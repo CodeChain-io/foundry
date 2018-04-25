@@ -4,7 +4,7 @@
   "description": "A JavaScript SDK for CodeChain",
   "main": "src/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/jest/bin/jest.js --env node"
   },
   "repository": {
     "type": "git",
@@ -17,7 +17,12 @@
   },
   "homepage": "https://github.com/kodebox-io/codechain-sdk-js#readme",
   "dependencies": {
-    "@types/node": "^9.6.6",
     "jayson": "^2.0.5"
+  },
+  "devDependencies": {
+    "@types/node": "^9.6.6",
+    "jest": "^22.4.3",
+    "ts-jest": "^22.4.4",
+    "typescript": "^2.8.3"
   }
 }
