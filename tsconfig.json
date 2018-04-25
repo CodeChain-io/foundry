@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "target": "es2015",
+        "types": [
+            "node",
+            "test"
+        ]
+    },
+    "include": [
+        "./src/**/*",
+    ],
+    "exclude": [
+        "./src/**/*.spec.ts"
+    ]
+}
