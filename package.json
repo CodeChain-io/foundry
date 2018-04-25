@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/kodebox-io/codechain-sdk-js/issues"
   },
-  "homepage": "https://github.com/kodebox-io/codechain-sdk-js#readme"
+  "homepage": "https://github.com/kodebox-io/codechain-sdk-js#readme",
+  "dependencies": {
+    "@types/node": "^9.6.6",
+    "jayson": "^2.0.5"
+  }
 }
