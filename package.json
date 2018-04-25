@@ -2,7 +2,6 @@
   "name": "codechain-sdk",
   "version": "0.1.0",
   "description": "A JavaScript SDK for CodeChain",
-  "main": "src/index.ts",
   "scripts": {
     "test": "./node_modules/jest/bin/jest.js --env node"
   },
