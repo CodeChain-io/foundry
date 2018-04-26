@@ -16,7 +16,9 @@
   },
   "homepage": "https://github.com/kodebox-io/codechain-sdk-js#readme",
   "dependencies": {
-    "jayson": "^2.0.5"
+    "elliptic": "^6.4.0",
+    "jayson": "^2.0.5",
+    "rlp": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^9.6.6",
