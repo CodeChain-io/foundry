@@ -7,7 +7,7 @@ class SDK {
         this.client = jayson.client.http(httpUrl);
     }
 
-    ping() {
+    ping(): Promise<string> {
         return new Promise((resolve, reject) => {
             this.client.request("ping", [], (err, res) => {
                 if (err) {
