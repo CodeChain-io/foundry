@@ -1,0 +1,29 @@
+const RLP = require("rlp");
+
+class H256 {
+    value: string;
+
+    constructor(value?: string) {
+        if ((!value.startsWith("0x") && value.length !== 64) || (value.startsWith("0x") && value.length !== 66)) {
+            throw `The length for H256 must be 64 or 66 with 0x-prefix`;
+        } else if (!/(0x)?[0-9a-fA-F]{64}/.test(value)) {
+            throw `Invalid hexadecimal string: ${value}`;
+        }
+        this.value = value.startsWith("0x") ? value.slice(2).toLowerCase() : value.toLowerCase();
+    }
+
+    static fromBytes(buffer: Buffer): H256 {
+        const bytes = Array.from(buffer.values());
+        const length = bytes.shift() - 0x80;
+        if (length !== 32 || bytes.length !== length) {
+            throw "Invalid RLP";
+        }
+        return new H256(bytes.map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join(""));
+    }
+
+    rlpBytes(): Buffer {
+        return RLP.encode(`0x${this.value}`);
+    }
+}
+
+export default H256;
