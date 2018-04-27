@@ -8,13 +8,19 @@ const toHex = (buffer: Buffer): string => {
     return Array.from(buffer).map(toHexByte).join("");
 };
 
-export const blake256 = (buffer: Buffer): string => {
+export const blake256 = (buffer: Buffer | string): string => {
+    if (!(buffer instanceof Buffer)) {
+        buffer = Buffer.from(buffer, "hex");
+    }
     const context = blake.blake2bInit(32, null);
     blake.blake2bUpdate(context, buffer);
     return toHex(blake.blake2bFinal(context));
 };
 
-export const ripemd160 = (buffer: string): string => {
+export const ripemd160 = (buffer: Buffer | string): string => {
+    if (!(buffer instanceof Buffer)) {
+        buffer = Buffer.from(buffer, "hex");
+    }
     return new ripemd().update(buffer).digest('hex');
 };
 
