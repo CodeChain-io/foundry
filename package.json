@@ -21,6 +21,7 @@
     "elliptic": "^6.4.0",
     "jayson": "^2.0.5",
     "lodash": "^4.17.10",
+    "ripemd160": "^2.0.2",
     "rlp": "^2.0.0"
   },
   "devDependencies": {

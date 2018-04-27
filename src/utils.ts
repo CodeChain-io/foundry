@@ -1,4 +1,5 @@
 const blake = require("blakejs");
+const ripemd = require("ripemd160");
 const EC = require("elliptic").ec;
 
 const toHexByte = byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16);
@@ -11,6 +12,10 @@ export const blake256 = (buffer: Buffer): string => {
     const context = blake.blake2bInit(32, null);
     blake.blake2bUpdate(context, buffer);
     return toHex(blake.blake2bFinal(context));
+};
+
+export const ripemd160 = (buffer: string): string => {
+    return new ripemd().update(buffer).digest('hex');
 };
 
 export const signEcdsa = (() => {
