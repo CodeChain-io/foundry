@@ -1,13 +1,10 @@
-import U256 from "./U256";
-import H256 from "./H256";
-import Action from "./Action";
-import SignedTransaction from "./SignedTransaction";
+import { U256, H256, Action, SignedTransaction } from "./index";
 
 const blake = require("blakejs");
 const EC = require("elliptic").ec;
 const RLP = require("rlp");
 
-class Transaction {
+export class Transaction {
     private nonce: U256;
     private fee: U256;
     private action: Action;
@@ -51,5 +48,3 @@ class Transaction {
         return new SignedTransaction(this, sig.recoveryParam, new U256(sig.r.toString()), new U256(sig.s.toString()));
     }
 }
-
-export default Transaction;

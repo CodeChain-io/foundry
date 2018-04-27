@@ -1,7 +1,4 @@
-import H256 from "../H256";
-import U256 from "../U256";
-import Action from "../Action";
-import Transaction from "../Transaction";
+import { H256, U256, Action, Transaction } from "../index";
 
 test("rlp", () => {
     const t = new Transaction(new U256(0), new U256(0), new Action("noop"), 1);

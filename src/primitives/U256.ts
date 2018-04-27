@@ -3,7 +3,7 @@ import { BigNumber } from "bignumber.js";
 
 const RLP = require("rlp");
 
-class U256 {
+export class U256 {
     value: BigNumber;
 
     constructor(value?: number | string) {
@@ -44,5 +44,3 @@ class U256 {
         return RLP.encode(this.toEncodeObject());
     }
 }
-
-export default U256;

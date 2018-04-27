@@ -1,9 +1,4 @@
-import SignedTransaction from "./primitives/SignedTransaction";
-import H256 from "./primitives/H256";
-import Transaction from "./primitives/Transaction";
-import U256 from "./primitives/U256";
-import Action from "./primitives/Action";
-import Invoice from "./primitives/Invoice";
+import { SignedTransaction, H256, Transaction, U256, Action, Invoice } from "./primitives/index";
 
 const jayson = require('jayson');
 

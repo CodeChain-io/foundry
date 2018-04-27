@@ -1,11 +1,9 @@
-import U256 from "./U256";
-import H256 from "./H256";
-import Transaction from "./Transaction";
+import { U256, H256, Transaction } from "./index"
 
 const blake = require("blakejs");
 const RLP = require("rlp");
 
-class SignedTransaction {
+export class SignedTransaction {
     private unsigned: Transaction;
     private v: number;
     private r: U256;
@@ -48,5 +46,3 @@ class SignedTransaction {
         return new H256(hashStr);
     }
 }
-
-export default SignedTransaction;

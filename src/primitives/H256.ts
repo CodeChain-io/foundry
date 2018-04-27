@@ -1,6 +1,6 @@
 const RLP = require("rlp");
 
-class H256 {
+export class H256 {
     value: string;
 
     constructor(value?: string) {
@@ -25,5 +25,3 @@ class H256 {
         return RLP.encode(`0x${this.value}`);
     }
 }
-
-export default H256;

@@ -1,4 +1,4 @@
-import Invoice from "../Invoice";
+import { Invoice } from "../Invoice";
 
 test("rlp", () => {
     expect(new Invoice(true).rlpBytes()).toEqual(Buffer.from([0x01]));

@@ -2,7 +2,7 @@ const RLP = require("rlp");
 
 type TransactionOutcome = "Success" | "Failed";
 
-class Invoice {
+export class Invoice {
     private outcome: TransactionOutcome;
 
     constructor(success: boolean) {
@@ -25,5 +25,3 @@ class Invoice {
         return Buffer.from([this.toEncodeObject() ? 0x01 : 0x00])
     }
 }
-
-export default Invoice;

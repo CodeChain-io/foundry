@@ -1,4 +1,4 @@
-import U256 from "../U256";
+import { U256 } from "../U256";
 const RLP = require("rlp");
 
 test("rlpBytes", () => {

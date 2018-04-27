@@ -1,9 +1,9 @@
 const RLP = require("rlp");
 
 // FIXME: Support "payment", "set_regular_key", "asset_mint" and etc.
-type ActionType = "noop";
+export type ActionType = "noop";
 
-class Action {
+export class Action {
     type: ActionType;
 
     constructor(type: ActionType) {
@@ -19,5 +19,3 @@ class Action {
         return RLP.encode(this.toEncodeObject());
     }
 }
-
-export default Action;
