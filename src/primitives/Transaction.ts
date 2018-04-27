@@ -45,9 +45,9 @@ class Transaction {
     }
 
     sign(secret: H256): SignedTransaction {
-        const ec = new EC('secp256k1');
+        const ec = new EC("secp256k1");
         const key = ec.keyFromPrivate(secret.value);
-        const sig = key.sign(this.hash().value);
+        const sig = key.sign(this.hash().value, { "canonical": true });
         return new SignedTransaction(this, sig.recoveryParam, new U256(sig.r.toString()), new U256(sig.s.toString()));
     }
 }
