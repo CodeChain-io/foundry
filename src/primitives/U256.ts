@@ -28,16 +28,20 @@ class U256 {
         return new U256("0x" + bytes.map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join(""));
     }
 
-    rlpBytes(): Buffer {
+    toEncodeObject(): string | number {
         const hex = this.value.toString(16);
         // NOTE: workaround that RLP.encode("0x0") results to 00
         if (hex === "0") {
-            return RLP.encode(0);
+            return 0;
         } else {
-            return RLP.encode(hex.length % 2 === 0
+            return hex.length % 2 === 0
                 ? `0x${hex}`
-                : `0x0${hex}`);
+                : `0x0${hex}`;
         }
+    }
+
+    rlpBytes(): Buffer {
+        return RLP.encode(this.toEncodeObject());
     }
 }
 

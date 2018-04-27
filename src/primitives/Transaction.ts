@@ -20,14 +20,18 @@ class Transaction {
         this.networkId = new U256(networkId);
     }
 
-    rlpBytes(): Buffer {
+    toEncodeObject(): Array<any> {
         const { nonce, fee, action, networkId } = this;
-        return RLP.encode([
-            nonce.rlpBytes(), 
-            fee.rlpBytes(), 
-            action.rlpBytes(), 
-            networkId.rlpBytes()
-        ]);
+        return [
+            nonce.toEncodeObject(),
+            fee.toEncodeObject(),
+            action.toEncodeObject(),
+            networkId.toEncodeObject()
+        ];
+    }
+
+    rlpBytes(): Buffer {
+        return RLP.encode(this.toEncodeObject());
     }
 
     hash(): H256 {

@@ -10,9 +10,13 @@ class Action {
         this.type = type;
     }
 
-    rlpBytes(): Buffer {
+    toEncodeObject(): string {
         // FIXME: noop hard-coded here.
-        return RLP.encode("");
+        return "";
+    }
+
+    rlpBytes(): Buffer {
+        return RLP.encode(this.toEncodeObject());
     }
 }
 
