@@ -2,7 +2,7 @@ import { H160, SignedTransaction, H256, Transaction, U256, Action, Invoice } fro
 
 const jayson = require('jayson');
 
-class SDK {
+export class SDK {
     private client;
 
     constructor(httpUrl) {
@@ -65,5 +65,3 @@ class SDK {
         });
     }
 }
-
-module.exports = SDK;
