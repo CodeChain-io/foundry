@@ -1,4 +1,4 @@
-import { SignedTransaction, H256, Transaction, U256, Action, Invoice } from "./primitives/index";
+import { H160, SignedTransaction, H256, Transaction, U256, Action, Invoice } from "./primitives/index";
 
 const jayson = require('jayson');
 
@@ -45,6 +45,23 @@ class SDK {
                 }
                 resolve(new Invoice(res.result.outcome === "Success"));
             });;
+        });
+    }
+
+    getNonce(address: H160, blockNumber?: number): Promise<U256 | null> {
+        return new Promise((resolve, reject) => {
+            this.client.request("chain_getNonce", [`0x${address.value}`, blockNumber || null], (err, res) => {
+                if (err) {
+                    return reject(err);
+                } else if (res.error) {
+                    return reject(res.error);
+                }
+                if (res.result) {
+                    resolve(new U256(res.result));
+                } else {
+                    resolve(null);
+                }
+            });
         });
     }
 }
