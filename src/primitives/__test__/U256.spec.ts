@@ -2,7 +2,7 @@ import U256 from "../U256";
 const RLP = require("rlp");
 
 test("rlpBytes", () => {
-    expect(new U256(0).rlpBytes()).toEqual(Buffer.from([0x00]));
+    expect(new U256(0).rlpBytes()).toEqual(Buffer.from([0x80]));
     expect(new U256(10).rlpBytes()).toEqual(Buffer.from([0x0a]));
     expect(new U256(255).rlpBytes()).toEqual(Buffer.from([0x81, 0xff]));
     expect(new U256(1000).rlpBytes()).toEqual(Buffer.from([0x82, 0x03, 0xe8]));

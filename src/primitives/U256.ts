@@ -17,22 +17,27 @@ class U256 {
 
     static fromBytes(buffer: Buffer): U256 {
         const bytes = Array.from(buffer.values());
-        if (bytes.length > 1) {
-            const length = bytes.shift() - 0x80;
-            if (length > 32) {
-                throw "Buffer for U256 must be less than or equal to 32";
-            } else if (bytes.length !== length) {
-                throw "Invalid RLP";
-            }
+        const length = bytes.shift() - 0x80;
+        if (length > 32) {
+            throw "Buffer for U256 must be less than or equal to 32";
+        } else if (bytes.length !== length) {
+            throw "Invalid RLP";
+        } else if (length === 0) {
+            return new U256(0);
         }
         return new U256("0x" + bytes.map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join(""));
     }
 
     rlpBytes(): Buffer {
         const hex = this.value.toString(16);
-        return RLP.encode(hex.length % 2 === 0
-            ? `0x${hex}` 
-            : `0x0${hex}`);
+        // NOTE: workaround that RLP.encode("0x0") results to 00
+        if (hex === "0") {
+            return RLP.encode(0);
+        } else {
+            return RLP.encode(hex.length % 2 === 0
+                ? `0x${hex}`
+                : `0x0${hex}`);
+        }
     }
 }
 
