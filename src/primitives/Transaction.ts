@@ -1,8 +1,10 @@
 import U256 from "./U256";
 import H256 from "./H256";
 import Action from "./Action";
+import SignedTransaction from "./SignedTransaction";
 
 const blake = require("blakejs");
+const EC = require("elliptic").ec;
 const RLP = require("rlp");
 
 class Transaction {
@@ -40,6 +42,13 @@ class Transaction {
         let hash: Buffer = blake.blake2bFinal(context);
         let hashStr = Array.from(hash).map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join("");
         return new H256(hashStr);
+    }
+
+    sign(secret: H256): SignedTransaction {
+        const ec = new EC('secp256k1');
+        const key = ec.keyFromPrivate(secret.value);
+        const sig = key.sign(this.hash().value);
+        return new SignedTransaction(this, sig.recoveryParam, new U256(sig.r.toString()), new U256(sig.s.toString()));
     }
 }
 
