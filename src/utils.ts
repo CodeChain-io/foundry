@@ -31,3 +31,11 @@ export const signEcdsa = (() => {
         return key.sign(message, { "canonical": true });
     };
 })();
+
+export const privateKeyToAddress = (() => {
+    const ec = new EC("secp256k1");
+    return (priv: string) => {
+        const key = ec.keyFromPrivate(priv);
+        return ripemd160(blake256(key.getPublic().encode('hex').slice(2)));
+    };
+})();
