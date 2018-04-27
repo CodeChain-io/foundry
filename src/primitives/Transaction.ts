@@ -1,7 +1,6 @@
 import { U256, H256, Action, SignedTransaction } from "./index";
-import { blake256 } from "../utils";
+import { blake256, signEcdsa } from "../utils";
 
-const EC = require("elliptic").ec;
 const RLP = require("rlp");
 
 export class Transaction {
@@ -38,9 +37,7 @@ export class Transaction {
     }
 
     sign(secret: H256): SignedTransaction {
-        const ec = new EC("secp256k1");
-        const key = ec.keyFromPrivate(secret.value);
-        const sig = key.sign(this.hash().value, { "canonical": true });
-        return new SignedTransaction(this, sig.recoveryParam, new U256(sig.r.toString()), new U256(sig.s.toString()));
+        const { r, s, recoveryParam: v } = signEcdsa(this.hash().value, secret.value);
+        return new SignedTransaction(this, v, new U256(r.toString()), new U256(s.toString()));
     }
 }
