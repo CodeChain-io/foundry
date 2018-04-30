@@ -90,4 +90,18 @@ export class SDK {
             });
         });
     }
+
+    getBlock(hash: H256): Promise<any | null> {
+        return new Promise((resolve, reject) => {
+            this.client.request("chain_getBlockByHash", [`0x${hash.value}`], (err, res) => {
+                if (err) {
+                    return reject(err);
+                } else if (res.error) {
+                    return reject(res.error);
+                }
+                // FIXME: introduce Block primitive
+                resolve(res.result);
+            });
+        });
+    }
 }
