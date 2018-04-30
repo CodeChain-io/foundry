@@ -64,4 +64,30 @@ export class SDK {
             });
         });
     }
+
+    getBlockNumber(): Promise<number> {
+        return new Promise((resolve, reject) => {
+            this.client.request("chain_getBlockNumber", [], (err, res) => {
+                if (err) {
+                    return reject(err);
+                } else if (res.error) {
+                    return reject(res.error);
+                }
+                resolve(res.result);
+            });
+        });
+    }
+
+    getBlockHash(blockNumber: number): Promise<H256 | null> {
+        return new Promise((resolve, reject) => {
+            this.client.request("chain_getBlockHash", [blockNumber], (err, res) => {
+                if (err) {
+                    return reject(err);
+                } else if (res.error) {
+                    return reject(res.error);
+                }
+                resolve(res.result ? new H256(res.result) : null);
+            });
+        });
+    }
 }
