@@ -21,7 +21,11 @@ export class H160 {
         return new H160(bytes.map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join(""));
     }
 
+    toEncodeObject(): string {
+        return `0x${this.value}`;
+    }
+
     rlpBytes(): Buffer {
-        return RLP.encode(`0x${this.value}`);
+        return RLP.encode(this.toEncodeObject());
     }
 }
