@@ -1,5 +1,6 @@
-import { U256, H256, Action, SignedTransaction } from "./index";
+import { U256, H256, SignedTransaction } from "./index";
 import { blake256, signEcdsa } from "../utils";
+import { Action } from "./action/index";
 
 const RLP = require("rlp");
 
