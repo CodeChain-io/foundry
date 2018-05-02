@@ -1,4 +1,4 @@
-import { H160, U256, H512 } from "./index";
+import { H160, U256, H512, H256 } from "./index";
 
 const RLP = require("rlp");
 
@@ -10,10 +10,23 @@ type PaymentActionData = {
 type SetRegularKeyActionData = {
     key: H512;
 }
+type AssetMintActionData = {
+    metadata: string;
+    lockScriptHash: H256;
+    parameters: Buffer[];
+    amount: number | null;
+    registrar: H160 | null;
+}
 
 // FIXME: Support "set_regular_key", "asset_mint" and etc.
-export type ActionType = "noop" | "payment" | "setRegularKey";
-export type ActionData = NoopActionData | PaymentActionData | SetRegularKeyActionData;
+export type ActionType = "noop"
+                         | "payment"
+                         | "setRegularKey"
+                         | "assetMint";
+export type ActionData = NoopActionData
+                         | PaymentActionData
+                         | SetRegularKeyActionData
+                         | AssetMintActionData;
 
 export class Action {
     type: ActionType;
@@ -34,6 +47,22 @@ export class Action {
             case "setRegularKey":
                 const { key } = this.data as SetRegularKeyActionData;
                 return [2, key.toEncodeObject()];
+            case "assetMint":
+                const {
+                    metadata,
+                    lockScriptHash,
+                    parameters,
+                    amount,
+                    registrar
+                } = this.data as AssetMintActionData;
+                return [
+                    3,
+                    metadata,
+                    lockScriptHash.toEncodeObject(),
+                    parameters,
+                    amount ? [amount] : [],
+                    registrar ? [registrar] : []
+                ];
         }
     }
 

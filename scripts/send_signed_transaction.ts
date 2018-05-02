@@ -13,12 +13,19 @@ const paymentAction = new Action("payment", {
     address: new H160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
     value: new U256("10")
 });
+const AssetMintAction = new Action("assetMint", {
+    metadata: "",
+    lockScriptHash: new H256("0000000000000000000000000000000000000000000000000000000000000000"),
+    parameters: [],
+    amount: null,
+    registrar: null,
+});
 
 sdk.getNonce(address).then(nonce => {
     console.log(nonce);
 
     const fee = new U256(10);
-    const t = new Transaction(nonce, fee, paymentAction, networkId);
+    const t = new Transaction(nonce, fee, AssetMintAction, networkId);
     return sdk.sendSignedTransaction(t.sign(secret));
 }).then(hash => {
     console.log(hash);
