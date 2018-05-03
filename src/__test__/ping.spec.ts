@@ -1,4 +1,4 @@
-import * as SDK from "../";
+import { SDK } from "../";
 
 const SERVER_URL = "http://localhost:8080";
 
