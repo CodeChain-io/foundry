@@ -64,7 +64,7 @@ class AssetTransferOutput {
 type AssetTransferActionData = {
     inputs: AssetTransferInputData[];
     outputs: AssetTransferOutputData[];
-}
+};
 export class AssetTransferAction {
     private inputs: AssetTransferInput[];
     private outputs: AssetTransferOutput[];
@@ -78,6 +78,6 @@ export class AssetTransferAction {
             4,
             this.inputs.map(input => input.toEncodeObject()),
             this.outputs.map(output => output.toEncodeObject())
-        ]
+        ];
     }
 }

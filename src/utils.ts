@@ -21,7 +21,7 @@ export const ripemd160 = (buffer: Buffer | string): string => {
     if (!(buffer instanceof Buffer)) {
         buffer = Buffer.from(buffer, "hex");
     }
-    return new ripemd().update(buffer).digest('hex');
+    return new ripemd().update(buffer).digest("hex");
 };
 
 export const signEcdsa = (() => {
@@ -36,6 +36,6 @@ export const privateKeyToAddress = (() => {
     const ec = new EC("secp256k1");
     return (priv: string) => {
         const key = ec.keyFromPrivate(priv);
-        return ripemd160(blake256(key.getPublic().encode('hex').slice(2)));
+        return ripemd160(blake256(key.getPublic().encode("hex").slice(2)));
     };
 })();

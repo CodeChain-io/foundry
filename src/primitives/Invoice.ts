@@ -22,6 +22,6 @@ export class Invoice {
     }
 
     rlpBytes(): Buffer {
-        return Buffer.from([this.toEncodeObject() ? 0x01 : 0x00])
+        return Buffer.from([this.toEncodeObject() ? 0x01 : 0x00]);
     }
 }

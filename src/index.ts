@@ -1,6 +1,6 @@
 import { H160, SignedTransaction, H256, Transaction, U256, Action, Invoice } from "./primitives/index";
 
-const jayson = require('jayson');
+const jayson = require("jayson");
 
 export class SDK {
     private client;
@@ -30,7 +30,7 @@ export class SDK {
                     return reject(res.error);
                 }
                 resolve(new H256(res.result));
-            })
+            });
         });
     }
 
@@ -44,7 +44,7 @@ export class SDK {
                     return reject(res.error);
                 }
                 resolve(new Invoice(res.result.outcome === "Success"));
-            });;
+            });
         });
     }
 

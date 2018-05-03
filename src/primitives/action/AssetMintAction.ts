@@ -6,7 +6,7 @@ type AssetMintActionData = {
     parameters: Buffer[];
     amount: number | null;
     registrar: H160 | null;
-}
+};
 
 export class AssetMintAction {
     private data: AssetMintActionData;
