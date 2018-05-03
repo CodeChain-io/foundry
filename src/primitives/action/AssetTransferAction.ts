@@ -20,19 +20,24 @@ class AssetOutPoint {
 }
 
 type AssetTransferInputData = {
-    prevOut: AssetOutPoint;
+    prevOut: AssetOutPointData;
     lockScript: Buffer;
     unlockScript: Buffer;
 };
 class AssetTransferInput {
-    private data: AssetTransferInputData;
+    private prevOut: AssetOutPoint;
+    private lockScript: Buffer;
+    private unlockScript: Buffer;
 
     constructor(data: AssetTransferInputData) {
-        this.data = data;
+        const { prevOut, lockScript, unlockScript } = data;
+        this.prevOut = new AssetOutPoint(prevOut);
+        this.lockScript = lockScript;
+        this.unlockScript = unlockScript;
     }
 
     toEncodeObject() {
-        const { prevOut, lockScript, unlockScript } = this.data;
+        const { prevOut, lockScript, unlockScript } = this;
         return [prevOut.toEncodeObject(), lockScript, unlockScript];
     }
 }
@@ -57,15 +62,15 @@ class AssetTransferOutput {
 }
 
 type AssetTransferActionData = {
-    inputs: AssetTransferInput[];
-    outputs: AssetTransferOutput[];
+    inputs: AssetTransferInputData[];
+    outputs: AssetTransferOutputData[];
 }
 export class AssetTransferAction {
     private inputs: AssetTransferInput[];
     private outputs: AssetTransferOutput[];
     constructor({ inputs, outputs }: AssetTransferActionData) {
-        this.inputs = inputs;
-        this.outputs = outputs;
+        this.inputs = inputs.map(input => new AssetTransferInput(input));
+        this.outputs = outputs.map(output => new AssetTransferOutput(output));
     }
 
     toEncodeObject() {
