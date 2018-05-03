@@ -5,3 +5,5 @@ before_install:
   - yarn install
 script:
   - yarn test
+notifications:
+  slack: kodebox:URYvmhwGeGliw90dCz9wgJp7
