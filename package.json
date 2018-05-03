@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@types/bignumber.js": "^5.0.0",
+    "@types/jest": "^22.2.3",
     "@types/lodash": "^4.14.108",
     "@types/node": "^9.6.6",
     "jest": "^22.4.3",
