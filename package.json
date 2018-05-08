@@ -16,6 +16,11 @@
     "url": "https://github.com/kodebox-io/codechain-sdk-js/issues"
   },
   "homepage": "https://github.com/kodebox-io/codechain-sdk-js#readme",
+  "main": "./lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
   "dependencies": {
     "bignumber.js": "^6.0.0",
     "blakejs": "^1.1.0",
