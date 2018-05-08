@@ -1,6 +1,6 @@
 import { H256 } from "../index";
 
-type AssetOutPointData = {
+export type AssetOutPointData = {
     transactionHash: H256;
     index: number;
     assetType: H256;
@@ -19,7 +19,7 @@ class AssetOutPoint {
     }
 }
 
-type AssetTransferInputData = {
+export type AssetTransferInputData = {
     prevOut: AssetOutPointData;
     lockScript: Buffer;
     unlockScript: Buffer;
@@ -42,7 +42,7 @@ class AssetTransferInput {
     }
 }
 
-type AssetTransferOutputData = {
+export type AssetTransferOutputData = {
     lockScriptHash: H256;
     parameters: Buffer[];
     assetType: H256;
@@ -61,7 +61,7 @@ class AssetTransferOutput {
     }
 }
 
-type AssetTransferActionData = {
+export type AssetTransferActionData = {
     inputs: AssetTransferInputData[];
     outputs: AssetTransferOutputData[];
 };

@@ -1,6 +1,6 @@
 import { H512 } from "../index";
 
-type SetRegularKeyActionData = H512;
+export type SetRegularKeyActionData = H512;
 
 export class SetRegularKeyAction {
     private key: H512;

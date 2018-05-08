@@ -1,6 +1,6 @@
 import { H160, H256 } from "../index";
 
-type AssetMintActionData = {
+export type AssetMintActionData = {
     metadata: string;
     lockScriptHash: H256;
     parameters: Buffer[];

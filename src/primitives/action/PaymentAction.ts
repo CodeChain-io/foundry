@@ -1,6 +1,6 @@
 import { H160, U256 } from "../index";
 
-type PaymentActionData = {
+export type PaymentActionData = {
     address: H160;
     value: U256;
 };
