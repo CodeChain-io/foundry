@@ -1,17 +1,17 @@
-import { H160, SignedTransaction, H256, Transaction, U256, Action, Invoice } from "./primitives/index";
+import { H160, SignedTransaction, H256, Transaction, U256, Invoice } from "./primitives/index";
 
 const jayson = require("jayson");
 
 export class SDK {
-    private client;
+    private client: any;
 
-    constructor(httpUrl) {
+    constructor(httpUrl: string) {
         this.client = jayson.client.http(httpUrl);
     }
 
     ping(): Promise<string> {
         return new Promise((resolve, reject) => {
-            this.client.request("ping", [], (err, res) => {
+            this.client.request("ping", [], (err: any, res: any) => {
                 if (err) {
                     return reject(err);
                 }
@@ -23,7 +23,7 @@ export class SDK {
     sendSignedTransaction(t: SignedTransaction): Promise<H256> {
         return new Promise((resolve, reject) => {
             const bytes = Array.from(t.rlpBytes()).map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join("");
-            this.client.request("chain_sendSignedTransaction", [`0x${bytes}`], (err, res) => {
+            this.client.request("chain_sendSignedTransaction", [`0x${bytes}`], (err: any, res: any) => {
                 if (err) {
                     return reject(err);
                 } else if (res.error) {
@@ -37,7 +37,7 @@ export class SDK {
     // FIXME: timeout not implemented
     getTransactionInvoice(txhash: H256, _timeout: number): Promise<Invoice | null> {
         return new Promise((resolve, reject) => {
-            this.client.request("chain_getTransactionInvoice", [`0x${txhash.value}`], (err, res) => {
+            this.client.request("chain_getTransactionInvoice", [`0x${txhash.value}`], (err: any, res: any) => {
                 if (err) {
                     return reject(err);
                 } else if (res.error) {
@@ -50,7 +50,7 @@ export class SDK {
 
     getNonce(address: H160, blockNumber?: number): Promise<U256 | null> {
         return new Promise((resolve, reject) => {
-            this.client.request("chain_getNonce", [`0x${address.value}`, blockNumber || null], (err, res) => {
+            this.client.request("chain_getNonce", [`0x${address.value}`, blockNumber || null], (err: any, res: any) => {
                 if (err) {
                     return reject(err);
                 } else if (res.error) {
@@ -67,7 +67,7 @@ export class SDK {
 
     getBlockNumber(): Promise<number> {
         return new Promise((resolve, reject) => {
-            this.client.request("chain_getBlockNumber", [], (err, res) => {
+            this.client.request("chain_getBlockNumber", [], (err: any, res: any) => {
                 if (err) {
                     return reject(err);
                 } else if (res.error) {
@@ -80,7 +80,7 @@ export class SDK {
 
     getBlockHash(blockNumber: number): Promise<H256 | null> {
         return new Promise((resolve, reject) => {
-            this.client.request("chain_getBlockHash", [blockNumber], (err, res) => {
+            this.client.request("chain_getBlockHash", [blockNumber], (err: any, res: any) => {
                 if (err) {
                     return reject(err);
                 } else if (res.error) {
@@ -93,7 +93,7 @@ export class SDK {
 
     getBlock(hash: H256): Promise<any | null> {
         return new Promise((resolve, reject) => {
-            this.client.request("chain_getBlockByHash", [`0x${hash.value}`], (err, res) => {
+            this.client.request("chain_getBlockByHash", [`0x${hash.value}`], (err: any, res: any) => {
                 if (err) {
                     return reject(err);
                 } else if (res.error) {

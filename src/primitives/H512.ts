@@ -3,7 +3,7 @@ const RLP = require("rlp");
 export class H512 {
     value: string;
 
-    constructor(value?: string) {
+    constructor(value: string) {
         if ((!value.startsWith("0x") && value.length !== 128) || (value.startsWith("0x") && value.length !== 130)) {
             throw `The length for H512 must be 128 or 130 with 0x-prefix`;
         } else if (!/(0x)?[0-9a-fA-F]{128}/.test(value)) {

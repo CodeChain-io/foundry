@@ -3,7 +3,7 @@ const RLP = require("rlp");
 export class H256 {
     value: string;
 
-    constructor(value?: string) {
+    constructor(value: string) {
         if ((!value.startsWith("0x") && value.length !== 64) || (value.startsWith("0x") && value.length !== 66)) {
             throw `The length for H256 must be 64 or 66 with 0x-prefix`;
         } else if (!/(0x)?[0-9a-fA-F]{64}/.test(value)) {
@@ -14,7 +14,7 @@ export class H256 {
 
     static fromBytes(buffer: Buffer): H256 {
         const bytes = Array.from(buffer.values());
-        const length = bytes.shift() - 0x80;
+        const length = bytes.shift()! - 0x80;
         if (length !== 32 || bytes.length !== length) {
             throw "Invalid RLP";
         }

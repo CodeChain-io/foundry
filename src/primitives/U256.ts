@@ -17,7 +17,7 @@ export class U256 {
 
     static fromBytes(buffer: Buffer): U256 {
         const bytes = Array.from(buffer.values());
-        const length = bytes.shift() - 0x80;
+        const length = bytes.shift()! - 0x80;
         if (length > 32) {
             throw "Buffer for U256 must be less than or equal to 32";
         } else if (bytes.length !== length) {

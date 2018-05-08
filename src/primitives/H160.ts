@@ -3,7 +3,7 @@ const RLP = require("rlp");
 export class H160 {
     value: string;
 
-    constructor(value?: string) {
+    constructor(value: string) {
         if ((!value.startsWith("0x") && value.length !== 40) || (value.startsWith("0x") && value.length !== 42)) {
             throw `The length for H160 must be 40 or 42 with 0x-prefix`;
         } else if (!/(0x)?[0-9a-fA-F]{40}/.test(value)) {
@@ -14,7 +14,7 @@ export class H160 {
 
     static fromBytes(buffer: Buffer): H160 {
         const bytes = Array.from(buffer.values());
-        const length = bytes.shift() - 0x80;
+        const length = bytes.shift()! - 0x80;
         if (length !== 20 || bytes.length !== length) {
             throw "Invalid RLP";
         }

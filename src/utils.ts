@@ -2,7 +2,7 @@ const blake = require("blakejs");
 const ripemd = require("ripemd160");
 const EC = require("elliptic").ec;
 
-const toHexByte = byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16);
+const toHexByte = (byte: number) => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16);
 
 const toHex = (buffer: Buffer): string => {
     return Array.from(buffer).map(toHexByte).join("");
