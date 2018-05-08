@@ -4,6 +4,7 @@
   "description": "A JavaScript SDK for CodeChain",
   "scripts": {
     "lint": "./node_modules/.bin/tslint -c tslint.json \"src/**/*.ts\"",
+    "build": "./node_modules/.bin/tsc",
     "test": "yarn lint && ./node_modules/jest/bin/jest.js --env node"
   },
   "repository": {
