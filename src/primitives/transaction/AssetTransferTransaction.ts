@@ -61,14 +61,14 @@ class AssetTransferOutput {
     }
 }
 
-export type AssetTransferActionData = {
+export type AssetTransferTransactionData = {
     inputs: AssetTransferInputData[];
     outputs: AssetTransferOutputData[];
 };
-export class AssetTransferAction {
+export class AssetTransferTransaction {
     private inputs: AssetTransferInput[];
     private outputs: AssetTransferOutput[];
-    constructor({ inputs, outputs }: AssetTransferActionData) {
+    constructor({ inputs, outputs }: AssetTransferTransactionData) {
         this.inputs = inputs.map(input => new AssetTransferInput(input));
         this.outputs = outputs.map(output => new AssetTransferOutput(output));
     }

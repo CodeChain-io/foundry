@@ -1,14 +1,14 @@
 import { H160, U256 } from "../index";
 
-export type PaymentActionData = {
+export type PaymentTransactionData = {
     address: H160;
     value: U256;
 };
 
-export class PaymentAction {
-    private data: PaymentActionData;
+export class PaymentTransaction {
+    private data: PaymentTransactionData;
 
-    constructor(data: PaymentActionData) {
+    constructor(data: PaymentTransactionData) {
         this.data = data;
     }
 

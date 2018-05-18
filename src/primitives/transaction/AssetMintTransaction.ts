@@ -1,6 +1,6 @@
 import { H160, H256 } from "../index";
 
-export type AssetMintActionData = {
+export type AssetMintTransactionData = {
     metadata: string;
     lockScriptHash: H256;
     parameters: Buffer[];
@@ -8,10 +8,10 @@ export type AssetMintActionData = {
     registrar: H160 | null;
 };
 
-export class AssetMintAction {
-    private data: AssetMintActionData;
+export class AssetMintTransaction {
+    private data: AssetMintTransactionData;
 
-    constructor(data: AssetMintActionData) {
+    constructor(data: AssetMintTransactionData) {
         this.data = data;
     }
 

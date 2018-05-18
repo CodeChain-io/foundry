@@ -1,11 +1,11 @@
 import { H512 } from "../index";
 
-export type SetRegularKeyActionData = H512;
+export type SetRegularKeyTransactionData = H512;
 
-export class SetRegularKeyAction {
+export class SetRegularKeyTransaction {
     private key: H512;
 
-    constructor(data: SetRegularKeyActionData) {
+    constructor(data: SetRegularKeyTransactionData) {
         this.key = data;
     }
 

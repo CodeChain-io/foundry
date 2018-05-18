@@ -1,4 +1,4 @@
-export class NoopAction {
+export class NoopTransaction {
     toEncodeObject() {
         return "";
     }
