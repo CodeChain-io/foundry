@@ -49,6 +49,23 @@ export class SDK {
         });
     }
 
+    getBalance(address: H160, blockNumber?: number): Promise<U256 | null> {
+        return new Promise((resolve, reject) => {
+            this.client.request("chain_getBalance", [`0x${address.value}`, blockNumber || null], (err: any, res: any) => {
+                if (err) {
+                    return reject(err);
+                } else if (res.error) {
+                    return reject(res.error);
+                }
+                if (res.result) {
+                    resolve(new U256(res.result));
+                } else {
+                    resolve(null);
+                }
+            });
+        });
+    }
+
     getNonce(address: H160, blockNumber?: number): Promise<U256 | null> {
         return new Promise((resolve, reject) => {
             this.client.request("chain_getNonce", [`0x${address.value}`, blockNumber || null], (err: any, res: any) => {
