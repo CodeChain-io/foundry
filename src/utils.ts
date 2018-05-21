@@ -17,6 +17,15 @@ export const blake256 = (buffer: Buffer | string): string => {
     return toHex(blake.blake2bFinal(context));
 };
 
+export const blake256WithKey = (buffer: Buffer | string, key: Uint8Array): string => {
+    if (!(buffer instanceof Buffer)) {
+        buffer = Buffer.from(buffer, "hex");
+    }
+    const context = blake.blake2bInit(32, key);
+    blake.blake2bUpdate(context, buffer);
+    return toHex(blake.blake2bFinal(context));
+};
+
 export const ripemd160 = (buffer: Buffer | string): string => {
     if (!(buffer instanceof Buffer)) {
         buffer = Buffer.from(buffer, "hex");
