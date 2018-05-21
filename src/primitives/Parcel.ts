@@ -1,6 +1,6 @@
 import { U256, H256, SignedParcel } from "./index";
 import { blake256, signEcdsa } from "../utils";
-import { Transaction } from "./transaction/index";
+import { Transaction, getTransactionFromJSON } from "./transaction/index";
 
 const RLP = require("rlp");
 
@@ -40,5 +40,10 @@ export class Parcel {
     sign(secret: H256): SignedParcel {
         const { r, s, recoveryParam: v } = signEcdsa(this.hash().value, secret.value);
         return new SignedParcel(this, v, new U256(r.toString()), new U256(s.toString()));
+    }
+
+    static fromJSON(result: any) {
+        const { nonce, fee, transaction, networkId } = result;
+        return new Parcel(new U256(nonce), new U256(fee), getTransactionFromJSON(transaction), networkId);
     }
 }

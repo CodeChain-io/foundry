@@ -34,6 +34,19 @@ export class SDK {
         });
     }
 
+    getParcel(hash: H256): Promise<Parcel | null> {
+        return new Promise((resolve, reject) => {
+            this.client.request("chain_getParcel", [`0x${hash.value}`], (err: any, res: any) => {
+                if (err) {
+                    return reject(err);
+                } else if (res.error) {
+                    return reject(res.error);
+                }
+                resolve(res.result === null ? null : Parcel.fromJSON(res.result));
+            });
+        });
+    }
+
     // FIXME: will be replaced with getParcelInvoices
     // FIXME: timeout not implemented
     getParcelInvoice(txhash: H256, _timeout: number): Promise<Invoice | null> {
