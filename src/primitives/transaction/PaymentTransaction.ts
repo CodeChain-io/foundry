@@ -8,6 +8,7 @@ export type PaymentTransactionData = {
 
 export class PaymentTransaction {
     private data: PaymentTransactionData;
+    private type = "payment";
 
     constructor(data: PaymentTransactionData) {
         this.data = data;

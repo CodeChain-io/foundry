@@ -7,6 +7,7 @@ export type SetRegularKeyTransactionData = {
 
 export class SetRegularKeyTransaction {
     private data: SetRegularKeyTransactionData;
+    private type = "setRegularKey";
 
     constructor(data: SetRegularKeyTransactionData) {
         this.data = data;

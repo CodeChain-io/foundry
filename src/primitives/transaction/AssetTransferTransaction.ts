@@ -50,6 +50,7 @@ export type AssetTransferOutputData = {
 };
 class AssetTransferOutput {
     private data: AssetTransferOutputData;
+    private type = "assetTransfer";
 
     constructor(data: AssetTransferOutputData) {
         this.data = data;

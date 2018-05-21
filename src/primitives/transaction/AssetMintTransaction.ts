@@ -13,6 +13,7 @@ export type AssetMintTransactionData = {
 
 export class AssetMintTransaction {
     private data: AssetMintTransactionData;
+    private type = "assetMint";
 
     constructor(data: AssetMintTransactionData) {
         this.data = data;
