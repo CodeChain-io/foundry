@@ -23,3 +23,10 @@ test("fromBytes", () => {
     a = new U256("1000000000000");
     expect(U256.fromBytes(a.rlpBytes())).toEqual(a);
 });
+
+test("increase", () => {
+    const a = new U256(0);
+    const b = a.increase();
+    expect(a).toEqual(new U256(0));
+    expect(b).toEqual(new U256(1));
+});

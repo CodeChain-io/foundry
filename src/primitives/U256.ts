@@ -6,13 +6,17 @@ const RLP = require("rlp");
 export class U256 {
     value: BigNumber;
 
-    constructor(value?: number | string) {
+    constructor(value?: number | string | BigNumber) {
         this.value = new BigNumber(value || 0);
         if (!this.value.isInteger() || this.value.isNegative()) {
             throw "U256 must be a positive integer";
         } else if (this.value.toString(16).length > 64) {
             throw "Given value is out of range for U256";
         }
+    }
+
+    increase(): U256 {
+        return new U256(this.value.plus(1));
     }
 
     static fromBytes(buffer: Buffer): U256 {
