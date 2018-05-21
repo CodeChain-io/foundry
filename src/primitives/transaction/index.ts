@@ -14,8 +14,6 @@ export type Transaction =
 export { NoopTransaction, PaymentTransaction, SetRegularKeyTransaction, AssetMintTransaction, AssetTransferTransaction };
 
 export const getTransactionFromJSON = (obj: string | any) => {
-    console.log(obj, obj === "noop");
-
     if (obj === "noop") {
         return new NoopTransaction();
     }

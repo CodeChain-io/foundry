@@ -26,7 +26,7 @@ export class AssetMintTransaction {
             lockScriptHash.toEncodeObject(),
             parameters,
             amount ? [amount] : [],
-            registrar ? [registrar] : []
+            registrar ? [registrar.toEncodeObject()] : []
         ];
     }
 
