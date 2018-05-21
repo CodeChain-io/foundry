@@ -1,15 +1,19 @@
-import { H512 } from "../index";
+import { H512, U256 } from "../index";
 
-export type SetRegularKeyTransactionData = H512;
+export type SetRegularKeyTransactionData = {
+    nonce: U256;
+    key: H512;
+};
 
 export class SetRegularKeyTransaction {
-    private key: H512;
+    private data: SetRegularKeyTransactionData;
 
     constructor(data: SetRegularKeyTransactionData) {
-        this.key = data;
+        this.data = data;
     }
 
     toEncodeObject() {
-        return [2, this.key.toEncodeObject()];
+        const { nonce, key } = this.data;
+        return [2, nonce.toEncodeObject(), key.toEncodeObject()];
     }
 }
