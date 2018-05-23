@@ -1,4 +1,4 @@
-import { SDK, AssetMintTransaction, H256, Parcel, H160, U256 } from "../";
+import { SDK, AssetMintTransaction, H256, Parcel, H160, U256, NoopTransaction } from "../";
 import { privateKeyToAddress } from "../src/utils";
 
 const SERVER_URL = "http://localhost:8080";
@@ -23,4 +23,13 @@ export const mintAsset = async ({ metadata, amount, lockScriptHash, parameters, 
     await sdk.sendSignedParcel(parcel.sign(secret));
 
     return assetMintTransaction;
+};
+
+export const sendNoopTwice = async () => {
+    const t = new NoopTransaction();
+    const nonce = await sdk.getNonce(address);
+    const fee = new U256(10);
+    const networkId = 17;
+    await sdk.sendSignedParcel(new Parcel(nonce, fee, t, networkId).sign(secret));
+    await sdk.sendSignedParcel(new Parcel(nonce.increase(), fee, t, networkId).sign(secret));
 };

@@ -126,6 +126,14 @@ export class SDK {
             return new AssetScheme(result);
         }
     });
+
+    getPendingParcels: () => Promise<any[] | null> = this.createRpcRequest({
+        name: "chain_getPendingParcels",
+        toRpcParameter: () => [],
+        fromRpcResult: result => {
+            return result;
+        }
+    });
 }
 
 export * from "./primitives/";
