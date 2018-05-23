@@ -1,4 +1,4 @@
-import { H160, SignedParcel, H256, Parcel, U256, Invoice } from "./primitives/index";
+import { H160, SignedParcel, H256, Parcel, U256, Invoice, AssetScheme } from "./primitives/index";
 
 const jayson = require("jayson");
 
@@ -132,6 +132,25 @@ export class SDK {
                 }
                 // FIXME: introduce Block primitive
                 resolve(res.result);
+            });
+        });
+    }
+
+    getAssetScheme(type: H256): Promise<AssetScheme | null> {
+        return new Promise((resolve, reject) => {
+            this.client.request("chain_getAssetScheme", [`0x${type.value}`], (err: any, res: any) => {
+                if (err) {
+                    return reject(err);
+                } else if (res.error) {
+                    return reject(res.error);
+                }
+                if (!res.result) {
+                    resolve(null);
+                }
+                const { metadata, parameters, amount } = res.result;
+                resolve(new AssetScheme({
+                    metadata, parameters, amount
+                }));
             });
         });
     }
