@@ -2,6 +2,12 @@ import { H160, SignedParcel, H256, Parcel, U256, Invoice, AssetScheme } from "./
 
 const jayson = require("jayson");
 
+interface RpcRequest {
+    name: string;
+    toRpcParameter: (...params: any[]) => any[];
+    fromRpcResult: (result: any) => any;
+}
+
 export class SDK {
     private client: any;
 
@@ -9,31 +15,38 @@ export class SDK {
         this.client = jayson.client.http(httpUrl);
     }
 
-    ping(): Promise<string> {
-        return new Promise((resolve, reject) => {
-            this.client.request("ping", [], (err: any, res: any) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(res.result);
+    private createRpcRequest = (request: RpcRequest) => {
+        return (...params: any[]) => {
+            const { name, toRpcParameter, fromRpcResult } = request;
+            return new Promise<any>((resolve, reject) => {
+                this.client.request(name, toRpcParameter(...params), (err: any, res: any) => {
+                    if (err) {
+                        return reject(err);
+                    } else if (res.error) {
+                        return reject(res.error);
+                    }
+                    resolve(fromRpcResult(res.result));
+                });
             });
-        });
+        };
     }
 
-    sendSignedParcel(t: SignedParcel): Promise<H256> {
-        return new Promise((resolve, reject) => {
+    ping: () => Promise<string> = this.createRpcRequest({
+        name: "ping",
+        toRpcParameter: () => [],
+        fromRpcResult: result => result
+    });
+
+    sendSignedParcel: (t: SignedParcel) => Promise<H256> = this.createRpcRequest({
+        name: "chain_sendSignedParcel",
+        toRpcParameter: (t: SignedParcel) => {
             const bytes = Array.from(t.rlpBytes()).map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join("");
-            this.client.request("chain_sendSignedParcel", [`0x${bytes}`], (err: any, res: any) => {
-                if (err) {
-                    return reject(err);
-                } else if (res.error) {
-                    return reject(res.error);
-                }
-                resolve(new H256(res.result));
-            });
-        });
-    }
+            return [`0x${bytes}`];
+        },
+        fromRpcResult: result => new H256(result)
+    });
 
+    // FIXME: use createRpcRequest
     getParcel(hash: H256): Promise<Parcel | null> {
         return new Promise((resolve, reject) => {
             this.client.request("chain_getParcel", [`0x${hash.value}`], (err: any, res: any) => {
@@ -49,6 +62,7 @@ export class SDK {
 
     // FIXME: will be replaced with getParcelInvoices
     // FIXME: timeout not implemented
+    // FIXME: use createRpcRequest
     getParcelInvoice(txhash: H256, _timeout: number): Promise<Invoice | null> {
         return new Promise((resolve, reject) => {
             this.client.request("chain_getParcelInvoice", [`0x${txhash.value}`], (err: any, res: any) => {
@@ -62,66 +76,31 @@ export class SDK {
         });
     }
 
-    getBalance(address: H160, blockNumber?: number): Promise<U256 | null> {
-        return new Promise((resolve, reject) => {
-            this.client.request("chain_getBalance", [`0x${address.value}`, blockNumber || null], (err: any, res: any) => {
-                if (err) {
-                    return reject(err);
-                } else if (res.error) {
-                    return reject(res.error);
-                }
-                if (res.result) {
-                    resolve(new U256(res.result));
-                } else {
-                    resolve(null);
-                }
-            });
-        });
-    }
+    getBalance: (address: H160, blockNumber?: number) => Promise<U256 | null> = this.createRpcRequest({
+        name: "chain_getBalance",
+        toRpcParameter: (address: H160, blockNumber?: number) => [`0x${address.value}`, blockNumber],
+        fromRpcResult: result => result ? new U256(result) : null
+    });
 
-    getNonce(address: H160, blockNumber?: number): Promise<U256 | null> {
-        return new Promise((resolve, reject) => {
-            this.client.request("chain_getNonce", [`0x${address.value}`, blockNumber || null], (err: any, res: any) => {
-                if (err) {
-                    return reject(err);
-                } else if (res.error) {
-                    return reject(res.error);
-                }
-                if (res.result) {
-                    resolve(new U256(res.result));
-                } else {
-                    resolve(null);
-                }
-            });
-        });
-    }
+    getNonce: (address: H160, blockNumber?: number) => Promise<U256 | null> = this.createRpcRequest({
+        name: "chain_getNonce",
+        toRpcParameter: (address: H160, blockNumber?: number) => [`0x${address.value}`, blockNumber],
+        fromRpcResult: result => result ? new U256(result) : null
+    });
 
-    getBlockNumber(): Promise<number> {
-        return new Promise((resolve, reject) => {
-            this.client.request("chain_getBlockNumber", [], (err: any, res: any) => {
-                if (err) {
-                    return reject(err);
-                } else if (res.error) {
-                    return reject(res.error);
-                }
-                resolve(res.result);
-            });
-        });
-    }
+    getBlockNumber: () => Promise<number> = this.createRpcRequest({
+        name: "chain_getBlockNumber",
+        toRpcParameter: () => [],
+        fromRpcResult: result => result
+    });
 
-    getBlockHash(blockNumber: number): Promise<H256 | null> {
-        return new Promise((resolve, reject) => {
-            this.client.request("chain_getBlockHash", [blockNumber], (err: any, res: any) => {
-                if (err) {
-                    return reject(err);
-                } else if (res.error) {
-                    return reject(res.error);
-                }
-                resolve(res.result ? new H256(res.result) : null);
-            });
-        });
-    }
+    getBlockHash: (blockNumber: number) => Promise<H256 | null> = this.createRpcRequest({
+        name: "chain_getBlockHash",
+        toRpcParameter: (blockNumber: number) => [blockNumber],
+        fromRpcResult: result => result ? new H256(result) : null
+    });
 
+    // FIXME: use createRpcRequest
     getBlock(hash: H256): Promise<any | null> {
         return new Promise((resolve, reject) => {
             this.client.request("chain_getBlockByHash", [`0x${hash.value}`], (err: any, res: any) => {
@@ -136,24 +115,17 @@ export class SDK {
         });
     }
 
-    getAssetScheme(type: H256): Promise<AssetScheme | null> {
-        return new Promise((resolve, reject) => {
-            this.client.request("chain_getAssetScheme", [`0x${type.value}`], (err: any, res: any) => {
-                if (err) {
-                    return reject(err);
-                } else if (res.error) {
-                    return reject(res.error);
-                }
-                if (!res.result) {
-                    resolve(null);
-                }
-                const { metadata, parameters, amount } = res.result;
-                resolve(new AssetScheme({
-                    metadata, parameters, amount
-                }));
-            });
-        });
-    }
+    // FIXME: receive asset type instead of txhash. Need to change codechain also.
+    getAssetScheme: (txhash: H256) => Promise<AssetScheme | null> = this.createRpcRequest({
+        name: "chain_getAssetScheme",
+        toRpcParameter: (txhash: H256) => [`0x${txhash.value}`],
+        fromRpcResult: result => {
+            if (!result) {
+                return null;
+            }
+            return new AssetScheme(result);
+        }
+    });
 }
 
 export * from "./primitives/";
