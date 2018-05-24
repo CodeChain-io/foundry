@@ -1,4 +1,4 @@
-import { H160, SignedParcel, H256, Parcel, U256, Invoice, AssetScheme } from "./primitives/index";
+import { H160, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme } from "./primitives/index";
 
 const jayson = require("jayson");
 
@@ -127,6 +127,17 @@ export class SDK {
                 return null;
             }
             return new AssetScheme(result);
+        }
+    });
+
+    getAsset: (txhash: H256, index: number) => Promise<AssetScheme | null> = this.createRpcRequest({
+        name: "chain_getAsset",
+        toRpcParameter: (txhash: H256, index: number) => [`0x${txhash.value}`, index],
+        fromRpcResult: result => {
+            if (!result) {
+                return null;
+            }
+            return new Asset(result);
         }
     });
 
