@@ -5,4 +5,5 @@ export { U256 } from "./U256";
 export { Parcel } from "./Parcel";
 export { SignedParcel } from "./SignedParcel";
 export { Invoice } from "./Invoice";
+export { Asset } from "./Asset";
 export { AssetScheme } from "./AssetScheme";
