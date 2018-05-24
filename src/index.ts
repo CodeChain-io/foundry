@@ -71,6 +71,9 @@ export class SDK {
                 } else if (res.error) {
                     return reject(res.error);
                 }
+                if (!res.result) {
+                    return resolve(null);
+                }
                 resolve(new Invoice(res.result.outcome === "Success"));
             });
         });
