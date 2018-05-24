@@ -69,14 +69,17 @@ export type AssetTransferTransactionData = {
 export class AssetTransferTransaction {
     private inputs: AssetTransferInput[];
     private outputs: AssetTransferOutput[];
-    constructor({ inputs, outputs }: AssetTransferTransactionData) {
+    private networkId: number;
+    constructor(networkId: number, { inputs, outputs }: AssetTransferTransactionData) {
         this.inputs = inputs.map(input => new AssetTransferInput(input));
         this.outputs = outputs.map(output => new AssetTransferOutput(output));
+        this.networkId = networkId;
     }
 
     toEncodeObject() {
         return [
             4,
+            this.networkId,
             this.inputs.map(input => input.toEncodeObject()),
             this.outputs.map(output => output.toEncodeObject())
         ];
