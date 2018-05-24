@@ -1,18 +1,15 @@
 import { SDK } from "../";
-import { sendNoopTwice } from "./helper";
+import { paymentTwice } from "./helper";
 
 const SERVER_URL = "http://localhost:8080";
 const sdk = new SDK(SERVER_URL);
 
 test("getPendingParcels", async () => {
     let pending = await sdk.getPendingParcels();
-    if (pending.length > 0) {
-        // FIXME: test Parcel type
-        expect(pending[0].transaction).toBeTruthy();
-        return;
+    if (pending.length === 0) {
+        await paymentTwice();
     }
-    await sendNoopTwice();
     pending = await sdk.getPendingParcels();
     // FIXME: test Parcel type
-    expect(pending[0].transaction).toEqual("noop");
+    expect(pending[0].transaction).toBeTruthy();
 });

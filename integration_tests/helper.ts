@@ -1,4 +1,4 @@
-import { SDK, AssetMintTransaction, H256, Parcel, H160, U256, NoopTransaction } from "../";
+import { SDK, AssetMintTransaction, H256, Parcel, H160, U256, PaymentTransaction } from "../";
 import { privateKeyToAddress } from "../src/utils";
 
 const SERVER_URL = "http://localhost:8080";
@@ -25,11 +25,34 @@ export const mintAsset = async ({ metadata, amount, lockScriptHash, parameters, 
     return assetMintTransaction;
 };
 
-export const sendNoopTwice = async () => {
-    const t = new NoopTransaction();
+export const payment = async () => {
     const nonce = await sdk.getNonce(address);
+    const t = new PaymentTransaction({
+        nonce: nonce.increase(),
+        address,
+        value: new U256(0)
+    });
     const fee = new U256(10);
     const networkId = 17;
-    await sdk.sendSignedParcel(new Parcel(nonce, fee, t, networkId).sign(secret));
-    await sdk.sendSignedParcel(new Parcel(nonce.increase(), fee, t, networkId).sign(secret));
+    const p = new Parcel(nonce, fee, t, networkId).sign(secret);
+    return await sdk.sendSignedParcel(p);
+};
+
+export const paymentTwice = async () => {
+    const fee = new U256(10);
+    const networkId = 17;
+    const value = new U256(0);
+
+    const nonce1 = await sdk.getNonce(address);
+    const nonce2 = nonce1.increase();
+    const nonce3 = nonce2.increase();
+    const nonce4 = nonce3.increase();
+
+    const t1 = new PaymentTransaction({ nonce: nonce2, address, value});
+    const p1 = new Parcel(nonce1, fee, t1, networkId).sign(secret);
+    await sdk.sendSignedParcel(p1);
+
+    const t2 = new PaymentTransaction({ nonce: nonce4, address, value});
+    const p2 = new Parcel(nonce3, fee, t2, networkId).sign(secret);
+    await sdk.sendSignedParcel(p2);
 };
