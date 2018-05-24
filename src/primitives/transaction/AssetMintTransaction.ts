@@ -47,4 +47,13 @@ export class AssetMintTransaction {
         const prefix = "5300000000000000";
         return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }
+
+    getAssetAddres(): H256 {
+        const blake = blake256WithKey(this.hash().value, new Uint8Array([
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        ]));
+        const prefix = "4100000000000000";
+        return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
+    }
 }

@@ -1,4 +1,7 @@
 import { H256 } from "../index";
+import { blake256WithKey, blake256 } from "../../utils";
+
+const RLP = require("rlp");
 
 export type AssetOutPointData = {
     transactionHash: H256;
@@ -83,5 +86,24 @@ export class AssetTransferTransaction {
             this.inputs.map(input => input.toEncodeObject()),
             this.outputs.map(output => output.toEncodeObject())
         ];
+    }
+
+    rlpBytes() {
+        return RLP.encode(this.toEncodeObject());
+    }
+
+    hash(): H256 {
+        return new H256(blake256(this.rlpBytes()));
+    }
+
+    getAssetAddres(index: number): H256 {
+        const iv = new Uint8Array([
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            (index >> 56) & 0xFF, (index >> 48) & 0xFF, (index >> 40) & 0xFF, (index >> 32) & 0xFF,
+            (index >> 24) & 0xFF, (index >> 16) & 0xFF, (index >> 8) & 0xFF, index & 0xFF,
+        ]);
+        const blake = blake256WithKey(this.hash().value, iv);
+        const prefix = "4100000000000000";
+        return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }
 }
