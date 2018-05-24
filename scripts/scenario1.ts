@@ -10,6 +10,92 @@ const networkId = 17;
 
 const sdk = new SDK("http://localhost:8080");
 
+
+const emptyLockScriptHash = new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3");
+
+const mint1 = new AssetMintTransaction({
+    metadata: "metadata of permissioned infinite asset",
+    lockScriptHash: emptyLockScriptHash,
+    parameters: [],
+    amount: null,
+    registrar: new H160("3f4aa1fedf1f54eeb03b759deadb36676b184911")
+});
+
+const mint2 = new AssetMintTransaction({
+    metadata: "metadata of non-permissioned asset",
+    lockScriptHash: emptyLockScriptHash,
+    parameters: [],
+    amount: 100,
+    registrar: null
+});
+
+
+const transfer1 = (() => {
+    const inputs = [ {
+        prevOut: {
+            transactionHash: mint2.hash(),
+            index: 0,
+            assetType: mint2.getAssetSchemeAddress(),
+            amount: 100
+        },
+        lockScript: Buffer.from([0x2, 0x1]),
+        unlockScript: Buffer.from([])
+    }];
+    const outputs = [{
+        lockScriptHash: emptyLockScriptHash,
+        parameters: [],
+        assetType: mint2.getAssetSchemeAddress(),
+        amount: 93
+    }, {
+        lockScriptHash: emptyLockScriptHash,
+        parameters: [],
+        assetType: mint2.getAssetSchemeAddress(),
+        amount: 4
+    }, {
+        lockScriptHash: emptyLockScriptHash,
+        parameters: [],
+        assetType: mint2.getAssetSchemeAddress(),
+        amount: 2
+    }, {
+        lockScriptHash: emptyLockScriptHash,
+        parameters: [],
+        assetType: mint2.getAssetSchemeAddress(),
+        amount: 1
+    }];
+    return new AssetTransferTransaction(networkId, { inputs, outputs });
+})();
+
+const transfer2 = (() => {
+    const inputs = [{
+        prevOut: {
+            transactionHash: transfer1.hash(),
+            index: 1,
+            assetType: mint2.getAssetSchemeAddress(),
+            amount: 4
+        },
+        lockScript: Buffer.from([0x2, 0x1]),
+        unlockScript: Buffer.from([])
+    }, {
+        prevOut: {
+            transactionHash: transfer1.hash(),
+            index: 3,
+            assetType: mint2.getAssetSchemeAddress(),
+            amount: 1
+        },
+        lockScript: Buffer.from([0x2, 0x1]),
+        unlockScript: Buffer.from([])
+    }];
+    const outputs = [{
+        lockScriptHash: emptyLockScriptHash,
+        parameters: [],
+        assetType: mint2.getAssetSchemeAddress(),
+        amount: 5
+    }];
+    return new AssetTransferTransaction(networkId, {inputs, outputs});
+
+})();
+
+
 sdk.getNonce(address).then(nonce => {
     if (!nonce) {
         throw new Error("No nonce");
@@ -49,95 +135,21 @@ sdk.getNonce(address).then(nonce => {
     return sendParcel(p, new H256("63c6969fa92659da9afd54d976293365ed8093bc7a87d8c5282d59e55e2478da"));
 }).then(printAssets).then( () => {
 }).then( () => {
-    const t = new AssetMintTransaction({
-        metadata: "metadata of permissioned infinite asset",
-        lockScriptHash: new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3"),
-        parameters: [],
-        amount: null,
-        registrar: new H160("3f4aa1fedf1f54eeb03b759deadb36676b184911")
-    });
-
-    const p = new Parcel(new U256(8), new U256(10), t, networkId);
+    const p = new Parcel(new U256(8), new U256(10), mint1, networkId);
     return sendParcel(p, new H256("a507f0116053be0bfb57a067cd55ac5cfabbc4dd838b9bed1fa552fba531e104"));
 }).then(printAssets).then( () => {
 }).then( () => {
-    const t = new AssetMintTransaction({
-        metadata: "metadata of non-permissioned asset",
-        lockScriptHash: new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3"),
-        parameters: [],
-        amount: 100,
-        registrar: null
-    });
+    assert.equal(mint2.hash().value, "84c8d5d2328dc4ea6da1cdaddaf8cfa5ce6ba0373f724d91bdc6a69c6977183d");
 
-    const p = new Parcel(new U256(9), new U256(10), t, networkId);
+    const p = new Parcel(new U256(9), new U256(10), mint2, networkId);
     return sendParcel(p, new H256("b25401a45611df40521a8a04a54be3b017acdce68ca134115a9b58d7571246e1"));
 }).then(printAssets).then( () => {
 }).then( () => {
-    const inputs = [ {
-        prevOut: {
-            transactionHash: new H256("84c8d5d2328dc4ea6da1cdaddaf8cfa5ce6ba0373f724d91bdc6a69c6977183d"),
-            index: 0,
-            assetType: new H256("5300000000000000e97740b63d40849b152624cd468aef4c95838689b0fdb551"),
-            amount: 100
-        },
-        lockScript: Buffer.from([0x2, 0x1]),
-        unlockScript: Buffer.from([])
-    }];
-    const outputs = [{
-        lockScriptHash: new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3"),
-        parameters: [],
-        assetType: new H256("5300000000000000e97740b63d40849b152624cd468aef4c95838689b0fdb551"),
-        amount: 93
-    }, {
-        lockScriptHash: new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3"),
-        parameters: [],
-        assetType: new H256("5300000000000000e97740b63d40849b152624cd468aef4c95838689b0fdb551"),
-        amount: 4
-    }, {
-        lockScriptHash: new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3"),
-        parameters: [],
-        assetType: new H256("5300000000000000e97740b63d40849b152624cd468aef4c95838689b0fdb551"),
-        amount: 2
-    }, {
-        lockScriptHash: new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3"),
-        parameters: [],
-        assetType: new H256("5300000000000000e97740b63d40849b152624cd468aef4c95838689b0fdb551"),
-        amount: 1
-    }];
-    const t = new AssetTransferTransaction(networkId, { inputs, outputs });
-
-    const p = new Parcel(new U256(10), new U256(10), t, networkId);
+    const p = new Parcel(new U256(10), new U256(10), transfer1, networkId);
     return sendParcel(p, new H256("be285304c6aa7f5df42835e91f8c08cfd50c0d9cfa59700e29946fafcbb3ab8c"));
 }).then(printAssets).then( () => {
 }).then( () => {
-    const inputs = [{
-        prevOut: {
-            transactionHash: new H256("4b770ac940e476148754f903a6cb2448be89cbfa0d89bd398a9edb03e913ae01"),
-            index: 1,
-            assetType: new H256("5300000000000000e97740b63d40849b152624cd468aef4c95838689b0fdb551"),
-            amount: 4
-        },
-        lockScript: Buffer.from([0x2, 0x1]),
-        unlockScript: Buffer.from([])
-    }, {
-        prevOut: {
-            transactionHash: new H256("4b770ac940e476148754f903a6cb2448be89cbfa0d89bd398a9edb03e913ae01"),
-            index: 3,
-            assetType: new H256("5300000000000000e97740b63d40849b152624cd468aef4c95838689b0fdb551"),
-            amount: 1
-        },
-        lockScript: Buffer.from([0x2, 0x1]),
-        unlockScript: Buffer.from([])
-    }];
-    const outputs = [{
-        lockScriptHash: new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3"),
-        parameters: [],
-        assetType: new H256("5300000000000000e97740b63d40849b152624cd468aef4c95838689b0fdb551"),
-        amount: 5
-    }];
-    const t = new AssetTransferTransaction(networkId, {inputs, outputs});
-
-    const p = new Parcel(new U256(11), new U256(10), t, networkId);
+    const p = new Parcel(new U256(11), new U256(10), transfer2, networkId);
     return sendParcel(p, new H256("5d98a4e3d65999838859a3c28e643b2125e9a87fc6020a86c10461125aef7367"));
 }).then(printAssets).then( () => {
     console.log("Succeed");
