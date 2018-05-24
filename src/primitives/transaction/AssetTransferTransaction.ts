@@ -96,7 +96,7 @@ export class AssetTransferTransaction {
         return new H256(blake256(this.rlpBytes()));
     }
 
-    getAssetAddres(index: number): H256 {
+    getAssetAddress(index: number): H256 {
         const iv = new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             (index >> 56) & 0xFF, (index >> 48) & 0xFF, (index >> 40) & 0xFF, (index >> 32) & 0xFF,

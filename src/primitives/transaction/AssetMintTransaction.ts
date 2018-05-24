@@ -48,7 +48,7 @@ export class AssetMintTransaction {
         return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }
 
-    getAssetAddres(): H256 {
+    getAssetAddress(): H256 {
         const blake = blake256WithKey(this.hash().value, new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
