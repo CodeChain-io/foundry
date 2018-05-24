@@ -28,4 +28,8 @@ export class H256 {
     rlpBytes(): Buffer {
         return RLP.encode(this.toEncodeObject());
     }
+
+    isEqualTo(rhs: H256): boolean {
+        return this.value === rhs.value;
+    }
 }
