@@ -5,6 +5,6 @@ const sdk = new SDK(SERVER_URL);
 
 test("getNonce", async () => {
     const address = new H160("a6594b7196808d161b6fb137e781abbc251385d9");
-    const balance = await sdk.getNonce(address);
-    expect(balance instanceof U256).toBeTruthy();
+    const nonce = await sdk.getNonce(address);
+    expect(nonce instanceof U256).toBeTruthy();
 });
