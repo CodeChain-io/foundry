@@ -16,7 +16,7 @@ export class Asset {
     constructor(data: AssetValues) {
         this.asset_type = data.asset_type;
         this.lock_script_hash = data.lock_script_hash;
-        this.parameters = data.parameters
+        this.parameters = data.parameters;
         this.amount = data.amount;
     }
 }
