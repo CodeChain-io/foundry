@@ -1,17 +1,19 @@
+import { H160 } from ".";
+
 export interface AssetSchemeValues {
     metadata: string;
-    parameters: any[];
     amount: number;
+    registrar: H160 | null;
 }
 
 export class AssetScheme {
     metadata: string;
-    parameters: any[];
     amount: number;
+    registrar: H160 | null;
 
     constructor(data: AssetSchemeValues) {
         this.metadata = data.metadata;
-        this.parameters = data.parameters;
+        this.registrar = data.registrar;
         this.amount = data.amount;
     }
 }
