@@ -30,3 +30,9 @@ test("increase", () => {
     expect(a).toEqual(new U256(0));
     expect(b).toEqual(new U256(1));
 });
+
+test("isEqualTo", () => {
+    expect(new U256(0).isEqualTo(new U256(0))).toEqual(true);
+    expect(new U256(1000000).isEqualTo(new U256(1000000))).toEqual(true);
+    expect(new U256("100000000000000000").isEqualTo(new U256("100000000000000000"))).toEqual(true);
+});

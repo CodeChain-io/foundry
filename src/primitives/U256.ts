@@ -47,4 +47,8 @@ export class U256 {
     rlpBytes(): Buffer {
         return RLP.encode(this.toEncodeObject());
     }
+
+    isEqualTo(rhs: U256): boolean {
+        return this.value.isEqualTo(rhs.value);
+    }
 }
