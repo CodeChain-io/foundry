@@ -7,24 +7,24 @@ const RLP = require("rlp");
 export class Parcel {
     private nonce: U256;
     private fee: U256;
-    private transaction: Transaction;
+    private transactions: Transaction[];
     // FIXME: network id is 64-bit unsigned originally, so it must be changed when
     // it's serialized with leading zeros.
     private networkId: U256;
 
-    constructor(nonce: U256, fee: U256, transaction: Transaction, networkId: number) {
+    constructor(nonce: U256, fee: U256, networkId: number, ...transactions: Transaction[]) {
         this.nonce = nonce;
         this.fee = fee;
-        this.transaction = transaction;
+        this.transactions = transactions;
         this.networkId = new U256(networkId);
     }
 
     toEncodeObject(): Array<any> {
-        const { nonce, fee, transaction, networkId } = this;
+        const { nonce, fee, transactions, networkId } = this;
         return [
             nonce.toEncodeObject(),
             fee.toEncodeObject(),
-            transaction.toEncodeObject(),
+            transactions.map(transaction => transaction.toEncodeObject()),
             networkId.toEncodeObject()
         ];
     }
@@ -43,7 +43,7 @@ export class Parcel {
     }
 
     static fromJSON(result: any) {
-        const { nonce, fee, transaction, networkId } = result;
-        return new Parcel(new U256(nonce), new U256(fee), getTransactionFromJSON(transaction), networkId);
+        const { nonce, fee, transactions, networkId } = result;
+        return new Parcel(new U256(nonce), new U256(fee), networkId, ...transactions.map(getTransactionFromJSON));
     }
 }

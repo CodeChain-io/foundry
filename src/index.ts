@@ -63,17 +63,38 @@ export class SDK {
     // FIXME: will be replaced with getParcelInvoices
     // FIXME: timeout not implemented
     // FIXME: use createRpcRequest
-    getParcelInvoice(txhash: H256, _timeout?: number): Promise<Invoice | null> {
+    getParcelInvoices(txhash: H256, _timeout?: number): Promise<Invoice[]> {
         return new Promise((resolve, reject) => {
-            this.client.request("chain_getParcelInvoice", [`0x${txhash.value}`], (err: any, res: any) => {
+            this.client.request("chain_getParcelInvoices", [`0x${txhash.value}`], (err: any, res: any) => {
                 if (err) {
                     return reject(err);
                 } else if (res.error) {
                     return reject(res.error);
                 }
                 if (!res.result) {
+                    return resolve([]);
+                }
+                resolve(res.result.map((result: { outcome: string }) => new Invoice(result.outcome === "Success")));
+            });
+        });
+    }
+
+    // FIXME: Implement timeout
+    getTransactionInvoice(txhash: H256): Promise<Invoice | null> {
+        return new Promise((resolve, reject) => {
+            this.client.request("chain_getTransactionInvoice", [`0x${txhash.value}`], (err: any, res: any) => {
+                if (err) {
+                    return reject(err);
+                }
+
+                if (res.error) {
+                    return reject(res.error);
+                }
+
+                if (!res.result) {
                     return resolve(null);
                 }
+
                 resolve(new Invoice(res.result.outcome === "Success"));
             });
         });

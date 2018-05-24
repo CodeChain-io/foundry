@@ -19,7 +19,7 @@ sdk.getNonce(address).then(nonce => {
         address: new H160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
         value: new U256("10")
     });
-    const p = new Parcel(nonce, new U256(10), t, networkId);
+    const p = new Parcel(nonce, new U256(10), networkId, t);
     return sdk.sendSignedParcel(p.sign(secret));
 }).then(hash => {
     console.log(hash);

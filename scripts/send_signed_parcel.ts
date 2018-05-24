@@ -26,11 +26,11 @@ sdk.getNonce(address).then(nonce => {
     console.log(nonce);
 
     const fee = new U256(10);
-    const p = new Parcel(nonce, fee, assetMintTransaction, networkId);
+    const p = new Parcel(nonce, fee, networkId, assetMintTransaction);
     return sdk.sendSignedParcel(p.sign(secret));
 }).then(hash => {
     console.log(hash);
-    return sdk.getParcelInvoice(hash, 0);
+    return sdk.getParcelInvoices(hash, 0);
 }).then(invoice => {
     if (invoice === null) {
         return console.log("Invoice not found");

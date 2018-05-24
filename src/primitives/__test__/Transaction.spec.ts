@@ -2,26 +2,26 @@ import { NoopTransaction } from "../transaction/index";
 import { H256, U256, Parcel } from "../";
 
 test("rlp", () => {
-    const t = new Parcel(new U256(0), new U256(0), new NoopTransaction(), 1);
-    expect(t.rlpBytes()).toEqual(Buffer.from([0xc4, 0x80, 0x80, 0x80, 0x01]));
+    const t = new Parcel(new U256(0), new U256(0), 1, new NoopTransaction());
+    expect(t.rlpBytes()).toEqual(Buffer.from([0xc5, 0x80, 0x80, 0xC1, 0x80, 0x01]));
 });
 
 test("hash", () => {
-    const t = new Parcel(new U256(0), new U256(0), new NoopTransaction(), 1);
-    expect(t.hash()).toEqual(new H256("828d02e6a218886c27505cd99cdcc64f22165ce166c4dce331f2dd27b50a4ecf"));
+    const t = new Parcel(new U256(0), new U256(0), 1, new NoopTransaction());
+    expect(t.hash()).toEqual(new H256("0fe0daf8dc502e5d0217a9a98662b59397740e2af8251262980cffb895f985ae"));
 });
 
 test("sign", () => {
-    const t = new Parcel(new U256(0), new U256(0), new NoopTransaction(), 1);
+    const t = new Parcel(new U256(0), new U256(0), 1, new NoopTransaction());
     const signed = t.sign(new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"));
     const { v, r, s } = signed.signature();
-    expect(v).toBe(1 + 27);
-    expect(r).toEqual(new U256("0x452361fcdbb033ad9cc8d70a5fb18f72e100fffd7175adfca72a5ea5339ce505"));
-    expect(s).toEqual(new U256("0x1294f76e5fbe2cc8fdfb3bcb34253de92678bf7f65646a6dfa58bb0c6d83c839"));
+    expect(v).toBe(1 + 26);
+    expect(r).toEqual(new U256("0x96884e18f9989a143696f81dfc8ded0ddaee11ff2fdb5424e22c07606580dc3b"));
+    expect(s).toEqual(new U256("0x3479e7fc71a74d3a343c11c2a56a3c32f43863ea7f3b840fbbef29bf68ebd55f"));
 });
 
 test("signed hash", () => {
-    const t = new Parcel(new U256(0), new U256(0), new NoopTransaction(), 1);
+    const t = new Parcel(new U256(0), new U256(0), 1, new NoopTransaction());
     const signed = t.sign(new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"));
-    expect(signed.hash()).toEqual(new H256("20f6fffaf8c3252f683b255dbb8fcf7ffacdb69638b2a9513429fb83342f4a06"));
+    expect(signed.hash()).toEqual(new H256("274559e29521f50e79059a0c7f43a0f44a66c21251744d4b121fd7d74b5daca1"));
 });

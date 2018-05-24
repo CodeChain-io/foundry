@@ -22,11 +22,11 @@ export class SignedParcel {
     }
 
     toEncodeObject(): Array<any> {
-        const { unsigned: { nonce, fee, transaction, networkId }, v, r, s } = this;
+        const { unsigned: { nonce, fee, transactions, networkId }, v, r, s } = this;
         return [
             nonce.toEncodeObject(),
             fee.toEncodeObject(),
-            transaction.toEncodeObject(),
+            transactions.map(transaction => transaction.toEncodeObject()),
             networkId.toEncodeObject(),
             v,
             r.toEncodeObject(),
