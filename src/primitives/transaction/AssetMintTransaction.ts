@@ -19,6 +19,17 @@ export class AssetMintTransaction {
         this.data = data;
     }
 
+    static fromJSON(data: any) {
+        const { metadata, lockScriptHash, parameters, amount, registrar } = data;
+        return new this({
+            metadata,
+            lockScriptHash: new H256(lockScriptHash),
+            parameters,
+            amount: amount === null ? null : amount,
+            registrar: registrar === null ? null : new H160(registrar),
+        });
+    }
+
     toEncodeObject() {
         const { metadata, lockScriptHash, parameters, amount, registrar } = this.data;
         return [

@@ -1,4 +1,4 @@
-import { SDK, AssetMintTransaction, H256, Parcel, H160, U256, PaymentTransaction } from "../";
+import { SDK, AssetMintTransaction, H256, Parcel, H160, U256, PaymentTransaction, H512, SetRegularKeyTransaction } from "../";
 import { privateKeyToAddress } from "../src/utils";
 
 const SERVER_URL = "http://localhost:8080";
@@ -20,9 +20,12 @@ export const mintAsset = async ({ metadata, amount, lockScriptHash, parameters, 
     const networkId = 17;
 
     const parcel = new Parcel(nonce, fee, assetMintTransaction, networkId);
-    await sdk.sendSignedParcel(parcel.sign(secret));
+    const parcelHash = await sdk.sendSignedParcel(parcel.sign(secret));
 
-    return assetMintTransaction;
+    return {
+        parcelHash,
+        assetMintTransaction
+    };
 };
 
 export const payment = async () => {
@@ -55,4 +58,14 @@ export const paymentTwice = async () => {
     const t2 = new PaymentTransaction({ nonce: nonce4, address, value});
     const p2 = new Parcel(nonce3, fee, t2, networkId).sign(secret);
     await sdk.sendSignedParcel(p2);
+};
+
+export const setRegularKey = async () => {
+    const nonce = await sdk.getNonce(address);
+    const key = new H512("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+    const t = new SetRegularKeyTransaction({ nonce: nonce.increase(), key });
+    const fee = new U256(10);
+    const networkId = 17;
+    const p = new Parcel(nonce, fee, t, networkId);
+    return await sdk.sendSignedParcel(p.sign(secret));
 };

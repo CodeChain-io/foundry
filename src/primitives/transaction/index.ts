@@ -25,11 +25,11 @@ export const getTransactionFromJSON = (obj: string | any) => {
     const type = keys[0];
     switch (type) {
     case "payment":
-        return new PaymentTransaction(obj[type]);
+        return PaymentTransaction.fromJSON(obj[type]);
     case "setRegularKey":
-        return new SetRegularKeyTransaction(obj[type]);
+        return SetRegularKeyTransaction.fromJSON(obj[type]);
     case "assetMint":
-        return new AssetMintTransaction(obj[type]);
+        return AssetMintTransaction.fromJSON(obj[type]);
     case "assetTransfer":
         throw new Error(`Unimplemented gettTransactionFromJSON for ${type}`);
     default:
