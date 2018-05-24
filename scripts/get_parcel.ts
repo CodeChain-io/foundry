@@ -1,6 +1,6 @@
 
 import { Parcel, H256, U256, H160 } from "../src/primitives";
-import { privateKeyToAddress } from "../src/Utils";
+import { privateKeyToAddress } from "../src/utils";
 import { SDK } from "../src";
 import { NoopTransaction, PaymentTransaction } from "../src/primitives/transaction/";
 
