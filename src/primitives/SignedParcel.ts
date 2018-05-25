@@ -63,7 +63,7 @@ export class SignedParcel {
             unsigned: { nonce, fee, transactions, networkId }, v, r, s } = this;
         return {
             blockNumber,
-            blockHash,
+            blockHash: blockHash === null ? null : blockHash.value,
             parcelIndex,
             nonce: nonce.value.toString(),
             fee: fee.value.toString(),
