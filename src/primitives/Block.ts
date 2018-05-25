@@ -1,4 +1,4 @@
-import { H256, H160, Parcel, U256 } from ".";
+import { H256, H160, U256, SignedParcel } from ".";
 
 export interface BlockValues {
     parentHash: H256;
@@ -12,7 +12,7 @@ export interface BlockValues {
     score: U256;
     seal: Buffer[];
     hash: H256;
-    parcels: Parcel[];
+    parcels: SignedParcel[];
 }
 
 export class Block {
@@ -27,7 +27,7 @@ export class Block {
     score: U256;
     seal: Buffer[];
     hash: H256;
-    parcels: Parcel[];
+    parcels: SignedParcel[];
 
     constructor(data: BlockValues) {
         const { parentHash, timestamp, number, author, extraData,
@@ -61,7 +61,7 @@ export class Block {
             score: new U256(score),
             seal,
             hash: new H256(hash),
-            parcels: parcels.map((p: any) => Parcel.fromJSON(p))
+            parcels: parcels.map((p: any) => SignedParcel.fromJSON(p))
         });
     }
 
