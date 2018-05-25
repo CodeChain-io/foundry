@@ -74,7 +74,7 @@ export class SDK {
                 if (!res.result) {
                     return resolve([]);
                 }
-                resolve(res.result.map((result: { outcome: string }) => new Invoice(result.outcome === "Success")));
+                resolve(res.result.map((invoice: any) => Invoice.fromJSON(invoice)));
             });
         });
     }
@@ -95,7 +95,7 @@ export class SDK {
                     return resolve(null);
                 }
 
-                resolve(new Invoice(res.result.outcome === "Success"));
+                resolve(Invoice.fromJSON(res.result));
             });
         });
     }

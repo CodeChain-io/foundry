@@ -9,6 +9,15 @@ export class Invoice {
         this.outcome = success ? "Success" : "Failed";
     }
 
+    static fromJSON(data: any) {
+        return new this(data.outcome === "Success");
+    }
+
+    toJSON() {
+        const { outcome } = this;
+        return { outcome };
+    }
+
     static fromBytes(buffer: Buffer): Invoice {
         const bytes = Array.from(buffer.values());
         if (bytes.length !== 1 || bytes[0] > 0x01) {

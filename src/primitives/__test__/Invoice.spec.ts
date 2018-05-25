@@ -7,3 +7,8 @@ test("rlp", () => {
     expect(Invoice.fromBytes(Buffer.from([0x01]))).toEqual(new Invoice(true));
     expect(Invoice.fromBytes(Buffer.from([0x00]))).toEqual(new Invoice(false));
 });
+
+test("toJSON", () => {
+    const invoice = new Invoice(true);
+    expect(Invoice.fromJSON(invoice.toJSON())).toEqual(invoice);
+});
