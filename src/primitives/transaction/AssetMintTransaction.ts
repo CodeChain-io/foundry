@@ -20,7 +20,7 @@ export class AssetMintTransaction {
     }
 
     static fromJSON(data: any) {
-        const { metadata, lockScriptHash, parameters, amount, registrar } = data;
+        const { metadata, lockScriptHash, parameters, amount, registrar } = data["assetMint"];
         return new this({
             metadata,
             lockScriptHash: new H256(lockScriptHash),
@@ -28,6 +28,19 @@ export class AssetMintTransaction {
             amount: amount === null ? null : amount,
             registrar: registrar === null ? null : new H160(registrar),
         });
+    }
+
+    toJSON() {
+        const { metadata, lockScriptHash, parameters, amount, registrar } = this.data;
+        return {
+            [this.type]: {
+                metadata,
+                lockScriptHash: lockScriptHash.value,
+                parameters,
+                amount,
+                registrar: registrar === null ? null : registrar.value,
+            }
+        };
     }
 
     toEncodeObject() {

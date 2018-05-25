@@ -1,5 +1,5 @@
-import { NoopTransaction } from "../transaction/index";
-import { H256, U256, Parcel } from "../";
+import { NoopTransaction, PaymentTransaction, SetRegularKeyTransaction, AssetMintTransaction } from "../transaction/index";
+import { H256, U256, Parcel, H160, H512 } from "../";
 
 test("rlp", () => {
     const t = new Parcel(new U256(0), new U256(0), 1, new NoopTransaction());
@@ -24,4 +24,32 @@ test("signed hash", () => {
     const t = new Parcel(new U256(0), new U256(0), 1, new NoopTransaction());
     const signed = t.sign(new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"));
     expect(signed.hash()).toEqual(new H256("274559e29521f50e79059a0c7f43a0f44a66c21251744d4b121fd7d74b5daca1"));
+});
+
+test("PaymentTransaction toJSON", () => {
+    const t = new PaymentTransaction({
+        nonce: new U256(22),
+        address: new H160("0x0000000000000000000000000000000000000000"),
+        value: new U256(11),
+    });
+    expect(PaymentTransaction.fromJSON(t.toJSON())).toEqual(t);
+});
+
+test("SetRegularKeyTransaction toJSON", () => {
+    const t = new SetRegularKeyTransaction({
+        nonce: new U256(22),
+        key: new H512("22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222"),
+    });
+    expect(SetRegularKeyTransaction.fromJSON(t.toJSON())).toEqual(t);
+});
+
+test("AssetMintTransaction toJSON", () => {
+    const t = new AssetMintTransaction({
+        metadata: "",
+        lockScriptHash: new H256("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"),
+        parameters: [],
+        amount: 0,
+        registrar: null,
+    });
+    expect(AssetMintTransaction.fromJSON(t.toJSON())).toEqual(t);
 });

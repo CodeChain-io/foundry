@@ -14,11 +14,21 @@ export class SetRegularKeyTransaction {
     }
 
     static fromJSON(data: any) {
-        const { nonce, key } = data;
+        const { nonce, key } = data["setRegularKey"];
         return new this({
             nonce: new U256(nonce),
             key: new H512(key),
         });
+    }
+
+    toJSON() {
+        const { nonce, key } = this.data;
+        return {
+            [this.type]: {
+                nonce: nonce.value.toString(),
+                key: key.value,
+            }
+        };
     }
 
     toEncodeObject() {

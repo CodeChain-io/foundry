@@ -23,12 +23,23 @@ export class PaymentTransaction {
     }
 
     static fromJSON(data: any) {
-        const { nonce, address, value } = data;
+        const { nonce, address, value } = data["payment"];
         return new PaymentTransaction({
             nonce: new U256(nonce),
             address: new H160(address),
             value: new U256(value),
         });
+    }
+
+    toJSON() {
+        const { nonce, address, value } = this.data;
+        return {
+            [this.type]: {
+                nonce: nonce.value.toString(),
+                address: address.value,
+                value: value.value.toString(),
+            }
+        };
     }
 
     rlpBytes() {
