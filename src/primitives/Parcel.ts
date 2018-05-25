@@ -5,12 +5,12 @@ import { Transaction, getTransactionFromJSON } from "./transaction/index";
 const RLP = require("rlp");
 
 export class Parcel {
-    private nonce: U256;
-    private fee: U256;
-    private transactions: Transaction[];
+    nonce: U256;
+    fee: U256;
+    transactions: Transaction[];
     // FIXME: network id is 64-bit unsigned originally, so it must be changed when
     // it's serialized with leading zeros.
-    private networkId: U256;
+    networkId: U256;
 
     constructor(nonce: U256, fee: U256, networkId: number, ...transactions: Transaction[]) {
         this.nonce = nonce;

@@ -4,13 +4,13 @@ import { blake256 } from "../utils";
 const RLP = require("rlp");
 
 export class SignedParcel {
-    private unsigned: Parcel;
-    private v: number;
-    private r: U256;
-    private s: U256;
-    private blockNumber: number | null;
-    private blockHash: H256 | null;
-    private parcelIndex: number | null;
+    unsigned: Parcel;
+    v: number;
+    r: U256;
+    s: U256;
+    blockNumber: number | null;
+    blockHash: H256 | null;
+    parcelIndex: number | null;
 
     constructor(unsigned: Parcel, v: number, r: U256, s: U256, blockNumber?: number, blockHash?: H256, parcelIndex?: number) {
         this.unsigned = unsigned;
