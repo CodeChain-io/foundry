@@ -125,7 +125,7 @@ export class SDK {
     });
 
     // FIXME: use createRpcRequest
-    getBlock(hash: H256): Promise<any | null> {
+    getBlock(hash: H256): Promise<Block | null> {
         return new Promise((resolve, reject) => {
             this.client.request("chain_getBlockByHash", [`0x${hash.value}`], (err: any, res: any) => {
                 if (err) {
@@ -164,11 +164,11 @@ export class SDK {
         }
     });
 
-    getPendingParcels: () => Promise<any[] | null> = this.createRpcRequest({
+    getPendingParcels: () => Promise<SignedParcel[] | null> = this.createRpcRequest({
         name: "chain_getPendingParcels",
         toRpcParameter: () => [],
         fromRpcResult: result => {
-            return result;
+            return result.map((p: any) => SignedParcel.fromJSON(p));
         }
     });
 }
