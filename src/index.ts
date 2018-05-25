@@ -1,4 +1,4 @@
-import { H160, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block } from "./primitives/index";
+import { H160, SignedParcel, H256, U256, Invoice, Asset, AssetScheme, Block } from "./primitives/index";
 
 const jayson = require("jayson");
 
@@ -47,7 +47,7 @@ export class SDK {
     });
 
     // FIXME: use createRpcRequest
-    getParcel(hash: H256): Promise<Parcel | null> {
+    getParcel(hash: H256): Promise<SignedParcel | null> {
         return new Promise((resolve, reject) => {
             this.client.request("chain_getParcel", [`0x${hash.value}`], (err: any, res: any) => {
                 if (err) {
@@ -55,7 +55,7 @@ export class SDK {
                 } else if (res.error) {
                     return reject(res.error);
                 }
-                resolve(res.result === null ? null : Parcel.fromJSON(res.result));
+                resolve(res.result === null ? null : SignedParcel.fromJSON(res.result));
             });
         });
     }
