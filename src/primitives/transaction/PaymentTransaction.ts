@@ -1,4 +1,7 @@
-import { H160, U256 } from "../index";
+import { H160, H256, U256 } from "../index";
+import { blake256 } from "../../utils";
+
+const RLP = require("rlp");
 
 export type PaymentTransactionData = {
     nonce: U256;
@@ -26,5 +29,13 @@ export class PaymentTransaction {
             address: new H160(address),
             value: new U256(value),
         });
+    }
+
+    rlpBytes() {
+        return RLP.encode(this.toEncodeObject());
+    }
+
+    hash(): H256 {
+        return new H256(blake256(this.rlpBytes()));
     }
 }
