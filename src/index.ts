@@ -1,4 +1,4 @@
-import { H160, SignedParcel, H256, U256, Invoice, Asset, AssetScheme, Block } from "./primitives/index";
+import { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block } from "./primitives/index";
 
 const jayson = require("jayson");
 
@@ -75,6 +75,23 @@ export class SDK {
                     return resolve([]);
                 }
                 resolve(res.result.map((invoice: any) => Invoice.fromJSON(invoice)));
+            });
+        });
+    }
+
+    getRegularKey(address: H160, blockNumber?: number): Promise<H512 | null> {
+        return new Promise((resolve, reject) => {
+            this.client.request("chain_getRegularKey", [`0x${address.value}`, blockNumber || null], (err: any, res: any) => {
+                if (err) {
+                    reject(err);
+                } else if (res.error) {
+                    return reject(res.error);
+                }
+                if (res.result) {
+                    resolve(new H512(res.result));
+                } else {
+                    resolve(null);
+                }
             });
         });
     }
