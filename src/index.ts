@@ -1,4 +1,4 @@
-import { H160, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme } from "./primitives/index";
+import { H160, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block } from "./primitives/index";
 
 const jayson = require("jayson");
 
@@ -133,8 +133,10 @@ export class SDK {
                 } else if (res.error) {
                     return reject(res.error);
                 }
-                // FIXME: introduce Block primitive
-                resolve(res.result);
+                if (!res.result) {
+                    resolve(null);
+                }
+                resolve(Block.fromJSON(res.result));
             });
         });
     }

@@ -7,3 +7,4 @@ export { SignedParcel } from "./SignedParcel";
 export { Invoice } from "./Invoice";
 export { Asset } from "./Asset";
 export { AssetScheme } from "./AssetScheme";
+export { Block } from "./Block";
