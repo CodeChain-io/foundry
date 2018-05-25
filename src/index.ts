@@ -147,7 +147,7 @@ export class SDK {
             if (!result) {
                 return null;
             }
-            return new AssetScheme(result);
+            return AssetScheme.fromJSON(result);
         }
     });
 
@@ -158,7 +158,7 @@ export class SDK {
             if (!result) {
                 return null;
             }
-            return new Asset(result);
+            return Asset.fromJSON(result);
         }
     });
 

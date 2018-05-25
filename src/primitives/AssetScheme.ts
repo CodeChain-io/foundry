@@ -16,4 +16,17 @@ export class AssetScheme {
         this.registrar = data.registrar;
         this.amount = data.amount;
     }
+
+    static fromJSON(data: any) {
+        return new AssetScheme(data);
+    }
+
+    toJSON() {
+        const { metadata, amount, registrar } = this;
+        return {
+            metadata,
+            amount,
+            registrar: registrar === null ? null : registrar.value
+        };
+    }
 }
