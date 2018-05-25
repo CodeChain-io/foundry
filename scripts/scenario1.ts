@@ -138,7 +138,7 @@ sdk.getNonce(address).then(nonce => {
     return sendParcel(p, new H256("6f5b38da7dcfb2fa43bcc0e20b7c8eee8773bcd94f3f8ec32dba4e10a93256fa"));
 }).then(printTransactionInvoices).then( () => {
     const p = new Parcel(new U256(6), new U256(10), networkId, payment7, payment8);
-    return sendParcel(p, new H256("878ea9c4a01d851192c82167b03510fb45dbf18d7b411956644d7e2f92d59e9e"));
+    return sendParcel(p, new H256("3358086da063e7dfee4a3022c0b3bda9f93c6f4ae4acc17fd13e19d8306702cb"));
 }).then(printTransactionInvoices).then( () => {
     const p = new Parcel(new U256(9), new U256(10), networkId, mint1, mint2);
     return sendParcel(p, new H256("80d02ad1f6cafe0d8e2a53fa7e48cc9c4b7c602431c46108ab00027e7f91ee3b"));
@@ -215,7 +215,7 @@ function printResults(): Promise<any> {
 
 function sendParcel(parcel: Parcel, parcel_hash: H256): Promise<any> {
     return sdk.sendSignedParcel(parcel.sign(secret)).then(hash => {
-        assert(hash.isEqualTo(parcel_hash));
+        assert(hash.isEqualTo(parcel_hash), `${hash.toEncodeObject()} != ${parcel_hash.toEncodeObject()}`);
         return new Promise<H256>(resolver => {
             setTimeout(() => resolver(hash), 2000);
         });
@@ -224,9 +224,5 @@ function sendParcel(parcel: Parcel, parcel_hash: H256): Promise<any> {
         return parcel_hash;
     }).then(hash => {
         return sdk.getParcelInvoices(hash);
-    }).then (invoices => {
-        for (const invoice of invoices) {
-            assert(invoice.toEncodeObject());
-        }
     });
 }
