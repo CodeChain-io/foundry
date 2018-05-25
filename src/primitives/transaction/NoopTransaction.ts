@@ -4,4 +4,8 @@ export class NoopTransaction {
     toEncodeObject() {
         return "";
     }
+
+    toJSON() {
+        return "noop";
+    }
 }

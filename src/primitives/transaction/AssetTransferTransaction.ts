@@ -106,4 +106,14 @@ export class AssetTransferTransaction {
         const prefix = "4100000000000000";
         return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }
+
+    fromJSON() {
+        // FIXME:
+        throw new Error("Not implemented");
+    }
+
+    toJSON() {
+        // FIXME:
+        throw new Error("Not implemented");
+    }
 }

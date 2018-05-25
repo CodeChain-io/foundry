@@ -46,4 +46,14 @@ export class Parcel {
         const { nonce, fee, transactions, networkId } = result;
         return new Parcel(new U256(nonce), new U256(fee), networkId, ...transactions.map(getTransactionFromJSON));
     }
+
+    toJSON() {
+        const { nonce, fee, networkId, transactions } = this;
+        return {
+            nonce: nonce.value.toString(),
+            fee: fee.value.toString(),
+            networkId: networkId.value.toNumber(),
+            transactions: transactions.map(t => t.toJSON()),
+        };
+    }
 }
