@@ -15,7 +15,7 @@ test("sendSignedParcel", async () => {
     });
     const fee = new U256(10);
     const networkId = 17;
-    const p = new Parcel(nonce, fee, t, networkId).sign(secret);
+    const p = new Parcel(nonce, fee, networkId, t).sign(secret);
     const hash = await sdk.sendSignedParcel(p);
     expect(hash).toMatchObject({
         value: expect.stringMatching(/[0-9a-f]{32}/)
