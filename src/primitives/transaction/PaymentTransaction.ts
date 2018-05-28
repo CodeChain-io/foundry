@@ -5,7 +5,8 @@ const RLP = require("rlp");
 
 export type PaymentTransactionData = {
     nonce: U256;
-    address: H160;
+    sender: H160;
+    receiver: H160;
     value: U256;
 };
 
@@ -18,25 +19,27 @@ export class PaymentTransaction {
     }
 
     toEncodeObject() {
-        const { address, nonce, value } = this.data;
-        return [0x01, nonce.toEncodeObject(), address.toEncodeObject(), value.toEncodeObject()];
+        const { sender, receiver, nonce, value } = this.data;
+        return [0x01, nonce.toEncodeObject(), sender.toEncodeObject(), receiver.toEncodeObject(), value.toEncodeObject()];
     }
 
     static fromJSON(data: any) {
-        const { nonce, address, value } = data["payment"];
+        const { nonce, sender, receiver, value } = data["payment"];
         return new PaymentTransaction({
             nonce: new U256(nonce),
-            address: new H160(address),
+            sender: new H160(sender),
+            receiver: new H160(receiver),
             value: new U256(value),
         });
     }
 
     toJSON() {
-        const { nonce, address, value } = this.data;
+        const { nonce, sender, receiver, value } = this.data;
         return {
             [this.type]: {
                 nonce: nonce.value.toString(),
-                address: address.value,
+                sender: sender.value,
+                receiver: receiver.value,
                 value: value.value.toString(),
             }
         };

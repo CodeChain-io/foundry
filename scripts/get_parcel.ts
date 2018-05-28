@@ -15,7 +15,8 @@ sdk.getNonce(address).then(nonce => {
     console.log(nonce);
     const t = new PaymentTransaction({
         nonce: nonce.increase(),
-        address: new H160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
+        sender: address,
+        receiver: new H160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
         value: new U256("10")
     });
     const p = new Parcel(nonce, new U256(10), networkId, t);

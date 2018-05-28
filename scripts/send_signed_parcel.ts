@@ -10,7 +10,9 @@ const networkId = Number.parseInt(process.env.NETWORK_ID) || 17;
 const sdk = new SDK("http://localhost:8080");
 
 const paymentTransaction = new PaymentTransaction({
-    address: new H160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
+    nonce: 0,
+    sender: address,
+    receiver: new H160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
     value: new U256("10")
 });
 const assetMintTransaction = new AssetMintTransaction({

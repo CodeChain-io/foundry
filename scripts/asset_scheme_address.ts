@@ -10,4 +10,4 @@ const t = new AssetMintTransaction({
 });
 
 console.log("hash", t.hash());
-console.log("asset scheme address", t.getAssetSchemeAddress());
+console.log("asset scheme receiver", t.getAssetSchemeAddress());
