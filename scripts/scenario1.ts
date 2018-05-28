@@ -199,15 +199,15 @@ function printTransactionInvoices(): Promise<any> {
 }
 function printResults(): Promise<any> {
     return printTransactionInvoices()
-        .then(() => printAssetScheme(new H256("ca79dffe73be0b0ef8afc3eeef2c300b087e332486172c79096d0c42f47abc9c")))
-        .then(() => printAssetScheme(new H256("84c8d5d2328dc4ea6da1cdaddaf8cfa5ce6ba0373f724d91bdc6a69c6977183d")))
-        .then(() => printAsset(new H256("ca79dffe73be0b0ef8afc3eeef2c300b087e332486172c79096d0c42f47abc9c"), 0))
-        .then(() => printAsset(new H256("84c8d5d2328dc4ea6da1cdaddaf8cfa5ce6ba0373f724d91bdc6a69c6977183d"), 0))
-        .then(() => printAsset(new H256("4b770ac940e476148754f903a6cb2448be89cbfa0d89bd398a9edb03e913ae01"), 0))
-        .then(() => printAsset(new H256("4b770ac940e476148754f903a6cb2448be89cbfa0d89bd398a9edb03e913ae01"), 1))
-        .then(() => printAsset(new H256("4b770ac940e476148754f903a6cb2448be89cbfa0d89bd398a9edb03e913ae01"), 2))
-        .then(() => printAsset(new H256("4b770ac940e476148754f903a6cb2448be89cbfa0d89bd398a9edb03e913ae01"), 3))
-        .then(() => printAsset(new H256("236ecc7778acf5dad60fd2b0dd0fb9fefe5a2bf466e244d75de180f9687c1b82"), 0))
+        .then(() => printAssetScheme(mint1.hash()))
+        .then(() => printAssetScheme(mint2.hash()))
+        .then(() => printAsset(mint1.hash(), 0))
+        .then(() => printAsset(mint2.hash(), 0))
+        .then(() => printAsset(transfer1.hash(), 0))
+        .then(() => printAsset(transfer1.hash(), 1))
+        .then(() => printAsset(transfer1.hash(), 2))
+        .then(() => printAsset(transfer1.hash(), 3))
+        .then(() => printAsset(transfer2.hash(), 0))
         .catch(err => {
             console.error(err);
         });
