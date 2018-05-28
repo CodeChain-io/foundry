@@ -159,7 +159,7 @@ sdk.getNonce(address).then(nonce => {
 function printAsset(hash: H256, index: number) {
     return sdk.getAsset(hash, index).then(asset => {
         if (asset) {
-            console.log(asset);
+            console.log(JSON.stringify(asset.toJSON()));
         } else {
             console.log("No asset");
         }
@@ -168,7 +168,7 @@ function printAsset(hash: H256, index: number) {
 function printAssetScheme(hash: H256) {
     return sdk.getAssetScheme(hash).then(scheme => {
         if (scheme) {
-            console.log(scheme);
+            console.log(JSON.stringify(scheme.toJSON()));
         } else {
             console.log("No scheme");
         }
