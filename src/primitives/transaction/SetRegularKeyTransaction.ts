@@ -1,6 +1,7 @@
-import { H512, U256 } from "../index";
+import { H160, H512, U256 } from "../index";
 
 export type SetRegularKeyTransactionData = {
+    address: H160;
     nonce: U256;
     key: H512;
 };
@@ -14,17 +15,19 @@ export class SetRegularKeyTransaction {
     }
 
     static fromJSON(data: any) {
-        const { nonce, key } = data["setRegularKey"];
+        const { address, nonce, key } = data["setRegularKey"];
         return new this({
+            address: new H160(address),
             nonce: new U256(nonce),
             key: new H512(key),
         });
     }
 
     toJSON() {
-        const { nonce, key } = this.data;
+        const { address, nonce, key } = this.data;
         return {
             [this.type]: {
+                address: address.value,
                 nonce: nonce.value.toString(),
                 key: key.value,
             }
@@ -32,7 +35,7 @@ export class SetRegularKeyTransaction {
     }
 
     toEncodeObject() {
-        const { nonce, key } = this.data;
-        return [2, nonce.toEncodeObject(), key.toEncodeObject()];
+        const { address, nonce, key } = this.data;
+        return [2, address.toEncodeObject(), nonce.toEncodeObject(), key.toEncodeObject()];
     }
 }

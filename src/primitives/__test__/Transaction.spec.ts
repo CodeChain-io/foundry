@@ -38,6 +38,7 @@ test("PaymentTransaction toJSON", () => {
 
 test("SetRegularKeyTransaction toJSON", () => {
     const t = new SetRegularKeyTransaction({
+        address: new H160("0x0000000000000000000000000000000000000000"),
         nonce: new U256(22),
         key: new H512("22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222"),
     });
