@@ -18,7 +18,8 @@ const mint1 = new AssetMintTransaction({
     lockScriptHash: emptyLockScriptHash,
     parameters: [],
     amount: null,
-    registrar: new H160("3f4aa1fedf1f54eeb03b759deadb36676b184911")
+    registrar: new H160("3f4aa1fedf1f54eeb03b759deadb36676b184911"),
+    nonce: 0,
 });
 
 const mint2 = new AssetMintTransaction({
@@ -26,7 +27,8 @@ const mint2 = new AssetMintTransaction({
     lockScriptHash: emptyLockScriptHash,
     parameters: [],
     amount: 100,
-    registrar: null
+    registrar: null,
+    nonce: 0,
 });
 
 
@@ -141,15 +143,15 @@ sdk.getNonce(address).then(nonce => {
     return sendParcel(p, new H256("3358086da063e7dfee4a3022c0b3bda9f93c6f4ae4acc17fd13e19d8306702cb"));
 }).then(printTransactionInvoices).then( () => {
     const p = new Parcel(new U256(9), new U256(10), networkId, mint1, mint2);
-    return sendParcel(p, new H256("80d02ad1f6cafe0d8e2a53fa7e48cc9c4b7c602431c46108ab00027e7f91ee3b"));
+    return sendParcel(p, new H256("aa761e78ee92ac5a94ded11bdd7ed0774737452c042805989b62dad4951f7051"));
 }).then(printResults).then( () => {
 }).then( () => {
     const p = new Parcel(new U256(10), new U256(10), networkId, transfer1);
-    return sendParcel(p, new H256("1a8e4e83fed75e8bc526544ebbd448031427f88febfd121fc0cf4d58dee150af"));
+    return sendParcel(p, new H256("d4af0ed1be40511ba0b8c705becdef5f049ea4bac0cee56ddc487276f2511dc6"));
 }).then(printResults).then( () => {
 }).then( () => {
     const p = new Parcel(new U256(11), new U256(10), networkId, transfer2);
-    return sendParcel(p, new H256("7554c1fd6246f5126eea2ece509b32c9a803ec4a38765087a8294a4023b7728e"));
+    return sendParcel(p, new H256("72390e25526a83b2f7b855c6f0f8e13045601345affce19ec33079859c2df159"));
 }).then(printResults).then( () => {
     console.log("Succeed");
 }).catch( err => {

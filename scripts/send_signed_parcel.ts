@@ -19,6 +19,7 @@ const assetMintTransaction = new AssetMintTransaction({
     parameters: [],
     amount: 100,
     registrar: null,
+    nonce: 0,
 });
 
 sdk.getNonce(address).then(nonce => {

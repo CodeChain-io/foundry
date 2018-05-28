@@ -6,6 +6,7 @@ const t = new AssetMintTransaction({
     parameters: [],
     amount: 100,
     registrar: null
+    nonce: 0,
 });
 
 console.log("hash", t.hash());

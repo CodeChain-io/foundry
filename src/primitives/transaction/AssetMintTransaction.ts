@@ -9,6 +9,7 @@ export type AssetMintTransactionData = {
     parameters: Buffer[];
     amount: number | null;
     registrar: H160 | null;
+    nonce: number;
 };
 
 export class AssetMintTransaction {
@@ -20,18 +21,19 @@ export class AssetMintTransaction {
     }
 
     static fromJSON(data: any) {
-        const { metadata, lockScriptHash, parameters, amount, registrar } = data["assetMint"];
+        const { metadata, lockScriptHash, parameters, amount, registrar, nonce } = data["assetMint"];
         return new this({
             metadata,
             lockScriptHash: new H256(lockScriptHash),
             parameters,
             amount: amount === null ? null : amount,
             registrar: registrar === null ? null : new H160(registrar),
+            nonce,
         });
     }
 
     toJSON() {
-        const { metadata, lockScriptHash, parameters, amount, registrar } = this.data;
+        const { metadata, lockScriptHash, parameters, amount, registrar, nonce } = this.data;
         return {
             [this.type]: {
                 metadata,
@@ -39,19 +41,21 @@ export class AssetMintTransaction {
                 parameters,
                 amount,
                 registrar: registrar === null ? null : registrar.value,
+                nonce,
             }
         };
     }
 
     toEncodeObject() {
-        const { metadata, lockScriptHash, parameters, amount, registrar } = this.data;
+        const { metadata, lockScriptHash, parameters, amount, registrar, nonce } = this.data;
         return [
             3,
             metadata,
             lockScriptHash.toEncodeObject(),
             parameters,
             amount ? [amount] : [],
-            registrar ? [registrar.toEncodeObject()] : []
+            registrar ? [registrar.toEncodeObject()] : [],
+            nonce
         ];
     }
 

@@ -73,10 +73,12 @@ export class AssetTransferTransaction {
     private inputs: AssetTransferInput[];
     private outputs: AssetTransferOutput[];
     private networkId: number;
-    constructor(networkId: number, { inputs, outputs }: AssetTransferTransactionData) {
+    private nonce: number;
+    constructor(networkId: number, { inputs, outputs }: AssetTransferTransactionData, nonce = 0) {
         this.inputs = inputs.map(input => new AssetTransferInput(input));
         this.outputs = outputs.map(output => new AssetTransferOutput(output));
         this.networkId = networkId;
+        this.nonce = nonce;
     }
 
     toEncodeObject() {
@@ -84,7 +86,8 @@ export class AssetTransferTransaction {
             4,
             this.networkId,
             this.inputs.map(input => input.toEncodeObject()),
-            this.outputs.map(output => output.toEncodeObject())
+            this.outputs.map(output => output.toEncodeObject()),
+            this.nonce
         ];
     }
 
