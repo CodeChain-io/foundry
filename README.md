@@ -32,5 +32,5 @@ Run `yarn test`
 
 # Documentations
 
-[Basic Types](https://github.com/kodebox-io/codechain-sdk-js/wiki/Basic-Types)
-[API Specifications](https://github.com/kodebox-io/codechain-sdk-js/wiki/API-Specifications)
+- [Basic Types](https://github.com/kodebox-io/codechain-sdk-js/wiki/Basic-Types)
+- [API Specifications](https://github.com/kodebox-io/codechain-sdk-js/wiki/API-Specifications)
