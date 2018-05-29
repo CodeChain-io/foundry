@@ -1,11 +1,10 @@
-# CodeChain SDK for JavaScript [![Build Status](https://travis-ci.com/kodebox-io/codechain-sdk-js.svg?token=ekWhXzYw9sUsATQJSpJ1&branch=master)](https://travis-ci.com/kodebox-io/codechain-sdk-js)
+# codechain-sdk-js [![Build Status](https://travis-ci.com/kodebox-io/codechain-sdk-js.svg?token=ekWhXzYw9sUsATQJSpJ1&branch=master)](https://travis-ci.com/kodebox-io/codechain-sdk-js)
 
-TBA
+A JavaScript SDK for CodeChain
 
 # Features
 
  * Connect to a [CodeChain JSON-RPC](https://github.com/kodebox-io/codechain/wiki/JSON-RPC) server from Node.js ~~or a web browser~~
- * ~~Generate new account~~ for CodeChain
  * Sign a parcel or a transaction
 
 # Getting Started
