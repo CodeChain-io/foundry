@@ -3,14 +3,34 @@
 TBA
 
 # Features
-TBA
 
-# How to
+ * Connect to a [CodeChain JSON-RPC](https://github.com/kodebox-io/codechain/wiki/JSON-RPC) server from Node.js ~~or a web browser~~
+ * ~~Generate new account~~ for CodeChain
+ * Sign a parcel or a transaction
+
+# Getting Started
+
 ## Install
-TBA
+
+```
+yarn install
+```
 
 ## Run tests
-TBA
+
+### Unit tests
+
+```
+yarn test
+```
+
+### Integration tests
+
+The integration tests requires the JSON-RPC server is listening on localhost:8080
+
+You can specify the pattern with `-t` option.
+
+`yarn test-int` or `yarn test-int -t ping`
 
 # API Specifications
 
