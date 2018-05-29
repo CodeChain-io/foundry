@@ -5,7 +5,7 @@ A JavaScript SDK for CodeChain
 # Features
 
  * Connect to a [CodeChain JSON-RPC](https://github.com/kodebox-io/codechain/wiki/JSON-RPC) server from Node.js ~~or a web browser~~
- * Sign a parcel or a transaction
+ * Generate an account, create a transacton, sign a parcel.
 
 # Getting Started
 
@@ -19,18 +19,18 @@ yarn install
 
 ### Unit tests
 
-```
-yarn test
-```
+Run `yarn test`
 
-### Integration tests
+### Build and Integration tests
 
-The integration tests requires the JSON-RPC server is listening on localhost:8080
+1. Run `yarn build` command.
+1. Run CodeChain RPC server.
+1. Set `CODECHAIN_RPC_HTTP` environment variable with JSON-RPC HTTP server. (e.g. `https://localhost:8080`)
+1. Run `yarn test-int` command.
+   > It is also possible to indicate specific testcase with `-t` option. (e.g. `yarn test-int -t getBlockNumber`)
 
-You can specify the pattern with `-t` option.
 
-`yarn test-int` or `yarn test-int -t ping`
+# Documentations
 
-# API Specifications
-
-TBA
+[Basic Types](https://github.com/kodebox-io/codechain-sdk-js/wiki/Basic-Types)
+[API Specifications](https://github.com/kodebox-io/codechain-sdk-js/wiki/API-Specifications)
