@@ -10,7 +10,8 @@ test("sendSignedParcel", async () => {
     const nonce = await sdk.getNonce(address);
     const t = new PaymentTransaction({
         nonce: nonce.increase(),
-        address,
+        sender: address,
+        receiver: address,
         value: new U256(0)
     });
     const fee = new U256(10);

@@ -7,7 +7,7 @@ const sdk = new SDK(SERVER_URL);
 test("getParcelInvoices", async () => {
     const hash = await payment();
     const invoice = await sdk.getParcelInvoices(hash);
-    expect(invoice).toEqual({ "outcome": "Success" });
+    expect(invoice).toEqual([{ "outcome": "Success" }]);
 });
 
 test("getParcelInvoices - null", async () => {

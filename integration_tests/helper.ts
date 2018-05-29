@@ -9,6 +9,7 @@ const address = new H160(privateKeyToAddress(secret.value));
 
 export const mintAsset = async ({ metadata, amount, lockScriptHash, parameters, registrar }) => {
     const assetMintTransaction = new AssetMintTransaction({
+        nonce: 1,
         metadata,
         lockScriptHash,
         parameters,
@@ -32,7 +33,8 @@ export const payment = async () => {
     const nonce = await sdk.getNonce(address);
     const t = new PaymentTransaction({
         nonce: nonce.increase(),
-        address,
+        sender: address,
+        receiver: address,
         value: new U256(0)
     });
     const fee = new U256(10);
@@ -51,11 +53,20 @@ export const paymentTwice = async () => {
     const nonce3 = nonce2.increase();
     const nonce4 = nonce3.increase();
 
-    const t1 = new PaymentTransaction({ nonce: nonce2, address, value});
+    const t1 = new PaymentTransaction({
+        nonce: nonce2,
+        sender: address,
+        receiver: address,
+        value});
     const p1 = new Parcel(nonce1, fee, networkId, t1).sign(secret);
     await sdk.sendSignedParcel(p1);
 
-    const t2 = new PaymentTransaction({ nonce: nonce4, address, value});
+    const t2 = new PaymentTransaction({
+        nonce: nonce4,
+        sender: address,
+        receiver: address,
+        value
+    });
     const p2 = new Parcel(nonce3, fee, networkId, t2).sign(secret);
     await sdk.sendSignedParcel(p2);
 };
@@ -63,7 +74,11 @@ export const paymentTwice = async () => {
 export const setRegularKey = async () => {
     const nonce = await sdk.getNonce(address);
     const key = new H512("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
-    const t = new SetRegularKeyTransaction({ nonce: nonce.increase(), key });
+    const t = new SetRegularKeyTransaction({
+        address,
+        nonce: nonce.increase(),
+        key
+    });
     const fee = new U256(10);
     const networkId = 17;
     const p = new Parcel(nonce, fee, networkId, t);
