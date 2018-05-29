@@ -19,7 +19,7 @@ yarn install
 
 Run `yarn test`
 
-### Building and Running integration tests
+## Building and Running integration tests
 
 1. Run `yarn build` command.
 1. Run CodeChain RPC server.
