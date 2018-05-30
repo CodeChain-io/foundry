@@ -14,7 +14,7 @@ export class SignedParcel {
 
     constructor(unsigned: Parcel, v: number, r: U256, s: U256, blockNumber?: number, blockHash?: H256, parcelIndex?: number) {
         this.unsigned = unsigned;
-        this.v = v + 27;
+        this.v = v;
         this.r = r;
         this.s = s;
         this.blockNumber = blockNumber || null;
@@ -69,7 +69,7 @@ export class SignedParcel {
             fee: fee.value.toString(),
             transactions: transactions.map(t => t.toJSON()),
             networkId: networkId.value.toNumber(),
-            v: v - 27,
+            v,
             r: r.value.toString(),
             s: s.value.toString(),
         };
