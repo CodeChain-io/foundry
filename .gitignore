@@ -2,6 +2,7 @@ yarn.lock
 node_modules
 
 /lib/
+/docs/
 
 # Visual Studio Code - https://code.visualstudio.com/
 .settings/

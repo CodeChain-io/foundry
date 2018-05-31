@@ -6,7 +6,9 @@
     "lint": "./node_modules/.bin/tslint -c tslint.json \"src/**/*.ts\"",
     "build": "./node_modules/.bin/tsc",
     "test": "yarn lint && ./node_modules/jest/bin/jest.js --env node",
-    "test-int": "./node_modules/jest/bin/jest.js --env node --roots integration_tests"
+    "test-int": "./node_modules/jest/bin/jest.js --env node --roots integration_tests",
+    "docs": "./node_modules/.bin/typedoc --out docs",
+    "docs-dev": "./node_modules/.bin/nodemon -e ts --watch src ./node_modules/.bin/typedoc --out docs"
   },
   "repository": {
     "type": "git",
@@ -38,8 +40,10 @@
     "@types/lodash": "^4.14.108",
     "@types/node": "^9.6.6",
     "jest": "^22.4.3",
+    "nodemon": "^1.17.5",
     "ts-jest": "^22.4.4",
     "tslint": "^5.9.1",
+    "typedoc": "^0.11.1",
     "typescript": "^2.8.3"
   }
 }
