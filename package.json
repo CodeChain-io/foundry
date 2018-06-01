@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "description": "A JavaScript SDK for CodeChain",
   "scripts": {
-    "lint": "./node_modules/.bin/tslint -c tslint.json \"src/**/*.ts\"",
-    "build": "./node_modules/.bin/tsc",
-    "test": "yarn lint && ./node_modules/jest/bin/jest.js --env node",
-    "test-int": "./node_modules/jest/bin/jest.js --env node --roots integration_tests",
-    "docs": "./node_modules/.bin/typedoc --out docs",
-    "docs-dev": "./node_modules/.bin/nodemon -e ts --watch src ./node_modules/.bin/typedoc --out docs"
+    "lint": "tslint -c tslint.json \"src/**/*.ts\"",
+    "build": "tsc",
+    "test": "npm run lint && jest --env node",
+    "test-int": "jest --env node --roots integration_tests",
+    "docs": "typedoc --out docs",
+    "docs-dev": "nodemon -e ts --watch src ./node_modules/.bin/typedoc --out docs"
   },
   "repository": {
     "type": "git",
