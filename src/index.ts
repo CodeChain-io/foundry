@@ -192,3 +192,4 @@ export class SDK {
 
 export * from "./primitives/";
 export * from "./primitives/transaction";
+export * from "./utils";
