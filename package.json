@@ -7,7 +7,7 @@
     "build": "tsc",
     "test": "npm run lint && jest --env node",
     "test-int": "jest --env node --roots integration_tests",
-    "docs": "typedoc --out docs --mode file",
+    "docs": "typedoc --out docs --mode file --excludePrivate --excludeProtected",
     "docs-dev": "nodemon -e ts --watch src --exec 'yarn docs'"
   },
   "repository": {
