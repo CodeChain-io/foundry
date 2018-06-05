@@ -31,6 +31,10 @@ export class SDK {
         };
     }
 
+    /**
+     * Sends ping to check whether CodeChain's RPC server is responding or not.
+     * @returns       return string "pong"
+     */
     ping: () => Promise<string> = this.createRpcRequest({
         name: "ping",
         toRpcParameter: () => [],
