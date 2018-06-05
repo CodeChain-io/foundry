@@ -13,6 +13,10 @@ const EC = require("elliptic").ec;
 /**
  * @hidden
  */
+const secp256k1 = new EC("secp256k1");
+/**
+ * @hidden
+ */
 const RLP = require("rlp");
 
 const toHexByte = (byte: number) => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16);
@@ -46,18 +50,12 @@ export const ripemd160 = (buffer: Buffer | string): string => {
     return new ripemd().update(buffer).digest("hex");
 };
 
-export const signEcdsa = (() => {
-    const ec = new EC("secp256k1");
-    return (message: string, priv: string) => {
-        const key = ec.keyFromPrivate(priv);
-        return key.sign(message, { "canonical": true });
-    };
-})();
+export const signEcdsa = (message: string, priv: string) => {
+    const key = secp256k1.keyFromPrivate(priv);
+    return key.sign(message, { "canonical": true });
+};
 
-export const privateKeyToAddress = (() => {
-    const ec = new EC("secp256k1");
-    return (priv: string) => {
-        const key = ec.keyFromPrivate(priv);
-        return ripemd160(blake256(key.getPublic().encode("hex").slice(2)));
-    };
-})();
+export const privateKeyToAddress = (priv: string) => {
+    const key = secp256k1.keyFromPrivate(priv);
+    return ripemd160(blake256(key.getPublic().encode("hex").slice(2)));
+};
