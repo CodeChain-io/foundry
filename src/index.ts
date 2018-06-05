@@ -1,5 +1,8 @@
 import { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block } from "./primitives/index";
 
+/**
+ * @hidden
+ */
 const jayson = require("jayson");
 
 interface RpcRequest {

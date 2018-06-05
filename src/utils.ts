@@ -1,6 +1,19 @@
+/**
+ * @hidden
+ */
 const blake = require("blakejs");
+/**
+ * @hidden
+ */
 const ripemd = require("ripemd160");
+/**
+ * @hidden
+ */
 const EC = require("elliptic").ec;
+/**
+ * @hidden
+ */
+const RLP = require("rlp");
 
 const toHexByte = (byte: number) => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16);
 
