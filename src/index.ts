@@ -41,6 +41,11 @@ export class SDK {
         fromRpcResult: result => result
     });
 
+    /**
+     * Sends SignedParcel to CodeChain's network.
+     * @param t SignedParcel
+     * @returns SignedParcel's hash.
+     */
     sendSignedParcel: (t: SignedParcel) => Promise<H256> = this.createRpcRequest({
         name: "chain_sendSignedParcel",
         toRpcParameter: (t: SignedParcel) => {
@@ -51,6 +56,11 @@ export class SDK {
     });
 
     // FIXME: use createRpcRequest
+    /**
+     * Gets SignedParcel of given hash. Else returns null.
+     * @param hash SignedParcel's hash
+     * @returns SignedParcel, or null when SignedParcel was not found.
+     */
     getParcel(hash: H256): Promise<SignedParcel | null> {
         return new Promise((resolve, reject) => {
             this.client.request("chain_getParcel", [`0x${hash.value}`], (err: any, res: any) => {
@@ -121,24 +131,42 @@ export class SDK {
         });
     }
 
+    /**
+     * Gets balance of a user of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns balance recorded in the most recent block.
+     * @param address the user's address
+     * @param blockNumber the specific block number to get user's balance at given address.
+     * @returns balance of user at specified block, or null when address was not found.
+     */
     getBalance: (address: H160, blockNumber?: number) => Promise<U256 | null> = this.createRpcRequest({
         name: "chain_getBalance",
         toRpcParameter: (address: H160, blockNumber?: number) => [`0x${address.value}`, blockNumber],
         fromRpcResult: result => result ? new U256(result) : null
     });
-
+    /**
+     * Gets nonce of a user of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns nonce recorded in the most recent block.
+     * @param address the user's address
+     * @param blockNumber the specific block number to get user's nonce at given address.
+     * @returns nonce of user at specified block, or null when address was not found.
+     */
     getNonce: (address: H160, blockNumber?: number) => Promise<U256 | null> = this.createRpcRequest({
         name: "chain_getNonce",
         toRpcParameter: (address: H160, blockNumber?: number) => [`0x${address.value}`, blockNumber],
         fromRpcResult: result => result ? new U256(result) : null
     });
-
+    /**
+     * Gets number of the latest block.
+     * @returns number of the latest block.
+     */
     getBlockNumber: () => Promise<number> = this.createRpcRequest({
         name: "chain_getBlockNumber",
         toRpcParameter: () => [],
         fromRpcResult: result => result
     });
-
+    /**
+     * Gets block hash of given blockNumber.
+     * @param blockNumber the block number of which to get the block hash of.
+     * @returns blockHash, if block exists. Else, returns null.
+     */
     getBlockHash: (blockNumber: number) => Promise<H256 | null> = this.createRpcRequest({
         name: "chain_getBlockHash",
         toRpcParameter: (blockNumber: number) => [blockNumber],
