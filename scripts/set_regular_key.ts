@@ -1,7 +1,7 @@
 import { Parcel, H256, U256, H160, H512 } from "../src/primitives";
 import { privateKeyToAddress } from "../src/utils";
 import { SDK } from "../src";
-import { NoopTransaction, PaymentTransaction, AssetMintTransaction, AssetTransferTransaction } from "../src/primitives/transaction/";
+import { PaymentTransaction, AssetMintTransaction, AssetTransferTransaction } from "../src/primitives/transaction/";
 import { SetRegularKeyTransaction } from "../src/primitives/transaction/SetRegularKeyTransaction";
 
 const secret = new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd");
