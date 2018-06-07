@@ -229,13 +229,11 @@ export class SDK {
      * Gets pending parcels.
      * @returns List of SignedParcel, with each parcel has null for blockNumber/blockHash/parcelIndex.
      */
-    getPendingParcels(): Promise<SignedParcel[] | null> {
+    getPendingParcels(): Promise<SignedParcel[]> {
         return this.createRpcRequest({
             name: "chain_getPendingParcels",
             toRpcParameter: () => [],
-            fromRpcResult: result => {
-                return result.map((p: any) => SignedParcel.fromJSON(p));
-            }
+            fromRpcResult: result => result.map((p: any) => SignedParcel.fromJSON(p))
         })();
     }
 }
