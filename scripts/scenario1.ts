@@ -129,95 +129,101 @@ const payment8 = new PaymentTransaction({
 });
 
 
-sdk.getNonce(address).then(nonce => {
+sdk.getNonce(address).then(async (nonce) => {
     if (!nonce) {
         throw new Error("No nonce");
     }
     console.log(`Current nonce: ${nonce.value}`);
-}).then(printTransactionInvoices).then( () => {
-    const p = new Parcel(new U256(0), new U256(10), networkId);
-    return sendParcel(p, new H256("06bedb2443dcb609597ea74d5dcee9b3bf35fc0ff7a5271ff144c7faa9d7ef69"));
-}).then(printTransactionInvoices).then( () => {
-    const p = new Parcel(new U256(1), new U256(10), networkId, payment2, payment3);
-    return sendParcel(p, new H256("b21d26a6ff8dc326ba949d331d66893ffca05397241a65cb59cadb7d27530311"));
-}).then(printTransactionInvoices).then( () => {
-    const p = new Parcel(new U256(4), new U256(10), networkId, payment5);
-    return sendParcel(p, new H256("b5c44620cd36b73029b847f1a338470c2dfb0f8782b7b34d04621f77c15bb311"));
-}).then(printTransactionInvoices).then( () => {
-    const p = new Parcel(new U256(6), new U256(10), networkId, payment7, payment8);
-    return sendParcel(p, new H256("fe39587fa0153359db5944cc761d82ceb7951ce22c7dfc38e9c7564eb9eed074"));
-}).then(printTransactionInvoices).then( () => {
-    const p = new Parcel(new U256(9), new U256(10), networkId, mint1, mint2);
-    return sendParcel(p, new H256("2ed039d66c1c76d271556489a2046ebf464570abe431120025b497c686ec773f"));
-}).then(printResults).then( () => {
-}).then( () => {
-    const p = new Parcel(new U256(10), new U256(10), networkId, transfer1);
-    return sendParcel(p, new H256("3bafc24fb3ccfbb0da99269a7b6517e1adc007b541e970efa1caad26e8fa8ec5"));
-}).then(printResults).then( () => {
-}).then( () => {
-    const p = new Parcel(new U256(11), new U256(10), networkId, transfer2);
-    return sendParcel(p, new H256("b04f0aecde43c1860d4b30904b531d93c7b424bb87b9221b6ba6a68059ee78b0"));
-}).then(printResults).then( () => {
+    await printTransactionInvoices();
+
+    const parcel0 = new Parcel(new U256(0), new U256(10), networkId);
+    await sendParcel(parcel0, new H256("06bedb2443dcb609597ea74d5dcee9b3bf35fc0ff7a5271ff144c7faa9d7ef69"));
+    await printTransactionInvoices();
+
+    const parcel1 = new Parcel(new U256(1), new U256(10), networkId, payment2, payment3);
+    await sendParcel(parcel1, new H256("b21d26a6ff8dc326ba949d331d66893ffca05397241a65cb59cadb7d27530311"));
+    await printTransactionInvoices();
+
+    const parcel2 = new Parcel(new U256(4), new U256(10), networkId, payment5);
+    await sendParcel(parcel2, new H256("b5c44620cd36b73029b847f1a338470c2dfb0f8782b7b34d04621f77c15bb311"));
+    await printTransactionInvoices();
+
+    const parcel3 = new Parcel(new U256(6), new U256(10), networkId, payment7, payment8);
+    await sendParcel(parcel3, new H256("fe39587fa0153359db5944cc761d82ceb7951ce22c7dfc38e9c7564eb9eed074"));
+    await printTransactionInvoices();
+
+    const parcel4 = new Parcel(new U256(9), new U256(10), networkId, mint1, mint2);
+    await sendParcel(parcel4, new H256("2ed039d66c1c76d271556489a2046ebf464570abe431120025b497c686ec773f"));
+    await printResults();
+
+    const parcel5 = new Parcel(new U256(10), new U256(10), networkId, transfer1);
+    await sendParcel(parcel5, new H256("3bafc24fb3ccfbb0da99269a7b6517e1adc007b541e970efa1caad26e8fa8ec5"));
+    await printResults();
+
+    const parcel6 = new Parcel(new U256(11), new U256(10), networkId, transfer2);
+    await sendParcel(parcel6, new H256("b04f0aecde43c1860d4b30904b531d93c7b424bb87b9221b6ba6a68059ee78b0"));
+    await printResults();
+
     console.log("Succeed");
 }).catch( err => {
     console.error(err);
 });
 
-function printAsset(hash: H256, index: number) {
-    return sdk.getAsset(hash, index).then(asset => {
-        if (asset) {
-            console.log(JSON.stringify(asset.toJSON()));
-        } else {
-            console.log("No asset");
-        }
-    });
-}
-function printAssetScheme(hash: H256) {
-    return sdk.getAssetScheme(hash).then(scheme => {
-        if (scheme) {
-            console.log(JSON.stringify(scheme.toJSON()));
-        } else {
-            console.log("No scheme");
-        }
-    });
-}
-function printTransactionInvoice(prefix: string, hash: H256) {
-    return sdk.getTransactionInvoice(hash).then(invoice => {
-        if (invoice) {
-            console.log(prefix, invoice);
-        } else {
-            console.log(prefix, "no invoice")
-        }
-    });
-
+async function printAsset(hash: H256, index: number) {
+    const asset = await sdk.getAsset(hash, index);
+    if (asset) {
+        console.log(JSON.stringify(asset.toJSON()));
+    } else {
+        console.log("No asset");
+    }
 }
 
-function printTransactionInvoices(): Promise<any> {
+async function printAssetScheme(hash: H256) {
+    const scheme = await sdk.getAssetScheme(hash);
+    if (scheme) {
+        console.log(JSON.stringify(scheme.toJSON()));
+    } else {
+        console.log("No scheme");
+    }
+}
+
+async function printTransactionInvoice(prefix: string, hash: H256) {
+    const invoice = await sdk.getTransactionInvoice(hash);
+    if (invoice) {
+        console.log(prefix, invoice);
+    } else {
+        console.log(prefix, "no invoice")
+    }
+}
+
+async function printTransactionInvoices(): Promise<any> {
     console.log("=====================");
-    return printTransactionInvoice("payment2", payment2.hash())
-        .then(() => printTransactionInvoice("payment3", payment3.hash()))
-        .then(() => printTransactionInvoice("payment5", payment5.hash()))
-        .then(() => printTransactionInvoice("payment7", payment7.hash()))
-        .then(() => printTransactionInvoice("payment8", payment8.hash()))
-        .then(() => printTransactionInvoice("mint1", mint1.hash()))
-        .then(() => printTransactionInvoice("mint2", mint2.hash()))
-        .then(() => printTransactionInvoice("transfer1", transfer1.hash()))
-        .then(() => printTransactionInvoice("transfer2", transfer2.hash()));
+    await printTransactionInvoice("payment2", payment2.hash());
+    await printTransactionInvoice("payment3", payment3.hash());
+    await printTransactionInvoice("payment5", payment5.hash());
+    await printTransactionInvoice("payment7", payment7.hash());
+    await printTransactionInvoice("payment8", payment8.hash());
+    await printTransactionInvoice("mint1", mint1.hash());
+    await printTransactionInvoice("mint2", mint2.hash());
+    await printTransactionInvoice("transfer1", transfer1.hash());
+    await printTransactionInvoice("transfer2", transfer2.hash());
 }
-function printResults(): Promise<any> {
-    return printTransactionInvoices()
-        .then(() => printAssetScheme(mint1.hash()))
-        .then(() => printAssetScheme(mint2.hash()))
-        .then(() => printAsset(mint1.hash(), 0))
-        .then(() => printAsset(mint2.hash(), 0))
-        .then(() => printAsset(transfer1.hash(), 0))
-        .then(() => printAsset(transfer1.hash(), 1))
-        .then(() => printAsset(transfer1.hash(), 2))
-        .then(() => printAsset(transfer1.hash(), 3))
-        .then(() => printAsset(transfer2.hash(), 0))
-        .catch(err => {
-            console.error(err);
-        });
+
+async function printResults(): Promise<any> {
+    try {
+        await printTransactionInvoices();
+        await printAssetScheme(mint1.hash());
+        await printAssetScheme(mint2.hash());
+        await printAsset(mint1.hash(), 0);
+        await printAsset(mint2.hash(), 0);
+        await printAsset(transfer1.hash(), 0);
+        await printAsset(transfer1.hash(), 1);
+        await printAsset(transfer1.hash(), 2);
+        await printAsset(transfer1.hash(), 3);
+        await printAsset(transfer2.hash(), 0);
+    } catch(err) {
+        console.error(err);
+    };
 }
 
 function sendParcel(parcel: Parcel, parcel_hash: H256): Promise<any> {
