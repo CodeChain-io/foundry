@@ -24,8 +24,8 @@ const sdk = new SDK("http://localhost:8080");
 const senderNonce = new U256(0);
 const tx = new PaymentTransaction({
     nonce: senderNonce,
-    sender: new H160("0x1111111111111111111111111111111111111111"),
-    receiver: new H160("0x2222222222222222222222222222222222222222"),
+    sender: new H160("0x5bcd7c840f108172d94a4d084af711d879630fe6"),
+    receiver: new H160("0x744142069fe2d03d48e61734cbe564fcc94e6e31"),
     value: new U256(10000)
 });
 
@@ -36,7 +36,7 @@ const networkId = 17;
 const parcel = new Parcel(parcelSignerNonce, fee, networkId, tx);
 
 // Signing Parcel
-const parcelSignerSecret = new H256("0x3434343434343434343434343434343434343434343434343434343434343434");
+const parcelSignerSecret = new H256("b15139f97aad25ae0330432aeb091ef962eee643e41dc07a1e04457c5c2c6088");
 const signedParcel = parcel.sign(parcelSignerSecret);
 sdk.sendSignedParcel(signedParcel).then((hash) => {
     console.log(`Parcel sent:`, hash);
