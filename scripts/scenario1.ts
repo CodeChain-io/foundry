@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { AssetTransferTransaction, AssetMintTransaction, PaymentTransaction } from "../src/primitives/transaction/";
+import { AssetTransferTransaction, AssetMintTransaction, PaymentTransaction, AssetOutPoint, AssetTransferInput, AssetTransferOutput } from "../src/primitives/transaction/";
 import { Parcel, H256, U256, H160 } from "../src/primitives";
 import { SDK } from "../src";
 import { privateKeyToAddress } from "../src/utils";
@@ -33,66 +33,66 @@ const mint2 = new AssetMintTransaction({
 
 
 const transfer1 = (() => {
-    const inputs = [ {
-        prevOut: {
+    const inputs = [ new AssetTransferInput({
+        prevOut: new AssetOutPoint({
             transactionHash: mint2.hash(),
             index: 0,
             assetType: mint2.getAssetSchemeAddress(),
             amount: 100
-        },
+        }),
         lockScript: Buffer.from([0x2, 0x1]),
         unlockScript: Buffer.from([])
-    }];
-    const outputs = [{
+    })];
+    const outputs = [new AssetTransferOutput({
         lockScriptHash: emptyLockScriptHash,
         parameters: [],
         assetType: mint2.getAssetSchemeAddress(),
         amount: 93
-    }, {
+    }), new AssetTransferOutput({
         lockScriptHash: emptyLockScriptHash,
         parameters: [],
         assetType: mint2.getAssetSchemeAddress(),
         amount: 4
-    }, {
+    }), new AssetTransferOutput({
         lockScriptHash: emptyLockScriptHash,
         parameters: [],
         assetType: mint2.getAssetSchemeAddress(),
         amount: 2
-    }, {
+    }), new AssetTransferOutput({
         lockScriptHash: emptyLockScriptHash,
         parameters: [],
         assetType: mint2.getAssetSchemeAddress(),
         amount: 1
-    }];
+    })];
     return new AssetTransferTransaction(networkId, { inputs, outputs });
 })();
 
 const transfer2 = (() => {
-    const inputs = [{
-        prevOut: {
+    const inputs = [new AssetTransferInput({
+        prevOut: new AssetOutPoint({
             transactionHash: transfer1.hash(),
             index: 1,
             assetType: mint2.getAssetSchemeAddress(),
             amount: 4
-        },
+        }),
         lockScript: Buffer.from([0x2, 0x1]),
         unlockScript: Buffer.from([])
-    }, {
-        prevOut: {
+    }), new AssetTransferInput({
+        prevOut: new AssetOutPoint({
             transactionHash: transfer1.hash(),
             index: 3,
             assetType: mint2.getAssetSchemeAddress(),
             amount: 1
-        },
+        }),
         lockScript: Buffer.from([0x2, 0x1]),
         unlockScript: Buffer.from([])
-    }];
-    const outputs = [{
+    })];
+    const outputs = [new AssetTransferOutput({
         lockScriptHash: emptyLockScriptHash,
         parameters: [],
         assetType: mint2.getAssetSchemeAddress(),
         amount: 5
-    }];
+    })];
     return new AssetTransferTransaction(networkId, {inputs, outputs});
 
 })();

@@ -9,7 +9,7 @@ export type AssetOutPointData = {
     assetType: H256;
     amount: number;
 };
-class AssetOutPoint {
+export class AssetOutPoint {
     private data: AssetOutPointData;
 
     constructor(data: AssetOutPointData) {
@@ -20,21 +20,41 @@ class AssetOutPoint {
         const { transactionHash, index, assetType, amount } = this.data;
         return [transactionHash.toEncodeObject(), index, assetType.toEncodeObject(), amount];
     }
+
+    static fromJSON(data: any) {
+        const { transactionHash, index, assetType, amount } = data;
+        return new this({
+            transactionHash: new H256(transactionHash),
+            index,
+            assetType: new H256(assetType),
+            amount,
+        });
+    }
+
+    toJSON() {
+        const { transactionHash, index, assetType, amount } = this.data;
+        return {
+            transactionHash: transactionHash.value,
+            index,
+            assetType: assetType.value,
+            amount,
+        };
+    }
 }
 
 export type AssetTransferInputData = {
-    prevOut: AssetOutPointData;
+    prevOut: AssetOutPoint;
     lockScript: Buffer;
     unlockScript: Buffer;
 };
-class AssetTransferInput {
+export class AssetTransferInput {
     private prevOut: AssetOutPoint;
     private lockScript: Buffer;
     private unlockScript: Buffer;
 
     constructor(data: AssetTransferInputData) {
         const { prevOut, lockScript, unlockScript } = data;
-        this.prevOut = new AssetOutPoint(prevOut);
+        this.prevOut = prevOut;
         this.lockScript = lockScript;
         this.unlockScript = unlockScript;
     }
@@ -42,6 +62,24 @@ class AssetTransferInput {
     toEncodeObject() {
         const { prevOut, lockScript, unlockScript } = this;
         return [prevOut.toEncodeObject(), lockScript, unlockScript];
+    }
+
+    static fromJSON(data: any) {
+        const { prevOut, lockScript, unlockScript } = data;
+        return new this({
+            prevOut: AssetOutPoint.fromJSON(prevOut),
+            lockScript,
+            unlockScript,
+        });
+    }
+
+    toJSON() {
+        const { prevOut, lockScript, unlockScript } = this;
+        return {
+            prevOut: prevOut.toJSON(),
+            lockScript,
+            unlockScript,
+        };
     }
 }
 
@@ -51,7 +89,7 @@ export type AssetTransferOutputData = {
     assetType: H256;
     amount: number;
 };
-class AssetTransferOutput {
+export class AssetTransferOutput {
     private data: AssetTransferOutputData;
     private type = "assetTransfer";
 
@@ -63,11 +101,31 @@ class AssetTransferOutput {
         const { lockScriptHash, parameters, assetType, amount } = this.data;
         return [lockScriptHash.toEncodeObject(), parameters, assetType.toEncodeObject(), amount];
     }
+
+    static fromJSON(data: any) {
+        const { lockScriptHash, parameters, assetType, amount } = data;
+        return new this({
+            lockScriptHash: new H256(lockScriptHash),
+            parameters,
+            assetType: new H256(assetType),
+            amount,
+        });
+    }
+
+    toJSON() {
+        const { lockScriptHash, parameters, assetType, amount } = this.data;
+        return {
+            lockScriptHash: lockScriptHash.value,
+            parameters,
+            assetType: assetType.value,
+            amount,
+        };
+    }
 }
 
 export type AssetTransferTransactionData = {
-    inputs: AssetTransferInputData[];
-    outputs: AssetTransferOutputData[];
+    inputs: AssetTransferInput[];
+    outputs: AssetTransferOutput[];
 };
 export class AssetTransferTransaction {
     private inputs: AssetTransferInput[];
@@ -75,8 +133,8 @@ export class AssetTransferTransaction {
     private networkId: number;
     private nonce: number;
     constructor(networkId: number, { inputs, outputs }: AssetTransferTransactionData, nonce = 0) {
-        this.inputs = inputs.map(input => new AssetTransferInput(input));
-        this.outputs = outputs.map(output => new AssetTransferOutput(output));
+        this.inputs = inputs;
+        this.outputs = outputs;
         this.networkId = networkId;
         this.nonce = nonce;
     }
@@ -110,13 +168,21 @@ export class AssetTransferTransaction {
         return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }
 
-    fromJSON() {
-        // FIXME:
-        throw new Error("Not implemented");
+    static fromJSON(data: any) {
+        const { networkId, inputs, outputs, nonce } = data;
+        return new this(networkId, {
+            inputs: inputs.map((input: any) => AssetTransferInput.fromJSON(input)),
+            outputs: outputs.map((output: any) => AssetTransferOutput.fromJSON(output))
+        }, nonce);
     }
 
     toJSON() {
-        // FIXME:
-        throw new Error("Not implemented");
+        const { networkId, inputs, outputs, nonce } = this;
+        return {
+            networkId,
+            inputs: inputs.map(input => input.toJSON()),
+            outputs: outputs.map(output => output.toJSON()),
+            nonce,
+        };
     }
 }

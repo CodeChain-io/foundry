@@ -1,7 +1,7 @@
 import { PaymentTransaction } from "./PaymentTransaction";
 import { SetRegularKeyTransaction } from "./SetRegularKeyTransaction";
 import { AssetMintTransaction } from "./AssetMintTransaction";
-import { AssetTransferTransaction } from "./AssetTransferTransaction";
+import { AssetTransferTransaction, AssetTransferInput, AssetTransferOutput, AssetOutPoint } from "./AssetTransferTransaction";
 
 export type Transaction =
     PaymentTransaction
@@ -9,7 +9,7 @@ export type Transaction =
     | AssetMintTransaction
     | AssetTransferTransaction;
 
-export { PaymentTransaction, SetRegularKeyTransaction, AssetMintTransaction, AssetTransferTransaction };
+export { PaymentTransaction, SetRegularKeyTransaction, AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetTransferOutput, AssetOutPoint };
 
 export const getTransactionFromJSON = (obj: string | any) => {
     const keys = Object.keys(obj);
