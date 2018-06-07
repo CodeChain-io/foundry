@@ -136,27 +136,27 @@ sdk.getNonce(address).then(nonce => {
     console.log(`Current nonce: ${nonce.value}`);
 }).then(printTransactionInvoices).then( () => {
     const p = new Parcel(new U256(0), new U256(10), networkId);
-    return sendParcel(p, new H256("208cbe076e68fda488bcba6f2884c3eedcb5917163a259d32010598307213d22"));
+    return sendParcel(p, new H256("06bedb2443dcb609597ea74d5dcee9b3bf35fc0ff7a5271ff144c7faa9d7ef69"));
 }).then(printTransactionInvoices).then( () => {
     const p = new Parcel(new U256(1), new U256(10), networkId, payment2, payment3);
-    return sendParcel(p, new H256("cfc72dcd1d08a5510f61ba8cdbb553115551272efd2d53cf26b4e42392c7c77c"));
+    return sendParcel(p, new H256("b21d26a6ff8dc326ba949d331d66893ffca05397241a65cb59cadb7d27530311"));
 }).then(printTransactionInvoices).then( () => {
     const p = new Parcel(new U256(4), new U256(10), networkId, payment5);
-    return sendParcel(p, new H256("d7ddfe2f3cc63f8e7016410bd8b214d9dbeb7f1e7fe795b9a387a45fd51fe20d"));
+    return sendParcel(p, new H256("b5c44620cd36b73029b847f1a338470c2dfb0f8782b7b34d04621f77c15bb311"));
 }).then(printTransactionInvoices).then( () => {
     const p = new Parcel(new U256(6), new U256(10), networkId, payment7, payment8);
-    return sendParcel(p, new H256("5852464f8c60b4a3e7515ab7d0cf2e14342db19805b2e3e7ab6ed4ca1f6635f2"));
+    return sendParcel(p, new H256("fe39587fa0153359db5944cc761d82ceb7951ce22c7dfc38e9c7564eb9eed074"));
 }).then(printTransactionInvoices).then( () => {
     const p = new Parcel(new U256(9), new U256(10), networkId, mint1, mint2);
-    return sendParcel(p, new H256("aa761e78ee92ac5a94ded11bdd7ed0774737452c042805989b62dad4951f7051"));
+    return sendParcel(p, new H256("2ed039d66c1c76d271556489a2046ebf464570abe431120025b497c686ec773f"));
 }).then(printResults).then( () => {
 }).then( () => {
     const p = new Parcel(new U256(10), new U256(10), networkId, transfer1);
-    return sendParcel(p, new H256("d4af0ed1be40511ba0b8c705becdef5f049ea4bac0cee56ddc487276f2511dc6"));
+    return sendParcel(p, new H256("3bafc24fb3ccfbb0da99269a7b6517e1adc007b541e970efa1caad26e8fa8ec5"));
 }).then(printResults).then( () => {
 }).then( () => {
     const p = new Parcel(new U256(11), new U256(10), networkId, transfer2);
-    return sendParcel(p, new H256("72390e25526a83b2f7b855c6f0f8e13045601345affce19ec33079859c2df159"));
+    return sendParcel(p, new H256("b04f0aecde43c1860d4b30904b531d93c7b424bb87b9221b6ba6a68059ee78b0"));
 }).then(printResults).then( () => {
     console.log("Succeed");
 }).catch( err => {
