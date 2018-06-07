@@ -13,4 +13,5 @@ test("getParcelInvoices", async () => {
 test("getParcelInvoices - null", async () => {
     const hash = new H256("0000000000000000000000000000000000000000000000000000000000000000");
     const invoice = await sdk.getParcelInvoices(hash);
+    expect(invoice).toBe(null);
 });
