@@ -1,4 +1,4 @@
-import { SDK, AssetMintTransaction, H256, Parcel, H160, U256, PaymentTransaction, H512, SetRegularKeyTransaction } from "../";
+import { SDK, AssetMintTransaction, H256, Parcel, H160, U256, PaymentTransaction, H512, SetRegularKeyTransaction, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "../";
 import { privateKeyToAddress } from "../src/utils";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
@@ -26,6 +26,38 @@ export const mintAsset = async ({ metadata, amount, lockScriptHash, parameters, 
     return {
         parcelHash,
         assetMintTransaction
+    };
+};
+
+export const transferAsset = async ({ mintTx }) => {
+    const networkId = 17;
+    const assetTransferTransaction = new AssetTransferTransaction(networkId, {
+        inputs: [new AssetTransferInput({
+            prevOut: new AssetOutPoint({
+                transactionHash: mintTx.hash(),
+                index: 0,
+                assetType: mintTx.getAssetSchemeAddress(),
+                amount: 100
+            }),
+            lockScript: Buffer.from([0x2, 0x1]),
+            unlockScript: Buffer.from([])
+        })],
+        outputs: [new AssetTransferOutput({
+            lockScriptHash: new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3"),
+            parameters: [],
+            assetType: mintTx.getAssetSchemeAddress(),
+            amount: 100
+        })]
+    });
+    const nonce = await sdk.getNonce(address);
+    const fee = new U256(10);
+
+    const parcel = new Parcel(nonce, fee, networkId, assetTransferTransaction);
+    const parcelHash = await sdk.sendSignedParcel(parcel.sign(secret));
+
+    return {
+        parcelHash,
+        assetTransferTransaction
     };
 };
 

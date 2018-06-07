@@ -25,7 +25,7 @@ export const getTransactionFromJSON = (obj: string | any) => {
     case "assetMint":
         return AssetMintTransaction.fromJSON(obj);
     case "assetTransfer":
-        throw new Error(`Unimplemented gettTransactionFromJSON for ${type}`);
+        return AssetTransferTransaction.fromJSON(obj);
     default:
         throw new Error(`Unexpected transaction type: ${type}`);
     }

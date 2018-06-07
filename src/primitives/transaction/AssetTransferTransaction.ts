@@ -91,7 +91,6 @@ export type AssetTransferOutputData = {
 };
 export class AssetTransferOutput {
     private data: AssetTransferOutputData;
-    private type = "assetTransfer";
 
     constructor(data: AssetTransferOutputData) {
         this.data = data;
@@ -132,6 +131,8 @@ export class AssetTransferTransaction {
     private outputs: AssetTransferOutput[];
     private networkId: number;
     private nonce: number;
+    private type = "assetTransfer";
+
     constructor(networkId: number, { inputs, outputs }: AssetTransferTransactionData, nonce = 0) {
         this.inputs = inputs;
         this.outputs = outputs;
@@ -169,7 +170,7 @@ export class AssetTransferTransaction {
     }
 
     static fromJSON(data: any) {
-        const { networkId, inputs, outputs, nonce } = data;
+        const { networkId, inputs, outputs, nonce } = data["assetTransfer"];
         return new this(networkId, {
             inputs: inputs.map((input: any) => AssetTransferInput.fromJSON(input)),
             outputs: outputs.map((output: any) => AssetTransferOutput.fromJSON(output))
@@ -179,10 +180,12 @@ export class AssetTransferTransaction {
     toJSON() {
         const { networkId, inputs, outputs, nonce } = this;
         return {
-            networkId,
-            inputs: inputs.map(input => input.toJSON()),
-            outputs: outputs.map(output => output.toJSON()),
-            nonce,
+            [this.type]: {
+                networkId,
+                inputs: inputs.map(input => input.toJSON()),
+                outputs: outputs.map(output => output.toJSON()),
+                nonce,
+            }
         };
     }
 }
