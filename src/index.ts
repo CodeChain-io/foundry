@@ -65,23 +65,17 @@ export class SDK {
         })(parcel);
     }
 
-    // FIXME: use createRpcRequest
     /**
      * Gets SignedParcel of given hash. Else returns null.
      * @param hash SignedParcel's hash
      * @returns SignedParcel, or null when SignedParcel was not found.
      */
     getParcel(hash: H256): Promise<SignedParcel | null> {
-        return new Promise((resolve, reject) => {
-            this.client.request("chain_getParcel", [`0x${hash.value}`], (err: any, res: any) => {
-                if (err) {
-                    return reject(err);
-                } else if (res.error) {
-                    return reject(res.error);
-                }
-                resolve(res.result === null ? null : SignedParcel.fromJSON(res.result));
-            });
-        });
+        return this.createRpcRequest({
+            name: "chain_getParcel",
+            toRpcParameter: (hash: H256) => [`0x${hash.value}`],
+            fromRpcResult: result => result === null ? null : SignedParcel.fromJSON(result)
+        })(hash);
     }
 
     // FIXME: timeout not implemented
@@ -106,46 +100,25 @@ export class SDK {
      * @returns The regular key of account at specified block, or null when address was not found.
      */
     getRegularKey(address: H160, blockNumber?: number): Promise<H512 | null> {
-        return new Promise((resolve, reject) => {
-            this.client.request("chain_getRegularKey", [`0x${address.value}`, blockNumber || null], (err: any, res: any) => {
-                if (err) {
-                    reject(err);
-                } else if (res.error) {
-                    return reject(res.error);
-                }
-                if (res.result) {
-                    resolve(new H512(res.result));
-                } else {
-                    resolve(null);
-                }
-            });
-        });
+        return this.createRpcRequest({
+            name: "chain_getRegularKey",
+            toRpcParameter: () => [`0x${address.value}`, blockNumber || null],
+            fromRpcResult: result => result === null ? null : new H512(result)
+        })(address, blockNumber);
     }
 
     // FIXME: Implement timeout
     /**
      * Gets invoice of a transaction of given hash.
      * @param txhash The transaction hash of which to get the corresponding transaction of.
-     * @returns Invoice, or null when hash was not found.
+     * @returns Invoice, or null when transaction of given hash not exists.
      */
     getTransactionInvoice(txhash: H256): Promise<Invoice | null> {
-        return new Promise((resolve, reject) => {
-            this.client.request("chain_getTransactionInvoice", [`0x${txhash.value}`], (err: any, res: any) => {
-                if (err) {
-                    return reject(err);
-                }
-
-                if (res.error) {
-                    return reject(res.error);
-                }
-
-                if (!res.result) {
-                    return resolve(null);
-                }
-
-                resolve(Invoice.fromJSON(res.result));
-            });
-        });
+        return this.createRpcRequest({
+            name: "chain_getTransactionInvoice",
+            toRpcParameter: () => [`0x${txhash.value}`],
+            fromRpcResult: result => result === null ? null : Invoice.fromJSON(result)
+        })(txhash);
     }
 
     /**
@@ -201,26 +174,17 @@ export class SDK {
         })(blockNumber);
     }
 
-    // FIXME: use createRpcRequest
     /**
      * Gets block of given block hash.
      * @param hash The block hash of which to get the block of
      * @returns Block, if block exists. Else, returns null.
      */
     getBlock(hash: H256): Promise<Block | null> {
-        return new Promise((resolve, reject) => {
-            this.client.request("chain_getBlockByHash", [`0x${hash.value}`], (err: any, res: any) => {
-                if (err) {
-                    return reject(err);
-                } else if (res.error) {
-                    return reject(res.error);
-                }
-                if (!res.result) {
-                    resolve(null);
-                }
-                resolve(Block.fromJSON(res.result));
-            });
-        });
+        return this.createRpcRequest({
+            name: "chain_getBlockByHash",
+            toRpcParameter: (hash) => [`0x${hash.value}`],
+            fromRpcResult: result => result === null ? null : Block.fromJSON(result)
+        })(hash);
     }
 
     // FIXME: receive asset type instead of txhash. Need to change codechain also.
