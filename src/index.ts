@@ -39,7 +39,7 @@ export class SDK {
 
     /**
      * Sends ping to check whether CodeChain's RPC server is responding or not.
-     * @returns       return string "pong"
+     * @returns String "pong"
      */
     ping(): Promise<string> {
         return this.createRpcRequest({
@@ -87,9 +87,15 @@ export class SDK {
     // FIXME: will be replaced with getParcelInvoices
     // FIXME: timeout not implemented
     // FIXME: use createRpcRequest
-    getParcelInvoices(txhash: H256, _timeout?: number): Promise<Invoice[]> {
+    /**
+     * Gets invoices of given parcel.
+     * @param parcelHash The parcel hash of which to get the corresponding parcel of.
+     * @param _timeout Indicating milliseconds to wait the parcel to be confirmed.
+     * @returns List of invoice.
+     */
+    getParcelInvoices(parcelHash: H256, _timeout?: number): Promise<Invoice[]> {
         return new Promise((resolve, reject) => {
-            this.client.request("chain_getParcelInvoices", [`0x${txhash.value}`], (err: any, res: any) => {
+            this.client.request("chain_getParcelInvoices", [`0x${parcelHash.value}`], (err: any, res: any) => {
                 if (err) {
                     return reject(err);
                 } else if (res.error) {
@@ -103,6 +109,12 @@ export class SDK {
         });
     }
 
+    /**
+     * Gets the regular key of an account of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns the regular key in the most recent block.
+     * @param address An account address
+     * @param blockNumber The specific block number to get account's regular key at given address.
+     * @returns The regular key of account at specified block, or null when address was not found.
+     */
     getRegularKey(address: H160, blockNumber?: number): Promise<H512 | null> {
         return new Promise((resolve, reject) => {
             this.client.request("chain_getRegularKey", [`0x${address.value}`, blockNumber || null], (err: any, res: any) => {
@@ -121,6 +133,11 @@ export class SDK {
     }
 
     // FIXME: Implement timeout
+    /**
+     * Gets invoice of a transaction of given hash.
+     * @param txhash The transaction hash of which to get the corresponding transaction of.
+     * @returns Invoice, or null when hash was not found.
+     */
     getTransactionInvoice(txhash: H256): Promise<Invoice | null> {
         return new Promise((resolve, reject) => {
             this.client.request("chain_getTransactionInvoice", [`0x${txhash.value}`], (err: any, res: any) => {
@@ -142,10 +159,10 @@ export class SDK {
     }
 
     /**
-     * Gets balance of a user of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns balance recorded in the most recent block.
-     * @param address the user's address
-     * @param blockNumber the specific block number to get user's balance at given address.
-     * @returns balance of user at specified block, or null when address was not found.
+     * Gets balance of an account of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns balance recorded in the most recent block.
+     * @param address An account address
+     * @param blockNumber The specific block number to get account's balance at given address.
+     * @returns Balance of account at specified block, or null when address was not found.
      */
     getBalance(address: H160, blockNumber?: number): Promise<U256 | null> {
         return this.createRpcRequest({
@@ -156,10 +173,10 @@ export class SDK {
     }
 
     /**
-     * Gets nonce of a user of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns nonce recorded in the most recent block.
-     * @param address the user's address
-     * @param blockNumber the specific block number to get user's nonce at given address.
-     * @returns nonce of user at specified block, or null when address was not found.
+     * Gets nonce of an account of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns nonce recorded in the most recent block.
+     * @param address An account address
+     * @param blockNumber The specific block number to get account's nonce at given address.
+     * @returns Nonce of account at specified block, or null when address was not found.
      */
     getNonce(address: H160, blockNumber?: number): Promise<U256 | null> {
         return this.createRpcRequest({
@@ -171,7 +188,7 @@ export class SDK {
 
     /**
      * Gets number of the latest block.
-     * @returns number of the latest block.
+     * @returns Number of the latest block.
      */
     getBlockNumber(): Promise<number> {
         return this.createRpcRequest({
@@ -183,8 +200,8 @@ export class SDK {
 
     /**
      * Gets block hash of given blockNumber.
-     * @param blockNumber the block number of which to get the block hash of.
-     * @returns blockHash, if block exists. Else, returns null.
+     * @param blockNumber The block number of which to get the block hash of.
+     * @returns BlockHash, if block exists. Else, returns null.
      */
     getBlockHash(blockNumber: number): Promise<H256 | null> {
         return this.createRpcRequest({
@@ -195,6 +212,11 @@ export class SDK {
     }
 
     // FIXME: use createRpcRequest
+    /**
+     * Gets block of given block hash.
+     * @param hash The block hash of which to get the block of
+     * @returns Block, if block exists. Else, returns null.
+     */
     getBlock(hash: H256): Promise<Block | null> {
         return new Promise((resolve, reject) => {
             this.client.request("chain_getBlockByHash", [`0x${hash.value}`], (err: any, res: any) => {
@@ -212,6 +234,11 @@ export class SDK {
     }
 
     // FIXME: receive asset type instead of txhash. Need to change codechain also.
+    /**
+     * Gets asset scheme of given hash of AssetMintTransaction.
+     * @param txhash The tx hash of AssetMintTransaction.
+     * @returns AssetScheme, if asset scheme exists. Else, returns null.
+     */
     getAssetScheme(txhash: H256): Promise<AssetScheme | null> {
         return this.createRpcRequest({
             name: "chain_getAssetScheme",
@@ -225,6 +252,12 @@ export class SDK {
         })(txhash);
     }
 
+    /**
+     * Gets asset of given transaction hash and index.
+     * @param txhash The tx hash of AssetMintTransaction or AssetTransferTransaction.
+     * @param index The index of output in the transaction.
+     * @returns Asset, if asset exists, Else, returns null.
+     */
     getAsset(txhash: H256, index: number): Promise<AssetScheme | null> {
         return this.createRpcRequest({
             name: "chain_getAsset",
@@ -238,6 +271,10 @@ export class SDK {
         })(txhash, index);
     }
 
+    /**
+     * Gets pending parcels.
+     * @returns List of SignedParcel, with each parcel has null for blockNumber/blockHash/parcelIndex.
+     */
     getPendingParcels(): Promise<SignedParcel[] | null> {
         return this.createRpcRequest({
             name: "chain_getPendingParcels",
