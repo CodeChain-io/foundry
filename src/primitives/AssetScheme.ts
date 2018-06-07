@@ -1,17 +1,17 @@
 import { H160 } from ".";
 
-export interface AssetSchemeValues {
+export type AssetSchemeData = {
     metadata: string;
     amount: number;
     registrar: H160 | null;
-}
+};
 
 export class AssetScheme {
     metadata: string;
     amount: number;
     registrar: H160 | null;
 
-    constructor(data: AssetSchemeValues) {
+    constructor(data: AssetSchemeData) {
         this.metadata = data.metadata;
         this.registrar = data.registrar;
         this.amount = data.amount;

@@ -1,11 +1,11 @@
 import { H256 } from ".";
 
-export interface AssetValues {
+export type AssetData = {
     assetType: H256;
     lockScriptHash: H256;
     parameters: Buffer[];
     amount: number;
-}
+};
 
 export class Asset {
     assetType: H256;
@@ -13,7 +13,7 @@ export class Asset {
     parameters: Buffer[];
     amount: number;
 
-    constructor(data: AssetValues) {
+    constructor(data: AssetData) {
         this.assetType = data.assetType;
         this.lockScriptHash = data.lockScriptHash;
         this.parameters = data.parameters;

@@ -1,6 +1,6 @@
 import { H256, H160, U256, SignedParcel } from ".";
 
-export interface BlockValues {
+export type BlockData = {
     parentHash: H256;
     timestamp: number;
     number: number;
@@ -13,7 +13,7 @@ export interface BlockValues {
     seal: Buffer[];
     hash: H256;
     parcels: SignedParcel[];
-}
+};
 
 export class Block {
     parentHash: H256;
@@ -29,7 +29,7 @@ export class Block {
     hash: H256;
     parcels: SignedParcel[];
 
-    constructor(data: BlockValues) {
+    constructor(data: BlockData) {
         const { parentHash, timestamp, number, author, extraData,
             parcelsRoot, stateRoot, invoicesRoot, score, seal, hash, parcels } = data;
         this.parentHash = parentHash;
