@@ -64,20 +64,20 @@ sdk.sendSignedParcel(signedParcel).then((hash) => {
 ```
 
 # [SDK](classes/sdk.html) methods
- * getAsset
- * getAssetScheme
- * getBalance
- * getBlock
- * getBlockHash
- * getBlockNumber
- * getNonce
- * getParcel
- * getParcelInvoices
- * getPendingParcels
- * getRegularKey
- * getTransactionInvoice
- * ping
- * sendSignedParcel
+ * [getAsset](classes/sdk.html#getasset)
+ * [getAssetScheme](classes/sdk.html#getassetscheme)
+ * [getBalance](classes/sdk.html#getbalance)
+ * [getBlock](classes/sdk.html#getblock)
+ * [getBlockHash](classes/sdk.html#getblockhash)
+ * [getBlockNumber](classes/sdk.html#getblocknumber)
+ * [getNonce](classes/sdk.html#getnonce)
+ * [getParcel](classes/sdk.html#getparcel)
+ * [getParcelInvoices](classes/sdk.html#getparcelinvoices)
+ * [getPendingParcels](classes/sdk.html#getpendingparcels)
+ * [getRegularKey](classes/sdk.html#getregularkey)
+ * [getTransactionInvoice](classes/sdk.html#gettransactioninvoice)
+ * [ping](classes/sdk.html#ping)
+ * [sendSignedParcel](classes/sdk.html#sendsignedparcel)
 
 # Transactions
  * [PaymentTransaction](classes/paymenttransaction.html)
