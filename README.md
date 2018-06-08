@@ -2,9 +2,13 @@
 
 A JavaScript SDK for CodeChain
 
+# API Documentation
+
+If you're looking for API documentation or quick start guide, go to [here](https://kodebox-io.github.io/codechain-sdk-js/0.1.0/)
+
 # Features
 
- * Connect to a [CodeChain JSON-RPC](https://github.com/kodebox-io/codechain/wiki/JSON-RPC) server from Node.js ~~or a web browser~~
+ * Connect to a [CodeChain JSON-RPC](https://github.com/kodebox-io/codechain/wiki/JSON-RPC) server from Node.js
  * Generate an account, create a transacton, sign a parcel.
 
 # Getting Started
@@ -27,7 +31,3 @@ Run `yarn test`
 1. Run `yarn test-int` command.
    > It is also possible to indicate specific testcase with `-t` option. (e.g. `yarn test-int -t getBlockNumber`)
 
-# Documentations
-
-- [Basic Types](https://github.com/kodebox-io/codechain-sdk-js/wiki/Basic-Types)
-- [API Specifications](https://github.com/kodebox-io/codechain-sdk-js/wiki/API-Specifications)
