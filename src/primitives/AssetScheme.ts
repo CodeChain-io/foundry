@@ -5,7 +5,9 @@ export type AssetSchemeData = {
     amount: number;
     registrar: H160 | null;
 };
-
+/**
+ * Object that contains information about the Asset when performing AssetMintTransaction.
+ */
 export class AssetScheme {
     metadata: string;
     amount: number;

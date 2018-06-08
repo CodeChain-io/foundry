@@ -14,7 +14,9 @@ export type BlockData = {
     hash: H256;
     parcels: SignedParcel[];
 };
-
+/**
+ * Block is the unit of processes being handled by CodeChain. Contains information related to SignedParcel's list and block creation.
+ */
 export class Block {
     parentHash: H256;
     timestamp: number;

@@ -1,5 +1,7 @@
 const RLP = require("rlp");
-
+/**
+ * Handles 160-bit data. Used to express account addresses.
+ */
 export class H160 {
     value: string;
 

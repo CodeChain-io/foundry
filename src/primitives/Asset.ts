@@ -6,7 +6,9 @@ export type AssetData = {
     parameters: Buffer[];
     amount: number;
 };
-
+/**
+ * Object created as an AssetMintTransaction or AssetTransferTransaction.
+ */
 export class Asset {
     assetType: H256;
     lockScriptHash: H256;

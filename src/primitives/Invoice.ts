@@ -1,7 +1,9 @@
 const RLP = require("rlp");
 
 type TransactionOutcome = "Success" | "Failed";
-
+/**
+ * Used to know whether a transaction succeeded or failed.
+ */
 export class Invoice {
     private outcome: TransactionOutcome;
 

@@ -2,7 +2,9 @@ import * as _ from "lodash";
 import { BigNumber } from "bignumber.js";
 
 const RLP = require("rlp");
-
+/**
+ * Handles 256-bit unsigned integers. Used to express nonce, asset amount, etc.
+ */
 export class U256 {
     value: BigNumber;
 
