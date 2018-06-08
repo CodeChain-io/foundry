@@ -4,7 +4,7 @@ A JavaScript SDK for CodeChain
 
 # API Documentation
 
-If you're looking for API documentation or quick start guide, go to [here](https://kodebox-io.github.io/codechain-sdk-js/0.1.0/)
+If you're looking for API documentation or quick start guide, [click here](https://kodebox-io.github.io/codechain-sdk-js/0.1.0/)
 
 # Features
 
