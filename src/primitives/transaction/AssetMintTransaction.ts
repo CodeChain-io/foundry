@@ -12,6 +12,16 @@ export type AssetMintTransactionData = {
     nonce: number;
 };
 
+/**
+ * Creates a new asset type and that asset itself.
+ *
+ * The owner of the new asset created can be assigned by lockScriptHash and parameters.
+ * - metadata is a string that explains the asset's type.
+ * - amount defines the quantity of asset to be created. If set as null, it will be set as the maximum value of a 64-bit unsigned integer by default.
+ * - If registrar exists, the registrar must be the Signer of the Parcel when sending the created asset through AssetTransferTransaction.
+ * - Transaction hash can be changed by changing nonce.
+ * - If an identical transaction hash already exists, then the change fails. In this situation, a transaction can be created again by arbitrarily changing the nonce.
+ */
 export class AssetMintTransaction {
     private data: AssetMintTransactionData;
     private type = "assetMint";

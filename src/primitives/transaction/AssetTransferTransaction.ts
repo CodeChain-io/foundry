@@ -9,6 +9,13 @@ export type AssetOutPointData = {
     assetType: H256;
     amount: number;
 };
+/**
+ * AssetOutPoint consists of transactionHash and index, asset type, and amount.
+ *
+ * - The transaction that it points to must be either AssetMint or AssetTransfer.
+ * - Index is what decides which Asset to point to amongst the Asset list that transaction creates.
+ * - The asset type and amount must be identical to the Asset that it points to.
+ */
 export class AssetOutPoint {
     private data: AssetOutPointData;
 
@@ -47,6 +54,14 @@ export type AssetTransferInputData = {
     lockScript: Buffer;
     unlockScript: Buffer;
 };
+/**
+ * AssetTransferInput consists of the following:
+ *
+ * - AssetOutPoint, which points to the asset to be spent.
+ * - lockScript and unlockScript, that prove ownership of the asset
+ * - The hashed value(blake256) of lockScript must be identical to that of the pointed asset's lockScriptHash.
+ * - The results of running the script must return successful in order for the Asset's Input to be valid.
+ */
 export class AssetTransferInput {
     private prevOut: AssetOutPoint;
     private lockScript: Buffer;
@@ -89,6 +104,9 @@ export type AssetTransferOutputData = {
     assetType: H256;
     amount: number;
 };
+/**
+ * AssetTransferOutput consists of lockScriptHash and parameters, which mark ownership of the asset, and asset type and amount, which indicate the asset's type and quantity.
+ */
 export class AssetTransferOutput {
     private data: AssetTransferOutputData;
 
@@ -126,6 +144,15 @@ export type AssetTransferTransactionData = {
     inputs: AssetTransferInput[];
     outputs: AssetTransferOutput[];
 };
+/**
+ * Spends the existing asset and creates a new asset. Ownership can be transferred during this process.
+ *
+ * - AssetTransfer consists of AssetTransferInput's list to spend and AssetTransferOutput's list to create.
+ * - All inputs must be valid for the transaction to be valid.
+ * - When each asset types' amount have been summed, the sum of inputs and the sum of outputs must be identical.
+ * - It contains the network ID. This must be identical to the network ID to which the transaction is being sent to.
+ * - If an identical transaction hash already exists, then the change fails. In this situation, a transaction can be created again by arbitrarily changing the nonce.
+ */
 export class AssetTransferTransaction {
     private inputs: AssetTransferInput[];
     private outputs: AssetTransferOutput[];

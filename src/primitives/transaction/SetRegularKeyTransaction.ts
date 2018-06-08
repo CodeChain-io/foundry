@@ -5,7 +5,13 @@ export type SetRegularKeyTransactionData = {
     nonce: U256;
     key: H512;
 };
-
+/**
+ * Registers address' regular key. The regular key can sign in place of the account's private key.
+ *
+ * - Its nonce has to be identical with the address account's nonce.
+ * - If there already exists a regular key, then the old one gets overwritten.
+ * - If the nonce is not identical, the transaction fails.
+ */
 export class SetRegularKeyTransaction {
     private data: SetRegularKeyTransactionData;
     private type = "setRegularKey";

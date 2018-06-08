@@ -10,6 +10,12 @@ export type PaymentTransactionData = {
     value: U256;
 };
 
+/**
+ * Sends value amount of CCC from sender to receiver.
+ *
+ * - The nonce has to be identical with the sender account's nonce.
+ * - The transaction fails if the nonce is not identical, or if the sender does not have value amount of CCC.
+ */
 export class PaymentTransaction {
     private data: PaymentTransactionData;
     private type = "payment";
