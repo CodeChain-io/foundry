@@ -22,8 +22,8 @@ import { SDK, Parcel, U256, H256, H160, PaymentTransaction } from "codechain-sdk
 const sdk = new SDK("http://localhost:8080");
 
 // Create PaymentTransaction that sends 10000 CCC from 0x5bcd7c... to 0x744142..
-// Transaction is only valid if the nonce is match to the nonce of the sender.
-// The nonce of the sender is increased by 1 when this transaction confirmed.
+// Transaction is only valid if the nonce matches the nonce of the sender.
+// The nonce of the sender is increased by 1 when this transaction is confirmed.
 const tx = new PaymentTransaction({
     nonce: new U256(0),
     sender: new H160("0x5bcd7c840f108172d94a4d084af711d879630fe6"),
@@ -31,29 +31,29 @@ const tx = new PaymentTransaction({
     value: new U256(10000)
 });
 
-// Parcel is only valid if the nonce is match to the nonce of the parcel signer.
-// The nonce of the signer is increased by 1 when this parcel confirmed.
+// Parcel is only valid if the nonce matches the nonce of the parcel signer.
+// The nonce of the signer is increased by 1 when this parcel is confirmed.
 const parcelSignerNonce = new U256(0);
 // Parcel signer pays 10 CCC as fee.
 const fee = new U256(10);
-// Network id prevents replay attack or mistake among different CodeChain network.
+// Network ID prevents replay attacks or confusion among different CodeChain networks.
 const networkId = 17;
 // Create Parcel
 const parcel = new Parcel(parcelSignerNonce, fee, networkId, tx);
 
-// Sign the parcel with the secret of the address 0x31bd8354de8f7dbab6764a11851086061fee3f25.
+// Sign the parcel with the secret key of the address 0x31bd8354de8f7dbab6764a11851086061fee3f25.
 const parcelSignerSecret = new H256("b15139f97aad25ae0330432aeb091ef962eee643e41dc07a1e04457c5c2c6088");
 const signedParcel = parcel.sign(parcelSignerSecret);
 
 // Send the signed parcel to the CodeChain node. The node will propagate this
-// parcel and trying to confirm it.
+// parcel and attempt to confirm it.
 sdk.sendSignedParcel(signedParcel).then((hash) => {
-    // sendSignedParcel returns Promise that resolves with parcel hash if parcel has
+    // sendSignedParcel returns a promise that resolves with a parcel hash if parcel has
     // been verified and queued successfully. It doesn't mean parcel was confirmed.
     console.log(`Parcel sent:`, hash);
     return sdk.getParcel(hash);
 }).then((parcel) => {
-    // getParcel returns Promise that resolves with parcel.
+    // getParcel returns a promise that resolves with a parcel.
     // blockNumber/blockHash/parcelIndex fields in Parcel is present only for the
     // confirmed parcel
     console.log(`Parcel`, parcel);
