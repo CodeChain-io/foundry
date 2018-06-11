@@ -1,5 +1,4 @@
-import { SDK, Parcel, U256, H256, H160, H512, PaymentTransaction, AssetMintTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput, AssetTransferTransaction } from "../";
-import { privateKeyToAddress } from "../src/utils";
+import { SDK, Parcel, U256, H256, H160, H512, PaymentTransaction, AssetMintTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput, AssetTransferTransaction, privateKeyToAddress } from "../";
 import { payment, mintAsset, setRegularKey, transferAsset } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";

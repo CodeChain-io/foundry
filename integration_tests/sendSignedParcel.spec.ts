@@ -1,5 +1,4 @@
-import { SDK, Parcel, U256, H256, H160, PaymentTransaction } from "../";
-import { privateKeyToAddress } from "../src/utils";
+import { SDK, Parcel, U256, H256, H160, PaymentTransaction, privateKeyToAddress } from "../";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 const sdk = new SDK(SERVER_URL);
