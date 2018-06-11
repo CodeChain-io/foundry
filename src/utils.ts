@@ -59,3 +59,8 @@ export const privateKeyToAddress = (priv: string) => {
     const key = secp256k1.keyFromPrivate(priv);
     return ripemd160(blake256(key.getPublic().encode("hex").slice(2)));
 };
+
+export const privateKeyToPublic = (priv: string) => {
+    const key = secp256k1.keyFromPrivate(priv);
+    return key.getPublic().encode("hex");
+};
