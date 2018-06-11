@@ -4,11 +4,11 @@ A JavaScript SDK for CodeChain
 
 # API Documentation
 
-If you're looking for API documentation or quick start guide, [click here](https://kodebox-io.github.io/codechain-sdk-js/0.1.0/)
+If you're looking for API documentation or quick start guide, [click here](https://api.codechain.io/)
 
 # Features
 
- * Connect to a [CodeChain JSON-RPC](https://github.com/kodebox-io/codechain/wiki/JSON-RPC) server from Node.js
+ * Connect to a [CodeChain JSON-RPC](https://github.com/codechain-io/codechain/wiki/JSON-RPC) server from Node.js
  * Generate an account, create a transacton, sign a parcel.
 
 # Getting Started
