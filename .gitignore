@@ -7,3 +7,6 @@ node_modules
 # Visual Studio Code - https://code.visualstudio.com/
 .settings/
 .vscode/
+
+# rollup-plugin-typescript2
+.rpt2_cache
