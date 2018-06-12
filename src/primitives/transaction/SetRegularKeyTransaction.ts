@@ -1,4 +1,6 @@
-import { H160, H512, U256 } from "../index";
+import { H160 } from "../H160";
+import { H512 } from "../H512";
+import { U256 } from "../U256";
 
 export type SetRegularKeyTransactionData = {
     address: H160;

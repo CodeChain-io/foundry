@@ -1,4 +1,6 @@
-import { U256, H256, Parcel } from "./index";
+import { U256 } from "./U256";
+import { H256 } from "./H256";
+import { Parcel } from "./Parcel";
 import { blake256 } from "../utils";
 
 const RLP = require("rlp");

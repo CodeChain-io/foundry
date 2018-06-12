@@ -1,6 +1,8 @@
-import { U256, H256, SignedParcel } from "./index";
+import { U256 } from "./U256";
+import { H256 } from "./H256";
+import { SignedParcel } from "./SignedParcel";
 import { blake256, signEcdsa } from "../utils";
-import { Transaction, getTransactionFromJSON } from "./transaction/index";
+import { Transaction, getTransactionFromJSON } from "./transaction";
 
 const RLP = require("rlp");
 /**

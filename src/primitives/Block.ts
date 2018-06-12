@@ -1,4 +1,7 @@
-import { H256, H160, U256, SignedParcel } from ".";
+import { H160 } from "./H160";
+import { H256 } from "./H256";
+import { U256 } from "./U256";
+import { SignedParcel } from "./SignedParcel";
 
 export type BlockData = {
     parentHash: H256;

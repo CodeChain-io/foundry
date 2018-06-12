@@ -1,4 +1,4 @@
-import { H256 } from ".";
+import { H256 } from "./H256";
 
 export type AssetData = {
     assetType: H256;
