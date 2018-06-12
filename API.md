@@ -1,14 +1,6 @@
-# Install package (not available yet)
+# Install package
 
-```sh
-npm install codechain-sdk
-```
-
-or
-
-```sh
-yarn add codechain-sdk
-```
+`npm install codechain-sdk` or `yarn add codechain-sdk`
 
 # Usage example
 Make sure that your CodeChain RPC server is listening. In the examples, we assume it is localhost:8080
