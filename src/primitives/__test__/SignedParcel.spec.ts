@@ -1,4 +1,5 @@
-import { PaymentTransaction, U256, H160, Parcel, H256, SignedParcel } from "../..";
+import { U256, H160, Parcel, H256, SignedParcel } from "..";
+import { PaymentTransaction } from "../transaction";
 import { privateKeyToAddress } from "../../utils";
 
 test("toJSON", () => {
