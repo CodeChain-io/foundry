@@ -1,8 +1,9 @@
 import * as assert from "assert";
-import { AssetTransferTransaction, AssetMintTransaction, PaymentTransaction, AssetOutPoint, AssetTransferInput, AssetTransferOutput } from "../src/primitives/transaction/";
-import { Parcel, H256, U256, H160 } from "../src/primitives";
-import { SDK } from "../src";
-import { privateKeyToAddress } from "../src/utils";
+import SDK from "../src";
+
+const { Parcel, H256, U256, H160, AssetTransferTransaction,
+    AssetMintTransaction, PaymentTransaction, AssetOutPoint,
+    AssetTransferInput, AssetTransferOutput, privateKeyToAddress } = SDK;
 
 const secret = new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd");
 const address = new H160(privateKeyToAddress(secret.value));
