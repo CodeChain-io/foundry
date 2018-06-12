@@ -1,11 +1,13 @@
 import { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block } from "./primitives/index";
+import { getTransactionFromJSON, Transaction, PaymentTransaction, SetRegularKeyTransaction, AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "./primitives/transaction";
+import { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress } from "./utils";
 
 /**
  * @hidden
  */
 const jayson = require("jayson");
 
-export class SDK {
+export default class SDK {
     private client: any;
 
     constructor(httpUrl: string) {
@@ -198,8 +200,35 @@ export class SDK {
             []
         ).then(result => result.map((p: any) => SignedParcel.fromJSON(p)));
     }
-}
 
-export * from "./primitives/";
-export * from "./primitives/transaction";
-export * from "./utils";
+    // Primitives
+    static SDK = SDK;
+    static H160 = H160;
+    static H256 = H256;
+    static H512 = H512;
+    static U256 = U256;
+    static Parcel = Parcel;
+    static SignedParcel = SignedParcel;
+    static Invoice = Invoice;
+    static Asset = Asset;
+    static AssetScheme = AssetScheme;
+    static Block = Block;
+
+    // Transactions
+    static PaymentTransaction = PaymentTransaction;
+    static SetRegularKeyTransaction = SetRegularKeyTransaction;
+    static AssetMintTransaction = AssetMintTransaction;
+    static AssetTransferTransaction = AssetTransferTransaction;
+    static AssetTransferInput = AssetTransferInput;
+    static AssetOutPoint = AssetOutPoint;
+    static AssetTransferOutput = AssetTransferOutput;
+    static getTransactionFromJSON = getTransactionFromJSON;
+
+    // Utils
+    static blake256 = blake256;
+    static blake256WithKey = blake256WithKey;
+    static ripemd160 = ripemd160;
+    static signEcdsa = signEcdsa;
+    static privateKeyToAddress = privateKeyToAddress;
+    static privateKeyToPublic = privateKeyToPublic;
+}
