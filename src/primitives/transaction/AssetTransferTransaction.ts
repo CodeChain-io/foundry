@@ -96,6 +96,15 @@ export class AssetTransferInput {
             unlockScript,
         };
     }
+
+    withoutScript() {
+        const { prevOut } = this;
+        return new AssetTransferInput({
+            prevOut,
+            lockScript: Buffer.from([]),
+            unlockScript: Buffer.from([]),
+        });
+    }
 }
 
 export type AssetTransferOutputData = {
@@ -183,6 +192,14 @@ export class AssetTransferTransaction {
 
     hash(): H256 {
         return new H256(blake256(this.rlpBytes()));
+    }
+
+    hashWithoutScript(): H256 {
+        const { networkId, inputs, outputs, nonce } = this;
+        return new H256(blake256(new AssetTransferTransaction(networkId, {
+            inputs: inputs.map(input => input.withoutScript()),
+            outputs,
+        }, nonce).rlpBytes()));
     }
 
     getAssetAddress(index: number): H256 {
