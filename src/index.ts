@@ -7,7 +7,7 @@ import { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, pr
  */
 const jayson = require("jayson");
 
-export default class SDK {
+class SDK {
     private client: any;
 
     constructor(httpUrl: string) {
@@ -232,3 +232,10 @@ export default class SDK {
     static privateKeyToAddress = privateKeyToAddress;
     static privateKeyToPublic = privateKeyToPublic;
 }
+
+export { SDK };
+export { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block };
+export { getTransactionFromJSON, Transaction, PaymentTransaction, SetRegularKeyTransaction, AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput };
+export { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress };
+
+module.exports = SDK;
