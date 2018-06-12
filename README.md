@@ -1,4 +1,4 @@
-# codechain-sdk-js [![Build Status](https://travis-ci.org/CodeChain-io/codechain-sdk-js.svg?branch=master)](https://travis-ci.org/CodeChain-io/codechain-sdk-js)
+# codechain-sdk-js [![npm version](https://badge.fury.io/js/codechain-sdk.svg)](https://badge.fury.io/js/codechain-sdk) [![Build Status](https://travis-ci.org/CodeChain-io/codechain-sdk-js.svg?branch=master)](https://travis-ci.org/CodeChain-io/codechain-sdk-js) 
 
 A JavaScript SDK for CodeChain
 
