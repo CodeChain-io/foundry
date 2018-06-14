@@ -66,6 +66,19 @@ export const signEcdsa = (message: string, priv: string): ECDSASignature => {
     };
 };
 
+export const verifyEcdsa = (message: string, signature: ECDSASignature, pub: string) => {
+    const key = secp256k1.keyFromPublic("04" + pub, "hex");
+    return key.verify(message, signature);
+};
+
+export const recoverPublic = (message: string, signature: ECDSASignature) => {
+    return secp256k1.recoverPubKey(
+        secp256k1.keyFromPrivate(message, "hex").getPrivate().toString(10),
+        signature,
+        signature.v
+    ).encode("hex").slice(2);
+};
+
 export const privateKeyToAddress = (priv: string) => {
     const key = secp256k1.keyFromPrivate(priv);
     return ripemd160(blake256(key.getPublic().encode("hex").slice(2)));
