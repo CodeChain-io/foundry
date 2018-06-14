@@ -1,3 +1,5 @@
+import { BigNumber } from "bignumber.js";
+
 import { U256 } from "./U256";
 import { H256 } from "./H256";
 import { SignedParcel } from "./SignedParcel";
@@ -48,8 +50,8 @@ export class Parcel {
     }
 
     sign(secret: H256): SignedParcel {
-        const { r, s, recoveryParam: v } = signEcdsa(this.hash().value, secret.value);
-        return new SignedParcel(this, v, new U256(r.toString()), new U256(s.toString()));
+        const { r, s, v } = signEcdsa(this.hash().value, secret.value);
+        return new SignedParcel(this, v, new U256(new BigNumber(r, 16)), new U256(new BigNumber(s, 16)));
     }
 
     static fromJSON(result: any) {

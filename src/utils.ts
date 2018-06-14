@@ -50,9 +50,20 @@ export const ripemd160 = (buffer: Buffer | string): string => {
     return new ripemd().update(buffer).digest("hex");
 };
 
-export const signEcdsa = (message: string, priv: string) => {
+export interface ECDSASignature {
+    r: string;
+    s: string;
+    v: number;
+}
+
+export const signEcdsa = (message: string, priv: string): ECDSASignature => {
     const key = secp256k1.keyFromPrivate(priv);
-    return key.sign(message, { "canonical": true });
+    const { r, s, recoveryParam: v } = key.sign(message, { "canonical": true });
+    return {
+        r: r.toString("hex"),
+        s: s.toString("hex"),
+        v
+    };
 };
 
 export const privateKeyToAddress = (priv: string) => {
