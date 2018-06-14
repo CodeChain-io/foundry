@@ -71,7 +71,7 @@ export class AssetMintTransaction {
         ];
     }
 
-    rlpBytes() {
+    rlpBytes(): Buffer {
         return RLP.encode(this.toEncodeObject());
     }
 

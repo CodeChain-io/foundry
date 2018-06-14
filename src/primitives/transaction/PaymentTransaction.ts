@@ -53,7 +53,7 @@ export class PaymentTransaction {
         };
     }
 
-    rlpBytes() {
+    rlpBytes(): Buffer {
         return RLP.encode(this.toEncodeObject());
     }
 

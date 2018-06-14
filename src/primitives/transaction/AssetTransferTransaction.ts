@@ -190,7 +190,7 @@ export class AssetTransferTransaction {
         ];
     }
 
-    rlpBytes() {
+    rlpBytes(): Buffer {
         return RLP.encode(this.toEncodeObject());
     }
 
