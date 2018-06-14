@@ -105,6 +105,10 @@ export class AssetTransferInput {
             unlockScript: Buffer.from([]),
         });
     }
+
+    setUnlockScript(unlockScript: Buffer) {
+        this.unlockScript = unlockScript;
+    }
 }
 
 export type AssetTransferOutputData = {
@@ -200,6 +204,13 @@ export class AssetTransferTransaction {
             inputs: inputs.map(input => input.withoutScript()),
             outputs,
         }, nonce).rlpBytes()));
+    }
+
+    setUnlockScript(index: number, unlockScript: Buffer) {
+        if (index < 0 || this.inputs.length <= index) {
+            throw "Invalid index";
+        }
+        this.inputs[index].setUnlockScript(unlockScript);
     }
 
     getAssetAddress(index: number): H256 {
