@@ -60,7 +60,8 @@ export const privateKeyToAddress = (priv: string) => {
     return ripemd160(blake256(key.getPublic().encode("hex").slice(2)));
 };
 
-export const privateKeyToPublic = (priv: string) => {
+export const privateKeyToPublic = (priv: string): string => {
     const key = secp256k1.keyFromPrivate(priv);
-    return key.getPublic().encode("hex");
+    // Remove prefix "04" which represents it's uncompressed form.
+    return key.getPublic().encode("hex").slice(2);
 };
