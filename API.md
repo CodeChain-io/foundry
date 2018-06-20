@@ -18,8 +18,8 @@ const sdk = new SDK("http://localhost:8080");
 // The nonce of the sender is increased by 1 when this transaction is confirmed.
 const tx = new PaymentTransaction({
     nonce: new U256(0),
-    sender: new H160("0x5bcd7c840f108172d94a4d084af711d879630fe6"),
-    receiver: new H160("0x744142069fe2d03d48e61734cbe564fcc94e6e31"),
+    sender: new H160("5bcd7c840f108172d94a4d084af711d879630fe6"),
+    receiver: new H160("744142069fe2d03d48e61734cbe564fcc94e6e31"),
     value: new U256(10000)
 });
 
