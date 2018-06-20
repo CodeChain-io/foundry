@@ -4,10 +4,10 @@ import { payment } from "./helper";
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 const sdk = new SDK(SERVER_URL);
 
-test("getParcelInvoices", async () => {
+test("getParcelInvoice", async () => {
     const hash = await payment();
     const invoice = await sdk.getParcelInvoices(hash);
-    expect(invoice).toEqual([new Invoice(true)]);
+    expect(invoice).toEqual(new Invoice(true));
 });
 
 test("getParcelInvoices - null", async () => {

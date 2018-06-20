@@ -70,11 +70,19 @@ class SDK {
      * @param _timeout Indicating milliseconds to wait the parcel to be confirmed.
      * @returns List of invoice, or null when no such parcel exists.
      */
-    getParcelInvoices(parcelHash: H256, _timeout?: number): Promise<Invoice[] | null> {
+    getParcelInvoice(parcelHash: H256, _timeout?: number): Promise<Invoice[] | Invoice | null> {
         return this.sendRpcRequest(
-            "chain_getParcelInvoices",
+            "chain_getParcelInvoice",
             [`0x${parcelHash.value}`]
-        ).then(result => result === null ? null : result.map((invoice: any) => Invoice.fromJSON(invoice)));
+        ).then(result => {
+            if (result === null) {
+                return null;
+            }
+            if (Array.isArray(result)) {
+                return result.map((invoice: any) => Invoice.fromJSON(invoice));
+            }
+            return Invoice.fromJSON(result);
+        });
     }
 
     /**
