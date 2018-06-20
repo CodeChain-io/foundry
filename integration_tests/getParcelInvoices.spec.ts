@@ -6,12 +6,12 @@ const sdk = new SDK(SERVER_URL);
 
 test("getParcelInvoice", async () => {
     const hash = await payment();
-    const invoice = await sdk.getParcelInvoices(hash);
+    const invoice = await sdk.getParcelInvoice(hash);
     expect(invoice).toEqual(new Invoice(true));
 });
 
-test("getParcelInvoices - null", async () => {
+test("getParcelInvoice - null", async () => {
     const hash = new H256("0000000000000000000000000000000000000000000000000000000000000000");
-    const invoice = await sdk.getParcelInvoices(hash);
+    const invoice = await sdk.getParcelInvoice(hash);
     expect(invoice).toBe(null);
 });

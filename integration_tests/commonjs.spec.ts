@@ -16,8 +16,6 @@ test("commonjs", async () => {
     expect(SDK.AssetScheme).toEqual(expect.any(Function));
     expect(SDK.Block).toEqual(expect.any(Function));
 
-    expect(SDK.PaymentTransaction).toEqual(expect.any(Function));
-    expect(SDK.SetRegularKeyTransaction).toEqual(expect.any(Function));
     expect(SDK.AssetMintTransaction).toEqual(expect.any(Function));
     expect(SDK.AssetTransferTransaction).toEqual(expect.any(Function));
     expect(SDK.AssetTransferInput).toEqual(expect.any(Function));

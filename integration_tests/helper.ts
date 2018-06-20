@@ -19,7 +19,7 @@ export const mintAsset = async ({ metadata, amount, lockScriptHash, parameters, 
     const fee = new U256(10);
     const networkId = 17;
 
-    const parcel = new Parcel(nonce, fee, networkId, assetMintTransaction);
+    const parcel = Parcel.transactions(nonce, fee, networkId, assetMintTransaction);
     const parcelHash = await sdk.sendSignedParcel(parcel.sign(secret));
 
     return {
@@ -51,7 +51,7 @@ export const transferAsset = async ({ mintTx }) => {
     const nonce = await sdk.getNonce(address);
     const fee = new U256(10);
 
-    const parcel = new Parcel(nonce, fee, networkId, assetTransferTransaction);
+    const parcel = Parcel.transactions(nonce, fee, networkId, mintTx, assetTransferTransaction);
     const parcelHash = await sdk.sendSignedParcel(parcel.sign(secret));
 
     return {
@@ -62,15 +62,9 @@ export const transferAsset = async ({ mintTx }) => {
 
 export const payment = async () => {
     const nonce = await sdk.getNonce(address);
-    const t = new PaymentTransaction({
-        nonce: nonce.increase(),
-        sender: address,
-        receiver: address,
-        value: new U256(0)
-    });
     const fee = new U256(10);
     const networkId = 17;
-    const p = new Parcel(nonce, fee, networkId, t).sign(secret);
+    const p = Parcel.payment(nonce, fee, networkId, address, new U256(0)).sign(secret);
     return await sdk.sendSignedParcel(p);
 };
 
@@ -81,37 +75,19 @@ export const paymentTwice = async () => {
 
     const nonce1 = await sdk.getNonce(address);
     const nonce2 = nonce1.increase();
-    const nonce3 = nonce2.increase();
-    const nonce4 = nonce3.increase();
 
-    const t1 = new PaymentTransaction({
-        nonce: nonce2,
-        sender: address,
-        receiver: address,
-        value});
-    const p1 = new Parcel(nonce1, fee, networkId, t1).sign(secret);
+    const p1 = Parcel.payment(nonce1, fee, networkId, address, value).sign(secret);
     await sdk.sendSignedParcel(p1);
 
-    const t2 = new PaymentTransaction({
-        nonce: nonce4,
-        sender: address,
-        receiver: address,
-        value
-    });
-    const p2 = new Parcel(nonce3, fee, networkId, t2).sign(secret);
+    const p2 = Parcel.payment(nonce2, fee, networkId, address, value).sign(secret);
     await sdk.sendSignedParcel(p2);
 };
 
 export const setRegularKey = async () => {
     const nonce = await sdk.getNonce(address);
     const key = new H512("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
-    const t = new SetRegularKeyTransaction({
-        address,
-        nonce: nonce.increase(),
-        key
-    });
     const fee = new U256(10);
     const networkId = 17;
-    const p = new Parcel(nonce, fee, networkId, t);
+    const p = Parcel.setRegularKey(nonce, fee, networkId, key);
     return await sdk.sendSignedParcel(p.sign(secret));
 };

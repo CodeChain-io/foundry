@@ -52,12 +52,12 @@ export class SignedParcel {
     }
 
     toEncodeObject(): Array<any> {
-        const { unsigned: { nonce, fee, transactions, networkId }, v, r, s } = this;
+        const { unsigned: { nonce, fee, action, networkId }, v, r, s } = this;
         return [
             nonce.toEncodeObject(),
             fee.toEncodeObject(),
-            transactions.map(transaction => transaction.toEncodeObject()),
             networkId.toEncodeObject(),
+            action.toEncodeObject(),
             v,
             r.toEncodeObject(),
             s.toEncodeObject()
@@ -73,8 +73,7 @@ export class SignedParcel {
     }
 
     static fromJSON(data: any) {
-        const { nonce, fee, transactions, networkId, v, r, s,
-            blockNumber, blockHash, parcelIndex } = data;
+        const { v, r, s, blockNumber, blockHash, parcelIndex } = data;
         if (blockNumber) {
             return new SignedParcel(Parcel.fromJSON(data), v, new U256(r), new U256(s), blockNumber, new H256(blockHash), parcelIndex);
         } else {
@@ -84,15 +83,15 @@ export class SignedParcel {
 
     toJSON() {
         const { blockNumber, blockHash, parcelIndex,
-            unsigned: { nonce, fee, transactions, networkId }, v, r, s } = this;
+            unsigned: { nonce, fee, networkId, action }, v, r, s } = this;
         return {
             blockNumber,
             blockHash: blockHash === null ? null : blockHash.value,
             parcelIndex,
             nonce: nonce.value.toString(),
             fee: fee.value.toString(),
-            transactions: transactions.map(t => t.toJSON()),
             networkId: networkId.value.toNumber(),
+            action: action.toJSON(),
             v,
             r: r.value.toString(),
             s: s.value.toString(),
