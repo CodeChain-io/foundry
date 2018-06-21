@@ -18,7 +18,7 @@ export class H160 {
         const bytes = Array.from(buffer.values());
         const length = bytes.shift()! - 0x80;
         if (length !== 20 || bytes.length !== length) {
-            throw "Invalid RLP";
+            throw `Invalid RLP for H160: ${bytes}`;
         }
         return new H160(bytes.map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join(""));
     }

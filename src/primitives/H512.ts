@@ -19,7 +19,7 @@ export class H512 {
         const firstByte = bytes.shift();
         const length = bytes.shift();
         if (firstByte !== 0xb8 || length !== 64 || bytes.length !== length) {
-            throw "Invalid RLP";
+            throw `Invalid RLP for H512: ${bytes}`;
         }
         return new H512(bytes.map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join(""));
     }

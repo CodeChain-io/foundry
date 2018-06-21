@@ -27,7 +27,7 @@ export class U256 {
         if (length > 32) {
             throw "Buffer for U256 must be less than or equal to 32";
         } else if (bytes.length !== length) {
-            throw "Invalid RLP";
+            throw `Invalid RLP for U256: ${bytes}`;
         } else if (length === 0) {
             return new U256(0);
         }
