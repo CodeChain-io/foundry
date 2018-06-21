@@ -1,23 +1,21 @@
 const RLP = require("rlp");
 
-type TransactionOutcome = "Success" | "Failed";
 /**
  * Used to know whether a transaction succeeded or failed.
  */
 export class Invoice {
-    private outcome: TransactionOutcome;
+    private success: boolean;
 
     constructor(success: boolean) {
-        this.outcome = success ? "Success" : "Failed";
+        this.success = !!success;
     }
 
     static fromJSON(data: any) {
-        return new this(data.outcome === "Success");
+        return new this(data === "Success");
     }
 
     toJSON() {
-        const { outcome } = this;
-        return { outcome };
+        return this.success ? "Success" : "Failed";
     }
 
     static fromBytes(buffer: Buffer): Invoice {
@@ -29,7 +27,7 @@ export class Invoice {
     }
 
     toEncodeObject(): boolean {
-        return this.outcome === "Success";
+        return this.success;
     }
 
     rlpBytes(): Buffer {

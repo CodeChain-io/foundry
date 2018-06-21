@@ -1,4 +1,4 @@
-import { SDK, H160, H256, U256, Parcel, PaymentTransaction, privateKeyToAddress } from "../";
+import { Invoice, SDK, H160, H256, U256, Parcel, PaymentTransaction, privateKeyToAddress } from "../";
 import { payment } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
@@ -20,5 +20,5 @@ test("getTransactionInvoice", async () => {
     const networkId = 17;
     const p = new Parcel(nonce, fee, networkId, t).sign(secret);
     await sdk.sendSignedParcel(p);
-    expect(await sdk.getTransactionInvoice(t.hash())).toEqual({ "outcome": "Success" });
+    expect(await sdk.getTransactionInvoice(t.hash())).toEqual(new Invoice(true));
 });

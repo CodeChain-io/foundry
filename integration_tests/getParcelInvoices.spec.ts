@@ -1,4 +1,4 @@
-import { SDK, H256 } from "../";
+import { Invoice, SDK, H256 } from "../";
 import { payment } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
@@ -7,7 +7,7 @@ const sdk = new SDK(SERVER_URL);
 test("getParcelInvoices", async () => {
     const hash = await payment();
     const invoice = await sdk.getParcelInvoices(hash);
-    expect(invoice).toEqual([{ "outcome": "Success" }]);
+    expect(invoice).toEqual([new Invoice(true)]);
 });
 
 test("getParcelInvoices - null", async () => {
