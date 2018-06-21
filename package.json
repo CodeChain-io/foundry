@@ -6,7 +6,7 @@
     "lint": "tslint -c tslint.json \"src/**/*.ts\"",
     "build": "rollup -c rollup.config.ts",
     "test": "npm run lint && jest --env node",
-    "test-int": "jest --env node --roots integration_tests",
+    "test-int": "npm run-script build && jest --env node --roots integration_tests",
     "docs": "typedoc --out docs --name \"CodeChain JavaScript SDK\" --mode file --readme API.md --excludePrivate --excludeProtected",
     "docs-dev": "nodemon -e ts --watch src --exec 'yarn docs'"
   },
