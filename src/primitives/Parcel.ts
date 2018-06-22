@@ -10,12 +10,9 @@ import { Transaction, getTransactionFromJSON } from "./transaction";
 
 const RLP = require("rlp");
 
-interface Action {
-    toEncodeObject(): Array<any>;
-    toJSON(): Object;
-}
+export type Action = ChangeShardState | Payment | SetRegularKey;
 
-class ChangeShardState implements Action {
+class ChangeShardState {
     transactions: Transaction[];
 
     constructor(transactions: Transaction[]) {
@@ -26,7 +23,7 @@ class ChangeShardState implements Action {
         return [1, this.transactions.map(transaction => transaction.toEncodeObject())];
     }
 
-    toJSON(): Object {
+    toJSON() {
         return {
             action: "changeShardState",
             transactions: this.transactions.map(t => t.toJSON())
@@ -34,7 +31,7 @@ class ChangeShardState implements Action {
     }
 }
 
-class Payment implements Action {
+class Payment {
     receiver: H160;
     value: U256;
 
@@ -47,7 +44,7 @@ class Payment implements Action {
         return [2, this.receiver.toEncodeObject(), this.value.toEncodeObject()];
     }
 
-    toJSON(): Object {
+    toJSON() {
         return {
             action: "payment",
             receiver: this.receiver.value,
@@ -56,7 +53,7 @@ class Payment implements Action {
     }
 }
 
-class SetRegularKey implements Action {
+class SetRegularKey {
     key: H512;
 
     constructor(key: H512) {
@@ -67,7 +64,7 @@ class SetRegularKey implements Action {
         return [3, this.key.toEncodeObject()];
     }
 
-    toJSON(): Object {
+    toJSON() {
         return {
             action: "setRegularKey",
             key: this.key.value
