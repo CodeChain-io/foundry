@@ -50,11 +50,11 @@ export const ripemd160 = (buffer: Buffer | string): string => {
     return new ripemd().update(buffer).digest("hex");
 };
 
-export interface ECDSASignature {
+export type ECDSASignature = {
     r: string;
     s: string;
     v: number;
-}
+};
 
 export const signEcdsa = (message: string, priv: string): ECDSASignature => {
     const key = secp256k1.keyFromPrivate(priv);
