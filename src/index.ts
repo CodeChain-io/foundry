@@ -154,14 +154,24 @@ class SDK {
 
     /**
      * Gets block of given block hash.
-     * @param hash The block hash of which to get the block of
+     * @param hashOrNumber The block hash or number of which to get the block of
      * @returns Block, if block exists. Else, returns null.
      */
-    getBlock(hash: H256): Promise<Block | null> {
-        return this.sendRpcRequest(
-            "chain_getBlockByHash",
-            [`0x${hash.value}`]
-        ).then(result => result === null ? null : Block.fromJSON(result));
+    getBlock(hashOrNumber: H256 | number): Promise<Block | null> {
+        if (hashOrNumber instanceof H256) {
+            return this.sendRpcRequest(
+                "chain_getBlockByHash",
+                [`0x${hashOrNumber.value}`]
+            ).then(result => result === null ? null : Block.fromJSON(result));
+        } else {
+            // FIXME: use chain_getBlockByNumber when it's implemented
+            return this.getBlockHash(hashOrNumber).then(hash => {
+                if (hash === null) {
+                    return null;
+                }
+                return this.getBlock(hash);
+            });
+        }
     }
 
     // FIXME: receive asset type instead of txhash. Need to change codechain also.
