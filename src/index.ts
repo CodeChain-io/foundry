@@ -1,6 +1,6 @@
 import { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block } from "./primitives/index";
 import { getTransactionFromJSON, Transaction, PaymentTransaction, SetRegularKeyTransaction, AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "./primitives/transaction";
-import { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress } from "./utils";
+import { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress, verifyEcdsa, recoverPublic } from "./utils";
 
 /**
  * @hidden
@@ -229,6 +229,8 @@ class SDK {
     static blake256WithKey = blake256WithKey;
     static ripemd160 = ripemd160;
     static signEcdsa = signEcdsa;
+    static verifyEcdsa = verifyEcdsa;
+    static recoverPublic = recoverPublic;
     static privateKeyToAddress = privateKeyToAddress;
     static privateKeyToPublic = privateKeyToPublic;
 }
