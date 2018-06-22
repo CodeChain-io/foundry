@@ -1,6 +1,10 @@
 import { H160 } from "../H160";
 import { H512 } from "../H512";
 import { U256 } from "../U256";
+import { H256 } from "..";
+import { blake256 } from "../..";
+
+const RLP = require("rlp");
 
 export type SetRegularKeyTransactionData = {
     address: H160;
@@ -45,5 +49,13 @@ export class SetRegularKeyTransaction {
     toEncodeObject() {
         const { address, nonce, key } = this.data;
         return [2, address.toEncodeObject(), nonce.toEncodeObject(), key.toEncodeObject()];
+    }
+
+    rlpBytes(): Buffer {
+        return RLP.encode(this.toEncodeObject());
+    }
+
+    hash(): H256 {
+        return new H256(blake256(this.rlpBytes()));
     }
 }
