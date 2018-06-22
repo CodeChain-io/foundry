@@ -43,6 +43,22 @@ test("AssetTransferTransaction fromJSON", async () => {
     const parcel = await sdk.getParcel(parcelHash);
     expect(parcel.unsigned.action.transactions[1]).toMatchObject({
         type: expect.stringMatching("assetTransfer"),
+        burns: expect.arrayContaining([{
+            prevOut: expect.objectContaining({
+                data: expect.objectContaining({
+                    transactionHash: expect.any(H256),
+                    // number
+                    index: expect.anything(),
+                    assetType: expect.any(H256),
+                    // number
+                    amount: expect.anything(),
+                })
+            }),
+            // Buffer
+            lockScript: expect.anything(),
+            // Buffer
+            unlockScript: expect.anything(),
+        }]),
         inputs: expect.arrayContaining([{
             prevOut: expect.objectContaining({
                 data: expect.objectContaining({

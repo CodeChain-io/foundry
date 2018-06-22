@@ -3,6 +3,7 @@ import { H256 } from "../..";
 
 test("AssetTransferTransaction toJSON", () => {
     const t = new AssetTransferTransaction(17, {
+        burns: [],
         inputs: [],
         outputs: []
     }, 54321);
@@ -62,10 +63,12 @@ test("AssetTransferTransaction hashWithoutScript", () => {
         unlockScript: Buffer.from([])
     });
     const t1 = new AssetTransferTransaction(17, {
+        burns: [],
         inputs: [input1],
         outputs: []
     }, 54321);
     const t2 = new AssetTransferTransaction(17, {
+        burns: [],
         inputs: [input2],
         outputs: []
     }, 54321);

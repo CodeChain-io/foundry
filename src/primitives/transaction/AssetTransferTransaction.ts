@@ -154,6 +154,7 @@ export class AssetTransferOutput {
 }
 
 export type AssetTransferTransactionData = {
+    burns: AssetTransferInput[];
     inputs: AssetTransferInput[];
     outputs: AssetTransferOutput[];
 };
@@ -167,13 +168,15 @@ export type AssetTransferTransactionData = {
  * - If an identical transaction hash already exists, then the change fails. In this situation, a transaction can be created again by arbitrarily changing the nonce.
  */
 export class AssetTransferTransaction {
+    private burns: AssetTransferInput[];
     private inputs: AssetTransferInput[];
     private outputs: AssetTransferOutput[];
     private networkId: number;
     private nonce: number;
     private type = "assetTransfer";
 
-    constructor(networkId: number, { inputs, outputs }: AssetTransferTransactionData, nonce = 0) {
+    constructor(networkId: number, { burns, inputs, outputs }: AssetTransferTransactionData, nonce = 0) {
+        this.burns = burns;
         this.inputs = inputs;
         this.outputs = outputs;
         this.networkId = networkId;
@@ -184,6 +187,7 @@ export class AssetTransferTransaction {
         return [
             4,
             this.networkId,
+            this.burns.map(input => input.toEncodeObject()),
             this.inputs.map(input => input.toEncodeObject()),
             this.outputs.map(output => output.toEncodeObject()),
             this.nonce
@@ -199,8 +203,9 @@ export class AssetTransferTransaction {
     }
 
     hashWithoutScript(): H256 {
-        const { networkId, inputs, outputs, nonce } = this;
+        const { networkId, burns, inputs, outputs, nonce } = this;
         return new H256(blake256(new AssetTransferTransaction(networkId, {
+            burns: burns.map(input => input.withoutScript()),
             inputs: inputs.map(input => input.withoutScript()),
             outputs,
         }, nonce).rlpBytes()));
@@ -225,18 +230,20 @@ export class AssetTransferTransaction {
     }
 
     static fromJSON(data: any) {
-        const { networkId, inputs, outputs, nonce } = data["assetTransfer"];
+        const { networkId, burns, inputs, outputs, nonce } = data["assetTransfer"];
         return new this(networkId, {
+            burns: burns.map((input: any) => AssetTransferInput.fromJSON(input)),
             inputs: inputs.map((input: any) => AssetTransferInput.fromJSON(input)),
             outputs: outputs.map((output: any) => AssetTransferOutput.fromJSON(output))
         }, nonce);
     }
 
     toJSON() {
-        const { networkId, inputs, outputs, nonce } = this;
+        const { networkId, burns, inputs, outputs, nonce } = this;
         return {
             [this.type]: {
                 networkId,
+                burns: burns.map(input => input.toJSON()),
                 inputs: inputs.map(input => input.toJSON()),
                 outputs: outputs.map(output => output.toJSON()),
                 nonce,

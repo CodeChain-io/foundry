@@ -150,6 +150,7 @@ async function sendTransaction(t: Transaction) {
 
     // Create AssetTransferTransaction with the input and the outputs
     const transferTx = new AssetTransferTransaction(17, {
+        burns: [],
         inputs,
         outputs,
     });

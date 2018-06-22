@@ -31,6 +31,7 @@ export const mintAsset = async ({ metadata, amount, lockScriptHash, parameters, 
 export const transferAsset = async ({ mintTx }) => {
     const networkId = 17;
     const assetTransferTransaction = new AssetTransferTransaction(networkId, {
+        burns: [],
         inputs: [new AssetTransferInput({
             prevOut: new AssetOutPoint({
                 transactionHash: mintTx.hash(),
