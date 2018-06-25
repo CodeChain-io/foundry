@@ -47,7 +47,7 @@ function encode (prefix: any, words: any, LIMIT: any) {
 
     // determine chk mod
     let chk = prefixChk(prefix);
-    let result = prefix + "1";
+    let result = prefix;
     for (let i = 0; i < words.length; ++i) {
         const x = words[i];
         if ((x >> 5) !== 0) throw new Error("Non 5-bit word");
@@ -70,7 +70,7 @@ function encode (prefix: any, words: any, LIMIT: any) {
 }
 
 // FIXME: any
-function decode (str: any, LIMIT: any) {
+function decode (str: string, prefix: string, LIMIT?: number) {
     LIMIT = LIMIT || 90;
     if (str.length < 8) throw new TypeError(str + " too short");
     if (str.length > LIMIT) throw new TypeError("Exceeds length limit");
@@ -81,12 +81,12 @@ function decode (str: any, LIMIT: any) {
     if (str !== lowered && str !== uppered) throw new Error("Mixed-case string " + str);
     str = lowered;
 
-    const split = str.lastIndexOf("1");
-    if (split === -1) throw new Error("No separator character for " + str);
-    if (split === 0) throw new Error("Missing prefix for " + str);
+    if (!str.startsWith(prefix)) {
+        throw new Error("Missing prefix for " + str);
+    }
+    const split = prefix.length;
 
-    const prefix = str.slice(0, split);
-    const wordChars = str.slice(split + 1);
+    const wordChars = str.slice(split);
     if (wordChars.length < 6) throw new Error("Data too short");
 
     let chk = prefixChk(prefix);
