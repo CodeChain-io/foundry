@@ -39,7 +39,7 @@ function prefixChk (prefix: any) {
 }
 
 // FIXME: any
-function encode (prefix: any, words: any, LIMIT: any) {
+export function encode (prefix: any, words: any, LIMIT?: any) {
     LIMIT = LIMIT || 90;
     if ((prefix.length + 7 + words.length) > LIMIT) throw new TypeError("Exceeds length limit");
 
@@ -70,7 +70,7 @@ function encode (prefix: any, words: any, LIMIT: any) {
 }
 
 // FIXME: any
-function decode (str: string, prefix: string, LIMIT?: number) {
+export function decode (str: string, prefix: string, LIMIT?: number) {
     LIMIT = LIMIT || 90;
     if (str.length < 8) throw new TypeError(str + " too short");
     if (str.length > LIMIT) throw new TypeError("Exceeds length limit");
@@ -136,7 +136,7 @@ function convert (data: any, inBits: any, outBits: any, pad: any) {
 }
 
 // FIXME: any
-function toWords (bytes: any) {
+export function toWords (bytes: any) {
     return convert(bytes, 8, 5, true);
 }
 
