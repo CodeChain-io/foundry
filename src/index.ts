@@ -2,16 +2,32 @@ import { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetSche
 import { getTransactionFromJSON, Transaction, AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "./primitives/transaction";
 import { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress, verifyEcdsa, recoverPublic } from "./utils";
 
+import fetch from "node-fetch";
+
 /**
  * @hidden
  */
-const jayson = require("jayson");
+const jaysonBrowserClient = require("jayson/lib/client/browser");
 
 class SDK {
     private client: any;
 
     constructor(httpUrl: string) {
-        this.client = jayson.client.http(httpUrl);
+        this.client = jaysonBrowserClient((request: any, callback: any) => {
+            fetch(httpUrl, {
+                method: "POST",
+                body: request,
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then(res => {
+                return res.text();
+            }).then(text => {
+                return callback(null, text);
+            }).catch(err => {
+                return callback(err);
+            });
+        });
     }
 
     private sendRpcRequest = (name: string, params: any[]) => {

@@ -29,8 +29,9 @@
     "bignumber.js": "^6.0.0",
     "blakejs": "^1.1.0",
     "elliptic": "^6.4.0",
-    "jayson": "^2.0.5",
+    "jayson": "^2.0.6",
     "lodash": "^4.17.10",
+    "node-fetch": "^2.1.2",
     "ripemd160": "^2.0.2",
     "rlp": "^2.0.0"
   },
@@ -39,6 +40,7 @@
     "@types/jest": "^22.2.3",
     "@types/lodash": "^4.14.108",
     "@types/node": "^9.6.6",
+    "@types/node-fetch": "^2.1.1",
     "jest": "^22.4.3",
     "nodemon": "^1.17.5",
     "rollup": "^0.60.2",
