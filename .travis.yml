@@ -7,5 +7,5 @@ script:
   - yarn test
   - yarn build
 notifications:
-  slack: kodebox:URYvmhwGeGliw90dCz9wgJp7
+  webhooks: https://webhooks.gitter.im/e/8908c378a5e2669893ab
 cache: yarn
