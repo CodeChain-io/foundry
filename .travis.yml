@@ -5,6 +5,7 @@ before_install:
   - yarn install
 script:
   - yarn test
+  - yarn build
 notifications:
   slack: kodebox:URYvmhwGeGliw90dCz9wgJp7
 cache: yarn
