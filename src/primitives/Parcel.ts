@@ -104,7 +104,7 @@ export class Parcel {
     // FIXME: network id is 64-bit unsigned originally, so it must be changed when
     // it's serialized with leading zeros.
     networkId: U256;
-    private action: Action;
+    action: Action;
 
     static transactions(nonce: U256, fee: U256, networkId: number, ...transactions: Transaction[]): Parcel {
         const action = new ChangeShardState(transactions);
