@@ -247,7 +247,7 @@ export class AssetTransferTransaction {
                 inputs: inputs.map(input => input.toJSON()),
                 outputs: outputs.map(output => output.toJSON()),
                 nonce,
-                hash: this.hash(),
+                hash: this.hash().value,
             }
         };
     }

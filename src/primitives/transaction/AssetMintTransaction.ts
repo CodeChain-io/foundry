@@ -53,7 +53,7 @@ export class AssetMintTransaction {
                 amount,
                 registrar: registrar === null ? null : registrar.value,
                 nonce,
-                hash: this.hash(),
+                hash: this.hash().value,
             }
         };
     }
