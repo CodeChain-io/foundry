@@ -172,13 +172,10 @@ class SDK {
                 [`0x${hashOrNumber.value}`]
             ).then(result => result === null ? null : Block.fromJSON(result));
         } else {
-            // FIXME: use chain_getBlockByNumber when it's implemented
-            return this.getBlockHash(hashOrNumber).then(hash => {
-                if (hash === null) {
-                    return null;
-                }
-                return this.getBlock(hash);
-            });
+            return this.sendRpcRequest(
+                "chain_getBlockByNumber",
+                [hashOrNumber]
+            ).then(result => result === null ? null : Block.fromJSON(result));
         }
     }
 
