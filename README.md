@@ -27,7 +27,7 @@ Run `yarn test`
 
 1. Run `yarn build` command.
 1. Run CodeChain RPC server.
-1. Set `CODECHAIN_RPC_HTTP` environment variable with JSON-RPC HTTP server. (e.g. `https://localhost:8080`)
+1. Set `CODECHAIN_RPC_HTTP` environment variable with JSON-RPC HTTP server. (e.g. `http://localhost:8080`)
 1. Run `yarn test-int` command.
    > It is also possible to indicate specific testcase with `-t` option. (e.g. `yarn test-int -t getBlockNumber`)
 
