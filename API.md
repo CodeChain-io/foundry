@@ -8,20 +8,12 @@ Make sure that your CodeChain RPC server is listening. In the examples, we assum
 ## Send 10000 CCC using PaymentTransaction
 
 ```javascript
-import { SDK, Parcel, U256, H256, H160, PaymentTransaction } from "codechain-sdk";
+const SDK = require("codechain-sdk");
+// import { Parcel, U256, H256, H160 } from "codechain-sdk";
+const { Parcel, U256, H256, H160 } = SDK;
 
 // Create SDK object with CodeChain RPC server URL
 const sdk = new SDK("http://localhost:8080");
-
-// Create PaymentTransaction that sends 10000 CCC from 0x5bcd7c... to 0x744142..
-// Transaction is only valid if the nonce matches the nonce of the sender.
-// The nonce of the sender is increased by 1 when this transaction is confirmed.
-const tx = new PaymentTransaction({
-    nonce: new U256(0),
-    sender: new H160("5bcd7c840f108172d94a4d084af711d879630fe6"),
-    receiver: new H160("744142069fe2d03d48e61734cbe564fcc94e6e31"),
-    value: new U256(10000)
-});
 
 // Parcel is only valid if the nonce matches the nonce of the parcel signer.
 // The nonce of the signer is increased by 1 when this parcel is confirmed.
@@ -30,11 +22,15 @@ const parcelSignerNonce = new U256(0);
 const fee = new U256(10);
 // Network ID prevents replay attacks or confusion among different CodeChain networks.
 const networkId = 17;
-// Create Parcel
-const parcel = new Parcel(parcelSignerNonce, fee, networkId, tx);
+// Recipient of the payment
+const receiver = new H160("744142069fe2d03d48e61734cbe564fcc94e6e31");
+// Amount of the payment. The parcel signer's balance must be at least 10010.
+const value = new U256(10000);
+// Create the Parcel for the payment
+const parcel = Parcel.payment(parcelSignerNonce, fee, networkId, receiver, value);
 
-// Sign the parcel with the secret key of the address 0x31bd8354de8f7dbab6764a11851086061fee3f25.
-const parcelSignerSecret = new H256("b15139f97aad25ae0330432aeb091ef962eee643e41dc07a1e04457c5c2c6088");
+// Sign the parcel with the secret key of the address 0xa6594b7196808d161b6fb137e781abbc251385d9.
+const parcelSignerSecret = new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd");
 const signedParcel = parcel.sign(parcelSignerSecret);
 
 // Send the signed parcel to the CodeChain node. The node will propagate this
@@ -58,15 +54,16 @@ sdk.sendSignedParcel(signedParcel).then((hash) => {
 ## Mint 10000 Gold and send 3000 Gold using AssetMintTransaction, AssetTransferTransaction
 
 ```javascript
-import { SDK, AssetMintTransaction, H256, blake256, signEcdsa, privateKeyToPublic,
+const SDK = require("codechain-sdk");
+const { AssetMintTransaction, H256, blake256, signEcdsa, privateKeyToPublic,
     privateKeyToAddress, H160, Parcel, U256, AssetTransferTransaction,
-    AssetTransferInput, AssetOutPoint, AssetTransferOutput, Transaction } from "codechain-sdk";
+    AssetTransferInput, AssetOutPoint, AssetTransferOutput, Transaction } = SDK;
 
 const sdk = new SDK("http://localhost:8080");
 
 // CodeChain opcodes for P2PK(Pay to Public Key)
 const OP_PUSHB = 0x32;
-const OP_CHECKSIG = 0x81;
+const OP_CHECKSIG = 0x80;
 
 // Alice's key pair
 const alicePrivate = "37a948d2e9ae622f3b9e224657249259312ffd3f2d105eabda6f222074608df3";
@@ -81,11 +78,11 @@ const bobPublic = privateKeyToPublic(bobPrivate);
 const bobLockScript = Buffer.from([OP_PUSHB, 64, ...Buffer.from(bobPublic, "hex"), OP_CHECKSIG]);
 
 // sendTransaction() is a function to make transaction to be processed.
-async function sendTransaction(t: Transaction) {
+async function sendTransaction(tx) {
     const parcelSignerSecret = new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd");
     const parcelSignerAddress = new H160(privateKeyToAddress("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"));
     const parcelSignerNonce = await sdk.getNonce(parcelSignerAddress);
-    const parcel = new Parcel(parcelSignerNonce!, new U256(10), 17, t);
+    const parcel = Parcel.transactions(parcelSignerNonce, new U256(10), 17, tx);
     const signedParcel = parcel.sign(parcelSignerSecret);
     return await sdk.sendSignedParcel(signedParcel);
 }
