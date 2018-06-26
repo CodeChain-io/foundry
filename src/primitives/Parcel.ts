@@ -12,7 +12,7 @@ const RLP = require("rlp");
 
 export type Action = ChangeShardState | Payment | SetRegularKey;
 
-class ChangeShardState {
+export class ChangeShardState {
     transactions: Transaction[];
 
     constructor(transactions: Transaction[]) {
@@ -31,7 +31,7 @@ class ChangeShardState {
     }
 }
 
-class Payment {
+export class Payment {
     receiver: H160;
     value: U256;
 
@@ -53,7 +53,7 @@ class Payment {
     }
 }
 
-class SetRegularKey {
+export class SetRegularKey {
     key: H512;
 
     constructor(key: H512) {
