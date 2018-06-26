@@ -7,12 +7,8 @@ export type Transaction =
 
 export { AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetTransferOutput, AssetOutPoint };
 
-export const getTransactionFromJSON = (obj: string | any) => {
-    const keys = Object.keys(obj);
-    if (keys.length !== 1) {
-        throw new Error(`Unexpected transaction keys: ${keys}`);
-    }
-    const type = keys[0];
+export const getTransactionFromJSON = (obj: { type: string, data: object }) => {
+    const { type } = obj;
     switch (type) {
     case "assetMint":
         return AssetMintTransaction.fromJSON(obj);

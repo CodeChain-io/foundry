@@ -229,8 +229,8 @@ export class AssetTransferTransaction {
         return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }
 
-    static fromJSON(data: any) {
-        const { networkId, burns, inputs, outputs, nonce } = data["assetTransfer"];
+    static fromJSON(obj: any) {
+        const { data: { networkId, burns, inputs, outputs, nonce } } = obj;
         return new this(networkId, {
             burns: burns.map((input: any) => AssetTransferInput.fromJSON(input)),
             inputs: inputs.map((input: any) => AssetTransferInput.fromJSON(input)),
@@ -241,7 +241,8 @@ export class AssetTransferTransaction {
     toJSON() {
         const { networkId, burns, inputs, outputs, nonce } = this;
         return {
-            [this.type]: {
+            type: this.type,
+            data: {
                 networkId,
                 burns: burns.map(input => input.toJSON()),
                 inputs: inputs.map(input => input.toJSON()),
