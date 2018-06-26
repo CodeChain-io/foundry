@@ -141,6 +141,6 @@ export function toWords (bytes: any) {
 }
 
 // FIXME: any
-function fromWords (words: any) {
+export function fromWords (words: any) {
     return convert(words, 5, 8, false);
 }

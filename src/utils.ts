@@ -17,7 +17,7 @@ const secp256k1 = new EC("secp256k1");
 
 const toHexByte = (byte: number) => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16);
 
-const toHex = (buffer: Buffer): string => {
+export const toHex = (buffer: Buffer): string => {
     return Array.from(buffer).map(toHexByte).join("");
 };
 
