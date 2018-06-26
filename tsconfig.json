@@ -7,7 +7,10 @@
         "module": "commonjs",
         "declaration": true,
         "outDir": "lib",
-        "strict": true
+        "strict": true,
+        "noImplicitAny": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
     },
     "include": [
         "./src/**/*",

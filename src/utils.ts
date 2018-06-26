@@ -14,10 +14,6 @@ const EC = require("elliptic").ec;
  * @hidden
  */
 const secp256k1 = new EC("secp256k1");
-/**
- * @hidden
- */
-const RLP = require("rlp");
 
 const toHexByte = (byte: number) => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16);
 

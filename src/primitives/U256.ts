@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import { BigNumber } from "bignumber.js";
 
 const RLP = require("rlp");
