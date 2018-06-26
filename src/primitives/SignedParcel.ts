@@ -95,6 +95,7 @@ export class SignedParcel {
             v,
             r: r.value.toString(),
             s: s.value.toString(),
+            hash: this.hash().value,
         };
     }
 }
