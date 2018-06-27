@@ -1,4 +1,6 @@
 import { H160 } from ".";
+import { AssetTransferAddress } from "../AssetTransferAddress";
+import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 
 export type AssetSchemeData = {
     metadata: string;
@@ -30,5 +32,17 @@ export class AssetScheme {
             amount,
             registrar: registrar === null ? null : registrar.value
         };
+    }
+
+    mint(address: AssetTransferAddress, options: { nonce?: number } = {}): AssetMintTransaction {
+        const { nonce = 0 } = options;
+        const { metadata, amount, registrar } = this;
+        return new AssetMintTransaction({
+            metadata,
+            registrar,
+            amount,
+            nonce,
+            ...address.getLockScriptHashAndParameters(),
+        });
     }
 }

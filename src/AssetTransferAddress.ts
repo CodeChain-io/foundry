@@ -89,4 +89,18 @@ export class AssetTransferAddress {
         const payload = toHex(Buffer.from(bytes.slice(2)));
         return new this(type, new H256(payload), address);
     }
+
+    getLockScriptHashAndParameters(): { lockScriptHash: H256, parameters: Buffer[] } {
+        const { type, payload } = this;
+        switch (type) {
+            case 0x00:
+                return { lockScriptHash: payload, parameters: [] };
+            case 0x01:
+                // FIXME:
+                const lockScriptHash = new H256("0000000000000000000000000000000000000000000000000000000000000000");
+                return { lockScriptHash, parameters: [Buffer.from(payload.value, "hex")] };
+            default:
+                throw "Unreachable";
+        }
+    }
 }
