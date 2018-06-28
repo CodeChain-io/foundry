@@ -6,6 +6,8 @@ test("toJSON", () => {
         lockScriptHash: new H256("1111111111111111111111111111111111111111111111111111111111111111"),
         parameters: [],
         amount: 222,
+        transactionHash: new H256("2222222222222222222222222222222222222222222222222222222222222222"),
+        transactionOutputIndex: 0,
     });
     expect(Asset.fromJSON(asset.toJSON())).toEqual(asset);
 });

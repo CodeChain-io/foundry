@@ -218,7 +218,16 @@ class SDK {
         return this.sendRpcRequest(
             "chain_getAsset",
             [`0x${txhash.value}`, index]
-        ).then(result => result === null ? null : Asset.fromJSON(result));
+        ).then(result => {
+            if (result === null) {
+                return null;
+            }
+            return Asset.fromJSON({
+                ...result,
+                transactionHash: txhash.value,
+                transactionOutputIndex: index
+            });
+        });
     }
 
     /**

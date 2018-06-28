@@ -18,5 +18,7 @@ test("getAsset", async () => {
         lockScriptHash: new H256("0000000000000000000000000000000000000000000000000000000000000000"),
         parameters: [],
         amount: 111,
+        transactionHash: assetMintTransaction.hash(),
+        transactionOutputIndex: 0
     }));
 });

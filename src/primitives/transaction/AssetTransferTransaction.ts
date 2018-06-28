@@ -17,7 +17,7 @@ export type AssetOutPointData = {
  * - The asset type and amount must be identical to the Asset that it points to.
  */
 export class AssetOutPoint {
-    private data: AssetOutPointData;
+    data: AssetOutPointData;
 
     constructor(data: AssetOutPointData) {
         this.data = data;
