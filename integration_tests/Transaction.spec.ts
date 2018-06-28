@@ -1,4 +1,4 @@
-import { SDK, H256, PaymentTransaction, AssetMintTransaction } from "../";
+import { SDK, H256, AssetMintTransaction } from "../";
 import { mintAsset, transferAsset } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
@@ -41,51 +41,31 @@ test("AssetTransferTransaction fromJSON", async () => {
 
     const { parcelHash } = await transferAsset({ mintTx: mint });
     const parcel = await sdk.getParcel(parcelHash);
-    expect(parcel.unsigned.action.transactions[1]).toMatchObject({
-        type: expect.stringMatching("assetTransfer"),
-        burns: expect.arrayContaining([{
-            prevOut: expect.objectContaining({
-                data: expect.objectContaining({
-                    transactionHash: expect.any(H256),
-                    // number
-                    index: expect.anything(),
-                    assetType: expect.any(H256),
-                    // number
-                    amount: expect.anything(),
-                })
-            }),
-            // Buffer
-            lockScript: expect.anything(),
-            // Buffer
-            unlockScript: expect.anything(),
-        }]),
-        inputs: expect.arrayContaining([{
-            prevOut: expect.objectContaining({
-                data: expect.objectContaining({
-                    transactionHash: expect.any(H256),
-                    // number
-                    index: expect.anything(),
-                    assetType: expect.any(H256),
-                    // number
-                    amount: expect.anything(),
-                })
-            }),
-            // Buffer
-            lockScript: expect.anything(),
-            // Buffer
-            unlockScript: expect.anything(),
-        }]),
-        outputs: expect.arrayContaining([{
+    // FIXME: Remove anythings when *Data fields are flattened
+    const expectedInput = expect.objectContaining({
+        prevOut: expect.objectContaining({
             data: expect.objectContaining({
-                lockScriptHash: expect.any(H256),
-                // number
-                parameters: expect.anything(),
+                transactionHash: expect.any(H256),
+                index: expect.anything(),
                 assetType: expect.any(H256),
-                // number
                 amount: expect.anything(),
             })
-        }]),
-        // number
+        }),
+        lockScript: expect.anything(),
+        unlockScript: expect.anything(),
+    });
+    const expectedOutput = expect.objectContaining({
+        lockScriptHash: expect.anything(),
+        parameters: [],
+        assetType: expect.anything(),
+        amount: expect.anything(),
+    });
+    expect(parcel.unsigned.action.transactions[1]).toMatchObject({
+        type: expect.stringMatching("assetTransfer"),
+        burns: [],
+        inputs: expect.arrayContaining([expectedInput]),
+        outputs: expect.anything(),
+        networkId: expect.anything(),
         nonce: expect.anything(),
     });
 });
