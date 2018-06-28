@@ -106,6 +106,10 @@ export class AssetTransferInput {
         });
     }
 
+    setLockScript(lockScript: Buffer) {
+        this.lockScript = lockScript;
+    }
+
     setUnlockScript(unlockScript: Buffer) {
         this.unlockScript = unlockScript;
     }
@@ -209,6 +213,13 @@ export class AssetTransferTransaction {
             inputs: inputs.map(input => input.withoutScript()),
             outputs,
         }, nonce).rlpBytes()));
+    }
+
+    setLockScript(index: number, lockScript: Buffer) {
+        if (index < 0 || this.inputs.length <= index) {
+            throw "Invalid index";
+        }
+        this.inputs[index].setLockScript(lockScript);
     }
 
     setUnlockScript(index: number, unlockScript: Buffer) {
