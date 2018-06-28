@@ -10,7 +10,7 @@ for (let z = 0; z < ALPHABET.length; z++) {
 }
 
 // FIXME: any
-function polymodStep (pre: any) {
+function polymodStep(pre: any) {
     const b = pre >> 25;
     return ((pre & 0x1FFFFFF) << 5) ^
         (-((b >> 0) & 1) & 0x3b6a57b2) ^
@@ -21,7 +21,7 @@ function polymodStep (pre: any) {
 }
 
 // FIXME: any
-function prefixChk (prefix: any) {
+function prefixChk(prefix: any) {
     let chk = 1;
     for (let i = 0; i < prefix.length; ++i) {
         const c = prefix.charCodeAt(i);
@@ -39,7 +39,7 @@ function prefixChk (prefix: any) {
 }
 
 // FIXME: any
-export function encode (prefix: any, words: any, LIMIT?: any) {
+export function encode(prefix: any, words: any, LIMIT?: any) {
     LIMIT = LIMIT || 90;
     if ((prefix.length + 7 + words.length) > LIMIT) throw new TypeError("Exceeds length limit");
 
@@ -70,7 +70,7 @@ export function encode (prefix: any, words: any, LIMIT?: any) {
 }
 
 // FIXME: any
-export function decode (str: string, prefix: string, LIMIT?: number) {
+export function decode(str: string, prefix: string, LIMIT?: number) {
     LIMIT = LIMIT || 90;
     if (str.length < 8) throw new TypeError(str + " too short");
     if (str.length > LIMIT) throw new TypeError("Exceeds length limit");
@@ -107,7 +107,7 @@ export function decode (str: string, prefix: string, LIMIT?: number) {
 }
 
 // FIXME: any
-function convert (data: any, inBits: any, outBits: any, pad: any) {
+function convert(data: any, inBits: any, outBits: any, pad: any) {
     let value = 0;
     let bits = 0;
     const maxV = (1 << outBits) - 1;
@@ -136,11 +136,11 @@ function convert (data: any, inBits: any, outBits: any, pad: any) {
 }
 
 // FIXME: any
-export function toWords (bytes: any) {
+export function toWords(bytes: any) {
     return convert(bytes, 8, 5, true);
 }
 
 // FIXME: any
-export function fromWords (words: any) {
+export function fromWords(words: any) {
     return convert(words, 5, 8, false);
 }

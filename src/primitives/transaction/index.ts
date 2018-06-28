@@ -10,11 +10,11 @@ export { AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, Ass
 export const getTransactionFromJSON = (obj: { type: string, data: object }) => {
     const { type } = obj;
     switch (type) {
-    case "assetMint":
-        return AssetMintTransaction.fromJSON(obj);
-    case "assetTransfer":
-        return AssetTransferTransaction.fromJSON(obj);
-    default:
-        throw new Error(`Unexpected transaction type: ${type}`);
+        case "assetMint":
+            return AssetMintTransaction.fromJSON(obj);
+        case "assetTransfer":
+            return AssetTransferTransaction.fromJSON(obj);
+        default:
+            throw new Error(`Unexpected transaction type: ${type}`);
     }
 };
