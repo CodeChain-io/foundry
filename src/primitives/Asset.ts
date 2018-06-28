@@ -1,5 +1,6 @@
 import { H256 } from "./H256";
-import { AssetOutPoint } from "./transaction/AssetTransferTransaction";
+import { AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "./transaction/AssetTransferTransaction";
+import { AssetTransferAddress } from "../AssetTransferAddress";
 
 export type AssetData = {
     assetType: H256;
@@ -57,5 +58,29 @@ export class Asset {
             transactionHash: transactionHash.value,
             transactionOutputIndex: index,
         };
+    }
+
+    transfer(recipients: { address: AssetTransferAddress, amount: number }[], options: { nonce?: number } = {}): AssetTransferTransaction {
+        const { outPoint, assetType } = this;
+        const { nonce = 0 } = options;
+
+        const outputSum = recipients.map(r => r.amount).reduce((a, b) => a + b);
+        if (outputSum !== this.amount) {
+            throw "The sum of recipients' amount must equal to the asset amount";
+        }
+
+        return new AssetTransferTransaction(17, {
+            burns: [],
+            inputs: [new AssetTransferInput({
+                prevOut: outPoint,
+                lockScript: Buffer.from([]),
+                unlockScript: Buffer.from([]),
+            })],
+            outputs: recipients.map(recipient => new AssetTransferOutput({
+                ...recipient.address.getLockScriptHashAndParameters(),
+                assetType,
+                amount: recipient.amount
+            })),
+        }, nonce);
     }
 }
