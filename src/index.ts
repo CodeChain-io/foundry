@@ -1,6 +1,8 @@
 import { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block } from "./primitives/index";
 import { getTransactionFromJSON, Transaction, AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "./primitives/transaction";
 import { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress, verifyEcdsa, recoverPublic } from "./utils";
+import { AssetTransferAddress } from "./AssetTransferAddress";
+import { PlatformAddress } from "./PlatformAddress";
 
 import fetch from "node-fetch";
 
@@ -254,6 +256,10 @@ class SDK {
     static AssetScheme = AssetScheme;
     static Block = Block;
 
+    // Address
+    static AssetTransferAddress = AssetTransferAddress;
+    static PlatformAddress = PlatformAddress;
+
     // Transactions
     static AssetMintTransaction = AssetMintTransaction;
     static AssetTransferTransaction = AssetTransferTransaction;
@@ -277,5 +283,6 @@ export { SDK };
 export { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block };
 export { getTransactionFromJSON, Transaction, AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput };
 export { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress };
+export { PlatformAddress, AssetTransferAddress };
 
 module.exports = SDK;
