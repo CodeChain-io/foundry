@@ -57,7 +57,7 @@ sdk.sendSignedParcel(signedParcel).then((hash) => {
 const SDK = require("codechain-sdk");
 const { AssetMintTransaction, H256, blake256, signEcdsa, privateKeyToPublic,
     privateKeyToAddress, H160, Parcel, U256, AssetTransferTransaction,
-    AssetTransferInput, AssetOutPoint, AssetTransferOutput, Transaction } = SDK;
+    AssetTransferInput, AssetOutPoint, AssetTransferOutput, Transaction, AssetScheme, AssetTransferAddress } = SDK;
 
 const sdk = new SDK("http://localhost:8080");
 
@@ -70,12 +70,14 @@ const alicePrivate = "37a948d2e9ae622f3b9e224657249259312ffd3f2d105eabda6f222074
 const alicePublic = privateKeyToPublic(alicePrivate);
 // Alice's P2PK script
 const aliceLockScript = Buffer.from([OP_PUSHB, 64, ...Buffer.from(alicePublic, "hex"), OP_CHECKSIG]);
+const aliceAddress = AssetTransferAddress.fromLockScriptHash(new H256(blake256(aliceLockScript)));
 
 // Bob's key pair
 const bobPrivate = "f9387b3247c21e88c656490914f4598a3b52b807517753b4a9d7a51d54a6260c";
 const bobPublic = privateKeyToPublic(bobPrivate);
 // Bob's P2PK script
 const bobLockScript = Buffer.from([OP_PUSHB, 64, ...Buffer.from(bobPublic, "hex"), OP_CHECKSIG]);
+const bobAddress = AssetTransferAddress.fromLockScriptHash(new H256(blake256(bobLockScript)));
 
 // sendTransaction() is a function to make transaction to be processed.
 async function sendTransaction(tx) {
@@ -88,69 +90,42 @@ async function sendTransaction(tx) {
 }
 
 (async () => {
-    // Create AssetMintTransaction that creates 10000 amount of asset named Gold for Alice.
-    const mintGoldTx = new AssetMintTransaction({
+    // Define a new asset scheme for the asset named "Gold"
+    const goldAssetScheme = new AssetScheme({
         // Put name, description and imageUrl to metadata.
         metadata: JSON.stringify({
             name: "Gold",
-            imageUrl: "https://gold.image/"
+            imageUrl: "https://gold.image/",
         }),
-        // hash value of locking script of the asset
-        lockScriptHash: new H256(blake256(aliceLockScript)),
-        parameters: [],
         // Mints 10000 golds
         amount: 10000,
         // No registrar for Gold. It means AssetTransfer of Gold can be done with any
         // parcel. If registrar is present, the parcel must be signed with the
         // registrar.
         registrar: null,
-        nonce: 0
     });
+
+    // Creates AssetMintTransaction that creates 10000 amount of Gold for Alice.
+    const mintTx = goldAssetScheme.mint(aliceAddress);
 
     // Process the AssetMintTransaction
-    await sendTransaction(mintGoldTx);
+    await sendTransaction(mintTx);
 
     // AssetMintTransaction creates Asset and AssetScheme object
-    console.log(await sdk.getAsset(mintGoldTx.hash(), 0));
-    console.log(await sdk.getAssetScheme(mintGoldTx.hash()));
+    console.log("minted asset scheme: ", await sdk.getAssetScheme(mintTx.hash()));
+    const firstGold = await sdk.getAsset(mintTx.hash(), 0);
+    console.log("alice's gold: ", firstGold);
 
-    // The address of asset
-    const goldAssetType = mintGoldTx.getAssetSchemeAddress();
-
-    // Create an input that spends 10000 golds
-    const inputs = [new AssetTransferInput({
-        prevOut: new AssetOutPoint({
-            transactionHash: mintGoldTx.hash(),
-            index: 0,
-            assetType: goldAssetType,
-            amount: 10000
-        }),
-        // Provide the preimage of the lockScriptHash.
-        lockScript: aliceLockScript,
-        // unlockScript can't be calculated at this moment.
-        unlockScript: Buffer.from([])
-    })];
-
-    // Create outputs. The sum of amount must equals to 10000. In this case, Alice
-    // pays 3000 golds to Bob. Alice is paid the remains back.
-    const outputs = [new AssetTransferOutput({
-        lockScriptHash: new H256(blake256(bobLockScript)),
-        parameters: [],
-        assetType: goldAssetType,
+    // Spend Alice's 10000 golds. In this case, Alice pays 3000 golds to Bob. Alice
+    // is paid the remains back.
+    // The sum of amount must equal to the amount of firstGold.
+    const transferTx = firstGold.transfer([{
+        address: bobAddress,
         amount: 3000
-    }), new AssetTransferOutput({
-        lockScriptHash: new H256(blake256(aliceLockScript)),
-        parameters: [],
-        assetType: goldAssetType,
+    }, {
+        address: aliceAddress,
         amount: 7000
-    })];
-
-    // Create AssetTransferTransaction with the input and the outputs
-    const transferTx = new AssetTransferTransaction(17, {
-        burns: [],
-        inputs,
-        outputs,
-    });
+    }]);
 
     // Calculate Alice's signature for the transaction.
     const { r, s, v } = signEcdsa(transferTx.hashWithoutScript().value, alicePrivate);
@@ -162,13 +137,14 @@ async function sendTransaction(tx) {
     // Create unlock script for the input of the transaction
     const aliceUnlockScript = Buffer.from([OP_PUSHB, 65, ...aliceSigBuffer]);
     // Put unlock script to the transaction
+    transferTx.setLockScript(0, aliceLockScript);
     transferTx.setUnlockScript(0, aliceUnlockScript);
 
     // Process the AssetTransferTransaction
     await sendTransaction(transferTx);
 
     // Spent asset will be null
-    console.log(await sdk.getAsset(mintGoldTx.hash(), 0));
+    console.log(await sdk.getAsset(mintTx.hash(), 0));
 
     // Unspent Bob's 3000 golds
     console.log(await sdk.getAsset(transferTx.hash(), 0));
