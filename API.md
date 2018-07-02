@@ -70,14 +70,24 @@ const alicePrivate = "37a948d2e9ae622f3b9e224657249259312ffd3f2d105eabda6f222074
 const alicePublic = privateKeyToPublic(alicePrivate);
 // Alice's P2PK script
 const aliceLockScript = Buffer.from([OP_PUSHB, 64, ...Buffer.from(alicePublic, "hex"), OP_CHECKSIG]);
-const aliceAddress = AssetTransferAddress.fromLockScriptHash(new H256(blake256(aliceLockScript)));
+// Hash of the Alice's script
+const aliceLockScriptHash = new H256(blake256(aliceLockScript));
+// Alice's asset transfer address of given lock script hash.
+const aliceAddress = AssetTransferAddress.fromLockScriptHash(aliceLockScriptHash);
+console.log("Alice's lock script hash: ", bobLockScriptHash.value);
+console.log("Alice's address: ", bobAddress.value);
 
 // Bob's key pair
 const bobPrivate = "f9387b3247c21e88c656490914f4598a3b52b807517753b4a9d7a51d54a6260c";
 const bobPublic = privateKeyToPublic(bobPrivate);
 // Bob's P2PK script
 const bobLockScript = Buffer.from([OP_PUSHB, 64, ...Buffer.from(bobPublic, "hex"), OP_CHECKSIG]);
-const bobAddress = AssetTransferAddress.fromLockScriptHash(new H256(blake256(bobLockScript)));
+// Hash of the Bob's script
+const bobLockScriptHash = new H256(blake256(bobLockScript));
+// Bob's asset transfer address of given lock script hash.
+const bobAddress = AssetTransferAddress.fromLockScriptHash(bobLockScriptHash);
+console.log("Bob's lock script hash: ", bobLockScriptHash.value);
+console.log("Bob's address: ", bobAddress.value);
 
 // sendTransaction() is a function to make transaction to be processed.
 async function sendTransaction(tx) {
