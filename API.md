@@ -74,8 +74,8 @@ const aliceLockScript = Buffer.from([OP_PUSHB, 64, ...Buffer.from(alicePublic, "
 const aliceLockScriptHash = new H256(blake256(aliceLockScript));
 // Alice's asset transfer address of given lock script hash.
 const aliceAddress = AssetTransferAddress.fromLockScriptHash(aliceLockScriptHash);
-console.log("Alice's lock script hash: ", bobLockScriptHash.value);
-console.log("Alice's address: ", bobAddress.value);
+console.log("Alice's lock script hash: ", aliceLockScriptHash.value);
+console.log("Alice's address: ", aliceAddress.value);
 
 // Bob's key pair
 const bobPrivate = "f9387b3247c21e88c656490914f4598a3b52b807517753b4a9d7a51d54a6260c";
