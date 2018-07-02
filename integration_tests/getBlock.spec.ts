@@ -6,7 +6,7 @@ const sdk = new SDK(SERVER_URL);
 
 test("getBlock - by hash", async () => {
     await payment();
-    const latest = await sdk.getBlockNumber();
+    const latest = await sdk.getBestBlockNumber();
     const hash = await sdk.getBlockHash(latest);
     const block = await sdk.getBlock(hash);
     expect(block).toMatchObject({
@@ -23,7 +23,7 @@ test("getBlock - by hash", async () => {
 
 test("getBlock - by number", async () => {
     await payment();
-    const latest = await sdk.getBlockNumber();
+    const latest = await sdk.getBestBlockNumber();
     const block = await sdk.getBlock(latest);
     expect(block).toMatchObject({
         // FIXME: test timestamp, number, extraData, seal, parcels

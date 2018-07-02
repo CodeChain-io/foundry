@@ -159,7 +159,7 @@ async function sendTransaction(tx) {
  * [getBalance](classes/sdk.html#getbalance)
  * [getBlock](classes/sdk.html#getblock)
  * [getBlockHash](classes/sdk.html#getblockhash)
- * [getBlockNumber](classes/sdk.html#getblocknumber)
+ * [getBestBlockNumber](classes/sdk.html#getbestblocknumber)
  * [getNonce](classes/sdk.html#getnonce)
  * [getParcel](classes/sdk.html#getparcel)
  * [getParcelInvoices](classes/sdk.html#getparcelinvoices)

@@ -159,9 +159,9 @@ class SDK {
      * Gets number of the latest block.
      * @returns Number of the latest block.
      */
-    getBlockNumber(): Promise<number> {
+    getBestBlockNumber(): Promise<number> {
         return this.sendRpcRequest(
-            "chain_getBlockNumber",
+            "chain_getBestBlockNumber",
             []
         );
     }
