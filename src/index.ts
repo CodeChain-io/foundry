@@ -3,6 +3,8 @@ import { getTransactionFromJSON, Transaction, AssetMintTransaction, AssetTransfe
 import { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress, verifyEcdsa, recoverPublic, generatePrivateKey } from "./utils";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
+import { PubkeyAssetAgent } from "./signer/PubkeyAssetAgent";
+import { MemoryKeyStore } from "./signer/MemoryKeyStore";
 
 import fetch from "node-fetch";
 
@@ -260,6 +262,9 @@ class SDK {
     static AssetTransferAddress = AssetTransferAddress;
     static PlatformAddress = PlatformAddress;
 
+    static PubkeyAssetAgent = PubkeyAssetAgent;
+    static MemoryKeyStore = MemoryKeyStore;
+
     // Transactions
     static AssetMintTransaction = AssetMintTransaction;
     static AssetTransferTransaction = AssetTransferTransaction;
@@ -284,6 +289,8 @@ export { SDK };
 export { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block };
 export { getTransactionFromJSON, Transaction, AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput };
 export { blake256, blake256WithKey, ripemd160, signEcdsa, generatePrivateKey, privateKeyToPublic, privateKeyToAddress };
+export { PubkeyAssetAgent };
+export { MemoryKeyStore };
 export { PlatformAddress, AssetTransferAddress };
 
 module.exports = SDK;
