@@ -2,7 +2,13 @@ import { H256 } from "./primitives/H256";
 import { encode, toWords, decode, fromWords } from "./bech32";
 import { toHex } from "./utils";
 
+/**
+ * @hidden
+ */
 const LOCK_SCRIPT_HASH_TYPE = 0x00;
+/**
+ * @hidden
+ */
 const PAY_TO_PUBLIC_KEY_HASH_TYPE = 0x01;
 
 /**

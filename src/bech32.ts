@@ -1,6 +1,12 @@
+/**
+ * @hidden
+ */
 const ALPHABET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 // pre-compute lookup table
+/**
+ * @hidden
+ */
 const ALPHABET_MAP: { [ch: string]: number } = {};
 for (let z = 0; z < ALPHABET.length; z++) {
     const x = ALPHABET.charAt(z);
@@ -10,6 +16,9 @@ for (let z = 0; z < ALPHABET.length; z++) {
 }
 
 // FIXME: any
+/**
+ * @hidden
+ */
 function polymodStep(pre: any) {
     const b = pre >> 25;
     return ((pre & 0x1FFFFFF) << 5) ^
@@ -21,6 +30,9 @@ function polymodStep(pre: any) {
 }
 
 // FIXME: any
+/**
+ * @hidden
+ */
 function prefixChk(prefix: any) {
     let chk = 1;
     for (let i = 0; i < prefix.length; ++i) {
@@ -107,6 +119,9 @@ export function decode(str: string, prefix: string, LIMIT?: number) {
 }
 
 // FIXME: any
+/**
+ * @hidden
+ */
 function convert(data: any, inBits: any, outBits: any, pad: any) {
     let value = 0;
     let bits = 0;
