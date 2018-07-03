@@ -1,6 +1,9 @@
 import { H256 } from "./H256";
 import { AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "./transaction/AssetTransferTransaction";
 import { AssetTransferAddress } from "../AssetTransferAddress";
+import { PubkeyAssetAgent } from "../signer/PubkeyAssetAgent";
+
+export type AssetAgent = PubkeyAssetAgent;
 
 export type AssetData = {
     assetType: H256;
@@ -60,7 +63,7 @@ export class Asset {
         };
     }
 
-    transfer(recipients: { address: AssetTransferAddress, amount: number }[], options: { nonce?: number } = {}): AssetTransferTransaction {
+    async transfer(unlocker: AssetAgent, recipients: { address: AssetTransferAddress, amount: number }[], options: { nonce?: number } = {}): Promise<AssetTransferTransaction> {
         const { outPoint, assetType } = this;
         const { nonce = 0 } = options;
 
@@ -69,7 +72,7 @@ export class Asset {
             throw "The sum of recipients' amount must equal to the asset amount";
         }
 
-        return new AssetTransferTransaction(17, {
+        const tx = new AssetTransferTransaction(17, {
             burns: [],
             inputs: [new AssetTransferInput({
                 prevOut: outPoint,
@@ -82,5 +85,9 @@ export class Asset {
                 amount: recipient.amount
             })),
         }, nonce);
+        const { lockScript, unlockScript } = await unlocker.unlock(this, tx);
+        tx.setLockScript(0, lockScript);
+        tx.setUnlockScript(0, unlockScript);
+        return tx;
     }
 }
