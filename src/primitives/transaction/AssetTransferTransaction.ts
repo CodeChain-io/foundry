@@ -215,14 +215,14 @@ export class AssetTransferTransaction {
         }, nonce).rlpBytes()));
     }
 
-    setLockScript(index: number, lockScript: Buffer) {
+    setLockScript(index: number, lockScript: Buffer): void {
         if (index < 0 || this.inputs.length <= index) {
             throw "Invalid index";
         }
         this.inputs[index].setLockScript(lockScript);
     }
 
-    setUnlockScript(index: number, unlockScript: Buffer) {
+    setUnlockScript(index: number, unlockScript: Buffer): void {
         if (index < 0 || this.inputs.length <= index) {
             throw "Invalid index";
         }
