@@ -32,7 +32,7 @@ export default {
         // relative to the current directory, or the name
         // of a module in node_modules
         "node_modules/bignumber.js/bignumber.js": [ "BigNumber" ],
-        "node_modules/lodash/lodash.js": [ "keys" ],
+        "node_modules/lodash/lodash.js": [ "keys", "padStart" ],
       }
     }),
     // Allow node_modules resolution, so you can use 'external' to control
