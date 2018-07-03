@@ -1,6 +1,6 @@
 import { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block } from "./primitives/index";
 import { getTransactionFromJSON, Transaction, AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "./primitives/transaction";
-import { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress, verifyEcdsa, recoverPublic } from "./utils";
+import { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress, verifyEcdsa, recoverPublic, generatePrivateKey } from "./utils";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
 
@@ -275,6 +275,7 @@ class SDK {
     static signEcdsa = signEcdsa;
     static verifyEcdsa = verifyEcdsa;
     static recoverPublic = recoverPublic;
+    static generatePrivateKey = generatePrivateKey;
     static privateKeyToAddress = privateKeyToAddress;
     static privateKeyToPublic = privateKeyToPublic;
 }
@@ -282,7 +283,7 @@ class SDK {
 export { SDK };
 export { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block };
 export { getTransactionFromJSON, Transaction, AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput };
-export { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress };
+export { blake256, blake256WithKey, ripemd160, signEcdsa, generatePrivateKey, privateKeyToPublic, privateKeyToAddress };
 export { PlatformAddress, AssetTransferAddress };
 
 module.exports = SDK;

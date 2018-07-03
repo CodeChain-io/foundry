@@ -75,6 +75,10 @@ export const recoverPublic = (message: string, signature: ECDSASignature) => {
     ).encode("hex").slice(2);
 };
 
+export const generatePrivateKey = (): string => {
+    return secp256k1.genKeyPair().priv.toString("hex");
+};
+
 export const privateKeyToAddress = (priv: string) => {
     const key = secp256k1.keyFromPrivate(priv);
     return ripemd160(blake256(key.getPublic().encode("hex").slice(2)));
