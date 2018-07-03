@@ -62,12 +62,12 @@ export const signEcdsa = (message: string, priv: string): ECDSASignature => {
     };
 };
 
-export const verifyEcdsa = (message: string, signature: ECDSASignature, pub: string) => {
+export const verifyEcdsa = (message: string, signature: ECDSASignature, pub: string): boolean => {
     const key = secp256k1.keyFromPublic("04" + pub, "hex");
     return key.verify(message, signature);
 };
 
-export const recoverPublic = (message: string, signature: ECDSASignature) => {
+export const recoverPublic = (message: string, signature: ECDSASignature): string => {
     return secp256k1.recoverPubKey(
         secp256k1.keyFromPrivate(message, "hex").getPrivate().toString(10),
         signature,
