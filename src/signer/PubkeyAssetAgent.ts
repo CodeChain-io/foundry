@@ -12,6 +12,9 @@ import { AssetTransferTransaction } from "..";
  */
 export type KeyStore = MemoryKeyStore;
 
+/**
+ * AssetAgent which supports P2PK(Pay to Public Key) lock script.
+ */
 export class PubkeyAssetAgent {
     private static OP_PUSHB = 0x32;
     private static OP_CHKSIG = 0x80;

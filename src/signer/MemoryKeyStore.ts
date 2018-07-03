@@ -2,6 +2,9 @@ import * as _ from "lodash";
 
 import { generatePrivateKey, privateKeyToPublic, signEcdsa } from "../utils";
 
+/**
+ * A simple key store for testing purpose.
+ */
 export class MemoryKeyStore {
     private privateKeyMap: { [publicKey: string]: string } = {};
 
