@@ -5,7 +5,7 @@ import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
 import { PubkeyAssetAgent } from "./signer/PubkeyAssetAgent";
 import { MemoryKeyStore } from "./signer/MemoryKeyStore";
-import { Payment, SetRegularKey } from "./primitives/Parcel";
+import { Payment, SetRegularKey, ChangeShardState } from "./primitives/Parcel";
 
 import fetch from "node-fetch";
 
@@ -269,6 +269,15 @@ class SDK {
      */
     createSetRegularKeyAction(key: H512 | string): SetRegularKey {
         return new SetRegularKey(key instanceof H512 ? key : new H512(key));
+    }
+
+    /**
+     * Creates ChangeShardState action which can mint or transfer assets through
+     * AssetMintTransaction or AssetTransferTransaction.
+     * @param transactions List of transaction
+     */
+    createChangeShardStateAction(transactions: Transaction[]): ChangeShardState {
+        return new ChangeShardState(transactions);
     }
 
     // Primitives
