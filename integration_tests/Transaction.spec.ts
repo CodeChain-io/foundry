@@ -2,7 +2,7 @@ import { SDK, H256, AssetMintTransaction } from "../";
 import { mintAsset, transferAsset } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
-const sdk = new SDK(SERVER_URL);
+const sdk = new SDK({ server: SERVER_URL });
 
 test("AssetMintTransaction fromJSON", async () => {
     const metadata = "";

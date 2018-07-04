@@ -1,8 +1,8 @@
-import { SDK, PaymentTransaction } from "../";
+import { SDK } from "../";
 import { paymentTwice } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
-const sdk = new SDK(SERVER_URL);
+const sdk = new SDK({ server: SERVER_URL });
 
 test.skip("getPendingParcels", async () => {
     let pending = await sdk.getPendingParcels();
@@ -10,5 +10,5 @@ test.skip("getPendingParcels", async () => {
         await paymentTwice();
     }
     pending = await sdk.getPendingParcels();
-    expect(pending[0].unsigned.transactions[0]).toBe(expect.any(PaymentTransaction));
+    expect(pending[0]).toBe(expect.anything());
 });

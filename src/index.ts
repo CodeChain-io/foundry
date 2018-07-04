@@ -13,13 +13,22 @@ import fetch from "node-fetch";
  * @hidden
  */
 const jaysonBrowserClient = require("jayson/lib/client/browser");
+/**
+ * @hidden
+ */
+export type ParcelParams = {
+    nonce: U256 | number | string;
+    fee: U256 | number | string;
+};
 
 class SDK {
     private client: any;
+    private networkId: number;
 
-    constructor(httpUrl: string) {
+    constructor(params: { server: string, networkId?: number }) {
+        const { server, networkId = 0x11 } = params;
         this.client = jaysonBrowserClient((request: any, callback: any) => {
-            fetch(httpUrl, {
+            fetch(server, {
                 method: "POST",
                 body: request,
                 headers: {
@@ -33,6 +42,7 @@ class SDK {
                 return callback(err);
             });
         });
+        this.networkId = networkId;
     }
 
     private sendRpcRequest = (name: string, params: any[]) => {
@@ -251,33 +261,65 @@ class SDK {
      * from the parcel signer to the recipient. Who is signing the parcel will pay.
      * @param params.recipient The platform account who receives CCC
      * @param params.value Amount of CCC to pay
+     * @param params.nonce Nonce for the parcel
+     * @param params.fee Fee for the parcel
      * @throws Given string for recipient is invalid for converting it to H160
-     * @throws Given number for value is invalid for converting it to U256
+     * @throws Given number or string for value is invalid for converting it to U256
+     * @throws Given number or string for nonce is invalid for converting it to U256
+     * @throws Given number or string for fee is invalid for converting it to U256
      */
-    createPaymentAction(params: { recipient: H160 | string, value: U256 | number | string }): Payment {
-        const { recipient, value } = params;
-        return new Payment(
+    createPaymentParcel(params: { recipient: H160 | string, value: U256 | number | string } & ParcelParams): Parcel {
+        const { recipient, value, fee, nonce } = params;
+        const action = new Payment(
             recipient instanceof H160 ? recipient : new H160(recipient),
             value instanceof U256 ? value : new U256(value)
+        );
+        return new Parcel(
+            nonce instanceof U256 ? nonce : new U256(nonce),
+            fee instanceof U256 ? fee : new U256(fee),
+            this.networkId,
+            action
         );
     }
 
     /**
      * Creates SetRegularKey action which sets the regular key of the parcel signer.
-     * @param key The public key of a regular key
+     * @param params.key The public key of a regular key
+     * @param params.nonce Nonce for the parcel
+     * @param params.fee Fee for the parcel
      * @throws Given string for key is invalid for converting it to H512
+     * @throws Given number or string for nonce is invalid for converting it to U256
+     * @throws Given number or string for fee is invalid for converting it to U256
      */
-    createSetRegularKeyAction(key: H512 | string): SetRegularKey {
-        return new SetRegularKey(key instanceof H512 ? key : new H512(key));
+    createSetRegularKeyParcel(params: { key: H512 | string } & ParcelParams): Parcel {
+        const { key, nonce, fee } = params;
+        const action = new SetRegularKey(key instanceof H512 ? key : new H512(key));
+        return new Parcel(
+            nonce instanceof U256 ? nonce : new U256(nonce),
+            fee instanceof U256 ? fee : new U256(fee),
+            this.networkId,
+            action
+        );
     }
 
     /**
      * Creates ChangeShardState action which can mint or transfer assets through
      * AssetMintTransaction or AssetTransferTransaction.
-     * @param transactions List of transaction
+     * @param params.transactions List of transaction
+     * @param params.nonce Nonce for the parcel
+     * @param params.fee Fee for the parcel
+     * @throws Given number or string for nonce is invalid for converting it to U256
+     * @throws Given number or string for fee is invalid for converting it to U256
      */
-    createChangeShardStateAction(transactions: Transaction[]): ChangeShardState {
-        return new ChangeShardState(transactions);
+    createChangeShardStateAction(params: { transactions: Transaction[] } & ParcelParams): Parcel {
+        const { transactions, nonce, fee } = params;
+        const action = new ChangeShardState(transactions);
+        return new Parcel(
+            nonce instanceof U256 ? nonce : new U256(nonce),
+            fee instanceof U256 ? fee : new U256(fee),
+            this.networkId,
+            action
+        );
     }
 
     /**

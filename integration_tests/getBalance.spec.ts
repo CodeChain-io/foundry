@@ -1,7 +1,7 @@
 import { SDK, H160, U256 } from "../";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
-const sdk = new SDK(SERVER_URL);
+const sdk = new SDK({ server: SERVER_URL });
 
 test("getBalance", async () => {
     const address = new H160("a6594b7196808d161b6fb137e781abbc251385d9");

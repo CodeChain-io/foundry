@@ -1,7 +1,7 @@
 import { AssetMintTransaction, Invoice, SDK, H160, H256, U256, Parcel, PaymentTransaction, privateKeyToAddress } from "../";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
-const sdk = new SDK(SERVER_URL);
+const sdk = new SDK({ server: SERVER_URL });
 
 test("getTransactionInvoice", async () => {
     const secret = new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd");

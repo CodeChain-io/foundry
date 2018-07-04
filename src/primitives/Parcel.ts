@@ -121,7 +121,7 @@ export class Parcel {
         return new Parcel(nonce, fee, networkId, action);
     }
 
-    private constructor(nonce: U256, fee: U256, networkId: number, action: Action) {
+    constructor(nonce: U256, fee: U256, networkId: number, action: Action) {
         this.nonce = nonce;
         this.fee = fee;
         this.networkId = new U256(networkId);
