@@ -5,7 +5,7 @@ import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
 import { PubkeyAssetAgent } from "./signer/PubkeyAssetAgent";
 import { MemoryKeyStore } from "./signer/MemoryKeyStore";
-import { Payment } from "./primitives/Parcel";
+import { Payment, SetRegularKey } from "./primitives/Parcel";
 
 import fetch from "node-fetch";
 
@@ -260,6 +260,15 @@ class SDK {
             recipient instanceof H160 ? recipient : new H160(recipient),
             value instanceof U256 ? value : new U256(value)
         );
+    }
+
+    /**
+     * Creates SetRegularKey action which sets the regular key of the parcel signer.
+     * @param key The public key of a regular key
+     * @throws Given string for key is invalid for converting it to H512
+     */
+    createSetRegularKeyAction(key: H512 | string): SetRegularKey {
+        return new SetRegularKey(key instanceof H512 ? key : new H512(key));
     }
 
     // Primitives
