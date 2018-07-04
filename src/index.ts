@@ -5,6 +5,7 @@ import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
 import { PubkeyAssetAgent } from "./signer/PubkeyAssetAgent";
 import { MemoryKeyStore } from "./signer/MemoryKeyStore";
+import { Payment } from "./primitives/Parcel";
 
 import fetch from "node-fetch";
 
@@ -243,6 +244,22 @@ class SDK {
             "chain_getPendingParcels",
             []
         ).then(result => result.map((p: any) => SignedParcel.fromJSON(p)));
+    }
+
+    /**
+     * Creates Payment action which pays the value amount of CCC(CodeChain Coin)
+     * from the parcel signer to the recipient. Who is signing the parcel will pay.
+     * @param params.recipient The platform account who receives CCC
+     * @param params.value Amount of CCC to pay
+     * @throws Given string for recipient is invalid for converting it to H160
+     * @throws Given number for value is invalid for converting it to U256
+     */
+    createPaymentAction(params: { recipient: H160 | string, value: U256 | number | string }): Payment {
+        const { recipient, value } = params;
+        return new Payment(
+            recipient instanceof H160 ? recipient : new H160(recipient),
+            value instanceof U256 ? value : new U256(value)
+        );
     }
 
     // Primitives
