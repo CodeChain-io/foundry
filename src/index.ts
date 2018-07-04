@@ -280,6 +280,25 @@ class SDK {
         return new ChangeShardState(transactions);
     }
 
+    /**
+     * Creates asset's scheme.
+     * @param params.metadata Any string that describing the asset. For example,
+     * stringified JSON containing properties.
+     * @param params.amount Total amount of this asset
+     * @param params.registrar Platform account or null. If account is present, the
+     * parcel that includes AssetTransferTransaction of this asset must be signed by
+     * the registrar account.
+     * @throws Given string for registrar is invalid for converting it to H160
+     */
+    createAssetScheme(params: { metadata: string, amount: number, registrar: H160 | string | null }): AssetScheme {
+        const { metadata, amount, registrar } = params;
+        return new AssetScheme({
+            metadata,
+            amount,
+            registrar: registrar === null ? null : (registrar instanceof H160 ? registrar : new H160(registrar))
+        });
+    }
+
     // Primitives
     static SDK = SDK;
     static H160 = H160;
