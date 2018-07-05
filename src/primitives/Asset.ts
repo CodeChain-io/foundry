@@ -72,7 +72,7 @@ export class Asset {
             throw "The sum of recipients' amount must equal to the asset amount";
         }
 
-        const tx = new AssetTransferTransaction(17, {
+        const tx = new AssetTransferTransaction({
             burns: [],
             inputs: [new AssetTransferInput({
                 prevOut: outPoint,
@@ -84,7 +84,9 @@ export class Asset {
                 assetType,
                 amount: recipient.amount
             })),
-        }, nonce);
+            networkId: 17,
+            nonce
+        });
         const { lockScript, unlockScript } = await unlocker.unlock(this, tx);
         tx.setLockScript(0, lockScript);
         tx.setUnlockScript(0, unlockScript);

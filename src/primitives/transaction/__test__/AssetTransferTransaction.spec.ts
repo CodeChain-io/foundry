@@ -2,11 +2,13 @@ import { AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTrans
 import { H256 } from "../..";
 
 test("AssetTransferTransaction toJSON", () => {
-    const t = new AssetTransferTransaction(17, {
+    const t = new AssetTransferTransaction({
         burns: [],
         inputs: [],
-        outputs: []
-    }, 54321);
+        outputs: [],
+        networkId: 17,
+        nonce: 54321
+    });
     expect(AssetTransferTransaction.fromJSON(t.toJSON())).toEqual(t);
 });
 
@@ -62,15 +64,19 @@ test("AssetTransferTransaction hashWithoutScript", () => {
         lockScript: Buffer.from([]),
         unlockScript: Buffer.from([])
     });
-    const t1 = new AssetTransferTransaction(17, {
+    const t1 = new AssetTransferTransaction({
         burns: [],
         inputs: [input1],
-        outputs: []
-    }, 54321);
-    const t2 = new AssetTransferTransaction(17, {
+        outputs: [],
+        networkId: 17,
+        nonce: 54321
+    });
+    const t2 = new AssetTransferTransaction({
         burns: [],
         inputs: [input2],
-        outputs: []
-    }, 54321);
+        outputs: [],
+        networkId: 17,
+        nonce: 54321
+    });
     expect(t1.hashWithoutScript()).toEqual(t2.hash());
 });

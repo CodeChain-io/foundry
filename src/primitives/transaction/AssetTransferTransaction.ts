@@ -161,6 +161,8 @@ export type AssetTransferTransactionData = {
     burns: AssetTransferInput[];
     inputs: AssetTransferInput[];
     outputs: AssetTransferOutput[];
+    networkId: number;
+    nonce?: number;
 };
 /**
  * Spends the existing asset and creates a new asset. Ownership can be transferred during this process.
@@ -179,12 +181,12 @@ export class AssetTransferTransaction {
     private nonce: number;
     private type = "assetTransfer";
 
-    constructor(networkId: number, { burns, inputs, outputs }: AssetTransferTransactionData, nonce = 0) {
+    constructor({ burns, inputs, outputs, networkId, nonce }: AssetTransferTransactionData) {
         this.burns = burns;
         this.inputs = inputs;
         this.outputs = outputs;
         this.networkId = networkId;
-        this.nonce = nonce;
+        this.nonce = nonce || 0;
     }
 
     toEncodeObject() {
@@ -208,11 +210,13 @@ export class AssetTransferTransaction {
 
     hashWithoutScript(): H256 {
         const { networkId, burns, inputs, outputs, nonce } = this;
-        return new H256(blake256(new AssetTransferTransaction(networkId, {
+        return new H256(blake256(new AssetTransferTransaction({
             burns: burns.map(input => input.withoutScript()),
             inputs: inputs.map(input => input.withoutScript()),
             outputs,
-        }, nonce).rlpBytes()));
+            networkId,
+            nonce
+        }).rlpBytes()));
     }
 
     setLockScript(index: number, lockScript: Buffer): void {
@@ -242,11 +246,13 @@ export class AssetTransferTransaction {
 
     static fromJSON(obj: any) {
         const { data: { networkId, burns, inputs, outputs, nonce } } = obj;
-        return new this(networkId, {
+        return new this({
             burns: burns.map((input: any) => AssetTransferInput.fromJSON(input)),
             inputs: inputs.map((input: any) => AssetTransferInput.fromJSON(input)),
-            outputs: outputs.map((output: any) => AssetTransferOutput.fromJSON(output))
-        }, nonce);
+            outputs: outputs.map((output: any) => AssetTransferOutput.fromJSON(output)),
+            networkId,
+            nonce
+        });
     }
 
     toJSON() {
