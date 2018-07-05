@@ -33,8 +33,7 @@ test("AssetMintTransaction fromJSON", async () => {
 });
 
 test("AssetTransferTransaction fromJSON", async () => {
-    const keyStore = new MemoryKeyStore();
-    const pubkeyAssetAgent = new PubkeyAssetAgent({ keyStore });
+    const pubkeyAssetAgent = sdk.getAssetAgent();
 
     const mintTx = sdk.createAssetScheme({
         metadata: "metadata of non-permissioned asset",

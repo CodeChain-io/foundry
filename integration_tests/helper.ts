@@ -1,10 +1,10 @@
-import { SDK, AssetMintTransaction, H256, Parcel, H160, U256, H512, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput, privateKeyToAddress, AssetTransferAddress } from "../";
+import { SDK, AssetTransferAddress } from "../";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 const sdk = new SDK({ server: SERVER_URL });
 
-const secret = new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd");
-const address = new H160(privateKeyToAddress(secret.value));
+const secret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
+const address = SDK.privateKeyToAddress(secret);
 
 export const sendTransactions = async ({ transactions }) => {
     const parcel = sdk.createChangeShardStateParcel({
