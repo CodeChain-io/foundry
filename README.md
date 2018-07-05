@@ -9,7 +9,7 @@ If you're looking for API documentation or quick start guide, [click here](https
 
 ## Features
 
- * Connect to a [CodeChain JSON-RPC](https://github.com/codechain-io/codechain/wiki/JSON-RPC) server from Node.js
+ * Connect to a [CodeChain JSON-RPC](https://github.com/CodeChain-io/codechain/blob/master/spec/JSON-RPC.md) server from Node.js
  * Generate an account, create a transacton, sign a parcel.
 
 ## Getting Started
