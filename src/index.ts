@@ -5,7 +5,7 @@ import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
 import { PubkeyAssetAgent, KeyStore } from "./signer/PubkeyAssetAgent";
 import { MemoryKeyStore } from "./signer/MemoryKeyStore";
-import { Payment, SetRegularKey, ChangeShardState } from "./primitives/Parcel";
+import { Payment, SetRegularKey, ChangeShardState, CreateShard } from "./primitives/Parcel";
 import { AssetAgent } from "./primitives/Asset";
 
 import fetch from "node-fetch";
@@ -347,6 +347,24 @@ class SDK {
     createChangeShardStateParcel(params: { transactions: Transaction[] } & ParcelParams): Parcel {
         const { transactions, nonce, fee } = params;
         const action = new ChangeShardState(transactions);
+        return new Parcel(
+            U256.ensure(nonce),
+            U256.ensure(fee),
+            this.networkId,
+            action
+        );
+    }
+
+    /**
+     * Creates CreateShard action which can create new shard
+     * @param params.nonce Nonce for the parcel
+     * @param params.fee Fee for the parcel
+     * @throws Given number or string for nonce is invalid for converting it to U256
+     * @throws Given number or string for fee is invalid for converting it to U256
+     */
+    createCreateShardParcel(params: {} & ParcelParams): Parcel {
+        const { nonce, fee } = params;
+        const action = new CreateShard();
         return new Parcel(
             U256.ensure(nonce),
             U256.ensure(fee),

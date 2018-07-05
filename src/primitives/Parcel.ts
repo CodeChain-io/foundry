@@ -10,7 +10,7 @@ import { Transaction, getTransactionFromJSON } from "./transaction";
 
 const RLP = require("rlp");
 
-export type Action = ChangeShardState | Payment | SetRegularKey;
+export type Action = ChangeShardState | Payment | SetRegularKey | CreateShard;
 
 export class ChangeShardState {
     transactions: Transaction[];
@@ -72,6 +72,21 @@ export class SetRegularKey {
     }
 }
 
+export class CreateShard {
+    constructor() {
+    }
+
+    toEncodeObject(): Array<any> {
+        return [4];
+    }
+
+    toJSON() {
+        return {
+            action: "createShard",
+        };
+    }
+}
+
 function getActionFromJSON(json: any): Action {
     const { action } = json;
     switch (action) {
@@ -84,6 +99,8 @@ function getActionFromJSON(json: any): Action {
         case "setRegularKey":
             const { key } = json;
             return new SetRegularKey(new H512(key));
+        case "createShard":
+            return new CreateShard();
         default:
             throw new Error(`Unexpected parcel action: ${action}`);
     }
@@ -118,6 +135,11 @@ export class Parcel {
 
     static setRegularKey(nonce: U256, fee: U256, networkId: number, key: H512): Parcel {
         const action = new SetRegularKey(key);
+        return new Parcel(nonce, fee, networkId, action);
+    }
+
+    static createShard(nonce: U256, fee: U256, networkId: number): Parcel {
+        const action = new CreateShard();
         return new Parcel(nonce, fee, networkId, action);
     }
 
