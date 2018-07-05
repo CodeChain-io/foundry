@@ -315,7 +315,7 @@ class SDK {
      * @throws Given number or string for nonce is invalid for converting it to U256
      * @throws Given number or string for fee is invalid for converting it to U256
      */
-    createChangeShardStateAction(params: { transactions: Transaction[] } & ParcelParams): Parcel {
+    createChangeShardStateParcel(params: { transactions: Transaction[] } & ParcelParams): Parcel {
         const { transactions, nonce, fee } = params;
         const action = new ChangeShardState(transactions);
         return new Parcel(
