@@ -91,10 +91,10 @@ class SDK {
      * @param hash SignedParcel's hash
      * @returns SignedParcel, or null when SignedParcel was not found.
      */
-    getParcel(hash: H256): Promise<SignedParcel | null> {
+    getParcel(hash: H256 | string): Promise<SignedParcel | null> {
         return this.sendRpcRequest(
             "chain_getParcel",
-            [`0x${hash.value}`]
+            [`0x${H256.ensure(hash).value}`]
         ).then(result => result === null ? null : SignedParcel.fromJSON(result));
     }
 
@@ -105,10 +105,10 @@ class SDK {
      * @param _timeout Indicating milliseconds to wait the parcel to be confirmed.
      * @returns List of invoice, or null when no such parcel exists.
      */
-    getParcelInvoice(parcelHash: H256, _timeout?: number): Promise<Invoice[] | Invoice | null> {
+    getParcelInvoice(parcelHash: H256 | string, _timeout?: number): Promise<Invoice[] | Invoice | null> {
         return this.sendRpcRequest(
             "chain_getParcelInvoice",
-            [`0x${parcelHash.value}`]
+            [`0x${H256.ensure(parcelHash).value}`]
         ).then(result => {
             if (result === null) {
                 return null;
@@ -126,10 +126,10 @@ class SDK {
      * @param blockNumber The specific block number to get account's regular key at given address.
      * @returns The regular key of account at specified block, or null when address was not found.
      */
-    getRegularKey(address: H160, blockNumber?: number): Promise<H512 | null> {
+    getRegularKey(address: H160 | string, blockNumber?: number): Promise<H512 | null> {
         return this.sendRpcRequest(
             "chain_getRegularKey",
-            [`0x${address.value}`, blockNumber || null]
+            [`0x${H160.ensure(address).value}`, blockNumber || null]
         ).then(result => result === null ? null : new H512(result));
     }
 
@@ -139,10 +139,10 @@ class SDK {
      * @param txhash The transaction hash of which to get the corresponding transaction of.
      * @returns Invoice, or null when transaction of given hash not exists.
      */
-    getTransactionInvoice(txhash: H256): Promise<Invoice | null> {
+    getTransactionInvoice(txhash: H256 | string): Promise<Invoice | null> {
         return this.sendRpcRequest(
             "chain_getTransactionInvoice",
-            [`0x${txhash.value}`]
+            [`0x${H256.ensure(txhash).value}`]
         ).then(result => result === null ? null : Invoice.fromJSON(result));
     }
 
@@ -152,10 +152,10 @@ class SDK {
      * @param blockNumber The specific block number to get account's balance at given address.
      * @returns Balance of account at specified block, or null when address was not found.
      */
-    getBalance(address: H160, blockNumber?: number): Promise<U256 | null> {
+    getBalance(address: H160 | string, blockNumber?: number): Promise<U256 | null> {
         return this.sendRpcRequest(
             "chain_getBalance",
-            [`0x${address.value}`, blockNumber]
+            [`0x${H160.ensure(address).value}`, blockNumber]
         ).then(result => result ? new U256(result) : null);
     }
 
@@ -165,10 +165,10 @@ class SDK {
      * @param blockNumber The specific block number to get account's nonce at given address.
      * @returns Nonce of account at specified block, or null when address was not found.
      */
-    getNonce(address: H160, blockNumber?: number): Promise<U256 | null> {
+    getNonce(address: H160 | string, blockNumber?: number): Promise<U256 | null> {
         return this.sendRpcRequest(
             "chain_getNonce",
-            [`0x${address.value}`, blockNumber]
+            [`0x${H160.ensure(address).value}`, blockNumber]
         ).then(result => result ? new U256(result) : null);
     }
 
@@ -200,11 +200,11 @@ class SDK {
      * @param hashOrNumber The block hash or number of which to get the block of
      * @returns Block, if block exists. Else, returns null.
      */
-    getBlock(hashOrNumber: H256 | number): Promise<Block | null> {
-        if (hashOrNumber instanceof H256) {
+    getBlock(hashOrNumber: H256 | string | number): Promise<Block | null> {
+        if (hashOrNumber instanceof H256 || typeof hashOrNumber === "string") {
             return this.sendRpcRequest(
                 "chain_getBlockByHash",
-                [`0x${hashOrNumber.value}`]
+                [`0x${H256.ensure(hashOrNumber).value}`]
             ).then(result => result === null ? null : Block.fromJSON(result));
         } else {
             return this.sendRpcRequest(
@@ -220,10 +220,10 @@ class SDK {
      * @param txhash The tx hash of AssetMintTransaction.
      * @returns AssetScheme, if asset scheme exists. Else, returns null.
      */
-    getAssetScheme(txhash: H256): Promise<AssetScheme | null> {
+    getAssetScheme(txhash: H256 | string): Promise<AssetScheme | null> {
         return this.sendRpcRequest(
             "chain_getAssetScheme",
-            [`0x${txhash.value}`]
+            [`0x${H256.ensure(txhash).value}`]
         ).then(result => result === null ? null : AssetScheme.fromJSON(result));
     }
 
@@ -233,17 +233,17 @@ class SDK {
      * @param index The index of output in the transaction.
      * @returns Asset, if asset exists, Else, returns null.
      */
-    getAsset(txhash: H256, index: number): Promise<Asset | null> {
+    getAsset(txhash: H256 | string, index: number): Promise<Asset | null> {
         return this.sendRpcRequest(
             "chain_getAsset",
-            [`0x${txhash.value}`, index]
+            [`0x${H256.ensure(txhash).value}`, index]
         ).then(result => {
             if (result === null) {
                 return null;
             }
             return Asset.fromJSON({
                 ...result,
-                transactionHash: txhash.value,
+                transactionHash: H256.ensure(txhash).value,
                 transactionOutputIndex: index
             });
         });

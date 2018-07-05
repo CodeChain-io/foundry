@@ -146,8 +146,8 @@ export class Parcel {
         return new H256(blake256(this.rlpBytes()));
     }
 
-    sign(secret: H256): SignedParcel {
-        const { r, s, v } = signEcdsa(this.hash().value, secret.value);
+    sign(secret: H256 | string): SignedParcel {
+        const { r, s, v } = signEcdsa(this.hash().value, H256.ensure(secret).value);
         return new SignedParcel(this, v, new U256(new BigNumber(r, 16)), new U256(new BigNumber(s, 16)));
     }
 
