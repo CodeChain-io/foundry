@@ -3,9 +3,10 @@ import { getTransactionFromJSON, Transaction, AssetMintTransaction, AssetTransfe
 import { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress, verifyEcdsa, recoverPublic, generatePrivateKey } from "./utils";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
-import { PubkeyAssetAgent } from "./signer/PubkeyAssetAgent";
+import { PubkeyAssetAgent, KeyStore } from "./signer/PubkeyAssetAgent";
 import { MemoryKeyStore } from "./signer/MemoryKeyStore";
 import { Payment, SetRegularKey, ChangeShardState } from "./primitives/Parcel";
+import { AssetAgent } from "./primitives/Asset";
 
 import fetch from "node-fetch";
 
@@ -24,6 +25,8 @@ export type ParcelParams = {
 class SDK {
     private client: any;
     private networkId: number;
+    private keyStore: KeyStore;
+    private assetAgent: AssetAgent;
 
     /**
      * @param params.server HTTP RPC server address
@@ -47,6 +50,8 @@ class SDK {
             });
         });
         this.networkId = networkId;
+        this.keyStore = new MemoryKeyStore();
+        this.assetAgent = new PubkeyAssetAgent({ keyStore: this.keyStore });
     }
 
     private sendRpcRequest = (name: string, params: any[]) => {
@@ -351,6 +356,14 @@ class SDK {
             amount,
             registrar: registrar === null ? null : (registrar instanceof H160 ? registrar : new H160(registrar))
         });
+    }
+
+    /**
+     * Gets AssetAgent. AssetAgent manages addresses, scripts and keys for
+     * locking/unlocking assets.
+     */
+    getAssetAgent(): AssetAgent {
+        return this.assetAgent;
     }
 
     /**
