@@ -1,5 +1,5 @@
-import { SDK, H256, AssetMintTransaction } from "../";
-import { mintAsset, transferAsset } from "./helper";
+import { SDK, H256, AssetMintTransaction, MemoryKeyStore, PubkeyAssetAgent, ChangeShardState } from "../";
+import { mintAsset, sendTransactions } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 const sdk = new SDK({ server: SERVER_URL });
@@ -8,10 +8,14 @@ test("AssetMintTransaction fromJSON", async () => {
     const metadata = "";
     const lockScriptHash = new H256("0000000000000000000000000000000000000000000000000000000000000000");
     const amount = 100;
-    const parameters: Buffer[] = [];
     const registrar = null;
-    const { parcelHash } = await mintAsset({ metadata, lockScriptHash, amount, parameters, registrar });
+    const { parcelHash } = await mintAsset({ metadata, lockScriptHash, amount, registrar });
     const parcel = await sdk.getParcel(parcelHash);
+
+    if (!(parcel.unsigned.action instanceof ChangeShardState)) {
+        throw "Invalid action";
+    }
+
     expect(parcel.unsigned.action.transactions[0]).toMatchObject({
         type: expect.stringMatching("assetMint"),
         data: expect.objectContaining({
@@ -29,17 +33,22 @@ test("AssetMintTransaction fromJSON", async () => {
 });
 
 test("AssetTransferTransaction fromJSON", async () => {
-    const emptyLockScriptHash = new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3");
-    const mint = new AssetMintTransaction({
+    const keyStore = new MemoryKeyStore();
+    const pubkeyAssetAgent = new PubkeyAssetAgent({ keyStore });
+
+    const mintTx = sdk.createAssetScheme({
         metadata: "metadata of non-permissioned asset",
-        lockScriptHash: emptyLockScriptHash,
-        parameters: [],
         amount: 100,
         registrar: null,
-        nonce: 0,
-    });
+    }).mint(await pubkeyAssetAgent.createAddress());
+    await sendTransactions({ transactions: [mintTx] });
+    const firstAsset = await sdk.getAsset(mintTx.hash(), 0);
 
-    const { parcelHash } = await transferAsset({ mintTx: mint });
+    const transferTx = await firstAsset.transfer(pubkeyAssetAgent, [{
+        address: await pubkeyAssetAgent.createAddress(),
+        amount: 100
+    }]);
+    const { parcelHash } = await sendTransactions({ transactions: [transferTx] });
     const parcel = await sdk.getParcel(parcelHash);
     // FIXME: Remove anythings when *Data fields are flattened
     const expectedInput = expect.objectContaining({
@@ -60,7 +69,12 @@ test("AssetTransferTransaction fromJSON", async () => {
         assetType: expect.anything(),
         amount: expect.anything(),
     });
-    expect(parcel.unsigned.action.transactions[1]).toMatchObject({
+
+    if (!(parcel.unsigned.action instanceof ChangeShardState)) {
+        throw "Invalid action";
+    }
+
+    expect(parcel.unsigned.action.transactions[0]).toMatchObject({
         type: expect.stringMatching("assetTransfer"),
         burns: [],
         inputs: expect.arrayContaining([expectedInput]),
