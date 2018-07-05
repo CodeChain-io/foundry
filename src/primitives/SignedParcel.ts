@@ -1,7 +1,8 @@
 import { U256 } from "./U256";
+import { H160 } from "./H160";
 import { H256 } from "./H256";
 import { Parcel } from "./Parcel";
-import { blake256 } from "../utils";
+import { blake256, ripemd160, recoverPublic } from "../utils";
 
 const RLP = require("rlp");
 
@@ -70,6 +71,16 @@ export class SignedParcel {
 
     hash(): H256 {
         return new H256(blake256(this.rlpBytes()));
+    }
+
+    getSender(): H160 {
+        const { r, s, v, unsigned } = this;
+        const publicKey = recoverPublic(unsigned.hash().value, {
+            r: r.value.toString(16),
+            s: s.value.toString(16),
+            v
+        });
+        return new H160(ripemd160(blake256(publicKey)));
     }
 
     static fromJSON(data: any) {
