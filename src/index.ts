@@ -74,6 +74,14 @@ class SDK {
     }
 
     /**
+     * Gets the version of CodeChain node.
+     * @returns The version of CodeChain node (e.g. 0.1.0)
+     */
+    getNodeVersion(): Promise<string> {
+        return this.sendRpcRequest("version", []);
+    }
+
+    /**
      * Sends SignedParcel to CodeChain's network.
      * @param parcel SignedParcel
      * @returns SignedParcel's hash.
