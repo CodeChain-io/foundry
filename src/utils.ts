@@ -79,11 +79,21 @@ export const generatePrivateKey = (): string => {
     return secp256k1.genKeyPair().priv.toString("hex");
 };
 
-export const privateKeyToAddress = (priv: string) => {
+/**
+ * Gets account id from private key.
+ * @param priv 32 bytes hexstring of private key
+ * @returns 20 bytes hexstring of account id
+ */
+export const privateKeyToAddress = (priv: string): string => {
     const key = secp256k1.keyFromPrivate(priv);
     return ripemd160(blake256(key.getPublic().encode("hex").slice(2)));
 };
 
+/**
+ * Gets public key from private key.
+ * @param priv Private key
+ * @returns 64 bytes hexstring of public key
+ */
 export const privateKeyToPublic = (priv: string): string => {
     const key = secp256k1.keyFromPrivate(priv);
     // Remove prefix "04" which represents it's uncompressed form.
