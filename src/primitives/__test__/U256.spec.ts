@@ -36,3 +36,10 @@ test("isEqualTo", () => {
     expect(new U256(1000000).isEqualTo(new U256(1000000))).toEqual(true);
     expect(new U256("100000000000000000").isEqualTo(new U256("100000000000000000"))).toEqual(true);
 });
+
+test("ensure", () => {
+    expect(U256.ensure(10)).toEqual(new U256(10));
+    expect(U256.ensure("10")).toEqual(new U256(10));
+    expect(U256.ensure("0xA")).toEqual(new U256(10));
+    expect(U256.ensure(new U256(10))).toEqual(new U256(10));
+});

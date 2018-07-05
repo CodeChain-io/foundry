@@ -23,6 +23,10 @@ export class H256 {
         return new H256(bytes.map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join(""));
     }
 
+    static ensure(param: H256 | string): H256 {
+        return param instanceof H256 ? param : new H256(param);
+    }
+
     toEncodeObject(): string {
         return `0x${this.value}`;
     }

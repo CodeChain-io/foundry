@@ -23,6 +23,10 @@ export class H160 {
         return new H160(bytes.map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join(""));
     }
 
+    static ensure(param: H160 | string): H160 {
+        return param instanceof H160 ? param : new H160(param);
+    }
+
     toEncodeObject(): string {
         return `0x${this.value}`;
     }

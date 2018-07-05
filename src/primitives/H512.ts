@@ -24,6 +24,10 @@ export class H512 {
         return new H512(bytes.map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join(""));
     }
 
+    static ensure(param: H512 | string): H512 {
+        return param instanceof H512 ? param : new H512(param);
+    }
+
     toEncodeObject(): string {
         return `0x${this.value}`;
     }

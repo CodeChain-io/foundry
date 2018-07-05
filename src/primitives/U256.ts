@@ -33,6 +33,10 @@ export class U256 {
         return new U256("0x" + bytes.map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join(""));
     }
 
+    static ensure(param: U256 | string | number | BigNumber) {
+        return param instanceof U256 ? param : new U256(param);
+    }
+
     toEncodeObject(): string | number {
         const hex = this.value.toString(16);
         // NOTE: workaround that RLP.encode("0x0") results to 00
