@@ -358,6 +358,11 @@ class SDK {
     static AssetScheme = AssetScheme;
     static Block = Block;
 
+    // Action
+    static Payment = Payment;
+    static SetRegularKey = SetRegularKey;
+    static ChangeShardState = ChangeShardState;
+
     // Address
     static AssetTransferAddress = AssetTransferAddress;
     static PlatformAddress = PlatformAddress;
@@ -392,5 +397,6 @@ export { blake256, blake256WithKey, ripemd160, signEcdsa, generatePrivateKey, pr
 export { PubkeyAssetAgent };
 export { MemoryKeyStore };
 export { PlatformAddress, AssetTransferAddress };
+export { ChangeShardState, Payment, SetRegularKey };
 
 module.exports = SDK;
