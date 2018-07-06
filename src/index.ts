@@ -111,26 +111,34 @@ class SDK {
         ).then(result => result === null ? null : SignedParcel.fromJSON(result));
     }
 
-    // FIXME: timeout not implemented
     /**
      * Gets invoices of given parcel.
      * @param parcelHash The parcel hash of which to get the corresponding parcel of.
-     * @param _timeout Indicating milliseconds to wait the parcel to be confirmed.
+     * @param timeout Indicating milliseconds to wait the parcel to be confirmed.
      * @returns List of invoice, or null when no such parcel exists.
      */
-    getParcelInvoice(parcelHash: H256 | string, _timeout?: number): Promise<Invoice[] | Invoice | null> {
-        return this.sendRpcRequest(
-            "chain_getParcelInvoice",
-            [`0x${H256.ensure(parcelHash).value}`]
-        ).then(result => {
-            if (result === null) {
-                return null;
-            }
-            if (Array.isArray(result)) {
-                return result.map((invoice: any) => Invoice.fromJSON(invoice));
-            }
-            return Invoice.fromJSON(result);
-        });
+    async getParcelInvoice(parcelHash: H256 | string, timeout?: number): Promise<Invoice[] | Invoice | null> {
+        const attemptToGet = async () => {
+            return this.sendRpcRequest(
+                "chain_getParcelInvoice",
+                [`0x${H256.ensure(parcelHash).value}`]
+            ).then(result => {
+                if (result === null) {
+                    return null;
+                }
+                if (Array.isArray(result)) {
+                    return result.map((invoice: any) => Invoice.fromJSON(invoice));
+                }
+                return Invoice.fromJSON(result);
+            });
+        };
+        const startTime = Date.now();
+        let result = await attemptToGet();
+        while (result === null && timeout !== undefined && Date.now() - startTime < timeout) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            result = await attemptToGet();
+        }
+        return result;
     }
 
     /**
