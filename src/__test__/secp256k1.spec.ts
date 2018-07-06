@@ -1,4 +1,4 @@
-import { signEcdsa, verifyEcdsa, recoverPublic, privateKeyToPublic } from "../utils";
+import { signEcdsa, verifyEcdsa, recoverEcdsa, privateKeyToPublic } from "../utils";
 
 const priv = "99053a6568a93b9f194ef983c84ddfa9eb2b37888e47433558d40b2f4770b2d8";
 const msg = "hello";
@@ -36,7 +36,7 @@ test("verify - fail", () => {
 });
 
 test("recover", () => {
-    const a = recoverPublic(msg, {
+    const a = recoverEcdsa(msg, {
         r: "7b5e0ee8644c6f585fc297364143280a458445025304ab8f8bd17012e0817189",
         s: "68d7d28f062724c5ec3033d3deb968aeb7eaf2931aeba07c6fea1540065835e3",
         v: 0

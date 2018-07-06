@@ -1,5 +1,5 @@
 import { MemoryKeyStore } from "../MemoryKeyStore";
-import { verifyEcdsa, recoverPublic } from "../../utils";
+import { verifyEcdsa, recoverEcdsa } from "../../utils";
 
 test("createKey", async () => {
     const store = new MemoryKeyStore();
@@ -33,5 +33,5 @@ test("sign", async () => {
     const signature = await store.sign({ publicKey: key1, message: "hello" });
 
     expect(verifyEcdsa("hello", signature, key1)).toBe(true);
-    expect(recoverPublic("hello", signature)).toEqual(key1);
+    expect(recoverEcdsa("hello", signature)).toEqual(key1);
 });

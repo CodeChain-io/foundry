@@ -106,7 +106,7 @@ export const verifyEcdsa = (message: string, signature: EcdsaSignature, pub: str
  * @param signature r, s, v of ECDSA signature
  * @returns 64 byte hexadecimal string public key
  */
-export const recoverPublic = (message: string, signature: EcdsaSignature): string => {
+export const recoverEcdsa = (message: string, signature: EcdsaSignature): string => {
     return secp256k1.recoverPubKey(
         secp256k1.keyFromPrivate(message, "hex").getPrivate().toString(10),
         signature,
