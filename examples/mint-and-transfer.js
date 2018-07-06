@@ -38,6 +38,10 @@ async function sendTransaction(tx) {
     const mintTx = goldAssetScheme.mint(aliceAddress);
 
     await sendTransaction(mintTx);
+    const mintTxInvoice = await sdk.getTransactionInvoice(mintTx.hash(), 5 * 60 * 1000);
+    if (!mintTxInvoice.success) {
+        throw "AssetMintTransaction failed";
+    }
 
     const firstGold = await sdk.getAsset(mintTx.hash(), 0);
 
@@ -50,6 +54,10 @@ async function sendTransaction(tx) {
     }]);
 
     await sendTransaction(transferTx);
+    const transferTxInvoice = await sdk.getTransactionInvoice(transferTx.hash(), 5 * 60 * 1000);
+    if (!transferTxInvoice.success) {
+        throw "AssetTransferTransaction failed";
+    }
 
     // Unspent Bob's 3000 golds
     console.log(await sdk.getAsset(transferTx.hash(), 0));
