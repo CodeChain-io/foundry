@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 
-import { generatePrivateKey, privateKeyToPublic, signEcdsa } from "../utils";
+import { generatePrivateKey, getPublicFromPrivate, signEcdsa } from "../utils";
 
 /**
  * A simple key store for testing purpose.
@@ -14,7 +14,7 @@ export class MemoryKeyStore {
 
     createKey(): Promise<string> {
         const privateKey = generatePrivateKey();
-        const publicKey = privateKeyToPublic(privateKey);
+        const publicKey = getPublicFromPrivate(privateKey);
         this.privateKeyMap[publicKey] = privateKey;
         return Promise.resolve(publicKey);
     }

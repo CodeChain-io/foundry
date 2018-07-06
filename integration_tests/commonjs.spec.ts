@@ -28,5 +28,5 @@ test("commonjs", async () => {
     expect(SDK.ripemd160).toEqual(expect.any(Function));
     expect(SDK.signEcdsa).toEqual(expect.any(Function));
     expect(SDK.getAccountIdFromPrivate).toEqual(expect.any(Function));
-    expect(SDK.privateKeyToPublic).toEqual(expect.any(Function));
+    expect(SDK.getPublicFromPrivate).toEqual(expect.any(Function));
 });

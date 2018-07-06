@@ -137,7 +137,7 @@ export const getAccountIdFromPrivate = (priv: string): string => {
  * @param priv 32 byte hexadecimal string of private key
  * @returns 64 byte hexadecimal string of public key
  */
-export const privateKeyToPublic = (priv: string): string => {
+export const getPublicFromPrivate = (priv: string): string => {
     const key = secp256k1.keyFromPrivate(priv);
     // Remove prefix "04" which represents it's uncompressed form.
     return key.getPublic().encode("hex").slice(2);
