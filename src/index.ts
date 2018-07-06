@@ -288,12 +288,12 @@ class SDK {
     createPaymentParcel(params: { recipient: H160 | string, value: U256 | number | string } & ParcelParams): Parcel {
         const { recipient, value, fee, nonce } = params;
         const action = new Payment(
-            recipient instanceof H160 ? recipient : new H160(recipient),
-            value instanceof U256 ? value : new U256(value)
+            H160.ensure(recipient),
+            U256.ensure(value)
         );
         return new Parcel(
-            nonce instanceof U256 ? nonce : new U256(nonce),
-            fee instanceof U256 ? fee : new U256(fee),
+            U256.ensure(nonce),
+            U256.ensure(fee),
             this.networkId,
             action
         );
@@ -310,10 +310,10 @@ class SDK {
      */
     createSetRegularKeyParcel(params: { key: H512 | string } & ParcelParams): Parcel {
         const { key, nonce, fee } = params;
-        const action = new SetRegularKey(key instanceof H512 ? key : new H512(key));
+        const action = new SetRegularKey(H512.ensure(key));
         return new Parcel(
-            nonce instanceof U256 ? nonce : new U256(nonce),
-            fee instanceof U256 ? fee : new U256(fee),
+            U256.ensure(nonce),
+            U256.ensure(fee),
             this.networkId,
             action
         );
@@ -332,8 +332,8 @@ class SDK {
         const { transactions, nonce, fee } = params;
         const action = new ChangeShardState(transactions);
         return new Parcel(
-            nonce instanceof U256 ? nonce : new U256(nonce),
-            fee instanceof U256 ? fee : new U256(fee),
+            U256.ensure(nonce),
+            U256.ensure(fee),
             this.networkId,
             action
         );
@@ -354,7 +354,7 @@ class SDK {
         return new AssetScheme({
             metadata,
             amount,
-            registrar: registrar === null ? null : (registrar instanceof H160 ? registrar : new H160(registrar))
+            registrar: registrar === null ? null : H160.ensure(registrar)
         });
     }
 
