@@ -66,7 +66,7 @@ export const ripemd160 = (data: Buffer | string): string => {
     return new ripemd().update(data).digest("hex");
 };
 
-export type ECDSASignature = {
+export type EcdsaSignature = {
     r: string;
     s: string;
     v: number;
@@ -78,7 +78,7 @@ export type ECDSASignature = {
  * @param priv 32 byte hexadecimal string of private key
  * @returns r, s, v of ECDSA signature
  */
-export const signEcdsa = (message: string, priv: string): ECDSASignature => {
+export const signEcdsa = (message: string, priv: string): EcdsaSignature => {
     const key = secp256k1.keyFromPrivate(priv);
     const { r, s, recoveryParam: v } = key.sign(message, { "canonical": true });
     return {
@@ -95,7 +95,7 @@ export const signEcdsa = (message: string, priv: string): ECDSASignature => {
  * @param pub 64 byte hexadecimal string of public key
  * @returns if signature is valid, true. Else false.
  */
-export const verifyEcdsa = (message: string, signature: ECDSASignature, pub: string): boolean => {
+export const verifyEcdsa = (message: string, signature: EcdsaSignature, pub: string): boolean => {
     const key = secp256k1.keyFromPublic("04" + pub, "hex");
     return key.verify(message, signature);
 };
@@ -106,7 +106,7 @@ export const verifyEcdsa = (message: string, signature: ECDSASignature, pub: str
  * @param signature r, s, v of ECDSA signature
  * @returns 64 byte hexadecimal string public key
  */
-export const recoverPublic = (message: string, signature: ECDSASignature): string => {
+export const recoverPublic = (message: string, signature: EcdsaSignature): string => {
     return secp256k1.recoverPubKey(
         secp256k1.keyFromPrivate(message, "hex").getPrivate().toString(10),
         signature,
