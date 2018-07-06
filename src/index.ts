@@ -1,6 +1,6 @@
 import { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block } from "./primitives/index";
 import { getTransactionFromJSON, Transaction, AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "./primitives/transaction";
-import { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, privateKeyToAddress, verifyEcdsa, recoverEcdsa, generatePrivateKey } from "./utils";
+import { blake256, blake256WithKey, ripemd160, signEcdsa, privateKeyToPublic, getAccountIdFromPrivate, verifyEcdsa, recoverEcdsa, generatePrivateKey } from "./utils";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
 import { PubkeyAssetAgent, KeyStore } from "./signer/PubkeyAssetAgent";
@@ -468,7 +468,7 @@ class SDK {
     static verifyEcdsa = verifyEcdsa;
     static recoverEcdsa = recoverEcdsa;
     static generatePrivateKey = generatePrivateKey;
-    static privateKeyToAddress = privateKeyToAddress;
+    static getAccountIdFromPrivate = getAccountIdFromPrivate;
     static privateKeyToPublic = privateKeyToPublic;
 
 }
@@ -476,7 +476,7 @@ class SDK {
 export { SDK };
 export { H160, H512, SignedParcel, H256, Parcel, U256, Invoice, Asset, AssetScheme, Block };
 export { getTransactionFromJSON, Transaction, AssetMintTransaction, AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput };
-export { blake256, blake256WithKey, ripemd160, signEcdsa, generatePrivateKey, privateKeyToPublic, privateKeyToAddress };
+export { blake256, blake256WithKey, ripemd160, signEcdsa, generatePrivateKey, privateKeyToPublic, getAccountIdFromPrivate };
 export { PubkeyAssetAgent };
 export { MemoryKeyStore };
 export { PlatformAddress, AssetTransferAddress };

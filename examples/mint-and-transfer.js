@@ -10,7 +10,7 @@ const assetAgent = new PubkeyAssetAgent({ keyStore: new MemoryKeyStore() });
 // sendTransaction() is a function to make transaction to be processed.
 async function sendTransaction(tx) {
     const parcelSignerSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
-    const parcelSignerAddress = SDK.privateKeyToAddress(parcelSignerSecret);
+    const parcelSignerAddress = SDK.getAccountIdFromPrivate(parcelSignerSecret);
     const parcel = sdk.createChangeShardStateParcel({
         transactions: [tx],
         nonce: await sdk.getNonce(parcelSignerAddress),

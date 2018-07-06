@@ -127,7 +127,7 @@ export const generatePrivateKey = (): string => {
  * @param priv 32 byte hexadecimal string of private key
  * @returns 20 byte hexadecimal string of account id
  */
-export const privateKeyToAddress = (priv: string): string => {
+export const getAccountIdFromPrivate = (priv: string): string => {
     const key = secp256k1.keyFromPrivate(priv);
     return ripemd160(blake256(key.getPublic().encode("hex").slice(2)));
 };

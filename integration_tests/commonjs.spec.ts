@@ -27,6 +27,6 @@ test("commonjs", async () => {
     expect(SDK.blake256WithKey).toEqual(expect.any(Function));
     expect(SDK.ripemd160).toEqual(expect.any(Function));
     expect(SDK.signEcdsa).toEqual(expect.any(Function));
-    expect(SDK.privateKeyToAddress).toEqual(expect.any(Function));
+    expect(SDK.getAccountIdFromPrivate).toEqual(expect.any(Function));
     expect(SDK.privateKeyToPublic).toEqual(expect.any(Function));
 });

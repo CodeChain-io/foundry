@@ -1,9 +1,9 @@
-import { SDK, Parcel, U256, H256, H160, privateKeyToAddress } from "../";
+import { SDK, Parcel, U256, H256, H160 } from "../";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 const sdk = new SDK({ server: SERVER_URL });
 const secret = new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd");
-const address = new H160(privateKeyToAddress(secret.value));
+const address = new H160(SDK.getAccountIdFromPrivate(secret.value));
 
 test("sendSignedParcel", async () => {
     const nonce = await sdk.getNonce(address);
