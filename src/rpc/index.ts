@@ -1,4 +1,5 @@
 import { NodeRpc } from "./node";
+import { ChainRpc } from "./chain";
 
 /**
  * @hidden
@@ -12,6 +13,10 @@ export class Rpc {
      * RPC module for retrieving the node info.
      */
     public node: NodeRpc;
+    /**
+     * RPC module for accessing the blockchain.
+     */
+    public chain: ChainRpc;
 
     /**
      * @param params.server HTTP RPC server address.
@@ -35,6 +40,7 @@ export class Rpc {
         });
 
         this.node = new NodeRpc(this);
+        this.chain = new ChainRpc(this);
     }
 
     sendRpcRequest = (name: string, params: any[]) => {
