@@ -32,6 +32,8 @@ class SDK {
         this.rpc = new Rpc({ server });
         this.core = new Core({ networkId });
     }
+
+    public static SDK = SDK;
 }
 
 export { SDK };
