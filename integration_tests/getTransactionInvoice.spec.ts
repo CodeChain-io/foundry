@@ -1,12 +1,14 @@
-import { AssetMintTransaction, Invoice, SDK, H160, H256, U256, Parcel, getAccountIdFromPrivate } from "../";
+import { SDK } from "../";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 const sdk = new SDK({ server: SERVER_URL });
 
 test("getTransactionInvoice", async () => {
-    const secret = new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd");
-    const address = new H160(SDK.getAccountIdFromPrivate(secret.value));
-    const nonce = await sdk.getNonce(address);
+    const { AssetMintTransaction, H256, Invoice } = SDK.Core.classes;
+
+    const secret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
+    const address = SDK.util.getAccountIdFromPrivate(secret);
+    const nonce = await sdk.rpc.chain.getNonce(address);
 
     const assetMintTransaction = new AssetMintTransaction({
         nonce: 1,
@@ -16,9 +18,11 @@ test("getTransactionInvoice", async () => {
         amount: 111,
         registrar: null
     });
-    const fee = new U256(10);
-    const networkId = 17;
-    const p = Parcel.transactions(nonce, fee, networkId, assetMintTransaction).sign(secret);
-    await sdk.sendSignedParcel(p);
-    expect(await sdk.getTransactionInvoice(assetMintTransaction.hash())).toEqual(new Invoice(true));
+    const p = sdk.core.createChangeShardStateParcel({
+        transactions: [assetMintTransaction],
+        nonce,
+        fee: 10
+    }).sign(secret);
+    await sdk.rpc.chain.sendSignedParcel(p);
+    expect(await sdk.rpc.chain.getTransactionInvoice(assetMintTransaction.hash())).toEqual(new Invoice(true));
 });

@@ -1,8 +1,9 @@
-import { SDK, H256, AssetMintTransaction, MemoryKeyStore, PubkeyAssetAgent, ChangeShardState } from "../";
+import { SDK } from "..";
 import { mintAsset, sendTransactions } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 const sdk = new SDK({ server: SERVER_URL });
+const { H256, ChangeShardState } = SDK.Core.classes;
 
 test("AssetMintTransaction fromJSON", async () => {
     const metadata = "";
@@ -10,7 +11,7 @@ test("AssetMintTransaction fromJSON", async () => {
     const amount = 100;
     const registrar = null;
     const { parcelHash } = await mintAsset({ metadata, lockScriptHash, amount, registrar });
-    const parcel = await sdk.getParcel(parcelHash);
+    const parcel = await sdk.rpc.chain.getParcel(parcelHash);
 
     if (!(parcel.unsigned.action instanceof ChangeShardState)) {
         throw "Invalid action";
@@ -33,22 +34,22 @@ test("AssetMintTransaction fromJSON", async () => {
 });
 
 test("AssetTransferTransaction fromJSON", async () => {
-    const pubkeyAssetAgent = sdk.getAssetAgent();
+    const pubkeyAssetAgent = sdk.core.getAssetAgent();
 
-    const mintTx = sdk.createAssetScheme({
+    const mintTx = sdk.core.createAssetScheme({
         metadata: "metadata of non-permissioned asset",
         amount: 100,
         registrar: null,
     }).mint(await pubkeyAssetAgent.createAddress());
     await sendTransactions({ transactions: [mintTx] });
-    const firstAsset = await sdk.getAsset(mintTx.hash(), 0);
+    const firstAsset = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
 
     const transferTx = await firstAsset.transfer(pubkeyAssetAgent, [{
         address: await pubkeyAssetAgent.createAddress(),
         amount: 100
     }]);
     const { parcelHash } = await sendTransactions({ transactions: [transferTx] });
-    const parcel = await sdk.getParcel(parcelHash);
+    const parcel = await sdk.rpc.chain.getParcel(parcelHash);
     // FIXME: Remove anythings when *Data fields are flattened
     const expectedInput = expect.objectContaining({
         prevOut: expect.objectContaining({

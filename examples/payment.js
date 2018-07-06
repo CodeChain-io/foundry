@@ -13,9 +13,9 @@ const signerSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0
 
 // Parcel is only valid if the nonce matches the nonce of the parcel signer.
 // The nonce of the signer is increased by 1 when this parcel is confirmed.
-sdk.getNonce("0xa6594b7196808d161b6fb137e781abbc251385d9").then(nonce => {
+sdk.rpc.chain.getNonce("0xa6594b7196808d161b6fb137e781abbc251385d9").then(nonce => {
     // Create the Parcel for the payment
-    const parcel = sdk.createPaymentParcel({
+    const parcel = sdk.core.createPaymentParcel({
         // Recipient of the payment
         recipient: recipientAddress,
         // Amount of the payment.
@@ -28,12 +28,12 @@ sdk.getNonce("0xa6594b7196808d161b6fb137e781abbc251385d9").then(nonce => {
     const signedParcel = parcel.sign(signerSecret);
     // Send the signed parcel to the CodeChain node. The node will propagate this
     // parcel and attempt to confirm it.
-    return sdk.sendSignedParcel(signedParcel);
+    return sdk.rpc.chain.sendSignedParcel(signedParcel);
 }).then(parcelHash => {
     // sendSignedParcel returns a promise that resolves with a parcel hash if parcel has
     // been verified and queued successfully. It doesn't mean parcel was confirmed.
     console.log(`Parcel sent:`, parcelHash);
-    return sdk.getParcel(parcelHash);
+    return sdk.rpc.chain.getParcel(parcelHash);
 }).then((parcel) => {
     // getParcel returns a promise that resolves with a parcel.
     // blockNumber/blockHash/parcelIndex fields in Parcel is present only for the
