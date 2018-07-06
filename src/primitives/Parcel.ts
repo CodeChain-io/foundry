@@ -72,7 +72,7 @@ export class SetRegularKey {
     }
 }
 
-function getActionFromJson(json: any): Action {
+function getActionFromJSON(json: any): Action {
     const { action } = json;
     switch (action) {
         case "changeShardState":
@@ -153,7 +153,7 @@ export class Parcel {
 
     static fromJSON(result: any) {
         const { nonce, fee, networkId, action } = result;
-        return new Parcel(new U256(nonce), new U256(fee), networkId, getActionFromJson(action));
+        return new Parcel(new U256(nonce), new U256(fee), networkId, getActionFromJSON(action));
     }
 
     toJSON() {
