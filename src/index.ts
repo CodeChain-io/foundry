@@ -154,17 +154,26 @@ class SDK {
         ).then(result => result === null ? null : new H512(result));
     }
 
-    // FIXME: Implement timeout
     /**
      * Gets invoice of a transaction of given hash.
      * @param txhash The transaction hash of which to get the corresponding transaction of.
+     * @param timeout Indicating milliseconds to wait the transaction to be confirmed.
      * @returns Invoice, or null when transaction of given hash not exists.
      */
-    getTransactionInvoice(txhash: H256 | string): Promise<Invoice | null> {
-        return this.sendRpcRequest(
-            "chain_getTransactionInvoice",
-            [`0x${H256.ensure(txhash).value}`]
-        ).then(result => result === null ? null : Invoice.fromJSON(result));
+    async getTransactionInvoice(txhash: H256 | string, timeout?: number): Promise<Invoice | null> {
+        const attemptToGet = async () => {
+            return this.sendRpcRequest(
+                "chain_getTransactionInvoice",
+                [`0x${H256.ensure(txhash).value}`]
+            ).then(result => result === null ? null : Invoice.fromJSON(result));
+        };
+        const startTime = Date.now();
+        let result = await attemptToGet();
+        while (result === null && timeout !== undefined && Date.now() - startTime < timeout) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            result = await attemptToGet();
+        }
+        return result;
     }
 
     /**
