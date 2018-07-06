@@ -5,7 +5,7 @@ import { H256 } from "../primitives/H256";
 import { blake256 } from "../utils";
 import { MemoryKeyStore } from "./MemoryKeyStore";
 import { Asset } from "../primitives/Asset";
-import { AssetTransferTransaction } from "..";
+import { AssetTransferTransaction } from "../primitives/transaction/AssetTransferTransaction";
 
 /**
  * hidden
