@@ -104,8 +104,8 @@ export class SignedParcel {
             networkId: networkId.value.toNumber(),
             action: action.toJSON(),
             v,
-            r: r.value.toString(),
-            s: s.value.toString(),
+            r: r.value.toString(10),
+            s: s.value.toString(10),
             hash: this.hash().value,
         };
     }
