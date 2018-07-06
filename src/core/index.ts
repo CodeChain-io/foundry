@@ -152,6 +152,7 @@ export class Core {
         return getTransactionFromJSON(json);
     }
 
+    public classes = Core.classes;
     static classes = {
         // Data
         H160,
