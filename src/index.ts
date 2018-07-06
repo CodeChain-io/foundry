@@ -244,7 +244,6 @@ class SDK {
         }
     }
 
-    // FIXME: receive asset type instead of txhash. Need to change codechain also.
     /**
      * Gets asset scheme of given hash of AssetMintTransaction.
      * @param txhash The tx hash of AssetMintTransaction.
