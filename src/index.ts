@@ -7,6 +7,7 @@ import { PubkeyAssetAgent, KeyStore } from "./signer/PubkeyAssetAgent";
 import { MemoryKeyStore } from "./signer/MemoryKeyStore";
 import { Payment, SetRegularKey, ChangeShardState, CreateShard } from "./primitives/Parcel";
 import { AssetAgent } from "./primitives/Asset";
+import { Rpc } from "./rpc";
 
 import fetch from "node-fetch";
 
@@ -27,6 +28,8 @@ class SDK {
     private networkId: number;
     private keyStore: KeyStore;
     private assetAgent: AssetAgent;
+
+    public rpc: Rpc;
 
     /**
      * @param params.server HTTP RPC server address
@@ -52,6 +55,8 @@ class SDK {
         this.networkId = networkId;
         this.keyStore = new MemoryKeyStore();
         this.assetAgent = new PubkeyAssetAgent({ keyStore: this.keyStore });
+
+        this.rpc = new Rpc({ server });
     }
 
     private sendRpcRequest = (name: string, params: any[]) => {
@@ -65,25 +70,6 @@ class SDK {
                 resolve(res.result);
             });
         });
-    }
-
-    /**
-     * Sends ping to check whether CodeChain's RPC server is responding or not.
-     * @returns String "pong"
-     */
-    ping(): Promise<string> {
-        return this.sendRpcRequest(
-            "ping",
-            []
-        );
-    }
-
-    /**
-     * Gets the version of CodeChain node.
-     * @returns The version of CodeChain node (e.g. 0.1.0)
-     */
-    getNodeVersion(): Promise<string> {
-        return this.sendRpcRequest("version", []);
     }
 
     /**
