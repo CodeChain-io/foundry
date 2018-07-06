@@ -1,5 +1,8 @@
+import fetch from "node-fetch";
+
 import { NodeRpc } from "./node";
 import { ChainRpc } from "./chain";
+import { NetworkRpc } from "./network";
 
 /**
  * @hidden
@@ -17,6 +20,10 @@ export class Rpc {
      * RPC module for accessing the blockchain.
      */
     public chain: ChainRpc;
+    /**
+     * RPC module for configuring P2P networking of the node.
+     */
+    public network: NetworkRpc;
 
     /**
      * @param params.server HTTP RPC server address.
@@ -41,6 +48,7 @@ export class Rpc {
 
         this.node = new NodeRpc(this);
         this.chain = new ChainRpc(this);
+        this.network = new NetworkRpc(this);
     }
 
     sendRpcRequest = (name: string, params: any[]) => {

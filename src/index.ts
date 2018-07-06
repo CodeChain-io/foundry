@@ -9,12 +9,6 @@ import { Payment, SetRegularKey, ChangeShardState, CreateShard } from "./primiti
 import { AssetAgent } from "./primitives/Asset";
 import { Rpc } from "./rpc";
 
-import fetch from "node-fetch";
-
-/**
- * @hidden
- */
-const jaysonBrowserClient = require("jayson/lib/client/browser");
 /**
  * @hidden
  */
@@ -24,7 +18,6 @@ export type ParcelParams = {
 };
 
 class SDK {
-    private client: any;
     private networkId: number;
     private keyStore: KeyStore;
     private assetAgent: AssetAgent;
@@ -37,41 +30,12 @@ class SDK {
      */
     constructor(params: { server: string, networkId?: number }) {
         const { server, networkId = 0x11 } = params;
-        this.client = jaysonBrowserClient((request: any, callback: any) => {
-            fetch(server, {
-                method: "POST",
-                body: request,
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            }).then(res => {
-                return res.text();
-            }).then(text => {
-                return callback(null, text);
-            }).catch(err => {
-                return callback(err);
-            });
-        });
         this.networkId = networkId;
         this.keyStore = new MemoryKeyStore();
         this.assetAgent = new PubkeyAssetAgent({ keyStore: this.keyStore });
 
         this.rpc = new Rpc({ server });
     }
-
-    private sendRpcRequest = (name: string, params: any[]) => {
-        return new Promise<any>((resolve, reject) => {
-            this.client.request(name, params, (err: any, res: any) => {
-                if (err) {
-                    return reject(err);
-                } else if (res.error) {
-                    return reject(res.error);
-                }
-                resolve(res.result);
-            });
-        });
-    }
-
 
     /**
      * Creates Payment action which pays the value amount of CCC(CodeChain Coin)
@@ -182,33 +146,6 @@ class SDK {
      */
     getAssetAgent(): AssetAgent {
         return this.assetAgent;
-    }
-
-    /**
-     * Save secret which is used when handshaking with other node,
-     * This secret may be exchanged in offline.
-     * To use this saved secret, you should call 'net_connect' RPC after this RPC call.
-     * @param secret Secret exchanged in offline
-     * @param address Node address which RPC server will connect to using secret
-     * @param port
-     */
-    shareSecret(secret: string, address: string, port: number): Promise<null> {
-        return this.sendRpcRequest(
-            "net_shareSecret",
-            [secret, address, port]
-        );
-    }
-
-    /**
-     * Connect to node
-     * @param address Node address which to connect
-     * @param port
-     */
-    connect(address: string, port: number): Promise<null> {
-        return this.sendRpcRequest(
-            "net_connect",
-            [address, port]
-        );
     }
 
     // Primitives
