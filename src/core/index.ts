@@ -40,19 +40,19 @@ export class Core {
      * Creates Payment action which pays the value amount of CCC(CodeChain Coin)
      * from the parcel signer to the recipient. Who is signing the parcel will pay.
      * @param params.recipient The platform account who receives CCC
-     * @param params.value Amount of CCC to pay
+     * @param params.amount Amount of CCC to pay
      * @param params.nonce Nonce for the parcel
      * @param params.fee Fee for the parcel
      * @throws Given string for recipient is invalid for converting it to H160
-     * @throws Given number or string for value is invalid for converting it to U256
+     * @throws Given number or string for amount is invalid for converting it to U256
      * @throws Given number or string for nonce is invalid for converting it to U256
      * @throws Given number or string for fee is invalid for converting it to U256
      */
-    createPaymentParcel(params: { recipient: H160 | string, value: U256 | number | string } & ParcelParams): Parcel {
-        const { recipient, value, fee, nonce } = params;
+    createPaymentParcel(params: { recipient: H160 | string, amount: U256 | number | string } & ParcelParams): Parcel {
+        const { recipient, amount, fee, nonce } = params;
         const action = new Payment(
             H160.ensure(recipient),
-            U256.ensure(value)
+            U256.ensure(amount)
         );
         return new Parcel(
             U256.ensure(nonce),

@@ -33,22 +33,22 @@ export class ChangeShardState {
 
 export class Payment {
     receiver: H160;
-    value: U256;
+    amount: U256;
 
-    constructor(receiver: H160, value: U256) {
+    constructor(receiver: H160, amount: U256) {
         this.receiver = receiver;
-        this.value = value;
+        this.amount = amount;
     }
 
     toEncodeObject(): Array<any> {
-        return [2, this.receiver.toEncodeObject(), this.value.toEncodeObject()];
+        return [2, this.receiver.toEncodeObject(), this.amount.toEncodeObject()];
     }
 
     toJSON() {
         return {
             action: "payment",
             receiver: this.receiver.value,
-            value: this.value.value.toString()
+            value: this.amount.value.toString()
         };
     }
 }
