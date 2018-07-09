@@ -2,8 +2,16 @@ import { MemoryKeyStore } from "./MemoryKeyStore";
 import { PubkeyAssetAgent } from "./PubkeyAssetAgent";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
-// FIXME:
-import { AssetAgent } from "../core/Asset";
+
+/**
+ * hidden
+ */
+export type KeyStore = MemoryKeyStore;
+
+/**
+ * @hidden
+ */
+export type AssetAgent = PubkeyAssetAgent;
 
 export class Key {
     private assetAgent: AssetAgent;

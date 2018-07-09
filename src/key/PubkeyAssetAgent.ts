@@ -6,12 +6,7 @@ import { AssetTransferTransaction } from "../core/transaction/AssetTransferTrans
 import { blake256 } from "../utils";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";
-import { MemoryKeyStore } from "./MemoryKeyStore";
-
-/**
- * hidden
- */
-export type KeyStore = MemoryKeyStore;
+import { KeyStore } from ".";
 
 /**
  * AssetAgent which supports P2PK(Pay to Public Key) lock script.
