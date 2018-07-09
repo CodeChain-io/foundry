@@ -25,8 +25,8 @@ export type AssetMintTransactionData = {
  * - If an identical transaction hash already exists, then the change fails. In this situation, a transaction can be created again by arbitrarily changing the nonce.
  */
 export class AssetMintTransaction {
-    private data: AssetMintTransactionData;
-    private type = "assetMint";
+    private readonly data: AssetMintTransactionData;
+    private readonly type = "assetMint";
 
     constructor(data: AssetMintTransactionData) {
         this.data = data;

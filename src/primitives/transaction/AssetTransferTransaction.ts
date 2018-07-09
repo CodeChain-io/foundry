@@ -63,7 +63,7 @@ export type AssetTransferInputData = {
  * - The results of running the script must return successful in order for the Asset's Input to be valid.
  */
 export class AssetTransferInput {
-    private prevOut: AssetOutPoint;
+    private readonly prevOut: AssetOutPoint;
     private lockScript: Buffer;
     private unlockScript: Buffer;
 
@@ -125,7 +125,7 @@ export type AssetTransferOutputData = {
  * AssetTransferOutput consists of lockScriptHash and parameters, which mark ownership of the asset, and asset type and amount, which indicate the asset's type and quantity.
  */
 export class AssetTransferOutput {
-    private data: AssetTransferOutputData;
+    private readonly data: AssetTransferOutputData;
 
     constructor(data: AssetTransferOutputData) {
         this.data = data;
@@ -174,12 +174,12 @@ export type AssetTransferTransactionData = {
  * - If an identical transaction hash already exists, then the change fails. In this situation, a transaction can be created again by arbitrarily changing the nonce.
  */
 export class AssetTransferTransaction {
-    private burns: AssetTransferInput[];
-    private inputs: AssetTransferInput[];
-    private outputs: AssetTransferOutput[];
-    private networkId: number;
-    private nonce: number;
-    private type = "assetTransfer";
+    private readonly burns: AssetTransferInput[];
+    private readonly inputs: AssetTransferInput[];
+    private readonly outputs: AssetTransferOutput[];
+    private readonly networkId: number;
+    private readonly nonce: number;
+    private readonly type = "assetTransfer";
 
     constructor({ burns, inputs, outputs, networkId, nonce }: AssetTransferTransactionData) {
         this.burns = burns;

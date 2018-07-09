@@ -4,7 +4,7 @@ const RLP = require("rlp");
  * Used to know whether a transaction succeeded or failed.
  */
 export class Invoice {
-    private success: boolean;
+    private readonly success: boolean;
 
     constructor(success: boolean) {
         this.success = !!success;
