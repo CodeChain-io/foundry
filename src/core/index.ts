@@ -1,5 +1,4 @@
-import { CreateShard, Payment, SetRegularKey, ChangeShardState, Parcel } from
-    "./Parcel";
+import { Parcel } from "./Parcel";
 import { Asset } from "./Asset";
 import { U256 } from "./U256";
 import { H160 } from "./H160";
@@ -10,6 +9,10 @@ import { H256 } from "./H256";
 import { Invoice } from "./Invoice";
 import { Block } from "./Block";
 import { SignedParcel } from "./SignedParcel";
+import { Payment } from "./action/Payment";
+import { SetRegularKey } from "./action/SetReulgarKey";
+import { ChangeShardState } from "./action/ChangeShardState";
+import { CreateShard } from "./action/CreateShard";
 
 /**
  * @hidden

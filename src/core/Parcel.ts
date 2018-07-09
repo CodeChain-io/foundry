@@ -6,105 +6,14 @@ import { H256 } from "./H256";
 import { H512 } from "./H512";
 import { SignedParcel } from "./SignedParcel";
 import { blake256, signEcdsa } from "../utils";
-import { Transaction, getTransactionFromJSON } from "./Transaction";
+import { Transaction } from "./Transaction";
+import { Action, getActionFromJSON } from "./action/Action";
+import { ChangeShardState } from "./action/ChangeShardState";
+import { Payment } from "./action/Payment";
+import { SetRegularKey } from "./action/SetReulgarKey";
+import { CreateShard } from "./action/CreateShard";
 
 const RLP = require("rlp");
-
-export type Action = ChangeShardState | Payment | SetRegularKey | CreateShard;
-
-export class ChangeShardState {
-    transactions: Transaction[];
-
-    constructor(transactions: Transaction[]) {
-        this.transactions = transactions;
-    }
-
-    toEncodeObject(): Array<any> {
-        return [1, this.transactions.map(transaction => transaction.toEncodeObject())];
-    }
-
-    toJSON() {
-        return {
-            action: "changeShardState",
-            transactions: this.transactions.map(t => t.toJSON())
-        };
-    }
-}
-
-export class Payment {
-    receiver: H160;
-    amount: U256;
-
-    constructor(receiver: H160, amount: U256) {
-        this.receiver = receiver;
-        this.amount = amount;
-    }
-
-    toEncodeObject(): Array<any> {
-        return [2, this.receiver.toEncodeObject(), this.amount.toEncodeObject()];
-    }
-
-    toJSON() {
-        return {
-            action: "payment",
-            receiver: this.receiver.value,
-            amount: this.amount.value.toString()
-        };
-    }
-}
-
-export class SetRegularKey {
-    key: H512;
-
-    constructor(key: H512) {
-        this.key = key;
-    }
-
-    toEncodeObject(): Array<any> {
-        return [3, this.key.toEncodeObject()];
-    }
-
-    toJSON() {
-        return {
-            action: "setRegularKey",
-            key: this.key.value
-        };
-    }
-}
-
-export class CreateShard {
-    constructor() {
-    }
-
-    toEncodeObject(): Array<any> {
-        return [4];
-    }
-
-    toJSON() {
-        return {
-            action: "createShard",
-        };
-    }
-}
-
-function getActionFromJSON(json: any): Action {
-    const { action } = json;
-    switch (action) {
-        case "changeShardState":
-            const { transactions } = json;
-            return new ChangeShardState(transactions.map(getTransactionFromJSON));
-        case "payment":
-            const { receiver, amount } = json;
-            return new Payment(new H160(receiver), new U256(amount));
-        case "setRegularKey":
-            const { key } = json;
-            return new SetRegularKey(new H512(key));
-        case "createShard":
-            return new CreateShard();
-        default:
-            throw new Error(`Unexpected parcel action: ${action}`);
-    }
-}
 
 /**
  * A unit that collects transactions and requests processing to the network. A parsel signer pays for CCC processing fees.
