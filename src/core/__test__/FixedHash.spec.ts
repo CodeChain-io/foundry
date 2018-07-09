@@ -1,4 +1,6 @@
-import { H160, H256, H512 } from "../index";
+import { H160 } from "../H160";
+import { H256 } from "../H256";
+import { H512 } from "../H512";
 
 test("0x-prefix", () => {
     const value = new H160("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");

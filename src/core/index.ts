@@ -1,15 +1,15 @@
-import {
-    H160, U256, Parcel, H512, SignedParcel, AssetScheme, Block, H256,
-    Invoice
-} from "../primitives";
-import { CreateShard, Payment, SetRegularKey, ChangeShardState } from
-    "../primitives/Parcel";
-import { Asset } from "../primitives/Asset";
-import {
-    Transaction, getTransactionFromJSON, AssetMintTransaction,
-    AssetTransferTransaction, AssetTransferOutput, AssetTransferInput,
-    AssetOutPoint
-} from "../primitives/transaction";
+import { CreateShard, Payment, SetRegularKey, ChangeShardState, Parcel } from
+    "./Parcel";
+import { Asset } from "./Asset";
+import { U256 } from "./U256";
+import { H160 } from "./H160";
+import { H512 } from "./H512";
+import { Transaction, getTransactionFromJSON, AssetMintTransaction, AssetTransferTransaction, AssetOutPoint, AssetTransferOutput, AssetTransferInput } from "./transaction";
+import { AssetScheme } from "./AssetScheme";
+import { H256 } from "./H256";
+import { Invoice } from "./Invoice";
+import { Block } from "./Block";
+import { SignedParcel } from "./SignedParcel";
 
 /**
  * @hidden

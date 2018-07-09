@@ -1,5 +1,5 @@
-import { AssetMintTransaction } from "..";
-import { H256 } from "../..";
+import { AssetMintTransaction } from "../AssetMintTransaction";
+import { H256 } from "../H256";
 
 test("AssetMintTransaction toJSON", () => {
     const t = new AssetMintTransaction({

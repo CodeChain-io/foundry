@@ -1,7 +1,7 @@
-import { H160 } from "../H160";
-import { H256 } from "../H256";
-import { blake256WithKey, blake256 } from "../../utils";
-import { Asset } from "../Asset";
+import { H160 } from "./H160";
+import { H256 } from "./H256";
+import { blake256WithKey, blake256 } from "../utils";
+import { Asset } from "./Asset";
 
 const RLP = require("rlp");
 

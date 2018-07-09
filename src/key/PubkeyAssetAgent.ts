@@ -1,11 +1,12 @@
 import * as _ from "lodash";
 
-import { AssetTransferAddress } from "../AssetTransferAddress";
-import { H256 } from "../primitives/H256";
+import { H256 } from "../core/H256";
+import { Asset } from "../core/Asset";
+import { AssetTransferTransaction } from "../core/AssetTransferTransaction";
 import { blake256 } from "../utils";
+
+import { AssetTransferAddress } from "./AssetTransferAddress";
 import { MemoryKeyStore } from "./MemoryKeyStore";
-import { Asset } from "../primitives/Asset";
-import { AssetTransferTransaction } from "../primitives/transaction/AssetTransferTransaction";
 
 /**
  * hidden

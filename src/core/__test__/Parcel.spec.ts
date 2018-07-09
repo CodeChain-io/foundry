@@ -1,4 +1,7 @@
-import { U256, H160, H256, Parcel } from "..";
+import { H160 } from "../H160";
+import { H256 } from "../H256";
+import { U256 } from "../U256";
+import { Parcel } from "../Parcel";
 
 test("rlp", () => {
     const t = Parcel.transactions(new U256(0), new U256(0), 1);

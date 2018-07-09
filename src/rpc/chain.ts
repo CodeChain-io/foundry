@@ -1,5 +1,13 @@
-import { SignedParcel, H256, Invoice, H160, H512, U256, Block, AssetScheme, Asset } from "../primitives/";
 import { Rpc } from ".";
+import { H256 } from "../core/H256";
+import { SignedParcel } from "../core/SignedParcel";
+import { H160 } from "../core/H160";
+import { U256 } from "../core/U256";
+import { AssetScheme } from "../core/AssetScheme";
+import { Block } from "../core/Block";
+import { Asset } from "../core/Asset";
+import { Invoice } from "../core/Invoice";
+import { H512 } from "../core/H512";
 
 export class ChainRpc {
     private rpc: Rpc;

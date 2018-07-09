@@ -1,5 +1,6 @@
+import { H160 } from "../../core/H160";
+
 import { PlatformAddress } from "../PlatformAddress";
-import { H160 } from "../primitives/H160";
 
 test("PlatformAddress.fromAccountId - mainnet (default)", () => {
     const accountId = new H160("7b5e0ee8644c6f585fc297364143280a45844502");

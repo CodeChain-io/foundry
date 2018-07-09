@@ -1,7 +1,9 @@
+// FIXME: Use interface instead of importing key class.
+import { AssetTransferAddress } from "../key/AssetTransferAddress";
+import { PubkeyAssetAgent } from "../key/PubkeyAssetAgent";
+
 import { H256 } from "./H256";
-import { AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "./transaction/AssetTransferTransaction";
-import { AssetTransferAddress } from "../AssetTransferAddress";
-import { PubkeyAssetAgent } from "../signer/PubkeyAssetAgent";
+import { AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "./AssetTransferTransaction";
 
 export type AssetAgent = PubkeyAssetAgent;
 

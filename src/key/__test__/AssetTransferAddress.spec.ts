@@ -1,5 +1,6 @@
+import { H256 } from "../../core/H256";
+
 import { AssetTransferAddress } from "../AssetTransferAddress";
-import { H256 } from "../primitives/H256";
 
 test("AssetTransferAddress.fromLockScriptHash - mainnet", () => {
     const lockScriptHash = new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3");

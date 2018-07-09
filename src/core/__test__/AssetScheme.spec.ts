@@ -1,4 +1,4 @@
-import { AssetScheme } from "..";
+import { AssetScheme } from "../AssetScheme";
 
 test("toJSON", () => {
     const assetScheme = new AssetScheme({

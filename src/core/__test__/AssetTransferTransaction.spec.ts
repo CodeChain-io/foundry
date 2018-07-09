@@ -1,5 +1,5 @@
-import { AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "..";
-import { H256 } from "../..";
+import { AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "../AssetTransferTransaction";
+import { H256 } from "../H256";
 
 test("AssetTransferTransaction toJSON", () => {
     const t = new AssetTransferTransaction({

@@ -1,4 +1,5 @@
-import { Asset, H256 } from "..";
+import { Asset } from "../Asset";
+import { H256 } from "../H256";
 
 test("toJSON", () => {
     const asset = new Asset({

@@ -1,4 +1,8 @@
-import { Block, H256, H160, U256, Parcel } from "..";
+import { Block } from "../Block";
+import { H256 } from "../H256";
+import { H160 } from "../H160";
+import { U256 } from "../U256";
+import { Parcel } from "../Parcel";
 import { getAccountIdFromPrivate } from "../../utils";
 
 test("toJSON", () => {

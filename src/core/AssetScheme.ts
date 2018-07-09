@@ -1,6 +1,8 @@
-import { H160 } from ".";
-import { AssetTransferAddress } from "../AssetTransferAddress";
-import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
+// FIXME: Use interface instead of importing key class.
+import { AssetTransferAddress } from "../key/AssetTransferAddress";
+
+import { H160 } from "./H160";
+import { AssetMintTransaction } from "./AssetMintTransaction";
 
 export type AssetSchemeData = {
     metadata: string;

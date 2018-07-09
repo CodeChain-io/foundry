@@ -1,6 +1,7 @@
-import { H160 } from "./primitives/H160";
+import { H160 } from "../core/H160";
+import { toHex } from "../utils";
+
 import { toWords, encode, decode, fromWords } from "./bech32";
-import { toHex } from "./utils";
 
 /**
  * Substitutes for platform token owner which consists of network id and account

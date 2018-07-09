@@ -1,6 +1,7 @@
-import { H256 } from "./primitives/H256";
+import { H256 } from "../core/H256";
+import { toHex } from "../utils";
+
 import { encode, toWords, decode, fromWords } from "./bech32";
-import { toHex } from "./utils";
 
 /**
  * @hidden
