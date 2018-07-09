@@ -2,6 +2,7 @@ import { H160 } from "./H160";
 import { H256 } from "./H256";
 import { blake256WithKey, blake256 } from "../utils";
 import { Asset } from "./Asset";
+import { AssetScheme } from "./AssetScheme";
 
 const RLP = require("rlp");
 
@@ -94,6 +95,19 @@ export class AssetMintTransaction {
             amount,
             transactionHash: this.hash(),
             transactionOutputIndex: 0
+        });
+    }
+
+    getAssetScheme(): AssetScheme {
+        const { metadata, amount, registrar } = this.data;
+        // FIXME: need U64 to be implemented or use U256
+        if (amount === null) {
+            throw "not implemented";
+        }
+        return new AssetScheme({
+            metadata,
+            amount,
+            registrar
         });
     }
 
