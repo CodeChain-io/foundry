@@ -1,4 +1,4 @@
-import { Transaction } from "../Transaction";
+import { Transaction } from "../transaction/Transaction";
 
 export class ChangeShardState {
     transactions: Transaction[];

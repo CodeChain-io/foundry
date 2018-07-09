@@ -6,7 +6,7 @@ import { H256 } from "./H256";
 import { H512 } from "./H512";
 import { SignedParcel } from "./SignedParcel";
 import { blake256, signEcdsa } from "../utils";
-import { Transaction } from "./Transaction";
+import { Transaction } from "./transaction/Transaction";
 import { Action, getActionFromJSON } from "./action/Action";
 import { ChangeShardState } from "./action/ChangeShardState";
 import { Payment } from "./action/Payment";

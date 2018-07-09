@@ -2,7 +2,7 @@ import * as _ from "lodash";
 
 import { H256 } from "../core/H256";
 import { Asset } from "../core/Asset";
-import { AssetTransferTransaction } from "../core/AssetTransferTransaction";
+import { AssetTransferTransaction } from "../core/transaction/AssetTransferTransaction";
 import { blake256 } from "../utils";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";

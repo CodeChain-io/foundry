@@ -2,7 +2,7 @@
 import { AssetTransferAddress } from "../key/AssetTransferAddress";
 
 import { H160 } from "./H160";
-import { AssetMintTransaction } from "./AssetMintTransaction";
+import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 
 export type AssetSchemeData = {
     metadata: string;

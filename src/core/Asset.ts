@@ -3,7 +3,7 @@ import { AssetTransferAddress } from "../key/AssetTransferAddress";
 import { PubkeyAssetAgent } from "../key/PubkeyAssetAgent";
 
 import { H256 } from "./H256";
-import { AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "./AssetTransferTransaction";
+import { AssetTransferTransaction, AssetTransferInput, AssetOutPoint, AssetTransferOutput } from "./transaction/AssetTransferTransaction";
 
 export type AssetAgent = PubkeyAssetAgent;
 

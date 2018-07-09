@@ -1,4 +1,4 @@
-import { getTransactionFromJSON } from "../Transaction";
+import { getTransactionFromJSON } from "../transaction/Transaction";
 import { H160 } from "../H160";
 import { U256 } from "../U256";
 import { H512 } from "../H512";
