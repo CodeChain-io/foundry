@@ -155,6 +155,11 @@ export class AssetTransferOutput {
             amount,
         };
     }
+
+    shardId(): number {
+        const { assetType } = this.data;
+        return parseInt(assetType.value.slice(8, 16), 16);
+    }
 }
 
 export type AssetTransferTransactionData = {

@@ -80,3 +80,13 @@ test("AssetTransferTransaction hashWithoutScript", () => {
     });
     expect(t1.hashWithoutScript()).toEqual(t2.hash());
 });
+
+test("AssetTransferOutput shard id", () => {
+    const output = new AssetTransferOutput({
+        lockScriptHash: new H256("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+        parameters: [Buffer.from([0x04, 0x05]), Buffer.from([0x06])],
+        assetType: new H256("41000000CAFEBEEFbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+        amount: 321
+    });
+    expect(output.shardId()).toEqual(parseInt("CafeBeef", 16));
+});
