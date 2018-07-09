@@ -6,7 +6,7 @@ import { H256 } from "./H256";
 import { H512 } from "./H512";
 import { SignedParcel } from "./SignedParcel";
 import { blake256, signEcdsa } from "../utils";
-import { Transaction, getTransactionFromJSON } from "./transaction";
+import { Transaction, getTransactionFromJSON } from "./Transaction";
 
 const RLP = require("rlp");
 

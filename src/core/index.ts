@@ -4,7 +4,7 @@ import { Asset } from "./Asset";
 import { U256 } from "./U256";
 import { H160 } from "./H160";
 import { H512 } from "./H512";
-import { Transaction, getTransactionFromJSON, AssetMintTransaction, AssetTransferTransaction, AssetOutPoint, AssetTransferOutput, AssetTransferInput } from "./transaction";
+import { Transaction, getTransactionFromJSON, AssetMintTransaction, AssetTransferTransaction, AssetOutPoint, AssetTransferOutput, AssetTransferInput } from "./Transaction";
 import { AssetScheme } from "./AssetScheme";
 import { H256 } from "./H256";
 import { Invoice } from "./Invoice";
