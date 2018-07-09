@@ -4,7 +4,7 @@ const sdk = new SDK({ server: "http://localhost:8080" });
 
 // AssetAgent creates addresses for assets and manages their locking/unlocking
 // data.
-const assetAgent = sdk.core.getAssetAgent();
+const assetAgent = sdk.key.getAssetAgent();
 
 // sendTransaction() is a function to make transaction to be processed.
 async function sendTransaction(tx) {

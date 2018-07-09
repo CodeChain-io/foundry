@@ -5,10 +5,12 @@ import {
 } from "./utils";
 import { Rpc } from "./rpc";
 import { Core } from "./core";
+import { Key } from "./key";
 
 class SDK {
     public rpc: Rpc;
     public core: Core;
+    public key: Key;
     public util = SDK.util;
     public static Rpc = Rpc;
     public static Core = Core;
@@ -33,6 +35,7 @@ class SDK {
 
         this.rpc = new Rpc({ server });
         this.core = new Core({ networkId });
+        this.key = new Key();
     }
 
     public static SDK = SDK;

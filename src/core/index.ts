@@ -4,16 +4,12 @@ import {
 } from "../primitives";
 import { CreateShard, Payment, SetRegularKey, ChangeShardState } from
     "../primitives/Parcel";
-import { AssetAgent, Asset } from "../primitives/Asset";
-import { PubkeyAssetAgent } from "../signer/PubkeyAssetAgent";
-import { MemoryKeyStore } from "../signer/MemoryKeyStore";
+import { Asset } from "../primitives/Asset";
 import {
     Transaction, getTransactionFromJSON, AssetMintTransaction,
     AssetTransferTransaction, AssetTransferOutput, AssetTransferInput,
     AssetOutPoint
 } from "../primitives/transaction";
-import { PlatformAddress } from "../PlatformAddress";
-import { AssetTransferAddress } from "../AssetTransferAddress";
 
 /**
  * @hidden
@@ -25,14 +21,12 @@ export type ParcelParams = {
 
 export class Core {
     private networkId: number;
-    private assetAgent: AssetAgent;
 
     /**
      * @param params.networkId The network id of CodeChain.
      */
     constructor(params: { networkId: number }) {
         const { networkId } = params;
-        this.assetAgent = new PubkeyAssetAgent({ keyStore: new MemoryKeyStore() });
         this.networkId = networkId;
     }
 
@@ -139,14 +133,6 @@ export class Core {
         });
     }
 
-    /**
-     * Gets AssetAgent. AssetAgent manages addresses, scripts and keys for
-     * locking/unlocking assets.
-     */
-    getAssetAgent(): AssetAgent {
-        return this.assetAgent;
-    }
-
     // FIXME: any
     getTransactionFromJSON(json: any): Transaction {
         return getTransactionFromJSON(json);
@@ -170,8 +156,6 @@ export class Core {
         SetRegularKey,
         ChangeShardState,
         CreateShard,
-        // Platform Address
-        PlatformAddress,
         // Transaction
         AssetMintTransaction,
         AssetTransferTransaction,
@@ -181,11 +165,5 @@ export class Core {
         // Asset and AssetScheme
         Asset,
         AssetScheme,
-        // AssetTransferAddress
-        AssetTransferAddress,
-        // AssetAgent
-        PubkeyAssetAgent,
-        // KeyStore
-        MemoryKeyStore,
     };
 }

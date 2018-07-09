@@ -34,7 +34,7 @@ test("AssetMintTransaction fromJSON", async () => {
 });
 
 test("AssetTransferTransaction fromJSON", async () => {
-    const pubkeyAssetAgent = sdk.core.getAssetAgent();
+    const pubkeyAssetAgent = sdk.key.getAssetAgent();
 
     const mintTx = sdk.core.createAssetScheme({
         metadata: "metadata of non-permissioned asset",
