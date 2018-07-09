@@ -36,7 +36,7 @@ export const payment = async (params?: { inc_nonce?: number }) => {
         nonce = nonce.increase();
     }
     const p = sdk.core.createPaymentParcel({
-        value: 10,
+        amount: 10,
         recipient: address,
         fee: 10,
         nonce
