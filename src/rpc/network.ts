@@ -36,4 +36,28 @@ export class NetworkRpc {
             [address, port]
         );
     }
+
+    /**
+    * Disconnect from the node
+    * @param address Node address which to disconnect
+    * @param port
+    */
+    disconnect(address: string, port: number): Promise<null> {
+        return this.rpc.sendRpcRequest(
+            "net_disconnect",
+            [address, port]
+        );
+    }
+
+    /**
+    * Check the node is connected
+    * @param address Node address
+    * @param port
+    */
+    isConnected(address: string, port: number): Promise<boolean> {
+        return this.rpc.sendRpcRequest(
+            "net_isConnected",
+            [address, port]
+        );
+    }
 }
