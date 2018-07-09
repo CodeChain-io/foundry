@@ -3,7 +3,7 @@ import { Asset } from "./Asset";
 import { U256 } from "./U256";
 import { H160 } from "./H160";
 import { H512 } from "./H512";
-import { Transaction, getTransactionFromJSON, AssetMintTransaction, AssetTransferTransaction, AssetOutPoint, AssetTransferOutput, AssetTransferInput } from "./transaction/Transaction";
+import { Transaction, getTransactionFromJSON } from "./transaction/Transaction";
 import { AssetScheme } from "./AssetScheme";
 import { H256 } from "./H256";
 import { Invoice } from "./Invoice";
@@ -13,6 +13,11 @@ import { Payment } from "./action/Payment";
 import { SetRegularKey } from "./action/SetReulgarKey";
 import { ChangeShardState } from "./action/ChangeShardState";
 import { CreateShard } from "./action/CreateShard";
+import { AssetTransferInput } from "./transaction/AssetTransferInput";
+import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
+import { AssetOutPoint } from "./transaction/AssetOutPoint";
+import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
+import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
 
 /**
  * @hidden
