@@ -9,44 +9,45 @@ Make sure that your CodeChain RPC server is listening. In the examples, we assum
 This example involves sending CCC from one party to another.
 First, make sure to import the correct sdk and use the proper server port.
 ```javascript
-const SDK = require("codechain-sdk");
-const { Parcel, U256, H256, H160 } = SDK;
+var SDK = require("codechain-sdk");
+var sdk = new SDK({ server: "http://localhost:8080" });
 
-// Create SDK object with CodeChain RPC server URL
-const sdk = new SDK("http://localhost:8080");
+var signerAddress = "0xa6594b7196808d161b6fb137e781abbc251385d9";
+var recipientAddress = "0x744142069fe2d03d48e61734cbe564fcc94e6e31";
 ```
 The parcel signer must pay the transaction fees. Parcels are basically a group of transactions used in CodeChain. They are the smallest unit that can be processed on the blockchain.
 
-In order for the parcel to be valid, the nonce must match the nonce of the parcel signer. Once the parcel is confirmed, the nonce of the signer is increased by 1. When specifying the receiver, make sure the correct address is used for the recipient. In addition, the parcel must be signed with the secret key of the address.
+In order for the parcel to be valid, the nonce must match the nonce of the parcel signer. Once the parcel is confirmed, the nonce of the signer is increased by 1. When specifying the receiver, make sure the correct address is used for the recipient. In addition, the parcel must be signed with the secret key of the address. After signing the parcel, send the parcel off to the CodeChain node. The node is responsible for propagating the parcels properly.
 ```javascript
-const parcelSignerNonce = new U256(0);
-// Parcel signer pays 10 CCC as fee.
-const fee = new U256(10);
-// Network ID prevents replay attacks or confusion among different CodeChain networks.
-const networkId = 17;
-// Recipient of the payment
-const receiver = new H160("744142069fe2d03d48e61734cbe564fcc94e6e31");
-// Amount of the payment. The parcel signer's balance must be at least 10010.
-const value = new U256(10000);
-// Create the Parcel for the payment
-const parcel = Parcel.payment(parcelSignerNonce, fee, networkId, receiver, value);
-
-const parcelSignerSecret = new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd");
-const signedParcel = parcel.sign(parcelSignerSecret);
+sdk.rpc.chain.getNonce(signerAddress).then(function (nonce) {
+    var parcel = sdk.core.createPaymentParcel({
+        recipient: recipientAddress,
+        amount: 10000,
+        nonce,
+        // Parcel signer pays 10 CCC as fee.
+        fee: 10
+    });
+    var signedParcel = parcel.sign(signerSecret);
+    return sdk.rpc.chain.sendSignedParcel(signedParcel);
+})
 ```
-After signing the parcel, send the parcel off to the CodeChain node. The node is responsible for propagating the parcels properly. sendSignedParcel returns a promise that resolves with a parcel hash if the parcel has been verified and queued successfully. It doesn't mean that the parcel was confirmed, however. getParcel returns a promise that resolves with a parcel. Only confirmed parcels contain blockNumber/blockHash/parcelIndex fields. 
+sendSignedParcel returns a promise that resolves with a parcel hash if the parcel has been verified and queued successfully. It doesn't mean that the parcel was confirmed, however. getParcel returns a promise that resolves with a parcel. Only confirmed parcels contain blockNumber/blockHash/parcelIndex fields.
 ```javascript
-sdk.sendSignedParcel(signedParcel).then((hash) => {
-    console.log(`Parcel sent:`, hash);
-    return sdk.getParcel(hash);
-}).then((parcel) => {
+.then(function (parcelHash) {
+    // sendSignedParcel returns a promise that resolves with a parcel hash if parcel has
+    // been verified and queued successfully. It doesn't mean parcel was confirmed.
+    console.log(`Parcel sent:`, parcelHash);
+    return sdk.rpc.chain.getParcel(parcelHash);
+}).then(function (parcel) {
+    // getParcel returns a promise that resolves with a parcel.
+    // blockNumber/blockHash/parcelIndex fields in Parcel is present only for the
+    // confirmed parcel
     console.log(`Parcel`, parcel);
 }).catch((err) => {
     console.error(`Error:`, err);
 });
-
 ```
-To view entire example, click [here](https://github.com/CodeChain-io/codechain-sdk-js/blob/gh-pages/examples/payment.js).
+To view entire example, click [here](https://github.com/CodeChain-io/codechain-sdk-js/blob/master/examples/payment.js).
 
 ## Mint 10000 Gold and send 3000 Gold
 
