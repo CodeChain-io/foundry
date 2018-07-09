@@ -54,46 +54,48 @@ To view entire example, click [here](https://github.com/CodeChain-io/codechain-s
 This example involves creating new assets and sending them amongst users. It largely involves three steps. First, create key pairs for each users. Then create the asset(in this case, Gold). Finally, execute the transaction.
 
 ```javascript
-const SDK = require(".");
-const { H256, privateKeyToAddress, H160, Parcel, U256,
-    AssetScheme, PubkeyAssetAgent, MemoryKeyStore } = SDK;
+const SDK = require("codechain-sdk");
 
-const sdk = new SDK("http://localhost:8080");
+const sdk = new SDK({ server: "http://localhost:8080" });
 ```
-We create new instances of a keyStore and an assetAgent. keyStore is where all the public and private keys are managed. 
+We create new instances of an assetAgent. AssetAgent creates addresses for assets and manages their locking/unlocking data. 
 ```javascript
-const keyStore = new MemoryKeyStore();
-const assetAgent = new PubkeyAssetAgent({ keyStore });
+const assetAgent = sdk.core.getAssetAgent();
 ```
 In this example, it is assumed that there is something that created a parcel out of the transactions. sendTransaction has been declared for later use.
 
 ```javascript
 // sendTransaction() is a function to make transaction to be processed.
 async function sendTransaction(tx) {
-    const parcelSignerSecret = new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd");
-    const parcelSignerAddress = new H160(privateKeyToAddress("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"));
-    const parcelSignerNonce = await sdk.getNonce(parcelSignerAddress);
-    const parcel = Parcel.transactions(parcelSignerNonce, new U256(10), 17, tx);
-    const signedParcel = parcel.sign(parcelSignerSecret);
-    return await sdk.sendSignedParcel(signedParcel);
+    const parcelSignerSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
+    const parcelSignerAddress = SDK.util.getAccountIdFromPrivate(parcelSignerSecret);
+    const parcel = sdk.core.createChangeShardStateParcel({
+        transactions: [tx],
+        nonce: await sdk.rpc.chain.getNonce(parcelSignerAddress),
+        fee: 10,
+    }).sign(parcelSignerSecret)
+    return await sdk.rpc.chain.sendSignedParcel(parcel);
 }
 ```
 Each users need an address for them to receive/send assets to. Addresses are created by the assetAgent.
 ```javascript
+// Start of wrapping async function, we use async/await here because a lot of
+// Promises are there.
+(async () => {
     const aliceAddress = await assetAgent.createAddress();
     const bobAddress = await assetAgent.createAddress();
 ```
 In this example, we want to create an asset called "Gold". Thus, we define a new asset scheme for the asset that will be named Gold. In schemes, the amount to be minted, and the registrar, if any, should be defined. If there is no registrar, it means that AssetTransfer of Gold can be done through any parcel. If the registrar is present, the parcel must be signed by the registrar. In this example, the registrar is set to null.
 
 ```javascript
- const goldAssetScheme = new AssetScheme({
+    const goldAssetScheme = sdk.core.createAssetScheme({
         metadata: JSON.stringify({
             name: "Gold",
             imageUrl: "https://gold.image/",
         }),
         amount: 10000,
         registrar: null,
-    });
+    })
 ```
 After Gold has been defined in the scheme, the amount that is minted but belong to someone initially. In this example, we create 10000 gold for Alice.
 ```javascript
@@ -101,18 +103,16 @@ After Gold has been defined in the scheme, the amount that is minted but belong 
 ```
 Then, the AssetMintTransaction is processed with the following code:
 ```javascript
-    // Process the AssetMintTransaction
     await sendTransaction(mintTx);
-
-    // AssetMintTransaction creates Asset and AssetScheme object
-    console.log("minted asset scheme: ", await sdk.getAssetScheme(mintTx.hash()));
-    const firstGold = await sdk.getAsset(mintTx.hash(), 0);
-    console.log("alice's gold: ", firstGold);
+    // Wait up to 5 minutes for transaction processing
+    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), 5 * 60 * 1000);
+    if (!mintTxInvoice.success) {
+        throw "AssetMintTransaction failed";
+    }
+    const firstGold = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
 ```
 Alice then sends 3000 gold to Bob. In CodeChain, users must follow the [UTXO](https://codechain.readthedocs.io/en/latest/what-is-codechain.html#what-is-utxo) standard, and make a transaction that spends an entire UTXO balance, and receive the change back through another transaction.
 ```javascript
-    // Spend Alice's 10000 golds. In this case, Alice pays 3000 golds to Bob. Alice
-    // is paid the remains back.
     // The sum of amount must equal to the amount of firstGold.
     const transferTx = await firstGold.transfer(assetAgent, [{
         address: bobAddress,
@@ -125,6 +125,10 @@ Alice then sends 3000 gold to Bob. In CodeChain, users must follow the [UTXO](ht
 By using Alice's signature, the 10000 Gold that was first minted can now be transferred to other users like Bob.
 ```javascript
     await sendTransaction(transferTx);
+    const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), 5 * 60 * 1000);
+    if (!transferTxInvoice.success) {
+        throw "AssetTransferTransaction failed";
+    }
 
     // Spent asset will be null
     console.log(await sdk.getAsset(mintTx.hash(), 0));
@@ -133,8 +137,10 @@ By using Alice's signature, the 10000 Gold that was first minted can now be tran
     console.log(await sdk.getAsset(transferTx.hash(), 0));
     // Unspent Alice's 7000 golds
     console.log(await sdk.getAsset(transferTx.hash(), 1));
+// End of wrapping async function
+})();
 ```
-The entire example can be viewed [here](https://github.com/CodeChain-io/codechain-sdk-js/blob/gh-pages/examples/mint-and-transfer.js).
+The entire example can be viewed [here](https://github.com/CodeChain-io/codechain-sdk-js/blob/master/examples/mint-and-transfer.js).
 
 # [SDK](classes/sdk.html) methods
  * [getAsset](classes/sdk.html#getasset)

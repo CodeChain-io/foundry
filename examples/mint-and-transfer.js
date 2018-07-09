@@ -2,7 +2,7 @@ const SDK = require("codechain-sdk");
 
 const sdk = new SDK({ server: "http://localhost:8080" });
 
-// AssetAgent creates address for assets and manages their locking/unlocking
+// AssetAgent creates addresses for assets and manages their locking/unlocking
 // data.
 const assetAgent = sdk.core.getAssetAgent();
 
