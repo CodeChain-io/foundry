@@ -48,7 +48,7 @@ export class Payment {
         return {
             action: "payment",
             receiver: this.receiver.value,
-            value: this.amount.value.toString()
+            amount: this.amount.value.toString()
         };
     }
 }
@@ -94,8 +94,8 @@ function getActionFromJSON(json: any): Action {
             const { transactions } = json;
             return new ChangeShardState(transactions.map(getTransactionFromJSON));
         case "payment":
-            const { receiver, value } = json;
-            return new Payment(new H160(receiver), new U256(value));
+            const { receiver, amount } = json;
+            return new Payment(new H160(receiver), new U256(amount));
         case "setRegularKey":
             const { key } = json;
             return new SetRegularKey(new H512(key));
