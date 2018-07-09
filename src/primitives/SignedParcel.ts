@@ -42,9 +42,9 @@ export class SignedParcel {
         this.v = v;
         this.r = r;
         this.s = s;
-        this.blockNumber = blockNumber || null;
+        this.blockNumber = blockNumber === undefined ? null : blockNumber;
         this.blockHash = blockHash || null;
-        this.parcelIndex = parcelIndex || null;
+        this.parcelIndex = parcelIndex === undefined ? null : parcelIndex;
     }
 
     signature() {
