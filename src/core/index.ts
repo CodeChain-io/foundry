@@ -18,6 +18,7 @@ import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
+import { Script } from "./Script";
 
 /**
  * @hidden
@@ -173,5 +174,7 @@ export class Core {
         // Asset and AssetScheme
         Asset,
         AssetScheme,
+        // Script
+        Script,
     };
 }

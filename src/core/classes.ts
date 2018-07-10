@@ -22,3 +22,5 @@ export { AssetTransferTransaction } from "./transaction/AssetTransferTransaction
 
 export { Asset } from "./Asset";
 export { AssetScheme } from "./AssetScheme";
+
+export { Script } from "./Script";
