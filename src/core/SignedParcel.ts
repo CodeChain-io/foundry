@@ -1,3 +1,5 @@
+import * as _ from "lodash";
+
 import { U256 } from "./U256";
 import { H160 } from "./H160";
 import { H256 } from "./H256";
@@ -54,14 +56,13 @@ export class SignedParcel {
 
     toEncodeObject(): Array<any> {
         const { unsigned: { nonce, fee, action, networkId }, v, r, s } = this;
+        const sig = `0x${_.padStart(r.value.toString(16), 64, "0")}${_.padStart(s.value.toString(16), 64, "0")}${_.padStart(v.toString(16), 2, "0")}`;
         return [
             nonce.toEncodeObject(),
             fee.toEncodeObject(),
             networkId.toEncodeObject(),
             action.toEncodeObject(),
-            v,
-            r.toEncodeObject(),
-            s.toEncodeObject()
+            sig
         ];
     }
 
@@ -84,7 +85,13 @@ export class SignedParcel {
     }
 
     static fromJSON(data: any) {
-        const { v, r, s, blockNumber, blockHash, parcelIndex } = data;
+        const { sig, blockNumber, blockHash, parcelIndex } = data;
+        if (typeof sig !== "string") {
+            throw "Unexpected type of sig";
+        }
+        const r = `0x${sig.substr(0, 64)}`;
+        const s = `0x${sig.substr(64, 64)}`;
+        const v = Number.parseInt(sig.substr(128, 2), 16);
         if (blockNumber) {
             return new SignedParcel(Parcel.fromJSON(data), v, new U256(r), new U256(s), blockNumber, new H256(blockHash), parcelIndex);
         } else {
@@ -95,6 +102,7 @@ export class SignedParcel {
     toJSON() {
         const { blockNumber, blockHash, parcelIndex,
             unsigned: { nonce, fee, networkId, action }, v, r, s } = this;
+        const sig = `${_.padStart(r.value.toString(16), 64, "0")}${_.padStart(s.value.toString(16), 64, "0")}${_.padStart(v.toString(16), 2, "0")}`;
         return {
             blockNumber,
             blockHash: blockHash === null ? null : blockHash.value,
@@ -103,9 +111,7 @@ export class SignedParcel {
             fee: fee.value.toString(),
             networkId: networkId.value.toNumber(),
             action: action.toJSON(),
-            v,
-            r: r.value.toString(10),
-            s: s.value.toString(10),
+            sig,
             hash: this.hash().value,
         };
     }

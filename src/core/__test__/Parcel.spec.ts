@@ -25,7 +25,7 @@ test("sign", () => {
 test("signed hash", () => {
     const t = Parcel.transactions(new U256(0), new U256(0), 1);
     const signed = t.sign(new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"));
-    expect(signed.hash()).toEqual(new H256("aac5d5de21a239e335b10c43d4b7666fdd2477963c72bc54b87cd4ab6a9d43d7"));
+    expect(signed.hash()).toEqual(new H256("8f5b65f7cfda422147dcd8402f9e95b401710a54c16eeb2feb5110648e466747"));
 });
 
 test("toJSON", () => {
