@@ -3,32 +3,39 @@ CodeChain SDK for JavaScript [![npm version](https://badge.fury.io/js/codechain-
 
 A JavaScript SDK for CodeChain
 
-## API Documentation
+## API Documentation (For SDK users)
 
 If you're looking for API documentation or quick start guide, [click here](https://api.codechain.io/)
 
 ## Features
 
- * Connect to a [CodeChain JSON-RPC](https://github.com/CodeChain-io/codechain/blob/master/spec/JSON-RPC.md) server from Node.js
- * Generate an account, create a transacton, sign a parcel.
+ * Connect to a [CodeChain JSON-RPC](https://github.com/CodeChain-io/codechain/blob/master/spec/JSON-RPC.md) server
+ * Generate an account, create a transacton, sign a parcel
 
-## Getting Started
+## Getting Started (For SDK developers)
 
-### Install
+### Clone the source code
 
 ```
-yarn install
+git clone git@github.com:CodeChain-io/codechain-sdk-js.git
+```
+
+### Install dependencies
+
+```
+cd codechain-sdk-js && npm install
 ```
 
 ### Running unit tests
 
-Run `yarn test`
+```
+npm run test
+```
 
-### Building and Running integration tests
+### Building and running integration tests
 
 1. Run `yarn build` command.
-1. Run CodeChain RPC server.
-1. Set `CODECHAIN_RPC_HTTP` environment variable with JSON-RPC HTTP server. (e.g. `http://localhost:8080`)
+1. Run CodeChain RPC server. 
 1. Run `yarn test-int` command.
    > It is also possible to indicate specific testcase with `-t` option. (e.g. `yarn test-int -t getBestBlockNumber`)
 
