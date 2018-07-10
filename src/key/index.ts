@@ -29,6 +29,15 @@ export class Key {
         return this.assetAgent;
     }
 
+    /**
+     * Creates AssetTransferAddress. AssetTransferAddress is used to receive assets.
+     * See AssetScheme.mint() or Asset.transfer().
+     * @returns AssetTransferAddress
+     */
+    createAssetTransferAddress(): Promise<AssetTransferAddress> {
+        return this.assetAgent.createAddress();
+    }
+
     public classes = Key.classes;
     static classes = {
         AssetTransferAddress,
