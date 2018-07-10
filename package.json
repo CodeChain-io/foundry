@@ -1,6 +1,6 @@
 {
   "name": "codechain-sdk",
-  "version": "0.1.0-alpha.11",
+  "version": "0.1.0-alpha.12",
   "description": "A JavaScript SDK for CodeChain",
   "scripts": {
     "lint": "tsfmt --verify",
