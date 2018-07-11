@@ -1,11 +1,40 @@
+# Table of Contents
+
+1. [Install package](#install-package)
+1. [Usage examples](#usage-examples)
+   1. [Get the latest block number](#get-the-latest-block-number)
+   1. [Send CCC (CodeChain Coin)](#send-ccc-codechain-coin-)
+   1. [Mint and Transfer an asset](#mint-and-transfer-an-asset)
+1. [SDK modules](#sdk-modules)
+
 # Install package
 
-`npm install codechain-sdk` or `yarn add codechain-sdk`
+```sh
+npm install codechain-sdk
+```
+or
+```sh
+yarn add codechain-sdk
+```
 
-# Usage example
+# Usage examples
 Make sure that your CodeChain RPC server is listening. In the examples, we assume it is localhost:8080
 
-## Send 10000 CCC From One Party To Another
+## Get the latest block number
+
+```javascript
+var SDK = require("codechain-sdk");
+var sdk = new SDK({ server: "http://localhost:8080" });
+
+sdk.rpc.chain.getBestBlockNumber().then(function (num) {
+    console.log(num);
+});
+```
+
+## Send CCC(CodeChain Coin)
+
+To view entire example, click [here](https://github.com/CodeChain-io/codechain-sdk-js/blob/master/examples/payment.js).
+
 This example involves sending CCC from one party to another.
 First, make sure to import the correct sdk and use the proper server port.
 ```javascript
@@ -47,9 +76,10 @@ sendSignedParcel returns a promise that resolves with a parcel hash if the parce
     console.error(`Error:`, err);
 });
 ```
-To view entire example, click [here](https://github.com/CodeChain-io/codechain-sdk-js/blob/master/examples/payment.js).
 
-## Mint 10000 Gold and send 3000 Gold
+## Mint and Transfer an asset
+
+The entire example can be viewed [here](https://github.com/CodeChain-io/codechain-sdk-js/blob/master/examples/mint-and-transfer.js).
 
 This example involves creating new assets and sending them amongst users. It largely involves three steps. First, create key pairs for each users. Then create the asset(in this case, Gold). Finally, execute the transaction.
 
@@ -141,26 +171,13 @@ By using Alice's signature, the 10000 Gold that was first minted can now be tran
 // End of wrapping async function
 })();
 ```
-The entire example can be viewed [here](https://github.com/CodeChain-io/codechain-sdk-js/blob/master/examples/mint-and-transfer.js).
 
-# [SDK](classes/sdk.html) methods
- * [getAsset](classes/sdk.html#getasset)
- * [getAssetScheme](classes/sdk.html#getassetscheme)
- * [getBalance](classes/sdk.html#getbalance)
- * [getBlock](classes/sdk.html#getblock)
- * [getBlockHash](classes/sdk.html#getblockhash)
- * [getBestBlockNumber](classes/sdk.html#getbestblocknumber)
- * [getNonce](classes/sdk.html#getnonce)
- * [getParcel](classes/sdk.html#getparcel)
- * [getParcelInvoices](classes/sdk.html#getparcelinvoices)
- * [getPendingParcels](classes/sdk.html#getpendingparcels)
- * [getRegularKey](classes/sdk.html#getregularkey)
- * [getTransactionInvoice](classes/sdk.html#gettransactioninvoice)
- * [ping](classes/sdk.html#ping)
- * [sendSignedParcel](classes/sdk.html#sendsignedparcel)
+# SDK modules
 
-# Transactions
- * [PaymentTransaction](classes/paymenttransaction.html)
- * [SetRegularKeyTransaction](classes/setregularkeytransaction.html)
- * [AssetMintTransaction](classes/assetminttransaction.html)
- * [AssetTransferTransaction](classes/assettransfertransaction.html)
+ * [RPC](classes/rpc.html)
+   * [node](classes/noderpc.html)
+   * [chain](classes/chainrpc.html)
+   * [network](classes/networkrpc.html)
+ * [Core](classes/core.html)
+   * [classes](classes/core.html#classes-1) (Block, Parcel, Transaction, ...)
+ * [Utility](classes/sdk.html#util)
