@@ -11,6 +11,7 @@ test("getTransactionInvoice", async () => {
     const nonce = await sdk.rpc.chain.getNonce(address);
 
     const assetMintTransaction = new AssetMintTransaction({
+        networkId: 17,
         nonce: 1,
         metadata: "",
         lockScriptHash: new H256("0000000000000000000000000000000000000000000000000000000000000000"),
