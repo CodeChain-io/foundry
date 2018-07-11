@@ -136,6 +136,7 @@ export class Core {
     createAssetScheme(params: { metadata: string, amount: number, registrar: H160 | string | null }): AssetScheme {
         const { metadata, amount, registrar } = params;
         return new AssetScheme({
+            networkId: this.networkId,
             metadata,
             amount,
             registrar: registrar === null ? null : H160.ensure(registrar)

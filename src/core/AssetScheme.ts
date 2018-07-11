@@ -5,6 +5,7 @@ import { H160 } from "./H160";
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 
 export type AssetSchemeData = {
+    networkId: number;
     metadata: string;
     amount: number;
     registrar: H160 | null;
@@ -13,11 +14,13 @@ export type AssetSchemeData = {
  * Object that contains information about the Asset when performing AssetMintTransaction.
  */
 export class AssetScheme {
+    networkId: number;
     metadata: string;
     amount: number;
     registrar: H160 | null;
 
     constructor(data: AssetSchemeData) {
+        this.networkId = data.networkId;
         this.metadata = data.metadata;
         this.registrar = data.registrar;
         this.amount = data.amount;
@@ -28,8 +31,9 @@ export class AssetScheme {
     }
 
     toJSON() {
-        const { metadata, amount, registrar } = this;
+        const { networkId, metadata, amount, registrar } = this;
         return {
+            networkId,
             metadata,
             amount,
             registrar: registrar === null ? null : registrar.value
@@ -38,8 +42,9 @@ export class AssetScheme {
 
     mint(address: AssetTransferAddress, options: { nonce?: number } = {}): AssetMintTransaction {
         const { nonce = 0 } = options;
-        const { metadata, amount, registrar } = this;
+        const { networkId, metadata, amount, registrar } = this;
         return new AssetMintTransaction({
+            networkId,
             metadata,
             registrar,
             amount,

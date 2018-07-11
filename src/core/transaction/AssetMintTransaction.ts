@@ -7,6 +7,7 @@ import { AssetScheme } from "../AssetScheme";
 const RLP = require("rlp");
 
 export type AssetMintTransactionData = {
+    networkId: number;
     metadata: string;
     lockScriptHash: H256;
     parameters: Buffer[];
@@ -34,8 +35,9 @@ export class AssetMintTransaction {
     }
 
     static fromJSON(obj: any) {
-        const { data: { metadata, lockScriptHash, parameters, amount, registrar, nonce } } = obj;
+        const { data: { networkId, metadata, lockScriptHash, parameters, amount, registrar, nonce } } = obj;
         return new this({
+            networkId,
             metadata,
             lockScriptHash: new H256(lockScriptHash),
             parameters,
@@ -46,10 +48,11 @@ export class AssetMintTransaction {
     }
 
     toJSON() {
-        const { metadata, lockScriptHash, parameters, amount, registrar, nonce } = this.data;
+        const { networkId, metadata, lockScriptHash, parameters, amount, registrar, nonce } = this.data;
         return {
             type: this.type,
             data: {
+                networkId,
                 metadata,
                 lockScriptHash: lockScriptHash.value,
                 parameters,
@@ -62,9 +65,10 @@ export class AssetMintTransaction {
     }
 
     toEncodeObject() {
-        const { metadata, lockScriptHash, parameters, amount, registrar, nonce } = this.data;
+        const { networkId, metadata, lockScriptHash, parameters, amount, registrar, nonce } = this.data;
         return [
             3,
+            networkId,
             metadata,
             lockScriptHash.toEncodeObject(),
             parameters,
@@ -99,12 +103,13 @@ export class AssetMintTransaction {
     }
 
     getAssetScheme(): AssetScheme {
-        const { metadata, amount, registrar } = this.data;
+        const { networkId, metadata, amount, registrar } = this.data;
         // FIXME: need U64 to be implemented or use U256
         if (amount === null) {
             throw "not implemented";
         }
         return new AssetScheme({
+            networkId,
             metadata,
             amount,
             registrar
