@@ -81,6 +81,13 @@ export class Script {
         return tokens;
     }
 
+    // FIXME: return Script
+    // FIXME: add getStandardScriptHash
+    static getStandardScript(_id: "P2PKH" = "P2PKH"): Buffer {
+        const { COPY, BLAKE256, EQ, JZ, CHKSIG } = Script.Opcode;
+        return Buffer.from([COPY, 0x01, BLAKE256, EQ, JZ, 0xFF, CHKSIG]);
+    }
+
     static Opcode = {
         "NOP": 0x00,
         "BURN": 0x01,
