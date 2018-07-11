@@ -132,12 +132,12 @@ By using Alice's signature, the 10000 Gold that was first minted can now be tran
     }
 
     // Spent asset will be null
-    console.log(await sdk.getAsset(mintTx.hash(), 0));
+    console.log(await sdk.rpc.chain.getAsset(mintTx.hash(), 0));
 
     // Unspent Bob's 3000 golds
-    console.log(await sdk.getAsset(transferTx.hash(), 0));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.hash(), 0));
     // Unspent Alice's 7000 golds
-    console.log(await sdk.getAsset(transferTx.hash(), 1));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.hash(), 1));
 // End of wrapping async function
 })();
 ```
