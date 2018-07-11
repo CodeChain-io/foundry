@@ -2,6 +2,7 @@ import { MemoryKeyStore } from "./MemoryKeyStore";
 import { PubkeyAssetAgent } from "./PubkeyAssetAgent";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
+import { PkhAssetAgent } from "./PkhAssetAgent";
 
 /**
  * hidden
@@ -11,13 +12,15 @@ export type KeyStore = MemoryKeyStore;
 /**
  * @hidden
  */
-export type AssetAgent = PubkeyAssetAgent;
+export type AssetAgent = PubkeyAssetAgent | PkhAssetAgent;
 
 export class Key {
-    private assetAgent: AssetAgent;
+    private pkAssetAgent: PubkeyAssetAgent;
+    private pkhAssetAgent: PkhAssetAgent;
 
     constructor() {
-        this.assetAgent = new PubkeyAssetAgent({ keyStore: new MemoryKeyStore() });
+        this.pkAssetAgent = new PubkeyAssetAgent({ keyStore: new MemoryKeyStore() });
+        this.pkhAssetAgent = new PkhAssetAgent({ keyStore: new MemoryKeyStore() });
     }
 
     /**
@@ -25,17 +28,30 @@ export class Key {
      * locking/unlocking assets.
      * @returns AssetAgent
      */
-    getAssetAgent(): AssetAgent {
-        return this.assetAgent;
+    getAssetAgent(type: "nonStandardPay2PubKey" | "Pay2PubKeyHash" = "nonStandardPay2PubKey"): AssetAgent {
+        if (type === "nonStandardPay2PubKey") {
+            return this.pkAssetAgent;
+        } else {
+            return this.pkhAssetAgent;
+        }
     }
 
     /**
-     * Creates AssetTransferAddress. AssetTransferAddress is used to receive assets.
-     * See AssetScheme.mint() or Asset.transfer().
+     * Creates AssetTransferAddress for non-standard P2PK asset.
+     * To use this address AssetScheme.mint() or Asset.transfer().
      * @returns AssetTransferAddress
      */
-    createAssetTransferAddress(): Promise<AssetTransferAddress> {
-        return this.assetAgent.createAddress();
+    createPubKeyAddress(): Promise<AssetTransferAddress> {
+        return this.pkAssetAgent.createAddress();
+    }
+
+    /**
+     * Creates AssetTransferAddress for the standard P2PKH asset.
+     * To use this address, see AssetScheme.mint() or Asset.transfer().
+     * @returns AssetTransferAddress
+     */
+    createPubKeyHashAddresss(): Promise<AssetTransferAddress> {
+        return this.pkhAssetAgent.createAddress();
     }
 
     public classes = Key.classes;

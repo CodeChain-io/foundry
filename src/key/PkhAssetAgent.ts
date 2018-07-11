@@ -28,7 +28,7 @@ export class PkhAssetAgent {
     async unlock(asset: Asset, tx: AssetTransferTransaction): Promise<{ lockScript: Buffer, unlockScript: Buffer }> {
         const publicKeyList = await this.keyStore.getKeyList();
         const publicKeyHashList = publicKeyList.map(blake256);
-        const foundIndex = publicKeyHashList.findIndex((hash) => hash === asset.lockScriptHash.value);
+        const foundIndex = publicKeyHashList.findIndex((hash) => hash === Buffer.from(asset.parameters[0]).toString("hex"));
         if (foundIndex < 0) {
             throw "Unknown public key hash";
         }
@@ -51,7 +51,6 @@ export class PkhAssetAgent {
     }
 
     private generateLockScript(): Buffer {
-        const { COPY, BLAKE256, EQ, JZ, CHKSIG } = Script.Opcode;
-        return Buffer.from([COPY, 0x01, BLAKE256, EQ, JZ, CHKSIG]);
+        return Script.getStandardScript();
     }
 }
