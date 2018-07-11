@@ -9,7 +9,7 @@ test("sendSignedParcel", async () => {
     const nonce = await sdk.rpc.chain.getNonce(address);
     const p = sdk.core.createPaymentParcel({
         recipient: address,
-        value: 0,
+        amount: 0,
         nonce,
         fee: 10
     });
