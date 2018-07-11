@@ -28,7 +28,8 @@ async function sendTransaction(tx) {
     const goldAssetScheme = sdk.core.createAssetScheme({
         metadata: JSON.stringify({
             name: "Gold",
-            imageUrl: "https://gold.image/",
+            description: "An asset example",
+            icon_url: "https://gold.image/",
         }),
         amount: 10000,
         registrar: null,
