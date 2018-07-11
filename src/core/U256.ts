@@ -7,8 +7,8 @@ const RLP = require("rlp");
 export class U256 {
     value: BigNumber;
 
-    constructor(value?: number | string | BigNumber) {
-        this.value = new BigNumber(value || 0);
+    constructor(value: number | string | BigNumber) {
+        this.value = new BigNumber(value);
         if (!this.value.isInteger() || this.value.isNegative()) {
             throw "U256 must be a positive integer";
         } else if (this.value.toString(16).length > 64) {

@@ -38,6 +38,9 @@ test("isEqualTo", () => {
 });
 
 test("ensure", () => {
+    expect(() => {
+        U256.ensure(undefined);
+    }).toThrow();
     expect(U256.ensure(10)).toEqual(new U256(10));
     expect(U256.ensure("10")).toEqual(new U256(10));
     expect(U256.ensure("0xA")).toEqual(new U256(10));
