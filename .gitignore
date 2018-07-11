@@ -5,6 +5,11 @@ gh-pages
 /lib/
 /docs/
 
+/examples/package.json
+/examples/package-lock.json
+/examples/yarn.lock
+/examples/node_modules
+
 # Visual Studio Code - https://code.visualstudio.com/
 .settings/
 .vscode/
