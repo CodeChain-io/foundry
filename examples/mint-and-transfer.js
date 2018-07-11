@@ -63,4 +63,6 @@ async function sendTransaction(tx) {
     console.log(await sdk.rpc.chain.getAsset(transferTx.hash(), 0));
     // Unspent Alice's 7000 golds
     console.log(await sdk.rpc.chain.getAsset(transferTx.hash(), 1));
-})();
+})().catch((err) => {
+    console.error(`Error:`, err);
+});
