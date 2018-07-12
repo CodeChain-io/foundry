@@ -55,7 +55,7 @@ export class Key {
      * To use this address, see AssetScheme.mint() or Asset.transfer().
      * @returns AssetTransferAddress
      */
-    createPubKeyHashAddresss(): Promise<AssetTransferAddress> {
+    createPubKeyHashAddress(): Promise<AssetTransferAddress> {
         return this.pkhAssetAgent.createAddress();
     }
 
