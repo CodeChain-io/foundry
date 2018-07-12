@@ -15,14 +15,21 @@ export type AssetOutPointData = {
  * - The asset type and amount must be identical to the Asset that it points to.
  */
 export class AssetOutPoint {
-    data: AssetOutPointData;
+    readonly transactionHash: H256;
+    readonly index: number;
+    readonly assetType: H256;
+    readonly amount: number;
 
     constructor(data: AssetOutPointData) {
-        this.data = data;
+        const { transactionHash, index, assetType, amount } = data;
+        this.transactionHash = transactionHash;
+        this.index = index;
+        this.assetType = assetType;
+        this.amount = amount;
     }
 
     toEncodeObject() {
-        const { transactionHash, index, assetType, amount } = this.data;
+        const { transactionHash, index, assetType, amount } = this;
         return [transactionHash.toEncodeObject(), index, assetType.toEncodeObject(), amount];
     }
 
@@ -37,7 +44,7 @@ export class AssetOutPoint {
     }
 
     toJSON() {
-        const { transactionHash, index, assetType, amount } = this.data;
+        const { transactionHash, index, assetType, amount } = this;
         return {
             transactionHash: transactionHash.value,
             index,

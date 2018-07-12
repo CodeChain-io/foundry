@@ -53,12 +53,10 @@ test("AssetTransferTransaction fromJSON", async () => {
     // FIXME: Remove anythings when *Data fields are flattened
     const expectedInput = expect.objectContaining({
         prevOut: expect.objectContaining({
-            data: expect.objectContaining({
-                transactionHash: expect.any(H256),
-                index: expect.anything(),
-                assetType: expect.any(H256),
-                amount: expect.anything(),
-            })
+            transactionHash: expect.any(H256),
+            index: expect.anything(),
+            assetType: expect.any(H256),
+            amount: expect.anything(),
         }),
         lockScript: expect.anything(),
         unlockScript: expect.anything(),

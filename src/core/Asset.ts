@@ -55,7 +55,7 @@ export class Asset {
 
     toJSON() {
         const { assetType, lockScriptHash, parameters, amount, outPoint } = this;
-        const { transactionHash, index } = outPoint.data;
+        const { transactionHash, index } = outPoint;
         return {
             asset_type: assetType.value,
             lock_script_hash: lockScriptHash.value,
