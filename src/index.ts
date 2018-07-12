@@ -35,7 +35,7 @@ class SDK {
 
         this.rpc = new Rpc({ server });
         this.core = new Core({ networkId });
-        this.key = new Key();
+        this.key = new Key(this.rpc);
     }
 
     public static SDK = SDK;

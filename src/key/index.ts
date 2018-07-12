@@ -1,3 +1,6 @@
+import { Rpc } from "../rpc";
+import { AssetTransferTransaction } from "../core/transaction/AssetTransferTransaction";
+
 import { MemoryKeyStore } from "./MemoryKeyStore";
 import { PubkeyAssetAgent } from "./PubkeyAssetAgent";
 import { AssetTransferAddress } from "./AssetTransferAddress";
@@ -15,10 +18,12 @@ export type KeyStore = MemoryKeyStore;
 export type AssetAgent = PubkeyAssetAgent | PkhAssetAgent;
 
 export class Key {
+    private rpc: Rpc;
     private pkAssetAgent: PubkeyAssetAgent;
     private pkhAssetAgent: PkhAssetAgent;
 
-    constructor() {
+    constructor(rpc: Rpc) {
+        this.rpc = rpc;
         this.pkAssetAgent = new PubkeyAssetAgent({ keyStore: new MemoryKeyStore() });
         this.pkhAssetAgent = new PkhAssetAgent({ keyStore: new MemoryKeyStore() });
     }
@@ -52,6 +57,29 @@ export class Key {
      */
     createPubKeyHashAddresss(): Promise<AssetTransferAddress> {
         return this.pkhAssetAgent.createAddress();
+    }
+
+    async unlock(transaction: AssetTransferTransaction, inputIndex: number): Promise<boolean> {
+        if (inputIndex >= transaction.inputs.length) {
+            throw "Invalid input index.";
+        }
+        const asset = await this.rpc.chain.getAsset(transaction.inputs[inputIndex].prevOut.transactionHash, inputIndex);
+        if (asset === null) {
+            throw "Asset is not exist or spent.";
+        }
+
+        if (await this.pkhAssetAgent.inUnlockable(asset)) {
+            const { unlockScript, lockScript } = await this.pkhAssetAgent.unlock(asset, transaction);
+            transaction.setLockScript(inputIndex, lockScript);
+            transaction.setUnlockScript(inputIndex, unlockScript);
+        } else if (await this.pkAssetAgent.isUnlockable(asset)) {
+            const { unlockScript, lockScript } = await this.pkAssetAgent.unlock(asset, transaction);
+            transaction.setLockScript(inputIndex, lockScript);
+            transaction.setUnlockScript(inputIndex, unlockScript);
+        } else {
+            return false;
+        }
+        return true;
     }
 
     public classes = Key.classes;
