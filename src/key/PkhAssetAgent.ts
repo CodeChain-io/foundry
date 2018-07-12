@@ -1,4 +1,5 @@
 import * as _ from "lodash";
+import { Buffer } from "buffer";
 
 import { Asset } from "../core/Asset";
 import { H256 } from "../core/H256";

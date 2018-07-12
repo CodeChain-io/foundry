@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 import { H256 } from "../core/H256";
 import { toHex, blake256 } from "../utils";
 

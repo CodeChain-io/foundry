@@ -5,7 +5,7 @@ export class Script {
     data: Buffer;
 
     constructor(data: Buffer) {
-        this.data = data;
+        this.data = Buffer.from(data);
     }
 
     /**

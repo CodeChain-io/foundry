@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 import { AssetTransferAddress } from "../key/AssetTransferAddress";
 
 import { H256 } from "./H256";

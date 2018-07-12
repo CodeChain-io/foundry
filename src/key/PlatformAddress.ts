@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 import { H160 } from "../core/H160";
 import { toHex } from "../utils";
 
