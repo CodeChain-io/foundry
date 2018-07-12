@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 import { H256 } from "../H256";
 
 export type AssetTransferOutputData = {
@@ -18,7 +20,12 @@ export class AssetTransferOutput {
 
     toEncodeObject() {
         const { lockScriptHash, parameters, assetType, amount } = this.data;
-        return [lockScriptHash.toEncodeObject(), parameters, assetType.toEncodeObject(), amount];
+        return [
+            lockScriptHash.toEncodeObject(),
+            parameters.map(parameter => Buffer.from(parameter)),
+            assetType.toEncodeObject(),
+            amount
+        ];
     }
 
     static fromJSON(data: any) {
@@ -35,7 +42,7 @@ export class AssetTransferOutput {
         const { lockScriptHash, parameters, assetType, amount } = this.data;
         return {
             lockScriptHash: lockScriptHash.value,
-            parameters,
+            parameters: parameters.map(parameter => Buffer.from(parameter)),
             assetType: assetType.value,
             amount,
         };

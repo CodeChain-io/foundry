@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 import { H160 } from "../H160";
 import { H256 } from "../H256";
 import { blake256WithKey, blake256 } from "../../utils";
@@ -55,7 +57,7 @@ export class AssetMintTransaction {
                 networkId,
                 metadata,
                 lockScriptHash: lockScriptHash.value,
-                parameters,
+                parameters: parameters.map(parameter => Buffer.from(parameter)),
                 amount,
                 registrar: registrar === null ? null : registrar.value,
                 nonce,
@@ -71,7 +73,7 @@ export class AssetMintTransaction {
             networkId,
             metadata,
             lockScriptHash.toEncodeObject(),
-            parameters,
+            parameters.map(parameter => Buffer.from(parameter)),
             amount ? [amount] : [],
             registrar ? [registrar.toEncodeObject()] : [],
             nonce
