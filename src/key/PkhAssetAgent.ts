@@ -4,10 +4,10 @@ import { Asset } from "../core/Asset";
 import { H256 } from "../core/H256";
 import { AssetTransferTransaction } from "../core/transaction/AssetTransferTransaction";
 import { Script } from "../core/Script";
+import { blake256, toHex } from "../utils";
 
 import { KeyStore } from ".";
 import { AssetTransferAddress } from "./AssetTransferAddress";
-import { blake256 } from "../utils";
 
 /**
  * AssetAgent which supports P2PKH(Pay to Public Key Hash).
@@ -23,6 +23,14 @@ export class PkhAssetAgent {
         const publicKey = await this.keyStore.createKey();
         const publicKeyHash = H256.ensure(blake256(publicKey));
         return AssetTransferAddress.fromTypeAndPayload(1, publicKeyHash);
+    }
+
+    async inUnlockable(asset: Asset): Promise<boolean> {
+        if (asset.lockScriptHash.value !== blake256(this.generateLockScript())) {
+            return false;
+        }
+        const publicKeyHashList = (await this.keyStore.getKeyList()).map(blake256);
+        return !!publicKeyHashList.find(publicKeyHash => publicKeyHash === toHex(asset.parameters[0]));
     }
 
     async unlock(asset: Asset, tx: AssetTransferTransaction): Promise<{ lockScript: Buffer, unlockScript: Buffer }> {

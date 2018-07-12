@@ -30,6 +30,10 @@ export class PubkeyAssetAgent {
         return AssetTransferAddress.fromLockScriptHash(lockScriptHash);
     }
 
+    isUnlockable(asset: Asset): Promise<boolean> {
+        return Promise.resolve(!!this.publicKeyMap[asset.lockScriptHash.value]);
+    }
+
     async unlock(asset: Asset, tx: AssetTransferTransaction): Promise<{ lockScript: Buffer, unlockScript: Buffer }> {
         const publicKey = this.publicKeyMap[asset.lockScriptHash.value];
         if (!publicKey) {
