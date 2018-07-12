@@ -22,12 +22,12 @@ export type AssetTransferTransactionData = {
  * - If an identical transaction hash already exists, then the change fails. In this situation, a transaction can be created again by arbitrarily changing the nonce.
  */
 export class AssetTransferTransaction {
-    private readonly burns: AssetTransferInput[];
-    private readonly inputs: AssetTransferInput[];
-    private readonly outputs: AssetTransferOutput[];
-    private readonly networkId: number;
-    private readonly nonce: number;
-    private readonly type = "assetTransfer";
+    readonly burns: AssetTransferInput[];
+    readonly inputs: AssetTransferInput[];
+    readonly outputs: AssetTransferOutput[];
+    readonly networkId: number;
+    readonly nonce: number;
+    readonly type = "assetTransfer";
 
     constructor({ burns, inputs, outputs, networkId, nonce }: AssetTransferTransactionData) {
         this.burns = burns;
