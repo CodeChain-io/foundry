@@ -14,9 +14,9 @@ export type AssetTransferInputData = {
  * - The results of running the script must return successful in order for the Asset's Input to be valid.
  */
 export class AssetTransferInput {
-    private readonly prevOut: AssetOutPoint;
-    private lockScript: Buffer;
-    private unlockScript: Buffer;
+    readonly prevOut: AssetOutPoint;
+    lockScript: Buffer;
+    unlockScript: Buffer;
 
     constructor(data: AssetTransferInputData) {
         const { prevOut, lockScript, unlockScript } = data;
