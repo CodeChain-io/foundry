@@ -1,4 +1,5 @@
 import * as _ from "lodash";
+import { Buffer } from "buffer";
 
 export class Script {
     data: Buffer;
