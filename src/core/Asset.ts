@@ -1,5 +1,3 @@
-// FIXME: Use interface instead of importing key class.
-import { AssetAgent } from "../key";
 import { AssetTransferAddress } from "../key/AssetTransferAddress";
 
 import { H256 } from "./H256";
@@ -66,7 +64,7 @@ export class Asset {
         };
     }
 
-    async transfer(unlocker: AssetAgent, recipients: { address: AssetTransferAddress, amount: number }[], options: { nonce?: number } = {}): Promise<AssetTransferTransaction> {
+    transfer(recipients: { address: AssetTransferAddress, amount: number }[], options: { nonce?: number } = {}): AssetTransferTransaction {
         const { outPoint, assetType } = this;
         const { nonce = 0 } = options;
 
@@ -75,7 +73,7 @@ export class Asset {
             throw "The sum of recipients' amount must equal to the asset amount";
         }
 
-        const tx = new AssetTransferTransaction({
+        return new AssetTransferTransaction({
             burns: [],
             inputs: [new AssetTransferInput({
                 prevOut: outPoint,
@@ -90,9 +88,5 @@ export class Asset {
             networkId: 17,
             nonce
         });
-        const { lockScript, unlockScript } = await unlocker.unlock(this, tx);
-        tx.setLockScript(0, lockScript);
-        tx.setUnlockScript(0, unlockScript);
-        return tx;
     }
 }

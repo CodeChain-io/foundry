@@ -2,10 +2,6 @@ const SDK = require("codechain-sdk");
 
 const sdk = new SDK({ server: "http://localhost:8080" });
 
-// AssetAgent creates addresses for assets and manages their locking/unlocking
-// data.
-const assetAgent = sdk.key.getAssetAgent();
-
 // sendTransaction() is a function to make transaction to be processed.
 async function sendTransaction(tx) {
     const parcelSignerSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
@@ -20,8 +16,8 @@ async function sendTransaction(tx) {
 
 (async () => {
     // Create addresses for Alice and Bob.
-    const aliceAddress = await assetAgent.createAddress();
-    const bobAddress = await assetAgent.createAddress();
+    const aliceAddress = await sdk.key.createPubKeyAddress();
+    const bobAddress = await sdk.key.createPubKeyAddress();
 
     // Create asset named Gold. Total amount of Gold is 10000. The registrar is set
     // to null, which means this type of asset can be transferred freely.
@@ -45,13 +41,14 @@ async function sendTransaction(tx) {
 
     const firstGold = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
 
-    const transferTx = await firstGold.transfer(assetAgent, [{
+    const transferTx = firstGold.transfer([{
         address: bobAddress,
         amount: 3000
     }, {
         address: aliceAddress,
         amount: 7000
     }]);
+    await sdk.key.unlock(transferTx, 0);
 
     await sendTransaction(transferTx);
     const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), 5 * 60 * 1000);

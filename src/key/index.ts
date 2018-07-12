@@ -29,19 +29,6 @@ export class Key {
     }
 
     /**
-     * Gets AssetAgent. AssetAgent manages addresses, scripts and keys for
-     * locking/unlocking assets.
-     * @returns AssetAgent
-     */
-    getAssetAgent(type: "nonStandardPay2PubKey" | "Pay2PubKeyHash" = "nonStandardPay2PubKey"): AssetAgent {
-        if (type === "nonStandardPay2PubKey") {
-            return this.pkAssetAgent;
-        } else {
-            return this.pkhAssetAgent;
-        }
-    }
-
-    /**
      * Creates AssetTransferAddress for non-standard P2PK asset.
      * To use this address AssetScheme.mint() or Asset.transfer().
      * @returns AssetTransferAddress

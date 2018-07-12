@@ -88,10 +88,6 @@ const SDK = require("codechain-sdk");
 
 const sdk = new SDK({ server: "http://localhost:8080" });
 ```
-We create new instances of an assetAgent. AssetAgent creates addresses for assets and manages their locking/unlocking data. 
-```javascript
-const assetAgent = sdk.core.getAssetAgent();
-```
 In this example, it is assumed that there is something that created a parcel out of the transactions. sendTransaction has been declared for later use.
 
 ```javascript
@@ -112,8 +108,8 @@ Each users need an address for them to receive/send assets to. Addresses are cre
 // Start of wrapping async function, we use async/await here because a lot of
 // Promises are there.
 (async () => {
-    const aliceAddress = await assetAgent.createAddress();
-    const bobAddress = await assetAgent.createAddress();
+    const aliceAddress = await assetAgent.createPubKeyAddress();
+    const bobAddress = await assetAgent.createPubKeyAddress();
 ```
 In this example, we want to create an asset called "Gold". Thus, we define a new asset scheme for the asset that will be named Gold. In schemes, the amount to be minted, and the registrar, if any, should be defined. If there is no registrar, it means that AssetTransfer of Gold can be done through any parcel. If the registrar is present, the parcel must be signed by the registrar. In this example, the registrar is set to null.
 
@@ -145,7 +141,7 @@ Then, the AssetMintTransaction is processed with the following code:
 Alice then sends 3000 gold to Bob. In CodeChain, users must follow the [UTXO](https://codechain.readthedocs.io/en/latest/what-is-codechain.html#what-is-utxo) standard, and make a transaction that spends an entire UTXO balance, and receive the change back through another transaction.
 ```javascript
     // The sum of amount must equal to the amount of firstGold.
-    const transferTx = await firstGold.transfer(assetAgent, [{
+    const transferTx = firstGold.transfer([{
         address: bobAddress,
         amount: 3000
     }, {
@@ -155,6 +151,8 @@ Alice then sends 3000 gold to Bob. In CodeChain, users must follow the [UTXO](ht
 ```
 By using Alice's signature, the 10000 Gold that was first minted can now be transferred to other users like Bob.
 ```javascript
+    // Unlock first input of the transaction. The key instance can unlock because the Alice's key is created by it.
+    await sdk.key.unlock(transferTx, 0);
     await sendTransaction(transferTx);
     const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), 5 * 60 * 1000);
     if (!transferTxInvoice.success) {

@@ -34,20 +34,21 @@ test("AssetMintTransaction fromJSON", async () => {
 });
 
 test("AssetTransferTransaction fromJSON", async () => {
-    const pubkeyAssetAgent = sdk.key.getAssetAgent();
-
+    const addressA = await sdk.key.createPubKeyHashAddress();
+    const addressB = await sdk.key.createPubKeyHashAddress();
     const mintTx = sdk.core.createAssetScheme({
         metadata: "metadata of non-permissioned asset",
         amount: 100,
         registrar: null,
-    }).mint(await pubkeyAssetAgent.createAddress());
+    }).mint(addressA);
     await sendTransactions({ transactions: [mintTx] });
     const firstAsset = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
 
-    const transferTx = await firstAsset.transfer(pubkeyAssetAgent, [{
-        address: await pubkeyAssetAgent.createAddress(),
+    const transferTx = await firstAsset.transfer([{
+        address: addressB,
         amount: 100
     }]);
+    await sdk.key.unlock(transferTx, 0);
     const { parcelHash } = await sendTransactions({ transactions: [transferTx] });
     const parcel = await sdk.rpc.chain.getParcel(parcelHash);
     // FIXME: Remove anythings when *Data fields are flattened
