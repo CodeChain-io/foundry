@@ -46,6 +46,17 @@ export class Key {
         return this.pkhAssetAgent.createAddress();
     }
 
+    /**
+     * Sets lock and unlock scripts to the given transaction's input. The unlock
+     * script contains the signature for the whole tranasaction except for scripts
+     * in it.
+     * @param transaction AssetTransferTransaction to sign
+     * @param inputIndex An index of input to unlock
+     * @returns True if successful, false if unable to recognize lock script hash or
+     * unable to create the signature
+     * @throws When the input is already spent or never has been exist
+     * @throws When the given index is out of range
+     */
     async unlock(transaction: AssetTransferTransaction, inputIndex: number): Promise<boolean> {
         if (inputIndex >= transaction.inputs.length) {
             throw "Invalid input index.";
