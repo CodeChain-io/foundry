@@ -21,11 +21,13 @@ test("AssetMintTransaction fromJSON", async () => {
         type: expect.stringMatching("assetMint"),
         data: expect.objectContaining({
             metadata: expect.anything(),
-            lockScriptHash: expect.any(H256),
-            // FIXME: Buffer[]
-            parameters: expect.anything(),
-            // FIXME: Change it to U256
-            amount: expect.anything(),
+            output: {
+                lockScriptHash: expect.any(H256),
+                // FIXME: Buffer[]
+                parameters: expect.anything(),
+                // FIXME: Change it to U256
+                amount: expect.anything(),
+            },
             // FIXME: null or H160
             registrar: null,
             nonce: expect.anything()

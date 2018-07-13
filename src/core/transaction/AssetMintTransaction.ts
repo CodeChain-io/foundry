@@ -11,9 +11,11 @@ const RLP = require("rlp");
 export type AssetMintTransactionData = {
     networkId: number;
     metadata: string;
-    lockScriptHash: H256;
-    parameters: Buffer[];
-    amount: number | null;
+    output: {
+        lockScriptHash: H256;
+        parameters: Buffer[];
+        amount: number | null;
+    };
     registrar: H160 | null;
     nonce: number;
 };
@@ -37,28 +39,32 @@ export class AssetMintTransaction {
     }
 
     static fromJSON(obj: any) {
-        const { data: { networkId, metadata, lockScriptHash, parameters, amount, registrar, nonce } } = obj;
+        const { data: { networkId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } } = obj;
         return new this({
             networkId,
             metadata,
-            lockScriptHash: new H256(lockScriptHash),
-            parameters,
-            amount: amount === null ? null : amount,
+            output: {
+                lockScriptHash: new H256(lockScriptHash),
+                parameters,
+                amount: amount === null ? null : amount,
+            },
             registrar: registrar === null ? null : new H160(registrar),
             nonce,
         });
     }
 
     toJSON() {
-        const { networkId, metadata, lockScriptHash, parameters, amount, registrar, nonce } = this.data;
+        const { networkId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this.data;
         return {
             type: this.type,
             data: {
                 networkId,
                 metadata,
-                lockScriptHash: lockScriptHash.value,
-                parameters: parameters.map(parameter => Buffer.from(parameter)),
-                amount,
+                output: {
+                    lockScriptHash: lockScriptHash.value,
+                    parameters: parameters.map(parameter => Buffer.from(parameter)),
+                    amount,
+                },
                 registrar: registrar === null ? null : registrar.value,
                 nonce,
                 hash: this.hash().value,
@@ -67,7 +73,7 @@ export class AssetMintTransaction {
     }
 
     toEncodeObject() {
-        const { networkId, metadata, lockScriptHash, parameters, amount, registrar, nonce } = this.data;
+        const { networkId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this.data;
         return [
             3,
             networkId,
@@ -89,7 +95,7 @@ export class AssetMintTransaction {
     }
 
     getMintedAsset(): Asset {
-        const { lockScriptHash, parameters, amount } = this.data;
+        const { lockScriptHash, parameters, amount } = this.data.output;
         // FIXME: need U64 to be implemented or use U256
         if (amount === null) {
             throw "not implemented";
@@ -105,7 +111,7 @@ export class AssetMintTransaction {
     }
 
     getAssetScheme(): AssetScheme {
-        const { networkId, metadata, amount, registrar } = this.data;
+        const { networkId, metadata, output: { amount }, registrar } = this.data;
         // FIXME: need U64 to be implemented or use U256
         if (amount === null) {
             throw "not implemented";

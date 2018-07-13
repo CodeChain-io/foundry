@@ -46,10 +46,12 @@ export class AssetScheme {
         return new AssetMintTransaction({
             networkId,
             metadata,
+            output: {
+                amount,
+                ...address.getLockScriptHashAndParameters(),
+            },
             registrar,
-            amount,
             nonce,
-            ...address.getLockScriptHashAndParameters(),
         });
     }
 }
