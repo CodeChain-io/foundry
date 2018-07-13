@@ -1,5 +1,6 @@
 import { SDK } from "../";
 import { H256, SignedParcel, Invoice, AssetMintTransaction, Asset, AssetScheme } from "../lib/core/classes";
+import { getAccountIdFromPrivate, generatePrivateKey, signEcdsa } from "../src/utils";
 
 describe("rpc", () => {
     let sdk: SDK;
@@ -122,5 +123,44 @@ describe("rpc", () => {
             expect(await sdk.rpc.chain.getAsset(mintTransaction.hash(), 1)).toBe(null);
             expect(await sdk.rpc.chain.getAsset(invalidHash, 0)).toBe(null);
         });
+    });
+
+    test("getAccountList", async () => {
+        expect(async () => {
+            await sdk.rpc.account.getAccountList();
+        }).not.toThrow();
+    });
+
+    test("createAccount", async () => {
+        expect(await sdk.rpc.account.createAccount()).toEqual(expect.anything());
+        expect(await sdk.rpc.account.createAccount("my-password")).toEqual(expect.anything());
+    });
+
+    test("createAccountFromSecret", async () => {
+        const secret = "a2b39d4aefecdb17f84ed4cf629e7c8817691cc4f444ac7522902b8fb4b7bd53";
+        const account = getAccountIdFromPrivate(secret);
+        expect(await sdk.rpc.account.createAccountFromSecret(secret)).toEqual(`0x${account}`);
+    });
+
+    test("removeAccount", async () => {
+        const account = await sdk.rpc.account.createAccount("123");
+        expect(async () => {
+            await sdk.rpc.account.removeAccount(account, "123");
+            expect(await sdk.rpc.account.getAccountList()).not.toContain(account);
+        }).not.toThrow();
+    });
+
+    test("sign", async () => {
+        const secret = generatePrivateKey();
+        const account = getAccountIdFromPrivate(secret);
+        await sdk.rpc.account.createAccountFromSecret(secret, "my-password");
+
+        const message = "0000000000000000000000000000000000000000000000000000000000000000";
+        const { r, s, v } = signEcdsa(message, secret);
+        // FIXME:
+        const sig = await sdk.rpc.account.sign(message, account, "my-password");
+        expect(sig).toContain(r);
+        expect(sig).toContain(s);
+        expect(sig).toContain(v);
     });
 });

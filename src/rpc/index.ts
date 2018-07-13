@@ -3,6 +3,7 @@ import fetch from "node-fetch";
 import { NodeRpc } from "./node";
 import { ChainRpc } from "./chain";
 import { NetworkRpc } from "./network";
+import { AccountRpc } from "./account";
 
 /**
  * @hidden
@@ -24,6 +25,10 @@ export class Rpc {
      * RPC module for configuring P2P networking of the node.
      */
     public network: NetworkRpc;
+    /**
+     * RPC module for account management and signing
+     */
+    public account: AccountRpc;
 
     /**
      * @param params.server HTTP RPC server address.
@@ -49,6 +54,7 @@ export class Rpc {
         this.node = new NodeRpc(this);
         this.chain = new ChainRpc(this);
         this.network = new NetworkRpc(this);
+        this.account = new AccountRpc(this);
     }
 
     sendRpcRequest = (name: string, params: any[]) => {
