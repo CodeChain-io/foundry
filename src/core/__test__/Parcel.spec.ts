@@ -5,27 +5,27 @@ import { Parcel } from "../Parcel";
 
 test("rlp", () => {
     const t = Parcel.transactions(new U256(0), new U256(0), 1);
-    expect(t.rlpBytes()).toEqual(Buffer.from([0xc6, 0x80, 0x80, 0x01, 0xC2, 0x01, 0xC0]));
+    expect(t.rlpBytes()).toEqual(Buffer.from([248, 78, 128, 128, 1, 248, 73, 1, 192, 248, 69, 248, 67, 128, 160, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 160, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
 });
 
 test("hash", () => {
     const t = Parcel.transactions(new U256(0), new U256(0), 1);
-    expect(t.hash()).toEqual(new H256("793ab19e6663f78a1ac52e440347b8efe0d74318eccee020972a25adb926b3fa"));
+    expect(t.hash()).toEqual(new H256("78850c22e15642a364d57c2a9e5df97bb2876ee32fdf93da1e11afcd2d586245"));
 });
 
 test("sign", () => {
     const t = Parcel.transactions(new U256(0), new U256(0), 1);
     const signed = t.sign(new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"));
     const { v, r, s } = signed.signature();
-    expect(v).toBe(0);
-    expect(r).toEqual(new U256("0x3824b636cd92324253b13bcb7c674ecb44e7dbb22cd438c39a5529cd2a923e0b"));
-    expect(s).toEqual(new U256("0x1691d9f073d407f71e5f0ca6450b6f206a6ddb97a9ee22951ec1d75eff4d30e6"));
+    expect(v).toBe(1);
+    expect(r).toEqual(new U256("0x4ec506266b9945c152b325d8155c6ee05b9602272a87c0f9bf6180495e0c0cc1"));
+    expect(s).toEqual(new U256("0x4e1c05949e04cec49db5185f0f6dbfcc56ac83a1eae3fb6d45ae4b60d382ca3d"));
 });
 
 test("signed hash", () => {
     const t = Parcel.transactions(new U256(0), new U256(0), 1);
     const signed = t.sign(new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"));
-    expect(signed.hash()).toEqual(new H256("8f5b65f7cfda422147dcd8402f9e95b401710a54c16eeb2feb5110648e466747"));
+    expect(signed.hash()).toEqual(new H256("ec67fb2529da6f438d5bbf45c8025bcbcfa4d87c2d6ca2b36a25501e3cadc665"));
 });
 
 test("toJSON", () => {

@@ -15,7 +15,7 @@ export function getActionFromJSON(json: any): Action {
     switch (action) {
         case "changeShardState":
             const { transactions } = json;
-            return new ChangeShardState(transactions.map(getTransactionFromJSON));
+            return new ChangeShardState({ transactions: transactions.map(getTransactionFromJSON) });
         case "payment":
             const { receiver, amount } = json;
             return new Payment(new H160(receiver), new U256(amount));

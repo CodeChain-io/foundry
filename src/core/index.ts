@@ -96,7 +96,7 @@ export class Core {
      */
     createChangeShardStateParcel(params: { transactions: Transaction[] } & ParcelParams): Parcel {
         const { transactions, nonce, fee } = params;
-        const action = new ChangeShardState(transactions);
+        const action = new ChangeShardState({ transactions });
         return new Parcel(
             U256.ensure(nonce),
             U256.ensure(fee),

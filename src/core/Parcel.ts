@@ -33,7 +33,7 @@ export class Parcel {
     action: Action;
 
     static transactions(nonce: U256, fee: U256, networkId: number, ...transactions: Transaction[]): Parcel {
-        const action = new ChangeShardState(transactions);
+        const action = new ChangeShardState({ transactions });
         return new Parcel(nonce, fee, networkId, action);
     }
 
