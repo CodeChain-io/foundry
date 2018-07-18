@@ -22,7 +22,7 @@ yarn add codechain-sdk
 ```
 or
 ```
-yarn add file:../codechain-sdk
+yarn add file:../
 ```
 
 When you install package from the filepath, be sure it's built correctly.
