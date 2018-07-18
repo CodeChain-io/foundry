@@ -12,12 +12,17 @@ import { Parcel } from "../core/Parcel";
 
 export class ChainRpc {
     private rpc: Rpc;
+    private parcelSigner?: string;
+    private parcelFee?: number;
 
     /**
      * @hidden
      */
-    constructor(rpc: Rpc) {
+    constructor(rpc: Rpc, options: { parcelSigner?: string, parcelFee?: number }) {
+        const { parcelSigner, parcelFee } = options;
         this.rpc = rpc;
+        this.parcelSigner = parcelSigner;
+        this.parcelFee = parcelFee;
     }
 
     /**
@@ -47,15 +52,25 @@ export class ChainRpc {
      * @throws When the given account is unknown
      * @throws When the given passphrase does not match
      */
-    async sendParcel(parcel: Parcel, options: {
-        account: H160 | string,
+    async sendParcel(parcel: Parcel, options?: {
+        account?: H160 | string,
         passphrase?: string,
         nonce?: U256 | string | number,
-        fee: U256 | string | number,
+        fee?: U256 | string | number,
     }): Promise<H256> {
-        const { account, passphrase, fee } = options;
-        const { nonce = await this.getNonce(account) } = options;
+        const {
+            account = this.parcelSigner,
+            passphrase = undefined,
+            fee = this.parcelFee
+        } = options || {};
+        if (!account) {
+            throw "The account to sign the parcel is not specified";
+        }
+        const { nonce = await this.getNonce(account) } = options || {};
         parcel.setNonce(nonce!);
+        if (!fee) {
+            throw "The fee of the parcel is not specified";
+        }
         parcel.setFee(fee);
         const sig = await this.rpc.account.sign(parcel.hash(), account, passphrase);
         return this.sendSignedParcel(new SignedParcel(parcel, sig));

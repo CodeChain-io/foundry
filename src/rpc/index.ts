@@ -32,9 +32,17 @@ export class Rpc {
 
     /**
      * @param params.server HTTP RPC server address.
+     * @param params.options.parcelSigner The default account to sign the parcel
+     * @param params.options.parcelFee The default amount for the parcel fee
      */
-    constructor(params: { server: string }) {
-        const { server } = params;
+    constructor(params: {
+        server: string,
+        options?: {
+            parcelSigner?: string,
+            parcelFee?: number,
+        },
+    }) {
+        const { server, options = {} } = params;
         this.client = jaysonBrowserClient((request: any, callback: any) => {
             fetch(server, {
                 method: "POST",
@@ -52,7 +60,7 @@ export class Rpc {
         });
 
         this.node = new NodeRpc(this);
-        this.chain = new ChainRpc(this);
+        this.chain = new ChainRpc(this, options);
         this.network = new NetworkRpc(this);
         this.account = new AccountRpc(this);
     }
