@@ -11,7 +11,7 @@ const RLP = require("rlp");
 /**
  * A [Parcel](parcel.html) signed by a private key. It is possible to request
  * processing on the CodeChain network with the
- * [sendSignedParcel](sdk.html#sendsignedparcel) function.
+ * [sendSignedParcel](chainrpc.html#sendsignedparcel) function.
  *
  * Parcels signed with a regular key has the same effect as those signed with
  * the original key. The original key is the key of the account that registered
