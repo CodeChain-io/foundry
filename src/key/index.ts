@@ -1,5 +1,5 @@
 import { Rpc } from "../rpc";
-import { AssetTransferTransaction } from "../core/transaction/AssetTransferTransaction";
+import { AssetTransferTransaction, Parcel, SignedParcel, H160 } from "../core/classes";
 
 import { MemoryKeyStore } from "./MemoryKeyStore";
 import { PubkeyAssetAgent } from "./PubkeyAssetAgent";
@@ -44,6 +44,21 @@ export class Key {
      */
     createPubKeyHashAddress(): Promise<AssetTransferAddress> {
         return this.pkhAssetAgent.createAddress();
+    }
+
+    /**
+     * Signs a Parcel with the given account.
+     * @param parcel A Parcel
+     * @param params.account An account.
+     * @param params.passphrase The passphrase for the given account
+     * @returns A SignedParcel
+     * @throws When nonce or fee in the Parcel is null
+     * @throws When account or its passphrase is invalid
+     */
+    async signParcel(parcel: Parcel, params: { account: H160 | string, passphrase?: string }): Promise<SignedParcel> {
+        const { account, passphrase } = params;
+        const sig = await this.rpc.account.sign(parcel.hash(), account, passphrase);
+        return new SignedParcel(parcel, sig);
     }
 
     /**
