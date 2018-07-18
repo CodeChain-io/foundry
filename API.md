@@ -41,37 +41,27 @@ First, make sure to import the correct sdk and use the proper server port.
 var SDK = require("codechain-sdk");
 var sdk = new SDK({ server: "http://localhost:8080" });
 
-var signerAddress = "0xa6594b7196808d161b6fb137e781abbc251385d9";
-var recipientAddress = "0x744142069fe2d03d48e61734cbe564fcc94e6e31";
+var signerSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"
 ```
 The parcel signer must pay the transaction fees. Parcels are basically a group of transactions used in CodeChain. They are the smallest unit that can be processed on the blockchain.
 
 In order for the parcel to be valid, the nonce must match the nonce of the parcel signer. Once the parcel is confirmed, the nonce of the signer is increased by 1. When specifying the receiver, make sure the correct address is used for the recipient. In addition, the parcel must be signed with the secret key of the address. After signing the parcel, send the parcel off to the CodeChain node. The node is responsible for propagating the parcels properly.
 ```javascript
-sdk.rpc.chain.getNonce(signerAddress).then(function (nonce) {
+sdk.rpc.account.createAccountFromSecret(signerSecret).then(account => {
     var parcel = sdk.core.createPaymentParcel({
-        recipient: recipientAddress,
+        recipient: "0x744142069fe2d03d48e61734cbe564fcc94e6e31",
         amount: 10000,
-        nonce,
-        // Parcel signer pays 10 CCC as fee.
-        fee: 10
     });
-    var signedParcel = parcel.sign(signerSecret);
-    return sdk.rpc.chain.sendSignedParcel(signedParcel);
 })
 ```
-sendSignedParcel returns a promise that resolves with a parcel hash if the parcel has been verified and queued successfully. It doesn't mean that the parcel was confirmed, however. getParcel returns a promise that resolves with a parcel. Only confirmed parcels contain blockNumber/blockHash/parcelIndex fields.
+sendSignedParcel returns a promise that resolves with a parcel hash if the parcel has been verified and queued successfully. It doesn't mean that the parcel was confirmed, however. getParcelInvoice returns a promise that resolves with the invoice. The invoice tells that the parcel was successful or not.
 ```javascript
 .then(function (parcelHash) {
-    // sendSignedParcel returns a promise that resolves with a parcel hash if parcel has
-    // been verified and queued successfully. It doesn't mean parcel was confirmed.
-    console.log(`Parcel sent:`, parcelHash);
-    return sdk.rpc.chain.getParcel(parcelHash);
-}).then(function (parcel) {
-    // getParcel returns a promise that resolves with a parcel.
-    // blockNumber/blockHash/parcelIndex fields in Parcel is present only for the
-    // confirmed parcel
-    console.log(`Parcel`, parcel);
+    console.log("Parcel Hash: ", parcelHash);
+    // getParcelInvoice() waits the parcel to be confirmed until the given timeout(5 minutes).
+    return sdk.rpc.chain.getParcelInvoice(parcelHash, 5 * 60 * 1000);
+}).then(function (invoice) {
+    console.log("Parcel Invoice: ", invoice);
 }).catch((err) => {
     console.error(`Error:`, err);
 });
@@ -97,9 +87,11 @@ async function sendTransaction(tx) {
     const parcelSignerAddress = SDK.util.getAccountIdFromPrivate(parcelSignerSecret);
     const parcel = sdk.core.createChangeShardStateParcel({
         transactions: [tx],
+    }).sign({
+        secret: parcelSignerSecret
         nonce: await sdk.rpc.chain.getNonce(parcelSignerAddress),
         fee: 10,
-    }).sign(parcelSignerSecret)
+    })
     return await sdk.rpc.chain.sendSignedParcel(parcel);
 }
 ```
