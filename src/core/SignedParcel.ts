@@ -89,9 +89,7 @@ export class SignedParcel {
         if (typeof sig !== "string") {
             throw "Unexpected type of sig";
         }
-        const r = `0x${sig.substr(2, 64)}`;
-        const s = `0x${sig.substr(66, 64)}`;
-        const v = Number.parseInt(sig.substr(130, 2), 16);
+        const { r, s, v } = SignedParcel.convertSignatureStringToRsv(sig);
         if (blockNumber) {
             return new SignedParcel(Parcel.fromJSON(data), v, new U256(r), new U256(s), blockNumber, new H256(blockHash), parcelIndex);
         } else {
@@ -102,7 +100,11 @@ export class SignedParcel {
     toJSON() {
         const { blockNumber, blockHash, parcelIndex,
             unsigned: { nonce, fee, networkId, action }, v, r, s } = this;
-        const sig = `0x${_.padStart(r.value.toString(16), 64, "0")}${_.padStart(s.value.toString(16), 64, "0")}${_.padStart(v.toString(16), 2, "0")}`;
+        const sig = SignedParcel.convertRsvToSignatureString({
+            r: r.value.toString(16),
+            s: s.value.toString(16),
+            v
+        });
         return {
             blockNumber,
             blockHash: blockHash === null ? null : blockHash.value,
@@ -114,5 +116,17 @@ export class SignedParcel {
             sig,
             hash: this.hash().value,
         };
+    }
+
+    private static convertSignatureStringToRsv(signature: string): { r: string, s: string, v: number } {
+        const r = `0x${signature.substr(2, 64)}`;
+        const s = `0x${signature.substr(66, 64)}`;
+        const v = Number.parseInt(signature.substr(130, 2), 16);
+        return { r, s, v };
+    }
+
+    private static convertRsvToSignatureString(params: { r: string, s: string, v: number }) {
+        const { r, s, v } = params;
+        return `0x${_.padStart(r, 64, "0")}${_.padStart(s, 64, "0")}${_.padStart(v.toString(16), 2, "0")}`;
     }
 }
