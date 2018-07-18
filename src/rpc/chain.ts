@@ -193,12 +193,13 @@ export class ChainRpc {
      * Gets asset of given transaction hash and index.
      * @param txhash The tx hash of AssetMintTransaction or AssetTransferTransaction.
      * @param index The index of output in the transaction.
+     * @param blockNumber The specific block number to get the asset from
      * @returns Asset, if asset exists, Else, returns null.
      */
-    getAsset(txhash: H256 | string, index: number): Promise<Asset | null> {
+    getAsset(txhash: H256 | string, index: number, blockNumber?: number): Promise<Asset | null> {
         return this.rpc.sendRpcRequest(
             "chain_getAsset",
-            [`0x${H256.ensure(txhash).value}`, index]
+            [`0x${H256.ensure(txhash).value}`, index, blockNumber]
         ).then(result => {
             if (result === null) {
                 return null;
