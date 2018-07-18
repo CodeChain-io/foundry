@@ -8,6 +8,7 @@ import { Block } from "../core/Block";
 import { Asset } from "../core/Asset";
 import { Invoice } from "../core/Invoice";
 import { H512 } from "../core/H512";
+import { Parcel } from "../core/Parcel";
 
 export class ChainRpc {
     private rpc: Rpc;
@@ -30,6 +31,34 @@ export class ChainRpc {
             "chain_sendSignedParcel",
             [`0x${bytes}`]
         ).then(result => new H256(result));
+    }
+
+    /**
+     * Signs a parcel with the given account and sends it to CodeChain's network.
+     * @param parcel The parcel to send
+     * @param options.account The account to sign the parcel
+     * @param options.passphrase The account's passphrase
+     * @param options.nonce The nonce of the parcel
+     * @param options.fee The fee of the parcel
+     * @returns SignedParcel's hash
+     * @throws When the given account cannot afford to pay the fee
+     * @throws When the given fee is too low
+     * @throws When the given nonce does not match
+     * @throws When the given account is unknown
+     * @throws When the given passphrase does not match
+     */
+    async sendParcel(parcel: Parcel, options: {
+        account: H160 | string,
+        passphrase?: string,
+        nonce?: U256 | string | number,
+        fee: U256 | string | number,
+    }): Promise<H256> {
+        const { account, passphrase, fee } = options;
+        const { nonce = await this.getNonce(account) } = options;
+        parcel.setNonce(nonce!);
+        parcel.setFee(fee);
+        const sig = await this.rpc.account.sign(parcel.hash(), account, passphrase);
+        return this.sendSignedParcel(new SignedParcel(parcel, sig));
     }
 
     /**
