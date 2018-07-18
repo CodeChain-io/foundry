@@ -68,10 +68,12 @@ describe("rpc", () => {
             const parcel = sdk.core.createPaymentParcel({
                 recipient: signerAccount,
                 amount: 10,
+            });
+            const signedParcel = parcel.sign({
+                secret: signerSecret,
                 fee: 10,
                 nonce: await sdk.rpc.chain.getNonce(signerAccount),
             });
-            const signedParcel = parcel.sign(signerSecret);
             parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
         });
 
@@ -103,10 +105,12 @@ describe("rpc", () => {
             }).mint(await sdk.key.createPubKeyAddress());
             const parcel = sdk.core.createChangeShardStateParcel({
                 transactions: [mintTransaction],
+            });
+            await sdk.rpc.chain.sendSignedParcel(parcel.sign({
+                secret: signerSecret,
                 nonce: await sdk.rpc.chain.getNonce(signerAccount),
                 fee: 10
-            });
-            await sdk.rpc.chain.sendSignedParcel(parcel.sign(signerSecret));
+            }));
         });
 
         test("getTransactionInvoice", async () => {

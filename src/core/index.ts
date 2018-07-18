@@ -20,14 +20,6 @@ import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
 import { Script } from "./Script";
 
-/**
- * @hidden
- */
-export type ParcelParams = {
-    nonce: U256 | number | string;
-    fee: U256 | number | string;
-};
-
 export class Core {
     private networkId: number;
 
@@ -44,22 +36,16 @@ export class Core {
      * from the parcel signer to the recipient. Who is signing the parcel will pay.
      * @param params.recipient The platform account who receives CCC
      * @param params.amount Amount of CCC to pay
-     * @param params.nonce Nonce for the parcel
-     * @param params.fee Fee for the parcel
      * @throws Given string for recipient is invalid for converting it to H160
      * @throws Given number or string for amount is invalid for converting it to U256
-     * @throws Given number or string for nonce is invalid for converting it to U256
-     * @throws Given number or string for fee is invalid for converting it to U256
      */
-    createPaymentParcel(params: { recipient: H160 | string, amount: U256 | number | string } & ParcelParams): Parcel {
-        const { recipient, amount, fee, nonce } = params;
+    createPaymentParcel(params: { recipient: H160 | string, amount: U256 | number | string }): Parcel {
+        const { recipient, amount } = params;
         const action = new Payment(
             H160.ensure(recipient),
             U256.ensure(amount)
         );
         return new Parcel(
-            U256.ensure(nonce),
-            U256.ensure(fee),
             this.networkId,
             action
         );
@@ -68,18 +54,12 @@ export class Core {
     /**
      * Creates SetRegularKey action which sets the regular key of the parcel signer.
      * @param params.key The public key of a regular key
-     * @param params.nonce Nonce for the parcel
-     * @param params.fee Fee for the parcel
      * @throws Given string for key is invalid for converting it to H512
-     * @throws Given number or string for nonce is invalid for converting it to U256
-     * @throws Given number or string for fee is invalid for converting it to U256
      */
-    createSetRegularKeyParcel(params: { key: H512 | string } & ParcelParams): Parcel {
-        const { key, nonce, fee } = params;
+    createSetRegularKeyParcel(params: { key: H512 | string }): Parcel {
+        const { key } = params;
         const action = new SetRegularKey(H512.ensure(key));
         return new Parcel(
-            U256.ensure(nonce),
-            U256.ensure(fee),
             this.networkId,
             action
         );
@@ -89,17 +69,11 @@ export class Core {
      * Creates ChangeShardState action which can mint or transfer assets through
      * AssetMintTransaction or AssetTransferTransaction.
      * @param params.transactions List of transaction
-     * @param params.nonce Nonce for the parcel
-     * @param params.fee Fee for the parcel
-     * @throws Given number or string for nonce is invalid for converting it to U256
-     * @throws Given number or string for fee is invalid for converting it to U256
      */
-    createChangeShardStateParcel(params: { transactions: Transaction[] } & ParcelParams): Parcel {
-        const { transactions, nonce, fee } = params;
+    createChangeShardStateParcel(params: { transactions: Transaction[] }): Parcel {
+        const { transactions } = params;
         const action = new ChangeShardState({ transactions });
         return new Parcel(
-            U256.ensure(nonce),
-            U256.ensure(fee),
             this.networkId,
             action
         );
@@ -107,17 +81,10 @@ export class Core {
 
     /**
      * Creates CreateShard action which can create new shard
-     * @param params.nonce Nonce for the parcel
-     * @param params.fee Fee for the parcel
-     * @throws Given number or string for nonce is invalid for converting it to U256
-     * @throws Given number or string for fee is invalid for converting it to U256
      */
-    createCreateShardParcel(params: {} & ParcelParams): Parcel {
-        const { nonce, fee } = params;
+    createCreateShardParcel(): Parcel {
         const action = new CreateShard();
         return new Parcel(
-            U256.ensure(nonce),
-            U256.ensure(fee),
             this.networkId,
             action
         );

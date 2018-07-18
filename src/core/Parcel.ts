@@ -23,42 +23,53 @@ const RLP = require("rlp");
  * - After signing with the sign() function, it can be sent to the network.
  */
 export class Parcel {
-    nonce: U256;
-    fee: U256;
+    nonce: U256 | null;
+    fee: U256 | null;
     // FIXME: network id is 64-bit unsigned originally, so it must be changed when
     // it's serialized with leading zeros.
-    networkId: U256;
-    action: Action;
+    readonly networkId: U256;
+    readonly action: Action;
 
-    static transactions(nonce: U256, fee: U256, networkId: number, ...transactions: Transaction[]): Parcel {
+    static transactions(networkId: number, ...transactions: Transaction[]): Parcel {
         const action = new ChangeShardState({ transactions });
-        return new Parcel(nonce, fee, networkId, action);
+        return new Parcel(networkId, action);
     }
 
-    static payment(nonce: U256, fee: U256, networkId: number, receiver: H160, value: U256): Parcel {
+    static payment(networkId: number, receiver: H160, value: U256): Parcel {
         const action = new Payment(receiver, value);
-        return new Parcel(nonce, fee, networkId, action);
+        return new Parcel(networkId, action);
     }
 
-    static setRegularKey(nonce: U256, fee: U256, networkId: number, key: H512): Parcel {
+    static setRegularKey(networkId: number, key: H512): Parcel {
         const action = new SetRegularKey(key);
-        return new Parcel(nonce, fee, networkId, action);
+        return new Parcel(networkId, action);
     }
 
-    static createShard(nonce: U256, fee: U256, networkId: number): Parcel {
+    static createShard(networkId: number): Parcel {
         const action = new CreateShard();
-        return new Parcel(nonce, fee, networkId, action);
+        return new Parcel(networkId, action);
     }
 
-    constructor(nonce: U256, fee: U256, networkId: number, action: Action) {
-        this.nonce = nonce;
-        this.fee = fee;
+    constructor(networkId: number, action: Action) {
+        this.nonce = null;
+        this.fee = null;
         this.networkId = new U256(networkId);
         this.action = action;
     }
 
+    setNonce(nonce: U256 | string | number) {
+        this.nonce = U256.ensure(nonce);
+    }
+
+    setFee(fee: U256 | string | number) {
+        this.fee = U256.ensure(fee);
+    }
+
     toEncodeObject(): Array<any> {
         const { nonce, fee, action, networkId } = this;
+        if (!nonce || !fee) {
+            throw "Nonce and fee in the parcel must be present";
+        }
         return [
             nonce.toEncodeObject(),
             fee.toEncodeObject(),
@@ -75,7 +86,20 @@ export class Parcel {
         return new H256(blake256(this.rlpBytes()));
     }
 
-    sign(secret: H256 | string): SignedParcel {
+    sign(params: {
+        secret: H256 | string,
+        nonce: U256 | string | number,
+        fee: U256 | string | number
+    }): SignedParcel {
+        const { secret, nonce, fee } = params;
+        if (this.nonce !== null) {
+            throw "The parcel nonce is already set";
+        }
+        this.nonce = U256.ensure(nonce);
+        if (this.fee !== null) {
+            throw "The parcel fee is already set";
+        }
+        this.fee = U256.ensure(fee);
         const { r, s, v } = signEcdsa(this.hash().value, H256.ensure(secret).value);
         const sig = SignedParcel.convertRsvToSignatureString({ r, s, v });
         return new SignedParcel(this, sig);
@@ -83,11 +107,17 @@ export class Parcel {
 
     static fromJSON(result: any) {
         const { nonce, fee, networkId, action } = result;
-        return new Parcel(new U256(nonce), new U256(fee), networkId, getActionFromJSON(action));
+        const parcel = new Parcel(networkId, getActionFromJSON(action));
+        parcel.setNonce(nonce);
+        parcel.setFee(fee);
+        return parcel;
     }
 
     toJSON() {
         const { nonce, fee, networkId, action } = this;
+        if (!nonce || !fee) {
+            throw "Nonce and fee in the parcel must be present";
+        }
         return {
             nonce: nonce.value.toString(),
             fee: fee.value.toString(),

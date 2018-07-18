@@ -8,9 +8,11 @@ async function sendTransaction(tx) {
     const parcelSignerAddress = SDK.util.getAccountIdFromPrivate(parcelSignerSecret);
     const parcel = sdk.core.createChangeShardStateParcel({
         transactions: [tx],
+    }).sign({
+        secret: parcelSignerSecret,
         nonce: await sdk.rpc.chain.getNonce(parcelSignerAddress),
         fee: 10,
-    }).sign(parcelSignerSecret)
+    })
     return await sdk.rpc.chain.sendSignedParcel(parcel);
 }
 

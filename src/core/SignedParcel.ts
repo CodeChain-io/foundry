@@ -58,6 +58,9 @@ export class SignedParcel {
     toEncodeObject(): Array<any> {
         const { unsigned: { nonce, fee, action, networkId }, v, r, s } = this;
         const sig = `0x${_.padStart(r.value.toString(16), 64, "0")}${_.padStart(s.value.toString(16), 64, "0")}${_.padStart(v.toString(16), 2, "0")}`;
+        if (!nonce || !fee) {
+            throw "Nonce and fee in the parcel must be present";
+        }
         return [
             nonce.toEncodeObject(),
             fee.toEncodeObject(),
@@ -105,6 +108,9 @@ export class SignedParcel {
             s: s.value.toString(16),
             v
         });
+        if (!nonce || !fee) {
+            throw "Nonce and fee in the parcel must be present";
+        }
         return {
             blockNumber,
             blockHash: blockHash === null ? null : blockHash.value,

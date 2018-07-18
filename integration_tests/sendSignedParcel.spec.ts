@@ -10,10 +10,12 @@ test("sendSignedParcel", async () => {
     const p = sdk.core.createPaymentParcel({
         recipient: address,
         amount: 0,
+    });
+    const hash = await sdk.rpc.chain.sendSignedParcel(p.sign({
+        secret,
         nonce,
         fee: 10
-    });
-    const hash = await sdk.rpc.chain.sendSignedParcel(p.sign(secret));
+    }));
     expect(hash).toMatchObject({
         value: expect.stringMatching(/[0-9a-f]{32}/)
     });
@@ -23,10 +25,12 @@ test("sendSignedParcel - empty", async () => {
     const nonce = await sdk.rpc.chain.getNonce(address);
     const p = sdk.core.createChangeShardStateParcel({
         transactions: [],
+    });
+    const hash = await sdk.rpc.chain.sendSignedParcel(p.sign({
+        secret,
         nonce,
         fee: 10
-    });
-    const hash = await sdk.rpc.chain.sendSignedParcel(p.sign(secret));
+    }));
     expect(hash).toMatchObject({
         value: expect.stringMatching(/[0-9a-f]{32}/)
     });

@@ -9,10 +9,12 @@ const address = sdk.util.getAccountIdFromPrivate(secret);
 export const sendTransactions = async ({ transactions }) => {
     const parcel = sdk.core.createChangeShardStateParcel({
         transactions,
+    });
+    const signedParcel = parcel.sign({
+        secret,
         nonce: await sdk.rpc.chain.getNonce(address),
         fee: 10
     });
-    const signedParcel = parcel.sign(secret);
     const parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
     return {
         parcelHash
@@ -38,8 +40,10 @@ export const payment = async (params?: { inc_nonce?: number }) => {
     const p = sdk.core.createPaymentParcel({
         amount: 10,
         recipient: address,
+    }).sign({
+        secret,
         fee: 10,
         nonce
-    }).sign(secret);
+    });
     return await sdk.rpc.chain.sendSignedParcel(p);
 };

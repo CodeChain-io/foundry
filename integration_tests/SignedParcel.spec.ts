@@ -8,9 +8,11 @@ test("getSender", async () => {
     const parcelToSend = sdk.core.createPaymentParcel({
         amount: 10,
         recipient: address,
+    }).sign({
+        secret,
         fee: 10,
         nonce
-    }).sign(secret);
+    });
     const parcelHash = await sdk.rpc.chain.sendSignedParcel(parcelToSend);
     const parcelReceived = await sdk.rpc.chain.getParcel(parcelHash);
     expect(parcelReceived.getSender().value).toEqual(address);
