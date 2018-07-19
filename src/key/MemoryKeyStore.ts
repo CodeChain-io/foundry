@@ -17,6 +17,7 @@ export class MemoryKeyStore {
     private keyStore: MemoryRawKeyStore;
     private publicKeyMap: { [publicKeyHash: string]: string } = {};
 
+    // FIXME: rename keyStore to rawKeyStore
     constructor(params: { keyStore: MemoryRawKeyStore }) {
         this.keyStore = params.keyStore;
     }

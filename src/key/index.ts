@@ -16,12 +16,12 @@ export class Key {
     }
 
     /**
-     * Creates MemoryRawKeyStore which is a simple key store for testing purpose. Do
+     * Creates MemoryKeyStore which is a simple key store for testing purpose. Do
      * not use this in production.
-     * @returns new instance of MemoryRawKeyStore
+     * @returns new instance of MemoryKeyStore
      */
-    createMemoryRawKeyStore(): MemoryRawKeyStore {
-        return new MemoryRawKeyStore();
+    createMemoryKeyStore(): MemoryKeyStore {
+        return new MemoryKeyStore({ keyStore: new MemoryRawKeyStore() });
     }
 
     /**
