@@ -7,16 +7,16 @@ import { AssetTransferTransaction } from "../core/transaction/AssetTransferTrans
 import { Script } from "../core/Script";
 import { blake256, toHex } from "../utils";
 
-import { KeyStore } from ".";
 import { AssetTransferAddress } from "./AssetTransferAddress";
+import { MemoryRawKeyStore } from "./MemoryRawKeyStore";
 
 /**
  * AssetAgent which supports P2PKH(Pay to Public Key Hash).
  */
 export class PkhAssetAgent {
-    private keyStore: KeyStore;
+    private keyStore: MemoryRawKeyStore;
 
-    constructor(params: { keyStore: KeyStore }) {
+    constructor(params: { keyStore: MemoryRawKeyStore }) {
         this.keyStore = params.keyStore;
     }
 

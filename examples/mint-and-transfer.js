@@ -18,8 +18,8 @@ async function sendTransaction(tx) {
 
 (async () => {
     // Create addresses for Alice and Bob.
-    const aliceAddress = await sdk.key.createPubKeyAddress();
-    const bobAddress = await sdk.key.createPubKeyAddress();
+    const aliceAddress = await sdk.key.createPubKeyHashAddress();
+    const bobAddress = await sdk.key.createPubKeyHashAddress();
 
     // Create asset named Gold. Total amount of Gold is 10000. The registrar is set
     // to null, which means this type of asset can be transferred freely.

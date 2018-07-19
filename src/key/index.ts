@@ -1,7 +1,7 @@
 import { Rpc } from "../rpc";
 import { AssetTransferTransaction, Parcel, SignedParcel, H160 } from "../core/classes";
 
-import { MemoryKeyStore } from "./MemoryKeyStore";
+import { MemoryRawKeyStore } from "./MemoryRawKeyStore";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
 import { PkhAssetAgent } from "./PkhAssetAgent";
@@ -9,7 +9,7 @@ import { PkhAssetAgent } from "./PkhAssetAgent";
 /**
  * hidden
  */
-export type KeyStore = MemoryKeyStore;
+export type KeyStore = MemoryRawKeyStore;
 
 /**
  * @hidden
@@ -22,16 +22,16 @@ export class Key {
 
     constructor(rpc: Rpc) {
         this.rpc = rpc;
-        this.pkhAssetAgent = new PkhAssetAgent({ keyStore: new MemoryKeyStore() });
+        this.pkhAssetAgent = new PkhAssetAgent({ keyStore: new MemoryRawKeyStore() });
     }
 
     /**
-     * Creates MemoryKeyStore which is a simple key store for testing purpose. Do
+     * Creates MemoryRawKeyStore which is a simple key store for testing purpose. Do
      * not use this in production.
-     * @returns new instance of MemoryKeyStore
+     * @returns new instance of MemoryRawKeyStore
      */
-    createMemoryKeyStore(): MemoryKeyStore {
-        return new MemoryKeyStore();
+    createMemoryRawKeyStore(): MemoryRawKeyStore {
+        return new MemoryRawKeyStore();
     }
 
     /**
@@ -92,6 +92,6 @@ export class Key {
     static classes = {
         AssetTransferAddress,
         PlatformAddress,
-        MemoryKeyStore,
+        MemoryRawKeyStore,
     };
 }
