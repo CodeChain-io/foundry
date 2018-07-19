@@ -7,11 +7,6 @@ import { PlatformAddress } from "./PlatformAddress";
 import { PkhAssetAgent } from "./PkhAssetAgent";
 
 /**
- * hidden
- */
-export type KeyStore = MemoryRawKeyStore;
-
-/**
  * @hidden
  */
 export type AssetAgent = PkhAssetAgent;
