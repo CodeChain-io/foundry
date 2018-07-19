@@ -13,7 +13,7 @@ import { MemoryRawKeyStore } from "./MemoryRawKeyStore";
 /**
  * AssetAgent which supports P2PKH(Pay to Public Key Hash).
  */
-export class PkhAssetAgent {
+export class MemoryKeyStore {
     private keyStore: MemoryRawKeyStore;
     private publicKeyMap: { [publicKeyHash: string]: string } = {};
 

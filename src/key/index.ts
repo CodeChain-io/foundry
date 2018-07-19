@@ -4,20 +4,15 @@ import { AssetTransferTransaction, Parcel, SignedParcel, H160 } from "../core/cl
 import { MemoryRawKeyStore } from "./MemoryRawKeyStore";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
-import { PkhAssetAgent } from "./PkhAssetAgent";
-
-/**
- * @hidden
- */
-export type AssetAgent = PkhAssetAgent;
+import { MemoryKeyStore } from "./MemoryKeyStore";
 
 export class Key {
     private rpc: Rpc;
-    private pkhAssetAgent: PkhAssetAgent;
+    private memoryKeyStore: MemoryKeyStore;
 
     constructor(rpc: Rpc) {
         this.rpc = rpc;
-        this.pkhAssetAgent = new PkhAssetAgent({ keyStore: new MemoryRawKeyStore() });
+        this.memoryKeyStore = new MemoryKeyStore({ keyStore: new MemoryRawKeyStore() });
     }
 
     /**
@@ -35,7 +30,7 @@ export class Key {
      * @returns AssetTransferAddress
      */
     createPubKeyHashAddress(): Promise<AssetTransferAddress> {
-        return this.pkhAssetAgent.createAssetTransferAddress();
+        return this.memoryKeyStore.createAssetTransferAddress();
     }
 
     /**
@@ -73,8 +68,8 @@ export class Key {
             throw "Asset is not exist or spent.";
         }
 
-        if (await this.pkhAssetAgent.isUnlockable(asset)) {
-            const { unlockScript, lockScript } = await this.pkhAssetAgent.unlock(asset, transaction);
+        if (await this.memoryKeyStore.isUnlockable(asset)) {
+            const { unlockScript, lockScript } = await this.memoryKeyStore.unlock(asset, transaction);
             transaction.setLockScript(inputIndex, lockScript);
             transaction.setUnlockScript(inputIndex, unlockScript);
         } else {
