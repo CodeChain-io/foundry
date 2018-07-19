@@ -100,8 +100,8 @@ Each users need an address for them to receive/send assets to. Addresses are cre
 // Start of wrapping async function, we use async/await here because a lot of
 // Promises are there.
 (async () => {
-    const aliceAddress = await assetAgent.createPubKeyAddress();
-    const bobAddress = await assetAgent.createPubKeyAddress();
+    const aliceAddress = await assetAgent.createPubKeyHashAddress();
+    const bobAddress = await assetAgent.createPubKeyHashAddress();
 ```
 In this example, we want to create an asset called "Gold". Thus, we define a new asset scheme for the asset that will be named Gold. In schemes, the amount to be minted, and the registrar, if any, should be defined. If there is no registrar, it means that AssetTransfer of Gold can be done through any parcel. If the registrar is present, the parcel must be signed by the registrar. In this example, the registrar is set to null.
 

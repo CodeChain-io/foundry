@@ -105,7 +105,7 @@ describe("rpc", () => {
                     metadata: "metadata",
                     amount: 10,
                     registrar: null
-                }).createMintTransaction({ recipient: await sdk.key.createPubKeyAddress() });
+                }).createMintTransaction({ recipient: await sdk.key.createPubKeyHashAddress() });
                 const parcel = sdk.core.createChangeShardStateParcel({
                     transactions: [mintTransaction],
                 });

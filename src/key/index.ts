@@ -2,7 +2,6 @@ import { Rpc } from "../rpc";
 import { AssetTransferTransaction, Parcel, SignedParcel, H160 } from "../core/classes";
 
 import { MemoryKeyStore } from "./MemoryKeyStore";
-import { PubkeyAssetAgent } from "./PubkeyAssetAgent";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
 import { PkhAssetAgent } from "./PkhAssetAgent";
@@ -15,26 +14,15 @@ export type KeyStore = MemoryKeyStore;
 /**
  * @hidden
  */
-export type AssetAgent = PubkeyAssetAgent | PkhAssetAgent;
+export type AssetAgent = PkhAssetAgent;
 
 export class Key {
     private rpc: Rpc;
-    private pkAssetAgent: PubkeyAssetAgent;
     private pkhAssetAgent: PkhAssetAgent;
 
     constructor(rpc: Rpc) {
         this.rpc = rpc;
-        this.pkAssetAgent = new PubkeyAssetAgent({ keyStore: new MemoryKeyStore() });
         this.pkhAssetAgent = new PkhAssetAgent({ keyStore: new MemoryKeyStore() });
-    }
-
-    /**
-     * Creates AssetTransferAddress for non-standard P2PK asset.
-     * To use this address AssetScheme.createMintTransaction() or Asset.transfer().
-     * @returns AssetTransferAddress
-     */
-    createPubKeyAddress(): Promise<AssetTransferAddress> {
-        return this.pkAssetAgent.createAddress();
     }
 
     /**
@@ -85,10 +73,6 @@ export class Key {
             const { unlockScript, lockScript } = await this.pkhAssetAgent.unlock(asset, transaction);
             transaction.setLockScript(inputIndex, lockScript);
             transaction.setUnlockScript(inputIndex, unlockScript);
-        } else if (await this.pkAssetAgent.isUnlockable(asset)) {
-            const { unlockScript, lockScript } = await this.pkAssetAgent.unlock(asset, transaction);
-            transaction.setLockScript(inputIndex, lockScript);
-            transaction.setUnlockScript(inputIndex, unlockScript);
         } else {
             return false;
         }
@@ -99,7 +83,6 @@ export class Key {
     static classes = {
         AssetTransferAddress,
         PlatformAddress,
-        PubkeyAssetAgent,
         MemoryKeyStore,
     };
 }
