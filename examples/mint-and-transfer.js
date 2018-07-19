@@ -36,7 +36,7 @@ async function sendTransaction(tx) {
     const mintTx = goldAssetScheme.createMintTransaction({ recipient: aliceAddress });
 
     await sendTransaction(mintTx);
-    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), 5 * 60 * 1000);
+    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), { timeout: 5 * 60 * 1000 });
     if (!mintTxInvoice.success) {
         throw "AssetMintTransaction failed";
     }
@@ -53,7 +53,7 @@ async function sendTransaction(tx) {
     await sdk.key.unlock(transferTx, 0);
 
     await sendTransaction(transferTx);
-    const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), 5 * 60 * 1000);
+    const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), { timeout: 5 * 60 * 1000 });
     if (!transferTxInvoice.success) {
         throw "AssetTransferTransaction failed";
     }

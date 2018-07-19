@@ -12,7 +12,7 @@ sdk.rpc.account.importRaw(signerSecret).then(account => {
     return sdk.rpc.chain.sendParcel(parcel, { account });
 }).then(function (parcelHash) {
     console.log("Parcel Hash: ", parcelHash);
-    return sdk.rpc.chain.getParcelInvoice(parcelHash, 5 * 60 * 1000);
+    return sdk.rpc.chain.getParcelInvoice(parcelHash, { timeout: 5 * 60 * 1000 });
 }).then(function (invoice) {
     console.log("Parcel Invoice: ", invoice);
 }).catch((err) => {

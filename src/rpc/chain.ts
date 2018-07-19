@@ -91,10 +91,10 @@ export class ChainRpc {
     /**
      * Gets invoices of given parcel.
      * @param parcelHash The parcel hash of which to get the corresponding parcel of.
-     * @param timeout Indicating milliseconds to wait the parcel to be confirmed.
+     * @param options.timeout Indicating milliseconds to wait the parcel to be confirmed.
      * @returns List of invoice, or null when no such parcel exists.
      */
-    async getParcelInvoice(parcelHash: H256 | string, timeout?: number): Promise<Invoice[] | Invoice | null> {
+    async getParcelInvoice(parcelHash: H256 | string, options: { timeout?: number } = {}): Promise<Invoice[] | Invoice | null> {
         const attemptToGet = async () => {
             return this.rpc.sendRpcRequest(
                 "chain_getParcelInvoice",
@@ -110,6 +110,7 @@ export class ChainRpc {
             });
         };
         const startTime = Date.now();
+        const { timeout } = options;
         let result = await attemptToGet();
         while (result === null && timeout !== undefined && Date.now() - startTime < timeout) {
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -134,10 +135,10 @@ export class ChainRpc {
     /**
      * Gets invoice of a transaction of given hash.
      * @param txhash The transaction hash of which to get the corresponding transaction of.
-     * @param timeout Indicating milliseconds to wait the transaction to be confirmed.
+     * @param options.timeout Indicating milliseconds to wait the transaction to be confirmed.
      * @returns Invoice, or null when transaction of given hash not exists.
      */
-    async getTransactionInvoice(txhash: H256 | string, timeout?: number): Promise<Invoice | null> {
+    async getTransactionInvoice(txhash: H256 | string, options: { timeout?: number } = {}): Promise<Invoice | null> {
         const attemptToGet = async () => {
             return this.rpc.sendRpcRequest(
                 "chain_getTransactionInvoice",
@@ -145,6 +146,7 @@ export class ChainRpc {
             ).then(result => result === null ? null : Invoice.fromJSON(result));
         };
         const startTime = Date.now();
+        const { timeout } = options;
         let result = await attemptToGet();
         while (result === null && timeout !== undefined && Date.now() - startTime < timeout) {
             await new Promise(resolve => setTimeout(resolve, 1000));

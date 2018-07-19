@@ -59,7 +59,7 @@ sendSignedParcel returns a promise that resolves with a parcel hash if the parce
 .then(function (parcelHash) {
     console.log("Parcel Hash: ", parcelHash);
     // getParcelInvoice() waits the parcel to be confirmed until the given timeout(5 minutes).
-    return sdk.rpc.chain.getParcelInvoice(parcelHash, 5 * 60 * 1000);
+    return sdk.rpc.chain.getParcelInvoice(parcelHash, { timeout: 5 * 60 * 1000 });
 }).then(function (invoice) {
     console.log("Parcel Invoice: ", invoice);
 }).catch((err) => {
@@ -124,7 +124,7 @@ Then, the AssetMintTransaction is processed with the following code:
 ```javascript
     await sendTransaction(mintTx);
     // Wait up to 5 minutes for transaction processing
-    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), 5 * 60 * 1000);
+    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), { timeout: 5 * 60 * 1000 });
     if (!mintTxInvoice.success) {
         throw "AssetMintTransaction failed";
     }
@@ -146,7 +146,7 @@ By using Alice's signature, the 10000 Gold that was first minted can now be tran
     // Unlock first input of the transaction. The key instance can unlock because the Alice's key is created by it.
     await sdk.key.unlock(transferTx, 0);
     await sendTransaction(transferTx);
-    const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), 5 * 60 * 1000);
+    const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), { timeout: 5 * 60 * 1000 });
     if (!transferTxInvoice.success) {
         throw "AssetTransferTransaction failed";
     }
