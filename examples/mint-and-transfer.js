@@ -33,7 +33,7 @@ async function sendTransaction(tx) {
         registrar: null,
     })
 
-    const mintTx = goldAssetScheme.mint(aliceAddress);
+    const mintTx = goldAssetScheme.createMintTransaction({ recipient: aliceAddress });
 
     await sendTransaction(mintTx);
     const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), 5 * 60 * 1000);

@@ -118,7 +118,7 @@ In this example, we want to create an asset called "Gold". Thus, we define a new
 ```
 After Gold has been defined in the scheme, the amount that is minted but belong to someone initially. In this example, we create 10000 gold for Alice.
 ```javascript
-    const mintTx = goldAssetScheme.mint(aliceAddress);
+    const mintTx = goldAssetScheme.createMintTransaction({ recipient: aliceAddress });
 ```
 Then, the AssetMintTransaction is processed with the following code:
 ```javascript

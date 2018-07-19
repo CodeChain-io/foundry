@@ -40,15 +40,15 @@ export class AssetScheme {
         };
     }
 
-    mint(address: AssetTransferAddress, options: { nonce?: number } = {}): AssetMintTransaction {
-        const { nonce = 0 } = options;
+    createMintTransaction(params: { recipient: AssetTransferAddress, nonce?: number }): AssetMintTransaction {
+        const { recipient, nonce = 0 } = params;
         const { networkId, metadata, amount, registrar } = this;
         return new AssetMintTransaction({
             networkId,
             metadata,
             output: {
                 amount,
-                ...address.getLockScriptHashAndParameters(),
+                ...recipient.getLockScriptHashAndParameters(),
             },
             registrar,
             nonce,

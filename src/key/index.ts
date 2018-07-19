@@ -30,7 +30,7 @@ export class Key {
 
     /**
      * Creates AssetTransferAddress for non-standard P2PK asset.
-     * To use this address AssetScheme.mint() or Asset.transfer().
+     * To use this address AssetScheme.createMintTransaction() or Asset.transfer().
      * @returns AssetTransferAddress
      */
     createPubKeyAddress(): Promise<AssetTransferAddress> {
@@ -39,7 +39,7 @@ export class Key {
 
     /**
      * Creates AssetTransferAddress for the standard P2PKH asset.
-     * To use this address, see AssetScheme.mint() or Asset.transfer().
+     * To use this address, see AssetScheme.createMintTransaction() or Asset.transfer().
      * @returns AssetTransferAddress
      */
     createPubKeyHashAddress(): Promise<AssetTransferAddress> {

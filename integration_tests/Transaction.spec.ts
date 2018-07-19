@@ -42,7 +42,7 @@ test("AssetTransferTransaction fromJSON", async () => {
         metadata: "metadata of non-permissioned asset",
         amount: 100,
         registrar: null,
-    }).mint(addressA);
+    }).createMintTransaction({ recipient: addressA });
     await sendTransactions({ transactions: [mintTx] });
     const firstAsset = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
 

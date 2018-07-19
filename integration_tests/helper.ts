@@ -24,7 +24,7 @@ export const sendTransactions = async ({ transactions }) => {
 export const mintAsset = async ({ metadata, amount, lockScriptHash, registrar }) => {
     const assetScheme = sdk.core.createAssetScheme({ metadata, amount, registrar });
     const assetAddress = sdk.key.classes.AssetTransferAddress.fromLockScriptHash(lockScriptHash);
-    const assetMintTransaction = assetScheme.mint(assetAddress);
+    const assetMintTransaction = assetScheme.createMintTransaction({ recipient: assetAddress });
     return {
         ...await sendTransactions({ transactions: [assetMintTransaction] }),
         assetMintTransaction
