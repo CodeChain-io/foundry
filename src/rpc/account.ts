@@ -17,8 +17,8 @@ export class AccountRpc {
      * Gets a list of accounts.
      * @returns A list of accounts
      */
-    getAccountList(): Promise<string[]> {
-        return this.rpc.sendRpcRequest("account_getAccountList", []);
+    getList(): Promise<string[]> {
+        return this.rpc.sendRpcRequest("account_getList", []);
     }
 
     /**
@@ -26,8 +26,8 @@ export class AccountRpc {
      * @param passphrase A passphrase to be used by the account owner
      * @returns An account
      */
-    createAccount(passphrase?: string): Promise<string> {
-        return this.rpc.sendRpcRequest("account_createAccount", [passphrase]);
+    create(passphrase?: string): Promise<string> {
+        return this.rpc.sendRpcRequest("account_create", [passphrase]);
     }
 
     /**
@@ -36,8 +36,8 @@ export class AccountRpc {
      * @param passphrase A passphrase to be used by the account owner
      * @returns The account
      */
-    createAccountFromSecret(secret: H256 | string, passphrase?: string): Promise<string> {
-        return this.rpc.sendRpcRequest("account_createAccountFromSecret", [
+    importRaw(secret: H256 | string, passphrase?: string): Promise<string> {
+        return this.rpc.sendRpcRequest("account_importRaw", [
             `0x${H256.ensure(secret).value}`,
             passphrase
         ]);
@@ -48,8 +48,8 @@ export class AccountRpc {
      * @param account An account
      * @param passphrase The account's passphrase
      */
-    removeAccount(account: H160 | string, passphrase?: string): Promise<void> {
-        return this.rpc.sendRpcRequest("account_removeAccount", [
+    remove(account: H160 | string, passphrase?: string): Promise<void> {
+        return this.rpc.sendRpcRequest("account_remove", [
             `0x${H160.ensure(account).value}`,
             passphrase
         ]);

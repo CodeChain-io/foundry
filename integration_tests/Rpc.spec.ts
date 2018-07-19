@@ -129,42 +129,44 @@ describe("rpc", () => {
         });
     });
 
-    test("getAccountList", async () => {
-        expect(async () => {
-            await sdk.rpc.account.getAccountList();
-        }).not.toThrow();
-    });
+    describe("account", () => {
+        test("getList", async () => {
+            expect(async () => {
+                await sdk.rpc.account.getList();
+            }).not.toThrow();
+        });
 
-    test("createAccount", async () => {
-        expect(await sdk.rpc.account.createAccount()).toEqual(expect.anything());
-        expect(await sdk.rpc.account.createAccount("my-password")).toEqual(expect.anything());
-    });
+        test("create", async () => {
+            expect(await sdk.rpc.account.create()).toEqual(expect.anything());
+            expect(await sdk.rpc.account.create("my-password")).toEqual(expect.anything());
+        });
 
-    test("createAccountFromSecret", async () => {
-        const secret = "a2b39d4aefecdb17f84ed4cf629e7c8817691cc4f444ac7522902b8fb4b7bd53";
-        const account = getAccountIdFromPrivate(secret);
-        expect(await sdk.rpc.account.createAccountFromSecret(secret)).toEqual(`0x${account}`);
-    });
+        test("importRaw", async () => {
+            const secret = "a2b39d4aefecdb17f84ed4cf629e7c8817691cc4f444ac7522902b8fb4b7bd53";
+            const account = getAccountIdFromPrivate(secret);
+            expect(await sdk.rpc.account.importRaw(secret)).toEqual(`0x${account}`);
+        });
 
-    test("removeAccount", async () => {
-        const account = await sdk.rpc.account.createAccount("123");
-        expect(async () => {
-            await sdk.rpc.account.removeAccount(account, "123");
-            expect(await sdk.rpc.account.getAccountList()).not.toContain(account);
-        }).not.toThrow();
-    });
+        test("remove", async () => {
+            const account = await sdk.rpc.account.create("123");
+            expect(async () => {
+                await sdk.rpc.account.remove(account, "123");
+                expect(await sdk.rpc.account.getList()).not.toContain(account);
+            }).not.toThrow();
+        });
 
-    test("sign", async () => {
-        const secret = generatePrivateKey();
-        const account = getAccountIdFromPrivate(secret);
-        await sdk.rpc.account.createAccountFromSecret(secret, "my-password");
+        test("sign", async () => {
+            const secret = generatePrivateKey();
+            const account = getAccountIdFromPrivate(secret);
+            await sdk.rpc.account.importRaw(secret, "my-password");
 
-        const message = "0000000000000000000000000000000000000000000000000000000000000000";
-        const { r, s, v } = signEcdsa(message, secret);
-        // FIXME:
-        const sig = await sdk.rpc.account.sign(message, account, "my-password");
-        expect(sig).toContain(r);
-        expect(sig).toContain(s);
-        expect(sig).toContain(v);
+            const message = "0000000000000000000000000000000000000000000000000000000000000000";
+            const { r, s, v } = signEcdsa(message, secret);
+            // FIXME:
+            const sig = await sdk.rpc.account.sign(message, account, "my-password");
+            expect(sig).toContain(r);
+            expect(sig).toContain(s);
+            expect(sig).toContain(v);
+        });
     });
 });
