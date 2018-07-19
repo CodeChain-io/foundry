@@ -26,7 +26,7 @@ export class PkhAssetAgent {
         return AssetTransferAddress.fromTypeAndPayload(1, publicKeyHash);
     }
 
-    async inUnlockable(asset: Asset): Promise<boolean> {
+    async isUnlockable(asset: Asset): Promise<boolean> {
         if (asset.lockScriptHash.value !== blake256(this.generateLockScript())) {
             return false;
         }

@@ -81,7 +81,7 @@ export class Key {
             throw "Asset is not exist or spent.";
         }
 
-        if (await this.pkhAssetAgent.inUnlockable(asset)) {
+        if (await this.pkhAssetAgent.isUnlockable(asset)) {
             const { unlockScript, lockScript } = await this.pkhAssetAgent.unlock(asset, transaction);
             transaction.setLockScript(inputIndex, lockScript);
             transaction.setUnlockScript(inputIndex, unlockScript);
