@@ -26,6 +26,15 @@ export class Key {
     }
 
     /**
+     * Creates MemoryKeyStore which is a simple key store for testing purpose. Do
+     * not use this in production.
+     * @returns new instance of MemoryKeyStore
+     */
+    createMemoryKeyStore(): MemoryKeyStore {
+        return new MemoryKeyStore();
+    }
+
+    /**
      * Creates AssetTransferAddress for the standard P2PKH asset.
      * To use this address, see AssetScheme.createMintTransaction() or Asset.transfer().
      * @returns AssetTransferAddress

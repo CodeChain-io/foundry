@@ -11,8 +11,8 @@ test("createKey", async () => {
 test("removeKey", async () => {
     const store = new MemoryKeyStore();
     const key1 = await store.createKey();
-    expect(await store.removeKey(key1)).toBe(true);
-    expect(await store.removeKey(key1)).toBe(false);
+    expect(await store.removeKey({ publicKey: key1 })).toBe(true);
+    expect(await store.removeKey({ publicKey: key1 })).toBe(false);
 });
 
 test("getKeyList", async () => {
@@ -22,7 +22,7 @@ test("getKeyList", async () => {
     expect(await store.getKeyList()).toContain(key1);
     expect(await store.getKeyList()).toContain(key2);
 
-    await store.removeKey(key1);
+    await store.removeKey({ publicKey: key1 });
 
     expect(await store.getKeyList()).not.toContain(key1);
 });
