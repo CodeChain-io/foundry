@@ -15,6 +15,7 @@ import { MemoryRawKeyStore } from "./MemoryRawKeyStore";
  */
 export class PkhAssetAgent {
     private keyStore: MemoryRawKeyStore;
+    private publicKeyMap: { [publicKeyHash: string]: string } = {};
 
     constructor(params: { keyStore: MemoryRawKeyStore }) {
         this.keyStore = params.keyStore;
@@ -23,6 +24,7 @@ export class PkhAssetAgent {
     async createAddress(): Promise<AssetTransferAddress> {
         const publicKey = await this.keyStore.createKey();
         const publicKeyHash = H256.ensure(blake256(publicKey));
+        this.publicKeyMap[publicKeyHash.value] = publicKey;
         return AssetTransferAddress.fromTypeAndPayload(1, publicKeyHash);
     }
 
@@ -30,8 +32,7 @@ export class PkhAssetAgent {
         if (asset.lockScriptHash.value !== blake256(this.generateLockScript())) {
             return false;
         }
-        const publicKeyHashList = (await this.keyStore.getKeyList()).map(blake256);
-        return !!publicKeyHashList.find(publicKeyHash => publicKeyHash === toHex(asset.parameters[0]));
+        return !!this.publicKeyMap[toHex(asset.parameters[0])];
     }
 
     async unlock(asset: Asset, tx: AssetTransferTransaction): Promise<{ lockScript: Buffer, unlockScript: Buffer }> {
