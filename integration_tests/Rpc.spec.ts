@@ -13,119 +13,123 @@ describe("rpc", () => {
         sdk = new SDK({ server: "http://localhost:8080" });
     });
 
-    test("ping", async () => {
-        expect(await sdk.rpc.node.ping()).toBe("pong");
-    });
+    describe("node", () => {
+        test("ping", async () => {
+            expect(await sdk.rpc.node.ping()).toBe("pong");
+        });
 
-    test("getNodeVersion", async () => {
-        // FIXME: regex for semver
-        expect(typeof await sdk.rpc.node.getNodeVersion()).toBe("string");
+        test("getNodeVersion", async () => {
+            // FIXME: regex for semver
+            expect(typeof await sdk.rpc.node.getNodeVersion()).toBe("string");
+        });
     });
 
     test("getBestBlockNumber", async () => {
         expect(typeof await sdk.rpc.chain.getBestBlockNumber()).toBe("number");
     });
 
-    test("getBlockHash", async () => {
-        expect(await sdk.rpc.chain.getBlockHash(0)).toEqual(expect.any(H256));
-        expect(await sdk.rpc.chain.getBlockHash(9999999999)).toEqual(null);
-    });
-
-    test("getBlock - by number", async () => {
-        expect(await sdk.rpc.chain.getBlock(0)).toEqual(expect.any(Block));
-        expect(await sdk.rpc.chain.getBlock(9999999999)).toEqual(null);
-    });
-
-    test("getBlock - by hash", async () => {
-        const hash = await sdk.rpc.chain.getBlockHash(0);
-        expect(await sdk.rpc.chain.getBlock(hash)).toEqual(expect.any(Block));
-        expect(await sdk.rpc.chain.getBlock(hash.value)).toEqual(expect.any(Block));
-
-        expect(await sdk.rpc.chain.getBlock(invalidHash)).toEqual(null);
-    });
-
-    describe("with account", () => {
-        const account = "0xa6594b7196808d161b6fb137e781abbc251385d9";
-
-        test("getBalance", async () => {
-            expect(await sdk.rpc.chain.getBalance(account)).toEqual(expect.any(U256));
+    describe("chain", () => {
+        test("getBlockHash", async () => {
+            expect(await sdk.rpc.chain.getBlockHash(0)).toEqual(expect.any(H256));
+            expect(await sdk.rpc.chain.getBlockHash(9999999999)).toEqual(null);
         });
 
-        test("getNonce", async () => {
-            expect(await sdk.rpc.chain.getNonce(account)).toEqual(expect.any(U256));
+        test("getBlock - by number", async () => {
+            expect(await sdk.rpc.chain.getBlock(0)).toEqual(expect.any(Block));
+            expect(await sdk.rpc.chain.getBlock(9999999999)).toEqual(null);
         });
 
-        // FIXME: setRegularKey action isn't implemented.
-        test.skip("getRegularKey", async () => {
-            expect(await sdk.rpc.chain.getRegularKey(account)).toEqual(expect.any(H512));
+        test("getBlock - by hash", async () => {
+            const hash = await sdk.rpc.chain.getBlockHash(0);
+            expect(await sdk.rpc.chain.getBlock(hash)).toEqual(expect.any(Block));
+            expect(await sdk.rpc.chain.getBlock(hash.value)).toEqual(expect.any(Block));
+
+            expect(await sdk.rpc.chain.getBlock(invalidHash)).toEqual(null);
         });
-    });
 
-    describe("with parcel hash", () => {
-        let parcelHash: H256;
+        describe("with account", () => {
+            const account = "0xa6594b7196808d161b6fb137e781abbc251385d9";
 
-        beforeAll(async () => {
-            const parcel = sdk.core.createPaymentParcel({
-                recipient: signerAccount,
-                amount: 10,
+            test("getBalance", async () => {
+                expect(await sdk.rpc.chain.getBalance(account)).toEqual(expect.any(U256));
             });
-            const signedParcel = parcel.sign({
-                secret: signerSecret,
-                fee: 10,
-                nonce: await sdk.rpc.chain.getNonce(signerAccount),
+
+            test("getNonce", async () => {
+                expect(await sdk.rpc.chain.getNonce(account)).toEqual(expect.any(U256));
             });
-            parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
-        });
 
-        test("getParcel", async () => {
-            expect(await sdk.rpc.chain.getParcel(parcelHash)).toEqual(expect.any(SignedParcel));
-        });
-
-        test("getParcelInvoice", async () => {
-            expect(await sdk.rpc.chain.getParcelInvoice(parcelHash)).toEqual(expect.any(Invoice));
-            expect(await sdk.rpc.chain.getParcelInvoice(invalidHash)).toBe(null);
-        });
-    });
-
-    describe.skip("with pending parcels", () => {
-        test("getPendingParcels", async () => {
-            const pendingParcels = await sdk.rpc.chain.getPendingParcels();
-            expect(pendingParcels[0]).toEqual(expect.any(SignedParcel));
-        });
-    });
-
-    describe("with asset mint transaction", () => {
-        let mintTransaction: AssetMintTransaction;
-
-        beforeAll(async () => {
-            mintTransaction = sdk.core.createAssetScheme({
-                metadata: "metadata",
-                amount: 10,
-                registrar: null
-            }).mint(await sdk.key.createPubKeyAddress());
-            const parcel = sdk.core.createChangeShardStateParcel({
-                transactions: [mintTransaction],
+            // FIXME: setRegularKey action isn't implemented.
+            test.skip("getRegularKey", async () => {
+                expect(await sdk.rpc.chain.getRegularKey(account)).toEqual(expect.any(H512));
             });
-            await sdk.rpc.chain.sendSignedParcel(parcel.sign({
-                secret: signerSecret,
-                nonce: await sdk.rpc.chain.getNonce(signerAccount),
-                fee: 10
-            }));
         });
 
-        test("getTransactionInvoice", async () => {
-            expect(await sdk.rpc.chain.getTransactionInvoice(mintTransaction.hash())).toEqual(expect.any(Invoice));
+        describe("with parcel hash", () => {
+            let parcelHash: H256;
+
+            beforeAll(async () => {
+                const parcel = sdk.core.createPaymentParcel({
+                    recipient: signerAccount,
+                    amount: 10,
+                });
+                const signedParcel = parcel.sign({
+                    secret: signerSecret,
+                    fee: 10,
+                    nonce: await sdk.rpc.chain.getNonce(signerAccount),
+                });
+                parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
+            });
+
+            test("getParcel", async () => {
+                expect(await sdk.rpc.chain.getParcel(parcelHash)).toEqual(expect.any(SignedParcel));
+            });
+
+            test("getParcelInvoice", async () => {
+                expect(await sdk.rpc.chain.getParcelInvoice(parcelHash)).toEqual(expect.any(Invoice));
+                expect(await sdk.rpc.chain.getParcelInvoice(invalidHash)).toBe(null);
+            });
         });
 
-        test("getAssetScheme", async () => {
-            expect(await sdk.rpc.chain.getAssetScheme(mintTransaction.hash())).toEqual(expect.any(AssetScheme));
-            expect(await sdk.rpc.chain.getAssetScheme(invalidHash)).toBe(null);
+        describe.skip("with pending parcels", () => {
+            test("getPendingParcels", async () => {
+                const pendingParcels = await sdk.rpc.chain.getPendingParcels();
+                expect(pendingParcels[0]).toEqual(expect.any(SignedParcel));
+            });
         });
 
-        test("getAsset", async () => {
-            expect(await sdk.rpc.chain.getAsset(mintTransaction.hash(), 0)).toEqual(expect.any(Asset));
-            expect(await sdk.rpc.chain.getAsset(mintTransaction.hash(), 1)).toBe(null);
-            expect(await sdk.rpc.chain.getAsset(invalidHash, 0)).toBe(null);
+        describe("with asset mint transaction", () => {
+            let mintTransaction: AssetMintTransaction;
+
+            beforeAll(async () => {
+                mintTransaction = sdk.core.createAssetScheme({
+                    metadata: "metadata",
+                    amount: 10,
+                    registrar: null
+                }).mint(await sdk.key.createPubKeyAddress());
+                const parcel = sdk.core.createChangeShardStateParcel({
+                    transactions: [mintTransaction],
+                });
+                await sdk.rpc.chain.sendSignedParcel(parcel.sign({
+                    secret: signerSecret,
+                    nonce: await sdk.rpc.chain.getNonce(signerAccount),
+                    fee: 10
+                }));
+            });
+
+            test("getTransactionInvoice", async () => {
+                expect(await sdk.rpc.chain.getTransactionInvoice(mintTransaction.hash())).toEqual(expect.any(Invoice));
+            });
+
+            test("getAssetScheme", async () => {
+                expect(await sdk.rpc.chain.getAssetScheme(mintTransaction.hash())).toEqual(expect.any(AssetScheme));
+                expect(await sdk.rpc.chain.getAssetScheme(invalidHash)).toBe(null);
+            });
+
+            test("getAsset", async () => {
+                expect(await sdk.rpc.chain.getAsset(mintTransaction.hash(), 0)).toEqual(expect.any(Asset));
+                expect(await sdk.rpc.chain.getAsset(mintTransaction.hash(), 1)).toBe(null);
+                expect(await sdk.rpc.chain.getAsset(invalidHash, 0)).toBe(null);
+            });
         });
     });
 
