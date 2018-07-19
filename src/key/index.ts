@@ -35,7 +35,7 @@ export class Key {
      * @returns AssetTransferAddress
      */
     createPubKeyHashAddress(): Promise<AssetTransferAddress> {
-        return this.pkhAssetAgent.createAddress();
+        return this.pkhAssetAgent.createAssetTransferAddress();
     }
 
     /**

@@ -21,7 +21,7 @@ export class PkhAssetAgent {
         this.keyStore = params.keyStore;
     }
 
-    async createAddress(): Promise<AssetTransferAddress> {
+    async createAssetTransferAddress(): Promise<AssetTransferAddress> {
         const publicKey = await this.keyStore.createKey();
         const publicKeyHash = H256.ensure(blake256(publicKey));
         this.publicKeyMap[publicKeyHash.value] = publicKey;
