@@ -47,7 +47,7 @@ The parcel signer must pay the transaction fees. Parcels are basically a group o
 
 In order for the parcel to be valid, the nonce must match the nonce of the parcel signer. Once the parcel is confirmed, the nonce of the signer is increased by 1. When specifying the receiver, make sure the correct address is used for the recipient. In addition, the parcel must be signed with the secret key of the address. After signing the parcel, send the parcel off to the CodeChain node. The node is responsible for propagating the parcels properly.
 ```javascript
-sdk.rpc.account.createAccountFromSecret(signerSecret).then(account => {
+sdk.rpc.account.importRaw(signerSecret).then(account => {
     var parcel = sdk.core.createPaymentParcel({
         recipient: "0x744142069fe2d03d48e61734cbe564fcc94e6e31",
         amount: 10000,
