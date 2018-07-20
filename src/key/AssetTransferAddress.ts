@@ -77,7 +77,7 @@ export class AssetTransferAddress {
         return new AssetTransferAddress(type, publicKeyHash, address);
     }
 
-    static fromAddress(address: string) {
+    static fromString(address: string) {
         if (!address.startsWith("cca") && !address.startsWith("tca")) {
             throw `The prefix is unknown for asset transfer address: ${address}`;
         }

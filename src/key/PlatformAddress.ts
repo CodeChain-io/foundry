@@ -34,7 +34,7 @@ export class PlatformAddress {
         return new PlatformAddress(accountId, encode(isTestnet ? "tcc" : "ccc", words));
     }
 
-    static fromAddress(address: string) {
+    static fromString(address: string) {
         if (!address.startsWith("ccc") && !address.startsWith("tcc")) {
             throw `The prefix is unknown for platform address: ${address}`;
         }
