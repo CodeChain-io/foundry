@@ -31,11 +31,13 @@ export class MemoryRawKeyStore {
         }
     }
 
-    sign(params: { publicKey: string, message: string, passphrase?: string }): Promise<{ r: string, s: string, v: number }> {
+    sign(params: { publicKey: string, message: string, passphrase?: string }): Promise<string> {
         const { publicKey, message, passphrase = "" } = params;
         if (passphrase !== this.passphraseMap[publicKey]) {
             return Promise.reject("The passphrase does not match");
         }
-        return Promise.resolve(signEcdsa(message, this.privateKeyMap[publicKey]));
+        const { r, s, v } = signEcdsa(message, this.privateKeyMap[publicKey]);
+        const sig = `${_.padStart(r, 64, "0")}${_.padStart(s, 64, "0")}${_.padStart(v.toString(16), 2, "0")}`;
+        return Promise.resolve(sig);
     }
 }
