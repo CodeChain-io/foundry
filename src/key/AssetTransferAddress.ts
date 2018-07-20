@@ -29,13 +29,13 @@ export class AssetTransferAddress {
 
     value: string;
 
-    private constructor(type: number, payload: H256, address: string) {
+    private constructor(type: number, payload: H256 | string, address: string) {
         this.type = type;
-        this.payload = payload;
+        this.payload = H256.ensure(payload);
         this.value = address;
     }
 
-    static fromTypeAndPayload(type: number, payload: H256, options: { isTestnet?: boolean, version?: number } = {}) {
+    static fromTypeAndPayload(type: number, payload: H256 | string, options: { isTestnet?: boolean, version?: number } = {}) {
         const { isTestnet = false, version = 0 } = options;
 
         if (version !== 0) {
@@ -46,7 +46,7 @@ export class AssetTransferAddress {
             throw `Unsupported type for asset transfer address: ${type}`;
         }
 
-        const words = toWords(Buffer.from([version, type, ...Buffer.from(payload.value, "hex")]));
+        const words = toWords(Buffer.from([version, type, ...Buffer.from(H256.ensure(payload).value, "hex")]));
         const address = encode(isTestnet ? "tca" : "cca", words);
         return new AssetTransferAddress(type, payload, address);
     }
@@ -98,6 +98,17 @@ export class AssetTransferAddress {
 
         const payload = toHex(Buffer.from(bytes.slice(2)));
         return new this(type, new H256(payload), address);
+    }
+
+    static fromLockScriptHashAndParameters(params: { lockScriptHash: H256 | string, parameters: Buffer[] }) {
+        const { lockScriptHash, parameters } = params;
+        if (H256.ensure(lockScriptHash).value === Script.getStandardScriptHash("P2PKH").value) {
+            if (parameters.length === 1) {
+                return this.fromTypeAndPayload(1, Buffer.from(parameters[0]).toString("hex"));
+            }
+            throw "Invalid parameter length";
+        }
+        throw "Unknown lock script hash";
     }
 
     getLockScriptHashAndParameters(): { lockScriptHash: H256, parameters: Buffer[] } {
