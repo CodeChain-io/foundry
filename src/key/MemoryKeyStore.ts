@@ -5,7 +5,7 @@ import { generatePrivateKey, getPublicFromPrivate, signEcdsa } from "../utils";
 /**
  * A simple key store for testing purpose.
  */
-export class MemoryRawKeyStore {
+export class MemoryKeyStore {
     private privateKeyMap: { [publicKey: string]: string } = {};
     private passphraseMap: { [publicKey: string]: string } = {};
 

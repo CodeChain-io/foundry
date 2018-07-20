@@ -1,10 +1,12 @@
 import { Rpc } from "../rpc";
 import { AssetTransferTransaction, Parcel, SignedParcel, H160 } from "../core/classes";
 
-import { MemoryRawKeyStore } from "./MemoryRawKeyStore";
+import { MemoryKeyStore } from "./MemoryKeyStore";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
 import { P2PKH } from "./P2PKH";
+
+type KeyStore = MemoryKeyStore;
 
 export class Key {
     private rpc: Rpc;
@@ -12,25 +14,23 @@ export class Key {
 
     constructor(rpc: Rpc) {
         this.rpc = rpc;
-        this.memoryKeyStore = new P2PKH({ keyStore: new MemoryRawKeyStore() });
+        this.memoryKeyStore = new P2PKH({ keyStore: new MemoryKeyStore() });
     }
 
-    // FIXME: Change name
+    /**
+     * Creates key store which is non-persistent. Do not use in production.
+     */
+    createMemoryKeyStore(): MemoryKeyStore {
+        return new MemoryKeyStore();
+    }
+
     /**
      * Creates P2PKH script generator.
      * @returns new instance of P2PKH
      */
-    createMemoryKeyStore(): P2PKH {
-        return new P2PKH({ keyStore: new MemoryRawKeyStore() });
-    }
-
-    /**
-     * Creates AssetTransferAddress for the standard P2PKH asset.
-     * To use this address, see AssetScheme.createMintTransaction() or Asset.createTransferTransaction().
-     * @returns AssetTransferAddress
-     */
-    createPubKeyHashAddress(): Promise<AssetTransferAddress> {
-        return this.memoryKeyStore.createAssetTransferAddress();
+    createP2PKH(params: { keyStore: KeyStore }): P2PKH {
+        const { keyStore } = params;
+        return new P2PKH({ keyStore });
     }
 
     /**
@@ -82,6 +82,6 @@ export class Key {
     static classes = {
         AssetTransferAddress,
         PlatformAddress,
-        MemoryRawKeyStore,
+        MemoryKeyStore,
     };
 }

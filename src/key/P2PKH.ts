@@ -7,17 +7,17 @@ import { Script } from "../core/Script";
 import { blake256, toHex } from "../utils";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";
-import { MemoryRawKeyStore } from "./MemoryRawKeyStore";
+import { MemoryKeyStore } from "./MemoryKeyStore";
 
 /**
  * AssetAgent which supports P2PKH(Pay to Public Key Hash).
  */
 export class P2PKH implements TransactionSigner {
-    private rawKeyStore: MemoryRawKeyStore;
+    private rawKeyStore: MemoryKeyStore;
     private publicKeyMap: { [publicKeyHash: string]: string } = {};
 
     // FIXME: rename keyStore to rawKeyStore
-    constructor(params: { keyStore: MemoryRawKeyStore }) {
+    constructor(params: { keyStore: MemoryKeyStore }) {
         this.rawKeyStore = params.keyStore;
     }
 
