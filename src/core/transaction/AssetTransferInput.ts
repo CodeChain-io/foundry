@@ -4,8 +4,8 @@ import { AssetOutPoint } from "./AssetOutPoint";
 
 export type AssetTransferInputData = {
     prevOut: AssetOutPoint;
-    lockScript: Buffer;
-    unlockScript: Buffer;
+    lockScript?: Buffer;
+    unlockScript?: Buffer;
 };
 /**
  * AssetTransferInput consists of the following:
@@ -21,7 +21,7 @@ export class AssetTransferInput {
     unlockScript: Buffer;
 
     constructor(data: AssetTransferInputData) {
-        const { prevOut, lockScript, unlockScript } = data;
+        const { prevOut, lockScript = Buffer.from([]), unlockScript = Buffer.from([]) } = data;
         this.prevOut = prevOut;
         this.lockScript = Buffer.from(lockScript);
         this.unlockScript = Buffer.from(unlockScript);
