@@ -4,24 +4,24 @@ import { AssetTransferTransaction, Parcel, SignedParcel, H160 } from "../core/cl
 import { MemoryRawKeyStore } from "./MemoryRawKeyStore";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
-import { MemoryKeyStore } from "./MemoryKeyStore";
+import { P2PKH } from "./P2PKH";
 
 export class Key {
     private rpc: Rpc;
-    private memoryKeyStore: MemoryKeyStore;
+    private memoryKeyStore: P2PKH;
 
     constructor(rpc: Rpc) {
         this.rpc = rpc;
-        this.memoryKeyStore = new MemoryKeyStore({ keyStore: new MemoryRawKeyStore() });
+        this.memoryKeyStore = new P2PKH({ keyStore: new MemoryRawKeyStore() });
     }
 
+    // FIXME: Change name
     /**
-     * Creates MemoryKeyStore which is a simple key store for testing purpose. Do
-     * not use this in production.
-     * @returns new instance of MemoryKeyStore
+     * Creates P2PKH script generator.
+     * @returns new instance of P2PKH
      */
-    createMemoryKeyStore(): MemoryKeyStore {
-        return new MemoryKeyStore({ keyStore: new MemoryRawKeyStore() });
+    createMemoryKeyStore(): P2PKH {
+        return new P2PKH({ keyStore: new MemoryRawKeyStore() });
     }
 
     /**
