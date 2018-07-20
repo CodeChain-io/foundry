@@ -116,8 +116,8 @@ export class Core {
     createAssetMintTransaction(params: {
         metadata: string,
         recipient: AssetTransferAddress | string,
-        registrar: H160 | null,
         amount: number | null,
+        registrar?: H160,
         nonce?: number,
         networkId?: number;
     }): AssetMintTransaction {
@@ -125,8 +125,8 @@ export class Core {
         return new AssetMintTransaction({
             networkId: networkId || this.networkId,
             nonce: nonce || 0,
+            registrar: registrar || null,
             metadata,
-            registrar,
             output: {
                 amount,
                 ...AssetTransferAddress.ensure(recipient).getLockScriptHashAndParameters()
