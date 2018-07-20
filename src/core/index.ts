@@ -151,6 +151,31 @@ export class Core {
         });
     }
 
+    createAssetTransferInput(params: {
+        assetOutPoint: AssetOutPoint | {
+            transactionHash: H256 | string,
+            index: number,
+            assetType: H256 | string,
+            amount: number,
+        },
+        lockScript?: Buffer,
+        unlockScript?: Buffer
+    }): AssetTransferInput {
+        const { assetOutPoint, lockScript, unlockScript } = params;
+        return new AssetTransferInput({
+            prevOut: assetOutPoint instanceof AssetOutPoint
+                ? assetOutPoint
+                : new AssetOutPoint({
+                    transactionHash: H256.ensure(assetOutPoint.transactionHash),
+                    index: assetOutPoint.index,
+                    assetType: H256.ensure(assetOutPoint.assetType),
+                    amount: assetOutPoint.amount,
+                }),
+            lockScript,
+            unlockScript
+        });
+    }
+
     // FIXME: any
     getTransactionFromJSON(json: any): Transaction {
         return getTransactionFromJSON(json);
