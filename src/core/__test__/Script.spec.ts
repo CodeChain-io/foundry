@@ -9,6 +9,10 @@ test("Script.empty()", () => {
     }).not.toThrow();
 });
 
+test("getStandardScriptHash()", () => {
+    expect(Script.getStandardScriptHash().value).toEqual("f42a65ea518ba236c08b261c34af0521fa3cd1aa505e1c18980919cb8945f8f3");
+});
+
 test("toTokens()", () => {
     let tokens;
 
