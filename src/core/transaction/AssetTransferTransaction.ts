@@ -1,7 +1,10 @@
+import { AssetTransferAddress } from "../../key/classes";
+
 import { H256 } from "../H256";
 import { blake256WithKey, blake256 } from "../../utils";
 import { AssetTransferInput } from "./AssetTransferInput";
 import { AssetTransferOutput } from "./AssetTransferOutput";
+import { Asset } from "../Asset";
 
 const RLP = require("rlp");
 
@@ -54,6 +57,42 @@ export class AssetTransferTransaction {
 
     hash(): H256 {
         return new H256(blake256(this.rlpBytes()));
+    }
+
+    addBurn(burn: AssetTransferInput | Asset): AssetTransferTransaction {
+        if (burn instanceof AssetTransferInput) {
+            this.burns.push(burn);
+        } else {
+            this.burns.push(burn.createTransferInput());
+        }
+        return this;
+    }
+
+    addInput(input: AssetTransferInput | Asset): AssetTransferTransaction {
+        if (input instanceof AssetTransferInput) {
+            this.inputs.push(input);
+        } else {
+            this.inputs.push(input.createTransferInput());
+        }
+        return this;
+    }
+
+    addOutput(output: AssetTransferOutput | {
+        amount: number,
+        assetType: H256 | string
+        recipient: AssetTransferAddress,
+    }): AssetTransferTransaction {
+        if (output instanceof AssetTransferOutput) {
+            this.outputs.push(output);
+        } else {
+            const { assetType, amount, recipient } = output;
+            this.outputs.push(new AssetTransferOutput({
+                ...recipient.getLockScriptHashAndParameters(),
+                amount,
+                assetType: H256.ensure(assetType),
+            }));
+        }
+        return this;
     }
 
     hashWithoutScript(): H256 {
