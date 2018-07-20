@@ -101,11 +101,13 @@ describe("rpc", () => {
             let mintTransaction: AssetMintTransaction;
 
             beforeAll(async () => {
+                const keyStore = await sdk.key.createMemoryKeyStore();
+                const p2pkh = await sdk.key.createP2PKH({ keyStore });
                 mintTransaction = sdk.core.createAssetScheme({
                     metadata: "metadata",
                     amount: 10,
                     registrar: null
-                }).createMintTransaction({ recipient: await sdk.key.createPubKeyHashAddress() });
+                }).createMintTransaction({ recipient: await p2pkh.createAddress() });
                 const parcel = sdk.core.createChangeShardStateParcel({
                     transactions: [mintTransaction],
                 });

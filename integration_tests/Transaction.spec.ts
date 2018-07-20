@@ -36,8 +36,10 @@ test("AssetMintTransaction fromJSON", async () => {
 });
 
 test("AssetTransferTransaction fromJSON", async () => {
-    const addressA = await sdk.key.createPubKeyHashAddress();
-    const addressB = await sdk.key.createPubKeyHashAddress();
+    const keyStore = await sdk.key.createMemoryKeyStore();
+    const p2pkh = await sdk.key.createP2PKH({ keyStore });
+    const addressA = await p2pkh.createAddress();
+    const addressB = await p2pkh.createAddress();
     const mintTx = sdk.core.createAssetScheme({
         metadata: "metadata of non-permissioned asset",
         amount: 100,
@@ -52,7 +54,7 @@ test("AssetTransferTransaction fromJSON", async () => {
             amount: 100
         }]
     });
-    await sdk.key.unlock(transferTx, 0);
+    transferTx.sign(0, { signer: p2pkh });
     const { parcelHash } = await sendTransactions({ transactions: [transferTx] });
     const parcel = await sdk.rpc.chain.getParcel(parcelHash);
     // FIXME: Remove anythings when *Data fields are flattened
