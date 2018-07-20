@@ -87,6 +87,7 @@ export class Asset {
                 assetType,
                 amount: recipient.amount
             })),
+            // FIXME: Do not hardcode networkId
             networkId: 17,
             nonce
         });
