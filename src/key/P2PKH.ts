@@ -1,10 +1,9 @@
 import { Buffer } from "buffer";
 
-import { Asset } from "../core/Asset";
 import { H256 } from "../core/H256";
 import { AssetTransferTransaction, TransactionSigner } from "../core/transaction/AssetTransferTransaction";
 import { Script } from "../core/Script";
-import { blake256, toHex } from "../utils";
+import { blake256 } from "../utils";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { MemoryKeyStore } from "./MemoryKeyStore";
@@ -26,16 +25,6 @@ export class P2PKH implements TransactionSigner {
         const publicKeyHash = H256.ensure(blake256(publicKey));
         this.publicKeyMap[publicKeyHash.value] = publicKey;
         return AssetTransferAddress.fromTypeAndPayload(1, publicKeyHash);
-    }
-
-    async isUnlockable(asset: Asset): Promise<boolean> {
-        if (P2PKH.getLockScriptHash().value !== asset.lockScriptHash.value) {
-            return false;
-        }
-        if (asset.parameters.length !== 1 || asset.parameters[0].byteLength !== 32) {
-            return false;
-        }
-        return !!this.publicKeyMap[toHex(asset.parameters[0])];
     }
 
     async sign(transaction: AssetTransferTransaction, index: number): Promise<{ lockScript: Buffer, unlockScript: Buffer }> {
@@ -60,18 +49,6 @@ export class P2PKH implements TransactionSigner {
         return {
             lockScript: P2PKH.getLockScript(),
             unlockScript: await this.getUnlockScript(publicKey, transaction.hashWithoutScript()),
-        };
-    }
-
-    async unlock(asset: Asset, tx: AssetTransferTransaction): Promise<{ lockScript: Buffer, unlockScript: Buffer }> {
-        const publicKeyHash = Buffer.from(asset.parameters[0]).toString("hex");
-        const publicKey = this.publicKeyMap[publicKeyHash];
-        if (!publicKey) {
-            throw "Unknown public key hash";
-        }
-        return {
-            lockScript: P2PKH.getLockScript(),
-            unlockScript: await this.getUnlockScript(publicKey, tx.hashWithoutScript()),
         };
     }
 

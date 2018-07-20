@@ -1,5 +1,5 @@
 import { Rpc } from "../rpc";
-import { AssetTransferTransaction, Parcel, SignedParcel, H160 } from "../core/classes";
+import { Parcel, SignedParcel, H160 } from "../core/classes";
 
 import { MemoryKeyStore } from "./MemoryKeyStore";
 import { AssetTransferAddress } from "./AssetTransferAddress";
@@ -10,11 +10,9 @@ type KeyStore = MemoryKeyStore;
 
 export class Key {
     private rpc: Rpc;
-    private memoryKeyStore: P2PKH;
 
     constructor(rpc: Rpc) {
         this.rpc = rpc;
-        this.memoryKeyStore = new P2PKH({ keyStore: new MemoryKeyStore() });
     }
 
     /**
@@ -46,36 +44,6 @@ export class Key {
         const { account, passphrase } = params;
         const sig = await this.rpc.account.sign(parcel.hash(), account, passphrase);
         return new SignedParcel(parcel, sig);
-    }
-
-    /**
-     * Sets lock and unlock scripts to the given transaction's input. The unlock
-     * script contains the signature for the whole tranasaction except for scripts
-     * in it.
-     * @param transaction AssetTransferTransaction to sign
-     * @param inputIndex An index of input to unlock
-     * @returns True if successful, false if unable to recognize lock script hash or
-     * unable to create the signature
-     * @throws When the input is already spent or never has been exist
-     * @throws When the given index is out of range
-     */
-    async unlock(transaction: AssetTransferTransaction, inputIndex: number): Promise<boolean> {
-        if (inputIndex >= transaction.inputs.length) {
-            throw "Invalid input index.";
-        }
-        const asset = await this.rpc.chain.getAsset(transaction.inputs[inputIndex].prevOut.transactionHash, inputIndex);
-        if (asset === null) {
-            throw "Asset is not exist or spent.";
-        }
-
-        if (await this.memoryKeyStore.isUnlockable(asset)) {
-            const { unlockScript, lockScript } = await this.memoryKeyStore.unlock(asset, transaction);
-            transaction.setLockScript(inputIndex, lockScript);
-            transaction.setUnlockScript(inputIndex, unlockScript);
-        } else {
-            return false;
-        }
-        return true;
     }
 
     public classes = Key.classes;
