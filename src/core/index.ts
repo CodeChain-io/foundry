@@ -1,3 +1,6 @@
+// FIXME: Use interface instead of importing key class.
+import { AssetTransferAddress } from "../key/classes";
+
 import { Parcel } from "./Parcel";
 import { Asset } from "./Asset";
 import { U256 } from "./U256";
@@ -107,6 +110,27 @@ export class Core {
             metadata,
             amount,
             registrar: registrar === null ? null : H160.ensure(registrar)
+        });
+    }
+
+    createAssetMintTransaction(params: {
+        metadata: string,
+        recipient: AssetTransferAddress
+        registrar: H160 | null,
+        amount: number | null,
+        nonce?: number,
+        networkId?: number;
+    }): AssetMintTransaction {
+        const { metadata, recipient, registrar, amount, nonce, networkId } = params;
+        return new AssetMintTransaction({
+            networkId: networkId || this.networkId,
+            nonce: nonce || 0,
+            metadata,
+            registrar,
+            output: {
+                amount,
+                ...recipient.getLockScriptHashAndParameters()
+            },
         });
     }
 
