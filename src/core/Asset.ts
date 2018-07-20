@@ -66,6 +66,12 @@ export class Asset {
         };
     }
 
+    createTransferInput(): AssetTransferInput {
+        return new AssetTransferInput({
+            prevOut: this.outPoint
+        });
+    }
+
     createTransferTransaction(params: { recipients: { address: AssetTransferAddress, amount: number }[], nonce?: number }): AssetTransferTransaction {
         const { outPoint, assetType } = this;
         const { recipients, nonce = 0 } = params;
