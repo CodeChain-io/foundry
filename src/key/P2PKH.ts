@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 
 import { Asset } from "../core/Asset";
 import { H256 } from "../core/H256";
-import { AssetTransferTransaction } from "../core/transaction/AssetTransferTransaction";
+import { AssetTransferTransaction, TransactionSigner } from "../core/transaction/AssetTransferTransaction";
 import { Script } from "../core/Script";
 import { blake256, toHex } from "../utils";
 
@@ -12,7 +12,7 @@ import { MemoryRawKeyStore } from "./MemoryRawKeyStore";
 /**
  * AssetAgent which supports P2PKH(Pay to Public Key Hash).
  */
-export class P2PKH {
+export class P2PKH implements TransactionSigner {
     private rawKeyStore: MemoryRawKeyStore;
     private publicKeyMap: { [publicKeyHash: string]: string } = {};
 
@@ -38,6 +38,31 @@ export class P2PKH {
         return !!this.publicKeyMap[toHex(asset.parameters[0])];
     }
 
+    async sign(transaction: AssetTransferTransaction, index: number): Promise<{ lockScript: Buffer, unlockScript: Buffer }> {
+        if (index >= transaction.inputs.length) {
+            throw "Invalid input index";
+        }
+        const { lockScriptHash, parameters } = transaction.inputs[index].prevOut;
+        if (lockScriptHash === undefined || parameters === undefined) {
+            throw "Invalid transaction input";
+        }
+        if (!this.isStandardLockScriptHash(lockScriptHash)) {
+            throw "Unexpected lock script hash";
+        }
+        if (parameters.length !== 1) {
+            throw "Unexpected length of parameters";
+        }
+        const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
+        const publicKey = this.publicKeyMap[publicKeyHash];
+        if (!publicKey) {
+            throw `Unable to get original key from the given public key hash: ${publicKeyHash}`;
+        }
+        return {
+            lockScript: this.getLockScript(),
+            unlockScript: await this.getUnlockScript(publicKey, transaction.hashWithoutScript()),
+        };
+    }
+
     async unlock(asset: Asset, tx: AssetTransferTransaction): Promise<{ lockScript: Buffer, unlockScript: Buffer }> {
         const publicKeyHash = Buffer.from(asset.parameters[0]).toString("hex");
         const publicKey = this.publicKeyMap[publicKeyHash];
@@ -45,12 +70,16 @@ export class P2PKH {
             throw "Unknown public key hash";
         }
         return {
-            lockScript: Script.getStandardScript(),
-            unlockScript: await this.generateUnlockScript(publicKey, tx.hashWithoutScript()),
+            lockScript: this.getLockScript(),
+            unlockScript: await this.getUnlockScript(publicKey, tx.hashWithoutScript()),
         };
     }
 
-    private async generateUnlockScript(publicKey: string, txhash: H256): Promise<Buffer> {
+    private getLockScript(): Buffer {
+        return Script.getStandardScript();
+    }
+
+    private async getUnlockScript(publicKey: string, txhash: H256): Promise<Buffer> {
         const signature = await this.rawKeyStore.sign({ publicKey, message: txhash.value });
         const { PUSHB } = Script.Opcode;
         return Buffer.from([
