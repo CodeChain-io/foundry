@@ -8,6 +8,13 @@ import { Asset } from "../Asset";
 
 const RLP = require("rlp");
 
+export interface TransactionSigner {
+    sign: (transaction: AssetTransferTransaction, index: number) => Promise<{
+        unlockScript: Buffer,
+        lockScript: Buffer
+    }>;
+}
+
 export type AssetTransferTransactionData = {
     burns: AssetTransferInput[];
     inputs: AssetTransferInput[];
@@ -104,6 +111,16 @@ export class AssetTransferTransaction {
             networkId,
             nonce
         }).rlpBytes()));
+    }
+
+    async sign(index: number, params: { signer: TransactionSigner }): Promise<void> {
+        const { signer } = params;
+        if (index >= this.inputs.length) {
+            throw "Invalid index";
+        }
+        const { lockScript, unlockScript } = await signer.sign(this, index);
+        this.setLockScript(index, lockScript);
+        this.setUnlockScript(index, unlockScript);
     }
 
     setLockScript(index: number, lockScript: Buffer): void {
