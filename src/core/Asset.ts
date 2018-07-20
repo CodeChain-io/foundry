@@ -27,7 +27,7 @@ export class Asset {
     outPoint: AssetOutPoint;
 
     constructor(data: AssetData) {
-        const { transactionHash, transactionOutputIndex, assetType, amount } = data;
+        const { transactionHash, transactionOutputIndex, assetType, amount, lockScriptHash, parameters } = data;
         this.assetType = data.assetType;
         this.lockScriptHash = data.lockScriptHash;
         this.parameters = data.parameters;
@@ -37,6 +37,8 @@ export class Asset {
             index: transactionOutputIndex,
             assetType,
             amount,
+            lockScriptHash,
+            parameters,
         });
     }
 

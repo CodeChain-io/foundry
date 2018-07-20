@@ -157,6 +157,8 @@ export class Core {
             index: number,
             assetType: H256 | string,
             amount: number,
+            lockScriptHash?: H256 | string,
+            parameters?: Buffer[],
         },
         lockScript?: Buffer,
         unlockScript?: Buffer
@@ -170,6 +172,8 @@ export class Core {
                     index: assetOutPoint.index,
                     assetType: H256.ensure(assetOutPoint.assetType),
                     amount: assetOutPoint.amount,
+                    lockScriptHash: assetOutPoint.lockScriptHash ? H256.ensure(assetOutPoint.lockScriptHash) : undefined,
+                    parameters: assetOutPoint.parameters
                 }),
             lockScript,
             unlockScript

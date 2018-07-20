@@ -5,6 +5,8 @@ export type AssetOutPointData = {
     index: number;
     assetType: H256;
     amount: number;
+    lockScriptHash?: H256;
+    parameters?: Buffer[];
 };
 
 /**
@@ -19,13 +21,17 @@ export class AssetOutPoint {
     readonly index: number;
     readonly assetType: H256;
     readonly amount: number;
+    readonly lockScriptHash?: H256;
+    readonly parameters?: Buffer[];
 
     constructor(data: AssetOutPointData) {
-        const { transactionHash, index, assetType, amount } = data;
+        const { transactionHash, index, assetType, amount, lockScriptHash, parameters } = data;
         this.transactionHash = transactionHash;
         this.index = index;
         this.assetType = assetType;
         this.amount = amount;
+        this.lockScriptHash = lockScriptHash;
+        this.parameters = parameters;
     }
 
     toEncodeObject() {
