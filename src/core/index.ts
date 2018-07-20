@@ -176,6 +176,21 @@ export class Core {
         });
     }
 
+    createAssetOutPoint(params: {
+        transactionHash: H256 | string,
+        index: number,
+        assetType: H256 | string,
+        amount: number,
+    }): AssetOutPoint {
+        const { transactionHash, index, assetType, amount } = params;
+        return new AssetOutPoint({
+            transactionHash: H256.ensure(transactionHash),
+            index,
+            assetType: H256.ensure(assetType),
+            amount
+        });
+    }
+
     // FIXME: any
     getTransactionFromJSON(json: any): Transaction {
         return getTransactionFromJSON(json);
