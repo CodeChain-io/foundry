@@ -26,7 +26,7 @@ export class Key {
 
     /**
      * Creates AssetTransferAddress for the standard P2PKH asset.
-     * To use this address, see AssetScheme.createMintTransaction() or Asset.transfer().
+     * To use this address, see AssetScheme.createMintTransaction() or Asset.createTransferTransaction().
      * @returns AssetTransferAddress
      */
     createPubKeyHashAddress(): Promise<AssetTransferAddress> {

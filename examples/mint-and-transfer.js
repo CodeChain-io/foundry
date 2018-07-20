@@ -43,13 +43,15 @@ async function sendTransaction(tx) {
 
     const firstGold = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
 
-    const transferTx = firstGold.transfer([{
-        address: bobAddress,
-        amount: 3000
-    }, {
-        address: aliceAddress,
-        amount: 7000
-    }]);
+    const transferTx = firstGold.createTransferTransaction({
+        recipients: [{
+            address: bobAddress,
+            amount: 3000
+        }, {
+            address: aliceAddress,
+            amount: 7000
+        }]
+    });
     await sdk.key.unlock(transferTx, 0);
 
     await sendTransaction(transferTx);

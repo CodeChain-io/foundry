@@ -133,13 +133,15 @@ Then, the AssetMintTransaction is processed with the following code:
 Alice then sends 3000 gold to Bob. In CodeChain, users must follow the [UTXO](https://codechain.readthedocs.io/en/latest/what-is-codechain.html#what-is-utxo) standard, and make a transaction that spends an entire UTXO balance, and receive the change back through another transaction.
 ```javascript
     // The sum of amount must equal to the amount of firstGold.
-    const transferTx = firstGold.transfer([{
-        address: bobAddress,
-        amount: 3000
-    }, {
-        address: aliceAddress,
-        amount: 7000
-    }]);
+    const transferTx = firstGold.createTransferTransaction({
+        recipients: [{
+            address: bobAddress,
+            amount: 3000
+        }, {
+            address: aliceAddress,
+            amount: 7000
+        }]
+    });
 ```
 By using Alice's signature, the 10000 Gold that was first minted can now be transferred to other users like Bob.
 ```javascript

@@ -66,9 +66,9 @@ export class Asset {
         };
     }
 
-    transfer(recipients: { address: AssetTransferAddress, amount: number }[], options: { nonce?: number } = {}): AssetTransferTransaction {
+    createTransferTransaction(params: { recipients: { address: AssetTransferAddress, amount: number }[], nonce?: number }): AssetTransferTransaction {
         const { outPoint, assetType } = this;
-        const { nonce = 0 } = options;
+        const { recipients, nonce = 0 } = params;
 
         const outputSum = recipients.map(r => r.amount).reduce((a, b) => a + b);
         if (outputSum !== this.amount) {

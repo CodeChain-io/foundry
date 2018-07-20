@@ -46,10 +46,12 @@ test("AssetTransferTransaction fromJSON", async () => {
     await sendTransactions({ transactions: [mintTx] });
     const firstAsset = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
 
-    const transferTx = await firstAsset.transfer([{
-        address: addressB,
-        amount: 100
-    }]);
+    const transferTx = await firstAsset.createTransferTransaction({
+        recipients: [{
+            address: addressB,
+            amount: 100
+        }]
+    });
     await sdk.key.unlock(transferTx, 0);
     const { parcelHash } = await sendTransactions({ transactions: [transferTx] });
     const parcel = await sdk.rpc.chain.getParcel(parcelHash);
