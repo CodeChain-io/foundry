@@ -40,7 +40,7 @@ export class AssetScheme {
         };
     }
 
-    createMintTransaction(params: { recipient: AssetTransferAddress, nonce?: number }): AssetMintTransaction {
+    createMintTransaction(params: { recipient: AssetTransferAddress | string, nonce?: number }): AssetMintTransaction {
         const { recipient, nonce = 0 } = params;
         const { networkId, metadata, amount, registrar } = this;
         return new AssetMintTransaction({
@@ -48,7 +48,7 @@ export class AssetScheme {
             metadata,
             output: {
                 amount,
-                ...recipient.getLockScriptHashAndParameters(),
+                ...AssetTransferAddress.ensure(recipient).getLockScriptHashAndParameters(),
             },
             registrar,
             nonce,

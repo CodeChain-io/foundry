@@ -87,14 +87,15 @@ export class AssetTransferTransaction {
     addOutput(output: AssetTransferOutput | {
         amount: number,
         assetType: H256 | string
-        recipient: AssetTransferAddress,
+        recipient: AssetTransferAddress | string,
     }): AssetTransferTransaction {
         if (output instanceof AssetTransferOutput) {
             this.outputs.push(output);
         } else {
             const { assetType, amount, recipient } = output;
+            console.log(output);
             this.outputs.push(new AssetTransferOutput({
-                ...recipient.getLockScriptHashAndParameters(),
+                ...AssetTransferAddress.ensure(recipient).getLockScriptHashAndParameters(),
                 amount,
                 assetType: H256.ensure(assetType),
             }));

@@ -76,7 +76,7 @@ export class Asset {
 
     createTransferTransaction(params: {
         recipients: {
-            address: AssetTransferAddress,
+            address: AssetTransferAddress | string,
             amount: number
         }[],
         nonce?: number
@@ -94,7 +94,7 @@ export class Asset {
                 unlockScript: Buffer.from([]),
             })],
             outputs: recipients.map(recipient => new AssetTransferOutput({
-                ...recipient.address.getLockScriptHashAndParameters(),
+                ...AssetTransferAddress.ensure(recipient.address).getLockScriptHashAndParameters(),
                 assetType,
                 amount: recipient.amount
             })),

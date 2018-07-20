@@ -115,7 +115,7 @@ export class Core {
 
     createAssetMintTransaction(params: {
         metadata: string,
-        recipient: AssetTransferAddress
+        recipient: AssetTransferAddress | string,
         registrar: H160 | null,
         amount: number | null,
         nonce?: number,
@@ -129,7 +129,7 @@ export class Core {
             registrar,
             output: {
                 amount,
-                ...recipient.getLockScriptHashAndParameters()
+                ...AssetTransferAddress.ensure(recipient).getLockScriptHashAndParameters()
             },
         });
     }
@@ -196,13 +196,13 @@ export class Core {
     }
 
     createAssetTransferOutput(params: {
-        recipient: AssetTransferAddress
+        recipient: AssetTransferAddress | string
         assetType: H256 | string,
         amount: number,
     }): AssetTransferOutput {
         const { recipient, assetType, amount } = params;
         return new AssetTransferOutput({
-            ...recipient.getLockScriptHashAndParameters(),
+            ...AssetTransferAddress.ensure(recipient).getLockScriptHashAndParameters(),
             assetType: H256.ensure(assetType),
             amount,
         });
