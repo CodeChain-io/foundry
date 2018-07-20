@@ -10,6 +10,7 @@ const RLP = require("rlp");
 
 export type AssetMintTransactionData = {
     networkId: number;
+    shardId: number;
     metadata: string;
     output: {
         lockScriptHash: H256;
@@ -39,9 +40,10 @@ export class AssetMintTransaction {
     }
 
     static fromJSON(obj: any) {
-        const { data: { networkId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } } = obj;
+        const { data: { networkId, shardId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } } = obj;
         return new this({
             networkId,
+            shardId,
             metadata,
             output: {
                 lockScriptHash: new H256(lockScriptHash),
@@ -54,11 +56,12 @@ export class AssetMintTransaction {
     }
 
     toJSON() {
-        const { networkId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this.data;
+        const { networkId, shardId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this.data;
         return {
             type: this.type,
             data: {
                 networkId,
+                shardId,
                 metadata,
                 output: {
                     lockScriptHash: lockScriptHash.value,
@@ -73,10 +76,11 @@ export class AssetMintTransaction {
     }
 
     toEncodeObject() {
-        const { networkId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this.data;
+        const { networkId, shardId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this.data;
         return [
             3,
             networkId,
+            shardId,
             metadata,
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
@@ -111,13 +115,14 @@ export class AssetMintTransaction {
     }
 
     getAssetScheme(): AssetScheme {
-        const { networkId, metadata, output: { amount }, registrar } = this.data;
+        const { networkId, shardId, metadata, output: { amount }, registrar } = this.data;
         // FIXME: need U64 to be implemented or use U256
         if (amount === null) {
             throw "not implemented";
         }
         return new AssetScheme({
             networkId,
+            shardId,
             metadata,
             amount,
             registrar
@@ -125,20 +130,32 @@ export class AssetMintTransaction {
     }
 
     getAssetSchemeAddress(): H256 {
+        const { shardId } = this.data;
         const blake = blake256WithKey(this.hash().value, new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
         ]));
-        const prefix = "5300000000000000";
+        const shardPrefix = convertU32toHex(shardId);
+        const prefix = `53000000${shardPrefix}`;
         return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }
 
     getAssetAddress(): H256 {
+        const { shardId } = this.data;
         const blake = blake256WithKey(this.hash().value, new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         ]));
-        const prefix = "4100000000000000";
+        const shardPrefix = convertU32toHex(shardId);
+        const prefix = `41000000${shardPrefix}`;
         return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }
+}
+
+function convertU32toHex(id: number) {
+    const shardId0: string = ("0" + ((id >> 24) & 0xFF).toString(16)).slice(-2);
+    const shardId1: string = ("0" + ((id >> 16) & 0xFF).toString(16)).slice(-2);
+    const shardId2: string = ("0" + ((id >> 8) & 0xFF).toString(16)).slice(-2);
+    const shardId3: string = ("0" + ((id >> 0) & 0xFF).toString(16)).slice(-2);
+    return shardId0 + shardId1 + shardId2 + shardId3;
 }

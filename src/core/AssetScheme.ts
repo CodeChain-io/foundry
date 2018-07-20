@@ -6,6 +6,7 @@ import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 
 export type AssetSchemeData = {
     networkId: number;
+    shardId: number;
     metadata: string;
     amount: number;
     registrar: H160 | null;
@@ -15,12 +16,14 @@ export type AssetSchemeData = {
  */
 export class AssetScheme {
     networkId: number;
+    shardId: number;
     metadata: string;
     amount: number;
     registrar: H160 | null;
 
     constructor(data: AssetSchemeData) {
         this.networkId = data.networkId;
+        this.shardId = data.shardId;
         this.metadata = data.metadata;
         this.registrar = data.registrar;
         this.amount = data.amount;
@@ -42,9 +45,10 @@ export class AssetScheme {
 
     createMintTransaction(params: { recipient: AssetTransferAddress | string, nonce?: number }): AssetMintTransaction {
         const { recipient, nonce = 0 } = params;
-        const { networkId, metadata, amount, registrar } = this;
+        const { networkId, shardId, metadata, amount, registrar } = this;
         return new AssetMintTransaction({
             networkId,
+            shardId,
             metadata,
             output: {
                 amount,

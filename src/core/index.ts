@@ -103,10 +103,11 @@ export class Core {
      * the registrar account.
      * @throws Given string for registrar is invalid for converting it to H160
      */
-    createAssetScheme(params: { metadata: string, amount: number, registrar: H160 | string | null }): AssetScheme {
-        const { metadata, amount, registrar } = params;
+    createAssetScheme(params: { shardId: number, metadata: string, amount: number, registrar: H160 | string | null }): AssetScheme {
+        const { shardId, metadata, amount, registrar } = params;
         return new AssetScheme({
             networkId: this.networkId,
+            shardId,
             metadata,
             amount,
             registrar: registrar === null ? null : H160.ensure(registrar)
@@ -114,6 +115,7 @@ export class Core {
     }
 
     createAssetMintTransaction(params: {
+        shardId: number,
         metadata: string,
         recipient: AssetTransferAddress | string,
         amount: number | null,
@@ -121,9 +123,10 @@ export class Core {
         nonce?: number,
         networkId?: number;
     }): AssetMintTransaction {
-        const { metadata, recipient, registrar, amount, nonce, networkId } = params;
+        const { shardId, metadata, recipient, registrar, amount, nonce, networkId } = params;
         return new AssetMintTransaction({
             networkId: networkId || this.networkId,
+            shardId,
             nonce: nonce || 0,
             registrar: registrar || null,
             metadata,
