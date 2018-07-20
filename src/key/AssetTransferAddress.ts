@@ -100,6 +100,10 @@ export class AssetTransferAddress {
         return new this(type, new H256(payload), address);
     }
 
+    static ensure(address: AssetTransferAddress | string) {
+        return address instanceof AssetTransferAddress ? address : AssetTransferAddress.fromString(address);
+    }
+
     static fromLockScriptHashAndParameters(params: { lockScriptHash: H256 | string, parameters: Buffer[] }) {
         const { lockScriptHash, parameters } = params;
         if (H256.ensure(lockScriptHash).value === Script.getStandardScriptHash("P2PKH").value) {

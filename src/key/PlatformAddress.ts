@@ -50,4 +50,8 @@ export class PlatformAddress {
         const accountId = toHex(Buffer.from(bytes.slice(1)));
         return new PlatformAddress(new H160(accountId), address);
     }
+
+    static ensure(address: PlatformAddress | string) {
+        return address instanceof PlatformAddress ? address : PlatformAddress.fromString(address);
+    }
 }
