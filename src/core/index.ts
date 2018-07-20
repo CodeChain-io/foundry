@@ -191,6 +191,19 @@ export class Core {
         });
     }
 
+    createAssetTransferOutput(params: {
+        recipient: AssetTransferAddress
+        assetType: H256 | string,
+        amount: number,
+    }): AssetTransferOutput {
+        const { recipient, assetType, amount } = params;
+        return new AssetTransferOutput({
+            ...recipient.getLockScriptHashAndParameters(),
+            assetType: H256.ensure(assetType),
+            amount,
+        });
+    }
+
     // FIXME: any
     getTransactionFromJSON(json: any): Transaction {
         return getTransactionFromJSON(json);
