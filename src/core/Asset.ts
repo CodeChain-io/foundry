@@ -80,9 +80,7 @@ export class Asset {
             amount: number
         }[],
         nonce?: number
-    } = {
-        recipients: []
-    }): AssetTransferTransaction {
+    } = { recipients: [] }): AssetTransferTransaction {
         const { outPoint, assetType } = this;
         const { recipients, nonce = 0 } = params;
 

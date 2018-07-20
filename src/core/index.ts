@@ -140,11 +140,7 @@ export class Core {
         outputs: AssetTransferOutput[],
         networkId?: number,
         nonce?: number,
-    } = {
-        burns: [],
-        inputs: [],
-        outputs: [],
-    }): AssetTransferTransaction {
+    } = { burns: [], inputs: [], outputs: [] }): AssetTransferTransaction {
         const { burns, inputs, outputs, networkId, nonce } = params;
         return new AssetTransferTransaction({
             burns,
