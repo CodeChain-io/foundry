@@ -17,9 +17,11 @@ async function sendTransaction(tx) {
 }
 
 (async () => {
-    // Create addresses for Alice and Bob.
-    const aliceAddress = await sdk.key.createPubKeyHashAddress();
-    const bobAddress = await sdk.key.createPubKeyHashAddress();
+    const keyStore = await sdk.key.createMemoryKeyStore();
+    const p2pkh = await sdk.key.createP2PKH({ keyStore });
+
+    const aliceAddress = await p2pkh.createAddress();
+    const bobAddress = "ccaqqqap7lazh5g84jsfxccp686jakdy0z9v4chrq4vz8pj4nl9lzvf7rs2rnmc0";
 
     // Create asset named Gold. Total amount of Gold is 10000. The registrar is set
     // to null, which means this type of asset can be transferred freely.
@@ -43,16 +45,19 @@ async function sendTransaction(tx) {
 
     const firstGold = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
 
-    const transferTx = firstGold.createTransferTransaction({
-        recipients: [{
-            address: bobAddress,
-            amount: 3000
-        }, {
-            address: aliceAddress,
-            amount: 7000
-        }]
-    });
-    await sdk.key.unlock(transferTx, 0);
+    const transferTx = sdk.core.createAssetTransferTransaction()
+        .addInput(firstGold)
+        .addOutput({
+            recipient: bobAddress,
+            amount: 3000,
+            assetType: firstGold.assetType
+        })
+        .addOutput({
+            recipient: aliceAddress,
+            amount: 7000,
+            assetType: firstGold.assetType
+        });
+    await transferTx.sign(0, { signer: p2pkh });
 
     await sendTransaction(transferTx);
     const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), { timeout: 5 * 60 * 1000 });
