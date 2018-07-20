@@ -1,8 +1,6 @@
 import * as _ from "lodash";
 import { Buffer } from "buffer";
 
-import { H256 } from "./H256";
-
 export class Script {
     data: Buffer;
 
@@ -82,16 +80,6 @@ export class Script {
             }
         }
         return tokens;
-    }
-
-    // FIXME: return Script
-    static getStandardScript(_id: "P2PKH" = "P2PKH"): Buffer {
-        const { COPY, BLAKE256, EQ, JZ, CHKSIG } = Script.Opcode;
-        return Buffer.from([COPY, 0x01, BLAKE256, EQ, JZ, 0xFF, CHKSIG]);
-    }
-
-    static getStandardScriptHash(_id: "P2PKH" = "P2PKH"): H256 {
-        return new H256("f42a65ea518ba236c08b261c34af0521fa3cd1aa505e1c18980919cb8945f8f3");
     }
 
     static Opcode = {

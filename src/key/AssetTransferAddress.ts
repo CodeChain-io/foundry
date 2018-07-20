@@ -1,10 +1,10 @@
 import { Buffer } from "buffer";
 
 import { H256 } from "../core/H256";
-import { toHex, blake256 } from "../utils";
+import { toHex } from "../utils";
 
 import { encode, toWords, decode, fromWords } from "./bech32";
-import { Script } from "../core/Script";
+import { P2PKH } from "./P2PKH";
 
 /**
  * @hidden
@@ -106,7 +106,7 @@ export class AssetTransferAddress {
 
     static fromLockScriptHashAndParameters(params: { lockScriptHash: H256 | string, parameters: Buffer[] }) {
         const { lockScriptHash, parameters } = params;
-        if (H256.ensure(lockScriptHash).value === Script.getStandardScriptHash("P2PKH").value) {
+        if (H256.ensure(lockScriptHash).value === P2PKH.getLockScriptHash().value) {
             if (parameters.length === 1) {
                 return this.fromTypeAndPayload(1, Buffer.from(parameters[0]).toString("hex"));
             }
@@ -121,7 +121,7 @@ export class AssetTransferAddress {
             case 0x00:
                 return { lockScriptHash: payload, parameters: [] };
             case 0x01:
-                const lockScriptHash = new H256(blake256(Script.getStandardScript("P2PKH")));
+                const lockScriptHash = P2PKH.getLockScriptHash();
                 return { lockScriptHash, parameters: [Buffer.from(payload.value, "hex")] };
             default:
                 throw "Unreachable";

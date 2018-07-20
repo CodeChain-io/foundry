@@ -29,7 +29,7 @@ export class P2PKH implements TransactionSigner {
     }
 
     async isUnlockable(asset: Asset): Promise<boolean> {
-        if (this.isStandardLockScriptHash(asset.lockScriptHash)) {
+        if (P2PKH.getLockScriptHash().value !== asset.lockScriptHash.value) {
             return false;
         }
         if (asset.parameters.length !== 1 || asset.parameters[0].byteLength !== 32) {
@@ -46,7 +46,7 @@ export class P2PKH implements TransactionSigner {
         if (lockScriptHash === undefined || parameters === undefined) {
             throw "Invalid transaction input";
         }
-        if (!this.isStandardLockScriptHash(lockScriptHash)) {
+        if (lockScriptHash.value !== P2PKH.getLockScriptHash().value) {
             throw "Unexpected lock script hash";
         }
         if (parameters.length !== 1) {
@@ -58,7 +58,7 @@ export class P2PKH implements TransactionSigner {
             throw `Unable to get original key from the given public key hash: ${publicKeyHash}`;
         }
         return {
-            lockScript: this.getLockScript(),
+            lockScript: P2PKH.getLockScript(),
             unlockScript: await this.getUnlockScript(publicKey, transaction.hashWithoutScript()),
         };
     }
@@ -70,13 +70,9 @@ export class P2PKH implements TransactionSigner {
             throw "Unknown public key hash";
         }
         return {
-            lockScript: this.getLockScript(),
+            lockScript: P2PKH.getLockScript(),
             unlockScript: await this.getUnlockScript(publicKey, tx.hashWithoutScript()),
         };
-    }
-
-    private getLockScript(): Buffer {
-        return Script.getStandardScript();
     }
 
     private async getUnlockScript(publicKey: string, txhash: H256): Promise<Buffer> {
@@ -92,7 +88,12 @@ export class P2PKH implements TransactionSigner {
         ]);
     }
 
-    private isStandardLockScriptHash(hash: H256): boolean {
-        return hash.value === Script.getStandardScriptHash().value;
+    static getLockScript(): Buffer {
+        const { COPY, BLAKE256, EQ, JZ, CHKSIG } = Script.Opcode;
+        return Buffer.from([COPY, 0x01, BLAKE256, EQ, JZ, 0xFF, CHKSIG]);
+    }
+
+    static getLockScriptHash(): H256 {
+        return new H256("f42a65ea518ba236c08b261c34af0521fa3cd1aa505e1c18980919cb8945f8f3");
     }
 }
