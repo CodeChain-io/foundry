@@ -134,6 +134,23 @@ export class Core {
         });
     }
 
+    createAssetTransferTransaction(params: {
+        burns: AssetTransferInput[],
+        inputs: AssetTransferInput[],
+        outputs: AssetTransferOutput[],
+        networkId?: number,
+        nonce?: number,
+    }): AssetTransferTransaction {
+        const { burns, inputs, outputs, networkId, nonce } = params;
+        return new AssetTransferTransaction({
+            burns,
+            inputs,
+            outputs,
+            networkId: networkId || this.networkId,
+            nonce: nonce || 0,
+        });
+    }
+
     // FIXME: any
     getTransactionFromJSON(json: any): Transaction {
         return getTransactionFromJSON(json);
