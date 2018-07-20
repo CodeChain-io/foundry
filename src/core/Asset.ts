@@ -74,14 +74,17 @@ export class Asset {
         });
     }
 
-    createTransferTransaction(params: { recipients: { address: AssetTransferAddress, amount: number }[], nonce?: number }): AssetTransferTransaction {
+    createTransferTransaction(params: {
+        recipients: {
+            address: AssetTransferAddress,
+            amount: number
+        }[],
+        nonce?: number
+    } = {
+        recipients: []
+    }): AssetTransferTransaction {
         const { outPoint, assetType } = this;
         const { recipients, nonce = 0 } = params;
-
-        const outputSum = recipients.map(r => r.amount).reduce((a, b) => a + b);
-        if (outputSum !== this.amount) {
-            throw "The sum of recipients' amount must equal to the asset amount";
-        }
 
         return new AssetTransferTransaction({
             burns: [],
