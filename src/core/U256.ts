@@ -56,4 +56,8 @@ export class U256 {
     isEqualTo(rhs: U256): boolean {
         return this.value.isEqualTo(rhs.value);
     }
+
+    toString(base?: 10 | 16) {
+        return this.value.toString(base || 10);
+    }
 }
