@@ -66,40 +66,45 @@ export class AssetTransferTransaction {
         return new H256(blake256(this.rlpBytes()));
     }
 
-    addBurn(burn: AssetTransferInput | Asset): AssetTransferTransaction {
-        if (burn instanceof AssetTransferInput) {
-            this.burns.push(burn);
-        } else {
-            this.burns.push(burn.createTransferInput());
-        }
+    addBurns(...burns: (AssetTransferInput | Asset)[]): AssetTransferTransaction {
+        burns.forEach(burn => {
+            if (burn instanceof AssetTransferInput) {
+                this.burns.push(burn);
+            } else {
+                this.burns.push(burn.createTransferInput());
+            }
+        });
         return this;
     }
 
-    addInput(input: AssetTransferInput | Asset): AssetTransferTransaction {
-        if (input instanceof AssetTransferInput) {
-            this.inputs.push(input);
-        } else {
-            this.inputs.push(input.createTransferInput());
-        }
+    addInputs(...inputs: (AssetTransferInput | Asset)[]): AssetTransferTransaction {
+        inputs.forEach(input => {
+            if (input instanceof AssetTransferInput) {
+                this.inputs.push(input);
+            } else {
+                this.inputs.push(input.createTransferInput());
+            }
+        });
         return this;
     }
 
-    addOutput(output: AssetTransferOutput | {
+    addOutputs(...outputs: (AssetTransferOutput | {
         amount: number,
         assetType: H256 | string
         recipient: AssetTransferAddress | string,
-    }): AssetTransferTransaction {
-        if (output instanceof AssetTransferOutput) {
-            this.outputs.push(output);
-        } else {
-            const { assetType, amount, recipient } = output;
-            console.log(output);
-            this.outputs.push(new AssetTransferOutput({
-                ...AssetTransferAddress.ensure(recipient).getLockScriptHashAndParameters(),
-                amount,
-                assetType: H256.ensure(assetType),
-            }));
-        }
+    })[]): AssetTransferTransaction {
+        outputs.forEach(output => {
+            if (output instanceof AssetTransferOutput) {
+                this.outputs.push(output);
+            } else {
+                const { assetType, amount, recipient } = output;
+                this.outputs.push(new AssetTransferOutput({
+                    ...AssetTransferAddress.ensure(recipient).getLockScriptHashAndParameters(),
+                    amount,
+                    assetType: H256.ensure(assetType),
+                }));
+            }
+        });
         return this;
     }
 
