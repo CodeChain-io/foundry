@@ -6,6 +6,10 @@ describe("examples", () => {
         require("../examples/import-test-account");
     });
 
+    test("get-balance", () => {
+        require("../examples/get-balance");
+    });
+
     test("payment", () => {
         require("../examples/payment");
     });
