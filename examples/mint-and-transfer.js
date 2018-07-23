@@ -3,11 +3,11 @@ const SDK = require("codechain-sdk");
 const sdk = new SDK({ server: "http://localhost:8080" });
 
 // sendTransaction() is a function to make transaction to be processed.
-async function sendTransaction(tx) {
+async function sendTransactions(txs) {
     const parcelSignerSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
     const parcelSignerAddress = SDK.util.getAccountIdFromPrivate(parcelSignerSecret);
     const parcel = sdk.core.createChangeShardStateParcel({
-        transactions: [tx],
+        transactions: txs,
     }).sign({
         secret: parcelSignerSecret,
         nonce: await sdk.rpc.chain.getNonce(parcelSignerAddress),
@@ -35,20 +35,12 @@ async function sendTransaction(tx) {
         amount: 10000,
         registrar: null,
     });
-
     const mintTx = sdk.core.createAssetMintTransaction({
         scheme: goldAssetScheme,
         recipient: aliceAddress
     });
 
-    await sendTransaction(mintTx);
-    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), { timeout: 5 * 60 * 1000 });
-    if (!mintTxInvoice.success) {
-        throw "AssetMintTransaction failed";
-    }
-
-    const firstGold = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
-
+    const firstGold = mintTx.getMintedAsset();
     const transferTx = sdk.core.createAssetTransferTransaction()
         .addInputs(firstGold)
         .addOutputs({
@@ -62,9 +54,13 @@ async function sendTransaction(tx) {
         });
     await transferTx.sign(0, { signer: p2pkh });
 
-    await sendTransaction(transferTx);
+    await sendTransactions([mintTx, transferTx]);
+    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), { timeout: 5 * 60 * 1000 });
+    if (mintTxInvoice.success === false) {
+        throw "AssetMintTransaction failed";
+    }
     const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), { timeout: 5 * 60 * 1000 });
-    if (!transferTxInvoice.success) {
+    if (transferTxInvoice.success === false) {
         throw "AssetTransferTransaction failed";
     }
 
