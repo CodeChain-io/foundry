@@ -51,6 +51,10 @@ export class PlatformAddress {
         return new PlatformAddress(new H160(accountId), address);
     }
 
+    toString(): string {
+        return this.value;
+    }
+
     static ensure(address: PlatformAddress | string) {
         return address instanceof PlatformAddress ? address : PlatformAddress.fromString(address);
     }

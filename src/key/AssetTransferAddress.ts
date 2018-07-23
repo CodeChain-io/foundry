@@ -100,6 +100,10 @@ export class AssetTransferAddress {
         return new this(type, new H256(payload), address);
     }
 
+    toString(): string {
+        return this.value;
+    }
+
     static ensure(address: AssetTransferAddress | string) {
         return address instanceof AssetTransferAddress ? address : AssetTransferAddress.fromString(address);
     }
