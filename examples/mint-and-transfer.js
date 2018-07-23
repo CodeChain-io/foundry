@@ -26,6 +26,7 @@ async function sendTransaction(tx) {
     // Create asset named Gold. Total amount of Gold is 10000. The registrar is set
     // to null, which means this type of asset can be transferred freely.
     const goldAssetScheme = sdk.core.createAssetScheme({
+        shardId: 0,
         metadata: JSON.stringify({
             name: "Gold",
             description: "An asset example",
@@ -33,9 +34,12 @@ async function sendTransaction(tx) {
         }),
         amount: 10000,
         registrar: null,
-    })
+    });
 
-    const mintTx = goldAssetScheme.createMintTransaction({ recipient: aliceAddress });
+    const mintTx = sdk.core.createAssetMintTransaction({
+        scheme: goldAssetScheme,
+        recipient: aliceAddress
+    });
 
     await sendTransaction(mintTx);
     const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), { timeout: 5 * 60 * 1000 });
@@ -46,13 +50,12 @@ async function sendTransaction(tx) {
     const firstGold = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
 
     const transferTx = sdk.core.createAssetTransferTransaction()
-        .addInput(firstGold)
-        .addOutput({
+        .addInputs(firstGold)
+        .addOutputs({
             recipient: bobAddress,
             amount: 3000,
             assetType: firstGold.assetType
-        })
-        .addOutput({
+        }, {
             recipient: aliceAddress,
             amount: 7000,
             assetType: firstGold.assetType
