@@ -24,7 +24,7 @@ describe.skip("examples", () => {
         runExample("mint-asset");
     });
 
-    test("mint-and-transfer", () => {
+    test.skip("mint-and-transfer", () => {
         runExample("mint-and-transfer");
     });
 });
