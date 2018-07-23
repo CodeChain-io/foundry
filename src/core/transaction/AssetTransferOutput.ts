@@ -12,14 +12,21 @@ export type AssetTransferOutputData = {
  * AssetTransferOutput consists of lockScriptHash and parameters, which mark ownership of the asset, and asset type and amount, which indicate the asset's type and quantity.
  */
 export class AssetTransferOutput {
-    private readonly data: AssetTransferOutputData;
+    readonly lockScriptHash: H256;
+    readonly parameters: Buffer[];
+    readonly assetType: H256;
+    readonly amount: number;
 
     constructor(data: AssetTransferOutputData) {
-        this.data = data;
+        const { lockScriptHash, parameters, assetType, amount } = data;
+        this.lockScriptHash = lockScriptHash;
+        this.parameters = parameters;
+        this.assetType = assetType;
+        this.amount = amount;
     }
 
     toEncodeObject() {
-        const { lockScriptHash, parameters, assetType, amount } = this.data;
+        const { lockScriptHash, parameters, assetType, amount } = this;
         return [
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
@@ -39,7 +46,7 @@ export class AssetTransferOutput {
     }
 
     toJSON() {
-        const { lockScriptHash, parameters, assetType, amount } = this.data;
+        const { lockScriptHash, parameters, assetType, amount } = this;
         return {
             lockScriptHash: lockScriptHash.value,
             parameters: parameters.map(parameter => Buffer.from(parameter)),
@@ -49,7 +56,7 @@ export class AssetTransferOutput {
     }
 
     shardId(): number {
-        const { assetType } = this.data;
+        const { assetType } = this;
         return parseInt(assetType.value.slice(8, 16), 16);
     }
 }
