@@ -128,8 +128,17 @@ export const generatePrivateKey = (): string => {
  * @returns 20 byte hexadecimal string of account id
  */
 export const getAccountIdFromPrivate = (priv: string): string => {
-    const key = secp256k1.keyFromPrivate(priv);
-    return ripemd160(blake256(key.getPublic().encode("hex").slice(2)));
+    const publicKey = getPublicFromPrivate(priv);
+    return getAccountIdFromPublic(publicKey);
+};
+
+/**
+ * Gets account id from the given public key.
+ * @param publicKey 64 byte hexadecimal string of uncompressed public key
+ * @returns 20 byte hexadecimal string of account id
+ */
+export const getAccountIdFromPublic = (publicKey: string): string => {
+    return ripemd160(blake256(publicKey));
 };
 
 /**
