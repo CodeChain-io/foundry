@@ -1,24 +1,32 @@
-describe("examples", () => {
+import { readFileSync } from "fs";
+
+describe.skip("examples", () => {
     beforeAll(() => {
         // import account "0xa6594b7196808d161b6fb137e781abbc251385d9" which is used in
         // the examples.
         // The passphrase of the account is "satoshi".
-        require("../examples/import-test-account");
+        runExample("import-test-account");
     });
 
     test("get-balance", () => {
-        require("../examples/get-balance");
+        runExample("get-balance");
     });
 
     test("payment", () => {
-        require("../examples/payment");
+        runExample("payment");
     });
 
     test("create-asset-transfer-address", () => {
-        require("../examples/create-asset-transfer-address");
+        runExample("create-asset-transfer-address");
     });
 
     test("mint-and-transfer", () => {
-        require("../examples/mint-and-transfer");
+        runExample("mint-and-transfer");
     });
 });
+
+// FIXME: The tests don't fail even if eval prints console.error
+function runExample(name) {
+    const path = `examples/${name}.js`;
+    eval(String(readFileSync(path)).replace(`require("codechain-sdk")`, `require("..")`));
+}
