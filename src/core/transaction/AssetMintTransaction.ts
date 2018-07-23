@@ -32,11 +32,26 @@ export type AssetMintTransactionData = {
  * - If an identical transaction hash already exists, then the change fails. In this situation, a transaction can be created again by arbitrarily changing the nonce.
  */
 export class AssetMintTransaction {
-    private readonly data: AssetMintTransactionData;
-    private readonly type = "assetMint";
+    readonly networkId: number;
+    readonly shardId: number;
+    readonly metadata: string;
+    readonly output: {
+        lockScriptHash: H256;
+        parameters: Buffer[];
+        amount: number | null;
+    };
+    readonly registrar: H160 | null;
+    readonly nonce: number;
+    readonly type = "assetMint";
 
     constructor(data: AssetMintTransactionData) {
-        this.data = data;
+        const { networkId, shardId, metadata, output, registrar, nonce } = data;
+        this.networkId = networkId;
+        this.shardId = shardId;
+        this.metadata = metadata;
+        this.output = output;
+        this.registrar = registrar;
+        this.nonce = nonce;
     }
 
     static fromJSON(obj: any) {
@@ -56,7 +71,7 @@ export class AssetMintTransaction {
     }
 
     toJSON() {
-        const { networkId, shardId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this.data;
+        const { networkId, shardId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this;
         return {
             type: this.type,
             data: {
@@ -76,7 +91,7 @@ export class AssetMintTransaction {
     }
 
     toEncodeObject() {
-        const { networkId, shardId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this.data;
+        const { networkId, shardId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this;
         return [
             3,
             networkId,
@@ -99,7 +114,7 @@ export class AssetMintTransaction {
     }
 
     getMintedAsset(): Asset {
-        const { lockScriptHash, parameters, amount } = this.data.output;
+        const { lockScriptHash, parameters, amount } = this.output;
         // FIXME: need U64 to be implemented or use U256
         if (amount === null) {
             throw "not implemented";
@@ -115,7 +130,7 @@ export class AssetMintTransaction {
     }
 
     getAssetScheme(): AssetScheme {
-        const { networkId, shardId, metadata, output: { amount }, registrar } = this.data;
+        const { networkId, shardId, metadata, output: { amount }, registrar } = this;
         // FIXME: need U64 to be implemented or use U256
         if (amount === null) {
             throw "not implemented";
@@ -130,7 +145,7 @@ export class AssetMintTransaction {
     }
 
     getAssetSchemeAddress(): H256 {
-        const { shardId } = this.data;
+        const { shardId } = this;
         const blake = blake256WithKey(this.hash().value, new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -141,7 +156,7 @@ export class AssetMintTransaction {
     }
 
     getAssetAddress(): H256 {
-        const { shardId } = this.data;
+        const { shardId } = this;
         const blake = blake256WithKey(this.hash().value, new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

@@ -19,19 +19,17 @@ test("AssetMintTransaction fromJSON", async () => {
 
     expect(parcel.unsigned.action.transactions[0]).toMatchObject({
         type: expect.stringMatching("assetMint"),
-        data: expect.objectContaining({
-            metadata: expect.anything(),
-            output: {
-                lockScriptHash: expect.any(H256),
-                // FIXME: Buffer[]
-                parameters: expect.anything(),
-                // FIXME: Change it to U256
-                amount: expect.anything(),
-            },
-            // FIXME: null or H160
-            registrar: null,
-            nonce: expect.anything()
-        })
+        metadata: expect.anything(),
+        output: {
+            lockScriptHash: expect.any(H256),
+            // FIXME: Buffer[]
+            parameters: expect.anything(),
+            // FIXME: Change it to U256
+            amount: expect.anything(),
+        },
+        // FIXME: null or H160
+        registrar: null,
+        nonce: expect.anything()
     });
 });
 
