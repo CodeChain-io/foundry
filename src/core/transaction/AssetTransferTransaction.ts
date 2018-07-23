@@ -1,3 +1,5 @@
+import * as _ from "lodash";
+
 import { AssetTransferAddress } from "../../key/classes";
 
 import { H256 } from "../H256";
@@ -106,6 +108,26 @@ export class AssetTransferTransaction {
             }
         });
         return this;
+    }
+
+    getTransferredAsset(index: number): Asset {
+        if (index >= this.outputs.length) {
+            throw "invalid output index";
+        }
+        const output = this.outputs[index];
+        const { assetType, lockScriptHash, parameters, amount } = output;
+        return new Asset({
+            assetType,
+            lockScriptHash,
+            parameters,
+            amount,
+            transactionHash: this.hash(),
+            transactionOutputIndex: index
+        });
+    }
+
+    getTransferredAssets(): Asset[] {
+        return _.range(this.outputs.length).map(i => this.getTransferredAsset(i));
     }
 
     hashWithoutScript(): H256 {
