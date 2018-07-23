@@ -14,6 +14,10 @@ describe("examples", () => {
         require("../examples/payment");
     });
 
+    test("create-asset-transfer-address", () => {
+        require("../examples/create-asset-transfer-address");
+    });
+
     test("mint-and-transfer", () => {
         require("../examples/mint-and-transfer");
     });
