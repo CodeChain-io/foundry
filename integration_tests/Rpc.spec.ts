@@ -123,8 +123,8 @@ describe("rpc", () => {
             });
 
             test("getAssetScheme", async () => {
-                expect(await sdk.rpc.chain.getAssetScheme(mintTransaction.hash())).toEqual(expect.any(AssetScheme));
-                expect(await sdk.rpc.chain.getAssetScheme(invalidHash)).toBe(null);
+                expect(await sdk.rpc.chain.getAssetSchemeByHash(mintTransaction.hash(), 0)).toEqual(expect.any(AssetScheme));
+                expect(await sdk.rpc.chain.getAssetSchemeByHash(invalidHash, 0)).toBe(null);
             });
 
             test("getAsset", async () => {
