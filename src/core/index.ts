@@ -115,15 +115,18 @@ export class Core {
     }
 
     createAssetMintTransaction(params: {
-        shardId: number,
-        metadata: string,
+        scheme: AssetScheme | {
+            networkId?: number;
+            shardId: number,
+            metadata: string,
+            registrar?: H160,
+            amount: number | null,
+        },
         recipient: AssetTransferAddress | string,
-        amount: number | null,
-        registrar?: H160,
         nonce?: number,
-        networkId?: number;
     }): AssetMintTransaction {
-        const { shardId, metadata, recipient, registrar, amount, nonce, networkId } = params;
+        const { scheme, recipient, nonce } = params;
+        const { networkId, shardId, metadata, registrar, amount } = scheme;
         return new AssetMintTransaction({
             networkId: networkId || this.networkId,
             shardId,
