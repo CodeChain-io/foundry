@@ -20,6 +20,10 @@ describe.skip("examples", () => {
         runExample("create-asset-transfer-address");
     });
 
+    test("mint-asset", () => {
+        runExample("mint-asset");
+    });
+
     test("mint-and-transfer", () => {
         runExample("mint-and-transfer");
     });
