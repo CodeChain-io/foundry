@@ -6,17 +6,16 @@ import { toHex } from "../utils";
 import { toWords, encode, decode, fromWords } from "./bech32";
 
 /**
- * Substitutes for platform token owner which consists of network id and account
- * id. . The network id is represented with prefix "ccc"(mainnet) or
- * "tcc"(testnet). Currently version 0 exists only.
+ * The bech32 form of account id. The human readable part(HRP) is used to
+ * represent the network. For platform address, the HRP is "ccc" for mainnet or
+ * "tcc" for testnet.
  *
- * Refer to the wiki for the details about PlatformAddress.
- * https://github.com/CodeChain-io/codechain/wiki/CodeChain-Address
+ * Refer to the spec for the details about PlatformAddress.
+ * https://github.com/CodeChain-io/codechain/blob/master/spec/CodeChain-Address.md
  */
 export class PlatformAddress {
-    accountId: H160;
-
-    value: string;
+    readonly accountId: H160;
+    readonly value: string;
 
     private constructor(accountId: H160, address: string) {
         this.accountId = accountId;
@@ -53,6 +52,10 @@ export class PlatformAddress {
 
     toString(): string {
         return this.value;
+    }
+
+    getAccountId(): H160 {
+        return this.accountId;
     }
 
     static ensure(address: PlatformAddress | string) {
