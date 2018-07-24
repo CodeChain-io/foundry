@@ -115,6 +115,8 @@ export class AssetTransferAddress {
                 return this.fromTypeAndPayload(1, Buffer.from(parameters[0]).toString("hex"));
             }
             throw "Invalid parameter length";
+        } else if (parameters.length === 0) {
+            return this.fromLockScriptHash(H256.ensure(lockScriptHash));
         }
         throw "Unknown lock script hash";
     }
