@@ -8,6 +8,10 @@ describe.skip("examples", () => {
         runExample("import-test-account");
     });
 
+    test("create-account", () => {
+        runExample("create-account");
+    });
+
     test("get-balance", () => {
         runExample("get-balance");
     });
