@@ -2,7 +2,7 @@ var SDK = require("..");
 
 var sdk = new SDK({ server: "http://localhost:8080" });
 
-// MemoryKeyStore is the key store for testing purpose. Do not use this code in
+// MemoryKeyStore is a key store for testing purposes. Do not use this code in
 // production.
 var keyStore = sdk.key.createMemoryKeyStore();
 // P2PKH supports P2PKH(Pay to Public Key Hash) lock/unlock scripts.
