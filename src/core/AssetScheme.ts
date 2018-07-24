@@ -1,5 +1,6 @@
 // FIXME: Use interface instead of importing key class.
 import { AssetTransferAddress } from "../key/AssetTransferAddress";
+import { PlatformAddress } from "../key/classes";
 
 import { H160 } from "./H160";
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
@@ -9,7 +10,7 @@ export type AssetSchemeData = {
     shardId: number;
     metadata: string;
     amount: number;
-    registrar: H160 | null;
+    registrar: PlatformAddress | H160 | string | null;
 };
 /**
  * Object that contains information about the Asset when performing AssetMintTransaction.
@@ -25,7 +26,7 @@ export class AssetScheme {
         this.networkId = data.networkId;
         this.shardId = data.shardId;
         this.metadata = data.metadata;
-        this.registrar = data.registrar;
+        this.registrar = data.registrar === null ? null : PlatformAddress.ensureAccount(data.registrar);
         this.amount = data.amount;
     }
 

@@ -1,5 +1,5 @@
 // FIXME: Use interface instead of importing key class.
-import { AssetTransferAddress } from "../key/classes";
+import { AssetTransferAddress, PlatformAddress } from "../key/classes";
 
 import { Parcel } from "./Parcel";
 import { Asset } from "./Asset";
@@ -42,10 +42,10 @@ export class Core {
      * @throws Given string for recipient is invalid for converting it to H160
      * @throws Given number or string for amount is invalid for converting it to U256
      */
-    createPaymentParcel(params: { recipient: H160 | string, amount: U256 | number | string }): Parcel {
+    createPaymentParcel(params: { recipient: PlatformAddress | H160 | string, amount: U256 | number | string }): Parcel {
         const { recipient, amount } = params;
         const action = new Payment(
-            H160.ensure(recipient),
+            PlatformAddress.ensureAccount(recipient),
             U256.ensure(amount)
         );
         return new Parcel(
@@ -103,14 +103,19 @@ export class Core {
      * the registrar account.
      * @throws Given string for registrar is invalid for converting it to H160
      */
-    createAssetScheme(params: { shardId: number, metadata: string, amount: number, registrar: H160 | string | null }): AssetScheme {
+    createAssetScheme(params: {
+        shardId: number,
+        metadata: string,
+        amount: number,
+        registrar: PlatformAddress | H160 | string | null
+    }): AssetScheme {
         const { shardId, metadata, amount, registrar } = params;
         return new AssetScheme({
             networkId: this.networkId,
             shardId,
             metadata,
             amount,
-            registrar: registrar === null ? null : H160.ensure(registrar)
+            registrar,
         });
     }
 
@@ -119,7 +124,7 @@ export class Core {
             networkId?: number;
             shardId: number,
             metadata: string,
-            registrar?: H160,
+            registrar?: PlatformAddress | H160 | string,
             amount: number | null,
         },
         recipient: AssetTransferAddress | string,

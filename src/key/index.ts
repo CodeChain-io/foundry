@@ -40,7 +40,7 @@ export class Key {
      * @throws When nonce or fee in the Parcel is null
      * @throws When account or its passphrase is invalid
      */
-    async signParcel(parcel: Parcel, params: { account: H160 | string, passphrase?: string }): Promise<SignedParcel> {
+    async signParcel(parcel: Parcel, params: { account: PlatformAddress | H160 | string, passphrase?: string }): Promise<SignedParcel> {
         const { account, passphrase } = params;
         const sig = await this.rpc.account.sign(parcel.hash(), account, passphrase);
         return new SignedParcel(parcel, sig);

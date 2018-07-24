@@ -22,15 +22,15 @@ export class PlatformAddress {
         this.value = address;
     }
 
-    static fromAccountId(accountId: H160, options: { isTestnet?: boolean, version?: number } = {}) {
+    static fromAccountId(accountId: H160 | string, options: { isTestnet?: boolean, version?: number } = {}) {
         const { isTestnet = false, version = 0 } = options;
 
         if (version !== 0) {
             throw `Unsupported version for platform address: ${version}`;
         }
 
-        const words = toWords(Buffer.from([version, ...Buffer.from(accountId.value, "hex")]));
-        return new PlatformAddress(accountId, encode(isTestnet ? "tcc" : "ccc", words));
+        const words = toWords(Buffer.from([version, ...Buffer.from(H160.ensure(accountId).value, "hex")]));
+        return new PlatformAddress(H160.ensure(accountId), encode(isTestnet ? "tcc" : "ccc", words));
     }
 
     static fromString(address: string) {
@@ -58,7 +58,20 @@ export class PlatformAddress {
         return this.accountId;
     }
 
-    static ensure(address: PlatformAddress | string) {
+    static ensure(address: PlatformAddress | string): PlatformAddress {
         return address instanceof PlatformAddress ? address : PlatformAddress.fromString(address);
+    }
+
+    static ensureAccount(address: PlatformAddress | H160 | string): H160 {
+        if (address instanceof PlatformAddress) {
+            // FIXME: verify network id
+            return address.getAccountId();
+        } else if (address instanceof H160) {
+            return address;
+        } else if (address.match(`^(0x)?[a-fA-F0-9]{40}$`)) {
+            return new H160(address);
+        } else {
+            return PlatformAddress.fromString(address).getAccountId();
+        }
     }
 }

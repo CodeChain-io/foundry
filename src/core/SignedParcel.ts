@@ -1,10 +1,12 @@
 import * as _ from "lodash";
 
+import { PlatformAddress } from "../key/classes";
+import { blake256, ripemd160, recoverEcdsa } from "../utils";
+
 import { U256 } from "./U256";
 import { H160 } from "./H160";
 import { H256 } from "./H256";
 import { Parcel } from "./Parcel";
-import { blake256, ripemd160, recoverEcdsa } from "../utils";
 
 const RLP = require("rlp");
 
@@ -78,7 +80,7 @@ export class SignedParcel {
         return new H256(blake256(this.rlpBytes()));
     }
 
-    getSender(): H160 {
+    getSignerAccountId(): H160 {
         const { r, s, v, unsigned } = this;
         const publicKey = recoverEcdsa(unsigned.hash().value, {
             r: r.value.toString(16),
@@ -86,6 +88,10 @@ export class SignedParcel {
             v
         });
         return new H160(ripemd160(blake256(publicKey)));
+    }
+
+    getSignerAddress(): PlatformAddress {
+        return PlatformAddress.fromAccountId(this.getSignerAccountId());
     }
 
     static fromJSON(data: any) {

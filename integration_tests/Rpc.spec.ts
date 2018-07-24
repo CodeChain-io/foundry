@@ -1,6 +1,7 @@
 import { SDK } from "../";
 import { H256, SignedParcel, Invoice, AssetMintTransaction, Asset, AssetScheme } from "../lib/core/classes";
-import { getAccountIdFromPrivate, generatePrivateKey, signEcdsa } from "../src/utils";
+import { PlatformAddress } from "../lib/key/classes";
+import { getAccountIdFromPrivate, generatePrivateKey, signEcdsa } from "../lib/utils";
 
 describe("rpc", () => {
     let sdk: SDK;
@@ -150,7 +151,9 @@ describe("rpc", () => {
         test("importRaw", async () => {
             const secret = "a2b39d4aefecdb17f84ed4cf629e7c8817691cc4f444ac7522902b8fb4b7bd53";
             const account = getAccountIdFromPrivate(secret);
-            expect(await sdk.rpc.account.importRaw(secret)).toEqual(`0x${account}`);
+            const address = PlatformAddress.fromAccountId(account);
+            expect(address.toString()).toEqual("cccqz3z4e3x6f5j80wexg0xfr0qsrqcuyzf7g4y0je6");
+            expect(await sdk.rpc.account.importRaw(secret)).toEqual(address.toString());
         });
 
         test("remove", async () => {

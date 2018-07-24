@@ -1,5 +1,7 @@
 import { Buffer } from "buffer";
 
+import { PlatformAddress } from "../../key/classes";
+
 import { H160 } from "../H160";
 import { H256 } from "../H256";
 import { blake256WithKey, blake256 } from "../../utils";
@@ -17,7 +19,7 @@ export type AssetMintTransactionData = {
         parameters: Buffer[];
         amount: number | null;
     };
-    registrar: H160 | null;
+    registrar: PlatformAddress | H160 | string | null;
     nonce: number;
 };
 
@@ -50,7 +52,7 @@ export class AssetMintTransaction {
         this.shardId = shardId;
         this.metadata = metadata;
         this.output = output;
-        this.registrar = registrar;
+        this.registrar = registrar === null ? null : PlatformAddress.ensureAccount(registrar);
         this.nonce = nonce;
     }
 
