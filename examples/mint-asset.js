@@ -22,7 +22,7 @@ var assetMintTransaction = sdk.core.createAssetMintTransaction({
 // Send a change-shard-state parcel to process the transaction.
 var parcel = sdk.core.createChangeShardStateParcel({ transactions: [assetMintTransaction] });
 sdk.rpc.chain.sendParcel(parcel, {
-    account: "0xa6594b7196808d161b6fb137e781abbc251385d9",
+    account: "cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7",
     passphrase: "satoshi"
 }).then(function (parcelHash) {
     // Get the invoice of the parcel.

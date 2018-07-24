@@ -9,6 +9,7 @@ describe("rpc", () => {
     const invalidHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
     const signerSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
     const signerAccount = "0xa6594b7196808d161b6fb137e781abbc251385d9";
+    const signerAddress = "cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7";
 
     beforeAll(async () => {
         sdk = new SDK({ server: "http://localhost:8080" });
@@ -64,6 +65,8 @@ describe("rpc", () => {
                 expect(await sdk.rpc.chain.getRegularKey(account)).toEqual(expect.any(H512));
             });
         });
+
+        // FIXME: with address here.
 
         describe("with parcel hash", () => {
             let parcelHash: H256;

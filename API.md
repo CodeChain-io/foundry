@@ -26,7 +26,7 @@ Make sure that your CodeChain RPC server is listening. In the examples, we assum
 
 ## Setup the test account
 
-Before you begin to meet various examples, you need to setup the account. The given account below(`0xa6594b7196808d161b6fb137e781abbc251385d9`) holds 100000 CCC at the genesis block. It's a sufficient amount to pay for the parcel fee.
+Before you begin to meet various examples, you need to setup the account. The given account below(`cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7`) holds 100000 CCC at the genesis block. It's a sufficient amount to pay for the parcel fee.
 
 ```javascript
 var SDK = require("codechain-sdk");
@@ -35,7 +35,7 @@ var sdk = new SDK({ server: "http://localhost:8080" });
 var secret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
 var passphrase = "satoshi";
 sdk.rpc.account.importRaw(secret, passphrase).then(function (account) {
-    console.log(account); // 0xa6594b7196808d161b6fb137e781abbc251385d9
+    console.log(account); // cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7
 });
 ```
 
@@ -66,7 +66,7 @@ var sdk = new SDK({ server: "http://localhost:8080" });
 
 var passphrase = "my-secret";
 sdk.rpc.account.create(passphrase).then(function (account) {
-    console.log(account); // 160-bit account id
+    console.log(account); // string that starts with "ccc". For example: cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7
 });
 ```
 
@@ -80,7 +80,7 @@ You can get the balance of an account using `getBalance` method in `sdk.rpc.chai
 var SDK = require("codechain-sdk");
 var sdk = new SDK({ server: "http://localhost:8080" });
 
-sdk.rpc.chain.getBalance("0xa6594b7196808d161b6fb137e781abbc251385d9").then(function (balance) {
+sdk.rpc.chain.getBalance("cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7").then(function (balance) {
     // the balance is a U256 instance at this moment. Use toString() to print it out.
     console.log(balance.toString()); // the amount of CCC that the account has.
 });
@@ -90,19 +90,19 @@ sdk.rpc.chain.getBalance("0xa6594b7196808d161b6fb137e781abbc251385d9").then(func
 
 ## Send a payment parcel
 
-When you create an account, the CCC balance is 0. CCC is needed to pay for the parcel's fee. The fee must be at least 10 for any parcel. The example below shows the sending of 10000 CCC from the test account(`0xa659..85d9`) to the account(`0xaaaa..aaaa`).
+When you create an account, the CCC balance is 0. CCC is needed to pay for the parcel's fee. The fee must be at least 10 for any parcel. The example below shows the sending of 10000 CCC from the test account(`cccqzn..d6c4d7`) to the account(`cccqrj..0ys4jg`).
 
 ```javascript
 var SDK = require("codechain-sdk");
 var sdk = new SDK({ server: "http://localhost:8080" });
 
 var parcel = sdk.core.createPaymentParcel({
-    recipient: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    recipient: "cccqrjgmsqfcj9xx2frftwq5w3esgwahtkf5q0ys4jg",
     amount: 10000
 });
 
 sdk.rpc.chain.sendParcel(parcel, {
-    account: "0xa6594b7196808d161b6fb137e781abbc251385d9",
+    account: "cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7",
     passphrase: "satoshi"
 }).then(function (parcelHash) {
     return sdk.rpc.chain.getParcelInvoice(parcelHash, { timeout: 5 * 60 * 1000 });
@@ -160,7 +160,7 @@ var assetMintTransaction = sdk.core.createAssetMintTransaction({
 // Send a change-shard-state parcel to process the transaction.
 var parcel = sdk.core.createChangeShardStateParcel({ transactions: [assetMintTransaction] });
 sdk.rpc.chain.sendParcel(parcel, {
-    account: "0xa6594b7196808d161b6fb137e781abbc251385d9",
+    account: "cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7",
     passphrase: "satoshi"
 }).then(function (parcelHash) {
     // Get the invoice of the parcel.

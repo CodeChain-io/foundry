@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 
 describe.skip("examples", () => {
     beforeAll(() => {
-        // import account "0xa6594b7196808d161b6fb137e781abbc251385d9" which is used in
+        // import account "cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7" which is used in
         // the examples.
         // The passphrase of the account is "satoshi".
         runExample("import-test-account");
