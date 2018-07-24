@@ -20,8 +20,8 @@ const PAY_TO_PUBLIC_KEY_HASH_TYPE = 0x01;
  * lockScriptHash, parameters. The network id is represented with prefix
  * "cca"(mainnet) or "tca"(testnet). Currently version 0 exists only.
  *
- * Refer to the wiki for the details about AssetTransferAddress.
- * https://github.com/CodeChain-io/codechain/wiki/CodeChain-Address
+ * Refer to the spec for the details about AssetTransferAddress.
+ * https://github.com/CodeChain-io/codechain/blob/master/spec/CodeChain-Address.md
  */
 export class AssetTransferAddress {
     type: number;
