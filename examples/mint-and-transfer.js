@@ -2,20 +2,6 @@ const SDK = require("codechain-sdk");
 
 const sdk = new SDK({ server: "http://localhost:8080" });
 
-// sendTransaction() is a function to make transaction to be processed.
-async function sendTransactions(txs) {
-    const parcelSignerSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
-    const parcelSignerAddress = SDK.util.getAccountIdFromPrivate(parcelSignerSecret);
-    const parcel = sdk.core.createChangeShardStateParcel({
-        transactions: txs,
-    }).sign({
-        secret: parcelSignerSecret,
-        nonce: await sdk.rpc.chain.getNonce(parcelSignerAddress),
-        fee: 10,
-    })
-    return await sdk.rpc.chain.sendSignedParcel(parcel);
-}
-
 (async () => {
     const keyStore = await sdk.key.createMemoryKeyStore();
     const p2pkh = await sdk.key.createP2PKH({ keyStore });
@@ -53,13 +39,25 @@ async function sendTransactions(txs) {
             assetType: firstGold.assetType
         });
     await transferTx.sign(0, { signer: p2pkh });
+    transferTx.getTransferredAssets();
 
-    await sendTransactions([mintTx, transferTx]);
-    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), { timeout: 5 * 60 * 1000 });
+    const parcel = sdk.core.createChangeShardStateParcel({
+        transactions: [mintTx, transferTx]
+    });
+    await sdk.rpc.chain.sendParcel(parcel, {
+        account: "0xa6594b7196808d161b6fb137e781abbc251385d9",
+        passphrase: "satoshi",
+    });
+
+    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), {
+        timeout: 5 * 60 * 1000
+    });
     if (mintTxInvoice.success === false) {
         throw "AssetMintTransaction failed";
     }
-    const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), { timeout: 5 * 60 * 1000 });
+    const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), {
+        timeout: 5 * 60 * 1000
+    });
     if (transferTxInvoice.success === false) {
         throw "AssetTransferTransaction failed";
     }
