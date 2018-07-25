@@ -2,7 +2,7 @@ var SDK = require("codechain-sdk");
 
 var sdk = new SDK({ server: "http://localhost:8080" });
 
-// If you want to know how to create an address, See the example "Create an
+// If you want to know how to create an address, see the example "Create an
 // asset transfer address".
 var address = "ccaqqqk7n0a0w69tjfza9svdjzhvu95cpl29ssnyn99ml8nvl8q6sd2c7qgjejfc";
 
@@ -27,11 +27,11 @@ sdk.rpc.chain.sendParcel(parcel, {
 }).then(function (parcelHash) {
     // Get the invoice of the parcel.
     return sdk.rpc.chain.getParcelInvoice(parcelHash, {
-        // Wait up to 120 seconds to get the invoice
+        // Wait up to 120 seconds to get the invoice.
         timeout: 120 * 1000
     });
 }).then(function (invoice) {
-    // The invoice of ChangeShardState parcel is an array of the object that has
+    // The invoice of change-shard-state parcel is an array of the object that has
     // type { success: boolean }. Each object represents the result of each
     // transaction.
     console.log(invoice); // [{ success: true }]
