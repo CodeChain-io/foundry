@@ -169,8 +169,7 @@ describe("rpc", () => {
 
         test("sign", async () => {
             const secret = generatePrivateKey();
-            const account = getAccountIdFromPrivate(secret);
-            await sdk.rpc.account.importRaw(secret, "my-password");
+            const account = await sdk.rpc.account.importRaw(secret, "my-password");
 
             const message = "0000000000000000000000000000000000000000000000000000000000000000";
             const { r, s, v } = signEcdsa(message, secret);

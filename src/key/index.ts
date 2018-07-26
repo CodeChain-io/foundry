@@ -42,7 +42,8 @@ export class Key {
      */
     async signParcel(parcel: Parcel, params: { account: PlatformAddress | H160 | string, passphrase?: string }): Promise<SignedParcel> {
         const { account, passphrase } = params;
-        const sig = await this.rpc.account.sign(parcel.hash(), account, passphrase);
+        const address = account instanceof PlatformAddress ? account : PlatformAddress.fromAccountId(account);
+        const sig = await this.rpc.account.sign(parcel.hash(), address, passphrase);
         return new SignedParcel(parcel, sig);
     }
 

@@ -1,4 +1,4 @@
-import { H160, H256 } from "../core/classes";
+import { H256 } from "../core/classes";
 import { PlatformAddress } from "../key/classes";
 
 import { Rpc } from ".";
@@ -20,7 +20,7 @@ export class AccountRpc {
     getList(): Promise<string[]> {
         return this.rpc.sendRpcRequest("account_getList", [])
             .then((accounts: string[]) => {
-                return accounts.map(account => PlatformAddress.fromAccountId(account).toString());
+                return accounts.map(account => PlatformAddress.ensure(account).toString());
             });
     }
 
@@ -32,7 +32,7 @@ export class AccountRpc {
     create(passphrase?: string): Promise<string> {
         return this.rpc.sendRpcRequest("account_create", [
             passphrase
-        ]).then(account => PlatformAddress.fromAccountId(account).toString());
+        ]).then(account => PlatformAddress.ensure(account).toString());
     }
 
     /**
@@ -45,7 +45,7 @@ export class AccountRpc {
         return this.rpc.sendRpcRequest("account_importRaw", [
             `0x${H256.ensure(secret).value}`,
             passphrase
-        ]).then(account => PlatformAddress.fromAccountId(account).toString());
+        ]).then(account => PlatformAddress.ensure(account).toString());
     }
 
     /**
@@ -53,10 +53,9 @@ export class AccountRpc {
      * @param address A platform address
      * @param passphrase The account's passphrase
      */
-    remove(address: PlatformAddress | H160 | string, passphrase?: string): Promise<void> {
-        const account = PlatformAddress.ensureAccount(address);
+    remove(address: PlatformAddress | string, passphrase?: string): Promise<void> {
         return this.rpc.sendRpcRequest("account_remove", [
-            `0x${account.value}`,
+            PlatformAddress.ensure(address).toString(),
             passphrase
         ]);
     }
@@ -67,11 +66,10 @@ export class AccountRpc {
      * @param address A platform address
      * @param passphrase The account's passphrase
      */
-    sign(messageDigest: H256 | string, address: PlatformAddress | H160 | string, passphrase?: string): Promise<string> {
-        const account = PlatformAddress.ensureAccount(address);
+    sign(messageDigest: H256 | string, address: PlatformAddress | string, passphrase?: string): Promise<string> {
         return this.rpc.sendRpcRequest("account_sign", [
             `0x${H256.ensure(messageDigest).value}`,
-            `0x${account.value}`,
+            PlatformAddress.ensure(address).toString(),
             passphrase
         ]);
     }

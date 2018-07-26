@@ -73,7 +73,8 @@ export class ChainRpc {
             throw "The fee of the parcel is not specified";
         }
         parcel.setFee(fee);
-        const sig = await this.rpc.account.sign(parcel.hash(), account, passphrase);
+        const address = account instanceof PlatformAddress ? account : PlatformAddress.fromAccountId(account);
+        const sig = await this.rpc.account.sign(parcel.hash(), address, passphrase);
         return this.sendSignedParcel(new SignedParcel(parcel, sig));
     }
 
