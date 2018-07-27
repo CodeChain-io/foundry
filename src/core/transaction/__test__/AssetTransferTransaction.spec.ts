@@ -88,8 +88,8 @@ test("AssetTransferOutput shard id", () => {
     const output = new AssetTransferOutput({
         lockScriptHash: new H256("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
         parameters: [Buffer.from([0x04, 0x05]), Buffer.from([0x06])],
-        assetType: new H256("41000000CAFEBEEFbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+        assetType: new H256("4100BAADCAFEBEEFbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
         amount: 321
     });
-    expect(output.shardId()).toEqual(parseInt("CafeBeef", 16));
+    expect(output.shardId()).toEqual(parseInt("BAAD", 16));
 });

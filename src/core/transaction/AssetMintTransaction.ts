@@ -4,7 +4,7 @@ import { PlatformAddress } from "../../key/classes";
 
 import { H160 } from "../H160";
 import { H256 } from "../H256";
-import { blake256WithKey, blake256 } from "../../utils";
+import { blake208WithKey, blake256 } from "../../utils";
 import { Asset } from "../Asset";
 import { AssetScheme } from "../AssetScheme";
 
@@ -148,31 +148,31 @@ export class AssetMintTransaction {
 
     getAssetSchemeAddress(): H256 {
         const { shardId } = this;
-        const blake = blake256WithKey(this.hash().value, new Uint8Array([
+        const blake = blake208WithKey(this.hash().value, new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
         ]));
-        const shardPrefix = convertU32toHex(shardId);
-        const prefix = `53000000${shardPrefix}`;
-        return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
+        const shardPrefix = convertU16toHex(shardId);
+        const worldPrefix = "0000";
+        const prefix = "5300";
+        return new H256(prefix + shardPrefix + worldPrefix + blake);
     }
 
     getAssetAddress(): H256 {
         const { shardId } = this;
-        const blake = blake256WithKey(this.hash().value, new Uint8Array([
+        const blake = blake208WithKey(this.hash().value, new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         ]));
-        const shardPrefix = convertU32toHex(shardId);
-        const prefix = `41000000${shardPrefix}`;
-        return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
+        const shardPrefix = convertU16toHex(shardId);
+        const worldPrefix = "0000";
+        const prefix = "4100";
+        return new H256(prefix + shardPrefix + worldPrefix + blake);
     }
 }
 
-function convertU32toHex(id: number) {
-    const shardId0: string = ("0" + ((id >> 24) & 0xFF).toString(16)).slice(-2);
-    const shardId1: string = ("0" + ((id >> 16) & 0xFF).toString(16)).slice(-2);
-    const shardId2: string = ("0" + ((id >> 8) & 0xFF).toString(16)).slice(-2);
-    const shardId3: string = ("0" + ((id >> 0) & 0xFF).toString(16)).slice(-2);
-    return shardId0 + shardId1 + shardId2 + shardId3;
+function convertU16toHex(id: number) {
+    const hi: string = ("0" + ((id >> 8) & 0xFF).toString(16)).slice(-2);
+    const lo: string = ("0" + (id & 0xFF).toString(16)).slice(-2);
+    return hi + lo;
 }

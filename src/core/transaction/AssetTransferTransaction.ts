@@ -3,7 +3,7 @@ import * as _ from "lodash";
 import { AssetTransferAddress } from "../../key/classes";
 
 import { H256 } from "../H256";
-import { blake256WithKey, blake256 } from "../../utils";
+import { blake208WithKey, blake256 } from "../../utils";
 import { AssetTransferInput } from "./AssetTransferInput";
 import { AssetTransferOutput } from "./AssetTransferOutput";
 import { Asset } from "../Asset";
@@ -171,9 +171,13 @@ export class AssetTransferTransaction {
             (index >> 56) & 0xFF, (index >> 48) & 0xFF, (index >> 40) & 0xFF, (index >> 32) & 0xFF,
             (index >> 24) & 0xFF, (index >> 16) & 0xFF, (index >> 8) & 0xFF, index & 0xFF,
         ]);
-        const blake = blake256WithKey(this.hash().value, iv);
-        const prefix = "4100000000000000";
-        return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
+        const shardId = this.outputs[index].shardId();
+
+        const blake = blake208WithKey(this.hash().value, iv);
+        const shardPrefix = convertU16toHex(shardId);
+        const worldPrefix = "0000";
+        const prefix = "4100";
+        return new H256(prefix + shardPrefix + worldPrefix + blake);
     }
 
     static fromJSON(obj: any) {
@@ -201,4 +205,10 @@ export class AssetTransferTransaction {
             }
         };
     }
+}
+
+function convertU16toHex(id: number) {
+    const hi: string = ("0" + ((id >> 8) & 0xFF).toString(16)).slice(-2);
+    const lo: string = ("0" + (id & 0xFF).toString(16)).slice(-2);
+    return hi + lo;
 }

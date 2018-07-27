@@ -57,6 +57,6 @@ export class AssetTransferOutput {
 
     shardId(): number {
         const { assetType } = this;
-        return parseInt(assetType.value.slice(8, 16), 16);
+        return parseInt(assetType.value.slice(4, 8), 16);
     }
 }
