@@ -108,6 +108,7 @@ describe("rpc", () => {
                 const keyStore = await sdk.key.createMemoryKeyStore();
                 const p2pkh = await sdk.key.createP2PKH({ keyStore });
                 mintTransaction = sdk.core.createAssetScheme({
+                    shardId: 0,
                     metadata: "metadata",
                     amount: 10,
                     registrar: null
@@ -120,6 +121,10 @@ describe("rpc", () => {
                     nonce: await sdk.rpc.chain.getNonce(signerAccount),
                     fee: 10
                 }));
+            });
+
+            test("getTransaction", async () => {
+                expect(await sdk.rpc.chain.getTransaction(mintTransaction.hash())).toEqual(mintTransaction);
             });
 
             test("getTransactionInvoice", async () => {

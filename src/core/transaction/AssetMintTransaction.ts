@@ -64,7 +64,7 @@ export class AssetMintTransaction {
             metadata,
             output: {
                 lockScriptHash: new H256(lockScriptHash),
-                parameters,
+                parameters: parameters.map((p: Array<number>) => Buffer.from(p)),
                 amount: amount === null ? null : amount,
             },
             registrar: registrar === null ? null : new H160(registrar),

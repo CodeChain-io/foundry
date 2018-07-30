@@ -39,7 +39,7 @@ export class AssetTransferOutput {
         const { lockScriptHash, parameters, assetType, amount } = data;
         return new this({
             lockScriptHash: new H256(lockScriptHash),
-            parameters,
+            parameters: parameters.map((p: Array<number>) => Buffer.from(p)),
             assetType: new H256(assetType),
             amount,
         });

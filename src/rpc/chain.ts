@@ -10,6 +10,7 @@ import { Invoice } from "../core/Invoice";
 import { H512 } from "../core/H512";
 import { Parcel } from "../core/Parcel";
 import { PlatformAddress } from "../key/classes";
+import { getTransactionFromJSON, Transaction } from "../core/transaction/Transaction";
 
 export class ChainRpc {
     private rpc: Rpc;
@@ -132,6 +133,18 @@ export class ChainRpc {
             "chain_getRegularKey",
             [`0x${PlatformAddress.ensureAccount(address).value}`, blockNumber || null]
         ).then(result => result === null ? null : new H512(result));
+    }
+
+    /**
+     * Gets a transaction of given hash.
+     * @param txhash The transaction hash of which to get the corresponding transaction of.
+     * @returns A transaction, or null when transaction of given hash not exists.
+     */
+    getTransaction(txhash: H256 | string): Promise<Transaction> {
+        return this.rpc.sendRpcRequest(
+            "chain_getTransaction",
+            [`0x${H256.ensure(txhash).value}`]
+        ).then(result => getTransactionFromJSON(result));
     }
 
     /**
