@@ -37,5 +37,5 @@ npm run test
 1. Run `yarn build` command.
 1. Run CodeChain RPC server. 
 1. Run `yarn test-int` command.
-   > It is also possible to indicate specific testcase with `-t` option. (e.g. `yarn test-int -t getBestBlockNumber`)
+   > It is also possible to indicate specific testcases with --`testRegex` and `-t` option. (e.g. `yarn test-int --testRegex Rpc -t getBestBlockNumber`)
 
