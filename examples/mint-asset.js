@@ -17,6 +17,7 @@ var assetMintTransaction = sdk.core.createAssetMintTransaction({
         amount: 100000000,
     },
     recipient: address,
+    nonce: Math.floor(Math.random() * 1000000000),
 });
 
 // Send a change-shard-state parcel to process the transaction.

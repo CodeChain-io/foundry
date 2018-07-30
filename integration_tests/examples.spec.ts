@@ -1,40 +1,47 @@
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync, unlinkSync } from "fs";
+import { execFile } from "child_process";
 
-describe.skip("examples", () => {
-    beforeAll(() => {
+describe("examples", () => {
+    beforeAll((done) => {
         // import account "cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7" which is used in
         // the examples.
         // The passphrase of the account is "satoshi".
-        runExample("import-test-account");
+        runExample("import-test-account", done);
     });
 
-    test("create-account", () => {
-        runExample("create-account");
+    test("create-account", (done) => {
+        runExample("create-account", done);
     });
 
-    test("get-balance", () => {
-        runExample("get-balance");
+    test("get-balance", (done) => {
+        runExample("get-balance", done);
     });
 
-    test("payment", () => {
-        runExample("payment");
+    test("payment", (done) => {
+        runExample("payment", done);
     });
 
-    test("create-asset-transfer-address", () => {
-        runExample("create-asset-transfer-address");
+    test("create-asset-transfer-address", (done) => {
+        runExample("create-asset-transfer-address", done);
     });
 
-    test("mint-asset", () => {
-        runExample("mint-asset");
+    test("mint-asset", (done) => {
+        runExample("mint-asset", done);
     });
 
-    test.skip("mint-and-transfer", () => {
-        runExample("mint-and-transfer");
+    test("mint-and-transfer", (done) => {
+        runExample("mint-and-transfer", done);
     });
 });
 
-// FIXME: The tests don't fail even if eval prints console.error
-function runExample(name) {
-    const path = `examples/${name}.js`;
-    eval(String(readFileSync(path)).replace(`require("codechain-sdk")`, `require("..")`));
+function runExample(name, done) {
+    const originalPath = `examples/${name}.js`;
+    const code = String(readFileSync(originalPath)).replace(`require("codechain-sdk")`, `require("..")`);
+    const testPath = `examples/test-${name}.js`;
+    writeFileSync(testPath, code);
+    execFile("node", [testPath], (error, stdout, stderr) => {
+        expect(stderr).toBe("");
+        unlinkSync(testPath);
+        done();
+    });
 }
