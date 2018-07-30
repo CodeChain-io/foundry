@@ -4,7 +4,7 @@ import { PlatformAddress } from "../../key/classes";
 
 import { H160 } from "../H160";
 import { H256 } from "../H256";
-import { blake208WithKey, blake256 } from "../../utils";
+import { blake256, blake256WithKey } from "../../utils";
 import { Asset } from "../Asset";
 import { AssetScheme } from "../AssetScheme";
 
@@ -148,26 +148,26 @@ export class AssetMintTransaction {
 
     getAssetSchemeAddress(): H256 {
         const { shardId } = this;
-        const blake = blake208WithKey(this.hash().value, new Uint8Array([
+        const blake = blake256WithKey(this.hash().value, new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
         ]));
         const shardPrefix = convertU16toHex(shardId);
         const worldPrefix = "0000";
-        const prefix = "5300";
-        return new H256(prefix + shardPrefix + worldPrefix + blake);
+        const prefix = `5300${shardPrefix}${worldPrefix}`;
+        return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }
 
     getAssetAddress(): H256 {
         const { shardId } = this;
-        const blake = blake208WithKey(this.hash().value, new Uint8Array([
+        const blake = blake256WithKey(this.hash().value, new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         ]));
         const shardPrefix = convertU16toHex(shardId);
         const worldPrefix = "0000";
-        const prefix = "4100";
-        return new H256(prefix + shardPrefix + worldPrefix + blake);
+        const prefix = `4100${shardPrefix}${worldPrefix}`;
+        return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }
 }
 
