@@ -14,4 +14,4 @@ sdk.rpc.chain.sendParcel(parcel, {
     return sdk.rpc.chain.getParcelInvoice(parcelHash, { timeout: 5 * 60 * 1000 });
 }).then(function (parcelInvoice) {
     console.log(parcelInvoice) // { success: true }
-});
+}).catch(console.error);

@@ -12,4 +12,4 @@ p2pkh.createAddress().then(function (address) {
     // This type of address is used to receive assets when minting or transferring them.
     // Example: ccaqqqk7n0a0w69tjfza9svdjzhvu95cpl29ssnyn99ml8nvl8q6sd2c7qgjejfc
     console.log(address.toString());
-});
+}).catch(console.error);

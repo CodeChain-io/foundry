@@ -35,4 +35,4 @@ sdk.rpc.chain.sendParcel(parcel, {
     // type { success: boolean }. Each object represents the result of each
     // transaction.
     console.log(invoice); // [{ success: true }]
-});
+}).catch(console.error);
