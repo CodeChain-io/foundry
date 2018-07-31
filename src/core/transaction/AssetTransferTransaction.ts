@@ -3,7 +3,7 @@ import * as _ from "lodash";
 import { AssetTransferAddress } from "../../key/classes";
 
 import { H256 } from "../H256";
-import { blake208WithKey, blake256 } from "../../utils";
+import { blake256, blake256WithKey } from "../../utils";
 import { AssetTransferInput } from "./AssetTransferInput";
 import { AssetTransferOutput } from "./AssetTransferOutput";
 import { Asset } from "../Asset";
@@ -173,11 +173,11 @@ export class AssetTransferTransaction {
         ]);
         const shardId = this.outputs[index].shardId();
 
-        const blake = blake208WithKey(this.hash().value, iv);
+        const blake = blake256WithKey(this.hash().value, iv);
         const shardPrefix = convertU16toHex(shardId);
         const worldPrefix = "0000";
-        const prefix = "4100";
-        return new H256(prefix + shardPrefix + worldPrefix + blake);
+        const prefix = `4100${shardPrefix}${worldPrefix}`;
+        return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }
 
     static fromJSON(obj: any) {
