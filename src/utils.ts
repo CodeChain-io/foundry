@@ -40,20 +40,6 @@ export const blake256 = (data: Buffer | string): string => {
 };
 
 /**
- * Gets data's 208 bit blake hash.
- * @param data buffer or hexadecimal string
- * @returns 26 byte hexadecimal string
- */
-export const blake208 = (data: Buffer | string): string => {
-    if (!(data instanceof Buffer)) {
-        data = Buffer.from(data, "hex");
-    }
-    const context = blake.blake2bInit(26, null);
-    blake.blake2bUpdate(context, data);
-    return toHex(blake.blake2bFinal(context));
-};
-
-/**
  * Gets data's 256 bit blake hash by using the key.
  * @param data buffer or hexadecimal string
  * @param key
@@ -64,21 +50,6 @@ export const blake256WithKey = (data: Buffer | string, key: Uint8Array): string 
         data = Buffer.from(data, "hex");
     }
     const context = blake.blake2bInit(32, key);
-    blake.blake2bUpdate(context, data);
-    return toHex(blake.blake2bFinal(context));
-};
-
-/**
- * Gets data's 208 bit blake hash by using the key.
- * @param data buffer or hexadecimal string
- * @param key
- * @returns 26 byte hexadecimal string
- */
-export const blake208WithKey = (data: Buffer | string, key: Uint8Array): string => {
-    if (!(data instanceof Buffer)) {
-        data = Buffer.from(data, "hex");
-    }
-    const context = blake.blake2bInit(26, key);
     blake.blake2bUpdate(context, data);
     return toHex(blake.blake2bFinal(context));
 };
