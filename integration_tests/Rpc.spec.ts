@@ -1,5 +1,5 @@
 import { SDK } from "../";
-import { H256, SignedParcel, Invoice, AssetMintTransaction, Asset, AssetScheme } from "../lib/core/classes";
+import { H256, SignedParcel, Invoice, AssetMintTransaction, Asset, AssetScheme, AssetTransferTransaction } from "../lib/core/classes";
 import { PlatformAddress } from "../lib/key/classes";
 import { getAccountIdFromPrivate, generatePrivateKey, signEcdsa } from "../lib/utils";
 
@@ -103,12 +103,13 @@ describe("rpc", () => {
 
         describe("with asset mint transaction", () => {
             let mintTransaction: AssetMintTransaction;
+            const shardId = 0;
 
             beforeAll(async () => {
                 const keyStore = await sdk.key.createMemoryKeyStore();
                 const p2pkh = await sdk.key.createP2PKH({ keyStore });
                 mintTransaction = sdk.core.createAssetScheme({
-                    shardId: 0,
+                    shardId,
                     metadata: "metadata",
                     amount: 10,
                     registrar: null
@@ -140,6 +141,59 @@ describe("rpc", () => {
                 expect(await sdk.rpc.chain.getAsset(mintTransaction.hash(), 0)).toEqual(expect.any(Asset));
                 expect(await sdk.rpc.chain.getAsset(mintTransaction.hash(), 1)).toBe(null);
                 expect(await sdk.rpc.chain.getAsset(invalidHash, 0)).toBe(null);
+            });
+
+            test("isAssetSpent", async () => {
+                expect(await sdk.rpc.chain.isAssetSpent(mintTransaction.hash(), 0, shardId)).toBe(false);
+                expect(await sdk.rpc.chain.isAssetSpent(mintTransaction.hash(), 1, shardId)).toBe(null);
+                expect(await sdk.rpc.chain.isAssetSpent(invalidHash, 0, shardId)).toBe(null);
+            });
+        });
+
+        describe("with mint and transfer transaction", () => {
+            let mintTransaction: AssetMintTransaction;
+            let transferTransaction: AssetTransferTransaction;
+            let blockNumber: number;
+            const shardId = 0;
+            const wrongShardId = 1;
+
+            beforeAll(async () => {
+                const keyStore = await sdk.key.createMemoryKeyStore();
+                const p2pkh = await sdk.key.createP2PKH({ keyStore });
+                mintTransaction = sdk.core.createAssetScheme({
+                    shardId,
+                    metadata: "metadata",
+                    amount: 10,
+                    registrar: null
+                }).createMintTransaction({ recipient: await p2pkh.createAddress() });
+                const mintedAsset = mintTransaction.getMintedAsset();
+                transferTransaction = sdk.core.createAssetTransferTransaction()
+                    .addInputs(mintedAsset)
+                    .addOutputs({
+                        recipient: await p2pkh.createAddress(),
+                        amount: 10,
+                        assetType: mintedAsset.assetType,
+                    });
+                await transferTransaction.sign(0, { signer: p2pkh });
+                const parcel = sdk.core.createChangeShardStateParcel({ transactions: [mintTransaction, transferTransaction] });
+                await sdk.rpc.chain.sendSignedParcel(parcel.sign({
+                    secret: signerSecret,
+                    nonce: await sdk.rpc.chain.getNonce(signerAccount),
+                    fee: 10
+                }));
+                blockNumber = await sdk.rpc.chain.getBestBlockNumber();
+            });
+
+            test("isAssetSpent", async () => {
+                expect(await sdk.rpc.chain.isAssetSpent(mintTransaction.hash(), 0, shardId)).toBe(true);
+                expect(await sdk.rpc.chain.isAssetSpent(mintTransaction.hash(), 0, shardId, blockNumber - 1)).toBe(null);
+                expect(await sdk.rpc.chain.isAssetSpent(mintTransaction.hash(), 0, shardId, blockNumber)).toBe(true);
+                expect(await sdk.rpc.chain.isAssetSpent(mintTransaction.hash(), 0, wrongShardId)).toBe(null);
+
+                expect(await sdk.rpc.chain.isAssetSpent(transferTransaction.hash(), 0, shardId)).toBe(false);
+                expect(await sdk.rpc.chain.isAssetSpent(transferTransaction.hash(), 0, shardId, blockNumber - 1)).toBe(null);
+                expect(await sdk.rpc.chain.isAssetSpent(transferTransaction.hash(), 0, shardId, blockNumber)).toBe(false);
+                expect(await sdk.rpc.chain.isAssetSpent(transferTransaction.hash(), 0, wrongShardId)).toBe(null);
             });
         });
     });

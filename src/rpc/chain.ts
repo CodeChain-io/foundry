@@ -287,6 +287,26 @@ export class ChainRpc {
     }
 
     /**
+     * Checks whether an asset is spent or not.
+     * @param txhash The tx hash of AssetMintTransaction or AssetTransferTransaction.
+     * @param index The index of output in the transaction.
+     * @param shardId The shard id of an Asset.
+     * @param blockNumber The specific block number to get the asset from.
+     * @returns True, if the asset is spent. False, if the asset is not spent. Null, if no such asset exists.
+     */
+    isAssetSpent(txhash: H256 | string, index: number, shardId: number, blockNumber?: number): Promise<boolean | null> {
+        return this.rpc.sendRpcRequest(
+            "chain_isAssetSpent",
+            [`0x${H256.ensure(txhash).value}`, index, shardId, blockNumber]
+        ).then(result => {
+            if (result === null) {
+                return null;
+            }
+            return result;
+        });
+    }
+
+    /**
      * Gets pending parcels.
      * @returns List of SignedParcel, with each parcel has null for blockNumber/blockHash/parcelIndex.
      */
