@@ -1,28 +1,13 @@
-To execute the example scripts without modifying `require("codechain-sdk")`,
-create `package.json` and install codechain-sdk here.
+To execute the example scripts without modifying `require("codechain-sdk")`, run the integration tests.
 
-## 1. Create `package.json`
+# How to test all examples
 
-```sh
-npm init
 ```
-or
-```
-yarn init
+yarn test-int --testRegex examples.spec.ts
 ```
 
-## 2. Install codechain-sdk package
-
-```sh
-npm install codechain-sdk
+# How to test specific example
 ```
-or
-```
-yarn add codechain-sdk
-```
-or
-```
-yarn add file:../
+yarn test-int --testRegex examples.spec.ts -t mint-and-transfer
 ```
 
-When you install package from the filepath, be sure it's built correctly.
