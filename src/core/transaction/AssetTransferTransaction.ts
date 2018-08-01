@@ -27,11 +27,18 @@ export type AssetTransferTransactionData = {
 /**
  * Spends the existing asset and creates a new asset. Ownership can be transferred during this process.
  *
- * - AssetTransfer consists of AssetTransferInput's list to spend and AssetTransferOutput's list to create.
- * - All inputs must be valid for the transaction to be valid.
- * - When each asset types' amount have been summed, the sum of inputs and the sum of outputs must be identical.
- * - It contains the network ID. This must be identical to the network ID to which the transaction is being sent to.
- * - If an identical transaction hash already exists, then the change fails. In this situation, a transaction can be created again by arbitrarily changing the nonce.
+ * An AssetTransferTransaction consists of:
+ *  - A list of AssetTransferInput to burn.
+ *  - A list of AssetTransferInput to spend.
+ *  - A list of AssetTransferOutput to create.
+ *  - A network ID. This must be identical to the network ID of which the
+ *  transaction is being sent to.
+ *
+ * All inputs must be valid for the transaction to be valid. When each asset
+ * types' amount have been summed, the sum of inputs and the sum of outputs
+ * must be identical. If an identical transaction hash already exists, then the
+ * change fails. In this situation, a transaction can be created again by
+ * arbitrarily changing the nonce.
  */
 export class AssetTransferTransaction {
     readonly burns: AssetTransferInput[];
@@ -41,7 +48,15 @@ export class AssetTransferTransaction {
     readonly nonce: number;
     readonly type = "assetTransfer";
 
-    constructor({ burns, inputs, outputs, networkId, nonce }: AssetTransferTransactionData) {
+    /**
+     * @param params.burns An array of AssetTransferInput to burn.
+     * @param params.inputs An array of AssetTransferInput to spend.
+     * @param params.outputs An array of AssetTransferOutput to create.
+     * @param params.networkId A network ID of the transaction.
+     * @param params.nonce A nonce of the transaction.
+     */
+    constructor(params: AssetTransferTransactionData) {
+        const { burns, inputs, outputs, networkId, nonce } = params;
         this.burns = burns;
         this.inputs = inputs;
         this.outputs = outputs;
@@ -49,6 +64,9 @@ export class AssetTransferTransaction {
         this.nonce = nonce || 0;
     }
 
+    /**
+     * Convert to an object for RLP encoding.
+     */
     toEncodeObject() {
         return [
             4,
@@ -60,14 +78,26 @@ export class AssetTransferTransaction {
         ];
     }
 
+    /**
+     * Convert to RLP bytes.
+     */
     rlpBytes(): Buffer {
         return RLP.encode(this.toEncodeObject());
     }
 
+    /**
+     * Get the hash of an AssetTransferTransaction.
+     * @returns A transaction hash.
+     */
     hash(): H256 {
         return new H256(blake256(this.rlpBytes()));
     }
 
+    /**
+     * Add an AssetTransferInput to burn.
+     * @param burns An array of either an AssetTransferInput or an Asset.
+     * @returns The AssetTransferTransaction, which is modified by adding them.
+     */
     addBurns(...burns: (AssetTransferInput | Asset)[]): AssetTransferTransaction {
         burns.forEach(burn => {
             if (burn instanceof AssetTransferInput) {
@@ -79,6 +109,11 @@ export class AssetTransferTransaction {
         return this;
     }
 
+    /**
+     * Add an AssetTransferInput to spend.
+     * @param inputs An array of either an AssetTransferInput or an Asset.
+     * @returns The AssetTransferTransaction, which is modified by adding them.
+     */
     addInputs(...inputs: (AssetTransferInput | Asset)[]): AssetTransferTransaction {
         inputs.forEach(input => {
             if (input instanceof AssetTransferInput) {
@@ -90,6 +125,14 @@ export class AssetTransferTransaction {
         return this;
     }
 
+    /**
+     * Add an AssetTransferOutput to create.
+     * @param outputs An array of either an AssetTransferOutput or an object
+     * that has amount, assetType and recipient values.
+     * @param output.amount Asset amount of the output.
+     * @param output.assetType An asset type of the output.
+     * @param output.recipient A recipient of the output.
+     */
     addOutputs(...outputs: (AssetTransferOutput | {
         amount: number,
         assetType: H256 | string
@@ -110,6 +153,11 @@ export class AssetTransferTransaction {
         return this;
     }
 
+    /**
+     * Get the output of the given index, of this transaction.
+     * @param index An index indicating an output.
+     * @returns An Asset.
+     */
     getTransferredAsset(index: number): Asset {
         if (index >= this.outputs.length) {
             throw "invalid output index";
@@ -126,10 +174,19 @@ export class AssetTransferTransaction {
         });
     }
 
+    /**
+     * Get the outputs of this transaction.
+     * @returns An array of an Asset.
+     */
     getTransferredAssets(): Asset[] {
         return _.range(this.outputs.length).map(i => this.getTransferredAsset(i));
     }
 
+    /**
+     * Get a hash of the transaction that doesn't contain the scripts. The hash
+     * is used as a message to create a signature for a transaction.
+     * @returns A hash.
+     */
     hashWithoutScript(): H256 {
         const { networkId, burns, inputs, outputs, nonce } = this;
         return new H256(blake256(new AssetTransferTransaction({
@@ -141,6 +198,13 @@ export class AssetTransferTransaction {
         }).rlpBytes()));
     }
 
+    /**
+     * Set an input's lock script and an input's unlock script so that the
+     * input become spendable.
+     * @param index An index indicating the input to sign.
+     * @param params.signer A TransactionSigner. Currently, P2PKH is available.
+     * @returns A promise that resolves when setting is done.
+     */
     async sign(index: number, params: { signer: TransactionSigner }): Promise<void> {
         const { signer } = params;
         if (index >= this.inputs.length) {
@@ -151,6 +215,11 @@ export class AssetTransferTransaction {
         this.setUnlockScript(index, unlockScript);
     }
 
+    /**
+     * Set the input's lock script.
+     * @param index An index indicating the input.
+     * @param lockScript A lock script.
+     */
     setLockScript(index: number, lockScript: Buffer): void {
         if (index < 0 || this.inputs.length <= index) {
             throw "Invalid index";
@@ -158,6 +227,11 @@ export class AssetTransferTransaction {
         this.inputs[index].setLockScript(lockScript);
     }
 
+    /**
+     * Set the input's unlock script.
+     * @param index An index indicating the input.
+     * @param unlockScript An unlock script.
+     */
     setUnlockScript(index: number, unlockScript: Buffer): void {
         if (index < 0 || this.inputs.length <= index) {
             throw "Invalid index";
@@ -165,6 +239,11 @@ export class AssetTransferTransaction {
         this.inputs[index].setUnlockScript(unlockScript);
     }
 
+    /**
+     * Get the asset address of an output.
+     * @param index An index indicating the output.
+     * @returns An asset address which is H256.
+     */
     getAssetAddress(index: number): H256 {
         const iv = new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -180,6 +259,10 @@ export class AssetTransferTransaction {
         return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }
 
+    /** Create an AssetTransferTransaction from an AssetTransferTransaction JSON object.
+     * @param obj An AssetTransferTransaction JSON object.
+     * @returns An AssetTransferTransaction.
+     */
     static fromJSON(obj: any) {
         const { data: { networkId, burns, inputs, outputs, nonce } } = obj;
         return new this({
@@ -191,6 +274,10 @@ export class AssetTransferTransaction {
         });
     }
 
+    /**
+     * Convert to an AssetTransferTransaction JSON object.
+     * @returns An AssetTransferTransaction JSON object.
+     */
     toJSON() {
         const { networkId, burns, inputs, outputs, nonce } = this;
         return {

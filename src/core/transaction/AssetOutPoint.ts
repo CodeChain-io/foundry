@@ -24,6 +24,14 @@ export class AssetOutPoint {
     readonly lockScriptHash?: H256;
     readonly parameters?: Buffer[];
 
+    /**
+     * @param data.transactionHash A transaction hash where the Asset is created.
+     * @param data.index The index in the output of the transaction.
+     * @param data.assetType The asset type of the asset that it points to.
+     * @param data.amount The asset amount of the asset that it points to.
+     * @param data.lockScriptHash The lock script hash of the asset.
+     * @param data.parameters The parameters of the asset.
+     */
     constructor(data: AssetOutPointData) {
         const { transactionHash, index, assetType, amount, lockScriptHash, parameters } = data;
         this.transactionHash = transactionHash;
@@ -34,11 +42,19 @@ export class AssetOutPoint {
         this.parameters = parameters;
     }
 
+    /**
+     * Convert to an object for RLP encoding.
+     */
     toEncodeObject() {
         const { transactionHash, index, assetType, amount } = this;
         return [transactionHash.toEncodeObject(), index, assetType.toEncodeObject(), amount];
     }
 
+    /**
+     * Create an AssetOutPoint from an AssetOutPoint JSON object.
+     * @param data An AssetOutPoint JSON object.
+     * @returns An AssetOutPoint.
+     */
     static fromJSON(data: any) {
         const { transactionHash, index, assetType, amount } = data;
         return new this({
@@ -49,6 +65,10 @@ export class AssetOutPoint {
         });
     }
 
+    /**
+     * Convert to an AssetOutPoint JSON object.
+     * @returns An AssetOutPoint JSON object.
+     */
     toJSON() {
         const { transactionHash, index, assetType, amount } = this;
         return {

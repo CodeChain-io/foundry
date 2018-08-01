@@ -9,7 +9,9 @@ export type AssetTransferOutputData = {
     amount: number;
 };
 /**
- * AssetTransferOutput consists of lockScriptHash and parameters, which mark ownership of the asset, and asset type and amount, which indicate the asset's type and quantity.
+ * An AssetTransferOutput consists of:
+ *  - A lock script hash and parameters, which mark ownership of the asset.
+ *  - An asset type and amount, which indicate the asset's type and quantity.
  */
 export class AssetTransferOutput {
     readonly lockScriptHash: H256;
@@ -17,6 +19,12 @@ export class AssetTransferOutput {
     readonly assetType: H256;
     readonly amount: number;
 
+    /**
+     * @param data.lockScriptHash A lock script hash of the output.
+     * @param data.parameters Parameters of the output.
+     * @param data.assetType An asset type of the output.
+     * @param data.amount An asset amount of the output.
+     */
     constructor(data: AssetTransferOutputData) {
         const { lockScriptHash, parameters, assetType, amount } = data;
         this.lockScriptHash = lockScriptHash;
@@ -25,6 +33,9 @@ export class AssetTransferOutput {
         this.amount = amount;
     }
 
+    /**
+     * Convert to an object for RLP encoding.
+     */
     toEncodeObject() {
         const { lockScriptHash, parameters, assetType, amount } = this;
         return [
@@ -35,6 +46,11 @@ export class AssetTransferOutput {
         ];
     }
 
+    /**
+     * Create an AssetTransferOutput from an AssetTransferOutput JSON object.
+     * @param data An AssetTransferOutput JSON object.
+     * @returns An AssetTransferOutput.
+     */
     static fromJSON(data: any) {
         const { lockScriptHash, parameters, assetType, amount } = data;
         return new this({
@@ -45,6 +61,10 @@ export class AssetTransferOutput {
         });
     }
 
+    /**
+     * Convert to an AssetTransferOutput JSON object.
+     * @returns An AssetTransferOutput JSON object.
+     */
     toJSON() {
         const { lockScriptHash, parameters, assetType, amount } = this;
         return {
@@ -55,6 +75,10 @@ export class AssetTransferOutput {
         };
     }
 
+    /**
+     * Get the shard ID.
+     * @returns A shard ID.
+     */
     shardId(): number {
         const { assetType } = this;
         return parseInt(assetType.value.slice(4, 8), 16);
