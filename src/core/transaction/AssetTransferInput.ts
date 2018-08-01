@@ -62,8 +62,8 @@ export class AssetTransferInput {
         const { prevOut, lockScript, unlockScript } = this;
         return {
             prevOut: prevOut.toJSON(),
-            lockScript,
-            unlockScript,
+            lockScript: [...lockScript],
+            unlockScript: [...unlockScript],
         };
     }
 

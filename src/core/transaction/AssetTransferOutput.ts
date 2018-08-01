@@ -69,7 +69,7 @@ export class AssetTransferOutput {
         const { lockScriptHash, parameters, assetType, amount } = this;
         return {
             lockScriptHash: lockScriptHash.value,
-            parameters: parameters.map(parameter => Buffer.from(parameter)),
+            parameters: parameters.map(parameter => [...parameter]),
             assetType: assetType.value,
             amount,
         };

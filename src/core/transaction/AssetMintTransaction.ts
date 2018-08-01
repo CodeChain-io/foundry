@@ -105,7 +105,7 @@ export class AssetMintTransaction {
                 metadata,
                 output: {
                     lockScriptHash: lockScriptHash.value,
-                    parameters: parameters.map(parameter => Buffer.from(parameter)),
+                    parameters: parameters.map(parameter => [...parameter]),
                     amount,
                 },
                 registrar: registrar === null ? null : registrar.value,
