@@ -26,8 +26,8 @@ test("sign", () => {
     });
     const { v, r, s } = signed.signature();
     expect(v).toBe(1);
-    expect(r).toEqual(new U256("0x4ec506266b9945c152b325d8155c6ee05b9602272a87c0f9bf6180495e0c0cc1"));
-    expect(s).toEqual(new U256("0x4e1c05949e04cec49db5185f0f6dbfcc56ac83a1eae3fb6d45ae4b60d382ca3d"));
+    expect(r.toEncodeObject()).toEqual(new U256("0x4ec506266b9945c152b325d8155c6ee05b9602272a87c0f9bf6180495e0c0cc1").toEncodeObject());
+    expect(s.toEncodeObject()).toEqual(new U256("0x4e1c05949e04cec49db5185f0f6dbfcc56ac83a1eae3fb6d45ae4b60d382ca3d").toEncodeObject());
 });
 
 test("signed hash", () => {
