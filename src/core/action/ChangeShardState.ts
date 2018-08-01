@@ -30,24 +30,32 @@ export class ChangeShard {
 export class ChangeShardState {
     transactions: Transaction[];
     changes: ChangeShard[];
+    signatures: string[];
 
     constructor(input: { transactions: Transaction[] }) {
         const ZERO = new H256("0x0000000000000000000000000000000000000000000000000000000000000000")
         this.transactions = input.transactions;
         this.changes = [new ChangeShard({ shardId: 0, preRoot: ZERO, postRoot: ZERO })];
+        this.signatures = [];
+    }
+
+    addSignature(signature: string) {
+        this.signatures.push(signature);
     }
 
     toEncodeObject(): Array<any> {
         const transactions = this.transactions.map(transaction => transaction.toEncodeObject());
         const changes = this.changes.map(c => c.toEncodeObject());
-        return [1, transactions, changes];
+        const signatures = this.signatures;
+        return [1, transactions, changes, signatures];
     }
 
     toJSON() {
         return {
             action: "changeShardState",
             transactions: this.transactions.map(t => t.toJSON()),
-            changes: this.changes.map(c => c.toJSON())
+            changes: this.changes.map(c => c.toJSON()),
+            signatures: this.signatures
         };
     }
 }

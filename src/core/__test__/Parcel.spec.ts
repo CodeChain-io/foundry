@@ -7,14 +7,14 @@ test("rlp", () => {
     const t = Parcel.transactions(1);
     t.setFee(0);
     t.setNonce(0);
-    expect(t.rlpBytes()).toEqual(Buffer.from([248, 78, 128, 128, 1, 248, 73, 1, 192, 248, 69, 248, 67, 128, 160, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 160, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
+    expect(t.rlpBytes()).toEqual(Buffer.from([248, 79, 128, 128, 1, 248, 74, 1, 192, 248, 69, 248, 67, 128, 160, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 160, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 192]));
 });
 
 test("hash", () => {
     const t = Parcel.transactions(1);
     t.setFee(0);
     t.setNonce(0);
-    expect(t.hash()).toEqual(new H256("78850c22e15642a364d57c2a9e5df97bb2876ee32fdf93da1e11afcd2d586245"));
+    expect(t.hash()).toEqual(new H256("9380648466574175d5363ff9411cf723a899ad8c75d975730fcc3169bea84f79"));
 });
 
 test("sign", () => {
@@ -26,8 +26,8 @@ test("sign", () => {
     });
     const { v, r, s } = signed.signature();
     expect(v).toBe(1);
-    expect(r.toEncodeObject()).toEqual(new U256("0x4ec506266b9945c152b325d8155c6ee05b9602272a87c0f9bf6180495e0c0cc1").toEncodeObject());
-    expect(s.toEncodeObject()).toEqual(new U256("0x4e1c05949e04cec49db5185f0f6dbfcc56ac83a1eae3fb6d45ae4b60d382ca3d").toEncodeObject());
+    expect(r.toEncodeObject()).toEqual(new U256("0xedfcde8b129c6d8faaaaef6a0dae4fd510a25f34dfb4e8abda326d895955611e").toEncodeObject());
+    expect(s.toEncodeObject()).toEqual(new U256("0x65f81e9d365b4f79e35e4e4e86e93a383b4395b84220ae6a0c95960fd8e8f17c").toEncodeObject());
 });
 
 test("signed hash", () => {
@@ -37,7 +37,7 @@ test("signed hash", () => {
         nonce: 0,
         fee: 0
     });
-    expect(signed.hash()).toEqual(new H256("ec67fb2529da6f438d5bbf45c8025bcbcfa4d87c2d6ca2b36a25501e3cadc665"));
+    expect(signed.hash()).toEqual(new H256("c69919c07a984792e0d5ecba84011cb74004ecc8fccc98f65f1f424a208cec32"));
 });
 
 test("toJSON", () => {
