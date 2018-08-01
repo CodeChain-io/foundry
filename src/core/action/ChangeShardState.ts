@@ -2,28 +2,28 @@ import { Transaction } from "../transaction/Transaction";
 import { H256 } from "../H256";
 
 export class ChangeShard {
-    public shard_id: number;
-    public pre_root: H256;
-    public post_root: H256;
+    public shardId: number;
+    public preRoot: H256;
+    public postRoot: H256;
 
-    constructor(obj: { shard_id: number, pre_root: H256, post_root: H256 }) {
-        this.shard_id = obj.shard_id;
-        this.pre_root = obj.pre_root;
-        this.post_root = obj.post_root;
+    constructor(obj: { shardId: number, preRoot: H256, postRoot: H256 }) {
+        this.shardId = obj.shardId;
+        this.preRoot = obj.preRoot;
+        this.postRoot = obj.postRoot;
     }
 
     toJSON() {
-        const { shard_id, pre_root, post_root } = this;
+        const { shardId, preRoot, postRoot } = this;
         return {
-            shard_id,
-            pre_root,
-            post_root
+            shardId,
+            preRoot: preRoot.toEncodeObject(),
+            postRoot: postRoot.toEncodeObject()
         };
     }
 
     toEncodeObject() {
-        const { shard_id, pre_root, post_root } = this;
-        return [shard_id, pre_root.toEncodeObject(), post_root.toEncodeObject()];
+        const { shardId, preRoot, postRoot } = this;
+        return [shardId, preRoot.toEncodeObject(), postRoot.toEncodeObject()];
     }
 }
 
@@ -34,7 +34,7 @@ export class ChangeShardState {
     constructor(input: { transactions: Transaction[] }) {
         const ZERO = new H256("0x0000000000000000000000000000000000000000000000000000000000000000")
         this.transactions = input.transactions;
-        this.changes = [new ChangeShard({ shard_id: 0, pre_root: ZERO, post_root: ZERO })];
+        this.changes = [new ChangeShard({ shardId: 0, preRoot: ZERO, postRoot: ZERO })];
     }
 
     toEncodeObject(): Array<any> {
