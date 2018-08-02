@@ -48,6 +48,10 @@ describe("examples", () => {
     test("set-regular-key", done => {
         runExample("set-regular-key", done);
     });
+
+    test("mint-and-compose", done => {
+        runExample("mint-and-compose", done);
+    });
 });
 
 function runExample(name: string, done: () => any) {

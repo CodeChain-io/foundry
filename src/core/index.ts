@@ -17,6 +17,7 @@ import { Invoice } from "./Invoice";
 import { Parcel } from "./Parcel";
 import { Script } from "./Script";
 import { SignedParcel } from "./SignedParcel";
+import { AssetComposeTransaction } from "./transaction/AssetComposeTransaction";
 import { AssetMintOutput } from "./transaction/AssetMintOutput";
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
@@ -54,6 +55,7 @@ export class Core {
         // Transaction
         AssetMintTransaction,
         AssetTransferTransaction,
+        AssetComposeTransaction,
         AssetTransferInput,
         AssetTransferOutput,
         AssetOutPoint,
@@ -365,6 +367,57 @@ export class Core {
             outputs,
             networkId,
             nonce
+        });
+    }
+
+    public createAssetComposeTransaction(params: {
+        scheme:
+            | AssetScheme
+            | {
+                  shardId: number;
+                  worldId: number;
+                  metadata: string;
+                  amount: number | null;
+                  registrar?: PlatformAddress | string;
+                  networkId?: NetworkId;
+              };
+        inputs: AssetTransferInput[];
+        recipient: AssetTransferAddress | string;
+        nonce?: number;
+    }): AssetComposeTransaction {
+        const { scheme, inputs, recipient, nonce = 0 } = params;
+        const {
+            networkId = this.networkId,
+            shardId,
+            worldId,
+            metadata,
+            registrar = null,
+            amount
+        } = scheme;
+        checkTransferInputs(inputs);
+        checkAssetTransferAddressRecipient(recipient);
+        checkNonce(nonce);
+        checkNetworkId(networkId);
+        checkShardId(shardId);
+        checkWorldId(worldId);
+        checkMetadata(metadata);
+        checkRegistrar(registrar);
+        if (amount !== null) {
+            checkAmountU64(amount);
+        }
+        return new AssetComposeTransaction({
+            networkId,
+            shardId,
+            worldId,
+            nonce,
+            registrar:
+                registrar === null ? null : PlatformAddress.ensure(registrar),
+            metadata,
+            inputs,
+            output: new AssetMintOutput({
+                recipient: AssetTransferAddress.ensure(recipient),
+                amount
+            })
         });
     }
 

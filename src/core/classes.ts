@@ -24,6 +24,7 @@ export { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 export {
     AssetTransferTransaction
 } from "./transaction/AssetTransferTransaction";
+export { AssetComposeTransaction } from "./transaction/AssetComposeTransaction";
 export { CreateWorldTransaction } from "./transaction/CreateWorldTransaction";
 export {
     SetWorldOwnersTransaction

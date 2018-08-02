@@ -1,3 +1,4 @@
+import { AssetComposeTransaction } from "./AssetComposeTransaction";
 import { AssetMintTransaction } from "./AssetMintTransaction";
 import { AssetTransferTransaction } from "./AssetTransferTransaction";
 import { CreateWorldTransaction } from "./CreateWorldTransaction";
@@ -9,7 +10,8 @@ export type Transaction =
     | SetWorldOwnersTransaction
     | SetWorldUsersTransaction
     | AssetMintTransaction
-    | AssetTransferTransaction;
+    | AssetTransferTransaction
+    | AssetComposeTransaction;
 
 /**
  * Create a transaction from either an AssetMintTransaction JSON object or an
@@ -33,6 +35,8 @@ export const getTransactionFromJSON = (params: {
             return AssetMintTransaction.fromJSON(params);
         case "assetTransfer":
             return AssetTransferTransaction.fromJSON(params);
+        case "assetCompose":
+            return AssetComposeTransaction.fromJSON(params);
         default:
             throw Error(`Unexpected transaction type: ${type}`);
     }
