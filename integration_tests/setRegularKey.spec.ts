@@ -10,7 +10,6 @@ const regularSecret = SDK.util.generatePrivateKey();
 const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
 
 test("setRegularKey", async () => {
-    console.log(`regular ${regularSecret}, ${regularPublic}, ${SDK.util.getAccountIdFromPrivate(regularSecret)}`);
     const nonce = await sdk.rpc.chain.getNonce(masterAddress);
     const p = sdk.core.createSetRegularKeyParcel({
         key: regularPublic,
