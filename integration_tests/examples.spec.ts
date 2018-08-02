@@ -32,6 +32,10 @@ describe("examples", () => {
     test("mint-and-transfer", (done) => {
         runExample("mint-and-transfer", done);
     });
+
+    test("set-regular-key", (done) => {
+        runExample("set-regular-key", done);
+    });
 });
 
 function runExample(name, done) {
