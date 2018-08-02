@@ -23,6 +23,8 @@ test("setRegularKey", async () => {
         value: expect.stringMatching(/[0-9a-f]{32}/)
     });
 
+    await sdk.rpc.chain.getParcelInvoice(hash, { timeout: 60 * 60 * 1000 });
+
     const beforeBalance = await sdk.rpc.chain.getBalance(masterAddress);
 
     const nonce2 = await sdk.rpc.chain.getNonce(masterAddress);
@@ -30,11 +32,12 @@ test("setRegularKey", async () => {
         recipient: masterAddress,
         amount: 10,
     });
-    await sdk.rpc.chain.sendSignedParcel(p2.sign({
+    const hash2 = await sdk.rpc.chain.sendSignedParcel(p2.sign({
         secret: regularSecret,
         nonce: nonce2,
         fee: 10
     }));
+    await sdk.rpc.chain.getParcelInvoice(hash2, { timeout: 60 * 60 * 1000 });
     const afterBalance = await sdk.rpc.chain.getBalance(masterAddress);
     expect(afterBalance.toString()).toEqual(new U256(beforeBalance.value.minus(10)).toString());
 });
