@@ -1,8 +1,10 @@
 import { AssetMintTransaction } from "./AssetMintTransaction";
 import { AssetTransferTransaction } from "./AssetTransferTransaction";
+import { CreateWorldTransaction } from "./CreateWorldTransaction";
 
 export type Transaction =
-    AssetMintTransaction
+    CreateWorldTransaction
+    | AssetMintTransaction
     | AssetTransferTransaction;
 
 /**
@@ -14,6 +16,8 @@ export type Transaction =
 export const getTransactionFromJSON = (params: { type: string, data: object }) => {
     const { type } = params;
     switch (type) {
+        case "createWorld":
+            return CreateWorldTransaction.fromJSON(params);
         case "assetMint":
             return AssetMintTransaction.fromJSON(params);
         case "assetTransfer":
