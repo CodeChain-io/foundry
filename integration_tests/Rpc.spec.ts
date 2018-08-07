@@ -104,12 +104,14 @@ describe("rpc", () => {
         describe("with asset mint transaction", () => {
             let mintTransaction: AssetMintTransaction;
             const shardId = 0;
+            const worldId = 0;
 
             beforeAll(async () => {
                 const keyStore = await sdk.key.createMemoryKeyStore();
                 const p2pkh = await sdk.key.createP2PKH({ keyStore });
                 mintTransaction = sdk.core.createAssetScheme({
                     shardId,
+                    worldId,
                     metadata: "metadata",
                     amount: 10,
                     registrar: null
@@ -133,8 +135,10 @@ describe("rpc", () => {
             });
 
             test("getAssetScheme", async () => {
-                expect(await sdk.rpc.chain.getAssetSchemeByHash(mintTransaction.hash(), 0)).toEqual(expect.any(AssetScheme));
-                expect(await sdk.rpc.chain.getAssetSchemeByHash(invalidHash, 0)).toBe(null);
+                const shardId = 0;
+                const worldId = 0;
+                expect(await sdk.rpc.chain.getAssetSchemeByHash(mintTransaction.hash(), shardId, worldId)).toEqual(expect.any(AssetScheme));
+                expect(await sdk.rpc.chain.getAssetSchemeByHash(invalidHash, shardId, worldId)).toBe(null);
             });
 
             test("getAsset", async () => {
@@ -155,6 +159,7 @@ describe("rpc", () => {
             let transferTransaction: AssetTransferTransaction;
             let blockNumber: number;
             const shardId = 0;
+            const worldId = 0;
             const wrongShardId = 1;
 
             beforeAll(async () => {
@@ -162,6 +167,7 @@ describe("rpc", () => {
                 const p2pkh = await sdk.key.createP2PKH({ keyStore });
                 mintTransaction = sdk.core.createAssetScheme({
                     shardId,
+                    worldId,
                     metadata: "metadata",
                     amount: 10,
                     registrar: null

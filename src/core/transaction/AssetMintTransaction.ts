@@ -13,6 +13,7 @@ const RLP = require("rlp");
 export type AssetMintTransactionData = {
     networkId: number;
     shardId: number;
+    worldId: number;
     metadata: string;
     output: {
         lockScriptHash: H256;
@@ -40,6 +41,7 @@ export type AssetMintTransactionData = {
 export class AssetMintTransaction {
     readonly networkId: number;
     readonly shardId: number;
+    readonly worldId: number;
     readonly metadata: string;
     readonly output: {
         lockScriptHash: H256;
@@ -61,9 +63,10 @@ export class AssetMintTransaction {
      * @param data.nonce A nonce of the transaction.
      */
     constructor(data: AssetMintTransactionData) {
-        const { networkId, shardId, metadata, output, registrar, nonce } = data;
+        const { networkId, shardId, worldId, metadata, output, registrar, nonce } = data;
         this.networkId = networkId;
         this.shardId = shardId;
+        this.worldId = worldId;
         this.metadata = metadata;
         this.output = output;
         this.registrar = registrar === null ? null : PlatformAddress.ensureAccount(registrar);
@@ -76,10 +79,11 @@ export class AssetMintTransaction {
      * @returns An AssetMintTransaction.
      */
     static fromJSON(data: any) {
-        const { data: { networkId, shardId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } } = data;
+        const { data: { networkId, shardId, worldId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } } = data;
         return new this({
             networkId,
             shardId,
+            worldId,
             metadata,
             output: {
                 lockScriptHash: new H256(lockScriptHash),
@@ -96,12 +100,13 @@ export class AssetMintTransaction {
      * @returns An AssetMintTransaction JSON object.
      */
     toJSON() {
-        const { networkId, shardId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this;
+        const { networkId, shardId, worldId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this;
         return {
             type: this.type,
             data: {
                 networkId,
                 shardId,
+                worldId,
                 metadata,
                 output: {
                     lockScriptHash: lockScriptHash.value,
@@ -118,11 +123,12 @@ export class AssetMintTransaction {
      * Convert to an object for RLP encoding.
      */
     toEncodeObject() {
-        const { networkId, shardId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this;
+        const { networkId, shardId, worldId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this;
         return [
             3,
             networkId,
             shardId,
+            worldId,
             metadata,
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
@@ -172,7 +178,7 @@ export class AssetMintTransaction {
      * @return An AssetScheme.
      */
     getAssetScheme(): AssetScheme {
-        const { networkId, shardId, metadata, output: { amount }, registrar } = this;
+        const { networkId, shardId, worldId, metadata, output: { amount }, registrar } = this;
         // FIXME: need U64 to be implemented or use U256
         if (amount === null) {
             throw "not implemented";
@@ -180,6 +186,7 @@ export class AssetMintTransaction {
         return new AssetScheme({
             networkId,
             shardId,
+            worldId,
             metadata,
             amount,
             registrar
@@ -192,13 +199,13 @@ export class AssetMintTransaction {
      * @returns An asset scheme address which is H256.
      */
     getAssetSchemeAddress(): H256 {
-        const { shardId } = this;
+        const { shardId, worldId } = this;
         const blake = blake256WithKey(this.hash().value, new Uint8Array([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
         ]));
         const shardPrefix = convertU16toHex(shardId);
-        const worldPrefix = "0000";
+        const worldPrefix = convertU16toHex(worldId);
         const prefix = `5300${shardPrefix}${worldPrefix}`;
         return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
     }

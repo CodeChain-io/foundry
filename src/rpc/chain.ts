@@ -242,12 +242,13 @@ export class ChainRpc {
      * Gets asset scheme of given hash of AssetMintTransaction.
      * @param txhash The tx hash of AssetMintTransaction.
      * @param shardId The shard id of Asset Scheme.
+     * @param worldId The world id of Asset Scheme.
      * @returns AssetScheme, if asset scheme exists. Else, returns null.
      */
-    getAssetSchemeByHash(txhash: H256 | string, shardId: number): Promise<AssetScheme | null> {
+    getAssetSchemeByHash(txhash: H256 | string, shardId: number, worldId: number): Promise<AssetScheme | null> {
         return this.rpc.sendRpcRequest(
             "chain_getAssetSchemeByHash",
-            [`0x${H256.ensure(txhash).value}`, shardId]
+            [`0x${H256.ensure(txhash).value}`, shardId, worldId]
         ).then(result => result === null ? null : AssetScheme.fromJSON(result));
     }
 

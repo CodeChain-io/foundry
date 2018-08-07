@@ -117,14 +117,16 @@ export class Core {
      */
     createAssetScheme(params: {
         shardId: number,
+        worldId: number,
         metadata: string,
         amount: number,
         registrar: PlatformAddress | H160 | string | null
     }): AssetScheme {
-        const { shardId, metadata, amount, registrar } = params;
+        const { shardId, worldId, metadata, amount, registrar } = params;
         return new AssetScheme({
             networkId: this.networkId,
             shardId,
+            worldId,
             metadata,
             amount,
             registrar,
@@ -169,6 +171,7 @@ export class Core {
         scheme: AssetScheme | {
             networkId?: number;
             shardId: number,
+            worldId: number,
             metadata: string,
             registrar?: PlatformAddress | H160 | string,
             amount: number | null,
@@ -177,10 +180,11 @@ export class Core {
         nonce?: number,
     }): AssetMintTransaction {
         const { scheme, recipient, nonce } = params;
-        const { networkId, shardId, metadata, registrar, amount } = scheme;
+        const { networkId, shardId, worldId, metadata, registrar, amount } = scheme;
         return new AssetMintTransaction({
             networkId: networkId || this.networkId,
             shardId,
+            worldId,
             nonce: nonce || 0,
             registrar: registrar || null,
             metadata,
