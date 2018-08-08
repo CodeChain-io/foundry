@@ -16,6 +16,7 @@ import { Payment } from "./action/Payment";
 import { SetRegularKey } from "./action/SetReulgarKey";
 import { ChangeShardState } from "./action/ChangeShardState";
 import { CreateShard } from "./action/CreateShard";
+import { ChangeShardOwners } from "./action/ChangeShardOwners";
 import { AssetTransferInput } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
@@ -87,6 +88,15 @@ export class Core {
      */
     createCreateShardParcel(): Parcel {
         const action = new CreateShard();
+        return new Parcel(
+            this.networkId,
+            action
+        );
+    }
+
+    createChangeShardOwnersParcel(params: { shardId: number, owners: H160[] }): Parcel {
+        const { shardId, owners } = params;
+        const action = new ChangeShardOwners({ shardId, owners });
         return new Parcel(
             this.networkId,
             action
@@ -242,6 +252,7 @@ export class Core {
         SetRegularKey,
         ChangeShardState,
         CreateShard,
+        ChangeShardOwners,
         // Transaction
         AssetMintTransaction,
         AssetTransferTransaction,

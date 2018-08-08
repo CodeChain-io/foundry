@@ -7,8 +7,9 @@ import { ChangeShardState } from "./ChangeShardState";
 import { Payment } from "./Payment";
 import { SetRegularKey } from "./SetReulgarKey";
 import { CreateShard } from "./CreateShard";
+import { ChangeShardOwners } from "./ChangeShardOwners";
 
-export type Action = ChangeShardState | Payment | SetRegularKey | CreateShard;
+export type Action = ChangeShardState | Payment | SetRegularKey | CreateShard | ChangeShardOwners;
 
 export function getActionFromJSON(json: any): Action {
     const { action } = json;
@@ -24,6 +25,9 @@ export function getActionFromJSON(json: any): Action {
             return new SetRegularKey(new H512(key));
         case "createShard":
             return new CreateShard();
+        case "changeShardOwners":
+            const { shard_id: shardId, owners } = json;
+            return new ChangeShardOwners({ shardId, owners });
         default:
             throw new Error(`Unexpected parcel action: ${action}`);
     }
