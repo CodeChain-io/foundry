@@ -20,6 +20,7 @@ export { AssetTransferInput } from "./transaction/AssetTransferInput";
 export { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 export { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
 export { CreateWorldTransaction } from "./transaction/CreateWorldTransaction";
+export { SetWorldOwnersTransaction } from "./transaction/SetWorldOwnersTransaction";
 
 export { Asset } from "./Asset";
 export { AssetScheme } from "./AssetScheme";

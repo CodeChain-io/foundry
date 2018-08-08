@@ -23,6 +23,7 @@ import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
 import { CreateWorldTransaction } from "./transaction/CreateWorldTransaction";
+import { SetWorldOwnersTransaction } from "./transaction/SetWorldOwnersTransaction";
 import { Script } from "./Script";
 
 export class Core {
@@ -143,6 +144,24 @@ export class Core {
             shardId,
             owners: owners.map(PlatformAddress.ensureAccount),
             nonce: nonce || 0
+        });
+    }
+
+    createSetWorldOwnersTransaction(params: {
+        networkId?: number;
+        shardId: number,
+        worldId: number,
+        owners: (H160 | PlatformAddress | string)[],
+        nonce: number,
+    }): SetWorldOwnersTransaction {
+        const { networkId, shardId, worldId, owners, nonce } = params;
+
+        return new SetWorldOwnersTransaction({
+            networkId: networkId || this.networkId,
+            shardId,
+            worldId,
+            owners: owners.map(PlatformAddress.ensureAccount),
+            nonce
         });
     }
 
@@ -277,6 +296,7 @@ export class Core {
         AssetTransferOutput,
         AssetOutPoint,
         CreateWorldTransaction,
+        SetWorldOwnersTransaction,
         // Asset and AssetScheme
         Asset,
         AssetScheme,
