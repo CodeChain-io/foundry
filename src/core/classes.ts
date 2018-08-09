@@ -12,6 +12,7 @@ export { Payment } from "./action/Payment";
 export { SetRegularKey } from "./action/SetReulgarKey";
 export { ChangeShardState } from "./action/ChangeShardState";
 export { CreateShard } from "./action/CreateShard";
+export { ChangeShardOwners } from "./action/ChangeShardOwners";
 
 export { Transaction } from "./transaction/Transaction";
 export { AssetMintTransaction } from "./transaction/AssetMintTransaction";
