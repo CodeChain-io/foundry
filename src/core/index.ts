@@ -25,6 +25,7 @@ import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
 import { CreateWorldTransaction } from "./transaction/CreateWorldTransaction";
 import { SetWorldOwnersTransaction } from "./transaction/SetWorldOwnersTransaction";
+import { SetWorldUsersTransaction } from "./transaction/SetWorldUsersTransaction";
 import { Script } from "./Script";
 
 type NetworkId = string;
@@ -180,6 +181,24 @@ export class Core {
             shardId,
             worldId,
             owners: owners.map(PlatformAddress.ensureAccount),
+            nonce
+        });
+    }
+
+    createSetWorldUsersTransaction(params: {
+        networkId?: NetworkId;
+        shardId: number,
+        worldId: number,
+        users: (H160 | PlatformAddress | string)[],
+        nonce: number,
+    }): SetWorldUsersTransaction {
+        const { networkId, shardId, worldId, users, nonce } = params;
+
+        return new SetWorldUsersTransaction({
+            networkId: networkId || this.networkId,
+            shardId,
+            worldId,
+            users: users.map(PlatformAddress.ensureAccount),
             nonce
         });
     }
