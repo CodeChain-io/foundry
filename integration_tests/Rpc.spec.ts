@@ -9,7 +9,6 @@ describe("rpc", () => {
     const invalidHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
     const signerSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
     const signerAccount = "0xa6594b7196808d161b6fb137e781abbc251385d9";
-    const signerAddress = "cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7";
 
     beforeAll(async () => {
         sdk = new SDK({ server: "http://localhost:8080" });
@@ -219,8 +218,8 @@ describe("rpc", () => {
         test("importRaw", async () => {
             const secret = "a2b39d4aefecdb17f84ed4cf629e7c8817691cc4f444ac7522902b8fb4b7bd53";
             const account = getAccountIdFromPrivate(secret);
-            const address = PlatformAddress.fromAccountId(account);
-            expect(address.toString()).toEqual("cccqz3z4e3x6f5j80wexg0xfr0qsrqcuyzf7g4y0je6");
+            const address = PlatformAddress.fromAccountId(account, { isTestnet: true });
+            expect(address.toString()).toEqual("tccqz3z4e3x6f5j80wexg0xfr0qsrqcuyzf7gara32r");
             expect(await sdk.rpc.account.importRaw(secret)).toEqual(address.toString());
         });
 

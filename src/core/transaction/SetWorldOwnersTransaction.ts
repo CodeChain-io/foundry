@@ -4,8 +4,10 @@ import { blake256 } from "../../utils";
 
 const RLP = require("rlp");
 
+type NetworkId = string;
+
 export type SetWorldOwnersData = {
-    networkId: number;
+    networkId: NetworkId;
     shardId: number;
     worldId: number;
     nonce: number;
@@ -16,7 +18,7 @@ export type SetWorldOwnersData = {
  * Change the owners of the world
  */
 export class SetWorldOwnersTransaction {
-    readonly networkId: number;
+    readonly networkId: NetworkId;
     readonly shardId: number;
     readonly worldId: number;
     readonly nonce: number;

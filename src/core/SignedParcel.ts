@@ -71,7 +71,7 @@ export class SignedParcel {
         return [
             nonce.toEncodeObject(),
             fee.toEncodeObject(),
-            networkId.toEncodeObject(),
+            networkId,
             action.toEncodeObject(),
             sig
         ];
@@ -153,7 +153,7 @@ export class SignedParcel {
             parcelIndex,
             nonce: nonce.value.toString(),
             fee: fee.value.toString(),
-            networkId: networkId.value.toNumber(),
+            networkId,
             action: action.toJSON(),
             sig,
             hash: this.hash().value,

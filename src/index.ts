@@ -7,6 +7,8 @@ import { Rpc } from "./rpc";
 import { Core } from "./core";
 import { Key } from "./key";
 
+type NetworkId = string;
+
 class SDK {
     public rpc: Rpc;
     public core: Core;
@@ -28,20 +30,20 @@ class SDK {
 
     /**
      * @param params.server HTTP RPC server address
-     * @param params.options.networkId The network id of CodeChain. The default value is 0x11 (solo consensus)
+     * @param params.options.networkId The network id of CodeChain. The default value is "tc" (testnet)
      * @param params.options.parcelSigner The default account to sign the parcel
      * @param params.options.parcelFee The default amount for the parcel fee
      */
     constructor(params: {
         server: string,
         options?: {
-            networkId?: number,
+            networkId?: NetworkId,
             parcelSigner?: string,
             parcelFee?: number,
         },
     }) {
         const { server, options = {} } = params;
-        const { networkId = 0x11, parcelSigner, parcelFee = 10 } = options;
+        const { networkId = "tc", parcelSigner, parcelFee = 10 } = options;
 
         this.rpc = new Rpc({ server, options: { parcelSigner, parcelFee } });
         this.core = new Core({ networkId });

@@ -11,6 +11,8 @@ import { Payment } from "./action/Payment";
 import { SetRegularKey } from "./action/SetReulgarKey";
 import { CreateShard } from "./action/CreateShard";
 
+type NetworkId = string;
+
 const RLP = require("rlp");
 
 /**
@@ -25,35 +27,33 @@ const RLP = require("rlp");
 export class Parcel {
     nonce: U256 | null;
     fee: U256 | null;
-    // FIXME: network id is 64-bit unsigned originally, so it must be changed when
-    // it's serialized with leading zeros.
-    readonly networkId: U256;
+    readonly networkId: NetworkId;
     readonly action: Action;
 
-    static transactions(networkId: number, ...transactions: Transaction[]): Parcel {
+    static transactions(networkId: NetworkId, ...transactions: Transaction[]): Parcel {
         const action = new ChangeShardState({ transactions });
         return new Parcel(networkId, action);
     }
 
-    static payment(networkId: number, receiver: H160, value: U256): Parcel {
+    static payment(networkId: NetworkId, receiver: H160, value: U256): Parcel {
         const action = new Payment(receiver, value);
         return new Parcel(networkId, action);
     }
 
-    static setRegularKey(networkId: number, key: H512): Parcel {
+    static setRegularKey(networkId: NetworkId, key: H512): Parcel {
         const action = new SetRegularKey(key);
         return new Parcel(networkId, action);
     }
 
-    static createShard(networkId: number): Parcel {
+    static createShard(networkId: NetworkId): Parcel {
         const action = new CreateShard();
         return new Parcel(networkId, action);
     }
 
-    constructor(networkId: number, action: Action) {
+    constructor(networkId: NetworkId, action: Action) {
         this.nonce = null;
         this.fee = null;
-        this.networkId = new U256(networkId);
+        this.networkId = networkId;
         this.action = action;
     }
 
@@ -73,7 +73,7 @@ export class Parcel {
         return [
             nonce.toEncodeObject(),
             fee.toEncodeObject(),
-            networkId.toEncodeObject(),
+            networkId,
             action.toEncodeObject()
         ];
     }
@@ -121,7 +121,7 @@ export class Parcel {
         return {
             nonce: nonce.value.toString(),
             fee: fee.value.toString(),
-            networkId: networkId.value.toNumber(),
+            networkId,
             action: action.toJSON()
         };
     }

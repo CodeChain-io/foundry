@@ -17,11 +17,13 @@ export interface TransactionSigner {
     }>;
 }
 
+type NetworkId = string;
+
 export type AssetTransferTransactionData = {
     burns: AssetTransferInput[];
     inputs: AssetTransferInput[];
     outputs: AssetTransferOutput[];
-    networkId: number;
+    networkId: NetworkId;
     nonce?: number;
 };
 /**
@@ -44,7 +46,7 @@ export class AssetTransferTransaction {
     readonly burns: AssetTransferInput[];
     readonly inputs: AssetTransferInput[];
     readonly outputs: AssetTransferOutput[];
-    readonly networkId: number;
+    readonly networkId: NetworkId;
     readonly nonce: number;
     readonly type = "assetTransfer";
 

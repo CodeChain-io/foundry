@@ -9,7 +9,7 @@ test("AssetTransferTransaction toJSON", () => {
         burns: [],
         inputs: [],
         outputs: [],
-        networkId: 17,
+        networkId: "tc",
         nonce: 54321
     });
     expect(AssetTransferTransaction.fromJSON(t.toJSON())).toEqual(t);
@@ -71,14 +71,14 @@ test("AssetTransferTransaction hashWithoutScript", () => {
         burns: [],
         inputs: [input1],
         outputs: [],
-        networkId: 17,
+        networkId: "tc",
         nonce: 54321
     });
     const t2 = new AssetTransferTransaction({
         burns: [],
         inputs: [input2],
         outputs: [],
-        networkId: 17,
+        networkId: "tc",
         nonce: 54321
     });
     expect(t1.hashWithoutScript()).toEqual(t2.hash());

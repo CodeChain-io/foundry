@@ -26,13 +26,15 @@ import { CreateWorldTransaction } from "./transaction/CreateWorldTransaction";
 import { SetWorldOwnersTransaction } from "./transaction/SetWorldOwnersTransaction";
 import { Script } from "./Script";
 
+type NetworkId = string;
+
 export class Core {
-    private networkId: number;
+    private networkId: NetworkId;
 
     /**
      * @param params.networkId The network id of CodeChain.
      */
-    constructor(params: { networkId: number }) {
+    constructor(params: { networkId: NetworkId }) {
         const { networkId } = params;
         this.networkId = networkId;
     }
@@ -134,7 +136,7 @@ export class Core {
     }
 
     createCreateWorldTransaction(params: {
-        networkId?: number;
+        networkId?: NetworkId;
         shardId: number,
         owners: (H160 | PlatformAddress | string)[],
         nonce?: number,
@@ -150,7 +152,7 @@ export class Core {
     }
 
     createSetWorldOwnersTransaction(params: {
-        networkId?: number;
+        networkId?: NetworkId;
         shardId: number,
         worldId: number,
         owners: (H160 | PlatformAddress | string)[],
@@ -169,7 +171,7 @@ export class Core {
 
     createAssetMintTransaction(params: {
         scheme: AssetScheme | {
-            networkId?: number;
+            networkId?: NetworkId;
             shardId: number,
             worldId: number,
             metadata: string,
@@ -199,7 +201,7 @@ export class Core {
         burns: AssetTransferInput[],
         inputs: AssetTransferInput[],
         outputs: AssetTransferOutput[],
-        networkId?: number,
+        networkId?: NetworkId,
         nonce?: number,
     } = { burns: [], inputs: [], outputs: [] }): AssetTransferTransaction {
         const { burns, inputs, outputs, networkId, nonce } = params;

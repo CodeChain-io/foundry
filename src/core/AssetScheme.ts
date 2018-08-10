@@ -5,8 +5,10 @@ import { PlatformAddress } from "../key/classes";
 import { H160 } from "./H160";
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 
+type NetworkId = string;
+
 export type AssetSchemeData = {
-    networkId: number;
+    networkId: NetworkId;
     shardId: number;
     worldId: number;
     metadata: string;
@@ -17,7 +19,7 @@ export type AssetSchemeData = {
  * Object that contains information about the Asset when performing AssetMintTransaction.
  */
 export class AssetScheme {
-    networkId: number;
+    networkId: NetworkId;
     shardId: number;
     worldId: number;
     metadata: string;

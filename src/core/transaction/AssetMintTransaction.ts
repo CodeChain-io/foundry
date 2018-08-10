@@ -10,8 +10,10 @@ import { AssetScheme } from "../AssetScheme";
 
 const RLP = require("rlp");
 
+type NetworkId = string;
+
 export type AssetMintTransactionData = {
-    networkId: number;
+    networkId: NetworkId;
     shardId: number;
     worldId: number;
     metadata: string;
@@ -39,7 +41,7 @@ export type AssetMintTransactionData = {
  *  the nonce.
  */
 export class AssetMintTransaction {
-    readonly networkId: number;
+    readonly networkId: NetworkId;
     readonly shardId: number;
     readonly worldId: number;
     readonly metadata: string;

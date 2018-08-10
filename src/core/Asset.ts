@@ -97,7 +97,7 @@ export class Asset {
                 amount: recipient.amount
             })),
             // FIXME: Do not hardcode networkId
-            networkId: 17,
+            networkId: "tc",
             nonce
         });
     }

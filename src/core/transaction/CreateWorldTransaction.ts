@@ -4,8 +4,10 @@ import { blake256 } from "../../utils";
 
 const RLP = require("rlp");
 
+type NetworkId = string;
+
 export type CreateWorldData = {
-    networkId: number;
+    networkId: NetworkId;
     shardId: number;
     nonce: number;
     owners: H160[];
@@ -18,7 +20,7 @@ export type CreateWorldData = {
  * - If an identical transaction hash already exists, then the change fails. In this situation, a transaction can be created again by arbitrarily changing the nonce.
  */
 export class CreateWorldTransaction {
-    readonly networkId: number;
+    readonly networkId: NetworkId;
     readonly shardId: number;
     readonly nonce: number;
     readonly owners: H160[];
