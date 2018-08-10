@@ -26,8 +26,8 @@ export function getActionFromJSON(json: any): Action {
         case "createShard":
             return new CreateShard();
         case "changeShardOwners":
-            const { shard_id: shardId, owners } = json;
-            return new ChangeShardOwners({ shardId, owners });
+            const { shardId, owners } = json;
+            return new ChangeShardOwners({ shardId, owners: owners.map(H160.ensure) });
         default:
             throw new Error(`Unexpected parcel action: ${action}`);
     }

@@ -98,9 +98,9 @@ export class Core {
         );
     }
 
-    createChangeShardOwnersParcel(params: { shardId: number, owners: H160[] }): Parcel {
+    createChangeShardOwnersParcel(params: { shardId: number, owners: (H160 | PlatformAddress | string)[] }): Parcel {
         const { shardId, owners } = params;
-        const action = new ChangeShardOwners({ shardId, owners });
+        const action = new ChangeShardOwners({ shardId, owners: owners.map(PlatformAddress.ensureAccount) });
         return new Parcel(
             this.networkId,
             action

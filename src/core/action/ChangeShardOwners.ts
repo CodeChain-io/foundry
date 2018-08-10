@@ -15,8 +15,11 @@ export class ChangeShardOwners {
     }
 
     toJSON() {
+        const { shardId, owners } = this;
         return {
             action: "changeShardOwners",
+            shardId,
+            owners: owners.map(owner => owner.value)
         };
     }
 }
