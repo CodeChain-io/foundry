@@ -217,8 +217,8 @@ export class AssetTransferTransaction {
             throw "Invalid index";
         }
         const { lockScript, unlockScript } = await signer.signBurn(this, index);
-        this.setLockScript(index, lockScript);
-        this.setUnlockScript(index, unlockScript);
+        this.burns[index].setLockScript(lockScript);
+        this.burns[index].setUnlockScript(unlockScript);
     }
 
     // FIXME: Rename it to signInput
@@ -235,31 +235,7 @@ export class AssetTransferTransaction {
             throw "Invalid index";
         }
         const { lockScript, unlockScript } = await signer.sign(this, index);
-        this.setLockScript(index, lockScript);
-        this.setUnlockScript(index, unlockScript);
-    }
-
-    /**
-     * Set the input's lock script.
-     * @param index An index indicating the input.
-     * @param lockScript A lock script.
-     */
-    setLockScript(index: number, lockScript: Buffer): void {
-        if (index < 0 || this.inputs.length <= index) {
-            throw "Invalid index";
-        }
         this.inputs[index].setLockScript(lockScript);
-    }
-
-    /**
-     * Set the input's unlock script.
-     * @param index An index indicating the input.
-     * @param unlockScript An unlock script.
-     */
-    setUnlockScript(index: number, unlockScript: Buffer): void {
-        if (index < 0 || this.inputs.length <= index) {
-            throw "Invalid index";
-        }
         this.inputs[index].setUnlockScript(unlockScript);
     }
 
