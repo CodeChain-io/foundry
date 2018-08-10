@@ -5,7 +5,7 @@ import { getTransactionFromJSON } from "../Transaction";
 describe("CreateWorldTransaction", () => {
     test("toJSON", () => {
         const t = new CreateWorldTransaction({
-            networkId: 1,
+            networkId: "a1",
             shardId: 2,
             owners: [H160.ensure("0x0123456789012345678901234567890123456789")],
             nonce: 0,
@@ -15,7 +15,7 @@ describe("CreateWorldTransaction", () => {
 
     test("getTransactionFromJSON", () => {
         const t = new CreateWorldTransaction({
-            networkId: 1,
+            networkId: "x1",
             shardId: 2,
             owners: [H160.ensure("0x0123456789012345678901234567890123456789")],
             nonce: 0,
