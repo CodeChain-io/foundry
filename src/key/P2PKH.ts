@@ -27,6 +27,32 @@ export class P2PKH implements TransactionSigner {
         return AssetTransferAddress.fromTypeAndPayload(1, publicKeyHash);
     }
 
+    async signBurn(transaction: AssetTransferTransaction, index: number): Promise<{ lockScript: Buffer, unlockScript: Buffer }> {
+        if (index >= transaction.burns.length) {
+            throw "Invalid burn index";
+        }
+        const { lockScriptHash, parameters } = transaction.burns[index].prevOut;
+        if (lockScriptHash === undefined || parameters === undefined) {
+            throw "Invalid transaction input";
+        }
+        if (lockScriptHash.value !== P2PKH.getLockScriptHash().value) {
+            throw "Unexpected lock script hash";
+        }
+        if (parameters.length !== 1) {
+            throw "Unexpected length of parameters";
+        }
+        const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
+        const publicKey = this.publicKeyMap[publicKeyHash];
+        if (!publicKey) {
+            throw `Unable to get original key from the given public key hash: ${publicKeyHash}`;
+        }
+        return {
+            lockScript: P2PKH.getLockScript(),
+            unlockScript: await this.getUnlockScript(publicKey, transaction.hashWithoutScript()),
+        };
+    }
+
+    // FIXME: Rename it to signInput
     async sign(transaction: AssetTransferTransaction, index: number): Promise<{ lockScript: Buffer, unlockScript: Buffer }> {
         if (index >= transaction.inputs.length) {
             throw "Invalid input index";

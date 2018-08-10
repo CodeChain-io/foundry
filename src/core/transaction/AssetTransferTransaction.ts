@@ -11,6 +11,10 @@ import { Asset } from "../Asset";
 const RLP = require("rlp");
 
 export interface TransactionSigner {
+    signBurn: (transaction: AssetTransferTransaction, index: number) => Promise<{
+        unlockScript: Buffer,
+        lockScript: Buffer
+    }>;
     sign: (transaction: AssetTransferTransaction, index: number) => Promise<{
         unlockScript: Buffer,
         lockScript: Buffer
@@ -200,6 +204,24 @@ export class AssetTransferTransaction {
         }).rlpBytes()));
     }
 
+    /**
+     * Set a burn's lock script and an input's unlock script so that the
+     * burn become burnable.
+     * @param index An index indicating the burn to sign.
+     * @param params.signer A TransactionSigner. Currently, P2PKH is available.
+     * @returns A promise that resolves when setting is done.
+     */
+    async signBurn(index: number, params: { signer: TransactionSigner }): Promise<void> {
+        const { signer } = params;
+        if (index >= this.burns.length) {
+            throw "Invalid index";
+        }
+        const { lockScript, unlockScript } = await signer.signBurn(this, index);
+        this.setLockScript(index, lockScript);
+        this.setUnlockScript(index, unlockScript);
+    }
+
+    // FIXME: Rename it to signInput
     /**
      * Set an input's lock script and an input's unlock script so that the
      * input become spendable.
