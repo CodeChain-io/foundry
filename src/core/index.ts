@@ -17,6 +17,7 @@ import { SetRegularKey } from "./action/SetReulgarKey";
 import { ChangeShardState } from "./action/ChangeShardState";
 import { CreateShard } from "./action/CreateShard";
 import { ChangeShardOwners } from "./action/ChangeShardOwners";
+import { ChangeShardUsers } from "./action/ChangeShardUsers";
 import { AssetTransferInput } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
@@ -101,6 +102,20 @@ export class Core {
     createChangeShardOwnersParcel(params: { shardId: number, owners: (H160 | PlatformAddress | string)[] }): Parcel {
         const { shardId, owners } = params;
         const action = new ChangeShardOwners({ shardId, owners: owners.map(PlatformAddress.ensureAccount) });
+        return new Parcel(
+            this.networkId,
+            action
+        );
+    }
+
+    /**
+     * Create ChangeShardUser action which can change shard users
+     * @param params.shardId
+     * @param params.users
+     */
+    createChangeShardUsersParcel(params: { shardId: number, users: (H160 | PlatformAddress | string)[] }): Parcel {
+        const { shardId, users } = params;
+        const action = new ChangeShardUsers({ shardId, users: users.map(PlatformAddress.ensureAccount) });
         return new Parcel(
             this.networkId,
             action
