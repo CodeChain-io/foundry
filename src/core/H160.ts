@@ -7,7 +7,7 @@ export class H160 {
 
     constructor(value: string) {
         if ((!value.startsWith("0x") && value.length !== 40) || (value.startsWith("0x") && value.length !== 42)) {
-            throw `The length for H160 must be 40 or 42 with 0x-prefix`;
+            throw `The length for H160 must be 40 or 42 with 0x-prefix, but "${value}" is given`;
         } else if (!/(0x)?[0-9a-fA-F]{40}/.test(value)) {
             throw `Invalid hexadecimal string: ${value}`;
         }

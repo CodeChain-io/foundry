@@ -7,7 +7,7 @@ export class H256 {
 
     constructor(value: string) {
         if ((!value.startsWith("0x") && value.length !== 64) || (value.startsWith("0x") && value.length !== 66)) {
-            throw `The length for H256 must be 64 or 66 with 0x-prefix`;
+            throw `The length for H256 must be 64 or 66 with 0x-prefix, but "${value}" is given`;
         } else if (!/(0x)?[0-9a-fA-F]{64}/.test(value)) {
             throw `Invalid hexadecimal string: ${value}`;
         }

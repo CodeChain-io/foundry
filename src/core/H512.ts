@@ -7,7 +7,7 @@ export class H512 {
 
     constructor(value: string) {
         if ((!value.startsWith("0x") && value.length !== 128) || (value.startsWith("0x") && value.length !== 130)) {
-            throw `The length for H512 must be 128 or 130 with 0x-prefix`;
+            throw `The length for H512 must be 128 or 130 with 0x-prefix, but "${value}" is given`;
         } else if (!/(0x)?[0-9a-fA-F]{128}/.test(value)) {
             throw `Invalid hexadecimal string: ${value}`;
         }
