@@ -1,6 +1,6 @@
 import { SetWorldOwnersTransaction } from "../SetWorldOwnersTransaction";
-import { H160 } from "../../H160";
 import { getTransactionFromJSON } from "../Transaction";
+import { PlatformAddress } from "../../../key/classes";
 
 describe("SetWorldOwnersTransaction", () => {
     test("toJSON", () => {
@@ -8,7 +8,7 @@ describe("SetWorldOwnersTransaction", () => {
             networkId: "x1",
             shardId: 42,
             worldId: 0x42,
-            owners: [H160.ensure("0x0123456789012345678901234567890123456789")],
+            owners: [PlatformAddress.fromAccountId("0x0123456789012345678901234567890123456789")],
             nonce: 0,
         });
         expect(SetWorldOwnersTransaction.fromJSON(t.toJSON())).toEqual(t);
@@ -19,7 +19,7 @@ describe("SetWorldOwnersTransaction", () => {
             networkId: "1a",
             shardId: 42,
             worldId: 0x42,
-            owners: [H160.ensure("0x0123456789012345678901234567890123456789")],
+            owners: [PlatformAddress.fromAccountId("0x0123456789012345678901234567890123456789")],
             nonce: 0,
         });
         expect(getTransactionFromJSON(t.toJSON())).toEqual(t);

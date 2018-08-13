@@ -1,5 +1,5 @@
+import { PlatformAddress } from "../key/PlatformAddress";
 import { U256 } from "./U256";
-import { H160 } from "./H160";
 import { H256 } from "./H256";
 import { H512 } from "./H512";
 import { SignedParcel } from "./SignedParcel";
@@ -35,7 +35,7 @@ export class Parcel {
         return new Parcel(networkId, action);
     }
 
-    static payment(networkId: NetworkId, receiver: H160, value: U256): Parcel {
+    static payment(networkId: NetworkId, receiver: PlatformAddress, value: U256): Parcel {
         const action = new Payment(receiver, value);
         return new Parcel(networkId, action);
     }

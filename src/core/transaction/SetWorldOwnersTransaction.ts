@@ -1,4 +1,4 @@
-import { H160 } from "../H160";
+import { PlatformAddress } from "../../key/PlatformAddress";
 import { H256 } from "../H256";
 import { blake256 } from "../../utils";
 
@@ -11,7 +11,7 @@ export type SetWorldOwnersData = {
     shardId: number;
     worldId: number;
     nonce: number;
-    owners: H160[];
+    owners: PlatformAddress[];
 };
 
 /**
@@ -22,7 +22,7 @@ export class SetWorldOwnersTransaction {
     readonly shardId: number;
     readonly worldId: number;
     readonly nonce: number;
-    readonly owners: H160[];
+    readonly owners: PlatformAddress[];
 
     readonly type = "setWorldOwners";
 

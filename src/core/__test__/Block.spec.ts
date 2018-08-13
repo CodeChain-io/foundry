@@ -1,14 +1,14 @@
 import { Block } from "../Block";
 import { H256 } from "../H256";
-import { H160 } from "../H160";
 import { U256 } from "../U256";
 import { Parcel } from "../Parcel";
+import { PlatformAddress } from "../../key/PlatformAddress";
 import { getAccountIdFromPrivate } from "../../utils";
 
 test("toJSON", () => {
     const secret = new H256("ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd");
-    const sender = new H160(getAccountIdFromPrivate(secret.value));
-    const p = Parcel.payment("tc", new H160("0x2222222222222222222222222222222222222222"), new U256(11)).sign({
+    const sender = PlatformAddress.fromAccountId(getAccountIdFromPrivate(secret.value));
+    const p = Parcel.payment("tc", PlatformAddress.fromAccountId("0x2222222222222222222222222222222222222222"), new U256(11)).sign({
         secret,
         fee: 33,
         nonce: 44
@@ -17,7 +17,7 @@ test("toJSON", () => {
         parentHash: new H256("0000000000000000000000000000000000000000000000000000000000000000"),
         timestamp: 1,
         number: 2,
-        author: new H160("1111111111111111111111111111111111111111"),
+        author: PlatformAddress.fromAccountId("1111111111111111111111111111111111111111").getAccountId(),
         extraData: Buffer.from([]),
         parcelsRoot: new H256("1111111111111111111111111111111111111111111111111111111111111111"),
         stateRoot: new H256("2222222222222222222222222222222222222222222222222222222222222222"),

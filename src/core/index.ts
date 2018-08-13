@@ -49,10 +49,10 @@ export class Core {
      * @throws Given string for recipient is invalid for converting it to H160
      * @throws Given number or string for amount is invalid for converting it to U256
      */
-    createPaymentParcel(params: { recipient: PlatformAddress | H160 | string, amount: U256 | number | string }): Parcel {
+    createPaymentParcel(params: { recipient: PlatformAddress | string, amount: U256 | number | string }): Parcel {
         const { recipient, amount } = params;
         const action = new Payment(
-            PlatformAddress.ensureAccount(recipient),
+            PlatformAddress.ensure(recipient),
             U256.ensure(amount)
         );
         return new Parcel(
@@ -100,9 +100,9 @@ export class Core {
         );
     }
 
-    createChangeShardOwnersParcel(params: { shardId: number, owners: (H160 | PlatformAddress | string)[] }): Parcel {
+    createChangeShardOwnersParcel(params: { shardId: number, owners: (PlatformAddress | string)[] }): Parcel {
         const { shardId, owners } = params;
-        const action = new ChangeShardOwners({ shardId, owners: owners.map(PlatformAddress.ensureAccount) });
+        const action = new ChangeShardOwners({ shardId, owners: owners.map(PlatformAddress.ensure) });
         return new Parcel(
             this.networkId,
             action
@@ -114,9 +114,9 @@ export class Core {
      * @param params.shardId
      * @param params.users
      */
-    createChangeShardUsersParcel(params: { shardId: number, users: (H160 | PlatformAddress | string)[] }): Parcel {
+    createChangeShardUsersParcel(params: { shardId: number, users: (PlatformAddress | string)[] }): Parcel {
         const { shardId, users } = params;
-        const action = new ChangeShardUsers({ shardId, users: users.map(PlatformAddress.ensureAccount) });
+        const action = new ChangeShardUsers({ shardId, users: users.map(PlatformAddress.ensure) });
         return new Parcel(
             this.networkId,
             action
@@ -131,14 +131,14 @@ export class Core {
      * @param params.registrar Platform account or null. If account is present, the
      * parcel that includes AssetTransferTransaction of this asset must be signed by
      * the registrar account.
-     * @throws Given string for registrar is invalid for converting it to H160
+     * @throws Given string for registrar is invalid for converting it to paltform account
      */
     createAssetScheme(params: {
         shardId: number,
         worldId: number,
         metadata: string,
         amount: number,
-        registrar: PlatformAddress | H160 | string | null
+        registrar: PlatformAddress | string | null
     }): AssetScheme {
         const { shardId, worldId, metadata, amount, registrar } = params;
         return new AssetScheme({
@@ -147,14 +147,14 @@ export class Core {
             worldId,
             metadata,
             amount,
-            registrar,
+            registrar: registrar == null ? null : PlatformAddress.ensure(registrar),
         });
     }
 
     createCreateWorldTransaction(params: {
         networkId?: NetworkId;
         shardId: number,
-        owners: (H160 | PlatformAddress | string)[],
+        owners: (PlatformAddress | string)[],
         nonce?: number,
     }): CreateWorldTransaction {
         const { networkId, shardId, owners, nonce } = params;
@@ -162,7 +162,7 @@ export class Core {
         return new CreateWorldTransaction({
             networkId: networkId || this.networkId,
             shardId,
-            owners: owners.map(PlatformAddress.ensureAccount),
+            owners: owners.map(PlatformAddress.ensure),
             nonce: nonce || 0
         });
     }
@@ -171,7 +171,7 @@ export class Core {
         networkId?: NetworkId;
         shardId: number,
         worldId: number,
-        owners: (H160 | PlatformAddress | string)[],
+        owners: (PlatformAddress | string)[],
         nonce: number,
     }): SetWorldOwnersTransaction {
         const { networkId, shardId, worldId, owners, nonce } = params;
@@ -180,7 +180,7 @@ export class Core {
             networkId: networkId || this.networkId,
             shardId,
             worldId,
-            owners: owners.map(PlatformAddress.ensureAccount),
+            owners: owners.map(PlatformAddress.ensure),
             nonce
         });
     }
@@ -189,7 +189,7 @@ export class Core {
         networkId?: NetworkId;
         shardId: number,
         worldId: number,
-        users: (H160 | PlatformAddress | string)[],
+        users: (PlatformAddress | string)[],
         nonce: number,
     }): SetWorldUsersTransaction {
         const { networkId, shardId, worldId, users, nonce } = params;
@@ -198,7 +198,7 @@ export class Core {
             networkId: networkId || this.networkId,
             shardId,
             worldId,
-            users: users.map(PlatformAddress.ensureAccount),
+            users: users.map(PlatformAddress.ensure),
             nonce
         });
     }
@@ -209,7 +209,7 @@ export class Core {
             shardId: number,
             worldId: number,
             metadata: string,
-            registrar?: PlatformAddress | H160 | string,
+            registrar?: PlatformAddress | string,
             amount: number | null,
         },
         recipient: AssetTransferAddress | string,
@@ -222,7 +222,7 @@ export class Core {
             shardId,
             worldId,
             nonce: nonce || 0,
-            registrar: registrar || null,
+            registrar: registrar == null ? null : PlatformAddress.ensure(registrar),
             metadata,
             output: {
                 amount,

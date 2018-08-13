@@ -1,4 +1,4 @@
-import { H160 } from "../H160";
+import { PlatformAddress } from "../../key/PlatformAddress";
 import { H256 } from "../H256";
 import { blake256 } from "../../utils";
 
@@ -10,7 +10,7 @@ export type CreateWorldData = {
     networkId: NetworkId;
     shardId: number;
     nonce: number;
-    owners: H160[];
+    owners: PlatformAddress[];
 };
 
 /**
@@ -23,7 +23,7 @@ export class CreateWorldTransaction {
     readonly networkId: NetworkId;
     readonly shardId: number;
     readonly nonce: number;
-    readonly owners: H160[];
+    readonly owners: PlatformAddress[];
 
     readonly type = "createWorld";
 
@@ -65,7 +65,7 @@ export class CreateWorldTransaction {
             networkId,
             shardId,
             nonce,
-            owners
+            owners.map(owner => owner.getAccountId().toEncodeObject())
         ];
     }
 

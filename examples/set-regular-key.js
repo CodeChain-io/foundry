@@ -28,7 +28,7 @@ const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
 
     const nonce2 = await sdk.rpc.chain.getNonce(masterAddress);
     const p2 = sdk.core.createPaymentParcel({
-        recipient: masterAddress,
+        recipient: sdk.key.classes.PlatformAddress.fromAccountId(masterAddress),
         amount: 10,
     });
     // We can sign a parcel with our `regularSecret`.

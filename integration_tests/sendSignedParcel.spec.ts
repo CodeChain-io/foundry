@@ -8,7 +8,7 @@ const address = SDK.util.getAccountIdFromPrivate(secret);
 test("sendSignedParcel", async () => {
     const nonce = await sdk.rpc.chain.getNonce(address);
     const p = sdk.core.createPaymentParcel({
-        recipient: address,
+        recipient: sdk.key.classes.PlatformAddress.fromAccountId(address),
         amount: 0,
     });
     const hash = await sdk.rpc.chain.sendSignedParcel(p.sign({

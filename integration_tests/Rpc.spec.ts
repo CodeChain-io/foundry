@@ -72,7 +72,7 @@ describe("rpc", () => {
 
             beforeAll(async () => {
                 const parcel = sdk.core.createPaymentParcel({
-                    recipient: signerAccount,
+                    recipient: sdk.key.classes.PlatformAddress.fromAccountId(signerAccount),
                     amount: 10,
                 });
                 const signedParcel = parcel.sign({

@@ -2,7 +2,6 @@ import { Buffer } from "buffer";
 
 import { PlatformAddress } from "../../key/classes";
 
-import { H160 } from "../H160";
 import { H256 } from "../H256";
 import { blake256, blake256WithKey } from "../../utils";
 import { Asset } from "../Asset";
@@ -22,7 +21,7 @@ export type AssetMintTransactionData = {
         parameters: Buffer[];
         amount: number | null;
     };
-    registrar: PlatformAddress | H160 | string | null;
+    registrar: PlatformAddress | null;
     nonce: number;
 };
 
@@ -50,7 +49,7 @@ export class AssetMintTransaction {
         parameters: Buffer[];
         amount: number | null;
     };
-    readonly registrar: H160 | null;
+    readonly registrar: PlatformAddress | null;
     readonly nonce: number;
     readonly type = "assetMint";
 
@@ -71,7 +70,7 @@ export class AssetMintTransaction {
         this.worldId = worldId;
         this.metadata = metadata;
         this.output = output;
-        this.registrar = registrar === null ? null : PlatformAddress.ensureAccount(registrar);
+        this.registrar = registrar;
         this.nonce = nonce;
     }
 
@@ -92,7 +91,7 @@ export class AssetMintTransaction {
                 parameters: parameters.map((p: Array<number>) => Buffer.from(p)),
                 amount: amount === null ? null : amount,
             },
-            registrar: registrar === null ? null : new H160(registrar),
+            registrar: registrar === null ? null : PlatformAddress.fromString(registrar),
             nonce,
         });
     }
@@ -115,7 +114,7 @@ export class AssetMintTransaction {
                     parameters: parameters.map(parameter => [...parameter]),
                     amount,
                 },
-                registrar: registrar === null ? null : registrar.value,
+                registrar: registrar === null ? null : registrar.toString(),
                 nonce,
             }
         };
@@ -135,7 +134,7 @@ export class AssetMintTransaction {
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
             amount ? [amount] : [],
-            registrar ? [registrar.toEncodeObject()] : [],
+            registrar ? [registrar.getAccountId().toEncodeObject()] : [],
             nonce
         ];
     }

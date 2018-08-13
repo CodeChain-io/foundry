@@ -1,4 +1,5 @@
 import { SDK } from "../";
+
 const U256 = SDK.Core.classes.U256;
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
@@ -29,7 +30,7 @@ test("setRegularKey", async () => {
 
     const nonce2 = await sdk.rpc.chain.getNonce(masterAddress);
     const p2 = sdk.core.createPaymentParcel({
-        recipient: masterAddress,
+        recipient: sdk.key.classes.PlatformAddress.fromAccountId(masterAddress),
         amount: 10,
     });
     const hash2 = await sdk.rpc.chain.sendSignedParcel(p2.sign({

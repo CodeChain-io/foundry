@@ -1,7 +1,7 @@
-import { H160 } from "../H160";
 import { H256 } from "../H256";
 import { U256 } from "../U256";
 import { Parcel } from "../Parcel";
+import { PlatformAddress } from "../../key/PlatformAddress";
 
 test("rlp", () => {
     const t = Parcel.transactions("tc");
@@ -42,7 +42,7 @@ test("signed hash", () => {
 });
 
 test("toJSON", () => {
-    const p = Parcel.payment("tc", new H160("0x0000000000000000000000000000000000000000"), new U256(11));
+    const p = Parcel.payment("tc", PlatformAddress.fromAccountId("0x0000000000000000000000000000000000000000"), new U256(11));
     p.setFee(33);
     p.setNonce(44);
     expect(Parcel.fromJSON(p.toJSON())).toEqual(p);

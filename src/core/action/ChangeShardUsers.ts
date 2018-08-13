@@ -1,9 +1,9 @@
-import { H160 } from "../H160";
+import { PlatformAddress } from "../../key/PlatformAddress";
 
 export class ChangeShardUsers {
     public readonly shardId: number;
-    public readonly users: H160[];
-    constructor(params: { shardId: number, users: H160[] }) {
+    public readonly users: PlatformAddress[];
+    constructor(params: { shardId: number, users: PlatformAddress[] }) {
         const { shardId, users } = params;
         this.shardId = shardId;
         this.users = users;
@@ -11,7 +11,7 @@ export class ChangeShardUsers {
 
     toEncodeObject(): Array<any> {
         const { shardId, users } = this;
-        return [6, shardId, users.map(user => user.toEncodeObject())];
+        return [6, shardId, users.map(user => user.getAccountId().toEncodeObject())];
     }
 
     toJSON() {

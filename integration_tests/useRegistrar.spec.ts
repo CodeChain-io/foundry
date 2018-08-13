@@ -44,7 +44,7 @@ async function setRegularKey() {
 async function sendCCCToOther() {
     const nonce = await sdk.rpc.chain.getNonce(masterAddress);
     const p = sdk.core.createPaymentParcel({
-        recipient: otherAddress,
+        recipient: sdk.key.classes.PlatformAddress.fromAccountId(otherAddress),
         amount: 100,
     });
     const hash = await sdk.rpc.chain.sendSignedParcel(p.sign({
@@ -67,7 +67,7 @@ async function mintAssetUsingMaster(p2pkh, aliceAddress, bobAddress) {
             icon_url: "https://gold.image/",
         }),
         amount: 10000,
-        registrar: masterAddress,
+        registrar: sdk.key.classes.PlatformAddress.fromAccountId(masterAddress),
     });
 
     const mintTx = sdk.core.createAssetMintTransaction({

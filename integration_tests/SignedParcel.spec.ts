@@ -7,7 +7,7 @@ test("getSignerAccountId", async () => {
     const nonce = await sdk.rpc.chain.getNonce(accountId);
     const parcelToSend = sdk.core.createPaymentParcel({
         amount: 10,
-        recipient: accountId,
+        recipient: sdk.key.classes.PlatformAddress.fromAccountId(accountId),
     }).sign({
         secret,
         fee: 10,
