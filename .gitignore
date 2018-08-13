@@ -9,6 +9,7 @@ gh-pages
 /examples/package-lock.json
 /examples/yarn.lock
 /examples/node_modules
+/examples/test-*.js
 
 # Visual Studio Code - https://code.visualstudio.com/
 .settings/
