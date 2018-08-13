@@ -9,9 +9,14 @@ describe("rpc", () => {
     const invalidHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
     const signerSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
     const signerAccount = "0xa6594b7196808d161b6fb137e781abbc251385d9";
+    const signerAddress = "cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7";
 
     beforeAll(async () => {
         sdk = new SDK({ server: "http://localhost:8080" });
+    });
+
+    test("PlatformAddress", () => {
+        expect(sdk.key.classes.PlatformAddress.fromAccountId(signerAccount).value).toEqual(signerAddress);
     });
 
     describe("node", () => {
@@ -50,18 +55,23 @@ describe("rpc", () => {
 
         describe("with account", () => {
             const account = "0xa6594b7196808d161b6fb137e781abbc251385d9";
+            const address = "cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7";
+
+            test("PlatformAddress", () => {
+                expect(sdk.key.classes.PlatformAddress.fromAccountId(account).value).toEqual(address);
+            });
 
             test("getBalance", async () => {
-                expect(await sdk.rpc.chain.getBalance(account)).toEqual(expect.any(U256));
+                expect(await sdk.rpc.chain.getBalance(address)).toEqual(expect.any(U256));
             });
 
             test("getNonce", async () => {
-                expect(await sdk.rpc.chain.getNonce(account)).toEqual(expect.any(U256));
+                expect(await sdk.rpc.chain.getNonce(address)).toEqual(expect.any(U256));
             });
 
             // FIXME: setRegularKey action isn't implemented.
             test.skip("getRegularKey", async () => {
-                expect(await sdk.rpc.chain.getRegularKey(account)).toEqual(expect.any(H512));
+                expect(await sdk.rpc.chain.getRegularKey(address)).toEqual(expect.any(H512));
             });
         });
 
@@ -72,13 +82,13 @@ describe("rpc", () => {
 
             beforeAll(async () => {
                 const parcel = sdk.core.createPaymentParcel({
-                    recipient: sdk.key.classes.PlatformAddress.fromAccountId(signerAccount),
+                    recipient: signerAddress,
                     amount: 10,
                 });
                 const signedParcel = parcel.sign({
                     secret: signerSecret,
                     fee: 10,
-                    nonce: await sdk.rpc.chain.getNonce(signerAccount),
+                    nonce: await sdk.rpc.chain.getNonce(signerAddress),
                 });
                 parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
             });
@@ -120,7 +130,7 @@ describe("rpc", () => {
                 });
                 await sdk.rpc.chain.sendSignedParcel(parcel.sign({
                     secret: signerSecret,
-                    nonce: await sdk.rpc.chain.getNonce(signerAccount),
+                    nonce: await sdk.rpc.chain.getNonce(signerAddress),
                     fee: 10
                 }));
             });
@@ -183,7 +193,7 @@ describe("rpc", () => {
                 const parcel = sdk.core.createChangeShardStateParcel({ transactions: [mintTransaction, transferTransaction] });
                 await sdk.rpc.chain.sendSignedParcel(parcel.sign({
                     secret: signerSecret,
-                    nonce: await sdk.rpc.chain.getNonce(signerAccount),
+                    nonce: await sdk.rpc.chain.getNonce(signerAddress),
                     fee: 10
                 }));
                 blockNumber = await sdk.rpc.chain.getBestBlockNumber();

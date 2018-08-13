@@ -1,7 +1,6 @@
 import { Rpc } from ".";
 import { H256 } from "../core/H256";
 import { SignedParcel } from "../core/SignedParcel";
-import { H160 } from "../core/H160";
 import { U256 } from "../core/U256";
 import { AssetScheme } from "../core/AssetScheme";
 import { Block } from "../core/Block";
@@ -55,7 +54,7 @@ export class ChainRpc {
      * @throws When the given passphrase does not match
      */
     async sendParcel(parcel: Parcel, options?: {
-        account?: PlatformAddress | H160 | string,
+        account?: PlatformAddress | string,
         passphrase?: string,
         nonce?: U256 | string | number,
         fee?: U256 | string | number,
@@ -128,10 +127,10 @@ export class ChainRpc {
      * @param blockNumber The specific block number to get account's regular key at given address.
      * @returns The regular key of account at specified block, or null when address was not found.
      */
-    getRegularKey(address: PlatformAddress | H160 | string, blockNumber?: number): Promise<H512 | null> {
+    getRegularKey(address: PlatformAddress | string, blockNumber?: number): Promise<H512 | null> {
         return this.rpc.sendRpcRequest(
             "chain_getRegularKey",
-            [`0x${PlatformAddress.ensureAccount(address).value}`, blockNumber || null]
+            [`${PlatformAddress.ensure(address).value}`, blockNumber || null]
         ).then(result => result === null ? null : new H512(result));
     }
 
@@ -176,10 +175,10 @@ export class ChainRpc {
      * @param blockNumber The specific block number to get account's balance at given address.
      * @returns Balance of account at specified block, or null when address was not found.
      */
-    getBalance(address: PlatformAddress | H160 | string, blockNumber?: number): Promise<U256 | null> {
+    getBalance(address: PlatformAddress | string, blockNumber?: number): Promise<U256 | null> {
         return this.rpc.sendRpcRequest(
             "chain_getBalance",
-            [`0x${PlatformAddress.ensureAccount(address).value}`, blockNumber]
+            [`${PlatformAddress.ensure(address).value}`, blockNumber]
         ).then(result => result ? new U256(result) : null);
     }
 
@@ -189,10 +188,10 @@ export class ChainRpc {
      * @param blockNumber The specific block number to get account's nonce at given address.
      * @returns Nonce of account at specified block, or null when address was not found.
      */
-    getNonce(address: PlatformAddress | H160 | string, blockNumber?: number): Promise<U256 | null> {
+    getNonce(address: PlatformAddress | string, blockNumber?: number): Promise<U256 | null> {
         return this.rpc.sendRpcRequest(
             "chain_getNonce",
-            [`0x${PlatformAddress.ensureAccount(address).value}`, blockNumber]
+            [`${PlatformAddress.ensure(address).value}`, blockNumber]
         ).then(result => result ? new U256(result) : null);
     }
 

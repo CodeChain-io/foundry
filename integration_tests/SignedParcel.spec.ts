@@ -4,10 +4,11 @@ test("getSignerAccountId", async () => {
     const sdk = new SDK({ server: process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080" });
     const secret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
     const accountId = sdk.util.getAccountIdFromPrivate(secret);
-    const nonce = await sdk.rpc.chain.getNonce(accountId);
+    const accountAddress = sdk.key.classes.PlatformAddress.fromAccountId(accountId);
+    const nonce = await sdk.rpc.chain.getNonce(accountAddress);
     const parcelToSend = sdk.core.createPaymentParcel({
         amount: 10,
-        recipient: sdk.key.classes.PlatformAddress.fromAccountId(accountId),
+        recipient: accountAddress,
     }).sign({
         secret,
         fee: 10,

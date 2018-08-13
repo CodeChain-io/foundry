@@ -2,7 +2,8 @@ const SDK = require("codechain-sdk");
 
 const sdk = new SDK({ server: "http://localhost:8080" });
 const masterSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
-const masterAddress = SDK.util.getAccountIdFromPrivate(masterSecret);
+const masterAccountId = SDK.util.getAccountIdFromPrivate(masterSecret);
+const masterAddress = sdk.key.classes.PlatformAddress.fromAccountId(masterAccountId);
 
 const regularSecret = SDK.util.generatePrivateKey();
 const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
@@ -28,7 +29,7 @@ const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
 
     const nonce2 = await sdk.rpc.chain.getNonce(masterAddress);
     const p2 = sdk.core.createPaymentParcel({
-        recipient: sdk.key.classes.PlatformAddress.fromAccountId(masterAddress),
+        recipient: masterAddress,
         amount: 10,
     });
     // We can sign a parcel with our `regularSecret`.

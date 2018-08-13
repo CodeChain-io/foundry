@@ -3,10 +3,12 @@ import { SDK } from "../";
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 const sdk = new SDK({ server: SERVER_URL });
 const masterSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
-const masterAddress = SDK.util.getAccountIdFromPrivate(masterSecret);
+const masterAccountId = SDK.util.getAccountIdFromPrivate(masterSecret);
+const masterAddress = sdk.key.classes.PlatformAddress.fromAccountId(masterAccountId);
 
 const otherSecret = "0000000000000000000000000000000000000000000000000000000000000001";
-const otherAddress = SDK.util.getAccountIdFromPrivate(otherSecret);
+const otherAccountId = SDK.util.getAccountIdFromPrivate(otherSecret);
+const otherAddress = sdk.key.classes.PlatformAddress.fromAccountId(otherAccountId);
 
 const regularSecret = SDK.util.generatePrivateKey();
 const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
@@ -44,7 +46,7 @@ async function setRegularKey() {
 async function sendCCCToOther() {
     const nonce = await sdk.rpc.chain.getNonce(masterAddress);
     const p = sdk.core.createPaymentParcel({
-        recipient: sdk.key.classes.PlatformAddress.fromAccountId(otherAddress),
+        recipient: otherAddress,
         amount: 100,
     });
     const hash = await sdk.rpc.chain.sendSignedParcel(p.sign({
@@ -67,7 +69,7 @@ async function mintAssetUsingMaster(p2pkh, aliceAddress, bobAddress) {
             icon_url: "https://gold.image/",
         }),
         amount: 10000,
-        registrar: sdk.key.classes.PlatformAddress.fromAccountId(masterAddress),
+        registrar: masterAddress,
     });
 
     const mintTx = sdk.core.createAssetMintTransaction({
