@@ -1,4 +1,4 @@
-import { H160 } from "./H160";
+import { PlatformAddress } from "../key/PlatformAddress";
 import { H256 } from "./H256";
 import { U256 } from "./U256";
 import { SignedParcel } from "./SignedParcel";
@@ -7,7 +7,7 @@ export type BlockData = {
     parentHash: H256;
     timestamp: number;
     number: number;
-    author: H160;
+    author: PlatformAddress;
     extraData: Buffer;
     parcelsRoot: H256;
     stateRoot: H256;
@@ -24,7 +24,7 @@ export class Block {
     parentHash: H256;
     timestamp: number;
     number: number;
-    author: H160;
+    author: PlatformAddress;
     extraData: Buffer;
     parcelsRoot: H256;
     stateRoot: H256;
@@ -58,7 +58,7 @@ export class Block {
             parentHash: new H256(parentHash),
             timestamp,
             number,
-            author: new H160(author),
+            author: PlatformAddress.fromString(author),
             extraData,
             parcelsRoot: new H256(parcelsRoot),
             stateRoot: new H256(stateRoot),
@@ -77,7 +77,7 @@ export class Block {
             parentHash: parentHash.value,
             timestamp,
             number,
-            author: author.value,
+            author: author.toString(),
             extraData,
             parcelsRoot: parcelsRoot.value,
             stateRoot: stateRoot.value,
