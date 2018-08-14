@@ -362,6 +362,8 @@ describe("rpc", () => {
     });
 
     describe("account", () => {
+        const noSuchAccount = "tccqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj5aqu5";
+
         test("getList", async () => {
             expect(async () => {
                 await sdk.rpc.account.getList();
@@ -373,33 +375,105 @@ describe("rpc", () => {
             expect(await sdk.rpc.account.create("my-password")).toEqual(expect.anything());
         });
 
-        test("importRaw", async () => {
-            const secret = "a2b39d4aefecdb17f84ed4cf629e7c8817691cc4f444ac7522902b8fb4b7bd53";
-            const account = getAccountIdFromPrivate(secret);
-            const address = PlatformAddress.fromAccountId(account, { networkId: "tc" });
-            expect(address.toString()).toEqual("tccqz3z4e3x6f5j80wexg0xfr0qsrqcuyzf7gara32r");
-            expect(await sdk.rpc.account.importRaw(secret)).toEqual(address.toString());
+        describe("importRaw", () => {
+            let randomSecret: string;
+            beforeEach(() => {
+                randomSecret = sdk.util.generatePrivateKey();
+            });
+
+            test("Ok", async () => {
+                const account = getAccountIdFromPrivate(randomSecret);
+                const address = PlatformAddress.fromAccountId(account, { networkId: "tc" });
+                // FIXME: Check that address not exists
+                expect(await sdk.rpc.account.importRaw(randomSecret)).toEqual(address.toString());
+            });
+
+            test("KeyError", (done) => {
+                const invalidSecret = "0000000000000000000000000000000000000000000000000000000000000000";
+                sdk.rpc.account.importRaw(invalidSecret)
+                    .then(done.fail)
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.KEY_ERROR);
+                        done();
+                    });
+            });
+
+            test("AlreadyExists", async (done) => {
+                sdk.rpc.account.importRaw(randomSecret).then(() => {
+                    sdk.rpc.account.importRaw(randomSecret)
+                        .then(() => done.fail())
+                        .catch(e => {
+                            expect(e).toEqual(ERROR.ALREADY_EXISTS);
+                            done();
+                        });
+                });
+            });
         });
 
-        test("remove", async () => {
-            const account = await sdk.rpc.account.create("123");
-            expect(async () => {
-                await sdk.rpc.account.remove(account, "123");
-                expect(await sdk.rpc.account.getList()).not.toContain(account);
-            }).not.toThrow();
+        describe("remove", () => {
+            let address;
+            beforeEach(async () => {
+                address = await sdk.rpc.account.create("123");
+            });
+
+            test("Ok", async () => {
+                await sdk.rpc.account.remove(address, "123");
+                expect(await sdk.rpc.account.getList()).not.toContain(address);
+            });
+
+            test("WrongPassword", async (done) => {
+                sdk.rpc.account.remove(address, "1234")
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.WRONG_PASSWORD);
+                        done();
+                    });
+            });
+
+            test("NoSuchAccount", async (done) => {
+                sdk.rpc.account.remove(noSuchAccount, "123")
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.NO_SUCH_ACCOUNT);
+                        done();
+                    });
+            });
         });
 
-        test("sign", async () => {
-            const secret = generatePrivateKey();
-            const account = await sdk.rpc.account.importRaw(secret, "my-password");
-
+        describe("sign", () => {
             const message = "0000000000000000000000000000000000000000000000000000000000000000";
-            const { r, s, v } = signEcdsa(message, secret);
-            // FIXME:
-            const sig = await sdk.rpc.account.sign(message, account, "my-password");
-            expect(sig).toContain(r);
-            expect(sig).toContain(s);
-            expect(sig).toContain(v);
+            let address;
+            let secret;
+            beforeAll(async () => {
+                secret = generatePrivateKey();
+                address = await sdk.rpc.account.importRaw(secret, "my-password");
+            });
+
+            test("Ok", async () => {
+                const { r, s, v } = signEcdsa(message, secret);
+                const signature = await sdk.rpc.account.sign(message, address, "my-password");
+                expect(signature).toContain(r);
+                expect(signature).toContain(s);
+                expect(signature).toContain(v);
+            });
+
+            test("WrongPassword", async (done) => {
+                sdk.rpc.account.sign(message, address, "wrong-password")
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.WRONG_PASSWORD);
+                        done();
+                    });
+            });
+
+            test("NoSuchAccount", async (done) => {
+                sdk.rpc.account.sign(message, noSuchAccount, "my-password")
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.NO_SUCH_ACCOUNT);
+                        done();
+                    });
+            });
         });
 
         describe("unlock", () => {
@@ -414,7 +488,7 @@ describe("rpc", () => {
                 await sdk.rpc.account.unlock(address, "123", 300);
             });
 
-            test.skip("InvalidParams", async (done) => {
+            test("InvalidParams", async (done) => {
                 sdk.rpc.account.unlock(address, "123", -1)
                     .then(() => done.fail())
                     .catch(e => {
@@ -423,7 +497,7 @@ describe("rpc", () => {
                     });
             });
 
-            test.skip("WrongPassword", async (done) => {
+            test("WrongPassword", async (done) => {
                 sdk.rpc.account.unlock(address, "456")
                     .then(() => done.fail())
                     .catch(e => {
@@ -432,7 +506,7 @@ describe("rpc", () => {
                     });
             });
 
-            test.skip("NoSuchAccount", async (done) => {
+            test("NoSuchAccount", async (done) => {
                 sdk.rpc.account.unlock(noSuchAccount)
                     .then(() => done.fail())
                     .catch(e => {
