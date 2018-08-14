@@ -60,4 +60,108 @@ export class NetworkRpc {
             [address, port]
         );
     }
+
+    /**
+     * Add the IP to whitelist
+     * @param ip Node IP
+     */
+    addToWhiteList(ip: string): Promise<null> {
+        return this.rpc.sendRpcRequest(
+            "net_addToWhitelist",
+            [ip]
+        );
+    }
+
+    /**
+     * Remove the IP from whitelist
+     * @param ip Node IP
+     */
+    removeFromWhiteList(ip: string): Promise<null> {
+        return this.rpc.sendRpcRequest(
+            "net_removeFromWhitelist",
+            [ip]
+        );
+    }
+
+    /**
+     * Add the IP to blacklist
+     * @param ip Node IP
+     */
+    addToBlacklist(ip: string): Promise<null> {
+        return this.rpc.sendRpcRequest(
+            "net_addToBlacklist",
+            [ip]
+        );
+    }
+
+    /**
+     * Remove the IP from blacklist
+     * @param ip Node IP
+     */
+    removeFromBlackList(ip: string): Promise<null> {
+        return this.rpc.sendRpcRequest(
+            "net_removeFromBlacklist",
+            [ip]
+        );
+    }
+
+    /**
+     * Enable whitelist
+     */
+    enableWhiteList(): Promise<null> {
+        return this.rpc.sendRpcRequest(
+            "net_enableWhitelist",
+            []
+        );
+    }
+
+    /**
+     * Disable whitelist
+     */
+    disableWhiteList(): Promise<null> {
+        return this.rpc.sendRpcRequest(
+            "net_disableWhitelist",
+            []
+        );
+    }
+
+    /**
+     * Enable blacklist
+     */
+    enableBlackList(): Promise<null> {
+        return this.rpc.sendRpcRequest(
+            "net_enableBlacklist",
+            []
+        );
+    }
+
+    /**
+     * Disable blacklist
+     */
+    disableBlackList(): Promise<null> {
+        return this.rpc.sendRpcRequest(
+            "net_disableBlacklist",
+            []
+        );
+    }
+
+    /**
+     * Get the status of whitelist
+     */
+    getWhitelist(): Promise<{ list: string[], enabled: boolean }> {
+        return this.rpc.sendRpcRequest(
+            "net_getWhitelist",
+            []
+        );
+    }
+
+    /**
+     * Get the status of blacklist
+     */
+    getBlacklist(): Promise<{ list: string[], enabled: boolean }> {
+        return this.rpc.sendRpcRequest(
+            "net_getBlacklist",
+            []
+        );
+    }
 }
