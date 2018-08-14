@@ -3,6 +3,37 @@ import { H256, SignedParcel, Invoice, AssetMintTransaction, Asset, AssetScheme, 
 import { PlatformAddress } from "../lib/key/classes";
 import { getAccountIdFromPrivate, generatePrivateKey, signEcdsa } from "../lib/utils";
 
+const ERROR = {
+    // FIXME:
+    KEY_ERROR: {
+        code: -32041,
+        data: expect.anything(),
+        message: expect.anything(),
+    },
+    // FIXME:
+    ALREADY_EXISTS: {
+        code: -32042,
+        data: expect.anything(),
+        message: expect.anything(),
+    },
+    // FIXME:
+    WRONG_PASSWORD: {
+        code: -32043,
+        data: expect.anything(),
+        message: expect.anything(),
+    },
+    // FIXME:
+    NO_SUCH_ACCOUNT: {
+        code: -32044,
+        data: expect.anything(),
+        message: expect.anything(),
+    },
+    INVALID_PARAMS: {
+        code: -32602,
+        message: expect.anything(),
+    },
+};
+
 describe("rpc", () => {
     let sdk: SDK;
     const { Block, H256, H512 , U256 } = SDK.Core.classes;
@@ -252,6 +283,46 @@ describe("rpc", () => {
             expect(sig).toContain(r);
             expect(sig).toContain(s);
             expect(sig).toContain(v);
+        });
+
+        describe("unlock", () => {
+            let address;
+            beforeEach(async () => {
+                address = await sdk.rpc.account.create("123");
+            });
+
+            test("Ok", async () => {
+                await sdk.rpc.account.unlock(address, "123");
+                await sdk.rpc.account.unlock(address, "123", 0);
+                await sdk.rpc.account.unlock(address, "123", 300);
+            });
+
+            test("InvalidParams", async (done) => {
+                sdk.rpc.account.unlock(address, "123", -1)
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.INVALID_PARAMS);
+                        done();
+                    });
+            });
+
+            test("WrongPassword", async (done) => {
+                sdk.rpc.account.unlock(address, "456")
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.WRONG_PASSWORD);
+                        done();
+                    });
+            });
+
+            test("NoSuchAccount", async (done) => {
+                sdk.rpc.account.unlock(noSuchAccount)
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.NO_SUCH_ACCOUNT);
+                        done();
+                    });
+            });
         });
     });
 });

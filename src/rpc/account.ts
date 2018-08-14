@@ -73,4 +73,18 @@ export class AccountRpc {
             passphrase
         ]);
     }
+
+    /**
+     * Unlocks the account.
+     * @param address A platform address
+     * @param passphrase The account's passphrase
+     * @param duration Time to keep the account unlocked. The default value is 300(seconds). Passing 0 unlocks the account indefinitely.
+     */
+    unlock(address: PlatformAddress | string, passphrase?: string, duration?: number): Promise<string> {
+        return this.rpc.sendRpcRequest("account_unlock", [
+            PlatformAddress.ensure(address).toString(),
+            passphrase || "",
+            duration
+        ]);
+    }
 }
