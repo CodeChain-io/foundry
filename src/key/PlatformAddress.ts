@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 import { Buffer } from "buffer";
 
 import { H160 } from "../core/H160";
@@ -29,7 +30,7 @@ export class PlatformAddress {
             throw `Unsupported version for platform address: ${version}`;
         }
 
-        const words = toWords(Buffer.from([version, ...Buffer.from(H160.ensure(accountId).value, "hex")]));
+        const words = toWords(Buffer.from(_.padStart(version.toString(16), 2, "0") + H160.ensure(accountId).value, "hex"));
         return new PlatformAddress(H160.ensure(accountId), encode(networkId + "c", words));
     }
 
