@@ -8,23 +8,28 @@ import { blake256 } from "../utils";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { MemoryKeyStore } from "./MemoryKeyStore";
 
+type NetworkId = string;
+
 /**
  * AssetAgent which supports P2PKH(Pay to Public Key Hash).
  */
 export class P2PKH implements TransactionSigner {
     private rawKeyStore: MemoryKeyStore;
+    private networkId: NetworkId;
     private publicKeyMap: { [publicKeyHash: string]: string } = {};
 
     // FIXME: rename keyStore to rawKeyStore
-    constructor(params: { keyStore: MemoryKeyStore }) {
-        this.rawKeyStore = params.keyStore;
+    constructor(params: { keyStore: MemoryKeyStore, networkId: NetworkId }) {
+        const { keyStore, networkId } = params;
+        this.rawKeyStore = keyStore;
+        this.networkId = networkId;
     }
 
     async createAddress(): Promise<AssetTransferAddress> {
         const publicKey = await this.rawKeyStore.createKey();
         const publicKeyHash = H256.ensure(blake256(publicKey));
         this.publicKeyMap[publicKeyHash.value] = publicKey;
-        return AssetTransferAddress.fromTypeAndPayload(1, publicKeyHash);
+        return AssetTransferAddress.fromTypeAndPayload(1, publicKeyHash, { networkId: this.networkId });
     }
 
     async signBurn(transaction: AssetTransferTransaction, index: number): Promise<{ lockScript: Buffer, unlockScript: Buffer }> {

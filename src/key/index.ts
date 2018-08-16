@@ -7,12 +7,15 @@ import { PlatformAddress } from "./PlatformAddress";
 import { P2PKH } from "./P2PKH";
 
 type KeyStore = MemoryKeyStore;
+type NetworkId = string;
 
 export class Key {
     private rpc: Rpc;
+    private networkId: NetworkId;
 
-    constructor(rpc: Rpc) {
+    constructor(rpc: Rpc, options: { networkId: NetworkId }) {
         this.rpc = rpc;
+        this.networkId = options.networkId;
     }
 
     /**
@@ -28,7 +31,8 @@ export class Key {
      */
     createP2PKH(params: { keyStore: KeyStore }): P2PKH {
         const { keyStore } = params;
-        return new P2PKH({ keyStore });
+        const { networkId } = this;
+        return new P2PKH({ keyStore, networkId });
     }
 
     /**

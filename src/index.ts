@@ -47,7 +47,7 @@ class SDK {
 
         this.rpc = new Rpc({ server, options: { parcelSigner, parcelFee } });
         this.core = new Core({ networkId });
-        this.key = new Key(this.rpc);
+        this.key = new Key(this.rpc, { networkId });
     }
 
     public static SDK = SDK;
