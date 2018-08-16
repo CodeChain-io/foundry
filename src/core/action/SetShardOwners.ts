@@ -1,6 +1,6 @@
 import { PlatformAddress } from "../../key/PlatformAddress";
 
-export class ChangeShardOwners {
+export class SetShardOwners {
     public readonly shardId: number;
     public readonly owners: PlatformAddress[];
     constructor(params: { shardId: number, owners: PlatformAddress[] }) {
@@ -17,7 +17,7 @@ export class ChangeShardOwners {
     toJSON() {
         const { shardId, owners } = this;
         return {
-            action: "changeShardOwners",
+            action: "setShardOwners",
             shardId,
             owners: owners.map(owner => owner.value)
         };

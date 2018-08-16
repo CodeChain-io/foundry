@@ -16,8 +16,8 @@ import { Payment } from "./action/Payment";
 import { SetRegularKey } from "./action/SetReulgarKey";
 import { ChangeShardState } from "./action/ChangeShardState";
 import { CreateShard } from "./action/CreateShard";
-import { ChangeShardOwners } from "./action/ChangeShardOwners";
-import { ChangeShardUsers } from "./action/ChangeShardUsers";
+import { SetShardOwners } from "./action/SetShardOwners";
+import { SetShardUsers } from "./action/SetShardUsers";
 import { AssetTransferInput } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
@@ -100,9 +100,9 @@ export class Core {
         );
     }
 
-    createChangeShardOwnersParcel(params: { shardId: number, owners: (PlatformAddress | string)[] }): Parcel {
+    createSetShardOwnersParcel(params: { shardId: number, owners: (PlatformAddress | string)[] }): Parcel {
         const { shardId, owners } = params;
-        const action = new ChangeShardOwners({ shardId, owners: owners.map(PlatformAddress.ensure) });
+        const action = new SetShardOwners({ shardId, owners: owners.map(PlatformAddress.ensure) });
         return new Parcel(
             this.networkId,
             action
@@ -110,13 +110,13 @@ export class Core {
     }
 
     /**
-     * Create ChangeShardUser action which can change shard users
+     * Create SetShardUser action which can change shard users
      * @param params.shardId
      * @param params.users
      */
-    createChangeShardUsersParcel(params: { shardId: number, users: (PlatformAddress | string)[] }): Parcel {
+    createSetShardUsersParcel(params: { shardId: number, users: (PlatformAddress | string)[] }): Parcel {
         const { shardId, users } = params;
-        const action = new ChangeShardUsers({ shardId, users: users.map(PlatformAddress.ensure) });
+        const action = new SetShardUsers({ shardId, users: users.map(PlatformAddress.ensure) });
         return new Parcel(
             this.networkId,
             action
@@ -328,7 +328,8 @@ export class Core {
         SetRegularKey,
         ChangeShardState,
         CreateShard,
-        ChangeShardOwners,
+        SetShardOwners,
+        SetShardUsers,
         // Transaction
         AssetMintTransaction,
         AssetTransferTransaction,
