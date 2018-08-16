@@ -338,6 +338,7 @@ export class Core {
         AssetOutPoint,
         CreateWorldTransaction,
         SetWorldOwnersTransaction,
+        SetWorldUsersTransaction,
         // Asset and AssetScheme
         Asset,
         AssetScheme,
