@@ -1,9 +1,40 @@
 import { SDK } from "../";
-import { H256, SignedParcel, Invoice, AssetMintTransaction, Asset, AssetScheme, AssetTransferTransaction } from "../lib/core/classes";
+import { H256, SignedParcel, Invoice, AssetMintTransaction, Asset, AssetScheme, AssetTransferTransaction, Parcel } from "../lib/core/classes";
 import { PlatformAddress } from "../lib/key/classes";
 import { getAccountIdFromPrivate, generatePrivateKey, signEcdsa } from "../lib/utils";
 
+// FIXME:
 const ERROR = {
+    VERIFICATION_FAILED: {
+        code: -32030,
+        data: expect.anything(),
+        message: expect.anything(),
+    },
+    ALREADY_IMPORTED: {
+        code: -32031,
+        data: expect.anything(),
+        message: expect.anything(),
+    },
+    NOT_ENOUTGH_BALANCE: {
+        code: -32032,
+        data: expect.anything(),
+        message: expect.anything(),
+    },
+    TOO_LOW_FEE: {
+        code: -32033,
+        data: expect.anything(),
+        message: expect.anything(),
+    },
+    TOO_CHEAP_TO_REPLACE: {
+        code: -32034,
+        data: expect.anything(),
+        message: expect.anything(),
+    },
+    INVALID_NONCE: {
+        code: -32035,
+        data: expect.anything(),
+        message: expect.anything(),
+    },
     // FIXME:
     KEY_ERROR: {
         code: -32041,
@@ -106,7 +137,93 @@ describe("rpc", () => {
             });
         });
 
-        // FIXME: with address here.
+        describe("sendSignedParcel", () => {
+            const secret = signerSecret;
+            let nonce;
+            let parcel: Parcel;
+            beforeEach(async () => {
+                parcel = sdk.core.createPaymentParcel({
+                    recipient: signerAddress,
+                    amount: 10,
+                });
+                nonce = await sdk.rpc.chain.getNonce(signerAddress);
+            });
+
+            test("Ok", async (done) => {
+                sdk.rpc.chain.sendSignedParcel(parcel.sign({ secret, fee: 10, nonce }))
+                    .then(() => done())
+                    .catch(e => done.fail(e));
+            });
+
+            describe("VerificationFailed", () => {
+                test("Signature", (done) => {
+                    const signedParcel = parcel.sign({ secret, fee: 10, nonce });
+                    signedParcel.r = new U256(0);
+                    sdk.rpc.chain.sendSignedParcel(signedParcel)
+                        .then(() => done.fail())
+                        .catch(e => {
+                            expect(e).toEqual(ERROR.VERIFICATION_FAILED);
+                            done();
+                        });
+                });
+
+                test("NetworkID", (done) => {
+                    (parcel as any).networkId = "zz";
+                    const signedParcel = parcel.sign({ secret, fee: 10, nonce });
+                    sdk.rpc.chain.sendSignedParcel(signedParcel)
+                        .then(() => done.fail())
+                        .catch(e => {
+                            expect(e).toEqual(ERROR.VERIFICATION_FAILED);
+                            done();
+                        });
+                });
+            });
+
+            test("AlreadyImported", (done) => {
+                const signedParcel = parcel.sign({ secret, fee: 10, nonce });
+                sdk.rpc.chain.sendSignedParcel(signedParcel).catch(done.fail);
+                sdk.rpc.chain.sendSignedParcel(signedParcel)
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.ALREADY_IMPORTED);
+                        done();
+                    });
+            });
+
+            test("NotEnoughBalance", async (done) => {
+                const signedParcel = parcel.sign({ secret, fee: new U256("0xffffffffffffffffffffffffffffffffffffffffffffffffff"), nonce });
+                sdk.rpc.chain.sendSignedParcel(signedParcel)
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.NOT_ENOUTGH_BALANCE);
+                        done();
+                    });
+            });
+
+            test("TooLowFee", (done) => {
+                const signedParcel = parcel.sign({ secret, fee: 9, nonce });
+                sdk.rpc.chain.sendSignedParcel(signedParcel)
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.TOO_LOW_FEE);
+                        done();
+                    });
+            });
+
+            test.skip("TooCheapToReplace", (done) => {
+                done.fail("Not implemented");
+            });
+
+            test("InvalidNonce", (done) => {
+                const signedParcel = parcel.sign({ secret, fee: 12321, nonce: new U256(nonce.value.minus(1)) });
+                sdk.rpc.chain.sendSignedParcel(signedParcel)
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.INVALID_NONCE);
+                        done();
+                    });
+            });
+        });
 
         describe("with parcel hash", () => {
             let parcelHash: H256;
