@@ -7,7 +7,7 @@ const sdk = new SDK({ server: "http://localhost:8080" });
     const p2pkh = await sdk.key.createP2PKH({ keyStore });
 
     const aliceAddress = await p2pkh.createAddress();
-    const bobAddress = "ccaqqqap7lazh5g84jsfxccp686jakdy0z9v4chrq4vz8pj4nl9lzvf7rs2rnmc0";
+    const bobAddress = "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
 
     // Create asset named Gold. Total amount of Gold is 10000. The registrar is set
     // to null, which means this type of asset can be transferred freely.

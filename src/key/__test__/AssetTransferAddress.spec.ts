@@ -4,13 +4,13 @@ import { AssetTransferAddress } from "../AssetTransferAddress";
 
 test("AssetTransferAddress.fromLockScriptHash - mainnet", () => {
     const lockScriptHash = new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3");
-    const address = AssetTransferAddress.fromLockScriptHash(lockScriptHash);
+    const address = AssetTransferAddress.fromLockScriptHash(lockScriptHash, { networkId: "cc" });
     expect(address.value).toMatch(/^cca[a-z0-9]+$/);
 });
 
 test("AssetTransferAddress.fromLockScriptHash - testnet", () => {
     const lockScriptHash = new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3");
-    const address = AssetTransferAddress.fromLockScriptHash(lockScriptHash, { isTestnet: true });
+    const address = AssetTransferAddress.fromLockScriptHash(lockScriptHash, { networkId: "tc" });
     expect(address.value).toMatch(/^tca[a-z0-9]+$/);
 });
 
@@ -23,13 +23,13 @@ test("AssetTransferAddress.fromLockScriptHash - invalid version", () => {
 
 test("AssetTransferAddress.fromPublicKeyHash - mainnet", () => {
     const publicKeyHash = new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3");
-    const address = AssetTransferAddress.fromPublicKeyHash(publicKeyHash);
+    const address = AssetTransferAddress.fromPublicKeyHash(publicKeyHash, { networkId: "cc" });
     expect(address.value).toMatch(/^cca[a-z0-9]+$/);
 });
 
 test("AssetTransferAddress.fromPublicKeyHash - testnet", () => {
     const publicKeyHash = new H256("50a2c0d145539c1fb32f60e0d8425b1c03f6120c40171971b8de9c0017a4bfb3");
-    const address = AssetTransferAddress.fromPublicKeyHash(publicKeyHash, { isTestnet: true });
+    const address = AssetTransferAddress.fromPublicKeyHash(publicKeyHash, { networkId: "tc" });
     expect(address.value).toMatch(/^tca[a-z0-9]+$/);
 });
 

@@ -20,7 +20,7 @@ test("checkRegistrarValidation", async () => {
     const keyStore = await sdk.key.createMemoryKeyStore();
     const p2pkh = await sdk.key.createP2PKH({ keyStore });
     const aliceAddress = await p2pkh.createAddress();
-    const bobAddress = "ccaqqqap7lazh5g84jsfxccp686jakdy0z9v4chrq4vz8pj4nl9lzvf7rs2rnmc0";
+    const bobAddress = "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
 
     const mintTx = await mintAssetUsingMaster(p2pkh, aliceAddress, bobAddress);
     await transferAssetUsingOther(mintTx, p2pkh, aliceAddress, bobAddress);

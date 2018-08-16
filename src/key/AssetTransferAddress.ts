@@ -35,8 +35,8 @@ export class AssetTransferAddress {
         this.value = address;
     }
 
-    static fromTypeAndPayload(type: number, payload: H256 | string, options: { isTestnet?: boolean, version?: number } = {}) {
-        const { isTestnet = false, version = 0 } = options;
+    static fromTypeAndPayload(type: number, payload: H256 | string, options: { networkId?: string, version?: number } = {}) {
+        const { networkId = "tc", version = 0 } = options;
 
         if (version !== 0) {
             throw `Unsupported version for asset transfer address: ${version}`;
@@ -47,12 +47,12 @@ export class AssetTransferAddress {
         }
 
         const words = toWords(Buffer.from([version, type, ...Buffer.from(H256.ensure(payload).value, "hex")]));
-        const address = encode(isTestnet ? "tca" : "cca", words);
+        const address = encode(networkId + "a", words);
         return new AssetTransferAddress(type, payload, address);
     }
 
-    static fromLockScriptHash(lockScriptHash: H256, options: { isTestnet?: boolean, version?: number } = {}) {
-        const { isTestnet = false, version = 0 } = options;
+    static fromLockScriptHash(lockScriptHash: H256, options: { networkId?: string, version?: number } = {}) {
+        const { networkId = "tc", version = 0 } = options;
         const type = LOCK_SCRIPT_HASH_TYPE;
 
         if (version !== 0) {
@@ -60,12 +60,12 @@ export class AssetTransferAddress {
         }
 
         const words = toWords(Buffer.from([version, type, ...Buffer.from(lockScriptHash.value, "hex")]));
-        const address = encode(isTestnet ? "tca" : "cca", words);
+        const address = encode(networkId + "a", words);
         return new AssetTransferAddress(type, lockScriptHash, address);
     }
 
-    static fromPublicKeyHash(publicKeyHash: H256, options: { isTestnet?: boolean, version?: number } = {}) {
-        const { isTestnet = false, version = 0 } = options;
+    static fromPublicKeyHash(publicKeyHash: H256, options: { networkId?: string, version?: number } = {}) {
+        const { networkId = "tc", version = 0 } = options;
         const type = PAY_TO_PUBLIC_KEY_HASH_TYPE;
 
         if (version !== 0) {
@@ -73,12 +73,12 @@ export class AssetTransferAddress {
         }
 
         const words = toWords(Buffer.from([version, type, ...Buffer.from(publicKeyHash.value, "hex")]));
-        const address = encode(isTestnet ? "tca" : "cca", words);
+        const address = encode(networkId + "a", words);
         return new AssetTransferAddress(type, publicKeyHash, address);
     }
 
     static fromString(address: string) {
-        if (!address.startsWith("cca") && !address.startsWith("tca")) {
+        if (address.charAt(2) !== "a") {
             throw `The prefix is unknown for asset transfer address: ${address}`;
         }
 

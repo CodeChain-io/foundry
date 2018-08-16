@@ -127,7 +127,7 @@ var p2pkh = sdk.key.createP2PKH({ keyStore });
 
 p2pkh.createAddress().then(function (address) {
     // This type of address is used to receive assets when minting or transferring them.
-    // Example: ccaqqqk7n0a0w69tjfza9svdjzhvu95cpl29ssnyn99ml8nvl8q6sd2c7qgjejfc
+    // Example: tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze
     console.log(address.toString());
 });
 ```
@@ -142,7 +142,7 @@ var sdk = new SDK({ server: "http://localhost:8080" });
 
 // If you want to know how to create an address, see the example "Create an
 // asset transfer address".
-var address = "ccaqqqk7n0a0w69tjfza9svdjzhvu95cpl29ssnyn99ml8nvl8q6sd2c7qgjejfc";
+var address = "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
 
 var assetMintTransaction = sdk.core.createAssetMintTransaction({
     scheme: {
