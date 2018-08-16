@@ -3,7 +3,7 @@ import { execFile } from "child_process";
 
 describe("examples", () => {
     beforeAll((done) => {
-        // import account "cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7" which is used in
+        // import account "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78" which is used in
         // the examples.
         // The passphrase of the account is "satoshi".
         runExample("import-test-account", done);

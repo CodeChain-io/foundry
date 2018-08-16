@@ -4,13 +4,13 @@ import { PlatformAddress } from "../PlatformAddress";
 
 test("PlatformAddress.fromAccountId - mainnet (default)", () => {
     const accountId = new H160("7b5e0ee8644c6f585fc297364143280a45844502");
-    const address = PlatformAddress.fromAccountId(accountId);
+    const address = PlatformAddress.fromAccountId(accountId, { networkId: "cc" });
     expect(address.value).toMatch(/^ccc[a-z0-9]+$/);
 });
 
 test("PlatformAddress.fromAccountId - testnet", () => {
     const accountId = new H160("7b5e0ee8644c6f585fc297364143280a45844502");
-    const address = PlatformAddress.fromAccountId(accountId, { networkId: "tc" });
+    const address = PlatformAddress.fromAccountId(accountId);
     expect(address.value).toMatch(/^tcc[a-z0-9]+$/);
 });
 

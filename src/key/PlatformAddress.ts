@@ -23,7 +23,7 @@ export class PlatformAddress {
     }
 
     static fromAccountId(accountId: H160 | string, options: { networkId?: string, version?: number } = {}) {
-        const { networkId = "cc", version = 0 } = options;
+        const { networkId = "tc", version = 0 } = options;
 
         if (version !== 0) {
             throw `Unsupported version for platform address: ${version}`;
