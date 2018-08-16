@@ -46,7 +46,7 @@ export class Core {
      * from the parcel signer to the recipient. Who is signing the parcel will pay.
      * @param params.recipient The platform account who receives CCC
      * @param params.amount Amount of CCC to pay
-     * @throws Given string for recipient is invalid for converting it to H160
+     * @throws Given string for recipient is invalid for converting it to PlatformAddress
      * @throws Given number or string for amount is invalid for converting it to U256
      */
     createPaymentParcel(params: { recipient: PlatformAddress | string, amount: U256 | number | string }): Parcel {
