@@ -22,19 +22,19 @@ export class PlatformAddress {
         this.value = address;
     }
 
-    static fromAccountId(accountId: H160 | string, options: { isTestnet?: boolean, version?: number } = {}) {
-        const { isTestnet = false, version = 0 } = options;
+    static fromAccountId(accountId: H160 | string, options: { networkId?: string, version?: number } = {}) {
+        const { networkId = "cc", version = 0 } = options;
 
         if (version !== 0) {
             throw `Unsupported version for platform address: ${version}`;
         }
 
         const words = toWords(Buffer.from([version, ...Buffer.from(H160.ensure(accountId).value, "hex")]));
-        return new PlatformAddress(H160.ensure(accountId), encode(isTestnet ? "tcc" : "ccc", words));
+        return new PlatformAddress(H160.ensure(accountId), encode(networkId + "c", words));
     }
 
     static fromString(address: string) {
-        if (!address.startsWith("ccc") && !address.startsWith("tcc")) {
+        if (address.charAt(2) !== "c") {
             throw `The prefix is unknown for platform address: ${address}`;
         }
 

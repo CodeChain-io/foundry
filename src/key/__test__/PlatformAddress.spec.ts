@@ -10,7 +10,7 @@ test("PlatformAddress.fromAccountId - mainnet (default)", () => {
 
 test("PlatformAddress.fromAccountId - testnet", () => {
     const accountId = new H160("7b5e0ee8644c6f585fc297364143280a45844502");
-    const address = PlatformAddress.fromAccountId(accountId, { isTestnet: true });
+    const address = PlatformAddress.fromAccountId(accountId, { networkId: "tc" });
     expect(address.value).toMatch(/^tcc[a-z0-9]+$/);
 });
 
