@@ -259,7 +259,7 @@ describe("rpc", () => {
         test("importRaw", async () => {
             const secret = "a2b39d4aefecdb17f84ed4cf629e7c8817691cc4f444ac7522902b8fb4b7bd53";
             const account = getAccountIdFromPrivate(secret);
-            const address = PlatformAddress.fromAccountId(account, { isTestnet: true });
+            const address = PlatformAddress.fromAccountId(account, { networkId: "tc" });
             expect(address.toString()).toEqual("tccqz3z4e3x6f5j80wexg0xfr0qsrqcuyzf7gara32r");
             expect(await sdk.rpc.account.importRaw(secret)).toEqual(address.toString());
         });
@@ -297,7 +297,7 @@ describe("rpc", () => {
                 await sdk.rpc.account.unlock(address, "123", 300);
             });
 
-            test("InvalidParams", async (done) => {
+            test.skip("InvalidParams", async (done) => {
                 sdk.rpc.account.unlock(address, "123", -1)
                     .then(() => done.fail())
                     .catch(e => {
@@ -306,7 +306,7 @@ describe("rpc", () => {
                     });
             });
 
-            test("WrongPassword", async (done) => {
+            test.skip("WrongPassword", async (done) => {
                 sdk.rpc.account.unlock(address, "456")
                     .then(() => done.fail())
                     .catch(e => {
@@ -315,7 +315,7 @@ describe("rpc", () => {
                     });
             });
 
-            test("NoSuchAccount", async (done) => {
+            test.skip("NoSuchAccount", async (done) => {
                 sdk.rpc.account.unlock(noSuchAccount)
                     .then(() => done.fail())
                     .catch(e => {
