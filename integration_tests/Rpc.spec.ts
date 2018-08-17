@@ -181,13 +181,16 @@ describe("rpc", () => {
 
             test("AlreadyImported", (done) => {
                 const signedParcel = parcel.sign({ secret, fee: 10, nonce });
-                sdk.rpc.chain.sendSignedParcel(signedParcel).catch(done.fail);
                 sdk.rpc.chain.sendSignedParcel(signedParcel)
-                    .then(() => done.fail())
-                    .catch(e => {
-                        expect(e).toEqual(ERROR.ALREADY_IMPORTED);
-                        done();
-                    });
+                    .then(() => {
+                        sdk.rpc.chain.sendSignedParcel(signedParcel)
+                            .then(() => done.fail())
+                            .catch(e => {
+                                expect(e).toEqual(ERROR.ALREADY_IMPORTED);
+                                done();
+                            });
+                    })
+                    .catch(done.fail);
             });
 
             test("NotEnoughBalance", async (done) => {
