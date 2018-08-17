@@ -33,6 +33,10 @@ describe("examples", () => {
         runExample("mint-and-transfer", done);
     });
 
+    test("mint-and-burn", (done) => {
+        runExample("mint-and-burn", done);
+    });
+
     test("set-regular-key", (done) => {
         runExample("set-regular-key", done);
     });
