@@ -15,7 +15,7 @@ const ERROR = {
         data: expect.anything(),
         message: expect.anything(),
     },
-    NOT_ENOUTGH_BALANCE: {
+    NOT_ENOUGH_BALANCE: {
         code: -32032,
         data: expect.anything(),
         message: expect.anything(),
@@ -195,7 +195,7 @@ describe("rpc", () => {
                 sdk.rpc.chain.sendSignedParcel(signedParcel)
                     .then(() => done.fail())
                     .catch(e => {
-                        expect(e).toEqual(ERROR.NOT_ENOUTGH_BALANCE);
+                        expect(e).toEqual(ERROR.NOT_ENOUGH_BALANCE);
                         done();
                     });
             });
