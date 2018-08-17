@@ -1,4 +1,4 @@
-import { H256 } from "../../../lib/core/H256";
+import { H256 } from "../../core/H256";
 import { blake256 } from "../../utils";
 
 import { P2PKHBurn } from "../P2PKHBurn";
