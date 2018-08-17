@@ -38,7 +38,7 @@ const sdk = new SDK({ server: "http://localhost:8080" });
             amount: 7000,
             assetType: firstGold.assetType
         });
-    await transferTx.sign(0, { signer: p2pkh });
+    await transferTx.signInput(0, { signer: p2pkh });
     transferTx.getTransferredAssets();
 
     const parcel = sdk.core.createChangeShardStateParcel({

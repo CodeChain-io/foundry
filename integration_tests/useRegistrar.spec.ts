@@ -109,7 +109,7 @@ async function transferAssetUsingRegular(mintTx, p2pkh, aliceAddress, bobAddress
                 amount: 7000,
                 assetType: asset.assetType
             });
-    await transferTx.sign(0, { signer: p2pkh });
+    await transferTx.signInput(0, { signer: p2pkh });
     transferTx.getTransferredAssets();
 
     const p = sdk.core.createChangeShardStateParcel({
@@ -149,7 +149,7 @@ async function transferAssetUsingOther(mintTx, p2pkh, aliceAddress, bobAddress) 
                 assetType: asset.assetType
             });
 
-    await transferTx.sign(0, { signer: p2pkh });
+    await transferTx.signInput(0, { signer: p2pkh });
     transferTx.getTransferredAssets();
 
     const p = sdk.core.createChangeShardStateParcel({

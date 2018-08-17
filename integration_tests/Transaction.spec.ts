@@ -52,7 +52,7 @@ test("AssetTransferTransaction fromJSON", async () => {
             amount: 100
         }]
     });
-    transferTx.sign(0, { signer: p2pkh });
+    transferTx.signInput(0, { signer: p2pkh });
     const { parcelHash } = await sendTransactions({ transactions: [transferTx] });
     const parcel = await sdk.rpc.chain.getParcel(parcelHash);
     // FIXME: Remove anythings when *Data fields are flattened

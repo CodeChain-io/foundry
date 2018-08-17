@@ -343,7 +343,7 @@ describe("rpc", () => {
                         amount: 10,
                         assetType: mintedAsset.assetType,
                     });
-                await transferTransaction.sign(0, { signer: p2pkh });
+                await transferTransaction.signInput(0, { signer: p2pkh });
                 const parcel = sdk.core.createChangeShardStateParcel({ transactions: [mintTransaction, transferTransaction] });
                 await sdk.rpc.chain.sendSignedParcel(parcel.sign({
                     secret: signerSecret,

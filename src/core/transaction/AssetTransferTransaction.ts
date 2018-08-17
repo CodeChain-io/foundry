@@ -221,7 +221,6 @@ export class AssetTransferTransaction {
         this.burns[index].setUnlockScript(unlockScript);
     }
 
-    // FIXME: Rename it to signInput
     /**
      * Set an input's lock script and an input's unlock script so that the
      * input become spendable.
@@ -229,7 +228,7 @@ export class AssetTransferTransaction {
      * @param params.signer A TransactionSigner. Currently, P2PKH is available.
      * @returns A promise that resolves when setting is done.
      */
-    async sign(index: number, params: { signer: TransactionSigner }): Promise<void> {
+    async signInput(index: number, params: { signer: TransactionSigner }): Promise<void> {
         const { signer } = params;
         if (index >= this.inputs.length) {
             throw "Invalid index";
