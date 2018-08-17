@@ -39,6 +39,8 @@ test("AssetTransferTransaction fromJSON", async () => {
     const addressA = await p2pkh.createAddress();
     const addressB = await p2pkh.createAddress();
     const mintTx = sdk.core.createAssetScheme({
+        shardId: 0,
+        worldId: 0,
         metadata: "metadata of non-permissioned asset",
         amount: 100,
         registrar: null,
