@@ -5,6 +5,7 @@ import { toHex } from "../utils";
 
 import { encode, toWords, decode, fromWords } from "./bech32";
 import { P2PKH } from "./P2PKH";
+import { P2PKHBurn } from "./P2PKHBurn";
 
 /**
  * @hidden
@@ -14,6 +15,10 @@ const LOCK_SCRIPT_HASH_TYPE = 0x00;
  * @hidden
  */
 const PAY_TO_PUBLIC_KEY_HASH_TYPE = 0x01;
+/**
+ * @hidden
+ */
+const PAY_TO_PUBLIC_KEY_HASH_BURN_TYPE = 0x02;
 
 /**
  * Substitutes for asset owner data which consists of network id,
@@ -42,7 +47,7 @@ export class AssetTransferAddress {
             throw `Unsupported version for asset transfer address: ${version}`;
         }
 
-        if (type < 0x00 || type > 0x01) {
+        if (type < 0x00 || type > 0x02) {
             throw `Unsupported type for asset transfer address: ${type}`;
         }
 
@@ -92,7 +97,7 @@ export class AssetTransferAddress {
 
         const type = bytes[1];
 
-        if (type < 0x00 || type > 0x01) {
+        if (type < 0x00 || type > 0x02) {
             throw `Unsupported type for asset transfer address: ${type}`;
         }
 
@@ -124,11 +129,18 @@ export class AssetTransferAddress {
     getLockScriptHashAndParameters(): { lockScriptHash: H256, parameters: Buffer[] } {
         const { type, payload } = this;
         switch (type) {
-            case 0x00:
+            case LOCK_SCRIPT_HASH_TYPE:
                 return { lockScriptHash: payload, parameters: [] };
-            case 0x01:
-                const lockScriptHash = P2PKH.getLockScriptHash();
-                return { lockScriptHash, parameters: [Buffer.from(payload.value, "hex")] };
+            case PAY_TO_PUBLIC_KEY_HASH_TYPE:
+                return {
+                    lockScriptHash: P2PKH.getLockScriptHash(),
+                    parameters: [Buffer.from(payload.value, "hex")]
+                };
+            case PAY_TO_PUBLIC_KEY_HASH_BURN_TYPE:
+                return {
+                    lockScriptHash: P2PKHBurn.getLockScriptHash(),
+                    parameters: [Buffer.from(payload.value, "hex")]
+                };
             default:
                 throw "Unreachable";
         }

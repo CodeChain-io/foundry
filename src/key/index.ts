@@ -5,6 +5,7 @@ import { MemoryKeyStore } from "./MemoryKeyStore";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
 import { P2PKH } from "./P2PKH";
+import { P2PKHBurn } from "./P2PKHBurn";
 
 type KeyStore = MemoryKeyStore;
 type NetworkId = string;
@@ -33,6 +34,16 @@ export class Key {
         const { keyStore } = params;
         const { networkId } = this;
         return new P2PKH({ keyStore, networkId });
+    }
+
+    /**
+     * Creates P2PKHBurn script generator.
+     * @returns new instance of P2PKHBurn
+     */
+    createP2PKHBurn(params: { keyStore: KeyStore }): P2PKHBurn {
+        const { keyStore } = params;
+        const { networkId } = this;
+        return new P2PKHBurn({ keyStore, networkId });
     }
 
     /**
