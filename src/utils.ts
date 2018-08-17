@@ -1,3 +1,5 @@
+import * as _ from "lodash";
+
 /**
  * @hidden
  */
@@ -119,7 +121,7 @@ export const recoverEcdsa = (message: string, signature: EcdsaSignature): string
  * @returns 32 byte hexadecimal string of private key
  */
 export const generatePrivateKey = (): string => {
-    return secp256k1.genKeyPair().priv.toString("hex");
+    return _.padStart(secp256k1.genKeyPair().priv.toString("hex"), 64, "0");
 };
 
 /**
