@@ -10,15 +10,12 @@ import { Asset } from "../Asset";
 
 const RLP = require("rlp");
 
-export interface TransactionSigner {
-    signBurn: (transaction: AssetTransferTransaction, index: number) => Promise<{
-        unlockScript: Buffer,
-        lockScript: Buffer
-    }>;
-    sign: (transaction: AssetTransferTransaction, index: number) => Promise<{
-        unlockScript: Buffer,
-        lockScript: Buffer
-    }>;
+export interface TransactionInputSigner {
+    signInput: (transaction: AssetTransferTransaction, index: number) => Promise<void>;
+}
+
+export interface TransactionBurnSigner {
+    signBurn: (transaction: AssetTransferTransaction, index: number) => Promise<void>;
 }
 
 type NetworkId = string;
@@ -211,14 +208,12 @@ export class AssetTransferTransaction {
      * @param params.signer A TransactionSigner. Currently, P2PKH is available.
      * @returns A promise that resolves when setting is done.
      */
-    async signBurn(index: number, params: { signer: TransactionSigner }): Promise<void> {
+    async signBurn(index: number, params: { signer: TransactionBurnSigner }): Promise<void> {
         const { signer } = params;
         if (index >= this.burns.length) {
             throw "Invalid index";
         }
-        const { lockScript, unlockScript } = await signer.signBurn(this, index);
-        this.burns[index].setLockScript(lockScript);
-        this.burns[index].setUnlockScript(unlockScript);
+        return signer.signBurn(this, index);
     }
 
     /**
@@ -228,14 +223,12 @@ export class AssetTransferTransaction {
      * @param params.signer A TransactionSigner. Currently, P2PKH is available.
      * @returns A promise that resolves when setting is done.
      */
-    async signInput(index: number, params: { signer: TransactionSigner }): Promise<void> {
+    async signInput(index: number, params: { signer: TransactionInputSigner }): Promise<void> {
         const { signer } = params;
         if (index >= this.inputs.length) {
             throw "Invalid index";
         }
-        const { lockScript, unlockScript } = await signer.sign(this, index);
-        this.inputs[index].setLockScript(lockScript);
-        this.inputs[index].setUnlockScript(unlockScript);
+        return signer.signInput(this, index);
     }
 
     /**
