@@ -8,6 +8,8 @@ import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetTransferInput } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 
+type NetworkId = string;
+
 export type AssetData = {
     assetType: H256;
     lockScriptHash: H256;
@@ -79,10 +81,11 @@ export class Asset {
             address: AssetTransferAddress | string,
             amount: number
         }[],
-        nonce?: number
+        nonce?: number,
+        networkId?: NetworkId,
     } = { recipients: [] }): AssetTransferTransaction {
         const { outPoint, assetType } = this;
-        const { recipients, nonce = 0 } = params;
+        const { recipients, nonce = 0, networkId = "tc" } = params;
 
         return new AssetTransferTransaction({
             burns: [],
@@ -96,8 +99,7 @@ export class Asset {
                 assetType,
                 amount: recipient.amount
             })),
-            // FIXME: Do not hardcode networkId
-            networkId: "tc",
+            networkId,
             nonce
         });
     }
