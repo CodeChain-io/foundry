@@ -35,6 +35,11 @@ const ERROR = {
         data: expect.anything(),
         message: expect.anything(),
     },
+    INVALID_NETWORK_ID: {
+        code: -32036,
+        data: expect.anything(),
+        message: expect.anything(),
+    },
     // FIXME:
     KEY_ERROR: {
         code: -32041,
@@ -155,28 +160,15 @@ describe("rpc", () => {
                     .catch(e => done.fail(e));
             });
 
-            describe("VerificationFailed", () => {
-                test("Signature", (done) => {
-                    const signedParcel = parcel.sign({ secret, fee: 10, nonce });
-                    signedParcel.r = new U256(0);
-                    sdk.rpc.chain.sendSignedParcel(signedParcel)
-                        .then(() => done.fail())
-                        .catch(e => {
-                            expect(e).toEqual(ERROR.VERIFICATION_FAILED);
-                            done();
-                        });
-                });
-
-                test("NetworkID", (done) => {
-                    (parcel as any).networkId = "zz";
-                    const signedParcel = parcel.sign({ secret, fee: 10, nonce });
-                    sdk.rpc.chain.sendSignedParcel(signedParcel)
-                        .then(() => done.fail())
-                        .catch(e => {
-                            expect(e).toEqual(ERROR.VERIFICATION_FAILED);
-                            done();
-                        });
-                });
+            test("VerificationFailed", (done) => {
+                const signedParcel = parcel.sign({ secret, fee: 10, nonce });
+                signedParcel.r = new U256(0);
+                sdk.rpc.chain.sendSignedParcel(signedParcel)
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.VERIFICATION_FAILED);
+                        done();
+                    });
             });
 
             test("AlreadyImported", (done) => {
@@ -223,6 +215,17 @@ describe("rpc", () => {
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e).toEqual(ERROR.INVALID_NONCE);
+                        done();
+                    });
+            });
+
+            test("InvalidNetworkId", (done) => {
+                (parcel as any).networkId = "zz";
+                const signedParcel = parcel.sign({ secret, fee: 10, nonce });
+                sdk.rpc.chain.sendSignedParcel(signedParcel)
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.INVALID_NETWORK_ID);
                         done();
                     });
             });
