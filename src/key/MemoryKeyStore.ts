@@ -1,11 +1,12 @@
 import * as _ from "lodash";
 
 import { generatePrivateKey, getPublicFromPrivate, signEcdsa } from "../utils";
+import { KeyStore } from "./KeyStore";
 
 /**
  * A simple key store for testing purpose.
  */
-export class MemoryKeyStore {
+export class MemoryKeyStore implements KeyStore {
     private privateKeyMap: { [publicKey: string]: string } = {};
     private passphraseMap: { [publicKey: string]: string } = {};
 

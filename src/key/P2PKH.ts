@@ -6,7 +6,7 @@ import { Script } from "../core/Script";
 import { blake256 } from "../utils";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";
-import { MemoryKeyStore } from "./MemoryKeyStore";
+import { KeyStore } from "./KeyStore";
 
 type NetworkId = string;
 
@@ -14,12 +14,12 @@ type NetworkId = string;
  * AssetAgent which supports P2PKH(Pay to Public Key Hash).
  */
 export class P2PKH implements TransactionInputSigner {
-    private rawKeyStore: MemoryKeyStore;
+    private rawKeyStore: KeyStore;
     private networkId: NetworkId;
     private publicKeyMap: { [publicKeyHash: string]: string } = {};
 
     // FIXME: rename keyStore to rawKeyStore
-    constructor(params: { keyStore: MemoryKeyStore, networkId: NetworkId }) {
+    constructor(params: { keyStore: KeyStore, networkId: NetworkId }) {
         const { keyStore, networkId } = params;
         this.rawKeyStore = keyStore;
         this.networkId = networkId;

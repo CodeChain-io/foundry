@@ -6,8 +6,8 @@ import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
 import { P2PKH } from "./P2PKH";
 import { P2PKHBurn } from "./P2PKHBurn";
+import { KeyStore } from "./KeyStore";
 
-type KeyStore = MemoryKeyStore;
 type NetworkId = string;
 
 export class Key {

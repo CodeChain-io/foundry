@@ -6,16 +6,16 @@ import { Script } from "../core/Script";
 import { blake256 } from "../utils";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";
-import { MemoryKeyStore } from "./MemoryKeyStore";
+import { KeyStore } from "./KeyStore";
 
 type NetworkId = string;
 
 export class P2PKHBurn implements TransactionBurnSigner {
-    private keyStore: MemoryKeyStore;
+    private keyStore: KeyStore;
     private networkId: NetworkId;
     private publicKeyMap: { [publicKeyHash: string]: string } = {};
 
-    constructor(params: { keyStore: MemoryKeyStore, networkId: NetworkId }) {
+    constructor(params: { keyStore: KeyStore, networkId: NetworkId }) {
         const { keyStore, networkId } = params;
         this.keyStore = keyStore;
         this.networkId = networkId;
