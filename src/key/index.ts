@@ -76,5 +76,6 @@ export class Key {
         AssetTransferAddress,
         PlatformAddress,
         MemoryKeyStore,
+        ExternalKeyStore,
     };
 }
