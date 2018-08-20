@@ -68,7 +68,7 @@ export class Parcel {
     toEncodeObject(): Array<any> {
         const { nonce, fee, action, networkId } = this;
         if (!nonce || !fee) {
-            throw "Nonce and fee in the parcel must be present";
+            throw Error("Nonce and fee in the parcel must be present");
         }
         return [
             nonce.toEncodeObject(),
@@ -93,11 +93,11 @@ export class Parcel {
     }): SignedParcel {
         const { secret, nonce, fee } = params;
         if (this.nonce !== null) {
-            throw "The parcel nonce is already set";
+            throw Error("The parcel nonce is already set");
         }
         this.nonce = U256.ensure(nonce);
         if (this.fee !== null) {
-            throw "The parcel fee is already set";
+            throw Error("The parcel fee is already set");
         }
         this.fee = U256.ensure(fee);
         const { r, s, v } = signEcdsa(this.hash().value, H256.ensure(secret).value);
@@ -116,7 +116,7 @@ export class Parcel {
     toJSON() {
         const { nonce, fee, networkId, action } = this;
         if (!nonce || !fee) {
-            throw "Nonce and fee in the parcel must be present";
+            throw Error("Nonce and fee in the parcel must be present");
         }
         return {
             nonce: nonce.value.toString(),

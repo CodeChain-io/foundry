@@ -163,7 +163,7 @@ export class AssetTransferTransaction {
      */
     getTransferredAsset(index: number): Asset {
         if (index >= this.outputs.length) {
-            throw "invalid output index";
+            throw Error("invalid output index");
         }
         const output = this.outputs[index];
         const { assetType, lockScriptHash, parameters, amount } = output;
@@ -211,7 +211,7 @@ export class AssetTransferTransaction {
     async signBurn(index: number, params: { signer: TransactionBurnSigner }): Promise<void> {
         const { signer } = params;
         if (index >= this.burns.length) {
-            throw "Invalid index";
+            throw Error("Invalid index");
         }
         return signer.signBurn(this, index);
     }
@@ -226,7 +226,7 @@ export class AssetTransferTransaction {
     async signInput(index: number, params: { signer: TransactionInputSigner }): Promise<void> {
         const { signer } = params;
         if (index >= this.inputs.length) {
-            throw "Invalid index";
+            throw Error("Invalid index");
         }
         return signer.signInput(this, index);
     }

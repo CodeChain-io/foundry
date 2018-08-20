@@ -30,24 +30,24 @@ export class P2PKHBurn implements TransactionBurnSigner {
 
     async signBurn(transaction: AssetTransferTransaction, index: number): Promise<void> {
         if (index >= transaction.burns.length) {
-            throw "Invalid input index";
+            throw Error("Invalid input index");
         }
         const { lockScriptHash, parameters } = transaction.burns[index].prevOut;
         if (lockScriptHash === undefined || parameters === undefined) {
-            throw "Invalid transaction input";
+            throw Error("Invalid transaction input");
         }
         console.log(lockScriptHash);
         console.log(P2PKHBurn.getLockScriptHash().value);
         if (lockScriptHash.value !== P2PKHBurn.getLockScriptHash().value) {
-            throw "Unexpected lock script hash";
+            throw Error("Unexpected lock script hash");
         }
         if (parameters.length !== 1) {
-            throw "Unexpected length of parameters";
+            throw Error("Unexpected length of parameters");
         }
         const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
         const publicKey = this.publicKeyMap[publicKeyHash];
         if (!publicKey) {
-            throw `Unable to get original key from the given public key hash: ${publicKeyHash}`;
+            throw Error(`Unable to get original key from the given public key hash: ${publicKeyHash}`);
         }
 
         transaction.burns[index].setLockScript(P2PKHBurn.getLockScript());

@@ -31,6 +31,6 @@ export const getTransactionFromJSON = (params: { type: string, data: object }) =
         case "assetTransfer":
             return AssetTransferTransaction.fromJSON(params);
         default:
-            throw new Error(`Unexpected transaction type: ${type}`);
+            throw Error(`Unexpected transaction type: ${type}`);
     }
 };

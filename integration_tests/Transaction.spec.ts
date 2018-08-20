@@ -14,7 +14,7 @@ test("AssetMintTransaction fromJSON", async () => {
     const parcel = await sdk.rpc.chain.getParcel(parcelHash);
 
     if (!(parcel.unsigned.action instanceof ChangeShardState)) {
-        throw "Invalid action";
+        throw Error("Invalid action");
     }
 
     expect(parcel.unsigned.action.transactions[0]).toMatchObject({
@@ -76,7 +76,7 @@ test("AssetTransferTransaction fromJSON", async () => {
     });
 
     if (!(parcel.unsigned.action instanceof ChangeShardState)) {
-        throw "Invalid action";
+        throw Error("Invalid action");
     }
 
     expect(parcel.unsigned.action.transactions[0]).toMatchObject({

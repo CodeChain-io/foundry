@@ -44,13 +44,13 @@ const sdk = new SDK({ server: "http://localhost:8080" });
         timeout: 5 * 60 * 1000
     });
     if (mintTxInvoice.success === false) {
-        throw "AssetMintTransaction failed";
+        throw Error("AssetMintTransaction failed");
     }
     const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), {
         timeout: 5 * 60 * 1000
     });
     if (transferTxInvoice.success === false) {
-        throw "AssetTransferTransaction failed";
+        throw Error("AssetTransferTransaction failed");
     }
 })().catch((err) => {
     console.error(`Error:`, err);

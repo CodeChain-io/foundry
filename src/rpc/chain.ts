@@ -65,12 +65,12 @@ export class ChainRpc {
             fee = this.parcelFee
         } = options || {};
         if (!account) {
-            throw "The account to sign the parcel is not specified";
+            throw Error("The account to sign the parcel is not specified");
         }
         const { nonce = await this.getNonce(account) } = options || {};
         parcel.setNonce(nonce!);
         if (!fee) {
-            throw "The fee of the parcel is not specified";
+            throw Error("The fee of the parcel is not specified");
         }
         parcel.setFee(fee);
         const address = PlatformAddress.fromAccountId(PlatformAddress.ensureAccount(account));

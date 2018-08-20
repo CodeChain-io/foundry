@@ -49,11 +49,11 @@ export class Script {
                     break;
                 case PUSHB:
                     if (data.length < cursor + 1) {
-                        throw `The parameter of ${name} is expected but not exists`;
+                        throw Error(`The parameter of ${name} is expected but not exists`);
                     }
                     const len = data.readUInt8(cursor++);
                     if (data.length < cursor + len) {
-                        throw `The parameter of ${name} is expected but not exists`;
+                        throw Error(`The parameter of ${name} is expected but not exists`);
                     }
                     const blob = data.subarray(cursor, cursor + len);
                     cursor += len;
@@ -70,13 +70,13 @@ export class Script {
                     try {
                         val = data.readUInt8(cursor++);
                     } catch (_) {
-                        throw `The parameter of ${name} is expected but not exists`;
+                        throw Error(`The parameter of ${name} is expected but not exists`);
                     }
                     tokens.push(name);
                     tokens.push(`0x${val.toString(16).toUpperCase()}`);
                     break;
                 default:
-                    throw `Unknown opcode: 0x${opcode.toString(16).toUpperCase()}`;
+                    throw Error(`Unknown opcode: 0x${opcode.toString(16).toUpperCase()}`);
             }
         }
         return tokens;

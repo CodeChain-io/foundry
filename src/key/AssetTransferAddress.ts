@@ -44,11 +44,11 @@ export class AssetTransferAddress {
         const { networkId = "tc", version = 0 } = options;
 
         if (version !== 0) {
-            throw `Unsupported version for asset transfer address: ${version}`;
+            throw Error(`Unsupported version for asset transfer address: ${version}`);
         }
 
         if (type < 0x00 || type > 0x02) {
-            throw `Unsupported type for asset transfer address: ${type}`;
+            throw Error(`Unsupported type for asset transfer address: ${type}`);
         }
 
         const words = toWords(Buffer.from([version, type, ...Buffer.from(H256.ensure(payload).value, "hex")]));
@@ -61,7 +61,7 @@ export class AssetTransferAddress {
         const type = LOCK_SCRIPT_HASH_TYPE;
 
         if (version !== 0) {
-            throw `Unsupported version for asset transfer address: ${version}`;
+            throw Error(`Unsupported version for asset transfer address: ${version}`);
         }
 
         const words = toWords(Buffer.from([version, type, ...Buffer.from(lockScriptHash.value, "hex")]));
@@ -74,7 +74,7 @@ export class AssetTransferAddress {
         const type = PAY_TO_PUBLIC_KEY_HASH_TYPE;
 
         if (version !== 0) {
-            throw `Unsupported version for asset transfer address: ${version}`;
+            throw Error(`Unsupported version for asset transfer address: ${version}`);
         }
 
         const words = toWords(Buffer.from([version, type, ...Buffer.from(publicKeyHash.value, "hex")]));
@@ -84,7 +84,7 @@ export class AssetTransferAddress {
 
     static fromString(address: string) {
         if (address.charAt(2) !== "a") {
-            throw `The prefix is unknown for asset transfer address: ${address}`;
+            throw Error(`The prefix is unknown for asset transfer address: ${address}`);
         }
 
         const { words } = decode(address, address.substr(0, 3));
@@ -92,13 +92,13 @@ export class AssetTransferAddress {
         const version = bytes[0];
 
         if (version !== 0) {
-            throw `Unsupported version for asset transfer address: ${version}`;
+            throw Error(`Unsupported version for asset transfer address: ${version}`);
         }
 
         const type = bytes[1];
 
         if (type < 0x00 || type > 0x02) {
-            throw `Unsupported type for asset transfer address: ${type}`;
+            throw Error(`Unsupported type for asset transfer address: ${type}`);
         }
 
         const payload = toHex(Buffer.from(bytes.slice(2)));
@@ -119,11 +119,11 @@ export class AssetTransferAddress {
             if (parameters.length === 1) {
                 return this.fromTypeAndPayload(1, Buffer.from(parameters[0]).toString("hex"));
             }
-            throw "Invalid parameter length";
+            throw Error("Invalid parameter length");
         } else if (parameters.length === 0) {
             return this.fromLockScriptHash(H256.ensure(lockScriptHash));
         }
-        throw "Unknown lock script hash";
+        throw Error("Unknown lock script hash");
     }
 
     getLockScriptHashAndParameters(): { lockScriptHash: H256, parameters: Buffer[] } {
@@ -142,7 +142,7 @@ export class AssetTransferAddress {
                     parameters: [Buffer.from(payload.value, "hex")]
                 };
             default:
-                throw "Unreachable";
+                throw Error("Unreachable");
         }
     }
 }

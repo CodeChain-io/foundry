@@ -66,7 +66,7 @@ export class SignedParcel {
         const { unsigned: { nonce, fee, action, networkId }, v, r, s } = this;
         const sig = `0x${_.padStart(r.value.toString(16), 64, "0")}${_.padStart(s.value.toString(16), 64, "0")}${_.padStart(v.toString(16), 2, "0")}`;
         if (!nonce || !fee) {
-            throw "Nonce and fee in the parcel must be present";
+            throw Error("Nonce and fee in the parcel must be present");
         }
         return [
             nonce.toEncodeObject(),
@@ -123,7 +123,7 @@ export class SignedParcel {
     static fromJSON(data: any) {
         const { sig, blockNumber, blockHash, parcelIndex } = data;
         if (typeof sig !== "string") {
-            throw "Unexpected type of sig";
+            throw Error("Unexpected type of sig");
         }
         if (blockNumber) {
             return new SignedParcel(Parcel.fromJSON(data), sig, blockNumber, new H256(blockHash), parcelIndex);
@@ -145,7 +145,7 @@ export class SignedParcel {
             v
         });
         if (!nonce || !fee) {
-            throw "Nonce and fee in the parcel must be present";
+            throw Error("Nonce and fee in the parcel must be present");
         }
         return {
             blockNumber,

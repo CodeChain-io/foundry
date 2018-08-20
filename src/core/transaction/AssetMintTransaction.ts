@@ -162,7 +162,7 @@ export class AssetMintTransaction {
         const { lockScriptHash, parameters, amount } = this.output;
         // FIXME: need U64 to be implemented or use U256
         if (amount === null) {
-            throw "not implemented";
+            throw Error("not implemented");
         }
         return new Asset({
             assetType: this.getAssetSchemeAddress(),
@@ -182,7 +182,7 @@ export class AssetMintTransaction {
         const { networkId, shardId, worldId, metadata, output: { amount }, registrar } = this;
         // FIXME: need U64 to be implemented or use U256
         if (amount === null) {
-            throw "not implemented";
+            throw Error("not implemented");
         }
         return new AssetScheme({
             networkId,

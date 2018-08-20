@@ -34,6 +34,6 @@ export function getActionFromJSON(json: any): Action {
             return new SetShardUsers({ shardId, users: users.map(PlatformAddress.ensure) });
         }
         default:
-            throw new Error(`Unexpected parcel action: ${action}`);
+            throw Error(`Unexpected parcel action: ${action}`);
     }
 }

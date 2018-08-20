@@ -27,7 +27,7 @@ export class PlatformAddress {
         const { networkId = "tc", version = 0 } = options;
 
         if (version !== 0) {
-            throw `Unsupported version for platform address: ${version}`;
+            throw Error(`Unsupported version for platform address: ${version}`);
         }
 
         const words = toWords(Buffer.from(_.padStart(version.toString(16), 2, "0") + H160.ensure(accountId).value, "hex"));
@@ -36,7 +36,7 @@ export class PlatformAddress {
 
     static fromString(address: string) {
         if (address.charAt(2) !== "c") {
-            throw `The prefix is unknown for platform address: ${address}`;
+            throw Error(`The prefix is unknown for platform address: ${address}`);
         }
 
         const { words } = decode(address, address.substr(0, 3));
@@ -44,7 +44,7 @@ export class PlatformAddress {
         const version = bytes[0];
 
         if (version !== 0) {
-            throw `Unsupported version for platform address: ${version}`;
+            throw Error(`Unsupported version for platform address: ${version}`);
         }
 
         const accountId = toHex(Buffer.from(bytes.slice(1)));

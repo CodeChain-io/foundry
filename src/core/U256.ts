@@ -10,9 +10,9 @@ export class U256 {
     constructor(value: number | string | BigNumber) {
         this.value = new BigNumber(value);
         if (!this.value.isInteger() || this.value.isNegative()) {
-            throw "U256 must be a positive integer";
+            throw Error("U256 must be a positive integer");
         } else if (this.value.toString(16).length > 64) {
-            throw "Given value is out of range for U256";
+            throw Error("Given value is out of range for U256");
         }
     }
 
@@ -24,9 +24,9 @@ export class U256 {
         const bytes = Array.from(buffer.values());
         const length = bytes.shift()! - 0x80;
         if (length > 32) {
-            throw "Buffer for U256 must be less than or equal to 32";
+            throw Error("Buffer for U256 must be less than or equal to 32");
         } else if (bytes.length !== length) {
-            throw `Invalid RLP for U256: ${bytes}`;
+            throw Error(`Invalid RLP for U256: ${bytes}`);
         } else if (length === 0) {
             return new U256(0);
         }
