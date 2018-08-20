@@ -34,6 +34,8 @@
     "jayson": "^2.0.6",
     "lodash": "^4.17.10",
     "node-fetch": "^2.1.2",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2",
     "ripemd160": "^2.0.2",
     "rlp": "^2.0.0"
   },
@@ -43,6 +45,7 @@
     "@types/lodash": "^4.14.108",
     "@types/node": "^9.6.6",
     "@types/node-fetch": "^2.1.1",
+    "@types/request-promise": "^4.1.42",
     "jest": "^23.5.0",
     "nodemon": "^1.17.5",
     "ts-jest": "^23.1.3",

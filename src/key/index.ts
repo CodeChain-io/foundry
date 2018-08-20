@@ -7,6 +7,7 @@ import { PlatformAddress } from "./PlatformAddress";
 import { P2PKH } from "./P2PKH";
 import { P2PKHBurn } from "./P2PKHBurn";
 import { KeyStore } from "./KeyStore";
+import { ExternalKeyStore } from "./ExternalKeyStore";
 
 type NetworkId = string;
 
@@ -22,8 +23,16 @@ export class Key {
     /**
      * Creates key store which is non-persistent. Do not use in production.
      */
-    createMemoryKeyStore(): MemoryKeyStore {
+    createMemoryKeyStore(): KeyStore {
         return new MemoryKeyStore();
+    }
+
+    /**
+     * Creates persistent key store
+     * @param keystoreURL key store url (ex http://localhost:7007)
+     */
+    createExternalKeyStore(keystoreURL: string): Promise<KeyStore> {
+        return ExternalKeyStore.create(keystoreURL);
     }
 
     /**
