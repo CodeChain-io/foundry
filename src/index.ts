@@ -16,6 +16,7 @@ class SDK {
     public util = SDK.util;
     public static Rpc = Rpc;
     public static Core = Core;
+    public static Key = Key;
     public static util = {
         blake256,
         blake256WithKey,
