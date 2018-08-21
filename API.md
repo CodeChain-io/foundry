@@ -1,16 +1,16 @@
-# Table of Contents
-
-1. [Install package](#install-package)
-1. [Usage examples](#usage-examples)
-    1. [Setup the test account](#setup-the-test-account)
-    1. [Get the latest block number](#get-the-latest-block-number)
-    1. [Create a new account](#create-a-new-account)
-    1. [Get the balance of an account](#get-the-balance-of-an-account)
-    1. [Send a payment parcel](#send-a-payment-parcel)
-    1. [Create an asset transfer address](#create-an-asset-transfer-address)
-    1. [Mint a new asset](#mint-a-new-asset)
-
-1. [SDK modules](#sdk-modules)
+Table of Contents
+---
+- [Install package](#install-package)
+- [Usage examples](#usage-examples)
+    - [Setup the test account](#setup-the-test-account)
+    - [Get the latest block number](#get-the-latest-block-number)
+    - [Create a new account](#create-a-new-account)
+    - [Get the balance of an account](#get-the-balance-of-an-account)
+    - [Send a payment parcel](#send-a-payment-parcel)
+    - [Create an asset transfer address](#create-an-asset-transfer-address)
+    - [Mint a new asset](#mint-a-new-asset)
+    - [Transfer assets](#transfer-assets)
+- [SDK modules](#sdk-modules)
 
 # Install package
 
@@ -116,7 +116,7 @@ sdk.rpc.chain.sendParcel(parcel, {
 ## Create an asset transfer address
 
 ```javascript
-var SDK = require("..");
+var SDK = require("codechain-sdk");
 var sdk = new SDK({ server: "http://localhost:8080" });
 
 // MemoryKeyStore is a key store for testing purposes. Do not use this code in
