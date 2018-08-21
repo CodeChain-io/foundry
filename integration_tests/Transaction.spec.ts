@@ -1,4 +1,5 @@
 import { SDK } from "..";
+import { MemoryKeyStore } from "../lib/key/MemoryKeyStore";
 import { mintAsset, sendTransactions } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
@@ -34,7 +35,7 @@ test("AssetMintTransaction fromJSON", async () => {
 });
 
 test("AssetTransferTransaction fromJSON", async () => {
-    const keyStore = await sdk.key.createMemoryKeyStore();
+    const keyStore = new MemoryKeyStore();
     const p2pkh = await sdk.key.createP2PKH({ keyStore });
     const addressA = await p2pkh.createAddress();
     const addressB = await p2pkh.createAddress();

@@ -5,7 +5,7 @@ import { KeyStore } from "./KeyStore";
 import { H256 } from "../core/H256";
 
 /**
- * A simple key store for testing purpose.
+ * @hidden
  */
 export class MemoryKeyStore implements KeyStore {
     private privateKeyMap: { [publicKey: string]: string } = {};

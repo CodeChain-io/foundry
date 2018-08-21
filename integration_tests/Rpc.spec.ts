@@ -3,6 +3,8 @@ import { H256, SignedParcel, Invoice, AssetMintTransaction, Asset, AssetScheme, 
 import { PlatformAddress } from "../lib/key/classes";
 import { getAccountIdFromPrivate, generatePrivateKey, signEcdsa } from "../lib/utils";
 
+import { MemoryKeyStore } from "../lib/key/MemoryKeyStore";
+
 // FIXME:
 const ERROR = {
     VERIFICATION_FAILED: {
@@ -270,7 +272,7 @@ describe("rpc", () => {
             const worldId = 0;
 
             beforeAll(async () => {
-                const keyStore = await sdk.key.createMemoryKeyStore();
+                const keyStore = new MemoryKeyStore();
                 const p2pkh = await sdk.key.createP2PKH({ keyStore });
                 mintTransaction = sdk.core.createAssetScheme({
                     shardId,
@@ -326,7 +328,7 @@ describe("rpc", () => {
             const wrongShardId = 1;
 
             beforeAll(async () => {
-                const keyStore = await sdk.key.createMemoryKeyStore();
+                const keyStore = new MemoryKeyStore();
                 const p2pkh = await sdk.key.createP2PKH({ keyStore });
                 mintTransaction = sdk.core.createAssetScheme({
                     shardId,

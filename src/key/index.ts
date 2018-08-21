@@ -1,7 +1,6 @@
 import { Rpc } from "../rpc";
 import { Parcel, SignedParcel, H160 } from "../core/classes";
 
-import { MemoryKeyStore } from "./MemoryKeyStore";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
 import { P2PKH } from "./P2PKH";
@@ -18,13 +17,6 @@ export class Key {
     constructor(rpc: Rpc, options: { networkId: NetworkId }) {
         this.rpc = rpc;
         this.networkId = options.networkId;
-    }
-
-    /**
-     * Creates key store which is non-persistent. Do not use in production.
-     */
-    createMemoryKeyStore(): KeyStore {
-        return new MemoryKeyStore();
     }
 
     /**
@@ -75,7 +67,6 @@ export class Key {
     static classes = {
         AssetTransferAddress,
         PlatformAddress,
-        MemoryKeyStore,
         ExternalKeyStore,
     };
 }
