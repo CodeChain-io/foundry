@@ -17,8 +17,12 @@ describe("examples", () => {
         runExample("get-balance", done);
     });
 
-    test("payment", (done) => {
-        runExample("payment", done);
+    test("send-parcel", (done) => {
+        runExample("send-parcel", done);
+    });
+
+    test("send-signed-parcel", (done) => {
+        runExample("send-signed-parcel", done);
     });
 
     test("create-asset-transfer-address", (done) => {

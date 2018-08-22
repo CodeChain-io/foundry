@@ -10,6 +10,7 @@ var parcel = sdk.core.createPaymentParcel({
 sdk.rpc.chain.sendParcel(parcel, {
     account: "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78",
     passphrase: "satoshi"
+    // fee and nonce are optional
 }).then(function (parcelHash) {
     return sdk.rpc.chain.getParcelInvoice(parcelHash, { timeout: 5 * 60 * 1000 });
 }).then(function (parcelInvoice) {
