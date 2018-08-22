@@ -3,15 +3,20 @@ import * as rp from "request-promise";
 
 import { KeyStore, KeyManagementAPI } from "./KeyStore";
 
+type KeyType = "asset" | "platform";
+
 class RemoteKeymanager implements KeyManagementAPI {
     keystoreURL: string;
+    keyType: string;
 
-    constructor(keystoreURL: string) {
+    constructor(keystoreURL: string, keyType: KeyType) {
         this.keystoreURL = keystoreURL;
+        this.keyType = keyType;
     }
 
     async getKeyList(): Promise<string[]> {
         const response = await rp.get(`${this.keystoreURL}/api/keys`, {
+            body: { keyType: this.keyType },
             json: true
         });
 
@@ -25,6 +30,7 @@ class RemoteKeymanager implements KeyManagementAPI {
     async createKey(params: { passphrase?: string } = {}): Promise<string> {
         const response = await rp.post(`${this.keystoreURL}/api/keys`, {
             body: {
+                keyType: this.keyType,
                 passphrase: params.passphrase
             },
             json: true
@@ -40,6 +46,7 @@ class RemoteKeymanager implements KeyManagementAPI {
     async removeKey(params: { publicKey: string, passphrase?: string }): Promise<boolean> {
         const response = await rp.post(`${this.keystoreURL}/api/keys/${params.publicKey}/remove`, {
             body: {
+                keyType: this.keyType,
                 passphrase: params.passphrase
             },
             json: true
@@ -55,6 +62,7 @@ class RemoteKeymanager implements KeyManagementAPI {
     async sign(params: { publicKey: string, message: string, passphrase?: string }): Promise<string> {
         const response = await rp.post(`${this.keystoreURL}/api/keys/${params.publicKey}/sign`, {
             body: {
+                keyType: this.keyType,
                 passphrase: params.passphrase,
                 publicKey: params.publicKey,
                 message: params.message
@@ -77,9 +85,8 @@ export class RemoteKeyStore implements KeyStore {
 
     private constructor(keystoreURL: string) {
         this.keystoreURL = keystoreURL;
-        // not working yet;
-        this.platform = null as any;
-        this.asset = new RemoteKeymanager(keystoreURL);
+        this.platform = new RemoteKeymanager(keystoreURL, "platform");
+        this.asset = new RemoteKeymanager(keystoreURL, "asset");
     }
 
     static async create(keystoreURL: string): Promise<KeyStore> {
