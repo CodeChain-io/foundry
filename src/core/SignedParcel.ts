@@ -161,9 +161,12 @@ export class SignedParcel {
     }
 
     private static convertSignatureStringToRsv(signature: string): { r: string, s: string, v: number } {
-        const r = `0x${signature.substr(2, 64)}`;
-        const s = `0x${signature.substr(66, 64)}`;
-        const v = Number.parseInt(signature.substr(130, 2), 16);
+        if (signature.startsWith("0x")) {
+            signature = signature.substr(2);
+        }
+        const r = `0x${signature.substr(0, 64)}`;
+        const s = `0x${signature.substr(64, 64)}`;
+        const v = Number.parseInt(signature.substr(128, 2), 16);
         return { r, s, v };
     }
 
