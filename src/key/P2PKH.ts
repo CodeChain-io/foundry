@@ -27,7 +27,7 @@ export class P2PKH implements TransactionInputSigner {
     async createAddress(): Promise<AssetTransferAddress> {
         const publicKey = await this.rawKeyStore.asset.createKey();
         const hash = H256.ensure(blake256(publicKey));
-        await this.rawKeyStore.mapping.add({ key: publicKey, value: hash.value });
+        await this.rawKeyStore.mapping.add({ key: hash.value, value: publicKey });
         return AssetTransferAddress.fromTypeAndPayload(1, hash, { networkId: this.networkId });
     }
 
