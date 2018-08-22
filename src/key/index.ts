@@ -7,6 +7,7 @@ import { P2PKH } from "./P2PKH";
 import { P2PKHBurn } from "./P2PKHBurn";
 import { KeyStore } from "./KeyStore";
 import { RemoteKeyStore } from "./RemoteKeyStore";
+import { LocalKeyStore } from "./LocalKeyStore";
 
 type NetworkId = string;
 
@@ -25,6 +26,13 @@ export class Key {
      */
     createRemoteKeyStore(keystoreURL: string): Promise<KeyStore> {
         return RemoteKeyStore.create(keystoreURL);
+    }
+
+    /**
+     * Creates persistent key store which stores data in the filesystem.
+     */
+    createLocalKeyStore(): Promise<KeyStore> {
+        return LocalKeyStore.create();
     }
 
     /**
@@ -68,5 +76,6 @@ export class Key {
         AssetTransferAddress,
         PlatformAddress,
         RemoteKeyStore,
+        LocalKeyStore,
     };
 }
