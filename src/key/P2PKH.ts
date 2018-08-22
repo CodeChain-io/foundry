@@ -1,5 +1,6 @@
 import { Buffer } from "buffer";
 
+import { blake256 } from "../utils";
 import { H256 } from "../core/H256";
 import { AssetTransferTransaction, TransactionInputSigner } from "../core/transaction/AssetTransferTransaction";
 import { Script } from "../core/Script";
@@ -25,8 +26,9 @@ export class P2PKH implements TransactionInputSigner {
 
     async createAddress(): Promise<AssetTransferAddress> {
         const publicKey = await this.rawKeyStore.asset.createKey();
-        const publicKeyHash = await this.rawKeyStore.pkh.addPKH({ publicKey });
-        return AssetTransferAddress.fromTypeAndPayload(1, publicKeyHash, { networkId: this.networkId });
+        const hash = H256.ensure(blake256(publicKey));
+        await this.rawKeyStore.mapping.add({ key: publicKey, value: hash.value });
+        return AssetTransferAddress.fromTypeAndPayload(1, hash, { networkId: this.networkId });
     }
 
     async signInput(transaction: AssetTransferTransaction, index: number): Promise<void> {
@@ -44,7 +46,7 @@ export class P2PKH implements TransactionInputSigner {
             throw Error("Unexpected length of parameters");
         }
         const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
-        const publicKey = await this.rawKeyStore.pkh.getPK({ hash: publicKeyHash });
+        const publicKey = await this.rawKeyStore.mapping.get({ key: publicKeyHash });
         if (!publicKey) {
             throw Error(`Unable to get original key from the given public key hash: ${publicKeyHash}`);
         }

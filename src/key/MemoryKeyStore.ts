@@ -1,8 +1,7 @@
 import * as _ from "lodash";
 
-import { generatePrivateKey, getPublicFromPrivate, signEcdsa, blake256 } from "../utils";
+import { generatePrivateKey, getPublicFromPrivate, signEcdsa } from "../utils";
 import { KeyStore, KeyManagementAPI } from "./KeyStore";
-import { H256 } from "../core/H256";
 
 /**
  * @hidden
@@ -49,18 +48,17 @@ export class MemoryKeyStore implements KeyStore {
     platform = new KeyManager();
     asset = new KeyManager();
 
-    pkh = {
-        publicKeyMap: {} as { [publicKeyHash: string]: string },
+    mapping = {
+        keyMap: {} as { [publicKeyHash: string]: string },
 
-        addPKH(params: { publicKey: string; }): Promise<string> {
-            const publicKeyHash = H256.ensure(blake256(params.publicKey));
-            this.publicKeyMap[publicKeyHash.value] = params.publicKey;
-            return Promise.resolve(publicKeyHash.value);
+        add(params: { key: string; value: string; }): Promise<void> {
+            this.keyMap[params.key] = params.value;
+            return Promise.resolve();
         },
 
-        getPK(params: { hash: string; }): Promise<string> {
-            const publicKey = this.publicKeyMap[params.hash];
-            return Promise.resolve(publicKey);
+        get(params: { key: string; }): Promise<string> {
+            const value = this.keyMap[params.key];
+            return Promise.resolve(value);
         }
     };
 }

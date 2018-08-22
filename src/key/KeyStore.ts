@@ -9,8 +9,8 @@ export interface KeyStore {
     platform: KeyManagementAPI;
     asset: KeyManagementAPI;
 
-    pkh: {
-        addPKH(params: { publicKey: string }): Promise<string>;
-        getPK(params: { hash: string }): Promise<string>;
+    mapping: {
+        add(params: { key: string; value: string; }): Promise<void>;
+        get(params: { key: string }): Promise<string>;
     };
 }

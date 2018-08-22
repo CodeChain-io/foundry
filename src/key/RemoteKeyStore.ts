@@ -102,11 +102,12 @@ export class RemoteKeyStore implements KeyStore {
         return keystore;
     }
 
-    pkh = {
-        addPKH: async (params: { publicKey: string; }): Promise<string> => {
-            const response = await rp.post(`${this.keystoreURL}/api/pkhs`, {
+    mapping = {
+        add: async (params: { key: string; value: string; }): Promise<void> => {
+            const response = await rp.post(`${this.keystoreURL}/api/mapping`, {
                 body: {
-                    publicKey: params.publicKey
+                    key: params.key,
+                    value: params.value
                 },
                 json: true
             });
@@ -114,12 +115,10 @@ export class RemoteKeyStore implements KeyStore {
             if (!response.success) {
                 throw Error(response.error);
             }
-
-            return response.result;
         },
 
-        getPK: async (params: { hash: string; }): Promise<string> => {
-            const response = await rp.get(`${this.keystoreURL}/api/pkhs/${params.hash}`, {
+        get: async (params: { key: string; }): Promise<string> => {
+            const response = await rp.get(`${this.keystoreURL}/api/mapping/${params.key}`, {
                 json: true
             });
 

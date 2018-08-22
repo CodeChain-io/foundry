@@ -60,13 +60,13 @@ export class LocalKeyStore implements KeyStore {
         return new LocalKeyStore(cckey);
     }
 
-    pkh = {
-        addPKH: (params: { publicKey: string; }): Promise<string> => {
-            return this.cckey.pkh.insertPKH(params);
+    mapping = {
+        add: (params: { key: string; value: string; }): Promise<void> => {
+            return this.cckey.mapping.add(params);
         },
 
-        getPK: async (params: { hash: string; }): Promise<string> => {
-            const pk = await this.cckey.pkh.getPKH(params);
+        get: async (params: { key: string; }): Promise<string> => {
+            const pk = await this.cckey.mapping.get(params);
             return pk as string;
         }
     };

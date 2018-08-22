@@ -1,5 +1,6 @@
 import { Buffer } from "buffer";
 
+import { blake256 } from "../utils";
 import { H256 } from "../core/H256";
 import { AssetTransferTransaction, TransactionBurnSigner } from "../core/transaction/AssetTransferTransaction";
 import { Script } from "../core/Script";
@@ -21,8 +22,9 @@ export class P2PKHBurn implements TransactionBurnSigner {
 
     async createAddress(): Promise<AssetTransferAddress> {
         const publicKey = await this.keyStore.asset.createKey();
-        const publicKeyHash = await this.keyStore.pkh.addPKH({ publicKey });
-        return AssetTransferAddress.fromTypeAndPayload(2, publicKeyHash, { networkId: this.networkId });
+        const hash = H256.ensure(blake256(publicKey));
+        await this.keyStore.mapping.add({ key: hash.value, value: publicKey });
+        return AssetTransferAddress.fromTypeAndPayload(2, hash, { networkId: this.networkId });
     }
 
     async signBurn(transaction: AssetTransferTransaction, index: number): Promise<void> {
@@ -42,7 +44,7 @@ export class P2PKHBurn implements TransactionBurnSigner {
             throw Error("Unexpected length of parameters");
         }
         const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
-        const publicKey = await this.keyStore.pkh.getPK({ hash: publicKeyHash });
+        const publicKey = await this.keyStore.mapping.get({ key: publicKeyHash });
         if (!publicKey) {
             throw Error(`Unable to get original key from the given public key hash: ${publicKeyHash}`);
         }
