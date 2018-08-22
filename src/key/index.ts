@@ -1,5 +1,5 @@
 import { Rpc } from "../rpc";
-import { Parcel, SignedParcel, H160 } from "../core/classes";
+import { Parcel, SignedParcel } from "../core/classes";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
@@ -19,6 +19,8 @@ export class Key {
     constructor(rpc: Rpc, options: { networkId: NetworkId }) {
         this.rpc = rpc;
         this.networkId = options.networkId;
+        // FIXME:
+        this.rpc;
     }
 
     /**
