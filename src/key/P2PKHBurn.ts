@@ -20,8 +20,8 @@ export class P2PKHBurn implements TransactionBurnSigner {
     }
 
     async createAddress(): Promise<AssetTransferAddress> {
-        const publicKey = await this.keyStore.createKey();
-        const publicKeyHash = await this.keyStore.addPKH({ publicKey });
+        const publicKey = await this.keyStore.asset.createKey();
+        const publicKeyHash = await this.keyStore.pkh.addPKH({ publicKey });
         return AssetTransferAddress.fromTypeAndPayload(2, publicKeyHash, { networkId: this.networkId });
     }
 
@@ -42,7 +42,7 @@ export class P2PKHBurn implements TransactionBurnSigner {
             throw Error("Unexpected length of parameters");
         }
         const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
-        const publicKey = await this.keyStore.getPK({ hash: publicKeyHash });
+        const publicKey = await this.keyStore.pkh.getPK({ hash: publicKeyHash });
         if (!publicKey) {
             throw Error(`Unable to get original key from the given public key hash: ${publicKeyHash}`);
         }
@@ -52,7 +52,7 @@ export class P2PKHBurn implements TransactionBurnSigner {
     }
 
     private async getUnlockScript(publicKey: string, txhash: H256): Promise<Buffer> {
-        const signature = await this.keyStore.sign({ publicKey, message: txhash.value });
+        const signature = await this.keyStore.asset.sign({ publicKey, message: txhash.value });
         const { PUSHB } = Script.Opcode;
         return Buffer.from([
             PUSHB,

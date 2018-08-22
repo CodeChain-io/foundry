@@ -1,16 +1,16 @@
 import * as _ from "lodash";
 
 import { generatePrivateKey, getPublicFromPrivate, signEcdsa, blake256 } from "../utils";
-import { KeyStore } from "./KeyStore";
+import { KeyStore, KeyManagementAPI } from "./KeyStore";
 import { H256 } from "../core/H256";
 
 /**
  * @hidden
  */
-export class MemoryKeyStore implements KeyStore {
+
+class KeyManager implements KeyManagementAPI {
     private privateKeyMap: { [publicKey: string]: string } = {};
     private passphraseMap: { [publicKey: string]: string } = {};
-    private publicKeyMap: { [publicKeyHash: string]: string } = {};
 
     getKeyList(): Promise<string[]> {
         return Promise.resolve(_.keys(this.privateKeyMap));
@@ -43,15 +43,24 @@ export class MemoryKeyStore implements KeyStore {
         const sig = `${_.padStart(r, 64, "0")}${_.padStart(s, 64, "0")}${_.padStart(v.toString(16), 2, "0")}`;
         return Promise.resolve(sig);
     }
+}
 
-    addPKH(params: { publicKey: string; }): Promise<string> {
-        const publicKeyHash = H256.ensure(blake256(params.publicKey));
-        this.publicKeyMap[publicKeyHash.value] = params.publicKey;
-        return Promise.resolve(publicKeyHash.value);
-    }
+export class MemoryKeyStore implements KeyStore {
+    platform = new KeyManager();
+    asset = new KeyManager();
 
-    getPK(params: { hash: string; }): Promise<string> {
-        const publicKey = this.publicKeyMap[params.hash];
-        return Promise.resolve(publicKey);
-    }
+    pkh = {
+        publicKeyMap: {} as { [publicKeyHash: string]: string },
+
+        addPKH(params: { publicKey: string; }): Promise<string> {
+            const publicKeyHash = H256.ensure(blake256(params.publicKey));
+            this.publicKeyMap[publicKeyHash.value] = params.publicKey;
+            return Promise.resolve(publicKeyHash.value);
+        },
+
+        getPK(params: { hash: string; }): Promise<string> {
+            const publicKey = this.publicKeyMap[params.hash];
+            return Promise.resolve(publicKey);
+        }
+    };
 }

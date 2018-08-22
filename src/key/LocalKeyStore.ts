@@ -5,9 +5,50 @@ import { CCKey } from "codechain-keystore";
 
 export class LocalKeyStore implements KeyStore {
     cckey: CCKey;
+
     private constructor(cckey: CCKey) {
         this.cckey = cckey;
     }
+
+    platform = {
+        getKeyList: (): Promise<string[]> => {
+            return this.cckey.platform.getKeys();
+        },
+
+        createKey: (params: { passphrase?: string } = {}): Promise<string> => {
+            return this.cckey.platform.createKey(params);
+        },
+
+        removeKey: (params: { publicKey: string, passphrase?: string }): Promise<boolean> => {
+            const { publicKey, passphrase = "" } = params;
+            return this.cckey.platform.deleteKey({ publicKey, passphrase });
+        },
+
+        sign: (params: { publicKey: string, message: string, passphrase?: string }): Promise<string> => {
+            const { passphrase = "" } = params;
+            return this.cckey.platform.sign({ ...params, passphrase });
+        }
+    };
+
+    asset = {
+        getKeyList: (): Promise<string[]> => {
+            return this.cckey.asset.getKeys();
+        },
+
+        createKey: (params: { passphrase?: string } = {}): Promise<string> => {
+            return this.cckey.asset.createKey(params);
+        },
+
+        removeKey: (params: { publicKey: string, passphrase?: string }): Promise<boolean> => {
+            const { publicKey, passphrase = "" } = params;
+            return this.cckey.asset.deleteKey({ publicKey, passphrase });
+        },
+
+        sign: (params: { publicKey: string, message: string, passphrase?: string }): Promise<string> => {
+            const { passphrase = "" } = params;
+            return this.cckey.asset.sign({ ...params, passphrase });
+        }
+    };
 
     static async create(): Promise<KeyStore> {
         const cckey = await CCKey.create({});
@@ -19,33 +60,18 @@ export class LocalKeyStore implements KeyStore {
         return new LocalKeyStore(cckey);
     }
 
-    getKeyList(): Promise<string[]> {
-        return this.cckey.getKeys();
-    }
+    pkh = {
+        addPKH: (params: { publicKey: string; }): Promise<string> => {
+            return this.cckey.pkh.insertPKH(params);
+        },
 
-    createKey(params: { passphrase?: string } = {}): Promise<string> {
-        return this.cckey.createKey(params);
-    }
+        getPK: async (params: { hash: string; }): Promise<string> => {
+            const pk = await this.cckey.pkh.getPKH(params);
+            return pk as string;
+        }
+    };
 
-    removeKey(params: { publicKey: string, passphrase?: string }): Promise<boolean> {
-        const { publicKey, passphrase = "" } = params;
-        return this.cckey.deleteKey({ publicKey, passphrase });
-    }
-
-    sign(params: { publicKey: string, message: string, passphrase?: string }): Promise<string> {
-        const { passphrase = "" } = params;
-        return this.cckey.signKey({ ...params, passphrase });
-    }
-
-    addPKH(params: { publicKey: string; }): Promise<string> {
-        return this.cckey.insertPKH(params);
-    }
-
-    getPK(params: { hash: string; }): Promise<string> {
-        return this.getPK(params);
-    }
-
-    close(): Promise<void> {
+    close() {
         return this.cckey.close();
     }
 }
