@@ -6,7 +6,8 @@ Table of Contents
     - [Get the latest block number](#get-the-latest-block-number)
     - [Create a new account](#create-a-new-account)
     - [Get the balance of an account](#get-the-balance-of-an-account)
-    - [Send a payment parcel](#send-a-payment-parcel)
+    - [Send a payment parcel via sendParcel](#send-a-payment-parcel-via-sendparcel)
+    - [Send a payment parcel via sendSignedParcel](#send-a-payment-parcel-via-sendsignedparcel)
     - [Create an asset transfer address](#create-an-asset-transfer-address)
     - [Mint a new asset](#mint-a-new-asset)
     - [Transfer assets](#transfer-assets)
@@ -88,7 +89,7 @@ sdk.rpc.chain.getBalance("tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78").then(fun
 
 ---
 
-## Send a payment parcel
+## Send a payment parcel via sendParcel
 
 When you create an account, the CCC balance is 0. CCC is needed to pay for the parcel's fee. The fee must be at least 10 for any parcel. The example below shows the sending of 10000 CCC from the test account(`tccqzn..9a2k78`) to the account(`tccqru..7vzngg`).
 
@@ -106,6 +107,36 @@ sdk.rpc.chain.sendParcel(parcel, {
     passphrase: "satoshi"
 }).then(function (parcelHash) {
     return sdk.rpc.chain.getParcelInvoice(parcelHash, { timeout: 5 * 60 * 1000 });
+}).then(function (parcelInvoice) {
+    console.log(parcelInvoice) // { success: true }
+});
+```
+
+---
+
+## Send a payment parcel via sendSignedParcel
+
+```javascript
+var SDK = require("codechain-sdk");
+
+var sdk = new SDK({ server: "http://localhost:8080" });
+
+var parcel = sdk.core.createPaymentParcel({
+    recipient: "tccqruq09sfgax77nj4gukjcuq69uzeyv0jcs7vzngg",
+    amount: 10000,
+});
+
+var account = "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78";
+var accountSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
+
+sdk.rpc.chain.getNonce(account).then(function (nonce) {
+    return sdk.rpc.chain.sendSignedParcel(parcel.sign({
+        secret: accountSecret,
+        fee: 10,
+        nonce: nonce,
+    }));
+}).then(function (parcelHash) {
+    return sdk.rpc.chain.getParcelInvoice(parcelHash, { timeout: 300 * 1000 });
 }).then(function (parcelInvoice) {
     console.log(parcelInvoice) // { success: true }
 });
