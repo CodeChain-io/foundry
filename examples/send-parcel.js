@@ -12,7 +12,7 @@ sdk.rpc.chain.sendParcel(parcel, {
     passphrase: "satoshi"
     // fee and nonce are optional
 }).then(function (parcelHash) {
-    return sdk.rpc.chain.getParcelInvoice(parcelHash, { timeout: 5 * 60 * 1000 });
+    return sdk.rpc.chain.getParcelInvoice(parcelHash, { timeout: 300 * 1000 });
 }).then(function (parcelInvoice) {
     console.log(parcelInvoice) // { success: true }
 }).catch(console.error);

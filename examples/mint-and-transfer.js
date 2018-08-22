@@ -15,6 +15,7 @@ const sdk = new SDK({ server: "http://localhost:8080" });
     // to null, which means this type of asset can be transferred freely.
     const goldAssetScheme = sdk.core.createAssetScheme({
         shardId: 0,
+        worldId: 0,
         metadata: JSON.stringify({
             name: "Gold",
             description: "An asset example",
@@ -41,7 +42,6 @@ const sdk = new SDK({ server: "http://localhost:8080" });
             assetType: firstGold.assetType
         });
     await transferTx.signInput(0, { signer: p2pkh });
-    transferTx.getTransferredAssets();
 
     const parcel = sdk.core.createChangeShardStateParcel({
         transactions: [mintTx, transferTx]
@@ -52,13 +52,13 @@ const sdk = new SDK({ server: "http://localhost:8080" });
     });
 
     const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), {
-        timeout: 5 * 60 * 1000
+        timeout: 300 * 1000
     });
     if (mintTxInvoice.success === false) {
         throw Error("AssetMintTransaction failed");
     }
     const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), {
-        timeout: 5 * 60 * 1000
+        timeout: 300 * 1000
     });
     if (transferTxInvoice.success === false) {
         throw Error("AssetTransferTransaction failed");

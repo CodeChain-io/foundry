@@ -43,13 +43,13 @@ const sdk = new SDK({ server: "http://localhost:8080" });
     });
 
     const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), {
-        timeout: 5 * 60 * 1000
+        timeout: 300 * 1000
     });
     if (mintTxInvoice.success === false) {
         throw Error("AssetMintTransaction failed");
     }
     const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), {
-        timeout: 5 * 60 * 1000
+        timeout: 300 * 1000
     });
     if (transferTxInvoice.success === false) {
         throw Error("AssetTransferTransaction failed");
