@@ -1,4 +1,4 @@
-const SDK = require("..");
+const SDK = require("codechain-sdk");
 
 const sdk = new SDK({ server: "http://localhost:8080" });
 
