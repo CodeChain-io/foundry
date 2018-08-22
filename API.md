@@ -4,7 +4,8 @@ Table of Contents
 - [Usage examples](#usage-examples)
     - [Setup the test account](#setup-the-test-account)
     - [Get the latest block number](#get-the-latest-block-number)
-    - [Create a new account](#create-a-new-account)
+    - [Create a new account with a private key](#create-a-new-account-with-a-private-key)
+    - [Create a new account with RPC](#create-a-new-account-with-rpc)
     - [Get the balance of an account](#get-the-balance-of-an-account)
     - [Send a payment parcel via sendParcel](#send-a-payment-parcel-via-sendparcel)
     - [Send a payment parcel via sendSignedParcel](#send-a-payment-parcel-via-sendsignedparcel)
@@ -57,7 +58,22 @@ sdk.rpc.chain.getBestBlockNumber().then(function (num) {
 
 ---
 
-## Create a new account
+## Create a new account with a private key
+
+```javascript
+var SDK = require("codechain-sdk");
+
+var secret = SDK.util.generatePrivateKey();
+console.log("Your secret:", secret);
+
+var account = SDK.util.getAccountIdFromPrivate(secret);
+var address = SDK.Key.classes.PlatformAddress.fromAccountId(account);
+console.log("Your CodeChain address:", address.toString());
+```
+
+---
+
+## Create a new account with RPC
 
 You can manage accounts and create their signatures using methods in `sdk.rpc.account`.
 

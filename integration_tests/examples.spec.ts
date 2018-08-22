@@ -13,6 +13,10 @@ describe("examples", () => {
         runExample("create-account-with-rpc", done);
     });
 
+    test("create-account-with-secret", (done) => {
+        runExample("create-account-with-secret", done);
+    });
+
     test("get-balance", (done) => {
         runExample("get-balance", done);
     });
