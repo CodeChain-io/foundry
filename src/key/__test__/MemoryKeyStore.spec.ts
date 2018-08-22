@@ -4,33 +4,33 @@ import { verifyEcdsa, recoverEcdsa } from "../../utils";
 test("createKey", async () => {
     const store = new MemoryKeyStore();
     expect(() => {
-        store.createKey();
+        store.asset.createKey();
     }).not.toThrow();
 });
 
 test("removeKey", async () => {
     const store = new MemoryKeyStore();
-    const key1 = await store.createKey();
-    expect(await store.removeKey({ publicKey: key1 })).toBe(true);
-    expect(await store.removeKey({ publicKey: key1 })).toBe(false);
+    const key1 = await store.asset.createKey();
+    expect(await store.asset.removeKey({ publicKey: key1 })).toBe(true);
+    expect(await store.asset.removeKey({ publicKey: key1 })).toBe(false);
 });
 
 test("getKeyList", async () => {
     const store = new MemoryKeyStore();
-    const key1 = await store.createKey();
-    const key2 = await store.createKey();
-    expect(await store.getKeyList()).toContain(key1);
-    expect(await store.getKeyList()).toContain(key2);
+    const key1 = await store.asset.createKey();
+    const key2 = await store.asset.createKey();
+    expect(await store.asset.getKeyList()).toContain(key1);
+    expect(await store.asset.getKeyList()).toContain(key2);
 
-    await store.removeKey({ publicKey: key1 });
+    await store.asset.removeKey({ publicKey: key1 });
 
-    expect(await store.getKeyList()).not.toContain(key1);
+    expect(await store.asset.getKeyList()).not.toContain(key1);
 });
 
 test("sign", async () => {
     const store = new MemoryKeyStore();
-    const key1 = await store.createKey();
-    const signature = await store.sign({ publicKey: key1, message: "hello" });
+    const key1 = await store.asset.createKey();
+    const signature = await store.asset.sign({ publicKey: key1, message: "hello" });
     const r = `${signature.substr(0, 64)}`;
     const s = `${signature.substr(64, 64)}`;
     const v = Number.parseInt(signature.substr(128, 2), 16);
