@@ -3,7 +3,7 @@ import * as rp from "request-promise";
 
 import { KeyStore } from "./KeyStore";
 
-export class ExternalKeyStore implements KeyStore {
+export class RemoteKeyStore implements KeyStore {
     keystoreURL: string;
 
     private constructor(keystoreURL: string) {
@@ -11,14 +11,14 @@ export class ExternalKeyStore implements KeyStore {
     }
 
     static async create(keystoreURL: string): Promise<KeyStore> {
-        const keystore = new ExternalKeyStore(keystoreURL);
+        const keystore = new RemoteKeyStore(keystoreURL);
         await keystore.ping();
         return keystore;
     }
 
     // Use only this method for test purpose
     static createUnsafe(keystoreURL: string): KeyStore {
-        const keystore = new ExternalKeyStore(keystoreURL);
+        const keystore = new RemoteKeyStore(keystoreURL);
         keystore.ping();
         return keystore;
     }

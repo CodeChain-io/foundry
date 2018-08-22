@@ -4,8 +4,8 @@ const sdk = new SDK({ server: "http://localhost:8080" });
 
 (async () => {
     // If you want to know how to set up the external key store, go to
-    // https://codechain.readthedocs.io/en/latest/asset-management.html#use-externalkeystore-to-save-asset-address-private-key
-    const keyStore = await sdk.key.createExternalKeyStore("http://localhost:7007");
+    // https://codechain.readthedocs.io/en/latest/asset-management.html#use-remotekeystore-to-save-asset-address-private-key
+    const keyStore = await sdk.key.createRemoteKeyStore("http://localhost:7007");
     // Create P2PKHBurn instead of P2PKH. Currently, P2PKH addresses can only
     // transfer assets. If you want to burn assets which are holded by P2PKH
     // addresses, you need to transfer them to P2PKHBurn addresses first.
