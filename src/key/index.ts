@@ -71,16 +71,31 @@ export class Key {
     /**
      * Signs a Parcel with the given account.
      * @param parcel A Parcel
+     * @param params.keyStore A key store.
      * @param params.account An account.
      * @param params.passphrase The passphrase for the given account
      * @returns A SignedParcel
      * @throws When nonce or fee in the Parcel is null
      * @throws When account or its passphrase is invalid
      */
-    async signParcel(parcel: Parcel, params: { account: PlatformAddress | H160 | string, passphrase?: string }): Promise<SignedParcel> {
-        const { account, passphrase } = params;
-        const address = PlatformAddress.fromAccountId(PlatformAddress.ensureAccount(account));
-        const sig = await this.rpc.account.sign(parcel.hash(), address, passphrase);
+    async signParcel(
+        parcel: Parcel,
+        params: {
+            keyStore: KeyStore,
+            account: PlatformAddress | string,
+            passphrase?: string
+            // FIXME:
+            fee: number,
+            // FIXME:
+            nonce: number,
+        }
+    ): Promise<SignedParcel> {
+        const { account, passphrase, keyStore, fee, nonce } = params;
+        parcel.setFee(fee);
+        parcel.setNonce(nonce);
+        const accountId = PlatformAddress.ensure(account).getAccountId();
+        const publicKey = await keyStore.mapping.get({ key: accountId.value });
+        const sig = await keyStore.platform.sign({ publicKey, message: parcel.hash().value, passphrase });
         return new SignedParcel(parcel, sig);
     }
 
