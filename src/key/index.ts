@@ -8,6 +8,7 @@ import { P2PKHBurn } from "./P2PKHBurn";
 import { KeyStore } from "./KeyStore";
 import { RemoteKeyStore } from "./RemoteKeyStore";
 import { LocalKeyStore } from "./LocalKeyStore";
+import { getAccountIdFromPublic } from "../utils";
 
 type NetworkId = string;
 
@@ -33,6 +34,18 @@ export class Key {
      */
     createLocalKeyStore(): Promise<KeyStore> {
         return LocalKeyStore.create();
+    }
+
+    /**
+     * Creates a new platform address
+     * @returns A new platform address
+     */
+    async createPlatformAddress(params: { keyStore: KeyStore }): Promise<PlatformAddress> {
+        const { keyStore } = params;
+        const publicKey = await keyStore.platform.createKey();
+        const accountId = getAccountIdFromPublic(publicKey);
+        keyStore.mapping.add({ key: accountId, value: publicKey });
+        return PlatformAddress.fromAccountId(accountId);
     }
 
     /**
