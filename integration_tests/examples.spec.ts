@@ -9,8 +9,8 @@ describe("examples", () => {
         runExample("import-test-account", done);
     });
 
-    test("create-account", (done) => {
-        runExample("create-account", done);
+    test("create-account-with-rpc", (done) => {
+        runExample("create-account-with-rpc", done);
     });
 
     test("get-balance", (done) => {
