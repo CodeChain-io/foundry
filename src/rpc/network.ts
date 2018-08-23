@@ -62,6 +62,30 @@ export class NetworkRpc {
     }
 
     /**
+     * Get the number of established peers
+     */
+    getPeerCount(): Promise<number> {
+        return this.rpc.sendRpcRequest(
+            "net_getPeerCount",
+            []
+        );
+    }
+
+    /**
+     * Get the addresses of established peers
+     */
+    getPeers(): Promise<string[]> {
+        return new Promise(resolve => {
+            this.rpc.sendRpcRequest(
+                "net_getEstablishedPeers",
+                []
+            ).then(resolve)
+                // FIXME:
+                .catch(_ => resolve(["getPeers() is not implemented yet"]));
+        });
+    }
+
+    /**
      * Add the IP to whitelist
      * @param ip Node IP
      */
