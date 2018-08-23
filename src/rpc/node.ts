@@ -25,4 +25,12 @@ export class NodeRpc {
     getNodeVersion(): Promise<string> {
         return this.rpc.sendRpcRequest("version", []);
     }
+
+    /**
+     * Gets the commit hash of the repository upon which the CodeChain executable was built.
+     * @hidden
+     */
+    getCommitHash(): Promise<string> {
+        return this.rpc.sendRpcRequest("commitHash", []);
+    }
 }
