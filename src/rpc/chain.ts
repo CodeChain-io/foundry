@@ -11,6 +11,8 @@ import { Parcel } from "../core/Parcel";
 import { PlatformAddress } from "../key/classes";
 import { getTransactionFromJSON, Transaction } from "../core/transaction/Transaction";
 
+type NetworkId = string;
+
 export class ChainRpc {
     private rpc: Rpc;
     private parcelSigner?: string;
@@ -317,4 +319,13 @@ export class ChainRpc {
         ).then(result => result.map((p: any) => SignedParcel.fromJSON(p)));
     }
 
+    /**
+     * Gets the network ID.
+     */
+    getNetworkId(): Promise<NetworkId> {
+        return this.rpc.sendRpcRequest(
+            "chain_getNetworkId",
+            []
+        );
+    }
 }
