@@ -1,7 +1,11 @@
 import * as _ from "lodash";
 
 import { KeyStore } from "./KeyStore";
-import { CCKey } from "codechain-keystore";
+// FIXME: This will be added after removing sqlite3 dependency.
+// import { CCKey } from "codechain-keystore";
+
+type CCKey = any;
+const CCKey: CCKey = null;
 
 export class LocalKeyStore implements KeyStore {
     cckey: CCKey;
