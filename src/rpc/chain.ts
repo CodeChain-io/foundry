@@ -320,7 +320,8 @@ export class ChainRpc {
     }
 
     /**
-     * Gets the network ID.
+     * Gets the network ID of the node.
+     * @returns A network ID, e.g. "tc".
      */
     getNetworkId(): Promise<NetworkId> {
         return this.rpc.sendRpcRequest(
