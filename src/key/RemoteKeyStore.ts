@@ -5,7 +5,7 @@ import { KeyStore, KeyManagementAPI } from "./KeyStore";
 
 type KeyType = "asset" | "platform";
 
-class RemoteKeymanager implements KeyManagementAPI {
+class RemoteKeyManager implements KeyManagementAPI {
     keystoreURL: string;
     keyType: string;
 
@@ -85,8 +85,8 @@ export class RemoteKeyStore implements KeyStore {
 
     private constructor(keystoreURL: string) {
         this.keystoreURL = keystoreURL;
-        this.platform = new RemoteKeymanager(keystoreURL, "platform");
-        this.asset = new RemoteKeymanager(keystoreURL, "asset");
+        this.platform = new RemoteKeyManager(keystoreURL, "platform");
+        this.asset = new RemoteKeyManager(keystoreURL, "asset");
     }
 
     static async create(keystoreURL: string): Promise<KeyStore> {
