@@ -166,9 +166,10 @@ sdk.rpc.chain.getNonce(account).then(function (nonce) {
 var SDK = require("codechain-sdk");
 var sdk = new SDK({ server: "http://localhost:8080" });
 
+// createRemoteKeyStore("http://localhost:7007") is also available.
 // If you want to know how to set up the external key store, go to
 // https://codechain.readthedocs.io/en/latest/asset-management.html#use-remotekeystore-to-save-asset-address-private-key
-sdk.key.createRemoteKeyStore("http://localhost:7007")
+sdk.key.createLocalKeyStore()
     .then(function (keyStore) {
         // P2PKH supports P2PKH(Pay to Public Key Hash) lock/unlock scripts.
         var p2pkh = sdk.key.createP2PKH({ keyStore });

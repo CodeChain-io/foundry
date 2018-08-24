@@ -8,7 +8,7 @@ var parcel = sdk.core.createPaymentParcel({
 });
 
 (async () => {
-    const keyStore = await sdk.key.createRemoteKeyStore("http://localhost:7007");
+    const keyStore = await sdk.key.createLocalKeyStore();
     const account = await sdk.key.createPlatformAddress({ keyStore });
     const nonce = await sdk.rpc.chain.getNonce(account);
 

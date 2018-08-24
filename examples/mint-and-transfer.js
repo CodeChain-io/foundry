@@ -3,9 +3,7 @@ const SDK = require("codechain-sdk");
 const sdk = new SDK({ server: "http://localhost:8080" });
 
 (async () => {
-    // If you want to know how to set up the external key store, go to
-    // https://codechain.readthedocs.io/en/latest/asset-management.html#use-remotekeystore-to-save-asset-address-private-key
-    const keyStore = await sdk.key.createRemoteKeyStore("http://localhost:7007");
+    const keyStore = await sdk.key.createLocalKeyStore();
     const p2pkh = await sdk.key.createP2PKH({ keyStore });
 
     const aliceAddress = await p2pkh.createAddress();
