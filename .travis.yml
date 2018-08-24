@@ -3,9 +3,16 @@ node_js:
   - "8"
 before_install:
   - yarn install
+before_script:
+  - docker pull kodebox/codechain:7f3d3030d8d4bb86a5b7025f73877df45d8bd97a
+  - docker run -d -p 8080:8080 kodebox/codechain:7f3d3030d8d4bb86a5b7025f73877df45d8bd97a --jsonrpc-interface 0.0.0.0 -c solo --reseal-min-period 0
+  - docker ps -a
 script:
   - yarn test
   - yarn build
+  - yarn test-int --verbose
 notifications:
   webhooks: https://webhooks.gitter.im/e/8908c378a5e2669893ab
+services:
+  - docker
 cache: yarn
