@@ -1,11 +1,7 @@
 import * as _ from "lodash";
 
 import { KeyStore } from "./KeyStore";
-// FIXME: This will be added after removing sqlite3 dependency.
-// import { CCKey } from "codechain-keystore";
-
-type CCKey = any;
-const CCKey: CCKey = null;
+import { CCKey } from "codechain-keystore";
 
 export class LocalKeyStore implements KeyStore {
     cckey: CCKey;
@@ -23,9 +19,9 @@ export class LocalKeyStore implements KeyStore {
             return this.cckey.platform.createKey(params);
         },
 
-        removeKey: (params: { publicKey: string, passphrase?: string }): Promise<boolean> => {
-            const { publicKey, passphrase = "" } = params;
-            return this.cckey.platform.deleteKey({ publicKey, passphrase });
+        removeKey: (params: { publicKey: string }): Promise<boolean> => {
+            const { publicKey } = params;
+            return this.cckey.platform.deleteKey({ publicKey });
         },
 
         sign: (params: { publicKey: string, message: string, passphrase?: string }): Promise<string> => {
@@ -43,9 +39,9 @@ export class LocalKeyStore implements KeyStore {
             return this.cckey.asset.createKey(params);
         },
 
-        removeKey: (params: { publicKey: string, passphrase?: string }): Promise<boolean> => {
-            const { publicKey, passphrase = "" } = params;
-            return this.cckey.asset.deleteKey({ publicKey, passphrase });
+        removeKey: (params: { publicKey: string }): Promise<boolean> => {
+            const { publicKey } = params;
+            return this.cckey.asset.deleteKey({ publicKey });
         },
 
         sign: (params: { publicKey: string, message: string, passphrase?: string }): Promise<string> => {
