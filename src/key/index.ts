@@ -1,5 +1,5 @@
 import { Rpc } from "../rpc";
-import { Parcel, SignedParcel } from "../core/classes";
+import { Parcel, SignedParcel, U256 } from "../core/classes";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { PlatformAddress } from "./PlatformAddress";
@@ -86,10 +86,8 @@ export class Key {
             keyStore: KeyStore,
             account: PlatformAddress | string,
             passphrase?: string
-            // FIXME:
-            fee: number,
-            // FIXME:
-            nonce: number,
+            fee: U256 | string | number,
+            nonce: U256 | string | number,
         }
     ): Promise<SignedParcel> {
         const { account, passphrase, keyStore, fee, nonce } = params;
