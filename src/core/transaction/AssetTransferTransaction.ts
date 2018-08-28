@@ -11,11 +11,11 @@ import { Asset } from "../Asset";
 const RLP = require("rlp");
 
 export interface TransactionInputSigner {
-    signInput: (transaction: AssetTransferTransaction, index: number) => Promise<void>;
+    signInput: (transaction: AssetTransferTransaction, index: number, options?: { passphrase?: string }) => Promise<void>;
 }
 
 export interface TransactionBurnSigner {
-    signBurn: (transaction: AssetTransferTransaction, index: number) => Promise<void>;
+    signBurn: (transaction: AssetTransferTransaction, index: number, options?: { passphrase?: string }) => Promise<void>;
 }
 
 type NetworkId = string;
@@ -208,12 +208,12 @@ export class AssetTransferTransaction {
      * @param params.signer A TransactionSigner. Currently, P2PKH is available.
      * @returns A promise that resolves when setting is done.
      */
-    async signBurn(index: number, params: { signer: TransactionBurnSigner }): Promise<void> {
-        const { signer } = params;
+    async signBurn(index: number, params: { signer: TransactionBurnSigner, passphrase?: string }): Promise<void> {
+        const { signer, passphrase } = params;
         if (index >= this.burns.length) {
             throw Error("Invalid index");
         }
-        return signer.signBurn(this, index);
+        return signer.signBurn(this, index, { passphrase });
     }
 
     /**
@@ -223,12 +223,12 @@ export class AssetTransferTransaction {
      * @param params.signer A TransactionSigner. Currently, P2PKH is available.
      * @returns A promise that resolves when setting is done.
      */
-    async signInput(index: number, params: { signer: TransactionInputSigner }): Promise<void> {
-        const { signer } = params;
+    async signInput(index: number, params: { signer: TransactionInputSigner, passphrase?: string }): Promise<void> {
+        const { signer, passphrase } = params;
         if (index >= this.inputs.length) {
             throw Error("Invalid index");
         }
-        return signer.signInput(this, index);
+        return signer.signInput(this, index, { passphrase });
     }
 
     /**

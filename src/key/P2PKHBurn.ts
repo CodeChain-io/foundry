@@ -27,7 +27,8 @@ export class P2PKHBurn implements TransactionBurnSigner {
         return AssetTransferAddress.fromTypeAndPayload(2, hash, { networkId: this.networkId });
     }
 
-    async signBurn(transaction: AssetTransferTransaction, index: number): Promise<void> {
+    async signBurn(transaction: AssetTransferTransaction, index: number, options: { passphrase?: string } = {}): Promise<void> {
+        const { passphrase } = options;
         if (index >= transaction.burns.length) {
             throw Error("Invalid input index");
         }
@@ -50,11 +51,12 @@ export class P2PKHBurn implements TransactionBurnSigner {
         }
 
         transaction.burns[index].setLockScript(P2PKHBurn.getLockScript());
-        transaction.burns[index].setUnlockScript(await this.getUnlockScript(publicKey, transaction.hashWithoutScript()));
+        transaction.burns[index].setUnlockScript(await this.getUnlockScript(publicKey, transaction.hashWithoutScript(), { passphrase }));
     }
 
-    private async getUnlockScript(publicKey: string, txhash: H256): Promise<Buffer> {
-        const signature = await this.keyStore.asset.sign({ publicKey, message: txhash.value });
+    private async getUnlockScript(publicKey: string, txhash: H256, options: { passphrase?: string } = {}): Promise<Buffer> {
+        const { passphrase } = options;
+        const signature = await this.keyStore.asset.sign({ publicKey, message: txhash.value, passphrase });
         const { PUSHB } = Script.Opcode;
         return Buffer.from([
             PUSHB,

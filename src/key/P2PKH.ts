@@ -31,7 +31,8 @@ export class P2PKH implements TransactionInputSigner {
         return AssetTransferAddress.fromTypeAndPayload(1, hash, { networkId: this.networkId });
     }
 
-    async signInput(transaction: AssetTransferTransaction, index: number): Promise<void> {
+    async signInput(transaction: AssetTransferTransaction, index: number, options: { passphrase?: string } = {}): Promise<void> {
+        const { passphrase } = options;
         if (index >= transaction.inputs.length) {
             throw Error("Invalid input index");
         }
@@ -52,11 +53,12 @@ export class P2PKH implements TransactionInputSigner {
         }
 
         transaction.inputs[index].setLockScript(P2PKH.getLockScript());
-        transaction.inputs[index].setUnlockScript(await this.getUnlockScript(publicKey, transaction.hashWithoutScript()));
+        transaction.inputs[index].setUnlockScript(await this.getUnlockScript(publicKey, transaction.hashWithoutScript(), { passphrase }));
     }
 
-    private async getUnlockScript(publicKey: string, txhash: H256): Promise<Buffer> {
-        const signature = await this.rawKeyStore.asset.sign({ publicKey, message: txhash.value });
+    private async getUnlockScript(publicKey: string, txhash: H256, options: { passphrase?: string } = {}): Promise<Buffer> {
+        const { passphrase } = options;
+        const signature = await this.rawKeyStore.asset.sign({ publicKey, message: txhash.value, passphrase });
         const { PUSHB } = Script.Opcode;
         return Buffer.from([
             PUSHB,
