@@ -175,26 +175,45 @@ export class ChainRpc {
      * Gets balance of an account of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns balance recorded in the most recent block.
      * @param address An account address
      * @param blockNumber The specific block number to get account's balance at given address.
-     * @returns Balance of account at specified block, or null when address was not found.
+     * @returns Balance of account at specified block.
      */
     getBalance(address: PlatformAddress | string, blockNumber?: number): Promise<U256 | null> {
-        return this.rpc.sendRpcRequest(
-            "chain_getBalance",
-            [`${PlatformAddress.ensure(address).value}`, blockNumber]
-        ).then(result => result ? new U256(result) : null);
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_getBalance",
+                [
+                    `${PlatformAddress.ensure(address).value}`,
+                    blockNumber
+                ])
+                .then(result => {
+                    try {
+                        resolve(new U256(result));
+                    } catch (e) {
+                        reject(Error(`Expect getBalance() to return a value of U256, but an error occurred: ${e.toString()}`));
+                    }
+                })
+                .catch(reject);
+        });
     }
 
     /**
      * Gets nonce of an account of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns nonce recorded in the most recent block.
      * @param address An account address
      * @param blockNumber The specific block number to get account's nonce at given address.
-     * @returns Nonce of account at specified block, or null when address was not found.
+     * @returns Nonce of account at specified block.
      */
-    getNonce(address: PlatformAddress | string, blockNumber?: number): Promise<U256 | null> {
-        return this.rpc.sendRpcRequest(
-            "chain_getNonce",
-            [`${PlatformAddress.ensure(address).value}`, blockNumber]
-        ).then(result => result ? new U256(result) : null);
+    getNonce(address: PlatformAddress | string, blockNumber?: number): Promise<U256> {
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_getNonce",
+                [`${PlatformAddress.ensure(address).value}`, blockNumber])
+                .then(result => {
+                    try {
+                        resolve(new U256(result));
+                    } catch (e) {
+                        reject(Error(`Expect getNonce() to return a value of U256, but an error occurred: ${e.toString()}`));
+                    }
+                })
+                .catch(reject);
+        });
     }
 
     /**
