@@ -15,7 +15,17 @@ export class NodeRpc {
      * @returns String "pong"
      */
     ping(): Promise<string> {
-        return this.rpc.sendRpcRequest("ping", []);
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("ping", [])
+                .then(res => {
+                    const responseType = typeof res;
+                    if (responseType === "string") {
+                        return resolve(res);
+                    }
+                    return reject(Error(`Expect ping() to return a string but ${responseType} is given`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -23,7 +33,17 @@ export class NodeRpc {
      * @returns The version of CodeChain node (e.g. 0.1.0)
      */
     getNodeVersion(): Promise<string> {
-        return this.rpc.sendRpcRequest("version", []);
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("version", [])
+                .then(res => {
+                    const responseType = typeof res;
+                    if (responseType === "string") {
+                        return resolve(res);
+                    }
+                    return reject(Error(`Expect getNodeVersion() to return a string but ${responseType} is given`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -31,6 +51,16 @@ export class NodeRpc {
      * @hidden
      */
     getCommitHash(): Promise<string> {
-        return this.rpc.sendRpcRequest("commitHash", []);
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("commitHash", [])
+                .then(res => {
+                    const responseType = typeof res;
+                    if (responseType === "string") {
+                        return resolve(res);
+                    }
+                    return reject(Error(`Expect getCommitHash() to return a string but ${responseType} is given`));
+                })
+                .catch(reject);
+        });
     }
 }
