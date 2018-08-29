@@ -34,11 +34,19 @@ export class ChainRpc {
      * @returns SignedParcel's hash.
      */
     sendSignedParcel(parcel: SignedParcel): Promise<H256> {
-        const bytes = Array.from(parcel.rlpBytes()).map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join("");
-        return this.rpc.sendRpcRequest(
-            "chain_sendSignedParcel",
-            [`0x${bytes}`]
-        ).then(result => new H256(result));
+        return new Promise((resolve, reject) => {
+            const bytes = Array.from(parcel.rlpBytes()).map(byte => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)).join("");
+            this.rpc.sendRpcRequest("chain_sendSignedParcel",
+                [`0x${bytes}`])
+                .then(result => {
+                    try {
+                        resolve(new H256(result));
+                    } catch (e) {
+                        reject(Error(`Expected sendSignedParcel() to return a value of H256, but an error occurred: ${e.toString()}`));
+                    }
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -86,10 +94,18 @@ export class ChainRpc {
      * @returns SignedParcel, or null when SignedParcel was not found.
      */
     getParcel(hash: H256 | string): Promise<SignedParcel | null> {
-        return this.rpc.sendRpcRequest(
-            "chain_getParcel",
-            [`0x${H256.ensure(hash).value}`]
-        ).then(result => result === null ? null : SignedParcel.fromJSON(result));
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_getParcel",
+                [`0x${H256.ensure(hash).value}`])
+                .then(result => {
+                    try {
+                        resolve(result === null ? null : SignedParcel.fromJSON(result));
+                    } catch (e) {
+                        reject(Error(`Expected chain_getParcel to return either null or JSON of SignedParcel, but an error occurred: ${e.toString()}`));
+                    }
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -103,15 +119,7 @@ export class ChainRpc {
             return this.rpc.sendRpcRequest(
                 "chain_getParcelInvoice",
                 [`0x${H256.ensure(parcelHash).value}`]
-            ).then(result => {
-                if (result === null) {
-                    return null;
-                }
-                if (Array.isArray(result)) {
-                    return result.map((invoice: any) => Invoice.fromJSON(invoice));
-                }
-                return Invoice.fromJSON(result);
-            });
+            );
         };
         const startTime = Date.now();
         const { timeout } = options;
@@ -120,20 +128,37 @@ export class ChainRpc {
             await new Promise(resolve => setTimeout(resolve, 1000));
             result = await attemptToGet();
         }
-        return result;
+        if (result === null) {
+            return null;
+        }
+        try {
+            if (Array.isArray(result)) {
+                return result.map((invoice: any) => Invoice.fromJSON(invoice));
+            }
+            return Invoice.fromJSON(result);
+        } catch (e) {
+            throw Error(`Expected chain_getParcelInvoice to return either null or JSON of Invoice, but an error occurred: ${e.toString()}`);
+        }
     }
 
     /**
      * Gets the regular key of an account of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns the regular key in the most recent block.
      * @param address An account address
      * @param blockNumber The specific block number to get account's regular key at given address.
-     * @returns The regular key of account at specified block, or null when address was not found.
+     * @returns The regular key of account at specified block.
      */
-    getRegularKey(address: PlatformAddress | string, blockNumber?: number): Promise<H512 | null> {
-        return this.rpc.sendRpcRequest(
-            "chain_getRegularKey",
-            [`${PlatformAddress.ensure(address).value}`, blockNumber || null]
-        ).then(result => result === null ? null : new H512(result));
+    getRegularKey(address: PlatformAddress | string, blockNumber?: number): Promise<H512> {
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_getRegularKey",
+                [`${PlatformAddress.ensure(address).value}`, blockNumber || null])
+                .then(result => {
+                    try {
+                        resolve(new H512(result));
+                    } catch (e) {
+                        reject(Error(`Expected chain_getRegularKey to return a value of H512, but an error occurred: ${e.toString()}`));
+                    }
+                });
+        });
     }
 
     /**
@@ -141,11 +166,19 @@ export class ChainRpc {
      * @param txhash The transaction hash of which to get the corresponding transaction of.
      * @returns A transaction, or null when transaction of given hash not exists.
      */
-    getTransaction(txhash: H256 | string): Promise<Transaction> {
-        return this.rpc.sendRpcRequest(
-            "chain_getTransaction",
-            [`0x${H256.ensure(txhash).value}`]
-        ).then(result => getTransactionFromJSON(result));
+    getTransaction(txhash: H256 | string): Promise<Transaction | null> {
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_getTransaction",
+                [`0x${H256.ensure(txhash).value}`])
+                .then(result => {
+                    try {
+                        resolve(result === null ? null : getTransactionFromJSON(result));
+                    } catch (e) {
+                        reject(Error(`Expected chain_getTransaction to return either null or JSON of Transaction, but an error occurred: ${e.toString()}`));
+                    }
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -159,7 +192,7 @@ export class ChainRpc {
             return this.rpc.sendRpcRequest(
                 "chain_getTransactionInvoice",
                 [`0x${H256.ensure(txhash).value}`]
-            ).then(result => result === null ? null : Invoice.fromJSON(result));
+            );
         };
         const startTime = Date.now();
         const { timeout } = options;
@@ -168,7 +201,14 @@ export class ChainRpc {
             await new Promise(resolve => setTimeout(resolve, 1000));
             result = await attemptToGet();
         }
-        return result;
+        if (result === null) {
+            return null;
+        }
+        try {
+            return Invoice.fromJSON(result);
+        } catch (e) {
+            throw Error(`Expected chain_getTransactionInvoice to return either null or JSON of Invoice, but an error occurred: ${e.toString()}`);
+        }
     }
 
     /**
@@ -177,7 +217,7 @@ export class ChainRpc {
      * @param blockNumber The specific block number to get account's balance at given address.
      * @returns Balance of account at specified block.
      */
-    getBalance(address: PlatformAddress | string, blockNumber?: number): Promise<U256 | null> {
+    getBalance(address: PlatformAddress | string, blockNumber?: number): Promise<U256> {
         return new Promise((resolve, reject) => {
             this.rpc.sendRpcRequest("chain_getBalance",
                 [
@@ -188,7 +228,7 @@ export class ChainRpc {
                     try {
                         resolve(new U256(result));
                     } catch (e) {
-                        reject(Error(`Expect getBalance() to return a value of U256, but an error occurred: ${e.toString()}`));
+                        reject(Error(`Expected chain_getBalance to return a value of U256, but an error occurred: ${e.toString()}`));
                     }
                 })
                 .catch(reject);
@@ -209,7 +249,7 @@ export class ChainRpc {
                     try {
                         resolve(new U256(result));
                     } catch (e) {
-                        reject(Error(`Expect getNonce() to return a value of U256, but an error occurred: ${e.toString()}`));
+                        reject(Error(`Expected chain_getNonce to return a value of U256, but an error occurred: ${e.toString()}`));
                     }
                 })
                 .catch(reject);
@@ -221,10 +261,16 @@ export class ChainRpc {
      * @returns Number of the latest block.
      */
     getBestBlockNumber(): Promise<number> {
-        return this.rpc.sendRpcRequest(
-            "chain_getBestBlockNumber",
-            []
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_getBestBlockNumber", [])
+                .then(result => {
+                    if (typeof result === "number") {
+                        return resolve(result);
+                    }
+                    reject(Error(`Expected chain_getBestBlockNumber to return a number, but it returned ${result}`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -233,10 +279,19 @@ export class ChainRpc {
      * @returns BlockHash, if block exists. Else, returns null.
      */
     getBlockHash(blockNumber: number): Promise<H256 | null> {
-        return this.rpc.sendRpcRequest(
-            "chain_getBlockHash",
-            [blockNumber]
-        ).then(result => result ? new H256(result) : null);
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_getBlockHash",
+                [blockNumber])
+                .then(result => {
+                    try {
+                        resolve(result === null ? null : new H256(result));
+                    } catch (e) {
+                        reject(Error(`Expected chain_getBlockHash to return either null or a value of H256, but an error occurred: ${e.toString()}`));
+                    }
+
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -244,17 +299,23 @@ export class ChainRpc {
      * @param hashOrNumber The block hash or number of which to get the block of
      * @returns Block, if block exists. Else, returns null.
      */
-    getBlock(hashOrNumber: H256 | string | number): Promise<Block | null> {
+    async getBlock(hashOrNumber: H256 | string | number): Promise<Block | null> {
+        let result;
         if (hashOrNumber instanceof H256 || typeof hashOrNumber === "string") {
-            return this.rpc.sendRpcRequest(
+            result = await this.rpc.sendRpcRequest(
                 "chain_getBlockByHash",
                 [`0x${H256.ensure(hashOrNumber).value}`]
-            ).then(result => result === null ? null : Block.fromJSON(result));
+            );
         } else {
-            return this.rpc.sendRpcRequest(
+            result = await this.rpc.sendRpcRequest(
                 "chain_getBlockByNumber",
                 [hashOrNumber]
-            ).then(result => result === null ? null : Block.fromJSON(result));
+            );
+        }
+        try {
+            return result === null ? null : Block.fromJSON(result);
+        } catch (e) {
+            throw Error(`Expected chain_getBlock to return either null or JSON of Block, but an error occurred: ${e.toString()}`);
         }
     }
 
@@ -266,10 +327,18 @@ export class ChainRpc {
      * @returns AssetScheme, if asset scheme exists. Else, returns null.
      */
     getAssetSchemeByHash(txhash: H256 | string, shardId: number, worldId: number): Promise<AssetScheme | null> {
-        return this.rpc.sendRpcRequest(
-            "chain_getAssetSchemeByHash",
-            [`0x${H256.ensure(txhash).value}`, shardId, worldId]
-        ).then(result => result === null ? null : AssetScheme.fromJSON(result));
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_getAssetSchemeByHash",
+                [`0x${H256.ensure(txhash).value}`, shardId, worldId])
+                .then(result => {
+                    try {
+                        resolve(result === null ? null : AssetScheme.fromJSON(result));
+                    } catch (e) {
+                        reject(Error(`Expected chain_getAssetSchemeByHash to return either null or JSON of AssetScheme, but an error occurred: ${e.toString()}`));
+                    }
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -278,10 +347,18 @@ export class ChainRpc {
      * @returns AssetScheme, if asset scheme exists. Else, returns null.
      */
     getAssetSchemeByType(assetType: H256 | string): Promise<AssetScheme | null> {
-        return this.rpc.sendRpcRequest(
-            "chain_getAssetSchemeByType",
-            [`0x${H256.ensure(assetType).value}`]
-        ).then(result => result === null ? null : AssetScheme.fromJSON(result));
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_getAssetSchemeByType",
+                [`0x${H256.ensure(assetType).value}`])
+                .then(result => {
+                    try {
+                        resolve(result === null ? null : AssetScheme.fromJSON(result));
+                    } catch (e) {
+                        reject(Error(`Expected chain_getAssetSchemeByType to return either null or JSON of AssetScheme, but an error occurred: ${e.toString()}`));
+                    }
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -292,18 +369,24 @@ export class ChainRpc {
      * @returns Asset, if asset exists, Else, returns null.
      */
     getAsset(txhash: H256 | string, index: number, blockNumber?: number): Promise<Asset | null> {
-        return this.rpc.sendRpcRequest(
-            "chain_getAsset",
-            [`0x${H256.ensure(txhash).value}`, index, blockNumber]
-        ).then(result => {
-            if (result === null) {
-                return null;
-            }
-            return Asset.fromJSON({
-                ...result,
-                transactionHash: H256.ensure(txhash).value,
-                transactionOutputIndex: index
-            });
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_getAsset",
+                [`0x${H256.ensure(txhash).value}`, index, blockNumber])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    try {
+                        resolve(Asset.fromJSON({
+                            ...result,
+                            transactionHash: H256.ensure(txhash).value,
+                            transactionOutputIndex: index
+                        }));
+                    } catch (e) {
+                        reject(Error(`Expected chain_getAsset to return either null or JSON of Asset, but an error occurred: ${e.toString()}`));
+                    }
+                })
+                .catch(reject);
         });
     }
 
@@ -316,14 +399,17 @@ export class ChainRpc {
      * @returns True, if the asset is spent. False, if the asset is not spent. Null, if no such asset exists.
      */
     isAssetSpent(txhash: H256 | string, index: number, shardId: number, blockNumber?: number): Promise<boolean | null> {
-        return this.rpc.sendRpcRequest(
-            "chain_isAssetSpent",
-            [`0x${H256.ensure(txhash).value}`, index, shardId, blockNumber]
-        ).then(result => {
-            if (result === null) {
-                return null;
-            }
-            return result;
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_isAssetSpent",
+                [`0x${H256.ensure(txhash).value}`, index, shardId, blockNumber])
+                .then(result => {
+                    if (result === null || typeof result === "boolean") {
+                        resolve(result);
+                    } else {
+                        reject(Error(`Expected chain_isAssetSpent to return either null or boolean but ${result} is given`));
+                    }
+                })
+                .catch(reject);
         });
     }
 
@@ -332,10 +418,21 @@ export class ChainRpc {
      * @returns List of SignedParcel, with each parcel has null for blockNumber/blockHash/parcelIndex.
      */
     getPendingParcels(): Promise<SignedParcel[]> {
-        return this.rpc.sendRpcRequest(
-            "chain_getPendingParcels",
-            []
-        ).then(result => result.map((p: any) => SignedParcel.fromJSON(p)));
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_getPendingParcels",
+                [])
+                .then(result => {
+                    if (!Array.isArray(result)) {
+                        return reject(Error(`Expected chain_getPendingParcels to return an array but ${result} is given`));
+                    }
+                    try {
+                        resolve(result.map(p => SignedParcel.fromJSON(p)));
+                    } catch (e) {
+                        reject(Error(`Expected chain_getPendingParcels to return an array of JSON of SignedParcel, but an error occurred: ${e.toString()}`));
+                    }
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -343,9 +440,17 @@ export class ChainRpc {
      * @returns A network ID, e.g. "tc".
      */
     getNetworkId(): Promise<NetworkId> {
-        return this.rpc.sendRpcRequest(
-            "chain_getNetworkId",
-            []
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("chain_getNetworkId",
+                [])
+                .then(result => {
+                    if (typeof result === "string") {
+                        resolve(result);
+                    } else {
+                        reject(Error(`Expected chain_getNetworkId to return a string but ${result} is given`));
+                    }
+                })
+                .catch(reject);
+        });
     }
 }

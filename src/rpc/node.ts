@@ -22,7 +22,7 @@ export class NodeRpc {
                     if (responseType === "string") {
                         return resolve(res);
                     }
-                    return reject(Error(`Expect ping() to return a string but ${responseType} is given`));
+                    return reject(Error(`Expected ping() to return a string but ${responseType} is given`));
                 })
                 .catch(reject);
         });
@@ -40,7 +40,7 @@ export class NodeRpc {
                     if (responseType === "string") {
                         return resolve(res);
                     }
-                    return reject(Error(`Expect getNodeVersion() to return a string but ${responseType} is given`));
+                    return reject(Error(`Expected getNodeVersion() to return a string but ${responseType} is given`));
                 })
                 .catch(reject);
         });
@@ -58,7 +58,7 @@ export class NodeRpc {
                     if (responseType === "string") {
                         return resolve(res);
                     }
-                    return reject(Error(`Expect getCommitHash() to return a string but ${responseType} is given`));
+                    return reject(Error(`Expected getCommitHash() to return a string but ${responseType} is given`));
                 })
                 .catch(reject);
         });
