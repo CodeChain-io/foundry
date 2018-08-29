@@ -1,3 +1,5 @@
+import * as _ from "lodash";
+
 const RLP = require("rlp");
 /**
  * Handles 256-bit data. Used to express block hash, parcel hash, transaction hash, merkle root, etc.
@@ -6,6 +8,9 @@ export class H256 {
     value: string;
 
     constructor(value: string) {
+        if (!_.isString(value)) {
+            throw Error(`The given value for new H256() is not a string, but ${value}`);
+        }
         if ((!value.startsWith("0x") && value.length !== 64) || (value.startsWith("0x") && value.length !== 66)) {
             throw Error(`The length for H256 must be 64 or 66 with 0x-prefix, but "${value}" is given`);
         } else if (!/(0x)?[0-9a-fA-F]{64}/.test(value)) {
