@@ -123,7 +123,7 @@ export class NetworkRpc {
      * Add the IP to whitelist
      * @param ip Node IP
      */
-    addToWhiteList(ip: string): Promise<null> {
+    addToWhitelist(ip: string): Promise<null> {
         return new Promise((resolve, reject) => {
             this.rpc.sendRpcRequest("net_addToWhitelist", [ip])
                 .then(result => {
@@ -140,7 +140,7 @@ export class NetworkRpc {
      * Remove the IP from whitelist
      * @param ip Node IP
      */
-    removeFromWhiteList(ip: string): Promise<null> {
+    removeFromWhitelist(ip: string): Promise<null> {
         return new Promise((resolve, reject) => {
             this.rpc.sendRpcRequest("net_removeFromWhitelist", [ip])
                 .then(result => {
@@ -173,7 +173,7 @@ export class NetworkRpc {
      * Remove the IP from blacklist
      * @param ip Node IP
      */
-    removeFromBlackList(ip: string): Promise<null> {
+    removeFromBlacklist(ip: string): Promise<null> {
         return new Promise((resolve, reject) => {
             this.rpc.sendRpcRequest("net_removeFromBlacklist", [ip])
                 .then(result => {
@@ -189,7 +189,7 @@ export class NetworkRpc {
     /**
      * Enable whitelist
      */
-    enableWhiteList(): Promise<null> {
+    enableWhitelist(): Promise<null> {
         return new Promise((resolve, reject) => {
             this.rpc.sendRpcRequest("net_enableWhitelist", [])
                 .then(result => {
@@ -205,7 +205,7 @@ export class NetworkRpc {
     /**
      * Disable whitelist
      */
-    disableWhiteList(): Promise<null> {
+    disableWhitelist(): Promise<null> {
         return new Promise((resolve, reject) => {
             this.rpc.sendRpcRequest("net_disableWhitelist", [])
                 .then(result => {
@@ -221,7 +221,7 @@ export class NetworkRpc {
     /**
      * Enable blacklist
      */
-    enableBlackList(): Promise<null> {
+    enableBlacklist(): Promise<null> {
         return new Promise((resolve, reject) => {
             this.rpc.sendRpcRequest("net_enableBlacklist", [])
                 .then(result => {
@@ -237,7 +237,7 @@ export class NetworkRpc {
     /**
      * Disable blacklist
      */
-    disableBlackList(): Promise<null> {
+    disableBlacklist(): Promise<null> {
         return new Promise((resolve, reject) => {
             this.rpc.sendRpcRequest("net_disableBlacklist", [])
                 .then(result => {
