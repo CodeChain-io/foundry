@@ -6,7 +6,8 @@
         "object-literal-sort-keys": false,
         "no-var-requires": false,
         "max-classes-per-file": false,
-        "no-bitwise": false
+        "no-bitwise": false,
+        "array-type": false
     },
     "jsRules": {
         "no-console": false,
