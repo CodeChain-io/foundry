@@ -73,8 +73,9 @@ export class Rpc {
         return new Promise<any>((resolve, reject) => {
             this.client.request(name, params, (err: any, res: any) => {
                 if (err) {
-                    return reject(err);
+                    return reject(Error(`An error occurred while ${name}: ${err}`));
                 } else if (res.error) {
+                    // FIXME: Throw Error with a description
                     return reject(res.error);
                 }
                 resolve(res.result);
