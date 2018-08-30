@@ -19,10 +19,16 @@ export class NetworkRpc {
      * @param port
      */
     shareSecret(secret: string, address: string, port: number): Promise<null> {
-        return this.rpc.sendRpcRequest(
-            "net_shareSecret",
-            [secret, address, port]
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_shareSecret", [secret, address, port])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(Error(`Expected net_shareSecret to return null but it returned ${result}`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -31,10 +37,16 @@ export class NetworkRpc {
      * @param port
      */
     connect(address: string, port: number): Promise<null> {
-        return this.rpc.sendRpcRequest(
-            "net_connect",
-            [address, port]
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_connect", [address, port])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(Error(`Expected net_connect to return null but it returned ${result}`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -43,10 +55,16 @@ export class NetworkRpc {
     * @param port
     */
     disconnect(address: string, port: number): Promise<null> {
-        return this.rpc.sendRpcRequest(
-            "net_disconnect",
-            [address, port]
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_disconnect", [address, port])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(Error(`Expected net_disconnect to return null but it returned ${result}`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -55,33 +73,49 @@ export class NetworkRpc {
     * @param port
     */
     isConnected(address: string, port: number): Promise<boolean> {
-        return this.rpc.sendRpcRequest(
-            "net_isConnected",
-            [address, port]
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_isConnected", [address, port])
+                .then(result => {
+                    if (typeof result === "boolean") {
+                        return resolve(result);
+                    }
+                    reject(Error(`Expected net_isConnected to return a boolean but it returned ${result}`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
      * Get the number of established peers
      */
     getPeerCount(): Promise<number> {
-        return this.rpc.sendRpcRequest(
-            "net_getPeerCount",
-            []
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_getPeerCount", [])
+                .then(result => {
+                    if (typeof result === "number") {
+                        return resolve(result);
+                    }
+                    reject(Error(`Expected net_getPeerCount to return a number but it returned ${result}`));
+                })
+                .catch(reject);
+        });
+
     }
 
     /**
      * Get the addresses of established peers
      */
     getPeers(): Promise<string[]> {
-        return new Promise(resolve => {
-            this.rpc.sendRpcRequest(
-                "net_getEstablishedPeers",
-                []
-            ).then(resolve)
-                // FIXME:
-                .catch(_ => resolve(["getPeers() is not implemented yet"]));
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_getEstablishedPeers", [])
+                .then(result => {
+                    if (!Array.isArray(result)) {
+                        // FIXME: Check whether the strings are peer addresses.
+                        resolve(result);
+                    }
+                    return reject(Error(`Expected net_getEstablishedPeers to return an array but it returned ${result}`));
+                })
+                .catch(reject);
         });
     }
 
@@ -90,10 +124,16 @@ export class NetworkRpc {
      * @param ip Node IP
      */
     addToWhiteList(ip: string): Promise<null> {
-        return this.rpc.sendRpcRequest(
-            "net_addToWhitelist",
-            [ip]
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_addToWhitelist", [ip])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(Error(`Expected net_addToWhitelist to return null but it returned ${result}`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -101,10 +141,16 @@ export class NetworkRpc {
      * @param ip Node IP
      */
     removeFromWhiteList(ip: string): Promise<null> {
-        return this.rpc.sendRpcRequest(
-            "net_removeFromWhitelist",
-            [ip]
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_removeFromWhitelist", [ip])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(Error(`Expected net_removeFromWhitelist to return null but it returned ${result}`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -112,10 +158,15 @@ export class NetworkRpc {
      * @param ip Node IP
      */
     addToBlacklist(ip: string): Promise<null> {
-        return this.rpc.sendRpcRequest(
-            "net_addToBlacklist",
-            [ip]
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_addToBlacklist", [ip])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(Error(`Expected net_addToBlacklist to return null but it returned ${result}`));
+                });
+        });
     }
 
     /**
@@ -123,69 +174,120 @@ export class NetworkRpc {
      * @param ip Node IP
      */
     removeFromBlackList(ip: string): Promise<null> {
-        return this.rpc.sendRpcRequest(
-            "net_removeFromBlacklist",
-            [ip]
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_removeFromBlacklist", [ip])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(Error(`Expected net_removeFromBlacklist to return null but it returned ${result}`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
      * Enable whitelist
      */
     enableWhiteList(): Promise<null> {
-        return this.rpc.sendRpcRequest(
-            "net_enableWhitelist",
-            []
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_enableWhitelist", [])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(Error(`Expected net_enableWhitelist to return null but it returned ${result}`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
      * Disable whitelist
      */
     disableWhiteList(): Promise<null> {
-        return this.rpc.sendRpcRequest(
-            "net_disableWhitelist",
-            []
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_disableWhitelist", [])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(Error(`Expected net_disableWhitelist to return null but it returned ${result}`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
      * Enable blacklist
      */
     enableBlackList(): Promise<null> {
-        return this.rpc.sendRpcRequest(
-            "net_enableBlacklist",
-            []
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_enableBlacklist", [])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(Error(`Expected net_enableBlacklist to return null but it returned ${result}`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
      * Disable blacklist
      */
     disableBlackList(): Promise<null> {
-        return this.rpc.sendRpcRequest(
-            "net_disableBlacklist",
-            []
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_disableBlacklist", [])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(Error(`Expected net_disableBlacklist to return null but it returned ${result}`));
+                });
+        });
     }
 
     /**
      * Get the status of whitelist
      */
     getWhitelist(): Promise<{ list: string[], enabled: boolean }> {
-        return this.rpc.sendRpcRequest(
-            "net_getWhitelist",
-            []
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_getWhitelist", [])
+                .then(result => {
+                    if (result === null || typeof result !== "object") {
+                        return reject(Error(`Expected net_getWhitelist to return an object but it returned ${result}`));
+                    }
+                    const { list, enabled } = result;
+                    if (Array.isArray(list) && typeof enabled === "boolean") {
+                        // FIXME: Check whether the strings in the list are valid.
+                        return resolve(result);
+                    }
+                    reject(Error(`Expected net_getWhitelist to return { list: string[], enabled: boolean } but it returned ${JSON.stringify(result)}`));
+                })
+                .catch(reject);
+        });
     }
 
     /**
      * Get the status of blacklist
      */
     getBlacklist(): Promise<{ list: string[], enabled: boolean }> {
-        return this.rpc.sendRpcRequest(
-            "net_getBlacklist",
-            []
-        );
+        return new Promise((resolve, reject) => {
+            this.rpc.sendRpcRequest("net_getBlacklist", [])
+                .then(result => {
+                    if (result === null || typeof result !== "object") {
+                        return reject(Error(`Expected net_getBlacklist to return an object but it returned ${result}`));
+                    }
+                    const { list, enabled } = result;
+                    if (Array.isArray(list) && typeof enabled === "boolean") {
+                        // FIXME: Check whether the strings in the list are valid.
+                        return resolve(result);
+                    }
+                    reject(Error(`Expected net_getBlacklist to return { list: string[], enabled: boolean } but it returned ${JSON.stringify(result)}`));
+                })
+                .catch(reject);
+        });
     }
 }
