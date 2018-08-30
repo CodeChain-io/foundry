@@ -17,12 +17,11 @@ export class NodeRpc {
     ping(): Promise<string> {
         return new Promise((resolve, reject) => {
             this.rpc.sendRpcRequest("ping", [])
-                .then(res => {
-                    const responseType = typeof res;
-                    if (responseType === "string") {
-                        return resolve(res);
+                .then(result => {
+                    if (typeof result === "string") {
+                        return resolve(result);
                     }
-                    return reject(Error(`Expected ping() to return a string but ${responseType} is given`));
+                    return reject(Error(`Expected ping() to return a string but it returned ${result}`));
                 })
                 .catch(reject);
         });
@@ -35,12 +34,11 @@ export class NodeRpc {
     getNodeVersion(): Promise<string> {
         return new Promise((resolve, reject) => {
             this.rpc.sendRpcRequest("version", [])
-                .then(res => {
-                    const responseType = typeof res;
-                    if (responseType === "string") {
-                        return resolve(res);
+                .then(result => {
+                    if (typeof result === "string") {
+                        return resolve(result);
                     }
-                    return reject(Error(`Expected getNodeVersion() to return a string but ${responseType} is given`));
+                    return reject(Error(`Expected getNodeVersion() to return a string but it returned ${result}`));
                 })
                 .catch(reject);
         });
@@ -53,12 +51,11 @@ export class NodeRpc {
     getCommitHash(): Promise<string> {
         return new Promise((resolve, reject) => {
             this.rpc.sendRpcRequest("commitHash", [])
-                .then(res => {
-                    const responseType = typeof res;
-                    if (responseType === "string") {
-                        return resolve(res);
+                .then(result => {
+                    if (typeof result === "string") {
+                        return resolve(result);
                     }
-                    return reject(Error(`Expected getCommitHash() to return a string but ${responseType} is given`));
+                    return reject(Error(`Expected getCommitHash() to return a string but it returned ${result}`));
                 })
                 .catch(reject);
         });

@@ -406,7 +406,7 @@ export class ChainRpc {
                     if (result === null || typeof result === "boolean") {
                         resolve(result);
                     } else {
-                        reject(Error(`Expected chain_isAssetSpent to return either null or boolean but ${result} is given`));
+                        reject(Error(`Expected chain_isAssetSpent to return either null or boolean but it returned ${result}`));
                     }
                 })
                 .catch(reject);
@@ -423,7 +423,7 @@ export class ChainRpc {
                 [])
                 .then(result => {
                     if (!Array.isArray(result)) {
-                        return reject(Error(`Expected chain_getPendingParcels to return an array but ${result} is given`));
+                        return reject(Error(`Expected chain_getPendingParcels to return an array but it returned ${result}`));
                     }
                     try {
                         resolve(result.map(p => SignedParcel.fromJSON(p)));
@@ -447,7 +447,7 @@ export class ChainRpc {
                     if (typeof result === "string") {
                         resolve(result);
                     } else {
-                        reject(Error(`Expected chain_getNetworkId to return a string but ${result} is given`));
+                        reject(Error(`Expected chain_getNetworkId to return a string but it returned ${result}`));
                     }
                 })
                 .catch(reject);

@@ -15,7 +15,9 @@ describe("Invalid response", () => {
             nodeRpc.ping()
                 .then(done.fail)
                 .catch(e => {
-                    expect(e).toEqual(Error("Expected ping() to return a string but undefined is given"));
+                    expect(e.toString()).toContain("ping");
+                    expect(e.toString()).toContain("string");
+                    expect(e.toString()).toContain("undefined");
                     done();
                 });
         });
@@ -25,7 +27,9 @@ describe("Invalid response", () => {
             nodeRpc.getNodeVersion()
                 .then(done.fail)
                 .catch(e => {
-                    expect(e).toEqual(Error("Expected getNodeVersion() to return a string but undefined is given"));
+                    expect(e.toString()).toContain("getNodeVersion");
+                    expect(e.toString()).toContain("string");
+                    expect(e.toString()).toContain("undefined");
                     done();
                 });
         });
@@ -35,7 +39,9 @@ describe("Invalid response", () => {
             nodeRpc.getCommitHash()
                 .then(done.fail)
                 .catch(e => {
-                    expect(e).toEqual(Error("Expected getCommitHash() to return a string but undefined is given"));
+                    expect(e.toString()).toContain("getCommitHash");
+                    expect(e.toString()).toContain("string");
+                    expect(e.toString()).toContain("undefined");
                     done();
                 });
         });
