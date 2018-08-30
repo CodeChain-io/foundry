@@ -415,4 +415,23 @@ describe("Invalid response", () => {
                 });
         });
     });
+
+    describe("NetworkRpc", () => {
+        test.skip("shareSecret", done => done.fail("not implemented"));
+        test.skip("connect", done => done.fail("not implemented"));
+        test.skip("disconnect", done => done.fail("not implemented"));
+        test.skip("isConnected", done => done.fail("not implemented"));
+        test.skip("getPeerCount", done => done.fail("not implemented"));
+        test.skip("getPeers", done => done.fail("not implemented"));
+        test.skip("addToWhiteList", done => done.fail("not implemented"));
+        test.skip("removeFromWhiteList", done => done.fail("not implemented"));
+        test.skip("addToBlocklist", done => done.fail("not implemented"));
+        test.skip("removeFromBlockList", done => done.fail("not implemented"));
+        test.skip("enableWhiteList", done => done.fail("not implemented"));
+        test.skip("disableWhiteList", done => done.fail("not implemented"));
+        test.skip("enableBlackList", done => done.fail("not implemented"));
+        test.skip("disableBlackList", done => done.fail("not implemented"));
+        test.skip("getWhitelist", done => done.fail("not implemented"));
+        test.skip("getBlacklist", done => done.fail("not implemented"));
+    });
 });
