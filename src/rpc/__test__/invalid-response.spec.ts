@@ -3,6 +3,7 @@ import { NodeRpc } from "../node";
 import { ChainRpc } from "../chain";
 import { PlatformAddress } from "../../key/classes";
 import { Parcel, Payment, U256 } from "../../core/classes";
+import { AccountRpc } from "../account";
 
 describe("Invalid response", () => {
     const rpc: Rpc = new Rpc({ server: "" });
@@ -314,6 +315,101 @@ describe("Invalid response", () => {
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getNetworkId");
                     expect(e.toString()).toContain("string");
+                    expect(e.toString()).toContain("undefined");
+                    done();
+                });
+        });
+    });
+
+    describe("AccountRpc", () => {
+        const accountRpc = new AccountRpc(rpc);
+        const hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        const secret = "0x0000000000000000000000000000000000000000000000000000000000000001";
+        const address = PlatformAddress.fromAccountId("0x0000000000000000000000000000000000000000");
+
+        describe("getList", () => {
+            test("undefined", done => {
+                rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
+                accountRpc.getList()
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e.toString()).toContain("account_getList");
+                        expect(e.toString()).toContain("array");
+                        expect(e.toString()).toContain("undefined");
+                        done();
+                    });
+            });
+
+            test.skip("invalid address string", done => done.fail("not implemented"));
+        });
+
+        describe("create", () => {
+            test("undefined", done => {
+                rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
+                accountRpc.create()
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e.toString()).toContain("account_create");
+                        expect(e.toString()).toContain("PlatformAddress");
+                        expect(e.toString()).toContain("undefined");
+                        done();
+                    });
+            });
+
+            test.skip("invalid address string", done => done.fail("not implemented"));
+        });
+
+        describe("importRaw", () => {
+            test("undefined", done => {
+                rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
+                accountRpc.importRaw(secret)
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e.toString()).toContain("account_importRaw");
+                        expect(e.toString()).toContain("PlatformAddress");
+                        expect(e.toString()).toContain("undefined");
+                        done();
+                    });
+            });
+
+            test.skip("invalid address string", done => done.fail("not implemented"));
+        });
+
+        test("remove", done => {
+            rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
+            accountRpc.remove(address)
+                .then(() => done.fail())
+                .catch(e => {
+                    expect(e.toString()).toContain("account_remove");
+                    expect(e.toString()).toContain("null");
+                    expect(e.toString()).toContain("undefined");
+                    done();
+                });
+        });
+
+        describe("sign", () => {
+            test("undefined", done => {
+                rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
+                accountRpc.sign(hash, address)
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e.toString()).toContain("account_sign");
+                        expect(e.toString()).toContain("string");
+                        expect(e.toString()).toContain("undefined");
+                        done();
+                    });
+            });
+
+            test.skip("invalid signature string", done => done.fail("not implemented"));
+        });
+
+        test("unlock", done => {
+            rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
+            accountRpc.unlock(address)
+                .then(() => done.fail())
+                .catch(e => {
+                    expect(e.toString()).toContain("account_unlock");
+                    expect(e.toString()).toContain("null");
                     expect(e.toString()).toContain("undefined");
                     done();
                 });
