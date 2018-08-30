@@ -4,6 +4,7 @@ import { NodeRpc } from "./node";
 import { ChainRpc } from "./chain";
 import { NetworkRpc } from "./network";
 import { AccountRpc } from "./account";
+import { DevelRpc } from "./devel";
 
 /**
  * @hidden
@@ -29,6 +30,8 @@ export class Rpc {
      * RPC module for account management and signing
      */
     public account: AccountRpc;
+
+    public devel: DevelRpc;
 
     /**
      * @param params.server HTTP RPC server address.
@@ -63,6 +66,7 @@ export class Rpc {
         this.chain = new ChainRpc(this, options);
         this.network = new NetworkRpc(this);
         this.account = new AccountRpc(this);
+        this.devel = new DevelRpc(this);
     }
 
     sendRpcRequest = (name: string, params: any[]) => {
