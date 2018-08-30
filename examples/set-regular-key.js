@@ -1,9 +1,12 @@
 const SDK = require("codechain-sdk");
 
 const sdk = new SDK({ server: "http://localhost:8080" });
-const masterSecret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
+const masterSecret =
+    "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
 const masterAccountId = SDK.util.getAccountIdFromPrivate(masterSecret);
-const masterAddress = sdk.key.classes.PlatformAddress.fromAccountId(masterAccountId);
+const masterAddress = sdk.key.classes.PlatformAddress.fromAccountId(
+    masterAccountId
+);
 
 const regularSecret = SDK.util.generatePrivateKey();
 const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
@@ -13,15 +16,19 @@ const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
     // Set `regularSecret` as the master account's regular key.
     // It means that you can sign a parcel with the "regularSecret" instead of the "masterSecert".
     const setRegularKeyParcel = sdk.core.createSetRegularKeyParcel({
-        key: regularPublic,
+        key: regularPublic
     });
-    const setRegularKeyParcelHash = await sdk.rpc.chain.sendSignedParcel(setRegularKeyParcel.sign({
-        secret: masterSecret,
-        nonce,
-        fee: 10
-    }));
+    const setRegularKeyParcelHash = await sdk.rpc.chain.sendSignedParcel(
+        setRegularKeyParcel.sign({
+            secret: masterSecret,
+            nonce,
+            fee: 10
+        })
+    );
 
-    await sdk.rpc.chain.getParcelInvoice(setRegularKeyParcelHash, { timeout: 60 * 60 * 1000 });
+    await sdk.rpc.chain.getParcelInvoice(setRegularKeyParcelHash, {
+        timeout: 60 * 60 * 1000
+    });
     console.log("The parcel contains 'setRegularkey' has been mined");
 
     const beforeBalance = await sdk.rpc.chain.getBalance(masterAddress);
@@ -30,20 +37,24 @@ const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
     const nonce2 = await sdk.rpc.chain.getNonce(masterAddress);
     const p2 = sdk.core.createPaymentParcel({
         recipient: masterAddress,
-        amount: 10,
+        amount: 10
     });
     // We can sign a parcel with our `regularSecret`.
     // The parcel's fee is charged from the master account.
-    const hash2 = await sdk.rpc.chain.sendSignedParcel(p2.sign({
-        secret: regularSecret,
-        nonce: nonce2,
-        fee: 10
-    }));
+    const hash2 = await sdk.rpc.chain.sendSignedParcel(
+        p2.sign({
+            secret: regularSecret,
+            nonce: nonce2,
+            fee: 10
+        })
+    );
     await sdk.rpc.chain.getParcelInvoice(hash2, { timeout: 60 * 60 * 1000 });
     console.log("The parcel signed with 'regularSecret' has been mined");
 
     const afterBalance = await sdk.rpc.chain.getBalance(masterAddress);
-    console.log(`After the parcel which signed with regularSecret, master account's balance changed to ${afterBalance}`);;
-})().catch((err) => {
+    console.log(
+        `After the parcel which signed with regularSecret, master account's balance changed to ${afterBalance}`
+    );
+})().catch(err => {
     console.error(`Error:`, err);
 });

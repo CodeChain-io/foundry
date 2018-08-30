@@ -5,12 +5,14 @@ test("AssetMintTransaction toJSON", () => {
     const t = new AssetMintTransaction({
         metadata: "",
         output: {
-            lockScriptHash: new H256("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"),
+            lockScriptHash: new H256(
+                "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            ),
             parameters: [],
-            amount: 0,
+            amount: 0
         },
         registrar: null,
-        nonce: 0,
+        nonce: 0
     });
     expect(AssetMintTransaction.fromJSON(t.toJSON())).toEqual(t);
 });

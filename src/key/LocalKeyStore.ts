@@ -1,16 +1,19 @@
-import * as _ from "lodash";
-
-import { KeyStore } from "./KeyStore";
 import { CCKey } from "codechain-keystore";
+import { KeyStore } from "./KeyStore";
 
 export class LocalKeyStore implements KeyStore {
-    cckey: CCKey;
-
-    private constructor(cckey: CCKey) {
-        this.cckey = cckey;
+    public static async create(): Promise<KeyStore> {
+        const cckey = await CCKey.create({});
+        return new LocalKeyStore(cckey);
     }
 
-    platform = {
+    public static async createForTest(): Promise<KeyStore> {
+        const cckey = await CCKey.create({ useMemoryDB: true });
+        return new LocalKeyStore(cckey);
+    }
+    public cckey: CCKey;
+
+    public platform = {
         getKeyList: (): Promise<string[]> => {
             return this.cckey.platform.getKeys();
         },
@@ -24,13 +27,17 @@ export class LocalKeyStore implements KeyStore {
             return this.cckey.platform.deleteKey({ publicKey });
         },
 
-        sign: (params: { publicKey: string, message: string, passphrase?: string }): Promise<string> => {
+        sign: (params: {
+            publicKey: string;
+            message: string;
+            passphrase?: string;
+        }): Promise<string> => {
             const { passphrase = "" } = params;
             return this.cckey.platform.sign({ ...params, passphrase });
         }
     };
 
-    asset = {
+    public asset = {
         getKeyList: (): Promise<string[]> => {
             return this.cckey.asset.getKeys();
         },
@@ -44,34 +51,32 @@ export class LocalKeyStore implements KeyStore {
             return this.cckey.asset.deleteKey({ publicKey });
         },
 
-        sign: (params: { publicKey: string, message: string, passphrase?: string }): Promise<string> => {
+        sign: (params: {
+            publicKey: string;
+            message: string;
+            passphrase?: string;
+        }): Promise<string> => {
             const { passphrase = "" } = params;
             return this.cckey.asset.sign({ ...params, passphrase });
         }
     };
 
-    static async create(): Promise<KeyStore> {
-        const cckey = await CCKey.create({});
-        return new LocalKeyStore(cckey);
-    }
-
-    static async createForTest(): Promise<KeyStore> {
-        const cckey = await CCKey.create({ useMemoryDB: true });
-        return new LocalKeyStore(cckey);
-    }
-
-    mapping = {
-        add: (params: { key: string; value: string; }): Promise<void> => {
+    public mapping = {
+        add: (params: { key: string; value: string }): Promise<void> => {
             return this.cckey.mapping.add(params);
         },
 
-        get: async (params: { key: string; }): Promise<string> => {
+        get: async (params: { key: string }): Promise<string> => {
             const pk = await this.cckey.mapping.get(params);
             return pk as string;
         }
     };
 
-    close() {
+    private constructor(cckey: CCKey) {
+        this.cckey = cckey;
+    }
+
+    public close() {
         return this.cckey.close();
     }
 }

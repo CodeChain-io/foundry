@@ -1,9 +1,12 @@
 import { PlatformAddress } from "../key/PlatformAddress";
 import { H256 } from "./H256";
-import { U256 } from "./U256";
 import { SignedParcel } from "./SignedParcel";
+import { U256 } from "./U256";
 
-export type BlockData = {
+// Disable lint error from using "number" as variable name
+// tslint:disable:variable-name
+
+export interface BlockData {
     parentHash: H256;
     timestamp: number;
     number: number;
@@ -16,44 +19,26 @@ export type BlockData = {
     seal: Buffer[];
     hash: H256;
     parcels: SignedParcel[];
-};
+}
 /**
  * Block is the unit of processes being handled by CodeChain. Contains information related to SignedParcel's list and block creation.
  */
 export class Block {
-    parentHash: H256;
-    timestamp: number;
-    number: number;
-    author: PlatformAddress;
-    extraData: Buffer;
-    parcelsRoot: H256;
-    stateRoot: H256;
-    invoicesRoot: H256;
-    score: U256;
-    seal: Buffer[];
-    hash: H256;
-    parcels: SignedParcel[];
-
-    constructor(data: BlockData) {
-        const { parentHash, timestamp, number, author, extraData,
-            parcelsRoot, stateRoot, invoicesRoot, score, seal, hash, parcels } = data;
-        this.parentHash = parentHash;
-        this.timestamp = timestamp;
-        this.number = number;
-        this.author = author;
-        this.extraData = extraData;
-        this.parcelsRoot = parcelsRoot;
-        this.stateRoot = stateRoot;
-        this.invoicesRoot = invoicesRoot;
-        this.score = score;
-        this.seal = seal;
-        this.hash = hash;
-        this.parcels = parcels;
-    }
-
-    static fromJSON(data: any) {
-        const { parentHash, timestamp, number, author, extraData,
-            parcelsRoot, stateRoot, invoicesRoot, score, seal, hash, parcels } = data;
+    public static fromJSON(data: any) {
+        const {
+            parentHash,
+            timestamp,
+            number,
+            author,
+            extraData,
+            parcelsRoot,
+            stateRoot,
+            invoicesRoot,
+            score,
+            seal,
+            hash,
+            parcels
+        } = data;
         return new this({
             parentHash: new H256(parentHash),
             timestamp,
@@ -69,10 +54,63 @@ export class Block {
             parcels: parcels.map((p: any) => SignedParcel.fromJSON(p))
         });
     }
+    public parentHash: H256;
+    public timestamp: number;
+    public number: number;
+    public author: PlatformAddress;
+    public extraData: Buffer;
+    public parcelsRoot: H256;
+    public stateRoot: H256;
+    public invoicesRoot: H256;
+    public score: U256;
+    public seal: Buffer[];
+    public hash: H256;
+    public parcels: SignedParcel[];
 
-    toJSON() {
-        const { parentHash, timestamp, number, author, extraData,
-            parcelsRoot, stateRoot, invoicesRoot, score, seal, hash, parcels } = this;
+    constructor(data: BlockData) {
+        const {
+            parentHash,
+            timestamp,
+            number,
+            author,
+            extraData,
+            parcelsRoot,
+            stateRoot,
+            invoicesRoot,
+            score,
+            seal,
+            hash,
+            parcels
+        } = data;
+        this.parentHash = parentHash;
+        this.timestamp = timestamp;
+        this.number = number;
+        this.author = author;
+        this.extraData = extraData;
+        this.parcelsRoot = parcelsRoot;
+        this.stateRoot = stateRoot;
+        this.invoicesRoot = invoicesRoot;
+        this.score = score;
+        this.seal = seal;
+        this.hash = hash;
+        this.parcels = parcels;
+    }
+
+    public toJSON() {
+        const {
+            parentHash,
+            timestamp,
+            number,
+            author,
+            extraData,
+            parcelsRoot,
+            stateRoot,
+            invoicesRoot,
+            score,
+            seal,
+            hash,
+            parcels
+        } = this;
         return {
             parentHash: parentHash.value,
             timestamp,
@@ -85,7 +123,7 @@ export class Block {
             score: score.value.toString(),
             seal,
             hash: hash.value,
-            parcels: parcels.map(p => p.toJSON()),
+            parcels: parcels.map(p => p.toJSON())
         };
     }
 }

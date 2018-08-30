@@ -4,7 +4,8 @@ var sdk = new SDK({ server: "http://localhost:8080" });
 
 // If you want to know how to create an address, see the example "Create an
 // asset transfer address".
-var address = "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
+var address =
+    "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
 
 var assetMintTransaction = sdk.core.createAssetMintTransaction({
     scheme: {
@@ -12,28 +13,34 @@ var assetMintTransaction = sdk.core.createAssetMintTransaction({
         metadata: JSON.stringify({
             name: "Silver Coin",
             description: "...",
-            icon_url: "...",
+            icon_url: "..."
         }),
-        amount: 100000000,
+        amount: 100000000
     },
     recipient: address,
-    nonce: Math.floor(Math.random() * 1000000000),
+    nonce: Math.floor(Math.random() * 1000000000)
 });
 
 // Send a change-shard-state parcel to process the transaction.
-var parcel = sdk.core.createChangeShardStateParcel({ transactions: [assetMintTransaction] });
-sdk.rpc.chain.sendParcel(parcel, {
-    account: "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78",
-    passphrase: "satoshi"
-}).then(function (parcelHash) {
-    // Get the invoice of the parcel.
-    return sdk.rpc.chain.getParcelInvoice(parcelHash, {
-        // Wait up to 120 seconds to get the invoice.
-        timeout: 120 * 1000
-    });
-}).then(function (invoice) {
-    // The invoice of change-shard-state parcel is an array of the object that has
-    // type { success: boolean }. Each object represents the result of each
-    // transaction.
-    console.log(invoice); // [{ success: true }]
-}).catch(console.error);
+var parcel = sdk.core.createChangeShardStateParcel({
+    transactions: [assetMintTransaction]
+});
+sdk.rpc.chain
+    .sendParcel(parcel, {
+        account: "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78",
+        passphrase: "satoshi"
+    })
+    .then(function(parcelHash) {
+        // Get the invoice of the parcel.
+        return sdk.rpc.chain.getParcelInvoice(parcelHash, {
+            // Wait up to 120 seconds to get the invoice.
+            timeout: 120 * 1000
+        });
+    })
+    .then(function(invoice) {
+        // The invoice of change-shard-state parcel is an array of the object that has
+        // type { success: boolean }. Each object represents the result of each
+        // transaction.
+        console.log(invoice); // [{ success: true }]
+    })
+    .catch(console.error);

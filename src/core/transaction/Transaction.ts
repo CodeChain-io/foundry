@@ -5,7 +5,7 @@ import { SetWorldOwnersTransaction } from "./SetWorldOwnersTransaction";
 import { SetWorldUsersTransaction } from "./SetWorldUsersTransaction";
 
 export type Transaction =
-    CreateWorldTransaction
+    | CreateWorldTransaction
     | SetWorldOwnersTransaction
     | SetWorldUsersTransaction
     | AssetMintTransaction
@@ -17,7 +17,10 @@ export type Transaction =
  * @param params Either an AssetMintTransaction JSON object or an AssetTransferTransaction JSON object.
  * @returns A Transaction.
  */
-export const getTransactionFromJSON = (params: { type: string, data: object }) => {
+export const getTransactionFromJSON = (params: {
+    type: string;
+    data: object;
+}) => {
     const { type } = params;
     switch (type) {
         case "createWorld":

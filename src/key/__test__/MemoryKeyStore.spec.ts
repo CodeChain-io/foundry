@@ -30,7 +30,10 @@ test("getKeyList", async () => {
 test("sign", async () => {
     const store = new MemoryKeyStore();
     const key1 = await store.asset.createKey();
-    const signature = await store.asset.sign({ publicKey: key1, message: "hello" });
+    const signature = await store.asset.sign({
+        publicKey: key1,
+        message: "hello"
+    });
     const r = `${signature.substr(0, 64)}`;
     const s = `${signature.substr(64, 64)}`;
     const v = Number.parseInt(signature.substr(128, 2), 16);

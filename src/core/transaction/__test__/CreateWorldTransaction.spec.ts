@@ -7,8 +7,12 @@ describe("CreateWorldTransaction", () => {
         const t = new CreateWorldTransaction({
             networkId: "a1",
             shardId: 2,
-            owners: [PlatformAddress.fromAccountId("0x0123456789012345678901234567890123456789")],
-            nonce: 0,
+            owners: [
+                PlatformAddress.fromAccountId(
+                    "0x0123456789012345678901234567890123456789"
+                )
+            ],
+            nonce: 0
         });
         expect(CreateWorldTransaction.fromJSON(t.toJSON())).toEqual(t);
     });
@@ -17,9 +21,13 @@ describe("CreateWorldTransaction", () => {
         const t = new CreateWorldTransaction({
             networkId: "x1",
             shardId: 2,
-            owners: [PlatformAddress.fromAccountId("0x0123456789012345678901234567890123456789")],
-            nonce: 0,
+            owners: [
+                PlatformAddress.fromAccountId(
+                    "0x0123456789012345678901234567890123456789"
+                )
+            ],
+            nonce: 0
         });
         expect(getTransactionFromJSON(t.toJSON())).toEqual(t);
     });
-})
+});

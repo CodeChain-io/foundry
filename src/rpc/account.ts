@@ -17,18 +17,31 @@ export class AccountRpc {
      * Gets a list of accounts.
      * @returns A list of accounts
      */
-    getList(): Promise<string[]> {
+    public getList(): Promise<string[]> {
         return new Promise((resolve, reject) => {
-            this.rpc.sendRpcRequest("account_getList", [])
+            this.rpc
+                .sendRpcRequest("account_getList", [])
                 .then((accounts: string[]) => {
                     try {
                         if (Array.isArray(accounts)) {
-                            resolve(accounts.map(account => PlatformAddress.ensure(account).toString()));
+                            resolve(
+                                accounts.map(account =>
+                                    PlatformAddress.ensure(account).toString()
+                                )
+                            );
                         } else {
-                            reject(Error(`Expected account_getList to return an array but it returned ${accounts}`));
+                            reject(
+                                Error(
+                                    `Expected account_getList to return an array but it returned ${accounts}`
+                                )
+                            );
                         }
                     } catch (e) {
-                        reject(Error(`Expected account_getList to return an array of PlatformAddress string, but an error occurred: ${e.toString()}`));
+                        reject(
+                            Error(
+                                `Expected account_getList to return an array of PlatformAddress string, but an error occurred: ${e.toString()}`
+                            )
+                        );
                     }
                 })
                 .catch(reject);
@@ -40,15 +53,19 @@ export class AccountRpc {
      * @param passphrase A passphrase to be used by the account owner
      * @returns An account
      */
-    create(passphrase?: string): Promise<string> {
+    public create(passphrase?: string): Promise<string> {
         return new Promise((resolve, reject) => {
-            this.rpc.sendRpcRequest("account_create",
-                [passphrase])
+            this.rpc
+                .sendRpcRequest("account_create", [passphrase])
                 .then(account => {
                     try {
                         resolve(PlatformAddress.ensure(account).toString());
                     } catch (e) {
-                        reject(Error(`Expected account_create to return PlatformAddress string but an error occurred: ${e.toString()}`));
+                        reject(
+                            Error(
+                                `Expected account_create to return PlatformAddress string but an error occurred: ${e.toString()}`
+                            )
+                        );
                     }
                 })
                 .catch(reject);
@@ -61,16 +78,25 @@ export class AccountRpc {
      * @param passphrase A passphrase to be used by the account owner
      * @returns The account
      */
-    importRaw(secret: H256 | string, passphrase?: string): Promise<string> {
+    public importRaw(
+        secret: H256 | string,
+        passphrase?: string
+    ): Promise<string> {
         return new Promise((resolve, reject) => {
-            this.rpc.sendRpcRequest("account_importRaw", [
-                `0x${H256.ensure(secret).value}`,
-                passphrase])
+            this.rpc
+                .sendRpcRequest("account_importRaw", [
+                    `0x${H256.ensure(secret).value}`,
+                    passphrase
+                ])
                 .then(account => {
                     try {
                         resolve(PlatformAddress.ensure(account).toString());
                     } catch (e) {
-                        reject(Error(`Expected account_importRaw to return PlatformAddress string but an error occurred: ${e.toString()}`));
+                        reject(
+                            Error(
+                                `Expected account_importRaw to return PlatformAddress string but an error occurred: ${e.toString()}`
+                            )
+                        );
                     }
                 })
                 .catch(reject);
@@ -82,17 +108,27 @@ export class AccountRpc {
      * @param address A platform address
      * @param passphrase The account's passphrase
      */
-    remove(address: PlatformAddress | string, passphrase?: string): Promise<null> {
+    public remove(
+        address: PlatformAddress | string,
+        passphrase?: string
+    ): Promise<null> {
         return new Promise((resolve, reject) => {
-            this.rpc.sendRpcRequest("account_remove", [
-                PlatformAddress.ensure(address).toString(),
-                passphrase
-            ]).then(result => {
-                if (result === null) {
-                    return resolve(null);
-                }
-                reject(Error(`Expected account_remove to return null but it returned ${result}`));
-            }).catch(reject);
+            this.rpc
+                .sendRpcRequest("account_remove", [
+                    PlatformAddress.ensure(address).toString(),
+                    passphrase
+                ])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(
+                        Error(
+                            `Expected account_remove to return null but it returned ${result}`
+                        )
+                    );
+                })
+                .catch(reject);
         });
     }
 
@@ -102,18 +138,32 @@ export class AccountRpc {
      * @param address A platform address
      * @param passphrase The account's passphrase
      */
-    sign(messageDigest: H256 | string, address: PlatformAddress | string, passphrase?: string): Promise<string> {
+    public sign(
+        messageDigest: H256 | string,
+        address: PlatformAddress | string,
+        passphrase?: string
+    ): Promise<string> {
         return new Promise((resolve, reject) => {
-            this.rpc.sendRpcRequest("account_sign", [
-                `0x${H256.ensure(messageDigest).value}`,
-                PlatformAddress.ensure(address).toString(),
-                passphrase
-            ]).then(result => {
-                if (typeof result === "string" && result.match(/0x[0-9a-f]{130}/)) {
-                    return resolve(result);
-                }
-                reject(Error(`Expected account_sign to return a 65 byte hexstring but it returned ${result}`));
-            }).catch(reject);
+            this.rpc
+                .sendRpcRequest("account_sign", [
+                    `0x${H256.ensure(messageDigest).value}`,
+                    PlatformAddress.ensure(address).toString(),
+                    passphrase
+                ])
+                .then(result => {
+                    if (
+                        typeof result === "string" &&
+                        result.match(/0x[0-9a-f]{130}/)
+                    ) {
+                        return resolve(result);
+                    }
+                    reject(
+                        Error(
+                            `Expected account_sign to return a 65 byte hexstring but it returned ${result}`
+                        )
+                    );
+                })
+                .catch(reject);
         });
     }
 
@@ -123,18 +173,29 @@ export class AccountRpc {
      * @param passphrase The account's passphrase
      * @param duration Time to keep the account unlocked. The default value is 300(seconds). Passing 0 unlocks the account indefinitely.
      */
-    unlock(address: PlatformAddress | string, passphrase?: string, duration?: number): Promise<null> {
+    public unlock(
+        address: PlatformAddress | string,
+        passphrase?: string,
+        duration?: number
+    ): Promise<null> {
         return new Promise((resolve, reject) => {
-            this.rpc.sendRpcRequest("account_unlock", [
-                PlatformAddress.ensure(address).toString(),
-                passphrase || "",
-                duration
-            ]).then(result => {
-                if (result === null) {
-                    return resolve(null);
-                }
-                reject(Error(`Expected account_unlock to return null but it returned ${result}`));
-            }).catch(reject);
+            this.rpc
+                .sendRpcRequest("account_unlock", [
+                    PlatformAddress.ensure(address).toString(),
+                    passphrase || "",
+                    duration
+                ])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(
+                        Error(
+                            `Expected account_unlock to return null but it returned ${result}`
+                        )
+                    );
+                })
+                .catch(reject);
         });
     }
 }

@@ -2,31 +2,39 @@ import * as _ from "lodash";
 
 import { AssetTransferAddress } from "../../key/classes";
 
-import { H256 } from "../H256";
 import { blake256, blake256WithKey } from "../../utils";
+import { Asset } from "../Asset";
+import { H256 } from "../H256";
 import { AssetTransferInput } from "./AssetTransferInput";
 import { AssetTransferOutput } from "./AssetTransferOutput";
-import { Asset } from "../Asset";
 
 const RLP = require("rlp");
 
 export interface TransactionInputSigner {
-    signInput: (transaction: AssetTransferTransaction, index: number, options?: { passphrase?: string }) => Promise<void>;
+    signInput: (
+        transaction: AssetTransferTransaction,
+        index: number,
+        options?: { passphrase?: string }
+    ) => Promise<void>;
 }
 
 export interface TransactionBurnSigner {
-    signBurn: (transaction: AssetTransferTransaction, index: number, options?: { passphrase?: string }) => Promise<void>;
+    signBurn: (
+        transaction: AssetTransferTransaction,
+        index: number,
+        options?: { passphrase?: string }
+    ) => Promise<void>;
 }
 
 type NetworkId = string;
 
-export type AssetTransferTransactionData = {
+export interface AssetTransferTransactionData {
     burns: AssetTransferInput[];
     inputs: AssetTransferInput[];
     outputs: AssetTransferOutput[];
     networkId: NetworkId;
     nonce?: number;
-};
+}
 /**
  * Spends the existing asset and creates a new asset. Ownership can be transferred during this process.
  *
@@ -44,12 +52,34 @@ export type AssetTransferTransactionData = {
  * arbitrarily changing the nonce.
  */
 export class AssetTransferTransaction {
-    readonly burns: AssetTransferInput[];
-    readonly inputs: AssetTransferInput[];
-    readonly outputs: AssetTransferOutput[];
-    readonly networkId: NetworkId;
-    readonly nonce: number;
-    readonly type = "assetTransfer";
+    /** Create an AssetTransferTransaction from an AssetTransferTransaction JSON object.
+     * @param obj An AssetTransferTransaction JSON object.
+     * @returns An AssetTransferTransaction.
+     */
+    public static fromJSON(obj: any) {
+        const {
+            data: { networkId, burns, inputs, outputs, nonce }
+        } = obj;
+        return new this({
+            burns: burns.map((input: any) =>
+                AssetTransferInput.fromJSON(input)
+            ),
+            inputs: inputs.map((input: any) =>
+                AssetTransferInput.fromJSON(input)
+            ),
+            outputs: outputs.map((output: any) =>
+                AssetTransferOutput.fromJSON(output)
+            ),
+            networkId,
+            nonce
+        });
+    }
+    public readonly burns: AssetTransferInput[];
+    public readonly inputs: AssetTransferInput[];
+    public readonly outputs: AssetTransferOutput[];
+    public readonly networkId: NetworkId;
+    public readonly nonce: number;
+    public readonly type = "assetTransfer";
 
     /**
      * @param params.burns An array of AssetTransferInput to burn.
@@ -70,7 +100,7 @@ export class AssetTransferTransaction {
     /**
      * Convert to an object for RLP encoding.
      */
-    toEncodeObject() {
+    public toEncodeObject() {
         return [
             4,
             this.networkId,
@@ -84,7 +114,7 @@ export class AssetTransferTransaction {
     /**
      * Convert to RLP bytes.
      */
-    rlpBytes(): Buffer {
+    public rlpBytes(): Buffer {
         return RLP.encode(this.toEncodeObject());
     }
 
@@ -92,7 +122,7 @@ export class AssetTransferTransaction {
      * Get the hash of an AssetTransferTransaction.
      * @returns A transaction hash.
      */
-    hash(): H256 {
+    public hash(): H256 {
         return new H256(blake256(this.rlpBytes()));
     }
 
@@ -101,7 +131,9 @@ export class AssetTransferTransaction {
      * @param burns An array of either an AssetTransferInput or an Asset.
      * @returns The AssetTransferTransaction, which is modified by adding them.
      */
-    addBurns(...burns: (AssetTransferInput | Asset)[]): AssetTransferTransaction {
+    public addBurns(
+        ...burns: Array<AssetTransferInput | Asset>
+    ): AssetTransferTransaction {
         burns.forEach(burn => {
             if (burn instanceof AssetTransferInput) {
                 this.burns.push(burn);
@@ -117,7 +149,9 @@ export class AssetTransferTransaction {
      * @param inputs An array of either an AssetTransferInput or an Asset.
      * @returns The AssetTransferTransaction, which is modified by adding them.
      */
-    addInputs(...inputs: (AssetTransferInput | Asset)[]): AssetTransferTransaction {
+    public addInputs(
+        ...inputs: Array<AssetTransferInput | Asset>
+    ): AssetTransferTransaction {
         inputs.forEach(input => {
             if (input instanceof AssetTransferInput) {
                 this.inputs.push(input);
@@ -136,21 +170,30 @@ export class AssetTransferTransaction {
      * @param output.assetType An asset type of the output.
      * @param output.recipient A recipient of the output.
      */
-    addOutputs(...outputs: (AssetTransferOutput | {
-        amount: number,
-        assetType: H256 | string
-        recipient: AssetTransferAddress | string,
-    })[]): AssetTransferTransaction {
+    public addOutputs(
+        ...outputs: Array<
+            | AssetTransferOutput
+            | {
+                  amount: number;
+                  assetType: H256 | string;
+                  recipient: AssetTransferAddress | string;
+              }
+        >
+    ): AssetTransferTransaction {
         outputs.forEach(output => {
             if (output instanceof AssetTransferOutput) {
                 this.outputs.push(output);
             } else {
                 const { assetType, amount, recipient } = output;
-                this.outputs.push(new AssetTransferOutput({
-                    ...AssetTransferAddress.ensure(recipient).getLockScriptHashAndParameters(),
-                    amount,
-                    assetType: H256.ensure(assetType),
-                }));
+                this.outputs.push(
+                    new AssetTransferOutput({
+                        ...AssetTransferAddress.ensure(
+                            recipient
+                        ).getLockScriptHashAndParameters(),
+                        amount,
+                        assetType: H256.ensure(assetType)
+                    })
+                );
             }
         });
         return this;
@@ -161,7 +204,7 @@ export class AssetTransferTransaction {
      * @param index An index indicating an output.
      * @returns An Asset.
      */
-    getTransferredAsset(index: number): Asset {
+    public getTransferredAsset(index: number): Asset {
         if (index >= this.outputs.length) {
             throw Error("invalid output index");
         }
@@ -181,8 +224,10 @@ export class AssetTransferTransaction {
      * Get the outputs of this transaction.
      * @returns An array of an Asset.
      */
-    getTransferredAssets(): Asset[] {
-        return _.range(this.outputs.length).map(i => this.getTransferredAsset(i));
+    public getTransferredAssets(): Asset[] {
+        return _.range(this.outputs.length).map(i =>
+            this.getTransferredAsset(i)
+        );
     }
 
     /**
@@ -190,15 +235,19 @@ export class AssetTransferTransaction {
      * is used as a message to create a signature for a transaction.
      * @returns A hash.
      */
-    hashWithoutScript(): H256 {
+    public hashWithoutScript(): H256 {
         const { networkId, burns, inputs, outputs, nonce } = this;
-        return new H256(blake256(new AssetTransferTransaction({
-            burns: burns.map(input => input.withoutScript()),
-            inputs: inputs.map(input => input.withoutScript()),
-            outputs,
-            networkId,
-            nonce
-        }).rlpBytes()));
+        return new H256(
+            blake256(
+                new AssetTransferTransaction({
+                    burns: burns.map(input => input.withoutScript()),
+                    inputs: inputs.map(input => input.withoutScript()),
+                    outputs,
+                    networkId,
+                    nonce
+                }).rlpBytes()
+            )
+        );
     }
 
     /**
@@ -208,7 +257,10 @@ export class AssetTransferTransaction {
      * @param params.signer A TransactionSigner. Currently, P2PKH is available.
      * @returns A promise that resolves when setting is done.
      */
-    async signBurn(index: number, params: { signer: TransactionBurnSigner, passphrase?: string }): Promise<void> {
+    public async signBurn(
+        index: number,
+        params: { signer: TransactionBurnSigner; passphrase?: string }
+    ): Promise<void> {
         const { signer, passphrase } = params;
         if (index >= this.burns.length) {
             throw Error("Invalid index");
@@ -223,7 +275,10 @@ export class AssetTransferTransaction {
      * @param params.signer A TransactionSigner. Currently, P2PKH is available.
      * @returns A promise that resolves when setting is done.
      */
-    async signInput(index: number, params: { signer: TransactionInputSigner, passphrase?: string }): Promise<void> {
+    public async signInput(
+        index: number,
+        params: { signer: TransactionInputSigner; passphrase?: string }
+    ): Promise<void> {
         const { signer, passphrase } = params;
         if (index >= this.inputs.length) {
             throw Error("Invalid index");
@@ -236,11 +291,24 @@ export class AssetTransferTransaction {
      * @param index An index indicating the output.
      * @returns An asset address which is H256.
      */
-    getAssetAddress(index: number): H256 {
+    public getAssetAddress(index: number): H256 {
         const iv = new Uint8Array([
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            (index >> 56) & 0xFF, (index >> 48) & 0xFF, (index >> 40) & 0xFF, (index >> 32) & 0xFF,
-            (index >> 24) & 0xFF, (index >> 16) & 0xFF, (index >> 8) & 0xFF, index & 0xFF,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            (index >> 56) & 0xff,
+            (index >> 48) & 0xff,
+            (index >> 40) & 0xff,
+            (index >> 32) & 0xff,
+            (index >> 24) & 0xff,
+            (index >> 16) & 0xff,
+            (index >> 8) & 0xff,
+            index & 0xff
         ]);
         const shardId = this.outputs[index].shardId();
 
@@ -248,29 +316,16 @@ export class AssetTransferTransaction {
         const shardPrefix = convertU16toHex(shardId);
         const worldPrefix = "0000";
         const prefix = `4100${shardPrefix}${worldPrefix}`;
-        return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
-    }
-
-    /** Create an AssetTransferTransaction from an AssetTransferTransaction JSON object.
-     * @param obj An AssetTransferTransaction JSON object.
-     * @returns An AssetTransferTransaction.
-     */
-    static fromJSON(obj: any) {
-        const { data: { networkId, burns, inputs, outputs, nonce } } = obj;
-        return new this({
-            burns: burns.map((input: any) => AssetTransferInput.fromJSON(input)),
-            inputs: inputs.map((input: any) => AssetTransferInput.fromJSON(input)),
-            outputs: outputs.map((output: any) => AssetTransferOutput.fromJSON(output)),
-            networkId,
-            nonce
-        });
+        return new H256(
+            blake.replace(new RegExp(`^.{${prefix.length}}`), prefix)
+        );
     }
 
     /**
      * Convert to an AssetTransferTransaction JSON object.
      * @returns An AssetTransferTransaction JSON object.
      */
-    toJSON() {
+    public toJSON() {
         const { networkId, burns, inputs, outputs, nonce } = this;
         return {
             type: this.type,
@@ -279,14 +334,14 @@ export class AssetTransferTransaction {
                 burns: burns.map(input => input.toJSON()),
                 inputs: inputs.map(input => input.toJSON()),
                 outputs: outputs.map(output => output.toJSON()),
-                nonce,
+                nonce
             }
         };
     }
 }
 
 function convertU16toHex(id: number) {
-    const hi: string = ("0" + ((id >> 8) & 0xFF).toString(16)).slice(-2);
-    const lo: string = ("0" + (id & 0xFF).toString(16)).slice(-2);
+    const hi: string = ("0" + ((id >> 8) & 0xff).toString(16)).slice(-2);
+    const lo: string = ("0" + (id & 0xff).toString(16)).slice(-2);
     return hi + lo;
 }

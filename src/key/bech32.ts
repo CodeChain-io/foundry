@@ -3,6 +3,8 @@
  */
 const ALPHABET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
+/* tslint:disable:prefer-for-of */
+
 // pre-compute lookup table
 /**
  * @hidden
@@ -11,7 +13,9 @@ const ALPHABET_MAP: { [ch: string]: number } = {};
 for (let z = 0; z < ALPHABET.length; z++) {
     const x = ALPHABET.charAt(z);
 
-    if (ALPHABET_MAP[x] !== undefined) throw new TypeError(x + " is ambiguous");
+    if (ALPHABET_MAP[x] !== undefined) {
+        throw new TypeError(x + " is ambiguous");
+    }
     ALPHABET_MAP[x] = z;
 }
 
@@ -21,12 +25,14 @@ for (let z = 0; z < ALPHABET.length; z++) {
  */
 function polymodStep(pre: any) {
     const b = pre >> 25;
-    return ((pre & 0x1FFFFFF) << 5) ^
+    return (
+        ((pre & 0x1ffffff) << 5) ^
         (-((b >> 0) & 1) & 0x3b6a57b2) ^
         (-((b >> 1) & 1) & 0x26508e6d) ^
         (-((b >> 2) & 1) & 0x1ea119fa) ^
         (-((b >> 3) & 1) & 0x3d4233dd) ^
-        (-((b >> 4) & 1) & 0x2a1462b3);
+        (-((b >> 4) & 1) & 0x2a1462b3)
+    );
 }
 
 // FIXME: any
@@ -37,7 +43,9 @@ function prefixChk(prefix: any) {
     let chk = 1;
     for (let i = 0; i < prefix.length; ++i) {
         const c = prefix.charCodeAt(i);
-        if (c < 33 || c > 126) throw new Error("Invalid prefix (" + prefix + ")");
+        if (c < 33 || c > 126) {
+            throw new Error("Invalid prefix (" + prefix + ")");
+        }
 
         chk = polymodStep(chk) ^ (c >> 5);
     }
@@ -53,7 +61,9 @@ function prefixChk(prefix: any) {
 // FIXME: any
 export function encode(prefix: any, words: any, LIMIT?: any) {
     LIMIT = LIMIT || 90;
-    if ((prefix.length + 7 + words.length) > LIMIT) throw new TypeError("Exceeds length limit");
+    if (prefix.length + 7 + words.length > LIMIT) {
+        throw new TypeError("Exceeds length limit");
+    }
 
     prefix = prefix.toLowerCase();
 
@@ -62,7 +72,9 @@ export function encode(prefix: any, words: any, LIMIT?: any) {
     let result = prefix;
     for (let i = 0; i < words.length; ++i) {
         const x = words[i];
-        if ((x >> 5) !== 0) throw new Error("Non 5-bit word");
+        if (x >> 5 !== 0) {
+            throw new Error("Non 5-bit word");
+        }
 
         chk = polymodStep(chk) ^ x;
         result += ALPHABET.charAt(x);
@@ -84,13 +96,19 @@ export function encode(prefix: any, words: any, LIMIT?: any) {
 // FIXME: any
 export function decode(str: string, prefix: string, LIMIT?: number) {
     LIMIT = LIMIT || 90;
-    if (str.length < 8) throw new TypeError(str + " too short");
-    if (str.length > LIMIT) throw new TypeError("Exceeds length limit");
+    if (str.length < 8) {
+        throw new TypeError(str + " too short");
+    }
+    if (str.length > LIMIT) {
+        throw new TypeError("Exceeds length limit");
+    }
 
     // don't allow mixed case
     const lowered = str.toLowerCase();
     const uppered = str.toUpperCase();
-    if (str !== lowered && str !== uppered) throw new Error("Mixed-case string " + str);
+    if (str !== lowered && str !== uppered) {
+        throw new Error("Mixed-case string " + str);
+    }
     str = lowered;
 
     if (!str.startsWith(prefix)) {
@@ -99,22 +117,30 @@ export function decode(str: string, prefix: string, LIMIT?: number) {
     const split = prefix.length;
 
     const wordChars = str.slice(split);
-    if (wordChars.length < 6) throw new Error("Data too short");
+    if (wordChars.length < 6) {
+        throw new Error("Data too short");
+    }
 
     let chk = prefixChk(prefix);
     const words = [];
     for (let i = 0; i < wordChars.length; ++i) {
         const c = wordChars.charAt(i);
         const v = ALPHABET_MAP[c];
-        if (v === undefined) throw new Error("Unknown character " + c);
+        if (v === undefined) {
+            throw new Error("Unknown character " + c);
+        }
         chk = polymodStep(chk) ^ v;
 
         // not in the checksum?
-        if (i + 6 >= wordChars.length) continue;
+        if (i + 6 >= wordChars.length) {
+            continue;
+        }
         words.push(v);
     }
 
-    if (chk !== 1) throw new Error("Invalid checksum for " + str);
+    if (chk !== 1) {
+        throw new Error("Invalid checksum for " + str);
+    }
     return { prefix, words };
 }
 
@@ -143,8 +169,12 @@ function convert(data: any, inBits: any, outBits: any, pad: any) {
             result.push((value << (outBits - bits)) & maxV);
         }
     } else {
-        if (bits >= inBits) throw new Error("Excess padding");
-        if ((value << (outBits - bits)) & maxV) throw new Error("Non-zero padding");
+        if (bits >= inBits) {
+            throw new Error("Excess padding");
+        }
+        if ((value << (outBits - bits)) & maxV) {
+            throw new Error("Non-zero padding");
+        }
     }
 
     return result;

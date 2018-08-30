@@ -2,16 +2,16 @@ import { Buffer } from "buffer";
 
 import { PlatformAddress } from "../../key/classes";
 
-import { H256 } from "../H256";
 import { blake256, blake256WithKey } from "../../utils";
 import { Asset } from "../Asset";
 import { AssetScheme } from "../AssetScheme";
+import { H256 } from "../H256";
 
 const RLP = require("rlp");
 
 type NetworkId = string;
 
-export type AssetMintTransactionData = {
+export interface AssetMintTransactionData {
     networkId: NetworkId;
     shardId: number;
     worldId: number;
@@ -23,7 +23,7 @@ export type AssetMintTransactionData = {
     };
     registrar: PlatformAddress | null;
     nonce: number;
-};
+}
 
 /**
  * Creates a new asset type and that asset itself.
@@ -40,18 +40,52 @@ export type AssetMintTransactionData = {
  *  the nonce.
  */
 export class AssetMintTransaction {
-    readonly networkId: NetworkId;
-    readonly shardId: number;
-    readonly worldId: number;
-    readonly metadata: string;
-    readonly output: {
+    /**
+     * Create an AssetMintTransaction from an AssetMintTransaction JSON object.
+     * @param data An AssetMintTransaction JSON object.
+     * @returns An AssetMintTransaction.
+     */
+    public static fromJSON(data: any) {
+        const {
+            data: {
+                networkId,
+                shardId,
+                worldId,
+                metadata,
+                output: { lockScriptHash, parameters, amount },
+                registrar,
+                nonce
+            }
+        } = data;
+        return new this({
+            networkId,
+            shardId,
+            worldId,
+            metadata,
+            output: {
+                lockScriptHash: new H256(lockScriptHash),
+                parameters: parameters.map((p: number[]) => Buffer.from(p)),
+                amount: amount === null ? null : amount
+            },
+            registrar:
+                registrar === null
+                    ? null
+                    : PlatformAddress.fromString(registrar),
+            nonce
+        });
+    }
+    public readonly networkId: NetworkId;
+    public readonly shardId: number;
+    public readonly worldId: number;
+    public readonly metadata: string;
+    public readonly output: {
         lockScriptHash: H256;
         parameters: Buffer[];
         amount: number | null;
     };
-    readonly registrar: PlatformAddress | null;
-    readonly nonce: number;
-    readonly type = "assetMint";
+    public readonly registrar: PlatformAddress | null;
+    public readonly nonce: number;
+    public readonly type = "assetMint";
 
     /**
      * @param data.networkId A network ID of the transaction.
@@ -64,7 +98,15 @@ export class AssetMintTransaction {
      * @param data.nonce A nonce of the transaction.
      */
     constructor(data: AssetMintTransactionData) {
-        const { networkId, shardId, worldId, metadata, output, registrar, nonce } = data;
+        const {
+            networkId,
+            shardId,
+            worldId,
+            metadata,
+            output,
+            registrar,
+            nonce
+        } = data;
         this.networkId = networkId;
         this.shardId = shardId;
         this.worldId = worldId;
@@ -75,33 +117,19 @@ export class AssetMintTransaction {
     }
 
     /**
-     * Create an AssetMintTransaction from an AssetMintTransaction JSON object.
-     * @param data An AssetMintTransaction JSON object.
-     * @returns An AssetMintTransaction.
+     * Convert to an AssetMintTransaction JSON object.
+     * @returns An AssetMintTransaction JSON object.
      */
-    static fromJSON(data: any) {
-        const { data: { networkId, shardId, worldId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } } = data;
-        return new this({
+    public toJSON() {
+        const {
             networkId,
             shardId,
             worldId,
             metadata,
-            output: {
-                lockScriptHash: new H256(lockScriptHash),
-                parameters: parameters.map((p: Array<number>) => Buffer.from(p)),
-                amount: amount === null ? null : amount,
-            },
-            registrar: registrar === null ? null : PlatformAddress.fromString(registrar),
-            nonce,
-        });
-    }
-
-    /**
-     * Convert to an AssetMintTransaction JSON object.
-     * @returns An AssetMintTransaction JSON object.
-     */
-    toJSON() {
-        const { networkId, shardId, worldId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this;
+            output: { lockScriptHash, parameters, amount },
+            registrar,
+            nonce
+        } = this;
         return {
             type: this.type,
             data: {
@@ -112,10 +140,10 @@ export class AssetMintTransaction {
                 output: {
                     lockScriptHash: lockScriptHash.value,
                     parameters: parameters.map(parameter => [...parameter]),
-                    amount,
+                    amount
                 },
                 registrar: registrar === null ? null : registrar.toString(),
-                nonce,
+                nonce
             }
         };
     }
@@ -123,8 +151,16 @@ export class AssetMintTransaction {
     /**
      * Convert to an object for RLP encoding.
      */
-    toEncodeObject() {
-        const { networkId, shardId, worldId, metadata, output: { lockScriptHash, parameters, amount }, registrar, nonce } = this;
+    public toEncodeObject() {
+        const {
+            networkId,
+            shardId,
+            worldId,
+            metadata,
+            output: { lockScriptHash, parameters, amount },
+            registrar,
+            nonce
+        } = this;
         return [
             3,
             networkId,
@@ -142,7 +178,7 @@ export class AssetMintTransaction {
     /**
      * Convert to RLP bytes.
      */
-    rlpBytes(): Buffer {
+    public rlpBytes(): Buffer {
         return RLP.encode(this.toEncodeObject());
     }
 
@@ -150,7 +186,7 @@ export class AssetMintTransaction {
      * Get the hash of an AssetMintTransaction.
      * @returns A transaction hash.
      */
-    hash(): H256 {
+    public hash(): H256 {
         return new H256(blake256(this.rlpBytes()));
     }
 
@@ -158,7 +194,7 @@ export class AssetMintTransaction {
      * Get the output of this transaction.
      * @returns An Asset.
      */
-    getMintedAsset(): Asset {
+    public getMintedAsset(): Asset {
         const { lockScriptHash, parameters, amount } = this.output;
         // FIXME: need U64 to be implemented or use U256
         if (amount === null) {
@@ -178,8 +214,15 @@ export class AssetMintTransaction {
      * Get the asset scheme of this transaction.
      * @return An AssetScheme.
      */
-    getAssetScheme(): AssetScheme {
-        const { networkId, shardId, worldId, metadata, output: { amount }, registrar } = this;
+    public getAssetScheme(): AssetScheme {
+        const {
+            networkId,
+            shardId,
+            worldId,
+            metadata,
+            output: { amount },
+            registrar
+        } = this;
         // FIXME: need U64 to be implemented or use U256
         if (amount === null) {
             throw Error("not implemented");
@@ -199,37 +242,75 @@ export class AssetMintTransaction {
      * asset type value.
      * @returns An asset scheme address which is H256.
      */
-    getAssetSchemeAddress(): H256 {
+    public getAssetSchemeAddress(): H256 {
         const { shardId, worldId } = this;
-        const blake = blake256WithKey(this.hash().value, new Uint8Array([
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-        ]));
+        const blake = blake256WithKey(
+            this.hash().value,
+            new Uint8Array([
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0xff,
+                0xff,
+                0xff,
+                0xff,
+                0xff,
+                0xff,
+                0xff,
+                0xff
+            ])
+        );
         const shardPrefix = convertU16toHex(shardId);
         const worldPrefix = convertU16toHex(worldId);
         const prefix = `5300${shardPrefix}${worldPrefix}`;
-        return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
+        return new H256(
+            blake.replace(new RegExp(`^.{${prefix.length}}`), prefix)
+        );
     }
 
     /**
      * Get the asset address of the output.
      * @returns An asset address which is H256.
      */
-    getAssetAddress(): H256 {
+    public getAssetAddress(): H256 {
         const { shardId } = this;
-        const blake = blake256WithKey(this.hash().value, new Uint8Array([
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        ]));
+        const blake = blake256WithKey(
+            this.hash().value,
+            new Uint8Array([
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00
+            ])
+        );
         const shardPrefix = convertU16toHex(shardId);
         const worldPrefix = "0000";
         const prefix = `4100${shardPrefix}${worldPrefix}`;
-        return new H256(blake.replace(new RegExp(`^.{${prefix.length}}`), prefix));
+        return new H256(
+            blake.replace(new RegExp(`^.{${prefix.length}}`), prefix)
+        );
     }
 }
 
 function convertU16toHex(id: number) {
-    const hi: string = ("0" + ((id >> 8) & 0xFF).toString(16)).slice(-2);
-    const lo: string = ("0" + (id & 0xFF).toString(16)).slice(-2);
+    const hi: string = ("0" + ((id >> 8) & 0xff).toString(16)).slice(-2);
+    const lo: string = ("0" + (id & 0xff).toString(16)).slice(-2);
     return hi + lo;
 }

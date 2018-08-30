@@ -2,22 +2,36 @@ import { Buffer } from "buffer";
 
 import { H256 } from "../H256";
 
-export type AssetTransferOutputData = {
+export interface AssetTransferOutputData {
     lockScriptHash: H256;
     parameters: Buffer[];
     assetType: H256;
     amount: number;
-};
+}
 /**
  * An AssetTransferOutput consists of:
  *  - A lock script hash and parameters, which mark ownership of the asset.
  *  - An asset type and amount, which indicate the asset's type and quantity.
  */
 export class AssetTransferOutput {
-    readonly lockScriptHash: H256;
-    readonly parameters: Buffer[];
-    readonly assetType: H256;
-    readonly amount: number;
+    /**
+     * Create an AssetTransferOutput from an AssetTransferOutput JSON object.
+     * @param data An AssetTransferOutput JSON object.
+     * @returns An AssetTransferOutput.
+     */
+    public static fromJSON(data: any) {
+        const { lockScriptHash, parameters, assetType, amount } = data;
+        return new this({
+            lockScriptHash: new H256(lockScriptHash),
+            parameters: parameters.map((p: number[]) => Buffer.from(p)),
+            assetType: new H256(assetType),
+            amount
+        });
+    }
+    public readonly lockScriptHash: H256;
+    public readonly parameters: Buffer[];
+    public readonly assetType: H256;
+    public readonly amount: number;
 
     /**
      * @param data.lockScriptHash A lock script hash of the output.
@@ -36,7 +50,7 @@ export class AssetTransferOutput {
     /**
      * Convert to an object for RLP encoding.
      */
-    toEncodeObject() {
+    public toEncodeObject() {
         const { lockScriptHash, parameters, assetType, amount } = this;
         return [
             lockScriptHash.toEncodeObject(),
@@ -47,31 +61,16 @@ export class AssetTransferOutput {
     }
 
     /**
-     * Create an AssetTransferOutput from an AssetTransferOutput JSON object.
-     * @param data An AssetTransferOutput JSON object.
-     * @returns An AssetTransferOutput.
-     */
-    static fromJSON(data: any) {
-        const { lockScriptHash, parameters, assetType, amount } = data;
-        return new this({
-            lockScriptHash: new H256(lockScriptHash),
-            parameters: parameters.map((p: Array<number>) => Buffer.from(p)),
-            assetType: new H256(assetType),
-            amount,
-        });
-    }
-
-    /**
      * Convert to an AssetTransferOutput JSON object.
      * @returns An AssetTransferOutput JSON object.
      */
-    toJSON() {
+    public toJSON() {
         const { lockScriptHash, parameters, assetType, amount } = this;
         return {
             lockScriptHash: lockScriptHash.value,
             parameters: parameters.map(parameter => [...parameter]),
             assetType: assetType.value,
-            amount,
+            amount
         };
     }
 
@@ -79,7 +78,7 @@ export class AssetTransferOutput {
      * Get the shard ID.
      * @returns A shard ID.
      */
-    shardId(): number {
+    public shardId(): number {
         const { assetType } = this;
         return parseInt(assetType.value.slice(4, 8), 16);
     }

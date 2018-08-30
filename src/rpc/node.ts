@@ -14,14 +14,19 @@ export class NodeRpc {
      * Sends ping to check whether CodeChain's RPC server is responding or not.
      * @returns String "pong"
      */
-    ping(): Promise<string> {
+    public ping(): Promise<string> {
         return new Promise((resolve, reject) => {
-            this.rpc.sendRpcRequest("ping", [])
+            this.rpc
+                .sendRpcRequest("ping", [])
                 .then(result => {
                     if (typeof result === "string") {
                         return resolve(result);
                     }
-                    return reject(Error(`Expected ping() to return a string but it returned ${result}`));
+                    return reject(
+                        Error(
+                            `Expected ping() to return a string but it returned ${result}`
+                        )
+                    );
                 })
                 .catch(reject);
         });
@@ -31,14 +36,19 @@ export class NodeRpc {
      * Gets the version of CodeChain node.
      * @returns The version of CodeChain node (e.g. 0.1.0)
      */
-    getNodeVersion(): Promise<string> {
+    public getNodeVersion(): Promise<string> {
         return new Promise((resolve, reject) => {
-            this.rpc.sendRpcRequest("version", [])
+            this.rpc
+                .sendRpcRequest("version", [])
                 .then(result => {
                     if (typeof result === "string") {
                         return resolve(result);
                     }
-                    return reject(Error(`Expected getNodeVersion() to return a string but it returned ${result}`));
+                    return reject(
+                        Error(
+                            `Expected getNodeVersion() to return a string but it returned ${result}`
+                        )
+                    );
                 })
                 .catch(reject);
         });
@@ -48,14 +58,19 @@ export class NodeRpc {
      * Gets the commit hash of the repository upon which the CodeChain executable was built.
      * @hidden
      */
-    getCommitHash(): Promise<string> {
+    public getCommitHash(): Promise<string> {
         return new Promise((resolve, reject) => {
-            this.rpc.sendRpcRequest("commitHash", [])
+            this.rpc
+                .sendRpcRequest("commitHash", [])
                 .then(result => {
                     if (typeof result === "string") {
                         return resolve(result);
                     }
-                    return reject(Error(`Expected getCommitHash() to return a string but it returned ${result}`));
+                    return reject(
+                        Error(
+                            `Expected getCommitHash() to return a string but it returned ${result}`
+                        )
+                    );
                 })
                 .catch(reject);
         });

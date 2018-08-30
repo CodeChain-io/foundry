@@ -1,13 +1,13 @@
 import { H256 } from "../H256";
 
-export type AssetOutPointData = {
+export interface AssetOutPointData {
     transactionHash: H256;
     index: number;
     assetType: H256;
     amount: number;
     lockScriptHash?: H256;
     parameters?: Buffer[];
-};
+}
 
 /**
  * AssetOutPoint consists of transactionHash and index, asset type, and amount.
@@ -17,12 +17,26 @@ export type AssetOutPointData = {
  * - The asset type and amount must be identical to the Asset that it points to.
  */
 export class AssetOutPoint {
-    readonly transactionHash: H256;
-    readonly index: number;
-    readonly assetType: H256;
-    readonly amount: number;
-    readonly lockScriptHash?: H256;
-    readonly parameters?: Buffer[];
+    /**
+     * Create an AssetOutPoint from an AssetOutPoint JSON object.
+     * @param data An AssetOutPoint JSON object.
+     * @returns An AssetOutPoint.
+     */
+    public static fromJSON(data: any) {
+        const { transactionHash, index, assetType, amount } = data;
+        return new this({
+            transactionHash: new H256(transactionHash),
+            index,
+            assetType: new H256(assetType),
+            amount
+        });
+    }
+    public readonly transactionHash: H256;
+    public readonly index: number;
+    public readonly assetType: H256;
+    public readonly amount: number;
+    public readonly lockScriptHash?: H256;
+    public readonly parameters?: Buffer[];
 
     /**
      * @param data.transactionHash A transaction hash where the Asset is created.
@@ -33,7 +47,14 @@ export class AssetOutPoint {
      * @param data.parameters The parameters of the asset.
      */
     constructor(data: AssetOutPointData) {
-        const { transactionHash, index, assetType, amount, lockScriptHash, parameters } = data;
+        const {
+            transactionHash,
+            index,
+            assetType,
+            amount,
+            lockScriptHash,
+            parameters
+        } = data;
         this.transactionHash = transactionHash;
         this.index = index;
         this.assetType = assetType;
@@ -45,37 +66,27 @@ export class AssetOutPoint {
     /**
      * Convert to an object for RLP encoding.
      */
-    toEncodeObject() {
+    public toEncodeObject() {
         const { transactionHash, index, assetType, amount } = this;
-        return [transactionHash.toEncodeObject(), index, assetType.toEncodeObject(), amount];
-    }
-
-    /**
-     * Create an AssetOutPoint from an AssetOutPoint JSON object.
-     * @param data An AssetOutPoint JSON object.
-     * @returns An AssetOutPoint.
-     */
-    static fromJSON(data: any) {
-        const { transactionHash, index, assetType, amount } = data;
-        return new this({
-            transactionHash: new H256(transactionHash),
+        return [
+            transactionHash.toEncodeObject(),
             index,
-            assetType: new H256(assetType),
-            amount,
-        });
+            assetType.toEncodeObject(),
+            amount
+        ];
     }
 
     /**
      * Convert to an AssetOutPoint JSON object.
      * @returns An AssetOutPoint JSON object.
      */
-    toJSON() {
+    public toJSON() {
         const { transactionHash, index, assetType, amount } = this;
         return {
             transactionHash: transactionHash.value,
             index,
             assetType: assetType.value,
-            amount,
+            amount
         };
     }
 }

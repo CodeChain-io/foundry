@@ -1,18 +1,18 @@
-import { Transaction } from "../transaction/Transaction";
 import { H256 } from "../H256";
+import { Transaction } from "../transaction/Transaction";
 
 export class ChangeShard {
     public shardId: number;
     public preRoot: H256;
     public postRoot: H256;
 
-    constructor(obj: { shardId: number, preRoot: H256, postRoot: H256 }) {
+    constructor(obj: { shardId: number; preRoot: H256; postRoot: H256 }) {
         this.shardId = obj.shardId;
         this.preRoot = obj.preRoot;
         this.postRoot = obj.postRoot;
     }
 
-    toJSON() {
+    public toJSON() {
         const { shardId, preRoot, postRoot } = this;
         return {
             shardId,
@@ -21,36 +21,42 @@ export class ChangeShard {
         };
     }
 
-    toEncodeObject() {
+    public toEncodeObject() {
         const { shardId, preRoot, postRoot } = this;
         return [shardId, preRoot.toEncodeObject(), postRoot.toEncodeObject()];
     }
 }
 
 export class ChangeShardState {
-    transactions: Transaction[];
-    changes: ChangeShard[];
-    signatures: string[];
+    public transactions: Transaction[];
+    public changes: ChangeShard[];
+    public signatures: string[];
 
     constructor(input: { transactions: Transaction[] }) {
-        const ZERO = new H256("0x0000000000000000000000000000000000000000000000000000000000000000")
+        const ZERO = new H256(
+            "0x0000000000000000000000000000000000000000000000000000000000000000"
+        );
         this.transactions = input.transactions;
-        this.changes = [new ChangeShard({ shardId: 0, preRoot: ZERO, postRoot: ZERO })];
+        this.changes = [
+            new ChangeShard({ shardId: 0, preRoot: ZERO, postRoot: ZERO })
+        ];
         this.signatures = [];
     }
 
-    addSignature(signature: string) {
+    public addSignature(signature: string) {
         this.signatures.push(signature);
     }
 
-    toEncodeObject(): Array<any> {
-        const transactions = this.transactions.map(transaction => transaction.toEncodeObject());
+    public toEncodeObject(): any[] {
+        const transactions = this.transactions.map(transaction =>
+            transaction.toEncodeObject()
+        );
         const changes = this.changes.map(c => c.toEncodeObject());
         const signatures = this.signatures;
         return [1, transactions, changes, signatures];
     }
 
-    toJSON() {
+    public toJSON() {
         return {
             action: "changeShardState",
             transactions: this.transactions.map(t => t.toJSON()),

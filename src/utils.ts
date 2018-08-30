@@ -17,14 +17,17 @@ const EC = require("elliptic").ec;
  */
 const secp256k1 = new EC("secp256k1");
 
-const toHexByte = (byte: number) => byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16);
+const toHexByte = (byte: number) =>
+    byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16);
 /**
  * Converts buffer to hexadecimal string.
  * @param buffer arbritrary length of data
  * @returns hexadecimal string
  */
 export const toHex = (buffer: Buffer): string => {
-    return Array.from(buffer).map(toHexByte).join("");
+    return Array.from(buffer)
+        .map(toHexByte)
+        .join("");
 };
 
 /**
@@ -47,7 +50,10 @@ export const blake256 = (data: Buffer | string): string => {
  * @param key
  * @returns 32 byte hexadecimal string
  */
-export const blake256WithKey = (data: Buffer | string, key: Uint8Array): string => {
+export const blake256WithKey = (
+    data: Buffer | string,
+    key: Uint8Array
+): string => {
     if (!(data instanceof Buffer)) {
         data = Buffer.from(data, "hex");
     }
@@ -68,11 +74,11 @@ export const ripemd160 = (data: Buffer | string): string => {
     return new ripemd().update(data).digest("hex");
 };
 
-export type EcdsaSignature = {
+export interface EcdsaSignature {
     r: string;
     s: string;
     v: number;
-};
+}
 
 /**
  * Gets signature for message from private key.
@@ -82,7 +88,7 @@ export type EcdsaSignature = {
  */
 export const signEcdsa = (message: string, priv: string): EcdsaSignature => {
     const key = secp256k1.keyFromPrivate(priv);
-    const { r, s, recoveryParam: v } = key.sign(message, { "canonical": true });
+    const { r, s, recoveryParam: v } = key.sign(message, { canonical: true });
     return {
         r: r.toString("hex"),
         s: s.toString("hex"),
@@ -97,7 +103,11 @@ export const signEcdsa = (message: string, priv: string): EcdsaSignature => {
  * @param pub 64 byte hexadecimal string of public key
  * @returns if signature is valid, true. Else false.
  */
-export const verifyEcdsa = (message: string, signature: EcdsaSignature, pub: string): boolean => {
+export const verifyEcdsa = (
+    message: string,
+    signature: EcdsaSignature,
+    pub: string
+): boolean => {
     const key = secp256k1.keyFromPublic("04" + pub, "hex");
     return key.verify(message, signature);
 };
@@ -108,12 +118,21 @@ export const verifyEcdsa = (message: string, signature: EcdsaSignature, pub: str
  * @param signature r, s, v of ECDSA signature
  * @returns 64 byte hexadecimal string public key
  */
-export const recoverEcdsa = (message: string, signature: EcdsaSignature): string => {
-    return secp256k1.recoverPubKey(
-        secp256k1.keyFromPrivate(message, "hex").getPrivate().toString(10),
-        signature,
-        signature.v
-    ).encode("hex").slice(2);
+export const recoverEcdsa = (
+    message: string,
+    signature: EcdsaSignature
+): string => {
+    return secp256k1
+        .recoverPubKey(
+            secp256k1
+                .keyFromPrivate(message, "hex")
+                .getPrivate()
+                .toString(10),
+            signature,
+            signature.v
+        )
+        .encode("hex")
+        .slice(2);
 };
 
 /**
@@ -151,5 +170,8 @@ export const getAccountIdFromPublic = (publicKey: string): string => {
 export const getPublicFromPrivate = (priv: string): string => {
     const key = secp256k1.keyFromPrivate(priv);
     // Remove prefix "04" which represents it's uncompressed form.
-    return key.getPublic().encode("hex").slice(2);
+    return key
+        .getPublic()
+        .encode("hex")
+        .slice(2);
 };

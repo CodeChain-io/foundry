@@ -14,7 +14,7 @@ export class DevelRpc {
      * Starts and Enable sealing parcels.
      * @returns null
      */
-    startSealing(): Promise<null> {
+    public startSealing(): Promise<null> {
         return this.rpc.sendRpcRequest("devel_startSealing", []);
     }
 
@@ -22,7 +22,7 @@ export class DevelRpc {
      * Stops and Disable sealing parcels.
      * @returns null
      */
-    stopSealing(): Promise<null> {
+    public stopSealing(): Promise<null> {
         return this.rpc.sendRpcRequest("devel_stopSealing", []);
     }
 }

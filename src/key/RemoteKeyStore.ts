@@ -1,20 +1,19 @@
-import * as _ from "lodash";
 import * as rp from "request-promise";
 
-import { KeyStore, KeyManagementAPI } from "./KeyStore";
+import { KeyManagementAPI, KeyStore } from "./KeyStore";
 
 type KeyType = "asset" | "platform";
 
 class RemoteKeyManager implements KeyManagementAPI {
-    keystoreURL: string;
-    keyType: string;
+    public keystoreURL: string;
+    public keyType: string;
 
     constructor(keystoreURL: string, keyType: KeyType) {
         this.keystoreURL = keystoreURL;
         this.keyType = keyType;
     }
 
-    async getKeyList(): Promise<string[]> {
+    public async getKeyList(): Promise<string[]> {
         const response = await rp.get(`${this.keystoreURL}/api/keys`, {
             body: { keyType: this.keyType },
             json: true
@@ -27,7 +26,9 @@ class RemoteKeyManager implements KeyManagementAPI {
         return response.result;
     }
 
-    async createKey(params: { passphrase?: string } = {}): Promise<string> {
+    public async createKey(
+        params: { passphrase?: string } = {}
+    ): Promise<string> {
         const response = await rp.post(`${this.keystoreURL}/api/keys`, {
             body: {
                 keyType: this.keyType,
@@ -43,14 +44,20 @@ class RemoteKeyManager implements KeyManagementAPI {
         return response.result;
     }
 
-    async removeKey(params: { publicKey: string, passphrase?: string }): Promise<boolean> {
-        const response = await rp.delete(`${this.keystoreURL}/api/keys/${params.publicKey}`, {
-            body: {
-                keyType: this.keyType,
-                passphrase: params.passphrase
-            },
-            json: true
-        });
+    public async removeKey(params: {
+        publicKey: string;
+        passphrase?: string;
+    }): Promise<boolean> {
+        const response = await rp.delete(
+            `${this.keystoreURL}/api/keys/${params.publicKey}`,
+            {
+                body: {
+                    keyType: this.keyType,
+                    passphrase: params.passphrase
+                },
+                json: true
+            }
+        );
 
         if (!response.success) {
             throw Error(response.error);
@@ -59,16 +66,23 @@ class RemoteKeyManager implements KeyManagementAPI {
         return response.result;
     }
 
-    async sign(params: { publicKey: string, message: string, passphrase?: string }): Promise<string> {
-        const response = await rp.post(`${this.keystoreURL}/api/keys/${params.publicKey}/sign`, {
-            body: {
-                keyType: this.keyType,
-                passphrase: params.passphrase,
-                publicKey: params.publicKey,
-                message: params.message
-            },
-            json: true
-        });
+    public async sign(params: {
+        publicKey: string;
+        message: string;
+        passphrase?: string;
+    }): Promise<string> {
+        const response = await rp.post(
+            `${this.keystoreURL}/api/keys/${params.publicKey}/sign`,
+            {
+                body: {
+                    keyType: this.keyType,
+                    passphrase: params.passphrase,
+                    publicKey: params.publicKey,
+                    message: params.message
+                },
+                json: true
+            }
+        );
 
         if (!response.success) {
             throw Error(response.error);
@@ -79,31 +93,24 @@ class RemoteKeyManager implements KeyManagementAPI {
 }
 
 export class RemoteKeyStore implements KeyStore {
-    platform: KeyManagementAPI;
-    asset: KeyManagementAPI;
-    keystoreURL: string;
-
-    private constructor(keystoreURL: string) {
-        this.keystoreURL = keystoreURL;
-        this.platform = new RemoteKeyManager(keystoreURL, "platform");
-        this.asset = new RemoteKeyManager(keystoreURL, "asset");
-    }
-
-    static async create(keystoreURL: string): Promise<KeyStore> {
+    public static async create(keystoreURL: string): Promise<KeyStore> {
         const keystore = new RemoteKeyStore(keystoreURL);
         await keystore.ping();
         return keystore;
     }
 
     // Use only this method for test purpose
-    static createUnsafe(keystoreURL: string): KeyStore {
+    public static createUnsafe(keystoreURL: string): KeyStore {
         const keystore = new RemoteKeyStore(keystoreURL);
         keystore.ping();
         return keystore;
     }
+    public platform: KeyManagementAPI;
+    public asset: KeyManagementAPI;
+    public keystoreURL: string;
 
-    mapping = {
-        add: async (params: { key: string; value: string; }): Promise<void> => {
+    public mapping = {
+        add: async (params: { key: string; value: string }): Promise<void> => {
             const response = await rp.post(`${this.keystoreURL}/api/mapping`, {
                 body: {
                     key: params.key,
@@ -117,10 +124,13 @@ export class RemoteKeyStore implements KeyStore {
             }
         },
 
-        get: async (params: { key: string; }): Promise<string> => {
-            const response = await rp.get(`${this.keystoreURL}/api/mapping/${params.key}`, {
-                json: true
-            });
+        get: async (params: { key: string }): Promise<string> => {
+            const response = await rp.get(
+                `${this.keystoreURL}/api/mapping/${params.key}`,
+                {
+                    json: true
+                }
+            );
 
             if (!response.success) {
                 throw Error(response.error);
@@ -130,7 +140,13 @@ export class RemoteKeyStore implements KeyStore {
         }
     };
 
-    async ping(): Promise<void> {
+    private constructor(keystoreURL: string) {
+        this.keystoreURL = keystoreURL;
+        this.platform = new RemoteKeyManager(keystoreURL, "platform");
+        this.asset = new RemoteKeyManager(keystoreURL, "asset");
+    }
+
+    public async ping(): Promise<void> {
         const response = await rp.get(`${this.keystoreURL}/ping`, {
             json: true
         });

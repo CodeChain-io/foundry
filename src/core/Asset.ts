@@ -3,33 +3,59 @@ import { Buffer } from "buffer";
 import { AssetTransferAddress } from "../key/AssetTransferAddress";
 
 import { H256 } from "./H256";
-import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetTransferInput } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
+import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
 
 type NetworkId = string;
 
-export type AssetData = {
+export interface AssetData {
     assetType: H256;
     lockScriptHash: H256;
     parameters: Buffer[];
     amount: number;
     transactionHash: H256;
     transactionOutputIndex: number;
-};
+}
 /**
  * Object created as an AssetMintTransaction or AssetTransferTransaction.
  */
 export class Asset {
-    assetType: H256;
-    lockScriptHash: H256;
-    parameters: Buffer[];
-    amount: number;
-    outPoint: AssetOutPoint;
+    public static fromJSON(data: any) {
+        // FIXME: use camelCase for all
+        const {
+            asset_type,
+            lock_script_hash,
+            parameters,
+            amount,
+            transactionHash,
+            transactionOutputIndex
+        } = data;
+        return new Asset({
+            assetType: new H256(asset_type),
+            lockScriptHash: new H256(lock_script_hash),
+            parameters,
+            amount,
+            transactionHash: new H256(transactionHash),
+            transactionOutputIndex
+        });
+    }
+    public assetType: H256;
+    public lockScriptHash: H256;
+    public parameters: Buffer[];
+    public amount: number;
+    public outPoint: AssetOutPoint;
 
     constructor(data: AssetData) {
-        const { transactionHash, transactionOutputIndex, assetType, amount, lockScriptHash, parameters } = data;
+        const {
+            transactionHash,
+            transactionOutputIndex,
+            assetType,
+            amount,
+            lockScriptHash,
+            parameters
+        } = data;
         this.assetType = data.assetType;
         this.lockScriptHash = data.lockScriptHash;
         this.parameters = data.parameters;
@@ -40,25 +66,18 @@ export class Asset {
             assetType,
             amount,
             lockScriptHash,
-            parameters,
+            parameters
         });
     }
 
-    static fromJSON(data: any) {
-        // FIXME: use camelCase for all
-        const { asset_type, lock_script_hash, parameters, amount, transactionHash, transactionOutputIndex } = data;
-        return new Asset({
-            assetType: new H256(asset_type),
-            lockScriptHash: new H256(lock_script_hash),
+    public toJSON() {
+        const {
+            assetType,
+            lockScriptHash,
             parameters,
             amount,
-            transactionHash: new H256(transactionHash),
-            transactionOutputIndex,
-        });
-    }
-
-    toJSON() {
-        const { assetType, lockScriptHash, parameters, amount, outPoint } = this;
+            outPoint
+        } = this;
         const { transactionHash, index } = outPoint;
         return {
             asset_type: assetType.value,
@@ -66,39 +85,48 @@ export class Asset {
             parameters,
             amount,
             transactionHash: transactionHash.value,
-            transactionOutputIndex: index,
+            transactionOutputIndex: index
         };
     }
 
-    createTransferInput(): AssetTransferInput {
+    public createTransferInput(): AssetTransferInput {
         return new AssetTransferInput({
             prevOut: this.outPoint
         });
     }
 
-    createTransferTransaction(params: {
-        recipients: {
-            address: AssetTransferAddress | string,
-            amount: number
-        }[],
-        nonce?: number,
-        networkId?: NetworkId,
-    } = { recipients: [] }): AssetTransferTransaction {
+    public createTransferTransaction(
+        params: {
+            recipients: Array<{
+                address: AssetTransferAddress | string;
+                amount: number;
+            }>;
+            nonce?: number;
+            networkId?: NetworkId;
+        } = { recipients: [] }
+    ): AssetTransferTransaction {
         const { outPoint, assetType } = this;
         const { recipients, nonce = 0, networkId = "tc" } = params;
 
         return new AssetTransferTransaction({
             burns: [],
-            inputs: [new AssetTransferInput({
-                prevOut: outPoint,
-                lockScript: Buffer.from([]),
-                unlockScript: Buffer.from([]),
-            })],
-            outputs: recipients.map(recipient => new AssetTransferOutput({
-                ...AssetTransferAddress.ensure(recipient.address).getLockScriptHashAndParameters(),
-                assetType,
-                amount: recipient.amount
-            })),
+            inputs: [
+                new AssetTransferInput({
+                    prevOut: outPoint,
+                    lockScript: Buffer.from([]),
+                    unlockScript: Buffer.from([])
+                })
+            ],
+            outputs: recipients.map(
+                recipient =>
+                    new AssetTransferOutput({
+                        ...AssetTransferAddress.ensure(
+                            recipient.address
+                        ).getLockScriptHashAndParameters(),
+                        assetType,
+                        amount: recipient.amount
+                    })
+            ),
             networkId,
             nonce
         });

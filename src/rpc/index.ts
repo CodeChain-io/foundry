@@ -1,10 +1,10 @@
 import fetch from "node-fetch";
 
-import { NodeRpc } from "./node";
-import { ChainRpc } from "./chain";
-import { NetworkRpc } from "./network";
 import { AccountRpc } from "./account";
+import { ChainRpc } from "./chain";
 import { DevelRpc } from "./devel";
+import { NetworkRpc } from "./network";
+import { NodeRpc } from "./node";
 
 /**
  * @hidden
@@ -12,8 +12,6 @@ import { DevelRpc } from "./devel";
 const jaysonBrowserClient = require("jayson/lib/client/browser");
 
 export class Rpc {
-    private client: any;
-
     /**
      * RPC module for retrieving the node info.
      */
@@ -32,6 +30,7 @@ export class Rpc {
     public account: AccountRpc;
 
     public devel: DevelRpc;
+    private client: any;
 
     /**
      * @param params.server HTTP RPC server address.
@@ -39,11 +38,11 @@ export class Rpc {
      * @param params.options.parcelFee The default amount for the parcel fee
      */
     constructor(params: {
-        server: string,
+        server: string;
         options?: {
-            parcelSigner?: string,
-            parcelFee?: number,
-        },
+            parcelSigner?: string;
+            parcelFee?: number;
+        };
     }) {
         const { server, options = {} } = params;
         this.client = jaysonBrowserClient((request: any, callback: any) => {
@@ -53,13 +52,16 @@ export class Rpc {
                 headers: {
                     "Content-Type": "application/json"
                 }
-            }).then(res => {
-                return res.text();
-            }).then(text => {
-                return callback(null, text);
-            }).catch(err => {
-                return callback(err);
-            });
+            })
+                .then(res => {
+                    return res.text();
+                })
+                .then(text => {
+                    return callback(null, text);
+                })
+                .catch(err => {
+                    return callback(err);
+                });
         });
 
         this.node = new NodeRpc(this);
@@ -69,11 +71,13 @@ export class Rpc {
         this.devel = new DevelRpc(this);
     }
 
-    sendRpcRequest = (name: string, params: any[]) => {
+    public sendRpcRequest = (name: string, params: any[]) => {
         return new Promise<any>((resolve, reject) => {
             this.client.request(name, params, (err: any, res: any) => {
                 if (err) {
-                    return reject(Error(`An error occurred while ${name}: ${err}`));
+                    return reject(
+                        Error(`An error occurred while ${name}: ${err}`)
+                    );
                 } else if (res.error) {
                     // FIXME: Throw Error with a description
                     return reject(res.error);
@@ -81,5 +85,5 @@ export class Rpc {
                 resolve(res.result);
             });
         });
-    }
+    };
 }

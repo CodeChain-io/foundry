@@ -6,24 +6,27 @@ import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 
 type NetworkId = string;
 
-export type AssetSchemeData = {
+export interface AssetSchemeData {
     networkId: NetworkId;
     shardId: number;
     worldId: number;
     metadata: string;
     amount: number;
     registrar: PlatformAddress | null;
-};
+}
 /**
  * Object that contains information about the Asset when performing AssetMintTransaction.
  */
 export class AssetScheme {
-    networkId: NetworkId;
-    shardId: number;
-    worldId: number;
-    metadata: string;
-    amount: number;
-    registrar: PlatformAddress | null;
+    public static fromJSON(data: any) {
+        return new AssetScheme(data);
+    }
+    public networkId: NetworkId;
+    public shardId: number;
+    public worldId: number;
+    public metadata: string;
+    public amount: number;
+    public registrar: PlatformAddress | null;
 
     constructor(data: AssetSchemeData) {
         this.networkId = data.networkId;
@@ -34,11 +37,7 @@ export class AssetScheme {
         this.amount = data.amount;
     }
 
-    static fromJSON(data: any) {
-        return new AssetScheme(data);
-    }
-
-    toJSON() {
+    public toJSON() {
         const { networkId, metadata, amount, registrar } = this;
         return {
             networkId,
@@ -48,9 +47,19 @@ export class AssetScheme {
         };
     }
 
-    createMintTransaction(params: { recipient: AssetTransferAddress | string, nonce?: number }): AssetMintTransaction {
+    public createMintTransaction(params: {
+        recipient: AssetTransferAddress | string;
+        nonce?: number;
+    }): AssetMintTransaction {
         const { recipient, nonce = 0 } = params;
-        const { networkId, shardId, worldId, metadata, amount, registrar } = this;
+        const {
+            networkId,
+            shardId,
+            worldId,
+            metadata,
+            amount,
+            registrar
+        } = this;
         return new AssetMintTransaction({
             networkId,
             shardId,
@@ -58,10 +67,12 @@ export class AssetScheme {
             metadata,
             output: {
                 amount,
-                ...AssetTransferAddress.ensure(recipient).getLockScriptHashAndParameters(),
+                ...AssetTransferAddress.ensure(
+                    recipient
+                ).getLockScriptHashAndParameters()
             },
             registrar,
-            nonce,
+            nonce
         });
     }
 }

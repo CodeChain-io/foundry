@@ -17,9 +17,13 @@ test("AssetTransferTransaction toJSON", () => {
 
 test("AssetOutPoint toJSON", () => {
     const outPoint = new AssetOutPoint({
-        transactionHash: new H256("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+        transactionHash: new H256(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ),
         index: 0,
-        assetType: new H256("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+        assetType: new H256(
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ),
         amount: 1
     });
     expect(AssetOutPoint.fromJSON(outPoint.toJSON())).toEqual(outPoint);
@@ -27,9 +31,13 @@ test("AssetOutPoint toJSON", () => {
 
 test("AssetTransferInput toJSON", () => {
     const outPoint = new AssetOutPoint({
-        transactionHash: new H256("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+        transactionHash: new H256(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ),
         index: 0,
-        assetType: new H256("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+        assetType: new H256(
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ),
         amount: 1
     });
     const input = new AssetTransferInput({
@@ -42,9 +50,13 @@ test("AssetTransferInput toJSON", () => {
 
 test("AssetTransferOutput toJSON", () => {
     const output = new AssetTransferOutput({
-        lockScriptHash: new H256("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+        lockScriptHash: new H256(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ),
         parameters: [Buffer.from([0x04, 0x05]), Buffer.from([0x06])],
-        assetType: new H256("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+        assetType: new H256(
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ),
         amount: 321
     });
     expect(AssetTransferOutput.fromJSON(output.toJSON())).toEqual(output);
@@ -52,9 +64,13 @@ test("AssetTransferOutput toJSON", () => {
 
 test("AssetTransferTransaction hashWithoutScript", () => {
     const outPoint = new AssetOutPoint({
-        transactionHash: new H256("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+        transactionHash: new H256(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ),
         index: 0,
-        assetType: new H256("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+        assetType: new H256(
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ),
         amount: 1
     });
     const input1 = new AssetTransferInput({
@@ -86,9 +102,13 @@ test("AssetTransferTransaction hashWithoutScript", () => {
 
 test("AssetTransferOutput shard id", () => {
     const output = new AssetTransferOutput({
-        lockScriptHash: new H256("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+        lockScriptHash: new H256(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ),
         parameters: [Buffer.from([0x04, 0x05]), Buffer.from([0x06])],
-        assetType: new H256("4100BAADCAFEBEEFbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+        assetType: new H256(
+            "4100BAADCAFEBEEFbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ),
         amount: 321
     });
     expect(output.shardId()).toEqual(parseInt("BAAD", 16));

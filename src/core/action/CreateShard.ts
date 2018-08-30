@@ -1,13 +1,11 @@
 export class CreateShard {
-    constructor() { }
-
-    toEncodeObject(): Array<any> {
+    public toEncodeObject(): any[] {
         return [4];
     }
 
-    toJSON() {
+    public toJSON() {
         return {
-            action: "createShard",
+            action: "createShard"
         };
     }
 }

@@ -17,10 +17,10 @@ const sdk = new SDK({ server: "http://localhost:8080" });
         worldId: 0,
         metadata: JSON.stringify({
             name: "ExampleAsset",
-            description: "This asset will be burnt shortly",
+            description: "This asset will be burnt shortly"
         }),
         amount: 10000,
-        registrar: null,
+        registrar: null
     });
     const mintTx = sdk.core.createAssetMintTransaction({
         scheme: assetScheme,
@@ -28,8 +28,9 @@ const sdk = new SDK({ server: "http://localhost:8080" });
     });
 
     const firstGold = mintTx.getMintedAsset();
-    const transferTx = sdk.core.createAssetTransferTransaction()
-        .addBurns(firstGold)
+    const transferTx = sdk.core
+        .createAssetTransferTransaction()
+        .addBurns(firstGold);
     await transferTx.signBurn(0, { signer: p2pkhBurn });
 
     const parcel = sdk.core.createChangeShardStateParcel({
@@ -37,21 +38,27 @@ const sdk = new SDK({ server: "http://localhost:8080" });
     });
     await sdk.rpc.chain.sendParcel(parcel, {
         account: "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78",
-        passphrase: "satoshi",
+        passphrase: "satoshi"
     });
 
-    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(mintTx.hash(), {
-        timeout: 300 * 1000
-    });
+    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(
+        mintTx.hash(),
+        {
+            timeout: 300 * 1000
+        }
+    );
     if (mintTxInvoice.success === false) {
         throw Error("AssetMintTransaction failed");
     }
-    const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(transferTx.hash(), {
-        timeout: 300 * 1000
-    });
+    const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(
+        transferTx.hash(),
+        {
+            timeout: 300 * 1000
+        }
+    );
     if (transferTxInvoice.success === false) {
         throw Error("AssetTransferTransaction failed");
     }
-})().catch((err) => {
+})().catch(err => {
     console.error(`Error:`, err);
 });

@@ -2,11 +2,11 @@ import { Buffer } from "buffer";
 
 import { AssetOutPoint } from "./AssetOutPoint";
 
-export type AssetTransferInputData = {
+export interface AssetTransferInputData {
     prevOut: AssetOutPoint;
     lockScript?: Buffer;
     unlockScript?: Buffer;
-};
+}
 
 /**
  * An AssetTransferInput consists of the following:
@@ -16,9 +16,22 @@ export type AssetTransferInputData = {
  *  - The results of running the script must return successful in order for the Asset's input to be valid.
  */
 export class AssetTransferInput {
-    readonly prevOut: AssetOutPoint;
-    lockScript: Buffer;
-    unlockScript: Buffer;
+    /**
+     * Create an AssetTransferInput from an AssetTransferInput JSON object.
+     * @param data An AssetTransferInput JSON object.
+     * @returns An AssetTransferInput.
+     */
+    public static fromJSON(data: any) {
+        const { prevOut, lockScript, unlockScript } = data;
+        return new this({
+            prevOut: AssetOutPoint.fromJSON(prevOut),
+            lockScript,
+            unlockScript
+        });
+    }
+    public readonly prevOut: AssetOutPoint;
+    public lockScript: Buffer;
+    public unlockScript: Buffer;
 
     /**
      * @param data.prevOut An AssetOutPoint of the input.
@@ -26,7 +39,11 @@ export class AssetTransferInput {
      * @param data.unlockScript A unlock script of the input.
      */
     constructor(data: AssetTransferInputData) {
-        const { prevOut, lockScript = Buffer.from([]), unlockScript = Buffer.from([]) } = data;
+        const {
+            prevOut,
+            lockScript = Buffer.from([]),
+            unlockScript = Buffer.from([])
+        } = data;
         this.prevOut = prevOut;
         this.lockScript = Buffer.from(lockScript);
         this.unlockScript = Buffer.from(unlockScript);
@@ -35,35 +52,21 @@ export class AssetTransferInput {
     /**
      * Convert to an object for RLP encoding.
      */
-    toEncodeObject() {
+    public toEncodeObject() {
         const { prevOut, lockScript, unlockScript } = this;
         return [prevOut.toEncodeObject(), lockScript, unlockScript];
-    }
-
-    /**
-     * Create an AssetTransferInput from an AssetTransferInput JSON object.
-     * @param data An AssetTransferInput JSON object.
-     * @returns An AssetTransferInput.
-     */
-    static fromJSON(data: any) {
-        const { prevOut, lockScript, unlockScript } = data;
-        return new this({
-            prevOut: AssetOutPoint.fromJSON(prevOut),
-            lockScript,
-            unlockScript,
-        });
     }
 
     /**
      * Convert to an AssetTransferInput JSON object.
      * @returns An AssetTransferInput JSON object.
      */
-    toJSON() {
+    public toJSON() {
         const { prevOut, lockScript, unlockScript } = this;
         return {
             prevOut: prevOut.toJSON(),
             lockScript: [...lockScript],
-            unlockScript: [...unlockScript],
+            unlockScript: [...unlockScript]
         };
     }
 
@@ -72,12 +75,12 @@ export class AssetTransferInput {
      * unlock script. The cloned object is used to sign a transaction.
      * @returns An AssetTransferInput.
      */
-    withoutScript() {
+    public withoutScript() {
         const { prevOut } = this;
         return new AssetTransferInput({
             prevOut,
             lockScript: Buffer.from([]),
-            unlockScript: Buffer.from([]),
+            unlockScript: Buffer.from([])
         });
     }
 
@@ -85,7 +88,7 @@ export class AssetTransferInput {
      * Set a lock script.
      * @param lockScript A lock script.
      */
-    setLockScript(lockScript: Buffer) {
+    public setLockScript(lockScript: Buffer) {
         this.lockScript = lockScript;
     }
 
@@ -93,7 +96,7 @@ export class AssetTransferInput {
      * Set a unlock script.
      * @param unlockScript A unlock script.
      */
-    setUnlockScript(unlockScript: Buffer) {
+    public setUnlockScript(unlockScript: Buffer) {
         this.unlockScript = unlockScript;
     }
 }

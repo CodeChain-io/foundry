@@ -1,15 +1,15 @@
 import { PlatformAddress } from "../key/PlatformAddress";
-import { U256 } from "./U256";
+import { blake256, signEcdsa } from "../utils";
+import { Action, getActionFromJSON } from "./action/Action";
+import { ChangeShardState } from "./action/ChangeShardState";
+import { CreateShard } from "./action/CreateShard";
+import { Payment } from "./action/Payment";
+import { SetRegularKey } from "./action/SetReulgarKey";
 import { H256 } from "./H256";
 import { H512 } from "./H512";
 import { SignedParcel } from "./SignedParcel";
-import { blake256, signEcdsa } from "../utils";
 import { Transaction } from "./transaction/Transaction";
-import { Action, getActionFromJSON } from "./action/Action";
-import { ChangeShardState } from "./action/ChangeShardState";
-import { Payment } from "./action/Payment";
-import { SetRegularKey } from "./action/SetReulgarKey";
-import { CreateShard } from "./action/CreateShard";
+import { U256 } from "./U256";
 
 type NetworkId = string;
 
@@ -25,30 +25,44 @@ const RLP = require("rlp");
  * - After signing with the sign() function, it can be sent to the network.
  */
 export class Parcel {
-    nonce: U256 | null;
-    fee: U256 | null;
-    readonly networkId: NetworkId;
-    readonly action: Action;
-
-    static transactions(networkId: NetworkId, ...transactions: Transaction[]): Parcel {
+    public static transactions(
+        networkId: NetworkId,
+        ...transactions: Transaction[]
+    ): Parcel {
         const action = new ChangeShardState({ transactions });
         return new Parcel(networkId, action);
     }
 
-    static payment(networkId: NetworkId, receiver: PlatformAddress, value: U256): Parcel {
+    public static payment(
+        networkId: NetworkId,
+        receiver: PlatformAddress,
+        value: U256
+    ): Parcel {
         const action = new Payment(receiver, value);
         return new Parcel(networkId, action);
     }
 
-    static setRegularKey(networkId: NetworkId, key: H512): Parcel {
+    public static setRegularKey(networkId: NetworkId, key: H512): Parcel {
         const action = new SetRegularKey(key);
         return new Parcel(networkId, action);
     }
 
-    static createShard(networkId: NetworkId): Parcel {
+    public static createShard(networkId: NetworkId): Parcel {
         const action = new CreateShard();
         return new Parcel(networkId, action);
     }
+
+    public static fromJSON(result: any) {
+        const { nonce, fee, networkId, action } = result;
+        const parcel = new Parcel(networkId, getActionFromJSON(action));
+        parcel.setNonce(nonce);
+        parcel.setFee(fee);
+        return parcel;
+    }
+    public nonce: U256 | null;
+    public fee: U256 | null;
+    public readonly networkId: NetworkId;
+    public readonly action: Action;
 
     constructor(networkId: NetworkId, action: Action) {
         this.nonce = null;
@@ -57,15 +71,15 @@ export class Parcel {
         this.action = action;
     }
 
-    setNonce(nonce: U256 | string | number) {
+    public setNonce(nonce: U256 | string | number) {
         this.nonce = U256.ensure(nonce);
     }
 
-    setFee(fee: U256 | string | number) {
+    public setFee(fee: U256 | string | number) {
         this.fee = U256.ensure(fee);
     }
 
-    toEncodeObject(): Array<any> {
+    public toEncodeObject(): any[] {
         const { nonce, fee, action, networkId } = this;
         if (!nonce || !fee) {
             throw Error("Nonce and fee in the parcel must be present");
@@ -78,18 +92,18 @@ export class Parcel {
         ];
     }
 
-    rlpBytes(): Buffer {
+    public rlpBytes(): Buffer {
         return RLP.encode(this.toEncodeObject());
     }
 
-    hash(): H256 {
+    public hash(): H256 {
         return new H256(blake256(this.rlpBytes()));
     }
 
-    sign(params: {
-        secret: H256 | string,
-        nonce: U256 | string | number,
-        fee: U256 | string | number
+    public sign(params: {
+        secret: H256 | string;
+        nonce: U256 | string | number;
+        fee: U256 | string | number;
     }): SignedParcel {
         const { secret, nonce, fee } = params;
         if (this.nonce !== null) {
@@ -100,20 +114,15 @@ export class Parcel {
             throw Error("The parcel fee is already set");
         }
         this.fee = U256.ensure(fee);
-        const { r, s, v } = signEcdsa(this.hash().value, H256.ensure(secret).value);
+        const { r, s, v } = signEcdsa(
+            this.hash().value,
+            H256.ensure(secret).value
+        );
         const sig = SignedParcel.convertRsvToSignatureString({ r, s, v });
         return new SignedParcel(this, sig);
     }
 
-    static fromJSON(result: any) {
-        const { nonce, fee, networkId, action } = result;
-        const parcel = new Parcel(networkId, getActionFromJSON(action));
-        parcel.setNonce(nonce);
-        parcel.setFee(fee);
-        return parcel;
-    }
-
-    toJSON() {
+    public toJSON() {
         const { nonce, fee, networkId, action } = this;
         if (!nonce || !fee) {
             throw Error("Nonce and fee in the parcel must be present");

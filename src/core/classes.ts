@@ -20,10 +20,16 @@ export { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 export { AssetOutPoint } from "./transaction/AssetOutPoint";
 export { AssetTransferInput } from "./transaction/AssetTransferInput";
 export { AssetTransferOutput } from "./transaction/AssetTransferOutput";
-export { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
+export {
+    AssetTransferTransaction
+} from "./transaction/AssetTransferTransaction";
 export { CreateWorldTransaction } from "./transaction/CreateWorldTransaction";
-export { SetWorldOwnersTransaction } from "./transaction/SetWorldOwnersTransaction";
-export { SetWorldUsersTransaction } from "./transaction/SetWorldUsersTransaction";
+export {
+    SetWorldOwnersTransaction
+} from "./transaction/SetWorldOwnersTransaction";
+export {
+    SetWorldUsersTransaction
+} from "./transaction/SetWorldUsersTransaction";
 
 export { Asset } from "./Asset";
 export { AssetScheme } from "./AssetScheme";

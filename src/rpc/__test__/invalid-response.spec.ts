@@ -10,9 +10,10 @@ describe("Invalid response", () => {
 
     describe("NodeRpc", () => {
         const nodeRpc = new NodeRpc(rpc);
-        test("ping", (done) => {
+        test("ping", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-            nodeRpc.ping()
+            nodeRpc
+                .ping()
                 .then(done.fail)
                 .catch(e => {
                     expect(e.toString()).toContain("ping");
@@ -22,9 +23,10 @@ describe("Invalid response", () => {
                 });
         });
 
-        test("getNodeVersion", (done) => {
+        test("getNodeVersion", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-            nodeRpc.getNodeVersion()
+            nodeRpc
+                .getNodeVersion()
                 .then(done.fail)
                 .catch(e => {
                     expect(e.toString()).toContain("getNodeVersion");
@@ -34,9 +36,10 @@ describe("Invalid response", () => {
                 });
         });
 
-        test("getCommitHash", (done) => {
+        test("getCommitHash", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-            nodeRpc.getCommitHash()
+            nodeRpc
+                .getCommitHash()
                 .then(done.fail)
                 .catch(e => {
                     expect(e.toString()).toContain("getCommitHash");
@@ -49,20 +52,28 @@ describe("Invalid response", () => {
 
     describe("ChainRpc", () => {
         const chainRpc = new ChainRpc(rpc, {});
-        const address = PlatformAddress.fromAccountId("0x0000000000000000000000000000000000000000");
-        const hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
+        const address = PlatformAddress.fromAccountId(
+            "0x0000000000000000000000000000000000000000"
+        );
+        const hash =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
 
         describe("sendSignedParcel", () => {
-            const secret = "0x0000000000000000000000000000000000000000000000000000000000000001";
-            const signedParcel = new Parcel("tc", new Payment(address, new U256(0))).sign({
+            const secret =
+                "0x0000000000000000000000000000000000000000000000000000000000000001";
+            const signedParcel = new Parcel(
+                "tc",
+                new Payment(address, new U256(0))
+            ).sign({
                 secret,
                 fee: 0,
                 nonce: 0
             });
 
-            test("null", (done) => {
+            test("null", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(null);
-                chainRpc.sendSignedParcel(signedParcel)
+                chainRpc
+                    .sendSignedParcel(signedParcel)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("sendSignedParcel");
@@ -72,9 +83,10 @@ describe("Invalid response", () => {
                     });
             });
 
-            test("empty string", (done) => {
+            test("empty string", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce("");
-                chainRpc.sendSignedParcel(signedParcel)
+                chainRpc
+                    .sendSignedParcel(signedParcel)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("sendSignedParcel");
@@ -86,9 +98,10 @@ describe("Invalid response", () => {
         });
 
         describe("getParcel", () => {
-            test("undefined", (done) => {
+            test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                chainRpc.getParcel(hash)
+                chainRpc
+                    .getParcel(hash)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("chain_getParcel");
@@ -98,33 +111,39 @@ describe("Invalid response", () => {
                     });
             });
 
-            test.skip("Invalid signature", (done) => done.fail("not implemented"));
-            test.skip("Invalid nonce", (done) => done.fail("not implemented"));
-            test.skip("Invalid fee", (done) => done.fail("not implemented"));
-            test.skip("Invalid networkId", (done) => done.fail("not implemented"));
-            test.skip("Invalid action", (done) => done.fail("not implemented"));
+            test.skip("Invalid signature", done =>
+                done.fail("not implemented"));
+            test.skip("Invalid nonce", done => done.fail("not implemented"));
+            test.skip("Invalid fee", done => done.fail("not implemented"));
+            test.skip("Invalid networkId", done =>
+                done.fail("not implemented"));
+            test.skip("Invalid action", done => done.fail("not implemented"));
         });
 
         describe("getParcelInvoice", () => {
-            test("undefined", (done) => {
+            test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                chainRpc.getParcelInvoice(hash)
+                chainRpc
+                    .getParcelInvoice(hash)
                     .then(() => done.fail())
                     .catch(e => {
-                        expect(e.toString()).toContain("chain_getParcelInvoice");
+                        expect(e.toString()).toContain(
+                            "chain_getParcelInvoice"
+                        );
                         expect(e.toString()).toContain("JSON of Invoice");
                         expect(e.toString()).toContain("undefined");
                         done();
                     });
             });
 
-            test.skip("Invalid invoice", (done) => done.fail("not implemented"));
-            test.skip("Invalid invoices", (done) => done.fail("not implemented"));
+            test.skip("Invalid invoice", done => done.fail("not implemented"));
+            test.skip("Invalid invoices", done => done.fail("not implemented"));
         });
 
-        test("getRegularKey", (done) => {
+        test("getRegularKey", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(null);
-            chainRpc.getRegularKey(address)
+            chainRpc
+                .getRegularKey(address)
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getRegularKey");
@@ -135,9 +154,10 @@ describe("Invalid response", () => {
         });
 
         describe("getTransaction", () => {
-            test("undefined", (done) => {
+            test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                chainRpc.getTransaction(hash)
+                chainRpc
+                    .getTransaction(hash)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("chain_getTransaction");
@@ -150,20 +170,26 @@ describe("Invalid response", () => {
             test.skip("Invalid type", done => done.fail("not implemented"));
             describe("Invalid data", () => {
                 test.skip("CreateWorld", done => done.fail("not implemented"));
-                test.skip("SetWorldOwner", done => done.fail("not implemented"));
-                test.skip("SetWorldUsers", done => done.fail("not implemented"));
+                test.skip("SetWorldOwner", done =>
+                    done.fail("not implemented"));
+                test.skip("SetWorldUsers", done =>
+                    done.fail("not implemented"));
                 test.skip("AssetMint", done => done.fail("not implemented"));
-                test.skip("AssetTransfer", done => done.fail("not implemented"));
+                test.skip("AssetTransfer", done =>
+                    done.fail("not implemented"));
             });
         });
 
         describe("getTransactionInvoice", () => {
-            test("undefined", (done) => {
+            test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                chainRpc.getTransactionInvoice(hash)
+                chainRpc
+                    .getTransactionInvoice(hash)
                     .then(() => done.fail())
                     .catch(e => {
-                        expect(e.toString()).toContain("chain_getTransactionInvoice");
+                        expect(e.toString()).toContain(
+                            "chain_getTransactionInvoice"
+                        );
                         expect(e.toString()).toContain("JSON of Invoice");
                         expect(e.toString()).toContain("undefined");
                         done();
@@ -173,9 +199,10 @@ describe("Invalid response", () => {
             test.skip("Invalid invoice", done => done.fail("not implemented"));
         });
 
-        test("getNonce", (done) => {
+        test("getNonce", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(null);
-            chainRpc.getNonce(address)
+            chainRpc
+                .getNonce(address)
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getNonce");
@@ -185,9 +212,10 @@ describe("Invalid response", () => {
                 });
         });
 
-        test("getBalance", (done) => {
+        test("getBalance", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(null);
-            chainRpc.getBalance(address)
+            chainRpc
+                .getBalance(address)
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getBalance");
@@ -197,9 +225,10 @@ describe("Invalid response", () => {
                 });
         });
 
-        test("getBestBlockNumber", (done) => {
+        test("getBestBlockNumber", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-            chainRpc.getBestBlockNumber()
+            chainRpc
+                .getBestBlockNumber()
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getBestBlockNumber");
@@ -211,7 +240,8 @@ describe("Invalid response", () => {
 
         test("getBlockHash", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-            chainRpc.getBlockHash(0)
+            chainRpc
+                .getBlockHash(0)
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getBlockHash");
@@ -224,7 +254,8 @@ describe("Invalid response", () => {
         describe("getBlock", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                chainRpc.getBlock(0)
+                chainRpc
+                    .getBlock(0)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("chain_getBlock");
@@ -234,46 +265,56 @@ describe("Invalid response", () => {
                     });
             });
 
-            test.skip("Invalid timestamp", done => done.fail("not implemented"));
+            test.skip("Invalid timestamp", done =>
+                done.fail("not implemented"));
             test.skip("Invalid number", done => done.fail("not implemented"));
         });
 
         describe("getAssetSchemeByHash", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                chainRpc.getAssetSchemeByHash(hash, 0, 0)
+                chainRpc
+                    .getAssetSchemeByHash(hash, 0, 0)
                     .then(() => done.fail())
                     .catch(e => {
-                        expect(e.toString()).toContain("chain_getAssetSchemeByHash");
+                        expect(e.toString()).toContain(
+                            "chain_getAssetSchemeByHash"
+                        );
                         expect(e.toString()).toContain("JSON of AssetScheme");
                         expect(e.toString()).toContain("undefined");
                         done();
                     });
             });
 
-            test.skip("Invalid asset scheme", done => done.fail("not implemented"));
+            test.skip("Invalid asset scheme", done =>
+                done.fail("not implemented"));
         });
 
         describe("getAssetSchemeByType", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                chainRpc.getAssetSchemeByType(hash)
+                chainRpc
+                    .getAssetSchemeByType(hash)
                     .then(() => done.fail())
                     .catch(e => {
-                        expect(e.toString()).toContain("chain_getAssetSchemeByType");
+                        expect(e.toString()).toContain(
+                            "chain_getAssetSchemeByType"
+                        );
                         expect(e.toString()).toContain("JSON of AssetScheme");
                         expect(e.toString()).toContain("undefined");
                         done();
                     });
             });
 
-            test.skip("Invalid asset scheme", done => done.fail("not implemented"));
+            test.skip("Invalid asset scheme", done =>
+                done.fail("not implemented"));
         });
 
         describe("getAsset", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                chainRpc.getAsset(hash, 0)
+                chainRpc
+                    .getAsset(hash, 0)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("chain_getAsset");
@@ -288,7 +329,8 @@ describe("Invalid response", () => {
 
         test("isAssetSpent", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-            chainRpc.isAssetSpent(hash, 0, 0)
+            chainRpc
+                .isAssetSpent(hash, 0, 0)
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_isAssetSpent");
@@ -301,10 +343,13 @@ describe("Invalid response", () => {
         describe("getPendingParcels", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                chainRpc.getPendingParcels()
+                chainRpc
+                    .getPendingParcels()
                     .then(() => done.fail())
                     .catch(e => {
-                        expect(e.toString()).toContain("chain_getPendingParcels");
+                        expect(e.toString()).toContain(
+                            "chain_getPendingParcels"
+                        );
                         expect(e.toString()).toContain("array");
                         expect(e.toString()).toContain("undefined");
                         done();
@@ -316,7 +361,8 @@ describe("Invalid response", () => {
 
         test("getNetworkId", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-            chainRpc.getNetworkId()
+            chainRpc
+                .getNetworkId()
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getNetworkId");
@@ -329,14 +375,19 @@ describe("Invalid response", () => {
 
     describe("AccountRpc", () => {
         const accountRpc = new AccountRpc(rpc);
-        const hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
-        const secret = "0x0000000000000000000000000000000000000000000000000000000000000001";
-        const address = PlatformAddress.fromAccountId("0x0000000000000000000000000000000000000000");
+        const hash =
+            "0x0000000000000000000000000000000000000000000000000000000000000000";
+        const secret =
+            "0x0000000000000000000000000000000000000000000000000000000000000001";
+        const address = PlatformAddress.fromAccountId(
+            "0x0000000000000000000000000000000000000000"
+        );
 
         describe("getList", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                accountRpc.getList()
+                accountRpc
+                    .getList()
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("account_getList");
@@ -346,13 +397,15 @@ describe("Invalid response", () => {
                     });
             });
 
-            test.skip("invalid address string", done => done.fail("not implemented"));
+            test.skip("invalid address string", done =>
+                done.fail("not implemented"));
         });
 
         describe("create", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                accountRpc.create()
+                accountRpc
+                    .create()
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("account_create");
@@ -362,13 +415,15 @@ describe("Invalid response", () => {
                     });
             });
 
-            test.skip("invalid address string", done => done.fail("not implemented"));
+            test.skip("invalid address string", done =>
+                done.fail("not implemented"));
         });
 
         describe("importRaw", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                accountRpc.importRaw(secret)
+                accountRpc
+                    .importRaw(secret)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("account_importRaw");
@@ -378,12 +433,14 @@ describe("Invalid response", () => {
                     });
             });
 
-            test.skip("invalid address string", done => done.fail("not implemented"));
+            test.skip("invalid address string", done =>
+                done.fail("not implemented"));
         });
 
         test("remove", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-            accountRpc.remove(address)
+            accountRpc
+                .remove(address)
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("account_remove");
@@ -396,7 +453,8 @@ describe("Invalid response", () => {
         describe("sign", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-                accountRpc.sign(hash, address)
+                accountRpc
+                    .sign(hash, address)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("account_sign");
@@ -406,12 +464,14 @@ describe("Invalid response", () => {
                     });
             });
 
-            test.skip("invalid signature string", done => done.fail("not implemented"));
+            test.skip("invalid signature string", done =>
+                done.fail("not implemented"));
         });
 
         test("unlock", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-            accountRpc.unlock(address)
+            accountRpc
+                .unlock(address)
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("account_unlock");
