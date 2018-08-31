@@ -23,26 +23,25 @@ export class H256 {
         );
     }
 
+    public static check(param: H256 | string): boolean {
+        return param instanceof H256 ? true : H256.checkString(param);
+    }
+
     public static ensure(param: H256 | string): H256 {
         return param instanceof H256 ? param : new H256(param);
     }
+
+    private static checkString(value: string): boolean {
+        return /^(0x)?[0-9a-fA-F]{64}$/.test(value);
+    }
+
     public value: string;
 
     constructor(value: string) {
-        if (!_.isString(value)) {
+        if (!H256.checkString(value)) {
             throw Error(
-                `The given value for new H256() is not a string, but ${value}`
+                `Expected 32 byte hexstring for creating H256 but found "${value}"`
             );
-        }
-        if (
-            (!value.startsWith("0x") && value.length !== 64) ||
-            (value.startsWith("0x") && value.length !== 66)
-        ) {
-            throw Error(
-                `The length for H256 must be 64 or 66 with 0x-prefix, but "${value}" is given`
-            );
-        } else if (!/(0x)?[0-9a-fA-F]{64}/.test(value)) {
-            throw Error(`Invalid hexadecimal string: ${value}`);
         }
         this.value = value.startsWith("0x")
             ? value.slice(2).toLowerCase()

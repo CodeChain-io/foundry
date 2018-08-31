@@ -24,26 +24,25 @@ export class H512 {
         );
     }
 
+    public static check(param: H512 | string): boolean {
+        return param instanceof H512 ? true : H512.checkString(param);
+    }
+
     public static ensure(param: H512 | string): H512 {
         return param instanceof H512 ? param : new H512(param);
     }
+
+    private static checkString(value: string): boolean {
+        return /^(0x)?[0-9a-fA-F]{128}$/.test(value);
+    }
+
     public value: string;
 
     constructor(value: string) {
-        if (!_.isString(value)) {
+        if (!H512.checkString(value)) {
             throw Error(
-                `The given value for new H512() is not a string, but ${value}`
+                `Expected 64 byte hexstring for creating H512 but found "${value}"`
             );
-        }
-        if (
-            (!value.startsWith("0x") && value.length !== 128) ||
-            (value.startsWith("0x") && value.length !== 130)
-        ) {
-            throw Error(
-                `The length for H512 must be 128 or 130 with 0x-prefix, but "${value}" is given`
-            );
-        } else if (!/(0x)?[0-9a-fA-F]{128}/.test(value)) {
-            throw Error(`Invalid hexadecimal string: ${value}`);
         }
         this.value = value.startsWith("0x")
             ? value.slice(2).toLowerCase()

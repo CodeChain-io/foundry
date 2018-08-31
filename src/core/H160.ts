@@ -23,26 +23,25 @@ export class H160 {
         );
     }
 
+    public static check(param: H160 | string): boolean {
+        return param instanceof H160 ? true : H160.checkString(param);
+    }
+
     public static ensure(param: H160 | string): H160 {
         return param instanceof H160 ? param : new H160(param);
     }
+
+    private static checkString(value: string): boolean {
+        return /^(0x)?[0-9a-fA-F]{40}$/.test(value);
+    }
+
     public value: string;
 
     constructor(value: string) {
-        if (!_.isString(value)) {
+        if (!H160.checkString(value)) {
             throw Error(
-                `The given value for new H160() is not a string, but ${value}`
+                `Expected 20 byte hexstring for creating H160 but found "${value}"`
             );
-        }
-        if (
-            (!value.startsWith("0x") && value.length !== 40) ||
-            (value.startsWith("0x") && value.length !== 42)
-        ) {
-            throw Error(
-                `The length for H160 must be 40 or 42 with 0x-prefix, but "${value}" is given`
-            );
-        } else if (!/(0x)?[0-9a-fA-F]{40}/.test(value)) {
-            throw Error(`Invalid hexadecimal string: ${value}`);
         }
         this.value = value.startsWith("0x")
             ? value.slice(2).toLowerCase()
