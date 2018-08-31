@@ -132,6 +132,12 @@ export class AssetTransferAddress {
         return new this(type, new H256(payload), address);
     }
 
+    public static check(address: AssetTransferAddress | string) {
+        return address instanceof AssetTransferAddress
+            ? true
+            : AssetTransferAddress.checkString(address);
+    }
+
     public static ensure(address: AssetTransferAddress | string) {
         return address instanceof AssetTransferAddress
             ? address
@@ -159,9 +165,14 @@ export class AssetTransferAddress {
         }
         throw Error("Unknown lock script hash");
     }
+
+    private static checkString(value: string): boolean {
+        // FIXME: verify checksum
+        return /^.{2}a[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{61}$/.test(value);
+    }
+
     public type: number;
     public payload: H256;
-
     public value: string;
 
     private constructor(type: number, payload: H256 | string, address: string) {
