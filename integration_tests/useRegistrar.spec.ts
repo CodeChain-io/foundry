@@ -75,6 +75,7 @@ async function sendCCCToOther() {
 async function mintAssetUsingMaster(p2pkh, aliceAddress, bobAddress) {
     const assetScheme = sdk.core.createAssetScheme({
         shardId: 0,
+        worldId: 0,
         metadata: JSON.stringify({
             name: "Gold",
             description: "An asset example",

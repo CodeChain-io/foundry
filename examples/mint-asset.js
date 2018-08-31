@@ -10,6 +10,7 @@ var address =
 var assetMintTransaction = sdk.core.createAssetMintTransaction({
     scheme: {
         shardId: 0,
+        worldId: 0,
         metadata: JSON.stringify({
             name: "Silver Coin",
             description: "...",
