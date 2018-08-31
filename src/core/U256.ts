@@ -5,6 +5,10 @@ const RLP = require("rlp");
  * Handles 256-bit unsigned integers. Used to express nonce, asset amount, etc.
  */
 export class U256 {
+    public static MAX_VALUE = new BigNumber(
+        "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+    );
+
     public static fromBytes(buffer: Buffer): U256 {
         const bytes = Array.from(buffer.values());
         const length = bytes.shift()! - 0x80;
@@ -28,9 +32,38 @@ export class U256 {
         );
     }
 
+    public static check(param: U256 | string | number | BigNumber) {
+        if (param instanceof U256) {
+            return true;
+        } else if (param instanceof BigNumber) {
+            return (
+                param.isInteger() &&
+                !param.isNegative() &&
+                param.isLessThanOrEqualTo(U256.MAX_VALUE)
+            );
+        } else if (typeof param === "number") {
+            return Number.isInteger(param) && param >= 0;
+        } else {
+            return U256.checkString(param);
+        }
+    }
+
     public static ensure(param: U256 | string | number | BigNumber) {
         return param instanceof U256 ? param : new U256(param);
     }
+
+    private static checkString(param: string): boolean {
+        if (typeof param !== "string") {
+            return false;
+        }
+        const num = new BigNumber(param);
+        return (
+            num.isInteger() &&
+            !num.isNegative() &&
+            num.isLessThanOrEqualTo(U256.MAX_VALUE)
+        );
+    }
+
     public value: BigNumber;
 
     constructor(value: number | string | BigNumber) {
