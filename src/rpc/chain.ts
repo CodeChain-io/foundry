@@ -103,9 +103,7 @@ export class ChainRpc {
             throw Error("The fee of the parcel is not specified");
         }
         parcel.setFee(fee);
-        const address = PlatformAddress.fromAccountId(
-            PlatformAddress.ensureAccount(account)
-        );
+        const address = PlatformAddress.ensure(account);
         const sig = await this.rpc.account.sign(
             parcel.hash(),
             address,

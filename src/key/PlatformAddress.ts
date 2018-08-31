@@ -21,8 +21,20 @@ export class PlatformAddress {
     ) {
         const { networkId = "tc", version = 0 } = options;
 
+        if (!H160.check(accountId)) {
+            throw Error(
+                `Invalid accountId for creating PlatformAddress: "${accountId}"`
+            );
+        }
         if (version !== 0) {
-            throw Error(`Unsupported version for platform address: ${version}`);
+            throw Error(
+                `Unsupported version for PlatformAddress: "${version}"`
+            );
+        }
+        if (typeof networkId !== "string" || networkId.length !== 2) {
+            throw Error(
+                `Unsupported networkId for PlatformAddress: "${networkId}"`
+            );
         }
 
         const words = toWords(
@@ -39,10 +51,12 @@ export class PlatformAddress {
     }
 
     public static fromString(address: string) {
-        if (address.charAt(2) !== "c") {
+        if (typeof address !== "string") {
             throw Error(
-                `The prefix is unknown for platform address: ${address}`
+                `Expected PlatformAddress string but found: "${address}"`
             );
+        } else if (address.charAt(2) !== "c") {
+            throw Error(`Unknown prefix for PlatformAddress: ${address}`);
         }
 
         const { words } = decode(address, address.substr(0, 3));
@@ -50,7 +64,7 @@ export class PlatformAddress {
         const version = bytes[0];
 
         if (version !== 0) {
-            throw Error(`Unsupported version for platform address: ${version}`);
+            throw Error(`Unsupported version for PlatformAddress: ${version}`);
         }
 
         const accountId = toHex(Buffer.from(bytes.slice(1)));
@@ -58,9 +72,15 @@ export class PlatformAddress {
     }
 
     public static ensure(address: PlatformAddress | string): PlatformAddress {
-        return address instanceof PlatformAddress
-            ? address
-            : PlatformAddress.fromString(address);
+        if (address instanceof PlatformAddress) {
+            return address;
+        } else if (typeof address === "string") {
+            return PlatformAddress.fromString(address);
+        } else {
+            throw Error(
+                `Expected either PlatformAddress or string but found ${address}`
+            );
+        }
     }
 
     public static ensureAccount(

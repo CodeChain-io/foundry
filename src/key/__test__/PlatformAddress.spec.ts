@@ -23,10 +23,39 @@ describe("fromAccountId", () => {
         }).not.toThrow();
     });
 
-    test("Invalid version", () => {
-        expect(() => {
-            PlatformAddress.fromAccountId(accountId, { version: 1 });
-        }).toThrow("Unsupported version for platform address: 1");
+    test("Invalid version", done => {
+        try {
+            PlatformAddress.fromAccountId(accountId, { version: 99 });
+            done.fail();
+        } catch (e) {
+            expect(e.toString()).toContain("version");
+            done();
+        }
+    });
+
+    test("Invalid networkId", done => {
+        try {
+            PlatformAddress.fromAccountId(accountId, {
+                version: 0,
+                networkId: "x"
+            });
+            done.fail();
+        } catch (e) {
+            expect(e.toString()).toContain("networkId");
+            expect(e.toString()).toContain("x");
+            done();
+        }
+    });
+
+    test("Invalid accountId", done => {
+        try {
+            PlatformAddress.fromAccountId("xxx");
+            done.fail();
+        } catch (e) {
+            expect(e.toString()).toContain("accountId");
+            expect(e.toString()).toContain("xxx");
+            done();
+        }
     });
 });
 
@@ -45,13 +74,15 @@ describe("fromString", () => {
         expect(address.accountId).toEqual(new H160(accountId));
     });
 
-    test("Invalid checksum", () => {
+    test("Invalid checksum", done => {
         const invalidChecksumAddress =
             "cccqpa4urhgv3xx7kzlc2tnvs2r9q9ytpz9qgqqqqqq";
         try {
             PlatformAddress.fromString(invalidChecksumAddress);
+            done.fail();
         } catch (e) {
             expect(e.toString()).toContain("checksum");
+            done();
         }
     });
 });
