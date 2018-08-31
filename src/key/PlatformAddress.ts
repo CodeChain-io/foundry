@@ -71,6 +71,12 @@ export class PlatformAddress {
         return new PlatformAddress(new H160(accountId), address);
     }
 
+    public static check(address: PlatformAddress | string): boolean {
+        return address instanceof PlatformAddress
+            ? true
+            : PlatformAddress.checkString(address);
+    }
+
     public static ensure(address: PlatformAddress | string): PlatformAddress {
         if (address instanceof PlatformAddress) {
             return address;
@@ -97,6 +103,12 @@ export class PlatformAddress {
             return PlatformAddress.fromString(address).getAccountId();
         }
     }
+
+    private static checkString(value: string): boolean {
+        // FIXME: verify checksum
+        return /^.{2}c[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{40}$/.test(value);
+    }
+
     public readonly accountId: H160;
     public readonly value: string;
 
