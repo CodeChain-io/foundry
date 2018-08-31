@@ -8,7 +8,7 @@ before_script:
   - docker run -d -p 8080:8080 kodebox/codechain:7f3d3030d8d4bb86a5b7025f73877df45d8bd97a --jsonrpc-interface 0.0.0.0 -c solo --reseal-min-period 0
   - docker ps -a
 script:
-  - yarn test
+  - yarn test --verbose
   - yarn build
   - yarn test-int --verbose
 notifications:
