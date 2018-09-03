@@ -15,7 +15,21 @@ export class DevelRpc {
      * @returns null
      */
     public startSealing(): Promise<null> {
-        return this.rpc.sendRpcRequest("devel_startSealing", []);
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("devel_startSealing", [])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(
+                        Error(
+                            `Expected devel_startSealing to return null but it returned ${result}`
+                        )
+                    );
+                })
+                .catch(reject);
+        });
     }
 
     /**
@@ -23,6 +37,20 @@ export class DevelRpc {
      * @returns null
      */
     public stopSealing(): Promise<null> {
-        return this.rpc.sendRpcRequest("devel_stopSealing", []);
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("devel_stopSealing", [])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(
+                        Error(
+                            `Expected devel_stopSealing to return null but it returned ${result}`
+                        )
+                    );
+                })
+                .catch(reject);
+        });
     }
 }
