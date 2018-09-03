@@ -1,6 +1,8 @@
 var SDK = require("codechain-sdk");
 
-var sdk = new SDK({ server: "http://localhost:8080" });
+var sdk = new SDK({
+    server: "http://localhost:8080"
+});
 
 // If you want to know how to create an address, see the example "Create an
 // asset transfer address".
