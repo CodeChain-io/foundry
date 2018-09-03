@@ -90,11 +90,12 @@ export class Core {
         amount: U256 | number | string;
     }): Parcel {
         const { recipient, amount } = params;
-        const action = new Payment(
-            PlatformAddress.ensure(recipient),
-            U256.ensure(amount)
+        checkPlatformAddressRecipient(recipient);
+        checkAmount(amount);
+        return new Parcel(
+            this.networkId,
+            new Payment(PlatformAddress.ensure(recipient), U256.ensure(amount))
         );
-        return new Parcel(this.networkId, action);
     }
 
     /**
@@ -104,8 +105,8 @@ export class Core {
      */
     public createSetRegularKeyParcel(params: { key: H512 | string }): Parcel {
         const { key } = params;
-        const action = new SetRegularKey(H512.ensure(key));
-        return new Parcel(this.networkId, action);
+        checkKey(key);
+        return new Parcel(this.networkId, new SetRegularKey(H512.ensure(key)));
     }
 
     /**
@@ -117,16 +118,18 @@ export class Core {
         transactions: Transaction[];
     }): Parcel {
         const { transactions } = params;
-        const action = new ChangeShardState({ transactions });
-        return new Parcel(this.networkId, action);
+        checkTransactions(transactions);
+        return new Parcel(
+            this.networkId,
+            new ChangeShardState({ transactions })
+        );
     }
 
     /**
      * Creates CreateShard action which can create new shard
      */
     public createCreateShardParcel(): Parcel {
-        const action = new CreateShard();
-        return new Parcel(this.networkId, action);
+        return new Parcel(this.networkId, new CreateShard());
     }
 
     public createSetShardOwnersParcel(params: {
@@ -134,11 +137,15 @@ export class Core {
         owners: Array<PlatformAddress | string>;
     }): Parcel {
         const { shardId, owners } = params;
-        const action = new SetShardOwners({
-            shardId,
-            owners: owners.map(PlatformAddress.ensure)
-        });
-        return new Parcel(this.networkId, action);
+        checkShardId(shardId);
+        checkOwners(owners);
+        return new Parcel(
+            this.networkId,
+            new SetShardOwners({
+                shardId,
+                owners: owners.map(PlatformAddress.ensure)
+            })
+        );
     }
 
     /**
@@ -151,11 +158,15 @@ export class Core {
         users: Array<PlatformAddress | string>;
     }): Parcel {
         const { shardId, users } = params;
-        const action = new SetShardUsers({
-            shardId,
-            users: users.map(PlatformAddress.ensure)
-        });
-        return new Parcel(this.networkId, action);
+        checkShardId(shardId);
+        checkUsers(users);
+        return new Parcel(
+            this.networkId,
+            new SetShardUsers({
+                shardId,
+                users: users.map(PlatformAddress.ensure)
+            })
+        );
     }
 
     /**
@@ -173,9 +184,14 @@ export class Core {
         worldId: number;
         metadata: string;
         amount: number;
-        registrar: PlatformAddress | string | null;
+        registrar?: PlatformAddress | string;
     }): AssetScheme {
-        const { shardId, worldId, metadata, amount, registrar } = params;
+        const { shardId, worldId, metadata, amount, registrar = null } = params;
+        checkShardId(shardId);
+        checkWorldId(worldId);
+        checkMetadata(metadata);
+        checkAmountU64(amount);
+        checkRegistrar(registrar);
         return new AssetScheme({
             networkId: this.networkId,
             shardId,
@@ -193,13 +209,21 @@ export class Core {
         owners: Array<PlatformAddress | string>;
         nonce?: number;
     }): CreateWorldTransaction {
-        const { networkId, shardId, owners, nonce } = params;
-
+        const {
+            networkId = this.networkId,
+            shardId,
+            owners,
+            nonce = 0
+        } = params;
+        checkNetworkId(networkId);
+        checkShardId(shardId);
+        checkOwners(owners);
+        checkNonce(nonce);
         return new CreateWorldTransaction({
-            networkId: networkId || this.networkId,
+            networkId,
             shardId,
             owners: owners.map(PlatformAddress.ensure),
-            nonce: nonce || 0
+            nonce
         });
     }
 
@@ -210,10 +234,20 @@ export class Core {
         owners: Array<PlatformAddress | string>;
         nonce: number;
     }): SetWorldOwnersTransaction {
-        const { networkId, shardId, worldId, owners, nonce } = params;
-
+        const {
+            networkId = this.networkId,
+            shardId,
+            worldId,
+            owners,
+            nonce
+        } = params;
+        checkNetworkId(networkId);
+        checkShardId(shardId);
+        checkWorldId(worldId);
+        checkOwners(owners);
+        checkNonce(nonce);
         return new SetWorldOwnersTransaction({
-            networkId: networkId || this.networkId,
+            networkId,
             shardId,
             worldId,
             owners: owners.map(PlatformAddress.ensure),
@@ -228,10 +262,20 @@ export class Core {
         users: Array<PlatformAddress | string>;
         nonce: number;
     }): SetWorldUsersTransaction {
-        const { networkId, shardId, worldId, users, nonce } = params;
-
+        const {
+            networkId = this.networkId,
+            shardId,
+            worldId,
+            users,
+            nonce
+        } = params;
+        checkNetworkId(networkId);
+        checkShardId(shardId);
+        checkWorldId(worldId);
+        checkUsers(users);
+        checkNonce(nonce);
         return new SetWorldUsersTransaction({
-            networkId: networkId || this.networkId,
+            networkId,
             shardId,
             worldId,
             users: users.map(PlatformAddress.ensure),
@@ -253,20 +297,32 @@ export class Core {
         recipient: AssetTransferAddress | string;
         nonce?: number;
     }): AssetMintTransaction {
-        const { scheme, recipient, nonce } = params;
+        const { scheme, recipient, nonce = 0 } = params;
+        if (scheme !== null && typeof scheme !== "object") {
+            throw Error(
+                `Expected scheme param to be either an AssetScheme or an object but found ${scheme}`
+            );
+        }
         const {
-            networkId,
+            networkId = this.networkId,
             shardId,
             worldId,
             metadata,
-            registrar,
+            registrar = null,
             amount
         } = scheme;
+        checkAssetTransferAddressRecipient(recipient);
+        checkNonce(nonce);
+        checkNetworkId(networkId);
+        checkShardId(shardId);
+        checkWorldId(worldId);
+        checkMetadata(metadata);
+        checkRegistrar(registrar);
         return new AssetMintTransaction({
-            networkId: networkId || this.networkId,
+            networkId,
             shardId,
             worldId,
-            nonce: nonce || 0,
+            nonce,
             registrar:
                 registrar == null ? null : PlatformAddress.ensure(registrar),
             metadata,
@@ -288,13 +344,24 @@ export class Core {
             nonce?: number;
         } = { burns: [], inputs: [], outputs: [] }
     ): AssetTransferTransaction {
-        const { burns, inputs, outputs, networkId, nonce } = params;
+        const {
+            burns,
+            inputs,
+            outputs,
+            networkId = this.networkId,
+            nonce = 0
+        } = params;
+        checkTransferBurns(burns);
+        checkTransferInputs(inputs);
+        checkTransferOutputs(outputs);
+        checkNetworkId(networkId);
+        checkNonce(nonce);
         return new AssetTransferTransaction({
             burns,
             inputs,
             outputs,
-            networkId: networkId || this.networkId,
-            nonce: nonce || 0
+            networkId,
+            nonce
         });
     }
 
@@ -313,21 +380,48 @@ export class Core {
         unlockScript?: Buffer;
     }): AssetTransferInput {
         const { assetOutPoint, lockScript, unlockScript } = params;
+        if (assetOutPoint !== null && typeof assetOutPoint !== "object") {
+            throw Error(
+                `Expected assetOutPoint param to be either an AssetOutPoint or an object but found ${assetOutPoint}`
+            );
+        }
+        const {
+            transactionHash,
+            index,
+            assetType,
+            amount,
+            lockScriptHash,
+            parameters
+        } = assetOutPoint;
+        checkTransactionHash(transactionHash);
+        checkIndex(index);
+        checkAssetType(assetType);
+        checkAmountU64(amount);
+        if (lockScriptHash) {
+            checkLockScriptHash(lockScriptHash);
+        }
+        if (parameters) {
+            checkParameters(parameters);
+        }
+        if (lockScript) {
+            checkLockScript(lockScript);
+        }
+        if (unlockScript) {
+            checkUnlockScript(unlockScript);
+        }
         return new AssetTransferInput({
             prevOut:
                 assetOutPoint instanceof AssetOutPoint
                     ? assetOutPoint
                     : new AssetOutPoint({
-                          transactionHash: H256.ensure(
-                              assetOutPoint.transactionHash
-                          ),
-                          index: assetOutPoint.index,
-                          assetType: H256.ensure(assetOutPoint.assetType),
-                          amount: assetOutPoint.amount,
-                          lockScriptHash: assetOutPoint.lockScriptHash
-                              ? H256.ensure(assetOutPoint.lockScriptHash)
+                          transactionHash: H256.ensure(transactionHash),
+                          index,
+                          assetType: H256.ensure(assetType),
+                          amount,
+                          lockScriptHash: lockScriptHash
+                              ? H256.ensure(lockScriptHash)
                               : undefined,
-                          parameters: assetOutPoint.parameters
+                          parameters
                       }),
             lockScript,
             unlockScript
@@ -341,6 +435,10 @@ export class Core {
         amount: number;
     }): AssetOutPoint {
         const { transactionHash, index, assetType, amount } = params;
+        checkTransactionHash(transactionHash);
+        checkIndex(index);
+        checkAssetType(assetType);
+        checkAmountU64(amount);
         return new AssetOutPoint({
             transactionHash: H256.ensure(transactionHash),
             index,
@@ -355,6 +453,9 @@ export class Core {
         amount: number;
     }): AssetTransferOutput {
         const { recipient, assetType, amount } = params;
+        checkAssetTransferAddressRecipient(recipient);
+        checkAssetType(assetType);
+        checkAmountU64(amount);
         return new AssetTransferOutput({
             ...AssetTransferAddress.ensure(
                 recipient
@@ -367,5 +468,221 @@ export class Core {
     // FIXME: any
     public getTransactionFromJSON(json: any): Transaction {
         return getTransactionFromJSON(json);
+    }
+}
+
+function checkNetworkId(networkId: NetworkId) {
+    if (typeof networkId !== "string" || networkId.length !== 2) {
+        throw Error(
+            `Expected networkId param to be a string of length 2 but found ${networkId}`
+        );
+    }
+}
+
+function checkNonce(nonce: number) {
+    if (typeof nonce !== "number") {
+        throw Error(`Expected nonce param to be a number but found ${nonce}`);
+    }
+}
+
+function checkPlatformAddressRecipient(recipient: PlatformAddress | string) {
+    if (!PlatformAddress.check(recipient)) {
+        throw Error(
+            `Expected recipient param to be a PlatformAddress but found ${recipient}`
+        );
+    }
+}
+
+function checkAssetTransferAddressRecipient(
+    recipient: AssetTransferAddress | string
+) {
+    if (!AssetTransferAddress.check(recipient)) {
+        throw Error(
+            `Expected recipient param to be a AssetTransferAddress but found ${recipient}`
+        );
+    }
+}
+
+function checkAmount(amount: U256 | number | string) {
+    if (!U256.check(amount)) {
+        throw Error(
+            `Expected amount param to be a U256 value but found ${amount}`
+        );
+    }
+}
+
+// FIXME: U64
+function checkAmountU64(amount: number) {
+    if (typeof amount !== "number") {
+        throw Error(`Expected amount param to be a number but found ${amount}`);
+    }
+}
+
+function checkKey(key: H512 | string) {
+    if (!H512.check(key)) {
+        throw Error(`Expected key param to be an H512 value but found ${key}`);
+    }
+}
+
+function checkShardId(shardId: number) {
+    if (typeof shardId !== "number") {
+        throw Error(
+            `Expected shardId param to be a number but found ${shardId}`
+        );
+    }
+}
+
+function checkWorldId(worldId: number) {
+    if (typeof worldId !== "number") {
+        throw Error(
+            `Expected worldId param to be a number but found ${worldId}`
+        );
+    }
+}
+
+function checkMetadata(metadata: string) {
+    if (typeof metadata !== "string") {
+        throw Error(
+            `Expected metadata param to be a string but found ${metadata}`
+        );
+    }
+}
+
+function checkRegistrar(registrar: PlatformAddress | string | null) {
+    if (registrar !== null && !PlatformAddress.check(registrar)) {
+        throw Error(
+            `Expected registrar param to be either null or a PlatformAddress value but found ${registrar}`
+        );
+    }
+}
+
+function checkTransactions(transactions: Transaction[]) {
+    if (!Array.isArray(transactions)) {
+        throw Error(
+            `Expected transactions param to be an array but found ${transactions}`
+        );
+    }
+    // FIXME: check all transaction are valid
+}
+
+function checkOwners(owners: Array<PlatformAddress | string>) {
+    if (!Array.isArray(owners)) {
+        throw Error(`Expected owners param to be an array but found ${owners}`);
+    }
+    owners.forEach((owner, index) => {
+        if (!PlatformAddress.check(owner)) {
+            throw Error(
+                `Expected an owner address to be a PlatformAddress value but found ${owner} at index ${index}`
+            );
+        }
+    });
+}
+
+function checkUsers(users: Array<PlatformAddress | string>) {
+    if (!Array.isArray(users)) {
+        throw Error(`Expected users param to be an array but found ${users}`);
+    }
+    users.forEach((user, index) => {
+        if (!PlatformAddress.check(user)) {
+            throw Error(
+                `Expected a user address to be a PlatformAddress value but found ${user} at index ${index}`
+            );
+        }
+    });
+}
+
+function checkTransferBurns(burns: Array<AssetTransferInput>) {
+    if (!Array.isArray(burns)) {
+        throw Error(`Expected burns param to be an array but found ${burns}`);
+    }
+    burns.forEach((burn, index) => {
+        throw Error(
+            `Expected an item of burns to be an AssetTransferInput but found ${burn} at index ${index}`
+        );
+    });
+}
+
+function checkTransferInputs(inputs: Array<AssetTransferInput>) {
+    if (!Array.isArray(inputs)) {
+        throw Error(`Expected inputs param to be an array but found ${inputs}`);
+    }
+    inputs.forEach((input, index) => {
+        throw Error(
+            `Expected an item of inputs to be an AssetTransferInput but found ${input} at index ${index}`
+        );
+    });
+}
+
+function checkTransferOutputs(outputs: Array<AssetTransferOutput>) {
+    if (!Array.isArray(outputs)) {
+        throw Error(
+            `Expected outputs param to be an array but found ${outputs}`
+        );
+    }
+    outputs.forEach((output, index) => {
+        throw Error(
+            `Expected an item of outputs to be an AssetTransferOutput but found ${output} at index ${index}`
+        );
+    });
+}
+
+function checkTransactionHash(value: H256 | string) {
+    if (!H256.check(value)) {
+        throw Error(
+            `Expected transactionHash param to be an H256 value but found ${value}`
+        );
+    }
+}
+
+function checkIndex(index: number) {
+    if (typeof index !== "number") {
+        throw Error(`Expected index param to be a number but found ${index}`);
+    }
+}
+
+function checkAssetType(value: H256 | string) {
+    if (!H256.check(value)) {
+        throw Error(
+            `Expected assetType param to be an H256 value but found ${value}`
+        );
+    }
+}
+
+function checkLockScriptHash(value: H256 | string) {
+    if (!H256.check(value)) {
+        throw Error(
+            `Expected lockScriptHash param to be an H256 value but found ${value}`
+        );
+    }
+}
+
+function checkParameters(parameters: Buffer[]) {
+    if (!Array.isArray(parameters)) {
+        throw Error(
+            `Expected parameters param to be an array but found ${parameters}`
+        );
+    }
+    parameters.forEach((p, index) => {
+        if (p instanceof Buffer) {
+            throw Error(
+                `Expedted an item of parameters to be an instance of Buffer but found ${p} at index ${index}`
+            );
+        }
+    });
+}
+
+function checkLockScript(lockScript: Buffer) {
+    if (!(lockScript instanceof Buffer)) {
+        throw Error(
+            `Expedted lockScript param to be an instance of Buffer but found ${lockScript}`
+        );
+    }
+}
+
+function checkUnlockScript(unlockScript: Buffer) {
+    if (!(unlockScript instanceof Buffer)) {
+        throw Error(
+            `Expected unlockScript param to be an instance of Buffer but found ${unlockScript}`
+        );
     }
 }
