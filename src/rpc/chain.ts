@@ -40,6 +40,11 @@ export class ChainRpc {
      * @returns SignedParcel's hash.
      */
     public sendSignedParcel(parcel: SignedParcel): Promise<H256> {
+        if (!(parcel instanceof SignedParcel)) {
+            throw Error(
+                `Expected the first argument of sendSignedParcel to be SignedParcel but found ${parcel}`
+            );
+        }
         return new Promise((resolve, reject) => {
             const bytes = Array.from(parcel.rlpBytes())
                 .map(
@@ -89,6 +94,11 @@ export class ChainRpc {
             fee?: U256 | string | number;
         }
     ): Promise<H256> {
+        if (!(parcel instanceof Parcel)) {
+            throw Error(
+                `Expected the first argument of sendParcel to be a Parcel but found ${parcel}`
+            );
+        }
         const {
             account = this.parcelSigner,
             passphrase,
@@ -96,6 +106,10 @@ export class ChainRpc {
         } = options || { passphrase: undefined };
         if (!account) {
             throw Error("The account to sign the parcel is not specified");
+        } else if (!PlatformAddress.check(account)) {
+            throw Error(
+                `Expected account param of sendParcel to be a PlatformAddress value but found ${account}`
+            );
         }
         const { nonce = await this.getNonce(account) } = options || {};
         parcel.setNonce(nonce!);
@@ -118,6 +132,11 @@ export class ChainRpc {
      * @returns SignedParcel, or null when SignedParcel was not found.
      */
     public getParcel(hash: H256 | string): Promise<SignedParcel | null> {
+        if (!H256.check(hash)) {
+            throw Error(
+                `Expected the first argument of getParcel to be an H256 value but found ${hash}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getParcel", [
@@ -152,13 +171,26 @@ export class ChainRpc {
         parcelHash: H256 | string,
         options: { timeout?: number } = {}
     ): Promise<Invoice[] | Invoice | null> {
+        if (!H256.check(parcelHash)) {
+            throw Error(
+                `Expected the first argument of getParcelInvoice to be an H256 value but found ${parcelHash}`
+            );
+        }
         const attemptToGet = async () => {
             return this.rpc.sendRpcRequest("chain_getParcelInvoice", [
                 `0x${H256.ensure(parcelHash).value}`
             ]);
         };
-        const startTime = Date.now();
         const { timeout } = options;
+        if (
+            timeout !== undefined &&
+            (typeof timeout !== "number" || timeout < 0)
+        ) {
+            throw Error(
+                `Expected timeout param of getParcelInvoice to be non-negative number but found ${timeout}`
+            );
+        }
+        const startTime = Date.now();
         let result = await attemptToGet();
         while (
             result === null &&
@@ -193,6 +225,16 @@ export class ChainRpc {
         address: PlatformAddress | string,
         blockNumber?: number
     ): Promise<H512> {
+        if (!PlatformAddress.check(address)) {
+            throw Error(
+                `Expected the first argument of getRegularKey to be a PlatformAddress value but found ${address}`
+            );
+        }
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the second argument of getRegularKey to be a number but found ${blockNumber}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getRegularKey", [
@@ -219,6 +261,11 @@ export class ChainRpc {
      * @returns A transaction, or null when transaction of given hash not exists.
      */
     public getTransaction(txhash: H256 | string): Promise<Transaction | null> {
+        if (!H256.check(txhash)) {
+            throw Error(
+                `Expected the first argument of getTransaction to be an H256 value but found ${txhash}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getTransaction", [
@@ -253,6 +300,11 @@ export class ChainRpc {
         txhash: H256 | string,
         options: { timeout?: number } = {}
     ): Promise<Invoice | null> {
+        if (!H256.check(txhash)) {
+            throw Error(
+                `Expected the first argument of getTransactionInvoice to be an H256 value but found ${txhash}`
+            );
+        }
         const attemptToGet = async () => {
             return this.rpc.sendRpcRequest("chain_getTransactionInvoice", [
                 `0x${H256.ensure(txhash).value}`
@@ -260,6 +312,14 @@ export class ChainRpc {
         };
         const startTime = Date.now();
         const { timeout } = options;
+        if (
+            timeout !== undefined &&
+            (typeof timeout !== "number" || timeout < 0)
+        ) {
+            throw Error(
+                `Expected timeout param of getTransactionInvoice to be non-negative number but found ${timeout}`
+            );
+        }
         let result = await attemptToGet();
         while (
             result === null &&
@@ -291,6 +351,16 @@ export class ChainRpc {
         address: PlatformAddress | string,
         blockNumber?: number
     ): Promise<U256> {
+        if (!PlatformAddress.check(address)) {
+            throw Error(
+                `Expected the first argument of getBalance to be a PlatformAddress value but found ${address}`
+            );
+        }
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the second argument of getBalance to be a number but found ${blockNumber}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getBalance", [
@@ -322,6 +392,16 @@ export class ChainRpc {
         address: PlatformAddress | string,
         blockNumber?: number
     ): Promise<U256> {
+        if (!PlatformAddress.check(address)) {
+            throw Error(
+                `Expected the first argument of getNonce to be a PlatformAddress value but found ${address}`
+            );
+        }
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the second argument of getNonce to be a number but found ${blockNumber}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getNonce", [
@@ -371,6 +451,11 @@ export class ChainRpc {
      * @returns BlockHash, if block exists. Else, returns null.
      */
     public getBlockHash(blockNumber: number): Promise<H256 | null> {
+        if (!isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the first argument of getBlockHash to be a non-negative integer but found ${blockNumber}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getBlockHash", [blockNumber])
@@ -402,10 +487,14 @@ export class ChainRpc {
             result = await this.rpc.sendRpcRequest("chain_getBlockByHash", [
                 `0x${H256.ensure(hashOrNumber).value}`
             ]);
-        } else {
+        } else if (typeof hashOrNumber === "number") {
             result = await this.rpc.sendRpcRequest("chain_getBlockByNumber", [
                 hashOrNumber
             ]);
+        } else {
+            throw Error(
+                `Expected the first argument of getBlock to be either a number or an H256 value but found ${hashOrNumber}`
+            );
         }
         try {
             return result === null ? null : Block.fromJSON(result);
@@ -428,6 +517,21 @@ export class ChainRpc {
         shardId: number,
         worldId: number
     ): Promise<AssetScheme | null> {
+        if (!H256.check(txhash)) {
+            throw Error(
+                `Expected the first arugment of getAssetSchemeByHash to be an H256 value but found ${txhash}`
+            );
+        }
+        if (!isShardIdValue(shardId)) {
+            throw Error(
+                `Expected the second argument of getAssetSchemeByHash to be a shard ID value but found ${shardId}`
+            );
+        }
+        if (!isWorldIdValue(worldId)) {
+            throw Error(
+                `Expected the third argument of getAssetSchemeByHash to be a world ID value but found ${shardId}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getAssetSchemeByHash", [
@@ -462,6 +566,11 @@ export class ChainRpc {
     public getAssetSchemeByType(
         assetType: H256 | string
     ): Promise<AssetScheme | null> {
+        if (!H256.check(assetType)) {
+            throw Error(
+                `Expected the first arugment of getAssetSchemeByType to be an H256 value but found ${assetType}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getAssetSchemeByType", [
@@ -498,6 +607,21 @@ export class ChainRpc {
         index: number,
         blockNumber?: number
     ): Promise<Asset | null> {
+        if (!H256.check(txhash)) {
+            throw Error(
+                `Expected the first argument of getAsset to be an H256 value but found ${txhash}`
+            );
+        }
+        if (!isNonNegativeInterger(index)) {
+            throw Error(
+                `Expected the second argument of getAsset to be non-negative integer but found ${index}`
+            );
+        }
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the third argument of getAsset to be non-negative integer but found ${index}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getAsset", [
@@ -543,6 +667,22 @@ export class ChainRpc {
         shardId: number,
         blockNumber?: number
     ): Promise<boolean | null> {
+        if (!H256.check(txhash)) {
+            throw Error(
+                `Expected the first argument of isAssetSpent to be an H256 value but found ${txhash}`
+            );
+        }
+        if (!isNonNegativeInterger(index)) {
+            throw Error(
+                `Expected the second argument of isAssetSpent to be a non-negative integer but found ${index}`
+            );
+        }
+        if (!isShardIdValue(shardId)) {
+            throw Error(
+                `Expected the third argument of isAssetSpent to be a shard ID value but found ${shardId}`
+            );
+        }
+
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_isAssetSpent", [
@@ -618,4 +758,21 @@ export class ChainRpc {
                 .catch(reject);
         });
     }
+}
+
+function isNonNegativeInterger(value: any): boolean {
+    return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function isShardIdValue(value: any): boolean {
+    return (
+        typeof value === "number" &&
+        Number.isInteger(value) &&
+        value >= 0 &&
+        value <= 0xffff
+    );
+}
+
+function isWorldIdValue(value: any): boolean {
+    return isShardIdValue(value);
 }
