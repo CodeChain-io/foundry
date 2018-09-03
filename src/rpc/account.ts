@@ -54,6 +54,11 @@ export class AccountRpc {
      * @returns An account
      */
     public create(passphrase?: string): Promise<string> {
+        if (passphrase && typeof passphrase !== "string") {
+            throw Error(
+                `Expected the first argument to be a string but given ${passphrase}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("account_create", [passphrase])
@@ -82,6 +87,16 @@ export class AccountRpc {
         secret: H256 | string,
         passphrase?: string
     ): Promise<string> {
+        if (!H256.check(secret)) {
+            throw Error(
+                `Expected the first argument to be an H256 value but found ${secret}`
+            );
+        }
+        if (passphrase && typeof passphrase !== "string") {
+            throw Error(
+                `Expected the second argument to be a string but found ${passphrase}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("account_importRaw", [
@@ -112,6 +127,16 @@ export class AccountRpc {
         address: PlatformAddress | string,
         passphrase?: string
     ): Promise<null> {
+        if (!PlatformAddress.check(address)) {
+            throw Error(
+                `Expected the first argument to be a PlatformAddress value but found ${address}`
+            );
+        }
+        if (passphrase && typeof passphrase !== "string") {
+            throw Error(
+                `Expected the second argument to be a string but found ${passphrase}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("account_remove", [
@@ -143,6 +168,21 @@ export class AccountRpc {
         address: PlatformAddress | string,
         passphrase?: string
     ): Promise<string> {
+        if (!H256.check(messageDigest)) {
+            throw Error(
+                `Expected the first argument to be an H256 value but found ${messageDigest}`
+            );
+        }
+        if (!PlatformAddress.check(address)) {
+            throw Error(
+                `Expected the second argument to be a PlatformAddress value but found ${address}`
+            );
+        }
+        if (passphrase && typeof passphrase !== "string") {
+            throw Error(
+                `Expected the third argument to be a string but found ${passphrase}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("account_sign", [
@@ -178,6 +218,26 @@ export class AccountRpc {
         passphrase?: string,
         duration?: number
     ): Promise<null> {
+        if (!PlatformAddress.check(address)) {
+            throw Error(
+                `Expected the first argument to be a PlatformAddress value but found ${address}`
+            );
+        }
+        if (passphrase && typeof passphrase !== "string") {
+            throw Error(
+                `Expected the second argument to be a string but found ${passphrase}`
+            );
+        }
+        if (
+            duration !== undefined &&
+            (typeof duration !== "number" ||
+                !Number.isInteger(duration) ||
+                duration < 0)
+        ) {
+            throw Error(
+                `Expected the third argument to be non-negative integer but found ${duration}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("account_unlock", [
