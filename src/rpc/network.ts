@@ -1,3 +1,5 @@
+import { H256 } from "../core/H256";
+
 import { Rpc } from ".";
 
 export class NetworkRpc {
@@ -19,13 +21,32 @@ export class NetworkRpc {
      * @param port
      */
     public shareSecret(
-        secret: string,
+        secret: H256 | string,
         address: string,
         port: number
     ): Promise<null> {
+        if (!H256.check(secret)) {
+            throw Error(
+                `Expected the first argument of shardSecret to be an H256 value but found ${secret}`
+            );
+        }
+        if (!isIpAddressString(address)) {
+            throw Error(
+                `Expected the second argument of shareSecret to be an IP address string but found ${address}`
+            );
+        }
+        if (!isPortNumber(port)) {
+            throw Error(
+                `Expected the third argument of shardSecret to be a port number but found ${port}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("net_shareSecret", [secret, address, port])
+                .sendRpcRequest("net_shareSecret", [
+                    `0x${H256.ensure(secret).value}`,
+                    address,
+                    port
+                ])
                 .then(result => {
                     if (result === null) {
                         return resolve(null);
@@ -46,6 +67,16 @@ export class NetworkRpc {
      * @param port
      */
     public connect(address: string, port: number): Promise<null> {
+        if (!isIpAddressString(address)) {
+            throw Error(
+                `Expected the first argument of connect to be an IP address string but found ${address}`
+            );
+        }
+        if (!isPortNumber(port)) {
+            throw Error(
+                `Expected the second argument of connect to be a port number but found ${port}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("net_connect", [address, port])
@@ -69,6 +100,16 @@ export class NetworkRpc {
      * @param port
      */
     public disconnect(address: string, port: number): Promise<null> {
+        if (!isIpAddressString(address)) {
+            throw Error(
+                `Expected the first argument of disconnect to be an IP address string but found ${address}`
+            );
+        }
+        if (!isPortNumber(port)) {
+            throw Error(
+                `Expected the second argument of disconnect to be a port number but found ${port}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("net_disconnect", [address, port])
@@ -92,6 +133,16 @@ export class NetworkRpc {
      * @param port
      */
     public isConnected(address: string, port: number): Promise<boolean> {
+        if (!isIpAddressString(address)) {
+            throw Error(
+                `Expected the first argument of isConnected to be an IP address string but found ${address}`
+            );
+        }
+        if (!isPortNumber(port)) {
+            throw Error(
+                `Expected the second argument of isConnected to be a port number but found ${port}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("net_isConnected", [address, port])
@@ -157,6 +208,11 @@ export class NetworkRpc {
      * @param ip Node IP
      */
     public addToWhitelist(ip: string): Promise<null> {
+        if (!isIpAddressString(ip)) {
+            throw Error(
+                `Expected the first argument of addToWhitelist to be an IP address string but found ${ip}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("net_addToWhitelist", [ip])
@@ -179,6 +235,11 @@ export class NetworkRpc {
      * @param ip Node IP
      */
     public removeFromWhitelist(ip: string): Promise<null> {
+        if (!isIpAddressString(ip)) {
+            throw Error(
+                `Expected the first argument of removeFromWhitelist to be an IP address string but found ${ip}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("net_removeFromWhitelist", [ip])
@@ -201,6 +262,11 @@ export class NetworkRpc {
      * @param ip Node IP
      */
     public addToBlacklist(ip: string): Promise<null> {
+        if (!isIpAddressString(ip)) {
+            throw Error(
+                `Expected the first argument of addToBlacklist to be an IP address string but found ${ip}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc.sendRpcRequest("net_addToBlacklist", [ip]).then(result => {
                 if (result === null) {
@@ -220,6 +286,11 @@ export class NetworkRpc {
      * @param ip Node IP
      */
     public removeFromBlacklist(ip: string): Promise<null> {
+        if (!isIpAddressString(ip)) {
+            throw Error(
+                `Expected the first argument of removeFromBlacklist to be an IP address string but found ${ip}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("net_removeFromBlacklist", [ip])
@@ -381,4 +452,17 @@ export class NetworkRpc {
                 .catch(reject);
         });
     }
+}
+
+function isIpAddressString(value: any): boolean {
+    return /\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b/.test(value);
+}
+
+function isPortNumber(value: any): boolean {
+    return (
+        typeof value === "number" &&
+        Number.isInteger(value) &&
+        0 <= value &&
+        value < 0xffff
+    );
 }
