@@ -587,38 +587,6 @@ describe("rpc", () => {
             });
         });
 
-        describe("remove", () => {
-            let address;
-            beforeEach(async () => {
-                address = await sdk.rpc.account.create("123");
-            });
-
-            test("Ok", async () => {
-                await sdk.rpc.account.remove(address, "123");
-                expect(await sdk.rpc.account.getList()).not.toContain(address);
-            });
-
-            test("WrongPassword", async done => {
-                sdk.rpc.account
-                    .remove(address, "1234")
-                    .then(() => done.fail())
-                    .catch(e => {
-                        expect(e).toEqual(ERROR.WRONG_PASSWORD);
-                        done();
-                    });
-            });
-
-            test("NoSuchAccount", async done => {
-                sdk.rpc.account
-                    .remove(noSuchAccount, "123")
-                    .then(() => done.fail())
-                    .catch(e => {
-                        expect(e).toEqual(ERROR.NO_SUCH_ACCOUNT);
-                        done();
-                    });
-            });
-        });
-
         describe("sign", () => {
             const message =
                 "0000000000000000000000000000000000000000000000000000000000000000";

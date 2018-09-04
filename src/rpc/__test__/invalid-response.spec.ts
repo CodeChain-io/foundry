@@ -437,19 +437,6 @@ describe("Invalid response", () => {
                 done.fail("not implemented"));
         });
 
-        test("remove", done => {
-            rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
-            accountRpc
-                .remove(address)
-                .then(() => done.fail())
-                .catch(e => {
-                    expect(e.toString()).toContain("account_remove");
-                    expect(e.toString()).toContain("null");
-                    expect(e.toString()).toContain("undefined");
-                    done();
-                });
-        });
-
         describe("sign", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);

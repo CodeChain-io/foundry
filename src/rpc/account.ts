@@ -119,45 +119,6 @@ export class AccountRpc {
     }
 
     /**
-     * Removes the account.
-     * @param address A platform address
-     * @param passphrase The account's passphrase
-     */
-    public remove(
-        address: PlatformAddress | string,
-        passphrase?: string
-    ): Promise<null> {
-        if (!PlatformAddress.check(address)) {
-            throw Error(
-                `Expected the first argument to be a PlatformAddress value but found ${address}`
-            );
-        }
-        if (passphrase && typeof passphrase !== "string") {
-            throw Error(
-                `Expected the second argument to be a string but found ${passphrase}`
-            );
-        }
-        return new Promise((resolve, reject) => {
-            this.rpc
-                .sendRpcRequest("account_remove", [
-                    PlatformAddress.ensure(address).toString(),
-                    passphrase
-                ])
-                .then(result => {
-                    if (result === null) {
-                        return resolve(null);
-                    }
-                    reject(
-                        Error(
-                            `Expected account_remove to return null but it returned ${result}`
-                        )
-                    );
-                })
-                .catch(reject);
-        });
-    }
-
-    /**
      * Calculates the account's signature for a given message.
      * @param messageDigest A message to sign
      * @param address A platform address
