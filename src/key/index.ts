@@ -1,6 +1,4 @@
 import { Parcel, SignedParcel, U256 } from "../core/classes";
-import { Rpc } from "../rpc";
-
 import { getAccountIdFromPublic } from "../utils";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { KeyStore } from "./KeyStore";
@@ -21,15 +19,10 @@ export class Key {
     };
 
     public classes = Key.classes;
-    private rpc: Rpc;
     private networkId: NetworkId;
 
-    constructor(rpc: Rpc, options: { networkId: NetworkId }) {
-        this.rpc = rpc;
+    constructor(options: { networkId: NetworkId }) {
         this.networkId = options.networkId;
-        // FIXME:
-        // tslint:disable-next-line:no-unused-expression
-        this.rpc;
     }
 
     /**
