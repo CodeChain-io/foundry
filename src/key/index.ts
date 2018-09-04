@@ -3,6 +3,7 @@ import { getAccountIdFromPublic } from "../utils";
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { KeyStore } from "./KeyStore";
 import { LocalKeyStore } from "./LocalKeyStore";
+import { MemoryKeyStore } from "./MemoryKeyStore";
 import { P2PKH } from "./P2PKH";
 import { P2PKHBurn } from "./P2PKHBurn";
 import { PlatformAddress } from "./PlatformAddress";
@@ -48,6 +49,11 @@ export class Key {
         keyStore: KeyStore;
     }): Promise<PlatformAddress> {
         const { keyStore } = params;
+        if (!isKeyStore(keyStore)) {
+            throw Error(
+                `Expected keyStore param to be a KeyStore instance but found ${keyStore}`
+            );
+        }
         const publicKey = await keyStore.platform.createKey();
         const accountId = getAccountIdFromPublic(publicKey);
         keyStore.mapping.add({ key: accountId, value: publicKey });
@@ -60,6 +66,11 @@ export class Key {
      */
     public createP2PKH(params: { keyStore: KeyStore }): P2PKH {
         const { keyStore } = params;
+        if (!isKeyStore(keyStore)) {
+            throw Error(
+                `Expected keyStore param to be a KeyStore instance but found ${keyStore}`
+            );
+        }
         const { networkId } = this;
         return new P2PKH({ keyStore, networkId });
     }
@@ -70,6 +81,11 @@ export class Key {
      */
     public createP2PKHBurn(params: { keyStore: KeyStore }): P2PKHBurn {
         const { keyStore } = params;
+        if (!isKeyStore(keyStore)) {
+            throw Error(
+                `Expected keyStore param to be a KeyStore instance but found ${keyStore}`
+            );
+        }
         const { networkId } = this;
         return new P2PKHBurn({ keyStore, networkId });
     }
@@ -94,7 +110,22 @@ export class Key {
             nonce: U256 | string | number;
         }
     ): Promise<SignedParcel> {
+        if (!(parcel instanceof Parcel)) {
+            throw Error(
+                `Expected the first argument of signParcel to be a Parcel instance but found ${parcel}`
+            );
+        }
         const { account, passphrase, keyStore, fee, nonce } = params;
+        if (!isKeyStore(keyStore)) {
+            throw Error(
+                `Expected keyStore param to be a KeyStore instance but found ${keyStore}`
+            );
+        }
+        if (!PlatformAddress.check(account)) {
+            throw Error(
+                `Expected account param to be a PlatformAddress value but found ${account}`
+            );
+        }
         parcel.setFee(fee);
         parcel.setNonce(nonce);
         const accountId = PlatformAddress.ensure(account).getAccountId();
@@ -106,4 +137,12 @@ export class Key {
         });
         return new SignedParcel(parcel, sig);
     }
+}
+
+function isKeyStore(value: any) {
+    return (
+        value instanceof LocalKeyStore ||
+        value instanceof RemoteKeyStore ||
+        value instanceof MemoryKeyStore
+    );
 }
