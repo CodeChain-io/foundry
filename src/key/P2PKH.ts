@@ -7,7 +7,6 @@ import {
     TransactionInputSigner
 } from "../core/transaction/AssetTransferTransaction";
 import { NetworkId } from "../core/types";
-import { blake256 } from "../utils";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { KeyStore } from "./KeyStore";
@@ -37,12 +36,7 @@ export class P2PKH implements TransactionInputSigner {
     }
 
     public async createAddress(): Promise<AssetTransferAddress> {
-        const publicKey = await this.rawKeyStore.asset.createKey();
-        const hash = H256.ensure(blake256(publicKey));
-        await this.rawKeyStore.mapping.add({
-            key: hash.value,
-            value: publicKey
-        });
+        const hash = await this.rawKeyStore.asset.createKey();
         return AssetTransferAddress.fromTypeAndPayload(1, hash, {
             networkId: this.networkId
         });
@@ -70,19 +64,11 @@ export class P2PKH implements TransactionInputSigner {
             throw Error("Unexpected length of parameters");
         }
         const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
-        const publicKey = await this.rawKeyStore.mapping.get({
-            key: publicKeyHash
-        });
-        if (!publicKey) {
-            throw Error(
-                `Unable to get original key from the given public key hash: ${publicKeyHash}`
-            );
-        }
 
         transaction.inputs[index].setLockScript(P2PKH.getLockScript());
         transaction.inputs[index].setUnlockScript(
             await this.getUnlockScript(
-                publicKey,
+                publicKeyHash,
                 transaction.hashWithoutScript(),
                 { passphrase }
             )
@@ -90,13 +76,21 @@ export class P2PKH implements TransactionInputSigner {
     }
 
     private async getUnlockScript(
-        publicKey: string,
+        publicKeyHash: string,
         txhash: H256,
         options: { passphrase?: string } = {}
     ): Promise<Buffer> {
         const { passphrase } = options;
+        const publicKey = await this.rawKeyStore.asset.getPublicKey({
+            key: publicKeyHash
+        });
+        if (!publicKey) {
+            throw Error(
+                `Unable to get original key from the given public key hash: ${publicKeyHash}`
+            );
+        }
         const signature = await this.rawKeyStore.asset.sign({
-            publicKey,
+            key: publicKeyHash,
             message: txhash.value,
             passphrase
         });

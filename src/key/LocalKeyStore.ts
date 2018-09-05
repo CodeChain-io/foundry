@@ -24,13 +24,18 @@ export class LocalKeyStore implements KeyStore {
             return this.cckey.platform.createKey(params);
         },
 
-        removeKey: (params: { publicKey: string }): Promise<boolean> => {
-            const { publicKey } = params;
-            return this.cckey.platform.deleteKey({ publicKey });
+        removeKey: (params: { key: string }): Promise<boolean> => {
+            const { key } = params;
+            return this.cckey.platform.deleteKey({ key });
+        },
+
+        getPublicKey: (params: { key: string }): Promise<string | null> => {
+            const { key } = params;
+            return this.cckey.platform.getPublicKey({ key });
         },
 
         sign: (params: {
-            publicKey: string;
+            key: string;
             message: string;
             passphrase?: string;
         }): Promise<string> => {
@@ -48,29 +53,23 @@ export class LocalKeyStore implements KeyStore {
             return this.cckey.asset.createKey(params);
         },
 
-        removeKey: (params: { publicKey: string }): Promise<boolean> => {
-            const { publicKey } = params;
-            return this.cckey.asset.deleteKey({ publicKey });
+        removeKey: (params: { key: string }): Promise<boolean> => {
+            const { key } = params;
+            return this.cckey.asset.deleteKey({ key });
+        },
+
+        getPublicKey: (params: { key: string }): Promise<string | null> => {
+            const { key } = params;
+            return this.cckey.asset.getPublicKey({ key });
         },
 
         sign: (params: {
-            publicKey: string;
+            key: string;
             message: string;
             passphrase?: string;
         }): Promise<string> => {
             const { passphrase = "" } = params;
             return this.cckey.asset.sign({ ...params, passphrase });
-        }
-    };
-
-    public mapping = {
-        add: (params: { key: string; value: string }): Promise<void> => {
-            return this.cckey.mapping.add(params);
-        },
-
-        get: async (params: { key: string }): Promise<string> => {
-            const pk = await this.cckey.mapping.get(params);
-            return pk as string;
         }
     };
 

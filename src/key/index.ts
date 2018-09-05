@@ -1,6 +1,5 @@
 import { Parcel, SignedParcel, U256 } from "../core/classes";
 import { NetworkId } from "../core/types";
-import { getAccountIdFromPublic } from "../utils";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { KeyStore } from "./KeyStore";
@@ -55,9 +54,7 @@ export class Key {
                 `Expected keyStore param to be a KeyStore instance but found ${keyStore}`
             );
         }
-        const publicKey = await keyStore.platform.createKey();
-        const accountId = getAccountIdFromPublic(publicKey);
-        keyStore.mapping.add({ key: accountId, value: publicKey });
+        const accountId = await keyStore.platform.createKey();
         return PlatformAddress.fromAccountId(accountId);
     }
 
@@ -130,9 +127,8 @@ export class Key {
         parcel.setFee(fee);
         parcel.setNonce(nonce);
         const accountId = PlatformAddress.ensure(account).getAccountId();
-        const publicKey = await keyStore.mapping.get({ key: accountId.value });
         const sig = await keyStore.platform.sign({
-            publicKey,
+            key: accountId.value,
             message: parcel.hash().value,
             passphrase
         });

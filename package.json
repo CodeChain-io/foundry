@@ -35,7 +35,7 @@
     "bignumber.js": "^6.0.0",
     "blakejs": "^1.1.0",
     "buffer": "5.1.0",
-    "codechain-keystore": "^0.1.0",
+    "codechain-keystore": "git://github.com/CodeChain-io/codechain-keystore.git#1483361b94c79e468e055188df0583046d4c9540",
     "elliptic": "^6.4.0",
     "jayson": "^2.0.6",
     "lodash": "^4.17.10",

@@ -1,12 +1,10 @@
 export interface KeyManagementAPI {
     getKeyList(): Promise<string[]>;
     createKey(params?: { passphrase?: string }): Promise<string>;
-    removeKey(params: {
-        publicKey: string;
-        passphrase?: string;
-    }): Promise<boolean>;
+    removeKey(params: { key: string; passphrase?: string }): Promise<boolean>;
+    getPublicKey(params: { key: string }): Promise<string | null>;
     sign(params: {
-        publicKey: string;
+        key: string;
         message: string;
         passphrase?: string;
     }): Promise<string>;
@@ -15,9 +13,4 @@ export interface KeyManagementAPI {
 export interface KeyStore {
     platform: KeyManagementAPI;
     asset: KeyManagementAPI;
-
-    mapping: {
-        add(params: { key: string; value: string }): Promise<void>;
-        get(params: { key: string }): Promise<string>;
-    };
 }
