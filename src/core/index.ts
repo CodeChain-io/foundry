@@ -10,6 +10,7 @@ import { SetShardUsers } from "./action/SetShardUsers";
 import { Asset } from "./Asset";
 import { AssetScheme } from "./AssetScheme";
 import { Block } from "./Block";
+import { H128 } from "./H128";
 import { H160 } from "./H160";
 import { H256 } from "./H256";
 import { H512 } from "./H512";
@@ -33,6 +34,7 @@ type NetworkId = string;
 export class Core {
     public static classes = {
         // Data
+        H128,
         H160,
         H256,
         H512,

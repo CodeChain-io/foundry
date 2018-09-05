@@ -1,3 +1,4 @@
+export { H128 } from "./H128";
 export { H160 } from "./H160";
 export { H256 } from "./H256";
 export { H512 } from "./H512";
