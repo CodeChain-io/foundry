@@ -6,10 +6,9 @@ import { blake256, blake256WithKey } from "../../utils";
 import { Asset } from "../Asset";
 import { AssetScheme } from "../AssetScheme";
 import { H256 } from "../H256";
+import { NetworkId } from "../types";
 
 const RLP = require("rlp");
-
-type NetworkId = string;
 
 export interface AssetMintTransactionData {
     networkId: NetworkId;

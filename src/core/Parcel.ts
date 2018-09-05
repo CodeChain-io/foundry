@@ -9,9 +9,8 @@ import { H256 } from "./H256";
 import { H512 } from "./H512";
 import { SignedParcel } from "./SignedParcel";
 import { Transaction } from "./transaction/Transaction";
+import { NetworkId } from "./types";
 import { U256 } from "./U256";
-
-type NetworkId = string;
 
 const RLP = require("rlp");
 

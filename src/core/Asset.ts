@@ -7,8 +7,7 @@ import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetTransferInput } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
-
-type NetworkId = string;
+import { NetworkId } from "./types";
 
 export interface AssetData {
     assetType: H256;

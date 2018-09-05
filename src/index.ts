@@ -1,4 +1,5 @@
 import { Core } from "./core";
+import { NetworkId } from "./core/types";
 import { Key } from "./key";
 import { Rpc } from "./rpc";
 import {
@@ -12,8 +13,6 @@ import {
     signEcdsa,
     verifyEcdsa
 } from "./utils";
-
-type NetworkId = string;
 
 class SDK {
     public static Rpc = Rpc;

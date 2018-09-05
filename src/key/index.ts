@@ -1,5 +1,7 @@
 import { Parcel, SignedParcel, U256 } from "../core/classes";
+import { NetworkId } from "../core/types";
 import { getAccountIdFromPublic } from "../utils";
+
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { KeyStore } from "./KeyStore";
 import { LocalKeyStore } from "./LocalKeyStore";
@@ -8,8 +10,6 @@ import { P2PKH } from "./P2PKH";
 import { P2PKHBurn } from "./P2PKHBurn";
 import { PlatformAddress } from "./PlatformAddress";
 import { RemoteKeyStore } from "./RemoteKeyStore";
-
-type NetworkId = string;
 
 export class Key {
     public static classes = {

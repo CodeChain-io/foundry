@@ -6,12 +6,11 @@ import {
     AssetTransferTransaction,
     TransactionBurnSigner
 } from "../core/transaction/AssetTransferTransaction";
+import { NetworkId } from "../core/types";
 import { blake256 } from "../utils";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { KeyStore } from "./KeyStore";
-
-type NetworkId = string;
 
 export class P2PKHBurn implements TransactionBurnSigner {
     public static getLockScript(): Buffer {

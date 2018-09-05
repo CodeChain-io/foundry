@@ -5,6 +5,7 @@ import { AssetTransferAddress } from "../../key/classes";
 import { blake256, blake256WithKey } from "../../utils";
 import { Asset } from "../Asset";
 import { H256 } from "../H256";
+import { NetworkId } from "../types";
 import { AssetTransferInput } from "./AssetTransferInput";
 import { AssetTransferOutput } from "./AssetTransferOutput";
 
@@ -25,8 +26,6 @@ export interface TransactionBurnSigner {
         options?: { passphrase?: string }
     ) => Promise<void>;
 }
-
-type NetworkId = string;
 
 export interface AssetTransferTransactionData {
     burns: AssetTransferInput[];

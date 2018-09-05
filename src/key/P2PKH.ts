@@ -6,12 +6,11 @@ import {
     AssetTransferTransaction,
     TransactionInputSigner
 } from "../core/transaction/AssetTransferTransaction";
+import { NetworkId } from "../core/types";
 import { blake256 } from "../utils";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";
 import { KeyStore } from "./KeyStore";
-
-type NetworkId = string;
 
 /**
  * AssetAgent which supports P2PKH(Pay to Public Key Hash).

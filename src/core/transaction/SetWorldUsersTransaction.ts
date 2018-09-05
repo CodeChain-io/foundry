@@ -1,10 +1,9 @@
 import { PlatformAddress } from "../../key/PlatformAddress";
 import { blake256 } from "../../utils";
 import { H256 } from "../H256";
+import { NetworkId } from "../types";
 
 const RLP = require("rlp");
-
-type NetworkId = string;
 
 export interface SetWorldUsersData {
     networkId: NetworkId;

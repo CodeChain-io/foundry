@@ -3,8 +3,7 @@ import { AssetTransferAddress } from "../key/AssetTransferAddress";
 import { PlatformAddress } from "../key/classes";
 
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
-
-type NetworkId = string;
+import { NetworkId } from "./types";
 
 export interface AssetSchemeData {
     networkId: NetworkId;

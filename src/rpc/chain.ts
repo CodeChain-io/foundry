@@ -11,10 +11,9 @@ import {
     getTransactionFromJSON,
     Transaction
 } from "../core/transaction/Transaction";
+import { NetworkId } from "../core/types";
 import { U256 } from "../core/U256";
 import { PlatformAddress } from "../key/classes";
-
-type NetworkId = string;
 
 export class ChainRpc {
     private rpc: Rpc;

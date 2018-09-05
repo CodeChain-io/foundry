@@ -27,9 +27,8 @@ import { CreateWorldTransaction } from "./transaction/CreateWorldTransaction";
 import { SetWorldOwnersTransaction } from "./transaction/SetWorldOwnersTransaction";
 import { SetWorldUsersTransaction } from "./transaction/SetWorldUsersTransaction";
 import { getTransactionFromJSON, Transaction } from "./transaction/Transaction";
+import { NetworkId } from "./types";
 import { U256 } from "./U256";
-
-type NetworkId = string;
 
 export class Core {
     public static classes = {
