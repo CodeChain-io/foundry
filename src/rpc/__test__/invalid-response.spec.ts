@@ -57,6 +57,8 @@ describe("Invalid response", () => {
         );
         const hash =
             "0x0000000000000000000000000000000000000000000000000000000000000000";
+        const regularKey =
+            "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
 
         describe("sendSignedParcel", () => {
             const secret =
@@ -149,6 +151,19 @@ describe("Invalid response", () => {
                     expect(e.toString()).toContain("chain_getRegularKey");
                     expect(e.toString()).toContain("H512");
                     expect(e.toString()).toContain("null");
+                    done();
+                });
+        });
+
+        test("getRegularKeyOwner", done => {
+            rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
+            chainRpc
+                .getRegularKeyOwner(regularKey)
+                .then(() => done.fail())
+                .catch(e => {
+                    expect(e.toString()).toContain("chain_getRegularKeyOwner");
+                    expect(e.toString()).toContain("PlatformAddress");
+                    expect(e.toString()).toContain("undefined");
                     done();
                 });
         });

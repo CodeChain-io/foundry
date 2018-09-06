@@ -1,18 +1,18 @@
 import { SDK } from "../";
 import {
-    H256,
-    SignedParcel,
-    Invoice,
-    AssetMintTransaction,
     Asset,
+    AssetMintTransaction,
     AssetScheme,
     AssetTransferTransaction,
-    Parcel
+    H256,
+    Invoice,
+    Parcel,
+    SignedParcel
 } from "../lib/core/classes";
 import { PlatformAddress } from "../lib/key/classes";
 import {
-    getAccountIdFromPrivate,
     generatePrivateKey,
+    getAccountIdFromPrivate,
     signEcdsa
 } from "../lib/utils";
 
@@ -87,7 +87,7 @@ const ERROR = {
 
 describe("rpc", () => {
     let sdk: SDK;
-    const { Block, H256, H512, U256 } = SDK.Core.classes;
+    const { Block, H512, U256 } = SDK.Core.classes;
     const invalidHash =
         "0x0000000000000000000000000000000000000000000000000000000000000000";
     const signerSecret =
@@ -169,11 +169,37 @@ describe("rpc", () => {
                 );
             });
 
-            // FIXME: setRegularKey action isn't implemented.
-            test.skip("getRegularKey", async () => {
-                expect(await sdk.rpc.chain.getRegularKey(address)).toEqual(
-                    expect.any(H512)
-                );
+            describe("has regular key", () => {
+                const regularKey =
+                    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+
+                beforeAll(async () => {
+                    const parcel = sdk.core
+                        .createSetRegularKeyParcel({
+                            key: regularKey
+                        })
+                        .sign({
+                            secret: signerSecret,
+                            nonce: await sdk.rpc.chain.getNonce(signerAddress),
+                            fee: 10
+                        });
+                    await sdk.rpc.chain.sendSignedParcel(parcel);
+                });
+
+                test("getRegularKey", async () => {
+                    expect(
+                        (await sdk.rpc.chain.getRegularKey(address)).value
+                    ).toEqual(regularKey);
+                });
+
+                // FIXME: Update CodeChain docker image used in integration tests.
+                test.skip("getRegularKeyOwner", async () => {
+                    expect(
+                        (await sdk.rpc.chain.getRegularKeyOwner(
+                            regularKey
+                        )).toString()
+                    ).toEqual(signerAddress);
+                });
             });
         });
 

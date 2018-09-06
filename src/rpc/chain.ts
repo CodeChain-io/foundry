@@ -256,6 +256,46 @@ export class ChainRpc {
     }
 
     /**
+     * Gets the owner of a regular key, recorded in the block of given blockNumber.
+     * @param regularKey A regular key.
+     * @param blockNumber A block number.
+     * @return The platform address that can use the regular key at the specified block.
+     */
+    public getRegularKeyOwner(
+        regularKey: H512 | string,
+        blockNumber?: number
+    ): Promise<PlatformAddress> {
+        if (!H512.check(regularKey)) {
+            throw Error(
+                `Expected the first argument of getRegularKeyOwner to be an H512 value but found ${regularKey}`
+            );
+        }
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the second argument of getRegularKeyOwner to be a number but found ${blockNumber}`
+            );
+        }
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getRegularKeyOwner", [
+                    `0x${H512.ensure(regularKey).value}`,
+                    blockNumber || null
+                ])
+                .then(result => {
+                    try {
+                        resolve(PlatformAddress.fromString(result));
+                    } catch (e) {
+                        reject(
+                            Error(
+                                `Expected chain_getRegularKeyOwner to return a PlatformAddress string, but an error occurred: ${e.toString()}`
+                            )
+                        );
+                    }
+                });
+        });
+    }
+
+    /**
      * Gets a transaction of given hash.
      * @param txhash The transaction hash of which to get the corresponding transaction of.
      * @returns A transaction, or null when transaction of given hash not exists.
