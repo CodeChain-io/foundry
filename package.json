@@ -23,6 +23,9 @@
     "url": "https://github.com/kodebox-io/codechain-sdk-js/issues"
   },
   "homepage": "https://github.com/kodebox-io/codechain-sdk-js#readme",
+  "engines": {
+    "node": ">=8"
+  },
   "main": "./lib/index.js",
   "typings": "./lib/index.d.ts",
   "files": [
