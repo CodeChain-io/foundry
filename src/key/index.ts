@@ -36,9 +36,10 @@ export class Key {
 
     /**
      * Creates persistent key store which stores data in the filesystem.
+     * @param dbPath A keystore file path
      */
-    public createLocalKeyStore(): Promise<KeyStore> {
-        return LocalKeyStore.create();
+    public createLocalKeyStore(dbPath?: string): Promise<KeyStore> {
+        return LocalKeyStore.create({ dbPath });
     }
 
     /**

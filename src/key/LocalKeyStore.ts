@@ -2,8 +2,10 @@ import { CCKey } from "codechain-keystore";
 import { KeyStore } from "./KeyStore";
 
 export class LocalKeyStore implements KeyStore {
-    public static async create(): Promise<KeyStore> {
-        const cckey = await CCKey.create({});
+    public static async create(
+        options: { dbPath?: string } = {}
+    ): Promise<KeyStore> {
+        const cckey = await CCKey.create(options);
         return new LocalKeyStore(cckey);
     }
 
