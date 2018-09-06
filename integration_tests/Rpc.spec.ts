@@ -10,13 +10,12 @@ import {
     SignedParcel
 } from "../lib/core/classes";
 import { PlatformAddress } from "../lib/key/classes";
+import { createKeyStore } from "./helper";
 import {
     generatePrivateKey,
     getAccountIdFromPrivate,
     signEcdsa
 } from "../lib/utils";
-
-import { MemoryKeyStore } from "../lib/key/MemoryKeyStore";
 
 // FIXME:
 const ERROR = {
@@ -355,7 +354,7 @@ describe("rpc", () => {
             const worldId = 0;
 
             beforeAll(async () => {
-                const keyStore = new MemoryKeyStore();
+                const keyStore = await createKeyStore();
                 const p2pkh = await sdk.key.createP2PKH({ keyStore });
                 mintTransaction = sdk.core
                     .createAssetScheme({
@@ -453,7 +452,7 @@ describe("rpc", () => {
             const wrongShardId = 1;
 
             beforeAll(async () => {
-                const keyStore = new MemoryKeyStore();
+                const keyStore = await createKeyStore();
                 const p2pkh = await sdk.key.createP2PKH({ keyStore });
                 mintTransaction = sdk.core
                     .createAssetScheme({

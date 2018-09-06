@@ -1,4 +1,6 @@
 import { SDK } from "../";
+import { KeyStore } from "../lib/key/KeyStore";
+import { MemoryKeyStore } from "../lib/key/MemoryKeyStore";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 const sdk = new SDK({ server: SERVER_URL });
@@ -7,6 +9,10 @@ const secret =
     "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
 const accountId = sdk.util.getAccountIdFromPrivate(secret);
 const address = sdk.key.classes.PlatformAddress.fromAccountId(accountId);
+
+export const createKeyStore = async (): Promise<KeyStore> => {
+    return new MemoryKeyStore();
+};
 
 export const sendTransactions = async ({ transactions }) => {
     const parcel = sdk.core.createChangeShardStateParcel({

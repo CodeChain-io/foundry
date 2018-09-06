@@ -1,5 +1,5 @@
 import { SDK } from "../";
-import { MemoryKeyStore } from "../lib/key/MemoryKeyStore";
+import { createKeyStore } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 const sdk = new SDK({ server: SERVER_URL });
@@ -24,7 +24,7 @@ test("checkRegistrarValidation", async () => {
     await setRegularKey();
     await sendCCCToOther();
 
-    const keyStore = new MemoryKeyStore();
+    const keyStore = await createKeyStore();
     const p2pkh = await sdk.key.createP2PKH({ keyStore });
     const aliceAddress = await p2pkh.createAddress();
     const bobAddress =
