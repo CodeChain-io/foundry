@@ -34,7 +34,9 @@ export class Asset {
         return new Asset({
             assetType: new H256(asset_type),
             lockScriptHash: new H256(lock_script_hash),
-            parameters,
+            parameters: parameters.map((p: Buffer | number[]) =>
+                Buffer.from(p)
+            ),
             amount,
             transactionHash: new H256(transactionHash),
             transactionOutputIndex
