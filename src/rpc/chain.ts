@@ -291,7 +291,8 @@ export class ChainRpc {
                             )
                         );
                     }
-                });
+                })
+                .catch(reject);
         });
     }
 
