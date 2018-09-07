@@ -3,9 +3,7 @@ import { MemoryKeyStore } from "../MemoryKeyStore";
 
 test("createKey", async () => {
     const store = new MemoryKeyStore();
-    expect(() => {
-        store.asset.createKey();
-    }).not.toThrow();
+    await expect(store.asset.createKey()).resolves.toEqual(expect.anything());
 });
 
 test("removeKey", async () => {

@@ -558,9 +558,9 @@ describe("rpc", () => {
         const noSuchAccount = "tccqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj5aqu5";
 
         test("getList", async () => {
-            expect(async () => {
-                await sdk.rpc.account.getList();
-            }).not.toThrow();
+            await expect(sdk.rpc.account.getList()).resolves.toEqual(
+                expect.anything()
+            );
         });
 
         test("create", async () => {
