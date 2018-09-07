@@ -5,6 +5,7 @@ import { blake256, recoverEcdsa, ripemd160 } from "../utils";
 
 import { H160 } from "./H160";
 import { H256 } from "./H256";
+import { H512 } from "./H512";
 import { Parcel } from "./Parcel";
 import { U256 } from "./U256";
 
@@ -165,6 +166,7 @@ export class SignedParcel {
     /**
      * Get the account ID of a parcel's signer.
      * @returns An account ID.
+     * @deprecated
      */
     public getSignerAccountId(): H160 {
         const { r, s, v, unsigned } = this;
@@ -179,9 +181,25 @@ export class SignedParcel {
     /**
      * Get the platform address of a parcel's signer.
      * @returns A PlatformAddress.
+     * @deprecated
      */
     public getSignerAddress(): PlatformAddress {
         return PlatformAddress.fromAccountId(this.getSignerAccountId());
+    }
+
+    /**
+     * Get the public key of a parcel's signer.
+     * @returns A public key.
+     */
+    public getSignerPublic(): H512 {
+        const { r, s, v, unsigned } = this;
+        return new H512(
+            recoverEcdsa(unsigned.hash().value, {
+                r: r.value.toString(16),
+                s: s.value.toString(16),
+                v
+            })
+        );
     }
 
     /**
