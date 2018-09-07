@@ -283,7 +283,11 @@ export class ChainRpc {
                 ])
                 .then(result => {
                     try {
-                        resolve(PlatformAddress.fromString(result));
+                        resolve(
+                            result === null
+                                ? null
+                                : PlatformAddress.fromString(result)
+                        );
                     } catch (e) {
                         reject(
                             Error(
