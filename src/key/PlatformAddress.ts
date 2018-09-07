@@ -1,8 +1,8 @@
 import { Buffer } from "buffer";
 import * as _ from "lodash";
 
-import { H160 } from "../core/H160";
-import { toHex } from "../utils";
+import { H160, H512 } from "../core/classes";
+import { getAccountIdFromPublic, toHex } from "../utils";
 
 import { decode, encode, fromWords, toWords } from "./bech32";
 
@@ -15,6 +15,21 @@ import { decode, encode, fromWords, toWords } from "./bech32";
  * https://github.com/CodeChain-io/codechain/blob/master/spec/CodeChain-Address.md
  */
 export class PlatformAddress {
+    public static fromPublic(
+        publicKey: H512 | string,
+        options: { networkId?: string; version?: number } = {}
+    ): PlatformAddress {
+        if (!H512.check(publicKey)) {
+            throw Error(
+                `Invalid public key for creating PlatformAddress: ${publicKey}`
+            );
+        }
+        return PlatformAddress.fromAccountId(
+            getAccountIdFromPublic(H512.ensure(publicKey).value),
+            options
+        );
+    }
+
     public static fromAccountId(
         accountId: H160 | string,
         options: { networkId?: string; version?: number } = {}
