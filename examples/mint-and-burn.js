@@ -33,7 +33,7 @@ const sdk = new SDK({ server: "http://localhost:8080" });
         .addBurns(firstGold);
     await transferTx.signBurn(0, { signer: p2pkhBurn });
 
-    const parcel = sdk.core.createChangeShardStateParcel({
+    const parcel = sdk.core.createAssetTransactionGroupParcel({
         transactions: [mintTx, transferTx]
     });
     await sdk.rpc.chain.sendParcel(parcel, {

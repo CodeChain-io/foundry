@@ -11,7 +11,7 @@ export { SignedParcel } from "./SignedParcel";
 export { Action } from "./action/Action";
 export { Payment } from "./action/Payment";
 export { SetRegularKey } from "./action/SetReulgarKey";
-export { ChangeShardState } from "./action/ChangeShardState";
+export { AssetTransactionGroup } from "./action/AssetTransactionGroup";
 export { CreateShard } from "./action/CreateShard";
 export { SetShardOwners } from "./action/SetShardOwners";
 export { SetShardUsers } from "./action/SetShardUsers";

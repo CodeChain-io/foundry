@@ -27,7 +27,7 @@ test("sendSignedParcel", async () => {
 
 test("sendSignedParcel - empty", async () => {
     const nonce = await sdk.rpc.chain.getNonce(address);
-    const p = sdk.core.createChangeShardStateParcel({
+    const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: []
     });
     const hash = await sdk.rpc.chain.sendSignedParcel(

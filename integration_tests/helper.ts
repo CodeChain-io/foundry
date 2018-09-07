@@ -15,7 +15,7 @@ export const createKeyStore = async (): Promise<KeyStore> => {
 };
 
 export const sendTransactions = async ({ transactions }) => {
-    const parcel = sdk.core.createChangeShardStateParcel({
+    const parcel = sdk.core.createAssetTransactionGroupParcel({
         transactions
     });
     const signedParcel = parcel.sign({

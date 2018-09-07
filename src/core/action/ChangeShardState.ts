@@ -27,7 +27,7 @@ export class ChangeShard {
     }
 }
 
-export class ChangeShardState {
+export class AssetTransactionGroup {
     public transactions: Transaction[];
     public changes: ChangeShard[];
     public signatures: string[];
@@ -58,7 +58,7 @@ export class ChangeShardState {
 
     public toJSON() {
         return {
-            action: "changeShardState",
+            action: "assetTransactionGroup",
             transactions: this.transactions.map(t => t.toJSON()),
             changes: this.changes.map(c => c.toJSON()),
             signatures: this.signatures

@@ -3,7 +3,7 @@ import { mintAsset, sendTransactions, createKeyStore } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 const sdk = new SDK({ server: SERVER_URL });
-const { H256, ChangeShardState } = SDK.Core.classes;
+const { H256, AssetTransactionGroup } = SDK.Core.classes;
 
 test("AssetMintTransaction fromJSON", async () => {
     const metadata = "";
@@ -20,7 +20,7 @@ test("AssetMintTransaction fromJSON", async () => {
     });
     const parcel = await sdk.rpc.chain.getParcel(parcelHash);
 
-    if (!(parcel.unsigned.action instanceof ChangeShardState)) {
+    if (!(parcel.unsigned.action instanceof AssetTransactionGroup)) {
         throw Error("Invalid action");
     }
 
@@ -88,7 +88,7 @@ test("AssetTransferTransaction fromJSON", async () => {
         amount: expect.anything()
     });
 
-    if (!(parcel.unsigned.action instanceof ChangeShardState)) {
+    if (!(parcel.unsigned.action instanceof AssetTransactionGroup)) {
         throw Error("Invalid action");
     }
 

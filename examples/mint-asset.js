@@ -25,7 +25,7 @@ var assetMintTransaction = sdk.core.createAssetMintTransaction({
 });
 
 // Send a change-shard-state parcel to process the transaction.
-var parcel = sdk.core.createChangeShardStateParcel({
+var parcel = sdk.core.createAssetTransactionGroupParcel({
     transactions: [assetMintTransaction]
 });
 sdk.rpc.chain

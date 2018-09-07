@@ -1,7 +1,7 @@
 import { PlatformAddress } from "../key/PlatformAddress";
 import { blake256, signEcdsa } from "../utils";
 import { Action, getActionFromJSON } from "./action/Action";
-import { ChangeShardState } from "./action/ChangeShardState";
+import { AssetTransactionGroup } from "./action/AssetTransactionGroup";
 import { CreateShard } from "./action/CreateShard";
 import { Payment } from "./action/Payment";
 import { SetRegularKey } from "./action/SetReulgarKey";
@@ -28,7 +28,7 @@ export class Parcel {
         networkId: NetworkId,
         ...transactions: Transaction[]
     ): Parcel {
-        const action = new ChangeShardState({ transactions });
+        const action = new AssetTransactionGroup({ transactions });
         return new Parcel(networkId, action);
     }
 

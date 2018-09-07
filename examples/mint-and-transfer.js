@@ -46,7 +46,7 @@ const sdk = new SDK({ server: "http://localhost:8080" });
         );
     await transferTx.signInput(0, { signer: p2pkh });
 
-    const parcel = sdk.core.createChangeShardStateParcel({
+    const parcel = sdk.core.createAssetTransactionGroupParcel({
         transactions: [mintTx, transferTx]
     });
     await sdk.rpc.chain.sendParcel(parcel, {

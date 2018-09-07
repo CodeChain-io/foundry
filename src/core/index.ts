@@ -1,7 +1,7 @@
 // FIXME: Use interface instead of importing key class.
 import { AssetTransferAddress, PlatformAddress } from "../key/classes";
 
-import { ChangeShardState } from "./action/ChangeShardState";
+import { AssetTransactionGroup } from "./action/AssetTransactionGroup";
 import { CreateShard } from "./action/CreateShard";
 import { Payment } from "./action/Payment";
 import { SetRegularKey } from "./action/SetReulgarKey";
@@ -47,7 +47,7 @@ export class Core {
         // Action
         Payment,
         SetRegularKey,
-        ChangeShardState,
+        AssetTransactionGroup,
         CreateShard,
         SetShardOwners,
         SetShardUsers,
@@ -111,18 +111,18 @@ export class Core {
     }
 
     /**
-     * Creates ChangeShardState action which can mint or transfer assets through
+     * Creates AssetTransactionGroup action which can mint or transfer assets through
      * AssetMintTransaction or AssetTransferTransaction.
      * @param params.transactions List of transaction
      */
-    public createChangeShardStateParcel(params: {
+    public createAssetTransactionGroupParcel(params: {
         transactions: Transaction[];
     }): Parcel {
         const { transactions } = params;
         checkTransactions(transactions);
         return new Parcel(
             this.networkId,
-            new ChangeShardState({ transactions })
+            new AssetTransactionGroup({ transactions })
         );
     }
 

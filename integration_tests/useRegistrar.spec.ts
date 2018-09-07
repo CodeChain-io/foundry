@@ -90,7 +90,7 @@ async function mintAssetUsingMaster(p2pkh, aliceAddress, bobAddress) {
         recipient: aliceAddress
     });
 
-    const p = sdk.core.createChangeShardStateParcel({
+    const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: [mintTx]
     });
     const nonce = await sdk.rpc.chain.getNonce(masterAddress);
@@ -138,7 +138,7 @@ async function transferAssetUsingRegular(
     await transferTx.signInput(0, { signer: p2pkh });
     transferTx.getTransferredAssets();
 
-    const p = sdk.core.createChangeShardStateParcel({
+    const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: [transferTx]
     });
     const nonce = await sdk.rpc.chain.getNonce(masterAddress);
@@ -190,7 +190,7 @@ async function transferAssetUsingOther(
     await transferTx.signInput(0, { signer: p2pkh });
     transferTx.getTransferredAssets();
 
-    const p = sdk.core.createChangeShardStateParcel({
+    const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: [transferTx]
     });
     const nonce = await sdk.rpc.chain.getNonce(otherAddress);

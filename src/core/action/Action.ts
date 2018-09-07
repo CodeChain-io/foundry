@@ -3,7 +3,7 @@ import { H512 } from "../H512";
 import { getTransactionFromJSON } from "../transaction/Transaction";
 import { U256 } from "../U256";
 
-import { ChangeShardState } from "./ChangeShardState";
+import { AssetTransactionGroup } from "./AssetTransactionGroup";
 import { CreateShard } from "./CreateShard";
 import { Payment } from "./Payment";
 import { SetRegularKey } from "./SetReulgarKey";
@@ -11,7 +11,7 @@ import { SetShardOwners } from "./SetShardOwners";
 import { SetShardUsers } from "./SetShardUsers";
 
 export type Action =
-    | ChangeShardState
+    | AssetTransactionGroup
     | Payment
     | SetRegularKey
     | CreateShard
@@ -21,9 +21,9 @@ export type Action =
 export function getActionFromJSON(json: any): Action {
     const { action } = json;
     switch (action) {
-        case "changeShardState":
+        case "assetTransactionGroup":
             const { transactions } = json;
-            return new ChangeShardState({
+            return new AssetTransactionGroup({
                 transactions: transactions.map(getTransactionFromJSON)
             });
         case "payment":
