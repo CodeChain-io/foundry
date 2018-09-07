@@ -1,9 +1,10 @@
+import { Parcel, Payment, U256 } from "../../core/classes";
+import { PlatformAddress } from "../../key/classes";
+
+import { AccountRpc } from "../account";
+import { ChainRpc } from "../chain";
 import { Rpc } from "../index";
 import { NodeRpc } from "../node";
-import { ChainRpc } from "../chain";
-import { PlatformAddress } from "../../key/classes";
-import { Parcel, Payment, U256 } from "../../core/classes";
-import { AccountRpc } from "../account";
 
 describe("Invalid response", () => {
     const rpc: Rpc = new Rpc({ server: "" });
