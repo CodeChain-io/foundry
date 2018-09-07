@@ -264,7 +264,7 @@ export class ChainRpc {
     public getRegularKeyOwner(
         regularKey: H512 | string,
         blockNumber?: number
-    ): Promise<PlatformAddress> {
+    ): Promise<PlatformAddress | null> {
         if (!H512.check(regularKey)) {
             throw Error(
                 `Expected the first argument of getRegularKeyOwner to be an H512 value but found ${regularKey}`
