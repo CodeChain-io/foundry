@@ -191,8 +191,7 @@ describe("rpc", () => {
                     ).toEqual(regularKey);
                 });
 
-                // FIXME: Update CodeChain docker image used in integration tests.
-                test.skip("getRegularKeyOwner", async () => {
+                test("getRegularKeyOwner", async () => {
                     expect(
                         (await sdk.rpc.chain.getRegularKeyOwner(
                             regularKey
