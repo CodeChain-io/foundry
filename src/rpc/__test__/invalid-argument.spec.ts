@@ -18,7 +18,7 @@ describe("Invalid function argument", () => {
         test("second argument", () => {
             expect(() => {
                 rpc.chain.getRegularKeyOwner(regularKey, invalidBlockNumber);
-            }).toThrow(invalidRegularKey);
+            }).toThrow(invalidBlockNumber);
         });
     });
 });
