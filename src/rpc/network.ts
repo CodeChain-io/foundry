@@ -190,14 +190,22 @@ export class NetworkRpc {
                 .sendRpcRequest("net_getEstablishedPeers", [])
                 .then(result => {
                     if (!Array.isArray(result)) {
-                        // FIXME: Check whether the strings are peer addresses.
-                        resolve(result);
+                        return reject(
+                            Error(
+                                `Expected net_getEstablishedPeers to return an array but it returned ${result}`
+                            )
+                        );
                     }
-                    return reject(
-                        Error(
-                            `Expected net_getEstablishedPeers to return an array but it returned ${result}`
-                        )
-                    );
+                    result.forEach((address, index) => {
+                        if (!isSocketAddressString(address)) {
+                            return reject(
+                                Error(
+                                    `Expected net_getEstablishedPeers to return an array of IPv4 address but found ${address} at ${index}`
+                                )
+                            );
+                        }
+                    });
+                    resolve(result);
                 })
                 .catch(reject);
         });
@@ -456,6 +464,12 @@ export class NetworkRpc {
 
 function isIpAddressString(value: any): boolean {
     return /\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b/.test(value);
+}
+
+function isSocketAddressString(value: any): boolean {
+    return /((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|:)){4}([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])/.test(
+        value
+    );
 }
 
 function isPortNumber(value: any): boolean {

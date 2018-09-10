@@ -4,6 +4,7 @@ import { PlatformAddress } from "../../key/classes";
 import { AccountRpc } from "../account";
 import { ChainRpc } from "../chain";
 import { Rpc } from "../index";
+import { NetworkRpc } from "../network";
 import { NodeRpc } from "../node";
 
 describe("Invalid response", () => {
@@ -486,12 +487,49 @@ describe("Invalid response", () => {
     });
 
     describe("NetworkRpc", () => {
+        const networkRpc = new NetworkRpc(rpc);
+
         test.skip("shareSecret", done => done.fail("not implemented"));
         test.skip("connect", done => done.fail("not implemented"));
         test.skip("disconnect", done => done.fail("not implemented"));
         test.skip("isConnected", done => done.fail("not implemented"));
         test.skip("getPeerCount", done => done.fail("not implemented"));
-        test.skip("getPeers", done => done.fail("not implemented"));
+        describe("getPeers", () => {
+            test("undefined", done => {
+                rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
+                networkRpc
+                    .getPeers()
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e.toString()).toContain(
+                            "net_getEstablishedPeers"
+                        );
+                        expect(e.toString()).toContain("array");
+                        expect(e.toString()).toContain("undefined");
+                        done();
+                    });
+            });
+
+            test("invalid address", done => {
+                rpc.sendRpcRequest = jest
+                    .fn()
+                    .mockResolvedValueOnce([
+                        "127.0.0.1:3333",
+                        "127.0.0.1111:3333"
+                    ]);
+                networkRpc
+                    .getPeers()
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e.toString()).toContain(
+                            "net_getEstablishedPeers"
+                        );
+                        expect(e.toString()).toContain("IPv4");
+                        expect(e.toString()).toContain("127.0.0.1111:3333");
+                        done();
+                    });
+            });
+        });
         test.skip("addToWhitelist", done => done.fail("not implemented"));
         test.skip("removeFromWhitelist", done => done.fail("not implemented"));
         test.skip("addToBlocklist", done => done.fail("not implemented"));
