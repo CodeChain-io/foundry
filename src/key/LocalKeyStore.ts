@@ -29,6 +29,14 @@ export class LocalKeyStore implements KeyStore {
             return this.cckey.platform.deleteKey({ key });
         },
 
+        exportRawKey: (params: {
+            key: string;
+            passphrase?: string;
+        }): Promise<string> => {
+            const { passphrase = "" } = params;
+            return this.cckey.platform.exportRawKey({ ...params, passphrase });
+        },
+
         getPublicKey: (params: { key: string }): Promise<string | null> => {
             const { key } = params;
             return this.cckey.platform.getPublicKey({ key });
@@ -56,6 +64,14 @@ export class LocalKeyStore implements KeyStore {
         removeKey: (params: { key: string }): Promise<boolean> => {
             const { key } = params;
             return this.cckey.asset.deleteKey({ key });
+        },
+
+        exportRawKey: (params: {
+            key: string;
+            passphrase?: string;
+        }): Promise<string> => {
+            const { passphrase = "" } = params;
+            return this.cckey.asset.exportRawKey({ ...params, passphrase });
         },
 
         getPublicKey: (params: { key: string }): Promise<string | null> => {

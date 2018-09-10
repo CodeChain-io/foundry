@@ -62,6 +62,28 @@ class RemoteKeyManager implements KeyManagementAPI {
         return response.result;
     }
 
+    public async exportRawKey(params: {
+        key: string;
+        passphrase?: string;
+    }): Promise<string> {
+        const response = await rp.post(
+            `${this.keystoreURL}/api/keys/${params.key}/sign`,
+            {
+                body: {
+                    keyType: this.keyType,
+                    passphrase: params.passphrase
+                },
+                json: true
+            }
+        );
+
+        if (!response.success) {
+            throw Error(response.error);
+        }
+
+        return response.result;
+    }
+
     public async getPublicKey(params: { key: string }): Promise<string | null> {
         const response = await rp.get(
             `${this.keystoreURL}/api/keys/${params.key}/publicKey`,

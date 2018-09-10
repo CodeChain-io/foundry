@@ -51,6 +51,17 @@ class KeyManager implements KeyManagementAPI {
         }
     }
 
+    public exportRawKey(params: {
+        key: string;
+        passphrase?: string;
+    }): Promise<string> {
+        const { passphrase = "", key } = params;
+        if (passphrase !== this.passphraseMap[key]) {
+            return Promise.reject("The passphrase does not match");
+        }
+        return Promise.resolve(this.privateKeyMap[key]);
+    }
+
     public getPublicKey(params: { key: string }): Promise<string | null> {
         const { key } = params;
         if (this.publicKeyMap[key]) {

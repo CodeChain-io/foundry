@@ -1,4 +1,9 @@
-import { recoverEcdsa, verifyEcdsa } from "../../utils";
+import {
+    recoverEcdsa,
+    verifyEcdsa,
+    getPublicFromPrivate,
+    getAccountIdFromPublic
+} from "../../utils";
 import { MemoryKeyStore } from "../MemoryKeyStore";
 
 test("createKey", async () => {
@@ -23,6 +28,19 @@ test("getKeyList", async () => {
     await store.asset.removeKey({ key: key1 });
 
     expect(await store.asset.getKeyList()).not.toContain(key1);
+});
+
+test("exportRawKey", async () => {
+    const store = new MemoryKeyStore();
+    const key = await store.platform.createKey({ passphrase: "satoshi" });
+    const privateKey = await store.platform.exportRawKey({
+        key,
+        passphrase: "satoshi"
+    });
+
+    const publicKey = getPublicFromPrivate(privateKey);
+    const accountId = getAccountIdFromPublic(publicKey);
+    expect(accountId).toBe(key);
 });
 
 test("sign", async () => {
