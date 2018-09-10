@@ -1,5 +1,3 @@
-import * as _ from "lodash";
-
 const RLP = require("rlp");
 /**
  * Handles 256-bit data. Used to express block hash, parcel hash, transaction hash, merkle root, etc.
