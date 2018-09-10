@@ -39,12 +39,9 @@ class KeyManager implements KeyManagementAPI {
         return Promise.resolve(key);
     }
 
-    public removeKey(params: {
-        key: string;
-        passphrase?: string;
-    }): Promise<boolean> {
-        const { key, passphrase = "" } = params;
-        if (this.privateKeyMap[key] && this.passphraseMap[key] === passphrase) {
+    public removeKey(params: { key: string }): Promise<boolean> {
+        const { key } = params;
+        if (this.privateKeyMap[key]) {
             delete this.privateKeyMap[key];
             delete this.publicKeyMap[key];
             delete this.passphraseMap[key];

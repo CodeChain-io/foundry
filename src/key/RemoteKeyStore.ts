@@ -44,16 +44,12 @@ class RemoteKeyManager implements KeyManagementAPI {
         return response.result;
     }
 
-    public async removeKey(params: {
-        key: string;
-        passphrase?: string;
-    }): Promise<boolean> {
+    public async removeKey(params: { key: string }): Promise<boolean> {
         const response = await rp.delete(
             `${this.keystoreURL}/api/keys/${params.key}`,
             {
                 body: {
-                    keyType: this.keyType,
-                    passphrase: params.passphrase
+                    keyType: this.keyType
                 },
                 json: true
             }

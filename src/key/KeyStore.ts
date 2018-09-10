@@ -1,7 +1,7 @@
 export interface KeyManagementAPI {
     getKeyList(): Promise<string[]>;
     createKey(params?: { passphrase?: string }): Promise<string>;
-    removeKey(params: { key: string; passphrase?: string }): Promise<boolean>;
+    removeKey(params: { key: string }): Promise<boolean>;
     getPublicKey(params: { key: string }): Promise<string | null>;
     sign(params: {
         key: string;
