@@ -62,8 +62,6 @@ export class P2PKHBurn implements TransactionBurnSigner {
         if (lockScriptHash === undefined || parameters === undefined) {
             throw Error("Invalid transaction input");
         }
-        console.log(lockScriptHash);
-        console.log(P2PKHBurn.getLockScriptHash().value);
         if (lockScriptHash.value !== P2PKHBurn.getLockScriptHash().value) {
             throw Error("Unexpected lock script hash");
         }
