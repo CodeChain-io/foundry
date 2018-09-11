@@ -65,7 +65,7 @@ test("AssetTransferTransaction fromJSON", async () => {
             }
         ]
     });
-    transferTx.signInput(0, { signer: p2pkh });
+    sdk.key.signTransactionInput(transferTx, 0, { keyStore });
     const { parcelHash } = await sendTransactions({
         transactions: [transferTx]
     });

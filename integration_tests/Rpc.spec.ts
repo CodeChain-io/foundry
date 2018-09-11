@@ -473,7 +473,9 @@ describe("rpc", () => {
                         amount: 10,
                         assetType: mintedAsset.assetType
                     });
-                await transferTransaction.signInput(0, { signer: p2pkh });
+                sdk.key.signTransactionInput(transferTransaction, 0, {
+                    keyStore
+                });
                 const parcel = sdk.core.createAssetTransactionGroupParcel({
                     transactions: [mintTransaction, transferTransaction]
                 });

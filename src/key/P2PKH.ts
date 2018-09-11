@@ -42,6 +42,9 @@ export class P2PKH implements TransactionInputSigner {
         });
     }
 
+    /**
+     * @deprecated Use signTransactionInput
+     */
     public async signInput(
         transaction: AssetTransferTransaction,
         index: number,

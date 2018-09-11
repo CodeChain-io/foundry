@@ -1,10 +1,14 @@
 const SDK = require("codechain-sdk");
 
-const sdk = new SDK({ server: "http://localhost:8080" });
+const sdk = new SDK({
+    server: "http://localhost:8080"
+});
 
 (async () => {
     const keyStore = await sdk.key.createLocalKeyStore();
-    const p2pkh = await sdk.key.createP2PKH({ keyStore });
+    const p2pkh = await sdk.key.createP2PKH({
+        keyStore
+    });
 
     const aliceAddress = await p2pkh.createAddress();
     const bobAddress =
@@ -44,7 +48,9 @@ const sdk = new SDK({ server: "http://localhost:8080" });
                 assetType: firstGold.assetType
             }
         );
-    await transferTx.signInput(0, { signer: p2pkh });
+    sdk.key.signTransactionInput(transferTx, 0, {
+        keyStore
+    });
 
     const parcel = sdk.core.createAssetTransactionGroupParcel({
         transactions: [mintTx, transferTx]

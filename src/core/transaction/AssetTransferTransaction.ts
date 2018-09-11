@@ -255,6 +255,7 @@ export class AssetTransferTransaction {
      * @param index An index indicating the burn to sign.
      * @param params.signer A TransactionSigner. Currently, P2PKH is available.
      * @returns A promise that resolves when setting is done.
+     * @deprecated Use signTransactionBurn in the Key module
      */
     public async signBurn(
         index: number,
@@ -273,6 +274,7 @@ export class AssetTransferTransaction {
      * @param index An index indicating the input to sign.
      * @param params.signer A TransactionSigner. Currently, P2PKH is available.
      * @returns A promise that resolves when setting is done.
+     * @deprecated Use signTransactionInput in the Key module
      */
     public async signInput(
         index: number,

@@ -1,13 +1,17 @@
 const SDK = require("codechain-sdk");
 
-const sdk = new SDK({ server: "http://localhost:8080" });
+const sdk = new SDK({
+    server: "http://localhost:8080"
+});
 
 (async () => {
     const keyStore = await sdk.key.createLocalKeyStore();
     // Create P2PKHBurn instead of P2PKH. Currently, P2PKH addresses can only
     // transfer assets. If you want to burn assets which are holded by P2PKH
     // addresses, you need to transfer them to P2PKHBurn addresses first.
-    const p2pkhBurn = await sdk.key.createP2PKHBurn({ keyStore });
+    const p2pkhBurn = await sdk.key.createP2PKHBurn({
+        keyStore
+    });
 
     const aliceAddress = await p2pkhBurn.createAddress();
 
@@ -31,7 +35,9 @@ const sdk = new SDK({ server: "http://localhost:8080" });
     const transferTx = sdk.core
         .createAssetTransferTransaction()
         .addBurns(firstGold);
-    await transferTx.signBurn(0, { signer: p2pkhBurn });
+    await sdk.key.signTransactionBurn(transferTx, 0, {
+        keyStore
+    });
 
     const parcel = sdk.core.createAssetTransactionGroupParcel({
         transactions: [mintTx, transferTx]

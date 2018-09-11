@@ -31,8 +31,8 @@ test("checkRegistrarValidation", async () => {
         "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
 
     const mintTx = await mintAssetUsingMaster(p2pkh, aliceAddress, bobAddress);
-    await transferAssetUsingOther(mintTx, p2pkh, aliceAddress, bobAddress);
-    await transferAssetUsingRegular(mintTx, p2pkh, aliceAddress, bobAddress);
+    await transferAssetUsingOther(mintTx, keyStore, aliceAddress, bobAddress);
+    await transferAssetUsingRegular(mintTx, keyStore, aliceAddress, bobAddress);
 });
 
 async function setRegularKey() {
@@ -115,7 +115,7 @@ async function mintAssetUsingMaster(p2pkh, aliceAddress, bobAddress) {
 
 async function transferAssetUsingRegular(
     mintTx,
-    p2pkh,
+    keyStore,
     aliceAddress,
     bobAddress
 ) {
@@ -135,8 +135,7 @@ async function transferAssetUsingRegular(
                 assetType: asset.assetType
             }
         );
-    await transferTx.signInput(0, { signer: p2pkh });
-    transferTx.getTransferredAssets();
+    sdk.key.signTransactionInput(transferTx, 0, { keyStore });
 
     const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: [transferTx]
@@ -160,7 +159,7 @@ async function transferAssetUsingRegular(
 }
 async function transferAssetUsingOther(
     mintTx,
-    p2pkh,
+    keyStore,
     aliceAddress,
     bobAddress
 ) {
@@ -186,9 +185,7 @@ async function transferAssetUsingOther(
                 assetType: asset.assetType
             }
         );
-
-    await transferTx.signInput(0, { signer: p2pkh });
-    transferTx.getTransferredAssets();
+    sdk.key.signTransactionInput(transferTx, 0, { keyStore });
 
     const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: [transferTx]

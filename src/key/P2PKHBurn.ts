@@ -49,6 +49,9 @@ export class P2PKHBurn implements TransactionBurnSigner {
         });
     }
 
+    /**
+     * @deprecated Use signTransactionBurn
+     */
     public async signBurn(
         transaction: AssetTransferTransaction,
         index: number,
