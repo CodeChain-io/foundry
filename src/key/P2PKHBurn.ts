@@ -42,8 +42,11 @@ export class P2PKHBurn implements TransactionBurnSigner {
         this.networkId = networkId;
     }
 
-    public async createAddress(): Promise<AssetTransferAddress> {
-        const hash = await this.keyStore.asset.createKey();
+    public async createAddress(
+        options: { passphrase?: string } = {}
+    ): Promise<AssetTransferAddress> {
+        const { passphrase } = options;
+        const hash = await this.keyStore.asset.createKey({ passphrase });
         return AssetTransferAddress.fromTypeAndPayload(2, hash, {
             networkId: this.networkId
         });

@@ -1,6 +1,6 @@
 import { Core } from "./core";
 import { NetworkId } from "./core/types";
-import { Key } from "./key";
+import { Key, KeyStoreType } from "./key";
 import { Rpc } from "./rpc";
 import {
     blake256,
@@ -38,24 +38,26 @@ class SDK {
 
     /**
      * @param params.server HTTP RPC server address
+     * @param params.keyStoreType Specify the type of the keystore. The default value is "local". It creates keystore.db file on the working directory.
      * @param params.options.networkId The network id of CodeChain. The default value is "tc" (testnet)
      * @param params.options.parcelSigner The default account to sign the parcel
      * @param params.options.parcelFee The default amount for the parcel fee
      */
     constructor(params: {
         server: string;
+        keyStoreType?: KeyStoreType;
         options?: {
             networkId?: NetworkId;
             parcelSigner?: string;
             parcelFee?: number;
         };
     }) {
-        const { server, options = {} } = params;
+        const { server, keyStoreType = "local", options = {} } = params;
         const { networkId = "tc", parcelSigner, parcelFee = 10 } = options;
 
         this.rpc = new Rpc({ server, options: { parcelSigner, parcelFee } });
         this.core = new Core({ networkId });
-        this.key = new Key({ networkId });
+        this.key = new Key({ networkId, keyStoreType });
     }
 }
 

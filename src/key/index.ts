@@ -15,6 +15,12 @@ import { P2PKHBurn } from "./P2PKHBurn";
 import { PlatformAddress } from "./PlatformAddress";
 import { RemoteKeyStore } from "./RemoteKeyStore";
 
+export type KeyStoreType =
+    | "local"
+    | "memory"
+    | { type: "remote"; url: string }
+    | { type: "local"; path: string };
+
 export class Key {
     public static classes = {
         AssetTransferAddress,
@@ -25,9 +31,17 @@ export class Key {
 
     public classes = Key.classes;
     private networkId: NetworkId;
+    private keyStore: KeyStore | null;
+    private keyStoreType: KeyStoreType;
 
-    constructor(options: { networkId: NetworkId }) {
-        this.networkId = options.networkId;
+    constructor(options: { networkId: NetworkId; keyStoreType: KeyStoreType }) {
+        const { networkId, keyStoreType } = options;
+        if (!isKeyStoreType(keyStoreType)) {
+            throw Error(`Unexpected keyStoreType param: ${keyStoreType}`);
+        }
+        this.networkId = networkId;
+        this.keyStore = null;
+        this.keyStoreType = keyStoreType;
     }
 
     /**
@@ -51,15 +65,16 @@ export class Key {
      * @returns A new platform address
      */
     public async createPlatformAddress(params: {
-        keyStore: KeyStore;
+        keyStore?: KeyStore;
+        passphrase?: string;
     }): Promise<PlatformAddress> {
-        const { keyStore } = params;
+        const { keyStore = await this.ensureKeyStore(), passphrase } = params;
         if (!isKeyStore(keyStore)) {
             throw Error(
                 `Expected keyStore param to be a KeyStore instance but found ${keyStore}`
             );
         }
-        const accountId = await keyStore.platform.createKey();
+        const accountId = await keyStore.platform.createKey({ passphrase });
         return PlatformAddress.fromAccountId(accountId);
     }
 
@@ -106,7 +121,7 @@ export class Key {
     public async signParcel(
         parcel: Parcel,
         params: {
-            keyStore: KeyStore;
+            keyStore?: KeyStore;
             account: PlatformAddress | string;
             passphrase?: string;
             fee: U256 | string | number;
@@ -118,7 +133,13 @@ export class Key {
                 `Expected the first argument of signParcel to be a Parcel instance but found ${parcel}`
             );
         }
-        const { account, passphrase, keyStore, fee, nonce } = params;
+        const {
+            account,
+            passphrase,
+            keyStore = await this.ensureKeyStore(),
+            fee,
+            nonce
+        } = params;
         if (!isKeyStore(keyStore)) {
             throw Error(
                 `Expected keyStore param to be a KeyStore instance but found ${keyStore}`
@@ -151,9 +172,9 @@ export class Key {
         tx: AssetTransferTransaction,
         index: number,
         params: {
-            keyStore: KeyStore;
+            keyStore?: KeyStore;
             passphrase?: string;
-        }
+        } = {}
     ): Promise<void> {
         if (index >= tx.inputs.length) {
             throw Error(`Invalid index`);
@@ -171,7 +192,7 @@ export class Key {
         const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
 
         tx.inputs[index].setLockScript(P2PKH.getLockScript());
-        const { keyStore, passphrase } = params;
+        const { keyStore = await this.ensureKeyStore(), passphrase } = params;
         const p2pkh = this.createP2PKH({ keyStore });
         tx.inputs[index].setUnlockScript(
             await p2pkh.createUnlockScript(
@@ -195,9 +216,9 @@ export class Key {
         tx: AssetTransferTransaction,
         index: number,
         params: {
-            keyStore: KeyStore;
+            keyStore?: KeyStore;
             passphrase?: string;
-        }
+        } = {}
     ): Promise<void> {
         if (index >= tx.burns.length) {
             throw Error(`Invalid index`);
@@ -215,7 +236,7 @@ export class Key {
         const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
 
         tx.burns[index].setLockScript(P2PKHBurn.getLockScript());
-        const { keyStore, passphrase } = params;
+        const { keyStore = await this.ensureKeyStore(), passphrase } = params;
         const p2pkhBurn = this.createP2PKHBurn({ keyStore });
         tx.burns[index].setUnlockScript(
             await p2pkhBurn.createUnlockScript(
@@ -227,6 +248,27 @@ export class Key {
             )
         );
     }
+
+    private async ensureKeyStore(): Promise<KeyStore> {
+        if (this.keyStore === null) {
+            if (this.keyStoreType === "local") {
+                this.keyStore = await LocalKeyStore.create();
+            } else if (this.keyStoreType === "memory") {
+                this.keyStore = await LocalKeyStore.createForTest();
+            } else if (this.keyStoreType.type === "local") {
+                this.keyStore = await LocalKeyStore.create({
+                    dbPath: this.keyStoreType.path
+                });
+            } else if (this.keyStoreType.type === "remote") {
+                this.keyStore = await RemoteKeyStore.create(
+                    this.keyStoreType.url
+                );
+            } else {
+                throw Error(`Unreachable`);
+            }
+        }
+        return this.keyStore;
+    }
 }
 
 function isKeyStore(value: any) {
@@ -235,4 +277,17 @@ function isKeyStore(value: any) {
         value instanceof RemoteKeyStore ||
         value instanceof MemoryKeyStore
     );
+}
+
+function isKeyStoreType(value: any) {
+    if (typeof value === "string") {
+        return value === "local" || value === "memory";
+    }
+    if (typeof value === "object" && value !== null) {
+        return (
+            (value.type === "local" && typeof value.path === "string") ||
+            (value.type === "remote" && typeof value.url === "string")
+        );
+    }
+    return false;
 }
