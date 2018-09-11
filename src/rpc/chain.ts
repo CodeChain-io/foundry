@@ -223,7 +223,7 @@ export class ChainRpc {
     public getRegularKey(
         address: PlatformAddress | string,
         blockNumber?: number
-    ): Promise<H512> {
+    ): Promise<H512 | null> {
         if (!PlatformAddress.check(address)) {
             throw Error(
                 `Expected the first argument of getRegularKey to be a PlatformAddress value but found ${address}`
@@ -242,11 +242,11 @@ export class ChainRpc {
                 ])
                 .then(result => {
                     try {
-                        resolve(new H512(result));
+                        resolve(result === null ? null : new H512(result));
                     } catch (e) {
                         reject(
                             Error(
-                                `Expected chain_getRegularKey to return a value of H512, but an error occurred: ${e.toString()}`
+                                `Expected chain_getRegularKey to return either null or a value of H512, but an error occurred: ${e.toString()}`
                             )
                         );
                     }

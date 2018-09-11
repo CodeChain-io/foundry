@@ -145,14 +145,14 @@ describe("Invalid response", () => {
         });
 
         test("getRegularKey", done => {
-            rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(null);
+            rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
             chainRpc
                 .getRegularKey(address)
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getRegularKey");
                     expect(e.toString()).toContain("H512");
-                    expect(e.toString()).toContain("null");
+                    expect(e.toString()).toContain("undefined");
                     done();
                 });
         });
