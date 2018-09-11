@@ -5,15 +5,9 @@ const sdk = new SDK({
 });
 
 (async () => {
-    const keyStore = await sdk.key.createLocalKeyStore();
-    // Create P2PKHBurn instead of P2PKH. Currently, P2PKH addresses can only
-    // transfer assets. If you want to burn assets which are holded by P2PKH
-    // addresses, you need to transfer them to P2PKHBurn addresses first.
-    const p2pkhBurn = await sdk.key.createP2PKHBurn({
-        keyStore
+    const aliceAddress = await sdk.key.createAssetTransferAddress({
+        type: "P2PKHBurn"
     });
-
-    const aliceAddress = await p2pkhBurn.createAddress();
 
     // Create an asset.
     const assetScheme = sdk.core.createAssetScheme({
@@ -35,9 +29,7 @@ const sdk = new SDK({
     const transferTx = sdk.core
         .createAssetTransferTransaction()
         .addBurns(firstGold);
-    await sdk.key.signTransactionBurn(transferTx, 0, {
-        keyStore
-    });
+    await sdk.key.signTransactionBurn(transferTx, 0);
 
     const parcel = sdk.core.createAssetTransactionGroupParcel({
         transactions: [mintTx, transferTx]

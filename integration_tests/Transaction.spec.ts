@@ -1,8 +1,8 @@
 import { SDK } from "..";
-import { mintAsset, sendTransactions, createKeyStore } from "./helper";
+import { mintAsset, sendTransactions } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
-const sdk = new SDK({ server: SERVER_URL });
+const sdk = new SDK({ server: SERVER_URL, keyStoreType: "memory" });
 const { H256, AssetTransactionGroup } = SDK.Core.classes;
 
 test("AssetMintTransaction fromJSON", async () => {
@@ -41,10 +41,8 @@ test("AssetMintTransaction fromJSON", async () => {
 });
 
 test("AssetTransferTransaction fromJSON", async () => {
-    const keyStore = await createKeyStore();
-    const p2pkh = await sdk.key.createP2PKH({ keyStore });
-    const addressA = await p2pkh.createAddress();
-    const addressB = await p2pkh.createAddress();
+    const addressA = await sdk.key.createAssetTransferAddress();
+    const addressB = await sdk.key.createAssetTransferAddress();
     const mintTx = sdk.core
         .createAssetScheme({
             shardId: 0,
@@ -65,7 +63,7 @@ test("AssetTransferTransaction fromJSON", async () => {
             }
         ]
     });
-    sdk.key.signTransactionInput(transferTx, 0, { keyStore });
+    sdk.key.signTransactionInput(transferTx, 0);
     const { parcelHash } = await sendTransactions({
         transactions: [transferTx]
     });

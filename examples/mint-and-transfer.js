@@ -5,12 +5,7 @@ const sdk = new SDK({
 });
 
 (async () => {
-    const keyStore = await sdk.key.createLocalKeyStore();
-    const p2pkh = await sdk.key.createP2PKH({
-        keyStore
-    });
-
-    const aliceAddress = await p2pkh.createAddress();
+    const aliceAddress = await sdk.key.createAssetTransferAddress();
     const bobAddress =
         "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
 
@@ -48,9 +43,7 @@ const sdk = new SDK({
                 assetType: firstGold.assetType
             }
         );
-    sdk.key.signTransactionInput(transferTx, 0, {
-        keyStore
-    });
+    sdk.key.signTransactionInput(transferTx, 0);
 
     const parcel = sdk.core.createAssetTransactionGroupParcel({
         transactions: [mintTx, transferTx]

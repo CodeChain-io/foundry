@@ -1,8 +1,7 @@
 import { SDK } from "../";
-import { createKeyStore } from "./helper";
 
 const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
-const sdk = new SDK({ server: SERVER_URL });
+const sdk = new SDK({ server: SERVER_URL, keyStoreType: "memory" });
 const masterSecret =
     "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
 const masterAccountId = SDK.util.getAccountIdFromPrivate(masterSecret);
@@ -24,15 +23,13 @@ test("checkRegistrarValidation", async () => {
     await setRegularKey();
     await sendCCCToOther();
 
-    const keyStore = await createKeyStore();
-    const p2pkh = await sdk.key.createP2PKH({ keyStore });
-    const aliceAddress = await p2pkh.createAddress();
+    const aliceAddress = await sdk.key.createAssetTransferAddress();
     const bobAddress =
         "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
 
-    const mintTx = await mintAssetUsingMaster(p2pkh, aliceAddress, bobAddress);
-    await transferAssetUsingOther(mintTx, keyStore, aliceAddress, bobAddress);
-    await transferAssetUsingRegular(mintTx, keyStore, aliceAddress, bobAddress);
+    const mintTx = await mintAssetUsingMaster(aliceAddress, bobAddress);
+    await transferAssetUsingOther(mintTx, aliceAddress, bobAddress);
+    await transferAssetUsingRegular(mintTx, aliceAddress, bobAddress);
 });
 
 async function setRegularKey() {
@@ -72,7 +69,7 @@ async function sendCCCToOther() {
     });
 }
 
-async function mintAssetUsingMaster(p2pkh, aliceAddress, bobAddress) {
+async function mintAssetUsingMaster(aliceAddress, bobAddress) {
     const assetScheme = sdk.core.createAssetScheme({
         shardId: 0,
         worldId: 0,
@@ -113,12 +110,7 @@ async function mintAssetUsingMaster(p2pkh, aliceAddress, bobAddress) {
     return mintTx;
 }
 
-async function transferAssetUsingRegular(
-    mintTx,
-    keyStore,
-    aliceAddress,
-    bobAddress
-) {
+async function transferAssetUsingRegular(mintTx, aliceAddress, bobAddress) {
     const asset = mintTx.getMintedAsset();
     const transferTx = sdk.core
         .createAssetTransferTransaction()
@@ -135,7 +127,7 @@ async function transferAssetUsingRegular(
                 assetType: asset.assetType
             }
         );
-    sdk.key.signTransactionInput(transferTx, 0, { keyStore });
+    sdk.key.signTransactionInput(transferTx, 0);
 
     const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: [transferTx]
@@ -157,12 +149,7 @@ async function transferAssetUsingRegular(
     );
     expect(transferTxInvoice.success).toBe(true);
 }
-async function transferAssetUsingOther(
-    mintTx,
-    keyStore,
-    aliceAddress,
-    bobAddress
-) {
+async function transferAssetUsingOther(mintTx, aliceAddress, bobAddress) {
     const asset = mintTx.getMintedAsset();
 
     const transferTx = sdk.core
@@ -185,7 +172,7 @@ async function transferAssetUsingOther(
                 assetType: asset.assetType
             }
         );
-    sdk.key.signTransactionInput(transferTx, 0, { keyStore });
+    sdk.key.signTransactionInput(transferTx, 0);
 
     const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: [transferTx]

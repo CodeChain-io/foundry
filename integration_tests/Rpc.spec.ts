@@ -10,7 +10,6 @@ import {
     SignedParcel
 } from "../lib/core/classes";
 import { PlatformAddress } from "../lib/key/classes";
-import { createKeyStore } from "./helper";
 import {
     generatePrivateKey,
     getAccountIdFromPrivate,
@@ -95,7 +94,10 @@ describe("rpc", () => {
     const signerAddress = "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78";
 
     beforeAll(async () => {
-        sdk = new SDK({ server: "http://localhost:8080" });
+        sdk = new SDK({
+            server: "http://localhost:8080",
+            keyStoreType: "memory"
+        });
     });
 
     test("PlatformAddress", () => {
@@ -353,8 +355,6 @@ describe("rpc", () => {
             const worldId = 0;
 
             beforeAll(async () => {
-                const keyStore = await createKeyStore();
-                const p2pkh = await sdk.key.createP2PKH({ keyStore });
                 mintTransaction = sdk.core
                     .createAssetScheme({
                         shardId,
@@ -364,7 +364,7 @@ describe("rpc", () => {
                         registrar: null
                     })
                     .createMintTransaction({
-                        recipient: await p2pkh.createAddress()
+                        recipient: await sdk.key.createAssetTransferAddress()
                     });
                 const parcel = sdk.core.createAssetTransactionGroupParcel({
                     transactions: [mintTransaction]
@@ -451,8 +451,6 @@ describe("rpc", () => {
             const wrongShardId = 1;
 
             beforeAll(async () => {
-                const keyStore = await createKeyStore();
-                const p2pkh = await sdk.key.createP2PKH({ keyStore });
                 mintTransaction = sdk.core
                     .createAssetScheme({
                         shardId,
@@ -462,20 +460,18 @@ describe("rpc", () => {
                         registrar: null
                     })
                     .createMintTransaction({
-                        recipient: await p2pkh.createAddress()
+                        recipient: await sdk.key.createAssetTransferAddress()
                     });
                 const mintedAsset = mintTransaction.getMintedAsset();
                 transferTransaction = sdk.core
                     .createAssetTransferTransaction()
                     .addInputs(mintedAsset)
                     .addOutputs({
-                        recipient: await p2pkh.createAddress(),
+                        recipient: await sdk.key.createAssetTransferAddress(),
                         amount: 10,
                         assetType: mintedAsset.assetType
                     });
-                sdk.key.signTransactionInput(transferTransaction, 0, {
-                    keyStore
-                });
+                sdk.key.signTransactionInput(transferTransaction, 0);
                 const parcel = sdk.core.createAssetTransactionGroupParcel({
                     transactions: [mintTransaction, transferTransaction]
                 });
