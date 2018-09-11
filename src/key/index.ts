@@ -62,6 +62,7 @@ export class Key {
 
     /**
      * Creates a new platform address
+     * @param params.keyStore A key store.
      * @returns A new platform address
      */
     public async createPlatformAddress(params: {
@@ -76,6 +77,43 @@ export class Key {
         }
         const accountId = await keyStore.platform.createKey({ passphrase });
         return PlatformAddress.fromAccountId(accountId);
+    }
+
+    /**
+     * Creates a new asset transfer address
+     * @param params.type The type of AssetTransferAddress. The default value is "P2PKH".
+     * @param params.keyStore A key store.
+     * @returns A new platform address
+     */
+    public async createAssetTransferAddress(
+        params: {
+            type?: "P2PKH" | "P2PKHBurn";
+            keyStore?: KeyStore;
+            passphrase?: string;
+        } = {}
+    ): Promise<AssetTransferAddress> {
+        const {
+            keyStore = await this.ensureKeyStore(),
+            type = "P2PKH",
+            passphrase
+        } = params;
+        if (!isKeyStore(keyStore)) {
+            throw Error(
+                `Expected keyStore param to be a KeyStore instance but found ${keyStore}`
+            );
+        }
+        const { networkId } = this;
+        if (type === "P2PKH") {
+            const p2pkh = new P2PKH({ keyStore, networkId });
+            return p2pkh.createAddress({ passphrase });
+        } else if (type === "P2PKHBurn") {
+            const p2pkhBurn = new P2PKHBurn({ keyStore, networkId });
+            return p2pkhBurn.createAddress({ passphrase });
+        } else {
+            throw Error(
+                `Expected the type param of createAssetTransferAddress to be either P2PKH or P2PKHBurn but found ${type}`
+            );
+        }
     }
 
     /**
