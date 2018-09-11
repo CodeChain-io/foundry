@@ -1,4 +1,9 @@
-import { Parcel, SignedParcel, U256 } from "../core/classes";
+import {
+    AssetTransferTransaction,
+    Parcel,
+    SignedParcel,
+    U256
+} from "../core/classes";
 import { NetworkId } from "../core/types";
 
 import { AssetTransferAddress } from "./AssetTransferAddress";
@@ -133,6 +138,94 @@ export class Key {
             passphrase
         });
         return new SignedParcel(parcel, sig);
+    }
+
+    /**
+     * Signs a transaction's input with a given key store.
+     * @param tx An AssetTransferTransaction.
+     * @param index The index of an input to sign.
+     * @param params.keyStore A key store.
+     * @param params.passphrase The passphrase for the given input.
+     */
+    public async signTransactionInput(
+        tx: AssetTransferTransaction,
+        index: number,
+        params: {
+            keyStore: KeyStore;
+            passphrase?: string;
+        }
+    ): Promise<void> {
+        if (index >= tx.inputs.length) {
+            throw Error(`Invalid index`);
+        }
+        const { lockScriptHash, parameters } = tx.inputs[index].prevOut;
+        if (lockScriptHash === undefined || parameters === undefined) {
+            throw Error(`Invalid transaction input`);
+        }
+        if (lockScriptHash.value !== P2PKH.getLockScriptHash().value) {
+            throw Error(`Unexpected lock script hash`);
+        }
+        if (parameters.length !== 1) {
+            throw Error(`Unexpected length of parameters`);
+        }
+        const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
+
+        tx.inputs[index].setLockScript(P2PKH.getLockScript());
+        const { keyStore, passphrase } = params;
+        const p2pkh = this.createP2PKH({ keyStore });
+        tx.inputs[index].setUnlockScript(
+            await p2pkh.createUnlockScript(
+                publicKeyHash,
+                tx.hashWithoutScript(),
+                {
+                    passphrase
+                }
+            )
+        );
+    }
+
+    /**
+     * Signs a transaction's burn with a given key store.
+     * @param tx An AssetTransferTransaction.
+     * @param index The index of a burn to sign.
+     * @param params.keyStore A key store.
+     * @param params.passphrase The passphrase for the given burn.
+     */
+    public async signTransactionBurn(
+        tx: AssetTransferTransaction,
+        index: number,
+        params: {
+            keyStore: KeyStore;
+            passphrase?: string;
+        }
+    ): Promise<void> {
+        if (index >= tx.burns.length) {
+            throw Error(`Invalid index`);
+        }
+        const { lockScriptHash, parameters } = tx.burns[index].prevOut;
+        if (lockScriptHash === undefined || parameters === undefined) {
+            throw Error(`Invalid transaction burn`);
+        }
+        if (lockScriptHash.value !== P2PKHBurn.getLockScriptHash().value) {
+            throw Error(`Unexpected lock script hash`);
+        }
+        if (parameters.length !== 1) {
+            throw Error(`Unexpected length of parameters`);
+        }
+        const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
+
+        tx.burns[index].setLockScript(P2PKHBurn.getLockScript());
+        const { keyStore, passphrase } = params;
+        const p2pkhBurn = this.createP2PKHBurn({ keyStore });
+        tx.burns[index].setUnlockScript(
+            await p2pkhBurn.createUnlockScript(
+                publicKeyHash,
+                tx.hashWithoutScript(),
+                {
+                    passphrase
+                }
+            )
+        );
     }
 }
 

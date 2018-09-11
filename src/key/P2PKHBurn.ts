@@ -72,7 +72,7 @@ export class P2PKHBurn implements TransactionBurnSigner {
 
         transaction.burns[index].setLockScript(P2PKHBurn.getLockScript());
         transaction.burns[index].setUnlockScript(
-            await this.getUnlockScript(
+            await this.createUnlockScript(
                 publicKeyHash,
                 transaction.hashWithoutScript(),
                 { passphrase }
@@ -80,7 +80,7 @@ export class P2PKHBurn implements TransactionBurnSigner {
         );
     }
 
-    private async getUnlockScript(
+    public async createUnlockScript(
         publicKeyHash: string,
         txhash: H256,
         options: { passphrase?: string } = {}

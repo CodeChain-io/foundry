@@ -67,7 +67,7 @@ export class P2PKH implements TransactionInputSigner {
 
         transaction.inputs[index].setLockScript(P2PKH.getLockScript());
         transaction.inputs[index].setUnlockScript(
-            await this.getUnlockScript(
+            await this.createUnlockScript(
                 publicKeyHash,
                 transaction.hashWithoutScript(),
                 { passphrase }
@@ -75,7 +75,7 @@ export class P2PKH implements TransactionInputSigner {
         );
     }
 
-    private async getUnlockScript(
+    public async createUnlockScript(
         publicKeyHash: string,
         txhash: H256,
         options: { passphrase?: string } = {}
