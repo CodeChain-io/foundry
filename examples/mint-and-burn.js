@@ -5,6 +5,11 @@ const sdk = new SDK({
     server: SERVER_URL
 });
 
+const ACCOUNT_ADDRESS =
+    process.env.ACCOUNT_ADDRESS ||
+    "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78";
+const ACCOUNT_PASSPHRASE = "satoshi";
+
 (async () => {
     const aliceAddress = await sdk.key.createAssetTransferAddress({
         type: "P2PKHBurn"
@@ -36,8 +41,8 @@ const sdk = new SDK({
         transactions: [mintTx, transferTx]
     });
     await sdk.rpc.chain.sendParcel(parcel, {
-        account: "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78",
-        passphrase: "satoshi"
+        account: ACCOUNT_ADDRESS,
+        passphrase: ACCOUNT_PASSPHRASE
     });
 
     const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(

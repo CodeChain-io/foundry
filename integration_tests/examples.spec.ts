@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, unlinkSync } from "fs";
 import { execFile } from "child_process";
+import { readFileSync, unlinkSync, writeFileSync } from "fs";
 
 describe("examples", () => {
     beforeAll(done => {

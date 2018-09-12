@@ -5,8 +5,12 @@ var sdk = new SDK({
     server: SERVER_URL
 });
 
+var ACCOUNT_ADDRESS =
+    process.env.ACCOUNT_ADDRESS ||
+    "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78";
+
 sdk.rpc.chain
-    .getBalance("tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78")
+    .getBalance(ACCOUNT_ADDRESS)
     .then(function(balance) {
         // the balance is a U256 instance at this moment.
         // Use toString() to print it out.

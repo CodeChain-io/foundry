@@ -16,6 +16,13 @@ import {
     signEcdsa
 } from "../lib/utils";
 
+import {
+    ACCOUNT_ADDRESS,
+    ACCOUNT_ID,
+    ACCOUNT_SECRET,
+    SERVER_URL
+} from "./helper";
+
 // FIXME:
 const ERROR = {
     VERIFICATION_FAILED: {
@@ -88,14 +95,11 @@ describe("rpc", () => {
     const { Block, H512, U256 } = SDK.Core.classes;
     const invalidHash =
         "0x0000000000000000000000000000000000000000000000000000000000000000";
-    const signerSecret =
-        "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
-    const signerAccount = "0xa6594b7196808d161b6fb137e781abbc251385d9";
-    const signerAddress = "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78";
+    const signerSecret = ACCOUNT_SECRET;
+    const signerAccount = ACCOUNT_ID;
+    const signerAddress = ACCOUNT_ADDRESS;
 
     beforeAll(async () => {
-        const SERVER_URL =
-            process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
         sdk = new SDK({
             server: SERVER_URL,
             keyStoreType: "memory"

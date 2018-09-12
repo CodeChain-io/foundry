@@ -1,11 +1,10 @@
 import { SDK } from "../";
+import { SERVER_URL } from "./helper";
 
 describe("network", () => {
     let sdk: SDK;
 
     beforeAll(async () => {
-        const SERVER_URL =
-            process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
         sdk = new SDK({ server: SERVER_URL });
     });
 

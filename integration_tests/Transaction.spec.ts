@@ -1,7 +1,7 @@
 import { SDK } from "..";
-import { mintAsset, sendTransactions } from "./helper";
 
-const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
+import { mintAsset, sendTransactions, SERVER_URL } from "./helper";
+
 const sdk = new SDK({ server: SERVER_URL, keyStoreType: "memory" });
 const { H256, AssetTransactionGroup } = SDK.Core.classes;
 

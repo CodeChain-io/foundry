@@ -5,8 +5,11 @@ const sdk = new SDK({
     server: SERVER_URL
 });
 
-const masterSecret =
+var ACCOUNT_SECRET =
+    process.env.ACCOUNT_SECRET ||
     "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
+
+const masterSecret = ACCOUNT_SECRET;
 const masterAccountId = SDK.util.getAccountIdFromPrivate(masterSecret);
 const masterAddress = sdk.key.classes.PlatformAddress.fromAccountId(
     masterAccountId

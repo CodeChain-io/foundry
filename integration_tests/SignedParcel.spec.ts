@@ -1,27 +1,28 @@
 import { SDK } from "../";
 
+import {
+    ACCOUNT_ADDRESS,
+    ACCOUNT_ID,
+    ACCOUNT_SECRET,
+    SERVER_URL
+} from "./helper";
+
 test("getSignerAccountId", async () => {
     const sdk = new SDK({
-        server: process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080"
+        server: SERVER_URL
     });
-    const secret =
-        "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
-    const accountId = sdk.util.getAccountIdFromPrivate(secret);
-    const accountAddress = sdk.key.classes.PlatformAddress.fromAccountId(
-        accountId
-    );
-    const nonce = await sdk.rpc.chain.getNonce(accountAddress);
+    const nonce = await sdk.rpc.chain.getNonce(ACCOUNT_ADDRESS);
     const parcelToSend = sdk.core
         .createPaymentParcel({
             amount: 10,
-            recipient: accountAddress
+            recipient: ACCOUNT_ADDRESS
         })
         .sign({
-            secret,
+            secret: ACCOUNT_SECRET,
             fee: 10,
             nonce
         });
     const parcelHash = await sdk.rpc.chain.sendSignedParcel(parcelToSend);
     const parcelReceived = await sdk.rpc.chain.getParcel(parcelHash);
-    expect(parcelReceived.getSignerAccountId().value).toEqual(accountId);
+    expect(parcelReceived.getSignerAccountId().value).toEqual(ACCOUNT_ID);
 });

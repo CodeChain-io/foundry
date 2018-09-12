@@ -1,16 +1,13 @@
 import { SDK } from "../";
 
+import { ACCOUNT_ADDRESS, ACCOUNT_SECRET, SERVER_URL } from "./helper";
+
 const U256 = SDK.Core.classes.U256;
 
-const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 const sdk = new SDK({ server: SERVER_URL });
 
-const masterSecret =
-    "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
-const masterAccountId = SDK.util.getAccountIdFromPrivate(masterSecret);
-const masterAddress = sdk.key.classes.PlatformAddress.fromAccountId(
-    masterAccountId
-);
+const masterSecret = ACCOUNT_SECRET;
+const masterAddress = ACCOUNT_ADDRESS;
 
 const regularSecret = SDK.util.generatePrivateKey();
 const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
