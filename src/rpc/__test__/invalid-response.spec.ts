@@ -217,27 +217,27 @@ describe("Invalid response", () => {
         });
 
         test("getNonce", done => {
-            rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(null);
+            rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
             chainRpc
                 .getNonce(address)
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getNonce");
                     expect(e.toString()).toContain("U256");
-                    expect(e.toString()).toContain("null");
+                    expect(e.toString()).toContain("undefined");
                     done();
                 });
         });
 
         test("getBalance", done => {
-            rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(null);
+            rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
             chainRpc
                 .getBalance(address)
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getBalance");
                     expect(e.toString()).toContain("U256");
-                    expect(e.toString()).toContain("null");
+                    expect(e.toString()).toContain("undefined");
                     done();
                 });
         });

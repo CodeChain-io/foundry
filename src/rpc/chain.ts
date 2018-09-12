@@ -390,7 +390,7 @@ export class ChainRpc {
      * Gets balance of an account of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns balance recorded in the most recent block.
      * @param address An account address
      * @param blockNumber The specific block number to get account's balance at given address.
-     * @returns Balance of account at specified block.
+     * @returns Balance of account at the specified block, or null if no such block exists.
      */
     public getBalance(
         address: PlatformAddress | string,
@@ -414,7 +414,11 @@ export class ChainRpc {
                 ])
                 .then(result => {
                     try {
-                        resolve(new U256(result));
+                        // FIXME: Need to discuss changing the return type to `U256 | null`. It's a
+                        // breaking change.
+                        resolve(
+                            result === null ? (null as any) : new U256(result)
+                        );
                     } catch (e) {
                         reject(
                             Error(
@@ -431,7 +435,7 @@ export class ChainRpc {
      * Gets nonce of an account of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns nonce recorded in the most recent block.
      * @param address An account address
      * @param blockNumber The specific block number to get account's nonce at given address.
-     * @returns Nonce of account at specified block.
+     * @returns Nonce of account at the specified block, or null if no such block exists.
      */
     public getNonce(
         address: PlatformAddress | string,
@@ -455,7 +459,11 @@ export class ChainRpc {
                 ])
                 .then(result => {
                     try {
-                        resolve(new U256(result));
+                        // FIXME: Need to discuss changing the return type to `U256 | null`. It's a
+                        // breaking change.
+                        resolve(
+                            result === null ? (null as any) : new U256(result)
+                        );
                     } catch (e) {
                         reject(
                             Error(
