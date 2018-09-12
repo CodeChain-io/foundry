@@ -1,6 +1,9 @@
 var SDK = require("codechain-sdk");
 
-var sdk = new SDK({ server: "http://localhost:8080" });
+var SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
+var sdk = new SDK({
+    server: SERVER_URL
+});
 
 sdk.rpc.chain
     .getBalance("tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78")

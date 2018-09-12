@@ -1,6 +1,9 @@
 var SDK = require("codechain-sdk");
 
-var sdk = new SDK({ server: "http://localhost:8080" });
+var SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
+var sdk = new SDK({
+    server: SERVER_URL
+});
 
 var secret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
 var passphrase = "satoshi";

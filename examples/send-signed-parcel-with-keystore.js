@@ -1,6 +1,9 @@
 var SDK = require("..");
 
-var sdk = new SDK({ server: "http://localhost:8080" });
+var SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
+var sdk = new SDK({
+    server: SERVER_URL
+});
 
 var parcel = sdk.core.createPaymentParcel({
     recipient: "tccqruq09sfgax77nj4gukjcuq69uzeyv0jcs7vzngg",
@@ -9,7 +12,9 @@ var parcel = sdk.core.createPaymentParcel({
 
 (async () => {
     const keyStore = await sdk.key.createLocalKeyStore();
-    const account = await sdk.key.createPlatformAddress({ keyStore });
+    const account = await sdk.key.createPlatformAddress({
+        keyStore
+    });
     const nonce = await sdk.rpc.chain.getNonce(account);
 
     const signedParcel = await sdk.key.signParcel(parcel, {

@@ -1,6 +1,9 @@
 var SDK = require("codechain-sdk");
 
-var sdk = new SDK({ server: "http://localhost:8080" });
+var SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
+var sdk = new SDK({
+    server: SERVER_URL
+});
 
 var parcel = sdk.core.createPaymentParcel({
     recipient: "tccqruq09sfgax77nj4gukjcuq69uzeyv0jcs7vzngg",

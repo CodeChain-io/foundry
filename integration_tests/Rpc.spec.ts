@@ -94,8 +94,10 @@ describe("rpc", () => {
     const signerAddress = "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78";
 
     beforeAll(async () => {
+        const SERVER_URL =
+            process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
         sdk = new SDK({
-            server: "http://localhost:8080",
+            server: SERVER_URL,
             keyStoreType: "memory"
         });
     });
