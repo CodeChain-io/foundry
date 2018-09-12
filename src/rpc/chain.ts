@@ -238,7 +238,7 @@ export class ChainRpc {
             this.rpc
                 .sendRpcRequest("chain_getRegularKey", [
                     `${PlatformAddress.ensure(address).value}`,
-                    blockNumber || null
+                    blockNumber
                 ])
                 .then(result => {
                     try {
@@ -279,7 +279,7 @@ export class ChainRpc {
             this.rpc
                 .sendRpcRequest("chain_getRegularKeyOwner", [
                     `0x${H512.ensure(regularKey).value}`,
-                    blockNumber || null
+                    blockNumber
                 ])
                 .then(result => {
                     try {
