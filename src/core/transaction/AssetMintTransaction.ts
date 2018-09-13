@@ -168,7 +168,7 @@ export class AssetMintTransaction {
             metadata,
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
-            amount ? [amount] : [],
+            amount !== null ? [amount] : [],
             registrar ? [registrar.getAccountId().toEncodeObject()] : [],
             nonce
         ];
