@@ -664,9 +664,9 @@ function checkParameters(parameters: Buffer[]) {
         );
     }
     parameters.forEach((p, index) => {
-        if (p instanceof Buffer) {
+        if (!(p instanceof Buffer)) {
             throw Error(
-                `Expedted an item of parameters to be an instance of Buffer but found ${p} at index ${index}`
+                `Expected an item of parameters to be a Buffer instance but found ${p} at index ${index}`
             );
         }
     });
