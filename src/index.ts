@@ -39,25 +39,37 @@ class SDK {
     /**
      * @param params.server HTTP RPC server address
      * @param params.keyStoreType Specify the type of the keystore. The default value is "local". It creates keystore.db file on the working directory.
-     * @param params.options.networkId The network id of CodeChain. The default value is "tc" (testnet)
-     * @param params.options.parcelSigner The default account to sign the parcel
-     * @param params.options.parcelFee The default amount for the parcel fee
+     * @param params.networkId The network id of CodeChain. The default value is "tc" (testnet)
      */
     constructor(params: {
         server: string;
         keyStoreType?: KeyStoreType;
+        networkId?: NetworkId;
+        // Deprecated. It will be removed at 0.2.0
         options?: {
             networkId?: NetworkId;
             parcelSigner?: string;
             parcelFee?: number;
         };
     }) {
-        const { server, keyStoreType = "local", options = {} } = params;
-        const { networkId = "tc", parcelSigner, parcelFee = 10 } = options;
+        const {
+            server,
+            keyStoreType = "local",
+            networkId = "tc",
+            options
+        } = params;
+        const {
+            networkId: networkIdOpt,
+            parcelSigner,
+            parcelFee = 10
+        } = options || { networkId: undefined, parcelSigner: undefined };
 
         this.rpc = new Rpc({ server, options: { parcelSigner, parcelFee } });
-        this.core = new Core({ networkId });
-        this.key = new Key({ networkId, keyStoreType });
+        this.core = new Core({ networkId: networkIdOpt || networkId });
+        this.key = new Key({
+            networkId: networkIdOpt || networkId,
+            keyStoreType
+        });
     }
 }
 
