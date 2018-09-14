@@ -54,14 +54,12 @@ test("AssetTransferTransaction fromJSON", async () => {
         .createMintTransaction({ recipient: addressA });
     await sendTransactions({ transactions: [mintTx] });
     const firstAsset = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
-
-    const transferTx = await firstAsset.createTransferTransaction({
-        recipients: [
-            {
-                address: addressB,
-                amount: 100
-            }
-        ]
+    const transferTx = await sdk.core.createAssetTransferTransaction();
+    transferTx.addInputs(firstAsset);
+    transferTx.addOutputs({
+        assetType: firstAsset.assetType,
+        recipient: addressB,
+        amount: 100
     });
     sdk.key.signTransactionInput(transferTx, 0);
     const { parcelHash } = await sendTransactions({

@@ -96,18 +96,16 @@ export class Asset {
         });
     }
 
-    public createTransferTransaction(
-        params: {
-            recipients: Array<{
-                address: AssetTransferAddress | string;
-                amount: number;
-            }>;
-            nonce?: number;
-            networkId?: NetworkId;
-        } = { recipients: [] }
-    ): AssetTransferTransaction {
+    public createTransferTransaction(params: {
+        recipients?: Array<{
+            address: AssetTransferAddress | string;
+            amount: number;
+        }>;
+        nonce?: number;
+        networkId: NetworkId;
+    }): AssetTransferTransaction {
         const { outPoint, assetType } = this;
-        const { recipients, nonce = 0, networkId = "tc" } = params;
+        const { recipients = [], nonce = 0, networkId } = params;
 
         return new AssetTransferTransaction({
             burns: [],
