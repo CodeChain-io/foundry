@@ -1,8 +1,8 @@
 var SDK = require("codechain-sdk");
 
-var SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
 var sdk = new SDK({
-    server: SERVER_URL
+    server: process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080",
+    networkId: process.env.CODECHAIN_NETWORK_ID || "tc"
 });
 
 var ACCOUNT_SECRET =

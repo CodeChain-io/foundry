@@ -1,8 +1,17 @@
 import { SDK } from "..";
 
-import { mintAsset, sendTransactions, SERVER_URL } from "./helper";
+import {
+    CODECHAIN_NETWORK_ID,
+    mintAsset,
+    sendTransactions,
+    SERVER_URL
+} from "./helper";
 
-const sdk = new SDK({ server: SERVER_URL, keyStoreType: "memory" });
+const sdk = new SDK({
+    server: SERVER_URL,
+    keyStoreType: "memory",
+    networkId: CODECHAIN_NETWORK_ID
+});
 const { H256, AssetTransactionGroup } = SDK.Core.classes;
 
 test("AssetMintTransaction fromJSON", async () => {

@@ -1,8 +1,13 @@
 import { SDK } from "../";
 
+export const CODECHAIN_NETWORK_ID = process.env.CODECHAIN_NETWORK_ID || "tc";
 export const SERVER_URL =
     process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
-export const sdk = new SDK({ server: SERVER_URL, keyStoreType: "memory" });
+export const sdk = new SDK({
+    server: SERVER_URL,
+    keyStoreType: "memory",
+    networkId: CODECHAIN_NETWORK_ID
+});
 
 export const ACCOUNT_SECRET =
     process.env.ACCOUNT_SECRET ||

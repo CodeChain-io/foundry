@@ -4,12 +4,14 @@ import {
     ACCOUNT_ADDRESS,
     ACCOUNT_ID,
     ACCOUNT_SECRET,
+    CODECHAIN_NETWORK_ID,
     SERVER_URL
 } from "./helper";
 
 test("getSignerAccountId", async () => {
     const sdk = new SDK({
-        server: SERVER_URL
+        server: SERVER_URL,
+        networkId: CODECHAIN_NETWORK_ID
     });
     const nonce = await sdk.rpc.chain.getNonce(ACCOUNT_ADDRESS);
     const parcelToSend = sdk.core

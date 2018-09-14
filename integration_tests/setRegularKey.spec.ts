@@ -1,10 +1,15 @@
 import { SDK } from "../";
 
-import { ACCOUNT_ADDRESS, ACCOUNT_SECRET, SERVER_URL } from "./helper";
+import {
+    ACCOUNT_ADDRESS,
+    ACCOUNT_SECRET,
+    CODECHAIN_NETWORK_ID,
+    SERVER_URL
+} from "./helper";
 
 const U256 = SDK.Core.classes.U256;
 
-const sdk = new SDK({ server: SERVER_URL });
+const sdk = new SDK({ server: SERVER_URL, networkId: CODECHAIN_NETWORK_ID });
 
 const masterSecret = ACCOUNT_SECRET;
 const masterAddress = ACCOUNT_ADDRESS;

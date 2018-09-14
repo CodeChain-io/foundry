@@ -1,8 +1,17 @@
 import { SDK } from "../";
 
-import { ACCOUNT_ADDRESS, ACCOUNT_SECRET, SERVER_URL } from "./helper";
+import {
+    ACCOUNT_ADDRESS,
+    ACCOUNT_SECRET,
+    CODECHAIN_NETWORK_ID,
+    SERVER_URL
+} from "./helper";
 
-const sdk = new SDK({ server: SERVER_URL, keyStoreType: "memory" });
+const sdk = new SDK({
+    server: SERVER_URL,
+    keyStoreType: "memory",
+    networkId: CODECHAIN_NETWORK_ID
+});
 const masterSecret = ACCOUNT_SECRET;
 const masterAddress = ACCOUNT_ADDRESS;
 

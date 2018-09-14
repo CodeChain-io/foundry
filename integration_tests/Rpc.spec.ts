@@ -20,6 +20,7 @@ import {
     ACCOUNT_ADDRESS,
     ACCOUNT_ID,
     ACCOUNT_SECRET,
+    CODECHAIN_NETWORK_ID,
     SERVER_URL
 } from "./helper";
 
@@ -102,7 +103,8 @@ describe("rpc", () => {
     beforeAll(async () => {
         sdk = new SDK({
             server: SERVER_URL,
-            keyStoreType: "memory"
+            keyStoreType: "memory",
+            networkId: CODECHAIN_NETWORK_ID
         });
     });
 
@@ -582,7 +584,7 @@ describe("rpc", () => {
             test("Ok", async () => {
                 const account = getAccountIdFromPrivate(randomSecret);
                 const address = PlatformAddress.fromAccountId(account, {
-                    networkId: "tc"
+                    networkId: CODECHAIN_NETWORK_ID
                 });
                 // FIXME: Check that address not exists
                 expect(await sdk.rpc.account.importRaw(randomSecret)).toEqual(
