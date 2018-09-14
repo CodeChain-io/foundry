@@ -76,7 +76,8 @@ export class Key {
             );
         }
         const accountId = await keyStore.platform.createKey({ passphrase });
-        return PlatformAddress.fromAccountId(accountId);
+        const { networkId } = this;
+        return PlatformAddress.fromAccountId(accountId, { networkId });
     }
 
     /**
