@@ -1,4 +1,5 @@
-import { PlatformAddress } from "../key/PlatformAddress";
+import { PlatformAddress } from "codechain-primitives";
+
 import { H256 } from "./H256";
 import { SignedParcel } from "./SignedParcel";
 import { U256 } from "./U256";

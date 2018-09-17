@@ -1,5 +1,4 @@
-// FIXME: Use interface instead of importing key class.
-import { AssetTransferAddress, PlatformAddress } from "../key/classes";
+import { AssetTransferAddress, PlatformAddress } from "codechain-primitives";
 
 import { AssetTransactionGroup } from "./action/AssetTransactionGroup";
 import { CreateShard } from "./action/CreateShard";
@@ -64,7 +63,10 @@ export class Core {
         Asset,
         AssetScheme,
         // Script
-        Script
+        Script,
+        // Addresses
+        PlatformAddress,
+        AssetTransferAddress
     };
 
     public classes = Core.classes;

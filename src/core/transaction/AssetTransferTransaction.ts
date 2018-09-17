@@ -1,6 +1,5 @@
+import { AssetTransferAddress } from "codechain-primitives";
 import * as _ from "lodash";
-
-import { AssetTransferAddress } from "../../key/classes";
 
 import { blake256, blake256WithKey } from "../../utils";
 import { Asset } from "../Asset";

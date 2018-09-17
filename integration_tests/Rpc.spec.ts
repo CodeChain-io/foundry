@@ -7,9 +7,9 @@ import {
     H256,
     Invoice,
     Parcel,
+    PlatformAddress,
     SignedParcel
 } from "../lib/core/classes";
-import { PlatformAddress } from "../lib/key/classes";
 import {
     generatePrivateKey,
     getAccountIdFromPrivate,
@@ -110,7 +110,7 @@ describe("rpc", () => {
 
     test("PlatformAddress", () => {
         expect(
-            sdk.key.classes.PlatformAddress.fromAccountId(signerAccount).value
+            sdk.core.classes.PlatformAddress.fromAccountId(signerAccount).value
         ).toEqual(signerAddress);
     });
 
@@ -162,7 +162,8 @@ describe("rpc", () => {
 
             test("PlatformAddress", () => {
                 expect(
-                    sdk.key.classes.PlatformAddress.fromAccountId(account).value
+                    sdk.core.classes.PlatformAddress.fromAccountId(account)
+                        .value
                 ).toEqual(address);
             });
 

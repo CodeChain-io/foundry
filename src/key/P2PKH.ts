@@ -1,4 +1,5 @@
 import { Buffer } from "buffer";
+import { AssetTransferAddress } from "codechain-primitives";
 
 import { H256 } from "../core/H256";
 import { Script } from "../core/Script";
@@ -8,7 +9,6 @@ import {
 } from "../core/transaction/AssetTransferTransaction";
 import { NetworkId } from "../core/types";
 
-import { AssetTransferAddress } from "./AssetTransferAddress";
 import { KeyStore } from "./KeyStore";
 
 /**

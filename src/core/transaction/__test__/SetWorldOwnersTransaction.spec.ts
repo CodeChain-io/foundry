@@ -1,6 +1,7 @@
+import { PlatformAddress } from "codechain-primitives";
+
 import { SetWorldOwnersTransaction } from "../SetWorldOwnersTransaction";
 import { getTransactionFromJSON } from "../Transaction";
-import { PlatformAddress } from "../../../key/classes";
 
 describe("SetWorldOwnersTransaction", () => {
     test("toJSON", () => {

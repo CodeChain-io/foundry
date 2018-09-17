@@ -1,3 +1,5 @@
+import { AssetTransferAddress, PlatformAddress } from "codechain-primitives";
+
 import {
     AssetTransferTransaction,
     Parcel,
@@ -6,13 +8,11 @@ import {
 } from "../core/classes";
 import { NetworkId } from "../core/types";
 
-import { AssetTransferAddress } from "./AssetTransferAddress";
 import { KeyStore } from "./KeyStore";
 import { LocalKeyStore } from "./LocalKeyStore";
 import { MemoryKeyStore } from "./MemoryKeyStore";
 import { P2PKH } from "./P2PKH";
 import { P2PKHBurn } from "./P2PKHBurn";
-import { PlatformAddress } from "./PlatformAddress";
 import { RemoteKeyStore } from "./RemoteKeyStore";
 
 export type KeyStoreType =
@@ -23,8 +23,6 @@ export type KeyStoreType =
 
 export class Key {
     public static classes = {
-        AssetTransferAddress,
-        PlatformAddress,
         RemoteKeyStore,
         LocalKeyStore
     };

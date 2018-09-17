@@ -1,6 +1,6 @@
+import { PlatformAddress } from "codechain-primitives";
 import * as _ from "lodash";
 
-import { PlatformAddress } from "../key/classes";
 import { blake256, recoverEcdsa, ripemd160 } from "../utils";
 
 import { H160 } from "./H160";

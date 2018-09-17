@@ -1,6 +1,7 @@
+import { PlatformAddress } from "codechain-primitives";
+
 import { CreateWorldTransaction } from "../CreateWorldTransaction";
 import { getTransactionFromJSON } from "../Transaction";
-import { PlatformAddress } from "../../../key/classes";
 
 describe("CreateWorldTransaction", () => {
     test("toJSON", () => {

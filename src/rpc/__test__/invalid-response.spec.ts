@@ -1,5 +1,6 @@
+import { PlatformAddress } from "codechain-primitives";
+
 import { Parcel, Payment, U256 } from "../../core/classes";
-import { PlatformAddress } from "../../key/classes";
 
 import { AccountRpc } from "../account";
 import { ChainRpc } from "../chain";

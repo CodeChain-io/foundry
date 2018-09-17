@@ -1,4 +1,5 @@
-import { PlatformAddress } from "../../key/PlatformAddress";
+import { PlatformAddress } from "codechain-primitives";
+
 import { H512 } from "../H512";
 import { getTransactionFromJSON } from "../transaction/Transaction";
 import { U256 } from "../U256";

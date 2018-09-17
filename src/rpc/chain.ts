@@ -1,3 +1,5 @@
+import { PlatformAddress } from "codechain-primitives";
+
 import { Rpc } from ".";
 import { Asset } from "../core/Asset";
 import { AssetScheme } from "../core/AssetScheme";
@@ -13,7 +15,6 @@ import {
 } from "../core/transaction/Transaction";
 import { NetworkId } from "../core/types";
 import { U256 } from "../core/U256";
-import { PlatformAddress } from "../key/classes";
 
 export class ChainRpc {
     private rpc: Rpc;

@@ -36,3 +36,5 @@ export { Asset } from "./Asset";
 export { AssetScheme } from "./AssetScheme";
 
 export { Script } from "./Script";
+
+export { PlatformAddress, AssetTransferAddress } from "codechain-primitives";

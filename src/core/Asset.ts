@@ -1,6 +1,5 @@
 import { Buffer } from "buffer";
-
-import { AssetTransferAddress } from "../key/AssetTransferAddress";
+import { AssetTransferAddress } from "codechain-primitives";
 
 import { H256 } from "./H256";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";

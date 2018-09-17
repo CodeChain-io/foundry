@@ -1,5 +1,6 @@
+import { PlatformAddress } from "codechain-primitives";
+
 import { SetShardUsers } from "../SetShardUsers";
-import { PlatformAddress } from "../../../key/PlatformAddress";
 import { getActionFromJSON } from "../Action";
 
 describe("SetShardUsers", () => {

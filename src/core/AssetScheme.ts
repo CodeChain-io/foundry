@@ -1,6 +1,4 @@
-// FIXME: Use interface instead of importing key class.
-import { AssetTransferAddress } from "../key/AssetTransferAddress";
-import { PlatformAddress } from "../key/classes";
+import { AssetTransferAddress, PlatformAddress } from "codechain-primitives";
 
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { NetworkId } from "./types";

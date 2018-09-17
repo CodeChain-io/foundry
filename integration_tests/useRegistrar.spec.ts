@@ -18,7 +18,7 @@ const masterAddress = ACCOUNT_ADDRESS;
 const otherSecret =
     "0000000000000000000000000000000000000000000000000000000000000001";
 const otherAccountId = SDK.util.getAccountIdFromPrivate(otherSecret);
-const otherAddress = sdk.key.classes.PlatformAddress.fromAccountId(
+const otherAddress = sdk.core.classes.PlatformAddress.fromAccountId(
     otherAccountId
 );
 

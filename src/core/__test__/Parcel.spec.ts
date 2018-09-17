@@ -1,7 +1,8 @@
+import { PlatformAddress } from "codechain-primitives";
+
 import { H256 } from "../H256";
 import { U256 } from "../U256";
 import { Parcel } from "../Parcel";
-import { PlatformAddress } from "../../key/PlatformAddress";
 
 test("rlp", () => {
     const t = Parcel.transactions("tc");

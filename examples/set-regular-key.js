@@ -11,7 +11,7 @@ var ACCOUNT_SECRET =
 
 const masterSecret = ACCOUNT_SECRET;
 const masterAccountId = SDK.util.getAccountIdFromPrivate(masterSecret);
-const masterAddress = sdk.key.classes.PlatformAddress.fromAccountId(
+const masterAddress = sdk.core.classes.PlatformAddress.fromAccountId(
     masterAccountId
 );
 

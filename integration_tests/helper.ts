@@ -17,7 +17,7 @@ export const ACCOUNT_ID =
     sdk.util.getAccountIdFromPrivate(ACCOUNT_SECRET).toString(); // "0xa6594b7196808d161b6fb137e781abbc251385d9"
 export const ACCOUNT_ADDRESS =
     process.env.ACCOUNT_ADDRESS ||
-    sdk.key.classes.PlatformAddress.fromAccountId(ACCOUNT_ID).toString(); // "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78"
+    sdk.core.classes.PlatformAddress.fromAccountId(ACCOUNT_ID).toString(); // "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78"
 export const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 export const sendTransactions = async ({ transactions }: any) => {
@@ -48,7 +48,7 @@ export const mintAsset = async ({
         amount,
         registrar
     });
-    const assetAddress = sdk.key.classes.AssetTransferAddress.fromTypeAndPayload(
+    const assetAddress = sdk.core.classes.AssetTransferAddress.fromTypeAndPayload(
         0,
         lockScriptHash
     );

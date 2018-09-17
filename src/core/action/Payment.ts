@@ -1,4 +1,5 @@
-import { PlatformAddress } from "../../key/PlatformAddress";
+import { PlatformAddress } from "codechain-primitives";
+
 import { U256 } from "../U256";
 
 export class Payment {

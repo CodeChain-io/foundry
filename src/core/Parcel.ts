@@ -1,4 +1,5 @@
-import { PlatformAddress } from "../key/PlatformAddress";
+import { PlatformAddress } from "codechain-primitives";
+
 import { blake256, signEcdsa } from "../utils";
 import { Action, getActionFromJSON } from "./action/Action";
 import { AssetTransactionGroup } from "./action/AssetTransactionGroup";

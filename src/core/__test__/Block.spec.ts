@@ -1,8 +1,9 @@
+import { PlatformAddress } from "codechain-primitives";
+
 import { Block } from "../Block";
 import { H256 } from "../H256";
 import { U256 } from "../U256";
 import { Parcel } from "../Parcel";
-import { PlatformAddress } from "../../key/PlatformAddress";
 import { getAccountIdFromPrivate } from "../../utils";
 
 test("toJSON", () => {

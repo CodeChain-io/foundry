@@ -1,5 +1,6 @@
+import { PlatformAddress } from "codechain-primitives";
+
 import { H256 } from "../core/classes";
-import { PlatformAddress } from "../key/classes";
 
 import { Rpc } from ".";
 

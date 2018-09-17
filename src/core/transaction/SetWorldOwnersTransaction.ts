@@ -1,4 +1,5 @@
-import { PlatformAddress } from "../../key/PlatformAddress";
+import { PlatformAddress } from "codechain-primitives";
+
 import { blake256 } from "../../utils";
 import { H256 } from "../H256";
 import { NetworkId } from "../types";

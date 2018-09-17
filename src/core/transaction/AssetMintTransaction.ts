@@ -1,6 +1,6 @@
 import { Buffer } from "buffer";
+import { AssetTransferAddress, PlatformAddress } from "codechain-primitives";
 
-import { AssetTransferAddress, PlatformAddress } from "../../key/classes";
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
 

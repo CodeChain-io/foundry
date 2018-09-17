@@ -1,4 +1,4 @@
-import { PlatformAddress } from "../../key/PlatformAddress";
+import { PlatformAddress } from "codechain-primitives";
 
 export class SetShardUsers {
     public readonly shardId: number;
