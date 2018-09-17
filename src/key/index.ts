@@ -65,10 +65,12 @@ export class Key {
      * @param params.keyStore A key store.
      * @returns A new platform address
      */
-    public async createPlatformAddress(params: {
-        keyStore?: KeyStore;
-        passphrase?: string;
-    }): Promise<PlatformAddress> {
+    public async createPlatformAddress(
+        params: {
+            keyStore?: KeyStore;
+            passphrase?: string;
+        } = {}
+    ): Promise<PlatformAddress> {
         const { keyStore = await this.ensureKeyStore(), passphrase } = params;
         if (!isKeyStore(keyStore)) {
             throw Error(
