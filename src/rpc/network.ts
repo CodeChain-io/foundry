@@ -168,12 +168,12 @@ export class NetworkRpc {
             this.rpc
                 .sendRpcRequest("net_getPort", [])
                 .then(result => {
-                    if (typeof result === "number") {
+                    if (isPortNumber(result)) {
                         return resolve(result);
                     }
                     reject(
                         Error(
-                            `Expected net_getPort to return a number but it returned ${result}`
+                            `Expected net_getPort to return a port number but it returned ${result}`
                         )
                     );
                 })
