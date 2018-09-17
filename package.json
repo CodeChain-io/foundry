@@ -36,6 +36,7 @@
     "blakejs": "^1.1.0",
     "buffer": "5.1.0",
     "codechain-keystore": "~0.2.1",
+    "codechain-primitives": "^0.1.0-rc2",
     "elliptic": "^6.4.0",
     "jayson": "^2.0.6",
     "lodash": "^4.17.10",
