@@ -161,6 +161,27 @@ export class NetworkRpc {
     }
 
     /**
+     * Get the port
+     */
+    public getPort(): Promise<number> {
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("net_getPort", [])
+                .then(result => {
+                    if (typeof result === "number") {
+                        return resolve(result);
+                    }
+                    reject(
+                        Error(
+                            `Expected net_getPort to return a number but it returned ${result}`
+                        )
+                    );
+                })
+                .catch(reject);
+        });
+    }
+
+    /**
      * Get the number of established peers
      */
     public getPeerCount(): Promise<number> {
