@@ -1,6 +1,8 @@
 import { Buffer } from "buffer";
 
-import { PlatformAddress } from "../../key/classes";
+import { AssetTransferAddress, PlatformAddress } from "../../key/classes";
+import { P2PKH } from "../../key/P2PKH";
+import { P2PKHBurn } from "../../key/P2PKHBurn";
 
 import { blake256, blake256WithKey } from "../../utils";
 import { Asset } from "../Asset";
@@ -18,6 +20,19 @@ export interface AssetMintTransactionData {
     output: {
         lockScriptHash: H256;
         parameters: Buffer[];
+        amount: number | null;
+    };
+    registrar: PlatformAddress | null;
+    nonce: number;
+}
+
+export interface AssetMintTransactionAddressData {
+    networkId: NetworkId;
+    shardId: number;
+    worldId: number;
+    metadata: string;
+    output: {
+        recipient: AssetTransferAddress;
         amount: number | null;
     };
     registrar: PlatformAddress | null;
@@ -96,7 +111,9 @@ export class AssetMintTransaction {
      * @param data.registrar A registrar of the asset.
      * @param data.nonce A nonce of the transaction.
      */
-    constructor(data: AssetMintTransactionData) {
+    constructor(
+        data: AssetMintTransactionData | AssetMintTransactionAddressData
+    ) {
         const {
             networkId,
             shardId,
@@ -110,7 +127,41 @@ export class AssetMintTransaction {
         this.shardId = shardId;
         this.worldId = worldId;
         this.metadata = metadata;
-        this.output = output;
+        if ("recipient" in output) {
+            // FIXME: Clean up by abstracting the standard scripts
+            const { type, payload } = output.recipient;
+            switch (type) {
+                case 0x00: // LOCK_SCRIPT_HASH ONLY
+                    this.output = {
+                        lockScriptHash: payload,
+                        parameters: [],
+                        amount: output.amount
+                    };
+                    break;
+                case 0x01: // P2PKH
+                    this.output = {
+                        lockScriptHash: P2PKH.getLockScriptHash(),
+                        parameters: [Buffer.from(payload.value, "hex")],
+                        amount: output.amount
+                    };
+                    break;
+                case 0x02: // P2PKHBurn
+                    this.output = {
+                        lockScriptHash: P2PKHBurn.getLockScriptHash(),
+                        parameters: [Buffer.from(payload.value, "hex")],
+                        amount: output.amount
+                    };
+                    break;
+                default:
+                    throw Error(
+                        `Unexpected type of AssetTransferAddress: ${type}, ${
+                            output.recipient
+                        }`
+                    );
+            }
+        } else {
+            this.output = output;
+        }
         this.registrar = registrar;
         this.nonce = nonce;
     }

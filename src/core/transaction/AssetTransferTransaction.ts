@@ -186,9 +186,7 @@ export class AssetTransferTransaction {
                 const { assetType, amount, recipient } = output;
                 this.outputs.push(
                     new AssetTransferOutput({
-                        ...AssetTransferAddress.ensure(
-                            recipient
-                        ).getLockScriptHashAndParameters(),
+                        recipient: AssetTransferAddress.ensure(recipient),
                         amount,
                         assetType: H256.ensure(assetType)
                     })

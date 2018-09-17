@@ -66,9 +66,7 @@ export class AssetScheme {
             metadata,
             output: {
                 amount,
-                ...AssetTransferAddress.ensure(
-                    recipient
-                ).getLockScriptHashAndParameters()
+                recipient: AssetTransferAddress.ensure(recipient)
             },
             registrar,
             nonce

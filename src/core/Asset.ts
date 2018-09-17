@@ -119,9 +119,9 @@ export class Asset {
             outputs: recipients.map(
                 recipient =>
                     new AssetTransferOutput({
-                        ...AssetTransferAddress.ensure(
+                        recipient: AssetTransferAddress.ensure(
                             recipient.address
-                        ).getLockScriptHashAndParameters(),
+                        ),
                         assetType,
                         amount: recipient.amount
                     })

@@ -1,5 +1,9 @@
 import { Buffer } from "buffer";
 
+import { AssetTransferAddress } from "../../key/classes";
+import { P2PKH } from "../../key/P2PKH";
+import { P2PKHBurn } from "../../key/P2PKHBurn";
+
 import { H256 } from "../H256";
 
 export interface AssetTransferOutputData {
@@ -8,6 +12,13 @@ export interface AssetTransferOutputData {
     assetType: H256;
     amount: number;
 }
+
+export interface AssetTransferOutputAddressData {
+    recipient: AssetTransferAddress;
+    assetType: H256;
+    amount: number;
+}
+
 /**
  * An AssetTransferOutput consists of:
  *  - A lock script hash and parameters, which mark ownership of the asset.
@@ -19,12 +30,14 @@ export class AssetTransferOutput {
      * @param data An AssetTransferOutput JSON object.
      * @returns An AssetTransferOutput.
      */
-    public static fromJSON(data: any) {
+    public static fromJSON(data: AssetTransferOutputData) {
         const { lockScriptHash, parameters, assetType, amount } = data;
         return new this({
-            lockScriptHash: new H256(lockScriptHash),
-            parameters: parameters.map((p: number[]) => Buffer.from(p)),
-            assetType: new H256(assetType),
+            lockScriptHash: H256.ensure(lockScriptHash),
+            parameters: parameters.map((p: number[] | Buffer) =>
+                Buffer.from(p)
+            ),
+            assetType: H256.ensure(assetType),
             amount
         });
     }
@@ -39,10 +52,38 @@ export class AssetTransferOutput {
      * @param data.assetType An asset type of the output.
      * @param data.amount An asset amount of the output.
      */
-    constructor(data: AssetTransferOutputData) {
-        const { lockScriptHash, parameters, assetType, amount } = data;
-        this.lockScriptHash = lockScriptHash;
-        this.parameters = parameters;
+    constructor(
+        data: AssetTransferOutputData | AssetTransferOutputAddressData
+    ) {
+        if ("recipient" in data) {
+            // FIXME: Clean up by abstracting the standard scripts
+            const { type, payload } = data.recipient;
+            switch (type) {
+                case 0x00: // LOCK_SCRIPT_HASH ONLY
+                    this.lockScriptHash = payload;
+                    this.parameters = [];
+                    break;
+                case 0x01: // P2PKH
+                    this.lockScriptHash = P2PKH.getLockScriptHash();
+                    this.parameters = [Buffer.from(payload.value, "hex")];
+                    break;
+                case 0x02: // P2PKHBurn
+                    this.lockScriptHash = P2PKHBurn.getLockScriptHash();
+                    this.parameters = [Buffer.from(payload.value, "hex")];
+                    break;
+                default:
+                    throw Error(
+                        `Unexpected type of AssetTransferAddress: ${type}, ${
+                            data.recipient
+                        }`
+                    );
+            }
+        } else {
+            const { lockScriptHash, parameters } = data;
+            this.lockScriptHash = lockScriptHash;
+            this.parameters = parameters;
+        }
+        const { assetType, amount } = data;
         this.assetType = assetType;
         this.amount = amount;
     }

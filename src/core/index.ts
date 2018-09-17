@@ -329,9 +329,7 @@ export class Core {
             metadata,
             output: {
                 amount,
-                ...AssetTransferAddress.ensure(
-                    recipient
-                ).getLockScriptHashAndParameters()
+                recipient: AssetTransferAddress.ensure(recipient)
             }
         });
     }
@@ -458,9 +456,7 @@ export class Core {
         checkAssetType(assetType);
         checkAmountU64(amount);
         return new AssetTransferOutput({
-            ...AssetTransferAddress.ensure(
-                recipient
-            ).getLockScriptHashAndParameters(),
+            recipient: AssetTransferAddress.ensure(recipient),
             assetType: H256.ensure(assetType),
             amount
         });

@@ -48,7 +48,8 @@ export const mintAsset = async ({
         amount,
         registrar
     });
-    const assetAddress = sdk.key.classes.AssetTransferAddress.fromLockScriptHash(
+    const assetAddress = sdk.key.classes.AssetTransferAddress.fromTypeAndPayload(
+        0,
         lockScriptHash
     );
     const assetMintTransaction = assetScheme.createMintTransaction({
