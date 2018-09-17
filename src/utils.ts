@@ -1,48 +1,30 @@
-import * as _ from "lodash";
+import {
+    blake256 as _blake256,
+    blake256WithKey as _blake256WithKey,
+    generatePrivateKey as _generatePrivateKey,
+    getAccountIdFromPrivate as _getAccountIdFromPrivate,
+    getAccountIdFromPublic as _getAccountIdFromPublic,
+    getPublicFromPrivate as _getPublicFromPrivate,
+    recoverEcdsa as _recoverEcdsa,
+    ripemd160 as _ripemd160,
+    signEcdsa as _signEcdsa,
+    toHex as _toHex,
+    verifyEcdsa as _verifyEcdsa
+} from "codechain-primitives";
 
-/**
- * @hidden
- */
-const blake = require("blakejs");
-/**
- * @hidden
- */
-const ripemd = require("ripemd160");
-/**
- * @hidden
- */
-const EC = require("elliptic").ec;
-/**
- * @hidden
- */
-const secp256k1 = new EC("secp256k1");
-
-const toHexByte = (byte: number) =>
-    byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16);
 /**
  * Converts buffer to hexadecimal string.
  * @param buffer arbritrary length of data
  * @returns hexadecimal string
  */
-export const toHex = (buffer: Buffer): string => {
-    return Array.from(buffer)
-        .map(toHexByte)
-        .join("");
-};
+export const toHex = (buffer: Buffer): string => _toHex(buffer);
 
 /**
  * Gets data's 256 bit blake hash.
  * @param data buffer or hexadecimal string
  * @returns 32 byte hexadecimal string
  */
-export const blake256 = (data: Buffer | string): string => {
-    if (!(data instanceof Buffer)) {
-        data = Buffer.from(data, "hex");
-    }
-    const context = blake.blake2bInit(32, null);
-    blake.blake2bUpdate(context, data);
-    return toHex(blake.blake2bFinal(context));
-};
+export const blake256 = (data: Buffer | string): string => _blake256(data);
 
 /**
  * Gets data's 256 bit blake hash by using the key.
@@ -53,26 +35,14 @@ export const blake256 = (data: Buffer | string): string => {
 export const blake256WithKey = (
     data: Buffer | string,
     key: Uint8Array
-): string => {
-    if (!(data instanceof Buffer)) {
-        data = Buffer.from(data, "hex");
-    }
-    const context = blake.blake2bInit(32, key);
-    blake.blake2bUpdate(context, data);
-    return toHex(blake.blake2bFinal(context));
-};
+): string => _blake256WithKey(data, key);
 
 /**
  * Gets data's 160 bit RIPEMD hash.
  * @param data buffer or hexadecimal string
  * @returns 20 byte hexadecimal string
  */
-export const ripemd160 = (data: Buffer | string): string => {
-    if (!(data instanceof Buffer)) {
-        data = Buffer.from(data, "hex");
-    }
-    return new ripemd().update(data).digest("hex");
-};
+export const ripemd160 = (data: Buffer | string): string => _ripemd160(data);
 
 export interface EcdsaSignature {
     r: string;
@@ -86,15 +56,8 @@ export interface EcdsaSignature {
  * @param priv 32 byte hexadecimal string of private key
  * @returns r, s, v of ECDSA signature
  */
-export const signEcdsa = (message: string, priv: string): EcdsaSignature => {
-    const key = secp256k1.keyFromPrivate(priv);
-    const { r, s, recoveryParam: v } = key.sign(message, { canonical: true });
-    return {
-        r: r.toString("hex"),
-        s: s.toString("hex"),
-        v
-    };
-};
+export const signEcdsa = (message: string, priv: string): EcdsaSignature =>
+    _signEcdsa(message, priv);
 
 /**
  * Checks if the signature from signEcdsa is correct.
@@ -107,10 +70,7 @@ export const verifyEcdsa = (
     message: string,
     signature: EcdsaSignature,
     pub: string
-): boolean => {
-    const key = secp256k1.keyFromPublic("04" + pub, "hex");
-    return key.verify(message, signature);
-};
+): boolean => _verifyEcdsa(message, signature, pub);
 
 /**
  * Gets public key from the message and signature.
@@ -121,57 +81,34 @@ export const verifyEcdsa = (
 export const recoverEcdsa = (
     message: string,
     signature: EcdsaSignature
-): string => {
-    return secp256k1
-        .recoverPubKey(
-            secp256k1
-                .keyFromPrivate(message, "hex")
-                .getPrivate()
-                .toString(10),
-            signature,
-            signature.v
-        )
-        .encode("hex")
-        .slice(2);
-};
+): string => _recoverEcdsa(message, signature);
 
 /**
  * Generates a private key.
  * @returns 32 byte hexadecimal string of private key
  */
-export const generatePrivateKey = (): string => {
-    return _.padStart(secp256k1.genKeyPair().priv.toString("hex"), 64, "0");
-};
+export const generatePrivateKey = (): string => _generatePrivateKey();
 
 /**
  * Gets account id from private key.
  * @param priv 32 byte hexadecimal string of private key
  * @returns 20 byte hexadecimal string of account id
  */
-export const getAccountIdFromPrivate = (priv: string): string => {
-    const publicKey = getPublicFromPrivate(priv);
-    return getAccountIdFromPublic(publicKey);
-};
+export const getAccountIdFromPrivate = (priv: string): string =>
+    _getAccountIdFromPrivate(priv);
 
 /**
  * Gets account id from the given public key.
  * @param publicKey 64 byte hexadecimal string of uncompressed public key
  * @returns 20 byte hexadecimal string of account id
  */
-export const getAccountIdFromPublic = (publicKey: string): string => {
-    return ripemd160(blake256(publicKey));
-};
+export const getAccountIdFromPublic = (publicKey: string): string =>
+    _getAccountIdFromPublic(publicKey);
 
 /**
  * Gets public key from private key.
  * @param priv 32 byte hexadecimal string of private key
  * @returns 64 byte hexadecimal string of public key
  */
-export const getPublicFromPrivate = (priv: string): string => {
-    const key = secp256k1.keyFromPrivate(priv);
-    // Remove prefix "04" which represents it's uncompressed form.
-    return key
-        .getPublic()
-        .encode("hex")
-        .slice(2);
-};
+export const getPublicFromPrivate = (priv: string): string =>
+    _getPublicFromPrivate(priv);
