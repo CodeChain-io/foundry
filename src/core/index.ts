@@ -321,6 +321,9 @@ export class Core {
         checkWorldId(worldId);
         checkMetadata(metadata);
         checkRegistrar(registrar);
+        if (amount !== null) {
+            checkAmountU64(amount);
+        }
         return new AssetMintTransaction({
             networkId,
             shardId,
