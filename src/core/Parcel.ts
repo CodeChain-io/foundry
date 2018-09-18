@@ -25,6 +25,9 @@ const RLP = require("rlp");
  * - After signing with the sign() function, it can be sent to the network.
  */
 export class Parcel {
+    /**
+     * @deprecated
+     */
     public static transactions(
         networkId: NetworkId,
         ...transactions: Transaction[]
@@ -33,6 +36,9 @@ export class Parcel {
         return new Parcel(networkId, action);
     }
 
+    /**
+     * @deprecated
+     */
     public static payment(
         networkId: NetworkId,
         receiver: PlatformAddress,
@@ -42,11 +48,17 @@ export class Parcel {
         return new Parcel(networkId, action);
     }
 
+    /**
+     * @deprecated
+     */
     public static setRegularKey(networkId: NetworkId, key: H512): Parcel {
         const action = new SetRegularKey(key);
         return new Parcel(networkId, action);
     }
 
+    /**
+     * @deprecated
+     */
     public static createShard(networkId: NetworkId): Parcel {
         const action = new CreateShard();
         return new Parcel(networkId, action);
