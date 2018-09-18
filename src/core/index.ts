@@ -515,7 +515,7 @@ function checkAmount(amount: U256 | number | string) {
 
 // FIXME: U64
 function checkAmountU64(amount: number) {
-    if (typeof amount !== "number") {
+    if (typeof amount !== "number" || !Number.isInteger(amount) || amount < 0) {
         throw Error(`Expected amount param to be a number but found ${amount}`);
     }
 }
@@ -527,7 +527,12 @@ function checkKey(key: H512 | string) {
 }
 
 function checkShardId(shardId: number) {
-    if (typeof shardId !== "number") {
+    if (
+        typeof shardId !== "number" ||
+        !Number.isInteger(shardId) ||
+        shardId < 0 ||
+        shardId > 0xffff
+    ) {
         throw Error(
             `Expected shardId param to be a number but found ${shardId}`
         );
@@ -535,7 +540,12 @@ function checkShardId(shardId: number) {
 }
 
 function checkWorldId(worldId: number) {
-    if (typeof worldId !== "number") {
+    if (
+        typeof worldId !== "number" ||
+        !Number.isInteger(worldId) ||
+        worldId < 0 ||
+        worldId > 0xffff
+    ) {
         throw Error(
             `Expected worldId param to be a number but found ${worldId}`
         );
