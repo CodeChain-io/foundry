@@ -339,22 +339,20 @@ export class Core {
         });
     }
 
-    public createAssetTransferTransaction(
-        params: {
-            burns: AssetTransferInput[];
-            inputs: AssetTransferInput[];
-            outputs: AssetTransferOutput[];
-            networkId?: NetworkId;
-            nonce?: number;
-        } = { burns: [], inputs: [], outputs: [] }
-    ): AssetTransferTransaction {
+    public createAssetTransferTransaction(params?: {
+        burns?: AssetTransferInput[];
+        inputs?: AssetTransferInput[];
+        outputs?: AssetTransferOutput[];
+        networkId?: NetworkId;
+        nonce?: number;
+    }): AssetTransferTransaction {
         const {
-            burns,
-            inputs,
-            outputs,
+            burns = [],
+            inputs = [],
+            outputs = [],
             networkId = this.networkId,
             nonce = 0
-        } = params;
+        } = params || {};
         checkTransferBurns(burns);
         checkTransferInputs(inputs);
         checkTransferOutputs(outputs);
