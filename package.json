@@ -7,7 +7,7 @@
     "fmt": "tslint -p . --fix && prettier '{src,examples,integration_tests}/**/*.{ts,js,json}' --write",
     "build": "tsc -p .",
     "test": "jest --env node",
-    "test-int": "npm run-script build && jest -i --env node --roots integration_tests",
+    "test-int": "yarn build && jest -i --env node --roots integration_tests --globals '{\"ts-jest\":{\"diagnostics\":{\"warnOnly\":true}}}'",
     "posttest": "yarn lint",
     "docs": "typedoc --out gh-pages/0.1.1-alpha --name \"CodeChain JavaScript SDK\" --mode file --readme API.md --excludePrivate --excludeProtected",
     "docs-dev": "nodemon -e ts --watch src --watch API.md --exec 'yarn docs'",
