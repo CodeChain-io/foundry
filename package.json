@@ -32,22 +32,16 @@
     "lib"
   ],
   "dependencies": {
-    "bignumber.js": "^6.0.0",
-    "blakejs": "^1.1.0",
     "buffer": "5.1.0",
     "codechain-keystore": "~0.2.1",
     "codechain-primitives": "^0.1.0-rc2",
-    "elliptic": "^6.4.0",
     "jayson": "^2.0.6",
     "lodash": "^4.17.10",
     "node-fetch": "^2.1.2",
-    "request": "^2.88.0",
     "request-promise": "^4.2.2",
-    "ripemd160": "^2.0.2",
     "rlp": "^2.0.0"
   },
   "devDependencies": {
-    "@types/bignumber.js": "^5.0.0",
     "@types/jest": "^23.3.1",
     "@types/lodash": "^4.14.108",
     "@types/node": "^9.6.6",
