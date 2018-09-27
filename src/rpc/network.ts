@@ -236,15 +236,20 @@ export class NetworkRpc {
      * Add the IP to whitelist
      * @param ip Node IP
      */
-    public addToWhitelist(ip: string): Promise<null> {
+    public addToWhitelist(ip: string, tag?: string): Promise<null> {
         if (!isIpAddressString(ip)) {
             throw Error(
                 `Expected the first argument of addToWhitelist to be an IP address string but found ${ip}`
             );
         }
+        if (tag !== undefined && typeof tag !== "string") {
+            throw Error(
+                `Expected the second arguments of addToWhitelist to be an IP address string but found ${tag}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("net_addToWhitelist", [ip])
+                .sendRpcRequest("net_addToWhitelist", [ip, tag || null])
                 .then(result => {
                     if (result === null) {
                         return resolve(null);
@@ -290,23 +295,30 @@ export class NetworkRpc {
      * Add the IP to blacklist
      * @param ip Node IP
      */
-    public addToBlacklist(ip: string): Promise<null> {
+    public addToBlacklist(ip: string, tag?: string): Promise<null> {
         if (!isIpAddressString(ip)) {
             throw Error(
                 `Expected the first argument of addToBlacklist to be an IP address string but found ${ip}`
             );
         }
+        if (tag !== undefined && typeof tag !== "string") {
+            throw Error(
+                `Expected the second arguments of addToWhitelist to be an IP address string but found ${tag}`
+            );
+        }
         return new Promise((resolve, reject) => {
-            this.rpc.sendRpcRequest("net_addToBlacklist", [ip]).then(result => {
-                if (result === null) {
-                    return resolve(null);
-                }
-                reject(
-                    Error(
-                        `Expected net_addToBlacklist to return null but it returned ${result}`
-                    )
-                );
-            });
+            this.rpc
+                .sendRpcRequest("net_addToBlacklist", [ip, tag || null])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(
+                        Error(
+                            `Expected net_addToBlacklist to return null but it returned ${result}`
+                        )
+                    );
+                });
         });
     }
 
