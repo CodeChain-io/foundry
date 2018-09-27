@@ -133,7 +133,7 @@ async function transferAssetUsingRegular(mintTx, aliceAddress, bobAddress) {
                 assetType: asset.assetType
             }
         );
-    sdk.key.signTransactionInput(transferTx, 0);
+    await sdk.key.signTransactionInput(transferTx, 0);
 
     const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: [transferTx]
@@ -178,7 +178,7 @@ async function transferAssetUsingOther(mintTx, aliceAddress, bobAddress) {
                 assetType: asset.assetType
             }
         );
-    sdk.key.signTransactionInput(transferTx, 0);
+    await sdk.key.signTransactionInput(transferTx, 0);
 
     const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: [transferTx]

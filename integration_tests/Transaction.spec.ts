@@ -70,7 +70,7 @@ test("AssetTransferTransaction fromJSON", async () => {
         recipient: addressB,
         amount: 100
     });
-    sdk.key.signTransactionInput(transferTx, 0);
+    await sdk.key.signTransactionInput(transferTx, 0);
     const { parcelHash } = await sendTransactions({
         transactions: [transferTx]
     });

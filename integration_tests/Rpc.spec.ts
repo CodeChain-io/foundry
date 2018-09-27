@@ -480,7 +480,7 @@ describe("rpc", () => {
                         amount: 10,
                         assetType: mintedAsset.assetType
                     });
-                sdk.key.signTransactionInput(transferTransaction, 0);
+                await sdk.key.signTransactionInput(transferTransaction, 0);
                 const parcel = sdk.core.createAssetTransactionGroupParcel({
                     transactions: [mintTransaction, transferTransaction]
                 });
