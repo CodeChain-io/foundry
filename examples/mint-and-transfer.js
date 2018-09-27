@@ -49,7 +49,7 @@ var ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
                 assetType: firstGold.assetType
             }
         );
-    sdk.key.signTransactionInput(transferTx, 0);
+    await sdk.key.signTransactionInput(transferTx, 0);
 
     const parcel = sdk.core.createAssetTransactionGroupParcel({
         transactions: [mintTx, transferTx]

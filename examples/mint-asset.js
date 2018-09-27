@@ -30,7 +30,7 @@ var assetMintTransaction = sdk.core.createAssetMintTransaction({
     nonce: Math.floor(Math.random() * 1000000000)
 });
 
-// Send a change-shard-state parcel to process the transaction.
+// Send an asset-transaction-group parcel to process the transaction.
 var parcel = sdk.core.createAssetTransactionGroupParcel({
     transactions: [assetMintTransaction]
 });
@@ -47,7 +47,7 @@ sdk.rpc.chain
         });
     })
     .then(function(invoice) {
-        // The invoice of change-shard-state parcel is an array of the object that has
+        // The invoice of asset-transaction-group parcel is an array of the object that has
         // type { success: boolean }. Each object represents the result of each
         // transaction.
         console.log(invoice); // [{ success: true }]
