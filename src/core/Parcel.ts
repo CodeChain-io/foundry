@@ -136,14 +136,17 @@ export class Parcel {
 
     public toJSON() {
         const { nonce, fee, networkId, action } = this;
-        if (!nonce || !fee) {
-            throw Error("Nonce and fee in the parcel must be present");
+        if (!fee) {
+            throw Error("Fee in the parcel must be present");
         }
-        return {
-            nonce: nonce.value.toString(),
-            fee: fee.value.toString(),
+        const result: any = {
+            fee: fee.toEncodeObject(),
             networkId,
             action: action.toJSON()
         };
+        if (nonce) {
+            result.nonce = nonce.toEncodeObject();
+        }
+        return result;
     }
 }
