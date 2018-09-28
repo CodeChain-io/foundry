@@ -189,6 +189,16 @@ export class Key {
                 `Expected account param to be a PlatformAddress value but found ${account}`
             );
         }
+        if (!U256.check(fee)) {
+            throw Error(
+                `Expected fee param to be a U256 value but found ${fee}`
+            );
+        }
+        if (!U256.check(nonce)) {
+            throw Error(
+                `Expected nonce param to be a U256 value but found ${nonce}`
+            );
+        }
         parcel.setFee(fee);
         parcel.setNonce(nonce);
         const accountId = PlatformAddress.ensure(account).getAccountId();
