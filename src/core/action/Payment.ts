@@ -23,7 +23,7 @@ export class Payment {
         return {
             action: "payment",
             receiver: this.receiver.value,
-            amount: this.amount.value.toString()
+            amount: this.amount.toEncodeObject()
         };
     }
 }
