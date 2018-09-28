@@ -1,17 +1,20 @@
-import { PlatformAddress } from "codechain-primitives";
+import { H256, PlatformAddress, U256 } from "codechain-primitives";
 
-import { H256 } from "../core/classes";
+import { Parcel } from "../core/Parcel";
 
 import { Rpc } from ".";
 
 export class AccountRpc {
     private rpc: Rpc;
+    private readonly parcelFee?: number;
 
     /**
      * @hidden
      */
-    constructor(rpc: Rpc) {
+    constructor(rpc: Rpc, options: { parcelFee?: number }) {
+        const { parcelFee } = options;
         this.rpc = rpc;
+        this.parcelFee = parcelFee;
     }
 
     /**
@@ -169,6 +172,45 @@ export class AccountRpc {
         });
     }
 
+    /**
+     * Sends a parcel with the account's signature.
+     * @param params.parcel A parcel to send
+     * @param params.account The platform account to sign the parcel
+     * @param params.passphrase The account's passphrase
+     */
+    public sendParcel(params: {
+        parcel: Parcel;
+        account: PlatformAddress | string;
+        passphrase?: string;
+    }): Promise<{ hash: H256; nonce: U256 }> {
+        const { parcel, account, passphrase } = params;
+        if (!PlatformAddress.check(account)) {
+            throw Error(
+                `Expected account is a PlatformAddress value but found ${account}`
+            );
+        }
+        if (passphrase && typeof passphrase !== "string") {
+            throw Error(
+                `Expected the third argument to be a string but found ${passphrase}`
+            );
+        }
+        if (!parcel.fee && this.parcelFee != null) {
+            parcel.setFee(this.parcelFee);
+        }
+
+        return this.rpc
+            .sendRpcRequest("account_sendParcel", [
+                parcel.toJSON(),
+                PlatformAddress.ensure(account).toString(),
+                passphrase
+            ])
+            .then(result => {
+                return {
+                    hash: H256.ensure(result.hash),
+                    nonce: U256.ensure(result.nonce)
+                };
+            });
+    }
     /**
      * Unlocks the account.
      * @param address A platform address

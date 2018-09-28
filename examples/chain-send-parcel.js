@@ -15,14 +15,14 @@ var parcel = sdk.core.createPaymentParcel({
     amount: 10000
 });
 
-sdk.rpc.account
-    .sendParcel({
-        parcel,
+sdk.rpc.chain
+    .sendParcel(parcel, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
+        // fee and nonce are optional
     })
-    .then(function(result) {
-        return sdk.rpc.chain.getParcelInvoice(result.hash, {
+    .then(function(parcelHash) {
+        return sdk.rpc.chain.getParcelInvoice(parcelHash, {
             timeout: 300 * 1000
         });
     })

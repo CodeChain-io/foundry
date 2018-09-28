@@ -67,7 +67,7 @@ export class Rpc {
         this.node = new NodeRpc(this);
         this.chain = new ChainRpc(this, options);
         this.network = new NetworkRpc(this);
-        this.account = new AccountRpc(this);
+        this.account = new AccountRpc(this, options);
         this.devel = new DevelRpc(this);
     }
 
