@@ -21,7 +21,8 @@ export class Script {
         BLAKE256: 0x90,
         SHA256: 0x91,
         RIPEMD160: 0x92,
-        KECCAK256: 0x93
+        KECCAK256: 0x93,
+        BLAKE160: 0x94
     };
 
     /**
@@ -66,7 +67,8 @@ export class Script {
             BLAKE256,
             SHA256,
             RIPEMD160,
-            KECCAK256
+            KECCAK256,
+            BLAKE160
         } = Script.Opcode;
         let cursor = 0;
         while (cursor < data.length) {
@@ -85,6 +87,7 @@ export class Script {
                 case SHA256:
                 case RIPEMD160:
                 case KECCAK256:
+                case BLAKE160:
                     tokens.push(name);
                     break;
                 case PUSHB:

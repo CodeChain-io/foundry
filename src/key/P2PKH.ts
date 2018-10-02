@@ -16,8 +16,8 @@ import { KeyStore } from "./KeyStore";
  */
 export class P2PKH implements TransactionInputSigner {
     public static getLockScript(): Buffer {
-        const { COPY, BLAKE256, EQ, JZ, CHKSIG } = Script.Opcode;
-        return Buffer.from([COPY, 0x01, BLAKE256, EQ, JZ, 0xff, CHKSIG]);
+        const { COPY, BLAKE160, EQ, JZ, CHKSIG } = Script.Opcode;
+        return Buffer.from([COPY, 0x01, BLAKE160, EQ, JZ, 0xff, CHKSIG]);
     }
 
     public static getLockScriptHash(): H256 {

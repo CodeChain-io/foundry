@@ -13,11 +13,11 @@ import { KeyStore } from "./KeyStore";
 
 export class P2PKHBurn implements TransactionBurnSigner {
     public static getLockScript(): Buffer {
-        const { COPY, BLAKE256, EQ, JZ, CHKSIG, BURN } = Script.Opcode;
+        const { COPY, BLAKE160, EQ, JZ, CHKSIG, BURN } = Script.Opcode;
         return Buffer.from([
             COPY,
             0x01,
-            BLAKE256,
+            BLAKE160,
             EQ,
             JZ,
             0xff,
