@@ -1,4 +1,5 @@
 import {
+    blake160 as _blake160,
     blake256 as _blake256,
     blake256WithKey as _blake256WithKey,
     generatePrivateKey as _generatePrivateKey,
@@ -25,6 +26,13 @@ export const toHex = (buffer: Buffer): string => _toHex(buffer);
  * @returns 32 byte hexadecimal string
  */
 export const blake256 = (data: Buffer | string): string => _blake256(data);
+
+/**
+ * Gets data's 160 bit blake hash.
+ * @param data buffer or hexadecimal string
+ * @returns 20 byte hexadecimal string
+ */
+export const blake160 = (data: Buffer | string): string => _blake160(data);
 
 /**
  * Gets data's 256 bit blake hash by using the key.
