@@ -8,6 +8,7 @@ import {
     TransactionInputSigner
 } from "../core/transaction/AssetTransferTransaction";
 import { NetworkId } from "../core/types";
+import { encodeSignatureTag, SignatureTag } from "../utils";
 
 import { KeyStore } from "./KeyStore";
 
@@ -82,9 +83,12 @@ export class P2PKH implements TransactionInputSigner {
     public async createUnlockScript(
         publicKeyHash: string,
         txhash: H256,
-        options: { passphrase?: string } = {}
+        options: { passphrase?: string; signatureTag?: SignatureTag } = {}
     ): Promise<Buffer> {
-        const { passphrase } = options;
+        const {
+            passphrase,
+            signatureTag = { input: "all", output: "all" } as SignatureTag
+        } = options;
         const publicKey = await this.rawKeyStore.asset.getPublicKey({
             key: publicKeyHash
         });
@@ -98,11 +102,15 @@ export class P2PKH implements TransactionInputSigner {
             message: txhash.value,
             passphrase
         });
+        const encodedTag = encodeSignatureTag(signatureTag);
         const { PUSHB } = Script.Opcode;
         return Buffer.from([
             PUSHB,
             65,
             ...Buffer.from(signature, "hex"),
+            PUSHB,
+            encodedTag.byteLength,
+            ...encodedTag,
             PUSHB,
             64,
             ...Buffer.from(publicKey, "hex")

@@ -84,6 +84,79 @@ export const blake128WithKey = (
  */
 export const ripemd160 = (data: Buffer | string): string => _ripemd160(data);
 
+export interface SignatureTag {
+    input: "all" | "single";
+    output: "all" | number[];
+}
+
+/**
+ * @hidden
+ */
+export const encodeSignatureTag = (tag: SignatureTag): Buffer => {
+    const { input, output } = tag;
+    if (input !== "all" && input !== "single") {
+        throw Error(
+            `Expected the input of the tag to be either "all" or "single" but found ${input}`
+        );
+    }
+
+    const inputMask = input === "all" ? 0b01 : 0b00;
+    const outputMask = output === "all" ? 0b10 : 0b00;
+    if (Array.isArray(output)) {
+        // NOTE: Remove duplicates by using Set
+        const encoded = encodeSignatureTagOutput(
+            Array.from(new Set(output)).sort()
+        );
+        if (encoded.length >= 64) {
+            throw Error(`The output length is too big`);
+        }
+        return Buffer.from([
+            ...encoded,
+            (encoded.length << 2) | outputMask | inputMask
+        ]);
+    } else if (output === "all") {
+        return Buffer.from([outputMask | inputMask]);
+    } else {
+        throw Error(
+            `Expected the output of the tag to be either string "all" or an array of number but found ${output}`
+        );
+    }
+};
+
+/**
+ * @hidden
+ */
+const encodeSignatureTagOutput = (output: number[]) => {
+    // NOTE: Assume all numbers are distinct and the array is sorted by increasing order.
+    let offset = 0;
+    let byte = 0;
+    const bytes = [];
+    for (const index of output) {
+        if (typeof index !== "number") {
+            throw Error(
+                `Expected an array of number but found ${index} at ${output.indexOf(
+                    index
+                )}`
+            );
+        }
+        if (index < offset + 8) {
+            byte |= 1 << (index - offset);
+        } else {
+            bytes.push(byte);
+            offset += 8;
+            while (index >= offset + 8) {
+                bytes.push(0);
+                offset += 8;
+            }
+            byte = 1 << (index - offset);
+        }
+    }
+    if (byte !== 0) {
+        bytes.push(byte);
+    }
+    return bytes.reverse();
+};
+
 export interface EcdsaSignature {
     r: string;
     s: string;

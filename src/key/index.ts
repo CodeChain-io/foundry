@@ -7,6 +7,7 @@ import {
     U256
 } from "../core/classes";
 import { NetworkId } from "../core/types";
+import { SignatureTag } from "../utils";
 
 import { KeyStore } from "./KeyStore";
 import { LocalKeyStore } from "./LocalKeyStore";
@@ -223,6 +224,7 @@ export class Key {
         params: {
             keyStore?: KeyStore;
             passphrase?: string;
+            signatureTag?: SignatureTag;
         } = {}
     ): Promise<void> {
         if (index >= tx.inputs.length) {
@@ -241,14 +243,23 @@ export class Key {
         const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
 
         tx.inputs[index].setLockScript(P2PKH.getLockScript());
-        const { keyStore = await this.ensureKeyStore(), passphrase } = params;
+        const {
+            keyStore = await this.ensureKeyStore(),
+            passphrase,
+            signatureTag = { input: "all", output: "all" } as SignatureTag
+        } = params;
         const p2pkh = this.createP2PKH({ keyStore });
         tx.inputs[index].setUnlockScript(
             await p2pkh.createUnlockScript(
                 publicKeyHash,
-                tx.hashWithoutScript(),
+                tx.hashWithoutScript({
+                    tag: signatureTag,
+                    type: "input",
+                    index
+                }),
                 {
-                    passphrase
+                    passphrase,
+                    signatureTag
                 }
             )
         );
@@ -267,6 +278,7 @@ export class Key {
         params: {
             keyStore?: KeyStore;
             passphrase?: string;
+            signatureTag?: SignatureTag;
         } = {}
     ): Promise<void> {
         if (index >= tx.burns.length) {
@@ -285,14 +297,23 @@ export class Key {
         const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
 
         tx.burns[index].setLockScript(P2PKHBurn.getLockScript());
-        const { keyStore = await this.ensureKeyStore(), passphrase } = params;
+        const {
+            keyStore = await this.ensureKeyStore(),
+            passphrase,
+            signatureTag = { input: "all", output: "all" } as SignatureTag
+        } = params;
         const p2pkhBurn = this.createP2PKHBurn({ keyStore });
         tx.burns[index].setUnlockScript(
             await p2pkhBurn.createUnlockScript(
                 publicKeyHash,
-                tx.hashWithoutScript(),
+                tx.hashWithoutScript({
+                    tag: signatureTag,
+                    type: "burn",
+                    index
+                }),
                 {
-                    passphrase
+                    passphrase,
+                    signatureTag
                 }
             )
         );

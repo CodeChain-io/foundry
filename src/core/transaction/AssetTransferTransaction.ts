@@ -1,7 +1,13 @@
 import { AssetTransferAddress } from "codechain-primitives";
 import * as _ from "lodash";
 
-import { blake256, blake256WithKey } from "../../utils";
+import {
+    blake128,
+    blake256,
+    blake256WithKey,
+    encodeSignatureTag,
+    SignatureTag
+} from "../../utils";
 import { Asset } from "../Asset";
 import { H256 } from "../H256";
 import { NetworkId } from "../types";
@@ -231,17 +237,59 @@ export class AssetTransferTransaction {
      * is used as a message to create a signature for a transaction.
      * @returns A hash.
      */
-    public hashWithoutScript(): H256 {
-        const { networkId, burns, inputs, outputs, nonce } = this;
+    public hashWithoutScript(params?: {
+        tag: SignatureTag;
+        type: "input" | "burn";
+        index: number;
+    }): H256 {
+        const { networkId, nonce } = this;
+        const {
+            tag = { input: "all", output: "all" } as SignatureTag,
+            type = null,
+            index = null
+        } = params || {};
+        let burns: AssetTransferInput[];
+        let inputs: AssetTransferInput[];
+        let outputs: AssetTransferOutput[];
+        if (tag.input === "all") {
+            inputs = this.inputs.map(input => input.withoutScript());
+            burns = this.burns.map(input => input.withoutScript());
+        } else if (tag.input === "single") {
+            if (typeof index !== "number") {
+                throw Error(`Unexpected value of the index param: ${index}`);
+            }
+            if (type === "input") {
+                inputs = [this.inputs[index].withoutScript()];
+                burns = [];
+            } else if (type === "burn") {
+                inputs = [];
+                burns = [this.burns[index].withoutScript()];
+            } else {
+                throw Error(`Unexpected value of the type param: ${type}`);
+            }
+        } else {
+            throw Error(`Unexpected value of the tag input: ${tag.input}`);
+        }
+        if (tag.output === "all") {
+            outputs = this.outputs;
+        } else if (Array.isArray(tag.output)) {
+            // NOTE: Remove duplicates by using Set
+            outputs = Array.from(new Set(tag.output))
+                .sort()
+                .map(i => this.outputs[i]);
+        } else {
+            throw Error(`Unexpected value of the tag output: ${tag.output}`);
+        }
         return new H256(
-            blake256(
+            blake256WithKey(
                 new AssetTransferTransaction({
-                    burns: burns.map(input => input.withoutScript()),
-                    inputs: inputs.map(input => input.withoutScript()),
+                    burns,
+                    inputs,
                     outputs,
                     networkId,
                     nonce
-                }).rlpBytes()
+                }).rlpBytes(),
+                Buffer.from(blake128(encodeSignatureTag(tag)), "hex")
             )
         );
     }
