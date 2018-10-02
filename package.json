@@ -1,6 +1,6 @@
 {
   "name": "codechain-sdk",
-  "version": "0.1.0",
+  "version": "0.3.0-alpha.1",
   "description": "A JavaScript SDK for CodeChain",
   "scripts": {
     "lint": "tslint -p . && prettier '{src,examples,integration_tests}/**/*.{ts,js,json}' -l",
