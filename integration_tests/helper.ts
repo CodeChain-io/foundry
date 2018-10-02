@@ -14,10 +14,10 @@ export const ACCOUNT_SECRET =
     "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
 export const ACCOUNT_ID =
     process.env.ACCOUNT_ID ||
-    sdk.util.getAccountIdFromPrivate(ACCOUNT_SECRET).toString(); // "0xa6594b7196808d161b6fb137e781abbc251385d9"
+    sdk.util.getAccountIdFromPrivate(ACCOUNT_SECRET).toString(); // "0x6fe64ffa3a46c074226457c90ccb32dc06ccced1"
 export const ACCOUNT_ADDRESS =
     process.env.ACCOUNT_ADDRESS ||
-    sdk.core.classes.PlatformAddress.fromAccountId(ACCOUNT_ID).toString(); // "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78"
+    sdk.core.classes.PlatformAddress.fromAccountId(ACCOUNT_ID).toString(); // "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd"
 export const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 export const sendTransactions = async ({ transactions }: any) => {

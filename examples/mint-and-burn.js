@@ -7,7 +7,7 @@ const sdk = new SDK({
 
 const ACCOUNT_ADDRESS =
     process.env.ACCOUNT_ADDRESS ||
-    "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78";
+    "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd";
 const ACCOUNT_PASSPHRASE = "satoshi";
 
 (async () => {

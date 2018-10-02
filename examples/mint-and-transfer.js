@@ -7,13 +7,13 @@ const sdk = new SDK({
 
 var ACCOUNT_ADDRESS =
     process.env.ACCOUNT_ADDRESS ||
-    "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78";
+    "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd";
 var ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 (async () => {
     const aliceAddress = await sdk.key.createAssetTransferAddress();
     const bobAddress =
-        "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
+        "tcaqqqeqq47kh5nlk67eua0w2k4tku2hm0hazqx5wa3eqaaslq7zdfxhwgxs0x2r";
 
     // Create asset named Gold. Total amount of Gold is 10000. The registrar is set
     // to null, which means this type of asset can be transferred freely.

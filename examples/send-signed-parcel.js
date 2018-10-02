@@ -10,10 +10,10 @@ var ACCOUNT_SECRET =
     "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
 var ACCOUNT_ADDRESS =
     process.env.ACCOUNT_ADDRESS ||
-    "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78";
+    "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd";
 
 var parcel = sdk.core.createPaymentParcel({
-    recipient: "tccqruq09sfgax77nj4gukjcuq69uzeyv0jcs7vzngg",
+    recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
     amount: 10000
 });
 

@@ -3,7 +3,7 @@ import { readFileSync, unlinkSync, writeFileSync } from "fs";
 
 describe("examples", () => {
     beforeAll(done => {
-        // import account "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78" which is used in
+        // import account "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd" which is used in
         // the examples.
         // The passphrase of the account is "satoshi".
         runExample("import-test-account", done);

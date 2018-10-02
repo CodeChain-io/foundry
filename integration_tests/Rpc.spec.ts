@@ -157,8 +157,8 @@ describe("rpc", () => {
         });
 
         describe("with account", () => {
-            const account = "0xa6594b7196808d161b6fb137e781abbc251385d9";
-            const address = "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78";
+            const account = "0x6fe64ffa3a46c074226457c90ccb32dc06ccced1";
+            const address = "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd";
 
             test("PlatformAddress", () => {
                 expect(
@@ -181,7 +181,7 @@ describe("rpc", () => {
 
             describe("has regular key", () => {
                 const regularKey =
-                    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+                    "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b";
 
                 beforeAll(async () => {
                     const parcel = sdk.core
@@ -561,7 +561,7 @@ describe("rpc", () => {
     });
 
     describe("account", () => {
-        const noSuchAccount = "tccqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj5aqu5";
+        const noSuchAccount = "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3";
 
         test("getList", async () => {
             await expect(sdk.rpc.account.getList()).resolves.toEqual(

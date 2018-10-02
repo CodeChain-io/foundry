@@ -7,7 +7,7 @@ var sdk = new SDK({
 
 var ACCOUNT_ADDRESS =
     process.env.ACCOUNT_ADDRESS ||
-    "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78";
+    "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd";
 
 sdk.rpc.chain
     .getBalance(ACCOUNT_ADDRESS)

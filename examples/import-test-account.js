@@ -13,7 +13,7 @@ var ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 sdk.rpc.account
     .importRaw(ACCOUNT_SECRET, ACCOUNT_PASSPHRASE)
     .then(function(account) {
-        console.log(account); // tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78
+        console.log(account); // tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd
     })
     .catch(e => {
         if (e.message !== "Already Exists") {

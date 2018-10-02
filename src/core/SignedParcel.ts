@@ -1,7 +1,7 @@
 import { PlatformAddress } from "codechain-primitives";
 import * as _ from "lodash";
 
-import { blake256, recoverEcdsa, ripemd160 } from "../utils";
+import { blake160, blake256, recoverEcdsa } from "../utils";
 
 import { H160 } from "./H160";
 import { H256 } from "./H256";
@@ -175,7 +175,7 @@ export class SignedParcel {
             s: s.value.toString(16),
             v
         });
-        return new H160(ripemd160(blake256(publicKey)));
+        return new H160(blake160(publicKey));
     }
 
     /**
