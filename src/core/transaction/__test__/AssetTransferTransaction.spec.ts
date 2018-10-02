@@ -1,8 +1,9 @@
-import { AssetTransferTransaction } from "../AssetTransferTransaction";
+import { H160 } from "../../H160";
 import { H256 } from "../../H256";
 import { AssetOutPoint } from "../AssetOutPoint";
 import { AssetTransferInput } from "../AssetTransferInput";
 import { AssetTransferOutput } from "../AssetTransferOutput";
+import { AssetTransferTransaction } from "../AssetTransferTransaction";
 
 test("AssetTransferTransaction toJSON", () => {
     const t = new AssetTransferTransaction({
@@ -50,9 +51,7 @@ test("AssetTransferInput toJSON", () => {
 
 test("AssetTransferOutput toJSON", () => {
     const output = new AssetTransferOutput({
-        lockScriptHash: new H256(
-            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        ),
+        lockScriptHash: new H160("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
         parameters: [Buffer.from([0x04, 0x05]), Buffer.from([0x06])],
         assetType: new H256(
             "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
@@ -102,9 +101,7 @@ test("AssetTransferTransaction hashWithoutScript", () => {
 
 test("AssetTransferOutput shard id", () => {
     const output = new AssetTransferOutput({
-        lockScriptHash: new H256(
-            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        ),
+        lockScriptHash: new H160("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
         parameters: [Buffer.from([0x04, 0x05]), Buffer.from([0x06])],
         assetType: new H256(
             "4100BAADCAFEBEEFbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"

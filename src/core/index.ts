@@ -421,7 +421,7 @@ export class Core {
                           assetType: H256.ensure(assetType),
                           amount,
                           lockScriptHash: lockScriptHash
-                              ? H256.ensure(lockScriptHash)
+                              ? H160.ensure(lockScriptHash)
                               : undefined,
                           parameters
                       }),
@@ -658,10 +658,10 @@ function checkAssetType(value: H256 | string) {
     }
 }
 
-function checkLockScriptHash(value: H256 | string) {
-    if (!H256.check(value)) {
+function checkLockScriptHash(value: H160 | string) {
+    if (!H160.check(value)) {
         throw Error(
-            `Expected lockScriptHash param to be an H256 value but found ${value}`
+            `Expected lockScriptHash param to be an H160 value but found ${value}`
         );
     }
 }

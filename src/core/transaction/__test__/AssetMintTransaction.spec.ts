@@ -1,12 +1,15 @@
+import { H160 } from "../../H160";
 import { AssetMintTransaction } from "../AssetMintTransaction";
-import { H256 } from "../../H256";
 
 test("AssetMintTransaction toJSON", () => {
     const t = new AssetMintTransaction({
+        networkId: "cc",
+        shardId: 0,
+        worldId: 0,
         metadata: "",
         output: {
-            lockScriptHash: new H256(
-                "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            lockScriptHash: new H160(
+                "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
             ),
             parameters: [],
             amount: 0

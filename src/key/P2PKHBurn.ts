@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { AssetTransferAddress } from "codechain-primitives";
+import { AssetTransferAddress, H160 } from "codechain-primitives";
 
 import { H256 } from "../core/H256";
 import { Script } from "../core/Script";
@@ -28,10 +28,8 @@ export class P2PKHBurn implements TransactionBurnSigner {
         ]);
     }
 
-    public static getLockScriptHash(): H256 {
-        return new H256(
-            "41a872156efc1dbd45a85b49896e9349a4e8f3fb1b8f3ed38d5e13ef675bcd5a"
-        );
+    public static getLockScriptHash(): H160 {
+        return new H160("37572bdcc22d39a59c0d12d301f6271ba3fdd451");
     }
     private keyStore: KeyStore;
     private networkId: NetworkId;

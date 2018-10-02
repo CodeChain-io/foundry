@@ -12,8 +12,7 @@ var ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 // If you want to know how to create an address, see the example "Create an
 // asset transfer address".
-var address =
-    "tcaqqqeqq47kh5nlk67eua0w2k4tku2hm0hazqx5wa3eqaaslq7zdfxhwgxs0x2r";
+var address = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
 
 var assetMintTransaction = sdk.core.createAssetMintTransaction({
     scheme: {

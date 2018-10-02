@@ -12,13 +12,11 @@ const sdk = new SDK({
     keyStoreType: "memory",
     networkId: CODECHAIN_NETWORK_ID
 });
-const { H256, AssetTransactionGroup } = SDK.Core.classes;
+const { H160, H256, AssetTransactionGroup } = SDK.Core.classes;
 
 test("AssetMintTransaction fromJSON", async () => {
     const metadata = "";
-    const lockScriptHash = new H256(
-        "0000000000000000000000000000000000000000000000000000000000000000"
-    );
+    const lockScriptHash = new H160("0000000000000000000000000000000000000000");
     const amount = 100;
     const registrar = null;
     const { parcelHash } = await mintAsset({
@@ -37,7 +35,7 @@ test("AssetMintTransaction fromJSON", async () => {
         type: expect.stringMatching("assetMint"),
         metadata: expect.anything(),
         output: {
-            lockScriptHash: expect.any(H256),
+            lockScriptHash: expect.any(H160),
             // FIXME: Buffer[]
             parameters: expect.anything(),
             // FIXME: Change it to U256

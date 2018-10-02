@@ -12,7 +12,7 @@ export interface AssetTransferInputData {
  * An AssetTransferInput consists of the following:
  *  - An AssetOutPoint, which points to the asset to be spent.
  *  - A lock script and an unlock script, that prove ownership of the asset
- *  - The hashed value(blake256) of a lock script must be identical to that of the pointed asset's lock script hash.
+ *  - The hashed value(blake160) of a lock script must be identical to that of the pointed asset's lock script hash.
  *  - The results of running the script must return successful in order for the Asset's input to be valid.
  */
 export class AssetTransferInput {

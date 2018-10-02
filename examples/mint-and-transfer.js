@@ -12,8 +12,7 @@ var ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 (async () => {
     const aliceAddress = await sdk.key.createAssetTransferAddress();
-    const bobAddress =
-        "tcaqqqeqq47kh5nlk67eua0w2k4tku2hm0hazqx5wa3eqaaslq7zdfxhwgxs0x2r";
+    const bobAddress = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
 
     // Create asset named Gold. Total amount of Gold is 10000. The registrar is set
     // to null, which means this type of asset can be transferred freely.

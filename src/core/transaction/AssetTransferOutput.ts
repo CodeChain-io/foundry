@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { AssetTransferAddress } from "codechain-primitives";
+import { AssetTransferAddress, H160 } from "codechain-primitives";
 
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
@@ -7,7 +7,7 @@ import { P2PKHBurn } from "../../key/P2PKHBurn";
 import { H256 } from "../H256";
 
 export interface AssetTransferOutputData {
-    lockScriptHash: H256;
+    lockScriptHash: H160;
     parameters: Buffer[];
     assetType: H256;
     amount: number;
@@ -33,7 +33,7 @@ export class AssetTransferOutput {
     public static fromJSON(data: AssetTransferOutputData) {
         const { lockScriptHash, parameters, assetType, amount } = data;
         return new this({
-            lockScriptHash: H256.ensure(lockScriptHash),
+            lockScriptHash: H160.ensure(lockScriptHash),
             parameters: parameters.map((p: number[] | Buffer) =>
                 Buffer.from(p)
             ),
@@ -41,7 +41,7 @@ export class AssetTransferOutput {
             amount
         });
     }
-    public readonly lockScriptHash: H256;
+    public readonly lockScriptHash: H160;
     public readonly parameters: Buffer[];
     public readonly assetType: H256;
     public readonly amount: number;

@@ -30,8 +30,7 @@ test("checkRegistrarValidation", async () => {
     await sendCCCToOther();
 
     const aliceAddress = await sdk.key.createAssetTransferAddress();
-    const bobAddress =
-        "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
+    const bobAddress = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
 
     const mintTx = await mintAssetUsingMaster(aliceAddress, bobAddress);
     await transferAssetUsingOther(mintTx, aliceAddress, bobAddress);

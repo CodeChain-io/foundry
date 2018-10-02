@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { AssetTransferAddress } from "codechain-primitives";
+import { AssetTransferAddress, H160 } from "codechain-primitives";
 
 import { H256 } from "../core/H256";
 import { Script } from "../core/Script";
@@ -20,10 +20,8 @@ export class P2PKH implements TransactionInputSigner {
         return Buffer.from([COPY, 0x01, BLAKE160, EQ, JZ, 0xff, CHKSIG]);
     }
 
-    public static getLockScriptHash(): H256 {
-        return new H256(
-            "f42a65ea518ba236c08b261c34af0521fa3cd1aa505e1c18980919cb8945f8f3"
-        );
+    public static getLockScriptHash(): H160 {
+        return new H160("5f5960a7bca6ceeeb0c97bc717562914e7a1de04");
     }
     private rawKeyStore: KeyStore;
     private networkId: NetworkId;

@@ -88,10 +88,8 @@ function extractAddresses(transactions) {
 }
 
 function isP2PKHScript(output) {
-    const P2pkhLockScriptHash =
-        "f42a65ea518ba236c08b261c34af0521fa3cd1aa505e1c18980919cb8945f8f3";
-    const P2pkhBurnLockScriptHash =
-        "41a872156efc1dbd45a85b49896e9349a4e8f3fb1b8f3ed38d5e13ef675bcd5a";
+    const P2pkhLockScriptHash = "5f5960a7bca6ceeeb0c97bc717562914e7a1de04";
+    const P2pkhBurnLockScriptHash = "c007347083b42447fef4f151d65016292f4fdd0f";
     return (
         output.parameters.length === 1 &&
         (output.lockScriptHash.value === P2pkhLockScriptHash ||

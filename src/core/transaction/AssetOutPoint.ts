@@ -1,3 +1,4 @@
+import { H160 } from "../H160";
 import { H256 } from "../H256";
 
 export interface AssetOutPointData {
@@ -5,7 +6,7 @@ export interface AssetOutPointData {
     index: number;
     assetType: H256;
     amount: number;
-    lockScriptHash?: H256;
+    lockScriptHash?: H160;
     parameters?: Buffer[];
 }
 
@@ -35,7 +36,7 @@ export class AssetOutPoint {
     public readonly index: number;
     public readonly assetType: H256;
     public readonly amount: number;
-    public readonly lockScriptHash?: H256;
+    public readonly lockScriptHash?: H160;
     public readonly parameters?: Buffer[];
 
     /**
