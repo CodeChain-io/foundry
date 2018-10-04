@@ -1,5 +1,8 @@
 import {
+    blake128 as _blake128,
+    blake128WithKey as _blake128WithKey,
     blake160 as _blake160,
+    blake160WithKey as _blake160WithKey,
     blake256 as _blake256,
     blake256WithKey as _blake256WithKey,
     generatePrivateKey as _generatePrivateKey,
@@ -35,6 +38,13 @@ export const blake256 = (data: Buffer | string): string => _blake256(data);
 export const blake160 = (data: Buffer | string): string => _blake160(data);
 
 /**
+ * Gets data's 128 bit blake hash.
+ * @param data buffer or hexadecimal string
+ * @returns 16 byte hexadecimal string
+ */
+export const blake128 = (data: Buffer | string): string => _blake128(data);
+
+/**
  * Gets data's 256 bit blake hash by using the key.
  * @param data buffer or hexadecimal string
  * @param key
@@ -44,6 +54,28 @@ export const blake256WithKey = (
     data: Buffer | string,
     key: Uint8Array
 ): string => _blake256WithKey(data, key);
+
+/**
+ * Gets data's 160 bit blake hash by using the key.
+ * @param data buffer or hexadecimal string
+ * @param key
+ * @returns 20 byte hexadecimal string
+ */
+export const blake160WithKey = (
+    data: Buffer | string,
+    key: Uint8Array
+): string => _blake160WithKey(data, key);
+
+/**
+ * Gets data's 128 bit blake hash by using the key.
+ * @param data buffer or hexadecimal string
+ * @param key
+ * @returns 16 byte hexadecimal string
+ */
+export const blake128WithKey = (
+    data: Buffer | string,
+    key: Uint8Array
+): string => _blake128WithKey(data, key);
 
 /**
  * Gets data's 160 bit RIPEMD hash.
