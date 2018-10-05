@@ -19,8 +19,7 @@ sdk.key
             type: "P2PKH",
             keyStore
         });
-        const bobAddress =
-            "scaqqqhzqech2kg7mmsf942xvn40cesxrgck0xxt9gpx6336xkeglwtdsqlg8lhr";
+        const bobAddress = "scaqyqa6lghs8a5mgt8e08tncmgeh55arh0rcqqm0ylk2";
 
         const mintTx = sdk.core.createAssetMintTransaction({
             scheme: {

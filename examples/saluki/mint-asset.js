@@ -23,8 +23,7 @@ const mintTx = sdk.core.createAssetMintTransaction({
         }),
         amount: 500
     },
-    recipient:
-        "scaqqqhzqech2kg7mmsf942xvn40cesxrgck0xxt9gpx6336xkeglwtdsqlg8lhr"
+    recipient: "scaqyqa6lghs8a5mgt8e08tncmgeh55arh0rcqqm0ylk2"
 });
 
 const parcel = sdk.core.createAssetTransactionGroupParcel({

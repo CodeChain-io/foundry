@@ -11,7 +11,7 @@ if (!sdk.core.classes.PlatformAddress.check(parcelSender)) {
     );
 }
 
-let lastBlockNumber = 9706;
+let lastBlockNumber = 1;
 setInterval(async () => {
     const bestBlockNumber = await sdk.rpc.chain.getBestBlockNumber();
     if (bestBlockNumber <= lastBlockNumber) {
@@ -89,7 +89,7 @@ function extractAddresses(transactions) {
 
 function isP2PKHScript(output) {
     const P2pkhLockScriptHash = "5f5960a7bca6ceeeb0c97bc717562914e7a1de04";
-    const P2pkhBurnLockScriptHash = "c007347083b42447fef4f151d65016292f4fdd0f";
+    const P2pkhBurnLockScriptHash = "37572bdcc22d39a59c0d12d301f6271ba3fdd451";
     return (
         output.parameters.length === 1 &&
         (output.lockScriptHash.value === P2pkhLockScriptHash ||

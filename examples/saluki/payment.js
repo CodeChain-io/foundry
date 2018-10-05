@@ -16,7 +16,7 @@ sdk.key
     .createLocalKeyStore()
     .then(async keyStore => {
         const parcel = sdk.core.createPaymentParcel({
-            recipient: "sccqz8hyh3560xwpykm9u8en5k2jcwcueq6ncvg2dvy",
+            recipient: "sccqywxfyz8ykulqsq2l7z9nvgd8z3cczfun509f08u",
             amount: 5 // 0.000000005CCC
         });
         const signedParcel = await sdk.key.signParcel(parcel, {
