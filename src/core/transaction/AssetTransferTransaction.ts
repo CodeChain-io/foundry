@@ -275,7 +275,7 @@ export class AssetTransferTransaction {
         } else if (Array.isArray(tag.output)) {
             // NOTE: Remove duplicates by using Set
             outputs = Array.from(new Set(tag.output))
-                .sort()
+                .sort((a, b) => a - b)
                 .map(i => this.outputs[i]);
         } else {
             throw Error(`Unexpected value of the tag output: ${tag.output}`);

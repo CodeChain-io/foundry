@@ -105,7 +105,7 @@ export const encodeSignatureTag = (tag: SignatureTag): Buffer => {
     if (Array.isArray(output)) {
         // NOTE: Remove duplicates by using Set
         const encoded = encodeSignatureTagOutput(
-            Array.from(new Set(output)).sort()
+            Array.from(new Set(output)).sort((a, b) => a - b)
         );
         if (encoded.length >= 64) {
             throw Error(`The output length is too big`);
@@ -128,6 +128,13 @@ export const encodeSignatureTag = (tag: SignatureTag): Buffer => {
  */
 const encodeSignatureTagOutput = (output: number[]) => {
     // NOTE: Assume all numbers are distinct and the array is sorted by increasing order.
+    if (output[0] < 0) {
+        throw Error(`Invalid signature tag. Out of range: ${output[0]}`);
+    } else if (output[output.length - 1] > 503) {
+        throw Error(
+            `Invalid signature tag. Out of range: ${output[output.length - 1]}`
+        );
+    }
     let offset = 0;
     let byte = 0;
     const bytes = [];
