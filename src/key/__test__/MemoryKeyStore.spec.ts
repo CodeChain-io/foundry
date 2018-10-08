@@ -47,14 +47,16 @@ test("sign", async () => {
     const store = new MemoryKeyStore();
     const key = await store.asset.createKey();
     const publicKey = await store.asset.getPublicKey({ key });
+    const message =
+        "00000000c0dec6a100000000c0dec6a100000000c0dec6a100000000c0dec6a1";
     const signature = await store.asset.sign({
         key,
-        message: "hello"
+        message
     });
     const r = `${signature.substr(0, 64)}`;
     const s = `${signature.substr(64, 64)}`;
     const v = Number.parseInt(signature.substr(128, 2), 16);
 
-    expect(verifyEcdsa("hello", { r, s, v }, publicKey)).toBe(true);
-    expect(recoverEcdsa("hello", { r, s, v })).toEqual(publicKey);
+    expect(verifyEcdsa(message, { r, s, v }, publicKey)).toBe(true);
+    expect(recoverEcdsa(message, { r, s, v })).toEqual(publicKey);
 });

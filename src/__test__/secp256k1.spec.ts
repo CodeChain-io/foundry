@@ -6,7 +6,7 @@ import {
 } from "../utils";
 
 const priv = "99053a6568a93b9f194ef983c84ddfa9eb2b37888e47433558d40b2f4770b2d8";
-const msg = "hello";
+const msg = "00000000c0dec6a100000000c0dec6a100000000c0dec6a100000000c0dec6a1";
 
 test("public key", () => {
     const pub = getPublicFromPrivate(priv);
@@ -16,8 +16,8 @@ test("public key", () => {
 test("sign", () => {
     const signature = signEcdsa(msg, priv);
     expect(signature).toEqual({
-        r: "7b5e0ee8644c6f585fc297364143280a458445025304ab8f8bd17012e0817189",
-        s: "68d7d28f062724c5ec3033d3deb968aeb7eaf2931aeba07c6fea1540065835e3",
+        r: "d8706a863775325b1b8c3f16c19ff337c2699c4f857be903e08a5a9234c5a5c7",
+        s: "19d685ae28e52081480b08a3a1e5d8dd1f852b78f65a7e99af37ad42ebc5f375",
         v: 0
     });
 });
@@ -27,9 +27,9 @@ test("verify - success", () => {
         msg,
         {
             r:
-                "7b5e0ee8644c6f585fc297364143280a458445025304ab8f8bd17012e0817189",
+                "d8706a863775325b1b8c3f16c19ff337c2699c4f857be903e08a5a9234c5a5c7",
             s:
-                "68d7d28f062724c5ec3033d3deb968aeb7eaf2931aeba07c6fea1540065835e3",
+                "19d685ae28e52081480b08a3a1e5d8dd1f852b78f65a7e99af37ad42ebc5f375",
             v: 0
         },
         getPublicFromPrivate(priv)
@@ -39,12 +39,12 @@ test("verify - success", () => {
 
 test("verify - fail", () => {
     const result = verifyEcdsa(
-        "hi",
+        "0000000000000000000000000000000000000000000000000000000000000000",
         {
             r:
-                "7b5e0ee8644c6f585fc297364143280a458445025304ab8f8bd17012e0817189",
+                "d8706a863775325b1b8c3f16c19ff337c2699c4f857be903e08a5a9234c5a5c7",
             s:
-                "68d7d28f062724c5ec3033d3deb968aeb7eaf2931aeba07c6fea1540065835e3",
+                "19d685ae28e52081480b08a3a1e5d8dd1f852b78f65a7e99af37ad42ebc5f375",
             v: 0
         },
         getPublicFromPrivate(priv)
@@ -54,8 +54,8 @@ test("verify - fail", () => {
 
 test("recover", () => {
     const a = recoverEcdsa(msg, {
-        r: "7b5e0ee8644c6f585fc297364143280a458445025304ab8f8bd17012e0817189",
-        s: "68d7d28f062724c5ec3033d3deb968aeb7eaf2931aeba07c6fea1540065835e3",
+        r: "d8706a863775325b1b8c3f16c19ff337c2699c4f857be903e08a5a9234c5a5c7",
+        s: "19d685ae28e52081480b08a3a1e5d8dd1f852b78f65a7e99af37ad42ebc5f375",
         v: 0
     });
     expect(a).toBe(getPublicFromPrivate(priv));
