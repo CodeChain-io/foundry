@@ -15,14 +15,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kodebox-io/codechain-sdk-js.git"
+    "url": "git+https://github.com/CodeChain-io/codechain-sdk-js.git"
   },
   "author": "CodeChain Team <codechain@kodebox.io>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/kodebox-io/codechain-sdk-js/issues"
+    "url": "https://github.com/CodeChain-io/codechain-sdk-js/issues"
   },
-  "homepage": "https://github.com/kodebox-io/codechain-sdk-js#readme",
+  "homepage": "https://github.com/CodeChain-io/codechain-sdk-js#readme",
   "engines": {
     "node": ">=8"
   },
