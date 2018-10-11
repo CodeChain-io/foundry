@@ -3,11 +3,8 @@ import { PlatformAddress } from "codechain-primitives";
 import { blake256, signEcdsa } from "../utils";
 import { Action, getActionFromJSON } from "./action/Action";
 import { AssetTransactionGroup } from "./action/AssetTransactionGroup";
-import { CreateShard } from "./action/CreateShard";
 import { Payment } from "./action/Payment";
-import { SetRegularKey } from "./action/SetReulgarKey";
 import { H256 } from "./H256";
-import { H512 } from "./H512";
 import { SignedParcel } from "./SignedParcel";
 import { Transaction } from "./transaction/Transaction";
 import { NetworkId } from "./types";
@@ -45,22 +42,6 @@ export class Parcel {
         value: U256
     ): Parcel {
         const action = new Payment(receiver, value);
-        return new Parcel(networkId, action);
-    }
-
-    /**
-     * @deprecated
-     */
-    public static setRegularKey(networkId: NetworkId, key: H512): Parcel {
-        const action = new SetRegularKey(key);
-        return new Parcel(networkId, action);
-    }
-
-    /**
-     * @deprecated
-     */
-    public static createShard(networkId: NetworkId): Parcel {
-        const action = new CreateShard();
         return new Parcel(networkId, action);
     }
 

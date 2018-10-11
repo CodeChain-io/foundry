@@ -3,10 +3,6 @@ import { AssetTransferAddress, H160 } from "codechain-primitives";
 
 import { H256 } from "../core/H256";
 import { Script } from "../core/Script";
-import {
-    AssetTransferTransaction,
-    TransactionInputSigner
-} from "../core/transaction/AssetTransferTransaction";
 import { NetworkId } from "../core/types";
 import { encodeSignatureTag, SignatureTag } from "../utils";
 
@@ -15,7 +11,7 @@ import { KeyStore } from "./KeyStore";
 /**
  * AssetAgent which supports P2PKH(Pay to Public Key Hash).
  */
-export class P2PKH implements TransactionInputSigner {
+export class P2PKH {
     public static getLockScript(): Buffer {
         const { COPY, BLAKE160, EQ, JZ, CHKSIG } = Script.Opcode;
         return Buffer.from([COPY, 0x01, BLAKE160, EQ, JZ, 0xff, CHKSIG]);
@@ -42,42 +38,6 @@ export class P2PKH implements TransactionInputSigner {
         return AssetTransferAddress.fromTypeAndPayload(1, hash, {
             networkId: this.networkId
         });
-    }
-
-    /**
-     * @deprecated Use signTransactionInput
-     */
-    public async signInput(
-        transaction: AssetTransferTransaction,
-        index: number,
-        options: { passphrase?: string } = {}
-    ): Promise<void> {
-        const { passphrase } = options;
-        if (index >= transaction.inputs.length) {
-            throw Error("Invalid input index");
-        }
-        const { lockScriptHash, parameters } = transaction.inputs[
-            index
-        ].prevOut;
-        if (lockScriptHash === undefined || parameters === undefined) {
-            throw Error("Invalid transaction input");
-        }
-        if (lockScriptHash.value !== P2PKH.getLockScriptHash().value) {
-            throw Error("Unexpected lock script hash");
-        }
-        if (parameters.length !== 1) {
-            throw Error("Unexpected length of parameters");
-        }
-        const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
-
-        transaction.inputs[index].setLockScript(P2PKH.getLockScript());
-        transaction.inputs[index].setUnlockScript(
-            await this.createUnlockScript(
-                publicKeyHash,
-                transaction.hashWithoutScript(),
-                { passphrase }
-            )
-        );
     }
 
     public async createUnlockScript(

@@ -16,22 +16,6 @@ import { AssetTransferOutput } from "./AssetTransferOutput";
 
 const RLP = require("rlp");
 
-export interface TransactionInputSigner {
-    signInput: (
-        transaction: AssetTransferTransaction,
-        index: number,
-        options?: { passphrase?: string }
-    ) => Promise<void>;
-}
-
-export interface TransactionBurnSigner {
-    signBurn: (
-        transaction: AssetTransferTransaction,
-        index: number,
-        options?: { passphrase?: string }
-    ) => Promise<void>;
-}
-
 export interface AssetTransferTransactionData {
     burns: AssetTransferInput[];
     inputs: AssetTransferInput[];
@@ -292,44 +276,6 @@ export class AssetTransferTransaction {
                 Buffer.from(blake128(encodeSignatureTag(tag)), "hex")
             )
         );
-    }
-
-    /**
-     * Set a burn's lock script and an input's unlock script so that the
-     * burn become burnable.
-     * @param index An index indicating the burn to sign.
-     * @param params.signer A TransactionSigner. Currently, P2PKH is available.
-     * @returns A promise that resolves when setting is done.
-     * @deprecated Use signTransactionBurn in the Key module
-     */
-    public async signBurn(
-        index: number,
-        params: { signer: TransactionBurnSigner; passphrase?: string }
-    ): Promise<void> {
-        const { signer, passphrase } = params;
-        if (index >= this.burns.length) {
-            throw Error("Invalid index");
-        }
-        return signer.signBurn(this, index, { passphrase });
-    }
-
-    /**
-     * Set an input's lock script and an input's unlock script so that the
-     * input become spendable.
-     * @param index An index indicating the input to sign.
-     * @param params.signer A TransactionSigner. Currently, P2PKH is available.
-     * @returns A promise that resolves when setting is done.
-     * @deprecated Use signTransactionInput in the Key module
-     */
-    public async signInput(
-        index: number,
-        params: { signer: TransactionInputSigner; passphrase?: string }
-    ): Promise<void> {
-        const { signer, passphrase } = params;
-        if (index >= this.inputs.length) {
-            throw Error("Invalid index");
-        }
-        return signer.signInput(this, index, { passphrase });
     }
 
     /**
