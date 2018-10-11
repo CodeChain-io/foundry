@@ -15,6 +15,6 @@ sdk.key
     })
     .then(function(address) {
         // You can mint assets using this address.
-        // Address example: scaqqqhzqech2kg7mmsf942xvn40cesxrgck0xxt9gpx6336xkeglwtdsqlg8lhr
+        // Address example: scaqyqu9ll6mw0nt07sjuvk7w5wq8tzvpdureps9gnepm
         console.log(address.toString());
     });
