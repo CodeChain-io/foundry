@@ -1,5 +1,6 @@
 import { AssetTransferAddress, PlatformAddress } from "codechain-primitives";
 
+import { AssetMintOutput } from "./transaction/AssetMintOutput";
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { NetworkId } from "./types";
 
@@ -62,10 +63,10 @@ export class AssetScheme {
             shardId,
             worldId,
             metadata,
-            output: {
+            output: new AssetMintOutput({
                 amount,
                 recipient: AssetTransferAddress.ensure(recipient)
-            },
+            }),
             registrar,
             nonce
         });

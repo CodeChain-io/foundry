@@ -1,47 +1,14 @@
 import { Buffer } from "buffer";
-import {
-    AssetTransferAddress,
-    H160,
-    PlatformAddress
-} from "codechain-primitives";
-
-import { P2PKH } from "../../key/P2PKH";
-import { P2PKHBurn } from "../../key/P2PKHBurn";
+import { PlatformAddress } from "codechain-primitives";
 
 import { blake256, blake256WithKey } from "../../utils";
 import { Asset } from "../Asset";
 import { AssetScheme } from "../AssetScheme";
 import { H256 } from "../H256";
 import { NetworkId } from "../types";
+import { AssetMintOutput } from "./AssetMintOutput";
 
 const RLP = require("rlp");
-
-export interface AssetMintTransactionData {
-    networkId: NetworkId;
-    shardId: number;
-    worldId: number;
-    metadata: string;
-    output: {
-        lockScriptHash: H160;
-        parameters: Buffer[];
-        amount: number | null;
-    };
-    registrar: PlatformAddress | null;
-    nonce: number;
-}
-
-export interface AssetMintTransactionAddressData {
-    networkId: NetworkId;
-    shardId: number;
-    worldId: number;
-    metadata: string;
-    output: {
-        recipient: AssetTransferAddress;
-        amount: number | null;
-    };
-    registrar: PlatformAddress | null;
-    nonce: number;
-}
 
 /**
  * Creates a new asset type and that asset itself.
@@ -70,7 +37,7 @@ export class AssetMintTransaction {
                 shardId,
                 worldId,
                 metadata,
-                output: { lockScriptHash, parameters, amount },
+                output,
                 registrar,
                 nonce
             }
@@ -80,11 +47,7 @@ export class AssetMintTransaction {
             shardId,
             worldId,
             metadata,
-            output: {
-                lockScriptHash: new H160(lockScriptHash),
-                parameters: parameters.map((p: number[]) => Buffer.from(p)),
-                amount: amount === null ? null : amount
-            },
+            output: AssetMintOutput.fromJSON(output),
             registrar:
                 registrar === null
                     ? null
@@ -96,11 +59,7 @@ export class AssetMintTransaction {
     public readonly shardId: number;
     public readonly worldId: number;
     public readonly metadata: string;
-    public readonly output: {
-        lockScriptHash: H160;
-        parameters: Buffer[];
-        amount: number | null;
-    };
+    public readonly output: AssetMintOutput;
     public readonly registrar: PlatformAddress | null;
     public readonly nonce: number;
     public readonly type = "assetMint";
@@ -115,9 +74,15 @@ export class AssetMintTransaction {
      * @param data.registrar A registrar of the asset.
      * @param data.nonce A nonce of the transaction.
      */
-    constructor(
-        data: AssetMintTransactionData | AssetMintTransactionAddressData
-    ) {
+    constructor(data: {
+        networkId: NetworkId;
+        shardId: number;
+        worldId: number;
+        metadata: string;
+        output: AssetMintOutput;
+        registrar: PlatformAddress | null;
+        nonce: number;
+    }) {
         const {
             networkId,
             shardId,
@@ -131,41 +96,7 @@ export class AssetMintTransaction {
         this.shardId = shardId;
         this.worldId = worldId;
         this.metadata = metadata;
-        if ("recipient" in output) {
-            // FIXME: Clean up by abstracting the standard scripts
-            const { type, payload } = output.recipient;
-            switch (type) {
-                case 0x00: // LOCK_SCRIPT_HASH ONLY
-                    this.output = {
-                        lockScriptHash: payload,
-                        parameters: [],
-                        amount: output.amount
-                    };
-                    break;
-                case 0x01: // P2PKH
-                    this.output = {
-                        lockScriptHash: P2PKH.getLockScriptHash(),
-                        parameters: [Buffer.from(payload.value, "hex")],
-                        amount: output.amount
-                    };
-                    break;
-                case 0x02: // P2PKHBurn
-                    this.output = {
-                        lockScriptHash: P2PKHBurn.getLockScriptHash(),
-                        parameters: [Buffer.from(payload.value, "hex")],
-                        amount: output.amount
-                    };
-                    break;
-                default:
-                    throw Error(
-                        `Unexpected type of AssetTransferAddress: ${type}, ${
-                            output.recipient
-                        }`
-                    );
-            }
-        } else {
-            this.output = output;
-        }
+        this.output = new AssetMintOutput(output);
         this.registrar = registrar;
         this.nonce = nonce;
     }
@@ -180,7 +111,7 @@ export class AssetMintTransaction {
             shardId,
             worldId,
             metadata,
-            output: { lockScriptHash, parameters, amount },
+            output,
             registrar,
             nonce
         } = this;
@@ -191,11 +122,7 @@ export class AssetMintTransaction {
                 shardId,
                 worldId,
                 metadata,
-                output: {
-                    lockScriptHash: lockScriptHash.value,
-                    parameters: parameters.map(parameter => [...parameter]),
-                    amount
-                },
+                output: output.toJSON(),
                 registrar: registrar === null ? null : registrar.toString(),
                 nonce
             }

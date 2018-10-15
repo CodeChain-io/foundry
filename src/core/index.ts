@@ -17,6 +17,7 @@ import { Invoice } from "./Invoice";
 import { Parcel } from "./Parcel";
 import { Script } from "./Script";
 import { SignedParcel } from "./SignedParcel";
+import { AssetMintOutput } from "./transaction/AssetMintOutput";
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetTransferInput } from "./transaction/AssetTransferInput";
@@ -332,10 +333,10 @@ export class Core {
             registrar:
                 registrar == null ? null : PlatformAddress.ensure(registrar),
             metadata,
-            output: {
+            output: new AssetMintOutput({
                 amount,
                 recipient: AssetTransferAddress.ensure(recipient)
-            }
+            })
         });
     }
 
