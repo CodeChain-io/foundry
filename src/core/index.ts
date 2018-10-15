@@ -607,9 +607,11 @@ function checkTransferBurns(burns: Array<AssetTransferInput>) {
         throw Error(`Expected burns param to be an array but found ${burns}`);
     }
     burns.forEach((burn, index) => {
-        throw Error(
-            `Expected an item of burns to be an AssetTransferInput but found ${burn} at index ${index}`
-        );
+        if (!(burn instanceof AssetTransferInput)) {
+            throw Error(
+                `Expected an item of burns to be an AssetTransferInput but found ${burn} at index ${index}`
+            );
+        }
     });
 }
 
@@ -618,9 +620,11 @@ function checkTransferInputs(inputs: Array<AssetTransferInput>) {
         throw Error(`Expected inputs param to be an array but found ${inputs}`);
     }
     inputs.forEach((input, index) => {
-        throw Error(
-            `Expected an item of inputs to be an AssetTransferInput but found ${input} at index ${index}`
-        );
+        if (!(input instanceof AssetTransferInput)) {
+            throw Error(
+                `Expected an item of inputs to be an AssetTransferInput but found ${input} at index ${index}`
+            );
+        }
     });
 }
 
@@ -631,9 +635,11 @@ function checkTransferOutputs(outputs: Array<AssetTransferOutput>) {
         );
     }
     outputs.forEach((output, index) => {
-        throw Error(
-            `Expected an item of outputs to be an AssetTransferOutput but found ${output} at index ${index}`
-        );
+        if (!(output instanceof AssetTransferOutput)) {
+            throw Error(
+                `Expected an item of outputs to be an AssetTransferOutput but found ${output} at index ${index}`
+            );
+        }
     });
 }
 
