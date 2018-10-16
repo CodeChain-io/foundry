@@ -450,20 +450,43 @@ export class Core {
         });
     }
 
-    public createAssetTransferOutput(params: {
-        recipient: AssetTransferAddress | string;
-        assetType: H256 | string;
-        amount: number;
-    }): AssetTransferOutput {
-        const { recipient, assetType, amount } = params;
-        checkAssetTransferAddressRecipient(recipient);
+    public createAssetTransferOutput(
+        params: {
+            assetType: H256 | string;
+            amount: number;
+        } & (
+            | {
+                  recipient: AssetTransferAddress | string;
+              }
+            | {
+                  lockScriptHash: H256 | string;
+                  parameters: Buffer[];
+              })
+    ): AssetTransferOutput {
+        const { assetType, amount } = params;
         checkAssetType(assetType);
         checkAmountU64(amount);
-        return new AssetTransferOutput({
-            recipient: AssetTransferAddress.ensure(recipient),
-            assetType: H256.ensure(assetType),
-            amount
-        });
+        if ("recipient" in params) {
+            const { recipient } = params;
+            checkAssetTransferAddressRecipient(recipient);
+            return new AssetTransferOutput({
+                recipient: AssetTransferAddress.ensure(recipient),
+                assetType: H256.ensure(assetType),
+                amount
+            });
+        } else if ("lockScriptHash" in params && "parameters" in params) {
+            const { lockScriptHash, parameters } = params;
+            checkLockScriptHash(lockScriptHash);
+            checkParameters(parameters);
+            return new AssetTransferOutput({
+                lockScriptHash: H160.ensure(lockScriptHash),
+                parameters,
+                assetType: H256.ensure(assetType),
+                amount
+            });
+        } else {
+            throw Error(`Unexpected params: ${params}`);
+        }
     }
 
     // FIXME: any
