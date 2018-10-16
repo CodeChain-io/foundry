@@ -26,6 +26,9 @@ test("AssetMintTransaction fromJSON", async () => {
         registrar
     });
     const parcel = await sdk.rpc.chain.getParcel(parcelHash);
+    if (parcel == null) {
+        throw Error("Cannot get the parcel");
+    }
 
     if (!(parcel.unsigned.action instanceof AssetTransactionGroup)) {
         throw Error("Invalid action");
@@ -56,11 +59,14 @@ test("AssetTransferTransaction fromJSON", async () => {
             worldId: 0,
             metadata: "metadata of non-permissioned asset",
             amount: 100,
-            registrar: null
+            registrar: undefined
         })
         .createMintTransaction({ recipient: addressA });
     await sendTransactions({ transactions: [mintTx] });
     const firstAsset = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
+    if (firstAsset == null) {
+        throw Error("Cannot get the first asset");
+    }
     const transferTx = await sdk.core.createAssetTransferTransaction();
     transferTx.addInputs(firstAsset);
     transferTx.addOutputs({
@@ -73,6 +79,9 @@ test("AssetTransferTransaction fromJSON", async () => {
         transactions: [transferTx]
     });
     const parcel = await sdk.rpc.chain.getParcel(parcelHash);
+    if (parcel == null) {
+        throw Error("Cannot get a parcel");
+    }
     // FIXME: Remove anythings when *Data fields are flattened
     const expectedInput = expect.objectContaining({
         prevOut: expect.objectContaining({
@@ -83,12 +92,6 @@ test("AssetTransferTransaction fromJSON", async () => {
         }),
         lockScript: expect.anything(),
         unlockScript: expect.anything()
-    });
-    const expectedOutput = expect.objectContaining({
-        lockScriptHash: expect.anything(),
-        parameters: [],
-        assetType: expect.anything(),
-        amount: expect.anything()
     });
 
     if (!(parcel.unsigned.action instanceof AssetTransactionGroup)) {

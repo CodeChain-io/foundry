@@ -15,6 +15,7 @@ import {
     getAccountIdFromPrivate,
     signEcdsa
 } from "../lib/utils";
+import { U256 } from "../src/core/U256";
 
 import {
     ACCOUNT_ADDRESS,
@@ -93,7 +94,7 @@ const ERROR = {
 
 describe("rpc", () => {
     let sdk: SDK;
-    const { Block, H512, U256 } = SDK.Core.classes;
+    const { Block } = SDK.Core.classes;
     const invalidHash =
         "0x0000000000000000000000000000000000000000000000000000000000000000";
     const signerSecret = ACCOUNT_SECRET;
@@ -146,6 +147,9 @@ describe("rpc", () => {
 
         test("getBlock - by hash", async () => {
             const hash = await sdk.rpc.chain.getBlockHash(0);
+            if (hash == null) {
+                throw Error("Cannot get block hash");
+            }
             expect(await sdk.rpc.chain.getBlock(hash)).toEqual(
                 expect.any(Block)
             );
@@ -197,24 +201,30 @@ describe("rpc", () => {
                 });
 
                 test("getRegularKey", async () => {
-                    expect(
-                        (await sdk.rpc.chain.getRegularKey(address)).value
-                    ).toEqual(regularKey);
+                    const regularKeyOfAddress = await sdk.rpc.chain.getRegularKey(
+                        address
+                    );
+                    if (regularKeyOfAddress == null) {
+                        throw Error("Cannot get a regular key");
+                    }
+                    expect(regularKeyOfAddress.value).toEqual(regularKey);
                 });
 
                 test("getRegularKeyOwner", async () => {
-                    expect(
-                        (await sdk.rpc.chain.getRegularKeyOwner(
-                            regularKey
-                        )).toString()
-                    ).toEqual(signerAddress);
+                    const keyOwner = await sdk.rpc.chain.getRegularKeyOwner(
+                        regularKey
+                    );
+                    if (keyOwner == null) {
+                        throw Error("Cannot get a key owner");
+                    }
+                    expect(keyOwner.toString()).toEqual(signerAddress);
                 });
             });
         });
 
         describe("sendSignedParcel", () => {
             const secret = signerSecret;
-            let nonce;
+            let nonce: U256;
             let parcel: Parcel;
             beforeEach(async () => {
                 parcel = sdk.core.createPaymentParcel({
@@ -370,7 +380,7 @@ describe("rpc", () => {
                         worldId,
                         metadata: "metadata",
                         amount: 10,
-                        registrar: null
+                        registrar: undefined
                     })
                     .createMintTransaction({
                         recipient: await sdk.key.createAssetTransferAddress()
@@ -466,7 +476,7 @@ describe("rpc", () => {
                         worldId,
                         metadata: "metadata",
                         amount: 10,
-                        registrar: null
+                        registrar: undefined
                     })
                     .createMintTransaction({
                         recipient: await sdk.key.createAssetTransferAddress()
@@ -621,8 +631,8 @@ describe("rpc", () => {
         describe("sign", () => {
             const message =
                 "0000000000000000000000000000000000000000000000000000000000000000";
-            let address;
-            let secret;
+            let address: string;
+            let secret: string;
             beforeAll(async () => {
                 secret = generatePrivateKey();
                 address = await sdk.rpc.account.importRaw(
@@ -665,7 +675,7 @@ describe("rpc", () => {
         });
 
         describe("unlock", () => {
-            let address;
+            let address: string;
             beforeEach(async () => {
                 address = await sdk.rpc.account.create("123");
             });

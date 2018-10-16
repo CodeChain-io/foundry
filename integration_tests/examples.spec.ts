@@ -50,7 +50,7 @@ describe("examples", () => {
     });
 });
 
-function runExample(name, done) {
+function runExample(name: string, done: () => any) {
     const originalPath = `examples/${name}.js`;
     const code = String(readFileSync(originalPath)).replace(
         `require("codechain-sdk")`,
@@ -58,7 +58,7 @@ function runExample(name, done) {
     );
     const testPath = `examples/test-${name}.js`;
     writeFileSync(testPath, code);
-    execFile("node", [testPath], (error, stdout, stderr) => {
+    execFile("node", [testPath], (_error, _stdout, stderr) => {
         expect(stderr).toBe("");
         unlinkSync(testPath);
         done();

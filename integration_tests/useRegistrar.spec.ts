@@ -1,4 +1,8 @@
-import { SDK } from "../";
+import { SDK } from "../src";
+import {
+    AssetMintTransaction,
+    AssetTransferAddress
+} from "../src/core/classes";
 
 import {
     ACCOUNT_ADDRESS,
@@ -32,7 +36,7 @@ test("checkRegistrarValidation", async () => {
     const aliceAddress = await sdk.key.createAssetTransferAddress();
     const bobAddress = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
 
-    const mintTx = await mintAssetUsingMaster(aliceAddress, bobAddress);
+    const mintTx = await mintAssetUsingMaster(aliceAddress);
     await transferAssetUsingOther(mintTx, aliceAddress, bobAddress);
     await transferAssetUsingRegular(mintTx, aliceAddress, bobAddress);
 });
@@ -74,7 +78,9 @@ async function sendCCCToOther() {
     });
 }
 
-async function mintAssetUsingMaster(aliceAddress, bobAddress) {
+async function mintAssetUsingMaster(
+    aliceAddress: AssetTransferAddress
+): Promise<AssetMintTransaction> {
     const assetScheme = sdk.core.createAssetScheme({
         shardId: 0,
         worldId: 0,
@@ -110,12 +116,19 @@ async function mintAssetUsingMaster(aliceAddress, bobAddress) {
             timeout: 5 * 60 * 1000
         }
     );
+    if (mintTxInvoice == null) {
+        throw Error("Cannot get the transaction invoice");
+    }
 
     expect(mintTxInvoice.success).toBe(true);
     return mintTx;
 }
 
-async function transferAssetUsingRegular(mintTx, aliceAddress, bobAddress) {
+async function transferAssetUsingRegular(
+    mintTx: AssetMintTransaction,
+    aliceAddress: AssetTransferAddress,
+    bobAddress: string
+) {
     const asset = mintTx.getMintedAsset();
     const transferTx = sdk.core
         .createAssetTransferTransaction()
@@ -152,9 +165,16 @@ async function transferAssetUsingRegular(mintTx, aliceAddress, bobAddress) {
             timeout: 5 * 60 * 1000
         }
     );
+    if (transferTxInvoice == null) {
+        throw Error("Cannot get the transfer invoice");
+    }
     expect(transferTxInvoice.success).toBe(true);
 }
-async function transferAssetUsingOther(mintTx, aliceAddress, bobAddress) {
+async function transferAssetUsingOther(
+    mintTx: AssetMintTransaction,
+    aliceAddress: AssetTransferAddress,
+    bobAddress: string
+) {
     const asset = mintTx.getMintedAsset();
 
     const transferTx = sdk.core
@@ -197,5 +217,8 @@ async function transferAssetUsingOther(mintTx, aliceAddress, bobAddress) {
             timeout: 5 * 60 * 1000
         }
     );
+    if (transferTxInvoice == null) {
+        throw Error("Cannot get the transaction invoice");
+    }
     expect(transferTxInvoice.success).toBe(false);
 }

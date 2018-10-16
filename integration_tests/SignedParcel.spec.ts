@@ -26,5 +26,8 @@ test("getSignerAccountId", async () => {
         });
     const parcelHash = await sdk.rpc.chain.sendSignedParcel(parcelToSend);
     const parcelReceived = await sdk.rpc.chain.getParcel(parcelHash);
+    if (parcelReceived == null) {
+        throw Error("Cannot get a parcel");
+    }
     expect(parcelReceived.getSignerAccountId().value).toEqual(ACCOUNT_ID);
 });
