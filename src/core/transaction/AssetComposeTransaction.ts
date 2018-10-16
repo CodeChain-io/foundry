@@ -4,6 +4,7 @@ import {
     H256,
     PlatformAddress
 } from "codechain-primitives/lib";
+import * as _ from "lodash";
 
 import {
     blake256,
@@ -282,6 +283,7 @@ export class AssetComposeTransaction {
             shardId,
             worldId,
             metadata,
+            inputs,
             output: { amount },
             registrar
         } = this;
@@ -295,7 +297,19 @@ export class AssetComposeTransaction {
             worldId,
             metadata,
             amount,
-            registrar
+            registrar,
+            pool: _.toPairs(
+                // NOTE: Get the sum of each asset type
+                inputs.reduce((acc: { [assetType: string]: number }, input) => {
+                    const { assetType, amount: assetAmount } = input.prevOut;
+                    // FIXME: Check integer overflow
+                    acc[assetType.value] += assetAmount;
+                    return acc;
+                }, {})
+            ).map(([assetType, assetAmount]) => ({
+                assetType: H256.ensure(assetType),
+                amount: assetAmount as number
+            }))
         });
     }
 

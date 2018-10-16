@@ -193,8 +193,16 @@ export class Core {
         metadata: string;
         amount: number;
         registrar?: PlatformAddress | string;
+        pool?: { assetType: H256 | string; amount: number }[];
     }): AssetScheme {
-        const { shardId, worldId, metadata, amount, registrar = null } = params;
+        const {
+            shardId,
+            worldId,
+            metadata,
+            amount,
+            registrar = null,
+            pool = []
+        } = params;
         checkShardId(shardId);
         checkWorldId(worldId);
         checkMetadata(metadata);
@@ -207,7 +215,11 @@ export class Core {
             metadata,
             amount,
             registrar:
-                registrar == null ? null : PlatformAddress.ensure(registrar)
+                registrar === null ? null : PlatformAddress.ensure(registrar),
+            pool: pool.map(({ assetType, amount: assetAmount }) => ({
+                assetType: H256.ensure(assetType),
+                amount: assetAmount
+            }))
         });
     }
 
@@ -322,6 +334,12 @@ export class Core {
         checkAssetTransferAddressRecipient(recipient);
         checkNonce(nonce);
         checkNetworkId(networkId);
+        if (shardId === undefined) {
+            throw Error(`shardId is undefined`);
+        }
+        if (worldId === undefined) {
+            throw Error(`worldId is undefined`);
+        }
         checkShardId(shardId);
         checkWorldId(worldId);
         checkMetadata(metadata);
@@ -400,7 +418,13 @@ export class Core {
         checkAssetTransferAddressRecipient(recipient);
         checkNonce(nonce);
         checkNetworkId(networkId);
+        if (shardId === undefined) {
+            throw Error(`shardId is undefined`);
+        }
         checkShardId(shardId);
+        if (worldId === undefined) {
+            throw Error(`worldId is undefined`);
+        }
         checkWorldId(worldId);
         checkMetadata(metadata);
         checkRegistrar(registrar);

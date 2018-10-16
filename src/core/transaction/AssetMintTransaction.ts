@@ -214,7 +214,8 @@ export class AssetMintTransaction {
             worldId,
             metadata,
             amount,
-            registrar
+            registrar,
+            pool: []
         });
     }
 
