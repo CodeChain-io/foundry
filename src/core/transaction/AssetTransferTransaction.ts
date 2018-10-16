@@ -10,7 +10,7 @@ import {
 } from "../../utils";
 import { Asset } from "../Asset";
 import { H256 } from "../H256";
-import { NetworkId } from "../types";
+import { AssetTransferOutputValue, NetworkId } from "../types";
 import { AssetTransferInput } from "./AssetTransferInput";
 import { AssetTransferOutput } from "./AssetTransferOutput";
 
@@ -120,13 +120,21 @@ export class AssetTransferTransaction {
      * @returns The AssetTransferTransaction, which is modified by adding them.
      */
     public addBurns(
-        ...burns: Array<AssetTransferInput | Asset>
+        burns: AssetTransferInput | Asset | Array<AssetTransferInput | Asset>,
+        ...rest: Array<AssetTransferInput | Asset>
     ): AssetTransferTransaction {
-        burns.forEach(burn => {
+        if (!Array.isArray(burns)) {
+            burns = [burns, ...rest];
+        }
+        burns.forEach((burn, index) => {
             if (burn instanceof AssetTransferInput) {
                 this.burns.push(burn);
-            } else {
+            } else if (burn instanceof Asset) {
                 this.burns.push(burn.createTransferInput());
+            } else {
+                throw Error(
+                    `Expected burn param to be either AssetTransferInput or Asset but found ${burn} at ${index}`
+                );
             }
         });
         return this;
@@ -138,13 +146,21 @@ export class AssetTransferTransaction {
      * @returns The AssetTransferTransaction, which is modified by adding them.
      */
     public addInputs(
-        ...inputs: Array<AssetTransferInput | Asset>
+        inputs: AssetTransferInput | Asset | Array<AssetTransferInput | Asset>,
+        ...rest: Array<AssetTransferInput | Asset>
     ): AssetTransferTransaction {
-        inputs.forEach(input => {
+        if (!Array.isArray(inputs)) {
+            inputs = [inputs, ...rest];
+        }
+        inputs.forEach((input, index) => {
             if (input instanceof AssetTransferInput) {
                 this.inputs.push(input);
-            } else {
+            } else if (input instanceof Asset) {
                 this.inputs.push(input.createTransferInput());
+            } else {
+                throw Error(
+                    `Expected input param to be either AssetTransferInput or Asset but found ${input} at ${index}`
+                );
             }
         });
         return this;
@@ -159,15 +175,12 @@ export class AssetTransferTransaction {
      * @param output.recipient A recipient of the output.
      */
     public addOutputs(
-        ...outputs: Array<
-            | AssetTransferOutput
-            | {
-                  amount: number;
-                  assetType: H256 | string;
-                  recipient: AssetTransferAddress | string;
-              }
-        >
+        outputs: AssetTransferOutputValue | Array<AssetTransferOutputValue>,
+        ...rest: Array<AssetTransferOutputValue>
     ): AssetTransferTransaction {
+        if (!Array.isArray(outputs)) {
+            outputs = [outputs, ...rest];
+        }
         outputs.forEach(output => {
             if (output instanceof AssetTransferOutput) {
                 this.outputs.push(output);
