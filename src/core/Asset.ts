@@ -41,11 +41,12 @@ export class Asset {
             transactionOutputIndex
         });
     }
-    public assetType: H256;
-    public lockScriptHash: H160;
-    public parameters: Buffer[];
-    public amount: number;
-    public outPoint: AssetOutPoint;
+
+    public readonly assetType: H256;
+    public readonly lockScriptHash: H160;
+    public readonly parameters: Buffer[];
+    public readonly amount: number;
+    public readonly outPoint: AssetOutPoint;
 
     constructor(data: AssetData) {
         const {

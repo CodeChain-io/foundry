@@ -19,12 +19,13 @@ export class AssetScheme {
     public static fromJSON(data: any) {
         return new AssetScheme(data);
     }
-    public networkId: NetworkId;
-    public shardId: number;
-    public worldId: number;
-    public metadata: string;
-    public amount: number;
-    public registrar: PlatformAddress | null;
+
+    public readonly networkId: NetworkId;
+    public readonly shardId: number;
+    public readonly worldId: number;
+    public readonly metadata: string;
+    public readonly amount: number;
+    public readonly registrar: PlatformAddress | null;
 
     constructor(data: AssetSchemeData) {
         this.networkId = data.networkId;
