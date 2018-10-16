@@ -18,6 +18,7 @@ import { Parcel } from "./Parcel";
 import { Script } from "./Script";
 import { SignedParcel } from "./SignedParcel";
 import { AssetComposeTransaction } from "./transaction/AssetComposeTransaction";
+import { AssetDecomposeTransaction } from "./transaction/AssetDecomposeTransaction";
 import { AssetMintOutput } from "./transaction/AssetMintOutput";
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
@@ -56,6 +57,7 @@ export class Core {
         AssetMintTransaction,
         AssetTransferTransaction,
         AssetComposeTransaction,
+        AssetDecomposeTransaction,
         AssetTransferInput,
         AssetTransferOutput,
         AssetOutPoint,
@@ -421,6 +423,39 @@ export class Core {
         });
     }
 
+    public createAssetDecomposeTransaction(params: {
+        input: AssetTransferInput;
+        outputs?: AssetTransferOutput[];
+        networkId?: NetworkId;
+        nonce?: number;
+    }): AssetDecomposeTransaction {
+        if (
+            params === null ||
+            typeof params !== "object" ||
+            !("input" in params)
+        ) {
+            throw Error(
+                `Expected the first param of createAssetDecomposeTransaction to be an object containing input param but found ${params}`
+            );
+        }
+        const {
+            input,
+            outputs = [],
+            networkId = this.networkId,
+            nonce = 0
+        } = params;
+        checkTransferInput(input);
+        checkTransferOutputs(outputs);
+        checkNetworkId(networkId);
+        checkNonce(nonce);
+        return new AssetDecomposeTransaction({
+            input,
+            outputs,
+            networkId,
+            nonce
+        });
+    }
+
     public createAssetTransferInput(params: {
         assetOutPoint:
             | AssetOutPoint
@@ -689,6 +724,14 @@ function checkTransferBurns(burns: Array<AssetTransferInput>) {
             );
         }
     });
+}
+
+function checkTransferInput(input: AssetTransferInput) {
+    if (!(input instanceof AssetTransferInput)) {
+        throw Error(
+            `Expected an input param to be an AssetTransferInput but found ${input}`
+        );
+    }
 }
 
 function checkTransferInputs(inputs: Array<AssetTransferInput>) {

@@ -52,6 +52,10 @@ describe("examples", () => {
     test("mint-and-compose", done => {
         runExample("mint-and-compose", done);
     });
+
+    test("mint-and-compose-and-decompose", done => {
+        runExample("mint-and-compose-and-decompose", done);
+    });
 });
 
 function runExample(name: string, done: () => any) {

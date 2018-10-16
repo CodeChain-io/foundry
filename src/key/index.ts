@@ -1,6 +1,12 @@
-import { AssetTransferAddress, PlatformAddress } from "codechain-primitives";
+import {
+    AssetTransferAddress,
+    H256,
+    PlatformAddress
+} from "codechain-primitives";
 
 import {
+    AssetComposeTransaction,
+    AssetDecomposeTransaction,
     AssetTransferTransaction,
     Parcel,
     SignedParcel,
@@ -219,7 +225,10 @@ export class Key {
      * @param params.passphrase The passphrase for the given input.
      */
     public async signTransactionInput(
-        tx: AssetTransferTransaction,
+        tx:
+            | AssetTransferTransaction
+            | AssetComposeTransaction
+            | AssetDecomposeTransaction,
         index: number,
         params: {
             keyStore?: KeyStore;
@@ -227,10 +236,14 @@ export class Key {
             signatureTag?: SignatureTag;
         } = {}
     ): Promise<void> {
-        if (index >= tx.inputs.length) {
+        if ("inputs" in tx && index >= tx.inputs.length) {
             throw Error(`Invalid index`);
         }
-        const { lockScriptHash, parameters } = tx.inputs[index].prevOut;
+        if ("input" in tx && index >= 1) {
+            throw Error(`Invalid index`);
+        }
+        const input = "inputs" in tx ? tx.inputs[index] : tx.input;
+        const { lockScriptHash, parameters } = input.prevOut;
         if (lockScriptHash === undefined || parameters === undefined) {
             throw Error(`Invalid transaction input`);
         }
@@ -242,26 +255,37 @@ export class Key {
         }
         const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
 
-        tx.inputs[index].setLockScript(P2PKH.getLockScript());
+        input.setLockScript(P2PKH.getLockScript());
         const {
             keyStore = await this.ensureKeyStore(),
             passphrase,
             signatureTag = { input: "all", output: "all" } as SignatureTag
         } = params;
         const p2pkh = this.createP2PKH({ keyStore });
-        tx.inputs[index].setUnlockScript(
-            await p2pkh.createUnlockScript(
-                publicKeyHash,
-                tx.hashWithoutScript({
-                    tag: signatureTag,
-                    type: "input",
-                    index
-                }),
-                {
-                    passphrase,
-                    signatureTag
-                }
-            )
+        let message: H256;
+        if (tx instanceof AssetTransferTransaction) {
+            message = tx.hashWithoutScript({
+                tag: signatureTag,
+                type: "input",
+                index
+            });
+        } else if (tx instanceof AssetComposeTransaction) {
+            // FIXME: check type
+            message = tx.hashWithoutScript({
+                tag: signatureTag,
+                index
+            });
+        } else if (tx instanceof AssetDecomposeTransaction) {
+            // FIXME: check signature tag
+            message = tx.hashWithoutScript();
+        } else {
+            throw Error(`Invalid tx`);
+        }
+        input.setUnlockScript(
+            await p2pkh.createUnlockScript(publicKeyHash, message, {
+                passphrase,
+                signatureTag
+            })
         );
     }
 
