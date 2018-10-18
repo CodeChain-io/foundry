@@ -2,10 +2,11 @@ import { Buffer } from "buffer";
 
 import { AssetOutPoint } from "./AssetOutPoint";
 
-export interface AssetTransferInputData {
-    prevOut: AssetOutPoint;
-    lockScript?: Buffer;
-    unlockScript?: Buffer;
+export type TimelockType = "block" | "blockAge" | "time" | "timeAge";
+export interface Timelock {
+    type: TimelockType;
+    // FIXME: U64
+    value: number;
 }
 
 /**
@@ -22,14 +23,16 @@ export class AssetTransferInput {
      * @returns An AssetTransferInput.
      */
     public static fromJSON(data: any) {
-        const { prevOut, lockScript, unlockScript } = data;
+        const { prevOut, timelock, lockScript, unlockScript } = data;
         return new this({
             prevOut: AssetOutPoint.fromJSON(prevOut),
+            timelock,
             lockScript,
             unlockScript
         });
     }
     public readonly prevOut: AssetOutPoint;
+    public readonly timelock: Timelock | null;
     public lockScript: Buffer;
     public unlockScript: Buffer;
 
@@ -38,13 +41,20 @@ export class AssetTransferInput {
      * @param data.lockScript A lock script of the input.
      * @param data.unlockScript A unlock script of the input.
      */
-    constructor(data: AssetTransferInputData) {
+    constructor(data: {
+        prevOut: AssetOutPoint;
+        timelock: Timelock | null;
+        lockScript?: Buffer;
+        unlockScript?: Buffer;
+    }) {
         const {
             prevOut,
+            timelock,
             lockScript = Buffer.from([]),
             unlockScript = Buffer.from([])
         } = data;
         this.prevOut = prevOut;
+        this.timelock = timelock;
         this.lockScript = Buffer.from(lockScript);
         this.unlockScript = Buffer.from(unlockScript);
     }
@@ -53,8 +63,13 @@ export class AssetTransferInput {
      * Convert to an object for RLP encoding.
      */
     public toEncodeObject() {
-        const { prevOut, lockScript, unlockScript } = this;
-        return [prevOut.toEncodeObject(), lockScript, unlockScript];
+        const { prevOut, timelock, lockScript, unlockScript } = this;
+        return [
+            prevOut.toEncodeObject(),
+            convertTimelockToEncodeObject(timelock),
+            lockScript,
+            unlockScript
+        ];
     }
 
     /**
@@ -62,9 +77,10 @@ export class AssetTransferInput {
      * @returns An AssetTransferInput JSON object.
      */
     public toJSON() {
-        const { prevOut, lockScript, unlockScript } = this;
+        const { prevOut, timelock, lockScript, unlockScript } = this;
         return {
             prevOut: prevOut.toJSON(),
+            timelock,
             lockScript: [...lockScript],
             unlockScript: [...unlockScript]
         };
@@ -76,9 +92,10 @@ export class AssetTransferInput {
      * @returns An AssetTransferInput.
      */
     public withoutScript() {
-        const { prevOut } = this;
+        const { prevOut, timelock } = this;
         return new AssetTransferInput({
             prevOut,
+            timelock,
             lockScript: Buffer.from([]),
             unlockScript: Buffer.from([])
         });
@@ -99,4 +116,29 @@ export class AssetTransferInput {
     public setUnlockScript(unlockScript: Buffer) {
         this.unlockScript = unlockScript;
     }
+}
+
+function convertTimelockToEncodeObject(timelock: Timelock | null) {
+    if (timelock === null) {
+        return [];
+    }
+    const { type, value } = timelock;
+    let typeEncoded;
+    switch (type) {
+        case "block":
+            typeEncoded = 1;
+            break;
+        case "blockAge":
+            typeEncoded = 2;
+            break;
+        case "time":
+            typeEncoded = 3;
+            break;
+        case "timeAge":
+            typeEncoded = 4;
+            break;
+        default:
+            throw Error(`Unexpected timelock type: ${type}`);
+    }
+    return [[typeEncoded, value]];
 }

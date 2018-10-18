@@ -3,7 +3,7 @@ import { AssetTransferAddress, H160 } from "codechain-primitives";
 
 import { H256 } from "./H256";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
-import { AssetTransferInput } from "./transaction/AssetTransferInput";
+import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
 import { NetworkId } from "./types";
@@ -90,9 +90,13 @@ export class Asset {
         };
     }
 
-    public createTransferInput(): AssetTransferInput {
+    public createTransferInput(options?: {
+        timelock: Timelock | null;
+    }): AssetTransferInput {
+        const { timelock = null } = options || {};
         return new AssetTransferInput({
-            prevOut: this.outPoint
+            prevOut: this.outPoint,
+            timelock
         });
     }
 
@@ -102,16 +106,23 @@ export class Asset {
             amount: number;
         }>;
         nonce?: number;
+        timelock?: null | Timelock;
         networkId: NetworkId;
     }): AssetTransferTransaction {
         const { outPoint, assetType } = this;
-        const { recipients = [], nonce = 0, networkId } = params;
+        const {
+            recipients = [],
+            nonce = 0,
+            timelock = null,
+            networkId
+        } = params;
 
         return new AssetTransferTransaction({
             burns: [],
             inputs: [
                 new AssetTransferInput({
                     prevOut: outPoint,
+                    timelock,
                     lockScript: Buffer.from([]),
                     unlockScript: Buffer.from([])
                 })

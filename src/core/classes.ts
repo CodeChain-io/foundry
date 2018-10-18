@@ -19,7 +19,7 @@ export { SetShardUsers } from "./action/SetShardUsers";
 export { Transaction } from "./transaction/Transaction";
 export { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 export { AssetOutPoint } from "./transaction/AssetOutPoint";
-export { AssetTransferInput } from "./transaction/AssetTransferInput";
+export { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
 export { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 export {
     AssetTransferTransaction
