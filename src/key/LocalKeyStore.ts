@@ -10,7 +10,7 @@ export class LocalKeyStore implements KeyStore {
     }
 
     public static async createForTest(): Promise<KeyStore> {
-        const cckey = await CCKey.create({ useMemoryDB: true });
+        const cckey = await CCKey.create({ dbType: "in-memory" });
         return new LocalKeyStore(cckey);
     }
     public cckey: CCKey;
@@ -37,9 +37,12 @@ export class LocalKeyStore implements KeyStore {
             return this.cckey.platform.exportRawKey({ ...params, passphrase });
         },
 
-        getPublicKey: (params: { key: string }): Promise<string | null> => {
-            const { key } = params;
-            return this.cckey.platform.getPublicKey({ key });
+        getPublicKey: (params: {
+            key: string;
+            passphrase?: string;
+        }): Promise<string | null> => {
+            const { key, passphrase = "" } = params;
+            return this.cckey.platform.getPublicKey({ key, passphrase });
         },
 
         sign: (params: {
@@ -74,9 +77,12 @@ export class LocalKeyStore implements KeyStore {
             return this.cckey.asset.exportRawKey({ ...params, passphrase });
         },
 
-        getPublicKey: (params: { key: string }): Promise<string | null> => {
-            const { key } = params;
-            return this.cckey.asset.getPublicKey({ key });
+        getPublicKey: (params: {
+            key: string;
+            passphrase?: string;
+        }): Promise<string | null> => {
+            const { key, passphrase = "" } = params;
+            return this.cckey.asset.getPublicKey({ key, passphrase });
         },
 
         sign: (params: {
@@ -89,7 +95,7 @@ export class LocalKeyStore implements KeyStore {
         }
     };
 
-    private constructor(cckey: CCKey) {
+    public constructor(cckey: CCKey) {
         this.cckey = cckey;
     }
 

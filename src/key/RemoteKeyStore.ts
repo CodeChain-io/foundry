@@ -162,7 +162,7 @@ export class RemoteKeyStore implements KeyStore {
         }
     };
 
-    private constructor(keystoreURL: string) {
+    public constructor(keystoreURL: string) {
         this.keystoreURL = keystoreURL;
         this.platform = new RemoteKeyManager(keystoreURL, "platform");
         this.asset = new RemoteKeyManager(keystoreURL, "asset");

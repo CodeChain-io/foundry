@@ -1,8 +1,8 @@
 import {
-    recoverEcdsa,
-    verifyEcdsa,
+    getAccountIdFromPublic,
     getPublicFromPrivate,
-    getAccountIdFromPublic
+    recoverEcdsa,
+    verifyEcdsa
 } from "../../utils";
 import { LocalKeyStore } from "../LocalKeyStore";
 
