@@ -57,7 +57,8 @@ export class P2PKHBurn {
             signatureTag = { input: "all", output: "all" } as SignatureTag
         } = options;
         const publicKey = await this.keyStore.asset.getPublicKey({
-            key: publicKeyHash
+            key: publicKeyHash,
+            passphrase
         });
         if (!publicKey) {
             throw Error(

@@ -50,7 +50,8 @@ export class P2PKH {
             signatureTag = { input: "all", output: "all" } as SignatureTag
         } = options;
         const publicKey = await this.rawKeyStore.asset.getPublicKey({
-            key: publicKeyHash
+            key: publicKeyHash,
+            passphrase
         });
         if (!publicKey) {
             throw Error(
