@@ -9,7 +9,7 @@
     "test": "jest --env node",
     "test-int": "yarn build && jest -i --env node --roots integration_tests --globals '{\"ts-jest\":{\"diagnostics\":{\"warnOnly\":true}}}'",
     "posttest": "yarn lint",
-    "docs": "typedoc --out gh-pages/0.1.1-alpha --name \"CodeChain JavaScript SDK\" --mode file --readme API.md --excludePrivate --excludeProtected",
+    "docs": "typedoc --out gh-pages/$npm_package_version --name \"CodeChain JavaScript SDK (Alpha)\" --mode file --readme API.md --excludePrivate --excludeProtected",
     "docs-dev": "nodemon -e ts --watch src --watch API.md --exec 'yarn docs'",
     "docs-prepare": "[ -d 'gh-pages' ] || git clone -b gh-pages git@github.com:CodeChain-io/codechain-sdk-js.git gh-pages && cd gh-pages && git pull"
   },
