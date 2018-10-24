@@ -207,7 +207,7 @@ export class AccountRpc {
             .then(result => {
                 return {
                     hash: H256.ensure(result.hash),
-                    nonce: U256.ensure(result.nonce)
+                    nonce: U256.ensure(result.seq)
                 };
             });
     }
