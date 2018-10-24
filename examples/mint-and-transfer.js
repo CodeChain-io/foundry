@@ -65,7 +65,11 @@ var ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         }
     );
     if (mintTxInvoice.success === false) {
-        throw Error("AssetMintTransaction failed");
+        throw Error(
+            `AssetMintTransaction failed: ${JSON.stringify(
+                mintTxInvoice.error
+            )}`
+        );
     }
     const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(
         transferTx.hash(),
@@ -74,7 +78,11 @@ var ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         }
     );
     if (transferTxInvoice.success === false) {
-        throw Error("AssetTransferTransaction failed");
+        throw Error(
+            `AssetTransferTransaction failed: ${JSON.stringify(
+                transferTxInvoice.error
+            )}`
+        );
     }
 
     // Unspent Bob's 3000 golds
