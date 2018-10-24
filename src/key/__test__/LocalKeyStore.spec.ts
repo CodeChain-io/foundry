@@ -47,6 +47,9 @@ test("sign", async () => {
     const store = await LocalKeyStore.createForTest();
     const key = await store.asset.createKey();
     const publicKey = await store.asset.getPublicKey({ key });
+    if (publicKey == null) {
+        throw Error("Cannot get the public key");
+    }
     const message =
         "00000000c0dec6a100000000c0dec6a100000000c0dec6a100000000c0dec6a1";
     const signature = await store.asset.sign({
