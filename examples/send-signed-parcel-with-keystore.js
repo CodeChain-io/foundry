@@ -15,13 +15,13 @@ const parcel = sdk.core.createPaymentParcel({
     const account = await sdk.key.createPlatformAddress({
         keyStore
     });
-    const nonce = await sdk.rpc.chain.getNonce(account);
+    const seq = await sdk.rpc.chain.getSeq(account);
 
     const signedParcel = await sdk.key.signParcel(parcel, {
         account,
         keyStore,
         fee: 10,
-        nonce
+        seq
     });
     console.log(signedParcel);
     // FIXME: needs fee

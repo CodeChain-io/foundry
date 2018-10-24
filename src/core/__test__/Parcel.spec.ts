@@ -7,7 +7,7 @@ import { Parcel } from "../Parcel";
 test("rlp", () => {
     const t = Parcel.transactions("tc");
     t.setFee(0);
-    t.setNonce(0);
+    t.setSeq(0);
     expect(t.rlpBytes()).toEqual(
         Buffer.from([
             248,
@@ -100,7 +100,7 @@ test("rlp", () => {
 test("hash", () => {
     const t = Parcel.transactions("tc");
     t.setFee(0);
-    t.setNonce(0);
+    t.setSeq(0);
     expect(t.hash()).toEqual(
         new H256(
             "cc946ae0cc8226c5a8db992d840c5f6bcb22dd2ea91dea994a334b67b325b1a0"
@@ -113,7 +113,7 @@ test("sign", () => {
     const signed = t.sign({
         secret:
             "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd",
-        nonce: 0,
+        seq: 0,
         fee: 0
     });
     const { v, r, s } = signed.signature();
@@ -135,7 +135,7 @@ test("signed hash", () => {
     const signed = t.sign({
         secret:
             "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd",
-        nonce: 0,
+        seq: 0,
         fee: 0
     });
     expect(signed.hash()).toEqual(
@@ -154,6 +154,6 @@ test("toJSON", () => {
         new U256(11)
     );
     p.setFee(33);
-    p.setNonce(44);
+    p.setSeq(44);
     expect(Parcel.fromJSON(p.toJSON())).toEqual(p);
 });

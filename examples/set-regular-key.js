@@ -19,7 +19,7 @@ const regularSecret = SDK.util.generatePrivateKey();
 const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
 
 (async () => {
-    const nonce = await sdk.rpc.chain.getNonce(masterAddress);
+    const seq = await sdk.rpc.chain.getSeq(masterAddress);
     // Set `regularSecret` as the master account's regular key.
     // It means that you can sign a parcel with the "regularSecret" instead of the "masterSecert".
     const setRegularKeyParcel = sdk.core.createSetRegularKeyParcel({
@@ -28,7 +28,7 @@ const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
     const setRegularKeyParcelHash = await sdk.rpc.chain.sendSignedParcel(
         setRegularKeyParcel.sign({
             secret: masterSecret,
-            nonce,
+            seq,
             fee: 10
         })
     );
@@ -41,7 +41,7 @@ const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
     const beforeBalance = await sdk.rpc.chain.getBalance(masterAddress);
     console.log(`Current master account's balance is ${beforeBalance}`);
 
-    const nonce2 = await sdk.rpc.chain.getNonce(masterAddress);
+    const seq2 = await sdk.rpc.chain.getSeq(masterAddress);
     const p2 = sdk.core.createPaymentParcel({
         recipient: masterAddress,
         amount: 10
@@ -51,7 +51,7 @@ const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
     const hash2 = await sdk.rpc.chain.sendSignedParcel(
         p2.sign({
             secret: regularSecret,
-            nonce: nonce2,
+            seq: seq2,
             fee: 10
         })
     );

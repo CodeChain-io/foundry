@@ -161,7 +161,7 @@ export class Key {
      * @param params.account An account.
      * @param params.passphrase The passphrase for the given account
      * @returns A SignedParcel
-     * @throws When nonce or fee in the Parcel is null
+     * @throws When seq or fee in the Parcel is null
      * @throws When account or its passphrase is invalid
      */
     public async signParcel(
@@ -171,7 +171,7 @@ export class Key {
             account: PlatformAddress | string;
             passphrase?: string;
             fee: U256 | string | number;
-            nonce: U256 | string | number;
+            seq: U256 | string | number;
         }
     ): Promise<SignedParcel> {
         if (!(parcel instanceof Parcel)) {
@@ -184,7 +184,7 @@ export class Key {
             passphrase,
             keyStore = await this.ensureKeyStore(),
             fee,
-            nonce
+            seq
         } = params;
         if (!isKeyStore(keyStore)) {
             throw Error(
@@ -201,13 +201,13 @@ export class Key {
                 `Expected fee param to be a U256 value but found ${fee}`
             );
         }
-        if (!U256.check(nonce)) {
+        if (!U256.check(seq)) {
             throw Error(
-                `Expected nonce param to be a U256 value but found ${nonce}`
+                `Expected seq param to be a U256 value but found ${seq}`
             );
         }
         parcel.setFee(fee);
-        parcel.setNonce(nonce);
+        parcel.setSeq(seq);
         const accountId = PlatformAddress.ensure(account).getAccountId();
         const sig = await keyStore.platform.sign({
             key: accountId.value,

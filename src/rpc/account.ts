@@ -182,7 +182,7 @@ export class AccountRpc {
         parcel: Parcel;
         account: PlatformAddress | string;
         passphrase?: string;
-    }): Promise<{ hash: H256; nonce: U256 }> {
+    }): Promise<{ hash: H256; seq: U256 }> {
         const { parcel, account, passphrase } = params;
         if (!PlatformAddress.check(account)) {
             throw Error(
@@ -207,7 +207,7 @@ export class AccountRpc {
             .then(result => {
                 return {
                     hash: H256.ensure(result.hash),
-                    nonce: U256.ensure(result.seq)
+                    seq: U256.ensure(result.seq)
                 };
             });
     }

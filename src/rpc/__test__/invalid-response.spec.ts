@@ -72,7 +72,7 @@ describe("Invalid response", () => {
             ).sign({
                 secret,
                 fee: 0,
-                nonce: 0
+                seq: 0
             });
 
             test("null", done => {
@@ -118,7 +118,7 @@ describe("Invalid response", () => {
 
             test.skip("Invalid signature", done =>
                 done.fail("not implemented"));
-            test.skip("Invalid nonce", done => done.fail("not implemented"));
+            test.skip("Invalid seq", done => done.fail("not implemented"));
             test.skip("Invalid fee", done => done.fail("not implemented"));
             test.skip("Invalid networkId", done =>
                 done.fail("not implemented"));
@@ -217,13 +217,13 @@ describe("Invalid response", () => {
             test.skip("Invalid invoice", done => done.fail("not implemented"));
         });
 
-        test("getNonce", done => {
+        test("getSeq", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
             chainRpc
-                .getNonce(address)
+                .getSeq(address)
                 .then(() => done.fail())
                 .catch(e => {
-                    expect(e.toString()).toContain("chain_getNonce");
+                    expect(e.toString()).toContain("chain_getSeq");
                     expect(e.toString()).toContain("U256");
                     expect(e.toString()).toContain("undefined");
                     done();

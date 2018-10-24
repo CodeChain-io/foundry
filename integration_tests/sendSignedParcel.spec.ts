@@ -8,7 +8,7 @@ const secret = ACCOUNT_SECRET;
 const address = ACCOUNT_ADDRESS;
 
 test("sendSignedParcel", async () => {
-    const nonce = await sdk.rpc.chain.getNonce(address);
+    const seq = await sdk.rpc.chain.getSeq(address);
     const p = sdk.core.createPaymentParcel({
         recipient: address,
         amount: 0
@@ -16,7 +16,7 @@ test("sendSignedParcel", async () => {
     const hash = await sdk.rpc.chain.sendSignedParcel(
         p.sign({
             secret,
-            nonce,
+            seq,
             fee: 10
         })
     );
@@ -26,14 +26,14 @@ test("sendSignedParcel", async () => {
 });
 
 test("sendSignedParcel - empty", async () => {
-    const nonce = await sdk.rpc.chain.getNonce(address);
+    const seq = await sdk.rpc.chain.getSeq(address);
     const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: []
     });
     const hash = await sdk.rpc.chain.sendSignedParcel(
         p.sign({
             secret,
-            nonce,
+            seq,
             fee: 10
         })
     );

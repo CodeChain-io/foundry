@@ -18,14 +18,14 @@ const regularSecret = SDK.util.generatePrivateKey();
 const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
 
 test("setRegularKey", async () => {
-    const nonce = await sdk.rpc.chain.getNonce(masterAddress);
+    const seq = await sdk.rpc.chain.getSeq(masterAddress);
     const p = sdk.core.createSetRegularKeyParcel({
         key: regularPublic
     });
     const hash = await sdk.rpc.chain.sendSignedParcel(
         p.sign({
             secret: masterSecret,
-            nonce,
+            seq,
             fee: 10
         })
     );
@@ -37,7 +37,7 @@ test("setRegularKey", async () => {
 
     const beforeBalance = await sdk.rpc.chain.getBalance(masterAddress);
 
-    const nonce2 = await sdk.rpc.chain.getNonce(masterAddress);
+    const seq2 = await sdk.rpc.chain.getSeq(masterAddress);
     const p2 = sdk.core.createPaymentParcel({
         recipient: masterAddress,
         amount: 10
@@ -45,7 +45,7 @@ test("setRegularKey", async () => {
     const hash2 = await sdk.rpc.chain.sendSignedParcel(
         p2.sign({
             secret: regularSecret,
-            nonce: nonce2,
+            seq: seq2,
             fee: 10
         })
     );

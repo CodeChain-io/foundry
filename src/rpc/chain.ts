@@ -76,12 +76,12 @@ export class ChainRpc {
      * @param parcel The parcel to send
      * @param options.account The account to sign the parcel
      * @param options.passphrase The account's passphrase
-     * @param options.nonce The nonce of the parcel
+     * @param options.seq The seq of the parcel
      * @param options.fee The fee of the parcel
      * @returns SignedParcel's hash
      * @throws When the given account cannot afford to pay the fee
      * @throws When the given fee is too low
-     * @throws When the given nonce does not match
+     * @throws When the given seq does not match
      * @throws When the given account is unknown
      * @throws When the given passphrase does not match
      */
@@ -90,7 +90,7 @@ export class ChainRpc {
         options?: {
             account?: PlatformAddress | string;
             passphrase?: string;
-            nonce?: U256 | string | number;
+            seq?: U256 | string | number;
             fee?: U256 | string | number;
         }
     ): Promise<H256> {
@@ -111,8 +111,8 @@ export class ChainRpc {
                 `Expected account param of sendParcel to be a PlatformAddress value but found ${account}`
             );
         }
-        const { nonce = await this.getNonce(account) } = options || {};
-        parcel.setNonce(nonce!);
+        const { seq = await this.getSeq(account) } = options || {};
+        parcel.setSeq(seq!);
         if (!fee) {
             throw Error("The fee of the parcel is not specified");
         }
@@ -433,28 +433,28 @@ export class ChainRpc {
     }
 
     /**
-     * Gets nonce of an account of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns nonce recorded in the most recent block.
+     * Gets seq of an account of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns seq recorded in the most recent block.
      * @param address An account address
-     * @param blockNumber The specific block number to get account's nonce at given address.
-     * @returns Nonce of account at the specified block, or null if no such block exists.
+     * @param blockNumber The specific block number to get account's seq at given address.
+     * @returns Seq of account at the specified block, or null if no such block exists.
      */
-    public getNonce(
+    public getSeq(
         address: PlatformAddress | string,
         blockNumber?: number
     ): Promise<U256> {
         if (!PlatformAddress.check(address)) {
             throw Error(
-                `Expected the first argument of getNonce to be a PlatformAddress value but found ${address}`
+                `Expected the first argument of getSeq to be a PlatformAddress value but found ${address}`
             );
         }
         if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
             throw Error(
-                `Expected the second argument of getNonce to be a number but found ${blockNumber}`
+                `Expected the second argument of getSeq to be a number but found ${blockNumber}`
             );
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getNonce", [
+                .sendRpcRequest("chain_getSeq", [
                     `${PlatformAddress.ensure(address).value}`,
                     blockNumber
                 ])
@@ -468,7 +468,7 @@ export class ChainRpc {
                     } catch (e) {
                         reject(
                             Error(
-                                `Expected chain_getNonce to return a value of U256, but an error occurred: ${e.toString()}`
+                                `Expected chain_getSeq to return a value of U256, but an error occurred: ${e.toString()}`
                             )
                         );
                     }

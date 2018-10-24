@@ -19,7 +19,7 @@ test("toJSON", () => {
     ).sign({
         secret,
         fee: 33,
-        nonce: 33
+        seq: 33
     });
     expect(SignedParcel.fromJSON(p.toJSON())).toEqual(p);
 });
@@ -40,7 +40,7 @@ test("getSignerAccountId", () => {
     ).sign({
         secret,
         fee: 33,
-        nonce: 44
+        seq: 44
     });
     expect(p.getSignerAccountId()).toEqual(signerAccountId);
 });
@@ -62,7 +62,7 @@ test("getSignerAddress", () => {
     ).sign({
         secret,
         fee: 33,
-        nonce: 44
+        seq: 44
     });
     expect(p.getSignerAddress()).toEqual(signerAddress);
 });

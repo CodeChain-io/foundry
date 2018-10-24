@@ -42,14 +42,14 @@ test("checkRegistrarValidation", async () => {
 });
 
 async function setRegularKey() {
-    const nonce = await sdk.rpc.chain.getNonce(masterAddress);
+    const seq = await sdk.rpc.chain.getSeq(masterAddress);
     const p = sdk.core.createSetRegularKeyParcel({
         key: regularPublic
     });
     const hash = await sdk.rpc.chain.sendSignedParcel(
         p.sign({
             secret: masterSecret,
-            nonce,
+            seq,
             fee: 10
         })
     );
@@ -60,7 +60,7 @@ async function setRegularKey() {
 }
 
 async function sendCCCToOther() {
-    const nonce = await sdk.rpc.chain.getNonce(masterAddress);
+    const seq = await sdk.rpc.chain.getSeq(masterAddress);
     const p = sdk.core.createPaymentParcel({
         recipient: otherAddress,
         amount: 100
@@ -68,7 +68,7 @@ async function sendCCCToOther() {
     const hash = await sdk.rpc.chain.sendSignedParcel(
         p.sign({
             secret: regularSecret,
-            nonce,
+            seq,
             fee: 10
         })
     );
@@ -101,11 +101,11 @@ async function mintAssetUsingMaster(
     const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: [mintTx]
     });
-    const nonce = await sdk.rpc.chain.getNonce(masterAddress);
+    const seq = await sdk.rpc.chain.getSeq(masterAddress);
     await sdk.rpc.chain.sendSignedParcel(
         p.sign({
             secret: masterSecret,
-            nonce,
+            seq,
             fee: 10
         })
     );
@@ -150,11 +150,11 @@ async function transferAssetUsingRegular(
     const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: [transferTx]
     });
-    const nonce = await sdk.rpc.chain.getNonce(masterAddress);
+    const seq = await sdk.rpc.chain.getSeq(masterAddress);
     await sdk.rpc.chain.sendSignedParcel(
         p.sign({
             secret: regularSecret,
-            nonce,
+            seq,
             fee: 10
         })
     );
@@ -202,11 +202,11 @@ async function transferAssetUsingOther(
     const p = sdk.core.createAssetTransactionGroupParcel({
         transactions: [transferTx]
     });
-    const nonce = await sdk.rpc.chain.getNonce(otherAddress);
+    const seq = await sdk.rpc.chain.getSeq(otherAddress);
     await sdk.rpc.chain.sendSignedParcel(
         p.sign({
             secret: otherSecret,
-            nonce,
+            seq,
             fee: 10
         })
     );

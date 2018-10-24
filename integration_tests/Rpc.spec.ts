@@ -52,7 +52,7 @@ const ERROR = {
         data: expect.anything(),
         message: expect.anything()
     },
-    INVALID_NONCE: {
+    INVALID_SEQ: {
         code: -32035,
         data: expect.anything(),
         message: expect.anything()
@@ -177,8 +177,8 @@ describe("rpc", () => {
                 );
             });
 
-            test("getNonce", async () => {
-                expect(await sdk.rpc.chain.getNonce(address)).toEqual(
+            test("getSeq", async () => {
+                expect(await sdk.rpc.chain.getSeq(address)).toEqual(
                     expect.any(U256)
                 );
             });
@@ -194,7 +194,7 @@ describe("rpc", () => {
                         })
                         .sign({
                             secret: signerSecret,
-                            nonce: await sdk.rpc.chain.getNonce(signerAddress),
+                            seq: await sdk.rpc.chain.getSeq(signerAddress),
                             fee: 10
                         });
                     await sdk.rpc.chain.sendSignedParcel(parcel);
@@ -224,25 +224,25 @@ describe("rpc", () => {
 
         describe("sendSignedParcel", () => {
             const secret = signerSecret;
-            let nonce: U256;
+            let seq: U256;
             let parcel: Parcel;
             beforeEach(async () => {
                 parcel = sdk.core.createPaymentParcel({
                     recipient: signerAddress,
                     amount: 10
                 });
-                nonce = await sdk.rpc.chain.getNonce(signerAddress);
+                seq = await sdk.rpc.chain.getSeq(signerAddress);
             });
 
             test("Ok", async done => {
                 sdk.rpc.chain
-                    .sendSignedParcel(parcel.sign({ secret, fee: 10, nonce }))
+                    .sendSignedParcel(parcel.sign({ secret, fee: 10, seq }))
                     .then(() => done())
                     .catch(e => done.fail(e));
             });
 
             test("VerificationFailed", done => {
-                const signedParcel = parcel.sign({ secret, fee: 10, nonce });
+                const signedParcel = parcel.sign({ secret, fee: 10, seq });
                 signedParcel.r = new U256(0);
                 sdk.rpc.chain
                     .sendSignedParcel(signedParcel)
@@ -254,7 +254,7 @@ describe("rpc", () => {
             });
 
             test("AlreadyImported", done => {
-                const signedParcel = parcel.sign({ secret, fee: 10, nonce });
+                const signedParcel = parcel.sign({ secret, fee: 10, seq });
                 sdk.rpc.chain
                     .sendSignedParcel(signedParcel)
                     .then(() => {
@@ -275,7 +275,7 @@ describe("rpc", () => {
                     fee: new U256(
                         "0xffffffffffffffffffffffffffffffffffffffffffffffffff"
                     ),
-                    nonce
+                    seq
                 });
                 sdk.rpc.chain
                     .sendSignedParcel(signedParcel)
@@ -287,7 +287,7 @@ describe("rpc", () => {
             });
 
             test("TooLowFee", done => {
-                const signedParcel = parcel.sign({ secret, fee: 9, nonce });
+                const signedParcel = parcel.sign({ secret, fee: 9, seq });
                 sdk.rpc.chain
                     .sendSignedParcel(signedParcel)
                     .then(() => done.fail())
@@ -301,24 +301,24 @@ describe("rpc", () => {
                 done.fail("Not implemented");
             });
 
-            test("InvalidNonce", done => {
+            test("InvalidSeq", done => {
                 const signedParcel = parcel.sign({
                     secret,
                     fee: 12321,
-                    nonce: new U256(nonce.value.minus(1))
+                    seq: new U256(seq.value.minus(1))
                 });
                 sdk.rpc.chain
                     .sendSignedParcel(signedParcel)
                     .then(() => done.fail())
                     .catch(e => {
-                        expect(e).toEqual(ERROR.INVALID_NONCE);
+                        expect(e).toEqual(ERROR.INVALID_SEQ);
                         done();
                     });
             });
 
             test("InvalidNetworkId", done => {
                 (parcel as any).networkId = "zz";
-                const signedParcel = parcel.sign({ secret, fee: 10, nonce });
+                const signedParcel = parcel.sign({ secret, fee: 10, seq });
                 sdk.rpc.chain
                     .sendSignedParcel(signedParcel)
                     .then(() => done.fail())
@@ -340,7 +340,7 @@ describe("rpc", () => {
                 const signedParcel = parcel.sign({
                     secret: signerSecret,
                     fee: 10,
-                    nonce: await sdk.rpc.chain.getNonce(signerAddress)
+                    seq: await sdk.rpc.chain.getSeq(signerAddress)
                 });
                 parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
             });
@@ -391,7 +391,7 @@ describe("rpc", () => {
                 await sdk.rpc.chain.sendSignedParcel(
                     parcel.sign({
                         secret: signerSecret,
-                        nonce: await sdk.rpc.chain.getNonce(signerAddress),
+                        seq: await sdk.rpc.chain.getSeq(signerAddress),
                         fee: 10
                     })
                 );
@@ -497,7 +497,7 @@ describe("rpc", () => {
                 await sdk.rpc.chain.sendSignedParcel(
                     parcel.sign({
                         secret: signerSecret,
-                        nonce: await sdk.rpc.chain.getNonce(signerAddress),
+                        seq: await sdk.rpc.chain.getSeq(signerAddress),
                         fee: 10
                     })
                 );

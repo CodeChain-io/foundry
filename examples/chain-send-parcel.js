@@ -19,7 +19,7 @@ const parcel = sdk.core.createPaymentParcel({
     const parcelHash = await sdk.rpc.chain.sendParcel(parcel, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
-        // fee and nonce are optional
+        // fee and seq are optional
     });
     const invoice = await sdk.rpc.chain.getParcelInvoice(parcelHash, {
         timeout: 300 * 1000

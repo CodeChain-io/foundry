@@ -13,7 +13,7 @@ test("getSignerAccountId", async () => {
         server: SERVER_URL,
         networkId: CODECHAIN_NETWORK_ID
     });
-    const nonce = await sdk.rpc.chain.getNonce(ACCOUNT_ADDRESS);
+    const seq = await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS);
     const parcelToSend = sdk.core
         .createPaymentParcel({
             amount: 10,
@@ -22,7 +22,7 @@ test("getSignerAccountId", async () => {
         .sign({
             secret: ACCOUNT_SECRET,
             fee: 10,
-            nonce
+            seq
         });
     const parcelHash = await sdk.rpc.chain.sendSignedParcel(parcelToSend);
     const parcelReceived = await sdk.rpc.chain.getParcel(parcelHash);

@@ -26,7 +26,7 @@ export const sendTransactions = async ({ transactions }: any) => {
     });
     const signedParcel = parcel.sign({
         secret: ACCOUNT_SECRET,
-        nonce: await sdk.rpc.chain.getNonce(ACCOUNT_ADDRESS),
+        seq: await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS),
         fee: 10
     });
     const parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
@@ -62,11 +62,11 @@ export const mintAsset = async ({
     };
 };
 
-export const payment = async (params?: { inc_nonce?: number }) => {
-    const { inc_nonce = 0 } = params || {};
-    let nonce = await sdk.rpc.chain.getNonce(ACCOUNT_ADDRESS);
-    for (let i = 0; i < inc_nonce; i++) {
-        nonce = nonce.increase();
+export const payment = async (params?: { inc_seq?: number }) => {
+    const { inc_seq = 0 } = params || {};
+    let seq = await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS);
+    for (let i = 0; i < inc_seq; i++) {
+        seq = seq.increase();
     }
     const p = sdk.core
         .createPaymentParcel({
@@ -76,7 +76,7 @@ export const payment = async (params?: { inc_nonce?: number }) => {
         .sign({
             secret: ACCOUNT_SECRET,
             fee: 10,
-            nonce
+            seq
         });
     return await sdk.rpc.chain.sendSignedParcel(p);
 };

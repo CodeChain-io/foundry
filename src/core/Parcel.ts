@@ -17,7 +17,7 @@ const RLP = require("rlp");
  *
  * - The fee must be at least 10. The higher the fee, the higher the priority for the parcel to be processed.
  * - It contains the network ID. This must be identical to the network ID to which the parcel is being sent to.
- * - Its nonce must be identical to the nonce of the account that will sign the parcel.
+ * - Its seq must be identical to the seq of the account that will sign the parcel.
  * - It contains the list of transactions to process. After signing the Parcel's size must not exceed 1 MB.
  * - After signing with the sign() function, it can be sent to the network.
  */
@@ -46,26 +46,26 @@ export class Parcel {
     }
 
     public static fromJSON(result: any) {
-        const { nonce, fee, networkId, action } = result;
+        const { seq, fee, networkId, action } = result;
         const parcel = new Parcel(networkId, getActionFromJSON(action));
-        parcel.setNonce(nonce);
+        parcel.setSeq(seq);
         parcel.setFee(fee);
         return parcel;
     }
-    public nonce: U256 | null;
+    public seq: U256 | null;
     public fee: U256 | null;
     public readonly networkId: NetworkId;
     public readonly action: Action;
 
     constructor(networkId: NetworkId, action: Action) {
-        this.nonce = null;
+        this.seq = null;
         this.fee = null;
         this.networkId = networkId;
         this.action = action;
     }
 
-    public setNonce(nonce: U256 | string | number) {
-        this.nonce = U256.ensure(nonce);
+    public setSeq(seq: U256 | string | number) {
+        this.seq = U256.ensure(seq);
     }
 
     public setFee(fee: U256 | string | number) {
@@ -73,12 +73,12 @@ export class Parcel {
     }
 
     public toEncodeObject(): any[] {
-        const { nonce, fee, action, networkId } = this;
-        if (!nonce || !fee) {
-            throw Error("Nonce and fee in the parcel must be present");
+        const { seq, fee, action, networkId } = this;
+        if (!seq || !fee) {
+            throw Error("Seq and fee in the parcel must be present");
         }
         return [
-            nonce.toEncodeObject(),
+            seq.toEncodeObject(),
             fee.toEncodeObject(),
             networkId,
             action.toEncodeObject()
@@ -95,14 +95,14 @@ export class Parcel {
 
     public sign(params: {
         secret: H256 | string;
-        nonce: U256 | string | number;
+        seq: U256 | string | number;
         fee: U256 | string | number;
     }): SignedParcel {
-        const { secret, nonce, fee } = params;
-        if (this.nonce !== null) {
-            throw Error("The parcel nonce is already set");
+        const { secret, seq, fee } = params;
+        if (this.seq !== null) {
+            throw Error("The parcel seq is already set");
         }
-        this.nonce = U256.ensure(nonce);
+        this.seq = U256.ensure(seq);
         if (this.fee !== null) {
             throw Error("The parcel fee is already set");
         }
@@ -116,7 +116,7 @@ export class Parcel {
     }
 
     public toJSON() {
-        const { nonce, fee, networkId, action } = this;
+        const { seq, fee, networkId, action } = this;
         if (!fee) {
             throw Error("Fee in the parcel must be present");
         }
@@ -125,8 +125,8 @@ export class Parcel {
             networkId,
             action: action.toJSON()
         };
-        if (nonce) {
-            result.nonce = nonce.toEncodeObject();
+        if (seq) {
+            result.seq = seq.toEncodeObject();
         }
         return result;
     }

@@ -23,7 +23,7 @@ const RLP = require("rlp");
  * If any of the following is true, the Parcel will not be processed:
  * - The Parcel's processing fee is less than 10.
  * - A network ID is not identical.
- * - A nonce is not identical to the signer's nonce.
+ * - A seq is not identical to the signer's seq.
  */
 export class SignedParcel {
     // FIXME: any
@@ -126,7 +126,7 @@ export class SignedParcel {
      */
     public toEncodeObject(): any[] {
         const {
-            unsigned: { nonce, fee, action, networkId },
+            unsigned: { seq, fee, action, networkId },
             v,
             r,
             s
@@ -136,11 +136,11 @@ export class SignedParcel {
             64,
             "0"
         )}${_.padStart(v.toString(16), 2, "0")}`;
-        if (!nonce || !fee) {
-            throw Error("Nonce and fee in the parcel must be present");
+        if (!seq || !fee) {
+            throw Error("Seq and fee in the parcel must be present");
         }
         return [
-            nonce.toEncodeObject(),
+            seq.toEncodeObject(),
             fee.toEncodeObject(),
             networkId,
             action.toEncodeObject(),
@@ -211,7 +211,7 @@ export class SignedParcel {
             blockNumber,
             blockHash,
             parcelIndex,
-            unsigned: { nonce, fee, networkId, action },
+            unsigned: { seq, fee, networkId, action },
             v,
             r,
             s
@@ -221,14 +221,14 @@ export class SignedParcel {
             s: s.value.toString(16),
             v
         });
-        if (!nonce || !fee) {
-            throw Error("Nonce and fee in the parcel must be present");
+        if (!seq || !fee) {
+            throw Error("Seq and fee in the parcel must be present");
         }
         return {
             blockNumber,
             blockHash: blockHash === null ? null : blockHash.value,
             parcelIndex,
-            nonce: nonce.value.toString(),
+            seq: seq.value.toString(),
             fee: fee.value.toString(),
             networkId,
             action: action.toJSON(),

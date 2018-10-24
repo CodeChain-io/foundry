@@ -22,7 +22,7 @@ test("toJSON", () => {
     ).sign({
         secret,
         fee: 33,
-        nonce: 44
+        seq: 44
     });
     const block = new Block({
         parentHash: new H256(

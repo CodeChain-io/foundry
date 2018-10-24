@@ -18,12 +18,12 @@ const parcel = sdk.core.createPaymentParcel({
 });
 
 (async () => {
-    const nonce = await sdk.rpc.chain.getNonce(ACCOUNT_ADDRESS);
+    const seq = await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS);
     const parcelHash = await sdk.rpc.chain.sendSignedParcel(
         parcel.sign({
             secret: ACCOUNT_SECRET,
             fee: 10,
-            nonce: nonce
+            seq
         })
     );
     const invoice = await sdk.rpc.chain.getParcelInvoice(parcelHash, {
