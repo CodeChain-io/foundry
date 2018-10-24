@@ -12,24 +12,20 @@ if (!sdk.core.classes.PlatformAddress.check(parcelSender)) {
     );
 }
 
-sdk.key
-    .createLocalKeyStore()
-    .then(async keyStore => {
-        const parcel = sdk.core.createPaymentParcel({
-            recipient: "sccqywxfyz8ykulqsq2l7z9nvgd8z3cczfun509f08u",
-            amount: 5 // 0.000000005CCC
-        });
-        const signedParcel = await sdk.key.signParcel(parcel, {
-            keyStore,
-            account: parcelSender,
-            fee: 10,
-            nonce: await sdk.rpc.chain.getNonce(parcelSender)
-        });
-        const parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
-        console.log(
-            "https://saluki.codechain.io/explorer/parcel/0x" + parcelHash.value
-        );
-    })
-    .catch(e => {
-        console.error(e);
+(async () => {
+    const keyStore = await sdk.key.createLocalKeyStore();
+    const parcel = sdk.core.createPaymentParcel({
+        recipient: "sccqywxfyz8ykulqsq2l7z9nvgd8z3cczfun509f08u",
+        amount: 5 // 0.000000005CCC
     });
+    const signedParcel = await sdk.key.signParcel(parcel, {
+        keyStore,
+        account: parcelSender,
+        fee: 10,
+        nonce: await sdk.rpc.chain.getNonce(parcelSender)
+    });
+    const parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
+    console.log(
+        `https://saluki.codechain.io/explorer/parcel/0x${parcelHash.value}`
+    );
+})().catch(console.error);

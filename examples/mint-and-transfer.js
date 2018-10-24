@@ -5,10 +5,10 @@ const sdk = new SDK({
     networkId: process.env.CODECHAIN_NETWORK_ID || "tc"
 });
 
-var ACCOUNT_ADDRESS =
+const ACCOUNT_ADDRESS =
     process.env.ACCOUNT_ADDRESS ||
     "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd";
-var ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
+const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 (async () => {
     const aliceAddress = await sdk.key.createAssetTransferAddress();

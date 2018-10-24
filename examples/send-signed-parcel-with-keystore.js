@@ -1,11 +1,11 @@
-var SDK = require("..");
+const SDK = require("..");
 
-var SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
-var sdk = new SDK({
+const SERVER_URL = process.env.CODECHAIN_RPC_HTTP || "http://localhost:8080";
+const sdk = new SDK({
     server: SERVER_URL
 });
 
-var parcel = sdk.core.createPaymentParcel({
+const parcel = sdk.core.createPaymentParcel({
     recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
     amount: 10000
 });

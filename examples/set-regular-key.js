@@ -5,7 +5,7 @@ const sdk = new SDK({
     networkId: process.env.CODECHAIN_NETWORK_ID || "tc"
 });
 
-var ACCOUNT_SECRET =
+const ACCOUNT_SECRET =
     process.env.ACCOUNT_SECRET ||
     "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
 

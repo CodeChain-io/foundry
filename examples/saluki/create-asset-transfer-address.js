@@ -5,16 +5,13 @@ const sdk = new SDK({
     networkId: "sc"
 });
 
-// LocalKeyStore creates `keystore.db` file in the working directory.
-sdk.key
-    .createLocalKeyStore()
-    .then(function(keyStore) {
-        return sdk.key.createAssetTransferAddress({
-            keyStore
-        });
-    })
-    .then(function(address) {
-        // You can mint assets using this address.
-        // Address example: scaqyqu9ll6mw0nt07sjuvk7w5wq8tzvpdureps9gnepm
-        console.log(address.toString());
+(async () => {
+    // LocalKeyStore creates `keystore.db` file in the working directory.
+    const keyStore = await sdk.key.createLocalKeyStore();
+    const address = await sdk.key.createAssetTransferAddress({
+        keyStore
     });
+    // You can mint assets using this address.
+    // Address example: scaqyqu9ll6mw0nt07sjuvk7w5wq8tzvpdureps9gnepm
+    console.log(address.toString());
+})().catch(console.error);

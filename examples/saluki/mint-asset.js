@@ -30,20 +30,16 @@ const parcel = sdk.core.createAssetTransactionGroupParcel({
     transactions: [mintTx]
 });
 
-sdk.key
-    .createLocalKeyStore()
-    .then(async keyStore => {
-        const signedParcel = await sdk.key.signParcel(parcel, {
-            keyStore,
-            account: parcelSender,
-            fee: 10,
-            nonce: await sdk.rpc.chain.getNonce(parcelSender)
-        });
-        const parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
-        console.log(
-            "https://saluki.codechain.io/explorer/parcel/0x" + parcelHash.value
-        );
-    })
-    .catch(e => {
-        console.error(e);
+(async () => {
+    const keyStore = await sdk.key.createLocalKeyStore();
+    const signedParcel = await sdk.key.signParcel(parcel, {
+        keyStore,
+        account: parcelSender,
+        fee: 10,
+        nonce: await sdk.rpc.chain.getNonce(parcelSender)
     });
+    const parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
+    console.log(
+        `https://saluki.codechain.io/explorer/parcel/0x${parcelHash.value}`
+    );
+})().catch(console.error);

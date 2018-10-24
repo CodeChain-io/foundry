@@ -12,65 +12,61 @@ if (!sdk.core.classes.PlatformAddress.check(parcelSender)) {
     );
 }
 
-sdk.key
-    .createLocalKeyStore()
-    .then(async keyStore => {
-        const aliceAddress = await sdk.key.createAssetTransferAddress({
-            type: "P2PKH",
-            keyStore
-        });
-        const bobAddress = "scaqyqa6lghs8a5mgt8e08tncmgeh55arh0rcqqm0ylk2";
-
-        const mintTx = sdk.core.createAssetMintTransaction({
-            scheme: {
-                shardId: 0,
-                worldId: 0,
-                metadata: JSON.stringify({
-                    name: "Saluki Coin",
-                    icon_url:
-                        "https://upload.wikimedia.org/wikipedia/commons/3/31/Red_Smooth_Saluki.jpg"
-                }),
-                amount: 500
-            },
-            recipient: aliceAddress
-        });
-
-        const mintedAsset = mintTx.getMintedAsset();
-        const { assetType } = mintedAsset;
-
-        const transferTx = sdk.core
-            .createAssetTransferTransaction()
-            .addInputs(mintedAsset)
-            .addOutputs(
-                {
-                    recipient: bobAddress,
-                    amount: 100,
-                    assetType
-                },
-                {
-                    recipient: aliceAddress,
-                    amount: 400,
-                    assetType
-                }
-            );
-        await sdk.key.signTransactionInput(transferTx, 0, {
-            keyStore
-        });
-
-        const parcel = sdk.core.createAssetTransactionGroupParcel({
-            transactions: [mintTx, transferTx]
-        });
-        const signedParcel = await sdk.key.signParcel(parcel, {
-            keyStore,
-            account: parcelSender,
-            fee: 10,
-            nonce: await sdk.rpc.chain.getNonce(parcelSender)
-        });
-        const parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
-        console.log(
-            "https://saluki.codechain.io/explorer/parcel/0x" + parcelHash.value
-        );
-    })
-    .catch(e => {
-        console.error(e);
+(async () => {
+    const keyStore = await sdk.key.createLocalKeyStore();
+    const aliceAddress = await sdk.key.createAssetTransferAddress({
+        type: "P2PKH",
+        keyStore
     });
+    const bobAddress = "scaqyqa6lghs8a5mgt8e08tncmgeh55arh0rcqqm0ylk2";
+
+    const mintTx = sdk.core.createAssetMintTransaction({
+        scheme: {
+            shardId: 0,
+            worldId: 0,
+            metadata: JSON.stringify({
+                name: "Saluki Coin",
+                icon_url:
+                    "https://upload.wikimedia.org/wikipedia/commons/3/31/Red_Smooth_Saluki.jpg"
+            }),
+            amount: 500
+        },
+        recipient: aliceAddress
+    });
+
+    const mintedAsset = mintTx.getMintedAsset();
+    const { assetType } = mintedAsset;
+
+    const transferTx = sdk.core
+        .createAssetTransferTransaction()
+        .addInputs(mintedAsset)
+        .addOutputs(
+            {
+                recipient: bobAddress,
+                amount: 100,
+                assetType
+            },
+            {
+                recipient: aliceAddress,
+                amount: 400,
+                assetType
+            }
+        );
+    await sdk.key.signTransactionInput(transferTx, 0, {
+        keyStore
+    });
+
+    const parcel = sdk.core.createAssetTransactionGroupParcel({
+        transactions: [mintTx, transferTx]
+    });
+    const signedParcel = await sdk.key.signParcel(parcel, {
+        keyStore,
+        account: parcelSender,
+        fee: 10,
+        nonce: await sdk.rpc.chain.getNonce(parcelSender)
+    });
+    const parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
+    console.log(
+        "https://saluki.codechain.io/explorer/parcel/0x" + parcelHash.value
+    );
+})().catch(console.error);
