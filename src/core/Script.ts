@@ -22,7 +22,8 @@ export class Script {
         SHA256: 0x91,
         RIPEMD160: 0x92,
         KECCAK256: 0x93,
-        BLAKE160: 0x94
+        BLAKE160: 0x94,
+        CHKTIMELOCK: 0xb0
     };
 
     /**
