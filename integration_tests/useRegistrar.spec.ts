@@ -97,8 +97,8 @@ async function mintAssetUsingMaster(
         recipient: aliceAddress
     });
 
-    const p = sdk.core.createAssetTransactionGroupParcel({
-        transactions: [mintTx]
+    const p = sdk.core.createAssetTransactionParcel({
+        transaction: mintTx
     });
     const seq = await sdk.rpc.chain.getSeq(masterAddress);
     await sdk.rpc.chain.sendSignedParcel(
@@ -146,8 +146,8 @@ async function transferAssetUsingRegular(
         );
     await sdk.key.signTransactionInput(transferTx, 0);
 
-    const p = sdk.core.createAssetTransactionGroupParcel({
-        transactions: [transferTx]
+    const p = sdk.core.createAssetTransactionParcel({
+        transaction: transferTx
     });
     const seq = await sdk.rpc.chain.getSeq(masterAddress);
     await sdk.rpc.chain.sendSignedParcel(
@@ -198,8 +198,8 @@ async function transferAssetUsingOther(
         );
     await sdk.key.signTransactionInput(transferTx, 0);
 
-    const p = sdk.core.createAssetTransactionGroupParcel({
-        transactions: [transferTx]
+    const p = sdk.core.createAssetTransactionParcel({
+        transaction: transferTx
     });
     const seq = await sdk.rpc.chain.getSeq(otherAddress);
     await sdk.rpc.chain.sendSignedParcel(

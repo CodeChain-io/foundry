@@ -2,7 +2,7 @@ import { PlatformAddress } from "codechain-primitives";
 
 import { blake256, signEcdsa } from "../utils";
 import { Action, getActionFromJSON } from "./action/Action";
-import { AssetTransactionGroup } from "./action/AssetTransactionGroup";
+import { AssetTransaction } from "./action/AssetTransaction";
 import { Payment } from "./action/Payment";
 import { H256 } from "./H256";
 import { SignedParcel } from "./SignedParcel";
@@ -13,23 +13,23 @@ import { U256 } from "./U256";
 const RLP = require("rlp");
 
 /**
- * A unit that collects transactions and requests processing to the network. A parsel signer pays for CCC processing fees.
+ * A unit that collects transaction and requests processing to the network. A parsel signer pays for CCC processing fees.
  *
  * - The fee must be at least 10. The higher the fee, the higher the priority for the parcel to be processed.
  * - It contains the network ID. This must be identical to the network ID to which the parcel is being sent to.
  * - Its seq must be identical to the seq of the account that will sign the parcel.
- * - It contains the list of transactions to process. After signing the Parcel's size must not exceed 1 MB.
+ * - It contains the transaction to process. After signing the Parcel's size must not exceed 1 MB.
  * - After signing with the sign() function, it can be sent to the network.
  */
 export class Parcel {
     /**
      * @deprecated
      */
-    public static transactions(
+    public static transaction(
         networkId: NetworkId,
-        ...transactions: Transaction[]
+        transaction: Transaction
     ): Parcel {
-        const action = new AssetTransactionGroup({ transactions });
+        const action = new AssetTransaction({ transaction });
         return new Parcel(networkId, action);
     }
 

@@ -2,6 +2,7 @@
     "extends": ["tslint:recommended", "tslint-config-prettier"],
     "rules": {
         "interface-name": false,
+        "variable-name": [true, "check-format", "allow-leading-underscore", "allow-pascal-case"],
         "no-console": false,
         "object-literal-sort-keys": false,
         "no-var-requires": false,

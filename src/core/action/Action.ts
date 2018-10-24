@@ -4,7 +4,7 @@ import { H512 } from "../H512";
 import { getTransactionFromJSON } from "../transaction/Transaction";
 import { U256 } from "../U256";
 
-import { AssetTransactionGroup } from "./AssetTransactionGroup";
+import { AssetTransaction } from "./AssetTransaction";
 import { CreateShard } from "./CreateShard";
 import { Payment } from "./Payment";
 import { SetRegularKey } from "./SetReulgarKey";
@@ -12,7 +12,7 @@ import { SetShardOwners } from "./SetShardOwners";
 import { SetShardUsers } from "./SetShardUsers";
 
 export type Action =
-    | AssetTransactionGroup
+    | AssetTransaction
     | Payment
     | SetRegularKey
     | CreateShard
@@ -22,10 +22,10 @@ export type Action =
 export function getActionFromJSON(json: any): Action {
     const { action } = json;
     switch (action) {
-        case "assetTransactionGroup":
-            const { transactions } = json;
-            return new AssetTransactionGroup({
-                transactions: transactions.map(getTransactionFromJSON)
+        case "assetTransaction":
+            const { transaction } = json;
+            return new AssetTransaction({
+                transaction: getTransactionFromJSON(transaction)
             });
         case "payment":
             const { receiver, amount } = json;

@@ -1,6 +1,6 @@
 import { AssetTransferAddress, PlatformAddress } from "codechain-primitives";
 
-import { AssetTransactionGroup } from "./action/AssetTransactionGroup";
+import { AssetTransaction } from "./action/AssetTransaction";
 import { CreateShard } from "./action/CreateShard";
 import { Payment } from "./action/Payment";
 import { SetRegularKey } from "./action/SetReulgarKey";
@@ -46,7 +46,7 @@ export class Core {
         // Action
         Payment,
         SetRegularKey,
-        AssetTransactionGroup,
+        AssetTransaction,
         CreateShard,
         SetShardOwners,
         SetShardUsers,
@@ -112,18 +112,18 @@ export class Core {
     }
 
     /**
-     * Creates AssetTransactionGroup action which can mint or transfer assets through
+     * Creates AssetTransaction action which can mint or transfer assets through
      * AssetMintTransaction or AssetTransferTransaction.
-     * @param params.transactions List of transaction
+     * @param params.transaction Transaction
      */
-    public createAssetTransactionGroupParcel(params: {
-        transactions: Transaction[];
+    public createAssetTransactionParcel(params: {
+        transaction: Transaction;
     }): Parcel {
-        const { transactions } = params;
-        checkTransactions(transactions);
+        const { transaction } = params;
+        checkTransaction(transaction);
         return new Parcel(
             this.networkId,
-            new AssetTransactionGroup({ transactions })
+            new AssetTransaction({ transaction })
         );
     }
 
@@ -593,13 +593,8 @@ function checkRegistrar(registrar: PlatformAddress | string | null) {
     }
 }
 
-function checkTransactions(transactions: Transaction[]) {
-    if (!Array.isArray(transactions)) {
-        throw Error(
-            `Expected transactions param to be an array but found ${transactions}`
-        );
-    }
-    // FIXME: check all transaction are valid
+function checkTransaction(_transaction: Transaction) {
+    // FIXME: check whether the transaction is valid
 }
 
 function checkOwners(owners: Array<PlatformAddress | string>) {

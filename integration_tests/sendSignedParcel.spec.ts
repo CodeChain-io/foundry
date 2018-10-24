@@ -24,20 +24,3 @@ test("sendSignedParcel", async () => {
         value: expect.stringMatching(/[0-9a-f]{32}/)
     });
 });
-
-test("sendSignedParcel - empty", async () => {
-    const seq = await sdk.rpc.chain.getSeq(address);
-    const p = sdk.core.createAssetTransactionGroupParcel({
-        transactions: []
-    });
-    const hash = await sdk.rpc.chain.sendSignedParcel(
-        p.sign({
-            secret,
-            seq,
-            fee: 10
-        })
-    );
-    expect(hash).toMatchObject({
-        value: expect.stringMatching(/[0-9a-f]{32}/)
-    });
-});

@@ -36,10 +36,17 @@ const ACCOUNT_PASSPHRASE = "satoshi";
         .addBurns(firstGold);
     await sdk.key.signTransactionBurn(transferTx, 0);
 
-    const parcel = sdk.core.createAssetTransactionGroupParcel({
-        transactions: [mintTx, transferTx]
+    const mintParcel = sdk.core.createAssetTransactionParcel({
+        transaction: mintTx
     });
-    await sdk.rpc.chain.sendParcel(parcel, {
+    await sdk.rpc.chain.sendParcel(mintParcel, {
+        account: ACCOUNT_ADDRESS,
+        passphrase: ACCOUNT_PASSPHRASE
+    });
+    const transferParcel = sdk.core.createAssetTransactionParcel({
+        transaction: transferTx
+    });
+    await sdk.rpc.chain.sendParcel(transferParcel, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });

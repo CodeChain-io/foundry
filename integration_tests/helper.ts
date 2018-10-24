@@ -1,4 +1,5 @@
 import { SDK } from "../";
+import { Transaction } from "../src/core/classes";
 
 export const CODECHAIN_NETWORK_ID = process.env.CODECHAIN_NETWORK_ID || "tc";
 export const SERVER_URL =
@@ -20,9 +21,13 @@ export const ACCOUNT_ADDRESS =
     sdk.core.classes.PlatformAddress.fromAccountId(ACCOUNT_ID).toString(); // "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd"
 export const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
-export const sendTransactions = async ({ transactions }: any) => {
-    const parcel = sdk.core.createAssetTransactionGroupParcel({
-        transactions
+export const sendTransaction = async ({
+    transaction
+}: {
+    transaction: Transaction;
+}) => {
+    const parcel = sdk.core.createAssetTransactionParcel({
+        transaction
     });
     const signedParcel = parcel.sign({
         secret: ACCOUNT_SECRET,
@@ -56,7 +61,7 @@ export const mintAsset = async ({
         nonce: Math.floor(Math.random() * 1000000000)
     });
     return {
-        ...(await sendTransactions({ transactions: [assetMintTransaction] })),
+        ...(await sendTransaction({ transaction: assetMintTransaction })),
         assetMintTransaction
     };
 };

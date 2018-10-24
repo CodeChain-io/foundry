@@ -170,7 +170,7 @@ export class ChainRpc {
     public async getParcelInvoice(
         parcelHash: H256 | string,
         options: { timeout?: number } = {}
-    ): Promise<Invoice[] | Invoice | null> {
+    ): Promise<Invoice | null> {
         if (!H256.check(parcelHash)) {
             throw Error(
                 `Expected the first argument of getParcelInvoice to be an H256 value but found ${parcelHash}`
@@ -204,9 +204,6 @@ export class ChainRpc {
             return null;
         }
         try {
-            if (Array.isArray(result)) {
-                return result.map((invoice: any) => Invoice.fromJSON(invoice));
-            }
             return Invoice.fromJSON(result);
         } catch (e) {
             throw Error(

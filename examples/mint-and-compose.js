@@ -42,10 +42,17 @@ const ACCOUNT_PASSPHRASE = "satoshi";
     });
     await sdk.key.signTransactionInput(composeTx, 0);
 
-    const parcel = sdk.core.createAssetTransactionGroupParcel({
-        transactions: [mintTx, composeTx]
+    const mintParcel = sdk.core.createAssetTransactionParcel({
+        transaction: mintTx
     });
-    await sdk.rpc.chain.sendParcel(parcel, {
+    await sdk.rpc.chain.sendParcel(mintParcel, {
+        account: ACCOUNT_ADDRESS,
+        passphrase: ACCOUNT_PASSPHRASE
+    });
+    const composeParcel = sdk.core.createAssetTransactionParcel({
+        transaction: composeTx
+    });
+    await sdk.rpc.chain.sendParcel(composeParcel, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });

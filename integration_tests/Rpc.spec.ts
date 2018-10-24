@@ -383,8 +383,8 @@ describe("rpc", () => {
                     .createMintTransaction({
                         recipient: await sdk.key.createAssetTransferAddress()
                     });
-                const parcel = sdk.core.createAssetTransactionGroupParcel({
-                    transactions: [mintTransaction]
+                const parcel = sdk.core.createAssetTransactionParcel({
+                    transaction: mintTransaction
                 });
                 await sdk.rpc.chain.sendSignedParcel(
                     parcel.sign({
@@ -484,13 +484,24 @@ describe("rpc", () => {
                         assetType: mintedAsset.assetType
                     });
                 await sdk.key.signTransactionInput(transferTransaction, 0);
-                const parcel = sdk.core.createAssetTransactionGroupParcel({
-                    transactions: [mintTransaction, transferTransaction]
+                const mintParcel = sdk.core.createAssetTransactionParcel({
+                    transaction: mintTransaction
+                });
+                const seq = await sdk.rpc.chain.getSeq(signerAddress);
+                await sdk.rpc.chain.sendSignedParcel(
+                    mintParcel.sign({
+                        secret: signerSecret,
+                        seq,
+                        fee: 10
+                    })
+                );
+                const transferParcel = sdk.core.createAssetTransactionParcel({
+                    transaction: transferTransaction
                 });
                 await sdk.rpc.chain.sendSignedParcel(
-                    parcel.sign({
+                    transferParcel.sign({
                         secret: signerSecret,
-                        seq: await sdk.rpc.chain.getSeq(signerAddress),
+                        seq: seq.increase(),
                         fee: 10
                     })
                 );
@@ -510,7 +521,7 @@ describe("rpc", () => {
                         mintTransaction.hash(),
                         0,
                         shardId,
-                        blockNumber - 1
+                        blockNumber - 2
                     )
                 ).toBe(null);
                 expect(
@@ -541,7 +552,7 @@ describe("rpc", () => {
                         transferTransaction.hash(),
                         0,
                         shardId,
-                        blockNumber - 1
+                        blockNumber - 2
                     )
                 ).toBe(null);
                 expect(

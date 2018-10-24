@@ -1,32 +1,30 @@
 import { PlatformAddress } from "codechain-primitives";
 
 import { H256 } from "../H256";
-import { U256 } from "../U256";
 import { Parcel } from "../Parcel";
+import { U256 } from "../U256";
 
 test("rlp", () => {
-    const t = Parcel.transactions("tc");
+    const t = Parcel.payment(
+        "tc",
+        PlatformAddress.fromAccountId(
+            "0x0000000000000000000000000000000000000000"
+        ),
+        new U256(11)
+    );
     t.setFee(0);
     t.setSeq(0);
     expect(t.rlpBytes()).toEqual(
         Buffer.from([
-            248,
-            81,
+            221,
             128,
             128,
             130,
             116,
             99,
-            248,
-            74,
-            1,
-            192,
-            248,
-            69,
-            248,
-            67,
-            128,
-            160,
+            215,
+            2,
+            148,
             0,
             0,
             0,
@@ -47,69 +45,36 @@ test("rlp", () => {
             0,
             0,
             0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            160,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            192
+            11
         ])
     );
 });
 
 test("hash", () => {
-    const t = Parcel.transactions("tc");
+    const t = Parcel.payment(
+        "tc",
+        PlatformAddress.fromAccountId(
+            "0x0000000000000000000000000000000000000000"
+        ),
+        new U256(11)
+    );
     t.setFee(0);
     t.setSeq(0);
     expect(t.hash()).toEqual(
         new H256(
-            "cc946ae0cc8226c5a8db992d840c5f6bcb22dd2ea91dea994a334b67b325b1a0"
+            "3b578bebb32cae770ab1094d572a4721b624fc101bb88fbc580eeb2931f65665"
         )
     );
 });
 
 test("sign", () => {
-    const t = Parcel.transactions("tc");
+    const t = Parcel.payment(
+        "tc",
+        PlatformAddress.fromAccountId(
+            "0x0000000000000000000000000000000000000000"
+        ),
+        new U256(11)
+    );
     const signed = t.sign({
         secret:
             "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd",
@@ -120,18 +85,24 @@ test("sign", () => {
     expect(v).toBe(1);
     expect(r.toEncodeObject()).toEqual(
         new U256(
-            "0x8e1718666082bad693c4a899da5aa09e074f9af76f6ebfe56603c4162cb54cda"
+            "0x3f9bcff484bd5f1d5549f912f9eeaf8c2fe349b257bde2b61fb1036013d4e44c"
         ).toEncodeObject()
     );
     expect(s.toEncodeObject()).toEqual(
         new U256(
-            "0x5ff543d92956ee5a45b9bbb28a22fd291792258691290be26c4d08ece010c6e6"
+            "0x204a4215d26cb879eaad2028fe1a7898e4cf9a5d979eb383e0a384140d6e04c1"
         ).toEncodeObject()
     );
 });
 
 test("signed hash", () => {
-    const t = Parcel.transactions("tc");
+    const t = Parcel.payment(
+        "tc",
+        PlatformAddress.fromAccountId(
+            "0x0000000000000000000000000000000000000000"
+        ),
+        new U256(11)
+    );
     const signed = t.sign({
         secret:
             "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd",
@@ -140,7 +111,7 @@ test("signed hash", () => {
     });
     expect(signed.hash()).toEqual(
         new H256(
-            "fb9410043ceefdef45f346e035fbd037b919c46dc678511b997011176e4accbb"
+            "6547527d42f407352b8d23470322e09261d6dee6fda43c10aa2f59aafa70ba4b"
         )
     );
 });

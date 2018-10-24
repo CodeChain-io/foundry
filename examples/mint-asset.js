@@ -29,8 +29,8 @@ const assetMintTransaction = sdk.core.createAssetMintTransaction({
 });
 
 // Send an asset-transaction-group parcel to process the transaction.
-const parcel = sdk.core.createAssetTransactionGroupParcel({
-    transactions: [assetMintTransaction]
+const parcel = sdk.core.createAssetTransactionParcel({
+    transaction: assetMintTransaction
 });
 (async () => {
     const parcelHash = await sdk.rpc.chain.sendParcel(parcel, {

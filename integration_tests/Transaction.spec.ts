@@ -3,7 +3,7 @@ import { SDK } from "..";
 import {
     CODECHAIN_NETWORK_ID,
     mintAsset,
-    sendTransactions,
+    sendTransaction,
     SERVER_URL
 } from "./helper";
 
@@ -12,7 +12,7 @@ const sdk = new SDK({
     keyStoreType: "memory",
     networkId: CODECHAIN_NETWORK_ID
 });
-const { H160, H256, AssetTransactionGroup } = SDK.Core.classes;
+const { H160, H256, AssetTransaction } = SDK.Core.classes;
 
 test("AssetMintTransaction fromJSON", async () => {
     const metadata = "";
@@ -30,11 +30,11 @@ test("AssetMintTransaction fromJSON", async () => {
         throw Error("Cannot get the parcel");
     }
 
-    if (!(parcel.unsigned.action instanceof AssetTransactionGroup)) {
+    if (!(parcel.unsigned.action instanceof AssetTransaction)) {
         throw Error("Invalid action");
     }
 
-    expect(parcel.unsigned.action.transactions[0]).toMatchObject({
+    expect(parcel.unsigned.action.transaction).toMatchObject({
         type: expect.stringMatching("assetMint"),
         metadata: expect.anything(),
         output: {
@@ -61,7 +61,7 @@ test("AssetTransferTransaction fromJSON", async () => {
             registrar: undefined
         })
         .createMintTransaction({ recipient: addressA });
-    await sendTransactions({ transactions: [mintTx] });
+    await sendTransaction({ transaction: mintTx });
     const firstAsset = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
     if (firstAsset == null) {
         throw Error("Cannot get the first asset");
@@ -74,8 +74,8 @@ test("AssetTransferTransaction fromJSON", async () => {
         amount: 100
     });
     await sdk.key.signTransactionInput(transferTx, 0);
-    const { parcelHash } = await sendTransactions({
-        transactions: [transferTx]
+    const { parcelHash } = await sendTransaction({
+        transaction: transferTx
     });
     const parcel = await sdk.rpc.chain.getParcel(parcelHash);
     if (parcel == null) {
@@ -93,11 +93,11 @@ test("AssetTransferTransaction fromJSON", async () => {
         unlockScript: expect.anything()
     });
 
-    if (!(parcel.unsigned.action instanceof AssetTransactionGroup)) {
+    if (!(parcel.unsigned.action instanceof AssetTransaction)) {
         throw Error("Invalid action");
     }
 
-    expect(parcel.unsigned.action.transactions[0]).toMatchObject({
+    expect(parcel.unsigned.action.transaction).toMatchObject({
         type: expect.stringMatching("assetTransfer"),
         burns: [],
         inputs: expect.arrayContaining([expectedInput]),
