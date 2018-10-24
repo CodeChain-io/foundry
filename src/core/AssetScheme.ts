@@ -28,7 +28,6 @@ export class AssetScheme {
 
     public readonly networkId?: NetworkId;
     public readonly shardId?: number;
-    public readonly worldId?: number;
     public readonly metadata: string;
     public readonly amount: number;
     public readonly registrar: PlatformAddress | null;
@@ -37,7 +36,6 @@ export class AssetScheme {
     constructor(data: {
         networkId?: NetworkId;
         shardId?: number;
-        worldId?: number;
         metadata: string;
         amount: number;
         registrar: PlatformAddress | null;
@@ -45,7 +43,6 @@ export class AssetScheme {
     }) {
         this.networkId = data.networkId;
         this.shardId = data.shardId;
-        this.worldId = data.worldId;
         this.metadata = data.metadata;
         this.registrar = data.registrar;
         this.amount = data.amount;
@@ -70,27 +67,16 @@ export class AssetScheme {
         nonce?: number;
     }): AssetMintTransaction {
         const { recipient, nonce = 0 } = params;
-        const {
-            networkId,
-            shardId,
-            worldId,
-            metadata,
-            amount,
-            registrar
-        } = this;
+        const { networkId, shardId, metadata, amount, registrar } = this;
         if (networkId === undefined) {
             throw Error(`networkId is undefined`);
         }
         if (shardId === undefined) {
             throw Error(`shardId is undefined`);
         }
-        if (worldId === undefined) {
-            throw Error(`worldId is undefined`);
-        }
         return new AssetMintTransaction({
             networkId,
             shardId,
-            worldId,
             metadata,
             output: new AssetMintOutput({
                 amount,

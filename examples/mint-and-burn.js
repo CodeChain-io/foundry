@@ -18,7 +18,6 @@ const ACCOUNT_PASSPHRASE = "satoshi";
     // Create an asset.
     const assetScheme = sdk.core.createAssetScheme({
         shardId: 0,
-        worldId: 0,
         metadata: JSON.stringify({
             name: "ExampleAsset",
             description: "This asset will be burnt shortly"

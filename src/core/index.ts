@@ -25,9 +25,6 @@ import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetTransferInput } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
-import { CreateWorldTransaction } from "./transaction/CreateWorldTransaction";
-import { SetWorldOwnersTransaction } from "./transaction/SetWorldOwnersTransaction";
-import { SetWorldUsersTransaction } from "./transaction/SetWorldUsersTransaction";
 import { getTransactionFromJSON, Transaction } from "./transaction/Transaction";
 import { NetworkId } from "./types";
 import { U256 } from "./U256";
@@ -61,9 +58,6 @@ export class Core {
         AssetTransferInput,
         AssetTransferOutput,
         AssetOutPoint,
-        CreateWorldTransaction,
-        SetWorldOwnersTransaction,
-        SetWorldUsersTransaction,
         // Asset and AssetScheme
         Asset,
         AssetScheme,
@@ -189,7 +183,6 @@ export class Core {
      */
     public createAssetScheme(params: {
         shardId: number;
-        worldId: number;
         metadata: string;
         amount: number;
         registrar?: PlatformAddress | string;
@@ -197,21 +190,18 @@ export class Core {
     }): AssetScheme {
         const {
             shardId,
-            worldId,
             metadata,
             amount,
             registrar = null,
             pool = []
         } = params;
         checkShardId(shardId);
-        checkWorldId(worldId);
         checkMetadata(metadata);
         checkAmountU64(amount);
         checkRegistrar(registrar);
         return new AssetScheme({
             networkId: this.networkId,
             shardId,
-            worldId,
             metadata,
             amount,
             registrar:
@@ -223,93 +213,12 @@ export class Core {
         });
     }
 
-    public createCreateWorldTransaction(params: {
-        networkId?: NetworkId;
-        shardId: number;
-        owners: Array<PlatformAddress | string>;
-        nonce?: number;
-    }): CreateWorldTransaction {
-        const {
-            networkId = this.networkId,
-            shardId,
-            owners,
-            nonce = 0
-        } = params;
-        checkNetworkId(networkId);
-        checkShardId(shardId);
-        checkOwners(owners);
-        checkNonce(nonce);
-        return new CreateWorldTransaction({
-            networkId,
-            shardId,
-            owners: owners.map(PlatformAddress.ensure),
-            nonce
-        });
-    }
-
-    public createSetWorldOwnersTransaction(params: {
-        networkId?: NetworkId;
-        shardId: number;
-        worldId: number;
-        owners: Array<PlatformAddress | string>;
-        nonce: number;
-    }): SetWorldOwnersTransaction {
-        const {
-            networkId = this.networkId,
-            shardId,
-            worldId,
-            owners,
-            nonce
-        } = params;
-        checkNetworkId(networkId);
-        checkShardId(shardId);
-        checkWorldId(worldId);
-        checkOwners(owners);
-        checkNonce(nonce);
-        return new SetWorldOwnersTransaction({
-            networkId,
-            shardId,
-            worldId,
-            owners: owners.map(PlatformAddress.ensure),
-            nonce
-        });
-    }
-
-    public createSetWorldUsersTransaction(params: {
-        networkId?: NetworkId;
-        shardId: number;
-        worldId: number;
-        users: Array<PlatformAddress | string>;
-        nonce: number;
-    }): SetWorldUsersTransaction {
-        const {
-            networkId = this.networkId,
-            shardId,
-            worldId,
-            users,
-            nonce
-        } = params;
-        checkNetworkId(networkId);
-        checkShardId(shardId);
-        checkWorldId(worldId);
-        checkUsers(users);
-        checkNonce(nonce);
-        return new SetWorldUsersTransaction({
-            networkId,
-            shardId,
-            worldId,
-            users: users.map(PlatformAddress.ensure),
-            nonce
-        });
-    }
-
     public createAssetMintTransaction(params: {
         scheme:
             | AssetScheme
             | {
                   networkId?: NetworkId;
                   shardId: number;
-                  worldId: number;
                   metadata: string;
                   registrar?: PlatformAddress | string;
                   amount: number | null;
@@ -326,7 +235,6 @@ export class Core {
         const {
             networkId = this.networkId,
             shardId,
-            worldId,
             metadata,
             registrar = null,
             amount
@@ -337,11 +245,7 @@ export class Core {
         if (shardId === undefined) {
             throw Error(`shardId is undefined`);
         }
-        if (worldId === undefined) {
-            throw Error(`worldId is undefined`);
-        }
         checkShardId(shardId);
-        checkWorldId(worldId);
         checkMetadata(metadata);
         checkRegistrar(registrar);
         if (amount !== null) {
@@ -350,7 +254,6 @@ export class Core {
         return new AssetMintTransaction({
             networkId,
             shardId,
-            worldId,
             nonce,
             registrar:
                 registrar == null ? null : PlatformAddress.ensure(registrar),
@@ -395,7 +298,6 @@ export class Core {
             | AssetScheme
             | {
                   shardId: number;
-                  worldId: number;
                   metadata: string;
                   amount: number | null;
                   registrar?: PlatformAddress | string;
@@ -409,7 +311,6 @@ export class Core {
         const {
             networkId = this.networkId,
             shardId,
-            worldId,
             metadata,
             registrar = null,
             amount
@@ -422,10 +323,6 @@ export class Core {
             throw Error(`shardId is undefined`);
         }
         checkShardId(shardId);
-        if (worldId === undefined) {
-            throw Error(`worldId is undefined`);
-        }
-        checkWorldId(worldId);
         checkMetadata(metadata);
         checkRegistrar(registrar);
         if (amount !== null) {
@@ -434,7 +331,6 @@ export class Core {
         return new AssetComposeTransaction({
             networkId,
             shardId,
-            worldId,
             nonce,
             registrar:
                 registrar === null ? null : PlatformAddress.ensure(registrar),
@@ -669,19 +565,6 @@ function checkShardId(shardId: number) {
     ) {
         throw Error(
             `Expected shardId param to be a number but found ${shardId}`
-        );
-    }
-}
-
-function checkWorldId(worldId: number) {
-    if (
-        typeof worldId !== "number" ||
-        !Number.isInteger(worldId) ||
-        worldId < 0 ||
-        worldId > 0xffff
-    ) {
-        throw Error(
-            `Expected worldId param to be a number but found ${worldId}`
         );
     }
 }

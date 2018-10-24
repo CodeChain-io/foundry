@@ -2,14 +2,8 @@ import { AssetComposeTransaction } from "./AssetComposeTransaction";
 import { AssetDecomposeTransaction } from "./AssetDecomposeTransaction";
 import { AssetMintTransaction } from "./AssetMintTransaction";
 import { AssetTransferTransaction } from "./AssetTransferTransaction";
-import { CreateWorldTransaction } from "./CreateWorldTransaction";
-import { SetWorldOwnersTransaction } from "./SetWorldOwnersTransaction";
-import { SetWorldUsersTransaction } from "./SetWorldUsersTransaction";
 
 export type Transaction =
-    | CreateWorldTransaction
-    | SetWorldOwnersTransaction
-    | SetWorldUsersTransaction
     | AssetMintTransaction
     | AssetTransferTransaction
     | AssetComposeTransaction
@@ -27,12 +21,6 @@ export const getTransactionFromJSON = (params: {
 }) => {
     const { type } = params;
     switch (type) {
-        case "createWorld":
-            return CreateWorldTransaction.fromJSON(params);
-        case "setWorldOwners":
-            return SetWorldOwnersTransaction.fromJSON(params);
-        case "setWorldUsers":
-            return SetWorldUsersTransaction.fromJSON(params);
         case "assetMint":
             return AssetMintTransaction.fromJSON(params);
         case "assetTransfer":

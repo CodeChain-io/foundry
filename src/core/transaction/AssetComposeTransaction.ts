@@ -35,7 +35,6 @@ export class AssetComposeTransaction {
             data: {
                 networkId,
                 shardId,
-                worldId,
                 metadata,
                 inputs,
                 output,
@@ -46,7 +45,6 @@ export class AssetComposeTransaction {
         return new this({
             networkId,
             shardId,
-            worldId,
             metadata,
             registrar:
                 registrar === null ? null : PlatformAddress.ensure(registrar),
@@ -60,7 +58,6 @@ export class AssetComposeTransaction {
 
     public readonly networkId: NetworkId;
     public readonly shardId: number;
-    public readonly worldId: number;
     public readonly metadata: string;
     public readonly registrar: PlatformAddress | null;
     public readonly inputs: AssetTransferInput[];
@@ -71,7 +68,6 @@ export class AssetComposeTransaction {
     /**
      * @param params.networkId A network ID of the transaction.
      * @param params.shardId A shard ID of the transaction.
-     * @param params.worldId A world ID of the transaction.
      * @param params.metadata A metadata of the asset.
      * @param params.registrar A registrar of the asset.
      * @param params.inputs A list of inputs of the transaction.
@@ -81,7 +77,6 @@ export class AssetComposeTransaction {
     constructor(params: {
         networkId: NetworkId;
         shardId: number;
-        worldId: number;
         metadata: string;
         registrar: PlatformAddress | null;
         inputs: AssetTransferInput[];
@@ -91,7 +86,6 @@ export class AssetComposeTransaction {
         const {
             networkId,
             shardId,
-            worldId,
             metadata,
             registrar,
             inputs,
@@ -100,7 +94,6 @@ export class AssetComposeTransaction {
         } = params;
         this.networkId = networkId;
         this.shardId = shardId;
-        this.worldId = worldId;
         this.metadata = metadata;
         this.registrar =
             registrar === null ? null : PlatformAddress.ensure(registrar);
@@ -119,7 +112,6 @@ export class AssetComposeTransaction {
             data: {
                 networkId: this.networkId,
                 shardId: this.shardId,
-                worldId: this.worldId,
                 metadata: this.metadata,
                 registrar: this.registrar,
                 output: this.output.toJSON(),
@@ -137,7 +129,6 @@ export class AssetComposeTransaction {
             6,
             this.networkId,
             this.shardId,
-            this.worldId,
             this.metadata,
             this.registrar ? [this.registrar.toString()] : [],
             this.inputs.map(input => input.toEncodeObject()),
@@ -203,20 +194,12 @@ export class AssetComposeTransaction {
         } else {
             throw Error(`Unexpected value of the tag output: ${tag.output}`);
         }
-        const {
-            networkId,
-            shardId,
-            worldId,
-            metadata,
-            registrar,
-            nonce
-        } = this;
+        const { networkId, shardId, metadata, registrar, nonce } = this;
         return new H256(
             blake256WithKey(
                 new AssetComposeTransaction({
                     networkId,
                     shardId,
-                    worldId,
                     metadata,
                     registrar,
                     inputs,
@@ -281,7 +264,6 @@ export class AssetComposeTransaction {
         const {
             networkId,
             shardId,
-            worldId,
             metadata,
             inputs,
             output: { amount },
@@ -294,7 +276,6 @@ export class AssetComposeTransaction {
         return new AssetScheme({
             networkId,
             shardId,
-            worldId,
             metadata,
             amount,
             registrar,
@@ -319,7 +300,7 @@ export class AssetComposeTransaction {
      * @returns An asset scheme address which is H256.
      */
     public getAssetSchemeAddress(): H256 {
-        const { shardId, worldId } = this;
+        const { shardId } = this;
         const blake = blake256WithKey(
             this.hash().value,
             new Uint8Array([
@@ -342,8 +323,7 @@ export class AssetComposeTransaction {
             ])
         );
         const shardPrefix = convertU16toHex(shardId);
-        const worldPrefix = convertU16toHex(worldId);
-        const prefix = `5300${shardPrefix}${worldPrefix}`;
+        const prefix = `5300${shardPrefix}`;
         return new H256(
             blake.replace(new RegExp(`^.{${prefix.length}}`), prefix)
         );
@@ -354,7 +334,7 @@ export class AssetComposeTransaction {
      * @returns An asset address which is H256.
      */
     public getAssetAddress(): H256 {
-        const { shardId, worldId } = this;
+        const { shardId } = this;
         const blake = blake256WithKey(
             this.hash().value,
             new Uint8Array([
@@ -377,8 +357,7 @@ export class AssetComposeTransaction {
             ])
         );
         const shardPrefix = convertU16toHex(shardId);
-        const worldPrefix = convertU16toHex(worldId);
-        const prefix = `4100${shardPrefix}${worldPrefix}`;
+        const prefix = `4100${shardPrefix}`;
         return new H256(
             blake.replace(new RegExp(`^.{${prefix.length}}`), prefix)
         );

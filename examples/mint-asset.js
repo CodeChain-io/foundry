@@ -17,7 +17,6 @@ const address = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
 const assetMintTransaction = sdk.core.createAssetMintTransaction({
     scheme: {
         shardId: 0,
-        worldId: 0,
         metadata: JSON.stringify({
             name: "Silver Coin",
             description: "...",

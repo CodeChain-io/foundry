@@ -563,13 +563,11 @@ export class ChainRpc {
      * Gets asset scheme of given hash of AssetMintTransaction.
      * @param txhash The tx hash of AssetMintTransaction.
      * @param shardId The shard id of Asset Scheme.
-     * @param worldId The world id of Asset Scheme.
      * @returns AssetScheme, if asset scheme exists. Else, returns null.
      */
     public getAssetSchemeByHash(
         txhash: H256 | string,
-        shardId: number,
-        worldId: number
+        shardId: number
     ): Promise<AssetScheme | null> {
         if (!H256.check(txhash)) {
             throw Error(
@@ -581,17 +579,11 @@ export class ChainRpc {
                 `Expected the second argument of getAssetSchemeByHash to be a shard ID value but found ${shardId}`
             );
         }
-        if (!isWorldIdValue(worldId)) {
-            throw Error(
-                `Expected the third argument of getAssetSchemeByHash to be a world ID value but found ${shardId}`
-            );
-        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getAssetSchemeByHash", [
                     `0x${H256.ensure(txhash).value}`,
-                    shardId,
-                    worldId
+                    shardId
                 ])
                 .then(result => {
                     try {
@@ -825,8 +817,4 @@ function isShardIdValue(value: any): boolean {
         value >= 0 &&
         value <= 0xffff
     );
-}
-
-function isWorldIdValue(value: any): boolean {
-    return isShardIdValue(value);
 }

@@ -5,7 +5,6 @@ test("AssetMintTransaction toJSON", () => {
     const t = new AssetMintTransaction({
         networkId: "cc",
         shardId: 0,
-        worldId: 0,
         metadata: "",
         output: {
             lockScriptHash: new H160(

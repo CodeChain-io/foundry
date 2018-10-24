@@ -83,7 +83,6 @@ async function mintAssetUsingMaster(
 ): Promise<AssetMintTransaction> {
     const assetScheme = sdk.core.createAssetScheme({
         shardId: 0,
-        worldId: 0,
         metadata: JSON.stringify({
             name: "Gold",
             description: "An asset example",

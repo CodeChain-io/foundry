@@ -18,7 +18,6 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     // to null, which means this type of asset can be transferred freely.
     const goldAssetScheme = sdk.core.createAssetScheme({
         shardId: 0,
-        worldId: 0,
         metadata: JSON.stringify({
             name: "Gold",
             description: "An asset example",

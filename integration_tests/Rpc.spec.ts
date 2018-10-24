@@ -371,13 +371,11 @@ describe("rpc", () => {
         describe("with asset mint transaction", () => {
             let mintTransaction: AssetMintTransaction;
             const shardId = 0;
-            const worldId = 0;
 
             beforeAll(async () => {
                 mintTransaction = sdk.core
                     .createAssetScheme({
                         shardId,
-                        worldId,
                         metadata: "metadata",
                         amount: 10,
                         registrar: undefined
@@ -413,19 +411,16 @@ describe("rpc", () => {
 
             test("getAssetScheme", async () => {
                 const shardId = 0;
-                const worldId = 0;
                 expect(
                     await sdk.rpc.chain.getAssetSchemeByHash(
                         mintTransaction.hash(),
-                        shardId,
-                        worldId
+                        shardId
                     )
                 ).toEqual(expect.any(AssetScheme));
                 expect(
                     await sdk.rpc.chain.getAssetSchemeByHash(
                         invalidHash,
-                        shardId,
-                        worldId
+                        shardId
                     )
                 ).toBe(null);
             });
@@ -466,14 +461,12 @@ describe("rpc", () => {
             let transferTransaction: AssetTransferTransaction;
             let blockNumber: number;
             const shardId = 0;
-            const worldId = 0;
             const wrongShardId = 1;
 
             beforeAll(async () => {
                 mintTransaction = sdk.core
                     .createAssetScheme({
                         shardId,
-                        worldId,
                         metadata: "metadata",
                         amount: 10,
                         registrar: undefined

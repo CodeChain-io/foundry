@@ -32,20 +32,11 @@ export class AssetMintTransaction {
      */
     public static fromJSON(data: any) {
         const {
-            data: {
-                networkId,
-                shardId,
-                worldId,
-                metadata,
-                output,
-                registrar,
-                nonce
-            }
+            data: { networkId, shardId, metadata, output, registrar, nonce }
         } = data;
         return new this({
             networkId,
             shardId,
-            worldId,
             metadata,
             output: AssetMintOutput.fromJSON(output),
             registrar:
@@ -57,7 +48,6 @@ export class AssetMintTransaction {
     }
     public readonly networkId: NetworkId;
     public readonly shardId: number;
-    public readonly worldId: number;
     public readonly metadata: string;
     public readonly output: AssetMintOutput;
     public readonly registrar: PlatformAddress | null;
@@ -77,24 +67,14 @@ export class AssetMintTransaction {
     constructor(data: {
         networkId: NetworkId;
         shardId: number;
-        worldId: number;
         metadata: string;
         output: AssetMintOutput;
         registrar: PlatformAddress | null;
         nonce: number;
     }) {
-        const {
-            networkId,
-            shardId,
-            worldId,
-            metadata,
-            output,
-            registrar,
-            nonce
-        } = data;
+        const { networkId, shardId, metadata, output, registrar, nonce } = data;
         this.networkId = networkId;
         this.shardId = shardId;
-        this.worldId = worldId;
         this.metadata = metadata;
         this.output = new AssetMintOutput(output);
         this.registrar = registrar;
@@ -106,21 +86,12 @@ export class AssetMintTransaction {
      * @returns An AssetMintTransaction JSON object.
      */
     public toJSON() {
-        const {
-            networkId,
-            shardId,
-            worldId,
-            metadata,
-            output,
-            registrar,
-            nonce
-        } = this;
+        const { networkId, shardId, metadata, output, registrar, nonce } = this;
         return {
             type: this.type,
             data: {
                 networkId,
                 shardId,
-                worldId,
                 metadata,
                 output: output.toJSON(),
                 registrar: registrar === null ? null : registrar.toString(),
@@ -136,7 +107,6 @@ export class AssetMintTransaction {
         const {
             networkId,
             shardId,
-            worldId,
             metadata,
             output: { lockScriptHash, parameters, amount },
             registrar,
@@ -146,7 +116,6 @@ export class AssetMintTransaction {
             3,
             networkId,
             shardId,
-            worldId,
             metadata,
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
@@ -199,7 +168,6 @@ export class AssetMintTransaction {
         const {
             networkId,
             shardId,
-            worldId,
             metadata,
             output: { amount },
             registrar
@@ -211,7 +179,6 @@ export class AssetMintTransaction {
         return new AssetScheme({
             networkId,
             shardId,
-            worldId,
             metadata,
             amount,
             registrar,
@@ -225,7 +192,7 @@ export class AssetMintTransaction {
      * @returns An asset scheme address which is H256.
      */
     public getAssetSchemeAddress(): H256 {
-        const { shardId, worldId } = this;
+        const { shardId } = this;
         const blake = blake256WithKey(
             this.hash().value,
             new Uint8Array([
@@ -248,8 +215,7 @@ export class AssetMintTransaction {
             ])
         );
         const shardPrefix = convertU16toHex(shardId);
-        const worldPrefix = convertU16toHex(worldId);
-        const prefix = `5300${shardPrefix}${worldPrefix}`;
+        const prefix = `5300${shardPrefix}`;
         return new H256(
             blake.replace(new RegExp(`^.{${prefix.length}}`), prefix)
         );
@@ -283,8 +249,7 @@ export class AssetMintTransaction {
             ])
         );
         const shardPrefix = convertU16toHex(shardId);
-        const worldPrefix = "0000";
-        const prefix = `4100${shardPrefix}${worldPrefix}`;
+        const prefix = `4100${shardPrefix}`;
         return new H256(
             blake.replace(new RegExp(`^.{${prefix.length}}`), prefix)
         );

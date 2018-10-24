@@ -43,7 +43,6 @@ export const mintAsset = async ({
 }: any) => {
     const assetScheme = sdk.core.createAssetScheme({
         shardId: 0,
-        worldId: 0,
         metadata,
         amount,
         registrar

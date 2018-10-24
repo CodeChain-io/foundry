@@ -319,8 +319,7 @@ export class AssetTransferTransaction {
 
         const blake = blake256WithKey(this.hash().value, iv);
         const shardPrefix = convertU16toHex(shardId);
-        const worldPrefix = "0000";
-        const prefix = `4100${shardPrefix}${worldPrefix}`;
+        const prefix = `4100${shardPrefix}`;
         return new H256(
             blake.replace(new RegExp(`^.{${prefix.length}}`), prefix)
         );

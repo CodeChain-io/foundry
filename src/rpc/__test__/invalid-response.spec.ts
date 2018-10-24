@@ -187,11 +187,6 @@ describe("Invalid response", () => {
 
             test.skip("Invalid type", done => done.fail("not implemented"));
             describe("Invalid data", () => {
-                test.skip("CreateWorld", done => done.fail("not implemented"));
-                test.skip("SetWorldOwner", done =>
-                    done.fail("not implemented"));
-                test.skip("SetWorldUsers", done =>
-                    done.fail("not implemented"));
                 test.skip("AssetMint", done => done.fail("not implemented"));
                 test.skip("AssetTransfer", done =>
                     done.fail("not implemented"));

@@ -28,14 +28,6 @@ export { AssetComposeTransaction } from "./transaction/AssetComposeTransaction";
 export {
     AssetDecomposeTransaction
 } from "./transaction/AssetDecomposeTransaction";
-export { CreateWorldTransaction } from "./transaction/CreateWorldTransaction";
-export {
-    SetWorldOwnersTransaction
-} from "./transaction/SetWorldOwnersTransaction";
-export {
-    SetWorldUsersTransaction
-} from "./transaction/SetWorldUsersTransaction";
-
 export { Asset } from "./Asset";
 export { AssetScheme } from "./AssetScheme";
 
