@@ -1,5 +1,4 @@
 import { U256 } from "../U256";
-const RLP = require("rlp");
 
 test("rlpBytes", () => {
     expect(new U256(0).rlpBytes()).toEqual(Buffer.from([0x80]));
