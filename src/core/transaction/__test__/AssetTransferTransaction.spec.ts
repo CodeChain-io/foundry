@@ -43,6 +43,7 @@ test("AssetTransferInput toJSON", () => {
     });
     const input = new AssetTransferInput({
         prevOut: outPoint,
+        timelock: null,
         lockScript: Buffer.from([0x01, 0x02]),
         unlockScript: Buffer.from([0x03])
     });
