@@ -109,17 +109,14 @@ async function mintAssetUsingMaster(
         })
     );
 
-    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(
+    const mintTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
         mintTx.hash(),
         {
             timeout: 5 * 60 * 1000
         }
     );
-    if (mintTxInvoice == null) {
-        throw Error("Cannot get the transaction invoice");
-    }
-
-    expect(mintTxInvoice.success).toBe(true);
+    expect(mintTxInvoices.length).toBe(1);
+    expect(mintTxInvoices[0].success).toBe(true);
     return mintTx;
 }
 
@@ -158,16 +155,14 @@ async function transferAssetUsingRegular(
         })
     );
 
-    const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(
+    const transferTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
         transferTx.hash(),
         {
             timeout: 5 * 60 * 1000
         }
     );
-    if (transferTxInvoice == null) {
-        throw Error("Cannot get the transfer invoice");
-    }
-    expect(transferTxInvoice.success).toBe(true);
+    expect(transferTxInvoices.length).toBe(2);
+    expect(transferTxInvoices[1].success).toBe(true);
 }
 async function transferAssetUsingOther(
     mintTx: AssetMintTransaction,
@@ -180,8 +175,7 @@ async function transferAssetUsingOther(
         .createAssetTransferTransaction({
             burns: [],
             inputs: [],
-            outputs: [],
-            nonce: 1 // use nonce here because "transferAssetUsingRegular" will send the same transaction
+            outputs: []
         })
         .addInputs(asset)
         .addOutputs(
@@ -210,14 +204,12 @@ async function transferAssetUsingOther(
         })
     );
 
-    const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(
+    const transferTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
         transferTx.hash(),
         {
             timeout: 5 * 60 * 1000
         }
     );
-    if (transferTxInvoice == null) {
-        throw Error("Cannot get the transaction invoice");
-    }
-    expect(transferTxInvoice.success).toBe(false);
+    expect(transferTxInvoices.length).toBe(1);
+    expect(transferTxInvoices[0].success).toBe(false);
 }

@@ -339,17 +339,17 @@ export class ChainRpc {
      * @param options.timeout Indicating milliseconds to wait the transaction to be confirmed.
      * @returns Invoice, or null when transaction of given hash not exists.
      */
-    public async getTransactionInvoice(
+    public async getTransactionInvoices(
         txhash: H256 | string,
         options: { timeout?: number } = {}
-    ): Promise<Invoice | null> {
+    ): Promise<Invoice[]> {
         if (!H256.check(txhash)) {
             throw Error(
                 `Expected the first argument of getTransactionInvoice to be an H256 value but found ${txhash}`
             );
         }
         const attemptToGet = async () => {
-            return this.rpc.sendRpcRequest("chain_getTransactionInvoice", [
+            return this.rpc.sendRpcRequest("chain_getTransactionInvoices", [
                 `0x${H256.ensure(txhash).value}`
             ]);
         };
@@ -372,14 +372,16 @@ export class ChainRpc {
             await new Promise(resolve => setTimeout(resolve, 1000));
             result = await attemptToGet();
         }
-        if (result === null) {
-            return null;
+        if (result == null) {
+            return [];
         }
         try {
-            return Invoice.fromJSON(result);
+            return result.map(Invoice.fromJSON);
         } catch (e) {
             throw Error(
-                `Expected chain_getTransactionInvoice to return either null or JSON of Invoice, but an error occurred: ${e.toString()}`
+                `Expected chain_getTransactionInvoices to return JSON of Invoice[], but an error occurred: ${e.toString()}. received: ${JSON.stringify(
+                    result
+                )}`
             );
         }
     }

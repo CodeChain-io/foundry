@@ -401,12 +401,16 @@ describe("rpc", () => {
                 ).toEqual(mintTransaction);
             });
 
-            test("getTransactionInvoice", async () => {
+            test("getTransactionInvoices", async () => {
                 expect(
-                    await sdk.rpc.chain.getTransactionInvoice(
+                    await sdk.rpc.chain.getTransactionInvoices(
                         mintTransaction.hash()
                     )
-                ).toEqual(expect.any(Invoice));
+                ).toEqual(
+                    expect.arrayContaining([
+                        Invoice.fromJSON({ success: true })
+                    ])
+                );
             });
 
             test("getAssetScheme", async () => {

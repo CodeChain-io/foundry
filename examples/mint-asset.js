@@ -24,8 +24,7 @@ const assetMintTransaction = sdk.core.createAssetMintTransaction({
         }),
         amount: 100000000
     },
-    recipient: address,
-    nonce: Math.floor(Math.random() * 1000000000)
+    recipient: address
 });
 
 // Send an asset-transaction-group parcel to process the transaction.

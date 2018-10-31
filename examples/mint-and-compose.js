@@ -57,22 +57,22 @@ const ACCOUNT_PASSPHRASE = "satoshi";
         passphrase: ACCOUNT_PASSPHRASE
     });
 
-    const mintTxInvoice = await sdk.rpc.chain.getTransactionInvoice(
+    const mintTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
         mintTx.hash(),
         {
             timeout: 300 * 1000
         }
     );
-    if (mintTxInvoice.success === false) {
+    if (!mintTxInvoices[0].success) {
         throw Error("AssetMintTransaction failed");
     }
-    const transferTxInvoice = await sdk.rpc.chain.getTransactionInvoice(
+    const transferTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
         composeTx.hash(),
         {
             timeout: 300 * 1000
         }
     );
-    if (transferTxInvoice.success === false) {
+    if (!transferTxInvoices[0].success) {
         throw Error("AssetComposeTransaction failed");
     }
 })().catch(err => {

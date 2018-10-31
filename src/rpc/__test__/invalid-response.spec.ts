@@ -193,12 +193,15 @@ describe("Invalid response", () => {
             });
         });
 
-        describe("getTransactionInvoice", () => {
+        describe("getTransactionInvoices", () => {
             test("undefined", done => {
-                rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
+                rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce([]);
                 chainRpc
-                    .getTransactionInvoice(hash)
-                    .then(() => done.fail())
+                    .getTransactionInvoices(hash)
+                    .then(invoices => {
+                        expect(invoices).toEqual([]);
+                        done();
+                    })
                     .catch(e => {
                         expect(e.toString()).toContain(
                             "chain_getTransactionInvoice"

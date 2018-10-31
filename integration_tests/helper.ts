@@ -57,8 +57,7 @@ export const mintAsset = async ({
         lockScriptHash
     );
     const assetMintTransaction = assetScheme.createMintTransaction({
-        recipient: assetAddress,
-        nonce: Math.floor(Math.random() * 1000000000)
+        recipient: assetAddress
     });
     return {
         ...(await sendTransaction({ transaction: assetMintTransaction })),

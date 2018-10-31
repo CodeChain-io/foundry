@@ -13,7 +13,7 @@ export class Invoice {
         error?: { type: string; content?: any };
     }) {
         const { success, error } = data;
-        return new this(success, error);
+        return new Invoice(success, error);
     }
     public readonly success: boolean;
     public readonly error?: { type: string; content?: any };

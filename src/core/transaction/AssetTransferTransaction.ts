@@ -21,7 +21,6 @@ export interface AssetTransferTransactionData {
     inputs: AssetTransferInput[];
     outputs: AssetTransferOutput[];
     networkId: NetworkId;
-    nonce?: number;
 }
 /**
  * Spends the existing asset and creates a new asset. Ownership can be transferred during this process.
@@ -35,9 +34,7 @@ export interface AssetTransferTransactionData {
  *
  * All inputs must be valid for the transaction to be valid. When each asset
  * types' amount have been summed, the sum of inputs and the sum of outputs
- * must be identical. If an identical transaction hash already exists, then the
- * change fails. In this situation, a transaction can be created again by
- * arbitrarily changing the nonce.
+ * must be identical.
  */
 export class AssetTransferTransaction {
     /** Create an AssetTransferTransaction from an AssetTransferTransaction JSON object.
@@ -46,7 +43,7 @@ export class AssetTransferTransaction {
      */
     public static fromJSON(obj: any) {
         const {
-            data: { networkId, burns, inputs, outputs, nonce }
+            data: { networkId, burns, inputs, outputs }
         } = obj;
         return new this({
             burns: burns.map((input: any) =>
@@ -58,15 +55,13 @@ export class AssetTransferTransaction {
             outputs: outputs.map((output: any) =>
                 AssetTransferOutput.fromJSON(output)
             ),
-            networkId,
-            nonce
+            networkId
         });
     }
     public readonly burns: AssetTransferInput[];
     public readonly inputs: AssetTransferInput[];
     public readonly outputs: AssetTransferOutput[];
     public readonly networkId: NetworkId;
-    public readonly nonce: number;
     public readonly type = "assetTransfer";
 
     /**
@@ -74,15 +69,13 @@ export class AssetTransferTransaction {
      * @param params.inputs An array of AssetTransferInput to spend.
      * @param params.outputs An array of AssetTransferOutput to create.
      * @param params.networkId A network ID of the transaction.
-     * @param params.nonce A nonce of the transaction.
      */
     constructor(params: AssetTransferTransactionData) {
-        const { burns, inputs, outputs, networkId, nonce } = params;
+        const { burns, inputs, outputs, networkId } = params;
         this.burns = burns;
         this.inputs = inputs;
         this.outputs = outputs;
         this.networkId = networkId;
-        this.nonce = nonce || 0;
     }
 
     /**
@@ -94,8 +87,7 @@ export class AssetTransferTransaction {
             this.networkId,
             this.burns.map(input => input.toEncodeObject()),
             this.inputs.map(input => input.toEncodeObject()),
-            this.outputs.map(output => output.toEncodeObject()),
-            this.nonce
+            this.outputs.map(output => output.toEncodeObject())
         ];
     }
 
@@ -239,7 +231,7 @@ export class AssetTransferTransaction {
         type: "input" | "burn";
         index: number;
     }): H256 {
-        const { networkId, nonce } = this;
+        const { networkId } = this;
         const {
             tag = { input: "all", output: "all" } as SignatureTag,
             type = null,
@@ -283,8 +275,7 @@ export class AssetTransferTransaction {
                     burns,
                     inputs,
                     outputs,
-                    networkId,
-                    nonce
+                    networkId
                 }).rlpBytes(),
                 Buffer.from(blake128(encodeSignatureTag(tag)), "hex")
             )
@@ -330,15 +321,14 @@ export class AssetTransferTransaction {
      * @returns An AssetTransferTransaction JSON object.
      */
     public toJSON() {
-        const { networkId, burns, inputs, outputs, nonce } = this;
+        const { networkId, burns, inputs, outputs } = this;
         return {
             type: this.type,
             data: {
                 networkId,
                 burns: burns.map(input => input.toJSON()),
                 inputs: inputs.map(input => input.toJSON()),
-                outputs: outputs.map(output => output.toJSON()),
-                nonce
+                outputs: outputs.map(output => output.toJSON())
             }
         };
     }

@@ -19,10 +19,6 @@ const RLP = require("rlp");
  *  will be set as the maximum value of a 64-bit unsigned integer by default.
  *  - If registrar exists, the registrar must be the Signer of the Parcel when
  *  sending the created asset through AssetTransferTransaction.
- *  - A transaction hash can be changed by changing nonce.
- *  - If an identical transaction hash already exists, then the change fails. In
- *  this situation, a transaction can be created again by arbitrarily changing
- *  the nonce.
  */
 export class AssetMintTransaction {
     /**
@@ -32,7 +28,7 @@ export class AssetMintTransaction {
      */
     public static fromJSON(data: any) {
         const {
-            data: { networkId, shardId, metadata, output, registrar, nonce }
+            data: { networkId, shardId, metadata, output, registrar }
         } = data;
         return new this({
             networkId,
@@ -42,8 +38,7 @@ export class AssetMintTransaction {
             registrar:
                 registrar === null
                     ? null
-                    : PlatformAddress.fromString(registrar),
-            nonce
+                    : PlatformAddress.fromString(registrar)
         });
     }
     public readonly networkId: NetworkId;
@@ -51,7 +46,6 @@ export class AssetMintTransaction {
     public readonly metadata: string;
     public readonly output: AssetMintOutput;
     public readonly registrar: PlatformAddress | null;
-    public readonly nonce: number;
     public readonly type = "assetMint";
 
     /**
@@ -62,7 +56,6 @@ export class AssetMintTransaction {
      * @param data.output.parameters Parameters of the output.
      * @param data.output.amount Asset amount of the output.
      * @param data.registrar A registrar of the asset.
-     * @param data.nonce A nonce of the transaction.
      */
     constructor(data: {
         networkId: NetworkId;
@@ -70,15 +63,13 @@ export class AssetMintTransaction {
         metadata: string;
         output: AssetMintOutput;
         registrar: PlatformAddress | null;
-        nonce: number;
     }) {
-        const { networkId, shardId, metadata, output, registrar, nonce } = data;
+        const { networkId, shardId, metadata, output, registrar } = data;
         this.networkId = networkId;
         this.shardId = shardId;
         this.metadata = metadata;
         this.output = new AssetMintOutput(output);
         this.registrar = registrar;
-        this.nonce = nonce;
     }
 
     /**
@@ -86,7 +77,7 @@ export class AssetMintTransaction {
      * @returns An AssetMintTransaction JSON object.
      */
     public toJSON() {
-        const { networkId, shardId, metadata, output, registrar, nonce } = this;
+        const { networkId, shardId, metadata, output, registrar } = this;
         return {
             type: this.type,
             data: {
@@ -94,8 +85,7 @@ export class AssetMintTransaction {
                 shardId,
                 metadata,
                 output: output.toJSON(),
-                registrar: registrar === null ? null : registrar.toString(),
-                nonce
+                registrar: registrar === null ? null : registrar.toString()
             }
         };
     }
@@ -109,8 +99,7 @@ export class AssetMintTransaction {
             shardId,
             metadata,
             output: { lockScriptHash, parameters, amount },
-            registrar,
-            nonce
+            registrar
         } = this;
         return [
             3,
@@ -120,8 +109,7 @@ export class AssetMintTransaction {
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
             amount !== null ? [amount] : [],
-            registrar ? [registrar.getAccountId().toEncodeObject()] : [],
-            nonce
+            registrar ? [registrar.getAccountId().toEncodeObject()] : []
         ];
     }
 

@@ -45,8 +45,7 @@ test("AssetMintTransaction fromJSON", async () => {
             amount: expect.anything()
         },
         // FIXME: null or H160
-        registrar: null,
-        nonce: expect.anything()
+        registrar: null
     });
 });
 
@@ -102,7 +101,6 @@ test("AssetTransferTransaction fromJSON", async () => {
         burns: [],
         inputs: expect.arrayContaining([expectedInput]),
         outputs: expect.anything(),
-        networkId: expect.anything(),
-        nonce: expect.anything()
+        networkId: expect.anything()
     });
 });

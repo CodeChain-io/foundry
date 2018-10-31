@@ -25,38 +25,33 @@ export class AssetDecomposeTransaction {
      */
     public static fromJSON(obj: any) {
         const {
-            data: { input, outputs, nonce, networkId }
+            data: { input, outputs, networkId }
         } = obj;
         return new this({
             input: AssetTransferInput.fromJSON(input),
             outputs: outputs.map((o: any) => AssetTransferInput.fromJSON(o)),
-            networkId,
-            nonce
+            networkId
         });
     }
 
     public readonly input: AssetTransferInput;
     public readonly outputs: AssetTransferOutput[];
     public readonly networkId: NetworkId;
-    public readonly nonce: number;
     public readonly type = "assetDecompose";
 
     /**
      * @param params.inputs An array of AssetTransferInput to decompose.
      * @param params.outputs An array of AssetTransferOutput to create.
      * @param params.networkId A network ID of the transaction.
-     * @param params.nonce A nonce of the transaction.
      */
     constructor(params: {
         input: AssetTransferInput;
         outputs: AssetTransferOutput[];
         networkId: NetworkId;
-        nonce?: number;
     }) {
         this.input = params.input;
         this.outputs = params.outputs;
         this.networkId = params.networkId;
-        this.nonce = params.nonce || 0;
     }
 
     /**
@@ -64,14 +59,13 @@ export class AssetDecomposeTransaction {
      * @returns An AssetDecomposeTransaction JSON object.
      */
     public toJSON() {
-        const { type, input, outputs, networkId, nonce } = this;
+        const { type, input, outputs, networkId } = this;
         return {
             type,
             data: {
                 input: input.toJSON(),
                 outputs: outputs.map(o => o.toJSON()),
-                networkId,
-                nonce
+                networkId
             }
         };
     }
@@ -84,8 +78,7 @@ export class AssetDecomposeTransaction {
             7,
             this.networkId,
             this.input.toEncodeObject(),
-            this.outputs.map(o => o.toEncodeObject()),
-            this.nonce
+            this.outputs.map(o => o.toEncodeObject())
         ];
     }
 
@@ -116,8 +109,7 @@ export class AssetDecomposeTransaction {
                 new AssetDecomposeTransaction({
                     input: this.input.withoutScript(),
                     outputs: this.outputs,
-                    networkId: this.networkId,
-                    nonce: 0
+                    networkId: this.networkId
                 }).rlpBytes(),
                 Buffer.from(blake128(Buffer.from([0b00000011])), "hex")
             )

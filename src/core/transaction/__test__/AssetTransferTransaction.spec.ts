@@ -10,8 +10,7 @@ test("AssetTransferTransaction toJSON", () => {
         burns: [],
         inputs: [],
         outputs: [],
-        networkId: "tc",
-        nonce: 54321
+        networkId: "tc"
     });
     expect(AssetTransferTransaction.fromJSON(t.toJSON())).toEqual(t);
 });

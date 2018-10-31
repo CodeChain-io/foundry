@@ -64,9 +64,8 @@ export class AssetScheme {
 
     public createMintTransaction(params: {
         recipient: AssetTransferAddress | string;
-        nonce?: number;
     }): AssetMintTransaction {
-        const { recipient, nonce = 0 } = params;
+        const { recipient } = params;
         const { networkId, shardId, metadata, amount, registrar } = this;
         if (networkId === undefined) {
             throw Error(`networkId is undefined`);
@@ -82,8 +81,7 @@ export class AssetScheme {
                 amount,
                 recipient: AssetTransferAddress.ensure(recipient)
             }),
-            registrar,
-            nonce
+            registrar
         });
     }
 }

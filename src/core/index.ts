@@ -224,9 +224,8 @@ export class Core {
                   amount: number | null;
               };
         recipient: AssetTransferAddress | string;
-        nonce?: number;
     }): AssetMintTransaction {
-        const { scheme, recipient, nonce = 0 } = params;
+        const { scheme, recipient } = params;
         if (scheme !== null && typeof scheme !== "object") {
             throw Error(
                 `Expected scheme param to be either an AssetScheme or an object but found ${scheme}`
@@ -240,7 +239,6 @@ export class Core {
             amount
         } = scheme;
         checkAssetTransferAddressRecipient(recipient);
-        checkNonce(nonce);
         checkNetworkId(networkId);
         if (shardId === undefined) {
             throw Error(`shardId is undefined`);
@@ -254,7 +252,6 @@ export class Core {
         return new AssetMintTransaction({
             networkId,
             shardId,
-            nonce,
             registrar:
                 registrar == null ? null : PlatformAddress.ensure(registrar),
             metadata,
@@ -270,26 +267,22 @@ export class Core {
         inputs?: AssetTransferInput[];
         outputs?: AssetTransferOutput[];
         networkId?: NetworkId;
-        nonce?: number;
     }): AssetTransferTransaction {
         const {
             burns = [],
             inputs = [],
             outputs = [],
-            networkId = this.networkId,
-            nonce = 0
+            networkId = this.networkId
         } = params || {};
         checkTransferBurns(burns);
         checkTransferInputs(inputs);
         checkTransferOutputs(outputs);
         checkNetworkId(networkId);
-        checkNonce(nonce);
         return new AssetTransferTransaction({
             burns,
             inputs,
             outputs,
-            networkId,
-            nonce
+            networkId
         });
     }
 
@@ -305,9 +298,8 @@ export class Core {
               };
         inputs: AssetTransferInput[];
         recipient: AssetTransferAddress | string;
-        nonce?: number;
     }): AssetComposeTransaction {
-        const { scheme, inputs, recipient, nonce = 0 } = params;
+        const { scheme, inputs, recipient } = params;
         const {
             networkId = this.networkId,
             shardId,
@@ -317,7 +309,6 @@ export class Core {
         } = scheme;
         checkTransferInputs(inputs);
         checkAssetTransferAddressRecipient(recipient);
-        checkNonce(nonce);
         checkNetworkId(networkId);
         if (shardId === undefined) {
             throw Error(`shardId is undefined`);
@@ -331,7 +322,6 @@ export class Core {
         return new AssetComposeTransaction({
             networkId,
             shardId,
-            nonce,
             registrar:
                 registrar === null ? null : PlatformAddress.ensure(registrar),
             metadata,
@@ -347,7 +337,6 @@ export class Core {
         input: AssetTransferInput;
         outputs?: AssetTransferOutput[];
         networkId?: NetworkId;
-        nonce?: number;
     }): AssetDecomposeTransaction {
         if (
             params === null ||
@@ -358,21 +347,14 @@ export class Core {
                 `Expected the first param of createAssetDecomposeTransaction to be an object containing input param but found ${params}`
             );
         }
-        const {
-            input,
-            outputs = [],
-            networkId = this.networkId,
-            nonce = 0
-        } = params;
+        const { input, outputs = [], networkId = this.networkId } = params;
         checkTransferInput(input);
         checkTransferOutputs(outputs);
         checkNetworkId(networkId);
-        checkNonce(nonce);
         return new AssetDecomposeTransaction({
             input,
             outputs,
-            networkId,
-            nonce
+            networkId
         });
     }
 
@@ -516,12 +498,6 @@ function checkNetworkId(networkId: NetworkId) {
         throw Error(
             `Expected networkId param to be a string of length 2 but found ${networkId}`
         );
-    }
-}
-
-function checkNonce(nonce: number) {
-    if (typeof nonce !== "number") {
-        throw Error(`Expected nonce param to be a number but found ${nonce}`);
     }
 }
 

@@ -105,17 +105,11 @@ export class Asset {
             address: AssetTransferAddress | string;
             amount: number;
         }>;
-        nonce?: number;
         timelock?: null | Timelock;
         networkId: NetworkId;
     }): AssetTransferTransaction {
         const { outPoint, assetType } = this;
-        const {
-            recipients = [],
-            nonce = 0,
-            timelock = null,
-            networkId
-        } = params;
+        const { recipients = [], timelock = null, networkId } = params;
 
         return new AssetTransferTransaction({
             burns: [],
@@ -137,8 +131,7 @@ export class Asset {
                         amount: recipient.amount
                     })
             ),
-            networkId,
-            nonce
+            networkId
         });
     }
 }
