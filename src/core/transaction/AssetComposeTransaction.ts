@@ -16,6 +16,7 @@ import {
 import { Asset } from "../Asset";
 import { AssetScheme } from "../AssetScheme";
 import { NetworkId } from "../types";
+import { U256 } from "../U256";
 import { AssetMintOutput } from "./AssetMintOutput";
 import { AssetTransferInput } from "./AssetTransferInput";
 
@@ -119,7 +120,9 @@ export class AssetComposeTransaction {
             this.inputs.map(input => input.toEncodeObject()),
             this.output.lockScriptHash.toEncodeObject(),
             this.output.parameters.map(parameter => Buffer.from(parameter)),
-            this.output.amount !== null ? [this.output.amount] : []
+            this.output.amount != null
+                ? [this.output.amount.toEncodeObject()]
+                : []
         ];
     }
 
@@ -233,7 +236,7 @@ export class AssetComposeTransaction {
             assetType: this.getAssetSchemeAddress(),
             lockScriptHash,
             parameters,
-            amount,
+            amount: amount == null ? U256.ensure(U256.MAX_VALUE) : amount,
             transactionHash: this.hash(),
             transactionOutputIndex: 0
         });
@@ -253,7 +256,7 @@ export class AssetComposeTransaction {
             registrar
         } = this;
         // FIXME: need U64 to be implemented or use U256
-        if (amount === null) {
+        if (amount == null) {
             throw Error("not implemented");
         }
         return new AssetScheme({
@@ -264,15 +267,18 @@ export class AssetComposeTransaction {
             registrar,
             pool: _.toPairs(
                 // NOTE: Get the sum of each asset type
-                inputs.reduce((acc: { [assetType: string]: number }, input) => {
+                inputs.reduce((acc: { [assetType: string]: U256 }, input) => {
                     const { assetType, amount: assetAmount } = input.prevOut;
                     // FIXME: Check integer overflow
-                    acc[assetType.value] += assetAmount;
+                    acc[assetType.value] = U256.plus(
+                        acc[assetType.value],
+                        assetAmount
+                    );
                     return acc;
                 }, {})
             ).map(([assetType, assetAmount]) => ({
                 assetType: H256.ensure(assetType),
-                amount: assetAmount as number
+                amount: U256.ensure(assetAmount as number)
             }))
         });
     }

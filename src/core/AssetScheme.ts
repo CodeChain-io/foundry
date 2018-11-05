@@ -7,6 +7,7 @@ import {
 import { AssetMintOutput } from "./transaction/AssetMintOutput";
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { NetworkId } from "./types";
+import { U256 } from "./U256";
 
 /**
  * Object that contains information about the Asset when performing AssetMintTransaction.
@@ -16,12 +17,12 @@ export class AssetScheme {
         const { metadata, amount, registrar, pool } = data;
         return new AssetScheme({
             metadata,
-            amount,
+            amount: U256.ensure(amount),
             registrar:
                 registrar === null ? null : PlatformAddress.ensure(registrar),
             pool: pool.map(({ assetType, amount: assetAmount }: any) => ({
                 assetType: H256.ensure(assetType),
-                amount: assetAmount
+                amount: U256.ensure(assetAmount)
             }))
         });
     }
@@ -29,17 +30,17 @@ export class AssetScheme {
     public readonly networkId?: NetworkId;
     public readonly shardId?: number;
     public readonly metadata: string;
-    public readonly amount: number;
+    public readonly amount: U256;
     public readonly registrar: PlatformAddress | null;
-    public readonly pool: { assetType: H256; amount: number }[];
+    public readonly pool: { assetType: H256; amount: U256 }[];
 
     constructor(data: {
         networkId?: NetworkId;
         shardId?: number;
         metadata: string;
-        amount: number;
+        amount: U256;
         registrar: PlatformAddress | null;
-        pool: { assetType: H256; amount: number }[];
+        pool: { assetType: H256; amount: U256 }[];
     }) {
         this.networkId = data.networkId;
         this.shardId = data.shardId;
@@ -53,11 +54,11 @@ export class AssetScheme {
         const { metadata, amount, registrar, pool } = this;
         return {
             metadata,
-            amount,
+            amount: amount.toEncodeObject(),
             registrar: registrar === null ? null : registrar.toString(),
             pool: pool.map(a => ({
                 assetType: a.assetType.value,
-                amount: a.amount
+                amount: a.amount.toEncodeObject()
             }))
         };
     }

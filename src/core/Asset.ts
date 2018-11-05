@@ -7,12 +7,13 @@ import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
 import { NetworkId } from "./types";
+import { U256 } from "./U256";
 
 export interface AssetData {
     assetType: H256;
     lockScriptHash: H160;
     parameters: Buffer[];
-    amount: number;
+    amount: U256;
     transactionHash: H256;
     transactionOutputIndex: number;
 }
@@ -36,7 +37,7 @@ export class Asset {
             parameters: parameters.map((p: Buffer | number[]) =>
                 Buffer.from(p)
             ),
-            amount,
+            amount: U256.ensure(amount),
             transactionHash: new H256(transactionHash),
             transactionOutputIndex
         });
@@ -45,7 +46,7 @@ export class Asset {
     public readonly assetType: H256;
     public readonly lockScriptHash: H160;
     public readonly parameters: Buffer[];
-    public readonly amount: number;
+    public readonly amount: U256;
     public readonly outPoint: AssetOutPoint;
 
     constructor(data: AssetData) {
@@ -84,7 +85,7 @@ export class Asset {
             asset_type: assetType.value,
             lock_script_hash: lockScriptHash.value,
             parameters,
-            amount,
+            amount: amount.toEncodeObject(),
             transactionHash: transactionHash.value,
             transactionOutputIndex: index
         };
@@ -103,7 +104,7 @@ export class Asset {
     public createTransferTransaction(params: {
         recipients?: Array<{
             address: AssetTransferAddress | string;
-            amount: number;
+            amount: U256;
         }>;
         timelock?: null | Timelock;
         networkId: NetworkId;

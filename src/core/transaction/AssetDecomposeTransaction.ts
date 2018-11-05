@@ -9,6 +9,7 @@ import * as _ from "lodash";
 
 import { Asset } from "../Asset";
 import { AssetTransferOutputValue, NetworkId } from "../types";
+import { U256 } from "../U256";
 import { AssetTransferInput } from "./AssetTransferInput";
 import { AssetTransferOutput } from "./AssetTransferOutput";
 
@@ -136,7 +137,7 @@ export class AssetDecomposeTransaction {
                 this.outputs.push(
                     new AssetTransferOutput({
                         recipient: AssetTransferAddress.ensure(recipient),
-                        amount,
+                        amount: U256.ensure(amount),
                         assetType: H256.ensure(assetType)
                     })
                 );

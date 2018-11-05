@@ -1,5 +1,6 @@
 import { H160 } from "../../H160";
 import { H256 } from "../../H256";
+import { U256 } from "../../U256";
 import { AssetOutPoint } from "../AssetOutPoint";
 import { AssetTransferInput } from "../AssetTransferInput";
 import { AssetTransferOutput } from "../AssetTransferOutput";
@@ -24,7 +25,7 @@ test("AssetOutPoint toJSON", () => {
         assetType: new H256(
             "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         ),
-        amount: 1
+        amount: new U256(1)
     });
     expect(AssetOutPoint.fromJSON(outPoint.toJSON())).toEqual(outPoint);
 });
@@ -38,7 +39,7 @@ test("AssetTransferInput toJSON", () => {
         assetType: new H256(
             "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         ),
-        amount: 1
+        amount: new U256(1)
     });
     const input = new AssetTransferInput({
         prevOut: outPoint,
@@ -56,7 +57,7 @@ test("AssetTransferOutput toJSON", () => {
         assetType: new H256(
             "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         ),
-        amount: 321
+        amount: new U256(321)
     });
     expect(AssetTransferOutput.fromJSON(output.toJSON())).toEqual(output);
 });
@@ -68,7 +69,7 @@ test("AssetTransferOutput shard id", () => {
         assetType: new H256(
             "4100BAADCAFEBEEFbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
         ),
-        amount: 321
+        amount: new U256(321)
     });
     expect(output.shardId()).toEqual(parseInt("BAAD", 16));
 });

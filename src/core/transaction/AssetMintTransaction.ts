@@ -108,7 +108,7 @@ export class AssetMintTransaction {
             metadata,
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
-            amount !== null ? [amount] : [],
+            amount != null ? [amount.toEncodeObject()] : [],
             registrar ? [registrar.getAccountId().toEncodeObject()] : []
         ];
     }
@@ -135,7 +135,7 @@ export class AssetMintTransaction {
     public getMintedAsset(): Asset {
         const { lockScriptHash, parameters, amount } = this.output;
         // FIXME: need U64 to be implemented or use U256
-        if (amount === null) {
+        if (amount == null) {
             throw Error("not implemented");
         }
         return new Asset({
@@ -161,7 +161,7 @@ export class AssetMintTransaction {
             registrar
         } = this;
         // FIXME: need U64 to be implemented or use U256
-        if (amount === null) {
+        if (amount == null) {
             throw Error("not implemented");
         }
         return new AssetScheme({

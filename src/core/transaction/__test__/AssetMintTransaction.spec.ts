@@ -1,4 +1,5 @@
 import { H160 } from "../../H160";
+import { U256 } from "../../U256";
 import { AssetMintTransaction } from "../AssetMintTransaction";
 
 test("AssetMintTransaction toJSON", () => {
@@ -11,7 +12,7 @@ test("AssetMintTransaction toJSON", () => {
                 "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
             ),
             parameters: [],
-            amount: 0
+            amount: new U256(0)
         },
         registrar: null
     });

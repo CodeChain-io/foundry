@@ -184,7 +184,7 @@ export class Core {
     public createAssetScheme(params: {
         shardId: number;
         metadata: string;
-        amount: number;
+        amount: U256 | number | string;
         registrar?: PlatformAddress | string;
         pool?: { assetType: H256 | string; amount: number }[];
     }): AssetScheme {
@@ -197,18 +197,18 @@ export class Core {
         } = params;
         checkShardId(shardId);
         checkMetadata(metadata);
-        checkAmountU64(amount);
+        checkAmount(amount);
         checkRegistrar(registrar);
         return new AssetScheme({
             networkId: this.networkId,
             shardId,
             metadata,
-            amount,
+            amount: U256.ensure(amount),
             registrar:
                 registrar === null ? null : PlatformAddress.ensure(registrar),
             pool: pool.map(({ assetType, amount: assetAmount }) => ({
                 assetType: H256.ensure(assetType),
-                amount: assetAmount
+                amount: U256.ensure(assetAmount)
             }))
         });
     }
@@ -221,7 +221,7 @@ export class Core {
                   shardId: number;
                   metadata: string;
                   registrar?: PlatformAddress | string;
-                  amount: number | null;
+                  amount?: U256 | number | string | null;
               };
         recipient: AssetTransferAddress | string;
     }): AssetMintTransaction {
@@ -246,8 +246,8 @@ export class Core {
         checkShardId(shardId);
         checkMetadata(metadata);
         checkRegistrar(registrar);
-        if (amount !== null) {
-            checkAmountU64(amount);
+        if (amount != null) {
+            checkAmount(amount);
         }
         return new AssetMintTransaction({
             networkId,
@@ -256,7 +256,7 @@ export class Core {
                 registrar == null ? null : PlatformAddress.ensure(registrar),
             metadata,
             output: new AssetMintOutput({
-                amount,
+                amount: amount == null ? null : U256.ensure(amount),
                 recipient: AssetTransferAddress.ensure(recipient)
             })
         });
@@ -292,7 +292,7 @@ export class Core {
             | {
                   shardId: number;
                   metadata: string;
-                  amount: number | null;
+                  amount?: U256 | number | string | null;
                   registrar?: PlatformAddress | string;
                   networkId?: NetworkId;
               };
@@ -316,8 +316,8 @@ export class Core {
         checkShardId(shardId);
         checkMetadata(metadata);
         checkRegistrar(registrar);
-        if (amount !== null) {
-            checkAmountU64(amount);
+        if (amount != null) {
+            checkAmount(amount);
         }
         return new AssetComposeTransaction({
             networkId,
@@ -328,7 +328,7 @@ export class Core {
             inputs,
             output: new AssetMintOutput({
                 recipient: AssetTransferAddress.ensure(recipient),
-                amount
+                amount: amount == null ? null : U256.ensure(amount)
             })
         });
     }
@@ -365,7 +365,7 @@ export class Core {
                   transactionHash: H256 | string;
                   index: number;
                   assetType: H256 | string;
-                  amount: number;
+                  amount: U256 | number | string;
                   lockScriptHash?: H256 | string;
                   parameters?: Buffer[];
               };
@@ -395,7 +395,7 @@ export class Core {
         checkTransactionHash(transactionHash);
         checkIndex(index);
         checkAssetType(assetType);
-        checkAmountU64(amount);
+        checkAmount(amount);
         checkTimelock(timelock);
         if (lockScriptHash) {
             checkLockScriptHash(lockScriptHash);
@@ -417,7 +417,7 @@ export class Core {
                           transactionHash: H256.ensure(transactionHash),
                           index,
                           assetType: H256.ensure(assetType),
-                          amount,
+                          amount: U256.ensure(amount),
                           lockScriptHash: lockScriptHash
                               ? H160.ensure(lockScriptHash)
                               : undefined,
@@ -433,25 +433,25 @@ export class Core {
         transactionHash: H256 | string;
         index: number;
         assetType: H256 | string;
-        amount: number;
+        amount: U256 | number | string;
     }): AssetOutPoint {
         const { transactionHash, index, assetType, amount } = params;
         checkTransactionHash(transactionHash);
         checkIndex(index);
         checkAssetType(assetType);
-        checkAmountU64(amount);
+        checkAmount(amount);
         return new AssetOutPoint({
             transactionHash: H256.ensure(transactionHash),
             index,
             assetType: H256.ensure(assetType),
-            amount
+            amount: U256.ensure(amount)
         });
     }
 
     public createAssetTransferOutput(
         params: {
             assetType: H256 | string;
-            amount: number;
+            amount: U256 | number | string;
         } & (
             | {
                   recipient: AssetTransferAddress | string;
@@ -461,9 +461,10 @@ export class Core {
                   parameters: Buffer[];
               })
     ): AssetTransferOutput {
-        const { assetType, amount } = params;
+        const { assetType } = params;
+        const amount = U256.ensure(params.amount);
         checkAssetType(assetType);
-        checkAmountU64(amount);
+        checkAmount(amount);
         if ("recipient" in params) {
             const { recipient } = params;
             checkAssetTransferAddressRecipient(recipient);
@@ -524,13 +525,6 @@ function checkAmount(amount: U256 | number | string) {
         throw Error(
             `Expected amount param to be a U256 value but found ${amount}`
         );
-    }
-}
-
-// FIXME: U64
-function checkAmountU64(amount: number) {
-    if (typeof amount !== "number" || !Number.isInteger(amount) || amount < 0) {
-        throw Error(`Expected amount param to be a number but found ${amount}`);
     }
 }
 

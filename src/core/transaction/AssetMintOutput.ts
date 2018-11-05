@@ -3,6 +3,7 @@ import { AssetTransferAddress, H160 } from "codechain-primitives/lib";
 
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
+import { U256 } from "../U256";
 
 export class AssetMintOutput {
     /**
@@ -13,19 +14,19 @@ export class AssetMintOutput {
     public static fromJSON(data: {
         lockScriptHash: string;
         parameters: Buffer[];
-        amount: number | null;
+        amount?: string | null;
     }) {
         const { lockScriptHash, parameters, amount } = data;
         return new this({
             lockScriptHash: H160.ensure(lockScriptHash),
             parameters: parameters.map(p => Buffer.from(p)),
-            amount
+            amount: amount == null ? null : U256.ensure(amount)
         });
     }
 
     public readonly lockScriptHash: H160;
     public readonly parameters: Buffer[];
-    public readonly amount: number | null;
+    public readonly amount?: U256 | null;
 
     /**
      * @param data.lockScriptHash A lock script hash of the output.
@@ -37,11 +38,11 @@ export class AssetMintOutput {
             | {
                   lockScriptHash: H160;
                   parameters: Buffer[];
-                  amount: number | null;
+                  amount?: U256 | null;
               }
             | {
                   recipient: AssetTransferAddress;
-                  amount: number | null;
+                  amount?: U256 | null;
               }
     ) {
         if ("recipient" in data) {
@@ -86,7 +87,8 @@ export class AssetMintOutput {
         return {
             lockScriptHash: this.lockScriptHash.value,
             parameters: this.parameters.map(p => [...p]),
-            amount: this.amount
+            amount:
+                this.amount == null ? undefined : this.amount.toEncodeObject()
         };
     }
 }

@@ -1,11 +1,12 @@
 import { H160 } from "../H160";
 import { H256 } from "../H256";
+import { U256 } from "../U256";
 
 export interface AssetOutPointData {
     transactionHash: H256;
     index: number;
     assetType: H256;
-    amount: number;
+    amount: U256;
     lockScriptHash?: H160;
     parameters?: Buffer[];
 }
@@ -29,13 +30,13 @@ export class AssetOutPoint {
             transactionHash: new H256(transactionHash),
             index,
             assetType: new H256(assetType),
-            amount
+            amount: U256.ensure(amount)
         });
     }
     public readonly transactionHash: H256;
     public readonly index: number;
     public readonly assetType: H256;
-    public readonly amount: number;
+    public readonly amount: U256;
     public readonly lockScriptHash?: H160;
     public readonly parameters?: Buffer[];
 
@@ -73,7 +74,7 @@ export class AssetOutPoint {
             transactionHash.toEncodeObject(),
             index,
             assetType.toEncodeObject(),
-            amount
+            amount.toEncodeObject()
         ];
     }
 
@@ -87,7 +88,7 @@ export class AssetOutPoint {
             transactionHash: transactionHash.value,
             index,
             assetType: assetType.value,
-            amount
+            amount: amount.toEncodeObject()
         };
     }
 }

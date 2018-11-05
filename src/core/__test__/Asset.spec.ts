@@ -1,6 +1,7 @@
 import { Asset } from "../Asset";
 import { H160 } from "../H160";
 import { H256 } from "../H256";
+import { U256 } from "../U256";
 
 test("toJSON", () => {
     const asset = new Asset({
@@ -9,7 +10,7 @@ test("toJSON", () => {
         ),
         lockScriptHash: new H160("1111111111111111111111111111111111111111"),
         parameters: [],
-        amount: 222,
+        amount: new U256(222),
         transactionHash: new H256(
             "2222222222222222222222222222222222222222222222222222222222222222"
         ),

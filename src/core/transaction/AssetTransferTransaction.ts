@@ -11,6 +11,7 @@ import {
 import { Asset } from "../Asset";
 import { H256 } from "../H256";
 import { AssetTransferOutputValue, NetworkId } from "../types";
+import { U256 } from "../U256";
 import { AssetTransferInput } from "./AssetTransferInput";
 import { AssetTransferOutput } from "./AssetTransferOutput";
 
@@ -181,7 +182,7 @@ export class AssetTransferTransaction {
                 this.outputs.push(
                     new AssetTransferOutput({
                         recipient: AssetTransferAddress.ensure(recipient),
-                        amount,
+                        amount: U256.ensure(amount),
                         assetType: H256.ensure(assetType)
                     })
                 );

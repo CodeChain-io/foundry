@@ -1,9 +1,10 @@
 import { AssetScheme } from "../AssetScheme";
+import { U256 } from "../U256";
 
 test("toJSON", () => {
     const assetScheme = new AssetScheme({
         metadata: "abcd",
-        amount: 111,
+        amount: new U256(111),
         registrar: null,
         pool: []
     });
