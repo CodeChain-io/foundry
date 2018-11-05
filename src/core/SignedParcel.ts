@@ -7,6 +7,7 @@ import { H160 } from "./H160";
 import { H256 } from "./H256";
 import { H512 } from "./H512";
 import { Parcel } from "./Parcel";
+import { NetworkId } from "./types";
 import { U256 } from "./U256";
 
 const RLP = require("rlp");
@@ -183,8 +184,8 @@ export class SignedParcel {
      * @returns A PlatformAddress.
      * @deprecated
      */
-    public getSignerAddress(): PlatformAddress {
-        return PlatformAddress.fromAccountId(this.getSignerAccountId());
+    public getSignerAddress(params: { networkId: NetworkId }): PlatformAddress {
+        return PlatformAddress.fromAccountId(this.getSignerAccountId(), params);
     }
 
     /**

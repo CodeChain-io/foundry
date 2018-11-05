@@ -1,7 +1,7 @@
 import { PlatformAddress } from "codechain-primitives";
 
-import { SetShardUsers } from "../SetShardUsers";
 import { getActionFromJSON } from "../Action";
+import { SetShardUsers } from "../SetShardUsers";
 
 describe("SetShardUsers", () => {
     test("getActionFromJSON", () => {
@@ -9,7 +9,8 @@ describe("SetShardUsers", () => {
             shardId: 42,
             users: [
                 PlatformAddress.fromAccountId(
-                    "0x0123456789012345678901234567890123456789"
+                    "0x0123456789012345678901234567890123456789",
+                    { networkId: "tc" }
                 )
             ]
         });

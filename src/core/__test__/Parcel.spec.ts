@@ -8,7 +8,8 @@ test("rlp", () => {
     const t = Parcel.payment(
         "tc",
         PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000"
+            "0x0000000000000000000000000000000000000000",
+            { networkId: "tc" }
         ),
         new U256(11)
     );
@@ -54,7 +55,8 @@ test("hash", () => {
     const t = Parcel.payment(
         "tc",
         PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000"
+            "0x0000000000000000000000000000000000000000",
+            { networkId: "tc" }
         ),
         new U256(11)
     );
@@ -71,7 +73,8 @@ test("sign", () => {
     const t = Parcel.payment(
         "tc",
         PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000"
+            "0x0000000000000000000000000000000000000000",
+            { networkId: "tc" }
         ),
         new U256(11)
     );
@@ -99,7 +102,8 @@ test("signed hash", () => {
     const t = Parcel.payment(
         "tc",
         PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000"
+            "0x0000000000000000000000000000000000000000",
+            { networkId: "tc" }
         ),
         new U256(11)
     );
@@ -120,7 +124,8 @@ test("toJSON", () => {
     const p = Parcel.payment(
         "tc",
         PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000"
+            "0x0000000000000000000000000000000000000000",
+            { networkId: "tc" }
         ),
         new U256(11)
     );

@@ -1,22 +1,24 @@
 import { PlatformAddress } from "codechain-primitives";
 
+import { getAccountIdFromPrivate } from "../../utils";
 import { Block } from "../Block";
 import { H256 } from "../H256";
-import { U256 } from "../U256";
 import { Parcel } from "../Parcel";
-import { getAccountIdFromPrivate } from "../../utils";
+import { U256 } from "../U256";
 
 test("toJSON", () => {
     const secret = new H256(
         "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"
     );
     const sender = PlatformAddress.fromAccountId(
-        getAccountIdFromPrivate(secret.value)
+        getAccountIdFromPrivate(secret.value),
+        { networkId: "tc" }
     );
     const p = Parcel.payment(
         "tc",
         PlatformAddress.fromAccountId(
-            "0x2222222222222222222222222222222222222222"
+            "0x2222222222222222222222222222222222222222",
+            { networkId: "tc" }
         ),
         new U256(11)
     ).sign({
@@ -31,7 +33,8 @@ test("toJSON", () => {
         timestamp: 1,
         number: 2,
         author: PlatformAddress.fromAccountId(
-            "1111111111111111111111111111111111111111"
+            "1111111111111111111111111111111111111111",
+            { networkId: "tc" }
         ),
         extraData: Buffer.from([]),
         parcelsRoot: new H256(

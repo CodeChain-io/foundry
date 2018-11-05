@@ -12,7 +12,8 @@ const ACCOUNT_SECRET =
 const masterSecret = ACCOUNT_SECRET;
 const masterAccountId = SDK.util.getAccountIdFromPrivate(masterSecret);
 const masterAddress = sdk.core.classes.PlatformAddress.fromAccountId(
-    masterAccountId
+    masterAccountId,
+    { networkId: "tc" }
 );
 
 const regularSecret = SDK.util.generatePrivateKey();

@@ -23,7 +23,8 @@ const otherSecret =
     "0000000000000000000000000000000000000000000000000000000000000001";
 const otherAccountId = SDK.util.getAccountIdFromPrivate(otherSecret);
 const otherAddress = sdk.core.classes.PlatformAddress.fromAccountId(
-    otherAccountId
+    otherAccountId,
+    { networkId: CODECHAIN_NETWORK_ID }
 );
 
 const regularSecret = SDK.util.generatePrivateKey();

@@ -18,7 +18,9 @@ export const ACCOUNT_ID =
     sdk.util.getAccountIdFromPrivate(ACCOUNT_SECRET).toString(); // "0x6fe64ffa3a46c074226457c90ccb32dc06ccced1"
 export const ACCOUNT_ADDRESS =
     process.env.ACCOUNT_ADDRESS ||
-    sdk.core.classes.PlatformAddress.fromAccountId(ACCOUNT_ID).toString(); // "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd"
+    sdk.core.classes.PlatformAddress.fromAccountId(ACCOUNT_ID, {
+        networkId: CODECHAIN_NETWORK_ID
+    }).toString(); // "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd"
 export const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 export const sendTransaction = async ({
@@ -54,7 +56,8 @@ export const mintAsset = async ({
     });
     const assetAddress = sdk.core.classes.AssetTransferAddress.fromTypeAndPayload(
         0,
-        lockScriptHash
+        lockScriptHash,
+        { networkId: CODECHAIN_NETWORK_ID }
     );
     const assetMintTransaction = assetScheme.createMintTransaction({
         recipient: assetAddress

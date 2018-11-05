@@ -56,7 +56,8 @@ describe("Invalid response", () => {
     describe("ChainRpc", () => {
         const chainRpc = new ChainRpc(rpc, {});
         const address = PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000"
+            "0x0000000000000000000000000000000000000000",
+            { networkId: "tc" }
         );
         const hash =
             "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -396,7 +397,8 @@ describe("Invalid response", () => {
         const secret =
             "0x0000000000000000000000000000000000000000000000000000000000000001";
         const address = PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000"
+            "0x0000000000000000000000000000000000000000",
+            { networkId: "tc" }
         );
 
         describe("getList", () => {

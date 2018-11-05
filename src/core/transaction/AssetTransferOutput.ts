@@ -58,6 +58,9 @@ export class AssetTransferOutput {
         if ("recipient" in data) {
             // FIXME: Clean up by abstracting the standard scripts
             const { type, payload } = data.recipient;
+            if ("pubkeys" in payload) {
+                throw Error("Multisig payload is not supported yet");
+            }
             switch (type) {
                 case 0x00: // LOCK_SCRIPT_HASH ONLY
                     this.lockScriptHash = payload;

@@ -111,7 +111,9 @@ describe("rpc", () => {
 
     test("PlatformAddress", () => {
         expect(
-            sdk.core.classes.PlatformAddress.fromAccountId(signerAccount).value
+            sdk.core.classes.PlatformAddress.fromAccountId(signerAccount, {
+                networkId: CODECHAIN_NETWORK_ID
+            }).value
         ).toEqual(signerAddress);
     });
 
@@ -166,8 +168,9 @@ describe("rpc", () => {
 
             test("PlatformAddress", () => {
                 expect(
-                    sdk.core.classes.PlatformAddress.fromAccountId(account)
-                        .value
+                    sdk.core.classes.PlatformAddress.fromAccountId(account, {
+                        networkId: "tc"
+                    }).value
                 ).toEqual(address);
             });
 
