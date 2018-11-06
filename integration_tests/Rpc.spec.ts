@@ -508,7 +508,7 @@ describe("rpc", () => {
                 await sdk.rpc.chain.sendSignedParcel(
                     transferParcel.sign({
                         secret: signerSecret,
-                        seq: seq.increase(),
+                        seq: U256.plus(seq, 1),
                         fee: 10
                     })
                 );
