@@ -22,18 +22,17 @@ export interface AssetData {
  */
 export class Asset {
     public static fromJSON(data: any) {
-        // FIXME: use camelCase for all
         const {
-            asset_type,
-            lock_script_hash,
+            assetType,
+            lockScriptHash,
             parameters,
             amount,
             transactionHash,
             transactionOutputIndex
         } = data;
         return new Asset({
-            assetType: new H256(asset_type),
-            lockScriptHash: new H160(lock_script_hash),
+            assetType: new H256(assetType),
+            lockScriptHash: new H160(lockScriptHash),
             parameters: parameters.map((p: Buffer | number[]) =>
                 Buffer.from(p)
             ),
@@ -82,8 +81,8 @@ export class Asset {
         } = this;
         const { transactionHash, index } = outPoint;
         return {
-            asset_type: assetType.value,
-            lock_script_hash: lockScriptHash.value,
+            assetType: assetType.value,
+            lockScriptHash: lockScriptHash.value,
             parameters,
             amount: amount.toEncodeObject(),
             transactionHash: transactionHash.value,

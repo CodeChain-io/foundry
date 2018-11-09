@@ -5,8 +5,8 @@ node_js:
 before_install:
   - yarn install
 before_script:
-  - docker pull kodebox/codechain:f32541af346436df04c3c89f016d268a634711ae
-  - docker run -d -p 8080:8080 kodebox/codechain:f32541af346436df04c3c89f016d268a634711ae --jsonrpc-interface 0.0.0.0 -c solo --reseal-min-period 0
+  - docker pull kodebox/codechain:4cea6ae32a2ac46c3a0ec877c383b36826c9d26f
+  - docker run -d -p 8080:8080 kodebox/codechain:4cea6ae32a2ac46c3a0ec877c383b36826c9d26f --jsonrpc-interface 0.0.0.0 -c solo --reseal-min-period 0
   - docker ps -a
 script:
   - yarn test --verbose
