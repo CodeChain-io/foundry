@@ -56,6 +56,14 @@ describe("examples", () => {
     test("mint-and-compose-and-decompose", done => {
         runExample("mint-and-compose-and-decompose", done);
     });
+
+    test("wrap-ccc", done => {
+        runExample("wrap-ccc", done);
+    });
+
+    test("wrap-ccc-and-unwrap-ccc", done => {
+        runExample("wrap-ccc-and-unwrap-ccc", done);
+    });
 });
 
 function runExample(name: string, done: () => any) {

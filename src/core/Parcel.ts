@@ -4,6 +4,8 @@ import { blake256, signEcdsa } from "../utils";
 import { Action, getActionFromJSON } from "./action/Action";
 import { AssetTransaction } from "./action/AssetTransaction";
 import { Payment } from "./action/Payment";
+import { WrapCCC } from "./action/WrapCCC";
+import { Asset } from "./Asset";
 import { H256 } from "./H256";
 import { SignedParcel } from "./SignedParcel";
 import { Transaction } from "./transaction/Transaction";
@@ -91,6 +93,14 @@ export class Parcel {
 
     public hash(): H256 {
         return new H256(blake256(this.rlpBytes()));
+    }
+
+    public getAsset(): Asset {
+        const { action } = this;
+        if (!(action instanceof WrapCCC)) {
+            throw Error("Getting asset is only available with WrapCCC action");
+        }
+        return action.getAsset(this.hash());
     }
 
     public sign(params: {

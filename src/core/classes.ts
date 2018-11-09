@@ -15,6 +15,7 @@ export { AssetTransaction } from "./action/AssetTransaction";
 export { CreateShard } from "./action/CreateShard";
 export { SetShardOwners } from "./action/SetShardOwners";
 export { SetShardUsers } from "./action/SetShardUsers";
+export { WrapCCC } from "./action/WrapCCC";
 
 export { Transaction } from "./transaction/Transaction";
 export { AssetMintTransaction } from "./transaction/AssetMintTransaction";
@@ -28,6 +29,9 @@ export { AssetComposeTransaction } from "./transaction/AssetComposeTransaction";
 export {
     AssetDecomposeTransaction
 } from "./transaction/AssetDecomposeTransaction";
+export {
+    AssetUnwrapCCCTransaction
+} from "./transaction/AssetUnwrapCCCTransaction";
 export { Asset } from "./Asset";
 export { AssetScheme } from "./AssetScheme";
 

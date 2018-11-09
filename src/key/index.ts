@@ -8,6 +8,7 @@ import {
     AssetComposeTransaction,
     AssetDecomposeTransaction,
     AssetTransferTransaction,
+    AssetUnwrapCCCTransaction,
     Parcel,
     SignedParcel,
     U256
@@ -297,7 +298,7 @@ export class Key {
      * @param params.passphrase The passphrase for the given burn.
      */
     public async signTransactionBurn(
-        tx: AssetTransferTransaction,
+        tx: AssetTransferTransaction | AssetUnwrapCCCTransaction,
         index: number,
         params: {
             keyStore?: KeyStore;
@@ -305,10 +306,14 @@ export class Key {
             signatureTag?: SignatureTag;
         } = {}
     ): Promise<void> {
-        if (index >= tx.burns.length) {
+        if ("burns" in tx && index >= tx.burns.length) {
             throw Error(`Invalid index`);
         }
-        const { lockScriptHash, parameters } = tx.burns[index].prevOut;
+        if ("burn" in tx && index >= 1) {
+            throw Error(`Invalid index`);
+        }
+        const burn = "burns" in tx ? tx.burns[index] : tx.burn;
+        const { lockScriptHash, parameters } = burn.prevOut;
         if (lockScriptHash === undefined || parameters === undefined) {
             throw Error(`Invalid transaction burn`);
         }
@@ -320,14 +325,14 @@ export class Key {
         }
         const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
 
-        tx.burns[index].setLockScript(P2PKHBurn.getLockScript());
+        burn.setLockScript(P2PKHBurn.getLockScript());
         const {
             keyStore = await this.ensureKeyStore(),
             passphrase,
             signatureTag = { input: "all", output: "all" } as SignatureTag
         } = params;
         const p2pkhBurn = this.createP2PKHBurn({ keyStore });
-        tx.burns[index].setUnlockScript(
+        burn.setUnlockScript(
             await p2pkhBurn.createUnlockScript(
                 publicKeyHash,
                 tx.hashWithoutScript({

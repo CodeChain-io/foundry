@@ -6,6 +6,7 @@ import { Payment } from "./action/Payment";
 import { SetRegularKey } from "./action/SetReulgarKey";
 import { SetShardOwners } from "./action/SetShardOwners";
 import { SetShardUsers } from "./action/SetShardUsers";
+import { WrapCCC } from "./action/WrapCCC";
 import { Asset } from "./Asset";
 import { AssetScheme } from "./AssetScheme";
 import { Block } from "./Block";
@@ -25,6 +26,7 @@ import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
+import { AssetUnwrapCCCTransaction } from "./transaction/AssetUnwrapCCCTransaction";
 import { getTransactionFromJSON, Transaction } from "./transaction/Transaction";
 import { NetworkId } from "./types";
 import { U256 } from "./U256";
@@ -50,11 +52,13 @@ export class Core {
         CreateShard,
         SetShardOwners,
         SetShardUsers,
+        WrapCCC,
         // Transaction
         AssetMintTransaction,
         AssetTransferTransaction,
         AssetComposeTransaction,
         AssetDecomposeTransaction,
+        AssetUnwrapCCCTransaction,
         AssetTransferInput,
         AssetTransferOutput,
         AssetOutPoint,
@@ -169,6 +173,59 @@ export class Core {
                 users: users.map(PlatformAddress.ensure)
             })
         );
+    }
+
+    /**
+     * Creates Wrap CCC action which wraps the value amount of CCC(CodeChain Coin)
+     * in a wrapped CCC asset. Who is signing the parcel will pay.
+     * @param params.shardId A shard ID of the wrapped CCC asset.
+     * @param params.lockScriptHash A lock script hash of the wrapped CCC asset.
+     * @param params.parameters Parameters of the wrapped CCC asset.
+     * @param params.amount Amount of CCC to pay
+     * @throws Given string for a lock script hash is invalid for converting it to H160
+     * @throws Given number or string for amount is invalid for converting it to U256
+     */
+    public createWrapCCCParcel(
+        params:
+            | {
+                  shardId: number;
+                  lockScriptHash: H160 | string;
+                  parameters: Buffer[];
+                  amount: U256 | number | string;
+              }
+            | {
+                  shardId: number;
+                  recipient: AssetTransferAddress | string;
+                  amount: U256 | number | string;
+              }
+    ): Parcel {
+        const { shardId, amount } = params;
+        checkShardId(shardId);
+        checkAmount(amount);
+        if ("recipient" in params) {
+            checkAssetTransferAddressRecipient(params.recipient);
+            return new Parcel(
+                this.networkId,
+                new WrapCCC({
+                    shardId,
+                    recipient: AssetTransferAddress.ensure(params.recipient),
+                    amount: U256.ensure(amount)
+                })
+            );
+        } else {
+            const { lockScriptHash, parameters } = params;
+            checkLockScriptHash(lockScriptHash);
+            checkParameters(parameters);
+            return new Parcel(
+                this.networkId,
+                new WrapCCC({
+                    shardId,
+                    lockScriptHash: H160.ensure(lockScriptHash),
+                    parameters,
+                    amount: U256.ensure(amount)
+                })
+            );
+        }
     }
 
     /**
@@ -356,6 +413,28 @@ export class Core {
             outputs,
             networkId
         });
+    }
+
+    public createAssetUnwrapCCCTransaction(params: {
+        burn: AssetTransferInput | Asset;
+        networkId?: NetworkId;
+    }): AssetUnwrapCCCTransaction {
+        const { burn, networkId = this.networkId } = params;
+        checkNetworkId(networkId);
+        if (burn instanceof Asset) {
+            const burnInput = burn.createTransferInput();
+            checkTransferBurns([burnInput]);
+            return new AssetUnwrapCCCTransaction({
+                burn: burnInput,
+                networkId
+            });
+        } else {
+            checkTransferBurns([burn]);
+            return new AssetUnwrapCCCTransaction({
+                burn,
+                networkId
+            });
+        }
     }
 
     public createAssetTransferInput(params: {
