@@ -417,7 +417,6 @@ describe("rpc", () => {
             });
 
             test("getAssetScheme", async () => {
-                const shardId = 0;
                 expect(
                     await sdk.rpc.chain.getAssetSchemeByHash(
                         mintTransaction.hash(),

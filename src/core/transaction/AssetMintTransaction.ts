@@ -79,7 +79,7 @@ export class AssetMintTransaction {
         this.networkId = networkId;
         this.shardId = shardId;
         this.metadata = metadata;
-        this.output = new AssetMintOutput(output);
+        this.output = output;
         this.registrar = registrar;
     }
 
