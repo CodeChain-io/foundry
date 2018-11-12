@@ -2,6 +2,13 @@ import { H160 } from "../H160";
 import { H256 } from "../H256";
 import { U256 } from "../U256";
 
+export interface AssetOutPointJSON {
+    transactionHash: string;
+    index: number;
+    assetType: string;
+    amount: string;
+}
+
 export interface AssetOutPointData {
     transactionHash: H256;
     index: number;
@@ -24,7 +31,7 @@ export class AssetOutPoint {
      * @param data An AssetOutPoint JSON object.
      * @returns An AssetOutPoint.
      */
-    public static fromJSON(data: any) {
+    public static fromJSON(data: AssetOutPointJSON) {
         const { transactionHash, index, assetType, amount } = data;
         return new this({
             transactionHash: new H256(transactionHash),
@@ -82,13 +89,13 @@ export class AssetOutPoint {
      * Convert to an AssetOutPoint JSON object.
      * @returns An AssetOutPoint JSON object.
      */
-    public toJSON() {
+    public toJSON(): AssetOutPointJSON {
         const { transactionHash, index, assetType, amount } = this;
         return {
             transactionHash: transactionHash.value,
             index,
             assetType: assetType.value,
-            amount: amount.toEncodeObject()
+            amount: `0x${amount.toString(16)}`
         };
     }
 }

@@ -7,6 +7,13 @@ import { P2PKHBurn } from "../../key/P2PKHBurn";
 import { H256 } from "../H256";
 import { U256 } from "../U256";
 
+export interface AssetTransferOutputJSON {
+    lockScriptHash: string;
+    parameters: number[][];
+    assetType: string;
+    amount: string;
+}
+
 export interface AssetTransferOutputData {
     lockScriptHash: H160;
     parameters: Buffer[];
@@ -31,7 +38,7 @@ export class AssetTransferOutput {
      * @param data An AssetTransferOutput JSON object.
      * @returns An AssetTransferOutput.
      */
-    public static fromJSON(data: AssetTransferOutputData) {
+    public static fromJSON(data: AssetTransferOutputJSON) {
         const { lockScriptHash, parameters, assetType, amount } = data;
         return new this({
             lockScriptHash: H160.ensure(lockScriptHash),
@@ -109,13 +116,13 @@ export class AssetTransferOutput {
      * Convert to an AssetTransferOutput JSON object.
      * @returns An AssetTransferOutput JSON object.
      */
-    public toJSON() {
+    public toJSON(): AssetTransferOutputJSON {
         const { lockScriptHash, parameters, assetType, amount } = this;
         return {
             lockScriptHash: lockScriptHash.value,
             parameters: parameters.map(parameter => [...parameter]),
             assetType: assetType.value,
-            amount: amount.toEncodeObject()
+            amount: `0x${amount.toString(16)}`
         };
     }
 

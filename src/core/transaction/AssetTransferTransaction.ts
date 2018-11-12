@@ -12,10 +12,26 @@ import { Asset } from "../Asset";
 import { H256 } from "../H256";
 import { AssetTransferOutputValue, NetworkId } from "../types";
 import { U256 } from "../U256";
-import { AssetTransferInput } from "./AssetTransferInput";
-import { AssetTransferOutput } from "./AssetTransferOutput";
+import {
+    AssetTransferInput,
+    AssetTransferInputJSON
+} from "./AssetTransferInput";
+import {
+    AssetTransferOutput,
+    AssetTransferOutputJSON
+} from "./AssetTransferOutput";
 
 const RLP = require("rlp");
+
+export interface AssetTransferTransactionJSON {
+    type: "assetTransfer";
+    data: {
+        burns: AssetTransferInputJSON[];
+        inputs: AssetTransferInputJSON[];
+        outputs: AssetTransferOutputJSON[];
+        networkId: NetworkId;
+    };
+}
 
 export interface AssetTransferTransactionData {
     burns: AssetTransferInput[];
@@ -42,7 +58,7 @@ export class AssetTransferTransaction {
      * @param obj An AssetTransferTransaction JSON object.
      * @returns An AssetTransferTransaction.
      */
-    public static fromJSON(obj: any) {
+    public static fromJSON(obj: AssetTransferTransactionJSON) {
         const {
             data: { networkId, burns, inputs, outputs }
         } = obj;
@@ -321,7 +337,7 @@ export class AssetTransferTransaction {
      * Convert to an AssetTransferTransaction JSON object.
      * @returns An AssetTransferTransaction JSON object.
      */
-    public toJSON() {
+    public toJSON(): AssetTransferTransactionJSON {
         const { networkId, burns, inputs, outputs } = this;
         return {
             type: this.type,

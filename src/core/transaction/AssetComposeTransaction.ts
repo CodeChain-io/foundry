@@ -17,10 +17,25 @@ import { Asset } from "../Asset";
 import { AssetScheme } from "../AssetScheme";
 import { NetworkId } from "../types";
 import { U256 } from "../U256";
-import { AssetMintOutput } from "./AssetMintOutput";
-import { AssetTransferInput } from "./AssetTransferInput";
+import { AssetMintOutput, AssetMintOutputJSON } from "./AssetMintOutput";
+import {
+    AssetTransferInput,
+    AssetTransferInputJSON
+} from "./AssetTransferInput";
 
 const RLP = require("rlp");
+
+export interface AssetComposeTransactionJSON {
+    type: "assetCompose";
+    data: {
+        networkId: NetworkId;
+        shardId: number;
+        metadata: string;
+        inputs: AssetTransferInputJSON[];
+        output: AssetMintOutputJSON;
+        registrar: string | null;
+    };
+}
 
 /**
  * Compose assets.
@@ -31,7 +46,7 @@ export class AssetComposeTransaction {
      * @param obj An AssetComposeTransaction JSON object.
      * @returns An AssetComposeTransaction.
      */
-    public static fromJSON(obj: any) {
+    public static fromJSON(obj: AssetComposeTransactionJSON) {
         const {
             data: { networkId, shardId, metadata, inputs, output, registrar }
         } = obj;
@@ -41,9 +56,7 @@ export class AssetComposeTransaction {
             metadata,
             registrar:
                 registrar === null ? null : PlatformAddress.ensure(registrar),
-            inputs: inputs.map((input: any) =>
-                AssetTransferInput.fromJSON(input)
-            ),
+            inputs: inputs.map(input => AssetTransferInput.fromJSON(input)),
             output: AssetMintOutput.fromJSON(output)
         });
     }
@@ -93,14 +106,15 @@ export class AssetComposeTransaction {
      * Convert to an AssetComposeTransaction JSON object.
      * @returns An AssetComposeTransaction JSON object.
      */
-    public toJSON() {
+    public toJSON(): AssetComposeTransactionJSON {
         return {
             type: this.type,
             data: {
                 networkId: this.networkId,
                 shardId: this.shardId,
                 metadata: this.metadata,
-                registrar: this.registrar,
+                registrar:
+                    this.registrar === null ? null : this.registrar.toString(),
                 output: this.output.toJSON(),
                 inputs: this.inputs.map(input => input.toJSON())
             }

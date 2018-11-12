@@ -9,11 +9,21 @@ import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { NetworkId } from "./types";
 import { U256 } from "./U256";
 
+export interface AssetSchemeJSON {
+    metadata: string;
+    amount: string;
+    registrar: string | null;
+    pool: {
+        assetType: string;
+        amount: string;
+    }[];
+}
+
 /**
  * Object that contains information about the Asset when performing AssetMintTransaction.
  */
 export class AssetScheme {
-    public static fromJSON(data: any) {
+    public static fromJSON(data: AssetSchemeJSON) {
         const { metadata, amount, registrar, pool } = data;
         return new AssetScheme({
             metadata,
@@ -50,15 +60,15 @@ export class AssetScheme {
         this.pool = data.pool;
     }
 
-    public toJSON() {
+    public toJSON(): AssetSchemeJSON {
         const { metadata, amount, registrar, pool } = this;
         return {
             metadata,
-            amount: amount.toEncodeObject(),
+            amount: `0x${amount.toString(16)}`,
             registrar: registrar === null ? null : registrar.toString(),
             pool: pool.map(a => ({
                 assetType: a.assetType.value,
-                amount: a.amount.toEncodeObject()
+                amount: `0x${a.amount.toString(16)}`
             }))
         };
     }

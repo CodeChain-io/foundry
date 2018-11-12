@@ -9,6 +9,17 @@ import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction
 import { NetworkId } from "./types";
 import { U256 } from "./U256";
 
+export interface AssetJSON {
+    assetType: string;
+    lockScriptHash: string;
+    parameters: number[][];
+    amount: string;
+    // The `hash` and the `index` are not included in an RPC response. See
+    // getAsset() in chain.ts for more details.
+    transactionHash: string;
+    transactionOutputIndex: number;
+}
+
 export interface AssetData {
     assetType: H256;
     lockScriptHash: H160;
@@ -21,7 +32,7 @@ export interface AssetData {
  * Object created as an AssetMintTransaction or AssetTransferTransaction.
  */
 export class Asset {
-    public static fromJSON(data: any) {
+    public static fromJSON(data: AssetJSON) {
         const {
             assetType,
             lockScriptHash,
@@ -71,7 +82,7 @@ export class Asset {
         });
     }
 
-    public toJSON() {
+    public toJSON(): AssetJSON {
         const {
             assetType,
             lockScriptHash,
@@ -83,8 +94,8 @@ export class Asset {
         return {
             assetType: assetType.value,
             lockScriptHash: lockScriptHash.value,
-            parameters,
-            amount: amount.toEncodeObject(),
+            parameters: parameters.map(p => [...p]),
+            amount: `0x${amount.toString(16)}`,
             transactionHash: transactionHash.value,
             transactionOutputIndex: index
         };

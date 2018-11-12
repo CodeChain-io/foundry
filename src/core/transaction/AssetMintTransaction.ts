@@ -6,9 +6,20 @@ import { Asset } from "../Asset";
 import { AssetScheme } from "../AssetScheme";
 import { H256 } from "../H256";
 import { NetworkId } from "../types";
-import { AssetMintOutput } from "./AssetMintOutput";
+import { AssetMintOutput, AssetMintOutputJSON } from "./AssetMintOutput";
 
 const RLP = require("rlp");
+
+export interface AssetMintTransactionJSON {
+    type: "assetMint";
+    data: {
+        networkId: NetworkId;
+        shardId: number;
+        metadata: string;
+        output: AssetMintOutputJSON;
+        registrar: string | null;
+    };
+}
 
 /**
  * Creates a new asset type and that asset itself.
@@ -26,7 +37,7 @@ export class AssetMintTransaction {
      * @param data An AssetMintTransaction JSON object.
      * @returns An AssetMintTransaction.
      */
-    public static fromJSON(data: any) {
+    public static fromJSON(data: AssetMintTransactionJSON) {
         const {
             data: { networkId, shardId, metadata, output, registrar }
         } = data;
@@ -76,7 +87,7 @@ export class AssetMintTransaction {
      * Convert to an AssetMintTransaction JSON object.
      * @returns An AssetMintTransaction JSON object.
      */
-    public toJSON() {
+    public toJSON(): AssetMintTransactionJSON {
         const { networkId, shardId, metadata, output, registrar } = this;
         return {
             type: this.type,

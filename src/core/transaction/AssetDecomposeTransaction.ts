@@ -10,10 +10,25 @@ import * as _ from "lodash";
 import { Asset } from "../Asset";
 import { AssetTransferOutputValue, NetworkId } from "../types";
 import { U256 } from "../U256";
-import { AssetTransferInput } from "./AssetTransferInput";
-import { AssetTransferOutput } from "./AssetTransferOutput";
+import {
+    AssetTransferInput,
+    AssetTransferInputJSON
+} from "./AssetTransferInput";
+import {
+    AssetTransferOutput,
+    AssetTransferOutputJSON
+} from "./AssetTransferOutput";
 
 const RLP = require("rlp");
+
+export interface AssetDecomposeTransactionJSON {
+    type: "assetDecompose";
+    data: {
+        input: AssetTransferInputJSON;
+        outputs: AssetTransferOutputJSON[];
+        networkId: NetworkId;
+    };
+}
 
 /**
  * Decompose assets. The sum of inputs must be whole supply of the asset.
@@ -24,13 +39,13 @@ export class AssetDecomposeTransaction {
      * @param obj An AssetDecomposeTransaction JSON object.
      * @returns An AssetDecomposeTransaction.
      */
-    public static fromJSON(obj: any) {
+    public static fromJSON(obj: AssetDecomposeTransactionJSON) {
         const {
             data: { input, outputs, networkId }
         } = obj;
         return new this({
             input: AssetTransferInput.fromJSON(input),
-            outputs: outputs.map((o: any) => AssetTransferInput.fromJSON(o)),
+            outputs: outputs.map(o => AssetTransferOutput.fromJSON(o)),
             networkId
         });
     }
@@ -59,7 +74,7 @@ export class AssetDecomposeTransaction {
      * Convert to an AssetDecomposeTransaction JSON object.
      * @returns An AssetDecomposeTransaction JSON object.
      */
-    public toJSON() {
+    public toJSON(): AssetDecomposeTransactionJSON {
         const { type, input, outputs, networkId } = this;
         return {
             type,

@@ -1,12 +1,19 @@
 import { Buffer } from "buffer";
 
-import { AssetOutPoint } from "./AssetOutPoint";
+import { AssetOutPoint, AssetOutPointJSON } from "./AssetOutPoint";
 
 export type TimelockType = "block" | "blockAge" | "time" | "timeAge";
 export interface Timelock {
     type: TimelockType;
     // FIXME: U64
     value: number;
+}
+
+export interface AssetTransferInputJSON {
+    prevOut: AssetOutPointJSON;
+    timelock: Timelock | null;
+    lockScript: number[];
+    unlockScript: number[];
 }
 
 /**
@@ -22,13 +29,13 @@ export class AssetTransferInput {
      * @param data An AssetTransferInput JSON object.
      * @returns An AssetTransferInput.
      */
-    public static fromJSON(data: any) {
+    public static fromJSON(data: AssetTransferInputJSON) {
         const { prevOut, timelock, lockScript, unlockScript } = data;
         return new this({
             prevOut: AssetOutPoint.fromJSON(prevOut),
             timelock,
-            lockScript,
-            unlockScript
+            lockScript: Buffer.from(lockScript),
+            unlockScript: Buffer.from(unlockScript)
         });
     }
     public readonly prevOut: AssetOutPoint;
@@ -76,7 +83,7 @@ export class AssetTransferInput {
      * Convert to an AssetTransferInput JSON object.
      * @returns An AssetTransferInput JSON object.
      */
-    public toJSON() {
+    public toJSON(): AssetTransferInputJSON {
         const { prevOut, timelock, lockScript, unlockScript } = this;
         return {
             prevOut: prevOut.toJSON(),
