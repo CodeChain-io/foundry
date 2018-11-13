@@ -562,11 +562,13 @@ export class ChainRpc {
      * Gets asset scheme of given hash of AssetMintTransaction.
      * @param txhash The tx hash of AssetMintTransaction.
      * @param shardId The shard id of Asset Scheme.
+     * @param blockNumber The specific block number to get the asset scheme from
      * @returns AssetScheme, if asset scheme exists. Else, returns null.
      */
     public getAssetSchemeByHash(
         txhash: H256 | string,
-        shardId: number
+        shardId: number,
+        blockNumber?: number | null
     ): Promise<AssetScheme | null> {
         if (!H256.check(txhash)) {
             throw Error(
@@ -578,11 +580,17 @@ export class ChainRpc {
                 `Expected the second argument of getAssetSchemeByHash to be a shard ID value but found ${shardId}`
             );
         }
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the third argument of getAssetSchemeByHash to be non-negative integer but found ${blockNumber}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getAssetSchemeByHash", [
                     `0x${H256.ensure(txhash).value}`,
-                    shardId
+                    shardId,
+                    blockNumber
                 ])
                 .then(result => {
                     try {
@@ -606,20 +614,28 @@ export class ChainRpc {
     /**
      * Gets asset scheme of asset type
      * @param assetType The type of Asset.
+     * @param blockNumber The specific block number to get the asset scheme from
      * @returns AssetScheme, if asset scheme exists. Else, returns null.
      */
     public getAssetSchemeByType(
-        assetType: H256 | string
+        assetType: H256 | string,
+        blockNumber?: number | null
     ): Promise<AssetScheme | null> {
         if (!H256.check(assetType)) {
             throw Error(
                 `Expected the first arugment of getAssetSchemeByType to be an H256 value but found ${assetType}`
             );
         }
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the second argument of getAssetSchemeByType to be non-negative integer but found ${blockNumber}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getAssetSchemeByType", [
-                    `0x${H256.ensure(assetType).value}`
+                    `0x${H256.ensure(assetType).value}`,
+                    blockNumber
                 ])
                 .then(result => {
                     try {
@@ -664,7 +680,7 @@ export class ChainRpc {
         }
         if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
             throw Error(
-                `Expected the third argument of getAsset to be non-negative integer but found ${index}`
+                `Expected the third argument of getAsset to be non-negative integer but found ${blockNumber}`
             );
         }
         return new Promise((resolve, reject) => {
