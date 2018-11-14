@@ -3,6 +3,7 @@ import * as _ from "lodash";
 
 import { blake160, blake256, recoverEcdsa } from "../utils";
 
+import { Asset } from "./Asset";
 import { H160 } from "./H160";
 import { H256 } from "./H256";
 import { H512 } from "./H512";
@@ -162,6 +163,10 @@ export class SignedParcel {
      */
     public hash(): H256 {
         return new H256(blake256(this.rlpBytes()));
+    }
+
+    public getAsset(): Asset {
+        return this.unsigned.getAsset();
     }
 
     /**
