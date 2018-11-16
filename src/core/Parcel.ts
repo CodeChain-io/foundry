@@ -10,7 +10,7 @@ import { H256 } from "./H256";
 import { SignedParcel } from "./SignedParcel";
 import { Transaction } from "./transaction/Transaction";
 import { NetworkId } from "./types";
-import { U256 } from "./U256";
+import { U64 } from "./U64";
 
 const RLP = require("rlp");
 
@@ -41,7 +41,7 @@ export class Parcel {
     public static payment(
         networkId: NetworkId,
         receiver: PlatformAddress,
-        value: U256
+        value: U64
     ): Parcel {
         const action = new Payment(receiver, value);
         return new Parcel(networkId, action);
@@ -54,8 +54,8 @@ export class Parcel {
         parcel.setFee(fee);
         return parcel;
     }
-    public seq: U256 | null;
-    public fee: U256 | null;
+    public seq: U64 | null;
+    public fee: U64 | null;
     public readonly networkId: NetworkId;
     public readonly action: Action;
 
@@ -66,12 +66,12 @@ export class Parcel {
         this.action = action;
     }
 
-    public setSeq(seq: U256 | string | number) {
-        this.seq = U256.ensure(seq);
+    public setSeq(seq: U64 | string | number) {
+        this.seq = U64.ensure(seq);
     }
 
-    public setFee(fee: U256 | string | number) {
-        this.fee = U256.ensure(fee);
+    public setFee(fee: U64 | string | number) {
+        this.fee = U64.ensure(fee);
     }
 
     public toEncodeObject(): any[] {
@@ -105,18 +105,18 @@ export class Parcel {
 
     public sign(params: {
         secret: H256 | string;
-        seq: U256 | string | number;
-        fee: U256 | string | number;
+        seq: U64 | string | number;
+        fee: U64 | string | number;
     }): SignedParcel {
         const { secret, seq, fee } = params;
         if (this.seq !== null) {
             throw Error("The parcel seq is already set");
         }
-        this.seq = U256.ensure(seq);
+        this.seq = U64.ensure(seq);
         if (this.fee !== null) {
             throw Error("The parcel fee is already set");
         }
-        this.fee = U256.ensure(fee);
+        this.fee = U64.ensure(fee);
         const { r, s, v } = signEcdsa(
             this.hash().value,
             H256.ensure(secret).value

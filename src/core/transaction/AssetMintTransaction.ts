@@ -145,7 +145,6 @@ export class AssetMintTransaction {
      */
     public getMintedAsset(): Asset {
         const { lockScriptHash, parameters, amount } = this.output;
-        // FIXME: need U64 to be implemented or use U256
         if (amount == null) {
             throw Error("not implemented");
         }
@@ -171,7 +170,6 @@ export class AssetMintTransaction {
             output: { amount },
             registrar
         } = this;
-        // FIXME: need U64 to be implemented or use U256
         if (amount == null) {
             throw Error("not implemented");
         }

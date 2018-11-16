@@ -11,7 +11,7 @@ const ACCOUNT_ADDRESS =
 
 (async () => {
     const balance = await sdk.rpc.chain.getBalance(ACCOUNT_ADDRESS);
-    // the balance is a U256 instance at this moment.
+    // the balance is a U64 instance at this moment.
     // Use toString() to print it out.
     console.log(balance.toString()); // the amount of CCC that the account has.
 })().catch(console.error);

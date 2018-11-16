@@ -3,7 +3,7 @@ import { AssetTransferAddress, H160 } from "codechain-primitives/lib";
 
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
-import { U256 } from "../U256";
+import { U64 } from "../U64";
 
 export interface AssetMintOutputJSON {
     lockScriptHash: string;
@@ -22,13 +22,13 @@ export class AssetMintOutput {
         return new this({
             lockScriptHash: H160.ensure(lockScriptHash),
             parameters: parameters.map(p => Buffer.from(p)),
-            amount: amount == null ? null : U256.ensure(amount)
+            amount: amount == null ? null : U64.ensure(amount)
         });
     }
 
     public readonly lockScriptHash: H160;
     public readonly parameters: Buffer[];
-    public readonly amount?: U256 | null;
+    public readonly amount?: U64 | null;
 
     /**
      * @param data.lockScriptHash A lock script hash of the output.
@@ -40,11 +40,11 @@ export class AssetMintOutput {
             | {
                   lockScriptHash: H160;
                   parameters: Buffer[];
-                  amount?: U256 | null;
+                  amount?: U64 | null;
               }
             | {
                   recipient: AssetTransferAddress;
-                  amount?: U256 | null;
+                  amount?: U64 | null;
               }
     ) {
         if ("recipient" in data) {

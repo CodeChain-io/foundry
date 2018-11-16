@@ -4,7 +4,7 @@ import { getAccountIdFromPrivate } from "../../utils";
 import { H256 } from "../H256";
 import { Parcel } from "../Parcel";
 import { SignedParcel } from "../SignedParcel";
-import { U256 } from "../U256";
+import { U64 } from "../U64";
 
 test("toJSON", () => {
     const secret = new H256(
@@ -16,7 +16,7 @@ test("toJSON", () => {
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U256(11)
+        new U64(11)
     ).sign({
         secret,
         fee: 33,
@@ -39,7 +39,7 @@ test("getSignerAccountId", () => {
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U256(11)
+        new U64(11)
     ).sign({
         secret,
         fee: 33,
@@ -65,7 +65,7 @@ test("getSignerAddress", () => {
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U256(11)
+        new U64(11)
     ).sign({
         secret,
         fee: 33,

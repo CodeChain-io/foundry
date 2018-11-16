@@ -11,7 +11,7 @@ import {
     AssetUnwrapCCCTransaction,
     Parcel,
     SignedParcel,
-    U256
+    U64
 } from "../core/classes";
 import { NetworkId } from "../core/types";
 import { SignatureTag } from "../utils";
@@ -171,8 +171,8 @@ export class Key {
             keyStore?: KeyStore;
             account: PlatformAddress | string;
             passphrase?: string;
-            fee: U256 | string | number;
-            seq: U256 | string | number;
+            fee: U64 | string | number;
+            seq: U64 | string | number;
         }
     ): Promise<SignedParcel> {
         if (!(parcel instanceof Parcel)) {
@@ -197,14 +197,14 @@ export class Key {
                 `Expected account param to be a PlatformAddress value but found ${account}`
             );
         }
-        if (!U256.check(fee)) {
+        if (!U64.check(fee)) {
             throw Error(
-                `Expected fee param to be a U256 value but found ${fee}`
+                `Expected fee param to be a U64 value but found ${fee}`
             );
         }
-        if (!U256.check(seq)) {
+        if (!U64.check(seq)) {
             throw Error(
-                `Expected seq param to be a U256 value but found ${seq}`
+                `Expected seq param to be a U64 value but found ${seq}`
             );
         }
         parcel.setFee(fee);

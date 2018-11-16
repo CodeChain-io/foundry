@@ -3,6 +3,7 @@ import { PlatformAddress } from "codechain-primitives";
 import { H256 } from "../H256";
 import { Parcel } from "../Parcel";
 import { U256 } from "../U256";
+import { U64 } from "../U64";
 
 test("rlp", () => {
     const t = Parcel.payment(
@@ -11,7 +12,7 @@ test("rlp", () => {
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U256(11)
+        new U64(11)
     );
     t.setFee(0);
     t.setSeq(0);
@@ -58,7 +59,7 @@ test("hash", () => {
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U256(11)
+        new U64(11)
     );
     t.setFee(0);
     t.setSeq(0);
@@ -76,7 +77,7 @@ test("sign", () => {
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U256(11)
+        new U64(11)
     );
     const signed = t.sign({
         secret:
@@ -105,7 +106,7 @@ test("signed hash", () => {
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U256(11)
+        new U64(11)
     );
     const signed = t.sign({
         secret:
@@ -127,7 +128,7 @@ test("toJSON", () => {
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U256(11)
+        new U64(11)
     );
     p.setFee(33);
     p.setSeq(44);

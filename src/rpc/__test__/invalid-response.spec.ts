@@ -1,6 +1,6 @@
 import { PlatformAddress } from "codechain-primitives";
 
-import { Parcel, Payment, U256 } from "../../core/classes";
+import { Parcel, Payment, U64 } from "../../core/classes";
 
 import { AccountRpc } from "../account";
 import { ChainRpc } from "../chain";
@@ -69,7 +69,7 @@ describe("Invalid response", () => {
                 "0x0000000000000000000000000000000000000000000000000000000000000001";
             const signedParcel = new Parcel(
                 "tc",
-                new Payment(address, new U256(0))
+                new Payment(address, new U64(0))
             ).sign({
                 secret,
                 fee: 0,
@@ -223,7 +223,7 @@ describe("Invalid response", () => {
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getSeq");
-                    expect(e.toString()).toContain("U256");
+                    expect(e.toString()).toContain("U64");
                     expect(e.toString()).toContain("undefined");
                     done();
                 });
@@ -236,7 +236,7 @@ describe("Invalid response", () => {
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getBalance");
-                    expect(e.toString()).toContain("U256");
+                    expect(e.toString()).toContain("U64");
                     expect(e.toString()).toContain("undefined");
                     done();
                 });

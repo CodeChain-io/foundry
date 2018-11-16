@@ -7,7 +7,7 @@ import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
 import { NetworkId } from "./types";
-import { U256 } from "./U256";
+import { U64 } from "./U64";
 
 export interface AssetJSON {
     assetType: string;
@@ -24,7 +24,7 @@ export interface AssetData {
     assetType: H256;
     lockScriptHash: H160;
     parameters: Buffer[];
-    amount: U256;
+    amount: U64;
     transactionHash: H256;
     transactionOutputIndex: number;
 }
@@ -47,7 +47,7 @@ export class Asset {
             parameters: parameters.map((p: Buffer | number[]) =>
                 Buffer.from(p)
             ),
-            amount: U256.ensure(amount),
+            amount: U64.ensure(amount),
             transactionHash: new H256(transactionHash),
             transactionOutputIndex
         });
@@ -56,7 +56,7 @@ export class Asset {
     public readonly assetType: H256;
     public readonly lockScriptHash: H160;
     public readonly parameters: Buffer[];
-    public readonly amount: U256;
+    public readonly amount: U64;
     public readonly outPoint: AssetOutPoint;
 
     constructor(data: AssetData) {
@@ -114,7 +114,7 @@ export class Asset {
     public createTransferTransaction(params: {
         recipients?: Array<{
             address: AssetTransferAddress | string;
-            amount: U256;
+            amount: U64;
         }>;
         timelock?: null | Timelock;
         networkId: NetworkId;

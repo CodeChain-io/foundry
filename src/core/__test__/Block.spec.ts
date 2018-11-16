@@ -5,6 +5,7 @@ import { Block } from "../Block";
 import { H256 } from "../H256";
 import { Parcel } from "../Parcel";
 import { U256 } from "../U256";
+import { U64 } from "../U64";
 
 test("toJSON", () => {
     const secret = new H256(
@@ -20,7 +21,7 @@ test("toJSON", () => {
             "0x2222222222222222222222222222222222222222",
             { networkId: "tc" }
         ),
-        new U256(11)
+        new U64(11)
     ).sign({
         secret,
         fee: 33,

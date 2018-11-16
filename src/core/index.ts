@@ -30,6 +30,7 @@ import { AssetUnwrapCCCTransaction } from "./transaction/AssetUnwrapCCCTransacti
 import { getTransactionFromJSON, Transaction } from "./transaction/Transaction";
 import { NetworkId } from "./types";
 import { U256 } from "./U256";
+import { U64 } from "./U64";
 
 export class Core {
     public static classes = {
@@ -39,6 +40,7 @@ export class Core {
         H256,
         H512,
         U256,
+        U64,
         Invoice,
         // Block
         Block,
@@ -89,18 +91,18 @@ export class Core {
      * @param params.recipient The platform account who receives CCC
      * @param params.amount Amount of CCC to pay
      * @throws Given string for recipient is invalid for converting it to PlatformAddress
-     * @throws Given number or string for amount is invalid for converting it to U256
+     * @throws Given number or string for amount is invalid for converting it to U64
      */
     public createPaymentParcel(params: {
         recipient: PlatformAddress | string;
-        amount: U256 | number | string;
+        amount: U64 | number | string;
     }): Parcel {
         const { recipient, amount } = params;
         checkPlatformAddressRecipient(recipient);
         checkAmount(amount);
         return new Parcel(
             this.networkId,
-            new Payment(PlatformAddress.ensure(recipient), U256.ensure(amount))
+            new Payment(PlatformAddress.ensure(recipient), U64.ensure(amount))
         );
     }
 
@@ -183,7 +185,7 @@ export class Core {
      * @param params.parameters Parameters of the wrapped CCC asset.
      * @param params.amount Amount of CCC to pay
      * @throws Given string for a lock script hash is invalid for converting it to H160
-     * @throws Given number or string for amount is invalid for converting it to U256
+     * @throws Given number or string for amount is invalid for converting it to U64
      */
     public createWrapCCCParcel(
         params:
@@ -191,12 +193,12 @@ export class Core {
                   shardId: number;
                   lockScriptHash: H160 | string;
                   parameters: Buffer[];
-                  amount: U256 | number | string;
+                  amount: U64 | number | string;
               }
             | {
                   shardId: number;
                   recipient: AssetTransferAddress | string;
-                  amount: U256 | number | string;
+                  amount: U64 | number | string;
               }
     ): Parcel {
         const { shardId, amount } = params;
@@ -209,7 +211,7 @@ export class Core {
                 new WrapCCC({
                     shardId,
                     recipient: AssetTransferAddress.ensure(params.recipient),
-                    amount: U256.ensure(amount)
+                    amount: U64.ensure(amount)
                 })
             );
         } else {
@@ -222,7 +224,7 @@ export class Core {
                     shardId,
                     lockScriptHash: H160.ensure(lockScriptHash),
                     parameters,
-                    amount: U256.ensure(amount)
+                    amount: U64.ensure(amount)
                 })
             );
         }
@@ -241,7 +243,7 @@ export class Core {
     public createAssetScheme(params: {
         shardId: number;
         metadata: string;
-        amount: U256 | number | string;
+        amount: U64 | number | string;
         registrar?: PlatformAddress | string;
         pool?: { assetType: H256 | string; amount: number }[];
     }): AssetScheme {
@@ -260,12 +262,12 @@ export class Core {
             networkId: this.networkId,
             shardId,
             metadata,
-            amount: U256.ensure(amount),
+            amount: U64.ensure(amount),
             registrar:
                 registrar === null ? null : PlatformAddress.ensure(registrar),
             pool: pool.map(({ assetType, amount: assetAmount }) => ({
                 assetType: H256.ensure(assetType),
-                amount: U256.ensure(assetAmount)
+                amount: U64.ensure(assetAmount)
             }))
         });
     }
@@ -278,7 +280,7 @@ export class Core {
                   shardId: number;
                   metadata: string;
                   registrar?: PlatformAddress | string;
-                  amount?: U256 | number | string | null;
+                  amount?: U64 | number | string | null;
               };
         recipient: AssetTransferAddress | string;
     }): AssetMintTransaction {
@@ -313,7 +315,7 @@ export class Core {
                 registrar == null ? null : PlatformAddress.ensure(registrar),
             metadata,
             output: new AssetMintOutput({
-                amount: amount == null ? null : U256.ensure(amount),
+                amount: amount == null ? null : U64.ensure(amount),
                 recipient: AssetTransferAddress.ensure(recipient)
             })
         });
@@ -349,7 +351,7 @@ export class Core {
             | {
                   shardId: number;
                   metadata: string;
-                  amount?: U256 | number | string | null;
+                  amount?: U64 | number | string | null;
                   registrar?: PlatformAddress | string;
                   networkId?: NetworkId;
               };
@@ -385,7 +387,7 @@ export class Core {
             inputs,
             output: new AssetMintOutput({
                 recipient: AssetTransferAddress.ensure(recipient),
-                amount: amount == null ? null : U256.ensure(amount)
+                amount: amount == null ? null : U64.ensure(amount)
             })
         });
     }
@@ -444,7 +446,7 @@ export class Core {
                   transactionHash: H256 | string;
                   index: number;
                   assetType: H256 | string;
-                  amount: U256 | number | string;
+                  amount: U64 | number | string;
                   lockScriptHash?: H256 | string;
                   parameters?: Buffer[];
               };
@@ -496,7 +498,7 @@ export class Core {
                           transactionHash: H256.ensure(transactionHash),
                           index,
                           assetType: H256.ensure(assetType),
-                          amount: U256.ensure(amount),
+                          amount: U64.ensure(amount),
                           lockScriptHash: lockScriptHash
                               ? H160.ensure(lockScriptHash)
                               : undefined,
@@ -512,7 +514,7 @@ export class Core {
         transactionHash: H256 | string;
         index: number;
         assetType: H256 | string;
-        amount: U256 | number | string;
+        amount: U64 | number | string;
     }): AssetOutPoint {
         const { transactionHash, index, assetType, amount } = params;
         checkTransactionHash(transactionHash);
@@ -523,14 +525,14 @@ export class Core {
             transactionHash: H256.ensure(transactionHash),
             index,
             assetType: H256.ensure(assetType),
-            amount: U256.ensure(amount)
+            amount: U64.ensure(amount)
         });
     }
 
     public createAssetTransferOutput(
         params: {
             assetType: H256 | string;
-            amount: U256 | number | string;
+            amount: U64 | number | string;
         } & (
             | {
                   recipient: AssetTransferAddress | string;
@@ -541,7 +543,7 @@ export class Core {
               })
     ): AssetTransferOutput {
         const { assetType } = params;
-        const amount = U256.ensure(params.amount);
+        const amount = U64.ensure(params.amount);
         checkAssetType(assetType);
         checkAmount(amount);
         if ("recipient" in params) {
@@ -599,10 +601,10 @@ function checkAssetTransferAddressRecipient(
     }
 }
 
-function checkAmount(amount: U256 | number | string) {
-    if (!U256.check(amount)) {
+function checkAmount(amount: U64 | number | string) {
+    if (!U64.check(amount)) {
         throw Error(
-            `Expected amount param to be a U256 value but found ${amount}`
+            `Expected amount param to be a U64 value but found ${amount}`
         );
     }
 }

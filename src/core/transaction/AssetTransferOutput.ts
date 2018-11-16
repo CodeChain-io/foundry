@@ -5,7 +5,7 @@ import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
 
 import { H256 } from "../H256";
-import { U256 } from "../U256";
+import { U64 } from "../U64";
 
 export interface AssetTransferOutputJSON {
     lockScriptHash: string;
@@ -18,13 +18,13 @@ export interface AssetTransferOutputData {
     lockScriptHash: H160;
     parameters: Buffer[];
     assetType: H256;
-    amount: U256;
+    amount: U64;
 }
 
 export interface AssetTransferOutputAddressData {
     recipient: AssetTransferAddress;
     assetType: H256;
-    amount: U256;
+    amount: U64;
 }
 
 /**
@@ -46,13 +46,13 @@ export class AssetTransferOutput {
                 Buffer.from(p)
             ),
             assetType: H256.ensure(assetType),
-            amount: U256.ensure(amount)
+            amount: U64.ensure(amount)
         });
     }
     public readonly lockScriptHash: H160;
     public readonly parameters: Buffer[];
     public readonly assetType: H256;
-    public readonly amount: U256;
+    public readonly amount: U64;
 
     /**
      * @param data.lockScriptHash A lock script hash of the output.

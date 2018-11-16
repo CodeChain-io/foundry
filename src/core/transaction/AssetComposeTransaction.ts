@@ -16,7 +16,7 @@ import {
 import { Asset } from "../Asset";
 import { AssetScheme } from "../AssetScheme";
 import { NetworkId } from "../types";
-import { U256 } from "../U256";
+import { U64 } from "../U64";
 import { AssetMintOutput, AssetMintOutputJSON } from "./AssetMintOutput";
 import {
     AssetTransferInput,
@@ -250,7 +250,7 @@ export class AssetComposeTransaction {
             assetType: this.getAssetSchemeAddress(),
             lockScriptHash,
             parameters,
-            amount: amount == null ? U256.ensure(U256.MAX_VALUE) : amount,
+            amount: amount == null ? U64.ensure(U64.MAX_VALUE) : amount,
             transactionHash: this.hash(),
             transactionOutputIndex: 0
         });
@@ -269,7 +269,6 @@ export class AssetComposeTransaction {
             output: { amount },
             registrar
         } = this;
-        // FIXME: need U64 to be implemented or use U256
         if (amount == null) {
             throw Error("not implemented");
         }
@@ -281,10 +280,10 @@ export class AssetComposeTransaction {
             registrar,
             pool: _.toPairs(
                 // NOTE: Get the sum of each asset type
-                inputs.reduce((acc: { [assetType: string]: U256 }, input) => {
+                inputs.reduce((acc: { [assetType: string]: U64 }, input) => {
                     const { assetType, amount: assetAmount } = input.prevOut;
                     // FIXME: Check integer overflow
-                    acc[assetType.value] = U256.plus(
+                    acc[assetType.value] = U64.plus(
                         acc[assetType.value],
                         assetAmount
                     );
@@ -292,7 +291,7 @@ export class AssetComposeTransaction {
                 }, {})
             ).map(([assetType, assetAmount]) => ({
                 assetType: H256.ensure(assetType),
-                amount: U256.ensure(assetAmount as number)
+                amount: U64.ensure(assetAmount as number)
             }))
         });
     }

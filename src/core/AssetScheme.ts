@@ -7,7 +7,7 @@ import {
 import { AssetMintOutput } from "./transaction/AssetMintOutput";
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { NetworkId } from "./types";
-import { U256 } from "./U256";
+import { U64 } from "./U64";
 
 export interface AssetSchemeJSON {
     metadata: string;
@@ -27,12 +27,12 @@ export class AssetScheme {
         const { metadata, amount, registrar, pool } = data;
         return new AssetScheme({
             metadata,
-            amount: U256.ensure(amount),
+            amount: U64.ensure(amount),
             registrar:
                 registrar === null ? null : PlatformAddress.ensure(registrar),
             pool: pool.map(({ assetType, amount: assetAmount }: any) => ({
                 assetType: H256.ensure(assetType),
-                amount: U256.ensure(assetAmount)
+                amount: U64.ensure(assetAmount)
             }))
         });
     }
@@ -40,17 +40,17 @@ export class AssetScheme {
     public readonly networkId?: NetworkId;
     public readonly shardId?: number;
     public readonly metadata: string;
-    public readonly amount: U256;
+    public readonly amount: U64;
     public readonly registrar: PlatformAddress | null;
-    public readonly pool: { assetType: H256; amount: U256 }[];
+    public readonly pool: { assetType: H256; amount: U64 }[];
 
     constructor(data: {
         networkId?: NetworkId;
         shardId?: number;
         metadata: string;
-        amount: U256;
+        amount: U64;
         registrar: PlatformAddress | null;
-        pool: { assetType: H256; amount: U256 }[];
+        pool: { assetType: H256; amount: U64 }[];
     }) {
         this.networkId = data.networkId;
         this.shardId = data.shardId;

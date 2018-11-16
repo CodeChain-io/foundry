@@ -14,7 +14,7 @@ import {
     Transaction
 } from "../core/transaction/Transaction";
 import { NetworkId } from "../core/types";
-import { U256 } from "../core/U256";
+import { U64 } from "../core/U64";
 
 export class ChainRpc {
     private rpc: Rpc;
@@ -90,8 +90,8 @@ export class ChainRpc {
         options?: {
             account?: PlatformAddress | string;
             passphrase?: string;
-            seq?: U256 | string | number;
-            fee?: U256 | string | number;
+            seq?: U64 | string | number;
+            fee?: U64 | string | number;
         }
     ): Promise<H256> {
         if (!(parcel instanceof Parcel)) {
@@ -395,7 +395,7 @@ export class ChainRpc {
     public getBalance(
         address: PlatformAddress | string,
         blockNumber?: number
-    ): Promise<U256> {
+    ): Promise<U64> {
         if (!PlatformAddress.check(address)) {
             throw Error(
                 `Expected the first argument of getBalance to be a PlatformAddress value but found ${address}`
@@ -414,15 +414,15 @@ export class ChainRpc {
                 ])
                 .then(result => {
                     try {
-                        // FIXME: Need to discuss changing the return type to `U256 | null`. It's a
+                        // FIXME: Need to discuss changing the return type to `U64 | null`. It's a
                         // breaking change.
                         resolve(
-                            result === null ? (null as any) : new U256(result)
+                            result === null ? (null as any) : new U64(result)
                         );
                     } catch (e) {
                         reject(
                             Error(
-                                `Expected chain_getBalance to return a value of U256, but an error occurred: ${e.toString()}`
+                                `Expected chain_getBalance to return a value of U64, but an error occurred: ${e.toString()}`
                             )
                         );
                     }
@@ -440,7 +440,7 @@ export class ChainRpc {
     public getSeq(
         address: PlatformAddress | string,
         blockNumber?: number
-    ): Promise<U256> {
+    ): Promise<U64> {
         if (!PlatformAddress.check(address)) {
             throw Error(
                 `Expected the first argument of getSeq to be a PlatformAddress value but found ${address}`
@@ -459,15 +459,15 @@ export class ChainRpc {
                 ])
                 .then(result => {
                     try {
-                        // FIXME: Need to discuss changing the return type to `U256 | null`. It's a
+                        // FIXME: Need to discuss changing the return type to `U64 | null`. It's a
                         // breaking change.
                         resolve(
-                            result === null ? (null as any) : new U256(result)
+                            result === null ? (null as any) : new U64(result)
                         );
                     } catch (e) {
                         reject(
                             Error(
-                                `Expected chain_getSeq to return a value of U256, but an error occurred: ${e.toString()}`
+                                `Expected chain_getSeq to return a value of U64, but an error occurred: ${e.toString()}`
                             )
                         );
                     }

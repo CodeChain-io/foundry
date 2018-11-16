@@ -1,12 +1,12 @@
 import { PlatformAddress } from "codechain-primitives";
 
-import { U256 } from "../U256";
+import { U64 } from "../U64";
 
 export class Payment {
     public receiver: PlatformAddress;
-    public amount: U256;
+    public amount: U64;
 
-    constructor(receiver: PlatformAddress, amount: U256) {
+    constructor(receiver: PlatformAddress, amount: U64) {
         this.receiver = receiver;
         this.amount = amount;
     }

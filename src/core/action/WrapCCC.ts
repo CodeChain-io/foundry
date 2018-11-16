@@ -1,4 +1,4 @@
-import { AssetTransferAddress, H160, H256, U256 } from "codechain-primitives";
+import { AssetTransferAddress, H160, H256, U64 } from "codechain-primitives";
 
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
@@ -9,20 +9,20 @@ export interface WrapCCCData {
     shardId: number;
     lockScriptHash: H160;
     parameters: Buffer[];
-    amount: U256;
+    amount: U64;
 }
 
 export interface WrapCCCAddressData {
     shardId: number;
     recipient: AssetTransferAddress;
-    amount: U256;
+    amount: U64;
 }
 
 export class WrapCCC {
     public readonly shardId: number;
     public readonly lockScriptHash: H160;
     public readonly parameters: Buffer[];
-    public readonly amount: U256;
+    public readonly amount: U64;
 
     constructor(data: WrapCCCData | WrapCCCAddressData) {
         if ("recipient" in data) {

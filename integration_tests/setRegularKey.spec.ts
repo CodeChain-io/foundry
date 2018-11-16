@@ -7,7 +7,7 @@ import {
     SERVER_URL
 } from "./helper";
 
-const U256 = SDK.Core.classes.U256;
+const U64 = SDK.Core.classes.U64;
 
 const sdk = new SDK({ server: SERVER_URL, networkId: CODECHAIN_NETWORK_ID });
 
@@ -52,6 +52,6 @@ test("setRegularKey", async () => {
     await sdk.rpc.chain.getParcelInvoice(hash2, { timeout: 60 * 60 * 1000 });
     const afterBalance = await sdk.rpc.chain.getBalance(masterAddress);
     expect(afterBalance.toString()).toEqual(
-        new U256(beforeBalance.value.minus(10)).toString()
+        U64.minus(beforeBalance, 10).toString()
     );
 });

@@ -3,7 +3,7 @@ import { PlatformAddress } from "codechain-primitives";
 import { H160 } from "../H160";
 import { H512 } from "../H512";
 import { getTransactionFromJSON } from "../transaction/Transaction";
-import { U256 } from "../U256";
+import { U64 } from "../U64";
 
 import { AssetTransaction } from "./AssetTransaction";
 import { CreateShard } from "./CreateShard";
@@ -35,7 +35,7 @@ export function getActionFromJSON(json: any): Action {
             const { receiver, amount } = json;
             return new Payment(
                 PlatformAddress.ensure(receiver),
-                new U256(amount)
+                new U64(amount)
             );
         }
         case "setRegularKey": {
@@ -66,7 +66,7 @@ export function getActionFromJSON(json: any): Action {
                 parameters: parameters.map((p: number[] | Buffer) =>
                     Buffer.from(p)
                 ),
-                amount: U256.ensure(amount)
+                amount: U64.ensure(amount)
             });
         }
         default:

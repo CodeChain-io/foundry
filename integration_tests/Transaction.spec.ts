@@ -41,7 +41,7 @@ test("AssetMintTransaction fromJSON", async () => {
             lockScriptHash: expect.any(H160),
             // FIXME: Buffer[]
             parameters: expect.anything(),
-            // FIXME: Change it to U256
+            // FIXME: Change it to U64
             amount: expect.anything()
         },
         // FIXME: null or H160
