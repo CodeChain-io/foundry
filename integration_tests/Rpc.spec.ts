@@ -182,8 +182,8 @@ describe("rpc", () => {
             });
 
             test("getSeq", async () => {
-                expect(await sdk.rpc.chain.getSeq(address)).toEqual(
-                    expect.any(U64)
+                expect(typeof (await sdk.rpc.chain.getSeq(address))).toBe(
+                    "number"
                 );
             });
 
@@ -228,7 +228,7 @@ describe("rpc", () => {
 
         describe("sendSignedParcel", () => {
             const secret = signerSecret;
-            let seq: U64;
+            let seq: number;
             let parcel: Parcel;
             beforeEach(async () => {
                 parcel = sdk.core.createPaymentParcel({
@@ -307,7 +307,7 @@ describe("rpc", () => {
                 const signedParcel = parcel.sign({
                     secret,
                     fee: 12321,
-                    seq: new U64(seq.value.minus(1))
+                    seq: seq - 1
                 });
                 sdk.rpc.chain
                     .sendSignedParcel(signedParcel)
@@ -506,7 +506,7 @@ describe("rpc", () => {
                 await sdk.rpc.chain.sendSignedParcel(
                     transferParcel.sign({
                         secret: signerSecret,
-                        seq: U64.plus(seq, 1),
+                        seq: seq + 1,
                         fee: 10
                     })
                 );

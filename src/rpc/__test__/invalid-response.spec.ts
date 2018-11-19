@@ -223,7 +223,6 @@ describe("Invalid response", () => {
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_getSeq");
-                    expect(e.toString()).toContain("U64");
                     expect(e.toString()).toContain("undefined");
                     done();
                 });

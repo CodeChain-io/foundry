@@ -90,7 +90,7 @@ export class ChainRpc {
         options?: {
             account?: PlatformAddress | string;
             passphrase?: string;
-            seq?: U64 | string | number;
+            seq?: number | null;
             fee?: U64 | string | number;
         }
     ): Promise<H256> {
@@ -440,7 +440,7 @@ export class ChainRpc {
     public getSeq(
         address: PlatformAddress | string,
         blockNumber?: number
-    ): Promise<U64> {
+    ): Promise<number> {
         if (!PlatformAddress.check(address)) {
             throw Error(
                 `Expected the first argument of getSeq to be a PlatformAddress value but found ${address}`
@@ -457,20 +457,11 @@ export class ChainRpc {
                     `${PlatformAddress.ensure(address).value}`,
                     blockNumber
                 ])
-                .then(result => {
-                    try {
-                        // FIXME: Need to discuss changing the return type to `U64 | null`. It's a
-                        // breaking change.
-                        resolve(
-                            result === null ? (null as any) : new U64(result)
-                        );
-                    } catch (e) {
-                        reject(
-                            Error(
-                                `Expected chain_getSeq to return a value of U64, but an error occurred: ${e.toString()}`
-                            )
-                        );
+                .then(async result => {
+                    if (result == null) {
+                        throw Error("chain_getSeq returns undefined");
                     }
+                    resolve(result);
                 })
                 .catch(reject);
         });

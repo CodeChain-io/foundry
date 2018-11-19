@@ -172,7 +172,7 @@ export class Key {
             account: PlatformAddress | string;
             passphrase?: string;
             fee: U64 | string | number;
-            seq: U64 | string | number;
+            seq: number;
         }
     ): Promise<SignedParcel> {
         if (!(parcel instanceof Parcel)) {
@@ -202,9 +202,9 @@ export class Key {
                 `Expected fee param to be a U64 value but found ${fee}`
             );
         }
-        if (!U64.check(seq)) {
+        if (typeof seq !== "number") {
             throw Error(
-                `Expected seq param to be a U64 value but found ${seq}`
+                `Expected seq param to be a number value but found ${seq}`
             );
         }
         parcel.setFee(fee);

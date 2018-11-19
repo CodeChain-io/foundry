@@ -1,5 +1,5 @@
 import { SDK } from "../";
-import { Transaction, U64 } from "../src/core/classes";
+import { Transaction } from "../src/core/classes";
 
 export const CODECHAIN_NETWORK_ID = process.env.CODECHAIN_NETWORK_ID || "tc";
 export const SERVER_URL =
@@ -72,7 +72,7 @@ export const payment = async (params?: { inc_seq?: number }) => {
     const { inc_seq = 0 } = params || {};
     let seq = await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS);
     for (let i = 0; i < inc_seq; i++) {
-        seq = U64.plus(seq, 1);
+        seq += 1;
     }
     const p = sdk.core
         .createPaymentParcel({

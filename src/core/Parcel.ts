@@ -54,7 +54,7 @@ export class Parcel {
         parcel.setFee(fee);
         return parcel;
     }
-    public seq: U64 | null;
+    public seq?: number | null;
     public fee: U64 | null;
     public readonly networkId: NetworkId;
     public readonly action: Action;
@@ -66,8 +66,8 @@ export class Parcel {
         this.action = action;
     }
 
-    public setSeq(seq: U64 | string | number) {
-        this.seq = U64.ensure(seq);
+    public setSeq(seq: number) {
+        this.seq = seq;
     }
 
     public setFee(fee: U64 | string | number) {
@@ -76,15 +76,10 @@ export class Parcel {
 
     public toEncodeObject(): any[] {
         const { seq, fee, action, networkId } = this;
-        if (!seq || !fee) {
+        if (seq == null || !fee) {
             throw Error("Seq and fee in the parcel must be present");
         }
-        return [
-            seq.toEncodeObject(),
-            fee.toEncodeObject(),
-            networkId,
-            action.toEncodeObject()
-        ];
+        return [seq, fee.toEncodeObject(), networkId, action.toEncodeObject()];
     }
 
     public rlpBytes(): Buffer {
@@ -105,14 +100,14 @@ export class Parcel {
 
     public sign(params: {
         secret: H256 | string;
-        seq: U64 | string | number;
+        seq: number;
         fee: U64 | string | number;
     }): SignedParcel {
         const { secret, seq, fee } = params;
         if (this.seq !== null) {
             throw Error("The parcel seq is already set");
         }
-        this.seq = U64.ensure(seq);
+        this.seq = seq;
         if (this.fee !== null) {
             throw Error("The parcel fee is already set");
         }
@@ -135,8 +130,8 @@ export class Parcel {
             networkId,
             action: action.toJSON()
         };
-        if (seq) {
-            result.seq = seq.toEncodeObject();
+        if (seq != null) {
+            result.seq = seq;
         }
         return result;
     }

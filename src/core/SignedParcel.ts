@@ -138,11 +138,11 @@ export class SignedParcel {
             64,
             "0"
         )}${_.padStart(v.toString(16), 2, "0")}`;
-        if (!seq || !fee) {
+        if (seq == null || !fee) {
             throw Error("Seq and fee in the parcel must be present");
         }
         return [
-            seq.toEncodeObject(),
+            seq,
             fee.toEncodeObject(),
             networkId,
             action.toEncodeObject(),
@@ -234,7 +234,7 @@ export class SignedParcel {
             blockNumber,
             blockHash: blockHash === null ? null : blockHash.value,
             parcelIndex,
-            seq: seq.value.toString(),
+            seq,
             fee: fee.value.toString(),
             networkId,
             action: action.toJSON(),
