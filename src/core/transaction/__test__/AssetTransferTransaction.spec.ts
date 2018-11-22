@@ -11,6 +11,7 @@ test("AssetTransferTransaction toJSON", () => {
         burns: [],
         inputs: [],
         outputs: [],
+        orders: [],
         networkId: "tc"
     });
     expect(AssetTransferTransaction.fromJSON(t.toJSON())).toEqual(t);

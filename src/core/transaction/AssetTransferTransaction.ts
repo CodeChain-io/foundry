@@ -20,6 +20,8 @@ import {
     AssetTransferOutput,
     AssetTransferOutputJSON
 } from "./AssetTransferOutput";
+import { Order } from "./Order";
+import { OrderOnTransfer, OrderOnTransferJSON } from "./OrderOnTransfer";
 
 const RLP = require("rlp");
 
@@ -29,6 +31,7 @@ export interface AssetTransferTransactionJSON {
         burns: AssetTransferInputJSON[];
         inputs: AssetTransferInputJSON[];
         outputs: AssetTransferOutputJSON[];
+        orders: OrderOnTransferJSON[];
         networkId: NetworkId;
     };
 }
@@ -37,6 +40,7 @@ export interface AssetTransferTransactionData {
     burns: AssetTransferInput[];
     inputs: AssetTransferInput[];
     outputs: AssetTransferOutput[];
+    orders: OrderOnTransfer[];
     networkId: NetworkId;
 }
 /**
@@ -60,7 +64,7 @@ export class AssetTransferTransaction {
      */
     public static fromJSON(obj: AssetTransferTransactionJSON) {
         const {
-            data: { networkId, burns, inputs, outputs }
+            data: { networkId, burns, inputs, outputs, orders }
         } = obj;
         return new this({
             burns: burns.map((input: any) =>
@@ -72,12 +76,14 @@ export class AssetTransferTransaction {
             outputs: outputs.map((output: any) =>
                 AssetTransferOutput.fromJSON(output)
             ),
+            orders: orders.map((order: any) => OrderOnTransfer.fromJSON(order)),
             networkId
         });
     }
     public readonly burns: AssetTransferInput[];
     public readonly inputs: AssetTransferInput[];
     public readonly outputs: AssetTransferOutput[];
+    public readonly orders: OrderOnTransfer[];
     public readonly networkId: NetworkId;
     public readonly type = "assetTransfer";
 
@@ -88,10 +94,11 @@ export class AssetTransferTransaction {
      * @param params.networkId A network ID of the transaction.
      */
     constructor(params: AssetTransferTransactionData) {
-        const { burns, inputs, outputs, networkId } = params;
+        const { burns, inputs, outputs, orders, networkId } = params;
         this.burns = burns;
         this.inputs = inputs;
         this.outputs = outputs;
+        this.orders = orders;
         this.networkId = networkId;
     }
 
@@ -104,7 +111,8 @@ export class AssetTransferTransaction {
             this.networkId,
             this.burns.map(input => input.toEncodeObject()),
             this.inputs.map(input => input.toEncodeObject()),
-            this.outputs.map(output => output.toEncodeObject())
+            this.outputs.map(output => output.toEncodeObject()),
+            this.orders.map(order => order.toEncodeObject())
         ];
     }
 
@@ -208,6 +216,51 @@ export class AssetTransferTransaction {
     }
 
     /**
+     * Add an Order to create.
+     * @param params.order An order to apply to the transfer transaction.
+     * @param params.spentAmount A spent amount of the asset to give(from) while transferring.
+     * @param params.inputIndices The indices of inputs affected by the order
+     * @param params.outputIndices The indices of outputs affected by the order
+     */
+    public addOrder(params: {
+        order: Order;
+        spentAmount: U64 | string | number;
+        inputIndices: number[];
+        outputIndices: number[];
+    }) {
+        const { order, spentAmount, inputIndices, outputIndices } = params;
+        if (inputIndices.length === 0 || outputIndices.length === 0) {
+            throw Error(`inputIndices and outputIndices should not be empty`);
+        }
+
+        for (const orderOnTx of this.orders) {
+            const setInputs = new Set(orderOnTx.inputIndices);
+            const setOutputs = new Set(orderOnTx.outputIndices);
+            const inputIntersection = [...new Set(inputIndices)].filter(x =>
+                setInputs.has(x)
+            );
+            const outputIntersection = [...new Set(outputIndices)].filter(x =>
+                setOutputs.has(x)
+            );
+            if (inputIntersection.length > 0 || outputIntersection.length > 0) {
+                throw Error(
+                    `inputIndices and outputIndices should not intersect with other orders: ${orderOnTx}`
+                );
+            }
+        }
+
+        this.orders.push(
+            new OrderOnTransfer({
+                order,
+                spentAmount: U64.ensure(spentAmount),
+                inputIndices,
+                outputIndices
+            })
+        );
+        return this;
+    }
+
+    /**
      * Get the output of the given index, of this transaction.
      * @param index An index indicating an output.
      * @returns An Asset.
@@ -257,6 +310,13 @@ export class AssetTransferTransaction {
         let burns: AssetTransferInput[];
         let inputs: AssetTransferInput[];
         let outputs: AssetTransferOutput[];
+
+        if (
+            this.orders.length > 0 &&
+            (tag.input !== "all" || tag.output !== "all")
+        ) {
+            throw Error(`Partial signing is unavailable with orders`);
+        }
         if (tag.input === "all") {
             inputs = this.inputs.map(input => input.withoutScript());
             burns = this.burns.map(input => input.withoutScript());
@@ -292,6 +352,7 @@ export class AssetTransferTransaction {
                     burns,
                     inputs,
                     outputs,
+                    orders: this.orders,
                     networkId
                 }).rlpBytes(),
                 Buffer.from(blake128(encodeSignatureTag(tag)), "hex")
@@ -338,14 +399,15 @@ export class AssetTransferTransaction {
      * @returns An AssetTransferTransaction JSON object.
      */
     public toJSON(): AssetTransferTransactionJSON {
-        const { networkId, burns, inputs, outputs } = this;
+        const { networkId, burns, inputs, outputs, orders } = this;
         return {
             type: this.type,
             data: {
                 networkId,
                 burns: burns.map(input => input.toJSON()),
                 inputs: inputs.map(input => input.toJSON()),
-                outputs: outputs.map(output => output.toJSON())
+                outputs: outputs.map(output => output.toJSON()),
+                orders: orders.map(order => order.toJSON())
             }
         };
     }

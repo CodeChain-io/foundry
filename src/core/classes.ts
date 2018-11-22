@@ -33,6 +33,8 @@ export {
 export {
     AssetUnwrapCCCTransaction
 } from "./transaction/AssetUnwrapCCCTransaction";
+export { Order } from "./transaction/Order";
+export { OrderOnTransfer } from "./transaction/OrderOnTransfer";
 export { Asset } from "./Asset";
 export { AssetScheme } from "./AssetScheme";
 

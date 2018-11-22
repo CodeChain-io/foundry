@@ -27,6 +27,7 @@ import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
 import { AssetUnwrapCCCTransaction } from "./transaction/AssetUnwrapCCCTransaction";
+import { OrderOnTransfer } from "./transaction/OrderOnTransfer";
 import { getTransactionFromJSON, Transaction } from "./transaction/Transaction";
 import { NetworkId } from "./types";
 import { U256 } from "./U256";
@@ -326,12 +327,14 @@ export class Core {
         burns?: AssetTransferInput[];
         inputs?: AssetTransferInput[];
         outputs?: AssetTransferOutput[];
+        orders?: OrderOnTransfer[];
         networkId?: NetworkId;
     }): AssetTransferTransaction {
         const {
             burns = [],
             inputs = [],
             outputs = [],
+            orders = [],
             networkId = this.networkId
         } = params || {};
         checkTransferBurns(burns);
@@ -342,6 +345,7 @@ export class Core {
             burns,
             inputs,
             outputs,
+            orders,
             networkId
         });
     }
