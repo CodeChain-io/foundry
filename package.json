@@ -34,7 +34,7 @@
   "dependencies": {
     "buffer": "5.1.0",
     "codechain-keystore": "^0.5.4",
-    "codechain-primitives": "^0.4.2",
+    "codechain-primitives": "^0.4.3",
     "jayson": "^2.0.6",
     "lodash": "^4.17.10",
     "node-fetch": "^2.1.2",
