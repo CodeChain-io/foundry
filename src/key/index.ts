@@ -9,6 +9,7 @@ import {
     AssetDecomposeTransaction,
     AssetTransferTransaction,
     AssetUnwrapCCCTransaction,
+    Order,
     Parcel,
     SignedParcel,
     Transaction,
@@ -305,11 +306,21 @@ export class Key {
         const p2pkh = this.createP2PKH({ keyStore });
         let message: H256;
         if (tx instanceof AssetTransferTransaction) {
-            message = tx.hashWithoutScript({
-                tag: signatureTag,
-                type: "input",
-                index
-            });
+            let flag = false;
+            for (const order of tx.orders) {
+                if (order.inputIndices.indexOf(index) !== -1) {
+                    message = order.order.hash();
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) {
+                message = tx.hashWithoutScript({
+                    tag: signatureTag,
+                    type: "input",
+                    index
+                });
+            }
         } else if (tx instanceof AssetComposeTransaction) {
             // FIXME: check type
             message = tx.hashWithoutScript({
@@ -323,9 +334,54 @@ export class Key {
             throw Error(`Invalid tx`);
         }
         input.setUnlockScript(
-            await p2pkh.createUnlockScript(publicKeyHash, message, {
+            await p2pkh.createUnlockScript(publicKeyHash, message!, {
                 passphrase,
                 signatureTag
+            })
+        );
+    }
+
+    /**
+     * Signs a transaction's input with an order.
+     * @param tx An AssetTransferTransaction.
+     * @param index The index of an input to sign.
+     * @param order An order to be used as a signature message.
+     * @param params.keyStore A key store.
+     * @param params.passphrase The passphrase for the given input.
+     */
+    public async signTransactionInputWithOrder(
+        tx: AssetTransferTransaction,
+        index: number,
+        order: Order,
+        params: {
+            keyStore?: KeyStore;
+            passphrase?: string;
+        } = {}
+    ): Promise<void> {
+        if (index >= tx.inputs.length) {
+            throw Error(`Invalid index`);
+        }
+        const input = tx.inputs[index];
+
+        const { lockScriptHash, parameters } = input.prevOut;
+        if (lockScriptHash === undefined || parameters === undefined) {
+            throw Error(`Invalid transaction input`);
+        }
+        if (lockScriptHash.value !== P2PKH.getLockScriptHash().value) {
+            throw Error(`Unexpected lock script hash`);
+        }
+        if (parameters.length !== 1) {
+            throw Error(`Unexpected length of parameters`);
+        }
+        const publicKeyHash = Buffer.from(parameters[0]).toString("hex");
+
+        input.setLockScript(P2PKH.getLockScript());
+        const { keyStore = await this.ensureKeyStore(), passphrase } = params;
+        const p2pkh = this.createP2PKH({ keyStore });
+        input.setUnlockScript(
+            await p2pkh.createUnlockScript(publicKeyHash, order.hash(), {
+                passphrase,
+                signatureTag: { input: "all", output: "all" }
             })
         );
     }
