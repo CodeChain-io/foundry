@@ -64,6 +64,10 @@ describe("examples", () => {
     test("wrap-ccc-and-unwrap-ccc", done => {
         runExample("wrap-ccc-and-unwrap-ccc", done);
     });
+
+    test("mint-and-transfer-with-order", done => {
+        runExample("mint-and-transfer-with-order", done);
+    });
 });
 
 function runExample(name: string, done: () => any) {
