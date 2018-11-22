@@ -27,6 +27,7 @@ import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
 import { AssetUnwrapCCCTransaction } from "./transaction/AssetUnwrapCCCTransaction";
+import { Order } from "./transaction/Order";
 import { OrderOnTransfer } from "./transaction/OrderOnTransfer";
 import { getTransactionFromJSON, Transaction } from "./transaction/Transaction";
 import { NetworkId } from "./types";
@@ -274,6 +275,129 @@ export class Core {
         });
     }
 
+    public createOrder(
+        params: {
+            assetTypeFrom: H256 | string;
+            assetTypeTo: H256 | string;
+            assetTypeFee?: H256 | string;
+            assetAmountFrom: U64 | number | string;
+            assetAmountTo: U64 | number | string;
+            assetAmountFee?: U64 | number | string;
+            originOutputs:
+                | AssetOutPoint[]
+                | {
+                      transactionHash: H256 | string;
+                      index: number;
+                      assetType: H256 | string;
+                      amount: U64 | number | string;
+                      lockScriptHash?: H256 | string;
+                      parameters?: Buffer[];
+                  }[];
+            expiration: U64 | number | string;
+        } & (
+            | {
+                  lockScriptHash: H160 | string;
+                  parameters: Buffer[];
+              }
+            | {
+                  recipient: AssetTransferAddress | string;
+              })
+    ): Order {
+        const {
+            assetTypeFrom,
+            assetTypeTo,
+            assetTypeFee = "0000000000000000000000000000000000000000000000000000000000000000",
+            assetAmountFrom,
+            assetAmountTo,
+            assetAmountFee = 0,
+            originOutputs,
+            expiration
+        } = params;
+        checkAssetType(assetTypeFrom);
+        checkAssetType(assetTypeTo);
+        checkAssetType(assetTypeFee);
+        checkAmount(assetAmountFrom);
+        checkAmount(assetAmountTo);
+        checkAmount(assetAmountFee);
+        checkExpiration(expiration);
+        const originOutputsConv: AssetOutPoint[] = [];
+        for (let i = 0; i < originOutputs.length; i++) {
+            const originOutput = originOutputs[i];
+            const {
+                transactionHash,
+                index,
+                assetType,
+                amount,
+                lockScriptHash,
+                parameters
+            } = originOutput;
+            checkAssetOutPoint(originOutput);
+            originOutputsConv[i] =
+                originOutput instanceof AssetOutPoint
+                    ? originOutput
+                    : new AssetOutPoint({
+                          transactionHash: H256.ensure(transactionHash),
+                          index,
+                          assetType: H256.ensure(assetType),
+                          amount: U64.ensure(amount),
+                          lockScriptHash: lockScriptHash
+                              ? H160.ensure(lockScriptHash)
+                              : undefined,
+                          parameters
+                      });
+        }
+
+        if ("recipient" in params) {
+            checkAssetTransferAddressRecipient(params.recipient);
+            return new Order({
+                assetTypeFrom: H256.ensure(assetTypeFrom),
+                assetTypeTo: H256.ensure(assetTypeTo),
+                assetTypeFee: H256.ensure(assetTypeFee),
+                assetAmountFrom: U64.ensure(assetAmountFrom),
+                assetAmountTo: U64.ensure(assetAmountTo),
+                assetAmountFee: U64.ensure(assetAmountFee),
+                expiration: U64.ensure(expiration),
+                originOutputs: originOutputsConv,
+                recipient: AssetTransferAddress.ensure(params.recipient)
+            });
+        } else {
+            const { lockScriptHash, parameters } = params;
+            checkLockScriptHash(lockScriptHash);
+            checkParameters(parameters);
+            return new Order({
+                assetTypeFrom: H256.ensure(assetTypeFrom),
+                assetTypeTo: H256.ensure(assetTypeTo),
+                assetTypeFee: H256.ensure(assetTypeFee),
+                assetAmountFrom: U64.ensure(assetAmountFrom),
+                assetAmountTo: U64.ensure(assetAmountTo),
+                assetAmountFee: U64.ensure(assetAmountFee),
+                expiration: U64.ensure(expiration),
+                originOutputs: originOutputsConv,
+                lockScriptHash: H160.ensure(lockScriptHash),
+                parameters
+            });
+        }
+    }
+    public createOrderOnTransfer(params: {
+        order: Order;
+        spentAmount: U64 | string | number;
+        inputIndices: number[];
+        outputIndices: number[];
+    }) {
+        const { order, spentAmount, inputIndices, outputIndices } = params;
+        checkOrder(order);
+        checkAmount(spentAmount);
+        checkIndices(inputIndices);
+        checkIndices(outputIndices);
+
+        return new OrderOnTransfer({
+            order,
+            spentAmount: U64.ensure(spentAmount),
+            inputIndices,
+            outputIndices
+        });
+    }
+
     public createAssetMintTransaction(params: {
         scheme:
             | AssetScheme
@@ -465,10 +589,13 @@ export class Core {
             lockScript,
             unlockScript
         } = params;
-        if (assetOutPoint !== null && typeof assetOutPoint !== "object") {
-            throw Error(
-                `Expected assetOutPoint param to be either an AssetOutPoint or an object but found ${assetOutPoint}`
-            );
+        checkAssetOutPoint(assetOutPoint);
+        checkTimelock(timelock);
+        if (lockScript) {
+            checkLockScript(lockScript);
+        }
+        if (unlockScript) {
+            checkUnlockScript(unlockScript);
         }
         const {
             transactionHash,
@@ -478,23 +605,6 @@ export class Core {
             lockScriptHash,
             parameters
         } = assetOutPoint;
-        checkTransactionHash(transactionHash);
-        checkIndex(index);
-        checkAssetType(assetType);
-        checkAmount(amount);
-        checkTimelock(timelock);
-        if (lockScriptHash) {
-            checkLockScriptHash(lockScriptHash);
-        }
-        if (parameters) {
-            checkParameters(parameters);
-        }
-        if (lockScript) {
-            checkLockScript(lockScript);
-        }
-        if (unlockScript) {
-            checkUnlockScript(unlockScript);
-        }
         return new AssetTransferInput({
             prevOut:
                 assetOutPoint instanceof AssetOutPoint
@@ -610,6 +720,14 @@ function checkAmount(amount: U64 | number | string) {
     if (!U64.check(amount)) {
         throw Error(
             `Expected amount param to be a U64 value but found ${amount}`
+        );
+    }
+}
+
+function checkExpiration(expiration: U64 | number | string) {
+    if (!U64.check(expiration)) {
+        throw Error(
+            `Expected expiration param to be a U64 value but found ${expiration}`
         );
     }
 }
@@ -748,6 +866,66 @@ function checkAssetType(value: H256 | string) {
             `Expected assetType param to be an H256 value but found ${value}`
         );
     }
+}
+
+function checkAssetOutPoint(
+    value:
+        | AssetOutPoint
+        | {
+              transactionHash: H256 | string;
+              index: number;
+              assetType: H256 | string;
+              amount: U64 | number | string;
+              lockScriptHash?: H256 | string;
+              parameters?: Buffer[];
+          }
+) {
+    if (value !== null && typeof value !== "object") {
+        throw Error(
+            `Expected assetOutPoint param to be either an AssetOutPoint or an object but found ${value}`
+        );
+    }
+    const {
+        transactionHash,
+        index,
+        assetType,
+        amount,
+        lockScriptHash,
+        parameters
+    } = value;
+    checkTransactionHash(transactionHash);
+    checkIndex(index);
+    checkAssetType(assetType);
+    checkAmount(amount);
+    if (lockScriptHash) {
+        checkLockScriptHash(lockScriptHash);
+    }
+    if (parameters) {
+        checkParameters(parameters);
+    }
+}
+
+function checkOrder(order: Order | null) {
+    if (order !== null && !(order instanceof Order)) {
+        throw Error(
+            `Expected order param to be either null or an Order value but found ${order}`
+        );
+    }
+}
+
+function checkIndices(indices: Array<number>) {
+    if (!Array.isArray(indices)) {
+        throw Error(
+            `Expected indices param to be an array but found ${indices}`
+        );
+    }
+    indices.forEach((value, idx) => {
+        if (typeof value !== "number") {
+            throw Error(
+                `Expected an indices to be an array of numbers but found ${value} at index ${idx}`
+            );
+        }
+    });
 }
 
 function checkLockScriptHash(value: H160 | string) {
