@@ -262,4 +262,46 @@ export class AccountRpc {
                 .catch(reject);
         });
     }
+
+    /**
+     * Changes the passpharse of the account
+     * @param address A platform address
+     * @param oldPassphrase The account's current passphrase
+     * @param newPassphrase The new passphrase for the account
+     */
+    public changePassword(
+        address: PlatformAddress | string,
+        oldPassphrase: string,
+        newPassphrase: string
+    ): Promise<null> {
+        if (oldPassphrase && typeof oldPassphrase !== "string") {
+            throw Error(
+                `Expected the second argument to be a string but given ${oldPassphrase}`
+            );
+        }
+        if (newPassphrase && typeof newPassphrase !== "string") {
+            throw Error(
+                `Expected the second argument to be a string but given ${newPassphrase}`
+            );
+        }
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("account_changePassword", [
+                    address,
+                    oldPassphrase,
+                    newPassphrase
+                ])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(
+                        Error(
+                            `Expected account_changePassword to return null but it returned ${result}`
+                        )
+                    );
+                })
+                .catch(reject);
+        });
+    }
 }

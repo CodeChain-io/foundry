@@ -715,5 +715,45 @@ describe("rpc", () => {
                     });
             });
         });
+
+        describe("changePassword", () => {
+            let address: string;
+            beforeEach(async () => {
+                address = await sdk.rpc.account.create("123");
+            });
+
+            test("Ok", async () => {
+                await sdk.rpc.account.changePassword(address, "123", "456");
+                await sdk.rpc.account.changePassword(address, "456", "");
+                await sdk.rpc.account.changePassword(address, "", "123");
+
+                const addressWithNoPassphrase = await sdk.rpc.account.create();
+                await sdk.rpc.account.changePassword(
+                    addressWithNoPassphrase,
+                    "",
+                    "123"
+                );
+            });
+
+            test("WrongPassword", async done => {
+                sdk.rpc.account
+                    .changePassword(address, "456", "123")
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.WRONG_PASSWORD);
+                        done();
+                    });
+            });
+
+            test("NoSuchAccount", async done => {
+                sdk.rpc.account
+                    .changePassword(noSuchAccount, "123", "456")
+                    .then(() => done.fail())
+                    .catch(e => {
+                        expect(e).toEqual(ERROR.NO_SUCH_ACCOUNT);
+                        done();
+                    });
+            });
+        });
     });
 });
