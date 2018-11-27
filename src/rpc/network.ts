@@ -417,16 +417,19 @@ export class NetworkRpc {
      */
     public disableBlacklist(): Promise<null> {
         return new Promise((resolve, reject) => {
-            this.rpc.sendRpcRequest("net_disableBlacklist", []).then(result => {
-                if (result === null) {
-                    return resolve(null);
-                }
-                reject(
-                    Error(
-                        `Expected net_disableBlacklist to return null but it returned ${result}`
-                    )
-                );
-            });
+            this.rpc
+                .sendRpcRequest("net_disableBlacklist", [])
+                .then(result => {
+                    if (result === null) {
+                        return resolve(null);
+                    }
+                    reject(
+                        Error(
+                            `Expected net_disableBlacklist to return null but it returned ${result}`
+                        )
+                    );
+                })
+                .catch(reject);
         });
     }
 
