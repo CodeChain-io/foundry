@@ -3,6 +3,7 @@ import fetch from "node-fetch";
 import { AccountRpc } from "./account";
 import { ChainRpc } from "./chain";
 import { DevelRpc } from "./devel";
+import { EngineRpc } from "./engine";
 import { NetworkRpc } from "./network";
 import { NodeRpc } from "./node";
 
@@ -29,6 +30,13 @@ export class Rpc {
      */
     public account: AccountRpc;
 
+    /**
+     * RPC module for retrieving the engine info.
+     */
+    public engine: EngineRpc;
+    /**
+     * RPC module for developer functions
+     */
     public devel: DevelRpc;
     private client: any;
 
@@ -68,6 +76,7 @@ export class Rpc {
         this.chain = new ChainRpc(this, options);
         this.network = new NetworkRpc(this);
         this.account = new AccountRpc(this, options);
+        this.engine = new EngineRpc(this);
         this.devel = new DevelRpc(this);
     }
 
