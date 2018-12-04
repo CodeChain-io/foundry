@@ -22,7 +22,7 @@ const ACCOUNT_PASSPHRASE = "satoshi";
             name: "An example asset"
         }),
         amount: 10,
-        registrar: null
+        approver: null
     });
     const mintTx = sdk.core.createAssetMintTransaction({
         scheme: assetScheme,

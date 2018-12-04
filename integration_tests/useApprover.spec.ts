@@ -30,7 +30,7 @@ const otherAddress = sdk.core.classes.PlatformAddress.fromAccountId(
 const regularSecret = SDK.util.generatePrivateKey();
 const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
 
-test("checkRegistrarValidation", async () => {
+test("checkApproverValidation", async () => {
     await setRegularKey();
     await sendCCCToOther();
 
@@ -90,7 +90,7 @@ async function mintAssetUsingMaster(
             icon_url: "https://gold.image/"
         }),
         amount: 10000,
-        registrar: masterAddress
+        approver: masterAddress
     });
 
     const mintTx = sdk.core.createAssetMintTransaction({

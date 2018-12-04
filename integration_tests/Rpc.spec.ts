@@ -380,7 +380,7 @@ describe("rpc", () => {
                         shardId,
                         metadata: "metadata",
                         amount: 10,
-                        registrar: undefined
+                        approver: undefined
                     })
                     .createMintTransaction({
                         recipient: await sdk.key.createAssetTransferAddress()
@@ -474,7 +474,7 @@ describe("rpc", () => {
                         shardId,
                         metadata: "metadata",
                         amount: 10,
-                        registrar: undefined
+                        approver: undefined
                     })
                     .createMintTransaction({
                         recipient: await sdk.key.createAssetTransferAddress()

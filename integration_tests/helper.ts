@@ -46,13 +46,13 @@ export const mintAsset = async ({
     metadata,
     amount,
     lockScriptHash,
-    registrar
+    approver
 }: any) => {
     const assetScheme = sdk.core.createAssetScheme({
         shardId: 0,
         metadata,
         amount,
-        registrar
+        approver
     });
     const assetAddress = sdk.core.classes.AssetTransferAddress.fromTypeAndPayload(
         0,

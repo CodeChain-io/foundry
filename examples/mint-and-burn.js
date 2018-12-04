@@ -23,7 +23,7 @@ const ACCOUNT_PASSPHRASE = "satoshi";
             description: "This asset will be burnt shortly"
         }),
         amount: 10000,
-        registrar: null
+        approver: null
     });
     const mintTx = sdk.core.createAssetMintTransaction({
         scheme: assetScheme,

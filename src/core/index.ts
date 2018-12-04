@@ -235,36 +235,36 @@ export class Core {
      * @param params.metadata Any string that describing the asset. For example,
      * stringified JSON containing properties.
      * @param params.amount Total amount of this asset
-     * @param params.registrar Platform account or null. If account is present, the
+     * @param params.approver Platform account or null. If account is present, the
      * parcel that includes AssetTransferTransaction of this asset must be signed by
-     * the registrar account.
-     * @throws Given string for registrar is invalid for converting it to paltform account
+     * the approver account.
+     * @throws Given string for approver is invalid for converting it to paltform account
      */
     public createAssetScheme(params: {
         shardId: number;
         metadata: string;
         amount: U64 | number | string;
-        registrar?: PlatformAddress | string;
+        approver?: PlatformAddress | string;
         pool?: { assetType: H256 | string; amount: number }[];
     }): AssetScheme {
         const {
             shardId,
             metadata,
             amount,
-            registrar = null,
+            approver = null,
             pool = []
         } = params;
         checkShardId(shardId);
         checkMetadata(metadata);
         checkAmount(amount);
-        checkRegistrar(registrar);
+        checkApprover(approver);
         return new AssetScheme({
             networkId: this.networkId,
             shardId,
             metadata,
             amount: U64.ensure(amount),
-            registrar:
-                registrar === null ? null : PlatformAddress.ensure(registrar),
+            approver:
+                approver == null ? null : PlatformAddress.ensure(approver),
             pool: pool.map(({ assetType, amount: assetAmount }) => ({
                 assetType: H256.ensure(assetType),
                 amount: U64.ensure(assetAmount)
@@ -279,7 +279,7 @@ export class Core {
                   networkId?: NetworkId;
                   shardId: number;
                   metadata: string;
-                  registrar?: PlatformAddress | string;
+                  approver?: PlatformAddress | string;
                   amount?: U64 | number | string | null;
               };
         recipient: AssetTransferAddress | string;
@@ -294,7 +294,7 @@ export class Core {
             networkId = this.networkId,
             shardId,
             metadata,
-            registrar = null,
+            approver: approver = null,
             amount
         } = scheme;
         checkAssetTransferAddressRecipient(recipient);
@@ -304,15 +304,15 @@ export class Core {
         }
         checkShardId(shardId);
         checkMetadata(metadata);
-        checkRegistrar(registrar);
+        checkApprover(approver);
         if (amount != null) {
             checkAmount(amount);
         }
         return new AssetMintTransaction({
             networkId,
             shardId,
-            registrar:
-                registrar == null ? null : PlatformAddress.ensure(registrar),
+            approver:
+                approver == null ? null : PlatformAddress.ensure(approver),
             metadata,
             output: new AssetMintOutput({
                 amount: amount == null ? null : U64.ensure(amount),
@@ -352,7 +352,7 @@ export class Core {
                   shardId: number;
                   metadata: string;
                   amount?: U64 | number | string | null;
-                  registrar?: PlatformAddress | string;
+                  approver?: PlatformAddress | string;
                   networkId?: NetworkId;
               };
         inputs: AssetTransferInput[];
@@ -363,7 +363,7 @@ export class Core {
             networkId = this.networkId,
             shardId,
             metadata,
-            registrar = null,
+            approver = null,
             amount
         } = scheme;
         checkTransferInputs(inputs);
@@ -374,15 +374,15 @@ export class Core {
         }
         checkShardId(shardId);
         checkMetadata(metadata);
-        checkRegistrar(registrar);
+        checkApprover(approver);
         if (amount != null) {
             checkAmount(amount);
         }
         return new AssetComposeTransaction({
             networkId,
             shardId,
-            registrar:
-                registrar === null ? null : PlatformAddress.ensure(registrar),
+            approver:
+                approver === null ? null : PlatformAddress.ensure(approver),
             metadata,
             inputs,
             output: new AssetMintOutput({
@@ -636,10 +636,10 @@ function checkMetadata(metadata: string) {
     }
 }
 
-function checkRegistrar(registrar: PlatformAddress | string | null) {
-    if (registrar !== null && !PlatformAddress.check(registrar)) {
+function checkApprover(approver: PlatformAddress | string | null) {
+    if (approver !== null && !PlatformAddress.check(approver)) {
         throw Error(
-            `Expected registrar param to be either null or a PlatformAddress value but found ${registrar}`
+            `Expected approver param to be either null or a PlatformAddress value but found ${approver}`
         );
     }
 }

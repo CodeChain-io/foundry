@@ -14,7 +14,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     const aliceAddress = await sdk.key.createAssetTransferAddress();
     const bobAddress = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
 
-    // Create asset named Gold. Total amount of Gold is 10000. The registrar is set
+    // Create asset named Gold. Total amount of Gold is 10000. The approver is set
     // to null, which means this type of asset can be transferred freely.
     const goldAssetScheme = sdk.core.createAssetScheme({
         shardId: 0,
@@ -24,7 +24,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             icon_url: "https://gold.image/"
         }),
         amount: 10000,
-        registrar: null
+        approver: null
     });
     const mintTx = sdk.core.createAssetMintTransaction({
         scheme: goldAssetScheme,

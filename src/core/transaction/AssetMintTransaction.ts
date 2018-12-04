@@ -17,7 +17,7 @@ export interface AssetMintTransactionJSON {
         shardId: number;
         metadata: string;
         output: AssetMintOutputJSON;
-        registrar: string | null;
+        approver: string | null;
     };
 }
 
@@ -28,7 +28,7 @@ export interface AssetMintTransactionJSON {
  *  - A metadata is a string that explains the asset's type.
  *  - Amount defines the quantity of asset to be created. If set as null, it
  *  will be set as the maximum value of a 64-bit unsigned integer by default.
- *  - If registrar exists, the registrar must be the Signer of the Parcel when
+ *  - If approver exists, the approver must be the Signer of the Parcel when
  *  sending the created asset through AssetTransferTransaction.
  */
 export class AssetMintTransaction {
@@ -39,24 +39,22 @@ export class AssetMintTransaction {
      */
     public static fromJSON(data: AssetMintTransactionJSON) {
         const {
-            data: { networkId, shardId, metadata, output, registrar }
+            data: { networkId, shardId, metadata, output, approver }
         } = data;
         return new this({
             networkId,
             shardId,
             metadata,
             output: AssetMintOutput.fromJSON(output),
-            registrar:
-                registrar === null
-                    ? null
-                    : PlatformAddress.fromString(registrar)
+            approver:
+                approver === null ? null : PlatformAddress.fromString(approver)
         });
     }
     public readonly networkId: NetworkId;
     public readonly shardId: number;
     public readonly metadata: string;
     public readonly output: AssetMintOutput;
-    public readonly registrar: PlatformAddress | null;
+    public readonly approver: PlatformAddress | null;
     public readonly type = "assetMint";
 
     /**
@@ -66,21 +64,21 @@ export class AssetMintTransaction {
      * @param data.output.lockScriptHash A lock script hash of the output.
      * @param data.output.parameters Parameters of the output.
      * @param data.output.amount Asset amount of the output.
-     * @param data.registrar A registrar of the asset.
+     * @param data.approver A approver of the asset.
      */
     constructor(data: {
         networkId: NetworkId;
         shardId: number;
         metadata: string;
         output: AssetMintOutput;
-        registrar: PlatformAddress | null;
+        approver: PlatformAddress | null;
     }) {
-        const { networkId, shardId, metadata, output, registrar } = data;
+        const { networkId, shardId, metadata, output, approver } = data;
         this.networkId = networkId;
         this.shardId = shardId;
         this.metadata = metadata;
         this.output = output;
-        this.registrar = registrar;
+        this.approver = approver;
     }
 
     /**
@@ -88,7 +86,7 @@ export class AssetMintTransaction {
      * @returns An AssetMintTransaction JSON object.
      */
     public toJSON(): AssetMintTransactionJSON {
-        const { networkId, shardId, metadata, output, registrar } = this;
+        const { networkId, shardId, metadata, output, approver } = this;
         return {
             type: this.type,
             data: {
@@ -96,7 +94,7 @@ export class AssetMintTransaction {
                 shardId,
                 metadata,
                 output: output.toJSON(),
-                registrar: registrar === null ? null : registrar.toString()
+                approver: approver === null ? null : approver.toString()
             }
         };
     }
@@ -110,7 +108,7 @@ export class AssetMintTransaction {
             shardId,
             metadata,
             output: { lockScriptHash, parameters, amount },
-            registrar
+            approver
         } = this;
         return [
             3,
@@ -120,7 +118,7 @@ export class AssetMintTransaction {
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
             amount != null ? [amount.toEncodeObject()] : [],
-            registrar ? [registrar.getAccountId().toEncodeObject()] : []
+            approver ? [approver.getAccountId().toEncodeObject()] : []
         ];
     }
 
@@ -168,7 +166,7 @@ export class AssetMintTransaction {
             shardId,
             metadata,
             output: { amount },
-            registrar
+            approver
         } = this;
         if (amount == null) {
             throw Error("not implemented");
@@ -178,7 +176,7 @@ export class AssetMintTransaction {
             shardId,
             metadata,
             amount,
-            registrar,
+            approver,
             pool: []
         });
     }
