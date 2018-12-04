@@ -29,9 +29,10 @@ export class Parcel {
      */
     public static transaction(
         networkId: NetworkId,
-        transaction: Transaction
+        transaction: Transaction,
+        approvals: string[] = []
     ): Parcel {
-        const action = new AssetTransaction({ transaction });
+        const action = new AssetTransaction({ transaction, approvals });
         return new Parcel(networkId, action);
     }
 

@@ -124,12 +124,13 @@ export class Core {
      */
     public createAssetTransactionParcel(params: {
         transaction: Transaction;
+        approvals?: string[];
     }): Parcel {
-        const { transaction } = params;
+        const { transaction, approvals = [] } = params;
         checkTransaction(transaction);
         return new Parcel(
             this.networkId,
-            new AssetTransaction({ transaction })
+            new AssetTransaction({ transaction, approvals })
         );
     }
 

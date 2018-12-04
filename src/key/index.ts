@@ -11,6 +11,7 @@ import {
     AssetUnwrapCCCTransaction,
     Parcel,
     SignedParcel,
+    Transaction,
     U64
 } from "../core/classes";
 import { NetworkId } from "../core/types";
@@ -155,6 +156,45 @@ export class Key {
         return new P2PKHBurn({ keyStore, networkId });
     }
 
+    /**
+     * Approves the transaction
+     * @param transaction A transaction
+     * @param params
+     * @param params.keyStore A key store.
+     * @param params.account An account.
+     * @param params.passphrase The passphrase for the given account
+     * @returns An approval
+     */
+    public async approveTransaction(
+        transaction: Transaction,
+        params: {
+            keyStore?: KeyStore;
+            account: PlatformAddress | string;
+            passphrase?: string;
+        }
+    ): Promise<string> {
+        const {
+            account,
+            passphrase,
+            keyStore = await this.ensureKeyStore()
+        } = params;
+        if (!isKeyStore(keyStore)) {
+            throw Error(
+                `Expected keyStore param to be a KeyStore instance but found ${keyStore}`
+            );
+        }
+        if (!PlatformAddress.check(account)) {
+            throw Error(
+                `Expected account param to be a PlatformAddress value but found ${account}`
+            );
+        }
+        const accountId = PlatformAddress.ensure(account).getAccountId();
+        return await keyStore.platform.sign({
+            key: accountId.value,
+            message: transaction.hash().value,
+            passphrase
+        });
+    }
     /**
      * Signs a Parcel with the given account.
      * @param parcel A Parcel

@@ -26,9 +26,10 @@ export function getActionFromJSON(json: any): Action {
     const { action } = json;
     switch (action) {
         case "assetTransaction": {
-            const { transaction } = json;
+            const { transaction, approvals } = json;
             return new AssetTransaction({
-                transaction: getTransactionFromJSON(transaction)
+                transaction: getTransactionFromJSON(transaction),
+                approvals
             });
         }
         case "payment": {
