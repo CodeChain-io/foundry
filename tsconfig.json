@@ -1,22 +1,15 @@
 {
-    "compilerOptions": {
-        "target": "es2015",
-        "types": [
-            "jest",
-            "node"
-        ],
-        "module": "commonjs",
-        "declaration": true,
-        "outDir": "lib",
-        "strict": true,
-        "noImplicitAny": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true
-    },
-    "include": [
-        "./src/**/*",
-    ],
-    "exclude": [
-        "./src/**/*.spec.ts"
-    ]
+  "compilerOptions": {
+    "target": "es2015",
+    "types": ["jest", "node"],
+    "module": "commonjs",
+    "declaration": true,
+    "outDir": "lib",
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["./src/**/*"],
+  "exclude": ["./src/**/*.spec.ts"]
 }
