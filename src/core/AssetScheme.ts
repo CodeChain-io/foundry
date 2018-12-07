@@ -13,6 +13,7 @@ export interface AssetSchemeJSON {
     metadata: string;
     amount: string;
     approver: string | null;
+    administrator: string | null;
     pool: {
         assetType: string;
         amount: string;
@@ -24,12 +25,16 @@ export interface AssetSchemeJSON {
  */
 export class AssetScheme {
     public static fromJSON(data: AssetSchemeJSON) {
-        const { metadata, amount, approver, pool } = data;
+        const { metadata, amount, approver, administrator, pool } = data;
         return new AssetScheme({
             metadata,
             amount: U64.ensure(amount),
             approver:
                 approver === null ? null : PlatformAddress.ensure(approver),
+            administrator:
+                administrator === null
+                    ? null
+                    : PlatformAddress.ensure(administrator),
             pool: pool.map(({ assetType, amount: assetAmount }: any) => ({
                 assetType: H256.ensure(assetType),
                 amount: U64.ensure(assetAmount)
@@ -42,6 +47,7 @@ export class AssetScheme {
     public readonly metadata: string;
     public readonly amount: U64;
     public readonly approver: PlatformAddress | null;
+    public readonly administrator: PlatformAddress | null;
     public readonly pool: { assetType: H256; amount: U64 }[];
 
     constructor(data: {
@@ -50,22 +56,26 @@ export class AssetScheme {
         metadata: string;
         amount: U64;
         approver: PlatformAddress | null;
+        administrator: PlatformAddress | null;
         pool: { assetType: H256; amount: U64 }[];
     }) {
         this.networkId = data.networkId;
         this.shardId = data.shardId;
         this.metadata = data.metadata;
         this.approver = data.approver;
+        this.administrator = data.administrator;
         this.amount = data.amount;
         this.pool = data.pool;
     }
 
     public toJSON(): AssetSchemeJSON {
-        const { metadata, amount, approver, pool } = this;
+        const { metadata, amount, approver, administrator, pool } = this;
         return {
             metadata,
             amount: `0x${amount.toString(16)}`,
             approver: approver === null ? null : approver.toString(),
+            administrator:
+                administrator === null ? null : administrator.toString(),
             pool: pool.map(a => ({
                 assetType: a.assetType.value,
                 amount: `0x${a.amount.toString(16)}`
@@ -77,7 +87,14 @@ export class AssetScheme {
         recipient: AssetTransferAddress | string;
     }): AssetMintTransaction {
         const { recipient } = params;
-        const { networkId, shardId, metadata, amount, approver } = this;
+        const {
+            networkId,
+            shardId,
+            metadata,
+            amount,
+            approver,
+            administrator
+        } = this;
         if (networkId === undefined) {
             throw Error(`networkId is undefined`);
         }
@@ -92,7 +109,8 @@ export class AssetScheme {
                 amount,
                 recipient: AssetTransferAddress.ensure(recipient)
             }),
-            approver
+            approver,
+            administrator
         });
     }
 }

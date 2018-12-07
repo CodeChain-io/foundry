@@ -241,13 +241,17 @@ export class Core {
      * @param params.approver Platform account or null. If account is present, the
      * parcel that includes AssetTransferTransaction of this asset must be signed by
      * the approver account.
+     * @param params.administrator Platform account or null. The administrator
+     * can transfer the asset without unlocking.
      * @throws Given string for approver is invalid for converting it to paltform account
+     * @throws Given string for administrator is invalid for converting it to paltform account
      */
     public createAssetScheme(params: {
         shardId: number;
         metadata: string;
         amount: U64 | number | string;
         approver?: PlatformAddress | string;
+        administrator?: PlatformAddress | string;
         pool?: { assetType: H256 | string; amount: number }[];
     }): AssetScheme {
         const {
@@ -255,12 +259,14 @@ export class Core {
             metadata,
             amount,
             approver = null,
+            administrator = null,
             pool = []
         } = params;
         checkShardId(shardId);
         checkMetadata(metadata);
         checkAmount(amount);
         checkApprover(approver);
+        checkAdministrator(administrator);
         return new AssetScheme({
             networkId: this.networkId,
             shardId,
@@ -268,6 +274,10 @@ export class Core {
             amount: U64.ensure(amount),
             approver:
                 approver == null ? null : PlatformAddress.ensure(approver),
+            administrator:
+                administrator == null
+                    ? null
+                    : PlatformAddress.ensure(administrator),
             pool: pool.map(({ assetType, amount: assetAmount }) => ({
                 assetType: H256.ensure(assetType),
                 amount: U64.ensure(assetAmount)
@@ -406,6 +416,7 @@ export class Core {
                   shardId: number;
                   metadata: string;
                   approver?: PlatformAddress | string;
+                  administrator?: PlatformAddress | string;
                   amount?: U64 | number | string | null;
               };
         recipient: AssetTransferAddress | string;
@@ -421,6 +432,7 @@ export class Core {
             shardId,
             metadata,
             approver: approver = null,
+            administrator: administrator = null,
             amount
         } = scheme;
         checkAssetTransferAddressRecipient(recipient);
@@ -431,6 +443,7 @@ export class Core {
         checkShardId(shardId);
         checkMetadata(metadata);
         checkApprover(approver);
+        checkAdministrator(administrator);
         if (amount != null) {
             checkAmount(amount);
         }
@@ -439,6 +452,10 @@ export class Core {
             shardId,
             approver:
                 approver == null ? null : PlatformAddress.ensure(approver),
+            administrator:
+                administrator == null
+                    ? null
+                    : PlatformAddress.ensure(administrator),
             metadata,
             output: new AssetMintOutput({
                 amount: amount == null ? null : U64.ensure(amount),
@@ -482,6 +499,7 @@ export class Core {
                   metadata: string;
                   amount?: U64 | number | string | null;
                   approver?: PlatformAddress | string;
+                  administrator?: PlatformAddress | string;
                   networkId?: NetworkId;
               };
         inputs: AssetTransferInput[];
@@ -493,6 +511,7 @@ export class Core {
             shardId,
             metadata,
             approver = null,
+            administrator = null,
             amount
         } = scheme;
         checkTransferInputs(inputs);
@@ -512,6 +531,10 @@ export class Core {
             shardId,
             approver:
                 approver === null ? null : PlatformAddress.ensure(approver),
+            administrator:
+                administrator === null
+                    ? null
+                    : PlatformAddress.ensure(administrator),
             metadata,
             inputs,
             output: new AssetMintOutput({
@@ -763,6 +786,14 @@ function checkApprover(approver: PlatformAddress | string | null) {
     if (approver !== null && !PlatformAddress.check(approver)) {
         throw Error(
             `Expected approver param to be either null or a PlatformAddress value but found ${approver}`
+        );
+    }
+}
+
+function checkAdministrator(administrator: PlatformAddress | string | null) {
+    if (administrator !== null && !PlatformAddress.check(administrator)) {
+        throw Error(
+            `Expected administrator param to be either null or a PlatformAddress value but found ${administrator}`
         );
     }
 }

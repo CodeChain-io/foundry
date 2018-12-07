@@ -18,6 +18,7 @@ export interface AssetMintTransactionJSON {
         metadata: string;
         output: AssetMintOutputJSON;
         approver: string | null;
+        administrator: string | null;
     };
 }
 
@@ -30,6 +31,7 @@ export interface AssetMintTransactionJSON {
  *  will be set as the maximum value of a 64-bit unsigned integer by default.
  *  - If approver exists, the approver must be the Signer of the Parcel when
  *  sending the created asset through AssetTransferTransaction.
+ *  - If administrator exists, the administrator can transfer without unlocking.
  */
 export class AssetMintTransaction {
     /**
@@ -39,7 +41,14 @@ export class AssetMintTransaction {
      */
     public static fromJSON(data: AssetMintTransactionJSON) {
         const {
-            data: { networkId, shardId, metadata, output, approver }
+            data: {
+                networkId,
+                shardId,
+                metadata,
+                output,
+                approver,
+                administrator
+            }
         } = data;
         return new this({
             networkId,
@@ -47,7 +56,11 @@ export class AssetMintTransaction {
             metadata,
             output: AssetMintOutput.fromJSON(output),
             approver:
-                approver === null ? null : PlatformAddress.fromString(approver)
+                approver === null ? null : PlatformAddress.fromString(approver),
+            administrator:
+                administrator === null
+                    ? null
+                    : PlatformAddress.fromString(administrator)
         });
     }
     public readonly networkId: NetworkId;
@@ -55,6 +68,7 @@ export class AssetMintTransaction {
     public readonly metadata: string;
     public readonly output: AssetMintOutput;
     public readonly approver: PlatformAddress | null;
+    public readonly administrator: PlatformAddress | null;
     public readonly type = "assetMint";
 
     /**
@@ -65,6 +79,7 @@ export class AssetMintTransaction {
      * @param data.output.parameters Parameters of the output.
      * @param data.output.amount Asset amount of the output.
      * @param data.approver A approver of the asset.
+     * @param data.administrator A administrator of the asset.
      */
     constructor(data: {
         networkId: NetworkId;
@@ -72,13 +87,22 @@ export class AssetMintTransaction {
         metadata: string;
         output: AssetMintOutput;
         approver: PlatformAddress | null;
+        administrator: PlatformAddress | null;
     }) {
-        const { networkId, shardId, metadata, output, approver } = data;
+        const {
+            networkId,
+            shardId,
+            metadata,
+            output,
+            approver,
+            administrator
+        } = data;
         this.networkId = networkId;
         this.shardId = shardId;
         this.metadata = metadata;
         this.output = output;
         this.approver = approver;
+        this.administrator = administrator;
     }
 
     /**
@@ -86,7 +110,14 @@ export class AssetMintTransaction {
      * @returns An AssetMintTransaction JSON object.
      */
     public toJSON(): AssetMintTransactionJSON {
-        const { networkId, shardId, metadata, output, approver } = this;
+        const {
+            networkId,
+            shardId,
+            metadata,
+            output,
+            approver,
+            administrator
+        } = this;
         return {
             type: this.type,
             data: {
@@ -94,7 +125,9 @@ export class AssetMintTransaction {
                 shardId,
                 metadata,
                 output: output.toJSON(),
-                approver: approver === null ? null : approver.toString()
+                approver: approver === null ? null : approver.toString(),
+                administrator:
+                    administrator === null ? null : administrator.toString()
             }
         };
     }
@@ -108,7 +141,8 @@ export class AssetMintTransaction {
             shardId,
             metadata,
             output: { lockScriptHash, parameters, amount },
-            approver
+            approver,
+            administrator
         } = this;
         return [
             3,
@@ -118,7 +152,8 @@ export class AssetMintTransaction {
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
             amount != null ? [amount.toEncodeObject()] : [],
-            approver ? [approver.getAccountId().toEncodeObject()] : []
+            approver ? [approver.getAccountId().toEncodeObject()] : [],
+            administrator ? [administrator.getAccountId().toEncodeObject()] : []
         ];
     }
 
@@ -166,7 +201,8 @@ export class AssetMintTransaction {
             shardId,
             metadata,
             output: { amount },
-            approver
+            approver,
+            administrator
         } = this;
         if (amount == null) {
             throw Error("not implemented");
@@ -177,6 +213,7 @@ export class AssetMintTransaction {
             metadata,
             amount,
             approver,
+            administrator,
             pool: []
         });
     }

@@ -34,6 +34,7 @@ export interface AssetComposeTransactionJSON {
         inputs: AssetTransferInputJSON[];
         output: AssetMintOutputJSON;
         approver: string | null;
+        administrator: string | null;
     };
 }
 
@@ -48,7 +49,15 @@ export class AssetComposeTransaction {
      */
     public static fromJSON(obj: AssetComposeTransactionJSON) {
         const {
-            data: { networkId, shardId, metadata, inputs, output, approver }
+            data: {
+                networkId,
+                shardId,
+                metadata,
+                inputs,
+                output,
+                approver,
+                administrator
+            }
         } = obj;
         return new this({
             networkId,
@@ -56,6 +65,10 @@ export class AssetComposeTransaction {
             metadata,
             approver:
                 approver === null ? null : PlatformAddress.ensure(approver),
+            administrator:
+                administrator === null
+                    ? null
+                    : PlatformAddress.ensure(administrator),
             inputs: inputs.map(input => AssetTransferInput.fromJSON(input)),
             output: AssetMintOutput.fromJSON(output)
         });
@@ -65,6 +78,7 @@ export class AssetComposeTransaction {
     public readonly shardId: number;
     public readonly metadata: string;
     public readonly approver: PlatformAddress | null;
+    public readonly administrator: PlatformAddress | null;
     public readonly inputs: AssetTransferInput[];
     public readonly output: AssetMintOutput;
     public readonly type = "assetCompose";
@@ -74,6 +88,7 @@ export class AssetComposeTransaction {
      * @param params.shardId A shard ID of the transaction.
      * @param params.metadata A metadata of the asset.
      * @param params.approver A approver of the asset.
+     * @param params.administrator A administrator of the asset.
      * @param params.inputs A list of inputs of the transaction.
      * @param params.output An output of the transaction.
      */
@@ -82,6 +97,7 @@ export class AssetComposeTransaction {
         shardId: number;
         metadata: string;
         approver: PlatformAddress | null;
+        administrator: PlatformAddress | null;
         inputs: AssetTransferInput[];
         output: AssetMintOutput;
     }) {
@@ -90,6 +106,7 @@ export class AssetComposeTransaction {
             shardId,
             metadata,
             approver,
+            administrator,
             inputs,
             output
         } = params;
@@ -98,6 +115,10 @@ export class AssetComposeTransaction {
         this.metadata = metadata;
         this.approver =
             approver === null ? null : PlatformAddress.ensure(approver);
+        this.administrator =
+            administrator === null
+                ? null
+                : PlatformAddress.ensure(administrator);
         this.inputs = inputs;
         this.output = new AssetMintOutput(output);
     }
@@ -115,6 +136,10 @@ export class AssetComposeTransaction {
                 metadata: this.metadata,
                 approver:
                     this.approver === null ? null : this.approver.toString(),
+                administrator:
+                    this.administrator === null
+                        ? null
+                        : this.administrator.toString(),
                 output: this.output.toJSON(),
                 inputs: this.inputs.map(input => input.toJSON())
             }
@@ -131,6 +156,7 @@ export class AssetComposeTransaction {
             this.shardId,
             this.metadata,
             this.approver ? [this.approver.toString()] : [],
+            this.administrator ? [this.administrator.toString()] : [],
             this.inputs.map(input => input.toEncodeObject()),
             this.output.lockScriptHash.toEncodeObject(),
             this.output.parameters.map(parameter => Buffer.from(parameter)),
@@ -195,7 +221,7 @@ export class AssetComposeTransaction {
         } else {
             throw Error(`Unexpected value of the tag output: ${tag.output}`);
         }
-        const { networkId, shardId, metadata, approver } = this;
+        const { networkId, shardId, metadata, approver, administrator } = this;
         return new H256(
             blake256WithKey(
                 new AssetComposeTransaction({
@@ -203,6 +229,7 @@ export class AssetComposeTransaction {
                     shardId,
                     metadata,
                     approver,
+                    administrator,
                     inputs,
                     output
                 }).rlpBytes(),
@@ -267,7 +294,8 @@ export class AssetComposeTransaction {
             metadata,
             inputs,
             output: { amount },
-            approver
+            approver,
+            administrator
         } = this;
         if (amount == null) {
             throw Error("not implemented");
@@ -278,6 +306,7 @@ export class AssetComposeTransaction {
             metadata,
             amount,
             approver,
+            administrator,
             pool: _.toPairs(
                 // NOTE: Get the sum of each asset type
                 inputs.reduce((acc: { [assetType: string]: U64 }, input) => {

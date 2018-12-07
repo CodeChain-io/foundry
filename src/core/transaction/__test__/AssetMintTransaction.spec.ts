@@ -15,7 +15,8 @@ test("AssetMintTransaction toJSON", () => {
             parameters: [],
             amount: new U64(0)
         }),
-        approver: null
+        approver: null,
+        administrator: null
     });
     expect(AssetMintTransaction.fromJSON(t.toJSON())).toEqual(t);
 });

@@ -6,6 +6,7 @@ test("toJSON", () => {
         metadata: "abcd",
         amount: new U64(111),
         approver: null,
+        administrator: null,
         pool: []
     });
     expect(AssetScheme.fromJSON(assetScheme.toJSON())).toEqual(assetScheme);
