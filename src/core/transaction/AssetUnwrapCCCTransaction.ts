@@ -45,7 +45,7 @@ export class AssetUnwrapCCCTransaction {
      * @param obj An AssetUnwrapCCCTransactionJSON object.
      * @returns An AssetUnwrapCCCTransaction.
      */
-    public static fromJSON(obj: any) {
+    public static fromJSON(obj: AssetUnwrapCCCTransactionJSON) {
         const {
             data: { networkId, burn }
         } = obj;

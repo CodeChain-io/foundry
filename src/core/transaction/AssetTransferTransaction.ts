@@ -67,16 +67,12 @@ export class AssetTransferTransaction {
             data: { networkId, burns, inputs, outputs, orders }
         } = obj;
         return new this({
-            burns: burns.map((input: any) =>
-                AssetTransferInput.fromJSON(input)
-            ),
-            inputs: inputs.map((input: any) =>
-                AssetTransferInput.fromJSON(input)
-            ),
-            outputs: outputs.map((output: any) =>
+            burns: burns.map(input => AssetTransferInput.fromJSON(input)),
+            inputs: inputs.map(input => AssetTransferInput.fromJSON(input)),
+            outputs: outputs.map(output =>
                 AssetTransferOutput.fromJSON(output)
             ),
-            orders: orders.map((order: any) => OrderOnTransfer.fromJSON(order)),
+            orders: orders.map(order => OrderOnTransfer.fromJSON(order)),
             networkId
         });
     }
