@@ -11,6 +11,10 @@ import {
     AssetMintTransactionJSON
 } from "./AssetMintTransaction";
 import {
+    AssetSchemeChangeTransaction,
+    AssetSchemeChangeTransactionJSON
+} from "./AssetSchemeChangeTransaction";
+import {
     AssetTransferTransaction,
     AssetTransferTransactionJSON
 } from "./AssetTransferTransaction";
@@ -24,19 +28,21 @@ export type TransactionJSON =
     | AssetTransferTransactionJSON
     | AssetComposeTransactionJSON
     | AssetDecomposeTransactionJSON
-    | AssetUnwrapCCCTransactionJSON;
+    | AssetUnwrapCCCTransactionJSON
+    | AssetSchemeChangeTransactionJSON;
 
 export type Transaction =
     | AssetMintTransaction
     | AssetTransferTransaction
     | AssetComposeTransaction
     | AssetDecomposeTransaction
-    | AssetUnwrapCCCTransaction;
+    | AssetUnwrapCCCTransaction
+    | AssetSchemeChangeTransaction;
 
 /**
  * Create a transaction from either an AssetMintTransaction JSON object or an
  * AssetTransferTransaction JSON object.
- * @param params Either an AssetMintTransaction JSON object or an AssetTransferTransaction JSON object.
+ * @param json Either an AssetMintTransaction JSON object or an AssetTransferTransaction JSON object.
  * @returns A Transaction.
  */
 export const getTransactionFromJSON = (json: TransactionJSON): Transaction => {
@@ -51,6 +57,8 @@ export const getTransactionFromJSON = (json: TransactionJSON): Transaction => {
             return AssetDecomposeTransaction.fromJSON(json);
         case "assetUnwrapCCC":
             return AssetUnwrapCCCTransaction.fromJSON(json);
+        case "assetSchemeChange":
+            return AssetSchemeChangeTransaction.fromJSON(json);
         default:
             throw Error(`Unexpected transaction type: ${(json as any).type}`);
     }

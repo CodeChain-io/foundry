@@ -23,6 +23,7 @@ import { AssetDecomposeTransaction } from "./transaction/AssetDecomposeTransacti
 import { AssetMintOutput } from "./transaction/AssetMintOutput";
 import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
+import { AssetSchemeChangeTransaction } from "./transaction/AssetSchemeChangeTransaction";
 import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
@@ -59,6 +60,7 @@ export class Core {
         WrapCCC,
         // Transaction
         AssetMintTransaction,
+        AssetSchemeChangeTransaction,
         AssetTransferTransaction,
         AssetComposeTransaction,
         AssetDecomposeTransaction,
@@ -461,6 +463,47 @@ export class Core {
                 amount: amount == null ? null : U64.ensure(amount),
                 recipient: AssetTransferAddress.ensure(recipient)
             })
+        });
+    }
+
+    public createAssetSchemeChangeTransaction(params: {
+        assetType: H256 | string;
+        scheme:
+            | AssetScheme
+            | {
+                  networkId?: NetworkId;
+                  metadata: string;
+                  approver?: PlatformAddress | string;
+                  administrator?: PlatformAddress | string;
+              };
+    }): AssetSchemeChangeTransaction {
+        const { assetType, scheme } = params;
+        if (scheme !== null && typeof scheme !== "object") {
+            throw Error(
+                `Expected scheme param to be either an AssetScheme or an object but found ${scheme}`
+            );
+        }
+        const {
+            networkId = this.networkId,
+            metadata,
+            approver: approver = null,
+            administrator: administrator = null
+        } = scheme;
+        checkNetworkId(networkId);
+        checkAssetType(assetType);
+        checkMetadata(metadata);
+        checkApprover(approver);
+        checkAdministrator(administrator);
+        return new AssetSchemeChangeTransaction({
+            networkId,
+            assetType: H256.ensure(assetType),
+            metadata,
+            approver:
+                approver == null ? null : PlatformAddress.ensure(approver),
+            administrator:
+                administrator == null
+                    ? null
+                    : PlatformAddress.ensure(administrator)
         });
     }
 
