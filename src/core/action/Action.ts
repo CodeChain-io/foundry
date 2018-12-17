@@ -8,7 +8,7 @@ import { U64 } from "../U64";
 import { AssetTransaction } from "./AssetTransaction";
 import { CreateShard } from "./CreateShard";
 import { Payment } from "./Payment";
-import { SetRegularKey } from "./SetReulgarKey";
+import { SetRegularKey } from "./SetRegularKey";
 import { SetShardOwners } from "./SetShardOwners";
 import { SetShardUsers } from "./SetShardUsers";
 import { WrapCCC } from "./WrapCCC";

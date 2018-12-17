@@ -3,7 +3,7 @@ import { AssetTransferAddress, PlatformAddress } from "codechain-primitives";
 import { AssetTransaction } from "./action/AssetTransaction";
 import { CreateShard } from "./action/CreateShard";
 import { Payment } from "./action/Payment";
-import { SetRegularKey } from "./action/SetReulgarKey";
+import { SetRegularKey } from "./action/SetRegularKey";
 import { SetShardOwners } from "./action/SetShardOwners";
 import { SetShardUsers } from "./action/SetShardUsers";
 import { WrapCCC } from "./action/WrapCCC";
