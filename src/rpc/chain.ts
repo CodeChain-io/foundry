@@ -9,6 +9,7 @@ import { H512 } from "../core/H512";
 import { Invoice } from "../core/Invoice";
 import { Parcel } from "../core/Parcel";
 import { SignedParcel } from "../core/SignedParcel";
+import { Text } from "../core/Text";
 import {
     getTransactionFromJSON,
     Transaction
@@ -697,6 +698,47 @@ export class ChainRpc {
                         reject(
                             Error(
                                 `Expected chain_getAsset to return either null or JSON of Asset, but an error occurred: ${e.toString()}`
+                            )
+                        );
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    /**
+     * Gets the text of the given hash of parcel with Store action.
+     * @param parcelHash The parcel hash of the Store parcel.
+     * @param blockNumber The specific block number to get the text from
+     * @returns Text, if text exists. Else, returns null.
+     */
+    public getText(
+        parcelHash: H256 | string,
+        blockNumber?: number | null
+    ): Promise<Text | null> {
+        if (!H256.check(parcelHash)) {
+            throw Error(
+                `Expected the first arugment of getText to be an H256 value but found ${parcelHash}`
+            );
+        }
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the second argument of getText to be non-negative integer but found ${blockNumber}`
+            );
+        }
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getText", [
+                    `0x${H256.ensure(parcelHash).value}`,
+                    blockNumber
+                ])
+                .then(result => {
+                    try {
+                        resolve(result === null ? null : Text.fromJSON(result));
+                    } catch (e) {
+                        reject(
+                            Error(
+                                `Expected chain_getText to return either null or JSON of Text, but an error occurred: ${e.toString()}`
                             )
                         );
                     }

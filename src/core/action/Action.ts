@@ -1,6 +1,7 @@
 import { PlatformAddress } from "codechain-primitives";
 
 import { H160 } from "../H160";
+import { H256 } from "../H256";
 import { H512 } from "../H512";
 import { getTransactionFromJSON } from "../transaction/Transaction";
 import { U64 } from "../U64";
@@ -8,9 +9,11 @@ import { U64 } from "../U64";
 import { AssetTransaction } from "./AssetTransaction";
 import { CreateShard } from "./CreateShard";
 import { Payment } from "./Payment";
+import { Remove } from "./Remove";
 import { SetRegularKey } from "./SetRegularKey";
 import { SetShardOwners } from "./SetShardOwners";
 import { SetShardUsers } from "./SetShardUsers";
+import { Store } from "./Store";
 import { WrapCCC } from "./WrapCCC";
 
 export type Action =
@@ -20,7 +23,9 @@ export type Action =
     | CreateShard
     | SetShardOwners
     | SetShardUsers
-    | WrapCCC;
+    | WrapCCC
+    | Store
+    | Remove;
 
 export function getActionFromJSON(json: any): Action {
     const { action } = json;
@@ -68,6 +73,21 @@ export function getActionFromJSON(json: any): Action {
                     Buffer.from(p)
                 ),
                 amount: U64.ensure(amount)
+            });
+        }
+        case "store": {
+            const { content, certifier, signature } = json;
+            return new Store({
+                content,
+                certifier: PlatformAddress.ensure(certifier),
+                signature
+            });
+        }
+        case "remove": {
+            const { hash, signature } = json;
+            return new Remove({
+                hash: H256.ensure(hash),
+                signature
             });
         }
         default:

@@ -17,6 +17,8 @@ export { CreateShard } from "./action/CreateShard";
 export { SetShardOwners } from "./action/SetShardOwners";
 export { SetShardUsers } from "./action/SetShardUsers";
 export { WrapCCC } from "./action/WrapCCC";
+export { Store } from "./action/Store";
+export { Remove } from "./action/Remove";
 
 export { Transaction } from "./transaction/Transaction";
 export { AssetMintTransaction } from "./transaction/AssetMintTransaction";
