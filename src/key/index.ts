@@ -7,6 +7,7 @@ import {
 import {
     AssetComposeTransaction,
     AssetDecomposeTransaction,
+    AssetTransferInput,
     AssetTransferTransaction,
     AssetUnwrapCCCTransaction,
     Order,
@@ -343,26 +344,19 @@ export class Key {
 
     /**
      * Signs a transaction's input with an order.
-     * @param tx An AssetTransferTransaction.
-     * @param index The index of an input to sign.
+     * @param input An AssetTransferInput.
      * @param order An order to be used as a signature message.
      * @param params.keyStore A key store.
      * @param params.passphrase The passphrase for the given input.
      */
     public async signTransactionInputWithOrder(
-        tx: AssetTransferTransaction,
-        index: number,
+        input: AssetTransferInput,
         order: Order,
         params: {
             keyStore?: KeyStore;
             passphrase?: string;
         } = {}
     ): Promise<void> {
-        if (index >= tx.inputs.length) {
-            throw Error(`Invalid index`);
-        }
-        const input = tx.inputs[index];
-
         const { lockScriptHash, parameters } = input.prevOut;
         if (lockScriptHash === undefined || parameters === undefined) {
             throw Error(`Invalid transaction input`);

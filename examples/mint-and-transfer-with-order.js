@@ -61,14 +61,12 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         originOutputs: [goldInput.prevOut],
         recipient: aliceAddress
     });
-    const partialTransferTx = sdk.core
-        .createAssetTransferTransaction()
-        .addInputs(goldInput);
-    await sdk.key.signTransactionInputWithOrder(partialTransferTx, 0, order);
+    await sdk.key.signTransactionInputWithOrder(goldInput, order);
 
     /// Bob receive the order and signed input
-    const transferTx = partialTransferTx
-        .addInputs(silverInput)
+    const transferTx = sdk.core
+        .createAssetTransferTransaction()
+        .addInputs(goldInput, silverInput)
         .addOutputs(
             {
                 recipient: aliceAddress,
