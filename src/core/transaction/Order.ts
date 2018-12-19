@@ -250,15 +250,15 @@ export class Order {
             parameters
         } = this;
         return {
-            assetTypeFrom: assetTypeFrom.value,
-            assetTypeTo: assetTypeTo.value,
-            assetTypeFee: assetTypeFee.value,
-            assetAmountFrom: `0x${assetAmountFrom.toString(16)}`,
-            assetAmountTo: `0x${assetAmountTo.toString(16)}`,
-            assetAmountFee: `0x${assetAmountFee.toString(16)}`,
+            assetTypeFrom: assetTypeFrom.toJSON(),
+            assetTypeTo: assetTypeTo.toJSON(),
+            assetTypeFee: assetTypeFee.toJSON(),
+            assetAmountFrom: assetAmountFrom.toJSON(),
+            assetAmountTo: assetAmountTo.toJSON(),
+            assetAmountFee: assetAmountFee.toJSON(),
             originOutputs: originOutputs.map(output => output.toJSON()),
             expiration: expiration.toString(),
-            lockScriptHash: lockScriptHash.toEncodeObject(),
+            lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map(parameter => [...parameter])
         };
     }

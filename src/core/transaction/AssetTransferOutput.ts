@@ -119,10 +119,10 @@ export class AssetTransferOutput {
     public toJSON(): AssetTransferOutputJSON {
         const { lockScriptHash, parameters, assetType, amount } = this;
         return {
-            lockScriptHash: lockScriptHash.value,
+            lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map(parameter => [...parameter]),
-            assetType: assetType.value,
-            amount: `0x${amount.toString(16)}`
+            assetType: assetType.toJSON(),
+            amount: amount.toJSON()
         };
     }
 

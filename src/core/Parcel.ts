@@ -127,7 +127,7 @@ export class Parcel {
             throw Error("Fee in the parcel must be present");
         }
         const result: any = {
-            fee: fee.toEncodeObject(),
+            fee: fee.toJSON(),
             networkId,
             action: action.toJSON()
         };

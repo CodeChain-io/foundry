@@ -87,12 +87,9 @@ export class AssetMintOutput {
      */
     public toJSON(): AssetMintOutputJSON {
         return {
-            lockScriptHash: this.lockScriptHash.value,
+            lockScriptHash: this.lockScriptHash.toJSON(),
             parameters: this.parameters.map(p => [...p]),
-            amount:
-                this.amount == null
-                    ? undefined
-                    : `0x${this.amount.toString(16)}`
+            amount: this.amount == null ? undefined : this.amount.toJSON()
         };
     }
 }

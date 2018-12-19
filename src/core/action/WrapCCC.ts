@@ -106,9 +106,9 @@ export class WrapCCC {
         return {
             action: "wrapCCC",
             shardId,
-            lockScriptHash: lockScriptHash.value,
+            lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map(parameter => [...parameter]),
-            amount: amount.toEncodeObject()
+            amount: amount.toJSON()
         };
     }
 }

@@ -113,17 +113,17 @@ export class Block {
             parcels
         } = this;
         return {
-            parentHash: parentHash.value,
+            parentHash: parentHash.toJSON(),
             timestamp,
             number,
             author: author.toString(),
             extraData,
-            parcelsRoot: parcelsRoot.value,
-            stateRoot: stateRoot.value,
-            invoicesRoot: invoicesRoot.value,
+            parcelsRoot: parcelsRoot.toJSON(),
+            stateRoot: stateRoot.toJSON(),
+            invoicesRoot: invoicesRoot.toJSON(),
             score: score.value.toString(),
             seal,
-            hash: hash.value,
+            hash: hash.toJSON(),
             parcels: parcels.map(p => p.toJSON())
         };
     }

@@ -81,7 +81,7 @@ export class OrderOnTransfer {
         const { order, spentAmount, inputIndices, outputIndices } = this;
         return {
             order: order.toJSON(),
-            spentAmount: spentAmount.toString(),
+            spentAmount: spentAmount.toJSON(),
             inputIndices,
             outputIndices
         };

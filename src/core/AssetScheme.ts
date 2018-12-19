@@ -72,13 +72,13 @@ export class AssetScheme {
         const { metadata, amount, approver, administrator, pool } = this;
         return {
             metadata,
-            amount: `0x${amount.toString(16)}`,
+            amount: amount.toJSON(),
             approver: approver === null ? null : approver.toString(),
             administrator:
                 administrator === null ? null : administrator.toString(),
             pool: pool.map(a => ({
-                assetType: a.assetType.value,
-                amount: `0x${a.amount.toString(16)}`
+                assetType: a.assetType.toJSON(),
+                amount: a.amount.toJSON()
             }))
         };
     }

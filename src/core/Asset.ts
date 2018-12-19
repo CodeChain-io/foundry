@@ -100,12 +100,12 @@ export class Asset {
         } = this;
         const { transactionHash, index } = outPoint;
         return {
-            assetType: assetType.value,
-            lockScriptHash: lockScriptHash.value,
+            assetType: assetType.toJSON(),
+            lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map(p => [...p]),
-            amount: `0x${amount.toString(16)}`,
-            orderHash: orderHash === null ? null : orderHash.toString(),
-            transactionHash: transactionHash.value,
+            amount: amount.toJSON(),
+            orderHash: orderHash === null ? null : orderHash.toJSON(),
+            transactionHash: transactionHash.toJSON(),
             transactionOutputIndex: index
         };
     }

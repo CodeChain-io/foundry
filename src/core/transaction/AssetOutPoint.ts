@@ -92,10 +92,10 @@ export class AssetOutPoint {
     public toJSON(): AssetOutPointJSON {
         const { transactionHash, index, assetType, amount } = this;
         return {
-            transactionHash: transactionHash.value,
+            transactionHash: transactionHash.toJSON(),
             index,
-            assetType: assetType.value,
-            amount: `0x${amount.toString(16)}`
+            assetType: assetType.toJSON(),
+            amount: amount.toJSON()
         };
     }
 }

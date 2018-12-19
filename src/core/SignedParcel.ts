@@ -232,14 +232,14 @@ export class SignedParcel {
         }
         return {
             blockNumber,
-            blockHash: blockHash === null ? null : blockHash.value,
+            blockHash: blockHash === null ? null : blockHash.toJSON(),
             parcelIndex,
             seq,
-            fee: fee.value.toString(),
+            fee: fee.toJSON(),
             networkId,
             action: action.toJSON(),
             sig,
-            hash: this.hash().value
+            hash: this.hash().toJSON()
         };
     }
 }

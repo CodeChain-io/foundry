@@ -14,7 +14,7 @@ export class SetRegularKey {
     public toJSON() {
         return {
             action: "setRegularKey",
-            key: this.key.value
+            key: this.key.toJSON()
         };
     }
 }
