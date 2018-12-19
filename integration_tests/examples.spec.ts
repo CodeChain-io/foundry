@@ -68,6 +68,10 @@ describe("examples", () => {
     test("mint-and-transfer-with-order", done => {
         runExample("mint-and-transfer-with-order", done);
     });
+
+    test("store-and-remove", done => {
+        runExample("store-and-remove", done);
+    });
 });
 
 function runExample(name: string, done: () => any) {
