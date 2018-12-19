@@ -227,7 +227,7 @@ export class SignedParcel {
             s: s.value.toString(16),
             v
         });
-        if (!seq || !fee) {
+        if (seq == null || !fee) {
             throw Error("Seq and fee in the parcel must be present");
         }
         return {
