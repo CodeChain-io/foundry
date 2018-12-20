@@ -21,11 +21,13 @@ export interface OrderJSON {
     assetAmountFee: string;
     originOutputs: AssetOutPointJSON[];
     expiration: string;
-    lockScriptHash: string;
-    parameters: number[][];
+    lockScriptHashFrom: string;
+    parametersFrom: number[][];
+    lockScriptHashFee: string;
+    parametersFee: number[][];
 }
 
-export interface OrderData {
+export interface OrderDataBasic {
     assetTypeFrom: H256;
     assetTypeTo: H256;
     assetTypeFee?: H256;
@@ -34,8 +36,6 @@ export interface OrderData {
     assetAmountFee?: U64;
     originOutputs: AssetOutPoint[];
     expiration: U64;
-    lockScriptHash: H160;
-    parameters: Buffer[];
 }
 
 export interface OrderAddressData {
@@ -47,7 +47,8 @@ export interface OrderAddressData {
     assetAmountFee?: U64;
     originOutputs: AssetOutPoint[];
     expiration: U64;
-    recipient: AssetTransferAddress;
+    recipientFrom: AssetTransferAddress;
+    recipientFee: AssetTransferAddress;
 }
 
 export class Order {
@@ -66,8 +67,10 @@ export class Order {
             assetAmountFee,
             originOutputs,
             expiration,
-            lockScriptHash,
-            parameters
+            lockScriptHashFrom,
+            parametersFrom,
+            lockScriptHashFee,
+            parametersFee
         } = data;
         return new this({
             assetTypeFrom: new H256(assetTypeFrom),
@@ -80,8 +83,14 @@ export class Order {
                 AssetOutPoint.fromJSON(point)
             ),
             expiration: U64.ensure(expiration),
-            lockScriptHash: new H160(lockScriptHash),
-            parameters: parameters.map((p: Buffer | number[]) => Buffer.from(p))
+            lockScriptHashFrom: new H160(lockScriptHashFrom),
+            parametersFrom: parametersFrom.map((p: Buffer | number[]) =>
+                Buffer.from(p)
+            ),
+            lockScriptHashFee: new H160(lockScriptHashFee),
+            parametersFee: parametersFee.map((p: Buffer | number[]) =>
+                Buffer.from(p)
+            )
         });
     }
 
@@ -93,8 +102,10 @@ export class Order {
     public readonly assetAmountFee: U64;
     public readonly originOutputs: AssetOutPoint[];
     public readonly expiration: U64;
-    public readonly lockScriptHash: H160;
-    public readonly parameters: Buffer[];
+    public readonly lockScriptHashFrom: H160;
+    public readonly parametersFrom: Buffer[];
+    public readonly lockScriptHashFee: H160;
+    public readonly parametersFee: Buffer[];
 
     /**
      * @param data.assetTypeFrom The asset type of the asset to give.
@@ -108,37 +119,46 @@ export class Order {
      * @param data.lockScriptHash The lock script hash of the asset.
      * @param data.parameters The parameters of the asset.
      */
-    constructor(data: OrderData | OrderAddressData) {
-        if ("recipient" in data) {
-            // FIXME: Clean up by abstracting the standard scripts
-            const { type, payload } = data.recipient;
-            if ("pubkeys" in payload) {
-                throw Error("Multisig payload is not supported yet");
-            }
-            switch (type) {
-                case 0x00: // LOCK_SCRIPT_HASH ONLY
-                    this.lockScriptHash = payload;
-                    this.parameters = [];
-                    break;
-                case 0x01: // P2PKH
-                    this.lockScriptHash = P2PKH.getLockScriptHash();
-                    this.parameters = [Buffer.from(payload.value, "hex")];
-                    break;
-                case 0x02: // P2PKHBurn
-                    this.lockScriptHash = P2PKHBurn.getLockScriptHash();
-                    this.parameters = [Buffer.from(payload.value, "hex")];
-                    break;
-                default:
-                    throw Error(
-                        `Unexpected type of AssetTransferAddress: ${type}, ${
-                            data.recipient
-                        }`
-                    );
-            }
+    constructor(
+        data: OrderDataBasic &
+            (
+                | {
+                      lockScriptHashFrom: H160;
+                      parametersFrom: Buffer[];
+                  }
+                | {
+                      recipientFrom: AssetTransferAddress;
+                  }) &
+            (
+                | {
+                      lockScriptHashFee: H160;
+                      parametersFee: Buffer[];
+                  }
+                | {
+                      recipientFee: AssetTransferAddress;
+                  })
+    ) {
+        if ("recipientFrom" in data) {
+            const { lockScriptHash, parameters } = decomposeRecipient(
+                data.recipientFrom
+            );
+            this.lockScriptHashFrom = lockScriptHash;
+            this.parametersFrom = parameters;
         } else {
-            const { lockScriptHash, parameters } = data;
-            this.lockScriptHash = lockScriptHash;
-            this.parameters = parameters;
+            const { lockScriptHashFrom, parametersFrom } = data;
+            this.lockScriptHashFrom = lockScriptHashFrom;
+            this.parametersFrom = parametersFrom;
+        }
+        if ("recipientFee" in data) {
+            const { lockScriptHash, parameters } = decomposeRecipient(
+                data.recipientFee
+            );
+            this.lockScriptHashFee = lockScriptHash;
+            this.parametersFee = parameters;
+        } else {
+            const { lockScriptHashFee, parametersFee } = data;
+            this.lockScriptHashFee = lockScriptHashFee;
+            this.parametersFee = parametersFee;
         }
         const {
             assetTypeFrom,
@@ -208,8 +228,10 @@ export class Order {
             assetAmountFee,
             originOutputs,
             expiration,
-            lockScriptHash,
-            parameters
+            lockScriptHashFrom,
+            parametersFrom,
+            lockScriptHashFee,
+            parametersFee
         } = this;
         return [
             assetTypeFrom.toEncodeObject(),
@@ -220,8 +242,10 @@ export class Order {
             assetAmountFee.toEncodeObject(),
             originOutputs.map(output => output.toEncodeObject()),
             expiration.toEncodeObject(),
-            lockScriptHash.toEncodeObject(),
-            parameters.map(parameter => Buffer.from(parameter))
+            lockScriptHashFrom.toEncodeObject(),
+            parametersFrom.map(p => Buffer.from(p)),
+            lockScriptHashFee.toEncodeObject(),
+            parametersFee.map(p => Buffer.from(p))
         ];
     }
 
@@ -246,8 +270,10 @@ export class Order {
             assetAmountFee,
             originOutputs,
             expiration,
-            lockScriptHash,
-            parameters
+            lockScriptHashFrom,
+            parametersFrom,
+            lockScriptHashFee,
+            parametersFee
         } = this;
         return {
             assetTypeFrom: assetTypeFrom.toJSON(),
@@ -258,8 +284,10 @@ export class Order {
             assetAmountFee: assetAmountFee.toJSON(),
             originOutputs: originOutputs.map(output => output.toJSON()),
             expiration: expiration.toString(),
-            lockScriptHash: lockScriptHash.toJSON(),
-            parameters: parameters.map(parameter => [...parameter])
+            lockScriptHashFrom: lockScriptHashFrom.toJSON(),
+            parametersFrom: parametersFrom.map(parameter => [...parameter]),
+            lockScriptHashFee: lockScriptHashFee.toJSON(),
+            parametersFee: parametersFee.map(parameter => [...parameter])
         };
     }
 
@@ -276,12 +304,24 @@ export class Order {
      * @param params.amount the consumed amount of the asset to give
      */
     public consume(amount: U64 | number | string): Order {
+        const {
+            assetTypeFrom,
+            assetTypeTo,
+            assetTypeFee,
+            assetAmountFrom,
+            assetAmountTo,
+            assetAmountFee,
+            originOutputs,
+            expiration,
+            lockScriptHashFrom,
+            parametersFrom,
+            lockScriptHashFee,
+            parametersFee
+        } = this;
         const amountFrom = U64.ensure(amount);
-        if (amountFrom.gt(this.assetAmountFrom)) {
+        if (amountFrom.gt(assetAmountFrom)) {
             throw Error(
-                `The given amount is too big: ${amountFrom} > ${
-                    this.assetAmountFrom
-                }`
+                `The given amount is too big: ${amountFrom} > ${assetAmountFrom}`
             );
         }
         const remainAmountFrom = this.assetAmountFrom.value.minus(
@@ -289,33 +329,67 @@ export class Order {
         );
         if (
             !remainAmountFrom
-                .times(this.assetAmountTo.value)
-                .mod(this.assetAmountFrom.value)
+                .times(assetAmountTo.value)
+                .mod(assetAmountFrom.value)
                 .isZero()
         ) {
             throw Error(
-                `The given amount does not fit to the ratio: ${
-                    this.assetAmountFrom
-                }:${this.assetAmountTo}`
+                `The given amount does not fit to the ratio: ${assetAmountFrom}:${assetAmountTo}`
             );
         }
         const remainAmountTo = remainAmountFrom
-            .times(this.assetAmountTo.value)
-            .idiv(this.assetAmountFrom.value);
+            .times(assetAmountTo.value)
+            .idiv(assetAmountFrom.value);
         const remainAmountFee = remainAmountFrom
-            .times(this.assetAmountFee.value)
-            .idiv(this.assetAmountFrom.value);
+            .times(assetAmountFee.value)
+            .idiv(assetAmountFrom.value);
         return new Order({
-            assetTypeFrom: this.assetTypeFrom,
-            assetTypeTo: this.assetTypeTo,
-            assetTypeFee: this.assetTypeFee,
+            assetTypeFrom,
+            assetTypeTo,
+            assetTypeFee,
             assetAmountFrom: U64.ensure(remainAmountFrom),
             assetAmountTo: U64.ensure(remainAmountTo),
             assetAmountFee: U64.ensure(remainAmountFee),
-            originOutputs: this.originOutputs,
-            expiration: this.expiration,
-            lockScriptHash: this.lockScriptHash,
-            parameters: this.parameters
+            originOutputs,
+            expiration,
+            lockScriptHashFrom,
+            parametersFrom,
+            lockScriptHashFee,
+            parametersFee
         });
+    }
+}
+
+function decomposeRecipient(
+    recipient: AssetTransferAddress
+): {
+    lockScriptHash: H160;
+    parameters: Buffer[];
+} {
+    // FIXME: Clean up by abstracting the standard scripts
+    const { type, payload } = recipient;
+    if ("pubkeys" in payload) {
+        throw Error("Multisig payload is not supported yet");
+    }
+    switch (type) {
+        case 0x00: // LOCK_SCRIPT_HASH ONLY
+            return {
+                lockScriptHash: payload,
+                parameters: []
+            };
+        case 0x01: // P2PKH
+            return {
+                lockScriptHash: P2PKH.getLockScriptHash(),
+                parameters: [Buffer.from(payload.value, "hex")]
+            };
+        case 0x02: // P2PKHBurn
+            return {
+                lockScriptHash: P2PKHBurn.getLockScriptHash(),
+                parameters: [Buffer.from(payload.value, "hex")]
+            };
+        default:
+            throw Error(
+                `Unexpected type of AssetTransferAddress: ${type}, ${recipient}`
+            );
     }
 }

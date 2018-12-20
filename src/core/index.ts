@@ -402,17 +402,26 @@ export class Core {
             expiration: U64 | number | string;
         } & (
             | {
-                  lockScriptHash: H160 | string;
-                  parameters: Buffer[];
+                  lockScriptHashFrom: H160 | string;
+                  parametersFrom: Buffer[];
               }
             | {
-                  recipient: AssetTransferAddress | string;
-              })
+                  recipientFrom: AssetTransferAddress | string;
+              }) &
+            (
+                | {
+                      lockScriptHashFee: H160 | string;
+                      parametersFee: Buffer[];
+                  }
+                | {
+                      recipientFee: AssetTransferAddress | string;
+                  }
+                | {})
     ): Order {
         const {
             assetTypeFrom,
             assetTypeTo,
-            assetTypeFee = "0000000000000000000000000000000000000000000000000000000000000000",
+            assetTypeFee = "0".repeat(64),
             assetAmountFrom,
             assetAmountTo,
             assetAmountFee = 0,
@@ -453,36 +462,59 @@ export class Core {
                       });
         }
 
-        if ("recipient" in params) {
-            checkAssetTransferAddressRecipient(params.recipient);
-            return new Order({
-                assetTypeFrom: H256.ensure(assetTypeFrom),
-                assetTypeTo: H256.ensure(assetTypeTo),
-                assetTypeFee: H256.ensure(assetTypeFee),
-                assetAmountFrom: U64.ensure(assetAmountFrom),
-                assetAmountTo: U64.ensure(assetAmountTo),
-                assetAmountFee: U64.ensure(assetAmountFee),
-                expiration: U64.ensure(expiration),
-                originOutputs: originOutputsConv,
-                recipient: AssetTransferAddress.ensure(params.recipient)
-            });
+        const baseParams = {
+            assetTypeFrom: H256.ensure(assetTypeFrom),
+            assetTypeTo: H256.ensure(assetTypeTo),
+            assetTypeFee: H256.ensure(assetTypeFee),
+            assetAmountFrom: U64.ensure(assetAmountFrom),
+            assetAmountTo: U64.ensure(assetAmountTo),
+            assetAmountFee: U64.ensure(assetAmountFee),
+            expiration: U64.ensure(expiration),
+            originOutputs: originOutputsConv
+        };
+        let toParams;
+        let feeParams;
+
+        if ("recipientFrom" in params) {
+            checkAssetTransferAddressRecipient(params.recipientFrom);
+            toParams = {
+                recipientFrom: AssetTransferAddress.ensure(params.recipientFrom)
+            };
         } else {
-            const { lockScriptHash, parameters } = params;
-            checkLockScriptHash(lockScriptHash);
-            checkParameters(parameters);
-            return new Order({
-                assetTypeFrom: H256.ensure(assetTypeFrom),
-                assetTypeTo: H256.ensure(assetTypeTo),
-                assetTypeFee: H256.ensure(assetTypeFee),
-                assetAmountFrom: U64.ensure(assetAmountFrom),
-                assetAmountTo: U64.ensure(assetAmountTo),
-                assetAmountFee: U64.ensure(assetAmountFee),
-                expiration: U64.ensure(expiration),
-                originOutputs: originOutputsConv,
-                lockScriptHash: H160.ensure(lockScriptHash),
-                parameters
-            });
+            const { lockScriptHashFrom, parametersFrom } = params;
+            checkLockScriptHash(lockScriptHashFrom);
+            checkParameters(parametersFrom);
+            toParams = {
+                lockScriptHashFrom: H160.ensure(lockScriptHashFrom),
+                parametersFrom
+            };
         }
+
+        if ("recipientFee" in params) {
+            checkAssetTransferAddressRecipient(params.recipientFee);
+            feeParams = {
+                recipientFee: AssetTransferAddress.ensure(params.recipientFee)
+            };
+        } else if ("lockScriptHashFee" in params) {
+            const { lockScriptHashFee, parametersFee } = params;
+            checkLockScriptHash(lockScriptHashFee);
+            checkParameters(parametersFee);
+            feeParams = {
+                lockScriptHashFee: H160.ensure(lockScriptHashFee),
+                parametersFee
+            };
+        } else {
+            feeParams = {
+                lockScriptHashFee: H160.ensure("0".repeat(40)),
+                parametersFee: []
+            };
+        }
+
+        return new Order({
+            ...baseParams,
+            ...toParams,
+            ...feeParams
+        });
     }
     public createOrderOnTransfer(params: {
         order: Order;

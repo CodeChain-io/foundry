@@ -59,7 +59,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         assetAmountTo: 1000,
         expiration,
         originOutputs: [goldInput.prevOut],
-        recipient: aliceAddress
+        recipientFrom: aliceAddress
     });
     await sdk.key.signTransactionInputWithOrder(goldInput, order);
 
