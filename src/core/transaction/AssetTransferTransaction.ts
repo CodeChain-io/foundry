@@ -225,8 +225,8 @@ export class AssetTransferTransaction {
         outputIndices: number[];
     }) {
         const { order, spentAmount, inputIndices, outputIndices } = params;
-        if (inputIndices.length === 0 || outputIndices.length === 0) {
-            throw Error(`inputIndices and outputIndices should not be empty`);
+        if (inputIndices.length === 0) {
+            throw Error(`inputIndices should not be empty`);
         }
 
         for (const orderOnTx of this.orders) {
