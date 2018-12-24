@@ -10,7 +10,7 @@ export { Parcel } from "./Parcel";
 export { SignedParcel } from "./SignedParcel";
 
 export { Action } from "./action/Action";
-export { Payment } from "./action/Payment";
+export { Pay } from "./action/Pay";
 export { SetRegularKey } from "./action/SetRegularKey";
 export { AssetTransaction } from "./action/AssetTransaction";
 export { CreateShard } from "./action/CreateShard";

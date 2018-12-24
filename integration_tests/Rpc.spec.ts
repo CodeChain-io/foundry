@@ -231,7 +231,7 @@ describe("rpc", () => {
             let seq: number;
             let parcel: Parcel;
             beforeEach(async () => {
-                parcel = sdk.core.createPaymentParcel({
+                parcel = sdk.core.createPayParcel({
                     recipient: signerAddress,
                     amount: 10
                 });
@@ -335,7 +335,7 @@ describe("rpc", () => {
             let parcelHash: H256;
 
             beforeAll(async () => {
-                const parcel = sdk.core.createPaymentParcel({
+                const parcel = sdk.core.createPayParcel({
                     recipient: signerAddress,
                     amount: 10
                 });

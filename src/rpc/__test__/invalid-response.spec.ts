@@ -1,6 +1,6 @@
 import { PlatformAddress } from "codechain-primitives";
 
-import { Parcel, Payment, U64 } from "../../core/classes";
+import { Parcel, Pay, U64 } from "../../core/classes";
 
 import { AccountRpc } from "../account";
 import { ChainRpc } from "../chain";
@@ -69,7 +69,7 @@ describe("Invalid response", () => {
                 "0x0000000000000000000000000000000000000000000000000000000000000001";
             const signedParcel = new Parcel(
                 "tc",
-                new Payment(address, new U64(0))
+                new Pay(address, new U64(0))
             ).sign({
                 secret,
                 fee: 0,

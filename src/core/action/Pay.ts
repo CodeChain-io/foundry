@@ -2,7 +2,7 @@ import { PlatformAddress } from "codechain-primitives";
 
 import { U64 } from "../U64";
 
-export class Payment {
+export class Pay {
     public receiver: PlatformAddress;
     public amount: U64;
 
@@ -21,7 +21,7 @@ export class Payment {
 
     public toJSON() {
         return {
-            action: "payment",
+            action: "pay",
             receiver: this.receiver.value,
             amount: this.amount.toEncodeObject()
         };

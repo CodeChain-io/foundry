@@ -15,7 +15,7 @@ test("getSignerAccountId", async () => {
     });
     const seq = await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS);
     const parcelToSend = sdk.core
-        .createPaymentParcel({
+        .createPayParcel({
             amount: 10,
             recipient: ACCOUNT_ADDRESS
         })

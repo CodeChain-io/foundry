@@ -43,7 +43,7 @@ const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
     console.log(`Current master account's balance is ${beforeBalance}`);
 
     const seq2 = await sdk.rpc.chain.getSeq(masterAddress);
-    const p2 = sdk.core.createPaymentParcel({
+    const p2 = sdk.core.createPayParcel({
         recipient: masterAddress,
         amount: 10
     });

@@ -62,7 +62,7 @@ async function setRegularKey() {
 
 async function sendCCCToOther() {
     const seq = await sdk.rpc.chain.getSeq(masterAddress);
-    const p = sdk.core.createPaymentParcel({
+    const p = sdk.core.createPayParcel({
         recipient: otherAddress,
         amount: 100
     });

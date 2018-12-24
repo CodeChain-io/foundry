@@ -10,7 +10,7 @@ const ACCOUNT_ADDRESS =
     "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd";
 const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
-const parcel = sdk.core.createPaymentParcel({
+const parcel = sdk.core.createPayParcel({
     recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
     amount: 10000
 });

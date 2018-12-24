@@ -15,7 +15,7 @@ test("toJSON", () => {
         getAccountIdFromPrivate(secret.value),
         { networkId: "tc" }
     );
-    const p = Parcel.payment(
+    const p = Parcel.pay(
         "tc",
         PlatformAddress.fromAccountId(
             "0x2222222222222222222222222222222222222222",

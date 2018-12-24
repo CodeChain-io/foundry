@@ -9,7 +9,7 @@ const address = ACCOUNT_ADDRESS;
 
 test("sendSignedParcel", async () => {
     const seq = await sdk.rpc.chain.getSeq(address);
-    const p = sdk.core.createPaymentParcel({
+    const p = sdk.core.createPayParcel({
         recipient: address,
         amount: 0
     });

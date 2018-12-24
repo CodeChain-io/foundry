@@ -8,7 +8,7 @@ import { U64 } from "../U64";
 
 import { AssetTransaction } from "./AssetTransaction";
 import { CreateShard } from "./CreateShard";
-import { Payment } from "./Payment";
+import { Pay } from "./Pay";
 import { Remove } from "./Remove";
 import { SetRegularKey } from "./SetRegularKey";
 import { SetShardOwners } from "./SetShardOwners";
@@ -18,7 +18,7 @@ import { WrapCCC } from "./WrapCCC";
 
 export type Action =
     | AssetTransaction
-    | Payment
+    | Pay
     | SetRegularKey
     | CreateShard
     | SetShardOwners
@@ -37,12 +37,9 @@ export function getActionFromJSON(json: any): Action {
                 approvals
             });
         }
-        case "payment": {
+        case "pay": {
             const { receiver, amount } = json;
-            return new Payment(
-                PlatformAddress.ensure(receiver),
-                new U64(amount)
-            );
+            return new Pay(PlatformAddress.ensure(receiver), new U64(amount));
         }
         case "setRegularKey": {
             const { key } = json;

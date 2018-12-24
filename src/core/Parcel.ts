@@ -3,7 +3,7 @@ import { PlatformAddress } from "codechain-primitives";
 import { blake256, signEcdsa } from "../utils";
 import { Action, getActionFromJSON } from "./action/Action";
 import { AssetTransaction } from "./action/AssetTransaction";
-import { Payment } from "./action/Payment";
+import { Pay } from "./action/Pay";
 import { WrapCCC } from "./action/WrapCCC";
 import { Asset } from "./Asset";
 import { H256 } from "./H256";
@@ -39,12 +39,12 @@ export class Parcel {
     /**
      * @deprecated
      */
-    public static payment(
+    public static pay(
         networkId: NetworkId,
         receiver: PlatformAddress,
         value: U64
     ): Parcel {
-        const action = new Payment(receiver, value);
+        const action = new Pay(receiver, value);
         return new Parcel(networkId, action);
     }
 

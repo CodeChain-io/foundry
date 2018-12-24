@@ -5,7 +5,7 @@ const sdk = new SDK({
     server: SERVER_URL
 });
 
-const parcel = sdk.core.createPaymentParcel({
+const parcel = sdk.core.createPayParcel({
     recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
     amount: 10000
 });

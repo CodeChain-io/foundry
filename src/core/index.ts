@@ -2,7 +2,7 @@ import { AssetTransferAddress, PlatformAddress } from "codechain-primitives";
 
 import { AssetTransaction } from "./action/AssetTransaction";
 import { CreateShard } from "./action/CreateShard";
-import { Payment } from "./action/Payment";
+import { Pay } from "./action/Pay";
 import { Remove } from "./action/Remove";
 import { SetRegularKey } from "./action/SetRegularKey";
 import { SetShardOwners } from "./action/SetShardOwners";
@@ -54,7 +54,7 @@ export class Core {
         Parcel,
         SignedParcel,
         // Action
-        Payment,
+        Pay,
         SetRegularKey,
         AssetTransaction,
         CreateShard,
@@ -95,14 +95,14 @@ export class Core {
     }
 
     /**
-     * Creates Payment action which pays the value amount of CCC(CodeChain Coin)
+     * Creates Pay action which pays the value amount of CCC(CodeChain Coin)
      * from the parcel signer to the recipient. Who is signing the parcel will pay.
      * @param params.recipient The platform account who receives CCC
      * @param params.amount Amount of CCC to pay
      * @throws Given string for recipient is invalid for converting it to PlatformAddress
      * @throws Given number or string for amount is invalid for converting it to U64
      */
-    public createPaymentParcel(params: {
+    public createPayParcel(params: {
         recipient: PlatformAddress | string;
         amount: U64 | number | string;
     }): Parcel {
@@ -111,7 +111,7 @@ export class Core {
         checkAmount(amount);
         return new Parcel(
             this.networkId,
-            new Payment(PlatformAddress.ensure(recipient), U64.ensure(amount))
+            new Pay(PlatformAddress.ensure(recipient), U64.ensure(amount))
         );
     }
 

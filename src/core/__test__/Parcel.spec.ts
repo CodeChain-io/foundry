@@ -6,7 +6,7 @@ import { U256 } from "../U256";
 import { U64 } from "../U64";
 
 test("rlp", () => {
-    const t = Parcel.payment(
+    const t = Parcel.pay(
         "tc",
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",
@@ -53,7 +53,7 @@ test("rlp", () => {
 });
 
 test("hash", () => {
-    const t = Parcel.payment(
+    const t = Parcel.pay(
         "tc",
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",
@@ -71,7 +71,7 @@ test("hash", () => {
 });
 
 test("sign", () => {
-    const t = Parcel.payment(
+    const t = Parcel.pay(
         "tc",
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",
@@ -100,7 +100,7 @@ test("sign", () => {
 });
 
 test("signed hash", () => {
-    const t = Parcel.payment(
+    const t = Parcel.pay(
         "tc",
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",
@@ -122,7 +122,7 @@ test("signed hash", () => {
 });
 
 test("toJSON", () => {
-    const p = Parcel.payment(
+    const p = Parcel.pay(
         "tc",
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",

@@ -10,7 +10,7 @@ test("toJSON", () => {
     const secret = new H256(
         "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"
     );
-    const p = Parcel.payment(
+    const p = Parcel.pay(
         "tc",
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",
@@ -33,7 +33,7 @@ test("getSignerAccountId", () => {
         getAccountIdFromPrivate(secret.value),
         { networkId: "tc" }
     ).getAccountId();
-    const p = Parcel.payment(
+    const p = Parcel.pay(
         "tc",
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",
@@ -59,7 +59,7 @@ test("getSignerAddress", () => {
     const signerAddress = PlatformAddress.fromAccountId(signerAccountId, {
         networkId: "tc"
     });
-    const p = Parcel.payment(
+    const p = Parcel.pay(
         "tc",
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",

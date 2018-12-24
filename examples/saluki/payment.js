@@ -14,7 +14,7 @@ if (!sdk.core.classes.PlatformAddress.check(parcelSender)) {
 
 (async () => {
     const keyStore = await sdk.key.createLocalKeyStore();
-    const parcel = sdk.core.createPaymentParcel({
+    const parcel = sdk.core.createPayParcel({
         recipient: "sccqywxfyz8ykulqsq2l7z9nvgd8z3cczfun509f08u",
         amount: 5 // 0.000000005CCC
     });

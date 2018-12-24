@@ -38,7 +38,7 @@ test("setRegularKey", async () => {
     const beforeBalance = await sdk.rpc.chain.getBalance(masterAddress);
 
     const seq2 = await sdk.rpc.chain.getSeq(masterAddress);
-    const p2 = sdk.core.createPaymentParcel({
+    const p2 = sdk.core.createPayParcel({
         recipient: masterAddress,
         amount: 10
     });

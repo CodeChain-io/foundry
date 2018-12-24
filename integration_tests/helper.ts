@@ -68,14 +68,14 @@ export const mintAsset = async ({
     };
 };
 
-export const payment = async (params?: { inc_seq?: number }) => {
+export const pay = async (params?: { inc_seq?: number }) => {
     const { inc_seq = 0 } = params || {};
     let seq = await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS);
     for (let i = 0; i < inc_seq; i++) {
         seq += 1;
     }
     const p = sdk.core
-        .createPaymentParcel({
+        .createPayParcel({
             amount: 10,
             recipient: ACCOUNT_ADDRESS
         })
