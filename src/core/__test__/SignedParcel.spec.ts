@@ -1,6 +1,7 @@
 import { PlatformAddress } from "codechain-primitives";
 
 import { getAccountIdFromPrivate } from "../../utils";
+import { Pay } from "../action/Pay";
 import { H256 } from "../H256";
 import { Parcel } from "../Parcel";
 import { SignedParcel } from "../SignedParcel";
@@ -10,14 +11,14 @@ test("toJSON", () => {
     const secret = new H256(
         "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"
     );
-    const p = Parcel.pay(
-        "tc",
+    const pay = new Pay(
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
         new U64(11)
-    ).sign({
+    );
+    const p = new Parcel("tc", pay).sign({
         secret,
         fee: 33,
         seq: 33
@@ -33,14 +34,14 @@ test("getSignerAccountId", () => {
         getAccountIdFromPrivate(secret.value),
         { networkId: "tc" }
     ).getAccountId();
-    const p = Parcel.pay(
-        "tc",
+    const pay = new Pay(
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
         new U64(11)
-    ).sign({
+    );
+    const p = new Parcel("tc", pay).sign({
         secret,
         fee: 33,
         seq: 44
@@ -59,14 +60,14 @@ test("getSignerAddress", () => {
     const signerAddress = PlatformAddress.fromAccountId(signerAccountId, {
         networkId: "tc"
     });
-    const p = Parcel.pay(
-        "tc",
+    const pay = new Pay(
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
         new U64(11)
-    ).sign({
+    );
+    const p = new Parcel("tc", pay).sign({
         secret,
         fee: 33,
         seq: 44

@@ -1,14 +1,9 @@
-import { PlatformAddress } from "codechain-primitives";
-
 import { blake256, signEcdsa } from "../utils";
 import { Action, getActionFromJSON } from "./action/Action";
-import { AssetTransaction } from "./action/AssetTransaction";
-import { Pay } from "./action/Pay";
 import { WrapCCC } from "./action/WrapCCC";
 import { Asset } from "./Asset";
 import { H256 } from "./H256";
 import { SignedParcel } from "./SignedParcel";
-import { Transaction } from "./transaction/Transaction";
 import { NetworkId } from "./types";
 import { U64 } from "./U64";
 
@@ -24,30 +19,6 @@ const RLP = require("rlp");
  * - After signing with the sign() function, it can be sent to the network.
  */
 export class Parcel {
-    /**
-     * @deprecated
-     */
-    public static transaction(
-        networkId: NetworkId,
-        transaction: Transaction,
-        approvals: string[] = []
-    ): Parcel {
-        const action = new AssetTransaction({ transaction, approvals });
-        return new Parcel(networkId, action);
-    }
-
-    /**
-     * @deprecated
-     */
-    public static pay(
-        networkId: NetworkId,
-        receiver: PlatformAddress,
-        value: U64
-    ): Parcel {
-        const action = new Pay(receiver, value);
-        return new Parcel(networkId, action);
-    }
-
     public static fromJSON(result: any) {
         const { seq, fee, networkId, action } = result;
         const parcel = new Parcel(networkId, getActionFromJSON(action));
