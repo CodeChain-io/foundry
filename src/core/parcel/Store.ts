@@ -1,20 +1,18 @@
-import { PlatformAddress } from "codechain-primitives";
 import * as _ from "lodash";
 
 import { blake256, getPublicFromPrivate, signEcdsa } from "../../utils";
-
-import { H256 } from "../H256";
+import { H256, PlatformAddress } from "../classes";
+import { Parcel } from "../Parcel";
 import { Text } from "../Text";
 import { NetworkId } from "../types";
 
 const RLP = require("rlp");
 
-export class Store {
-    public content: string;
-    public certifier: PlatformAddress;
-    public signature: string;
-
-    constructor(
+export class Store extends Parcel {
+    private content: string;
+    private certifier: PlatformAddress;
+    private signature: string;
+    public constructor(
         params:
             | {
                   content: string;
@@ -24,11 +22,13 @@ export class Store {
             | {
                   content: string;
                   secret: H256;
-                  networkId: NetworkId;
-              }
+              },
+        networkId: NetworkId
     ) {
+        super(networkId);
+
         if ("secret" in params) {
-            const { content, secret, networkId } = params;
+            const { content, secret } = params;
             this.content = content;
             this.certifier = PlatformAddress.fromPublic(
                 getPublicFromPrivate(secret.value),
@@ -55,7 +55,15 @@ export class Store {
         }
     }
 
-    public toEncodeObject(): any[] {
+    public getText() {
+        const { content, certifier } = this;
+        return new Text({
+            content,
+            certifier
+        });
+    }
+
+    protected actionToEncodeObject(): any[] {
         const { content, certifier, signature } = this;
         return [
             8,
@@ -65,21 +73,16 @@ export class Store {
         ];
     }
 
-    public toJSON() {
+    protected actionToJSON(): any {
         const { content, certifier, signature } = this;
         return {
-            action: "store",
             content,
             certifier: certifier.value,
             signature: `0x${signature}`
         };
     }
 
-    public getText() {
-        const { content, certifier } = this;
-        return new Text({
-            content,
-            certifier
-        });
+    protected action(): string {
+        return "store";
     }
 }

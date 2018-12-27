@@ -1,9 +1,8 @@
 import { PlatformAddress } from "codechain-primitives";
 
-import { Pay } from "../action/Pay";
 import { Block } from "../Block";
 import { H256 } from "../H256";
-import { Parcel } from "../Parcel";
+import { Pay } from "../parcel/Pay";
 import { U256 } from "../U256";
 import { U64 } from "../U64";
 
@@ -16,10 +15,11 @@ test("toJSON", () => {
             "0x2222222222222222222222222222222222222222",
             { networkId: "tc" }
         ),
-        new U64(11)
+        new U64(11),
+        "tc"
     );
 
-    const p = new Parcel("tc", pay).sign({
+    const p = pay.sign({
         secret,
         fee: 33,
         seq: 44

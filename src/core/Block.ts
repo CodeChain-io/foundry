@@ -1,6 +1,7 @@
 import { PlatformAddress } from "codechain-primitives";
 
 import { H256 } from "./H256";
+import { fromJSONToSignedParcel } from "./parcel/json";
 import { SignedParcel } from "./SignedParcel";
 import { U256 } from "./U256";
 
@@ -52,7 +53,7 @@ export class Block {
             score: new U256(score),
             seal,
             hash: new H256(hash),
-            parcels: parcels.map((p: any) => SignedParcel.fromJSON(p))
+            parcels: parcels.map(fromJSONToSignedParcel)
         });
     }
     public parentHash: H256;

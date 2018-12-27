@@ -8,6 +8,7 @@ import { H256 } from "../core/H256";
 import { H512 } from "../core/H512";
 import { Invoice } from "../core/Invoice";
 import { Parcel } from "../core/Parcel";
+import { fromJSONToSignedParcel } from "../core/parcel/json";
 import { SignedParcel } from "../core/SignedParcel";
 import { Text } from "../core/Text";
 import {
@@ -148,7 +149,7 @@ export class ChainRpc {
                         resolve(
                             result === null
                                 ? null
-                                : SignedParcel.fromJSON(result)
+                                : fromJSONToSignedParcel(result)
                         );
                     } catch (e) {
                         reject(
@@ -817,7 +818,7 @@ export class ChainRpc {
                         );
                     }
                     try {
-                        resolve(result.map(p => SignedParcel.fromJSON(p)));
+                        resolve(result.map(fromJSONToSignedParcel));
                     } catch (e) {
                         reject(
                             Error(

@@ -1,20 +1,20 @@
 import { PlatformAddress } from "codechain-primitives";
-import { Pay } from "../action/Pay";
+import { Pay } from "../parcel/Pay";
 
 import { H256 } from "../H256";
-import { Parcel } from "../Parcel";
+import { fromJSONToParcel } from "../parcel/json";
 import { U256 } from "../U256";
 import { U64 } from "../U64";
 
 test("rlp", () => {
-    const pay = new Pay(
+    const t = new Pay(
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U64(11)
+        new U64(11),
+        "tc"
     );
-    const t = new Parcel("tc", pay);
     t.setFee(0);
     t.setSeq(0);
     expect(t.rlpBytes()).toEqual(
@@ -54,14 +54,14 @@ test("rlp", () => {
 });
 
 test("hash", () => {
-    const pay = new Pay(
+    const t = new Pay(
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U64(11)
+        new U64(11),
+        "tc"
     );
-    const t = new Parcel("tc", pay);
     t.setFee(0);
     t.setSeq(0);
     expect(t.hash()).toEqual(
@@ -77,9 +77,10 @@ test("sign", () => {
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U64(11)
+        new U64(11),
+        "tc"
     );
-    const signed = new Parcel("tc", pay).sign({
+    const signed = pay.sign({
         secret:
             "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd",
         seq: 0,
@@ -105,9 +106,10 @@ test("signed hash", () => {
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U64(11)
+        new U64(11),
+        "tc"
     );
-    const signed = new Parcel("tc", pay).sign({
+    const signed = pay.sign({
         secret:
             "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd",
         seq: 0,
@@ -121,15 +123,15 @@ test("signed hash", () => {
 });
 
 test("toJSON", () => {
-    const pay = new Pay(
+    const p = new Pay(
         PlatformAddress.fromAccountId(
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         ),
-        new U64(11)
+        new U64(11),
+        "tc"
     );
-    const p = new Parcel("tc", pay);
     p.setFee(33);
     p.setSeq(44);
-    expect(Parcel.fromJSON(p.toJSON())).toEqual(p);
+    expect(fromJSONToParcel(p.toJSON())).toEqual(p);
 });

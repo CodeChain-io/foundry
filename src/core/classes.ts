@@ -9,16 +9,15 @@ export { Block } from "./Block";
 export { Parcel } from "./Parcel";
 export { SignedParcel } from "./SignedParcel";
 
-export { Action } from "./action/Action";
-export { Pay } from "./action/Pay";
-export { SetRegularKey } from "./action/SetRegularKey";
-export { AssetTransaction } from "./action/AssetTransaction";
-export { CreateShard } from "./action/CreateShard";
-export { SetShardOwners } from "./action/SetShardOwners";
-export { SetShardUsers } from "./action/SetShardUsers";
-export { WrapCCC } from "./action/WrapCCC";
-export { Store } from "./action/Store";
-export { Remove } from "./action/Remove";
+export { Pay } from "./parcel/Pay";
+export { SetRegularKey } from "./parcel/SetRegularKey";
+export { AssetTransaction } from "./parcel/AssetTransaction";
+export { CreateShard } from "./parcel/CreateShard";
+export { SetShardOwners } from "./parcel/SetShardOwners";
+export { SetShardUsers } from "./parcel/SetShardUsers";
+export { WrapCCC } from "./parcel/WrapCCC";
+export { Store } from "./parcel/Store";
+export { Remove } from "./parcel/Remove";
 
 export { Transaction } from "./transaction/Transaction";
 export { AssetMintTransaction } from "./transaction/AssetMintTransaction";

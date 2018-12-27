@@ -1,14 +1,15 @@
 import * as _ from "lodash";
 
 import { signEcdsa } from "../../utils";
+import { H256 } from "../classes";
+import { Parcel } from "../Parcel";
+import { NetworkId } from "../types";
 
-import { H256 } from "../H256";
+export class Remove extends Parcel {
+    private readonly _hash: H256;
+    private readonly signature: string;
 
-export class Remove {
-    public hash: H256;
-    public signature: string;
-
-    constructor(
+    public constructor(
         params:
             | {
                   hash: H256;
@@ -17,11 +18,14 @@ export class Remove {
             | {
                   hash: H256;
                   secret: H256;
-              }
+              },
+        networkId: NetworkId
     ) {
+        super(networkId);
+
         if ("secret" in params) {
             const { hash, secret } = params;
-            this.hash = hash;
+            this._hash = hash;
             const { r, s, v } = signEcdsa(hash.value, secret.value);
             this.signature = `${_.padStart(r, 64, "0")}${_.padStart(
                 s,
@@ -33,22 +37,25 @@ export class Remove {
             if (signature.startsWith("0x")) {
                 signature = signature.substr(2);
             }
-            this.hash = params.hash;
+            this._hash = params.hash;
             this.signature = signature;
         }
     }
 
-    public toEncodeObject(): any[] {
-        const { hash, signature } = this;
-        return [9, hash.toEncodeObject(), `0x${signature}`];
+    protected actionToEncodeObject(): any[] {
+        const { _hash, signature } = this;
+        return [9, _hash.toEncodeObject(), `0x${signature}`];
     }
 
-    public toJSON() {
-        const { hash, signature } = this;
+    protected actionToJSON(): any {
+        const { _hash, signature } = this;
         return {
-            action: "remove",
-            hash: hash.toEncodeObject(),
+            hash: _hash.toEncodeObject(),
             signature: `0x${signature}`
         };
+    }
+
+    protected action(): string {
+        return "remove";
     }
 }

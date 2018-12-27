@@ -1,4 +1,5 @@
 import { SDK } from "..";
+import { AssetTransaction } from "../src/core/parcel/AssetTransaction";
 
 import {
     CODECHAIN_NETWORK_ID,
@@ -12,9 +13,9 @@ const sdk = new SDK({
     keyStoreType: "memory",
     networkId: CODECHAIN_NETWORK_ID
 });
-const { H160, H256, AssetTransaction } = SDK.Core.classes;
+const { H160, H256 } = SDK.Core.classes;
 
-test("AssetMintTransaction fromJSON", async () => {
+test("AssetMintTransaction fromJSONToParcel", async () => {
     const metadata = "";
     const lockScriptHash = new H160("0000000000000000000000000000000000000000");
     const amount = 100;
@@ -31,11 +32,13 @@ test("AssetMintTransaction fromJSON", async () => {
     }
 
     const action = parcel.unsigned.action();
-    if (!(action instanceof AssetTransaction)) {
+    if (action !== "assetTransaction") {
         throw Error("Invalid action");
     }
 
-    expect(action.transaction).toMatchObject({
+    expect(
+        ((parcel.unsigned as any) as AssetTransaction).transaction()
+    ).toMatchObject({
         type: expect.stringMatching("assetMint"),
         metadata: expect.anything(),
         output: {
@@ -50,7 +53,7 @@ test("AssetMintTransaction fromJSON", async () => {
     });
 });
 
-test("AssetTransferTransaction fromJSON", async () => {
+test("AssetTransferTransaction fromJSONToParcel", async () => {
     const addressA = await sdk.key.createAssetTransferAddress();
     const addressB = await sdk.key.createAssetTransferAddress();
     const mintTx = sdk.core
@@ -93,12 +96,13 @@ test("AssetTransferTransaction fromJSON", async () => {
         unlockScript: expect.anything()
     });
 
-    const action = parcel.unsigned.action();
-    if (!(action instanceof AssetTransaction)) {
+    if (parcel.unsigned.action() !== "assetTransaction") {
         throw Error("Invalid action");
     }
 
-    expect(action.transaction).toMatchObject({
+    expect(
+        ((parcel.unsigned as any) as AssetTransaction).transaction()
+    ).toMatchObject({
         type: expect.stringMatching("assetTransfer"),
         burns: [],
         inputs: expect.arrayContaining([expectedInput]),

@@ -28,30 +28,6 @@ const RLP = require("rlp");
  * - A seq is not identical to the signer's seq.
  */
 export class SignedParcel {
-    // FIXME: any
-    /**
-     * Create a SignedParcel from a SignedParcel JSON object.
-     * @param data A SignedParcel JSON object.
-     * @returns A SignedParcel.
-     */
-    public static fromJSON(data: any) {
-        const { sig, blockNumber, blockHash, parcelIndex } = data;
-        if (typeof sig !== "string") {
-            throw Error("Unexpected type of sig");
-        }
-        if (blockNumber) {
-            return new SignedParcel(
-                Parcel.fromJSON(data),
-                sig,
-                blockNumber,
-                new H256(blockHash),
-                parcelIndex
-            );
-        } else {
-            return new SignedParcel(Parcel.fromJSON(data), sig);
-        }
-    }
-
     /**
      * Convert r, s, v values of an ECDSA signature to a string.
      * @param params.r The r value of an ECDSA signature, which is up to 32 bytes of hexadecimal string.
@@ -128,25 +104,14 @@ export class SignedParcel {
      */
     public toEncodeObject(): any[] {
         const { unsigned, v, r, s } = this;
-        const seq = unsigned.seq();
-        const fee = unsigned.fee();
-        const action = unsigned.action();
-        const networkId = unsigned.networkId();
         const sig = `0x${_.padStart(r.value.toString(16), 64, "0")}${_.padStart(
             s.value.toString(16),
             64,
             "0"
         )}${_.padStart(v.toString(16), 2, "0")}`;
-        if (seq == null || !fee) {
-            throw Error("Seq and fee in the parcel must be present");
-        }
-        return [
-            seq,
-            fee.toEncodeObject(),
-            networkId,
-            action.toEncodeObject(),
-            sig
-        ];
+        const result = unsigned.toEncodeObject();
+        result.push(sig);
+        return result;
     }
 
     /**
@@ -165,7 +130,8 @@ export class SignedParcel {
     }
 
     public getAsset(): Asset {
-        return this.unsigned.getAsset();
+        // FIXME: Only UnwrapCCC has getAsset method
+        return (this.unsigned as any).getAsset();
     }
 
     /**
@@ -214,27 +180,20 @@ export class SignedParcel {
     public toJSON() {
         const { blockNumber, blockHash, parcelIndex, unsigned, v, r, s } = this;
         const seq = unsigned.seq();
-        const fee = unsigned.fee();
-        const networkId = unsigned.networkId();
-        const action = unsigned.action();
         const sig = SignedParcel.convertRsvToSignatureString({
             r: r.value.toString(16),
             s: s.value.toString(16),
             v
         });
-        if (seq == null || !fee) {
-            throw Error("Seq and fee in the parcel must be present");
+        if (seq == null) {
+            throw Error("Signed parcel must have the seq");
         }
-        return {
-            blockNumber,
-            blockHash: blockHash === null ? null : blockHash.toJSON(),
-            parcelIndex,
-            seq,
-            fee: fee.toJSON(),
-            networkId,
-            action: action.toJSON(),
-            sig,
-            hash: this.hash().toJSON()
-        };
+        const result = unsigned.toJSON();
+        result.blockNumber = blockNumber;
+        result.blockHash = blockHash === null ? null : blockHash.toJSON();
+        result.parcelIndex = parcelIndex;
+        result.sig = sig;
+        result.hash = this.hash().toJSON();
+        return result;
     }
 }

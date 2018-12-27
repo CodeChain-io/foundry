@@ -1,7 +1,4 @@
 import { blake256, signEcdsa } from "../utils";
-import { Action, getActionFromJSON } from "./action/Action";
-import { WrapCCC } from "./action/WrapCCC";
-import { Asset } from "./Asset";
 import { H256 } from "./H256";
 import { SignedParcel } from "./SignedParcel";
 import { NetworkId } from "./types";
@@ -18,24 +15,15 @@ const RLP = require("rlp");
  * - It contains the transaction to process. After signing the Parcel's size must not exceed 1 MB.
  * - After signing with the sign() function, it can be sent to the network.
  */
-export class Parcel {
-    public static fromJSON(result: any) {
-        const { seq, fee, networkId, action } = result;
-        const parcel = new Parcel(networkId, getActionFromJSON(action));
-        parcel.setSeq(seq);
-        parcel.setFee(fee);
-        return parcel;
-    }
+export abstract class Parcel {
     private _seq: number | null;
     private _fee: U64 | null;
     private readonly _networkId: NetworkId;
-    private readonly _action: Action;
 
-    constructor(networkId: NetworkId, action: Action) {
+    protected constructor(networkId: NetworkId) {
         this._seq = null;
         this._fee = null;
         this._networkId = networkId;
-        this._action = action;
     }
 
     public seq(): number | null {
@@ -58,21 +46,17 @@ export class Parcel {
         return this._networkId;
     }
 
-    public action(): Action {
-        return this._action;
-    }
-
     public toEncodeObject(): any[] {
-        const [seq, fee, networkId, action] = [
-            this._seq,
-            this._fee,
-            this._networkId,
-            this._action
-        ];
+        const [seq, fee, networkId] = [this._seq, this._fee, this._networkId];
         if (seq == null || !fee) {
             throw Error("Seq and fee in the parcel must be present");
         }
-        return [seq, fee.toEncodeObject(), networkId, action.toEncodeObject()];
+        return [
+            seq,
+            fee.toEncodeObject(),
+            networkId,
+            this.actionToEncodeObject()
+        ];
     }
 
     public rlpBytes(): Buffer {
@@ -81,14 +65,6 @@ export class Parcel {
 
     public hash(): H256 {
         return new H256(blake256(this.rlpBytes()));
-    }
-
-    public getAsset(): Asset {
-        const action = this._action;
-        if (!(action instanceof WrapCCC)) {
-            throw Error("Getting asset is only available with WrapCCC action");
-        }
-        return action.getAsset(this.hash());
     }
 
     public sign(params: {
@@ -117,18 +93,23 @@ export class Parcel {
         const seq = this._seq;
         const fee = this._fee;
         const networkId = this._networkId;
-        const action = this._action;
         if (!fee) {
-            throw Error("Fee in the parcel must be present");
+            throw Error("Parcel must have the fee");
         }
+        const action = this.actionToJSON();
+        action.action = this.action();
         const result: any = {
             fee: fee.toJSON(),
             networkId,
-            action: action.toJSON()
+            action
         };
         if (seq != null) {
             result.seq = seq;
         }
         return result;
     }
+
+    protected abstract actionToJSON(): any;
+    protected abstract actionToEncodeObject(): any[];
+    protected abstract action(): string;
 }

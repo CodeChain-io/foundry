@@ -1,15 +1,5 @@
 import { AssetTransferAddress, PlatformAddress } from "codechain-primitives";
 
-import { AssetTransaction } from "./action/AssetTransaction";
-import { CreateShard } from "./action/CreateShard";
-import { Pay } from "./action/Pay";
-import { Remove } from "./action/Remove";
-import { SetRegularKey } from "./action/SetRegularKey";
-import { SetShardOwners } from "./action/SetShardOwners";
-import { SetShardUsers } from "./action/SetShardUsers";
-import { Store } from "./action/Store";
-import { WrapCCC } from "./action/WrapCCC";
-
 import { Asset } from "./Asset";
 import { AssetScheme } from "./AssetScheme";
 import { Block } from "./Block";
@@ -19,6 +9,15 @@ import { H256 } from "./H256";
 import { H512 } from "./H512";
 import { Invoice } from "./Invoice";
 import { Parcel } from "./Parcel";
+import { AssetTransaction } from "./parcel/AssetTransaction";
+import { CreateShard } from "./parcel/CreateShard";
+import { Pay } from "./parcel/Pay";
+import { Remove } from "./parcel/Remove";
+import { SetRegularKey } from "./parcel/SetRegularKey";
+import { SetShardOwners } from "./parcel/SetShardOwners";
+import { SetShardUsers } from "./parcel/SetShardUsers";
+import { Store } from "./parcel/Store";
+import { WrapCCC } from "./parcel/WrapCCC";
 import { Script } from "./Script";
 import { SignedParcel } from "./SignedParcel";
 import { AssetComposeTransaction } from "./transaction/AssetComposeTransaction";
@@ -53,7 +52,7 @@ export class Core {
         // Parcel
         Parcel,
         SignedParcel,
-        // Action
+        // Parcel
         Pay,
         SetRegularKey,
         AssetTransaction,
@@ -105,13 +104,14 @@ export class Core {
     public createPayParcel(params: {
         recipient: PlatformAddress | string;
         amount: U64 | number | string;
-    }): Parcel {
+    }): Pay {
         const { recipient, amount } = params;
         checkPlatformAddressRecipient(recipient);
         checkAmount(amount);
-        return new Parcel(
-            this.networkId,
-            new Pay(PlatformAddress.ensure(recipient), U64.ensure(amount))
+        return new Pay(
+            PlatformAddress.ensure(recipient),
+            U64.ensure(amount),
+            this.networkId
         );
     }
 
@@ -120,10 +120,12 @@ export class Core {
      * @param params.key The public key of a regular key
      * @throws Given string for key is invalid for converting it to H512
      */
-    public createSetRegularKeyParcel(params: { key: H512 | string }): Parcel {
+    public createSetRegularKeyParcel(params: {
+        key: H512 | string;
+    }): SetRegularKey {
         const { key } = params;
         checkKey(key);
-        return new Parcel(this.networkId, new SetRegularKey(H512.ensure(key)));
+        return new SetRegularKey(H512.ensure(key), this.networkId);
     }
 
     /**
@@ -134,35 +136,32 @@ export class Core {
     public createAssetTransactionParcel(params: {
         transaction: Transaction;
         approvals?: string[];
-    }): Parcel {
+    }): AssetTransaction {
         const { transaction, approvals = [] } = params;
         checkTransaction(transaction);
-        return new Parcel(
-            this.networkId,
-            new AssetTransaction({ transaction, approvals })
-        );
+        return new AssetTransaction({ transaction, approvals }, this.networkId);
     }
 
     /**
      * Creates CreateShard action which can create new shard
      */
-    public createCreateShardParcel(): Parcel {
-        return new Parcel(this.networkId, new CreateShard());
+    public createCreateShardParcel(): CreateShard {
+        return new CreateShard(this.networkId);
     }
 
     public createSetShardOwnersParcel(params: {
         shardId: number;
         owners: Array<PlatformAddress | string>;
-    }): Parcel {
+    }): SetShardOwners {
         const { shardId, owners } = params;
         checkShardId(shardId);
         checkOwners(owners);
-        return new Parcel(
-            this.networkId,
-            new SetShardOwners({
+        return new SetShardOwners(
+            {
                 shardId,
                 owners: owners.map(PlatformAddress.ensure)
-            })
+            },
+            this.networkId
         );
     }
 
@@ -174,16 +173,16 @@ export class Core {
     public createSetShardUsersParcel(params: {
         shardId: number;
         users: Array<PlatformAddress | string>;
-    }): Parcel {
+    }): SetShardUsers {
         const { shardId, users } = params;
         checkShardId(shardId);
         checkUsers(users);
-        return new Parcel(
-            this.networkId,
-            new SetShardUsers({
+        return new SetShardUsers(
+            {
                 shardId,
                 users: users.map(PlatformAddress.ensure)
-            })
+            },
+            this.networkId
         );
     }
 
@@ -210,34 +209,30 @@ export class Core {
                   recipient: AssetTransferAddress | string;
                   amount: U64 | number | string;
               }
-    ): Parcel {
+    ): WrapCCC {
         const { shardId, amount } = params;
         checkShardId(shardId);
         checkAmount(amount);
+        let data;
         if ("recipient" in params) {
             checkAssetTransferAddressRecipient(params.recipient);
-            return new Parcel(
-                this.networkId,
-                new WrapCCC({
-                    shardId,
-                    recipient: AssetTransferAddress.ensure(params.recipient),
-                    amount: U64.ensure(amount)
-                })
-            );
+            data = {
+                shardId,
+                recipient: AssetTransferAddress.ensure(params.recipient),
+                amount: U64.ensure(amount)
+            };
         } else {
             const { lockScriptHash, parameters } = params;
             checkLockScriptHash(lockScriptHash);
             checkParameters(parameters);
-            return new Parcel(
-                this.networkId,
-                new WrapCCC({
-                    shardId,
-                    lockScriptHash: H160.ensure(lockScriptHash),
-                    parameters,
-                    amount: U64.ensure(amount)
-                })
-            );
+            data = {
+                shardId,
+                lockScriptHash: H160.ensure(lockScriptHash),
+                parameters,
+                amount: U64.ensure(amount)
+            };
         }
+        return new WrapCCC(data, this.networkId);
     }
 
     /**
@@ -259,31 +254,26 @@ export class Core {
                   content: string;
                   secret: H256 | string;
               }
-    ): Parcel {
+    ): Store {
+        let storeParams;
         if ("secret" in params) {
             const { content, secret } = params;
             checkSecret(secret);
-            return new Parcel(
-                this.networkId,
-                new Store({
-                    content,
-                    secret: H256.ensure(secret),
-                    networkId: this.networkId
-                })
-            );
+            storeParams = {
+                content,
+                secret: H256.ensure(secret)
+            };
         } else {
             const { content, certifier, signature } = params;
             checkCertifier(certifier);
             checkSignature(signature);
-            return new Parcel(
-                this.networkId,
-                new Store({
-                    content,
-                    certifier: PlatformAddress.ensure(certifier),
-                    signature
-                })
-            );
+            storeParams = {
+                content,
+                certifier: PlatformAddress.ensure(certifier),
+                signature
+            };
         }
+        return new Store(storeParams, this.networkId);
     }
 
     /**
@@ -303,30 +293,26 @@ export class Core {
                   hash: H256 | string;
                   signature: string;
               }
-    ): Parcel {
+    ): Remove {
+        let removeParam = null;
         if ("secret" in params) {
             const { hash, secret } = params;
             checkParcelHash(hash);
             checkSecret(secret);
-            return new Parcel(
-                this.networkId,
-                new Remove({
-                    hash: H256.ensure(hash),
-                    secret: H256.ensure(secret)
-                })
-            );
+            removeParam = {
+                hash: H256.ensure(hash),
+                secret: H256.ensure(secret)
+            };
         } else {
             const { hash, signature } = params;
             checkParcelHash(hash);
             checkSignature(signature);
-            return new Parcel(
-                this.networkId,
-                new Remove({
-                    hash: H256.ensure(hash),
-                    signature
-                })
-            );
+            removeParam = {
+                hash: H256.ensure(hash),
+                signature
+            };
         }
+        return new Remove(removeParam, this.networkId);
     }
 
     /**

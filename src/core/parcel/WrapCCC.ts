@@ -1,9 +1,8 @@
-import { AssetTransferAddress, H160, H256, U64 } from "codechain-primitives";
-
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
-
-import { Asset } from "../Asset";
+import { Asset, AssetTransferAddress, H160, H256, U64 } from "../classes";
+import { Parcel } from "../Parcel";
+import { NetworkId } from "../types";
 
 export interface WrapCCCData {
     shardId: number;
@@ -18,13 +17,17 @@ export interface WrapCCCAddressData {
     amount: U64;
 }
 
-export class WrapCCC {
-    public readonly shardId: number;
-    public readonly lockScriptHash: H160;
-    public readonly parameters: Buffer[];
-    public readonly amount: U64;
+export class WrapCCC extends Parcel {
+    private readonly shardId: number;
+    private readonly lockScriptHash: H160;
+    private readonly parameters: Buffer[];
+    private readonly amount: U64;
 
-    constructor(data: WrapCCCData | WrapCCCAddressData) {
+    public constructor(
+        data: WrapCCCData | WrapCCCAddressData,
+        networkId: NetworkId
+    ) {
+        super(networkId);
         if ("recipient" in data) {
             // FIXME: Clean up by abstracting the standard scripts
             const { type, payload } = data.recipient;
@@ -75,22 +78,21 @@ export class WrapCCC {
 
     /**
      * Get the wrapped CCC asset output of this parcel.
-     * @param parcelHash A hash value of containing parcel
      * @returns An Asset.
      */
-    public getAsset(parcelHash: H256): Asset {
+    public getAsset(): Asset {
         const { lockScriptHash, parameters, amount } = this;
         return new Asset({
             assetType: this.getAssetSchemeAddress(),
             lockScriptHash,
             parameters,
             amount,
-            transactionHash: parcelHash,
+            transactionHash: this.hash(),
             transactionOutputIndex: 0
         });
     }
 
-    public toEncodeObject(): any[] {
+    protected actionToEncodeObject(): any[] {
         const { shardId, lockScriptHash, parameters, amount } = this;
         return [
             7,
@@ -101,15 +103,18 @@ export class WrapCCC {
         ];
     }
 
-    public toJSON() {
+    protected actionToJSON(): any {
         const { shardId, lockScriptHash, parameters, amount } = this;
         return {
-            action: "wrapCCC",
             shardId,
             lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map(parameter => [...parameter]),
             amount: amount.toJSON()
         };
+    }
+
+    protected action(): string {
+        return "wrapCCC";
     }
 }
 
