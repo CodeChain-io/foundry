@@ -194,7 +194,7 @@ export class AccountRpc {
                 `Expected the third argument to be a string but found ${passphrase}`
             );
         }
-        if (!parcel.fee && this.parcelFee != null) {
+        if (parcel.fee() == null && this.parcelFee != null) {
             parcel.setFee(this.parcelFee);
         }
 

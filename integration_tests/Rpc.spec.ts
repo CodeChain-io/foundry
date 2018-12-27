@@ -319,7 +319,7 @@ describe("rpc", () => {
             });
 
             test("InvalidNetworkId", done => {
-                (parcel as any).networkId = "zz";
+                (parcel as any)._networkId = "zz";
                 const signedParcel = parcel.sign({ secret, fee: 10, seq });
                 sdk.rpc.chain
                     .sendSignedParcel(signedParcel)

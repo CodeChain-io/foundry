@@ -26,28 +26,49 @@ export class Parcel {
         parcel.setFee(fee);
         return parcel;
     }
-    public seq?: number | null;
-    public fee: U64 | null;
-    public readonly networkId: NetworkId;
-    public readonly action: Action;
+    private _seq: number | null;
+    private _fee: U64 | null;
+    private readonly _networkId: NetworkId;
+    private readonly _action: Action;
 
     constructor(networkId: NetworkId, action: Action) {
-        this.seq = null;
-        this.fee = null;
-        this.networkId = networkId;
-        this.action = action;
+        this._seq = null;
+        this._fee = null;
+        this._networkId = networkId;
+        this._action = action;
+    }
+
+    public seq(): number | null {
+        return this._seq;
+    }
+
+    public fee(): U64 | null {
+        return this._fee;
     }
 
     public setSeq(seq: number) {
-        this.seq = seq;
+        this._seq = seq;
     }
 
     public setFee(fee: U64 | string | number) {
-        this.fee = U64.ensure(fee);
+        this._fee = U64.ensure(fee);
+    }
+
+    public networkId(): NetworkId {
+        return this._networkId;
+    }
+
+    public action(): Action {
+        return this._action;
     }
 
     public toEncodeObject(): any[] {
-        const { seq, fee, action, networkId } = this;
+        const [seq, fee, networkId, action] = [
+            this._seq,
+            this._fee,
+            this._networkId,
+            this._action
+        ];
         if (seq == null || !fee) {
             throw Error("Seq and fee in the parcel must be present");
         }
@@ -63,7 +84,7 @@ export class Parcel {
     }
 
     public getAsset(): Asset {
-        const { action } = this;
+        const action = this._action;
         if (!(action instanceof WrapCCC)) {
             throw Error("Getting asset is only available with WrapCCC action");
         }
@@ -76,14 +97,14 @@ export class Parcel {
         fee: U64 | string | number;
     }): SignedParcel {
         const { secret, seq, fee } = params;
-        if (this.seq !== null) {
+        if (this._seq !== null) {
             throw Error("The parcel seq is already set");
         }
-        this.seq = seq;
-        if (this.fee !== null) {
+        this._seq = seq;
+        if (this._fee !== null) {
             throw Error("The parcel fee is already set");
         }
-        this.fee = U64.ensure(fee);
+        this._fee = U64.ensure(fee);
         const { r, s, v } = signEcdsa(
             this.hash().value,
             H256.ensure(secret).value
@@ -93,7 +114,10 @@ export class Parcel {
     }
 
     public toJSON() {
-        const { seq, fee, networkId, action } = this;
+        const seq = this._seq;
+        const fee = this._fee;
+        const networkId = this._networkId;
+        const action = this._action;
         if (!fee) {
             throw Error("Fee in the parcel must be present");
         }

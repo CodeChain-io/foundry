@@ -30,11 +30,12 @@ test("AssetMintTransaction fromJSON", async () => {
         throw Error("Cannot get the parcel");
     }
 
-    if (!(parcel.unsigned.action instanceof AssetTransaction)) {
+    const action = parcel.unsigned.action();
+    if (!(action instanceof AssetTransaction)) {
         throw Error("Invalid action");
     }
 
-    expect(parcel.unsigned.action.transaction).toMatchObject({
+    expect(action.transaction).toMatchObject({
         type: expect.stringMatching("assetMint"),
         metadata: expect.anything(),
         output: {
@@ -92,11 +93,12 @@ test("AssetTransferTransaction fromJSON", async () => {
         unlockScript: expect.anything()
     });
 
-    if (!(parcel.unsigned.action instanceof AssetTransaction)) {
+    const action = parcel.unsigned.action();
+    if (!(action instanceof AssetTransaction)) {
         throw Error("Invalid action");
     }
 
-    expect(parcel.unsigned.action.transaction).toMatchObject({
+    expect(action.transaction).toMatchObject({
         type: expect.stringMatching("assetTransfer"),
         burns: [],
         inputs: expect.arrayContaining([expectedInput]),

@@ -127,12 +127,11 @@ export class SignedParcel {
      * Convert to an object for RLP encoding.
      */
     public toEncodeObject(): any[] {
-        const {
-            unsigned: { seq, fee, action, networkId },
-            v,
-            r,
-            s
-        } = this;
+        const { unsigned, v, r, s } = this;
+        const seq = unsigned.seq();
+        const fee = unsigned.fee();
+        const action = unsigned.action();
+        const networkId = unsigned.networkId();
         const sig = `0x${_.padStart(r.value.toString(16), 64, "0")}${_.padStart(
             s.value.toString(16),
             64,
@@ -213,15 +212,11 @@ export class SignedParcel {
      * @returns A SignedParcel JSON object.
      */
     public toJSON() {
-        const {
-            blockNumber,
-            blockHash,
-            parcelIndex,
-            unsigned: { seq, fee, networkId, action },
-            v,
-            r,
-            s
-        } = this;
+        const { blockNumber, blockHash, parcelIndex, unsigned, v, r, s } = this;
+        const seq = unsigned.seq();
+        const fee = unsigned.fee();
+        const networkId = unsigned.networkId();
+        const action = unsigned.action();
         const sig = SignedParcel.convertRsvToSignatureString({
             r: r.value.toString(16),
             s: s.value.toString(16),
