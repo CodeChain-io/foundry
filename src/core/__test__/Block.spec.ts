@@ -1,6 +1,5 @@
 import { PlatformAddress } from "codechain-primitives";
 
-import { getAccountIdFromPrivate } from "../../utils";
 import { Block } from "../Block";
 import { H256 } from "../H256";
 import { Parcel } from "../Parcel";
@@ -10,10 +9,6 @@ import { U64 } from "../U64";
 test("toJSON", () => {
     const secret = new H256(
         "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"
-    );
-    const sender = PlatformAddress.fromAccountId(
-        getAccountIdFromPrivate(secret.value),
-        { networkId: "tc" }
     );
     const p = Parcel.pay(
         "tc",
