@@ -13,6 +13,7 @@ import { AssetTransferOutput } from "./AssetTransferOutput";
 import { ChangeAssetScheme } from "./ChangeAssetScheme";
 import { ComposeAsset } from "./ComposeAsset";
 import { CreateShard } from "./CreateShard";
+import { Custom } from "./Custom";
 import { DecomposeAsset } from "./DecomposeAsset";
 import { MintAsset } from "./MintAsset";
 import { OrderOnTransfer } from "./OrderOnTransfer";
@@ -211,6 +212,18 @@ export function fromJSONToTransaction(result: any): Transaction {
                 {
                     hash: H256.ensure(hash),
                     signature
+                },
+                networkId
+            );
+            break;
+        }
+        case "custom": {
+            const handlerId = U64.ensure(action.handlerId);
+            const bytes = Buffer.from(action.bytes);
+            tx = new Custom(
+                {
+                    handlerId,
+                    bytes
                 },
                 networkId
             );
