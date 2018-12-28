@@ -86,7 +86,7 @@ export class AssetUnwrapCCCTransaction {
      * Get the hash of an AssetUnwrapCCCTransaction.
      * @returns A transaction hash.
      */
-    public hash(): H256 {
+    public id(): H256 {
         return new H256(blake256(this.rlpBytes()));
     }
 

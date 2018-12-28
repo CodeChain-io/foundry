@@ -52,7 +52,7 @@ const ACCOUNT_PASSPHRASE = "satoshi";
     });
 
     const mintTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        mintTx.hash(),
+        mintTx.id(),
         {
             timeout: 300 * 1000
         }
@@ -65,7 +65,7 @@ const ACCOUNT_PASSPHRASE = "satoshi";
         );
     }
     const transferTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        transferTx.hash(),
+        transferTx.id(),
         {
             timeout: 300 * 1000
         }

@@ -59,7 +59,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         passphrase: ACCOUNT_PASSPHRASE
     });
     const unwrapCCCTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        unwrapCCCTx.hash(),
+        unwrapCCCTx.id(),
         {
             // Wait up to 120 seconds to get the invoice.
             timeout: 120 * 1000

@@ -177,7 +177,7 @@ export class AssetComposeTransaction {
      * Get the hash of an AssetComposeTransaction.
      * @returns A transaction hash.
      */
-    public hash(): H256 {
+    public id(): H256 {
         return new H256(blake256(this.rlpBytes()));
     }
 
@@ -278,7 +278,7 @@ export class AssetComposeTransaction {
             lockScriptHash,
             parameters,
             amount: amount == null ? U64.ensure(U64.MAX_VALUE) : amount,
-            transactionHash: this.hash(),
+            transactionHash: this.id(),
             transactionOutputIndex: 0
         });
     }
@@ -333,7 +333,7 @@ export class AssetComposeTransaction {
     public getAssetSchemeAddress(): H256 {
         const { shardId } = this;
         const blake = blake256WithKey(
-            this.hash().value,
+            this.id().value,
             new Uint8Array([
                 0x00,
                 0x00,
@@ -367,7 +367,7 @@ export class AssetComposeTransaction {
     public getAssetAddress(): H256 {
         const { shardId } = this;
         const blake = blake256WithKey(
-            this.hash().value,
+            this.id().value,
             new Uint8Array([
                 0x00,
                 0x00,

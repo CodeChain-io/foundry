@@ -65,7 +65,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     });
 
     const mintTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        mintTx.hash(),
+        mintTx.id(),
         {
             timeout: 300 * 1000
         }
@@ -78,7 +78,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         );
     }
     const transferTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        transferTx.hash(),
+        transferTx.id(),
         {
             timeout: 300 * 1000
         }
@@ -92,9 +92,9 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     }
 
     // Unspent Bob's 3000 golds
-    console.log(await sdk.rpc.chain.getAsset(transferTx.hash(), 0));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.id(), 0));
     // Unspent Alice's 7000 golds
-    console.log(await sdk.rpc.chain.getAsset(transferTx.hash(), 1));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.id(), 1));
 })().catch(err => {
     console.error(`Error:`, err);
 });

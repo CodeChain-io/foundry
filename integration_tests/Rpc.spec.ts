@@ -399,14 +399,14 @@ describe("rpc", () => {
 
             test("getTransaction", async () => {
                 expect(
-                    await sdk.rpc.chain.getTransaction(mintTransaction.hash())
+                    await sdk.rpc.chain.getTransaction(mintTransaction.id())
                 ).toEqual(mintTransaction);
             });
 
             test("getTransactionInvoices", async () => {
                 expect(
                     await sdk.rpc.chain.getTransactionInvoices(
-                        mintTransaction.hash()
+                        mintTransaction.id()
                     )
                 ).toEqual(
                     expect.arrayContaining([
@@ -418,7 +418,7 @@ describe("rpc", () => {
             test("getAssetScheme", async () => {
                 expect(
                     await sdk.rpc.chain.getAssetSchemeByHash(
-                        mintTransaction.hash(),
+                        mintTransaction.id(),
                         shardId
                     )
                 ).toEqual(expect.any(AssetScheme));
@@ -432,10 +432,10 @@ describe("rpc", () => {
 
             test("getAsset", async () => {
                 expect(
-                    await sdk.rpc.chain.getAsset(mintTransaction.hash(), 0)
+                    await sdk.rpc.chain.getAsset(mintTransaction.id(), 0)
                 ).toEqual(expect.any(Asset));
                 expect(
-                    await sdk.rpc.chain.getAsset(mintTransaction.hash(), 1)
+                    await sdk.rpc.chain.getAsset(mintTransaction.id(), 1)
                 ).toBe(null);
                 expect(await sdk.rpc.chain.getAsset(invalidHash, 0)).toBe(null);
             });
@@ -443,14 +443,14 @@ describe("rpc", () => {
             test("isAssetSpent", async () => {
                 expect(
                     await sdk.rpc.chain.isAssetSpent(
-                        mintTransaction.hash(),
+                        mintTransaction.id(),
                         0,
                         shardId
                     )
                 ).toBe(false);
                 expect(
                     await sdk.rpc.chain.isAssetSpent(
-                        mintTransaction.hash(),
+                        mintTransaction.id(),
                         1,
                         shardId
                     )
@@ -516,14 +516,14 @@ describe("rpc", () => {
             test("isAssetSpent", async () => {
                 expect(
                     await sdk.rpc.chain.isAssetSpent(
-                        mintTransaction.hash(),
+                        mintTransaction.id(),
                         0,
                         shardId
                     )
                 ).toBe(true);
                 expect(
                     await sdk.rpc.chain.isAssetSpent(
-                        mintTransaction.hash(),
+                        mintTransaction.id(),
                         0,
                         shardId,
                         blockNumber - 2
@@ -531,7 +531,7 @@ describe("rpc", () => {
                 ).toBe(null);
                 expect(
                     await sdk.rpc.chain.isAssetSpent(
-                        mintTransaction.hash(),
+                        mintTransaction.id(),
                         0,
                         shardId,
                         blockNumber
@@ -539,7 +539,7 @@ describe("rpc", () => {
                 ).toBe(true);
                 expect(
                     await sdk.rpc.chain.isAssetSpent(
-                        mintTransaction.hash(),
+                        mintTransaction.id(),
                         0,
                         wrongShardId
                     )
@@ -547,14 +547,14 @@ describe("rpc", () => {
 
                 expect(
                     await sdk.rpc.chain.isAssetSpent(
-                        transferTransaction.hash(),
+                        transferTransaction.id(),
                         0,
                         shardId
                     )
                 ).toBe(false);
                 expect(
                     await sdk.rpc.chain.isAssetSpent(
-                        transferTransaction.hash(),
+                        transferTransaction.id(),
                         0,
                         shardId,
                         blockNumber - 2
@@ -562,7 +562,7 @@ describe("rpc", () => {
                 ).toBe(null);
                 expect(
                     await sdk.rpc.chain.isAssetSpent(
-                        transferTransaction.hash(),
+                        transferTransaction.id(),
                         0,
                         shardId,
                         blockNumber
@@ -570,7 +570,7 @@ describe("rpc", () => {
                 ).toBe(false);
                 expect(
                     await sdk.rpc.chain.isAssetSpent(
-                        transferTransaction.hash(),
+                        transferTransaction.id(),
                         0,
                         wrongShardId
                     )

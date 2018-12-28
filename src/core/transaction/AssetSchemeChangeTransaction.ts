@@ -128,7 +128,7 @@ export class AssetSchemeChangeTransaction {
      * Get the hash of an AssetMintTransaction.
      * @returns A transaction hash.
      */
-    public hash(): H256 {
+    public id(): H256 {
         return new H256(blake256(this.rlpBytes()));
     }
 }

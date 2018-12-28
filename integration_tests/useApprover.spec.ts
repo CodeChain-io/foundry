@@ -111,7 +111,7 @@ async function mintAssetUsingMaster(
     );
 
     const mintTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        mintTx.hash(),
+        mintTx.id(),
         {
             timeout: 5 * 60 * 1000
         }
@@ -157,7 +157,7 @@ async function transferAssetUsingRegular(
     );
 
     const transferTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        transferTx.hash(),
+        transferTx.id(),
         {
             timeout: 5 * 60 * 1000
         }
@@ -206,7 +206,7 @@ async function transferAssetUsingOther(
     );
 
     const transferTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        transferTx.hash(),
+        transferTx.id(),
         {
             timeout: 5 * 60 * 1000
         }

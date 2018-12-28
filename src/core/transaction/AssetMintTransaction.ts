@@ -168,7 +168,7 @@ export class AssetMintTransaction {
      * Get the hash of an AssetMintTransaction.
      * @returns A transaction hash.
      */
-    public hash(): H256 {
+    public id(): H256 {
         return new H256(blake256(this.rlpBytes()));
     }
 
@@ -186,7 +186,7 @@ export class AssetMintTransaction {
             lockScriptHash,
             parameters,
             amount,
-            transactionHash: this.hash(),
+            transactionHash: this.id(),
             transactionOutputIndex: 0
         });
     }
@@ -226,7 +226,7 @@ export class AssetMintTransaction {
     public getAssetSchemeAddress(): H256 {
         const { shardId } = this;
         const blake = blake256WithKey(
-            this.hash().value,
+            this.id().value,
             new Uint8Array([
                 0x00,
                 0x00,
@@ -260,7 +260,7 @@ export class AssetMintTransaction {
     public getAssetAddress(): H256 {
         const { shardId } = this;
         const blake = blake256WithKey(
-            this.hash().value,
+            this.id().value,
             new Uint8Array([
                 0x00,
                 0x00,

@@ -123,7 +123,7 @@ export class AssetTransferTransaction {
      * Get the hash of an AssetTransferTransaction.
      * @returns A transaction hash.
      */
-    public hash(): H256 {
+    public id(): H256 {
         return new H256(blake256(this.rlpBytes()));
     }
 
@@ -272,7 +272,7 @@ export class AssetTransferTransaction {
             lockScriptHash,
             parameters,
             amount,
-            transactionHash: this.hash(),
+            transactionHash: this.id(),
             transactionOutputIndex: index
         });
     }
@@ -382,7 +382,7 @@ export class AssetTransferTransaction {
         ]);
         const shardId = this.outputs[index].shardId();
 
-        const blake = blake256WithKey(this.hash().value, iv);
+        const blake = blake256WithKey(this.id().value, iv);
         const shardPrefix = convertU16toHex(shardId);
         const prefix = `4100${shardPrefix}`;
         return new H256(

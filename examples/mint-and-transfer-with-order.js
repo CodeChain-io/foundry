@@ -120,7 +120,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     });
 
     const goldMintTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        goldMintTx.hash(),
+        goldMintTx.id(),
         {
             timeout: 300 * 1000
         }
@@ -133,7 +133,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         );
     }
     const silverMintTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        silverMintTx.hash(),
+        silverMintTx.id(),
         {
             timeout: 300 * 1000
         }
@@ -146,7 +146,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         );
     }
     const transferTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        transferTx.hash(),
+        transferTx.id(),
         {
             timeout: 300 * 1000
         }
@@ -160,13 +160,13 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     }
 
     // Unspent Alice's 9900 golds with the order
-    console.log(await sdk.rpc.chain.getAsset(transferTx.hash(), 0));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.id(), 0));
     // 1000 silvers from Bob to Alice by the order
-    console.log(await sdk.rpc.chain.getAsset(transferTx.hash(), 1));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.id(), 1));
     // 100 golds from Alice to Bob, without any order (Bob owns)
-    console.log(await sdk.rpc.chain.getAsset(transferTx.hash(), 2));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.id(), 2));
     // Unspent Bob's 99000 silvers without any order
-    console.log(await sdk.rpc.chain.getAsset(transferTx.hash(), 3));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.id(), 3));
 })().catch(err => {
     console.error(`Error:`, err);
 });
