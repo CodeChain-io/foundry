@@ -100,14 +100,14 @@ describe("Invalid response", () => {
             });
         });
 
-        describe("getTransaction", () => {
+        describe("getTransactionById", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getParcel(hash)
+                    .getTransaction(hash)
                     .then(() => done.fail())
                     .catch(e => {
-                        expect(e.toString()).toContain("chain_getParcel");
+                        expect(e.toString()).toContain("chain_getTransaction");
                         expect(e.toString()).toContain("SignedTransaction");
                         expect(e.toString()).toContain("undefined");
                         done();
@@ -123,16 +123,14 @@ describe("Invalid response", () => {
             test.skip("Invalid action", done => done.fail("not implemented"));
         });
 
-        describe("getTransactionInvoice", () => {
+        describe("getInvoice", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getParcelInvoice(hash)
+                    .getInvoice(hash)
                     .then(() => done.fail())
                     .catch(e => {
-                        expect(e.toString()).toContain(
-                            "chain_getParcelInvoice"
-                        );
+                        expect(e.toString()).toContain("chain_getInvoice");
                         expect(e.toString()).toContain("JSON of Invoice");
                         expect(e.toString()).toContain("undefined");
                         done();
@@ -169,11 +167,11 @@ describe("Invalid response", () => {
                 });
         });
 
-        describe("getTransaction", () => {
+        describe("getTransactionById", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getTransaction(hash)
+                    .getTransactionById(hash)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("chain_getTransaction");
@@ -191,19 +189,17 @@ describe("Invalid response", () => {
             });
         });
 
-        describe("getTransactionInvoices", () => {
+        describe("getInvoicesById", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce([]);
                 chainRpc
-                    .getTransactionInvoices(hash)
+                    .getInvoicesById(hash)
                     .then(invoices => {
                         expect(invoices).toEqual([]);
                         done();
                     })
                     .catch(e => {
-                        expect(e.toString()).toContain(
-                            "chain_getTransactionInvoice"
-                        );
+                        expect(e.toString()).toContain("chain_getInvoice");
                         expect(e.toString()).toContain("JSON of Invoice");
                         expect(e.toString()).toContain("undefined");
                         done();
@@ -361,7 +357,7 @@ describe("Invalid response", () => {
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain(
-                            "chain_getPendingParcels"
+                            "chain_getPendingTransactions"
                         );
                         expect(e.toString()).toContain("array");
                         expect(e.toString()).toContain("undefined");

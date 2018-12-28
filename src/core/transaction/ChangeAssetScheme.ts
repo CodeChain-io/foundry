@@ -4,43 +4,7 @@ import { NetworkId } from "../types";
 
 const RLP = require("rlp");
 
-export interface ChangeAssetSchemeJSON {
-    type: "assetSchemeChange";
-    data: {
-        networkId: NetworkId;
-        assetType: string;
-        metadata: string;
-        approver?: string | null;
-        administrator?: string | null;
-    };
-}
-
 export class ChangeAssetScheme extends Transaction {
-    public static fromJSON(
-        obj: ChangeAssetSchemeJSON,
-        approvals: string[] = []
-    ) {
-        const { data } = obj;
-        const { networkId, metadata } = data;
-        const assetType = new H256(data.assetType);
-        const approver =
-            data.approver == null
-                ? null
-                : PlatformAddress.ensure(data.approver);
-        const administrator =
-            data.administrator == null
-                ? null
-                : PlatformAddress.ensure(data.administrator);
-        return new ChangeAssetScheme({
-            networkId,
-            assetType,
-            metadata,
-            approver,
-            administrator,
-            approvals
-        });
-    }
-
     private readonly _transaction: AssetSchemeChangeTransaction;
     private readonly approvals: string[];
     public constructor(input: {
@@ -58,7 +22,7 @@ export class ChangeAssetScheme extends Transaction {
     }
 
     public action(): string {
-        return "assetTransaction";
+        return "changeAssetScheme";
     }
 
     protected actionToEncodeObject(): any[] {
@@ -68,10 +32,9 @@ export class ChangeAssetScheme extends Transaction {
     }
 
     protected actionToJSON(): any {
-        return {
-            transaction: this._transaction.toJSON(),
-            approvals: this.approvals
-        };
+        const json = this._transaction.toJSON();
+        json.approvals = this.approvals;
+        return json;
     }
 }
 
@@ -84,7 +47,7 @@ class AssetSchemeChangeTransaction {
     public readonly metadata: string;
     public readonly approver: PlatformAddress | null;
     public readonly administrator: PlatformAddress | null;
-    public readonly type = "assetSchemeChange";
+    public readonly action = "changeAssetScheme";
 
     /**
      * @param params.networkId A network ID of the transaction.
@@ -122,20 +85,17 @@ class AssetSchemeChangeTransaction {
      * Convert to an AssetSchemeChangeTransaction JSON object.
      * @returns An AssetSchemeChangeTransaction JSON object.
      */
-    public toJSON(): ChangeAssetSchemeJSON {
+    public toJSON(): any {
         return {
-            type: this.type,
-            data: {
-                networkId: this.networkId,
-                assetType: this.assetType.toEncodeObject(),
-                metadata: this.metadata,
-                approver:
-                    this.approver == null ? null : this.approver.toString(),
-                administrator:
-                    this.administrator == null
-                        ? null
-                        : this.administrator.toString()
-            }
+            action: this.action,
+            networkId: this.networkId,
+            assetType: this.assetType.toEncodeObject(),
+            metadata: this.metadata,
+            approver: this.approver == null ? null : this.approver.toString(),
+            administrator:
+                this.administrator == null
+                    ? null
+                    : this.administrator.toString()
         };
     }
 

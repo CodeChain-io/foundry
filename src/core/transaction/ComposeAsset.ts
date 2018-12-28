@@ -18,53 +18,11 @@ import {
 } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { NetworkId } from "../types";
-import { AssetMintOutput, AssetMintOutputJSON } from "./AssetMintOutput";
-import { AssetTransferInputJSON } from "./AssetTransferInput";
+import { AssetMintOutput } from "./AssetMintOutput";
 
 const RLP = require("rlp");
 
-export interface ComposeAssetJSON {
-    type: "assetCompose";
-    data: {
-        networkId: NetworkId;
-        shardId: number;
-        metadata: string;
-        inputs: AssetTransferInputJSON[];
-        output: AssetMintOutputJSON;
-        approver: string | null;
-        administrator: string | null;
-    };
-}
-
 export class ComposeAsset extends Transaction implements AssetTransaction {
-    public static fromJSON(
-        obj: ComposeAssetJSON,
-        approvals: string[] = []
-    ): ComposeAsset {
-        const { data } = obj;
-        const { networkId, shardId, metadata } = data;
-        const approver =
-            data.approver == null
-                ? null
-                : PlatformAddress.ensure(data.approver);
-        const administrator =
-            data.administrator == null
-                ? null
-                : PlatformAddress.ensure(data.administrator);
-        const inputs = data.inputs.map(AssetTransferInput.fromJSON);
-        const output = AssetMintOutput.fromJSON(data.output);
-        return new ComposeAsset({
-            networkId,
-            shardId,
-            metadata,
-            approver,
-            administrator,
-            inputs,
-            output,
-            approvals
-        });
-    }
-
     private readonly _transaction: AssetComposeTransaction;
     private readonly approvals: string[];
     public constructor(input: {
@@ -203,7 +161,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
             lockScriptHash,
             parameters,
             amount: amount == null ? U64.ensure(U64.MAX_VALUE) : amount,
-            transactionHash: this.id(),
+            transactionId: this.id(),
             transactionOutputIndex: 0
         });
     }
@@ -320,7 +278,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
     }
 
     public action(): string {
-        return "assetTransaction";
+        return "composeAsset";
     }
 
     protected actionToEncodeObject(): any[] {
@@ -330,10 +288,9 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
     }
 
     protected actionToJSON(): any {
-        return {
-            transaction: this._transaction.toJSON(),
-            approvals: this.approvals
-        };
+        const json = this._transaction.toJSON();
+        json.approvals = this.approvals;
+        return json;
     }
 }
 
@@ -354,7 +311,7 @@ class AssetComposeTransaction {
     public readonly administrator: PlatformAddress | null;
     public readonly inputs: AssetTransferInput[];
     public readonly output: AssetMintOutput;
-    public readonly type = "assetCompose";
+    public readonly action = "composeAsset";
 
     /**
      * @param params.networkId A network ID of the transaction.
@@ -400,22 +357,19 @@ class AssetComposeTransaction {
      * Convert to an AssetComposeTransaction JSON object.
      * @returns An AssetComposeTransaction JSON object.
      */
-    public toJSON(): ComposeAssetJSON {
+    public toJSON(): any {
         return {
-            type: this.type,
-            data: {
-                networkId: this.networkId,
-                shardId: this.shardId,
-                metadata: this.metadata,
-                approver:
-                    this.approver === null ? null : this.approver.toString(),
-                administrator:
-                    this.administrator === null
-                        ? null
-                        : this.administrator.toString(),
-                output: this.output.toJSON(),
-                inputs: this.inputs.map(input => input.toJSON())
-            }
+            action: this.action,
+            networkId: this.networkId,
+            shardId: this.shardId,
+            metadata: this.metadata,
+            approver: this.approver === null ? null : this.approver.toString(),
+            administrator:
+                this.administrator === null
+                    ? null
+                    : this.administrator.toString(),
+            output: this.output.toJSON(),
+            inputs: this.inputs.map(input => input.toJSON())
         };
     }
 

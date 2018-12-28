@@ -10,10 +10,7 @@ import { Invoice } from "../core/Invoice";
 import { SignedTransaction } from "../core/SignedTransaction";
 import { Text } from "../core/Text";
 import { Transaction } from "../core/Transaction";
-import {
-    fromJSONToAssetTransaction,
-    fromJSONToSignedTransaction
-} from "../core/transaction/json";
+import { fromJSONToSignedTransaction } from "../core/transaction/json";
 import { NetworkId } from "../core/types";
 import { U64 } from "../core/U64";
 
@@ -56,7 +53,7 @@ export class ChainRpc {
                 )
                 .join("");
             this.rpc
-                .sendRpcRequest("chain_sendSignedParcel", [`0x${bytes}`])
+                .sendRpcRequest("chain_sendSignedTransaction", [`0x${bytes}`])
                 .then(result => {
                     try {
                         resolve(new H256(result));
@@ -128,15 +125,17 @@ export class ChainRpc {
      * @param hash SignedTransaction's hash
      * @returns SignedTransaction, or null when SignedTransaction was not found.
      */
-    public getParcel(hash: H256 | string): Promise<SignedTransaction | null> {
+    public getTransaction(
+        hash: H256 | string
+    ): Promise<SignedTransaction | null> {
         if (!H256.check(hash)) {
             throw Error(
-                `Expected the first argument of getParcel to be an H256 value but found ${hash}`
+                `Expected the first argument of getTransaction to be an H256 value but found ${hash}`
             );
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getParcel", [
+                .sendRpcRequest("chain_getTransaction", [
                     `0x${H256.ensure(hash).value}`
                 ])
                 .then(result => {
@@ -149,7 +148,7 @@ export class ChainRpc {
                     } catch (e) {
                         reject(
                             Error(
-                                `Expected chain_getParcel to return either null or JSON of SignedTransaction, but an error occurred: ${e.toString()}`
+                                `Expected chain_getTransaction to return either null or JSON of SignedTransaction, but an error occurred: ${e.toString()}`
                             )
                         );
                     }
@@ -160,22 +159,22 @@ export class ChainRpc {
 
     /**
      * Gets invoices of given tx.
-     * @param parcelHash The tx hash of which to get the corresponding tx of.
+     * @param hash The tx hash of which to get the corresponding tx of.
      * @param options.timeout Indicating milliseconds to wait the tx to be confirmed.
      * @returns List of invoice, or null when no such tx exists.
      */
-    public async getParcelInvoice(
-        parcelHash: H256 | string,
+    public async getInvoice(
+        hash: H256 | string,
         options: { timeout?: number } = {}
     ): Promise<Invoice | null> {
-        if (!H256.check(parcelHash)) {
+        if (!H256.check(hash)) {
             throw Error(
-                `Expected the first argument of getParcelInvoice to be an H256 value but found ${parcelHash}`
+                `Expected the first argument of getInvoice to be an H256 value but found ${hash}`
             );
         }
         const attemptToGet = async () => {
-            return this.rpc.sendRpcRequest("chain_getParcelInvoice", [
-                `0x${H256.ensure(parcelHash).value}`
+            return this.rpc.sendRpcRequest("chain_getInvoice", [
+                `0x${H256.ensure(hash).value}`
             ]);
         };
         const { timeout } = options;
@@ -184,7 +183,7 @@ export class ChainRpc {
             (typeof timeout !== "number" || timeout < 0)
         ) {
             throw Error(
-                `Expected timeout param of getParcelInvoice to be non-negative number but found ${timeout}`
+                `Expected timeout param of getInvoice to be non-negative number but found ${timeout}`
             );
         }
         const startTime = Date.now();
@@ -204,7 +203,7 @@ export class ChainRpc {
             return Invoice.fromJSON(result);
         } catch (e) {
             throw Error(
-                `Expected chain_getParcelInvoice to return either null or JSON of Invoice, but an error occurred: ${e.toString()}`
+                `Expected chain_getInvoice to return either null or JSON of Invoice, but an error occurred: ${e.toString()}`
             );
         }
     }
@@ -297,31 +296,33 @@ export class ChainRpc {
 
     /**
      * Gets a transaction of given hash.
-     * @param txhash The transaction hash of which to get the corresponding transaction of.
+     * @param txId The transaction hash of which to get the corresponding transaction of.
      * @returns A transaction, or null when transaction of given hash not exists.
      */
-    public getTransaction(txhash: H256 | string): Promise<Transaction | null> {
-        if (!H256.check(txhash)) {
+    public getTransactionById(
+        txId: H256 | string
+    ): Promise<SignedTransaction | null> {
+        if (!H256.check(txId)) {
             throw Error(
-                `Expected the first argument of getTransaction to be an H256 value but found ${txhash}`
+                `Expected the first argument of getTransaction to be an H256 value but found ${txId}`
             );
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getTransaction", [
-                    `0x${H256.ensure(txhash).value}`
+                .sendRpcRequest("chain_getTransactionById", [
+                    `0x${H256.ensure(txId).value}`
                 ])
                 .then(result => {
                     try {
                         resolve(
                             result === null
                                 ? null
-                                : fromJSONToAssetTransaction(result)
+                                : fromJSONToSignedTransaction(result)
                         );
                     } catch (e) {
                         reject(
                             Error(
-                                `Expected chain_getTransaction to return either null or JSON of Transaction, but an error occurred: ${e.toString()}`
+                                `Expected chain_getTransactionById to return either null or JSON of Transaction, but an error occurred: ${e.toString()}`
                             )
                         );
                     }
@@ -332,22 +333,22 @@ export class ChainRpc {
 
     /**
      * Gets invoice of a transaction of given hash.
-     * @param txhash The transaction hash of which to get the corresponding transaction of.
+     * @param txId The transaction hash of which to get the corresponding transaction of.
      * @param options.timeout Indicating milliseconds to wait the transaction to be confirmed.
      * @returns Invoice, or null when transaction of given hash not exists.
      */
-    public async getTransactionInvoices(
-        txhash: H256 | string,
+    public async getInvoicesById(
+        txId: H256 | string,
         options: { timeout?: number } = {}
     ): Promise<Invoice[]> {
-        if (!H256.check(txhash)) {
+        if (!H256.check(txId)) {
             throw Error(
-                `Expected the first argument of getTransactionInvoice to be an H256 value but found ${txhash}`
+                `Expected the first argument of getInvoice to be an H256 value but found ${txId}`
             );
         }
         const attemptToGet = async () => {
-            return this.rpc.sendRpcRequest("chain_getTransactionInvoices", [
-                `0x${H256.ensure(txhash).value}`
+            return this.rpc.sendRpcRequest("chain_getInvoicesById", [
+                `0x${H256.ensure(txId).value}`
             ]);
         };
         const startTime = Date.now();
@@ -357,7 +358,7 @@ export class ChainRpc {
             (typeof timeout !== "number" || timeout < 0)
         ) {
             throw Error(
-                `Expected timeout param of getTransactionInvoice to be non-negative number but found ${timeout}`
+                `Expected timeout param of getInvoice to be non-negative number but found ${timeout}`
             );
         }
         let result = await attemptToGet();
@@ -376,7 +377,7 @@ export class ChainRpc {
             return result.map(Invoice.fromJSON);
         } catch (e) {
             throw Error(
-                `Expected chain_getTransactionInvoices to return JSON of Invoice[], but an error occurred: ${e.toString()}. received: ${JSON.stringify(
+                `Expected chain_getInvoicesById to return JSON of Invoice[], but an error occurred: ${e.toString()}. received: ${JSON.stringify(
                     result
                 )}`
             );
@@ -646,19 +647,19 @@ export class ChainRpc {
 
     /**
      * Gets asset of given transaction hash and index.
-     * @param txhash The tx hash of AssetMintTransaction or AssetTransferTransaction.
+     * @param txId The tx hash of AssetMintTransaction or AssetTransferTransaction.
      * @param index The index of output in the transaction.
      * @param blockNumber The specific block number to get the asset from
      * @returns Asset, if asset exists, Else, returns null.
      */
     public getAsset(
-        txhash: H256 | string,
+        txId: H256 | string,
         index: number,
         blockNumber?: number
     ): Promise<Asset | null> {
-        if (!H256.check(txhash)) {
+        if (!H256.check(txId)) {
             throw Error(
-                `Expected the first argument of getAsset to be an H256 value but found ${txhash}`
+                `Expected the first argument of getAsset to be an H256 value but found ${txId}`
             );
         }
         if (!isNonNegativeInterger(index)) {
@@ -674,7 +675,7 @@ export class ChainRpc {
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getAsset", [
-                    `0x${H256.ensure(txhash).value}`,
+                    `0x${H256.ensure(txId).value}`,
                     index,
                     blockNumber
                 ])
@@ -686,7 +687,7 @@ export class ChainRpc {
                         resolve(
                             Asset.fromJSON({
                                 ...result,
-                                transactionHash: H256.ensure(txhash).value,
+                                transactionId: H256.ensure(txId).value,
                                 transactionOutputIndex: index
                             })
                         );
@@ -803,12 +804,12 @@ export class ChainRpc {
     public getPendingTransactions(): Promise<SignedTransaction[]> {
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getPendingParcels", [])
+                .sendRpcRequest("chain_getPendingTransactions", [])
                 .then(result => {
                     if (!Array.isArray(result)) {
                         return reject(
                             Error(
-                                `Expected chain_getPendingParcels to return an array but it returned ${result}`
+                                `Expected chain_getPendingTransactions to return an array but it returned ${result}`
                             )
                         );
                     }
@@ -817,7 +818,7 @@ export class ChainRpc {
                     } catch (e) {
                         reject(
                             Error(
-                                `Expected chain_getPendingParcels to return an array of JSON of SignedTransaction, but an error occurred: ${e.toString()}`
+                                `Expected chain_getPendingTransactions to return an array of JSON of SignedTransaction, but an error occurred: ${e.toString()}`
                             )
                         );
                     }

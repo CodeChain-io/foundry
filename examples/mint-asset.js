@@ -33,7 +33,7 @@ const tx = sdk.core.createMintAssetTransaction({
         passphrase: ACCOUNT_PASSPHRASE
     });
     // Get the invoice of the tx.
-    const invoice = await sdk.rpc.chain.getParcelInvoice(hash, {
+    const invoice = await sdk.rpc.chain.getInvoice(hash, {
         // Wait up to 120 seconds to get the invoice.
         timeout: 120 * 1000
     });

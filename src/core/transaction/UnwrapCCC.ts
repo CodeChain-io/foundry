@@ -8,30 +8,10 @@ import {
 import { AssetTransferInput, H256 } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { NetworkId } from "../types";
-import { AssetTransferInputJSON } from "./AssetTransferInput";
 
 const RLP = require("rlp");
 
-export interface UnwrapCCCJSON {
-    type: "assetUnwrapCCC";
-    data: {
-        burn: AssetTransferInputJSON;
-        networkId: NetworkId;
-    };
-}
-
 export class UnwrapCCC extends Transaction implements AssetTransaction {
-    public static fromJSON(obj: UnwrapCCCJSON, approvals: string[] = []) {
-        const {
-            data: { networkId, burn }
-        } = obj;
-        return new UnwrapCCC({
-            burn: AssetTransferInput.fromJSON(burn),
-            networkId,
-            approvals
-        });
-    }
-
     private readonly _transaction: AssetUnwrapCCCTransaction;
     private readonly approvals: string[];
     public constructor(input: {
@@ -85,7 +65,7 @@ export class UnwrapCCC extends Transaction implements AssetTransaction {
     }
 
     public action(): string {
-        return "assetTransaction";
+        return "unwrapCCC";
     }
 
     protected actionToEncodeObject(): any[] {
@@ -95,10 +75,9 @@ export class UnwrapCCC extends Transaction implements AssetTransaction {
     }
 
     protected actionToJSON(): any {
-        return {
-            transaction: this._transaction.toJSON(),
-            approvals: this.approvals
-        };
+        const json = this._transaction.toJSON();
+        json.approvals = this.approvals;
+        return json;
     }
 }
 
@@ -121,7 +100,7 @@ interface AssetUnwrapCCCTransactionData {
 class AssetUnwrapCCCTransaction {
     public readonly burn: AssetTransferInput;
     public readonly networkId: NetworkId;
-    public readonly type = "assetUnwrapCCC";
+    public readonly action = "unwrapCCC";
 
     /**
      * @param params.burn An AssetTransferInput of which asset type is wrapped CCC.
@@ -151,14 +130,12 @@ class AssetUnwrapCCCTransaction {
      * Convert to an AssetUnwrapCCCTransactionJSON object.
      * @returns An AssetUnwrapCCCTransactionJSON object.
      */
-    public toJSON() {
+    public toJSON(): any {
         const { networkId, burn } = this;
         return {
-            type: this.type,
-            data: {
-                networkId,
-                burn: burn.toJSON()
-            }
+            action: this.action,
+            networkId,
+            burn: burn.toJSON()
         };
     }
 }

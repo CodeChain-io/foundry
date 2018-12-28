@@ -3,49 +3,11 @@ import { Asset } from "../Asset";
 import { AssetScheme, H256, PlatformAddress } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { NetworkId } from "../types";
-import { AssetMintOutput, AssetMintOutputJSON } from "./AssetMintOutput";
+import { AssetMintOutput } from "./AssetMintOutput";
 
 const RLP = require("rlp");
 
-export interface MintAssetJSON {
-    type: "assetMint";
-    data: {
-        networkId: NetworkId;
-        shardId: number;
-        metadata: string;
-        output: AssetMintOutputJSON;
-        approver?: string | null;
-        administrator?: string | null;
-    };
-}
-
 export class MintAsset extends Transaction implements AssetTransaction {
-    public static fromJSON(
-        json: MintAssetJSON,
-        approvals: string[] = []
-    ): MintAsset {
-        const { data } = json;
-        const { networkId, shardId, metadata } = data;
-        const approver =
-            data.approver == null
-                ? null
-                : PlatformAddress.ensure(data.approver);
-        const administrator =
-            data.administrator == null
-                ? null
-                : PlatformAddress.ensure(data.administrator);
-        const output = AssetMintOutput.fromJSON(data.output);
-        return new MintAsset({
-            networkId,
-            shardId,
-            metadata,
-            output,
-            approver,
-            administrator,
-            approvals
-        });
-    }
-
     private readonly _transaction: AssetMintTransaction;
     private readonly approvals: string[];
 
@@ -86,7 +48,7 @@ export class MintAsset extends Transaction implements AssetTransaction {
             lockScriptHash,
             parameters,
             amount,
-            transactionHash: this.id(),
+            transactionId: this.id(),
             transactionOutputIndex: 0
         });
     }
@@ -188,7 +150,7 @@ export class MintAsset extends Transaction implements AssetTransaction {
     }
 
     public action(): string {
-        return "assetTransaction";
+        return "mintAsset";
     }
 
     protected actionToEncodeObject(): any[] {
@@ -198,10 +160,9 @@ export class MintAsset extends Transaction implements AssetTransaction {
     }
 
     protected actionToJSON(): any {
-        return {
-            transaction: this._transaction.toJSON(),
-            approvals: this.approvals
-        };
+        const json = this._transaction.toJSON();
+        json.approvals = this.approvals;
+        return json;
     }
 }
 
@@ -229,7 +190,7 @@ class AssetMintTransaction {
     public readonly output: AssetMintOutput;
     public readonly approver: PlatformAddress | null;
     public readonly administrator: PlatformAddress | null;
-    public readonly type = "assetMint";
+    public readonly action = "mintAsset";
 
     /**
      * @param data.networkId A network ID of the transaction.
@@ -269,7 +230,7 @@ class AssetMintTransaction {
      * Convert to an AssetMintTransaction JSON object.
      * @returns An AssetMintTransaction JSON object.
      */
-    public toJSON(): MintAssetJSON {
+    public toJSON(): any {
         const {
             networkId,
             shardId,
@@ -279,16 +240,14 @@ class AssetMintTransaction {
             administrator
         } = this;
         return {
-            type: this.type,
-            data: {
-                networkId,
-                shardId,
-                metadata,
-                output: output.toJSON(),
-                approver: approver === null ? null : approver.toString(),
-                administrator:
-                    administrator === null ? null : administrator.toString()
-            }
+            action: this.action,
+            networkId,
+            shardId,
+            metadata,
+            output: output.toJSON(),
+            approver: approver === null ? null : approver.toString(),
+            administrator:
+                administrator === null ? null : administrator.toString()
         };
     }
 

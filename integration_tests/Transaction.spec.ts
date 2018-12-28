@@ -25,18 +25,14 @@ test("AssetMintTransaction fromJSONToTransaction", async () => {
         amount,
         approver
     });
-    const tx = await sdk.rpc.chain.getParcel(hash);
+    const tx = await sdk.rpc.chain.getTransaction(hash);
     if (tx == null) {
         throw Error("Cannot get the tx");
     }
 
-    const action = tx.unsigned.action();
-    if (action !== "assetTransaction") {
-        throw Error("Invalid action");
-    }
+    expect(tx.unsigned.action()).toEqual("mintAsset");
 
-    expect(tx.unsigned.toJSON().action.transaction.type).toEqual("assetMint");
-    expect(tx.unsigned.toJSON().action.transaction.data).toMatchObject({
+    expect(tx.unsigned.toJSON().action).toMatchObject({
         metadata: expect.anything(),
         output: {
             lockScriptHash: expect.anything(),
@@ -77,14 +73,14 @@ test("AssetTransferTransaction fromJSONToTransaction", async () => {
     const { hash } = await sendTransaction({
         transaction: transferTx
     });
-    const tx = await sdk.rpc.chain.getParcel(hash);
+    const tx = await sdk.rpc.chain.getTransaction(hash);
     if (tx == null) {
         throw Error("Cannot get a tx");
     }
     // FIXME: Remove anythings when *Data fields are flattened
     const expectedInput = expect.objectContaining({
         prevOut: expect.objectContaining({
-            transactionHash: expect.any(H256),
+            transactionId: expect.any(H256),
             index: expect.anything(),
             assetType: expect.any(H256),
             amount: expect.anything()
@@ -93,12 +89,9 @@ test("AssetTransferTransaction fromJSONToTransaction", async () => {
         unlockScript: expect.anything()
     });
 
-    if (tx.unsigned.action() !== "assetTransaction") {
-        throw Error("Invalid action");
-    }
-
+    expect(tx.unsigned.action()).toEqual("transferAsset");
     expect((tx.unsigned as any)._transaction).toMatchObject({
-        type: expect.stringMatching("assetTransfer"),
+        action: expect.stringMatching("transferAsset"),
         burns: [],
         inputs: expect.arrayContaining([expectedInput]),
         outputs: expect.anything(),

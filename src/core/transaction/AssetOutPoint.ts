@@ -3,14 +3,14 @@ import { H256 } from "../H256";
 import { U64 } from "../U64";
 
 export interface AssetOutPointJSON {
-    transactionHash: string;
+    transactionId: string;
     index: number;
     assetType: string;
     amount: string;
 }
 
 export interface AssetOutPointData {
-    transactionHash: H256;
+    transactionId: H256;
     index: number;
     assetType: H256;
     amount: U64;
@@ -19,7 +19,7 @@ export interface AssetOutPointData {
 }
 
 /**
- * AssetOutPoint consists of transactionHash and index, asset type, and amount.
+ * AssetOutPoint consists of transactionId and index, asset type, and amount.
  *
  * - The transaction that it points to must be either AssetMint or AssetTransfer.
  * - Index is what decides which Asset to point to amongst the Asset list that transaction creates.
@@ -32,15 +32,15 @@ export class AssetOutPoint {
      * @returns An AssetOutPoint.
      */
     public static fromJSON(data: AssetOutPointJSON) {
-        const { transactionHash, index, assetType, amount } = data;
+        const { transactionId, index, assetType, amount } = data;
         return new this({
-            transactionHash: new H256(transactionHash),
+            transactionId: new H256(transactionId),
             index,
             assetType: new H256(assetType),
             amount: U64.ensure(amount)
         });
     }
-    public readonly transactionHash: H256;
+    public readonly transactionId: H256;
     public readonly index: number;
     public readonly assetType: H256;
     public readonly amount: U64;
@@ -48,7 +48,7 @@ export class AssetOutPoint {
     public readonly parameters?: Buffer[];
 
     /**
-     * @param data.transactionHash A transaction hash where the Asset is created.
+     * @param data.transactionId A transaction hash where the Asset is created.
      * @param data.index The index in the output of the transaction.
      * @param data.assetType The asset type of the asset that it points to.
      * @param data.amount The asset amount of the asset that it points to.
@@ -57,14 +57,14 @@ export class AssetOutPoint {
      */
     constructor(data: AssetOutPointData) {
         const {
-            transactionHash,
+            transactionId,
             index,
             assetType,
             amount,
             lockScriptHash,
             parameters
         } = data;
-        this.transactionHash = transactionHash;
+        this.transactionId = transactionId;
         this.index = index;
         this.assetType = assetType;
         this.amount = amount;
@@ -76,9 +76,9 @@ export class AssetOutPoint {
      * Convert to an object for RLP encoding.
      */
     public toEncodeObject() {
-        const { transactionHash, index, assetType, amount } = this;
+        const { transactionId, index, assetType, amount } = this;
         return [
-            transactionHash.toEncodeObject(),
+            transactionId.toEncodeObject(),
             index,
             assetType.toEncodeObject(),
             amount.toEncodeObject()
@@ -90,9 +90,9 @@ export class AssetOutPoint {
      * @returns An AssetOutPoint JSON object.
      */
     public toJSON(): AssetOutPointJSON {
-        const { transactionHash, index, assetType, amount } = this;
+        const { transactionId, index, assetType, amount } = this;
         return {
-            transactionHash: transactionHash.toJSON(),
+            transactionId: transactionId.toJSON(),
             index,
             assetType: assetType.toJSON(),
             amount: amount.toJSON()

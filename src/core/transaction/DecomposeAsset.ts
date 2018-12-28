@@ -11,36 +11,10 @@ import {
 } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { AssetTransferOutputValue, NetworkId } from "../types";
-import { AssetTransferInputJSON } from "./AssetTransferInput";
-import { AssetTransferOutputJSON } from "./AssetTransferOutput";
 
 const RLP = require("rlp");
 
-export interface DecomposeAssetJSON {
-    type: "assetDecompose";
-    data: {
-        input: AssetTransferInputJSON;
-        outputs: AssetTransferOutputJSON[];
-        networkId: NetworkId;
-    };
-}
-
 export class DecomposeAsset extends Transaction implements AssetTransaction {
-    public static fromJSON(
-        obj: DecomposeAssetJSON,
-        approvals: string[] = []
-    ): DecomposeAsset {
-        const {
-            data: { input, outputs, networkId }
-        } = obj;
-        return new this({
-            input: AssetTransferInput.fromJSON(input),
-            outputs: outputs.map(AssetTransferOutput.fromJSON),
-            networkId,
-            approvals
-        });
-    }
-
     private readonly _transaction: AssetDecomposeTransaction;
     private readonly approvals: string[];
     public constructor(input: {
@@ -130,7 +104,7 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
             lockScriptHash,
             parameters,
             amount,
-            transactionHash: this.id(),
+            transactionId: this.id(),
             transactionOutputIndex: index
         });
     }
@@ -180,7 +154,7 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
     }
 
     public action(): string {
-        return "assetTransaction";
+        return "decomposeAsset";
     }
 
     protected actionToEncodeObject(): any[] {
@@ -190,10 +164,9 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
     }
 
     protected actionToJSON(): any {
-        return {
-            transaction: this._transaction.toJSON(),
-            approvals: this.approvals
-        };
+        const json = this._transaction.toJSON();
+        json.approvals = this.approvals;
+        return json;
     }
 }
 
@@ -210,7 +183,7 @@ class AssetDecomposeTransaction {
     public readonly input: AssetTransferInput;
     public readonly outputs: AssetTransferOutput[];
     public readonly networkId: NetworkId;
-    public readonly type = "assetDecompose";
+    public readonly action = "decomposeAsset";
 
     /**
      * @param params.inputs An array of AssetTransferInput to decompose.
@@ -231,15 +204,13 @@ class AssetDecomposeTransaction {
      * Convert to an AssetDecomposeTransaction JSON object.
      * @returns An AssetDecomposeTransaction JSON object.
      */
-    public toJSON(): DecomposeAssetJSON {
-        const { type, input, outputs, networkId } = this;
+    public toJSON(): any {
+        const { action, input, outputs, networkId } = this;
         return {
-            type,
-            data: {
-                input: input.toJSON(),
-                outputs: outputs.map(o => o.toJSON()),
-                networkId
-            }
+            action,
+            input: input.toJSON(),
+            outputs: outputs.map(o => o.toJSON()),
+            networkId
         };
     }
 

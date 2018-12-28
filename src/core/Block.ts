@@ -33,13 +33,13 @@ export class Block {
             number,
             author,
             extraData,
-            parcelsRoot,
+            transactionsRoot,
             stateRoot,
             invoicesRoot,
             score,
             seal,
             hash,
-            parcels
+            transactions
         } = data;
         return new this({
             parentHash: new H256(parentHash),
@@ -47,13 +47,13 @@ export class Block {
             number,
             author: PlatformAddress.fromString(author),
             extraData,
-            transactionsRoot: new H256(parcelsRoot),
+            transactionsRoot: new H256(transactionsRoot),
             stateRoot: new H256(stateRoot),
             invoicesRoot: new H256(invoicesRoot),
             score: new U256(score),
             seal,
             hash: new H256(hash),
-            transactions: parcels.map(fromJSONToSignedTransaction)
+            transactions: transactions.map(fromJSONToSignedTransaction)
         });
     }
     public parentHash: H256;
@@ -119,13 +119,13 @@ export class Block {
             number,
             author: author.toString(),
             extraData,
-            parcelsRoot: transactionsRoot.toJSON(),
+            transactionsRoot: transactionsRoot.toJSON(),
             stateRoot: stateRoot.toJSON(),
             invoicesRoot: invoicesRoot.toJSON(),
             score: score.value.toString(),
             seal,
             hash: hash.toJSON(),
-            parcels: transactions.map(p => p.toJSON())
+            transactions: transactions.map(p => p.toJSON())
         };
     }
 }

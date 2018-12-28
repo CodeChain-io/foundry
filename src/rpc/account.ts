@@ -199,7 +199,7 @@ export class AccountRpc {
         }
 
         return this.rpc
-            .sendRpcRequest("account_sendParcel", [
+            .sendRpcRequest("account_sendTransaction", [
                 tx.toJSON(),
                 PlatformAddress.ensure(account).toString(),
                 passphrase

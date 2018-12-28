@@ -110,7 +110,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         passphrase: ACCOUNT_PASSPHRASE
     });
 
-    const goldMintTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
+    const goldMintTxInvoices = await sdk.rpc.chain.getInvoicesById(
         goldMintTx.id(),
         {
             timeout: 300 * 1000
@@ -123,7 +123,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             )}`
         );
     }
-    const silverMintTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
+    const silverMintTxInvoices = await sdk.rpc.chain.getInvoicesById(
         silverMintTx.id(),
         {
             timeout: 300 * 1000
@@ -136,7 +136,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             )}`
         );
     }
-    const transferTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
+    const transferTxInvoices = await sdk.rpc.chain.getInvoicesById(
         transferTx.id(),
         {
             timeout: 300 * 1000

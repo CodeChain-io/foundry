@@ -7,12 +7,15 @@ import {
     Transaction,
     U64
 } from "../classes";
-import { AssetTransactionJSON } from "./AssetTransaction";
+import { AssetMintOutput } from "./AssetMintOutput";
+import { AssetTransferInput } from "./AssetTransferInput";
+import { AssetTransferOutput } from "./AssetTransferOutput";
 import { ChangeAssetScheme } from "./ChangeAssetScheme";
 import { ComposeAsset } from "./ComposeAsset";
 import { CreateShard } from "./CreateShard";
 import { DecomposeAsset } from "./DecomposeAsset";
 import { MintAsset } from "./MintAsset";
+import { OrderOnTransfer } from "./OrderOnTransfer";
 import { Pay } from "./Pay";
 import { Remove } from "./Remove";
 import { SetRegularKey } from "./SetRegularKey";
@@ -23,41 +26,113 @@ import { TransferAsset } from "./TransferAsset";
 import { UnwrapCCC } from "./UnwrapCCC";
 import { WrapCCC } from "./WrapCCC";
 
-/**
- * Create a transaction from either an AssetMintTransaction JSON object or an
- * AssetTransferTransaction JSON object.
- * @param json Either an AssetMintTransaction JSON object or an AssetTransferTransaction JSON object.
- * @returns A Transaction.
- */
-export const fromJSONToAssetTransaction = (
-    json: AssetTransactionJSON,
-    approvals: string[] = []
-): any => {
-    switch (json.type) {
-        case "assetMint":
-            return MintAsset.fromJSON(json, approvals);
-        case "assetTransfer":
-            return TransferAsset.fromJSON(json, approvals);
-        case "assetCompose":
-            return ComposeAsset.fromJSON(json, approvals);
-        case "assetDecompose":
-            return DecomposeAsset.fromJSON(json, approvals);
-        case "assetUnwrapCCC":
-            return UnwrapCCC.fromJSON(json, approvals);
-        case "assetSchemeChange":
-            return ChangeAssetScheme.fromJSON(json, approvals);
-        default:
-            throw Error(`Unexpected transaction type: ${(json as any).type}`);
-    }
-};
-
 export function fromJSONToTransaction(result: any): Transaction {
     const { seq, fee, networkId, action } = result;
     let tx;
     switch (action.action) {
-        case "assetTransaction": {
-            const { approvals, transaction } = action;
-            tx = fromJSONToAssetTransaction(transaction, approvals);
+        case "mintAsset": {
+            const { shardId, metadata, approvals } = action;
+            const approver =
+                action.approver == null
+                    ? null
+                    : PlatformAddress.ensure(action.approver);
+            const administrator =
+                action.administrator == null
+                    ? null
+                    : PlatformAddress.ensure(action.administrator);
+            const output = AssetMintOutput.fromJSON(action.output);
+            tx = new MintAsset({
+                networkId,
+                shardId,
+                metadata,
+                output,
+                approver,
+                administrator,
+                approvals
+            });
+            break;
+        }
+        case "changeAssetScheme": {
+            const { metadata, approvals } = action;
+            const assetType = new H256(action.assetType);
+            const approver =
+                action.approver == null
+                    ? null
+                    : PlatformAddress.ensure(action.approver);
+            const administrator =
+                action.administrator == null
+                    ? null
+                    : PlatformAddress.ensure(action.administrator);
+            tx = new ChangeAssetScheme({
+                networkId,
+                assetType,
+                metadata,
+                approver,
+                administrator,
+                approvals
+            });
+            break;
+        }
+        case "transferAsset": {
+            const approvals = action.approvals;
+            const burns = action.burns.map(AssetTransferInput.fromJSON);
+            const inputs = action.inputs.map(AssetTransferInput.fromJSON);
+            const outputs = action.outputs.map(AssetTransferOutput.fromJSON);
+            const orders = action.orders.map(OrderOnTransfer.fromJSON);
+            tx = new TransferAsset({
+                networkId,
+                burns,
+                inputs,
+                outputs,
+                orders,
+                approvals
+            });
+            break;
+        }
+        case "composeAsset": {
+            const approvals = action.approvals;
+            const input = AssetTransferInput.fromJSON(action.input);
+            const outputs = action.outputs.map(AssetTransferOutput.fromJSON);
+            tx = new DecomposeAsset({
+                input,
+                outputs,
+                networkId,
+                approvals
+            });
+            break;
+        }
+        case "decomposeAsset": {
+            const { shardId, metadata, approvals } = action;
+            const approver =
+                action.approver == null
+                    ? null
+                    : PlatformAddress.ensure(action.approver);
+            const administrator =
+                action.administrator == null
+                    ? null
+                    : PlatformAddress.ensure(action.administrator);
+            const inputs = action.inputs.map(AssetTransferInput.fromJSON);
+            const output = AssetMintOutput.fromJSON(action.output);
+            tx = new ComposeAsset({
+                networkId,
+                shardId,
+                metadata,
+                approver,
+                administrator,
+                inputs,
+                output,
+                approvals
+            });
+            break;
+        }
+        case "unwrapCCC": {
+            const approvals = action.approvals;
+            const burn = AssetTransferInput.fromJSON(action.burn);
+            tx = new UnwrapCCC({
+                burn,
+                networkId,
+                approvals
+            });
             break;
         }
         case "pay": {
@@ -156,7 +231,7 @@ export function fromJSONToTransaction(result: any): Transaction {
  * @returns A SignedTransaction.
  */
 export function fromJSONToSignedTransaction(data: any) {
-    const { sig, blockNumber, blockHash, parcelIndex } = data;
+    const { sig, blockNumber, blockHash, transactionIndex } = data;
     if (typeof sig !== "string") {
         throw Error("Unexpected type of sig");
     }
@@ -166,7 +241,7 @@ export function fromJSONToSignedTransaction(data: any) {
             sig,
             blockNumber,
             new H256(blockHash),
-            parcelIndex
+            transactionIndex
         );
     } else {
         return new SignedTransaction(fromJSONToTransaction(data), sig);

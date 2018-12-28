@@ -200,7 +200,7 @@ export class SignedTransaction {
         const result = unsigned.toJSON();
         result.blockNumber = blockNumber;
         result.blockHash = blockHash === null ? null : blockHash.toJSON();
-        result.parcelIndex = transactionIndex;
+        result.transactionIndex = transactionIndex;
         result.sig = sig;
         result.hash = this.hash().toJSON();
         return result;

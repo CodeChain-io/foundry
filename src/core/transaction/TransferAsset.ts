@@ -17,50 +17,12 @@ import {
 } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { AssetTransferOutputValue, NetworkId } from "../types";
-import {
-    AssetTransferInput,
-    AssetTransferInputJSON
-} from "./AssetTransferInput";
-import {
-    AssetTransferOutput,
-    AssetTransferOutputJSON
-} from "./AssetTransferOutput";
-import { OrderOnTransferJSON } from "./OrderOnTransfer";
+import { AssetTransferInput } from "./AssetTransferInput";
+import { AssetTransferOutput } from "./AssetTransferOutput";
 
 const RLP = require("rlp");
 
-export interface TransferAssetJSON {
-    type: "assetTransfer";
-    data: {
-        burns: AssetTransferInputJSON[];
-        inputs: AssetTransferInputJSON[];
-        outputs: AssetTransferOutputJSON[];
-        orders: OrderOnTransferJSON[];
-        networkId: NetworkId;
-    };
-}
-
 export class TransferAsset extends Transaction implements AssetTransaction {
-    public static fromJSON(
-        json: TransferAssetJSON,
-        approvals: string[] = []
-    ): TransferAsset {
-        const { data } = json;
-        const networkId = data.networkId;
-        const burns = data.burns.map(AssetTransferInput.fromJSON);
-        const inputs = data.inputs.map(AssetTransferInput.fromJSON);
-        const outputs = data.outputs.map(AssetTransferOutput.fromJSON);
-        const orders = data.orders.map(OrderOnTransfer.fromJSON);
-        return new TransferAsset({
-            networkId,
-            burns,
-            inputs,
-            outputs,
-            orders,
-            approvals
-        });
-    }
-
     private readonly _transaction: AssetTransferTransaction;
     private readonly approvals: string[];
     public constructor(input: {
@@ -248,7 +210,7 @@ export class TransferAsset extends Transaction implements AssetTransaction {
             lockScriptHash,
             parameters,
             amount,
-            transactionHash: this.id(),
+            transactionId: this.id(),
             transactionOutputIndex: index
         });
     }
@@ -369,7 +331,7 @@ export class TransferAsset extends Transaction implements AssetTransaction {
     }
 
     public action(): string {
-        return "assetTransaction";
+        return "transferAsset";
     }
 
     protected actionToEncodeObject(): any[] {
@@ -379,10 +341,9 @@ export class TransferAsset extends Transaction implements AssetTransaction {
     }
 
     protected actionToJSON(): any {
-        return {
-            transaction: this._transaction.toJSON(),
-            approvals: this.approvals
-        };
+        const json = this._transaction.toJSON();
+        json.approvals = this.approvals;
+        return json;
     }
 }
 
@@ -420,7 +381,7 @@ class AssetTransferTransaction {
     public readonly outputs: AssetTransferOutput[];
     public readonly orders: OrderOnTransfer[];
     public readonly networkId: NetworkId;
-    public readonly type = "assetTransfer";
+    public readonly action = "transferAsset";
 
     /**
      * @param params.burns An array of AssetTransferInput to burn.
@@ -441,17 +402,15 @@ class AssetTransferTransaction {
      * Convert to an AssetTransferTransaction JSON object.
      * @returns An AssetTransferTransaction JSON object.
      */
-    public toJSON(): TransferAssetJSON {
+    public toJSON(): any {
         const { networkId, burns, inputs, outputs, orders } = this;
         return {
-            type: this.type,
-            data: {
-                networkId,
-                burns: burns.map(input => input.toJSON()),
-                inputs: inputs.map(input => input.toJSON()),
-                outputs: outputs.map(output => output.toJSON()),
-                orders: orders.map(order => order.toJSON())
-            }
+            action: this.action,
+            networkId,
+            burns: burns.map(input => input.toJSON()),
+            inputs: inputs.map(input => input.toJSON()),
+            outputs: outputs.map(output => output.toJSON()),
+            orders: orders.map(order => order.toJSON())
         };
     }
 

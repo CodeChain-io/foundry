@@ -348,18 +348,16 @@ describe("rpc", () => {
             });
 
             test("getTransaction", async () => {
-                expect(await sdk.rpc.chain.getParcel(txHash)).toEqual(
+                expect(await sdk.rpc.chain.getTransaction(txHash)).toEqual(
                     expect.any(SignedTransaction)
                 );
             });
 
-            test("getTransactionInvoice", async () => {
-                expect(await sdk.rpc.chain.getParcelInvoice(txHash)).toEqual(
+            test("getInvoice", async () => {
+                expect(await sdk.rpc.chain.getInvoice(txHash)).toEqual(
                     expect.any(Invoice)
                 );
-                expect(await sdk.rpc.chain.getParcelInvoice(invalidHash)).toBe(
-                    null
-                );
+                expect(await sdk.rpc.chain.getInvoice(invalidHash)).toBe(null);
             });
         });
 
@@ -396,19 +394,17 @@ describe("rpc", () => {
                 );
             });
 
-            test("getTransaction", async () => {
+            test("integration_tests/Rpc.spec.tsgetTransactionById", async () => {
                 expect(
-                    ((await sdk.rpc.chain.getTransaction(
+                    ((await sdk.rpc.chain.getTransactionById(
                         mintTransaction.id()
-                    )) as any).actionToJSON()
+                    )) as any).unsigned.actionToJSON()
                 ).toEqual((mintTransaction as any).actionToJSON());
             });
 
-            test("getTransactionInvoices", async () => {
+            test("getInvoicesById", async () => {
                 expect(
-                    await sdk.rpc.chain.getTransactionInvoices(
-                        mintTransaction.id()
-                    )
+                    await sdk.rpc.chain.getInvoicesById(mintTransaction.id())
                 ).toEqual(
                     expect.arrayContaining([
                         Invoice.fromJSON({ success: true })

@@ -28,7 +28,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const invoice = await sdk.rpc.chain.getParcelInvoice(hash, {
+    const invoice = await sdk.rpc.chain.getInvoice(hash, {
         // Wait up to 120 seconds to get the invoice.
         timeout: 120 * 1000
     });

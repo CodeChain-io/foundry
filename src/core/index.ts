@@ -19,7 +19,6 @@ import { ChangeAssetScheme } from "./transaction/ChangeAssetScheme";
 import { ComposeAsset } from "./transaction/ComposeAsset";
 import { CreateShard } from "./transaction/CreateShard";
 import { DecomposeAsset } from "./transaction/DecomposeAsset";
-import { fromJSONToAssetTransaction } from "./transaction/json";
 import { MintAsset } from "./transaction/MintAsset";
 import { Order } from "./transaction/Order";
 import { OrderOnTransfer } from "./transaction/OrderOnTransfer";
@@ -355,7 +354,7 @@ export class Core {
             originOutputs:
                 | AssetOutPoint[]
                 | {
-                      transactionHash: H256 | string;
+                      transactionId: H256 | string;
                       index: number;
                       assetType: H256 | string;
                       amount: U64 | number | string;
@@ -402,7 +401,7 @@ export class Core {
         for (let i = 0; i < originOutputs.length; i++) {
             const originOutput = originOutputs[i];
             const {
-                transactionHash,
+                transactionId,
                 index,
                 assetType,
                 amount,
@@ -414,7 +413,7 @@ export class Core {
                 originOutput instanceof AssetOutPoint
                     ? originOutput
                     : new AssetOutPoint({
-                          transactionHash: H256.ensure(transactionHash),
+                          transactionId: H256.ensure(transactionId),
                           index,
                           assetType: H256.ensure(assetType),
                           amount: U64.ensure(amount),
@@ -746,7 +745,7 @@ export class Core {
         assetOutPoint:
             | AssetOutPoint
             | {
-                  transactionHash: H256 | string;
+                  transactionId: H256 | string;
                   index: number;
                   assetType: H256 | string;
                   amount: U64 | number | string;
@@ -772,7 +771,7 @@ export class Core {
             checkUnlockScript(unlockScript);
         }
         const {
-            transactionHash,
+            transactionId,
             index,
             assetType,
             amount,
@@ -784,7 +783,7 @@ export class Core {
                 assetOutPoint instanceof AssetOutPoint
                     ? assetOutPoint
                     : new AssetOutPoint({
-                          transactionHash: H256.ensure(transactionHash),
+                          transactionId: H256.ensure(transactionId),
                           index,
                           assetType: H256.ensure(assetType),
                           amount: U64.ensure(amount),
@@ -800,18 +799,18 @@ export class Core {
     }
 
     public createAssetOutPoint(params: {
-        transactionHash: H256 | string;
+        transactionId: H256 | string;
         index: number;
         assetType: H256 | string;
         amount: U64 | number | string;
     }): AssetOutPoint {
-        const { transactionHash, index, assetType, amount } = params;
-        checkAssetTransactionHash(transactionHash);
+        const { transactionId, index, assetType, amount } = params;
+        checkTransactionId(transactionId);
         checkIndex(index);
         checkAssetType(assetType);
         checkAmount(amount);
         return new AssetOutPoint({
-            transactionHash: H256.ensure(transactionHash),
+            transactionId: H256.ensure(transactionId),
             index,
             assetType: H256.ensure(assetType),
             amount: U64.ensure(amount)
@@ -856,11 +855,6 @@ export class Core {
         } else {
             throw Error(`Unexpected params: ${params}`);
         }
-    }
-
-    // FIXME: any
-    public getTransactionFromJSON(json: any): any {
-        return fromJSONToAssetTransaction(json);
     }
 }
 
@@ -1032,10 +1026,10 @@ function checkTransferOutputs(outputs: Array<AssetTransferOutput>) {
     });
 }
 
-function checkAssetTransactionHash(value: H256 | string) {
+function checkTransactionId(value: H256 | string) {
     if (!H256.check(value)) {
         throw Error(
-            `Expected transactionHash param to be an H256 value but found ${value}`
+            `Expected transactionId param to be an H256 value but found ${value}`
         );
     }
 }
@@ -1058,7 +1052,7 @@ function checkAssetOutPoint(
     value:
         | AssetOutPoint
         | {
-              transactionHash: H256 | string;
+              transactionId: H256 | string;
               index: number;
               assetType: H256 | string;
               amount: U64 | number | string;
@@ -1072,14 +1066,14 @@ function checkAssetOutPoint(
         );
     }
     const {
-        transactionHash,
+        transactionId,
         index,
         assetType,
         amount,
         lockScriptHash,
         parameters
     } = value;
-    checkAssetTransactionHash(transactionHash);
+    checkTransactionId(transactionId);
     checkIndex(index);
     checkAssetType(assetType);
     checkAmount(amount);

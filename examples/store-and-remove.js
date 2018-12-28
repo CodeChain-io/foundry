@@ -24,7 +24,7 @@ const privForStore = sdk.util.generatePrivateKey();
         passphrase: ACCOUNT_PASSPHRASE
     });
     const storeHash = storeResult.hash;
-    const invoice1 = await sdk.rpc.chain.getParcelInvoice(storeHash, {
+    const invoice1 = await sdk.rpc.chain.getInvoice(storeHash, {
         timeout: 300 * 1000
     });
     console.log(invoice1); // { success : true }
@@ -48,7 +48,7 @@ const privForStore = sdk.util.generatePrivateKey();
         passphrase: ACCOUNT_PASSPHRASE
     });
     const removeHash = removeResult.hash;
-    const invoice2 = await sdk.rpc.chain.getParcelInvoice(removeHash, {
+    const invoice2 = await sdk.rpc.chain.getInvoice(removeHash, {
         timeout: 300 * 1000
     });
     console.log(invoice2); // { success : true }

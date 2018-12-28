@@ -21,7 +21,7 @@ const tx = sdk.core.createPayTransaction({
         tx,
         account: ACCOUNT_ADDRESS
     });
-    const invoice = await sdk.rpc.chain.getParcelInvoice(result.hash, {
+    const invoice = await sdk.rpc.chain.getInvoice(result.hash, {
         timeout: 300 * 1000
     });
     console.log(invoice); // { success: true }

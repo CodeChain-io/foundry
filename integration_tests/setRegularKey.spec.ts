@@ -33,7 +33,7 @@ test("setRegularKey", async () => {
         value: expect.stringMatching(/[0-9a-f]{32}/)
     });
 
-    await sdk.rpc.chain.getParcelInvoice(hash, { timeout: 60 * 60 * 1000 });
+    await sdk.rpc.chain.getInvoice(hash, { timeout: 60 * 60 * 1000 });
 
     const beforeBalance = await sdk.rpc.chain.getBalance(masterAddress);
 
@@ -49,7 +49,7 @@ test("setRegularKey", async () => {
             fee: 10
         })
     );
-    await sdk.rpc.chain.getParcelInvoice(hash2, { timeout: 60 * 60 * 1000 });
+    await sdk.rpc.chain.getInvoice(hash2, { timeout: 60 * 60 * 1000 });
     const afterBalance = await sdk.rpc.chain.getBalance(masterAddress);
     expect(afterBalance.toString()).toEqual(
         U64.minus(beforeBalance, 10).toString()

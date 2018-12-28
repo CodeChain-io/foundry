@@ -28,13 +28,10 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const wrapCCCInvoice = await sdk.rpc.chain.getParcelInvoice(
-        wrapCCCSignedHash,
-        {
-            // Wait up to 120 seconds to get the invoice.
-            timeout: 120 * 1000
-        }
-    );
+    const wrapCCCInvoice = await sdk.rpc.chain.getInvoice(wrapCCCSignedHash, {
+        // Wait up to 120 seconds to get the invoice.
+        timeout: 120 * 1000
+    });
     if (!wrapCCCInvoice.success) {
         throw Error(`WrapCCC failed: ${JSON.stringify(wrapCCCInvoice.error)}`);
     }
@@ -50,7 +47,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const unwrapCCCTxInvoice = await sdk.rpc.chain.getParcelInvoice(hash, {
+    const unwrapCCCTxInvoice = await sdk.rpc.chain.getInvoice(hash, {
         // Wait up to 120 seconds to get the invoice.
         timeout: 120 * 1000
     });

@@ -25,7 +25,7 @@ test("getSignerAccountId", async () => {
             seq
         });
     const hash = await sdk.rpc.chain.sendSignedTransaction(tx);
-    const txReceived = await sdk.rpc.chain.getParcel(hash);
+    const txReceived = await sdk.rpc.chain.getTransaction(hash);
     if (txReceived == null) {
         throw Error("Cannot get a transaction");
     }

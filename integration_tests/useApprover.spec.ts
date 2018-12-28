@@ -52,7 +52,7 @@ async function setRegularKey() {
         })
     );
 
-    await sdk.rpc.chain.getParcelInvoice(hash, {
+    await sdk.rpc.chain.getInvoice(hash, {
         timeout: 5 * 60 * 1000
     });
 }
@@ -71,7 +71,7 @@ async function sendCCCToOther() {
         })
     );
 
-    await sdk.rpc.chain.getParcelInvoice(hash, {
+    await sdk.rpc.chain.getInvoice(hash, {
         timeout: 5 * 60 * 1000
     });
 }
@@ -104,12 +104,9 @@ async function mintAssetUsingMaster(
         })
     );
 
-    const mintTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        mintTx.id(),
-        {
-            timeout: 5 * 60 * 1000
-        }
-    );
+    const mintTxInvoices = await sdk.rpc.chain.getInvoicesById(mintTx.id(), {
+        timeout: 5 * 60 * 1000
+    });
     expect(mintTxInvoices.length).toBe(1);
     expect(mintTxInvoices[0].success).toBe(true);
     return mintTx;
@@ -147,7 +144,7 @@ async function transferAssetUsingRegular(
         })
     );
 
-    const transferTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
+    const transferTxInvoices = await sdk.rpc.chain.getInvoicesById(
         transferTx.id(),
         {
             timeout: 5 * 60 * 1000
@@ -193,7 +190,7 @@ async function transferAssetUsingOther(
         })
     );
 
-    const transferTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
+    const transferTxInvoices = await sdk.rpc.chain.getInvoicesById(
         transferTx.id(),
         {
             timeout: 5 * 60 * 1000

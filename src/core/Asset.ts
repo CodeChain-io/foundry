@@ -17,7 +17,7 @@ export interface AssetJSON {
     orderHash: string | null;
     // The `hash` and the `index` are not included in an RPC response. See
     // getAsset() in chain.ts for more details.
-    transactionHash: string;
+    transactionId: string;
     transactionOutputIndex: number;
 }
 
@@ -27,7 +27,7 @@ export interface AssetData {
     parameters: Buffer[];
     amount: U64;
     orderHash?: H256 | null;
-    transactionHash: H256;
+    transactionId: H256;
     transactionOutputIndex: number;
 }
 /**
@@ -41,7 +41,7 @@ export class Asset {
             parameters,
             amount,
             orderHash,
-            transactionHash,
+            transactionId,
             transactionOutputIndex
         } = data;
         return new Asset({
@@ -52,7 +52,7 @@ export class Asset {
             ),
             amount: U64.ensure(amount),
             orderHash: orderHash === null ? orderHash : H256.ensure(orderHash),
-            transactionHash: new H256(transactionHash),
+            transactionId: new H256(transactionId),
             transactionOutputIndex
         });
     }
@@ -66,7 +66,7 @@ export class Asset {
 
     constructor(data: AssetData) {
         const {
-            transactionHash,
+            transactionId,
             transactionOutputIndex,
             assetType,
             amount,
@@ -80,7 +80,7 @@ export class Asset {
         this.amount = data.amount;
         this.orderHash = orderHash;
         this.outPoint = new AssetOutPoint({
-            transactionHash,
+            transactionId,
             index: transactionOutputIndex,
             assetType,
             amount,
@@ -98,14 +98,14 @@ export class Asset {
             amount,
             outPoint
         } = this;
-        const { transactionHash, index } = outPoint;
+        const { transactionId, index } = outPoint;
         return {
             assetType: assetType.toJSON(),
             lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map(p => [...p]),
             amount: amount.toJSON(),
             orderHash: orderHash === null ? null : orderHash.toJSON(),
-            transactionHash: transactionHash.toJSON(),
+            transactionId: transactionId.toJSON(),
             transactionOutputIndex: index
         };
     }
