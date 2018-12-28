@@ -5,7 +5,7 @@ const sdk = new SDK({
     server: SERVER_URL
 });
 
-const parcel = sdk.core.createPayParcel({
+const tx = sdk.core.createPayTransaction({
     recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
     amount: 10000
 });
@@ -17,13 +17,13 @@ const parcel = sdk.core.createPayParcel({
     });
     const seq = await sdk.rpc.chain.getSeq(account);
 
-    const signedParcel = await sdk.key.signParcel(parcel, {
+    const tx = await sdk.key.signTransaction(tx, {
         account,
         keyStore,
         fee: 10,
         seq
     });
-    console.log(signedParcel);
+    console.log(tx);
     // FIXME: needs fee
-    // const parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
+    // const hash = await sdk.rpc.chain.sendSignedTransaction(tx);
 })();

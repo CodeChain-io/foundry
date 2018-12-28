@@ -2,7 +2,7 @@ import { PlatformAddress } from "codechain-primitives";
 
 import { Block } from "../Block";
 import { H256 } from "../H256";
-import { Pay } from "../parcel/Pay";
+import { Pay } from "../transaction/Pay";
 import { U256 } from "../U256";
 import { U64 } from "../U64";
 
@@ -35,7 +35,7 @@ test("toJSON", () => {
             { networkId: "tc" }
         ),
         extraData: Buffer.from([]),
-        parcelsRoot: new H256(
+        transactionsRoot: new H256(
             "1111111111111111111111111111111111111111111111111111111111111111"
         ),
         stateRoot: new H256(
@@ -49,7 +49,7 @@ test("toJSON", () => {
         hash: new H256(
             "4444444444444444444444444444444444444444444444444444444444444444"
         ),
-        parcels: [p]
+        transactions: [p]
     });
     expect(Block.fromJSON(block.toJSON())).toEqual(block);
 });

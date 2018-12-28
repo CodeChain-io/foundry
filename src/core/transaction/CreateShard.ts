@@ -1,9 +1,13 @@
-import { Parcel } from "../Parcel";
+import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
-export class CreateShard extends Parcel {
+export class CreateShard extends Transaction {
     public constructor(networkId: NetworkId) {
         super(networkId);
+    }
+
+    public action(): string {
+        return "createShard";
     }
 
     protected actionToEncodeObject(): any[] {
@@ -12,9 +16,5 @@ export class CreateShard extends Parcel {
 
     protected actionToJSON(): any {
         return {};
-    }
-
-    protected action(): string {
-        return "createShard";
     }
 }

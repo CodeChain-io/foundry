@@ -56,8 +56,8 @@ class SDK {
         // Deprecated. It will be removed at 0.2.0
         options?: {
             networkId?: NetworkId;
-            parcelSigner?: string;
-            parcelFee?: number;
+            transactionSigner?: string;
+            transactionFee?: number;
         };
     }) {
         const {
@@ -68,11 +68,14 @@ class SDK {
         } = params;
         const {
             networkId: networkIdOpt,
-            parcelSigner,
-            parcelFee = 10
-        } = options || { networkId: undefined, parcelSigner: undefined };
+            transactionSigner,
+            transactionFee = 10
+        } = options || { networkId: undefined, transactionSigner: undefined };
 
-        this.rpc = new Rpc({ server, options: { parcelSigner, parcelFee } });
+        this.rpc = new Rpc({
+            server,
+            options: { transactionSigner, transactionFee }
+        });
         this.core = new Core({ networkId: networkIdOpt || networkId });
         this.key = new Key({
             networkId: networkIdOpt || networkId,

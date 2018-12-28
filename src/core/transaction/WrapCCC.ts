@@ -1,7 +1,8 @@
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
-import { Asset, AssetTransferAddress, H160, H256, U64 } from "../classes";
-import { Parcel } from "../Parcel";
+import { Asset } from "../Asset";
+import { AssetTransferAddress, H160, H256, U64 } from "../classes";
+import { AssetTransaction, Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
 export interface WrapCCCData {
@@ -17,7 +18,7 @@ export interface WrapCCCAddressData {
     amount: U64;
 }
 
-export class WrapCCC extends Parcel {
+export class WrapCCC extends Transaction implements AssetTransaction {
     private readonly shardId: number;
     private readonly lockScriptHash: H160;
     private readonly parameters: Buffer[];
@@ -77,7 +78,7 @@ export class WrapCCC extends Parcel {
     }
 
     /**
-     * Get the wrapped CCC asset output of this parcel.
+     * Get the wrapped CCC asset output of this tx.
      * @returns An Asset.
      */
     public getAsset(): Asset {
@@ -90,6 +91,14 @@ export class WrapCCC extends Parcel {
             transactionHash: this.hash(),
             transactionOutputIndex: 0
         });
+    }
+
+    public id() {
+        return this.hash();
+    }
+
+    public action(): string {
+        return "wrapCCC";
     }
 
     protected actionToEncodeObject(): any[] {
@@ -111,10 +120,6 @@ export class WrapCCC extends Parcel {
             parameters: parameters.map(parameter => [...parameter]),
             amount: amount.toJSON()
         };
-    }
-
-    protected action(): string {
-        return "wrapCCC";
     }
 }
 

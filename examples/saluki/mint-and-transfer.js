@@ -67,6 +67,6 @@ if (!sdk.core.classes.PlatformAddress.check(parcelSender)) {
     });
     const parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
     console.log(
-        "https://saluki.codechain.io/explorer/parcel/0x" + parcelHash.value
+        "https://saluki.codechain.io/explorer/tx/0x" + parcelHash.value
     );
 })().catch(console.error);

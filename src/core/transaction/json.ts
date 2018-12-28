@@ -1,50 +1,83 @@
-import { H160, H256, H512, Parcel, PlatformAddress, U64 } from "../classes";
-import { SignedParcel } from "../classes";
-import { getTransactionFromJSON } from "../transaction/Transaction";
-import { AssetTransaction } from "./AssetTransaction";
+import {
+    H160,
+    H256,
+    H512,
+    PlatformAddress,
+    SignedTransaction,
+    Transaction,
+    U64
+} from "../classes";
+import { AssetTransactionJSON } from "./AssetTransaction";
+import { ChangeAssetScheme } from "./ChangeAssetScheme";
+import { ComposeAsset } from "./ComposeAsset";
 import { CreateShard } from "./CreateShard";
+import { DecomposeAsset } from "./DecomposeAsset";
+import { MintAsset } from "./MintAsset";
 import { Pay } from "./Pay";
 import { Remove } from "./Remove";
 import { SetRegularKey } from "./SetRegularKey";
 import { SetShardOwners } from "./SetShardOwners";
 import { SetShardUsers } from "./SetShardUsers";
 import { Store } from "./Store";
+import { TransferAsset } from "./TransferAsset";
+import { UnwrapCCC } from "./UnwrapCCC";
 import { WrapCCC } from "./WrapCCC";
 
-export function fromJSONToParcel(result: any): Parcel {
+/**
+ * Create a transaction from either an AssetMintTransaction JSON object or an
+ * AssetTransferTransaction JSON object.
+ * @param json Either an AssetMintTransaction JSON object or an AssetTransferTransaction JSON object.
+ * @returns A Transaction.
+ */
+export const fromJSONToAssetTransaction = (
+    json: AssetTransactionJSON,
+    approvals: string[] = []
+): any => {
+    switch (json.type) {
+        case "assetMint":
+            return MintAsset.fromJSON(json, approvals);
+        case "assetTransfer":
+            return TransferAsset.fromJSON(json, approvals);
+        case "assetCompose":
+            return ComposeAsset.fromJSON(json, approvals);
+        case "assetDecompose":
+            return DecomposeAsset.fromJSON(json, approvals);
+        case "assetUnwrapCCC":
+            return UnwrapCCC.fromJSON(json, approvals);
+        case "assetSchemeChange":
+            return ChangeAssetScheme.fromJSON(json, approvals);
+        default:
+            throw Error(`Unexpected transaction type: ${(json as any).type}`);
+    }
+};
+
+export function fromJSONToTransaction(result: any): Transaction {
     const { seq, fee, networkId, action } = result;
-    let parcel;
+    let tx;
     switch (action.action) {
         case "assetTransaction": {
-            const transaction = getTransactionFromJSON(action.transaction);
-            const { approvals } = action;
-            parcel = new AssetTransaction(
-                {
-                    transaction,
-                    approvals
-                },
-                networkId
-            );
+            const { approvals, transaction } = action;
+            tx = fromJSONToAssetTransaction(transaction, approvals);
             break;
         }
         case "pay": {
             const receiver = PlatformAddress.ensure(action.receiver);
             const amount = new U64(action.amount);
-            parcel = new Pay(receiver, amount, networkId);
+            tx = new Pay(receiver, amount, networkId);
             break;
         }
         case "setRegularKey": {
             const key = new H512(action.key);
-            parcel = new SetRegularKey(key, networkId);
+            tx = new SetRegularKey(key, networkId);
             break;
         }
         case "createShard":
-            parcel = new CreateShard(networkId);
+            tx = new CreateShard(networkId);
             break;
         case "setShardOwners": {
             const shardId = action.shardId;
             const owners = action.owners.map(PlatformAddress.ensure);
-            parcel = new SetShardOwners(
+            tx = new SetShardOwners(
                 {
                     shardId,
                     owners
@@ -56,7 +89,7 @@ export function fromJSONToParcel(result: any): Parcel {
         case "setShardUsers": {
             const shardId = action.shardId;
             const users = action.users.map(PlatformAddress.ensure);
-            parcel = new SetShardUsers(
+            tx = new SetShardUsers(
                 {
                     shardId,
                     users
@@ -72,7 +105,7 @@ export function fromJSONToParcel(result: any): Parcel {
                 Buffer.from(p)
             );
             const amount = U64.ensure(action.amount);
-            parcel = new WrapCCC(
+            tx = new WrapCCC(
                 {
                     shardId,
                     lockScriptHash,
@@ -86,7 +119,7 @@ export function fromJSONToParcel(result: any): Parcel {
         case "store": {
             const { content, signature } = action;
             const certifier = PlatformAddress.ensure(action.certifier);
-            parcel = new Store(
+            tx = new Store(
                 {
                     content,
                     certifier: PlatformAddress.ensure(certifier),
@@ -99,7 +132,7 @@ export function fromJSONToParcel(result: any): Parcel {
         case "remove": {
             const signature = action.signature;
             const hash = H256.ensure(action.hash);
-            parcel = new Remove(
+            tx = new Remove(
                 {
                     hash: H256.ensure(hash),
                     signature
@@ -109,33 +142,33 @@ export function fromJSONToParcel(result: any): Parcel {
             break;
         }
         default:
-            throw Error(`Unexpected parcel action: ${action}`);
+            throw Error(`Unexpected action: ${action}`);
     }
-    parcel.setSeq(seq);
-    parcel.setFee(fee);
-    return parcel;
+    tx.setSeq(seq);
+    tx.setFee(fee);
+    return tx;
 }
 
 // FIXME: any
 /**
- * Create a SignedParcel from a SignedParcel JSON object.
- * @param data A SignedParcel JSON object.
- * @returns A SignedParcel.
+ * Create a SignedTransaction from a SignedTransaction JSON object.
+ * @param data A SignedTransaction JSON object.
+ * @returns A SignedTransaction.
  */
-export function fromJSONToSignedParcel(data: any) {
+export function fromJSONToSignedTransaction(data: any) {
     const { sig, blockNumber, blockHash, parcelIndex } = data;
     if (typeof sig !== "string") {
         throw Error("Unexpected type of sig");
     }
     if (blockNumber) {
-        return new SignedParcel(
-            fromJSONToParcel(data),
+        return new SignedTransaction(
+            fromJSONToTransaction(data),
             sig,
             blockNumber,
             new H256(blockHash),
             parcelIndex
         );
     } else {
-        return new SignedParcel(fromJSONToParcel(data), sig);
+        return new SignedTransaction(fromJSONToTransaction(data), sig);
     }
 }

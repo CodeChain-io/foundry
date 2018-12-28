@@ -105,7 +105,7 @@ export class DevelRpc {
     }
 
     /**
-     * Starts and Enable sealing parcels.
+     * Starts and Enable sealing transactions.
      * @returns null
      */
     public startSealing(): Promise<null> {
@@ -127,7 +127,7 @@ export class DevelRpc {
     }
 
     /**
-     * Stops and Disable sealing parcels.
+     * Stops and Disable sealing transactions.
      * @returns null
      */
     public stopSealing(): Promise<null> {

@@ -23,13 +23,13 @@ const ACCOUNT_PASSPHRASE = "satoshi";
         amount: 10,
         approver: null
     });
-    const mintTx = sdk.core.createAssetMintTransaction({
+    const mintTx = sdk.core.createMintAssetTransaction({
         scheme: assetScheme,
         recipient: aliceAddress
     });
 
     const firstAsset = mintTx.getMintedAsset();
-    const composeTx = sdk.core.createAssetComposeTransaction({
+    const composeTx = sdk.core.createComposeAssetTransaction({
         scheme: {
             shardId: 0,
             metadata: JSON.stringify({ name: "An unique asset" }),
@@ -41,7 +41,7 @@ const ACCOUNT_PASSPHRASE = "satoshi";
     await sdk.key.signTransactionInput(composeTx, 0);
 
     const composedAsset = composeTx.getComposedAsset();
-    const decomposeTx = sdk.core.createAssetDecomposeTransaction({
+    const decomposeTx = sdk.core.createDecomposeAssetTransaction({
         input: composedAsset.createTransferInput()
     });
     decomposeTx.addOutputs({
@@ -51,24 +51,15 @@ const ACCOUNT_PASSPHRASE = "satoshi";
     });
     await sdk.key.signTransactionInput(decomposeTx, 0);
 
-    const mintParcel = sdk.core.createAssetTransactionParcel({
-        transaction: mintTx
-    });
-    await sdk.rpc.chain.sendParcel(mintParcel, {
+    await sdk.rpc.chain.sendTransaction(mintTx, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const composeParcel = sdk.core.createAssetTransactionParcel({
-        transaction: composeTx
-    });
-    await sdk.rpc.chain.sendParcel(composeParcel, {
+    await sdk.rpc.chain.sendTransaction(composeTx, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const decomposeParcel = sdk.core.createAssetTransactionParcel({
-        transaction: decomposeTx
-    });
-    await sdk.rpc.chain.sendParcel(decomposeParcel, {
+    await sdk.rpc.chain.sendTransaction(decomposeTx, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });

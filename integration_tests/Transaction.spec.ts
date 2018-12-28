@@ -1,5 +1,4 @@
 import { SDK } from "..";
-import { AssetTransaction } from "../src/core/parcel/AssetTransaction";
 
 import {
     CODECHAIN_NETWORK_ID,
@@ -15,34 +14,32 @@ const sdk = new SDK({
 });
 const { H160, H256 } = SDK.Core.classes;
 
-test("AssetMintTransaction fromJSONToParcel", async () => {
+test("AssetMintTransaction fromJSONToTransaction", async () => {
     const metadata = "";
     const lockScriptHash = new H160("0000000000000000000000000000000000000000");
     const amount = 100;
     const approver = null;
-    const { parcelHash } = await mintAsset({
+    const { hash } = await mintAsset({
         metadata,
         lockScriptHash,
         amount,
         approver
     });
-    const parcel = await sdk.rpc.chain.getParcel(parcelHash);
-    if (parcel == null) {
-        throw Error("Cannot get the parcel");
+    const tx = await sdk.rpc.chain.getParcel(hash);
+    if (tx == null) {
+        throw Error("Cannot get the tx");
     }
 
-    const action = parcel.unsigned.action();
+    const action = tx.unsigned.action();
     if (action !== "assetTransaction") {
         throw Error("Invalid action");
     }
 
-    expect(
-        ((parcel.unsigned as any) as AssetTransaction).transaction()
-    ).toMatchObject({
-        type: expect.stringMatching("assetMint"),
+    expect(tx.unsigned.toJSON().action.transaction.type).toEqual("assetMint");
+    expect(tx.unsigned.toJSON().action.transaction.data).toMatchObject({
         metadata: expect.anything(),
         output: {
-            lockScriptHash: expect.any(H160),
+            lockScriptHash: expect.anything(),
             // FIXME: Buffer[]
             parameters: expect.anything(),
             // FIXME: Change it to U64
@@ -53,7 +50,7 @@ test("AssetMintTransaction fromJSONToParcel", async () => {
     });
 });
 
-test("AssetTransferTransaction fromJSONToParcel", async () => {
+test("AssetTransferTransaction fromJSONToTransaction", async () => {
     const addressA = await sdk.key.createAssetTransferAddress();
     const addressB = await sdk.key.createAssetTransferAddress();
     const mintTx = sdk.core
@@ -65,11 +62,11 @@ test("AssetTransferTransaction fromJSONToParcel", async () => {
         })
         .createMintTransaction({ recipient: addressA });
     await sendTransaction({ transaction: mintTx });
-    const firstAsset = await sdk.rpc.chain.getAsset(mintTx.hash(), 0);
+    const firstAsset = await sdk.rpc.chain.getAsset(mintTx.id(), 0);
     if (firstAsset == null) {
         throw Error("Cannot get the first asset");
     }
-    const transferTx = await sdk.core.createAssetTransferTransaction();
+    const transferTx = await sdk.core.createTransferAssetTransaction();
     transferTx.addInputs(firstAsset);
     transferTx.addOutputs({
         assetType: firstAsset.assetType,
@@ -77,12 +74,12 @@ test("AssetTransferTransaction fromJSONToParcel", async () => {
         amount: 100
     });
     await sdk.key.signTransactionInput(transferTx, 0);
-    const { parcelHash } = await sendTransaction({
+    const { hash } = await sendTransaction({
         transaction: transferTx
     });
-    const parcel = await sdk.rpc.chain.getParcel(parcelHash);
-    if (parcel == null) {
-        throw Error("Cannot get a parcel");
+    const tx = await sdk.rpc.chain.getParcel(hash);
+    if (tx == null) {
+        throw Error("Cannot get a tx");
     }
     // FIXME: Remove anythings when *Data fields are flattened
     const expectedInput = expect.objectContaining({
@@ -96,13 +93,11 @@ test("AssetTransferTransaction fromJSONToParcel", async () => {
         unlockScript: expect.anything()
     });
 
-    if (parcel.unsigned.action() !== "assetTransaction") {
+    if (tx.unsigned.action() !== "assetTransaction") {
         throw Error("Invalid action");
     }
 
-    expect(
-        ((parcel.unsigned as any) as AssetTransaction).transaction()
-    ).toMatchObject({
+    expect((tx.unsigned as any)._transaction).toMatchObject({
         type: expect.stringMatching("assetTransfer"),
         burns: [],
         inputs: expect.arrayContaining([expectedInput]),

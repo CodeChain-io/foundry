@@ -5,7 +5,7 @@ import {
 } from "codechain-primitives";
 
 import { AssetMintOutput } from "./transaction/AssetMintOutput";
-import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
+import { MintAsset } from "./transaction/MintAsset";
 import { NetworkId } from "./types";
 import { U64 } from "./U64";
 
@@ -85,7 +85,7 @@ export class AssetScheme {
 
     public createMintTransaction(params: {
         recipient: AssetTransferAddress | string;
-    }): AssetMintTransaction {
+    }): MintAsset {
         const { recipient } = params;
         const {
             networkId,
@@ -101,7 +101,7 @@ export class AssetScheme {
         if (shardId === undefined) {
             throw Error(`shardId is undefined`);
         }
-        return new AssetMintTransaction({
+        return new MintAsset({
             networkId,
             shardId,
             metadata,
@@ -110,7 +110,8 @@ export class AssetScheme {
                 recipient: AssetTransferAddress.ensure(recipient)
             }),
             approver,
-            administrator
+            administrator,
+            approvals: []
         });
     }
 }

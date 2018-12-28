@@ -5,7 +5,7 @@ import { H256 } from "./H256";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
-import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
+import { TransferAsset } from "./transaction/TransferAsset";
 import { NetworkId } from "./types";
 import { U64 } from "./U64";
 
@@ -31,7 +31,7 @@ export interface AssetData {
     transactionOutputIndex: number;
 }
 /**
- * Object created as an AssetMintTransaction or AssetTransferTransaction.
+ * Object created as an AssetMintTransaction or TransferAsset.
  */
 export class Asset {
     public static fromJSON(data: AssetJSON) {
@@ -127,11 +127,17 @@ export class Asset {
         }>;
         timelock?: null | Timelock;
         networkId: NetworkId;
-    }): AssetTransferTransaction {
+        approvals?: string[];
+    }): TransferAsset {
         const { outPoint, assetType } = this;
-        const { recipients = [], timelock = null, networkId } = params;
+        const {
+            recipients = [],
+            timelock = null,
+            networkId,
+            approvals = []
+        } = params;
 
-        return new AssetTransferTransaction({
+        return new TransferAsset({
             burns: [],
             inputs: [
                 new AssetTransferInput({
@@ -152,7 +158,8 @@ export class Asset {
                     })
             ),
             orders: [],
-            networkId
+            networkId,
+            approvals
         });
     }
 }

@@ -42,14 +42,14 @@ export class Rpc {
 
     /**
      * @param params.server HTTP RPC server address.
-     * @param params.options.parcelSigner The default account to sign the parcel
-     * @param params.options.parcelFee The default amount for the parcel fee
+     * @param params.options.transactionSigner The default account to sign the tx
+     * @param params.options.transactionFee The default amount for the tx fee
      */
     constructor(params: {
         server: string;
         options?: {
-            parcelSigner?: string;
-            parcelFee?: number;
+            transactionSigner?: string;
+            transactionFee?: number;
         };
     }) {
         const { server, options = {} } = params;

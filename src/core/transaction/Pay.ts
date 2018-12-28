@@ -1,8 +1,8 @@
 import { PlatformAddress, U64 } from "../classes";
-import { Parcel } from "../Parcel";
+import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
-export class Pay extends Parcel {
+export class Pay extends Transaction {
     private readonly receiver: PlatformAddress;
     private readonly amount: U64;
 
@@ -14,6 +14,10 @@ export class Pay extends Parcel {
         super(networkId);
         this.receiver = receiver;
         this.amount = amount;
+    }
+
+    public action(): string {
+        return "pay";
     }
 
     protected actionToEncodeObject(): any[] {
@@ -29,9 +33,5 @@ export class Pay extends Parcel {
             receiver: this.receiver.value,
             amount: this.amount.toEncodeObject()
         };
-    }
-
-    protected action(): string {
-        return "pay";
     }
 }

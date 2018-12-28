@@ -1,5 +1,5 @@
 /**
- * An Invoice is used to know whether a transaction or a parcel succeeded or
+ * An Invoice is used to know whether a transaction or a tx succeeded or
  * failed.
  */
 export class Invoice {
@@ -19,7 +19,7 @@ export class Invoice {
     public readonly error?: { type: string; content?: any };
 
     /**
-     * @param success Whether a transaction or a parcel succeeded or failed.
+     * @param success Whether a transaction or a tx succeeded or failed.
      * @param error.type The type of the error.
      * @param error.content An explanation of the error.
      */

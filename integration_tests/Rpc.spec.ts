@@ -1,22 +1,22 @@
 import { SDK } from "../";
+import { Asset } from "../lib/core/Asset";
+import { AssetScheme } from "../lib/core/AssetScheme";
 import {
-    Asset,
-    AssetMintTransaction,
-    AssetScheme,
-    AssetTransferTransaction,
     H256,
     Invoice,
-    Parcel,
+    MintAsset,
+    Transaction,
     PlatformAddress,
-    SignedParcel
+    SignedTransaction,
+    TransferAsset
 } from "../lib/core/classes";
+import { U256 } from "../lib/core/U256";
+import { U64 } from "../lib/core/U64";
 import {
     generatePrivateKey,
     getAccountIdFromPrivate,
     signEcdsa
 } from "../lib/utils";
-import { U256 } from "../src/core/U256";
-import { U64 } from "../src/core/U64";
 
 import {
     ACCOUNT_ADDRESS,
@@ -192,8 +192,8 @@ describe("rpc", () => {
                     "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000b";
 
                 beforeAll(async () => {
-                    const parcel = sdk.core
-                        .createSetRegularKeyParcel({
+                    const transaction = sdk.core
+                        .createSetRegularKeyTransaction({
                             key: regularKey
                         })
                         .sign({
@@ -201,7 +201,7 @@ describe("rpc", () => {
                             seq: await sdk.rpc.chain.getSeq(signerAddress),
                             fee: 10
                         });
-                    await sdk.rpc.chain.sendSignedParcel(parcel);
+                    await sdk.rpc.chain.sendSignedTransaction(transaction);
                 });
 
                 test("getRegularKey", async () => {
@@ -226,12 +226,12 @@ describe("rpc", () => {
             });
         });
 
-        describe("sendSignedParcel", () => {
+        describe("sendSignedTransaction", () => {
             const secret = signerSecret;
             let seq: number;
-            let parcel: Parcel;
+            let tx: Transaction;
             beforeEach(async () => {
-                parcel = sdk.core.createPayParcel({
+                tx = sdk.core.createPayTransaction({
                     recipient: signerAddress,
                     amount: 10
                 });
@@ -240,16 +240,16 @@ describe("rpc", () => {
 
             test("Ok", async done => {
                 sdk.rpc.chain
-                    .sendSignedParcel(parcel.sign({ secret, fee: 10, seq }))
+                    .sendSignedTransaction(tx.sign({ secret, fee: 10, seq }))
                     .then(() => done())
                     .catch(e => done.fail(e));
             });
 
             test("VerificationFailed", done => {
-                const signedParcel = parcel.sign({ secret, fee: 10, seq });
-                signedParcel.r = new U256(0);
+                const signed = tx.sign({ secret, fee: 10, seq });
+                signed.r = new U256(0);
                 sdk.rpc.chain
-                    .sendSignedParcel(signedParcel)
+                    .sendSignedTransaction(signed)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e).toEqual(ERROR.VERIFICATION_FAILED);
@@ -258,12 +258,12 @@ describe("rpc", () => {
             });
 
             test("AlreadyImported", done => {
-                const signedParcel = parcel.sign({ secret, fee: 10, seq });
+                const signed = tx.sign({ secret, fee: 10, seq });
                 sdk.rpc.chain
-                    .sendSignedParcel(signedParcel)
+                    .sendSignedTransaction(signed)
                     .then(() => {
                         sdk.rpc.chain
-                            .sendSignedParcel(signedParcel)
+                            .sendSignedTransaction(signed)
                             .then(() => done.fail())
                             .catch(e => {
                                 expect(e).toEqual(ERROR.ALREADY_IMPORTED);
@@ -274,13 +274,13 @@ describe("rpc", () => {
             });
 
             test("NotEnoughBalance", async done => {
-                const signedParcel = parcel.sign({
+                const signed = tx.sign({
                     secret,
                     fee: new U64("0xffffffffffffffff"),
                     seq
                 });
                 sdk.rpc.chain
-                    .sendSignedParcel(signedParcel)
+                    .sendSignedTransaction(signed)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e).toEqual(ERROR.NOT_ENOUGH_BALANCE);
@@ -289,9 +289,9 @@ describe("rpc", () => {
             });
 
             test("TooLowFee", done => {
-                const signedParcel = parcel.sign({ secret, fee: 9, seq });
+                const signed = tx.sign({ secret, fee: 9, seq });
                 sdk.rpc.chain
-                    .sendSignedParcel(signedParcel)
+                    .sendSignedTransaction(signed)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e).toEqual(ERROR.TOO_LOW_FEE);
@@ -304,13 +304,13 @@ describe("rpc", () => {
             });
 
             test("InvalidSeq", done => {
-                const signedParcel = parcel.sign({
+                const signed = tx.sign({
                     secret,
                     fee: 12321,
                     seq: seq - 1
                 });
                 sdk.rpc.chain
-                    .sendSignedParcel(signedParcel)
+                    .sendSignedTransaction(signed)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e).toEqual(ERROR.INVALID_SEQ);
@@ -319,10 +319,10 @@ describe("rpc", () => {
             });
 
             test("InvalidNetworkId", done => {
-                (parcel as any)._networkId = "zz";
-                const signedParcel = parcel.sign({ secret, fee: 10, seq });
+                (tx as any)._networkId = "zz";
+                const signed = tx.sign({ secret, fee: 10, seq });
                 sdk.rpc.chain
-                    .sendSignedParcel(signedParcel)
+                    .sendSignedTransaction(signed)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e).toEqual(ERROR.INVALID_NETWORK_ID);
@@ -331,47 +331,49 @@ describe("rpc", () => {
             });
         });
 
-        describe("with parcel hash", () => {
-            let parcelHash: H256;
+        describe("with tx hash", () => {
+            let txHash: H256;
 
             beforeAll(async () => {
-                const parcel = sdk.core.createPayParcel({
+                const tx = sdk.core.createPayTransaction({
                     recipient: signerAddress,
                     amount: 10
                 });
-                const signedParcel = parcel.sign({
+                const signed = tx.sign({
                     secret: signerSecret,
                     fee: 10,
                     seq: await sdk.rpc.chain.getSeq(signerAddress)
                 });
-                parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
+                txHash = await sdk.rpc.chain.sendSignedTransaction(signed);
             });
 
-            test("getParcel", async () => {
-                expect(await sdk.rpc.chain.getParcel(parcelHash)).toEqual(
-                    expect.any(SignedParcel)
+            test("getTransaction", async () => {
+                expect(await sdk.rpc.chain.getParcel(txHash)).toEqual(
+                    expect.any(SignedTransaction)
                 );
             });
 
-            test("getParcelInvoice", async () => {
-                expect(
-                    await sdk.rpc.chain.getParcelInvoice(parcelHash)
-                ).toEqual(expect.any(Invoice));
+            test("getTransactionInvoice", async () => {
+                expect(await sdk.rpc.chain.getParcelInvoice(txHash)).toEqual(
+                    expect.any(Invoice)
+                );
                 expect(await sdk.rpc.chain.getParcelInvoice(invalidHash)).toBe(
                     null
                 );
             });
         });
 
-        describe.skip("with pending parcels", () => {
-            test("getPendingParcels", async () => {
-                const pendingParcels = await sdk.rpc.chain.getPendingParcels();
-                expect(pendingParcels[0]).toEqual(expect.any(SignedParcel));
+        describe.skip("with pending transactions", () => {
+            test("getPendingTransactions", async () => {
+                const pendingTransactions = await sdk.rpc.chain.getPendingTransactions();
+                expect(pendingTransactions[0]).toEqual(
+                    expect.any(SignedTransaction)
+                );
             });
         });
 
         describe("with asset mint transaction", () => {
-            let mintTransaction: AssetMintTransaction;
+            let mintTransaction: MintAsset;
             const shardId = 0;
 
             beforeAll(async () => {
@@ -385,11 +387,8 @@ describe("rpc", () => {
                     .createMintTransaction({
                         recipient: await sdk.key.createAssetTransferAddress()
                     });
-                const parcel = sdk.core.createAssetTransactionParcel({
-                    transaction: mintTransaction
-                });
-                await sdk.rpc.chain.sendSignedParcel(
-                    parcel.sign({
+                await sdk.rpc.chain.sendSignedTransaction(
+                    mintTransaction.sign({
                         secret: signerSecret,
                         seq: await sdk.rpc.chain.getSeq(signerAddress),
                         fee: 10
@@ -399,8 +398,10 @@ describe("rpc", () => {
 
             test("getTransaction", async () => {
                 expect(
-                    await sdk.rpc.chain.getTransaction(mintTransaction.id())
-                ).toEqual(mintTransaction);
+                    ((await sdk.rpc.chain.getTransaction(
+                        mintTransaction.id()
+                    )) as any).actionToJSON()
+                ).toEqual((mintTransaction as any).actionToJSON());
             });
 
             test("getTransactionInvoices", async () => {
@@ -462,8 +463,8 @@ describe("rpc", () => {
         });
 
         describe("with mint and transfer transaction", () => {
-            let mintTransaction: AssetMintTransaction;
-            let transferTransaction: AssetTransferTransaction;
+            let mintTransaction: MintAsset;
+            let transferTransaction: TransferAsset;
             let blockNumber: number;
             const shardId = 0;
             const wrongShardId = 1;
@@ -481,7 +482,7 @@ describe("rpc", () => {
                     });
                 const mintedAsset = mintTransaction.getMintedAsset();
                 transferTransaction = sdk.core
-                    .createAssetTransferTransaction()
+                    .createTransferAssetTransaction()
                     .addInputs(mintedAsset)
                     .addOutputs({
                         recipient: await sdk.key.createAssetTransferAddress(),
@@ -489,22 +490,16 @@ describe("rpc", () => {
                         assetType: mintedAsset.assetType
                     });
                 await sdk.key.signTransactionInput(transferTransaction, 0);
-                const mintParcel = sdk.core.createAssetTransactionParcel({
-                    transaction: mintTransaction
-                });
                 const seq = await sdk.rpc.chain.getSeq(signerAddress);
-                await sdk.rpc.chain.sendSignedParcel(
-                    mintParcel.sign({
+                await sdk.rpc.chain.sendSignedTransaction(
+                    mintTransaction.sign({
                         secret: signerSecret,
                         seq,
                         fee: 10
                     })
                 );
-                const transferParcel = sdk.core.createAssetTransactionParcel({
-                    transaction: transferTransaction
-                });
-                await sdk.rpc.chain.sendSignedParcel(
-                    transferParcel.sign({
+                await sdk.rpc.chain.sendSignedTransaction(
+                    transferTransaction.sign({
                         secret: signerSecret,
                         seq: seq + 1,
                         fee: 10

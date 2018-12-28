@@ -1,8 +1,8 @@
 import { PlatformAddress } from "../classes";
-import { Parcel } from "../Parcel";
+import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
-export class SetShardOwners extends Parcel {
+export class SetShardOwners extends Transaction {
     private readonly shardId: number;
     private readonly owners: PlatformAddress[];
 
@@ -13,6 +13,10 @@ export class SetShardOwners extends Parcel {
         super(networkId);
         this.shardId = params.shardId;
         this.owners = params.owners;
+    }
+
+    public action(): string {
+        return "setShardOwners";
     }
 
     protected actionToEncodeObject(): any[] {
@@ -30,9 +34,5 @@ export class SetShardOwners extends Parcel {
             shardId,
             owners: owners.map(owner => owner.value)
         };
-    }
-
-    protected action(): string {
-        return "setShardOwners";
     }
 }

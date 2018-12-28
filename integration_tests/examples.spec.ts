@@ -21,12 +21,12 @@ describe("examples", () => {
         runExample("get-balance", done);
     });
 
-    test("send-parcel", done => {
-        runExample("send-parcel", done);
+    test("send-tx", done => {
+        runExample("send-tx", done);
     });
 
-    test("send-signed-parcel", done => {
-        runExample("send-signed-parcel", done);
+    test("send-signed-tx", done => {
+        runExample("send-signed-tx", done);
     });
 
     test("create-asset-transfer-address", done => {

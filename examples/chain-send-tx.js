@@ -5,28 +5,23 @@ const sdk = new SDK({
     networkId: process.env.CODECHAIN_NETWORK_ID || "tc"
 });
 
-const ACCOUNT_SECRET =
-    process.env.ACCOUNT_SECRET ||
-    "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
 const ACCOUNT_ADDRESS =
     process.env.ACCOUNT_ADDRESS ||
     "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd";
+const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
-const parcel = sdk.core.createPayParcel({
+const tx = sdk.core.createPayTransaction({
     recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
     amount: 10000
 });
 
 (async () => {
-    const seq = await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS);
-    const parcelHash = await sdk.rpc.chain.sendSignedParcel(
-        parcel.sign({
-            secret: ACCOUNT_SECRET,
-            fee: 10,
-            seq
-        })
-    );
-    const invoice = await sdk.rpc.chain.getParcelInvoice(parcelHash, {
+    const hash = await sdk.rpc.chain.sendTransaction(tx, {
+        account: ACCOUNT_ADDRESS,
+        passphrase: ACCOUNT_PASSPHRASE
+        // fee and seq are optional
+    });
+    const invoice = await sdk.rpc.chain.getParcelInvoice(hash, {
         timeout: 300 * 1000
     });
     console.log(invoice); // { success: true }

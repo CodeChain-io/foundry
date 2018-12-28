@@ -2,10 +2,10 @@ import * as _ from "lodash";
 
 import { signEcdsa } from "../../utils";
 import { H256 } from "../classes";
-import { Parcel } from "../Parcel";
+import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
-export class Remove extends Parcel {
+export class Remove extends Transaction {
     private readonly _hash: H256;
     private readonly signature: string;
 
@@ -42,6 +42,10 @@ export class Remove extends Parcel {
         }
     }
 
+    public action(): string {
+        return "remove";
+    }
+
     protected actionToEncodeObject(): any[] {
         const { _hash, signature } = this;
         return [9, _hash.toEncodeObject(), `0x${signature}`];
@@ -53,9 +57,5 @@ export class Remove extends Parcel {
             hash: _hash.toEncodeObject(),
             signature: `0x${signature}`
         };
-    }
-
-    protected action(): string {
-        return "remove";
     }
 }

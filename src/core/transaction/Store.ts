@@ -2,13 +2,13 @@ import * as _ from "lodash";
 
 import { blake256, getPublicFromPrivate, signEcdsa } from "../../utils";
 import { H256, PlatformAddress } from "../classes";
-import { Parcel } from "../Parcel";
 import { Text } from "../Text";
+import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
 const RLP = require("rlp");
 
-export class Store extends Parcel {
+export class Store extends Transaction {
     private content: string;
     private certifier: PlatformAddress;
     private signature: string;
@@ -63,6 +63,10 @@ export class Store extends Parcel {
         });
     }
 
+    public action(): string {
+        return "store";
+    }
+
     protected actionToEncodeObject(): any[] {
         const { content, certifier, signature } = this;
         return [
@@ -80,9 +84,5 @@ export class Store extends Parcel {
             certifier: certifier.value,
             signature: `0x${signature}`
         };
-    }
-
-    protected action(): string {
-        return "store";
     }
 }

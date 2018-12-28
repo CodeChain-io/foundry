@@ -10,16 +10,16 @@ const ACCOUNT_ADDRESS =
     "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd";
 const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
-const parcel = sdk.core.createPayParcel({
+const tx = sdk.core.createPayTransaction({
     recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
     amount: 10000
 });
 
 (async () => {
-    await sdk.rpc.account.unlock(ACCOUNT_ADDRESS, ACCOUNT_PASSPHRASE);
-    const result = await sdk.rpc.account.sendParcel({
-        parcel,
-        account: ACCOUNT_ADDRESS
+    const result = await sdk.rpc.account.sendTransaction({
+        tx,
+        account: ACCOUNT_ADDRESS,
+        passphrase: ACCOUNT_PASSPHRASE
     });
     const invoice = await sdk.rpc.chain.getParcelInvoice(result.hash, {
         timeout: 300 * 1000

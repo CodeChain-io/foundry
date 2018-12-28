@@ -1,10 +1,10 @@
-import { H256, PlatformAddress } from "codechain-primitives/lib";
-import { blake256 } from "../../utils";
+import { H256, PlatformAddress } from "../classes";
+import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
 const RLP = require("rlp");
 
-export interface AssetSchemeChangeTransactionJSON {
+export interface ChangeAssetSchemeJSON {
     type: "assetSchemeChange";
     data: {
         networkId: NetworkId;
@@ -15,27 +15,70 @@ export interface AssetSchemeChangeTransactionJSON {
     };
 }
 
-/**
- * Change asset scheme
- */
-export class AssetSchemeChangeTransaction {
-    public static fromJSON(obj: AssetSchemeChangeTransactionJSON) {
-        const {
-            data: { networkId, assetType, metadata, approver, administrator }
-        } = obj;
-        return new this({
+export class ChangeAssetScheme extends Transaction {
+    public static fromJSON(
+        obj: ChangeAssetSchemeJSON,
+        approvals: string[] = []
+    ) {
+        const { data } = obj;
+        const { networkId, metadata } = data;
+        const assetType = new H256(data.assetType);
+        const approver =
+            data.approver == null
+                ? null
+                : PlatformAddress.ensure(data.approver);
+        const administrator =
+            data.administrator == null
+                ? null
+                : PlatformAddress.ensure(data.administrator);
+        return new ChangeAssetScheme({
             networkId,
-            assetType: new H256(assetType),
+            assetType,
             metadata,
-            approver:
-                approver == null ? null : PlatformAddress.ensure(approver),
-            administrator:
-                administrator == null
-                    ? null
-                    : PlatformAddress.ensure(administrator)
+            approver,
+            administrator,
+            approvals
         });
     }
 
+    private readonly _transaction: AssetSchemeChangeTransaction;
+    private readonly approvals: string[];
+    public constructor(input: {
+        networkId: NetworkId;
+        assetType: H256;
+        metadata: string;
+        approver: PlatformAddress | null;
+        administrator: PlatformAddress | null;
+        approvals: string[];
+    }) {
+        super(input.networkId);
+
+        this._transaction = new AssetSchemeChangeTransaction(input);
+        this.approvals = input.approvals;
+    }
+
+    public action(): string {
+        return "assetTransaction";
+    }
+
+    protected actionToEncodeObject(): any[] {
+        const transaction = this._transaction.toEncodeObject();
+        const approvals = this.approvals;
+        return [1, transaction, approvals];
+    }
+
+    protected actionToJSON(): any {
+        return {
+            transaction: this._transaction.toJSON(),
+            approvals: this.approvals
+        };
+    }
+}
+
+/**
+ * Change asset scheme
+ */
+class AssetSchemeChangeTransaction {
     public readonly networkId: NetworkId;
     public readonly assetType: H256;
     public readonly metadata: string;
@@ -79,7 +122,7 @@ export class AssetSchemeChangeTransaction {
      * Convert to an AssetSchemeChangeTransaction JSON object.
      * @returns An AssetSchemeChangeTransaction JSON object.
      */
-    public toJSON(): AssetSchemeChangeTransactionJSON {
+    public toJSON(): ChangeAssetSchemeJSON {
         return {
             type: this.type,
             data: {
@@ -122,13 +165,5 @@ export class AssetSchemeChangeTransaction {
      */
     public rlpBytes(): Buffer {
         return RLP.encode(this.toEncodeObject());
-    }
-
-    /**
-     * Get the hash of an AssetMintTransaction.
-     * @returns A transaction hash.
-     */
-    public id(): H256 {
-        return new H256(blake256(this.rlpBytes()));
     }
 }

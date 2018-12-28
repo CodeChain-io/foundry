@@ -19,24 +19,24 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     const balanceBefore = await sdk.rpc.chain.getBalance(ACCOUNT_ADDRESS);
 
     // Wrap 100 CCC into the Wrapped CCC asset type.
-    const wrapCCCParcel = sdk.core.createWrapCCCParcel({
+    const wrapCCC = sdk.core.createWrapCCCTransaction({
         shardId: 0,
         recipient: address,
         amount
     });
-    const parcelHash = await sdk.rpc.chain.sendParcel(wrapCCCParcel, {
+    const hash = await sdk.rpc.chain.sendTransaction(wrapCCC, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const invoice = await sdk.rpc.chain.getParcelInvoice(parcelHash, {
+    const invoice = await sdk.rpc.chain.getParcelInvoice(hash, {
         // Wait up to 120 seconds to get the invoice.
         timeout: 120 * 1000
     });
     console.log(invoice); // [{ success: true }]
 
-    // Difference should be sdk.rpc.chain.parcelFee + amount
+    // Difference should be sdk.rpc.chain.transactionFee + amount
     const balanceAfter = await sdk.rpc.chain.getBalance(ACCOUNT_ADDRESS);
     console.log(balanceBefore.toString());
     console.log(balanceAfter.toString());
-    console.log(sdk.rpc.chain.parcelFee + amount);
+    console.log(sdk.rpc.chain.transactionFee + amount);
 })().catch(console.error);

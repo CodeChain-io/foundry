@@ -24,7 +24,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         amount: 10000,
         registrar: null
     });
-    const goldMintTx = sdk.core.createAssetMintTransaction({
+    const goldMintTx = sdk.core.createMintAssetTransaction({
         scheme: goldAssetScheme,
         recipient: aliceAddress
     });
@@ -39,7 +39,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         amount: 100000,
         registrar: null
     });
-    const silverMintTx = sdk.core.createAssetMintTransaction({
+    const silverMintTx = sdk.core.createMintAssetTransaction({
         scheme: silverAssetScheme,
         recipient: bobAddress
     });
@@ -65,7 +65,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
     /// Bob receive the order and signed input
     const transferTx = sdk.core
-        .createAssetTransferTransaction()
+        .createTransferAssetTransaction()
         .addInputs(goldInput, silverInput)
         .addOutputs(
             {
@@ -97,24 +97,15 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         });
     await sdk.key.signTransactionInput(transferTx, 1);
 
-    const goldMintParcel = sdk.core.createAssetTransactionParcel({
-        transaction: goldMintTx
-    });
-    await sdk.rpc.chain.sendParcel(goldMintParcel, {
+    await sdk.rpc.chain.sendTransaction(goldMintTx, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const silverMintParcel = sdk.core.createAssetTransactionParcel({
-        transaction: silverMintTx
-    });
-    await sdk.rpc.chain.sendParcel(silverMintParcel, {
+    await sdk.rpc.chain.sendTransaction(silverMintTx, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const transferParcel = sdk.core.createAssetTransactionParcel({
-        transaction: transferTx
-    });
-    await sdk.rpc.chain.sendParcel(transferParcel, {
+    await sdk.rpc.chain.sendTransaction(transferTx, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });

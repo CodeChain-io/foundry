@@ -40,7 +40,7 @@ export class AssetTransferOutput {
      */
     public static fromJSON(data: AssetTransferOutputJSON) {
         const { lockScriptHash, parameters, assetType, amount } = data;
-        return new this({
+        return new AssetTransferOutput({
             lockScriptHash: H160.ensure(lockScriptHash),
             parameters: parameters.map((p: number[] | Buffer) =>
                 Buffer.from(p)

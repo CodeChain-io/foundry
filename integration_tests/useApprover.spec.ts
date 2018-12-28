@@ -1,8 +1,5 @@
 import { SDK } from "../src";
-import {
-    AssetMintTransaction,
-    AssetTransferAddress
-} from "../src/core/classes";
+import { AssetTransferAddress, MintAsset } from "../src/core/classes";
 
 import {
     ACCOUNT_ADDRESS,
@@ -44,10 +41,10 @@ test("checkApproverValidation", async () => {
 
 async function setRegularKey() {
     const seq = await sdk.rpc.chain.getSeq(masterAddress);
-    const p = sdk.core.createSetRegularKeyParcel({
+    const p = sdk.core.createSetRegularKeyTransaction({
         key: regularPublic
     });
-    const hash = await sdk.rpc.chain.sendSignedParcel(
+    const hash = await sdk.rpc.chain.sendSignedTransaction(
         p.sign({
             secret: masterSecret,
             seq,
@@ -62,11 +59,11 @@ async function setRegularKey() {
 
 async function sendCCCToOther() {
     const seq = await sdk.rpc.chain.getSeq(masterAddress);
-    const p = sdk.core.createPayParcel({
+    const p = sdk.core.createPayTransaction({
         recipient: otherAddress,
         amount: 100
     });
-    const hash = await sdk.rpc.chain.sendSignedParcel(
+    const hash = await sdk.rpc.chain.sendSignedTransaction(
         p.sign({
             secret: regularSecret,
             seq,
@@ -81,7 +78,7 @@ async function sendCCCToOther() {
 
 async function mintAssetUsingMaster(
     aliceAddress: AssetTransferAddress
-): Promise<AssetMintTransaction> {
+): Promise<MintAsset> {
     const assetScheme = sdk.core.createAssetScheme({
         shardId: 0,
         metadata: JSON.stringify({
@@ -93,17 +90,14 @@ async function mintAssetUsingMaster(
         approver: masterAddress
     });
 
-    const mintTx = sdk.core.createAssetMintTransaction({
+    const mintTx = sdk.core.createMintAssetTransaction({
         scheme: assetScheme,
         recipient: aliceAddress
     });
 
-    const p = sdk.core.createAssetTransactionParcel({
-        transaction: mintTx
-    });
     const seq = await sdk.rpc.chain.getSeq(masterAddress);
-    await sdk.rpc.chain.sendSignedParcel(
-        p.sign({
+    await sdk.rpc.chain.sendSignedTransaction(
+        mintTx.sign({
             secret: masterSecret,
             seq,
             fee: 10
@@ -122,13 +116,13 @@ async function mintAssetUsingMaster(
 }
 
 async function transferAssetUsingRegular(
-    mintTx: AssetMintTransaction,
+    mintTx: MintAsset,
     aliceAddress: AssetTransferAddress,
     bobAddress: string
 ) {
     const asset = mintTx.getMintedAsset();
     const transferTx = sdk.core
-        .createAssetTransferTransaction()
+        .createTransferAssetTransaction()
         .addInputs(asset)
         .addOutputs(
             {
@@ -144,12 +138,9 @@ async function transferAssetUsingRegular(
         );
     await sdk.key.signTransactionInput(transferTx, 0);
 
-    const p = sdk.core.createAssetTransactionParcel({
-        transaction: transferTx
-    });
     const seq = await sdk.rpc.chain.getSeq(masterAddress);
-    await sdk.rpc.chain.sendSignedParcel(
-        p.sign({
+    await sdk.rpc.chain.sendSignedTransaction(
+        transferTx.sign({
             secret: regularSecret,
             seq,
             fee: 10
@@ -166,14 +157,14 @@ async function transferAssetUsingRegular(
     expect(transferTxInvoices[1].success).toBe(true);
 }
 async function transferAssetUsingOther(
-    mintTx: AssetMintTransaction,
+    mintTx: MintAsset,
     aliceAddress: AssetTransferAddress,
     bobAddress: string
 ) {
     const asset = mintTx.getMintedAsset();
 
     const transferTx = sdk.core
-        .createAssetTransferTransaction({
+        .createTransferAssetTransaction({
             burns: [],
             inputs: [],
             outputs: []
@@ -193,12 +184,9 @@ async function transferAssetUsingOther(
         );
     await sdk.key.signTransactionInput(transferTx, 0);
 
-    const p = sdk.core.createAssetTransactionParcel({
-        transaction: transferTx
-    });
     const seq = await sdk.rpc.chain.getSeq(otherAddress);
-    await sdk.rpc.chain.sendSignedParcel(
-        p.sign({
+    await sdk.rpc.chain.sendSignedTransaction(
+        transferTx.sign({
             secret: otherSecret,
             seq,
             fee: 10

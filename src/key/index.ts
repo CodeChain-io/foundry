@@ -5,17 +5,17 @@ import {
 } from "codechain-primitives";
 
 import {
-    AssetComposeTransaction,
-    AssetDecomposeTransaction,
     AssetTransferInput,
-    AssetTransferTransaction,
-    AssetUnwrapCCCTransaction,
     Order,
-    Parcel,
-    SignedParcel,
+    SignedTransaction,
     Transaction,
-    U64
+    U64,
+    UnwrapCCC
 } from "../core/classes";
+import { AssetTransaction } from "../core/Transaction";
+import { ComposeAsset } from "../core/transaction/ComposeAsset";
+import { DecomposeAsset } from "../core/transaction/DecomposeAsset";
+import { TransferAsset } from "../core/transaction/TransferAsset";
 import { NetworkId } from "../core/types";
 import { SignatureTag } from "../utils";
 
@@ -168,7 +168,7 @@ export class Key {
      * @returns An approval
      */
     public async approveTransaction(
-        transaction: Transaction,
+        transaction: AssetTransaction,
         params: {
             keyStore?: KeyStore;
             account: PlatformAddress | string;
@@ -198,17 +198,17 @@ export class Key {
         });
     }
     /**
-     * Signs a Parcel with the given account.
-     * @param parcel A Parcel
+     * Signs a Transaction with the given account.
+     * @param tx A Transaction
      * @param params.keyStore A key store.
      * @param params.account An account.
      * @param params.passphrase The passphrase for the given account
-     * @returns A SignedParcel
-     * @throws When seq or fee in the Parcel is null
+     * @returns A SignedTransaction
+     * @throws When seq or fee in the Transaction is null
      * @throws When account or its passphrase is invalid
      */
-    public async signParcel(
-        parcel: Parcel,
+    public async signTransaction(
+        tx: Transaction,
         params: {
             keyStore?: KeyStore;
             account: PlatformAddress | string;
@@ -216,10 +216,10 @@ export class Key {
             fee: U64 | string | number;
             seq: number;
         }
-    ): Promise<SignedParcel> {
-        if (!(parcel instanceof Parcel)) {
+    ): Promise<SignedTransaction> {
+        if (!(tx instanceof Transaction)) {
             throw Error(
-                `Expected the first argument of signParcel to be a Parcel instance but found ${parcel}`
+                `Expected the first argument of signTransaction to be a Transaction instance but found ${tx}`
             );
         }
         const {
@@ -249,29 +249,26 @@ export class Key {
                 `Expected seq param to be a number value but found ${seq}`
             );
         }
-        parcel.setFee(fee);
-        parcel.setSeq(seq);
+        tx.setFee(fee);
+        tx.setSeq(seq);
         const accountId = PlatformAddress.ensure(account).getAccountId();
         const sig = await keyStore.platform.sign({
             key: accountId.value,
-            message: parcel.hash().value,
+            message: tx.hash().value,
             passphrase
         });
-        return new SignedParcel(parcel, sig);
+        return new SignedTransaction(tx, sig);
     }
 
     /**
      * Signs a transaction's input with a given key store.
-     * @param tx An AssetTransferTransaction.
+     * @param tx An TransferAsset.
      * @param index The index of an input to sign.
      * @param params.keyStore A key store.
      * @param params.passphrase The passphrase for the given input.
      */
     public async signTransactionInput(
-        tx:
-            | AssetTransferTransaction
-            | AssetComposeTransaction
-            | AssetDecomposeTransaction,
+        tx: TransferAsset | ComposeAsset | DecomposeAsset,
         index: number,
         params: {
             keyStore?: KeyStore;
@@ -279,13 +276,10 @@ export class Key {
             signatureTag?: SignatureTag;
         } = {}
     ): Promise<void> {
-        if ("inputs" in tx && index >= tx.inputs.length) {
+        const input = tx.input(index);
+        if (input == null) {
             throw Error(`Invalid index`);
         }
-        if ("input" in tx && index >= 1) {
-            throw Error(`Invalid index`);
-        }
-        const input = "inputs" in tx ? tx.inputs[index] : tx.input;
         const { lockScriptHash, parameters } = input.prevOut;
         if (lockScriptHash === undefined || parameters === undefined) {
             throw Error(`Invalid transaction input`);
@@ -306,9 +300,9 @@ export class Key {
         } = params;
         const p2pkh = this.createP2PKH({ keyStore });
         let message: H256;
-        if (tx instanceof AssetTransferTransaction) {
+        if (tx instanceof TransferAsset) {
             let flag = false;
-            for (const order of tx.orders) {
+            for (const order of tx.orders()) {
                 if (order.inputIndices.indexOf(index) !== -1) {
                     message = order.order.hash();
                     flag = true;
@@ -322,13 +316,13 @@ export class Key {
                     index
                 });
             }
-        } else if (tx instanceof AssetComposeTransaction) {
+        } else if (tx instanceof ComposeAsset) {
             // FIXME: check type
             message = tx.hashWithoutScript({
                 tag: signatureTag,
                 index
             });
-        } else if (tx instanceof AssetDecomposeTransaction) {
+        } else if (tx instanceof DecomposeAsset) {
             // FIXME: check signature tag
             message = tx.hashWithoutScript();
         } else {
@@ -382,13 +376,13 @@ export class Key {
 
     /**
      * Signs a transaction's burn with a given key store.
-     * @param tx An AssetTransferTransaction.
+     * @param tx An TransferAsset.
      * @param index The index of a burn to sign.
      * @param params.keyStore A key store.
      * @param params.passphrase The passphrase for the given burn.
      */
     public async signTransactionBurn(
-        tx: AssetTransferTransaction | AssetUnwrapCCCTransaction,
+        tx: TransferAsset | UnwrapCCC,
         index: number,
         params: {
             keyStore?: KeyStore;
@@ -396,13 +390,10 @@ export class Key {
             signatureTag?: SignatureTag;
         } = {}
     ): Promise<void> {
-        if ("burns" in tx && index >= tx.burns.length) {
+        const burn = tx.burn(index);
+        if (burn == null) {
             throw Error(`Invalid index`);
         }
-        if ("burn" in tx && index >= 1) {
-            throw Error(`Invalid index`);
-        }
-        const burn = "burns" in tx ? tx.burns[index] : tx.burn;
         const { lockScriptHash, parameters } = burn.prevOut;
         if (lockScriptHash === undefined || parameters === undefined) {
             throw Error(`Invalid transaction burn`);

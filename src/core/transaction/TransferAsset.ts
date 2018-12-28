@@ -1,4 +1,3 @@
-import { AssetTransferAddress } from "codechain-primitives";
 import * as _ from "lodash";
 
 import {
@@ -9,9 +8,15 @@ import {
     SignatureTag
 } from "../../utils";
 import { Asset } from "../Asset";
-import { H256 } from "../H256";
+import {
+    AssetTransferAddress,
+    H256,
+    Order,
+    OrderOnTransfer,
+    U64
+} from "../classes";
+import { AssetTransaction, Transaction } from "../Transaction";
 import { AssetTransferOutputValue, NetworkId } from "../types";
-import { U64 } from "../U64";
 import {
     AssetTransferInput,
     AssetTransferInputJSON
@@ -20,12 +25,11 @@ import {
     AssetTransferOutput,
     AssetTransferOutputJSON
 } from "./AssetTransferOutput";
-import { Order } from "./Order";
-import { OrderOnTransfer, OrderOnTransferJSON } from "./OrderOnTransfer";
+import { OrderOnTransferJSON } from "./OrderOnTransfer";
 
 const RLP = require("rlp");
 
-export interface AssetTransferTransactionJSON {
+export interface TransferAssetJSON {
     type: "assetTransfer";
     data: {
         burns: AssetTransferInputJSON[];
@@ -36,114 +40,68 @@ export interface AssetTransferTransactionJSON {
     };
 }
 
-export interface AssetTransferTransactionData {
-    burns: AssetTransferInput[];
-    inputs: AssetTransferInput[];
-    outputs: AssetTransferOutput[];
-    orders: OrderOnTransfer[];
-    networkId: NetworkId;
-}
-/**
- * Spends the existing asset and creates a new asset. Ownership can be transferred during this process.
- *
- * An AssetTransferTransaction consists of:
- *  - A list of AssetTransferInput to burn.
- *  - A list of AssetTransferInput to spend.
- *  - A list of AssetTransferOutput to create.
- *  - A network ID. This must be identical to the network ID of which the
- *  transaction is being sent to.
- *
- * All inputs must be valid for the transaction to be valid. When each asset
- * types' amount have been summed, the sum of inputs and the sum of outputs
- * must be identical.
- */
-export class AssetTransferTransaction {
-    /** Create an AssetTransferTransaction from an AssetTransferTransaction JSON object.
-     * @param obj An AssetTransferTransaction JSON object.
-     * @returns An AssetTransferTransaction.
-     */
-    public static fromJSON(obj: AssetTransferTransactionJSON) {
-        const {
-            data: { networkId, burns, inputs, outputs, orders }
-        } = obj;
-        return new this({
-            burns: burns.map(input => AssetTransferInput.fromJSON(input)),
-            inputs: inputs.map(input => AssetTransferInput.fromJSON(input)),
-            outputs: outputs.map(output =>
-                AssetTransferOutput.fromJSON(output)
-            ),
-            orders: orders.map(order => OrderOnTransfer.fromJSON(order)),
-            networkId
+export class TransferAsset extends Transaction implements AssetTransaction {
+    public static fromJSON(
+        json: TransferAssetJSON,
+        approvals: string[] = []
+    ): TransferAsset {
+        const { data } = json;
+        const networkId = data.networkId;
+        const burns = data.burns.map(AssetTransferInput.fromJSON);
+        const inputs = data.inputs.map(AssetTransferInput.fromJSON);
+        const outputs = data.outputs.map(AssetTransferOutput.fromJSON);
+        const orders = data.orders.map(OrderOnTransfer.fromJSON);
+        return new TransferAsset({
+            networkId,
+            burns,
+            inputs,
+            outputs,
+            orders,
+            approvals
         });
     }
-    public readonly burns: AssetTransferInput[];
-    public readonly inputs: AssetTransferInput[];
-    public readonly outputs: AssetTransferOutput[];
-    public readonly orders: OrderOnTransfer[];
-    public readonly networkId: NetworkId;
-    public readonly type = "assetTransfer";
 
-    /**
-     * @param params.burns An array of AssetTransferInput to burn.
-     * @param params.inputs An array of AssetTransferInput to spend.
-     * @param params.outputs An array of AssetTransferOutput to create.
-     * @param params.networkId A network ID of the transaction.
-     */
-    constructor(params: AssetTransferTransactionData) {
-        const { burns, inputs, outputs, orders, networkId } = params;
-        this.burns = burns;
-        this.inputs = inputs;
-        this.outputs = outputs;
-        this.orders = orders;
-        this.networkId = networkId;
+    private readonly _transaction: AssetTransferTransaction;
+    private readonly approvals: string[];
+    public constructor(input: {
+        burns: AssetTransferInput[];
+        inputs: AssetTransferInput[];
+        outputs: AssetTransferOutput[];
+        orders: OrderOnTransfer[];
+        networkId: NetworkId;
+        approvals: string[];
+    }) {
+        super(input.networkId);
+
+        this._transaction = new AssetTransferTransaction(input);
+        this.approvals = input.approvals;
     }
 
     /**
-     * Convert to an object for RLP encoding.
-     */
-    public toEncodeObject() {
-        return [
-            4,
-            this.networkId,
-            this.burns.map(input => input.toEncodeObject()),
-            this.inputs.map(input => input.toEncodeObject()),
-            this.outputs.map(output => output.toEncodeObject()),
-            this.orders.map(order => order.toEncodeObject())
-        ];
-    }
-
-    /**
-     * Convert to RLP bytes.
-     */
-    public rlpBytes(): Buffer {
-        return RLP.encode(this.toEncodeObject());
-    }
-
-    /**
-     * Get the hash of an AssetTransferTransaction.
+     * Get the hash of an AssetDecomposeTransaction.
      * @returns A transaction hash.
      */
     public id(): H256 {
-        return new H256(blake256(this.rlpBytes()));
+        return new H256(blake256(this._transaction.rlpBytes()));
     }
 
     /**
      * Add an AssetTransferInput to burn.
      * @param burns An array of either an AssetTransferInput or an Asset.
-     * @returns The AssetTransferTransaction, which is modified by adding them.
+     * @returns The TransferAsset, which is modified by adding them.
      */
     public addBurns(
         burns: AssetTransferInput | Asset | Array<AssetTransferInput | Asset>,
         ...rest: Array<AssetTransferInput | Asset>
-    ): AssetTransferTransaction {
+    ): TransferAsset {
         if (!Array.isArray(burns)) {
             burns = [burns, ...rest];
         }
-        burns.forEach((burn, index) => {
+        burns.forEach((burn: AssetTransferInput | Asset, index: number) => {
             if (burn instanceof AssetTransferInput) {
-                this.burns.push(burn);
+                this._transaction.burns.push(burn);
             } else if (burn instanceof Asset) {
-                this.burns.push(burn.createTransferInput());
+                this._transaction.burns.push(burn.createTransferInput());
             } else {
                 throw Error(
                     `Expected burn param to be either AssetTransferInput or Asset but found ${burn} at ${index}`
@@ -153,23 +111,30 @@ export class AssetTransferTransaction {
         return this;
     }
 
+    public burn(index: number): AssetTransferInput | null {
+        if (this._transaction.burns.length <= index) {
+            return null;
+        }
+        return this._transaction.burns[index];
+    }
+
     /**
      * Add an AssetTransferInput to spend.
      * @param inputs An array of either an AssetTransferInput or an Asset.
-     * @returns The AssetTransferTransaction, which is modified by adding them.
+     * @returns The TransferAsset, which is modified by adding them.
      */
     public addInputs(
         inputs: AssetTransferInput | Asset | Array<AssetTransferInput | Asset>,
         ...rest: Array<AssetTransferInput | Asset>
-    ): AssetTransferTransaction {
+    ): TransferAsset {
         if (!Array.isArray(inputs)) {
             inputs = [inputs, ...rest];
         }
-        inputs.forEach((input, index) => {
+        inputs.forEach((input: AssetTransferInput | Asset, index: number) => {
             if (input instanceof AssetTransferInput) {
-                this.inputs.push(input);
+                this._transaction.inputs.push(input);
             } else if (input instanceof Asset) {
-                this.inputs.push(input.createTransferInput());
+                this._transaction.inputs.push(input.createTransferInput());
             } else {
                 throw Error(
                     `Expected input param to be either AssetTransferInput or Asset but found ${input} at ${index}`
@@ -177,6 +142,13 @@ export class AssetTransferTransaction {
             }
         });
         return this;
+    }
+
+    public input(index: number): AssetTransferInput | null {
+        if (this._transaction.inputs.length <= index) {
+            return null;
+        }
+        return this._transaction.inputs[index];
     }
 
     /**
@@ -190,16 +162,16 @@ export class AssetTransferTransaction {
     public addOutputs(
         outputs: AssetTransferOutputValue | Array<AssetTransferOutputValue>,
         ...rest: Array<AssetTransferOutputValue>
-    ): AssetTransferTransaction {
+    ): TransferAsset {
         if (!Array.isArray(outputs)) {
             outputs = [outputs, ...rest];
         }
-        outputs.forEach(output => {
+        outputs.forEach((output: AssetTransferOutputValue) => {
             if (output instanceof AssetTransferOutput) {
-                this.outputs.push(output);
+                this._transaction.outputs.push(output);
             } else {
                 const { assetType, amount, recipient } = output;
-                this.outputs.push(
+                this._transaction.outputs.push(
                     new AssetTransferOutput({
                         recipient: AssetTransferAddress.ensure(recipient),
                         amount: U64.ensure(amount),
@@ -229,7 +201,7 @@ export class AssetTransferTransaction {
             throw Error(`inputIndices should not be empty`);
         }
 
-        for (const orderOnTx of this.orders) {
+        for (const orderOnTx of this._transaction.orders) {
             const setInputs = new Set(orderOnTx.inputIndices);
             const setOutputs = new Set(orderOnTx.outputIndices);
             const inputIntersection = [...new Set(inputIndices)].filter(x =>
@@ -245,7 +217,7 @@ export class AssetTransferTransaction {
             }
         }
 
-        this.orders.push(
+        this._transaction.orders.push(
             new OrderOnTransfer({
                 order,
                 spentAmount: U64.ensure(spentAmount),
@@ -256,16 +228,20 @@ export class AssetTransferTransaction {
         return this;
     }
 
+    public orders(): OrderOnTransfer[] {
+        return this._transaction.orders;
+    }
+
     /**
      * Get the output of the given index, of this transaction.
      * @param index An index indicating an output.
      * @returns An Asset.
      */
     public getTransferredAsset(index: number): Asset {
-        if (index >= this.outputs.length) {
+        if (index >= this._transaction.outputs.length) {
             throw Error("invalid output index");
         }
-        const output = this.outputs[index];
+        const output = this._transaction.outputs[index];
         const { assetType, lockScriptHash, parameters, amount } = output;
         return new Asset({
             assetType,
@@ -282,7 +258,7 @@ export class AssetTransferTransaction {
      * @returns An array of an Asset.
      */
     public getTransferredAssets(): Asset[] {
-        return _.range(this.outputs.length).map(i =>
+        return _.range(this._transaction.outputs.length).map(i =>
             this.getTransferredAsset(i)
         );
     }
@@ -297,7 +273,7 @@ export class AssetTransferTransaction {
         type: "input" | "burn";
         index: number;
     }): H256 {
-        const { networkId } = this;
+        const { networkId } = this._transaction;
         const {
             tag = { input: "all", output: "all" } as SignatureTag,
             type = null,
@@ -308,24 +284,26 @@ export class AssetTransferTransaction {
         let outputs: AssetTransferOutput[];
 
         if (
-            this.orders.length > 0 &&
+            this._transaction.orders.length > 0 &&
             (tag.input !== "all" || tag.output !== "all")
         ) {
             throw Error(`Partial signing is unavailable with orders`);
         }
         if (tag.input === "all") {
-            inputs = this.inputs.map(input => input.withoutScript());
-            burns = this.burns.map(input => input.withoutScript());
+            inputs = this._transaction.inputs.map(input =>
+                input.withoutScript()
+            );
+            burns = this._transaction.burns.map(input => input.withoutScript());
         } else if (tag.input === "single") {
             if (typeof index !== "number") {
                 throw Error(`Unexpected value of the index param: ${index}`);
             }
             if (type === "input") {
-                inputs = [this.inputs[index].withoutScript()];
+                inputs = [this._transaction.inputs[index].withoutScript()];
                 burns = [];
             } else if (type === "burn") {
                 inputs = [];
-                burns = [this.burns[index].withoutScript()];
+                burns = [this._transaction.burns[index].withoutScript()];
             } else {
                 throw Error(`Unexpected value of the type param: ${type}`);
             }
@@ -333,12 +311,12 @@ export class AssetTransferTransaction {
             throw Error(`Unexpected value of the tag input: ${tag.input}`);
         }
         if (tag.output === "all") {
-            outputs = this.outputs;
+            outputs = this._transaction.outputs;
         } else if (Array.isArray(tag.output)) {
             // NOTE: Remove duplicates by using Set
             outputs = Array.from(new Set(tag.output))
                 .sort((a, b) => a - b)
-                .map(i => this.outputs[i]);
+                .map(i => this._transaction.outputs[i]);
         } else {
             throw Error(`Unexpected value of the tag output: ${tag.output}`);
         }
@@ -348,7 +326,7 @@ export class AssetTransferTransaction {
                     burns,
                     inputs,
                     outputs,
-                    orders: this.orders,
+                    orders: this._transaction.orders,
                     networkId
                 }).rlpBytes(),
                 Buffer.from(blake128(encodeSignatureTag(tag)), "hex")
@@ -380,7 +358,7 @@ export class AssetTransferTransaction {
             (index >> 8) & 0xff,
             index & 0xff
         ]);
-        const shardId = this.outputs[index].shardId();
+        const shardId = this._transaction.outputs[index].shardId();
 
         const blake = blake256WithKey(this.id().value, iv);
         const shardPrefix = convertU16toHex(shardId);
@@ -390,11 +368,80 @@ export class AssetTransferTransaction {
         );
     }
 
+    public action(): string {
+        return "assetTransaction";
+    }
+
+    protected actionToEncodeObject(): any[] {
+        const transaction = this._transaction.toEncodeObject();
+        const approvals = this.approvals;
+        return [1, transaction, approvals];
+    }
+
+    protected actionToJSON(): any {
+        return {
+            transaction: this._transaction.toJSON(),
+            approvals: this.approvals
+        };
+    }
+}
+
+function convertU16toHex(id: number) {
+    const hi: string = ("0" + ((id >> 8) & 0xff).toString(16)).slice(-2);
+    const lo: string = ("0" + (id & 0xff).toString(16)).slice(-2);
+    return hi + lo;
+}
+
+interface AssetTransferTransactionData {
+    burns: AssetTransferInput[];
+    inputs: AssetTransferInput[];
+    outputs: AssetTransferOutput[];
+    orders: OrderOnTransfer[];
+    networkId: NetworkId;
+}
+
+/**
+ * Spends the existing asset and creates a new asset. Ownership can be transferred during this process.
+ *
+ * An AssetTransferTransaction consists of:
+ *  - A list of AssetTransferInput to burn.
+ *  - A list of AssetTransferInput to spend.
+ *  - A list of AssetTransferOutput to create.
+ *  - A network ID. This must be identical to the network ID of which the
+ *  transaction is being sent to.
+ *
+ * All inputs must be valid for the transaction to be valid. When each asset
+ * types' amount have been summed, the sum of inputs and the sum of outputs
+ * must be identical.
+ */
+class AssetTransferTransaction {
+    public readonly burns: AssetTransferInput[];
+    public readonly inputs: AssetTransferInput[];
+    public readonly outputs: AssetTransferOutput[];
+    public readonly orders: OrderOnTransfer[];
+    public readonly networkId: NetworkId;
+    public readonly type = "assetTransfer";
+
+    /**
+     * @param params.burns An array of AssetTransferInput to burn.
+     * @param params.inputs An array of AssetTransferInput to spend.
+     * @param params.outputs An array of AssetTransferOutput to create.
+     * @param params.networkId A network ID of the transaction.
+     */
+    constructor(params: AssetTransferTransactionData) {
+        const { burns, inputs, outputs, orders, networkId } = params;
+        this.burns = burns;
+        this.inputs = inputs;
+        this.outputs = outputs;
+        this.orders = orders;
+        this.networkId = networkId;
+    }
+
     /**
      * Convert to an AssetTransferTransaction JSON object.
      * @returns An AssetTransferTransaction JSON object.
      */
-    public toJSON(): AssetTransferTransactionJSON {
+    public toJSON(): TransferAssetJSON {
         const { networkId, burns, inputs, outputs, orders } = this;
         return {
             type: this.type,
@@ -407,10 +454,25 @@ export class AssetTransferTransaction {
             }
         };
     }
-}
 
-function convertU16toHex(id: number) {
-    const hi: string = ("0" + ((id >> 8) & 0xff).toString(16)).slice(-2);
-    const lo: string = ("0" + (id & 0xff).toString(16)).slice(-2);
-    return hi + lo;
+    /**
+     * Convert to an object for RLP encoding.
+     */
+    public toEncodeObject() {
+        return [
+            4,
+            this.networkId,
+            this.burns.map(input => input.toEncodeObject()),
+            this.inputs.map(input => input.toEncodeObject()),
+            this.outputs.map(output => output.toEncodeObject()),
+            this.orders.map(order => order.toEncodeObject())
+        ];
+    }
+
+    /**
+     * Convert to RLP bytes.
+     */
+    public rlpBytes(): Buffer {
+        return RLP.encode(this.toEncodeObject());
+    }
 }

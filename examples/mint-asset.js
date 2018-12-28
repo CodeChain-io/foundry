@@ -14,7 +14,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 // asset transfer address".
 const address = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
 
-const assetMintTransaction = sdk.core.createAssetMintTransaction({
+const tx = sdk.core.createMintAssetTransaction({
     scheme: {
         shardId: 0,
         metadata: JSON.stringify({
@@ -27,21 +27,17 @@ const assetMintTransaction = sdk.core.createAssetMintTransaction({
     recipient: address
 });
 
-// Send an asset-transaction-group parcel to process the transaction.
-const parcel = sdk.core.createAssetTransactionParcel({
-    transaction: assetMintTransaction
-});
 (async () => {
-    const parcelHash = await sdk.rpc.chain.sendParcel(parcel, {
+    const hash = await sdk.rpc.chain.sendTransaction(tx, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    // Get the invoice of the parcel.
-    const invoice = await sdk.rpc.chain.getParcelInvoice(parcelHash, {
+    // Get the invoice of the tx.
+    const invoice = await sdk.rpc.chain.getParcelInvoice(hash, {
         // Wait up to 120 seconds to get the invoice.
         timeout: 120 * 1000
     });
-    // The invoice of asset-transaction-group parcel is an array of the object that has
+    // The invoice of asset-transaction-group tx is an array of the object that has
     // type { success: boolean }. Each object represents the result of each
     // transaction.
     console.log(invoice); // [{ success: true }]

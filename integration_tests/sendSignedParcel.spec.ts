@@ -7,13 +7,13 @@ const sdk = new SDK({ server: SERVER_URL });
 const secret = ACCOUNT_SECRET;
 const address = ACCOUNT_ADDRESS;
 
-test("sendSignedParcel", async () => {
+test("sendSignedTransaction", async () => {
     const seq = await sdk.rpc.chain.getSeq(address);
-    const p = sdk.core.createPayParcel({
+    const p = sdk.core.createPayTransaction({
         recipient: address,
         amount: 0
     });
-    const hash = await sdk.rpc.chain.sendSignedParcel(
+    const hash = await sdk.rpc.chain.sendSignedTransaction(
         p.sign({
             secret,
             seq,

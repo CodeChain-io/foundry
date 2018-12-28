@@ -1,12 +1,16 @@
 import { H512 } from "../classes";
-import { Parcel } from "../Parcel";
+import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
-export class SetRegularKey extends Parcel {
+export class SetRegularKey extends Transaction {
     private readonly key: H512;
     public constructor(key: H512, networkId: NetworkId) {
         super(networkId);
         this.key = key;
+    }
+
+    public action(): string {
+        return "setRegularKey";
     }
 
     protected actionToEncodeObject(): any[] {
@@ -17,9 +21,5 @@ export class SetRegularKey extends Parcel {
         return {
             key: this.key.toJSON()
         };
-    }
-
-    protected action(): string {
-        return "setRegularKey";
     }
 }

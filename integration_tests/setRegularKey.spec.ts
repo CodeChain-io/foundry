@@ -19,10 +19,10 @@ const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
 
 test("setRegularKey", async () => {
     const seq = await sdk.rpc.chain.getSeq(masterAddress);
-    const p = sdk.core.createSetRegularKeyParcel({
+    const p = sdk.core.createSetRegularKeyTransaction({
         key: regularPublic
     });
-    const hash = await sdk.rpc.chain.sendSignedParcel(
+    const hash = await sdk.rpc.chain.sendSignedTransaction(
         p.sign({
             secret: masterSecret,
             seq,
@@ -38,11 +38,11 @@ test("setRegularKey", async () => {
     const beforeBalance = await sdk.rpc.chain.getBalance(masterAddress);
 
     const seq2 = await sdk.rpc.chain.getSeq(masterAddress);
-    const p2 = sdk.core.createPayParcel({
+    const p2 = sdk.core.createPayTransaction({
         recipient: masterAddress,
         amount: 10
     });
-    const hash2 = await sdk.rpc.chain.sendSignedParcel(
+    const hash2 = await sdk.rpc.chain.sendSignedTransaction(
         p2.sign({
             secret: regularSecret,
             seq: seq2,

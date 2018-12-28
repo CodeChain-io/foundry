@@ -14,12 +14,12 @@ const privForStore = sdk.util.generatePrivateKey();
 
 (async () => {
     // Store the text with a secret (= private key)
-    const storeParcel = sdk.core.createStoreParcel({
+    const store = sdk.core.createStoreTransaction({
         content: "CodeChain",
         secret: privForStore
     });
-    const storeResult = await sdk.rpc.account.sendParcel({
-        parcel: storeParcel,
+    const storeResult = await sdk.rpc.account.sendTransaction({
+        tx: store,
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
@@ -29,7 +29,7 @@ const privForStore = sdk.util.generatePrivateKey();
     });
     console.log(invoice1); // { success : true }
 
-    // To get the text, use hash of signed parcel
+    // To get the text, use hash of signed tx
     const text = await sdk.rpc.chain.getText(storeHash);
     console.log(text);
     // Text {
@@ -37,13 +37,13 @@ const privForStore = sdk.util.generatePrivateKey();
     //   certifier: PlatformAddress from privForStore
     // }
 
-    // When remove, hash of signed parcel is needed
-    const removeParcel = sdk.core.createRemoveParcel({
+    // When remove, hash of signed tx is needed
+    const remove = sdk.core.createRemoveTransaction({
         hash: storeHash,
         secret: privForStore
     });
-    const removeResult = await sdk.rpc.account.sendParcel({
-        parcel: removeParcel,
+    const removeResult = await sdk.rpc.account.sendTransaction({
+        tx: remove,
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });

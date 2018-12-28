@@ -1,8 +1,8 @@
 import { PlatformAddress } from "codechain-primitives";
-import { Pay } from "../parcel/Pay";
+import { Pay } from "../transaction/Pay";
 
 import { H256 } from "../H256";
-import { fromJSONToParcel } from "../parcel/json";
+import { fromJSONToTransaction } from "../transaction/json";
 import { U256 } from "../U256";
 import { U64 } from "../U64";
 
@@ -133,5 +133,5 @@ test("toJSON", () => {
     );
     p.setFee(33);
     p.setSeq(44);
-    expect(fromJSONToParcel(p.toJSON())).toEqual(p);
+    expect(fromJSONToTransaction(p.toJSON())).toEqual(p);
 });

@@ -8,31 +8,30 @@ import { H160 } from "./H160";
 import { H256 } from "./H256";
 import { H512 } from "./H512";
 import { Invoice } from "./Invoice";
-import { Parcel } from "./Parcel";
-import { AssetTransaction } from "./parcel/AssetTransaction";
-import { CreateShard } from "./parcel/CreateShard";
-import { Pay } from "./parcel/Pay";
-import { Remove } from "./parcel/Remove";
-import { SetRegularKey } from "./parcel/SetRegularKey";
-import { SetShardOwners } from "./parcel/SetShardOwners";
-import { SetShardUsers } from "./parcel/SetShardUsers";
-import { Store } from "./parcel/Store";
-import { WrapCCC } from "./parcel/WrapCCC";
 import { Script } from "./Script";
-import { SignedParcel } from "./SignedParcel";
-import { AssetComposeTransaction } from "./transaction/AssetComposeTransaction";
-import { AssetDecomposeTransaction } from "./transaction/AssetDecomposeTransaction";
+import { SignedTransaction } from "./SignedTransaction";
+import { Transaction } from "./Transaction";
 import { AssetMintOutput } from "./transaction/AssetMintOutput";
-import { AssetMintTransaction } from "./transaction/AssetMintTransaction";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
-import { AssetSchemeChangeTransaction } from "./transaction/AssetSchemeChangeTransaction";
 import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
-import { AssetTransferTransaction } from "./transaction/AssetTransferTransaction";
-import { AssetUnwrapCCCTransaction } from "./transaction/AssetUnwrapCCCTransaction";
+import { ChangeAssetScheme } from "./transaction/ChangeAssetScheme";
+import { ComposeAsset } from "./transaction/ComposeAsset";
+import { CreateShard } from "./transaction/CreateShard";
+import { DecomposeAsset } from "./transaction/DecomposeAsset";
+import { fromJSONToAssetTransaction } from "./transaction/json";
+import { MintAsset } from "./transaction/MintAsset";
 import { Order } from "./transaction/Order";
 import { OrderOnTransfer } from "./transaction/OrderOnTransfer";
-import { getTransactionFromJSON, Transaction } from "./transaction/Transaction";
+import { Pay } from "./transaction/Pay";
+import { Remove } from "./transaction/Remove";
+import { SetRegularKey } from "./transaction/SetRegularKey";
+import { SetShardOwners } from "./transaction/SetShardOwners";
+import { SetShardUsers } from "./transaction/SetShardUsers";
+import { Store } from "./transaction/Store";
+import { TransferAsset } from "./transaction/TransferAsset";
+import { UnwrapCCC } from "./transaction/UnwrapCCC";
+import { WrapCCC } from "./transaction/WrapCCC";
 import { NetworkId } from "./types";
 import { U256 } from "./U256";
 import { U64 } from "./U64";
@@ -49,26 +48,18 @@ export class Core {
         Invoice,
         // Block
         Block,
-        // Parcel
-        Parcel,
-        SignedParcel,
-        // Parcel
+        // Transaction
+        Transaction,
+        SignedTransaction,
+        // Transaction
         Pay,
         SetRegularKey,
-        AssetTransaction,
         CreateShard,
         SetShardOwners,
         SetShardUsers,
         WrapCCC,
         Store,
         Remove,
-        // Transaction
-        AssetMintTransaction,
-        AssetSchemeChangeTransaction,
-        AssetTransferTransaction,
-        AssetComposeTransaction,
-        AssetDecomposeTransaction,
-        AssetUnwrapCCCTransaction,
         AssetTransferInput,
         AssetTransferOutput,
         AssetOutPoint,
@@ -95,13 +86,13 @@ export class Core {
 
     /**
      * Creates Pay action which pays the value amount of CCC(CodeChain Coin)
-     * from the parcel signer to the recipient. Who is signing the parcel will pay.
+     * from the tx signer to the recipient. Who is signing the tx will pay.
      * @param params.recipient The platform account who receives CCC
      * @param params.amount Amount of CCC to pay
      * @throws Given string for recipient is invalid for converting it to PlatformAddress
      * @throws Given number or string for amount is invalid for converting it to U64
      */
-    public createPayParcel(params: {
+    public createPayTransaction(params: {
         recipient: PlatformAddress | string;
         amount: U64 | number | string;
     }): Pay {
@@ -116,11 +107,11 @@ export class Core {
     }
 
     /**
-     * Creates SetRegularKey action which sets the regular key of the parcel signer.
+     * Creates SetRegularKey action which sets the regular key of the tx signer.
      * @param params.key The public key of a regular key
      * @throws Given string for key is invalid for converting it to H512
      */
-    public createSetRegularKeyParcel(params: {
+    public createSetRegularKeyTransaction(params: {
         key: H512 | string;
     }): SetRegularKey {
         const { key } = params;
@@ -129,27 +120,13 @@ export class Core {
     }
 
     /**
-     * Creates AssetTransaction action which can mint or transfer assets through
-     * AssetMintTransaction or AssetTransferTransaction.
-     * @param params.transaction Transaction
-     */
-    public createAssetTransactionParcel(params: {
-        transaction: Transaction;
-        approvals?: string[];
-    }): AssetTransaction {
-        const { transaction, approvals = [] } = params;
-        checkTransaction(transaction);
-        return new AssetTransaction({ transaction, approvals }, this.networkId);
-    }
-
-    /**
      * Creates CreateShard action which can create new shard
      */
-    public createCreateShardParcel(): CreateShard {
+    public createCreateShardTransaction(): CreateShard {
         return new CreateShard(this.networkId);
     }
 
-    public createSetShardOwnersParcel(params: {
+    public createSetShardOwnersTransaction(params: {
         shardId: number;
         owners: Array<PlatformAddress | string>;
     }): SetShardOwners {
@@ -170,7 +147,7 @@ export class Core {
      * @param params.shardId
      * @param params.users
      */
-    public createSetShardUsersParcel(params: {
+    public createSetShardUsersTransaction(params: {
         shardId: number;
         users: Array<PlatformAddress | string>;
     }): SetShardUsers {
@@ -188,7 +165,7 @@ export class Core {
 
     /**
      * Creates Wrap CCC action which wraps the value amount of CCC(CodeChain Coin)
-     * in a wrapped CCC asset. Who is signing the parcel will pay.
+     * in a wrapped CCC asset. Who is signing the tx will pay.
      * @param params.shardId A shard ID of the wrapped CCC asset.
      * @param params.lockScriptHash A lock script hash of the wrapped CCC asset.
      * @param params.parameters Parameters of the wrapped CCC asset.
@@ -196,7 +173,7 @@ export class Core {
      * @throws Given string for a lock script hash is invalid for converting it to H160
      * @throws Given number or string for amount is invalid for converting it to U64
      */
-    public createWrapCCCParcel(
+    public createWrapCCCTransaction(
         params:
             | {
                   shardId: number;
@@ -243,7 +220,7 @@ export class Core {
      * @param params.signature Signature on the content by the certifier
      * @throws Given string for secret is invalid for converting it to H256
      */
-    public createStoreParcel(
+    public createStoreTransaction(
         params:
             | {
                   content: string;
@@ -278,12 +255,12 @@ export class Core {
 
     /**
      * Creates Remove action which remove the text from the chain.
-     * @param params.hash Parcel hash which stored the text
+     * @param params.hash Transaction hash which stored the text
      * @param params.secret Secret key to sign
-     * @param params.signature Signature on parcel hash by the certifier of the text
+     * @param params.signature Signature on tx hash by the certifier of the text
      * @throws Given string for hash or secret is invalid for converting it to H256
      */
-    public createRemoveParcel(
+    public createRemoveTransaction(
         params:
             | {
                   hash: H256 | string;
@@ -297,7 +274,7 @@ export class Core {
         let removeParam = null;
         if ("secret" in params) {
             const { hash, secret } = params;
-            checkParcelHash(hash);
+            checkTransactionHash(hash);
             checkSecret(secret);
             removeParam = {
                 hash: H256.ensure(hash),
@@ -305,7 +282,7 @@ export class Core {
             };
         } else {
             const { hash, signature } = params;
-            checkParcelHash(hash);
+            checkTransactionHash(hash);
             checkSignature(signature);
             removeParam = {
                 hash: H256.ensure(hash),
@@ -321,7 +298,7 @@ export class Core {
      * stringified JSON containing properties.
      * @param params.amount Total amount of this asset
      * @param params.approver Platform account or null. If account is present, the
-     * parcel that includes AssetTransferTransaction of this asset must be signed by
+     * tx that includes AssetTransferTransaction of this asset must be signed by
      * the approver account.
      * @param params.administrator Platform account or null. The administrator
      * can transfer the asset without unlocking.
@@ -522,7 +499,7 @@ export class Core {
         });
     }
 
-    public createAssetMintTransaction(params: {
+    public createMintAssetTransaction(params: {
         scheme:
             | AssetScheme
             | {
@@ -534,8 +511,9 @@ export class Core {
                   amount?: U64 | number | string | null;
               };
         recipient: AssetTransferAddress | string;
-    }): AssetMintTransaction {
-        const { scheme, recipient } = params;
+        approvals?: string[];
+    }): MintAsset {
+        const { scheme, recipient, approvals = [] } = params;
         if (scheme !== null && typeof scheme !== "object") {
             throw Error(
                 `Expected scheme param to be either an AssetScheme or an object but found ${scheme}`
@@ -561,7 +539,7 @@ export class Core {
         if (amount != null) {
             checkAmount(amount);
         }
-        return new AssetMintTransaction({
+        return new MintAsset({
             networkId,
             shardId,
             approver:
@@ -574,11 +552,12 @@ export class Core {
             output: new AssetMintOutput({
                 amount: amount == null ? null : U64.ensure(amount),
                 recipient: AssetTransferAddress.ensure(recipient)
-            })
+            }),
+            approvals
         });
     }
 
-    public createAssetSchemeChangeTransaction(params: {
+    public createChangeAssetSchemeTransaction(params: {
         assetType: H256 | string;
         scheme:
             | AssetScheme
@@ -588,8 +567,9 @@ export class Core {
                   approver?: PlatformAddress | string;
                   administrator?: PlatformAddress | string;
               };
-    }): AssetSchemeChangeTransaction {
-        const { assetType, scheme } = params;
+        approvals?: string[];
+    }): ChangeAssetScheme {
+        const { assetType, scheme, approvals = [] } = params;
         if (scheme !== null && typeof scheme !== "object") {
             throw Error(
                 `Expected scheme param to be either an AssetScheme or an object but found ${scheme}`
@@ -606,7 +586,7 @@ export class Core {
         checkMetadata(metadata);
         checkApprover(approver);
         checkAdministrator(administrator);
-        return new AssetSchemeChangeTransaction({
+        return new ChangeAssetScheme({
             networkId,
             assetType: H256.ensure(assetType),
             metadata,
@@ -615,38 +595,42 @@ export class Core {
             administrator:
                 administrator == null
                     ? null
-                    : PlatformAddress.ensure(administrator)
+                    : PlatformAddress.ensure(administrator),
+            approvals
         });
     }
 
-    public createAssetTransferTransaction(params?: {
+    public createTransferAssetTransaction(params?: {
         burns?: AssetTransferInput[];
         inputs?: AssetTransferInput[];
         outputs?: AssetTransferOutput[];
         orders?: OrderOnTransfer[];
         networkId?: NetworkId;
-    }): AssetTransferTransaction {
+        approvals?: string[];
+    }): TransferAsset {
         const {
             burns = [],
             inputs = [],
             outputs = [],
             orders = [],
-            networkId = this.networkId
+            networkId = this.networkId,
+            approvals = []
         } = params || {};
         checkTransferBurns(burns);
         checkTransferInputs(inputs);
         checkTransferOutputs(outputs);
         checkNetworkId(networkId);
-        return new AssetTransferTransaction({
+        return new TransferAsset({
             burns,
             inputs,
             outputs,
             orders,
-            networkId
+            networkId,
+            approvals
         });
     }
 
-    public createAssetComposeTransaction(params: {
+    public createComposeAssetTransaction(params: {
         scheme:
             | AssetScheme
             | {
@@ -659,8 +643,9 @@ export class Core {
               };
         inputs: AssetTransferInput[];
         recipient: AssetTransferAddress | string;
-    }): AssetComposeTransaction {
-        const { scheme, inputs, recipient } = params;
+        approvals?: string[];
+    }): ComposeAsset {
+        const { scheme, inputs, recipient, approvals = [] } = params;
         const {
             networkId = this.networkId,
             shardId,
@@ -681,13 +666,13 @@ export class Core {
         if (amount != null) {
             checkAmount(amount);
         }
-        return new AssetComposeTransaction({
+        return new ComposeAsset({
             networkId,
             shardId,
             approver:
-                approver === null ? null : PlatformAddress.ensure(approver),
+                approver == null ? null : PlatformAddress.ensure(approver),
             administrator:
-                administrator === null
+                administrator == null
                     ? null
                     : PlatformAddress.ensure(administrator),
             metadata,
@@ -695,15 +680,17 @@ export class Core {
             output: new AssetMintOutput({
                 recipient: AssetTransferAddress.ensure(recipient),
                 amount: amount == null ? null : U64.ensure(amount)
-            })
+            }),
+            approvals
         });
     }
 
-    public createAssetDecomposeTransaction(params: {
+    public createDecomposeAssetTransaction(params: {
         input: AssetTransferInput;
         outputs?: AssetTransferOutput[];
         networkId?: NetworkId;
-    }): AssetDecomposeTransaction {
+        approvals?: string[];
+    }): DecomposeAsset {
         if (
             params === null ||
             typeof params !== "object" ||
@@ -713,35 +700,44 @@ export class Core {
                 `Expected the first param of createAssetDecomposeTransaction to be an object containing input param but found ${params}`
             );
         }
-        const { input, outputs = [], networkId = this.networkId } = params;
+        const {
+            input,
+            outputs = [],
+            networkId = this.networkId,
+            approvals = []
+        } = params;
         checkTransferInput(input);
         checkTransferOutputs(outputs);
         checkNetworkId(networkId);
-        return new AssetDecomposeTransaction({
+        return new DecomposeAsset({
             input,
             outputs,
-            networkId
+            networkId,
+            approvals
         });
     }
 
-    public createAssetUnwrapCCCTransaction(params: {
+    public createUnwrapCCCTransaction(params: {
         burn: AssetTransferInput | Asset;
         networkId?: NetworkId;
-    }): AssetUnwrapCCCTransaction {
-        const { burn, networkId = this.networkId } = params;
+        approvals?: string[];
+    }): UnwrapCCC {
+        const { burn, networkId = this.networkId, approvals = [] } = params;
         checkNetworkId(networkId);
         if (burn instanceof Asset) {
             const burnInput = burn.createTransferInput();
             checkTransferBurns([burnInput]);
-            return new AssetUnwrapCCCTransaction({
+            return new UnwrapCCC({
                 burn: burnInput,
-                networkId
+                networkId,
+                approvals
             });
         } else {
             checkTransferBurns([burn]);
-            return new AssetUnwrapCCCTransaction({
+            return new UnwrapCCC({
                 burn,
-                networkId
+                networkId,
+                approvals
             });
         }
     }
@@ -810,7 +806,7 @@ export class Core {
         amount: U64 | number | string;
     }): AssetOutPoint {
         const { transactionHash, index, assetType, amount } = params;
-        checkTransactionHash(transactionHash);
+        checkAssetTransactionHash(transactionHash);
         checkIndex(index);
         checkAssetType(assetType);
         checkAmount(amount);
@@ -863,8 +859,8 @@ export class Core {
     }
 
     // FIXME: any
-    public getTransactionFromJSON(json: any): Transaction {
-        return getTransactionFromJSON(json);
+    public getTransactionFromJSON(json: any): any {
+        return fromJSONToAssetTransaction(json);
     }
 }
 
@@ -961,10 +957,6 @@ function checkCertifier(certifier: PlatformAddress | string) {
     }
 }
 
-function checkTransaction(_transaction: Transaction) {
-    // FIXME: check whether the transaction is valid
-}
-
 function checkOwners(owners: Array<PlatformAddress | string>) {
     if (!Array.isArray(owners)) {
         throw Error(`Expected owners param to be an array but found ${owners}`);
@@ -1040,7 +1032,7 @@ function checkTransferOutputs(outputs: Array<AssetTransferOutput>) {
     });
 }
 
-function checkTransactionHash(value: H256 | string) {
+function checkAssetTransactionHash(value: H256 | string) {
     if (!H256.check(value)) {
         throw Error(
             `Expected transactionHash param to be an H256 value but found ${value}`
@@ -1087,7 +1079,7 @@ function checkAssetOutPoint(
         lockScriptHash,
         parameters
     } = value;
-    checkTransactionHash(transactionHash);
+    checkAssetTransactionHash(transactionHash);
     checkIndex(index);
     checkAssetType(assetType);
     checkAmount(amount);
@@ -1130,7 +1122,7 @@ function checkLockScriptHash(value: H160 | string) {
     }
 }
 
-function checkParcelHash(value: H256 | string) {
+function checkTransactionHash(value: H256 | string) {
     if (!H256.check(value)) {
         throw Error(
             `Expected hash param to be an H256 value but found ${value}`

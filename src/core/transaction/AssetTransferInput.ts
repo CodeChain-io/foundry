@@ -31,7 +31,7 @@ export class AssetTransferInput {
      */
     public static fromJSON(data: AssetTransferInputJSON) {
         const { prevOut, timelock, lockScript, unlockScript } = data;
-        return new this({
+        return new AssetTransferInput({
             prevOut: AssetOutPoint.fromJSON(prevOut),
             timelock,
             lockScript: Buffer.from(lockScript),

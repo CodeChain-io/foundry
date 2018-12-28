@@ -33,7 +33,7 @@ setInterval(async () => {
 const { AssetTransactionGroup } = sdk.core.classes;
 
 function extractTransactions(block) {
-    return block.parcels
+    return block.transactions
         .filter(p => p.unsigned.action instanceof AssetTransactionGroup)
         .map(p => p.unsigned.action.transactions)
         .reduce((prev, curr) => [...prev, ...curr], []);

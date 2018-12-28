@@ -7,48 +7,47 @@ import { Block } from "../core/Block";
 import { H256 } from "../core/H256";
 import { H512 } from "../core/H512";
 import { Invoice } from "../core/Invoice";
-import { Parcel } from "../core/Parcel";
-import { fromJSONToSignedParcel } from "../core/parcel/json";
-import { SignedParcel } from "../core/SignedParcel";
+import { SignedTransaction } from "../core/SignedTransaction";
 import { Text } from "../core/Text";
+import { Transaction } from "../core/Transaction";
 import {
-    getTransactionFromJSON,
-    Transaction
-} from "../core/transaction/Transaction";
+    fromJSONToAssetTransaction,
+    fromJSONToSignedTransaction
+} from "../core/transaction/json";
 import { NetworkId } from "../core/types";
 import { U64 } from "../core/U64";
 
 export class ChainRpc {
     private rpc: Rpc;
-    private parcelSigner?: string;
-    private parcelFee?: number;
+    private transactionSigner?: string;
+    private transactionFee?: number;
 
     /**
      * @hidden
      */
     constructor(
         rpc: Rpc,
-        options: { parcelSigner?: string; parcelFee?: number }
+        options: { transactionSigner?: string; transactionFee?: number }
     ) {
-        const { parcelSigner, parcelFee } = options;
+        const { transactionSigner, transactionFee } = options;
         this.rpc = rpc;
-        this.parcelSigner = parcelSigner;
-        this.parcelFee = parcelFee;
+        this.transactionSigner = transactionSigner;
+        this.transactionFee = transactionFee;
     }
 
     /**
-     * Sends SignedParcel to CodeChain's network.
-     * @param parcel SignedParcel
-     * @returns SignedParcel's hash.
+     * Sends SignedTransaction to CodeChain's network.
+     * @param tx SignedTransaction
+     * @returns SignedTransaction's hash.
      */
-    public sendSignedParcel(parcel: SignedParcel): Promise<H256> {
-        if (!(parcel instanceof SignedParcel)) {
+    public sendSignedTransaction(tx: SignedTransaction): Promise<H256> {
+        if (!(tx instanceof SignedTransaction)) {
             throw Error(
-                `Expected the first argument of sendSignedParcel to be SignedParcel but found ${parcel}`
+                `Expected the first argument of sendSignedTransaction to be SignedTransaction but found ${tx}`
             );
         }
         return new Promise((resolve, reject) => {
-            const bytes = Array.from(parcel.rlpBytes())
+            const bytes = Array.from(tx.rlpBytes())
                 .map(
                     byte =>
                         byte < 0x10
@@ -64,7 +63,7 @@ export class ChainRpc {
                     } catch (e) {
                         reject(
                             Error(
-                                `Expected sendSignedParcel() to return a value of H256, but an error occurred: ${e.toString()}`
+                                `Expected sendSignedTransaction() to return a value of H256, but an error occurred: ${e.toString()}`
                             )
                         );
                     }
@@ -74,21 +73,21 @@ export class ChainRpc {
     }
 
     /**
-     * Signs a parcel with the given account and sends it to CodeChain's network.
-     * @param parcel The parcel to send
-     * @param options.account The account to sign the parcel
+     * Signs a tx with the given account and sends it to CodeChain's network.
+     * @param tx The tx to send
+     * @param options.account The account to sign the tx
      * @param options.passphrase The account's passphrase
-     * @param options.seq The seq of the parcel
-     * @param options.fee The fee of the parcel
-     * @returns SignedParcel's hash
+     * @param options.seq The seq of the tx
+     * @param options.fee The fee of the tx
+     * @returns SignedTransaction's hash
      * @throws When the given account cannot afford to pay the fee
      * @throws When the given fee is too low
      * @throws When the given seq does not match
      * @throws When the given account is unknown
      * @throws When the given passphrase does not match
      */
-    public async sendParcel(
-        parcel: Parcel,
+    public async sendTransaction(
+        tx: Transaction,
         options?: {
             account?: PlatformAddress | string;
             passphrase?: string;
@@ -96,44 +95,40 @@ export class ChainRpc {
             fee?: U64 | string | number;
         }
     ): Promise<H256> {
-        if (!(parcel instanceof Parcel)) {
+        if (!(tx instanceof Transaction)) {
             throw Error(
-                `Expected the first argument of sendParcel to be a Parcel but found ${parcel}`
+                `Expected the first argument of sendTransaction to be a Transaction but found ${tx}`
             );
         }
         const {
-            account = this.parcelSigner,
+            account = this.transactionSigner,
             passphrase,
-            fee = this.parcelFee
+            fee = this.transactionFee
         } = options || { passphrase: undefined };
         if (!account) {
-            throw Error("The account to sign the parcel is not specified");
+            throw Error("The account to sign the tx is not specified");
         } else if (!PlatformAddress.check(account)) {
             throw Error(
-                `Expected account param of sendParcel to be a PlatformAddress value but found ${account}`
+                `Expected account param of sendTransaction to be a PlatformAddress value but found ${account}`
             );
         }
         const { seq = await this.getSeq(account) } = options || {};
-        parcel.setSeq(seq!);
+        tx.setSeq(seq!);
         if (!fee) {
-            throw Error("The fee of the parcel is not specified");
+            throw Error("The fee of the tx is not specified");
         }
-        parcel.setFee(fee);
+        tx.setFee(fee);
         const address = PlatformAddress.ensure(account);
-        const sig = await this.rpc.account.sign(
-            parcel.hash(),
-            address,
-            passphrase
-        );
-        return this.sendSignedParcel(new SignedParcel(parcel, sig));
+        const sig = await this.rpc.account.sign(tx.hash(), address, passphrase);
+        return this.sendSignedTransaction(new SignedTransaction(tx, sig));
     }
 
     /**
-     * Gets SignedParcel of given hash. Else returns null.
-     * @param hash SignedParcel's hash
-     * @returns SignedParcel, or null when SignedParcel was not found.
+     * Gets SignedTransaction of given hash. Else returns null.
+     * @param hash SignedTransaction's hash
+     * @returns SignedTransaction, or null when SignedTransaction was not found.
      */
-    public getParcel(hash: H256 | string): Promise<SignedParcel | null> {
+    public getParcel(hash: H256 | string): Promise<SignedTransaction | null> {
         if (!H256.check(hash)) {
             throw Error(
                 `Expected the first argument of getParcel to be an H256 value but found ${hash}`
@@ -149,12 +144,12 @@ export class ChainRpc {
                         resolve(
                             result === null
                                 ? null
-                                : fromJSONToSignedParcel(result)
+                                : fromJSONToSignedTransaction(result)
                         );
                     } catch (e) {
                         reject(
                             Error(
-                                `Expected chain_getParcel to return either null or JSON of SignedParcel, but an error occurred: ${e.toString()}`
+                                `Expected chain_getParcel to return either null or JSON of SignedTransaction, but an error occurred: ${e.toString()}`
                             )
                         );
                     }
@@ -164,10 +159,10 @@ export class ChainRpc {
     }
 
     /**
-     * Gets invoices of given parcel.
-     * @param parcelHash The parcel hash of which to get the corresponding parcel of.
-     * @param options.timeout Indicating milliseconds to wait the parcel to be confirmed.
-     * @returns List of invoice, or null when no such parcel exists.
+     * Gets invoices of given tx.
+     * @param parcelHash The tx hash of which to get the corresponding tx of.
+     * @param options.timeout Indicating milliseconds to wait the tx to be confirmed.
+     * @returns List of invoice, or null when no such tx exists.
      */
     public async getParcelInvoice(
         parcelHash: H256 | string,
@@ -321,7 +316,7 @@ export class ChainRpc {
                         resolve(
                             result === null
                                 ? null
-                                : getTransactionFromJSON(result)
+                                : fromJSONToAssetTransaction(result)
                         );
                     } catch (e) {
                         reject(
@@ -708,18 +703,18 @@ export class ChainRpc {
     }
 
     /**
-     * Gets the text of the given hash of parcel with Store action.
-     * @param parcelHash The parcel hash of the Store parcel.
+     * Gets the text of the given hash of tx with Store action.
+     * @param txHash The tx hash of the Store tx.
      * @param blockNumber The specific block number to get the text from
      * @returns Text, if text exists. Else, returns null.
      */
     public getText(
-        parcelHash: H256 | string,
+        txHash: H256 | string,
         blockNumber?: number | null
     ): Promise<Text | null> {
-        if (!H256.check(parcelHash)) {
+        if (!H256.check(txHash)) {
             throw Error(
-                `Expected the first arugment of getText to be an H256 value but found ${parcelHash}`
+                `Expected the first arugment of getText to be an H256 value but found ${txHash}`
             );
         }
         if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
@@ -730,7 +725,7 @@ export class ChainRpc {
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getText", [
-                    `0x${H256.ensure(parcelHash).value}`,
+                    `0x${H256.ensure(txHash).value}`,
                     blockNumber
                 ])
                 .then(result => {
@@ -802,10 +797,10 @@ export class ChainRpc {
     }
 
     /**
-     * Gets pending parcels.
-     * @returns List of SignedParcel, with each parcel has null for blockNumber/blockHash/parcelIndex.
+     * Gets pending transactions.
+     * @returns List of SignedTransaction, with each tx has null for blockNumber/blockHash/transactionIndex.
      */
-    public getPendingParcels(): Promise<SignedParcel[]> {
+    public getPendingTransactions(): Promise<SignedTransaction[]> {
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getPendingParcels", [])
@@ -818,11 +813,11 @@ export class ChainRpc {
                         );
                     }
                     try {
-                        resolve(result.map(fromJSONToSignedParcel));
+                        resolve(result.map(fromJSONToSignedTransaction));
                     } catch (e) {
                         reject(
                             Error(
-                                `Expected chain_getPendingParcels to return an array of JSON of SignedParcel, but an error occurred: ${e.toString()}`
+                                `Expected chain_getPendingParcels to return an array of JSON of SignedTransaction, but an error occurred: ${e.toString()}`
                             )
                         );
                     }

@@ -1,20 +1,20 @@
 import { H256, PlatformAddress } from "codechain-primitives";
 
-import { Parcel } from "../core/Parcel";
+import { Transaction } from "../core/Transaction";
 
 import { Rpc } from ".";
 
 export class AccountRpc {
     private rpc: Rpc;
-    private readonly parcelFee?: number;
+    private readonly transactionFee?: number;
 
     /**
      * @hidden
      */
-    constructor(rpc: Rpc, options: { parcelFee?: number }) {
-        const { parcelFee } = options;
+    constructor(rpc: Rpc, options: { transactionFee?: number }) {
+        const { transactionFee } = options;
         this.rpc = rpc;
-        this.parcelFee = parcelFee;
+        this.transactionFee = transactionFee;
     }
 
     /**
@@ -173,17 +173,17 @@ export class AccountRpc {
     }
 
     /**
-     * Sends a parcel with the account's signature.
-     * @param params.parcel A parcel to send
-     * @param params.account The platform account to sign the parcel
+     * Sends a transaction with the account's signature.
+     * @param params.tx A tx to send
+     * @param params.account The platform account to sign the tx
      * @param params.passphrase The account's passphrase
      */
-    public sendParcel(params: {
-        parcel: Parcel;
+    public sendTransaction(params: {
+        tx: Transaction;
         account: PlatformAddress | string;
         passphrase?: string;
     }): Promise<{ hash: H256; seq: number }> {
-        const { parcel, account, passphrase } = params;
+        const { tx, account, passphrase } = params;
         if (!PlatformAddress.check(account)) {
             throw Error(
                 `Expected account is a PlatformAddress value but found ${account}`
@@ -194,13 +194,13 @@ export class AccountRpc {
                 `Expected the third argument to be a string but found ${passphrase}`
             );
         }
-        if (parcel.fee() == null && this.parcelFee != null) {
-            parcel.setFee(this.parcelFee);
+        if (tx.fee() == null && this.transactionFee != null) {
+            tx.setFee(this.transactionFee);
         }
 
         return this.rpc
             .sendRpcRequest("account_sendParcel", [
-                parcel.toJSON(),
+                tx.toJSON(),
                 PlatformAddress.ensure(account).toString(),
                 passphrase
             ])

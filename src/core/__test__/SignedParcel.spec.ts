@@ -3,7 +3,7 @@ import { PlatformAddress } from "codechain-primitives";
 import { getAccountIdFromPrivate } from "../../utils";
 import { Pay } from "../classes";
 import { H256 } from "../H256";
-import { fromJSONToSignedParcel } from "../parcel/json";
+import { fromJSONToSignedTransaction } from "../transaction/json";
 import { U64 } from "../U64";
 
 test("toJSON", () => {
@@ -23,7 +23,7 @@ test("toJSON", () => {
         fee: 33,
         seq: 33
     });
-    expect(fromJSONToSignedParcel(p.toJSON())).toEqual(p);
+    expect(fromJSONToSignedTransaction(p.toJSON())).toEqual(p);
 });
 
 test("getSignerAccountId", () => {

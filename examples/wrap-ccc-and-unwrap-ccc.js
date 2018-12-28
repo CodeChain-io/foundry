@@ -19,56 +19,45 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     const balanceStart = await sdk.rpc.chain.getBalance(ACCOUNT_ADDRESS);
 
     // Wrap 100 CCC into the wrapped CCC asset type.
-    const wrapCCCParcel = sdk.core.createWrapCCCParcel({
+    const wrapCCC = sdk.core.createWrapCCCTransaction({
         shardId: 0,
         recipient: address,
         amount
     });
-    const wrapCCCSignedParcelHash = await sdk.rpc.chain.sendParcel(
-        wrapCCCParcel,
-        {
-            account: ACCOUNT_ADDRESS,
-            passphrase: ACCOUNT_PASSPHRASE
-        }
-    );
-    const wrapCCCParcelInvoice = await sdk.rpc.chain.getParcelInvoice(
-        wrapCCCSignedParcelHash,
+    const wrapCCCSignedHash = await sdk.rpc.chain.sendTransaction(wrapCCC, {
+        account: ACCOUNT_ADDRESS,
+        passphrase: ACCOUNT_PASSPHRASE
+    });
+    const wrapCCCInvoice = await sdk.rpc.chain.getParcelInvoice(
+        wrapCCCSignedHash,
         {
             // Wait up to 120 seconds to get the invoice.
             timeout: 120 * 1000
         }
     );
-    if (!wrapCCCParcelInvoice.success) {
-        throw Error(
-            `WrapCCC failed: ${JSON.stringify(wrapCCCParcelInvoice.error)}`
-        );
+    if (!wrapCCCInvoice.success) {
+        throw Error(`WrapCCC failed: ${JSON.stringify(wrapCCCInvoice.error)}`);
     }
     const balanceAfterWrapCCC = await sdk.rpc.chain.getBalance(ACCOUNT_ADDRESS);
     console.log("Wrap finish");
 
     // Unwrap the wrapped CCC asset created before.
-    const unwrapCCCTx = sdk.core.createAssetUnwrapCCCTransaction({
-        burn: wrapCCCParcel.getAsset() // After sendParcel, the fee and seq field of wrapCCCParcel is filled.
+    const unwrapCCCTx = sdk.core.createUnwrapCCCTransaction({
+        burn: wrapCCC.getAsset() // After sendTransaction, the fee and seq field of wrapCCC is filled.
     });
     await sdk.key.signTransactionBurn(unwrapCCCTx, 0);
-    const unwrapCCCParcel = sdk.core.createAssetTransactionParcel({
-        transaction: unwrapCCCTx
-    });
-    await sdk.rpc.chain.sendParcel(unwrapCCCParcel, {
+    const hash = await sdk.rpc.chain.sendTransaction(unwrapCCCTx, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const unwrapCCCTxInvoices = await sdk.rpc.chain.getTransactionInvoices(
-        unwrapCCCTx.id(),
-        {
-            // Wait up to 120 seconds to get the invoice.
-            timeout: 120 * 1000
-        }
-    );
-    if (!unwrapCCCTxInvoices[0].success) {
+    const unwrapCCCTxInvoice = await sdk.rpc.chain.getParcelInvoice(hash, {
+        // Wait up to 120 seconds to get the invoice.
+        timeout: 120 * 1000
+    });
+    if (!unwrapCCCTxInvoice.success) {
         throw Error(
             `AssetUnwrapCCCTransaction failed: ${JSON.stringify(
-                unwrapCCCTxInvoices[0].error
+                unwrapCCCTxInvoice.error
             )}`
         );
     }

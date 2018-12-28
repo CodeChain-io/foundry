@@ -7,8 +7,8 @@
     - [Create a new account with a private key](#create-a-new-account-with-a-private-key)
     - [Create a new account with RPC](#create-a-new-account-with-rpc)
     - [Get the balance of an account](#get-the-balance-of-an-account)
-    - [Send a payment parcel via sendParcel](#send-a-payment-parcel-via-sendparcel)
-    - [Send a payment parcel via sendSignedParcel](#send-a-payment-parcel-via-sendsignedparcel)
+    - [Send a payment transaction via sendTransaction](#send-a-payment-transaction-via-sendtransaction)
+    - [Send a payment transaction via sendSignedTransaction](#send-a-payment-transaction-via-sendsignedtransaction)
     - [Create an asset transfer address](#create-an-asset-transfer-address)
     - [Mint a new asset](#mint-a-new-asset)
     - [Transfer assets](#transfer-assets)
@@ -29,7 +29,7 @@ Make sure that your CodeChain RPC server is listening. In the examples, we assum
 
 ## Setup the test account
 
-Before you begin to meet various examples, you need to setup the account. The given account below(`tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78`) holds 100000 CCC at the genesis block. It's a sufficient amount to pay for the parcel fee.
+Before you begin to meet various examples, you need to setup the account. The given account below(`tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78`) holds 100000 CCC at the genesis block. It's a sufficient amount to pay for the transaction fee.
 
 ```javascript
 var SDK = require("codechain-sdk");
@@ -110,42 +110,42 @@ sdk.rpc.chain
 
 ---
 
-## Send a payment parcel via sendParcel
+## Send a payment transaction via sendTransaction
 
-When you create an account, the CCC balance is 0. CCC is needed to pay for the parcel's fee. The fee must be at least 10 for any parcel. The example below shows the sending of 10000 CCC from the test account(`tccqzn..9a2k78`) to the account(`tccqru..7vzngg`).
+When you create an account, the CCC balance is 0. CCC is needed to pay for the transaction's fee. The fee must be at least 10 for any transaction. The example below shows the sending of 10000 CCC from the test account(`tccqzn..9a2k78`) to the account(`tccqru..7vzngg`).
 
 ```javascript
 var SDK = require("codechain-sdk");
 var sdk = new SDK({ server: "http://localhost:8080" });
 
-var parcel = sdk.core.createPaymentParcel({
+var tx = sdk.core.createPaymentTransaction({
   recipient: "tccqruq09sfgax77nj4gukjcuq69uzeyv0jcs7vzngg",
   amount: 10000
 });
 
 sdk.rpc.chain
-  .sendParcel(parcel, {
+  .sendTransaction(tx, {
     account: "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78",
     passphrase: "satoshi"
   })
-  .then(function(parcelHash) {
-    return sdk.rpc.chain.getParcelInvoice(parcelHash, { timeout: 300 * 1000 });
+  .then(function(hash) {
+    return sdk.rpc.chain.getTransactionInvoice(hash, { timeout: 300 * 1000 });
   })
-  .then(function(parcelInvoice) {
-    console.log(parcelInvoice); // { success: true }
+  .then(function(invoice) {
+    console.log(invoice); // { success: true }
   });
 ```
 
 ---
 
-## Send a payment parcel via sendSignedParcel
+## Send a payment transaction via sendSignedTransaction
 
 ```javascript
 var SDK = require("codechain-sdk");
 
 var sdk = new SDK({ server: "http://localhost:8080" });
 
-var parcel = sdk.core.createPaymentParcel({
+var tx = sdk.core.createPaymentTransaction({
   recipient: "tccqruq09sfgax77nj4gukjcuq69uzeyv0jcs7vzngg",
   amount: 10000
 });
@@ -157,19 +157,19 @@ var accountSecret =
 sdk.rpc.chain
   .getNonce(account)
   .then(function(nonce) {
-    return sdk.rpc.chain.sendSignedParcel(
-      parcel.sign({
+    return sdk.rpc.chain.sendSignedTransaction(
+      tx.sign({
         secret: accountSecret,
         fee: 10,
         nonce: nonce
       })
     );
   })
-  .then(function(parcelHash) {
-    return sdk.rpc.chain.getParcelInvoice(parcelHash, { timeout: 300 * 1000 });
+  .then(function(hash) {
+    return sdk.rpc.chain.getTransactionInvoice(hash, { timeout: 300 * 1000 });
   })
-  .then(function(parcelInvoice) {
-    console.log(parcelInvoice); // { success: true }
+  .then(function(invoice) {
+    console.log(invoice); // { success: true }
   });
 ```
 
@@ -206,7 +206,8 @@ var sdk = new SDK({ server: "http://localhost:8080" });
 var address =
   "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
 
-var assetMintTransaction = sdk.core.createAssetMintTransaction({
+// Send a change-shard-state transaction to process the transaction.
+var tx = sdk.core.createAssetMintTransaction({
   scheme: {
     shardId: 0,
     metadata: JSON.stringify({
@@ -219,26 +220,20 @@ var assetMintTransaction = sdk.core.createAssetMintTransaction({
   recipient: address
 });
 
-// Send a change-shard-state parcel to process the transaction.
-var parcel = sdk.core.createAssetTransactionGroupParcel({
-  transactions: [assetMintTransaction]
-});
 sdk.rpc.chain
-  .sendParcel(parcel, {
+  .sendTransaction(tx, {
     account: "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78",
     passphrase: "satoshi"
   })
-  .then(function(parcelHash) {
-    // Get the invoice of the parcel.
-    return sdk.rpc.chain.getParcelInvoice(parcelHash, {
+  .then(function(hash) {
+    // Get the invoice of the transaction.
+    return sdk.rpc.chain.getTransactionInvoice(hash, {
       // Wait up to 120 seconds to get the invoice.
       timeout: 120 * 1000
     });
   })
   .then(function(invoice) {
-    // The invoice of change-shard-state parcel is an array of the object that has
-    // type { success: boolean }. Each object represents the result of each
-    // transaction.
+    // The invoice of mint transaction is  { success: boolean }.
     console.log(invoice); // [{ success: true }]
   });
 ```
@@ -259,5 +254,5 @@ A brief version of the example will be uploaded soon. The entire example can be 
   - [network](classes/networkrpc.html)
   - [account](classes/accountrpc.html)
 - [Core](classes/core.html)
-  - [classes](classes/core.html#classes-1) (Block, Parcel, Transaction, ...)
+  - [classes](classes/core.html#classes-1) (Block, Transaction, ...)
 - [Utility](classes/sdk.html#util)

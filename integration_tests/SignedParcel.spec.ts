@@ -14,8 +14,8 @@ test("getSignerAccountId", async () => {
         networkId: CODECHAIN_NETWORK_ID
     });
     const seq = await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS);
-    const parcelToSend = sdk.core
-        .createPayParcel({
+    const tx = sdk.core
+        .createPayTransaction({
             amount: 10,
             recipient: ACCOUNT_ADDRESS
         })
@@ -24,10 +24,10 @@ test("getSignerAccountId", async () => {
             fee: 10,
             seq
         });
-    const parcelHash = await sdk.rpc.chain.sendSignedParcel(parcelToSend);
-    const parcelReceived = await sdk.rpc.chain.getParcel(parcelHash);
-    if (parcelReceived == null) {
-        throw Error("Cannot get a parcel");
+    const hash = await sdk.rpc.chain.sendSignedTransaction(tx);
+    const txReceived = await sdk.rpc.chain.getParcel(hash);
+    if (txReceived == null) {
+        throw Error("Cannot get a transaction");
     }
-    expect(parcelReceived.getSignerAccountId().value).toEqual(ACCOUNT_ID);
+    expect(txReceived.getSignerAccountId().value).toEqual(ACCOUNT_ID);
 });

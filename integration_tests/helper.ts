@@ -1,5 +1,5 @@
 import { SDK } from "../";
-import { Transaction } from "../src/core/classes";
+import { MintAsset, TransferAsset } from "../lib/core/classes";
 
 export const CODECHAIN_NETWORK_ID = process.env.CODECHAIN_NETWORK_ID || "tc";
 export const SERVER_URL =
@@ -26,19 +26,16 @@ export const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 export const sendTransaction = async ({
     transaction
 }: {
-    transaction: Transaction;
+    transaction: MintAsset | TransferAsset;
 }) => {
-    const parcel = sdk.core.createAssetTransactionParcel({
-        transaction
-    });
-    const signedParcel = parcel.sign({
+    const signed = transaction.sign({
         secret: ACCOUNT_SECRET,
         seq: await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS),
         fee: 10
     });
-    const parcelHash = await sdk.rpc.chain.sendSignedParcel(signedParcel);
+    const hash = await sdk.rpc.chain.sendSignedTransaction(signed);
     return {
-        parcelHash
+        hash
     };
 };
 
@@ -75,7 +72,7 @@ export const pay = async (params?: { inc_seq?: number }) => {
         seq += 1;
     }
     const p = sdk.core
-        .createPayParcel({
+        .createPayTransaction({
             amount: 10,
             recipient: ACCOUNT_ADDRESS
         })
@@ -84,5 +81,5 @@ export const pay = async (params?: { inc_seq?: number }) => {
             fee: 10,
             seq
         });
-    return await sdk.rpc.chain.sendSignedParcel(p);
+    return await sdk.rpc.chain.sendSignedTransaction(p);
 };

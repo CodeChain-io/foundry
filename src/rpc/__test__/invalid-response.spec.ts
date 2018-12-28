@@ -64,10 +64,10 @@ describe("Invalid response", () => {
         const regularKey =
             "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
 
-        describe("sendSignedParcel", () => {
+        describe("sendSignedTransaction", () => {
             const secret =
                 "0x0000000000000000000000000000000000000000000000000000000000000001";
-            const signedParcel = new Pay(address, new U64(0), "tc").sign({
+            const signedTransaction = new Pay(address, new U64(0), "tc").sign({
                 secret,
                 fee: 0,
                 seq: 0
@@ -76,10 +76,10 @@ describe("Invalid response", () => {
             test("null", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(null);
                 chainRpc
-                    .sendSignedParcel(signedParcel)
+                    .sendSignedTransaction(signedTransaction)
                     .then(() => done.fail())
                     .catch(e => {
-                        expect(e.toString()).toContain("sendSignedParcel");
+                        expect(e.toString()).toContain("sendSignedTransaction");
                         expect(e.toString()).toContain("H256");
                         expect(e.toString()).toContain("null");
                         done();
@@ -89,10 +89,10 @@ describe("Invalid response", () => {
             test("empty string", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce("");
                 chainRpc
-                    .sendSignedParcel(signedParcel)
+                    .sendSignedTransaction(signedTransaction)
                     .then(() => done.fail())
                     .catch(e => {
-                        expect(e.toString()).toContain("sendSignedParcel");
+                        expect(e.toString()).toContain("sendSignedTransaction");
                         expect(e.toString()).toContain("H256");
                         expect(e.toString()).toContain(`""`);
                         done();
@@ -100,7 +100,7 @@ describe("Invalid response", () => {
             });
         });
 
-        describe("getParcel", () => {
+        describe("getTransaction", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
@@ -108,7 +108,7 @@ describe("Invalid response", () => {
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("chain_getParcel");
-                        expect(e.toString()).toContain("SignedParcel");
+                        expect(e.toString()).toContain("SignedTransaction");
                         expect(e.toString()).toContain("undefined");
                         done();
                     });
@@ -123,7 +123,7 @@ describe("Invalid response", () => {
             test.skip("Invalid action", done => done.fail("not implemented"));
         });
 
-        describe("getParcelInvoice", () => {
+        describe("getTransactionInvoice", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
@@ -353,11 +353,11 @@ describe("Invalid response", () => {
                 });
         });
 
-        describe("getPendingParcels", () => {
+        describe("getPendingTransactions", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getPendingParcels()
+                    .getPendingTransactions()
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain(
@@ -369,7 +369,8 @@ describe("Invalid response", () => {
                     });
             });
 
-            test.skip("Invalid parcels", done => done.fail("not implemented"));
+            test.skip("Invalid transactions", done =>
+                done.fail("not implemented"));
         });
 
         test("getNetworkId", done => {

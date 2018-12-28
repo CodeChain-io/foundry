@@ -7,27 +7,27 @@ import { Asset } from "./Asset";
 import { H160 } from "./H160";
 import { H256 } from "./H256";
 import { H512 } from "./H512";
-import { Parcel } from "./Parcel";
+import { Transaction } from "./Transaction";
 import { NetworkId } from "./types";
 import { U256 } from "./U256";
 
 const RLP = require("rlp");
 
 /**
- * A [Parcel](parcel.html) signed by a private key. It is possible to request
- * the CodeChain network to process this parcel with the
- * [sendSignedParcel](chainrpc.html#sendsignedparcel) function.
+ * A [Transaction](tx.html) signed by a private key. It is possible to request
+ * the CodeChain network to process this tx with the
+ * [sendSignedTransaction](chainrpc.html#sendsignedtransaction) function.
  *
- * Parcels signed with a regular key has the same effect as those signed with
+ * Transactions signed with a regular key has the same effect as those signed with
  * the original key. The original key is the key of the account that registered
  * the regular key.
  *
- * If any of the following is true, the Parcel will not be processed:
- * - The Parcel's processing fee is less than 10.
+ * If any of the following is true, the Transaction will not be processed:
+ * - The Transaction's processing fee is less than 10.
  * - A network ID is not identical.
  * - A seq is not identical to the signer's seq.
  */
-export class SignedParcel {
+export class SignedTransaction {
     /**
      * Convert r, s, v values of an ECDSA signature to a string.
      * @param params.r The r value of an ECDSA signature, which is up to 32 bytes of hexadecimal string.
@@ -59,40 +59,41 @@ export class SignedParcel {
         const v = Number.parseInt(signature.substr(128, 2), 16);
         return { r, s, v };
     }
-    public unsigned: Parcel;
+    public unsigned: Transaction;
     public v: number;
     public r: U256;
     public s: U256;
     public blockNumber: number | null;
     public blockHash: H256 | null;
-    public parcelIndex: number | null;
+    public transactionIndex: number | null;
 
     /**
-     * @param unsigned A Parcel.
+     * @param unsigned A Transaction.
      * @param sig An ECDSA signature which is a 65 byte hexadecimal string.
-     * @param blockNumber The block number of the block that contains the parcel.
-     * @param blockHash The hash of the block that contains the parcel.
-     * @param parcelIndex The index(location) of the parcel within the block.
+     * @param blockNumber The block number of the block that contains the tx.
+     * @param blockHash The hash of the block that contains the tx.
+     * @param transactionIndex The index(location) of the tx within the block.
      */
     constructor(
-        unsigned: Parcel,
+        unsigned: Transaction,
         sig: string,
         blockNumber?: number,
         blockHash?: H256,
-        parcelIndex?: number
+        transactionIndex?: number
     ) {
         this.unsigned = unsigned;
-        const { r, s, v } = SignedParcel.convertSignatureStringToRsv(sig);
+        const { r, s, v } = SignedTransaction.convertSignatureStringToRsv(sig);
         this.v = v;
         this.r = new U256(r);
         this.s = new U256(s);
         this.blockNumber = blockNumber === undefined ? null : blockNumber;
         this.blockHash = blockHash || null;
-        this.parcelIndex = parcelIndex === undefined ? null : parcelIndex;
+        this.transactionIndex =
+            transactionIndex === undefined ? null : transactionIndex;
     }
 
     /**
-     * Get the signature of a parcel.
+     * Get the signature of a tx.
      */
     public signature() {
         const { v, r, s } = this;
@@ -122,8 +123,8 @@ export class SignedParcel {
     }
 
     /**
-     * Get the hash of a parcel.
-     * @returns A parcel hash.
+     * Get the hash of a tx.
+     * @returns A tx hash.
      */
     public hash(): H256 {
         return new H256(blake256(this.rlpBytes()));
@@ -135,7 +136,7 @@ export class SignedParcel {
     }
 
     /**
-     * Get the account ID of a parcel's signer.
+     * Get the account ID of a tx's signer.
      * @returns An account ID.
      * @deprecated
      */
@@ -150,7 +151,7 @@ export class SignedParcel {
     }
 
     /**
-     * Get the platform address of a parcel's signer.
+     * Get the platform address of a tx's signer.
      * @returns A PlatformAddress.
      * @deprecated
      */
@@ -159,7 +160,7 @@ export class SignedParcel {
     }
 
     /**
-     * Get the public key of a parcel's signer.
+     * Get the public key of a tx's signer.
      * @returns A public key.
      */
     public getSignerPublic(): H512 {
@@ -174,24 +175,32 @@ export class SignedParcel {
     }
 
     /**
-     * Convert to a SignedParcel JSON object.
-     * @returns A SignedParcel JSON object.
+     * Convert to a SignedTransaction JSON object.
+     * @returns A SignedTransaction JSON object.
      */
     public toJSON() {
-        const { blockNumber, blockHash, parcelIndex, unsigned, v, r, s } = this;
+        const {
+            blockNumber,
+            blockHash,
+            transactionIndex,
+            unsigned,
+            v,
+            r,
+            s
+        } = this;
         const seq = unsigned.seq();
-        const sig = SignedParcel.convertRsvToSignatureString({
+        const sig = SignedTransaction.convertRsvToSignatureString({
             r: r.value.toString(16),
             s: s.value.toString(16),
             v
         });
         if (seq == null) {
-            throw Error("Signed parcel must have the seq");
+            throw Error("Signed tx must have the seq");
         }
         const result = unsigned.toJSON();
         result.blockNumber = blockNumber;
         result.blockHash = blockHash === null ? null : blockHash.toJSON();
-        result.parcelIndex = parcelIndex;
+        result.parcelIndex = transactionIndex;
         result.sig = sig;
         result.hash = this.hash().toJSON();
         return result;

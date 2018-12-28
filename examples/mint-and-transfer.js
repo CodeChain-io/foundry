@@ -26,14 +26,14 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         amount: 10000,
         approver: null
     });
-    const mintTx = sdk.core.createAssetMintTransaction({
+    const mintTx = sdk.core.createMintAssetTransaction({
         scheme: goldAssetScheme,
         recipient: aliceAddress
     });
 
     const firstGold = mintTx.getMintedAsset();
     const transferTx = sdk.core
-        .createAssetTransferTransaction()
+        .createTransferAssetTransaction()
         .addInputs(firstGold)
         .addOutputs(
             {
@@ -49,17 +49,11 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         );
     await sdk.key.signTransactionInput(transferTx, 0);
 
-    const mintParcel = sdk.core.createAssetTransactionParcel({
-        transaction: mintTx
-    });
-    await sdk.rpc.chain.sendParcel(mintParcel, {
+    await sdk.rpc.chain.sendTransaction(mintTx, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const transferParcel = sdk.core.createAssetTransactionParcel({
-        transaction: transferTx
-    });
-    await sdk.rpc.chain.sendParcel(transferParcel, {
+    await sdk.rpc.chain.sendTransaction(transferTx, {
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
