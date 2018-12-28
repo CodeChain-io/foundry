@@ -17,7 +17,6 @@ const ACCOUNT_PASSPHRASE = "satoshi";
 
     const assetScheme = sdk.core.createAssetScheme({
         shardId: 0,
-        worldId: 0,
         metadata: JSON.stringify({
             name: "An example asset"
         }),
@@ -33,7 +32,6 @@ const ACCOUNT_PASSPHRASE = "satoshi";
     const composeTx = sdk.core.createAssetComposeTransaction({
         scheme: {
             shardId: 0,
-            worldId: 0,
             metadata: JSON.stringify({ name: "An unique asset" }),
             amount: 1
         },
