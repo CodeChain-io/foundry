@@ -295,11 +295,11 @@ export class Core {
 
     /**
      * Creates Custom action that will be handled by a specified action handler
-     * @param params.handlerId An Id of an action handler which will handle a custom parcel
-     * @param params.bytes A custom parcel body
+     * @param params.handlerId An Id of an action handler which will handle a custom transaction
+     * @param params.bytes A custom transaction body
      * @throws Given number for handlerId is invalid for converting it to U64
      */
-    public createCustomParcel(params: {
+    public createCustomTransaction(params: {
         handlerId: number;
         bytes: Buffer;
     }): Custom {
