@@ -86,7 +86,7 @@ export class Core {
     }
 
     /**
-     * Creates Pay action which pays the value amount of CCC(CodeChain Coin)
+     * Creates Pay type which pays the value amount of CCC(CodeChain Coin)
      * from the tx signer to the recipient. Who is signing the tx will pay.
      * @param params.recipient The platform account who receives CCC
      * @param params.amount Amount of CCC to pay
@@ -108,7 +108,7 @@ export class Core {
     }
 
     /**
-     * Creates SetRegularKey action which sets the regular key of the tx signer.
+     * Creates SetRegularKey type which sets the regular key of the tx signer.
      * @param params.key The public key of a regular key
      * @throws Given string for key is invalid for converting it to H512
      */
@@ -121,7 +121,7 @@ export class Core {
     }
 
     /**
-     * Creates CreateShard action which can create new shard
+     * Creates CreateShard type which can create new shard
      */
     public createCreateShardTransaction(): CreateShard {
         return new CreateShard(this.networkId);
@@ -144,7 +144,7 @@ export class Core {
     }
 
     /**
-     * Create SetShardUser action which can change shard users
+     * Create SetShardUser type which can change shard users
      * @param params.shardId
      * @param params.users
      */
@@ -165,7 +165,7 @@ export class Core {
     }
 
     /**
-     * Creates Wrap CCC action which wraps the value amount of CCC(CodeChain Coin)
+     * Creates Wrap CCC type which wraps the value amount of CCC(CodeChain Coin)
      * in a wrapped CCC asset. Who is signing the tx will pay.
      * @param params.shardId A shard ID of the wrapped CCC asset.
      * @param params.lockScriptHash A lock script hash of the wrapped CCC asset.
@@ -214,7 +214,7 @@ export class Core {
     }
 
     /**
-     * Creates Store action which store content with certifier on chain.
+     * Creates Store type which store content with certifier on chain.
      * @param params.content Content to store
      * @param params.secret Secret key to sign
      * @param params.certifier Certifier of the text, which is PlatformAddress
@@ -255,7 +255,7 @@ export class Core {
     }
 
     /**
-     * Creates Remove action which remove the text from the chain.
+     * Creates Remove type which remove the text from the chain.
      * @param params.hash Transaction hash which stored the text
      * @param params.secret Secret key to sign
      * @param params.signature Signature on tx hash by the certifier of the text
@@ -294,8 +294,8 @@ export class Core {
     }
 
     /**
-     * Creates Custom action that will be handled by a specified action handler
-     * @param params.handlerId An Id of an action handler which will handle a custom transaction
+     * Creates Custom type that will be handled by a specified type handler
+     * @param params.handlerId An Id of an type handler which will handle a custom transaction
      * @param params.bytes A custom transaction body
      * @throws Given number for handlerId is invalid for converting it to U64
      */

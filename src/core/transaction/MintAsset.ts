@@ -149,7 +149,7 @@ export class MintAsset extends Transaction implements AssetTransaction {
         );
     }
 
-    public action(): string {
+    public type(): string {
         return "mintAsset";
     }
 
@@ -190,7 +190,6 @@ class AssetMintTransaction {
     public readonly output: AssetMintOutput;
     public readonly approver: PlatformAddress | null;
     public readonly administrator: PlatformAddress | null;
-    public readonly action = "mintAsset";
 
     /**
      * @param data.networkId A network ID of the transaction.
@@ -240,7 +239,6 @@ class AssetMintTransaction {
             administrator
         } = this;
         return {
-            action: this.action,
             networkId,
             shardId,
             metadata,

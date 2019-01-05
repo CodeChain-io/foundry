@@ -15,7 +15,7 @@ export class SetShardOwners extends Transaction {
         this.owners = params.owners;
     }
 
-    public action(): string {
+    public type(): string {
         return "setShardOwners";
     }
 

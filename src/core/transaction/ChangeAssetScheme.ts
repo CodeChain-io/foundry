@@ -21,7 +21,7 @@ export class ChangeAssetScheme extends Transaction {
         this.approvals = input.approvals;
     }
 
-    public action(): string {
+    public type(): string {
         return "changeAssetScheme";
     }
 
@@ -47,7 +47,6 @@ class AssetSchemeChangeTransaction {
     public readonly metadata: string;
     public readonly approver: PlatformAddress | null;
     public readonly administrator: PlatformAddress | null;
-    public readonly action = "changeAssetScheme";
 
     /**
      * @param params.networkId A network ID of the transaction.
@@ -87,7 +86,6 @@ class AssetSchemeChangeTransaction {
      */
     public toJSON(): any {
         return {
-            action: this.action,
             networkId: this.networkId,
             assetType: this.assetType.toEncodeObject(),
             metadata: this.metadata,

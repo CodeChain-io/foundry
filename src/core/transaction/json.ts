@@ -30,7 +30,7 @@ import { WrapCCC } from "./WrapCCC";
 export function fromJSONToTransaction(result: any): Transaction {
     const { seq, fee, networkId, action } = result;
     let tx;
-    switch (action.action) {
+    switch (action.type) {
         case "mintAsset": {
             const { shardId, metadata, approvals } = action;
             const approver =

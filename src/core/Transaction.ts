@@ -101,7 +101,7 @@ export abstract class Transaction {
             throw Error("Transaction must have the fee");
         }
         const action = this.actionToJSON();
-        action.action = this.action();
+        action.type = this.type();
         const result: any = {
             fee: fee.toJSON(),
             networkId,
@@ -113,7 +113,7 @@ export abstract class Transaction {
         return result;
     }
 
-    public abstract action(): string;
+    public abstract type(): string;
 
     protected abstract actionToJSON(): any;
     protected abstract actionToEncodeObject(): any[];

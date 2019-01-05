@@ -42,7 +42,7 @@ export class Remove extends Transaction {
         }
     }
 
-    public action(): string {
+    public type(): string {
         return "remove";
     }
 

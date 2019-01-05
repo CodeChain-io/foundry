@@ -704,7 +704,7 @@ export class ChainRpc {
     }
 
     /**
-     * Gets the text of the given hash of tx with Store action.
+     * Gets the text of the given hash of tx with Store type.
      * @param txHash The tx hash of the Store tx.
      * @param blockNumber The specific block number to get the text from
      * @returns Text, if text exists. Else, returns null.

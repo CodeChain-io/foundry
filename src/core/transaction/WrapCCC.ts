@@ -97,7 +97,7 @@ export class WrapCCC extends Transaction implements AssetTransaction {
         return this.hash();
     }
 
-    public action(): string {
+    public type(): string {
         return "wrapCCC";
     }
 

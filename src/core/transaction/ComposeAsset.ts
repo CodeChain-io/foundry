@@ -277,7 +277,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
         );
     }
 
-    public action(): string {
+    public type(): string {
         return "composeAsset";
     }
 
@@ -311,7 +311,6 @@ class AssetComposeTransaction {
     public readonly administrator: PlatformAddress | null;
     public readonly inputs: AssetTransferInput[];
     public readonly output: AssetMintOutput;
-    public readonly action = "composeAsset";
 
     /**
      * @param params.networkId A network ID of the transaction.
@@ -359,7 +358,6 @@ class AssetComposeTransaction {
      */
     public toJSON(): any {
         return {
-            action: this.action,
             networkId: this.networkId,
             shardId: this.shardId,
             metadata: this.metadata,

@@ -16,7 +16,7 @@ export class Custom extends Transaction {
         this.bytes = params.bytes;
     }
 
-    public action(): string {
+    public type(): string {
         return "custom";
     }
 

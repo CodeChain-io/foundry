@@ -9,7 +9,7 @@ export class SetRegularKey extends Transaction {
         this.key = key;
     }
 
-    public action(): string {
+    public type(): string {
         return "setRegularKey";
     }
 

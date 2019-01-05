@@ -153,7 +153,7 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
         );
     }
 
-    public action(): string {
+    public type(): string {
         return "decomposeAsset";
     }
 
@@ -183,7 +183,6 @@ class AssetDecomposeTransaction {
     public readonly input: AssetTransferInput;
     public readonly outputs: AssetTransferOutput[];
     public readonly networkId: NetworkId;
-    public readonly action = "decomposeAsset";
 
     /**
      * @param params.inputs An array of AssetTransferInput to decompose.
@@ -205,9 +204,8 @@ class AssetDecomposeTransaction {
      * @returns An AssetDecomposeTransaction JSON object.
      */
     public toJSON(): any {
-        const { action, input, outputs, networkId } = this;
+        const { input, outputs, networkId } = this;
         return {
-            action,
             input: input.toJSON(),
             outputs: outputs.map(o => o.toJSON()),
             networkId

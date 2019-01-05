@@ -30,7 +30,7 @@ test("AssetMintTransaction fromJSONToTransaction", async () => {
         throw Error("Cannot get the tx");
     }
 
-    expect(tx.unsigned.action()).toEqual("mintAsset");
+    expect(tx.unsigned.type()).toEqual("mintAsset");
 
     expect(tx.unsigned.toJSON().action).toMatchObject({
         metadata: expect.anything(),
@@ -89,9 +89,8 @@ test("AssetTransferTransaction fromJSONToTransaction", async () => {
         unlockScript: expect.anything()
     });
 
-    expect(tx.unsigned.action()).toEqual("transferAsset");
+    expect(tx.unsigned.type()).toEqual("transferAsset");
     expect((tx.unsigned as any)._transaction).toMatchObject({
-        action: expect.stringMatching("transferAsset"),
         burns: [],
         inputs: expect.arrayContaining([expectedInput]),
         outputs: expect.anything(),

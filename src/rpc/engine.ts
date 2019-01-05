@@ -88,7 +88,7 @@ export class EngineRpc {
     }
 
     /**
-     * Gets custom action's data at blockNumber with keyFragments.
+     * Gets custom type's data at blockNumber with keyFragments.
      * @param handlerId number
      * @param keyFragments any[]
      * @param blockNumber? number

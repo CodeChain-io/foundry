@@ -63,7 +63,7 @@ export class Store extends Transaction {
         });
     }
 
-    public action(): string {
+    public type(): string {
         return "store";
     }
 

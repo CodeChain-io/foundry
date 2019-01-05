@@ -16,7 +16,7 @@ export class Pay extends Transaction {
         this.amount = amount;
     }
 
-    public action(): string {
+    public type(): string {
         return "pay";
     }
 

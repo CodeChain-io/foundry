@@ -64,7 +64,7 @@ export class UnwrapCCC extends Transaction implements AssetTransaction {
         return new H256(blake256(this._transaction.rlpBytes()));
     }
 
-    public action(): string {
+    public type(): string {
         return "unwrapCCC";
     }
 
@@ -100,7 +100,6 @@ interface AssetUnwrapCCCTransactionData {
 class AssetUnwrapCCCTransaction {
     public readonly burn: AssetTransferInput;
     public readonly networkId: NetworkId;
-    public readonly action = "unwrapCCC";
 
     /**
      * @param params.burn An AssetTransferInput of which asset type is wrapped CCC.
@@ -133,7 +132,6 @@ class AssetUnwrapCCCTransaction {
     public toJSON(): any {
         const { networkId, burn } = this;
         return {
-            action: this.action,
             networkId,
             burn: burn.toJSON()
         };

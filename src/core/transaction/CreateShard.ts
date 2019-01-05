@@ -6,7 +6,7 @@ export class CreateShard extends Transaction {
         super(networkId);
     }
 
-    public action(): string {
+    public type(): string {
         return "createShard";
     }
 

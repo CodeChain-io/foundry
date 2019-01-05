@@ -120,7 +120,7 @@ describe("Invalid response", () => {
             test.skip("Invalid fee", done => done.fail("not implemented"));
             test.skip("Invalid networkId", done =>
                 done.fail("not implemented"));
-            test.skip("Invalid action", done => done.fail("not implemented"));
+            test.skip("Invalid type", done => done.fail("not implemented"));
         });
 
         describe("getInvoice", () => {

@@ -330,7 +330,7 @@ export class TransferAsset extends Transaction implements AssetTransaction {
         );
     }
 
-    public action(): string {
+    public type(): string {
         return "transferAsset";
     }
 
@@ -381,7 +381,6 @@ class AssetTransferTransaction {
     public readonly outputs: AssetTransferOutput[];
     public readonly orders: OrderOnTransfer[];
     public readonly networkId: NetworkId;
-    public readonly action = "transferAsset";
 
     /**
      * @param params.burns An array of AssetTransferInput to burn.
@@ -405,7 +404,6 @@ class AssetTransferTransaction {
     public toJSON(): any {
         const { networkId, burns, inputs, outputs, orders } = this;
         return {
-            action: this.action,
             networkId,
             burns: burns.map(input => input.toJSON()),
             inputs: inputs.map(input => input.toJSON()),
