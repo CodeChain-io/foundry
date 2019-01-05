@@ -69,9 +69,9 @@ export class UnwrapCCC extends Transaction implements AssetTransaction {
     }
 
     protected actionToEncodeObject(): any[] {
-        const transaction = this._transaction.toEncodeObject();
-        const approvals = this.approvals;
-        return [1, transaction, approvals];
+        const encoded: any[] = this._transaction.toEncodeObject();
+        encoded.push(this.approvals);
+        return encoded;
     }
 
     protected actionToJSON(): any {
@@ -115,7 +115,7 @@ class AssetUnwrapCCCTransaction {
      * Convert to an object for RLP encoding.
      */
     public toEncodeObject() {
-        return [1, this.networkId, this.burn.toEncodeObject()];
+        return [0x11, this.networkId, this.burn.toEncodeObject()];
     }
 
     /**

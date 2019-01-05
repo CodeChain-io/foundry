@@ -335,9 +335,9 @@ export class TransferAsset extends Transaction implements AssetTransaction {
     }
 
     protected actionToEncodeObject(): any[] {
-        const transaction = this._transaction.toEncodeObject();
-        const approvals = this.approvals;
-        return [1, transaction, approvals];
+        const encoded: any[] = this._transaction.toEncodeObject();
+        encoded.push(this.approvals);
+        return encoded;
     }
 
     protected actionToJSON(): any {
@@ -417,7 +417,7 @@ class AssetTransferTransaction {
      */
     public toEncodeObject() {
         return [
-            4,
+            0x14,
             this.networkId,
             this.burns.map(input => input.toEncodeObject()),
             this.inputs.map(input => input.toEncodeObject()),

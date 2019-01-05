@@ -26,9 +26,9 @@ export class ChangeAssetScheme extends Transaction {
     }
 
     protected actionToEncodeObject(): any[] {
-        const transaction = this._transaction.toEncodeObject();
-        const approvals = this.approvals;
-        return [1, transaction, approvals];
+        const encoded = this._transaction.toEncodeObject();
+        encoded.push(this.approvals);
+        return encoded;
     }
 
     protected actionToJSON(): any {
@@ -109,7 +109,7 @@ class AssetSchemeChangeTransaction {
             administrator
         } = this;
         return [
-            5,
+            0x15,
             networkId,
             assetType,
             metadata,

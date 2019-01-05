@@ -282,9 +282,9 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
     }
 
     protected actionToEncodeObject(): any[] {
-        const transaction = this._transaction.toEncodeObject();
-        const approvals = this.approvals;
-        return [1, transaction, approvals];
+        const encoded = this._transaction.toEncodeObject();
+        encoded.push(this.approvals);
+        return encoded;
     }
 
     protected actionToJSON(): any {
@@ -376,7 +376,7 @@ class AssetComposeTransaction {
      */
     public toEncodeObject() {
         return [
-            6,
+            0x16,
             this.networkId,
             this.shardId,
             this.metadata,

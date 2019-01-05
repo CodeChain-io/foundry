@@ -158,9 +158,9 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
     }
 
     protected actionToEncodeObject(): any[] {
-        const transaction = this._transaction.toEncodeObject();
-        const approvals = this.approvals;
-        return [1, transaction, approvals];
+        const encoded: any[] = this._transaction.toEncodeObject();
+        encoded.push(this.approvals);
+        return encoded;
     }
 
     protected actionToJSON(): any {
@@ -217,7 +217,7 @@ class AssetDecomposeTransaction {
      */
     public toEncodeObject() {
         return [
-            7,
+            0x17,
             this.networkId,
             this.input.toEncodeObject(),
             this.outputs.map(o => o.toEncodeObject())
