@@ -27,10 +27,10 @@ export class MintAsset extends Transaction implements AssetTransaction {
     }
 
     /**
-     * Get the hash of an AssetMintTransaction.
-     * @returns A transaction hash.
+     * Get the tracker of an AssetMintTransaction.
+     * @returns A transaction tracker.
      */
-    public id(): H256 {
+    public tracker(): H256 {
         return new H256(blake256(this._transaction.rlpBytes()));
     }
 
@@ -48,7 +48,7 @@ export class MintAsset extends Transaction implements AssetTransaction {
             lockScriptHash,
             parameters,
             amount,
-            transactionId: this.id(),
+            tracker: this.tracker(),
             transactionOutputIndex: 0
         });
     }
@@ -88,7 +88,7 @@ export class MintAsset extends Transaction implements AssetTransaction {
     public getAssetSchemeAddress(): H256 {
         const { shardId } = this._transaction;
         const blake = blake256WithKey(
-            this.id().value,
+            this.tracker().value,
             new Uint8Array([
                 0x00,
                 0x00,
@@ -122,7 +122,7 @@ export class MintAsset extends Transaction implements AssetTransaction {
     public getAssetAddress(): H256 {
         const { shardId } = this._transaction;
         const blake = blake256WithKey(
-            this.id().value,
+            this.tracker().value,
             new Uint8Array([
                 0x00,
                 0x00,

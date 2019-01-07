@@ -376,7 +376,7 @@ export class Core {
             originOutputs:
                 | AssetOutPoint[]
                 | {
-                      transactionId: H256 | string;
+                      tracker: H256 | string;
                       index: number;
                       assetType: H256 | string;
                       amount: U64 | number | string;
@@ -423,7 +423,7 @@ export class Core {
         for (let i = 0; i < originOutputs.length; i++) {
             const originOutput = originOutputs[i];
             const {
-                transactionId,
+                tracker,
                 index,
                 assetType,
                 amount,
@@ -435,7 +435,7 @@ export class Core {
                 originOutput instanceof AssetOutPoint
                     ? originOutput
                     : new AssetOutPoint({
-                          transactionId: H256.ensure(transactionId),
+                          tracker: H256.ensure(tracker),
                           index,
                           assetType: H256.ensure(assetType),
                           amount: U64.ensure(amount),
@@ -767,7 +767,7 @@ export class Core {
         assetOutPoint:
             | AssetOutPoint
             | {
-                  transactionId: H256 | string;
+                  tracker: H256 | string;
                   index: number;
                   assetType: H256 | string;
                   amount: U64 | number | string;
@@ -793,7 +793,7 @@ export class Core {
             checkUnlockScript(unlockScript);
         }
         const {
-            transactionId,
+            tracker,
             index,
             assetType,
             amount,
@@ -805,7 +805,7 @@ export class Core {
                 assetOutPoint instanceof AssetOutPoint
                     ? assetOutPoint
                     : new AssetOutPoint({
-                          transactionId: H256.ensure(transactionId),
+                          tracker: H256.ensure(tracker),
                           index,
                           assetType: H256.ensure(assetType),
                           amount: U64.ensure(amount),
@@ -821,18 +821,18 @@ export class Core {
     }
 
     public createAssetOutPoint(params: {
-        transactionId: H256 | string;
+        tracker: H256 | string;
         index: number;
         assetType: H256 | string;
         amount: U64 | number | string;
     }): AssetOutPoint {
-        const { transactionId, index, assetType, amount } = params;
-        checkTransactionId(transactionId);
+        const { tracker, index, assetType, amount } = params;
+        checkTracker(tracker);
         checkIndex(index);
         checkAssetType(assetType);
         checkAmount(amount);
         return new AssetOutPoint({
-            transactionId: H256.ensure(transactionId),
+            tracker: H256.ensure(tracker),
             index,
             assetType: H256.ensure(assetType),
             amount: U64.ensure(amount)
@@ -1048,10 +1048,10 @@ function checkTransferOutputs(outputs: Array<AssetTransferOutput>) {
     });
 }
 
-function checkTransactionId(value: H256 | string) {
+function checkTracker(value: H256 | string) {
     if (!H256.check(value)) {
         throw Error(
-            `Expected transactionId param to be an H256 value but found ${value}`
+            `Expected tracker param to be an H256 value but found ${value}`
         );
     }
 }
@@ -1074,7 +1074,7 @@ function checkAssetOutPoint(
     value:
         | AssetOutPoint
         | {
-              transactionId: H256 | string;
+              tracker: H256 | string;
               index: number;
               assetType: H256 | string;
               amount: U64 | number | string;
@@ -1088,14 +1088,14 @@ function checkAssetOutPoint(
         );
     }
     const {
-        transactionId,
+        tracker,
         index,
         assetType,
         amount,
         lockScriptHash,
         parameters
     } = value;
-    checkTransactionId(transactionId);
+    checkTracker(tracker);
     checkIndex(index);
     checkAssetType(assetType);
     checkAmount(amount);

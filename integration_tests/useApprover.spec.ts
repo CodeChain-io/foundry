@@ -104,9 +104,12 @@ async function mintAssetUsingMaster(
         })
     );
 
-    const mintTxInvoices = await sdk.rpc.chain.getInvoicesById(mintTx.id(), {
-        timeout: 5 * 60 * 1000
-    });
+    const mintTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+        mintTx.tracker(),
+        {
+            timeout: 5 * 60 * 1000
+        }
+    );
     expect(mintTxInvoices.length).toBe(1);
     expect(mintTxInvoices[0].success).toBe(true);
     return mintTx;
@@ -144,8 +147,8 @@ async function transferAssetUsingRegular(
         })
     );
 
-    const transferTxInvoices = await sdk.rpc.chain.getInvoicesById(
-        transferTx.id(),
+    const transferTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+        transferTx.tracker(),
         {
             timeout: 5 * 60 * 1000
         }
@@ -190,8 +193,8 @@ async function transferAssetUsingOther(
         })
     );
 
-    const transferTxInvoices = await sdk.rpc.chain.getInvoicesById(
-        transferTx.id(),
+    const transferTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+        transferTx.tracker(),
         {
             timeout: 5 * 60 * 1000
         }

@@ -17,7 +17,7 @@ export interface AssetJSON {
     orderHash: string | null;
     // The `hash` and the `index` are not included in an RPC response. See
     // getAsset() in chain.ts for more details.
-    transactionId: string;
+    tracker: string;
     transactionOutputIndex: number;
 }
 
@@ -27,7 +27,7 @@ export interface AssetData {
     parameters: Buffer[];
     amount: U64;
     orderHash?: H256 | null;
-    transactionId: H256;
+    tracker: H256;
     transactionOutputIndex: number;
 }
 /**
@@ -41,7 +41,7 @@ export class Asset {
             parameters,
             amount,
             orderHash,
-            transactionId,
+            tracker,
             transactionOutputIndex
         } = data;
         return new Asset({
@@ -52,7 +52,7 @@ export class Asset {
             ),
             amount: U64.ensure(amount),
             orderHash: orderHash === null ? orderHash : H256.ensure(orderHash),
-            transactionId: new H256(transactionId),
+            tracker: new H256(tracker),
             transactionOutputIndex
         });
     }
@@ -66,7 +66,7 @@ export class Asset {
 
     constructor(data: AssetData) {
         const {
-            transactionId,
+            tracker,
             transactionOutputIndex,
             assetType,
             amount,
@@ -80,7 +80,7 @@ export class Asset {
         this.amount = data.amount;
         this.orderHash = orderHash;
         this.outPoint = new AssetOutPoint({
-            transactionId,
+            tracker,
             index: transactionOutputIndex,
             assetType,
             amount,
@@ -98,14 +98,14 @@ export class Asset {
             amount,
             outPoint
         } = this;
-        const { transactionId, index } = outPoint;
+        const { tracker, index } = outPoint;
         return {
             assetType: assetType.toJSON(),
             lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map(p => [...p]),
             amount: amount.toJSON(),
             orderHash: orderHash === null ? null : orderHash.toJSON(),
-            transactionId: transactionId.toJSON(),
+            tracker: tracker.toJSON(),
             transactionOutputIndex: index
         };
     }

@@ -11,7 +11,7 @@ test("toJSON", () => {
         lockScriptHash: new H160("1111111111111111111111111111111111111111"),
         parameters: [],
         amount: new U64(222),
-        transactionId: new H256(
+        tracker: new H256(
             "2222222222222222222222222222222222222222222222222222222222222222"
         ),
         transactionOutputIndex: 0

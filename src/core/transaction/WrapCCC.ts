@@ -88,12 +88,12 @@ export class WrapCCC extends Transaction implements AssetTransaction {
             lockScriptHash,
             parameters,
             amount,
-            transactionId: this.id(),
+            tracker: this.tracker(),
             transactionOutputIndex: 0
         });
     }
 
-    public id() {
+    public tracker() {
         return this.hash();
     }
 

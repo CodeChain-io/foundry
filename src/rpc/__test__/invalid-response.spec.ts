@@ -171,7 +171,7 @@ describe("Invalid response", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getTransactionById(hash)
+                    .getTransactionByTracker(hash)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("chain_getTransaction");
@@ -189,11 +189,11 @@ describe("Invalid response", () => {
             });
         });
 
-        describe("getInvoicesById", () => {
+        describe("getInvoicesByTracker", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce([]);
                 chainRpc
-                    .getInvoicesById(hash)
+                    .getInvoicesByTracker(hash)
                     .then(invoices => {
                         expect(invoices).toEqual([]);
                         done();
@@ -279,15 +279,15 @@ describe("Invalid response", () => {
             test.skip("Invalid number", done => done.fail("not implemented"));
         });
 
-        describe("getAssetSchemeByHash", () => {
+        describe("getAssetSchemeByTracker", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getAssetSchemeByHash(hash, 0)
+                    .getAssetSchemeByTracker(hash, 0)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain(
-                            "chain_getAssetSchemeByHash"
+                            "chain_getAssetSchemeByTracker"
                         );
                         expect(e.toString()).toContain("JSON of AssetScheme");
                         expect(e.toString()).toContain("undefined");

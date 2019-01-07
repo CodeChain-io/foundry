@@ -7,7 +7,7 @@ import { U64 } from "./U64";
 const RLP = require("rlp");
 
 export interface AssetTransaction {
-    id(): H256;
+    tracker(): H256;
 }
 
 /**

@@ -110,8 +110,8 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         passphrase: ACCOUNT_PASSPHRASE
     });
 
-    const goldMintTxInvoices = await sdk.rpc.chain.getInvoicesById(
-        goldMintTx.id(),
+    const goldMintTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+        goldMintTx.tracker(),
         {
             timeout: 300 * 1000
         }
@@ -123,8 +123,8 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             )}`
         );
     }
-    const silverMintTxInvoices = await sdk.rpc.chain.getInvoicesById(
-        silverMintTx.id(),
+    const silverMintTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+        silverMintTx.tracker(),
         {
             timeout: 300 * 1000
         }
@@ -136,8 +136,8 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             )}`
         );
     }
-    const transferTxInvoices = await sdk.rpc.chain.getInvoicesById(
-        transferTx.id(),
+    const transferTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+        transferTx.tracker(),
         {
             timeout: 300 * 1000
         }
@@ -151,13 +151,13 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     }
 
     // Unspent Alice's 9900 golds with the order
-    console.log(await sdk.rpc.chain.getAsset(transferTx.id(), 0));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 0));
     // 1000 silvers from Bob to Alice by the order
-    console.log(await sdk.rpc.chain.getAsset(transferTx.id(), 1));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 1));
     // 100 golds from Alice to Bob, without any order (Bob owns)
-    console.log(await sdk.rpc.chain.getAsset(transferTx.id(), 2));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 2));
     // Unspent Bob's 99000 silvers without any order
-    console.log(await sdk.rpc.chain.getAsset(transferTx.id(), 3));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 3));
 })().catch(err => {
     console.error(`Error:`, err);
 });

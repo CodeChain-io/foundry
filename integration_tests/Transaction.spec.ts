@@ -58,7 +58,7 @@ test("AssetTransferTransaction fromJSONToTransaction", async () => {
         })
         .createMintTransaction({ recipient: addressA });
     await sendTransaction({ transaction: mintTx });
-    const firstAsset = await sdk.rpc.chain.getAsset(mintTx.id(), 0);
+    const firstAsset = await sdk.rpc.chain.getAsset(mintTx.tracker(), 0);
     if (firstAsset == null) {
         throw Error("Cannot get the first asset");
     }
@@ -80,7 +80,7 @@ test("AssetTransferTransaction fromJSONToTransaction", async () => {
     // FIXME: Remove anythings when *Data fields are flattened
     const expectedInput = expect.objectContaining({
         prevOut: expect.objectContaining({
-            transactionId: expect.any(H256),
+            tracker: expect.any(H256),
             index: expect.anything(),
             assetType: expect.any(H256),
             amount: expect.anything()

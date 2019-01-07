@@ -60,7 +60,7 @@ export class UnwrapCCC extends Transaction implements AssetTransaction {
         return this._transaction.burn;
     }
 
-    public id() {
+    public tracker() {
         return new H256(blake256(this._transaction.rlpBytes()));
     }
 

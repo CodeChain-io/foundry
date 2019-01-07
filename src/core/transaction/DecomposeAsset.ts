@@ -30,10 +30,10 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
     }
 
     /**
-     * Get the hash of an AssetDecomposeTransaction.
-     * @returns A transaction hash.
+     * Get the tracker of an AssetDecomposeTransaction.
+     * @returns A transaction tracker.
      */
-    public id(): H256 {
+    public tracker(): H256 {
         return new H256(blake256(this._transaction.rlpBytes()));
     }
 
@@ -104,7 +104,7 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
             lockScriptHash,
             parameters,
             amount,
-            transactionId: this.id(),
+            tracker: this.tracker(),
             transactionOutputIndex: index
         });
     }
@@ -145,7 +145,7 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
         ]);
         const shardId = this._transaction.outputs[index].shardId();
 
-        const blake = blake256WithKey(this.id().value, iv);
+        const blake = blake256WithKey(this.tracker().value, iv);
         const shardPrefix = convertU16toHex(shardId);
         const prefix = `4100${shardPrefix}`;
         return new H256(

@@ -296,21 +296,21 @@ export class ChainRpc {
 
     /**
      * Gets a transaction of given hash.
-     * @param txId The transaction hash of which to get the corresponding transaction of.
+     * @param tracker The tracker of which to get the corresponding transaction of.
      * @returns A transaction, or null when transaction of given hash not exists.
      */
-    public getTransactionById(
-        txId: H256 | string
+    public getTransactionByTracker(
+        tracker: H256 | string
     ): Promise<SignedTransaction | null> {
-        if (!H256.check(txId)) {
+        if (!H256.check(tracker)) {
             throw Error(
-                `Expected the first argument of getTransaction to be an H256 value but found ${txId}`
+                `Expected the first argument of getTransactionByTracker to be an H256 value but found ${tracker}`
             );
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getTransactionById", [
-                    `0x${H256.ensure(txId).value}`
+                .sendRpcRequest("chain_getTransactionByTracker", [
+                    `0x${H256.ensure(tracker).value}`
                 ])
                 .then(result => {
                     try {
@@ -322,7 +322,7 @@ export class ChainRpc {
                     } catch (e) {
                         reject(
                             Error(
-                                `Expected chain_getTransactionById to return either null or JSON of Transaction, but an error occurred: ${e.toString()}`
+                                `Expected chain_getTransactionByTracker to return either null or JSON of Transaction, but an error occurred: ${e.toString()}`
                             )
                         );
                     }
@@ -332,23 +332,23 @@ export class ChainRpc {
     }
 
     /**
-     * Gets invoice of a transaction of given hash.
-     * @param txId The transaction hash of which to get the corresponding transaction of.
+     * Gets invoice of a transaction of given tracker.
+     * @param tracker The transaction hash of which to get the corresponding transaction of.
      * @param options.timeout Indicating milliseconds to wait the transaction to be confirmed.
      * @returns Invoice, or null when transaction of given hash not exists.
      */
-    public async getInvoicesById(
-        txId: H256 | string,
+    public async getInvoicesByTracker(
+        tracker: H256 | string,
         options: { timeout?: number } = {}
     ): Promise<Invoice[]> {
-        if (!H256.check(txId)) {
+        if (!H256.check(tracker)) {
             throw Error(
-                `Expected the first argument of getInvoice to be an H256 value but found ${txId}`
+                `Expected the first argument of getInvoicesByTracker to be an H256 value but found ${tracker}`
             );
         }
         const attemptToGet = async () => {
-            return this.rpc.sendRpcRequest("chain_getInvoicesById", [
-                `0x${H256.ensure(txId).value}`
+            return this.rpc.sendRpcRequest("chain_getInvoicesByTracker", [
+                `0x${H256.ensure(tracker).value}`
             ]);
         };
         const startTime = Date.now();
@@ -358,7 +358,7 @@ export class ChainRpc {
             (typeof timeout !== "number" || timeout < 0)
         ) {
             throw Error(
-                `Expected timeout param of getInvoice to be non-negative number but found ${timeout}`
+                `Expected timeout param of getInvoicesByTracker to be non-negative number but found ${timeout}`
             );
         }
         let result = await attemptToGet();
@@ -377,7 +377,7 @@ export class ChainRpc {
             return result.map(Invoice.fromJSON);
         } catch (e) {
             throw Error(
-                `Expected chain_getInvoicesById to return JSON of Invoice[], but an error occurred: ${e.toString()}. received: ${JSON.stringify(
+                `Expected chain_getInvoicesByTracker to return JSON of Invoice[], but an error occurred: ${e.toString()}. received: ${JSON.stringify(
                     result
                 )}`
             );
@@ -548,36 +548,36 @@ export class ChainRpc {
     }
 
     /**
-     * Gets asset scheme of given hash of AssetMintTransaction.
-     * @param txhash The tx hash of AssetMintTransaction.
+     * Gets asset scheme of given tracker of the mint transaction.
+     * @param tracker The tracker of the mint transaction.
      * @param shardId The shard id of Asset Scheme.
      * @param blockNumber The specific block number to get the asset scheme from
      * @returns AssetScheme, if asset scheme exists. Else, returns null.
      */
-    public getAssetSchemeByHash(
-        txhash: H256 | string,
+    public getAssetSchemeByTracker(
+        tracker: H256 | string,
         shardId: number,
         blockNumber?: number | null
     ): Promise<AssetScheme | null> {
-        if (!H256.check(txhash)) {
+        if (!H256.check(tracker)) {
             throw Error(
-                `Expected the first arugment of getAssetSchemeByHash to be an H256 value but found ${txhash}`
+                `Expected the first arugment of getAssetSchemeByTracker to be an H256 value but found ${tracker}`
             );
         }
         if (!isShardIdValue(shardId)) {
             throw Error(
-                `Expected the second argument of getAssetSchemeByHash to be a shard ID value but found ${shardId}`
+                `Expected the second argument of getAssetSchemeByTracker to be a shard ID value but found ${shardId}`
             );
         }
         if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
             throw Error(
-                `Expected the third argument of getAssetSchemeByHash to be non-negative integer but found ${blockNumber}`
+                `Expected the third argument of getAssetSchemeByTracker to be non-negative integer but found ${blockNumber}`
             );
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getAssetSchemeByHash", [
-                    `0x${H256.ensure(txhash).value}`,
+                .sendRpcRequest("chain_getAssetSchemeByTracker", [
+                    `0x${H256.ensure(tracker).value}`,
                     shardId,
                     blockNumber
                 ])
@@ -591,7 +591,7 @@ export class ChainRpc {
                     } catch (e) {
                         reject(
                             Error(
-                                `Expected chain_getAssetSchemeByHash to return either null or JSON of AssetScheme, but an error occurred: ${e.toString()}`
+                                `Expected chain_getAssetSchemeByTracker to return either null or JSON of AssetScheme, but an error occurred: ${e.toString()}`
                             )
                         );
                     }
@@ -647,19 +647,19 @@ export class ChainRpc {
 
     /**
      * Gets asset of given transaction hash and index.
-     * @param txId The tx hash of AssetMintTransaction or AssetTransferTransaction.
+     * @param tracker The tracker of previous input transaction.
      * @param index The index of output in the transaction.
      * @param blockNumber The specific block number to get the asset from
      * @returns Asset, if asset exists, Else, returns null.
      */
     public getAsset(
-        txId: H256 | string,
+        tracker: H256 | string,
         index: number,
         blockNumber?: number
     ): Promise<Asset | null> {
-        if (!H256.check(txId)) {
+        if (!H256.check(tracker)) {
             throw Error(
-                `Expected the first argument of getAsset to be an H256 value but found ${txId}`
+                `Expected the first argument of getAsset to be an H256 value but found ${tracker}`
             );
         }
         if (!isNonNegativeInterger(index)) {
@@ -675,7 +675,7 @@ export class ChainRpc {
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getAsset", [
-                    `0x${H256.ensure(txId).value}`,
+                    `0x${H256.ensure(tracker).value}`,
                     index,
                     blockNumber
                 ])
@@ -687,7 +687,7 @@ export class ChainRpc {
                         resolve(
                             Asset.fromJSON({
                                 ...result,
-                                transactionId: H256.ensure(txId).value,
+                                tracker: H256.ensure(tracker).value,
                                 transactionOutputIndex: index
                             })
                         );

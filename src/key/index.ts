@@ -193,7 +193,7 @@ export class Key {
         const accountId = PlatformAddress.ensure(account).getAccountId();
         return await keyStore.platform.sign({
             key: accountId.value,
-            message: transaction.id().value,
+            message: transaction.tracker().value,
             passphrase
         });
     }

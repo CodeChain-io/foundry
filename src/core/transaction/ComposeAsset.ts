@@ -42,10 +42,10 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
     }
 
     /**
-     * Get the hash of an AssetComposeTransaction.
+     * Get the tracker of an AssetComposeTransaction.
      * @returns A transaction hash.
      */
-    public id(): H256 {
+    public tracker(): H256 {
         return new H256(blake256(this._transaction.rlpBytes()));
     }
 
@@ -161,7 +161,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
             lockScriptHash,
             parameters,
             amount: amount == null ? U64.ensure(U64.MAX_VALUE) : amount,
-            transactionId: this.id(),
+            tracker: this.tracker(),
             transactionOutputIndex: 0
         });
     }
@@ -216,7 +216,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
     public getAssetSchemeAddress(): H256 {
         const { shardId } = this._transaction;
         const blake = blake256WithKey(
-            this.id().value,
+            this.tracker().value,
             new Uint8Array([
                 0x00,
                 0x00,
@@ -250,7 +250,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
     public getAssetAddress(): H256 {
         const { shardId } = this._transaction;
         const blake = blake256WithKey(
-            this.id().value,
+            this.tracker().value,
             new Uint8Array([
                 0x00,
                 0x00,
