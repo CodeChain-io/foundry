@@ -1,4 +1,4 @@
-import { H256, PlatformAddress } from "../classes";
+import { H160, H256, PlatformAddress } from "../classes";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
@@ -13,6 +13,7 @@ export class ChangeAssetScheme extends Transaction {
         metadata: string;
         approver: PlatformAddress | null;
         administrator: PlatformAddress | null;
+        allowedScriptHashes: H160[];
         approvals: string[];
     }) {
         super(input.networkId);
@@ -47,6 +48,7 @@ class AssetSchemeChangeTransaction {
     public readonly metadata: string;
     public readonly approver: PlatformAddress | null;
     public readonly administrator: PlatformAddress | null;
+    public readonly allowedScriptHashes: H160[];
 
     /**
      * @param params.networkId A network ID of the transaction.
@@ -54,6 +56,7 @@ class AssetSchemeChangeTransaction {
      * @param params.metadata A changed metadata of the asset.
      * @param params.approver A changed approver of the asset.
      * @param params.administrator A changed administrator of the asset.
+     * @param params.allowedScriptHashes Allowed lock script hashes of the asset.
      */
     constructor(params: {
         networkId: NetworkId;
@@ -61,13 +64,15 @@ class AssetSchemeChangeTransaction {
         metadata: string;
         approver: PlatformAddress | null;
         administrator: PlatformAddress | null;
+        allowedScriptHashes: H160[];
     }) {
         const {
             networkId,
             assetType,
             metadata,
             approver,
-            administrator
+            administrator,
+            allowedScriptHashes
         } = params;
         this.networkId = networkId;
         this.assetType = assetType;
@@ -78,6 +83,7 @@ class AssetSchemeChangeTransaction {
             administrator === null
                 ? null
                 : PlatformAddress.ensure(administrator);
+        this.allowedScriptHashes = allowedScriptHashes;
     }
 
     /**
@@ -93,7 +99,10 @@ class AssetSchemeChangeTransaction {
             administrator:
                 this.administrator == null
                     ? null
-                    : this.administrator.toString()
+                    : this.administrator.toString(),
+            allowedScriptHashes: this.allowedScriptHashes.map(hash =>
+                hash.toJSON()
+            )
         };
     }
 
@@ -106,7 +115,8 @@ class AssetSchemeChangeTransaction {
             assetType,
             metadata,
             approver,
-            administrator
+            administrator,
+            allowedScriptHashes
         } = this;
         return [
             0x15,
@@ -114,7 +124,10 @@ class AssetSchemeChangeTransaction {
             assetType,
             metadata,
             approver ? [approver.getAccountId().toEncodeObject()] : [],
-            administrator ? [administrator.getAccountId().toEncodeObject()] : []
+            administrator
+                ? [administrator.getAccountId().toEncodeObject()]
+                : [],
+            allowedScriptHashes.map(hash => hash.toEncodeObject())
         ];
     }
 

@@ -1,5 +1,6 @@
 import {
     AssetTransferAddress,
+    H160,
     H256,
     PlatformAddress
 } from "codechain-primitives";
@@ -14,6 +15,7 @@ export interface AssetSchemeJSON {
     amount: string;
     approver: string | null;
     administrator: string | null;
+    allowedScriptHashes: string[] | null;
     pool: {
         assetType: string;
         amount: string;
@@ -25,7 +27,14 @@ export interface AssetSchemeJSON {
  */
 export class AssetScheme {
     public static fromJSON(data: AssetSchemeJSON) {
-        const { metadata, amount, approver, administrator, pool } = data;
+        const {
+            metadata,
+            amount,
+            approver,
+            administrator,
+            allowedScriptHashes,
+            pool
+        } = data;
         return new AssetScheme({
             metadata,
             amount: U64.ensure(amount),
@@ -35,6 +44,12 @@ export class AssetScheme {
                 administrator === null
                     ? null
                     : PlatformAddress.ensure(administrator),
+            allowedScriptHashes:
+                allowedScriptHashes === null
+                    ? []
+                    : allowedScriptHashes.map((hash: string) =>
+                          H160.ensure(hash)
+                      ),
             pool: pool.map(({ assetType, amount: assetAmount }: any) => ({
                 assetType: H256.ensure(assetType),
                 amount: U64.ensure(assetAmount)
@@ -48,6 +63,7 @@ export class AssetScheme {
     public readonly amount: U64;
     public readonly approver: PlatformAddress | null;
     public readonly administrator: PlatformAddress | null;
+    public readonly allowedScriptHashes: H160[];
     public readonly pool: { assetType: H256; amount: U64 }[];
 
     constructor(data: {
@@ -57,6 +73,7 @@ export class AssetScheme {
         amount: U64;
         approver: PlatformAddress | null;
         administrator: PlatformAddress | null;
+        allowedScriptHashes: H160[];
         pool: { assetType: H256; amount: U64 }[];
     }) {
         this.networkId = data.networkId;
@@ -64,18 +81,27 @@ export class AssetScheme {
         this.metadata = data.metadata;
         this.approver = data.approver;
         this.administrator = data.administrator;
+        this.allowedScriptHashes = data.allowedScriptHashes;
         this.amount = data.amount;
         this.pool = data.pool;
     }
 
     public toJSON(): AssetSchemeJSON {
-        const { metadata, amount, approver, administrator, pool } = this;
+        const {
+            metadata,
+            amount,
+            approver,
+            administrator,
+            allowedScriptHashes,
+            pool
+        } = this;
         return {
             metadata,
             amount: amount.toJSON(),
             approver: approver === null ? null : approver.toString(),
             administrator:
                 administrator === null ? null : administrator.toString(),
+            allowedScriptHashes: allowedScriptHashes.map(hash => hash.toJSON()),
             pool: pool.map(a => ({
                 assetType: a.assetType.toJSON(),
                 amount: a.amount.toJSON()
@@ -93,7 +119,8 @@ export class AssetScheme {
             metadata,
             amount,
             approver,
-            administrator
+            administrator,
+            allowedScriptHashes
         } = this;
         if (networkId === undefined) {
             throw Error(`networkId is undefined`);
@@ -111,6 +138,7 @@ export class AssetScheme {
             }),
             approver,
             administrator,
+            allowedScriptHashes,
             approvals: []
         });
     }

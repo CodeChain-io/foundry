@@ -7,6 +7,7 @@ test("toJSON", () => {
         amount: new U64(111),
         approver: null,
         administrator: null,
+        allowedScriptHashes: [],
         pool: []
     });
     expect(AssetScheme.fromJSON(assetScheme.toJSON())).toEqual(assetScheme);

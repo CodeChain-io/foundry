@@ -1,6 +1,6 @@
 import { blake256, blake256WithKey } from "../../utils";
 import { Asset } from "../Asset";
-import { AssetScheme, H256, PlatformAddress } from "../classes";
+import { AssetScheme, H160, H256, PlatformAddress } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 import { AssetMintOutput } from "./AssetMintOutput";
@@ -18,6 +18,7 @@ export class MintAsset extends Transaction implements AssetTransaction {
         output: AssetMintOutput;
         approver: PlatformAddress | null;
         administrator: PlatformAddress | null;
+        allowedScriptHashes: H160[];
         approvals: string[];
     }) {
         super(input.networkId);
@@ -64,7 +65,8 @@ export class MintAsset extends Transaction implements AssetTransaction {
             metadata,
             output: { amount },
             approver,
-            administrator
+            administrator,
+            allowedScriptHashes
         } = this._transaction;
         if (amount == null) {
             throw Error("not implemented");
@@ -76,6 +78,7 @@ export class MintAsset extends Transaction implements AssetTransaction {
             amount,
             approver,
             administrator,
+            allowedScriptHashes,
             pool: []
         });
     }
@@ -190,6 +193,7 @@ class AssetMintTransaction {
     public readonly output: AssetMintOutput;
     public readonly approver: PlatformAddress | null;
     public readonly administrator: PlatformAddress | null;
+    public readonly allowedScriptHashes: H160[];
 
     /**
      * @param data.networkId A network ID of the transaction.
@@ -200,6 +204,7 @@ class AssetMintTransaction {
      * @param data.output.amount Asset amount of the output.
      * @param data.approver A approver of the asset.
      * @param data.administrator A administrator of the asset.
+     * @param data.allowedScriptHashes Allowed lock script hashes of the asset.
      */
     constructor(data: {
         networkId: NetworkId;
@@ -208,6 +213,7 @@ class AssetMintTransaction {
         output: AssetMintOutput;
         approver: PlatformAddress | null;
         administrator: PlatformAddress | null;
+        allowedScriptHashes: H160[];
     }) {
         const {
             networkId,
@@ -215,7 +221,8 @@ class AssetMintTransaction {
             metadata,
             output,
             approver,
-            administrator
+            administrator,
+            allowedScriptHashes
         } = data;
         this.networkId = networkId;
         this.shardId = shardId;
@@ -223,6 +230,7 @@ class AssetMintTransaction {
         this.output = output;
         this.approver = approver;
         this.administrator = administrator;
+        this.allowedScriptHashes = allowedScriptHashes;
     }
 
     /**
@@ -236,7 +244,8 @@ class AssetMintTransaction {
             metadata,
             output,
             approver,
-            administrator
+            administrator,
+            allowedScriptHashes
         } = this;
         return {
             networkId,
@@ -245,7 +254,8 @@ class AssetMintTransaction {
             output: output.toJSON(),
             approver: approver === null ? null : approver.toString(),
             administrator:
-                administrator === null ? null : administrator.toString()
+                administrator === null ? null : administrator.toString(),
+            allowedScriptHashes: allowedScriptHashes.map(hash => hash.toJSON())
         };
     }
 
@@ -259,7 +269,8 @@ class AssetMintTransaction {
             metadata,
             output: { lockScriptHash, parameters, amount },
             approver,
-            administrator
+            administrator,
+            allowedScriptHashes
         } = this;
         return [
             0x13,
@@ -270,7 +281,10 @@ class AssetMintTransaction {
             parameters.map(parameter => Buffer.from(parameter)),
             amount != null ? [amount.toEncodeObject()] : [],
             approver ? [approver.getAccountId().toEncodeObject()] : [],
-            administrator ? [administrator.getAccountId().toEncodeObject()] : []
+            administrator
+                ? [administrator.getAccountId().toEncodeObject()]
+                : [],
+            allowedScriptHashes.map(hash => hash.toEncodeObject())
         ];
     }
 

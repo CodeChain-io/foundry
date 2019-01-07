@@ -41,6 +41,12 @@ export function fromJSONToTransaction(result: any): Transaction {
                 action.administrator == null
                     ? null
                     : PlatformAddress.ensure(action.administrator);
+            const allowedScriptHashes =
+                action.allowedScriptHashes == null
+                    ? null
+                    : action.allowedScriptHashes.map((hash: string) =>
+                          H160.ensure(hash)
+                      );
             const output = AssetMintOutput.fromJSON(action.output);
             tx = new MintAsset({
                 networkId,
@@ -49,6 +55,7 @@ export function fromJSONToTransaction(result: any): Transaction {
                 output,
                 approver,
                 administrator,
+                allowedScriptHashes,
                 approvals
             });
             break;
@@ -64,12 +71,16 @@ export function fromJSONToTransaction(result: any): Transaction {
                 action.administrator == null
                     ? null
                     : PlatformAddress.ensure(action.administrator);
+            const allowedScriptHashes = action.allowedScriptHashes.map(
+                (hash: string) => H160.ensure(hash)
+            );
             tx = new ChangeAssetScheme({
                 networkId,
                 assetType,
                 metadata,
                 approver,
                 administrator,
+                allowedScriptHashes,
                 approvals
             });
             break;
@@ -112,6 +123,9 @@ export function fromJSONToTransaction(result: any): Transaction {
                 action.administrator == null
                     ? null
                     : PlatformAddress.ensure(action.administrator);
+            const allowedScriptHashes = action.allowedScriptHashes.map(
+                (hash: string) => H160.ensure(hash)
+            );
             const inputs = action.inputs.map(AssetTransferInput.fromJSON);
             const output = AssetMintOutput.fromJSON(action.output);
             tx = new ComposeAsset({
@@ -120,6 +134,7 @@ export function fromJSONToTransaction(result: any): Transaction {
                 metadata,
                 approver,
                 administrator,
+                allowedScriptHashes,
                 inputs,
                 output,
                 approvals

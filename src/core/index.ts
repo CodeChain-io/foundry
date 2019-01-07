@@ -332,6 +332,7 @@ export class Core {
         amount: U64 | number | string;
         approver?: PlatformAddress | string;
         administrator?: PlatformAddress | string;
+        allowedScriptHashes?: H160[];
         pool?: { assetType: H256 | string; amount: number }[];
     }): AssetScheme {
         const {
@@ -340,6 +341,7 @@ export class Core {
             amount,
             approver = null,
             administrator = null,
+            allowedScriptHashes = null,
             pool = []
         } = params;
         checkShardId(shardId);
@@ -358,6 +360,8 @@ export class Core {
                 administrator == null
                     ? null
                     : PlatformAddress.ensure(administrator),
+            allowedScriptHashes:
+                allowedScriptHashes == null ? [] : allowedScriptHashes,
             pool: pool.map(({ assetType, amount: assetAmount }) => ({
                 assetType: H256.ensure(assetType),
                 amount: U64.ensure(assetAmount)
@@ -529,6 +533,7 @@ export class Core {
                   metadata: string;
                   approver?: PlatformAddress | string;
                   administrator?: PlatformAddress | string;
+                  allowedScriptHashes?: H160[];
                   amount?: U64 | number | string | null;
               };
         recipient: AssetTransferAddress | string;
@@ -546,6 +551,7 @@ export class Core {
             metadata,
             approver: approver = null,
             administrator: administrator = null,
+            allowedScriptHashes = null,
             amount
         } = scheme;
         checkAssetTransferAddressRecipient(recipient);
@@ -569,6 +575,8 @@ export class Core {
                 administrator == null
                     ? null
                     : PlatformAddress.ensure(administrator),
+            allowedScriptHashes:
+                allowedScriptHashes == null ? [] : allowedScriptHashes,
             metadata,
             output: new AssetMintOutput({
                 amount: amount == null ? null : U64.ensure(amount),
@@ -587,6 +595,7 @@ export class Core {
                   metadata: string;
                   approver?: PlatformAddress | string;
                   administrator?: PlatformAddress | string;
+                  allowedScriptHashes?: H160[];
               };
         approvals?: string[];
     }): ChangeAssetScheme {
@@ -600,7 +609,8 @@ export class Core {
             networkId = this.networkId,
             metadata,
             approver: approver = null,
-            administrator: administrator = null
+            administrator: administrator = null,
+            allowedScriptHashes = null
         } = scheme;
         checkNetworkId(networkId);
         checkAssetType(assetType);
@@ -617,6 +627,8 @@ export class Core {
                 administrator == null
                     ? null
                     : PlatformAddress.ensure(administrator),
+            allowedScriptHashes:
+                allowedScriptHashes == null ? [] : allowedScriptHashes,
             approvals
         });
     }
@@ -660,6 +672,7 @@ export class Core {
                   amount?: U64 | number | string | null;
                   approver?: PlatformAddress | string;
                   administrator?: PlatformAddress | string;
+                  allowedScriptHashes?: H160[];
                   networkId?: NetworkId;
               };
         inputs: AssetTransferInput[];
@@ -673,6 +686,7 @@ export class Core {
             metadata,
             approver = null,
             administrator = null,
+            allowedScriptHashes = null,
             amount
         } = scheme;
         checkTransferInputs(inputs);
@@ -696,6 +710,8 @@ export class Core {
                 administrator == null
                     ? null
                     : PlatformAddress.ensure(administrator),
+            allowedScriptHashes:
+                allowedScriptHashes == null ? [] : allowedScriptHashes,
             metadata,
             inputs,
             output: new AssetMintOutput({

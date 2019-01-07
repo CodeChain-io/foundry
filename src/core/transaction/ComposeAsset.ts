@@ -31,6 +31,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
         metadata: string;
         approver: PlatformAddress | null;
         administrator: PlatformAddress | null;
+        allowedScriptHashes: H160[];
         inputs: AssetTransferInput[];
         output: AssetMintOutput;
         approvals: string[];
@@ -96,7 +97,8 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
             shardId,
             metadata,
             approver,
-            administrator
+            administrator,
+            allowedScriptHashes
         } = this._transaction;
         return new H256(
             blake256WithKey(
@@ -106,6 +108,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
                     metadata,
                     approver,
                     administrator,
+                    allowedScriptHashes,
                     inputs,
                     output
                 }).rlpBytes(),
@@ -178,7 +181,8 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
             inputs,
             output: { amount },
             approver,
-            administrator
+            administrator,
+            allowedScriptHashes
         } = this._transaction;
         if (amount == null) {
             throw Error("not implemented");
@@ -190,6 +194,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
             amount,
             approver,
             administrator,
+            allowedScriptHashes,
             pool: _.toPairs(
                 // NOTE: Get the sum of each asset type
                 inputs.reduce((acc: { [assetType: string]: U64 }, input) => {
@@ -309,6 +314,7 @@ class AssetComposeTransaction {
     public readonly metadata: string;
     public readonly approver: PlatformAddress | null;
     public readonly administrator: PlatformAddress | null;
+    public readonly allowedScriptHashes: H160[];
     public readonly inputs: AssetTransferInput[];
     public readonly output: AssetMintOutput;
 
@@ -318,6 +324,7 @@ class AssetComposeTransaction {
      * @param params.metadata A metadata of the asset.
      * @param params.approver A approver of the asset.
      * @param params.administrator A administrator of the asset.
+     * @param params.allowedScriptHashes Allowed lock script hashes of the asset.
      * @param params.inputs A list of inputs of the transaction.
      * @param params.output An output of the transaction.
      */
@@ -327,6 +334,7 @@ class AssetComposeTransaction {
         metadata: string;
         approver: PlatformAddress | null;
         administrator: PlatformAddress | null;
+        allowedScriptHashes: H160[];
         inputs: AssetTransferInput[];
         output: AssetMintOutput;
     }) {
@@ -336,6 +344,7 @@ class AssetComposeTransaction {
             metadata,
             approver,
             administrator,
+            allowedScriptHashes,
             inputs,
             output
         } = params;
@@ -348,6 +357,7 @@ class AssetComposeTransaction {
             administrator === null
                 ? null
                 : PlatformAddress.ensure(administrator);
+        this.allowedScriptHashes = allowedScriptHashes;
         this.inputs = inputs;
         this.output = new AssetMintOutput(output);
     }
@@ -366,6 +376,9 @@ class AssetComposeTransaction {
                 this.administrator === null
                     ? null
                     : this.administrator.toString(),
+            allowedScriptHashes: this.allowedScriptHashes.map(hash =>
+                hash.toJSON()
+            ),
             output: this.output.toJSON(),
             inputs: this.inputs.map(input => input.toJSON())
         };
@@ -382,6 +395,7 @@ class AssetComposeTransaction {
             this.metadata,
             this.approver ? [this.approver.toString()] : [],
             this.administrator ? [this.administrator.toString()] : [],
+            this.allowedScriptHashes.map(hash => hash.toEncodeObject()),
             this.inputs.map(input => input.toEncodeObject()),
             this.output.lockScriptHash.toEncodeObject(),
             this.output.parameters.map(parameter => Buffer.from(parameter)),
