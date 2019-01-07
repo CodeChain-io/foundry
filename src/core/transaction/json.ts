@@ -90,7 +90,7 @@ export function fromJSONToTransaction(result: any): Transaction {
             });
             break;
         }
-        case "composeAsset": {
+        case "decomposeAsset": {
             const approvals = action.approvals;
             const input = AssetTransferInput.fromJSON(action.input);
             const outputs = action.outputs.map(AssetTransferOutput.fromJSON);
@@ -102,7 +102,7 @@ export function fromJSONToTransaction(result: any): Transaction {
             });
             break;
         }
-        case "decomposeAsset": {
+        case "composeAsset": {
             const { shardId, metadata, approvals } = action;
             const approver =
                 action.approver == null
