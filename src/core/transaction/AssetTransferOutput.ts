@@ -9,7 +9,7 @@ import { U64 } from "../U64";
 
 export interface AssetTransferOutputJSON {
     lockScriptHash: string;
-    parameters: number[][];
+    parameters: string[];
     assetType: string;
     amount: string;
 }
@@ -42,9 +42,7 @@ export class AssetTransferOutput {
         const { lockScriptHash, parameters, assetType, amount } = data;
         return new AssetTransferOutput({
             lockScriptHash: H160.ensure(lockScriptHash),
-            parameters: parameters.map((p: number[] | Buffer) =>
-                Buffer.from(p)
-            ),
+            parameters: parameters.map((p: string) => Buffer.from(p, "hex")),
             assetType: H256.ensure(assetType),
             amount: U64.ensure(amount)
         });
@@ -120,7 +118,7 @@ export class AssetTransferOutput {
         const { lockScriptHash, parameters, assetType, amount } = this;
         return {
             lockScriptHash: lockScriptHash.toJSON(),
-            parameters: parameters.map(parameter => [...parameter]),
+            parameters: parameters.map((p: Buffer) => p.toString("hex")),
             assetType: assetType.toJSON(),
             amount: amount.toJSON()
         };

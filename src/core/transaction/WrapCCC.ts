@@ -117,7 +117,7 @@ export class WrapCCC extends Transaction implements AssetTransaction {
         return {
             shardId,
             lockScriptHash: lockScriptHash.toJSON(),
-            parameters: parameters.map(parameter => [...parameter]),
+            parameters: parameters.map((p: Buffer) => p.toString("hex")),
             amount: amount.toJSON()
         };
     }

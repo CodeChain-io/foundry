@@ -192,8 +192,8 @@ export function fromJSONToTransaction(result: any): Transaction {
         case "wrapCCC": {
             const shardId = action.shardId;
             const lockScriptHash = H160.ensure(action.lockScriptHash);
-            const parameters = action.parameters.map((p: number[] | Buffer) =>
-                Buffer.from(p)
+            const parameters = action.parameters.map((p: string) =>
+                Buffer.from(p, "hex")
             );
             const amount = U64.ensure(action.amount);
             tx = new WrapCCC(

@@ -7,7 +7,7 @@ import { U64 } from "../U64";
 
 export interface AssetMintOutputJSON {
     lockScriptHash: string;
-    parameters: number[][];
+    parameters: string[];
     amount?: string | null;
 }
 
@@ -21,7 +21,7 @@ export class AssetMintOutput {
         const { lockScriptHash, parameters, amount } = data;
         return new this({
             lockScriptHash: H160.ensure(lockScriptHash),
-            parameters: parameters.map(p => Buffer.from(p)),
+            parameters: parameters.map(p => Buffer.from(p, "hex")),
             amount: amount == null ? null : U64.ensure(amount)
         });
     }
@@ -88,7 +88,7 @@ export class AssetMintOutput {
     public toJSON(): AssetMintOutputJSON {
         return {
             lockScriptHash: this.lockScriptHash.toJSON(),
-            parameters: this.parameters.map(p => [...p]),
+            parameters: this.parameters.map((p: Buffer) => p.toString("hex")),
             amount: this.amount == null ? undefined : this.amount.toJSON()
         };
     }

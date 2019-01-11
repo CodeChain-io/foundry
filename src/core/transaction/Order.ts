@@ -22,9 +22,9 @@ export interface OrderJSON {
     originOutputs: AssetOutPointJSON[];
     expiration: string;
     lockScriptHashFrom: string;
-    parametersFrom: number[][];
+    parametersFrom: string[];
     lockScriptHashFee: string;
-    parametersFee: number[][];
+    parametersFee: string[];
 }
 
 export interface OrderDataBasic {
@@ -84,12 +84,12 @@ export class Order {
             ),
             expiration: U64.ensure(expiration),
             lockScriptHashFrom: new H160(lockScriptHashFrom),
-            parametersFrom: parametersFrom.map((p: Buffer | number[]) =>
-                Buffer.from(p)
+            parametersFrom: parametersFrom.map((p: string) =>
+                Buffer.from(p, "hex")
             ),
             lockScriptHashFee: new H160(lockScriptHashFee),
-            parametersFee: parametersFee.map((p: Buffer | number[]) =>
-                Buffer.from(p)
+            parametersFee: parametersFee.map((p: string) =>
+                Buffer.from(p, "hex")
             )
         });
     }
@@ -285,9 +285,11 @@ export class Order {
             originOutputs: originOutputs.map(output => output.toJSON()),
             expiration: expiration.toString(),
             lockScriptHashFrom: lockScriptHashFrom.toJSON(),
-            parametersFrom: parametersFrom.map(parameter => [...parameter]),
+            parametersFrom: parametersFrom.map((p: Buffer) =>
+                p.toString("hex")
+            ),
             lockScriptHashFee: lockScriptHashFee.toJSON(),
-            parametersFee: parametersFee.map(parameter => [...parameter])
+            parametersFee: parametersFee.map((p: Buffer) => p.toString("hex"))
         };
     }
 

@@ -12,7 +12,7 @@ import { U64 } from "./U64";
 export interface AssetJSON {
     assetType: string;
     lockScriptHash: string;
-    parameters: number[][];
+    parameters: string[];
     amount: string;
     orderHash: string | null;
     // The `hash` and the `index` are not included in an RPC response. See
@@ -47,9 +47,7 @@ export class Asset {
         return new Asset({
             assetType: new H256(assetType),
             lockScriptHash: new H160(lockScriptHash),
-            parameters: parameters.map((p: Buffer | number[]) =>
-                Buffer.from(p)
-            ),
+            parameters: parameters.map((p: string) => Buffer.from(p, "hex")),
             amount: U64.ensure(amount),
             orderHash: orderHash === null ? orderHash : H256.ensure(orderHash),
             tracker: new H256(tracker),
@@ -102,7 +100,7 @@ export class Asset {
         return {
             assetType: assetType.toJSON(),
             lockScriptHash: lockScriptHash.toJSON(),
-            parameters: parameters.map(p => [...p]),
+            parameters: parameters.map((p: Buffer) => p.toString("hex")),
             amount: amount.toJSON(),
             orderHash: orderHash === null ? null : orderHash.toJSON(),
             tracker: tracker.toJSON(),
