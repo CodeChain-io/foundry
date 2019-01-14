@@ -233,7 +233,7 @@ describe("rpc", () => {
             beforeEach(async () => {
                 tx = sdk.core.createPayTransaction({
                     recipient: signerAddress,
-                    amount: 10
+                    quantity: 10
                 });
                 seq = await sdk.rpc.chain.getSeq(signerAddress);
             });
@@ -337,7 +337,7 @@ describe("rpc", () => {
             beforeAll(async () => {
                 const tx = sdk.core.createPayTransaction({
                     recipient: signerAddress,
-                    amount: 10
+                    quantity: 10
                 });
                 const signed = tx.sign({
                     secret: signerSecret,
@@ -379,7 +379,7 @@ describe("rpc", () => {
                     .createAssetScheme({
                         shardId,
                         metadata: "metadata",
-                        amount: 10,
+                        supply: 10,
                         approver: undefined
                     })
                     .createMintTransaction({
@@ -472,7 +472,7 @@ describe("rpc", () => {
                     .createAssetScheme({
                         shardId,
                         metadata: "metadata",
-                        amount: 10,
+                        supply: 10,
                         approver: undefined
                     })
                     .createMintTransaction({
@@ -484,7 +484,7 @@ describe("rpc", () => {
                     .addInputs(mintedAsset)
                     .addOutputs({
                         recipient: await sdk.key.createAssetTransferAddress(),
-                        amount: 10,
+                        quantity: 10,
                         assetType: mintedAsset.assetType
                     });
                 await sdk.key.signTransactionInput(transferTransaction, 0);

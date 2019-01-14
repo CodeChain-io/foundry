@@ -40,7 +40,7 @@ test("setRegularKey", async () => {
     const seq2 = await sdk.rpc.chain.getSeq(masterAddress);
     const p2 = sdk.core.createPayTransaction({
         recipient: masterAddress,
-        amount: 10
+        quantity: 10
     });
     const hash2 = await sdk.rpc.chain.sendSignedTransaction(
         p2.sign({

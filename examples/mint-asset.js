@@ -22,7 +22,7 @@ const tx = sdk.core.createMintAssetTransaction({
             description: "...",
             icon_url: "..."
         }),
-        amount: 100000000
+        supply: 100000000
     },
     recipient: address
 });

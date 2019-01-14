@@ -45,7 +45,7 @@ const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
     const seq2 = await sdk.rpc.chain.getSeq(masterAddress);
     const p2 = sdk.core.createPayTransaction({
         recipient: masterAddress,
-        amount: 10
+        quantity: 10
     });
     // We can sign a tx with our `regularSecret`.
     // The tx's fee is charged from the master account.

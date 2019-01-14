@@ -86,23 +86,23 @@ export class Core {
     }
 
     /**
-     * Creates Pay type which pays the value amount of CCC(CodeChain Coin)
+     * Creates Pay type which pays the value quantity of CCC(CodeChain Coin)
      * from the tx signer to the recipient. Who is signing the tx will pay.
      * @param params.recipient The platform account who receives CCC
-     * @param params.amount Amount of CCC to pay
+     * @param params.quantity quantity of CCC to pay
      * @throws Given string for recipient is invalid for converting it to PlatformAddress
-     * @throws Given number or string for amount is invalid for converting it to U64
+     * @throws Given number or string for quantity is invalid for converting it to U64
      */
     public createPayTransaction(params: {
         recipient: PlatformAddress | string;
-        amount: U64 | number | string;
+        quantity: U64 | number | string;
     }): Pay {
-        const { recipient, amount } = params;
+        const { recipient, quantity } = params;
         checkPlatformAddressRecipient(recipient);
-        checkAmount(amount);
+        checkAmount(quantity);
         return new Pay(
             PlatformAddress.ensure(recipient),
-            U64.ensure(amount),
+            U64.ensure(quantity),
             this.networkId
         );
     }
@@ -165,14 +165,14 @@ export class Core {
     }
 
     /**
-     * Creates Wrap CCC type which wraps the value amount of CCC(CodeChain Coin)
+     * Creates Wrap CCC type which wraps the value quantity of CCC(CodeChain Coin)
      * in a wrapped CCC asset. Who is signing the tx will pay.
      * @param params.shardId A shard ID of the wrapped CCC asset.
      * @param params.lockScriptHash A lock script hash of the wrapped CCC asset.
      * @param params.parameters Parameters of the wrapped CCC asset.
-     * @param params.amount Amount of CCC to pay
+     * @param params.quantity quantity of CCC to pay
      * @throws Given string for a lock script hash is invalid for converting it to H160
-     * @throws Given number or string for amount is invalid for converting it to U64
+     * @throws Given number or string for quantity is invalid for converting it to U64
      */
     public createWrapCCCTransaction(
         params:
@@ -180,24 +180,24 @@ export class Core {
                   shardId: number;
                   lockScriptHash: H160 | string;
                   parameters: Buffer[];
-                  amount: U64 | number | string;
+                  quantity: U64 | number | string;
               }
             | {
                   shardId: number;
                   recipient: AssetTransferAddress | string;
-                  amount: U64 | number | string;
+                  quantity: U64 | number | string;
               }
     ): WrapCCC {
-        const { shardId, amount } = params;
+        const { shardId, quantity } = params;
         checkShardId(shardId);
-        checkAmount(amount);
+        checkAmount(quantity);
         let data;
         if ("recipient" in params) {
             checkAssetTransferAddressRecipient(params.recipient);
             data = {
                 shardId,
                 recipient: AssetTransferAddress.ensure(params.recipient),
-                amount: U64.ensure(amount)
+                quantity: U64.ensure(quantity)
             };
         } else {
             const { lockScriptHash, parameters } = params;
@@ -207,7 +207,7 @@ export class Core {
                 shardId,
                 lockScriptHash: H160.ensure(lockScriptHash),
                 parameters,
-                amount: U64.ensure(amount)
+                quantity: U64.ensure(quantity)
             };
         }
         return new WrapCCC(data, this.networkId);
@@ -317,7 +317,7 @@ export class Core {
      * Creates asset's scheme.
      * @param params.metadata Any string that describing the asset. For example,
      * stringified JSON containing properties.
-     * @param params.amount Total amount of this asset
+     * @param params.supply Total supply of this asset
      * @param params.approver Platform account or null. If account is present, the
      * tx that includes AssetTransferTransaction of this asset must be signed by
      * the approver account.
@@ -329,16 +329,16 @@ export class Core {
     public createAssetScheme(params: {
         shardId: number;
         metadata: string;
-        amount: U64 | number | string;
+        supply: U64 | number | string;
         approver?: PlatformAddress | string;
         administrator?: PlatformAddress | string;
         allowedScriptHashes?: H160[];
-        pool?: { assetType: H256 | string; amount: number }[];
+        pool?: { assetType: H256 | string; quantity: number }[];
     }): AssetScheme {
         const {
             shardId,
             metadata,
-            amount,
+            supply,
             approver = null,
             administrator = null,
             allowedScriptHashes = null,
@@ -346,14 +346,14 @@ export class Core {
         } = params;
         checkShardId(shardId);
         checkMetadata(metadata);
-        checkAmount(amount);
+        checkAmount(supply);
         checkApprover(approver);
         checkAdministrator(administrator);
         return new AssetScheme({
             networkId: this.networkId,
             shardId,
             metadata,
-            amount: U64.ensure(amount),
+            supply: U64.ensure(supply),
             approver:
                 approver == null ? null : PlatformAddress.ensure(approver),
             administrator:
@@ -362,9 +362,9 @@ export class Core {
                     : PlatformAddress.ensure(administrator),
             allowedScriptHashes:
                 allowedScriptHashes == null ? [] : allowedScriptHashes,
-            pool: pool.map(({ assetType, amount: assetAmount }) => ({
+            pool: pool.map(({ assetType, quantity: assetQuantity }) => ({
                 assetType: H256.ensure(assetType),
-                amount: U64.ensure(assetAmount)
+                quantity: U64.ensure(assetQuantity)
             }))
         });
     }
@@ -374,16 +374,16 @@ export class Core {
             assetTypeFrom: H256 | string;
             assetTypeTo: H256 | string;
             assetTypeFee?: H256 | string;
-            assetAmountFrom: U64 | number | string;
-            assetAmountTo: U64 | number | string;
-            assetAmountFee?: U64 | number | string;
+            assetQuantityFrom: U64 | number | string;
+            assetQuantityTo: U64 | number | string;
+            assetQuantityFee?: U64 | number | string;
             originOutputs:
                 | AssetOutPoint[]
                 | {
                       tracker: H256 | string;
                       index: number;
                       assetType: H256 | string;
-                      amount: U64 | number | string;
+                      quantity: U64 | number | string;
                       lockScriptHash?: H256 | string;
                       parameters?: Buffer[];
                   }[];
@@ -410,18 +410,18 @@ export class Core {
             assetTypeFrom,
             assetTypeTo,
             assetTypeFee = "0".repeat(64),
-            assetAmountFrom,
-            assetAmountTo,
-            assetAmountFee = 0,
+            assetQuantityFrom,
+            assetQuantityTo,
+            assetQuantityFee = 0,
             originOutputs,
             expiration
         } = params;
         checkAssetType(assetTypeFrom);
         checkAssetType(assetTypeTo);
         checkAssetType(assetTypeFee);
-        checkAmount(assetAmountFrom);
-        checkAmount(assetAmountTo);
-        checkAmount(assetAmountFee);
+        checkAmount(assetQuantityFrom);
+        checkAmount(assetQuantityTo);
+        checkAmount(assetQuantityFee);
         checkExpiration(expiration);
         const originOutputsConv: AssetOutPoint[] = [];
         for (let i = 0; i < originOutputs.length; i++) {
@@ -430,7 +430,7 @@ export class Core {
                 tracker,
                 index,
                 assetType,
-                amount,
+                quantity,
                 lockScriptHash,
                 parameters
             } = originOutput;
@@ -442,7 +442,7 @@ export class Core {
                           tracker: H256.ensure(tracker),
                           index,
                           assetType: H256.ensure(assetType),
-                          amount: U64.ensure(amount),
+                          quantity: U64.ensure(quantity),
                           lockScriptHash: lockScriptHash
                               ? H160.ensure(lockScriptHash)
                               : undefined,
@@ -454,9 +454,9 @@ export class Core {
             assetTypeFrom: H256.ensure(assetTypeFrom),
             assetTypeTo: H256.ensure(assetTypeTo),
             assetTypeFee: H256.ensure(assetTypeFee),
-            assetAmountFrom: U64.ensure(assetAmountFrom),
-            assetAmountTo: U64.ensure(assetAmountTo),
-            assetAmountFee: U64.ensure(assetAmountFee),
+            assetQuantityFrom: U64.ensure(assetQuantityFrom),
+            assetQuantityTo: U64.ensure(assetQuantityTo),
+            assetQuantityFee: U64.ensure(assetQuantityFee),
             expiration: U64.ensure(expiration),
             originOutputs: originOutputsConv
         };
@@ -506,19 +506,19 @@ export class Core {
     }
     public createOrderOnTransfer(params: {
         order: Order;
-        spentAmount: U64 | string | number;
+        spentQuantity: U64 | string | number;
         inputIndices: number[];
         outputIndices: number[];
     }) {
-        const { order, spentAmount, inputIndices, outputIndices } = params;
+        const { order, spentQuantity, inputIndices, outputIndices } = params;
         checkOrder(order);
-        checkAmount(spentAmount);
+        checkAmount(spentQuantity);
         checkIndices(inputIndices);
         checkIndices(outputIndices);
 
         return new OrderOnTransfer({
             order,
-            spentAmount: U64.ensure(spentAmount),
+            spentQuantity: U64.ensure(spentQuantity),
             inputIndices,
             outputIndices
         });
@@ -534,7 +534,7 @@ export class Core {
                   approver?: PlatformAddress | string;
                   administrator?: PlatformAddress | string;
                   allowedScriptHashes?: H160[];
-                  amount?: U64 | number | string | null;
+                  supply?: U64 | number | string | null;
               };
         recipient: AssetTransferAddress | string;
         approvals?: string[];
@@ -552,7 +552,7 @@ export class Core {
             approver: approver = null,
             administrator: administrator = null,
             allowedScriptHashes = null,
-            amount
+            supply
         } = scheme;
         checkAssetTransferAddressRecipient(recipient);
         checkNetworkId(networkId);
@@ -563,8 +563,8 @@ export class Core {
         checkMetadata(metadata);
         checkApprover(approver);
         checkAdministrator(administrator);
-        if (amount != null) {
-            checkAmount(amount);
+        if (supply != null) {
+            checkAmount(supply);
         }
         return new MintAsset({
             networkId,
@@ -579,7 +579,7 @@ export class Core {
                 allowedScriptHashes == null ? [] : allowedScriptHashes,
             metadata,
             output: new AssetMintOutput({
-                amount: amount == null ? null : U64.ensure(amount),
+                supply: supply == null ? null : U64.ensure(supply),
                 recipient: AssetTransferAddress.ensure(recipient)
             }),
             approvals
@@ -669,7 +669,7 @@ export class Core {
             | {
                   shardId: number;
                   metadata: string;
-                  amount?: U64 | number | string | null;
+                  supply?: U64 | number | string | null;
                   approver?: PlatformAddress | string;
                   administrator?: PlatformAddress | string;
                   allowedScriptHashes?: H160[];
@@ -687,7 +687,7 @@ export class Core {
             approver = null,
             administrator = null,
             allowedScriptHashes = null,
-            amount
+            supply
         } = scheme;
         checkTransferInputs(inputs);
         checkAssetTransferAddressRecipient(recipient);
@@ -698,8 +698,8 @@ export class Core {
         checkShardId(shardId);
         checkMetadata(metadata);
         checkApprover(approver);
-        if (amount != null) {
-            checkAmount(amount);
+        if (supply != null) {
+            checkAmount(supply);
         }
         return new ComposeAsset({
             networkId,
@@ -716,7 +716,7 @@ export class Core {
             inputs,
             output: new AssetMintOutput({
                 recipient: AssetTransferAddress.ensure(recipient),
-                amount: amount == null ? null : U64.ensure(amount)
+                supply: supply == null ? null : U64.ensure(supply)
             }),
             approvals
         });
@@ -786,7 +786,7 @@ export class Core {
                   tracker: H256 | string;
                   index: number;
                   assetType: H256 | string;
-                  amount: U64 | number | string;
+                  quantity: U64 | number | string;
                   lockScriptHash?: H256 | string;
                   parameters?: Buffer[];
               };
@@ -812,7 +812,7 @@ export class Core {
             tracker,
             index,
             assetType,
-            amount,
+            quantity,
             lockScriptHash,
             parameters
         } = assetOutPoint;
@@ -824,7 +824,7 @@ export class Core {
                           tracker: H256.ensure(tracker),
                           index,
                           assetType: H256.ensure(assetType),
-                          amount: U64.ensure(amount),
+                          quantity: U64.ensure(quantity),
                           lockScriptHash: lockScriptHash
                               ? H160.ensure(lockScriptHash)
                               : undefined,
@@ -840,25 +840,25 @@ export class Core {
         tracker: H256 | string;
         index: number;
         assetType: H256 | string;
-        amount: U64 | number | string;
+        quantity: U64 | number | string;
     }): AssetOutPoint {
-        const { tracker, index, assetType, amount } = params;
+        const { tracker, index, assetType, quantity } = params;
         checkTracker(tracker);
         checkIndex(index);
         checkAssetType(assetType);
-        checkAmount(amount);
+        checkAmount(quantity);
         return new AssetOutPoint({
             tracker: H256.ensure(tracker),
             index,
             assetType: H256.ensure(assetType),
-            amount: U64.ensure(amount)
+            quantity: U64.ensure(quantity)
         });
     }
 
     public createAssetTransferOutput(
         params: {
             assetType: H256 | string;
-            amount: U64 | number | string;
+            quantity: U64 | number | string;
         } & (
             | {
                   recipient: AssetTransferAddress | string;
@@ -869,16 +869,16 @@ export class Core {
               })
     ): AssetTransferOutput {
         const { assetType } = params;
-        const amount = U64.ensure(params.amount);
+        const quantity = U64.ensure(params.quantity);
         checkAssetType(assetType);
-        checkAmount(amount);
+        checkAmount(quantity);
         if ("recipient" in params) {
             const { recipient } = params;
             checkAssetTransferAddressRecipient(recipient);
             return new AssetTransferOutput({
                 recipient: AssetTransferAddress.ensure(recipient),
                 assetType: H256.ensure(assetType),
-                amount
+                quantity
             });
         } else if ("lockScriptHash" in params && "parameters" in params) {
             const { lockScriptHash, parameters } = params;
@@ -888,7 +888,7 @@ export class Core {
                 lockScriptHash: H160.ensure(lockScriptHash),
                 parameters,
                 assetType: H256.ensure(assetType),
-                amount
+                quantity
             });
         } else {
             throw Error(`Unexpected params: ${params}`);
@@ -1093,7 +1093,7 @@ function checkAssetOutPoint(
               tracker: H256 | string;
               index: number;
               assetType: H256 | string;
-              amount: U64 | number | string;
+              quantity: U64 | number | string;
               lockScriptHash?: H256 | string;
               parameters?: Buffer[];
           }
@@ -1107,14 +1107,14 @@ function checkAssetOutPoint(
         tracker,
         index,
         assetType,
-        amount,
+        quantity,
         lockScriptHash,
         parameters
     } = value;
     checkTracker(tracker);
     checkIndex(index);
     checkAssetType(assetType);
-    checkAmount(amount);
+    checkAmount(quantity);
     if (lockScriptHash) {
         checkLockScriptHash(lockScriptHash);
     }

@@ -8,7 +8,7 @@ import { U64 } from "../U64";
 export interface AssetMintOutputJSON {
     lockScriptHash: string;
     parameters: string[];
-    amount?: string | null;
+    supply?: string | null;
 }
 
 export class AssetMintOutput {
@@ -18,33 +18,33 @@ export class AssetMintOutput {
      * @returns An AssetMintOutput.
      */
     public static fromJSON(data: AssetMintOutputJSON) {
-        const { lockScriptHash, parameters, amount } = data;
+        const { lockScriptHash, parameters, supply } = data;
         return new this({
             lockScriptHash: H160.ensure(lockScriptHash),
             parameters: parameters.map(p => Buffer.from(p, "hex")),
-            amount: amount == null ? null : U64.ensure(amount)
+            supply: supply == null ? null : U64.ensure(supply)
         });
     }
 
     public readonly lockScriptHash: H160;
     public readonly parameters: Buffer[];
-    public readonly amount?: U64 | null;
+    public readonly supply?: U64 | null;
 
     /**
      * @param data.lockScriptHash A lock script hash of the output.
      * @param data.parameters Parameters of the output.
-     * @param data.amount Asset amount of the output.
+     * @param data.supply Asset supply of the output.
      */
     constructor(
         data:
             | {
                   lockScriptHash: H160;
                   parameters: Buffer[];
-                  amount?: U64 | null;
+                  supply?: U64 | null;
               }
             | {
                   recipient: AssetTransferAddress;
-                  amount?: U64 | null;
+                  supply?: U64 | null;
               }
     ) {
         if ("recipient" in data) {
@@ -78,7 +78,7 @@ export class AssetMintOutput {
             this.lockScriptHash = lockScriptHash;
             this.parameters = parameters;
         }
-        this.amount = data.amount;
+        this.supply = data.supply;
     }
 
     /**
@@ -89,7 +89,7 @@ export class AssetMintOutput {
         return {
             lockScriptHash: this.lockScriptHash.toJSON(),
             parameters: this.parameters.map((p: Buffer) => p.toString("hex")),
-            amount: this.amount == null ? undefined : this.amount.toJSON()
+            supply: this.supply == null ? undefined : this.supply.toJSON()
         };
     }
 }

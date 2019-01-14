@@ -14,7 +14,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     const address = await sdk.key.createAssetTransferAddress({
         type: "P2PKHBurn"
     });
-    const amount = 100;
+    const quantity = 100;
 
     const balanceStart = await sdk.rpc.chain.getBalance(ACCOUNT_ADDRESS);
 
@@ -22,7 +22,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     const wrapCCC = sdk.core.createWrapCCCTransaction({
         shardId: 0,
         recipient: address,
-        amount
+        quantity
     });
     const wrapCCCSignedHash = await sdk.rpc.chain.sendTransaction(wrapCCC, {
         account: ACCOUNT_ADDRESS,

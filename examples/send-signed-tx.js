@@ -14,7 +14,7 @@ const ACCOUNT_ADDRESS =
 
 const tx = sdk.core.createPayTransaction({
     recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
-    amount: 10000
+    quantity: 10000
 });
 
 (async () => {

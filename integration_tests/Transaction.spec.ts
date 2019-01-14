@@ -17,12 +17,12 @@ const { H160, H256 } = SDK.Core.classes;
 test("AssetMintTransaction fromJSONToTransaction", async () => {
     const metadata = "";
     const lockScriptHash = new H160("0000000000000000000000000000000000000000");
-    const amount = 100;
+    const supply = 100;
     const approver = null;
     const { hash } = await mintAsset({
         metadata,
         lockScriptHash,
-        amount,
+        supply,
         approver
     });
     const tx = await sdk.rpc.chain.getTransaction(hash);
@@ -39,7 +39,7 @@ test("AssetMintTransaction fromJSONToTransaction", async () => {
             // FIXME: Buffer[]
             parameters: expect.anything(),
             // FIXME: Change it to U64
-            amount: expect.anything()
+            supply: expect.anything()
         },
         // FIXME: null or H160
         approver: null
@@ -53,7 +53,7 @@ test("AssetTransferTransaction fromJSONToTransaction", async () => {
         .createAssetScheme({
             shardId: 0,
             metadata: "metadata of non-permissioned asset",
-            amount: 100,
+            supply: 100,
             approver: undefined
         })
         .createMintTransaction({ recipient: addressA });
@@ -67,7 +67,7 @@ test("AssetTransferTransaction fromJSONToTransaction", async () => {
     transferTx.addOutputs({
         assetType: firstAsset.assetType,
         recipient: addressB,
-        amount: 100
+        quantity: 100
     });
     await sdk.key.signTransactionInput(transferTx, 0);
     const { hash } = await sendTransaction({
@@ -83,7 +83,7 @@ test("AssetTransferTransaction fromJSONToTransaction", async () => {
             tracker: expect.any(H256),
             index: expect.anything(),
             assetType: expect.any(H256),
-            amount: expect.anything()
+            quantity: expect.anything()
         }),
         lockScript: expect.anything(),
         unlockScript: expect.anything()

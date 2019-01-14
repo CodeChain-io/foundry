@@ -21,7 +21,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             description: "An asset example",
             icon_url: "https://gold.image/"
         }),
-        amount: 10000,
+        supply: 10000,
         registrar: null
     });
     const goldMintTx = sdk.core.createMintAssetTransaction({
@@ -36,7 +36,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             description: "An asset example",
             icon_url: "https://silver.image/"
         }),
-        amount: 100000,
+        supply: 100000,
         registrar: null
     });
     const silverMintTx = sdk.core.createMintAssetTransaction({
@@ -55,8 +55,8 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     const order = sdk.core.createOrder({
         assetTypeFrom: gold.assetType,
         assetTypeTo: silver.assetType,
-        assetAmountFrom: 100,
-        assetAmountTo: 1000,
+        assetQuantityFrom: 100,
+        assetQuantityTo: 1000,
         expiration,
         originOutputs: [goldInput.prevOut],
         recipientFrom: aliceAddress
@@ -70,28 +70,28 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         .addOutputs(
             {
                 recipient: aliceAddress,
-                amount: 10000 - 100,
+                quantity: 10000 - 100,
                 assetType: gold.assetType
             },
             {
                 recipient: aliceAddress,
-                amount: 1000,
+                quantity: 1000,
                 assetType: silver.assetType
             },
             {
                 recipient: bobAddress,
-                amount: 100,
+                quantity: 100,
                 assetType: gold.assetType
             },
             {
                 recipient: bobAddress,
-                amount: 99000,
+                quantity: 99000,
                 assetType: silver.assetType
             }
         )
         .addOrder({
             order,
-            spentAmount: 100,
+            spentQuantity: 100,
             inputIndices: [0],
             outputIndices: [0, 1]
         });

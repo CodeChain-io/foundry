@@ -12,13 +12,13 @@ import { U64 } from "./U64";
 
 export interface AssetSchemeJSON {
     metadata: string;
-    amount: string;
+    supply: string;
     approver: string | null;
     administrator: string | null;
     allowedScriptHashes: string[] | null;
     pool: {
         assetType: string;
-        amount: string;
+        quantity: string;
     }[];
 }
 
@@ -29,7 +29,7 @@ export class AssetScheme {
     public static fromJSON(data: AssetSchemeJSON) {
         const {
             metadata,
-            amount,
+            supply,
             approver,
             administrator,
             allowedScriptHashes,
@@ -37,7 +37,7 @@ export class AssetScheme {
         } = data;
         return new AssetScheme({
             metadata,
-            amount: U64.ensure(amount),
+            supply: U64.ensure(supply),
             approver:
                 approver === null ? null : PlatformAddress.ensure(approver),
             administrator:
@@ -50,9 +50,9 @@ export class AssetScheme {
                     : allowedScriptHashes.map((hash: string) =>
                           H160.ensure(hash)
                       ),
-            pool: pool.map(({ assetType, amount: assetAmount }: any) => ({
+            pool: pool.map(({ assetType, quantity: assetQuantity }: any) => ({
                 assetType: H256.ensure(assetType),
-                amount: U64.ensure(assetAmount)
+                quantity: U64.ensure(assetQuantity)
             }))
         });
     }
@@ -60,21 +60,21 @@ export class AssetScheme {
     public readonly networkId?: NetworkId;
     public readonly shardId?: number;
     public readonly metadata: string;
-    public readonly amount: U64;
+    public readonly supply: U64;
     public readonly approver: PlatformAddress | null;
     public readonly administrator: PlatformAddress | null;
     public readonly allowedScriptHashes: H160[];
-    public readonly pool: { assetType: H256; amount: U64 }[];
+    public readonly pool: { assetType: H256; quantity: U64 }[];
 
     constructor(data: {
         networkId?: NetworkId;
         shardId?: number;
         metadata: string;
-        amount: U64;
+        supply: U64;
         approver: PlatformAddress | null;
         administrator: PlatformAddress | null;
         allowedScriptHashes: H160[];
-        pool: { assetType: H256; amount: U64 }[];
+        pool: { assetType: H256; quantity: U64 }[];
     }) {
         this.networkId = data.networkId;
         this.shardId = data.shardId;
@@ -82,14 +82,14 @@ export class AssetScheme {
         this.approver = data.approver;
         this.administrator = data.administrator;
         this.allowedScriptHashes = data.allowedScriptHashes;
-        this.amount = data.amount;
+        this.supply = data.supply;
         this.pool = data.pool;
     }
 
     public toJSON(): AssetSchemeJSON {
         const {
             metadata,
-            amount,
+            supply,
             approver,
             administrator,
             allowedScriptHashes,
@@ -97,14 +97,14 @@ export class AssetScheme {
         } = this;
         return {
             metadata,
-            amount: amount.toJSON(),
+            supply: supply.toJSON(),
             approver: approver === null ? null : approver.toString(),
             administrator:
                 administrator === null ? null : administrator.toString(),
             allowedScriptHashes: allowedScriptHashes.map(hash => hash.toJSON()),
             pool: pool.map(a => ({
                 assetType: a.assetType.toJSON(),
-                amount: a.amount.toJSON()
+                quantity: a.quantity.toJSON()
             }))
         };
     }
@@ -117,7 +117,7 @@ export class AssetScheme {
             networkId,
             shardId,
             metadata,
-            amount,
+            supply,
             approver,
             administrator,
             allowedScriptHashes
@@ -133,7 +133,7 @@ export class AssetScheme {
             shardId,
             metadata,
             output: new AssetMintOutput({
-                amount,
+                supply,
                 recipient: AssetTransferAddress.ensure(recipient)
             }),
             approver,

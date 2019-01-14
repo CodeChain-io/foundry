@@ -13,7 +13,7 @@ export interface AssetJSON {
     assetType: string;
     lockScriptHash: string;
     parameters: string[];
-    amount: string;
+    quantity: string;
     orderHash: string | null;
     // The `hash` and the `index` are not included in an RPC response. See
     // getAsset() in chain.ts for more details.
@@ -25,7 +25,7 @@ export interface AssetData {
     assetType: H256;
     lockScriptHash: H160;
     parameters: Buffer[];
-    amount: U64;
+    quantity: U64;
     orderHash?: H256 | null;
     tracker: H256;
     transactionOutputIndex: number;
@@ -39,7 +39,7 @@ export class Asset {
             assetType,
             lockScriptHash,
             parameters,
-            amount,
+            quantity,
             orderHash,
             tracker,
             transactionOutputIndex
@@ -48,7 +48,7 @@ export class Asset {
             assetType: new H256(assetType),
             lockScriptHash: new H160(lockScriptHash),
             parameters: parameters.map((p: string) => Buffer.from(p, "hex")),
-            amount: U64.ensure(amount),
+            quantity: U64.ensure(quantity),
             orderHash: orderHash === null ? orderHash : H256.ensure(orderHash),
             tracker: new H256(tracker),
             transactionOutputIndex
@@ -58,7 +58,7 @@ export class Asset {
     public readonly assetType: H256;
     public readonly lockScriptHash: H160;
     public readonly parameters: Buffer[];
-    public readonly amount: U64;
+    public readonly quantity: U64;
     public readonly outPoint: AssetOutPoint;
     public readonly orderHash: H256 | null;
 
@@ -67,7 +67,7 @@ export class Asset {
             tracker,
             transactionOutputIndex,
             assetType,
-            amount,
+            quantity,
             orderHash = null,
             lockScriptHash,
             parameters
@@ -75,13 +75,13 @@ export class Asset {
         this.assetType = data.assetType;
         this.lockScriptHash = data.lockScriptHash;
         this.parameters = data.parameters;
-        this.amount = data.amount;
+        this.quantity = data.quantity;
         this.orderHash = orderHash;
         this.outPoint = new AssetOutPoint({
             tracker,
             index: transactionOutputIndex,
             assetType,
-            amount,
+            quantity,
             lockScriptHash,
             parameters
         });
@@ -93,7 +93,7 @@ export class Asset {
             lockScriptHash,
             parameters,
             orderHash,
-            amount,
+            quantity,
             outPoint
         } = this;
         const { tracker, index } = outPoint;
@@ -101,7 +101,7 @@ export class Asset {
             assetType: assetType.toJSON(),
             lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map((p: Buffer) => p.toString("hex")),
-            amount: amount.toJSON(),
+            quantity: quantity.toJSON(),
             orderHash: orderHash === null ? null : orderHash.toJSON(),
             tracker: tracker.toJSON(),
             transactionOutputIndex: index
@@ -121,7 +121,7 @@ export class Asset {
     public createTransferTransaction(params: {
         recipients?: Array<{
             address: AssetTransferAddress | string;
-            amount: U64;
+            quantity: U64;
         }>;
         timelock?: null | Timelock;
         networkId: NetworkId;
@@ -152,7 +152,7 @@ export class Asset {
                             recipient.address
                         ),
                         assetType,
-                        amount: recipient.amount
+                        quantity: recipient.quantity
                     })
             ),
             orders: [],

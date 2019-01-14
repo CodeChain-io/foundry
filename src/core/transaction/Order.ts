@@ -16,9 +16,9 @@ export interface OrderJSON {
     assetTypeFrom: string;
     assetTypeTo: string;
     assetTypeFee: string;
-    assetAmountFrom: string;
-    assetAmountTo: string;
-    assetAmountFee: string;
+    assetQuantityFrom: string;
+    assetQuantityTo: string;
+    assetQuantityFee: string;
     originOutputs: AssetOutPointJSON[];
     expiration: string;
     lockScriptHashFrom: string;
@@ -31,9 +31,9 @@ export interface OrderDataBasic {
     assetTypeFrom: H256;
     assetTypeTo: H256;
     assetTypeFee?: H256;
-    assetAmountFrom: U64;
-    assetAmountTo: U64;
-    assetAmountFee?: U64;
+    assetQuantityFrom: U64;
+    assetQuantityTo: U64;
+    assetQuantityFee?: U64;
     originOutputs: AssetOutPoint[];
     expiration: U64;
 }
@@ -42,9 +42,9 @@ export interface OrderAddressData {
     assetTypeFrom: H256;
     assetTypeTo: H256;
     assetTypeFee?: H256;
-    assetAmountFrom: U64;
-    assetAmountTo: U64;
-    assetAmountFee?: U64;
+    assetQuantityFrom: U64;
+    assetQuantityTo: U64;
+    assetQuantityFee?: U64;
     originOutputs: AssetOutPoint[];
     expiration: U64;
     recipientFrom: AssetTransferAddress;
@@ -62,9 +62,9 @@ export class Order {
             assetTypeFrom,
             assetTypeTo,
             assetTypeFee,
-            assetAmountFrom,
-            assetAmountTo,
-            assetAmountFee,
+            assetQuantityFrom,
+            assetQuantityTo,
+            assetQuantityFee,
             originOutputs,
             expiration,
             lockScriptHashFrom,
@@ -76,9 +76,9 @@ export class Order {
             assetTypeFrom: new H256(assetTypeFrom),
             assetTypeTo: new H256(assetTypeTo),
             assetTypeFee: new H256(assetTypeFee),
-            assetAmountFrom: U64.ensure(assetAmountFrom),
-            assetAmountTo: U64.ensure(assetAmountTo),
-            assetAmountFee: U64.ensure(assetAmountFee),
+            assetQuantityFrom: U64.ensure(assetQuantityFrom),
+            assetQuantityTo: U64.ensure(assetQuantityTo),
+            assetQuantityFee: U64.ensure(assetQuantityFee),
             originOutputs: originOutputs.map((point: AssetOutPointJSON) =>
                 AssetOutPoint.fromJSON(point)
             ),
@@ -97,9 +97,9 @@ export class Order {
     public readonly assetTypeFrom: H256;
     public readonly assetTypeTo: H256;
     public readonly assetTypeFee: H256;
-    public readonly assetAmountFrom: U64;
-    public readonly assetAmountTo: U64;
-    public readonly assetAmountFee: U64;
+    public readonly assetQuantityFrom: U64;
+    public readonly assetQuantityTo: U64;
+    public readonly assetQuantityFee: U64;
     public readonly originOutputs: AssetOutPoint[];
     public readonly expiration: U64;
     public readonly lockScriptHashFrom: H160;
@@ -111,9 +111,9 @@ export class Order {
      * @param data.assetTypeFrom The asset type of the asset to give.
      * @param data.assetTypeTo The asset type of the asset to get.
      * @param data.assetTypeFee The asset type of the asset for fee.
-     * @param data.assetAmountFrom The amount of the asset to give.
-     * @param data.assetAmountTo The amount of the asset to get.
-     * @param data.assetAmountFee The amount of the asset for fee.
+     * @param data.assetQuantityFrom The quantity of the asset to give.
+     * @param data.assetQuantityTo The quantity of the asset to get.
+     * @param data.assetQuantityFee The quantity of the asset for fee.
      * @param data.originOutputs The previous outputs to be consumed by the order.
      * @param data.expiration The expiration time of the order, by seconds.
      * @param data.lockScriptHash The lock script hash of the asset.
@@ -166,23 +166,23 @@ export class Order {
             assetTypeFee = new H256(
                 "0000000000000000000000000000000000000000000000000000000000000000"
             ),
-            assetAmountFrom,
-            assetAmountTo,
-            assetAmountFee = U64.ensure(0),
+            assetQuantityFrom,
+            assetQuantityTo,
+            assetQuantityFee = U64.ensure(0),
             originOutputs,
             expiration
         } = data;
         // Called too many times, so moving to variables
-        const assetAmountFromIsZero = assetAmountFrom.value.isZero();
-        const assetAmountToIsZero = assetAmountTo.value.isZero();
-        const assetAmountFeeIsZero = assetAmountFee.value.isZero();
+        const assetQuantityFromIsZero = assetQuantityFrom.value.isZero();
+        const assetQuantityToIsZero = assetQuantityTo.value.isZero();
+        const assetQuantityFeeIsZero = assetQuantityFee.value.isZero();
 
         if (assetTypeFrom.isEqualTo(assetTypeTo)) {
             throw Error(
                 `assetTypeFrom and assetTypeTo is same: ${assetTypeFrom}`
             );
         } else if (
-            !assetAmountFeeIsZero &&
+            !assetQuantityFeeIsZero &&
             (assetTypeFrom.isEqualTo(assetTypeFee) ||
                 assetTypeTo.isEqualTo(assetTypeFee))
         ) {
@@ -192,14 +192,14 @@ export class Order {
         }
 
         if (
-            (assetAmountFromIsZero && !assetAmountToIsZero) ||
-            (!assetAmountFromIsZero && assetAmountToIsZero) ||
-            (assetAmountFromIsZero && assetAmountFeeIsZero) ||
-            (!assetAmountFromIsZero &&
-                !assetAmountFee.value.mod(assetAmountFrom.value).isZero())
+            (assetQuantityFromIsZero && !assetQuantityToIsZero) ||
+            (!assetQuantityFromIsZero && assetQuantityToIsZero) ||
+            (assetQuantityFromIsZero && assetQuantityFeeIsZero) ||
+            (!assetQuantityFromIsZero &&
+                !assetQuantityFee.value.mod(assetQuantityFrom.value).isZero())
         ) {
             throw Error(
-                `The given amount ratio is invalid: ${assetAmountFrom}:${assetAmountTo}:${assetAmountFee}`
+                `The given quantity ratio is invalid: ${assetQuantityFrom}:${assetQuantityTo}:${assetQuantityFee}`
             );
         }
         if (originOutputs.length === 0) {
@@ -208,9 +208,9 @@ export class Order {
         this.assetTypeFrom = assetTypeFrom;
         this.assetTypeTo = assetTypeTo;
         this.assetTypeFee = assetTypeFee;
-        this.assetAmountFrom = assetAmountFrom;
-        this.assetAmountTo = assetAmountTo;
-        this.assetAmountFee = assetAmountFee;
+        this.assetQuantityFrom = assetQuantityFrom;
+        this.assetQuantityTo = assetQuantityTo;
+        this.assetQuantityFee = assetQuantityFee;
         this.originOutputs = originOutputs;
         this.expiration = expiration;
     }
@@ -223,9 +223,9 @@ export class Order {
             assetTypeFrom,
             assetTypeTo,
             assetTypeFee,
-            assetAmountFrom,
-            assetAmountTo,
-            assetAmountFee,
+            assetQuantityFrom,
+            assetQuantityTo,
+            assetQuantityFee,
             originOutputs,
             expiration,
             lockScriptHashFrom,
@@ -237,9 +237,9 @@ export class Order {
             assetTypeFrom.toEncodeObject(),
             assetTypeTo.toEncodeObject(),
             assetTypeFee.toEncodeObject(),
-            assetAmountFrom.toEncodeObject(),
-            assetAmountTo.toEncodeObject(),
-            assetAmountFee.toEncodeObject(),
+            assetQuantityFrom.toEncodeObject(),
+            assetQuantityTo.toEncodeObject(),
+            assetQuantityFee.toEncodeObject(),
             originOutputs.map(output => output.toEncodeObject()),
             expiration.toEncodeObject(),
             lockScriptHashFrom.toEncodeObject(),
@@ -265,9 +265,9 @@ export class Order {
             assetTypeFrom,
             assetTypeTo,
             assetTypeFee,
-            assetAmountFrom,
-            assetAmountTo,
-            assetAmountFee,
+            assetQuantityFrom,
+            assetQuantityTo,
+            assetQuantityFee,
             originOutputs,
             expiration,
             lockScriptHashFrom,
@@ -279,9 +279,9 @@ export class Order {
             assetTypeFrom: assetTypeFrom.toJSON(),
             assetTypeTo: assetTypeTo.toJSON(),
             assetTypeFee: assetTypeFee.toJSON(),
-            assetAmountFrom: assetAmountFrom.toJSON(),
-            assetAmountTo: assetAmountTo.toJSON(),
-            assetAmountFee: assetAmountFee.toJSON(),
+            assetQuantityFrom: assetQuantityFrom.toJSON(),
+            assetQuantityTo: assetQuantityTo.toJSON(),
+            assetQuantityFee: assetQuantityFee.toJSON(),
             originOutputs: originOutputs.map(output => output.toJSON()),
             expiration: expiration.toString(),
             lockScriptHashFrom: lockScriptHashFrom.toJSON(),
@@ -303,16 +303,16 @@ export class Order {
 
     /**
      * Return the consumed order
-     * @param params.amount the consumed amount of the asset to give
+     * @param params.quantity the consumed quantity of the asset to give
      */
-    public consume(amount: U64 | number | string): Order {
+    public consume(quantity: U64 | number | string): Order {
         const {
             assetTypeFrom,
             assetTypeTo,
             assetTypeFee,
-            assetAmountFrom,
-            assetAmountTo,
-            assetAmountFee,
+            assetQuantityFrom,
+            assetQuantityTo,
+            assetQuantityFee,
             originOutputs,
             expiration,
             lockScriptHashFrom,
@@ -320,38 +320,38 @@ export class Order {
             lockScriptHashFee,
             parametersFee
         } = this;
-        const amountFrom = U64.ensure(amount);
-        if (amountFrom.gt(assetAmountFrom)) {
+        const quantityFrom = U64.ensure(quantity);
+        if (quantityFrom.gt(assetQuantityFrom)) {
             throw Error(
-                `The given amount is too big: ${amountFrom} > ${assetAmountFrom}`
+                `The given quantity is too big: ${quantityFrom} > ${assetQuantityFrom}`
             );
         }
-        const remainAmountFrom = this.assetAmountFrom.value.minus(
-            amountFrom.value
+        const remainQuantityFrom = this.assetQuantityFrom.value.minus(
+            quantityFrom.value
         );
         if (
-            !remainAmountFrom
-                .times(assetAmountTo.value)
-                .mod(assetAmountFrom.value)
+            !remainQuantityFrom
+                .times(assetQuantityTo.value)
+                .mod(assetQuantityFrom.value)
                 .isZero()
         ) {
             throw Error(
-                `The given amount does not fit to the ratio: ${assetAmountFrom}:${assetAmountTo}`
+                `The given quantity does not fit to the ratio: ${assetQuantityFrom}:${assetQuantityTo}`
             );
         }
-        const remainAmountTo = remainAmountFrom
-            .times(assetAmountTo.value)
-            .idiv(assetAmountFrom.value);
-        const remainAmountFee = remainAmountFrom
-            .times(assetAmountFee.value)
-            .idiv(assetAmountFrom.value);
+        const remainQuantityTo = remainQuantityFrom
+            .times(assetQuantityTo.value)
+            .idiv(assetQuantityFrom.value);
+        const remainQuantityFee = remainQuantityFrom
+            .times(assetQuantityFee.value)
+            .idiv(assetQuantityFrom.value);
         return new Order({
             assetTypeFrom,
             assetTypeTo,
             assetTypeFee,
-            assetAmountFrom: U64.ensure(remainAmountFrom),
-            assetAmountTo: U64.ensure(remainAmountTo),
-            assetAmountFee: U64.ensure(remainAmountFee),
+            assetQuantityFrom: U64.ensure(remainQuantityFrom),
+            assetQuantityTo: U64.ensure(remainQuantityTo),
+            assetQuantityFee: U64.ensure(remainQuantityFee),
             originOutputs,
             expiration,
             lockScriptHashFrom,

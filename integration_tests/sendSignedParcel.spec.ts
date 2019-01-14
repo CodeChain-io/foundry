@@ -11,7 +11,7 @@ test("sendSignedTransaction", async () => {
     const seq = await sdk.rpc.chain.getSeq(address);
     const p = sdk.core.createPayTransaction({
         recipient: address,
-        amount: 0
+        quantity: 0
     });
     const hash = await sdk.rpc.chain.sendSignedTransaction(
         p.sign({

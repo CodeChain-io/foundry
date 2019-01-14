@@ -44,7 +44,7 @@ describe("fromJSON", () => {
             const json = {
                 success: false,
                 error: {
-                    type: "InvalidAssetAmount",
+                    type: "InvalidAssetQuantity",
                     content: {
                         address:
                             "0x0000000000000000000000000000000000000000000000000000000000000000",

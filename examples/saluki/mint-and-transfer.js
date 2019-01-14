@@ -29,7 +29,7 @@ if (!sdk.core.classes.PlatformAddress.check(parcelSender)) {
                 icon_url:
                     "https://upload.wikimedia.org/wikipedia/commons/3/31/Red_Smooth_Saluki.jpg"
             }),
-            amount: 500
+            supply: 500
         },
         recipient: aliceAddress
     });
@@ -43,12 +43,12 @@ if (!sdk.core.classes.PlatformAddress.check(parcelSender)) {
         .addOutputs(
             {
                 recipient: bobAddress,
-                amount: 100,
+                quantity: 100,
                 assetType
             },
             {
                 recipient: aliceAddress,
-                amount: 400,
+                quantity: 400,
                 assetType
             }
         );

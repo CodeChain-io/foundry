@@ -94,7 +94,7 @@ interface AssetUnwrapCCCTransactionData {
  *  transaction is being sent to.
  *
  * All inputs must be valid for the transaction to be valid. When each asset
- * types' amount have been summed, the sum of inputs and the sum of outputs
+ * types' quantity have been summed, the sum of inputs and the sum of outputs
  * must be identical.
  */
 class AssetUnwrapCCCTransaction {

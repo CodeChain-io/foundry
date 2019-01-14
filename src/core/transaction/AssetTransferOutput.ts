@@ -11,26 +11,26 @@ export interface AssetTransferOutputJSON {
     lockScriptHash: string;
     parameters: string[];
     assetType: string;
-    amount: string;
+    quantity: string;
 }
 
 export interface AssetTransferOutputData {
     lockScriptHash: H160;
     parameters: Buffer[];
     assetType: H256;
-    amount: U64;
+    quantity: U64;
 }
 
 export interface AssetTransferOutputAddressData {
     recipient: AssetTransferAddress;
     assetType: H256;
-    amount: U64;
+    quantity: U64;
 }
 
 /**
  * An AssetTransferOutput consists of:
  *  - A lock script hash and parameters, which mark ownership of the asset.
- *  - An asset type and amount, which indicate the asset's type and quantity.
+ *  - An asset type and quantity, which indicate the asset's type and quantity.
  */
 export class AssetTransferOutput {
     /**
@@ -39,24 +39,24 @@ export class AssetTransferOutput {
      * @returns An AssetTransferOutput.
      */
     public static fromJSON(data: AssetTransferOutputJSON) {
-        const { lockScriptHash, parameters, assetType, amount } = data;
+        const { lockScriptHash, parameters, assetType, quantity } = data;
         return new AssetTransferOutput({
             lockScriptHash: H160.ensure(lockScriptHash),
             parameters: parameters.map((p: string) => Buffer.from(p, "hex")),
             assetType: H256.ensure(assetType),
-            amount: U64.ensure(amount)
+            quantity: U64.ensure(quantity)
         });
     }
     public readonly lockScriptHash: H160;
     public readonly parameters: Buffer[];
     public readonly assetType: H256;
-    public readonly amount: U64;
+    public readonly quantity: U64;
 
     /**
      * @param data.lockScriptHash A lock script hash of the output.
      * @param data.parameters Parameters of the output.
      * @param data.assetType An asset type of the output.
-     * @param data.amount An asset amount of the output.
+     * @param data.quantity An asset quantity of the output.
      */
     constructor(
         data: AssetTransferOutputData | AssetTransferOutputAddressData
@@ -92,21 +92,21 @@ export class AssetTransferOutput {
             this.lockScriptHash = lockScriptHash;
             this.parameters = parameters;
         }
-        const { assetType, amount } = data;
+        const { assetType, quantity } = data;
         this.assetType = assetType;
-        this.amount = amount;
+        this.quantity = quantity;
     }
 
     /**
      * Convert to an object for RLP encoding.
      */
     public toEncodeObject() {
-        const { lockScriptHash, parameters, assetType, amount } = this;
+        const { lockScriptHash, parameters, assetType, quantity } = this;
         return [
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
             assetType.toEncodeObject(),
-            amount.toEncodeObject()
+            quantity.toEncodeObject()
         ];
     }
 
@@ -115,12 +115,12 @@ export class AssetTransferOutput {
      * @returns An AssetTransferOutput JSON object.
      */
     public toJSON(): AssetTransferOutputJSON {
-        const { lockScriptHash, parameters, assetType, amount } = this;
+        const { lockScriptHash, parameters, assetType, quantity } = this;
         return {
             lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map((p: Buffer) => p.toString("hex")),
             assetType: assetType.toJSON(),
-            amount: amount.toJSON()
+            quantity: quantity.toJSON()
         };
     }
 

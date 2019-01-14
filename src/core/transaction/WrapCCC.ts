@@ -9,20 +9,20 @@ export interface WrapCCCData {
     shardId: number;
     lockScriptHash: H160;
     parameters: Buffer[];
-    amount: U64;
+    quantity: U64;
 }
 
 export interface WrapCCCAddressData {
     shardId: number;
     recipient: AssetTransferAddress;
-    amount: U64;
+    quantity: U64;
 }
 
 export class WrapCCC extends Transaction implements AssetTransaction {
     private readonly shardId: number;
     private readonly lockScriptHash: H160;
     private readonly parameters: Buffer[];
-    private readonly amount: U64;
+    private readonly quantity: U64;
 
     public constructor(
         data: WrapCCCData | WrapCCCAddressData,
@@ -60,9 +60,9 @@ export class WrapCCC extends Transaction implements AssetTransaction {
             this.lockScriptHash = lockScriptHash;
             this.parameters = parameters;
         }
-        const { shardId, amount } = data;
+        const { shardId, quantity } = data;
         this.shardId = shardId;
-        this.amount = amount;
+        this.quantity = quantity;
     }
 
     /**
@@ -82,12 +82,12 @@ export class WrapCCC extends Transaction implements AssetTransaction {
      * @returns An Asset.
      */
     public getAsset(): Asset {
-        const { lockScriptHash, parameters, amount } = this;
+        const { lockScriptHash, parameters, quantity } = this;
         return new Asset({
             assetType: this.getAssetSchemeAddress(),
             lockScriptHash,
             parameters,
-            amount,
+            quantity,
             tracker: this.tracker(),
             transactionOutputIndex: 0
         });
@@ -102,23 +102,23 @@ export class WrapCCC extends Transaction implements AssetTransaction {
     }
 
     protected actionToEncodeObject(): any[] {
-        const { shardId, lockScriptHash, parameters, amount } = this;
+        const { shardId, lockScriptHash, parameters, quantity } = this;
         return [
             7,
             shardId,
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
-            amount.toEncodeObject()
+            quantity.toEncodeObject()
         ];
     }
 
     protected actionToJSON(): any {
-        const { shardId, lockScriptHash, parameters, amount } = this;
+        const { shardId, lockScriptHash, parameters, quantity } = this;
         return {
             shardId,
             lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map((p: Buffer) => p.toString("hex")),
-            amount: amount.toJSON()
+            quantity: quantity.toJSON()
         };
     }
 }

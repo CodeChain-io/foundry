@@ -16,7 +16,7 @@ test("getSignerAccountId", async () => {
     const seq = await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS);
     const tx = sdk.core
         .createPayTransaction({
-            amount: 10,
+            quantity: 10,
             recipient: ACCOUNT_ADDRESS
         })
         .sign({

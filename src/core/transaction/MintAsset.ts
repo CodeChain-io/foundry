@@ -40,15 +40,15 @@ export class MintAsset extends Transaction implements AssetTransaction {
      * @returns An Asset.
      */
     public getMintedAsset(): Asset {
-        const { lockScriptHash, parameters, amount } = this._transaction.output;
-        if (amount == null) {
+        const { lockScriptHash, parameters, supply } = this._transaction.output;
+        if (supply == null) {
             throw Error("not implemented");
         }
         return new Asset({
             assetType: this.getAssetSchemeAddress(),
             lockScriptHash,
             parameters,
-            amount,
+            quantity: supply,
             tracker: this.tracker(),
             transactionOutputIndex: 0
         });
@@ -63,19 +63,19 @@ export class MintAsset extends Transaction implements AssetTransaction {
             networkId,
             shardId,
             metadata,
-            output: { amount },
+            output: { supply },
             approver,
             administrator,
             allowedScriptHashes
         } = this._transaction;
-        if (amount == null) {
+        if (supply == null) {
             throw Error("not implemented");
         }
         return new AssetScheme({
             networkId,
             shardId,
             metadata,
-            amount,
+            supply,
             approver,
             administrator,
             allowedScriptHashes,
@@ -180,7 +180,7 @@ function convertU16toHex(id: number) {
  *
  * The owner of the new asset created can be assigned by a lock script hash and parameters.
  *  - A metadata is a string that explains the asset's type.
- *  - Amount defines the quantity of asset to be created. If set as null, it
+ *  - Supply defines the quantity of asset to be created. If set as null, it
  *  will be set as the maximum value of a 64-bit unsigned integer by default.
  *  - If approver exists, the approver must be the Signer of the Transaction when
  *  sending the created asset through AssetTransferTransaction.
@@ -201,7 +201,7 @@ class AssetMintTransaction {
      * @param data.metadata A metadata of the asset.
      * @param data.output.lockScriptHash A lock script hash of the output.
      * @param data.output.parameters Parameters of the output.
-     * @param data.output.amount Asset amount of the output.
+     * @param data.output.supply Asset supply of the output.
      * @param data.approver A approver of the asset.
      * @param data.administrator A administrator of the asset.
      * @param data.allowedScriptHashes Allowed lock script hashes of the asset.
@@ -267,7 +267,7 @@ class AssetMintTransaction {
             networkId,
             shardId,
             metadata,
-            output: { lockScriptHash, parameters, amount },
+            output: { lockScriptHash, parameters, supply },
             approver,
             administrator,
             allowedScriptHashes
@@ -279,7 +279,7 @@ class AssetMintTransaction {
             metadata,
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
-            amount != null ? [amount.toEncodeObject()] : [],
+            supply != null ? [supply.toEncodeObject()] : [],
             approver ? [approver.getAccountId().toEncodeObject()] : [],
             administrator
                 ? [administrator.getAccountId().toEncodeObject()]

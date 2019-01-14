@@ -6,14 +6,14 @@ const RLP = require("rlp");
 
 export interface OrderOnTransferJSON {
     order: OrderJSON;
-    spentAmount: string;
+    spentQuantity: string;
     inputIndices: number[];
     outputIndices: number[];
 }
 
 export interface OrderOnTransferData {
     order: Order;
-    spentAmount: U64;
+    spentQuantity: U64;
     inputIndices: number[];
     outputIndices: number[];
 }
@@ -25,30 +25,30 @@ export class OrderOnTransfer {
      * @returns An Order.
      */
     public static fromJSON(data: OrderOnTransferJSON) {
-        const { order, spentAmount, inputIndices, outputIndices } = data;
+        const { order, spentQuantity, inputIndices, outputIndices } = data;
         return new this({
             order: Order.fromJSON(order),
-            spentAmount: U64.ensure(spentAmount),
+            spentQuantity: U64.ensure(spentQuantity),
             inputIndices,
             outputIndices
         });
     }
 
     public readonly order: Order;
-    public readonly spentAmount: U64;
+    public readonly spentQuantity: U64;
     public inputIndices: number[];
     public outputIndices: number[];
 
     /**
      * @param params.order An order to apply to the transfer transaction.
-     * @param data.spentAmount A spent amount of the asset to give(from) while transferring.
+     * @param data.spentQuantity A spent quantity of the asset to give(from) while transferring.
      * @param data.inputIndices The indices of inputs affected by the order
      * @param data.outputIndices The indices of outputs affected by the order
      */
     constructor(data: OrderOnTransferData) {
-        const { order, spentAmount, inputIndices, outputIndices } = data;
+        const { order, spentQuantity, inputIndices, outputIndices } = data;
         this.order = order;
-        this.spentAmount = spentAmount;
+        this.spentQuantity = spentQuantity;
         this.inputIndices = inputIndices;
         this.outputIndices = outputIndices;
     }
@@ -57,10 +57,10 @@ export class OrderOnTransfer {
      * Convert to an object for RLP encoding.
      */
     public toEncodeObject() {
-        const { order, spentAmount, inputIndices, outputIndices } = this;
+        const { order, spentQuantity, inputIndices, outputIndices } = this;
         return [
             order.toEncodeObject(),
-            spentAmount.toEncodeObject(),
+            spentQuantity.toEncodeObject(),
             inputIndices,
             outputIndices
         ];
@@ -78,20 +78,20 @@ export class OrderOnTransfer {
      * @returns An OrderOnTransferJSON object.
      */
     public toJSON(): OrderOnTransferJSON {
-        const { order, spentAmount, inputIndices, outputIndices } = this;
+        const { order, spentQuantity, inputIndices, outputIndices } = this;
         return {
             order: order.toJSON(),
-            spentAmount: spentAmount.toJSON(),
+            spentQuantity: spentQuantity.toJSON(),
             inputIndices,
             outputIndices
         };
     }
 
     /**
-     * Return a consumed order as the spentAmount.
+     * Return a consumed order as the spentQuantity.
      * @returns An Order object.
      */
     public getConsumedOrder(): Order {
-        return this.order.consume(this.spentAmount);
+        return this.order.consume(this.spentQuantity);
     }
 }

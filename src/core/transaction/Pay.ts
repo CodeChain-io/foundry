@@ -4,16 +4,16 @@ import { NetworkId } from "../types";
 
 export class Pay extends Transaction {
     private readonly receiver: PlatformAddress;
-    private readonly amount: U64;
+    private readonly quantity: U64;
 
     public constructor(
         receiver: PlatformAddress,
-        amount: U64,
+        quantity: U64,
         networkId: NetworkId
     ) {
         super(networkId);
         this.receiver = receiver;
-        this.amount = amount;
+        this.quantity = quantity;
     }
 
     public type(): string {
@@ -24,14 +24,14 @@ export class Pay extends Transaction {
         return [
             2,
             this.receiver.getAccountId().toEncodeObject(),
-            this.amount.toEncodeObject()
+            this.quantity.toEncodeObject()
         ];
     }
 
     protected actionToJSON(): any {
         return {
             receiver: this.receiver.value,
-            amount: this.amount.toEncodeObject()
+            quantity: this.quantity.toEncodeObject()
         };
     }
 }

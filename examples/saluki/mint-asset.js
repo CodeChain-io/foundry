@@ -21,7 +21,7 @@ const mintTx = sdk.core.createAssetMintTransaction({
             icon_url:
                 "https://upload.wikimedia.org/wikipedia/commons/3/31/Red_Smooth_Saluki.jpg"
         }),
-        amount: 500
+        supply: 500
     },
     recipient: "scaqyqa6lghs8a5mgt8e08tncmgeh55arh0rcqqm0ylk2"
 });

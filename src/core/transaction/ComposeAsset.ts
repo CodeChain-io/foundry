@@ -87,7 +87,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
                     "0000000000000000000000000000000000000000"
                 ),
                 parameters: [],
-                amount: null
+                supply: null
             });
         } else {
             throw Error(`Unexpected value of the tag output: ${tag.output}`);
@@ -155,15 +155,15 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
      * @returns An Asset.
      */
     public getComposedAsset(): Asset {
-        const { lockScriptHash, parameters, amount } = this._transaction.output;
-        if (amount === null) {
+        const { lockScriptHash, parameters, supply } = this._transaction.output;
+        if (supply === null) {
             throw Error("not implemented");
         }
         return new Asset({
             assetType: this.getAssetSchemeAddress(),
             lockScriptHash,
             parameters,
-            amount: amount == null ? U64.ensure(U64.MAX_VALUE) : amount,
+            quantity: supply == null ? U64.ensure(U64.MAX_VALUE) : supply,
             tracker: this.tracker(),
             transactionOutputIndex: 0
         });
@@ -179,36 +179,39 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
             shardId,
             metadata,
             inputs,
-            output: { amount },
+            output: { supply },
             approver,
             administrator,
             allowedScriptHashes
         } = this._transaction;
-        if (amount == null) {
+        if (supply == null) {
             throw Error("not implemented");
         }
         return new AssetScheme({
             networkId,
             shardId,
             metadata,
-            amount,
+            supply,
             approver,
             administrator,
             allowedScriptHashes,
             pool: _.toPairs(
                 // NOTE: Get the sum of each asset type
                 inputs.reduce((acc: { [assetType: string]: U64 }, input) => {
-                    const { assetType, amount: assetAmount } = input.prevOut;
+                    const {
+                        assetType,
+                        quantity: assetQuantity
+                    } = input.prevOut;
                     // FIXME: Check integer overflow
                     acc[assetType.value] = U64.plus(
                         acc[assetType.value],
-                        assetAmount
+                        assetQuantity
                     );
                     return acc;
                 }, {})
-            ).map(([assetType, assetAmount]) => ({
+            ).map(([assetType, assetQuantity]) => ({
                 assetType: H256.ensure(assetType),
-                amount: U64.ensure(assetAmount as number)
+                quantity: U64.ensure(assetQuantity as number)
             }))
         });
     }
@@ -399,8 +402,8 @@ class AssetComposeTransaction {
             this.inputs.map(input => input.toEncodeObject()),
             this.output.lockScriptHash.toEncodeObject(),
             this.output.parameters.map(parameter => Buffer.from(parameter)),
-            this.output.amount != null
-                ? [this.output.amount.toEncodeObject()]
+            this.output.supply != null
+                ? [this.output.supply.toEncodeObject()]
                 : []
         ];
     }

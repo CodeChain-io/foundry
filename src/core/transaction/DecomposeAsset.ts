@@ -63,7 +63,7 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
     /**
      * Add AssetTransferOutputs to create.
      * @param outputs An array of either an AssetTransferOutput or an object
-     * containing amount, asset type, and recipient.
+     * containing quantity, asset type, and recipient.
      */
     public addOutputs(
         outputs: AssetTransferOutputValue | Array<AssetTransferOutputValue>,
@@ -76,11 +76,11 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
             if (output instanceof AssetTransferOutput) {
                 this._transaction.outputs.push(output);
             } else {
-                const { assetType, amount, recipient } = output;
+                const { assetType, quantity, recipient } = output;
                 this._transaction.outputs.push(
                     new AssetTransferOutput({
                         recipient: AssetTransferAddress.ensure(recipient),
-                        amount: U64.ensure(amount),
+                        quantity: U64.ensure(quantity),
                         assetType: H256.ensure(assetType)
                     })
                 );
@@ -98,12 +98,12 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
             throw Error(`Invalid output index`);
         }
         const output = this._transaction.outputs[index];
-        const { assetType, lockScriptHash, parameters, amount } = output;
+        const { assetType, lockScriptHash, parameters, quantity } = output;
         return new Asset({
             assetType,
             lockScriptHash,
             parameters,
-            amount,
+            quantity,
             tracker: this.tracker(),
             transactionOutputIndex: index
         });

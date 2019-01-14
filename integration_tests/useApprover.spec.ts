@@ -61,7 +61,7 @@ async function sendCCCToOther() {
     const seq = await sdk.rpc.chain.getSeq(masterAddress);
     const p = sdk.core.createPayTransaction({
         recipient: otherAddress,
-        amount: 100
+        quantity: 100
     });
     const hash = await sdk.rpc.chain.sendSignedTransaction(
         p.sign({
@@ -86,7 +86,7 @@ async function mintAssetUsingMaster(
             description: "An asset example",
             icon_url: "https://gold.image/"
         }),
-        amount: 10000,
+        supply: 10000,
         approver: masterAddress
     });
 
@@ -127,12 +127,12 @@ async function transferAssetUsingRegular(
         .addOutputs(
             {
                 recipient: bobAddress,
-                amount: 3000,
+                quantity: 3000,
                 assetType: asset.assetType
             },
             {
                 recipient: aliceAddress,
-                amount: 7000,
+                quantity: 7000,
                 assetType: asset.assetType
             }
         );
@@ -173,12 +173,12 @@ async function transferAssetUsingOther(
         .addOutputs(
             {
                 recipient: bobAddress,
-                amount: 3000,
+                quantity: 3000,
                 assetType: asset.assetType
             },
             {
                 recipient: aliceAddress,
-                amount: 7000,
+                quantity: 7000,
                 assetType: asset.assetType
             }
         );

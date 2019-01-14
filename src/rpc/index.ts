@@ -43,7 +43,7 @@ export class Rpc {
     /**
      * @param params.server HTTP RPC server address.
      * @param params.options.transactionSigner The default account to sign the tx
-     * @param params.options.transactionFee The default amount for the tx fee
+     * @param params.options.transactionFee The default quantity for the tx fee
      */
     constructor(params: {
         server: string;

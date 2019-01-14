@@ -20,7 +20,7 @@ const ACCOUNT_PASSPHRASE = "satoshi";
         metadata: JSON.stringify({
             name: "An example asset"
         }),
-        amount: 10,
+        supply: 10,
         approver: null
     });
     const mintTx = sdk.core.createMintAssetTransaction({
@@ -33,7 +33,7 @@ const ACCOUNT_PASSPHRASE = "satoshi";
         scheme: {
             shardId: 0,
             metadata: JSON.stringify({ name: "An unique asset" }),
-            amount: 1
+            supply: 1
         },
         inputs: [firstAsset.createTransferInput()],
         recipient: aliceAddress
@@ -46,7 +46,7 @@ const ACCOUNT_PASSPHRASE = "satoshi";
     });
     decomposeTx.addOutputs({
         assetType: firstAsset.assetType,
-        amount: 10,
+        quantity: 10,
         recipient: aliceAddress
     });
     await sdk.key.signTransactionInput(decomposeTx, 0);

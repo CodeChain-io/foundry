@@ -116,8 +116,8 @@ export class TransferAsset extends Transaction implements AssetTransaction {
     /**
      * Add an AssetTransferOutput to create.
      * @param outputs An array of either an AssetTransferOutput or an object
-     * that has amount, assetType and recipient values.
-     * @param output.amount Asset amount of the output.
+     * that has quantity, assetType and recipient values.
+     * @param output.quantity Asset quantity of the output.
      * @param output.assetType An asset type of the output.
      * @param output.recipient A recipient of the output.
      */
@@ -132,11 +132,11 @@ export class TransferAsset extends Transaction implements AssetTransaction {
             if (output instanceof AssetTransferOutput) {
                 this._transaction.outputs.push(output);
             } else {
-                const { assetType, amount, recipient } = output;
+                const { assetType, quantity, recipient } = output;
                 this._transaction.outputs.push(
                     new AssetTransferOutput({
                         recipient: AssetTransferAddress.ensure(recipient),
-                        amount: U64.ensure(amount),
+                        quantity: U64.ensure(quantity),
                         assetType: H256.ensure(assetType)
                     })
                 );
@@ -148,17 +148,17 @@ export class TransferAsset extends Transaction implements AssetTransaction {
     /**
      * Add an Order to create.
      * @param params.order An order to apply to the transfer transaction.
-     * @param params.spentAmount A spent amount of the asset to give(from) while transferring.
+     * @param params.spentQuantity A spent quantity of the asset to give(from) while transferring.
      * @param params.inputIndices The indices of inputs affected by the order
      * @param params.outputIndices The indices of outputs affected by the order
      */
     public addOrder(params: {
         order: Order;
-        spentAmount: U64 | string | number;
+        spentQuantity: U64 | string | number;
         inputIndices: number[];
         outputIndices: number[];
     }) {
-        const { order, spentAmount, inputIndices, outputIndices } = params;
+        const { order, spentQuantity, inputIndices, outputIndices } = params;
         if (inputIndices.length === 0) {
             throw Error(`inputIndices should not be empty`);
         }
@@ -182,7 +182,7 @@ export class TransferAsset extends Transaction implements AssetTransaction {
         this._transaction.orders.push(
             new OrderOnTransfer({
                 order,
-                spentAmount: U64.ensure(spentAmount),
+                spentQuantity: U64.ensure(spentQuantity),
                 inputIndices,
                 outputIndices
             })
@@ -204,12 +204,12 @@ export class TransferAsset extends Transaction implements AssetTransaction {
             throw Error("invalid output index");
         }
         const output = this._transaction.outputs[index];
-        const { assetType, lockScriptHash, parameters, amount } = output;
+        const { assetType, lockScriptHash, parameters, quantity } = output;
         return new Asset({
             assetType,
             lockScriptHash,
             parameters,
-            amount,
+            quantity,
             tracker: this.tracker(),
             transactionOutputIndex: index
         });
@@ -372,7 +372,7 @@ interface AssetTransferTransactionData {
  *  transaction is being sent to.
  *
  * All inputs must be valid for the transaction to be valid. When each asset
- * types' amount have been summed, the sum of inputs and the sum of outputs
+ * types' quantity have been summed, the sum of inputs and the sum of outputs
  * must be identical.
  */
 class AssetTransferTransaction {

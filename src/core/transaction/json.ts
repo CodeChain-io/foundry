@@ -153,8 +153,8 @@ export function fromJSONToTransaction(result: any): Transaction {
         }
         case "pay": {
             const receiver = PlatformAddress.ensure(action.receiver);
-            const amount = new U64(action.amount);
-            tx = new Pay(receiver, amount, networkId);
+            const quantity = new U64(action.quantity);
+            tx = new Pay(receiver, quantity, networkId);
             break;
         }
         case "setRegularKey": {
@@ -195,13 +195,13 @@ export function fromJSONToTransaction(result: any): Transaction {
             const parameters = action.parameters.map((p: string) =>
                 Buffer.from(p, "hex")
             );
-            const amount = U64.ensure(action.amount);
+            const quantity = U64.ensure(action.quantity);
             tx = new WrapCCC(
                 {
                     shardId,
                     lockScriptHash,
                     parameters,
-                    amount
+                    quantity
                 },
                 networkId
             );

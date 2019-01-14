@@ -15,7 +15,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     const bobAddress = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
     const carolAddress = "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5";
 
-    // Create asset named Gold. Total amount of Gold is 10000. The approver is set
+    // Create asset named Gold. Total supply of Gold is 10000. The approver is set
     // to null, which means this type of asset can be transferred freely.
     const goldAssetScheme = sdk.core.createAssetScheme({
         shardId: 0,
@@ -24,7 +24,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             description: "An asset example",
             icon_url: "https://gold.image/"
         }),
-        amount: 10000,
+        supply: 10000,
         administrator: ACCOUNT_ADDRESS
     });
     const mintTx = sdk.core.createMintAssetTransaction({

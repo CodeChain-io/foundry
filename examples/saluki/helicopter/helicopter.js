@@ -123,12 +123,12 @@ async function sendCoins(recipients) {
         .addOutputs(
             {
                 recipient: assetOwner,
-                amount: asset.amount - recipients.length,
+                quantity: asset.quantity - recipients.length,
                 assetType: asset.assetType
             },
             ...recipients.map(recipient => ({
                 recipient,
-                amount: 1,
+                quantity: 1,
                 assetType: asset.assetType
             }))
         );

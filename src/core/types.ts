@@ -7,7 +7,7 @@ export type NetworkId = string;
 export type AssetTransferOutputValue =
     | AssetTransferOutput
     | {
-          amount: U64 | number | string;
+          quantity: U64 | number | string;
           assetType: H256 | string;
           recipient: AssetTransferAddress | string;
       };

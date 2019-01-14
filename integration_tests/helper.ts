@@ -41,14 +41,14 @@ export const sendTransaction = async ({
 
 export const mintAsset = async ({
     metadata,
-    amount,
+    supply,
     lockScriptHash,
     approver
 }: any) => {
     const assetScheme = sdk.core.createAssetScheme({
         shardId: 0,
         metadata,
-        amount,
+        supply,
         approver
     });
     const assetAddress = sdk.core.classes.AssetTransferAddress.fromTypeAndPayload(
@@ -73,7 +73,7 @@ export const pay = async (params?: { inc_seq?: number }) => {
     }
     const p = sdk.core
         .createPayTransaction({
-            amount: 10,
+            quantity: 10,
             recipient: ACCOUNT_ADDRESS
         })
         .sign({

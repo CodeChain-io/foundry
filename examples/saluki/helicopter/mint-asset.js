@@ -28,7 +28,7 @@ sdk.key
                     icon_url:
                         "https://upload.wikimedia.org/wikipedia/commons/3/31/Red_Smooth_Saluki.jpg"
                 }),
-                amount: 500
+                supply: 500
             },
             recipient: address
         });
