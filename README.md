@@ -5,7 +5,7 @@ A JavaScript SDK for CodeChain
 
 ## API Documentation (For SDK users)
 
-If you're looking for API documentation or quick start guide, [click here](https://api.codechain.io/)
+If you're looking for an API documentation or a quick start guide, [click here](https://api.codechain.io/)
 
 ## Features
 
