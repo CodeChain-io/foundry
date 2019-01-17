@@ -125,6 +125,7 @@ export class Asset {
         }>;
         timelock?: null | Timelock;
         networkId: NetworkId;
+        metadata?: string;
         approvals?: string[];
     }): TransferAsset {
         const { outPoint, assetType } = this;
@@ -132,6 +133,7 @@ export class Asset {
             recipients = [],
             timelock = null,
             networkId,
+            metadata = "",
             approvals = []
         } = params;
 
@@ -157,6 +159,7 @@ export class Asset {
             ),
             orders: [],
             networkId,
+            metadata,
             approvals
         });
     }

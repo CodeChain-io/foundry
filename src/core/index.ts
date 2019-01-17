@@ -639,6 +639,7 @@ export class Core {
         outputs?: AssetTransferOutput[];
         orders?: OrderOnTransfer[];
         networkId?: NetworkId;
+        metadata?: string;
         approvals?: string[];
     }): TransferAsset {
         const {
@@ -647,6 +648,7 @@ export class Core {
             outputs = [],
             orders = [],
             networkId = this.networkId,
+            metadata = "",
             approvals = []
         } = params || {};
         checkTransferBurns(burns);
@@ -659,6 +661,7 @@ export class Core {
             outputs,
             orders,
             networkId,
+            metadata,
             approvals
         });
     }

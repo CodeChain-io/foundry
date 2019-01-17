@@ -25,17 +25,21 @@ const RLP = require("rlp");
 export class TransferAsset extends Transaction implements AssetTransaction {
     private readonly _transaction: AssetTransferTransaction;
     private readonly approvals: string[];
+    private readonly metadata: string;
+
     public constructor(input: {
         burns: AssetTransferInput[];
         inputs: AssetTransferInput[];
         outputs: AssetTransferOutput[];
         orders: OrderOnTransfer[];
         networkId: NetworkId;
+        metadata: string;
         approvals: string[];
     }) {
         super(input.networkId);
 
         this._transaction = new AssetTransferTransaction(input);
+        this.metadata = input.metadata;
         this.approvals = input.approvals;
     }
 
@@ -336,12 +340,14 @@ export class TransferAsset extends Transaction implements AssetTransaction {
 
     protected actionToEncodeObject(): any[] {
         const encoded: any[] = this._transaction.toEncodeObject();
+        encoded.push(this.metadata);
         encoded.push(this.approvals);
         return encoded;
     }
 
     protected actionToJSON(): any {
         const json = this._transaction.toJSON();
+        json.metadata = this.metadata;
         json.approvals = this.approvals;
         return json;
     }
