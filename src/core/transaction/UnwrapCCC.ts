@@ -13,16 +13,13 @@ const RLP = require("rlp");
 
 export class UnwrapCCC extends Transaction implements AssetTransaction {
     private readonly _transaction: AssetUnwrapCCCTransaction;
-    private readonly approvals: string[];
     public constructor(input: {
         burn: AssetTransferInput;
         networkId: NetworkId;
-        approvals: string[];
     }) {
         super(input.networkId);
 
         this._transaction = new AssetUnwrapCCCTransaction(input);
-        this.approvals = input.approvals;
     }
 
     /**
@@ -70,13 +67,11 @@ export class UnwrapCCC extends Transaction implements AssetTransaction {
 
     protected actionToEncodeObject(): any[] {
         const encoded: any[] = this._transaction.toEncodeObject();
-        encoded.push(this.approvals);
         return encoded;
     }
 
     protected actionToJSON(): any {
         const json = this._transaction.toJSON();
-        json.approvals = this.approvals;
         return json;
     }
 }

@@ -144,12 +144,10 @@ export function fromJSONToTransaction(result: any): Transaction {
             break;
         }
         case "unwrapCCC": {
-            const approvals = action.approvals;
             const burn = AssetTransferInput.fromJSON(action.burn);
             tx = new UnwrapCCC({
                 burn,
-                networkId,
-                approvals
+                networkId
             });
             break;
         }
