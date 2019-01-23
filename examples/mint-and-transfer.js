@@ -11,13 +11,14 @@ const ACCOUNT_ADDRESS =
 const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 (async () => {
+    const shardId = 0;
     const aliceAddress = await sdk.key.createAssetTransferAddress();
     const bobAddress = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
 
     // Create asset named Gold. Total supply of Gold is 10000. The approver is set
     // to null, which means this type of asset can be transferred freely.
     const goldAssetScheme = sdk.core.createAssetScheme({
-        shardId: 0,
+        shardId,
         metadata: JSON.stringify({
             name: "Gold",
             description: "An asset example",
@@ -39,12 +40,14 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             {
                 recipient: bobAddress,
                 quantity: 3000,
-                assetType: firstGold.assetType
+                assetType: firstGold.assetType,
+                shardId
             },
             {
                 recipient: aliceAddress,
                 quantity: 7000,
-                assetType: firstGold.assetType
+                assetType: firstGold.assetType,
+                shardId
             }
         );
     await sdk.key.signTransactionInput(transferTx, 0);
@@ -86,9 +89,9 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     }
 
     // Unspent Bob's 3000 golds
-    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 0));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 0, shardId));
     // Unspent Alice's 7000 golds
-    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 1));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 1, shardId));
 })().catch(err => {
     console.error(`Error:`, err);
 });

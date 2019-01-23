@@ -116,7 +116,7 @@ async function sendCoins(recipients) {
     }
 
     const keyStore = await sdk.key.createLocalKeyStore();
-    const asset = await sdk.rpc.chain.getAsset(lastTransactionHash, 0);
+    const asset = await sdk.rpc.chain.getAsset(lastTransactionHash, 0, 0);
     const transferTx = sdk.core
         .createAssetTransferTransaction()
         .addInputs(asset)
@@ -124,12 +124,14 @@ async function sendCoins(recipients) {
             {
                 recipient: assetOwner,
                 quantity: asset.quantity - recipients.length,
-                assetType: asset.assetType
+                assetType: asset.assetType,
+                shardId: asset.shardId
             },
             ...recipients.map(recipient => ({
                 recipient,
                 quantity: 1,
-                assetType: asset.assetType
+                assetType: asset.assetType,
+                shardId: asset.shardId
             }))
         );
     await sdk.key.signTransactionInput(transferTx, 0, {

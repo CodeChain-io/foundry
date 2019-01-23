@@ -11,11 +11,12 @@ const ACCOUNT_ADDRESS =
 const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 (async () => {
+    const shardId = 0;
     const aliceAddress = await sdk.key.createAssetTransferAddress();
     const bobAddress = await sdk.key.createAssetTransferAddress();
 
     const goldAssetScheme = sdk.core.createAssetScheme({
-        shardId: 0,
+        shardId,
         metadata: JSON.stringify({
             name: "Gold",
             description: "An asset example",
@@ -30,7 +31,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     });
 
     const silverAssetScheme = sdk.core.createAssetScheme({
-        shardId: 0,
+        shardId,
         metadata: JSON.stringify({
             name: "Silver",
             description: "An asset example",
@@ -55,6 +56,8 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     const order = sdk.core.createOrder({
         assetTypeFrom: gold.assetType,
         assetTypeTo: silver.assetType,
+        shardIdFrom: shardId,
+        shardIdTo: shardId,
         assetQuantityFrom: 100,
         assetQuantityTo: 1000,
         expiration,
@@ -71,22 +74,26 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             {
                 recipient: aliceAddress,
                 quantity: 10000 - 100,
-                assetType: gold.assetType
+                assetType: gold.assetType,
+                shardId
             },
             {
                 recipient: aliceAddress,
                 quantity: 1000,
-                assetType: silver.assetType
+                assetType: silver.assetType,
+                shardId
             },
             {
                 recipient: bobAddress,
                 quantity: 100,
-                assetType: gold.assetType
+                assetType: gold.assetType,
+                shardId
             },
             {
                 recipient: bobAddress,
                 quantity: 99000,
-                assetType: silver.assetType
+                assetType: silver.assetType,
+                shardId
             }
         )
         .addOrder({
@@ -151,13 +158,13 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     }
 
     // Unspent Alice's 9900 golds with the order
-    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 0));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 0, shardId));
     // 1000 silvers from Bob to Alice by the order
-    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 1));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 1, shardId));
     // 100 golds from Alice to Bob, without any order (Bob owns)
-    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 2));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 2, shardId));
     // Unspent Bob's 99000 silvers without any order
-    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 3));
+    console.log(await sdk.rpc.chain.getAsset(transferTx.tracker(), 3, shardId));
 })().catch(err => {
     console.error(`Error:`, err);
 });

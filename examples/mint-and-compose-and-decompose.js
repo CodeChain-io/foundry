@@ -11,12 +11,14 @@ const ACCOUNT_ADDRESS =
 const ACCOUNT_PASSPHRASE = "satoshi";
 
 (async () => {
+    let shardId = 0;
+
     const aliceAddress = await sdk.key.createAssetTransferAddress({
         type: "P2PKH"
     });
 
     const assetScheme = sdk.core.createAssetScheme({
-        shardId: 0,
+        shardId,
         metadata: JSON.stringify({
             name: "An example asset"
         }),
@@ -31,7 +33,7 @@ const ACCOUNT_PASSPHRASE = "satoshi";
     const firstAsset = mintTx.getMintedAsset();
     const composeTx = sdk.core.createComposeAssetTransaction({
         scheme: {
-            shardId: 0,
+            shardId,
             metadata: JSON.stringify({ name: "An unique asset" }),
             supply: 1
         },
@@ -46,6 +48,7 @@ const ACCOUNT_PASSPHRASE = "satoshi";
     });
     decomposeTx.addOutputs({
         assetType: firstAsset.assetType,
+        shardId,
         quantity: 10,
         recipient: aliceAddress
     });

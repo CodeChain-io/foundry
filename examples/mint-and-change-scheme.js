@@ -11,6 +11,7 @@ const ACCOUNT_ADDRESS =
 const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 (async () => {
+    const shardId = 0;
     const aliceAddress = await sdk.key.createAssetTransferAddress();
     const bobAddress = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
     const carolAddress = "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5";
@@ -18,7 +19,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     // Create asset named Gold. Total supply of Gold is 10000. The approver is set
     // to null, which means this type of asset can be transferred freely.
     const goldAssetScheme = sdk.core.createAssetScheme({
-        shardId: 0,
+        shardId,
         metadata: JSON.stringify({
             name: "Gold",
             description: "An asset example",
@@ -53,6 +54,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
     const assetSchemeChangeTx = sdk.core.createChangeAssetSchemeTransaction({
         assetType: mintTx.getMintedAsset().assetType,
+        shardId,
         scheme: {
             metadata: JSON.stringify({
                 name: "Golden Coin",
@@ -84,11 +86,12 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     }
 
     console.log(
-        await sdk.rpc.chain.getAssetSchemeByTracker(mintTx.tracker(), 0)
+        await sdk.rpc.chain.getAssetSchemeByTracker(mintTx.tracker(), shardId)
     );
     console.log(
         await sdk.rpc.chain.getAssetSchemeByType(
-            mintTx.getMintedAsset().assetType
+            mintTx.getMintedAsset().assetType,
+            shardId
         )
     );
 })().catch(err => {
