@@ -10,6 +10,7 @@ import {
 import { Asset } from "../Asset";
 import {
     AssetTransferAddress,
+    H160,
     H256,
     Order,
     OrderOnTransfer,
@@ -136,12 +137,13 @@ export class TransferAsset extends Transaction implements AssetTransaction {
             if (output instanceof AssetTransferOutput) {
                 this._transaction.outputs.push(output);
             } else {
-                const { assetType, quantity, recipient } = output;
+                const { assetType, shardId, quantity, recipient } = output;
                 this._transaction.outputs.push(
                     new AssetTransferOutput({
                         recipient: AssetTransferAddress.ensure(recipient),
                         quantity: U64.ensure(quantity),
-                        assetType: H256.ensure(assetType)
+                        assetType: H160.ensure(assetType),
+                        shardId
                     })
                 );
             }
@@ -208,9 +210,16 @@ export class TransferAsset extends Transaction implements AssetTransaction {
             throw Error("invalid output index");
         }
         const output = this._transaction.outputs[index];
-        const { assetType, lockScriptHash, parameters, quantity } = output;
+        const {
+            assetType,
+            shardId,
+            lockScriptHash,
+            parameters,
+            quantity
+        } = output;
         return new Asset({
             assetType,
+            shardId,
             lockScriptHash,
             parameters,
             quantity,
@@ -324,7 +333,7 @@ export class TransferAsset extends Transaction implements AssetTransaction {
             (index >> 8) & 0xff,
             index & 0xff
         ]);
-        const shardId = this._transaction.outputs[index].shardId();
+        const shardId = this._transaction.outputs[index].shardId;
 
         const blake = blake256WithKey(this.tracker().value, iv);
         const shardPrefix = convertU16toHex(shardId);

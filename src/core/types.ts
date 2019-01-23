@@ -1,4 +1,4 @@
-import { AssetTransferAddress, H256 } from "codechain-primitives/lib";
+import { AssetTransferAddress, H160 } from "codechain-primitives/lib";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { U64 } from "./U64";
 
@@ -8,6 +8,7 @@ export type AssetTransferOutputValue =
     | AssetTransferOutput
     | {
           quantity: U64 | number | string;
-          assetType: H256 | string;
+          assetType: H160 | string;
+          shardId: number;
           recipient: AssetTransferAddress | string;
       };

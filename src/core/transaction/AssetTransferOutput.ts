@@ -4,26 +4,28 @@ import { AssetTransferAddress, H160 } from "codechain-primitives";
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
 
-import { H256 } from "../H256";
 import { U64 } from "../U64";
 
 export interface AssetTransferOutputJSON {
     lockScriptHash: string;
     parameters: string[];
     assetType: string;
+    shardId: number;
     quantity: string;
 }
 
 export interface AssetTransferOutputData {
     lockScriptHash: H160;
     parameters: Buffer[];
-    assetType: H256;
+    assetType: H160;
+    shardId: number;
     quantity: U64;
 }
 
 export interface AssetTransferOutputAddressData {
     recipient: AssetTransferAddress;
-    assetType: H256;
+    assetType: H160;
+    shardId: number;
     quantity: U64;
 }
 
@@ -39,23 +41,32 @@ export class AssetTransferOutput {
      * @returns An AssetTransferOutput.
      */
     public static fromJSON(data: AssetTransferOutputJSON) {
-        const { lockScriptHash, parameters, assetType, quantity } = data;
+        const {
+            lockScriptHash,
+            parameters,
+            assetType,
+            shardId,
+            quantity
+        } = data;
         return new AssetTransferOutput({
             lockScriptHash: H160.ensure(lockScriptHash),
             parameters: parameters.map((p: string) => Buffer.from(p, "hex")),
-            assetType: H256.ensure(assetType),
+            assetType: H160.ensure(assetType),
+            shardId,
             quantity: U64.ensure(quantity)
         });
     }
     public readonly lockScriptHash: H160;
     public readonly parameters: Buffer[];
-    public readonly assetType: H256;
+    public readonly assetType: H160;
+    public readonly shardId: number;
     public readonly quantity: U64;
 
     /**
      * @param data.lockScriptHash A lock script hash of the output.
      * @param data.parameters Parameters of the output.
      * @param data.assetType An asset type of the output.
+     * @param data.shardId A shard ID of the output.
      * @param data.quantity An asset quantity of the output.
      */
     constructor(
@@ -92,8 +103,9 @@ export class AssetTransferOutput {
             this.lockScriptHash = lockScriptHash;
             this.parameters = parameters;
         }
-        const { assetType, quantity } = data;
+        const { assetType, shardId, quantity } = data;
         this.assetType = assetType;
+        this.shardId = shardId;
         this.quantity = quantity;
     }
 
@@ -101,11 +113,18 @@ export class AssetTransferOutput {
      * Convert to an object for RLP encoding.
      */
     public toEncodeObject() {
-        const { lockScriptHash, parameters, assetType, quantity } = this;
+        const {
+            lockScriptHash,
+            parameters,
+            assetType,
+            shardId,
+            quantity
+        } = this;
         return [
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
             assetType.toEncodeObject(),
+            shardId,
             quantity.toEncodeObject()
         ];
     }
@@ -115,21 +134,19 @@ export class AssetTransferOutput {
      * @returns An AssetTransferOutput JSON object.
      */
     public toJSON(): AssetTransferOutputJSON {
-        const { lockScriptHash, parameters, assetType, quantity } = this;
+        const {
+            lockScriptHash,
+            parameters,
+            assetType,
+            shardId,
+            quantity
+        } = this;
         return {
             lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map((p: Buffer) => p.toString("hex")),
             assetType: assetType.toJSON(),
+            shardId,
             quantity: quantity.toJSON()
         };
-    }
-
-    /**
-     * Get the shard ID.
-     * @returns A shard ID.
-     */
-    public shardId(): number {
-        const { assetType } = this;
-        return parseInt(assetType.value.slice(4, 8), 16);
     }
 }

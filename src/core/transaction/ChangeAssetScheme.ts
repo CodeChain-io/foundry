@@ -1,4 +1,4 @@
-import { H160, H256, PlatformAddress } from "../classes";
+import { H160, PlatformAddress } from "../classes";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
@@ -9,7 +9,8 @@ export class ChangeAssetScheme extends Transaction {
     private readonly approvals: string[];
     public constructor(input: {
         networkId: NetworkId;
-        assetType: H256;
+        assetType: H160;
+        shardId: number;
         metadata: string;
         approver: PlatformAddress | null;
         administrator: PlatformAddress | null;
@@ -44,7 +45,8 @@ export class ChangeAssetScheme extends Transaction {
  */
 class AssetSchemeChangeTransaction {
     public readonly networkId: NetworkId;
-    public readonly assetType: H256;
+    public readonly shardId: number;
+    public readonly assetType: H160;
     public readonly metadata: string;
     public readonly approver: PlatformAddress | null;
     public readonly administrator: PlatformAddress | null;
@@ -52,7 +54,8 @@ class AssetSchemeChangeTransaction {
 
     /**
      * @param params.networkId A network ID of the transaction.
-     * @param params.assetType A asset type that this transaction changes.
+     * @param params.shardId A shard ID of the asset that this transaction changes.
+     * @param params.assetType A asset type of the asset that this transaction changes.
      * @param params.metadata A changed metadata of the asset.
      * @param params.approver A changed approver of the asset.
      * @param params.administrator A changed administrator of the asset.
@@ -60,7 +63,8 @@ class AssetSchemeChangeTransaction {
      */
     constructor(params: {
         networkId: NetworkId;
-        assetType: H256;
+        shardId: number;
+        assetType: H160;
         metadata: string;
         approver: PlatformAddress | null;
         administrator: PlatformAddress | null;
@@ -68,6 +72,7 @@ class AssetSchemeChangeTransaction {
     }) {
         const {
             networkId,
+            shardId,
             assetType,
             metadata,
             approver,
@@ -75,6 +80,7 @@ class AssetSchemeChangeTransaction {
             allowedScriptHashes
         } = params;
         this.networkId = networkId;
+        this.shardId = shardId;
         this.assetType = assetType;
         this.metadata = metadata;
         this.approver =
@@ -93,6 +99,7 @@ class AssetSchemeChangeTransaction {
     public toJSON(): any {
         return {
             networkId: this.networkId,
+            shardId: this.shardId,
             assetType: this.assetType.toEncodeObject(),
             metadata: this.metadata,
             approver: this.approver == null ? null : this.approver.toString(),
@@ -112,6 +119,7 @@ class AssetSchemeChangeTransaction {
     public toEncodeObject() {
         const {
             networkId,
+            shardId,
             assetType,
             metadata,
             approver,
@@ -121,6 +129,7 @@ class AssetSchemeChangeTransaction {
         return [
             0x15,
             networkId,
+            shardId,
             assetType,
             metadata,
             approver ? [approver.getAccountId().toEncodeObject()] : [],

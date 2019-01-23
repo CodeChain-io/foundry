@@ -6,13 +6,15 @@ export interface AssetOutPointJSON {
     tracker: string;
     index: number;
     assetType: string;
+    shardId: number;
     quantity: string;
 }
 
 export interface AssetOutPointData {
     tracker: H256;
     index: number;
-    assetType: H256;
+    assetType: H160;
+    shardId: number;
     quantity: U64;
     lockScriptHash?: H160;
     parameters?: Buffer[];
@@ -32,17 +34,19 @@ export class AssetOutPoint {
      * @returns An AssetOutPoint.
      */
     public static fromJSON(data: AssetOutPointJSON) {
-        const { tracker, index, assetType, quantity } = data;
+        const { tracker, index, assetType, shardId, quantity } = data;
         return new this({
             tracker: new H256(tracker),
             index,
-            assetType: new H256(assetType),
+            assetType: new H160(assetType),
+            shardId,
             quantity: U64.ensure(quantity)
         });
     }
     public readonly tracker: H256;
     public readonly index: number;
-    public readonly assetType: H256;
+    public readonly assetType: H160;
+    public readonly shardId: number;
     public readonly quantity: U64;
     public readonly lockScriptHash?: H160;
     public readonly parameters?: Buffer[];
@@ -51,6 +55,7 @@ export class AssetOutPoint {
      * @param data.tracker A transaction tracker where the Asset is created.
      * @param data.index The index in the output of the transaction.
      * @param data.assetType The asset type of the asset that it points to.
+     * @param data.assetType The shard ID of the asset that it points to.
      * @param data.quantity The asset quantity of the asset that it points to.
      * @param data.lockScriptHash The lock script hash of the asset.
      * @param data.parameters The parameters of the asset.
@@ -60,6 +65,7 @@ export class AssetOutPoint {
             tracker,
             index,
             assetType,
+            shardId,
             quantity,
             lockScriptHash,
             parameters
@@ -67,6 +73,7 @@ export class AssetOutPoint {
         this.tracker = tracker;
         this.index = index;
         this.assetType = assetType;
+        this.shardId = shardId;
         this.quantity = quantity;
         this.lockScriptHash = lockScriptHash;
         this.parameters = parameters;
@@ -76,11 +83,12 @@ export class AssetOutPoint {
      * Convert to an object for RLP encoding.
      */
     public toEncodeObject() {
-        const { tracker, index, assetType, quantity } = this;
+        const { tracker, index, assetType, shardId, quantity } = this;
         return [
             tracker.toEncodeObject(),
             index,
             assetType.toEncodeObject(),
+            shardId,
             quantity.toEncodeObject()
         ];
     }
@@ -90,11 +98,12 @@ export class AssetOutPoint {
      * @returns An AssetOutPoint JSON object.
      */
     public toJSON(): AssetOutPointJSON {
-        const { tracker, index, assetType, quantity } = this;
+        const { tracker, index, assetType, shardId, quantity } = this;
         return {
             tracker: tracker.toJSON(),
             index,
             assetType: assetType.toJSON(),
+            shardId,
             quantity: quantity.toJSON()
         };
     }

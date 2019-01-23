@@ -16,6 +16,9 @@ export interface OrderJSON {
     assetTypeFrom: string;
     assetTypeTo: string;
     assetTypeFee: string;
+    shardIdFrom: number;
+    shardIdTo: number;
+    shardIdFee: number;
     assetQuantityFrom: string;
     assetQuantityTo: string;
     assetQuantityFee: string;
@@ -28,9 +31,12 @@ export interface OrderJSON {
 }
 
 export interface OrderDataBasic {
-    assetTypeFrom: H256;
-    assetTypeTo: H256;
-    assetTypeFee?: H256;
+    assetTypeFrom: H160;
+    assetTypeTo: H160;
+    assetTypeFee?: H160;
+    shardIdFrom: number;
+    shardIdTo: number;
+    shardIdFee?: number;
     assetQuantityFrom: U64;
     assetQuantityTo: U64;
     assetQuantityFee?: U64;
@@ -39,9 +45,12 @@ export interface OrderDataBasic {
 }
 
 export interface OrderAddressData {
-    assetTypeFrom: H256;
-    assetTypeTo: H256;
-    assetTypeFee?: H256;
+    assetTypeFrom: H160;
+    assetTypeTo: H160;
+    assetTypeFee?: H160;
+    shardIdFrom: number;
+    shardIdTo: number;
+    shardIdFee?: number;
     assetQuantityFrom: U64;
     assetQuantityTo: U64;
     assetQuantityFee?: U64;
@@ -62,6 +71,9 @@ export class Order {
             assetTypeFrom,
             assetTypeTo,
             assetTypeFee,
+            shardIdFrom,
+            shardIdTo,
+            shardIdFee,
             assetQuantityFrom,
             assetQuantityTo,
             assetQuantityFee,
@@ -73,9 +85,12 @@ export class Order {
             parametersFee
         } = data;
         return new this({
-            assetTypeFrom: new H256(assetTypeFrom),
-            assetTypeTo: new H256(assetTypeTo),
-            assetTypeFee: new H256(assetTypeFee),
+            assetTypeFrom: new H160(assetTypeFrom),
+            assetTypeTo: new H160(assetTypeTo),
+            assetTypeFee: new H160(assetTypeFee),
+            shardIdFrom,
+            shardIdTo,
+            shardIdFee,
             assetQuantityFrom: U64.ensure(assetQuantityFrom),
             assetQuantityTo: U64.ensure(assetQuantityTo),
             assetQuantityFee: U64.ensure(assetQuantityFee),
@@ -94,9 +109,12 @@ export class Order {
         });
     }
 
-    public readonly assetTypeFrom: H256;
-    public readonly assetTypeTo: H256;
-    public readonly assetTypeFee: H256;
+    public readonly assetTypeFrom: H160;
+    public readonly assetTypeTo: H160;
+    public readonly assetTypeFee: H160;
+    public readonly shardIdFrom: number;
+    public readonly shardIdTo: number;
+    public readonly shardIdFee: number;
     public readonly assetQuantityFrom: U64;
     public readonly assetQuantityTo: U64;
     public readonly assetQuantityFee: U64;
@@ -163,9 +181,10 @@ export class Order {
         const {
             assetTypeFrom,
             assetTypeTo,
-            assetTypeFee = new H256(
-                "0000000000000000000000000000000000000000000000000000000000000000"
-            ),
+            assetTypeFee = H160.zero(),
+            shardIdFrom,
+            shardIdTo,
+            shardIdFee = 0,
             assetQuantityFrom,
             assetQuantityTo,
             assetQuantityFee = U64.ensure(0),
@@ -177,18 +196,27 @@ export class Order {
         const assetQuantityToIsZero = assetQuantityTo.value.isZero();
         const assetQuantityFeeIsZero = assetQuantityFee.value.isZero();
 
-        if (assetTypeFrom.isEqualTo(assetTypeTo)) {
+        if (assetTypeFrom.isEqualTo(assetTypeTo) && shardIdFrom === shardIdTo) {
             throw Error(
-                `assetTypeFrom and assetTypeTo is same: ${assetTypeFrom}`
+                `assetTypeFrom and assetTypeTo is same: ${assetTypeFrom}(shard ${shardIdFrom})`
             );
-        } else if (
-            !assetQuantityFeeIsZero &&
-            (assetTypeFrom.isEqualTo(assetTypeFee) ||
-                assetTypeTo.isEqualTo(assetTypeFee))
-        ) {
-            throw Error(
-                `assetTypeFrom and assetTypeTo is same: ${assetTypeFrom}`
-            );
+        } else if (!assetQuantityFeeIsZero) {
+            if (
+                assetTypeFrom.isEqualTo(assetTypeFee) &&
+                shardIdFrom === shardIdFee
+            ) {
+                throw Error(
+                    `assetTypeFrom and assetTypeFee is same: ${assetTypeFrom}(shard ${shardIdFrom})`
+                );
+            }
+            if (
+                assetTypeTo.isEqualTo(assetTypeFee) &&
+                shardIdTo === shardIdFee
+            ) {
+                throw Error(
+                    `assetTypeTo and assetTypeFee is same: ${assetTypeTo}(shard ${shardIdTo})`
+                );
+            }
         }
 
         if (
@@ -208,6 +236,9 @@ export class Order {
         this.assetTypeFrom = assetTypeFrom;
         this.assetTypeTo = assetTypeTo;
         this.assetTypeFee = assetTypeFee;
+        this.shardIdFrom = shardIdFrom;
+        this.shardIdTo = shardIdTo;
+        this.shardIdFee = shardIdFee;
         this.assetQuantityFrom = assetQuantityFrom;
         this.assetQuantityTo = assetQuantityTo;
         this.assetQuantityFee = assetQuantityFee;
@@ -223,6 +254,9 @@ export class Order {
             assetTypeFrom,
             assetTypeTo,
             assetTypeFee,
+            shardIdFrom,
+            shardIdTo,
+            shardIdFee,
             assetQuantityFrom,
             assetQuantityTo,
             assetQuantityFee,
@@ -237,6 +271,9 @@ export class Order {
             assetTypeFrom.toEncodeObject(),
             assetTypeTo.toEncodeObject(),
             assetTypeFee.toEncodeObject(),
+            shardIdFrom,
+            shardIdTo,
+            shardIdFee,
             assetQuantityFrom.toEncodeObject(),
             assetQuantityTo.toEncodeObject(),
             assetQuantityFee.toEncodeObject(),
@@ -265,6 +302,9 @@ export class Order {
             assetTypeFrom,
             assetTypeTo,
             assetTypeFee,
+            shardIdFrom,
+            shardIdTo,
+            shardIdFee,
             assetQuantityFrom,
             assetQuantityTo,
             assetQuantityFee,
@@ -279,6 +319,9 @@ export class Order {
             assetTypeFrom: assetTypeFrom.toJSON(),
             assetTypeTo: assetTypeTo.toJSON(),
             assetTypeFee: assetTypeFee.toJSON(),
+            shardIdFrom,
+            shardIdTo,
+            shardIdFee,
             assetQuantityFrom: assetQuantityFrom.toJSON(),
             assetQuantityTo: assetQuantityTo.toJSON(),
             assetQuantityFee: assetQuantityFee.toJSON(),
@@ -310,6 +353,9 @@ export class Order {
             assetTypeFrom,
             assetTypeTo,
             assetTypeFee,
+            shardIdFrom,
+            shardIdTo,
+            shardIdFee,
             assetQuantityFrom,
             assetQuantityTo,
             assetQuantityFee,
@@ -349,6 +395,9 @@ export class Order {
             assetTypeFrom,
             assetTypeTo,
             assetTypeFee,
+            shardIdFrom,
+            shardIdTo,
+            shardIdFee,
             assetQuantityFrom: U64.ensure(remainQuantityFrom),
             assetQuantityTo: U64.ensure(remainQuantityTo),
             assetQuantityFee: U64.ensure(remainQuantityFee),

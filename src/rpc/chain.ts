@@ -1,4 +1,4 @@
-import { PlatformAddress } from "codechain-primitives";
+import { H160, PlatformAddress } from "codechain-primitives";
 
 import { Rpc } from ".";
 import { Asset } from "../core/Asset";
@@ -603,16 +603,23 @@ export class ChainRpc {
     /**
      * Gets asset scheme of asset type
      * @param assetType The type of Asset.
+     * @param shardId The shard id of Asset Scheme.
      * @param blockNumber The specific block number to get the asset scheme from
      * @returns AssetScheme, if asset scheme exists. Else, returns null.
      */
     public getAssetSchemeByType(
-        assetType: H256 | string,
+        assetType: H160 | string,
+        shardId: number,
         blockNumber?: number | null
     ): Promise<AssetScheme | null> {
-        if (!H256.check(assetType)) {
+        if (!H160.check(assetType)) {
             throw Error(
-                `Expected the first arugment of getAssetSchemeByType to be an H256 value but found ${assetType}`
+                `Expected the first arugment of getAssetSchemeByType to be an H160 value but found ${assetType}`
+            );
+        }
+        if (!isShardIdValue(shardId)) {
+            throw Error(
+                `Expected the second argument of getAssetSchemeByTracker to be a shard ID value but found ${shardId}`
             );
         }
         if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
@@ -623,7 +630,8 @@ export class ChainRpc {
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("chain_getAssetSchemeByType", [
-                    `0x${H256.ensure(assetType).value}`,
+                    `0x${H160.ensure(assetType).value}`,
+                    shardId,
                     blockNumber
                 ])
                 .then(result => {
@@ -649,12 +657,14 @@ export class ChainRpc {
      * Gets asset of given transaction hash and index.
      * @param tracker The tracker of previous input transaction.
      * @param index The index of output in the transaction.
+     * @param shardId The shard id of output in the transaction.
      * @param blockNumber The specific block number to get the asset from
      * @returns Asset, if asset exists, Else, returns null.
      */
     public getAsset(
         tracker: H256 | string,
         index: number,
+        shardId: number,
         blockNumber?: number
     ): Promise<Asset | null> {
         if (!H256.check(tracker)) {
@@ -667,6 +677,11 @@ export class ChainRpc {
                 `Expected the second argument of getAsset to be non-negative integer but found ${index}`
             );
         }
+        if (!isShardIdValue(shardId)) {
+            throw Error(
+                `Expected the second argument of getAssetSchemeByTracker to be a shard ID value but found ${shardId}`
+            );
+        }
         if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
             throw Error(
                 `Expected the third argument of getAsset to be non-negative integer but found ${blockNumber}`
@@ -677,6 +692,7 @@ export class ChainRpc {
                 .sendRpcRequest("chain_getAsset", [
                     `0x${H256.ensure(tracker).value}`,
                     index,
+                    shardId,
                     blockNumber
                 ])
                 .then(result => {
@@ -687,6 +703,7 @@ export class ChainRpc {
                         resolve(
                             Asset.fromJSON({
                                 ...result,
+                                shardId,
                                 tracker: H256.ensure(tracker).value,
                                 transactionOutputIndex: index
                             })

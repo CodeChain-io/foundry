@@ -1,7 +1,7 @@
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
 import { Asset } from "../Asset";
-import { AssetTransferAddress, H160, H256, U64 } from "../classes";
+import { AssetTransferAddress, H160, U64 } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
@@ -66,15 +66,11 @@ export class WrapCCC extends Transaction implements AssetTransaction {
     }
 
     /**
-     * Get the address of the asset scheme of the wrapped CCC asset. An asset scheme address equals to an
-     * asset type value.
-     * @returns An asset scheme address which is H256.
+     * Get the asset type of the output.
+     * @returns An asset type which is H160.
      */
-    public getAssetSchemeAddress(): H256 {
-        const shardPrefix = convertU16toHex(this.shardId);
-        const prefix = `5300${shardPrefix}`;
-        const hash = prefix.concat("0".repeat(56));
-        return new H256(hash);
+    public getAssetType(): H160 {
+        return H160.zero();
     }
 
     /**
@@ -82,9 +78,10 @@ export class WrapCCC extends Transaction implements AssetTransaction {
      * @returns An Asset.
      */
     public getAsset(): Asset {
-        const { lockScriptHash, parameters, quantity } = this;
+        const { shardId, lockScriptHash, parameters, quantity } = this;
         return new Asset({
-            assetType: this.getAssetSchemeAddress(),
+            assetType: this.getAssetType(),
+            shardId,
             lockScriptHash,
             parameters,
             quantity,
@@ -121,11 +118,4 @@ export class WrapCCC extends Transaction implements AssetTransaction {
             quantity: quantity.toJSON()
         };
     }
-}
-
-// FIXME: Need to move the function to the external file. Also used in AssetMintTransaction.
-function convertU16toHex(id: number) {
-    const hi: string = ("0" + ((id >> 8) & 0xff).toString(16)).slice(-2);
-    const lo: string = ("0" + (id & 0xff).toString(16)).slice(-2);
-    return hi + lo;
 }

@@ -1,4 +1,4 @@
-import { blake256, blake256WithKey } from "../../utils";
+import { blake160, blake256, blake256WithKey } from "../../utils";
 import { Asset } from "../Asset";
 import { AssetScheme, H160, H256, PlatformAddress } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
@@ -45,7 +45,8 @@ export class MintAsset extends Transaction implements AssetTransaction {
             throw Error("not implemented");
         }
         return new Asset({
-            assetType: this.getAssetSchemeAddress(),
+            assetType: this.getAssetType(),
+            shardId: this._transaction.shardId,
             lockScriptHash,
             parameters,
             quantity: supply,
@@ -84,38 +85,12 @@ export class MintAsset extends Transaction implements AssetTransaction {
     }
 
     /**
-     * Get the address of the asset scheme. An asset scheme address equals to an
-     * asset type value.
-     * @returns An asset scheme address which is H256.
+     * Get the asset type of the output.
+     * @returns An asset type which is H160.
      */
-    public getAssetSchemeAddress(): H256 {
-        const { shardId } = this._transaction;
-        const blake = blake256WithKey(
-            this.tracker().value,
-            new Uint8Array([
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0xff,
-                0xff,
-                0xff,
-                0xff,
-                0xff,
-                0xff,
-                0xff,
-                0xff
-            ])
-        );
-        const shardPrefix = convertU16toHex(shardId);
-        const prefix = `5300${shardPrefix}`;
-        return new H256(
-            blake.replace(new RegExp(`^.{${prefix.length}}`), prefix)
-        );
+    public getAssetType(): H160 {
+        const blake = blake160(this.tracker().value);
+        return new H160(blake);
     }
 
     /**

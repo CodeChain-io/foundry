@@ -1,7 +1,6 @@
 import {
     AssetTransferAddress,
     H160,
-    H256,
     PlatformAddress
 } from "codechain-primitives";
 
@@ -51,7 +50,7 @@ export class AssetScheme {
                           H160.ensure(hash)
                       ),
             pool: pool.map(({ assetType, quantity: assetQuantity }: any) => ({
-                assetType: H256.ensure(assetType),
+                assetType: H160.ensure(assetType),
                 quantity: U64.ensure(assetQuantity)
             }))
         });
@@ -64,7 +63,7 @@ export class AssetScheme {
     public readonly approver: PlatformAddress | null;
     public readonly administrator: PlatformAddress | null;
     public readonly allowedScriptHashes: H160[];
-    public readonly pool: { assetType: H256; quantity: U64 }[];
+    public readonly pool: { assetType: H160; quantity: U64 }[];
 
     constructor(data: {
         networkId?: NetworkId;
@@ -74,7 +73,7 @@ export class AssetScheme {
         approver: PlatformAddress | null;
         administrator: PlatformAddress | null;
         allowedScriptHashes: H160[];
-        pool: { assetType: H256; quantity: U64 }[];
+        pool: { assetType: H160; quantity: U64 }[];
     }) {
         this.networkId = data.networkId;
         this.shardId = data.shardId;

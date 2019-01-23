@@ -333,7 +333,7 @@ export class Core {
         approver?: PlatformAddress | string;
         administrator?: PlatformAddress | string;
         allowedScriptHashes?: H160[];
-        pool?: { assetType: H256 | string; quantity: number }[];
+        pool?: { assetType: H160 | string; quantity: number }[];
     }): AssetScheme {
         const {
             shardId,
@@ -363,7 +363,7 @@ export class Core {
             allowedScriptHashes:
                 allowedScriptHashes == null ? [] : allowedScriptHashes,
             pool: pool.map(({ assetType, quantity: assetQuantity }) => ({
-                assetType: H256.ensure(assetType),
+                assetType: H160.ensure(assetType),
                 quantity: U64.ensure(assetQuantity)
             }))
         });
@@ -371,9 +371,12 @@ export class Core {
 
     public createOrder(
         params: {
-            assetTypeFrom: H256 | string;
-            assetTypeTo: H256 | string;
-            assetTypeFee?: H256 | string;
+            assetTypeFrom: H160 | string;
+            assetTypeTo: H160 | string;
+            assetTypeFee?: H160 | string;
+            shardIdFrom: number;
+            shardIdTo: number;
+            shardIdFee?: number;
             assetQuantityFrom: U64 | number | string;
             assetQuantityTo: U64 | number | string;
             assetQuantityFee?: U64 | number | string;
@@ -382,7 +385,8 @@ export class Core {
                 | {
                       tracker: H256 | string;
                       index: number;
-                      assetType: H256 | string;
+                      assetType: H160 | string;
+                      shardId: number;
                       quantity: U64 | number | string;
                       lockScriptHash?: H256 | string;
                       parameters?: Buffer[];
@@ -409,7 +413,10 @@ export class Core {
         const {
             assetTypeFrom,
             assetTypeTo,
-            assetTypeFee = "0".repeat(64),
+            assetTypeFee = H160.zero(),
+            shardIdFrom,
+            shardIdTo,
+            shardIdFee = 0,
             assetQuantityFrom,
             assetQuantityTo,
             assetQuantityFee = 0,
@@ -419,6 +426,9 @@ export class Core {
         checkAssetType(assetTypeFrom);
         checkAssetType(assetTypeTo);
         checkAssetType(assetTypeFee);
+        checkShardId(shardIdFrom);
+        checkShardId(shardIdTo);
+        checkShardId(shardIdFee);
         checkAmount(assetQuantityFrom);
         checkAmount(assetQuantityTo);
         checkAmount(assetQuantityFee);
@@ -430,6 +440,7 @@ export class Core {
                 tracker,
                 index,
                 assetType,
+                shardId,
                 quantity,
                 lockScriptHash,
                 parameters
@@ -441,7 +452,8 @@ export class Core {
                     : new AssetOutPoint({
                           tracker: H256.ensure(tracker),
                           index,
-                          assetType: H256.ensure(assetType),
+                          assetType: H160.ensure(assetType),
+                          shardId,
                           quantity: U64.ensure(quantity),
                           lockScriptHash: lockScriptHash
                               ? H160.ensure(lockScriptHash)
@@ -451,9 +463,12 @@ export class Core {
         }
 
         const baseParams = {
-            assetTypeFrom: H256.ensure(assetTypeFrom),
-            assetTypeTo: H256.ensure(assetTypeTo),
-            assetTypeFee: H256.ensure(assetTypeFee),
+            assetTypeFrom: H160.ensure(assetTypeFrom),
+            assetTypeTo: H160.ensure(assetTypeTo),
+            assetTypeFee: H160.ensure(assetTypeFee),
+            shardIdFrom,
+            shardIdTo,
+            shardIdFee,
             assetQuantityFrom: U64.ensure(assetQuantityFrom),
             assetQuantityTo: U64.ensure(assetQuantityTo),
             assetQuantityFee: U64.ensure(assetQuantityFee),
@@ -587,7 +602,8 @@ export class Core {
     }
 
     public createChangeAssetSchemeTransaction(params: {
-        assetType: H256 | string;
+        shardId: number;
+        assetType: H160 | string;
         scheme:
             | AssetScheme
             | {
@@ -599,7 +615,7 @@ export class Core {
               };
         approvals?: string[];
     }): ChangeAssetScheme {
-        const { assetType, scheme, approvals = [] } = params;
+        const { shardId, assetType, scheme, approvals = [] } = params;
         if (scheme !== null && typeof scheme !== "object") {
             throw Error(
                 `Expected scheme param to be either an AssetScheme or an object but found ${scheme}`
@@ -619,7 +635,8 @@ export class Core {
         checkAdministrator(administrator);
         return new ChangeAssetScheme({
             networkId,
-            assetType: H256.ensure(assetType),
+            shardId,
+            assetType: H160.ensure(assetType),
             metadata,
             approver:
                 approver == null ? null : PlatformAddress.ensure(approver),
@@ -785,7 +802,8 @@ export class Core {
             | {
                   tracker: H256 | string;
                   index: number;
-                  assetType: H256 | string;
+                  assetType: H160 | string;
+                  shardId: number;
                   quantity: U64 | number | string;
                   lockScriptHash?: H256 | string;
                   parameters?: Buffer[];
@@ -812,6 +830,7 @@ export class Core {
             tracker,
             index,
             assetType,
+            shardId,
             quantity,
             lockScriptHash,
             parameters
@@ -823,7 +842,8 @@ export class Core {
                     : new AssetOutPoint({
                           tracker: H256.ensure(tracker),
                           index,
-                          assetType: H256.ensure(assetType),
+                          assetType: H160.ensure(assetType),
+                          shardId,
                           quantity: U64.ensure(quantity),
                           lockScriptHash: lockScriptHash
                               ? H160.ensure(lockScriptHash)
@@ -839,25 +859,29 @@ export class Core {
     public createAssetOutPoint(params: {
         tracker: H256 | string;
         index: number;
-        assetType: H256 | string;
+        assetType: H160 | string;
+        shardId: number;
         quantity: U64 | number | string;
     }): AssetOutPoint {
-        const { tracker, index, assetType, quantity } = params;
+        const { tracker, index, assetType, shardId, quantity } = params;
         checkTracker(tracker);
         checkIndex(index);
         checkAssetType(assetType);
+        checkShardId(shardId);
         checkAmount(quantity);
         return new AssetOutPoint({
             tracker: H256.ensure(tracker),
             index,
-            assetType: H256.ensure(assetType),
+            assetType: H160.ensure(assetType),
+            shardId,
             quantity: U64.ensure(quantity)
         });
     }
 
     public createAssetTransferOutput(
         params: {
-            assetType: H256 | string;
+            assetType: H160 | string;
+            shardId: number;
             quantity: U64 | number | string;
         } & (
             | {
@@ -868,16 +892,18 @@ export class Core {
                   parameters: Buffer[];
               })
     ): AssetTransferOutput {
-        const { assetType } = params;
+        const { assetType, shardId } = params;
         const quantity = U64.ensure(params.quantity);
         checkAssetType(assetType);
+        checkShardId(shardId);
         checkAmount(quantity);
         if ("recipient" in params) {
             const { recipient } = params;
             checkAssetTransferAddressRecipient(recipient);
             return new AssetTransferOutput({
                 recipient: AssetTransferAddress.ensure(recipient),
-                assetType: H256.ensure(assetType),
+                assetType: H160.ensure(assetType),
+                shardId,
                 quantity
             });
         } else if ("lockScriptHash" in params && "parameters" in params) {
@@ -887,7 +913,8 @@ export class Core {
             return new AssetTransferOutput({
                 lockScriptHash: H160.ensure(lockScriptHash),
                 parameters,
-                assetType: H256.ensure(assetType),
+                assetType: H160.ensure(assetType),
+                shardId,
                 quantity
             });
         } else {
@@ -1078,10 +1105,10 @@ function checkIndex(index: number) {
     }
 }
 
-function checkAssetType(value: H256 | string) {
-    if (!H256.check(value)) {
+function checkAssetType(value: H160 | string) {
+    if (!H160.check(value)) {
         throw Error(
-            `Expected assetType param to be an H256 value but found ${value}`
+            `Expected assetType param to be an H160 value but found ${value}`
         );
     }
 }
@@ -1092,7 +1119,8 @@ function checkAssetOutPoint(
         | {
               tracker: H256 | string;
               index: number;
-              assetType: H256 | string;
+              assetType: H160 | string;
+              shardId: number;
               quantity: U64 | number | string;
               lockScriptHash?: H256 | string;
               parameters?: Buffer[];
@@ -1107,6 +1135,7 @@ function checkAssetOutPoint(
         tracker,
         index,
         assetType,
+        shardId,
         quantity,
         lockScriptHash,
         parameters
@@ -1114,6 +1143,7 @@ function checkAssetOutPoint(
     checkTracker(tracker);
     checkIndex(index);
     checkAssetType(assetType);
+    checkShardId(shardId);
     checkAmount(quantity);
     if (lockScriptHash) {
         checkLockScriptHash(lockScriptHash);

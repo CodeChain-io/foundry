@@ -61,8 +61,8 @@ export function fromJSONToTransaction(result: any): Transaction {
             break;
         }
         case "changeAssetScheme": {
-            const { metadata, approvals } = action;
-            const assetType = new H256(action.assetType);
+            const { metadata, approvals, shardId } = action;
+            const assetType = new H160(action.assetType);
             const approver =
                 action.approver == null
                     ? null
@@ -76,6 +76,7 @@ export function fromJSONToTransaction(result: any): Transaction {
             );
             tx = new ChangeAssetScheme({
                 networkId,
+                shardId,
                 assetType,
                 metadata,
                 approver,
