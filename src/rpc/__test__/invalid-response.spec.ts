@@ -59,7 +59,8 @@ describe("Invalid response", () => {
             "0x0000000000000000000000000000000000000000",
             { networkId: "tc" }
         );
-        const hash =
+        const hashH160 = "0x0000000000000000000000000000000000000000";
+        const hashH256 =
             "0x0000000000000000000000000000000000000000000000000000000000000000";
         const regularKey =
             "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
@@ -104,7 +105,7 @@ describe("Invalid response", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getTransaction(hash)
+                    .getTransaction(hashH256)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("chain_getTransaction");
@@ -127,7 +128,7 @@ describe("Invalid response", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getInvoice(hash)
+                    .getInvoice(hashH256)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("chain_getInvoice");
@@ -171,7 +172,7 @@ describe("Invalid response", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getTransactionByTracker(hash)
+                    .getTransactionByTracker(hashH256)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("chain_getTransaction");
@@ -193,7 +194,7 @@ describe("Invalid response", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce([]);
                 chainRpc
-                    .getInvoicesByTracker(hash)
+                    .getInvoicesByTracker(hashH256)
                     .then(invoices => {
                         expect(invoices).toEqual([]);
                         done();
@@ -283,7 +284,7 @@ describe("Invalid response", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getAssetSchemeByTracker(hash, 0)
+                    .getAssetSchemeByTracker(hashH256, 0)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain(
@@ -303,7 +304,7 @@ describe("Invalid response", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getAssetSchemeByType(hash)
+                    .getAssetSchemeByType(hashH160, 0)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain(
@@ -323,7 +324,7 @@ describe("Invalid response", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getAsset(hash, 0)
+                    .getAsset(hashH256, 0, 0)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("chain_getAsset");
@@ -339,7 +340,7 @@ describe("Invalid response", () => {
         test("isAssetSpent", done => {
             rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
             chainRpc
-                .isAssetSpent(hash, 0, 0)
+                .isAssetSpent(hashH256, 0, 0)
                 .then(() => done.fail())
                 .catch(e => {
                     expect(e.toString()).toContain("chain_isAssetSpent");
@@ -385,7 +386,7 @@ describe("Invalid response", () => {
 
     describe("AccountRpc", () => {
         const accountRpc = new AccountRpc(rpc, {});
-        const hash =
+        const hashH256 =
             "0x0000000000000000000000000000000000000000000000000000000000000000";
         const secret =
             "0x0000000000000000000000000000000000000000000000000000000000000001";
@@ -452,7 +453,7 @@ describe("Invalid response", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 accountRpc
-                    .sign(hash, address)
+                    .sign(hashH256, address)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("account_sign");

@@ -5,9 +5,8 @@ import { U64 } from "../U64";
 
 test("toJSON", () => {
     const asset = new Asset({
-        assetType: new H256(
-            "0000000000000000000000000000000000000000000000000000000000000000"
-        ),
+        assetType: H160.zero(),
+        shardId: 0,
         lockScriptHash: new H160("1111111111111111111111111111111111111111"),
         parameters: [],
         quantity: new U64(222),
