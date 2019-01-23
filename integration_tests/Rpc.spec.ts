@@ -431,12 +431,22 @@ describe("rpc", () => {
 
             test("getAsset", async () => {
                 expect(
-                    await sdk.rpc.chain.getAsset(mintTransaction.tracker(), 0)
+                    await sdk.rpc.chain.getAsset(
+                        mintTransaction.tracker(),
+                        0,
+                        shardId
+                    )
                 ).toEqual(expect.any(Asset));
                 expect(
-                    await sdk.rpc.chain.getAsset(mintTransaction.tracker(), 1)
+                    await sdk.rpc.chain.getAsset(
+                        mintTransaction.tracker(),
+                        1,
+                        shardId
+                    )
                 ).toBe(null);
-                expect(await sdk.rpc.chain.getAsset(invalidHash, 0)).toBe(null);
+                expect(
+                    await sdk.rpc.chain.getAsset(invalidHash, 0, shardId)
+                ).toBe(null);
             });
 
             test("isAssetSpent", async () => {
@@ -485,7 +495,8 @@ describe("rpc", () => {
                     .addOutputs({
                         recipient: await sdk.key.createAssetTransferAddress(),
                         quantity: 10,
-                        assetType: mintedAsset.assetType
+                        assetType: mintedAsset.assetType,
+                        shardId
                     });
                 await sdk.key.signTransactionInput(transferTransaction, 0);
                 const seq = await sdk.rpc.chain.getSeq(signerAddress);

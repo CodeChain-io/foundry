@@ -47,18 +47,23 @@ test("AssetMintTransaction fromJSONToTransaction", async () => {
 });
 
 test("AssetTransferTransaction fromJSONToTransaction", async () => {
+    const shardId = 0;
     const addressA = await sdk.key.createAssetTransferAddress();
     const addressB = await sdk.key.createAssetTransferAddress();
     const mintTx = sdk.core
         .createAssetScheme({
-            shardId: 0,
+            shardId,
             metadata: "metadata of non-permissioned asset",
             supply: 100,
             approver: undefined
         })
         .createMintTransaction({ recipient: addressA });
     await sendTransaction({ transaction: mintTx });
-    const firstAsset = await sdk.rpc.chain.getAsset(mintTx.tracker(), 0);
+    const firstAsset = await sdk.rpc.chain.getAsset(
+        mintTx.tracker(),
+        0,
+        shardId
+    );
     if (firstAsset == null) {
         throw Error("Cannot get the first asset");
     }
@@ -66,6 +71,7 @@ test("AssetTransferTransaction fromJSONToTransaction", async () => {
     transferTx.addInputs(firstAsset);
     transferTx.addOutputs({
         assetType: firstAsset.assetType,
+        shardId,
         recipient: addressB,
         quantity: 100
     });
@@ -82,7 +88,8 @@ test("AssetTransferTransaction fromJSONToTransaction", async () => {
         prevOut: expect.objectContaining({
             tracker: expect.any(H256),
             index: expect.anything(),
-            assetType: expect.any(H256),
+            assetType: expect.any(H160),
+            shardId: expect.anything(),
             quantity: expect.anything()
         }),
         lockScript: expect.anything(),

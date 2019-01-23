@@ -128,12 +128,14 @@ async function transferAssetUsingRegular(
             {
                 recipient: bobAddress,
                 quantity: 3000,
-                assetType: asset.assetType
+                assetType: asset.assetType,
+                shardId: asset.shardId
             },
             {
                 recipient: aliceAddress,
                 quantity: 7000,
-                assetType: asset.assetType
+                assetType: asset.assetType,
+                shardId: asset.shardId
             }
         );
     await sdk.key.signTransactionInput(transferTx, 0);
@@ -174,12 +176,14 @@ async function transferAssetUsingOther(
             {
                 recipient: bobAddress,
                 quantity: 3000,
-                assetType: asset.assetType
+                assetType: asset.assetType,
+                shardId: asset.shardId
             },
             {
                 recipient: aliceAddress,
                 quantity: 7000,
-                assetType: asset.assetType
+                assetType: asset.assetType,
+                shardId: asset.shardId
             }
         );
     await sdk.key.signTransactionInput(transferTx, 0);
