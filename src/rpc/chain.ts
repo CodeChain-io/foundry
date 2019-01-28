@@ -1,18 +1,15 @@
-import { H160, PlatformAddress } from "codechain-primitives";
+import { H160, H256, H512, PlatformAddress, U64 } from "codechain-primitives";
 
 import { Rpc } from ".";
 import { Asset } from "../core/Asset";
 import { AssetScheme } from "../core/AssetScheme";
 import { Block } from "../core/Block";
-import { H256 } from "../core/H256";
-import { H512 } from "../core/H512";
 import { Invoice } from "../core/Invoice";
 import { SignedTransaction } from "../core/SignedTransaction";
 import { Text } from "../core/Text";
 import { Transaction } from "../core/Transaction";
 import { fromJSONToSignedTransaction } from "../core/transaction/json";
 import { NetworkId } from "../core/types";
-import { U64 } from "../core/U64";
 
 export class ChainRpc {
     private rpc: Rpc;

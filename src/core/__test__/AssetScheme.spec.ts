@@ -1,5 +1,6 @@
+import { U64 } from "codechain-primitives";
+
 import { AssetScheme } from "../AssetScheme";
-import { U64 } from "../U64";
 
 test("toJSON", () => {
     const assetScheme = new AssetScheme({

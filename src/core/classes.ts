@@ -1,9 +1,10 @@
-export { H128 } from "./H128";
-export { H160 } from "./H160";
-export { H256 } from "./H256";
-export { H512 } from "./H512";
-export { U256 } from "./U256";
-export { U64 } from "./U64";
+export { H128 } from "codechain-primitives";
+export { H160 } from "codechain-primitives";
+export { H256 } from "codechain-primitives";
+export { H512 } from "codechain-primitives";
+export { U64 } from "codechain-primitives";
+export { U256 } from "codechain-primitives";
+
 export { Invoice } from "./Invoice";
 export { Block } from "./Block";
 export { Transaction } from "./Transaction";

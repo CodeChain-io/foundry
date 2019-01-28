@@ -1,4 +1,5 @@
-import { H160 } from "../../core/H160";
+import { H160 } from "codechain-primitives";
+
 import { blake160 } from "../../utils";
 
 import { P2PKHBurn } from "../P2PKHBurn";

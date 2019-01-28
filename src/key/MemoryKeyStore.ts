@@ -1,6 +1,6 @@
+import { H256 } from "codechain-primitives";
 import * as _ from "lodash";
 
-import { H256 } from "../core/H256";
 import {
     blake256,
     generatePrivateKey,

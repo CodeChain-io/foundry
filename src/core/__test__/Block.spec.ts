@@ -1,10 +1,7 @@
-import { PlatformAddress } from "codechain-primitives";
+import { H256, PlatformAddress, U256, U64 } from "codechain-primitives";
 
 import { Block } from "../Block";
-import { H256 } from "../H256";
 import { Pay } from "../transaction/Pay";
-import { U256 } from "../U256";
-import { U64 } from "../U64";
 
 test("toJSON", () => {
     const secret = new H256(

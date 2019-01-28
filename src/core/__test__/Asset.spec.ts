@@ -1,7 +1,6 @@
+import { H160, H256, U64 } from "codechain-primitives";
+
 import { Asset } from "../Asset";
-import { H160 } from "../H160";
-import { H256 } from "../H256";
-import { U64 } from "../U64";
 
 test("toJSON", () => {
     const asset = new Asset({

@@ -8,10 +8,10 @@ import {
     PlatformAddress,
     SignedTransaction,
     Transaction,
-    TransferAsset
+    TransferAsset,
+    U256,
+    U64
 } from "../lib/core/classes";
-import { U256 } from "../lib/core/U256";
-import { U64 } from "../lib/core/U64";
 import {
     generatePrivateKey,
     getAccountIdFromPrivate,

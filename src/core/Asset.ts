@@ -1,13 +1,11 @@
 import { Buffer } from "buffer";
-import { AssetTransferAddress, H160 } from "codechain-primitives";
+import { AssetTransferAddress, H160, H256, U64 } from "codechain-primitives";
 
-import { H256 } from "./H256";
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { TransferAsset } from "./transaction/TransferAsset";
 import { NetworkId } from "./types";
-import { U64 } from "./U64";
 
 export interface AssetJSON {
     assetType: string;

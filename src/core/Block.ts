@@ -1,9 +1,7 @@
-import { PlatformAddress } from "codechain-primitives";
+import { H256, PlatformAddress, U256 } from "codechain-primitives";
 
-import { H256 } from "./H256";
 import { SignedTransaction } from "./SignedTransaction";
 import { fromJSONToSignedTransaction } from "./transaction/json";
-import { U256 } from "./U256";
 
 // Disable lint error from using "number" as variable name
 // tslint:disable:variable-name

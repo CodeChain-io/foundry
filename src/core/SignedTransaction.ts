@@ -1,15 +1,11 @@
-import { PlatformAddress } from "codechain-primitives";
+import { H160, H256, H512, PlatformAddress, U256 } from "codechain-primitives";
 import * as _ from "lodash";
 
 import { blake160, blake256, recoverEcdsa } from "../utils";
 
 import { Asset } from "./Asset";
-import { H160 } from "./H160";
-import { H256 } from "./H256";
-import { H512 } from "./H512";
 import { Transaction } from "./Transaction";
 import { NetworkId } from "./types";
-import { U256 } from "./U256";
 
 const RLP = require("rlp");
 

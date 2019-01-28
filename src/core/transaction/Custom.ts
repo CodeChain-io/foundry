@@ -1,6 +1,7 @@
+import { U64 } from "codechain-primitives";
+
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
-import { U64 } from "../U64";
 
 export class Custom extends Transaction {
     private readonly handlerId: U64;

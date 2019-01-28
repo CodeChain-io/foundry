@@ -1,8 +1,8 @@
+import { H256, U64 } from "codechain-primitives";
+
 import { blake256, signEcdsa } from "../utils";
-import { H256 } from "./H256";
 import { SignedTransaction } from "./SignedTransaction";
 import { NetworkId } from "./types";
-import { U64 } from "./U64";
 
 const RLP = require("rlp");
 

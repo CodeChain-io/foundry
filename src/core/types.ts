@@ -1,6 +1,6 @@
-import { AssetTransferAddress, H160 } from "codechain-primitives/lib";
+import { AssetTransferAddress, H160, U64 } from "codechain-primitives";
+
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
-import { U64 } from "./U64";
 
 export type NetworkId = string;
 

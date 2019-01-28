@@ -1,7 +1,6 @@
 import { Buffer } from "buffer";
-import { AssetTransferAddress, H160 } from "codechain-primitives";
+import { AssetTransferAddress, H160, H256 } from "codechain-primitives";
 
-import { H256 } from "../core/H256";
 import { Script } from "../core/Script";
 import { NetworkId } from "../core/types";
 import { encodeSignatureTag, SignatureTag } from "../utils";

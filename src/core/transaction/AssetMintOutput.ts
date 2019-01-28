@@ -1,9 +1,8 @@
 import { Buffer } from "buffer";
-import { AssetTransferAddress, H160 } from "codechain-primitives/lib";
+import { AssetTransferAddress, H160, U64 } from "codechain-primitives";
 
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
-import { U64 } from "../U64";
 
 export interface AssetMintOutputJSON {
     lockScriptHash: string;

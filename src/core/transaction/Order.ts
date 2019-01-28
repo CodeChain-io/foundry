@@ -1,12 +1,9 @@
-import { AssetTransferAddress } from "codechain-primitives";
+import { AssetTransferAddress, H160, H256, U64 } from "codechain-primitives";
 
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
 
 import { blake256 } from "../../utils";
-import { H160 } from "../H160";
-import { H256 } from "../H256";
-import { U64 } from "../U64";
 
 import { AssetOutPoint, AssetOutPointJSON } from "./AssetOutPoint";
 
