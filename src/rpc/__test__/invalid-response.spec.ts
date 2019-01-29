@@ -484,7 +484,6 @@ describe("Invalid response", () => {
     describe("NetworkRpc", () => {
         const networkRpc = new NetworkRpc(rpc);
 
-        test.skip("shareSecret", done => done.fail("not implemented"));
         test.skip("connect", done => done.fail("not implemented"));
         test.skip("disconnect", done => done.fail("not implemented"));
         test.skip("isConnected", done => done.fail("not implemented"));
