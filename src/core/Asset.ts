@@ -135,6 +135,7 @@ export class Asset {
         networkId: NetworkId;
         metadata?: string;
         approvals?: string[];
+        expiration?: number;
     }): TransferAsset {
         const { outPoint, assetType, shardId } = this;
         const {
@@ -142,7 +143,8 @@ export class Asset {
             timelock = null,
             networkId,
             metadata = "",
-            approvals = []
+            approvals = [],
+            expiration = null
         } = params;
 
         return new TransferAsset({
@@ -169,7 +171,8 @@ export class Asset {
             orders: [],
             networkId,
             metadata,
-            approvals
+            approvals,
+            expiration
         });
     }
 }

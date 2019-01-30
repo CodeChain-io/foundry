@@ -89,6 +89,7 @@ export function fromJSONToTransaction(result: any): Transaction {
         case "transferAsset": {
             const metadata = action.metadata;
             const approvals = action.approvals;
+            const expiration = action.expiration;
             const burns = action.burns.map(AssetTransferInput.fromJSON);
             const inputs = action.inputs.map(AssetTransferInput.fromJSON);
             const outputs = action.outputs.map(AssetTransferOutput.fromJSON);
@@ -100,7 +101,8 @@ export function fromJSONToTransaction(result: any): Transaction {
                 outputs,
                 orders,
                 metadata,
-                approvals
+                approvals,
+                expiration
             });
             break;
         }

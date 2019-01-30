@@ -27,6 +27,7 @@ export class TransferAsset extends Transaction implements AssetTransaction {
     private readonly _transaction: AssetTransferTransaction;
     private readonly approvals: string[];
     private readonly metadata: string;
+    private readonly expiration: number | null;
 
     public constructor(input: {
         burns: AssetTransferInput[];
@@ -36,12 +37,14 @@ export class TransferAsset extends Transaction implements AssetTransaction {
         networkId: NetworkId;
         metadata: string;
         approvals: string[];
+        expiration: number | null;
     }) {
         super(input.networkId);
 
         this._transaction = new AssetTransferTransaction(input);
         this.metadata = input.metadata;
         this.approvals = input.approvals;
+        this.expiration = input.expiration;
     }
 
     /**
@@ -348,9 +351,15 @@ export class TransferAsset extends Transaction implements AssetTransaction {
     }
 
     protected actionToEncodeObject(): any[] {
+        const { expiration, metadata, approvals } = this;
         const encoded: any[] = this._transaction.toEncodeObject();
-        encoded.push(this.metadata);
-        encoded.push(this.approvals);
+        encoded.push(metadata);
+        encoded.push(approvals);
+        if (expiration === null) {
+            encoded.push([]);
+        } else {
+            encoded.push([expiration]);
+        }
         return encoded;
     }
 
@@ -358,6 +367,7 @@ export class TransferAsset extends Transaction implements AssetTransaction {
         const json = this._transaction.toJSON();
         json.metadata = this.metadata;
         json.approvals = this.approvals;
+        json.expiration = this.expiration;
         return json;
     }
 }
