@@ -1,5 +1,3 @@
-import { H256 } from "../core/H256";
-
 import { Rpc } from ".";
 
 export class NetworkRpc {
@@ -10,55 +8,6 @@ export class NetworkRpc {
      */
     constructor(rpc: Rpc) {
         this.rpc = rpc;
-    }
-
-    /**
-     * Save secret which is used when handshaking with other node,
-     * This secret may be exchanged in offline.
-     * To use this saved secret, you should call 'net_connect' RPC after this RPC call.
-     * @param secret Secret exchanged in offline
-     * @param address Node address which RPC server will connect to using secret
-     * @param port
-     */
-    public shareSecret(
-        secret: H256 | string,
-        address: string,
-        port: number
-    ): Promise<null> {
-        if (!H256.check(secret)) {
-            throw Error(
-                `Expected the first argument of shardSecret to be an H256 value but found ${secret}`
-            );
-        }
-        if (!isIpAddressString(address)) {
-            throw Error(
-                `Expected the second argument of shareSecret to be an IP address string but found ${address}`
-            );
-        }
-        if (!isPortNumber(port)) {
-            throw Error(
-                `Expected the third argument of shardSecret to be a port number but found ${port}`
-            );
-        }
-        return new Promise((resolve, reject) => {
-            this.rpc
-                .sendRpcRequest("net_shareSecret", [
-                    `0x${H256.ensure(secret).value}`,
-                    address,
-                    port
-                ])
-                .then(result => {
-                    if (result === null) {
-                        return resolve(null);
-                    }
-                    reject(
-                        Error(
-                            `Expected net_shareSecret to return null but it returned ${result}`
-                        )
-                    );
-                })
-                .catch(reject);
-        });
     }
 
     /**
