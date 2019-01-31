@@ -8,8 +8,12 @@ const sdk = new SDK({
 const ACCOUNT_SECRET =
     process.env.ACCOUNT_SECRET ||
     "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
+const ACCOUNT_ADDRESS = sdk.core.classes.PlatformAddress.fromAccountId(
+    sdk.util.getAccountIdFromPrivate(ACCOUNT_SECRET),
+    { networkId: "tc" }
+);
 
-const masterSecret = ACCOUNT_SECRET;
+const masterSecret = sdk.util.generatePrivateKey();
 const masterAccountId = SDK.util.getAccountIdFromPrivate(masterSecret);
 const masterAddress = sdk.core.classes.PlatformAddress.fromAccountId(
     masterAccountId,
@@ -20,6 +24,18 @@ const regularSecret = SDK.util.generatePrivateKey();
 const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
 
 (async () => {
+    const pay = sdk.core
+        .createPayTransaction({
+            recipient: masterAddress,
+            quantity: 1000
+        })
+        .sign({
+            secret: ACCOUNT_SECRET,
+            seq: await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS),
+            fee: 10
+        });
+    await sdk.rpc.chain.sendSignedTransaction(pay);
+
     const seq = await sdk.rpc.chain.getSeq(masterAddress);
     // Set `regularSecret` as the master account's regular key.
     // It means that you can sign a tx with the "regularSecret" instead of the "masterSecert".

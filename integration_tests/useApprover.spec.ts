@@ -1,3 +1,4 @@
+import { PlatformAddress } from "codechain-primitives/lib";
 import { SDK } from "../src";
 import { AssetTransferAddress, MintAsset } from "../src/core/classes";
 
@@ -13,8 +14,8 @@ const sdk = new SDK({
     keyStoreType: "memory",
     networkId: CODECHAIN_NETWORK_ID
 });
-const masterSecret = ACCOUNT_SECRET;
-const masterAddress = ACCOUNT_ADDRESS;
+let masterSecret: string;
+let masterAddress: PlatformAddress;
 
 const otherSecret =
     "0000000000000000000000000000000000000000000000000000000000000001";
@@ -28,13 +29,20 @@ const regularSecret = SDK.util.generatePrivateKey();
 const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
 
 test("checkApproverValidation", async () => {
-    await setRegularKey();
-    await sendCCCToOther();
+    masterSecret = sdk.util.generatePrivateKey();
+    const account = sdk.util.getAccountIdFromPrivate(masterSecret);
+    masterAddress = sdk.core.classes.PlatformAddress.fromAccountId(account, {
+        networkId: "tc"
+    });
+    await sendCCCToOther(ACCOUNT_ADDRESS, masterAddress, ACCOUNT_SECRET, 1_000);
 
     const aliceAddress = await sdk.key.createAssetTransferAddress();
+    const mintTx = await mintAssetUsingMaster(aliceAddress);
+    await setRegularKey();
+    await sendCCCToOther(masterAddress, otherAddress, regularSecret, 100);
+
     const bobAddress = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
 
-    const mintTx = await mintAssetUsingMaster(aliceAddress);
     await transferAssetUsingOther(mintTx, aliceAddress, bobAddress);
     await transferAssetUsingRegular(mintTx, aliceAddress, bobAddress);
 });
@@ -57,23 +65,30 @@ async function setRegularKey() {
     });
 }
 
-async function sendCCCToOther() {
-    const seq = await sdk.rpc.chain.getSeq(masterAddress);
+async function sendCCCToOther(
+    address: PlatformAddress | string,
+    recipient: PlatformAddress,
+    secret: string,
+    quantity: number
+) {
+    const seq = await sdk.rpc.chain.getSeq(address);
     const p = sdk.core.createPayTransaction({
-        recipient: otherAddress,
-        quantity: 100
+        recipient,
+        quantity
     });
     const hash = await sdk.rpc.chain.sendSignedTransaction(
         p.sign({
-            secret: regularSecret,
+            secret,
             seq,
             fee: 10
         })
     );
 
-    await sdk.rpc.chain.getInvoice(hash, {
+    const invoice = await sdk.rpc.chain.getInvoice(hash, {
         timeout: 5 * 60 * 1000
     });
+    expect(invoice).toBeTruthy();
+    expect(invoice!.success).toBe(true);
 }
 
 async function mintAssetUsingMaster(
