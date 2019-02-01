@@ -14,4 +14,4 @@ const sdk = new SDK({
         keyStore
     });
     console.log(address.toString());
-}).catch(console.error);
+})().catch(console.error);

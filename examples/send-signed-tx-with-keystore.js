@@ -17,13 +17,13 @@ const tx = sdk.core.createPayTransaction({
     });
     const seq = await sdk.rpc.chain.getSeq(account);
 
-    const tx = await sdk.key.signTransaction(tx, {
+    const signed = await sdk.key.signTransaction(tx, {
         account,
         keyStore,
         fee: 10,
         seq
     });
-    console.log(tx);
+    console.log(signed);
     // FIXME: needs fee
     // const hash = await sdk.rpc.chain.sendSignedTransaction(tx);
-})();
+})().catch(console.error);
