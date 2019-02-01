@@ -154,6 +154,13 @@ export class TransferAsset extends Transaction implements AssetTransaction {
         return this;
     }
 
+    public output(index: number): AssetTransferOutput | null {
+        if (this._transaction.outputs.length <= index) {
+            return null;
+        }
+        return this._transaction.outputs[index];
+    }
+
     /**
      * Add an Order to create.
      * @param params.order An order to apply to the transfer transaction.
