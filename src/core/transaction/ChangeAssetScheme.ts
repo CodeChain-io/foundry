@@ -1,4 +1,6 @@
-import { H160, PlatformAddress } from "../classes";
+import { H160, H256 } from "codechain-primitives";
+import { blake256 } from "../../utils";
+import { PlatformAddress } from "../classes";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
@@ -21,6 +23,14 @@ export class ChangeAssetScheme extends Transaction {
 
         this._transaction = new AssetSchemeChangeTransaction(input);
         this.approvals = input.approvals;
+    }
+
+    /**
+     * Get the tracker of an ChangeAssetScheme.
+     * @returns A transaction hash.
+     */
+    public tracker(): H256 {
+        return new H256(blake256(this._transaction.rlpBytes()));
     }
 
     public type(): string {
@@ -130,7 +140,7 @@ class AssetSchemeChangeTransaction {
             0x15,
             networkId,
             shardId,
-            assetType,
+            assetType.toEncodeObject(),
             metadata,
             approver ? [approver.getAccountId().toEncodeObject()] : [],
             administrator
