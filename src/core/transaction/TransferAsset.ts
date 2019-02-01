@@ -81,6 +81,10 @@ export class TransferAsset extends Transaction implements AssetTransaction {
         return this;
     }
 
+    public burns(): AssetTransferInput[] {
+        return this._transaction.burns;
+    }
+
     public burn(index: number): AssetTransferInput | null {
         if (this._transaction.burns.length <= index) {
             return null;
@@ -112,6 +116,10 @@ export class TransferAsset extends Transaction implements AssetTransaction {
             }
         });
         return this;
+    }
+
+    public inputs(): AssetTransferInput[] {
+        return this._transaction.inputs;
     }
 
     public input(index: number): AssetTransferInput | null {
@@ -152,6 +160,10 @@ export class TransferAsset extends Transaction implements AssetTransaction {
             }
         });
         return this;
+    }
+
+    public outputs(): AssetTransferOutput[] {
+        return this._transaction.outputs;
     }
 
     public output(index: number): AssetTransferOutput | null {
