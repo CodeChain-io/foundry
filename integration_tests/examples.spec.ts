@@ -1,5 +1,6 @@
 import { execFile } from "child_process";
 import { readdirSync, readFileSync, unlinkSync, writeFileSync } from "fs";
+import * as _ from "lodash";
 
 describe("examples", () => {
     beforeAll(done => {
@@ -10,13 +11,15 @@ describe("examples", () => {
     });
 
     const excludes = ["import-test-account"];
-    const tests = readdirSync("examples/")
+    const tests: string[] = readdirSync("examples/")
         .filter(filename => filename.endsWith(".js"))
         .map(filename => filename.replace(/.js$/, ""))
         .filter(filename => !filename.startsWith("test-"))
         .filter(filename => !excludes.includes(filename));
 
-    tests.map(name => test(name, done => runExample(name, done)));
+    _.shuffle(tests).map(name =>
+        test(name, (done: () => any) => runExample(name, done))
+    );
 });
 
 function runExample(name: string, done: () => any) {
