@@ -11,13 +11,30 @@ const U64 = SDK.Core.classes.U64;
 
 const sdk = new SDK({ server: SERVER_URL, networkId: CODECHAIN_NETWORK_ID });
 
-const masterSecret = ACCOUNT_SECRET;
-const masterAddress = ACCOUNT_ADDRESS;
+const masterSecret = sdk.util.generatePrivateKey();
+const masterAccountId = SDK.util.getAccountIdFromPrivate(masterSecret);
+const masterAddress = sdk.core.classes.PlatformAddress.fromAccountId(
+    masterAccountId,
+    { networkId: "tc" }
+);
 
 const regularSecret = SDK.util.generatePrivateKey();
 const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
 
 test("setRegularKey", async () => {
+    await sdk.rpc.chain.sendSignedTransaction(
+        sdk.core
+            .createPayTransaction({
+                recipient: masterAddress,
+                quantity: 1000
+            })
+            .sign({
+                secret: ACCOUNT_SECRET,
+                seq: await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS),
+                fee: 10
+            })
+    );
+
     const seq = await sdk.rpc.chain.getSeq(masterAddress);
     const p = sdk.core.createSetRegularKeyTransaction({
         key: regularPublic
