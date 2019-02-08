@@ -10,7 +10,11 @@ describe("examples", () => {
         runExample("import-test-account", done);
     });
 
-    const excludes = ["import-test-account"];
+    const excludes = [
+        "import-test-account",
+        "mint-and-compose",
+        "mint-and-compose-and-decompose"
+    ];
     const tests: string[] = readdirSync("examples/")
         .filter(filename => filename.endsWith(".js"))
         .map(filename => filename.replace(/.js$/, ""))

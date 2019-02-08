@@ -21,10 +21,8 @@ import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { ChangeAssetScheme } from "./transaction/ChangeAssetScheme";
-import { ComposeAsset } from "./transaction/ComposeAsset";
 import { CreateShard } from "./transaction/CreateShard";
 import { Custom } from "./transaction/Custom";
-import { DecomposeAsset } from "./transaction/DecomposeAsset";
 import { MintAsset } from "./transaction/MintAsset";
 import { Order } from "./transaction/Order";
 import { OrderOnTransfer } from "./transaction/OrderOnTransfer";
@@ -689,97 +687,6 @@ export class Core {
         });
     }
 
-    public createComposeAssetTransaction(params: {
-        scheme:
-            | AssetScheme
-            | {
-                  shardId: number;
-                  metadata: string;
-                  supply?: U64 | number | string | null;
-                  approver?: PlatformAddress | string;
-                  administrator?: PlatformAddress | string;
-                  allowedScriptHashes?: H160[];
-                  networkId?: NetworkId;
-              };
-        inputs: AssetTransferInput[];
-        recipient: AssetTransferAddress | string;
-        approvals?: string[];
-    }): ComposeAsset {
-        const { scheme, inputs, recipient, approvals = [] } = params;
-        const {
-            networkId = this.networkId,
-            shardId,
-            metadata,
-            approver = null,
-            administrator = null,
-            allowedScriptHashes = null,
-            supply
-        } = scheme;
-        checkTransferInputs(inputs);
-        checkAssetTransferAddressRecipient(recipient);
-        checkNetworkId(networkId);
-        if (shardId === undefined) {
-            throw Error(`shardId is undefined`);
-        }
-        checkShardId(shardId);
-        checkMetadata(metadata);
-        checkApprover(approver);
-        if (supply != null) {
-            checkAmount(supply);
-        }
-        return new ComposeAsset({
-            networkId,
-            shardId,
-            approver:
-                approver == null ? null : PlatformAddress.ensure(approver),
-            administrator:
-                administrator == null
-                    ? null
-                    : PlatformAddress.ensure(administrator),
-            allowedScriptHashes:
-                allowedScriptHashes == null ? [] : allowedScriptHashes,
-            metadata,
-            inputs,
-            output: new AssetMintOutput({
-                recipient: AssetTransferAddress.ensure(recipient),
-                supply: supply == null ? null : U64.ensure(supply)
-            }),
-            approvals
-        });
-    }
-
-    public createDecomposeAssetTransaction(params: {
-        input: AssetTransferInput;
-        outputs?: AssetTransferOutput[];
-        networkId?: NetworkId;
-        approvals?: string[];
-    }): DecomposeAsset {
-        if (
-            params === null ||
-            typeof params !== "object" ||
-            !("input" in params)
-        ) {
-            throw Error(
-                `Expected the first param of createAssetDecomposeTransaction to be an object containing input param but found ${params}`
-            );
-        }
-        const {
-            input,
-            outputs = [],
-            networkId = this.networkId,
-            approvals = []
-        } = params;
-        checkTransferInput(input);
-        checkTransferOutputs(outputs);
-        checkNetworkId(networkId);
-        return new DecomposeAsset({
-            input,
-            outputs,
-            networkId,
-            approvals
-        });
-    }
-
     public createUnwrapCCCTransaction(params: {
         burn: AssetTransferInput | Asset;
         networkId?: NetworkId;
@@ -1059,14 +966,6 @@ function checkTransferBurns(burns: Array<AssetTransferInput>) {
             );
         }
     });
-}
-
-function checkTransferInput(input: AssetTransferInput) {
-    if (!(input instanceof AssetTransferInput)) {
-        throw Error(
-            `Expected an input param to be an AssetTransferInput but found ${input}`
-        );
-    }
 }
 
 function checkTransferInputs(inputs: Array<AssetTransferInput>) {

@@ -37,6 +37,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
         output: AssetMintOutput;
         approvals: string[];
     }) {
+        throw Error("ComposeAsset is disabled");
         super(input.networkId);
 
         this._transaction = new AssetComposeTransaction(input);

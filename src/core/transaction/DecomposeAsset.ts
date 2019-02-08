@@ -24,6 +24,7 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
         networkId: NetworkId;
         approvals: string[];
     }) {
+        throw Error("DecomposeAsset is disabled");
         super(input.networkId);
 
         this._transaction = new AssetDecomposeTransaction(input);
