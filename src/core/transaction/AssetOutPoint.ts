@@ -6,6 +6,8 @@ export interface AssetOutPointJSON {
     assetType: string;
     shardId: number;
     quantity: string;
+    lockScriptHash?: string;
+    parameters?: Buffer[];
 }
 
 export interface AssetOutPointData {
@@ -32,13 +34,27 @@ export class AssetOutPoint {
      * @returns An AssetOutPoint.
      */
     public static fromJSON(data: AssetOutPointJSON) {
-        const { tracker, index, assetType, shardId, quantity } = data;
+        const {
+            tracker,
+            index,
+            assetType,
+            shardId,
+            quantity,
+            lockScriptHash,
+            parameters
+        } = data;
         return new this({
             tracker: new H256(tracker),
             index,
             assetType: new H160(assetType),
             shardId,
-            quantity: U64.ensure(quantity)
+            quantity: U64.ensure(quantity),
+            lockScriptHash:
+                lockScriptHash == null ? undefined : new H160(lockScriptHash),
+            parameters:
+                parameters == null
+                    ? undefined
+                    : parameters.map(p => Buffer.from(p))
         });
     }
     public readonly tracker: H256;
