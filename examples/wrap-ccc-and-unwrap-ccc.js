@@ -22,7 +22,8 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     const wrapCCC = sdk.core.createWrapCCCTransaction({
         shardId: 0,
         recipient: address,
-        quantity
+        quantity,
+        sender: ACCOUNT_ADDRESS
     });
     const wrapCCCSignedHash = await sdk.rpc.chain.sendTransaction(wrapCCC, {
         account: ACCOUNT_ADDRESS,

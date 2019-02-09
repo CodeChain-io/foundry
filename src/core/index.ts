@@ -182,23 +182,27 @@ export class Core {
                   lockScriptHash: H160 | string;
                   parameters: Buffer[];
                   quantity: U64 | number | string;
+                  sender: PlatformAddress | string;
               }
             | {
                   shardId: number;
                   recipient: AssetTransferAddress | string;
                   quantity: U64 | number | string;
+                  sender: PlatformAddress | string;
               }
     ): WrapCCC {
-        const { shardId, quantity } = params;
+        const { shardId, quantity, sender } = params;
         checkShardId(shardId);
         checkAmount(quantity);
+        checkSender(sender);
         let data;
         if ("recipient" in params) {
             checkAssetTransferAddressRecipient(params.recipient);
             data = {
                 shardId,
                 recipient: AssetTransferAddress.ensure(params.recipient),
-                quantity: U64.ensure(quantity)
+                quantity: U64.ensure(quantity),
+                sender: PlatformAddress.ensure(sender)
             };
         } else {
             const { lockScriptHash, parameters } = params;
@@ -208,7 +212,8 @@ export class Core {
                 shardId,
                 lockScriptHash: H160.ensure(lockScriptHash),
                 parameters,
-                quantity: U64.ensure(quantity)
+                quantity: U64.ensure(quantity),
+                sender: PlatformAddress.ensure(sender)
             };
         }
         return new WrapCCC(data, this.networkId);
@@ -925,6 +930,14 @@ function checkCertifier(certifier: PlatformAddress | string) {
     if (!PlatformAddress.check(certifier)) {
         throw Error(
             `Expected certifier param to be a PlatformAddress but found ${certifier}`
+        );
+    }
+}
+
+function checkSender(sender: PlatformAddress | string) {
+    if (!PlatformAddress.check(sender)) {
+        throw Error(
+            `Expected sender param to be a PlatformAddress but found ${sender}`
         );
     }
 }

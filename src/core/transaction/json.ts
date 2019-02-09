@@ -199,12 +199,14 @@ export function fromJSONToTransaction(result: any): Transaction {
                 Buffer.from(p, "hex")
             );
             const quantity = U64.ensure(action.quantity);
+            const sender = PlatformAddress.ensure(action.sender);
             tx = new WrapCCC(
                 {
                     shardId,
                     lockScriptHash,
                     parameters,
-                    quantity
+                    quantity,
+                    sender
                 },
                 networkId
             );
