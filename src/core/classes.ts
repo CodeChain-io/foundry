@@ -5,7 +5,6 @@ export { H512 } from "codechain-primitives";
 export { U64 } from "codechain-primitives";
 export { U256 } from "codechain-primitives";
 
-export { Invoice } from "./Invoice";
 export { Block } from "./Block";
 export { Transaction } from "./Transaction";
 export { SignedTransaction } from "./SignedTransaction";

@@ -123,7 +123,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             timeout: 300 * 1000
         }
     );
-    if (!goldMintTxInvoices[0].success) {
+    if (!goldMintTxInvoices[0]) {
         throw Error(
             `AssetMintTransaction failed: ${JSON.stringify(
                 goldMintTxInvoices[0].error
@@ -136,7 +136,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             timeout: 300 * 1000
         }
     );
-    if (!silverMintTxInvoices[0].success) {
+    if (!silverMintTxInvoices[0]) {
         throw Error(
             `AssetMintTransaction failed: ${JSON.stringify(
                 silverMintTxInvoices[0].error
@@ -149,7 +149,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             timeout: 300 * 1000
         }
     );
-    if (!transferTxInvoices[0].success) {
+    if (!transferTxInvoices[0]) {
         throw Error(
             `AssetTransferTransaction failed: ${JSON.stringify(
                 transferTxInvoices[0].error

@@ -33,7 +33,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         // Wait up to 120 seconds to get the invoice.
         timeout: 120 * 1000
     });
-    if (!wrapCCCInvoice.success) {
+    if (!wrapCCCInvoice) {
         throw Error(`WrapCCC failed: ${JSON.stringify(wrapCCCInvoice.error)}`);
     }
     const balanceAfterWrapCCC = await sdk.rpc.chain.getBalance(ACCOUNT_ADDRESS);
@@ -52,7 +52,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         // Wait up to 120 seconds to get the invoice.
         timeout: 120 * 1000
     });
-    if (!unwrapCCCTxInvoice.success) {
+    if (!unwrapCCCTxInvoice) {
         throw Error(
             `AssetUnwrapCCCTransaction failed: ${JSON.stringify(
                 unwrapCCCTxInvoice.error

@@ -67,7 +67,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             timeout: 300 * 1000
         }
     );
-    if (!mintTxInvoices[0].success) {
+    if (!mintTxInvoices[0]) {
         throw Error(
             `AssetMintTransaction failed: ${JSON.stringify(
                 mintTxInvoices[0].error
@@ -80,7 +80,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             timeout: 300 * 1000
         }
     );
-    if (!transferTxInvoices[0].success) {
+    if (!transferTxInvoices[0]) {
         throw Error(
             `AssetTransferTransaction failed: ${JSON.stringify(
                 transferTxInvoices[0].error

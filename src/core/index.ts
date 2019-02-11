@@ -12,7 +12,6 @@ import {
 import { Asset } from "./Asset";
 import { AssetScheme } from "./AssetScheme";
 import { Block } from "./Block";
-import { Invoice } from "./Invoice";
 import { Script } from "./Script";
 import { SignedTransaction } from "./SignedTransaction";
 import { Transaction } from "./Transaction";
@@ -46,7 +45,6 @@ export class Core {
         H512,
         U256,
         U64,
-        Invoice,
         // Block
         Block,
         // Transaction

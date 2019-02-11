@@ -132,8 +132,7 @@ describe("Invalid response", () => {
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain("chain_getInvoice");
-                        expect(e.toString()).toContain("JSON of Invoice");
-                        expect(e.toString()).toContain("undefined");
+                        expect(e.toString()).toContain("JSON of boolean");
                         done();
                     });
             });

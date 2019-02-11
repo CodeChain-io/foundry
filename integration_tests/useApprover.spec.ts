@@ -88,7 +88,7 @@ async function sendCCCToOther(
         timeout: 5 * 60 * 1000
     });
     expect(invoice).toBeTruthy();
-    expect(invoice!.success).toBe(true);
+    expect(invoice!).toBe(true);
 }
 
 async function mintAssetUsingMaster(
@@ -126,7 +126,7 @@ async function mintAssetUsingMaster(
         }
     );
     expect(mintTxInvoices.length).toBe(1);
-    expect(mintTxInvoices[0].success).toBe(true);
+    expect(mintTxInvoices[0]).toBe(true);
     return mintTx;
 }
 
@@ -171,7 +171,7 @@ async function transferAssetUsingRegular(
         }
     );
     expect(transferTxInvoices.length).toBe(2);
-    expect(transferTxInvoices[1].success).toBe(true);
+    expect(transferTxInvoices[1]).toBe(true);
 }
 async function transferAssetUsingOther(
     mintTx: MintAsset,
@@ -219,5 +219,5 @@ async function transferAssetUsingOther(
         }
     );
     expect(transferTxInvoices.length).toBe(1);
-    expect(transferTxInvoices[0].success).toBe(false);
+    expect(transferTxInvoices[0]).toBe(false);
 }

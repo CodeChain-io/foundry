@@ -3,7 +3,6 @@ import { Asset } from "../lib/core/Asset";
 import { AssetScheme } from "../lib/core/AssetScheme";
 import {
     H256,
-    Invoice,
     MintAsset,
     PlatformAddress,
     SignedTransaction,
@@ -389,9 +388,7 @@ describe("rpc", () => {
             });
 
             test("getInvoice", async () => {
-                expect(await sdk.rpc.chain.getInvoice(txHash)).toEqual(
-                    expect.any(Invoice)
-                );
+                expect(await sdk.rpc.chain.getInvoice(txHash)).toEqual(true);
                 expect(await sdk.rpc.chain.getInvoice(invalidHash)).toBe(null);
             });
         });
@@ -442,11 +439,7 @@ describe("rpc", () => {
                     await sdk.rpc.chain.getInvoicesByTracker(
                         mintTransaction.tracker()
                     )
-                ).toEqual(
-                    expect.arrayContaining([
-                        Invoice.fromJSON({ success: true })
-                    ])
-                );
+                ).toEqual([true]);
             });
 
             test("getAssetSchemeByTracker", async () => {
