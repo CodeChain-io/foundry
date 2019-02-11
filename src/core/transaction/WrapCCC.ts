@@ -11,14 +11,14 @@ export interface WrapCCCData {
     lockScriptHash: H160;
     parameters: Buffer[];
     quantity: U64;
-    sender: PlatformAddress;
+    payer: PlatformAddress;
 }
 
 export interface WrapCCCAddressData {
     shardId: number;
     recipient: AssetTransferAddress;
     quantity: U64;
-    sender: PlatformAddress;
+    payer: PlatformAddress;
 }
 
 export class WrapCCC extends Transaction implements AssetTransaction {
@@ -26,7 +26,7 @@ export class WrapCCC extends Transaction implements AssetTransaction {
     private readonly lockScriptHash: H160;
     private readonly parameters: Buffer[];
     private readonly quantity: U64;
-    private readonly sender: PlatformAddress;
+    private readonly payer: PlatformAddress;
 
     public constructor(
         data: WrapCCCData | WrapCCCAddressData,
@@ -64,10 +64,10 @@ export class WrapCCC extends Transaction implements AssetTransaction {
             this.lockScriptHash = lockScriptHash;
             this.parameters = parameters;
         }
-        const { shardId, quantity, sender } = data;
+        const { shardId, quantity, payer } = data;
         this.shardId = shardId;
         this.quantity = quantity;
-        this.sender = sender;
+        this.payer = payer;
     }
 
     /**
@@ -104,25 +104,25 @@ export class WrapCCC extends Transaction implements AssetTransaction {
     }
 
     protected actionToEncodeObject(): any[] {
-        const { shardId, lockScriptHash, parameters, quantity, sender } = this;
+        const { shardId, lockScriptHash, parameters, quantity, payer } = this;
         return [
             7,
             shardId,
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
             quantity.toEncodeObject(),
-            sender.getAccountId().toEncodeObject()
+            payer.getAccountId().toEncodeObject()
         ];
     }
 
     protected actionToJSON(): any {
-        const { shardId, lockScriptHash, parameters, quantity, sender } = this;
+        const { shardId, lockScriptHash, parameters, quantity, payer } = this;
         return {
             shardId,
             lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map((p: Buffer) => p.toString("hex")),
             quantity: quantity.toJSON(),
-            sender: sender.toString()
+            payer: payer.toString()
         };
     }
 }

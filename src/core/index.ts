@@ -182,19 +182,19 @@ export class Core {
                   lockScriptHash: H160 | string;
                   parameters: Buffer[];
                   quantity: U64 | number | string;
-                  sender: PlatformAddress | string;
+                  payer: PlatformAddress | string;
               }
             | {
                   shardId: number;
                   recipient: AssetTransferAddress | string;
                   quantity: U64 | number | string;
-                  sender: PlatformAddress | string;
+                  payer: PlatformAddress | string;
               }
     ): WrapCCC {
-        const { shardId, quantity, sender } = params;
+        const { shardId, quantity, payer } = params;
         checkShardId(shardId);
         checkAmount(quantity);
-        checkSender(sender);
+        checkPayer(payer);
         let data;
         if ("recipient" in params) {
             checkAssetTransferAddressRecipient(params.recipient);
@@ -202,7 +202,7 @@ export class Core {
                 shardId,
                 recipient: AssetTransferAddress.ensure(params.recipient),
                 quantity: U64.ensure(quantity),
-                sender: PlatformAddress.ensure(sender)
+                payer: PlatformAddress.ensure(payer)
             };
         } else {
             const { lockScriptHash, parameters } = params;
@@ -213,7 +213,7 @@ export class Core {
                 lockScriptHash: H160.ensure(lockScriptHash),
                 parameters,
                 quantity: U64.ensure(quantity),
-                sender: PlatformAddress.ensure(sender)
+                payer: PlatformAddress.ensure(payer)
             };
         }
         return new WrapCCC(data, this.networkId);
@@ -934,10 +934,10 @@ function checkCertifier(certifier: PlatformAddress | string) {
     }
 }
 
-function checkSender(sender: PlatformAddress | string) {
-    if (!PlatformAddress.check(sender)) {
+function checkPayer(payer: PlatformAddress | string) {
+    if (!PlatformAddress.check(payer)) {
         throw Error(
-            `Expected sender param to be a PlatformAddress but found ${sender}`
+            `Expected payer param to be a PlatformAddress but found ${payer}`
         );
     }
 }

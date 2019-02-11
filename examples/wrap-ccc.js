@@ -23,7 +23,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         shardId: 0,
         recipient: address,
         quantity,
-        sender: ACCOUNT_ADDRESS
+        payer: ACCOUNT_ADDRESS
     });
     const hash = await sdk.rpc.chain.sendTransaction(wrapCCC, {
         account: ACCOUNT_ADDRESS,
