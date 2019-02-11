@@ -15,6 +15,7 @@ import { ComposeAsset } from "./ComposeAsset";
 import { CreateShard } from "./CreateShard";
 import { Custom } from "./Custom";
 import { DecomposeAsset } from "./DecomposeAsset";
+import { IncreaseAssetSupply } from "./IncreaseAssetSupply";
 import { MintAsset } from "./MintAsset";
 import { OrderOnTransfer } from "./OrderOnTransfer";
 import { Pay } from "./Pay";
@@ -82,6 +83,19 @@ export function fromJSONToTransaction(result: any): Transaction {
                 approver,
                 administrator,
                 allowedScriptHashes,
+                approvals
+            });
+            break;
+        }
+        case "increaseAssetSupply": {
+            const { approvals, shardId } = action;
+            const assetType = new H160(action.assetType);
+            const output = AssetMintOutput.fromJSON(action.output);
+            tx = new IncreaseAssetSupply({
+                networkId,
+                shardId,
+                assetType,
+                output,
                 approvals
             });
             break;

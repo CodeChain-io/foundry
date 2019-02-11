@@ -22,6 +22,7 @@ import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 import { ChangeAssetScheme } from "./transaction/ChangeAssetScheme";
 import { CreateShard } from "./transaction/CreateShard";
 import { Custom } from "./transaction/Custom";
+import { IncreaseAssetSupply } from "./transaction/IncreaseAssetSupply";
 import { MintAsset } from "./transaction/MintAsset";
 import { Order } from "./transaction/Order";
 import { OrderOnTransfer } from "./transaction/OrderOnTransfer";
@@ -650,6 +651,38 @@ export class Core {
                     : PlatformAddress.ensure(administrator),
             allowedScriptHashes:
                 allowedScriptHashes == null ? [] : allowedScriptHashes,
+            approvals
+        });
+    }
+
+    public createIncreaseAssetSupplyTransaction(params: {
+        shardId: number;
+        assetType: H160 | string;
+        recipient: AssetTransferAddress | string;
+        supply?: U64 | number | string | null;
+        approvals?: string[];
+    }): IncreaseAssetSupply {
+        const {
+            shardId,
+            assetType,
+            recipient,
+            supply,
+            approvals = []
+        } = params;
+        checkNetworkId(this.networkId);
+        checkShardId(shardId);
+        checkAssetType(assetType);
+        if (supply != null) {
+            checkAmount(supply);
+        }
+        return new IncreaseAssetSupply({
+            networkId: this.networkId,
+            shardId,
+            assetType: H160.ensure(assetType),
+            output: new AssetMintOutput({
+                supply: supply == null ? null : U64.ensure(supply),
+                recipient: AssetTransferAddress.ensure(recipient)
+            }),
             approvals
         });
     }
