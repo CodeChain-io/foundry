@@ -26,7 +26,7 @@ export class OrderOnTransfer {
      */
     public static fromJSON(data: OrderOnTransferJSON) {
         const { order, spentQuantity, inputIndices, outputIndices } = data;
-        return new this({
+        return new OrderOnTransfer({
             order: Order.fromJSON(order),
             spentQuantity: U64.ensure(spentQuantity),
             inputIndices,
