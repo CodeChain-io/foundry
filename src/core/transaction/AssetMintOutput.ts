@@ -7,7 +7,7 @@ import { P2PKHBurn } from "../../key/P2PKHBurn";
 export interface AssetMintOutputJSON {
     lockScriptHash: string;
     parameters: string[];
-    supply?: string | null;
+    supply: string;
 }
 
 export class AssetMintOutput {
@@ -21,13 +21,13 @@ export class AssetMintOutput {
         return new this({
             lockScriptHash: H160.ensure(lockScriptHash),
             parameters: parameters.map(p => Buffer.from(p, "hex")),
-            supply: supply == null ? null : U64.ensure(supply)
+            supply: U64.ensure(supply)
         });
     }
 
     public readonly lockScriptHash: H160;
     public readonly parameters: Buffer[];
-    public readonly supply?: U64 | null;
+    public readonly supply: U64;
 
     /**
      * @param data.lockScriptHash A lock script hash of the output.
@@ -39,11 +39,11 @@ export class AssetMintOutput {
             | {
                   lockScriptHash: H160;
                   parameters: Buffer[];
-                  supply?: U64 | null;
+                  supply: U64;
               }
             | {
                   recipient: AssetTransferAddress;
-                  supply?: U64 | null;
+                  supply: U64;
               }
     ) {
         if ("recipient" in data) {
@@ -88,7 +88,7 @@ export class AssetMintOutput {
         return {
             lockScriptHash: this.lockScriptHash.toJSON(),
             parameters: this.parameters.map((p: Buffer) => p.toString("hex")),
-            supply: this.supply == null ? undefined : this.supply.toJSON()
+            supply: this.supply.toJSON()
         };
     }
 }

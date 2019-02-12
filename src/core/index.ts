@@ -554,7 +554,7 @@ export class Core {
                   approver?: PlatformAddress | string;
                   administrator?: PlatformAddress | string;
                   allowedScriptHashes?: H160[];
-                  supply?: U64 | number | string | null;
+                  supply?: U64 | number | string;
               };
         recipient: AssetTransferAddress | string;
         approvals?: string[];
@@ -572,7 +572,7 @@ export class Core {
             approver: approver = null,
             administrator: administrator = null,
             allowedScriptHashes = null,
-            supply
+            supply = U64.MAX_VALUE
         } = scheme;
         checkAssetTransferAddressRecipient(recipient);
         checkNetworkId(networkId);
@@ -583,9 +583,7 @@ export class Core {
         checkMetadata(metadata);
         checkApprover(approver);
         checkAdministrator(administrator);
-        if (supply != null) {
-            checkAmount(supply);
-        }
+        checkAmount(supply);
         return new MintAsset({
             networkId,
             shardId,
@@ -599,7 +597,7 @@ export class Core {
                 allowedScriptHashes == null ? [] : allowedScriptHashes,
             metadata,
             output: new AssetMintOutput({
-                supply: supply == null ? null : U64.ensure(supply),
+                supply: U64.ensure(supply),
                 recipient: AssetTransferAddress.ensure(recipient)
             }),
             approvals
@@ -659,28 +657,26 @@ export class Core {
         shardId: number;
         assetType: H160 | string;
         recipient: AssetTransferAddress | string;
-        supply?: U64 | number | string | null;
+        supply?: U64 | number | string;
         approvals?: string[];
     }): IncreaseAssetSupply {
         const {
             shardId,
             assetType,
             recipient,
-            supply,
+            supply = U64.MAX_VALUE,
             approvals = []
         } = params;
         checkNetworkId(this.networkId);
         checkShardId(shardId);
         checkAssetType(assetType);
-        if (supply != null) {
-            checkAmount(supply);
-        }
+        checkAmount(supply);
         return new IncreaseAssetSupply({
             networkId: this.networkId,
             shardId,
             assetType: H160.ensure(assetType),
             output: new AssetMintOutput({
-                supply: supply == null ? null : U64.ensure(supply),
+                supply: U64.ensure(supply),
                 recipient: AssetTransferAddress.ensure(recipient)
             }),
             approvals

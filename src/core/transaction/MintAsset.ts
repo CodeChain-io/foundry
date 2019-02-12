@@ -258,7 +258,7 @@ class AssetMintTransaction {
             metadata,
             lockScriptHash.toEncodeObject(),
             parameters.map(parameter => Buffer.from(parameter)),
-            supply != null ? [supply.toEncodeObject()] : [],
+            supply.toEncodeObject(),
             approver ? [approver.getAccountId().toEncodeObject()] : [],
             administrator
                 ? [administrator.getAccountId().toEncodeObject()]

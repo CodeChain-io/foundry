@@ -89,7 +89,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
                     "0000000000000000000000000000000000000000"
                 ),
                 parameters: [],
-                supply: null
+                supply: new U64(0)
             });
         } else {
             throw Error(`Unexpected value of the tag output: ${tag.output}`);
@@ -379,9 +379,7 @@ class AssetComposeTransaction {
             this.inputs.map(input => input.toEncodeObject()),
             this.output.lockScriptHash.toEncodeObject(),
             this.output.parameters.map(parameter => Buffer.from(parameter)),
-            this.output.supply != null
-                ? [this.output.supply.toEncodeObject()]
-                : []
+            this.output.supply.toEncodeObject()
         ];
     }
 

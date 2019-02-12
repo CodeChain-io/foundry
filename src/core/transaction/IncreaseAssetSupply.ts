@@ -71,7 +71,7 @@ class IncreaseAssetSupplyTransaction {
         };
     }
 
-    public toEncodeObject() {
+    public toEncodeObject(): any[] {
         return [
             0x18,
             this.networkId,
@@ -79,9 +79,7 @@ class IncreaseAssetSupplyTransaction {
             this.assetType.toEncodeObject(),
             this.output.lockScriptHash.toEncodeObject(),
             this.output.parameters.map(parameter => Buffer.from(parameter)),
-            this.output.supply != null
-                ? [this.output.supply.toEncodeObject()]
-                : []
+            this.output.supply.toEncodeObject()
         ];
     }
 
