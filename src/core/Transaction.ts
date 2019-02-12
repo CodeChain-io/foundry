@@ -97,18 +97,17 @@ export abstract class Transaction {
         const seq = this._seq;
         const fee = this._fee;
         const networkId = this._networkId;
-        if (!fee) {
-            throw Error("Transaction must have the fee");
-        }
         const action = this.actionToJSON();
         action.type = this.type();
         const result: any = {
-            fee: fee.toJSON(),
             networkId,
             action
         };
         if (seq != null) {
             result.seq = seq;
+        }
+        if (fee != null) {
+            result.fee = fee.toJSON();
         }
         return result;
     }

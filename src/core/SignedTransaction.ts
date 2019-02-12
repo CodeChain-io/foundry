@@ -184,15 +184,11 @@ export class SignedTransaction {
             r,
             s
         } = this;
-        const seq = unsigned.seq();
         const sig = SignedTransaction.convertRsvToSignatureString({
             r: r.value.toString(16),
             s: s.value.toString(16),
             v
         });
-        if (seq == null) {
-            throw Error("Signed tx must have the seq");
-        }
         const result = unsigned.toJSON();
         result.blockNumber = blockNumber;
         result.blockHash = blockHash === null ? null : blockHash.toJSON();
