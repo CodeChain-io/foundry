@@ -426,6 +426,38 @@ export class ChainRpc {
     }
 
     /**
+     * Gets a hint to find out why the transaction failed.
+     * @param transactionHash A transaction hash from which the error hint would get.
+     * @returns Null if the transaction is not involved in the chain or succeeded. If the transaction failed, this should return the reason for the transaction failing.
+     */
+    public async getErrorHint(
+        transactionHash: H256 | string
+    ): Promise<string | null> {
+        if (!H256.check(transactionHash)) {
+            throw Error(
+                `Expected the first argument of getErrorHint to be an H256 value but found ${transactionHash}`
+            );
+        }
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getErrorHint", [
+                    `0x${H256.ensure(transactionHash).value}`
+                ])
+                .then(result => {
+                    if (typeof result === "string" || result === null) {
+                        return resolve(result);
+                    }
+                    reject(
+                        Error(
+                            `Expected chain_getErrorHint to return either null or value of string, but it returned ${result}`
+                        )
+                    );
+                })
+                .catch(reject);
+        });
+    }
+
+    /**
      * Gets seq of an account of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns seq recorded in the most recent block.
      * @param address An account address
      * @param blockNumber The specific block number to get account's seq at given address.
