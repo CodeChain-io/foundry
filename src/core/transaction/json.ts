@@ -252,8 +252,12 @@ export function fromJSONToTransaction(result: any): Transaction {
         default:
             throw Error(`Unexpected action: ${action}`);
     }
-    tx.setSeq(seq);
-    tx.setFee(fee);
+    if (seq != null) {
+        tx.setSeq(seq);
+    }
+    if (fee != null) {
+        tx.setFee(fee);
+    }
     return tx;
 }
 
