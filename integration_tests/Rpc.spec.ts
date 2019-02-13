@@ -8,7 +8,6 @@ import {
     SignedTransaction,
     Transaction,
     TransferAsset,
-    U256,
     U64
 } from "../lib/core/classes";
 import {
@@ -281,7 +280,8 @@ describe("rpc", () => {
 
             test("VerificationFailed", done => {
                 const signed = tx.sign({ secret: signerSecret, fee: 10, seq });
-                signed.r = new U256(0);
+                (signed as any)._signature =
+                    "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
                 sdk.rpc.chain
                     .sendSignedTransaction(signed)
                     .then(() => done.fail())
@@ -683,15 +683,12 @@ describe("rpc", () => {
             });
 
             test("Ok", async () => {
-                const { r, s, v } = signEcdsa(message, secret);
                 const signature = await sdk.rpc.account.sign(
                     message,
                     address,
                     "my-password"
                 );
-                expect(signature).toContain(r);
-                expect(signature).toContain(s);
-                expect(signature).toContain(v);
+                expect(signature).toContain(signEcdsa(message, secret));
             });
 
             test("WrongPassword", async done => {

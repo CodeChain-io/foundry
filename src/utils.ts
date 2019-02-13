@@ -15,6 +15,7 @@ import {
     toHex as _toHex,
     verifyEcdsa as _verifyEcdsa
 } from "codechain-primitives";
+import * as _ from "lodash";
 
 /**
  * Converts buffer to hexadecimal string.
@@ -164,44 +165,62 @@ const encodeSignatureTagOutput = (output: number[]) => {
     return bytes.reverse();
 };
 
-export interface EcdsaSignature {
-    r: string;
-    s: string;
-    v: number;
-}
+export type EcdsaSignature = string;
 
 /**
  * Gets signature for message from private key.
  * @param message arbitrary length string
- * @param priv 32 byte hexadecimal string of private key
- * @returns r, s, v of ECDSA signature
+ * @param priv 32 byte hexstring of private key
+ * @returns 65 byte hexstring of ECDSA signature
  */
-export const signEcdsa = (message: string, priv: string): EcdsaSignature =>
-    _signEcdsa(message, priv);
+export const signEcdsa = (message: string, priv: string): EcdsaSignature => {
+    const { r, s, v } = _signEcdsa(message, priv);
+    return `${_.padStart(r, 64, "0")}${_.padStart(s, 64, "0")}${_.padStart(
+        v.toString(16),
+        2,
+        "0"
+    )}`;
+};
 
 /**
  * Checks if the signature from signEcdsa is correct.
  * @param message arbitrary length string
- * @param signature r, s, v of ECDSA signature
- * @param pub 64 byte hexadecimal string of public key
+ * @param signature 65 byte hexstring of ECDSA signature
+ * @param pub 64 byte hexstring of public key
  * @returns if signature is valid, true. Else false.
  */
 export const verifyEcdsa = (
     message: string,
     signature: EcdsaSignature,
     pub: string
-): boolean => _verifyEcdsa(message, signature, pub);
+): boolean => {
+    if (signature.startsWith("0x")) {
+        signature = signature.substr(2);
+    }
+    const r = signature.substr(0, 64);
+    const s = signature.substr(64, 64);
+    const v = Number.parseInt(signature.substr(128, 2), 16);
+    return _verifyEcdsa(message, { r, s, v }, pub);
+};
 
 /**
  * Gets public key from the message and signature.
  * @param message arbitrary length string
- * @param signature r, s, v of ECDSA signature
- * @returns 64 byte hexadecimal string public key
+ * @param signature 65 byte hexstring of ECDSA signature
+ * @returns 64 byte hexstring public key
  */
 export const recoverEcdsa = (
     message: string,
     signature: EcdsaSignature
-): string => _recoverEcdsa(message, signature);
+): string => {
+    if (signature.startsWith("0x")) {
+        signature = signature.substr(2);
+    }
+    const r = signature.substr(0, 64);
+    const s = signature.substr(64, 64);
+    const v = Number.parseInt(signature.substr(128, 2), 16);
+    return _recoverEcdsa(message, { r, s, v });
+};
 
 /**
  * Generates a private key.

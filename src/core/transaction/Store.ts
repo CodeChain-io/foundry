@@ -34,15 +34,10 @@ export class Store extends Transaction {
                 getPublicFromPrivate(secret.value),
                 { networkId }
             );
-            const { r, s, v } = signEcdsa(
+            this.signature = signEcdsa(
                 blake256(RLP.encode(content)),
                 secret.value
             );
-            this.signature = `${_.padStart(r, 64, "0")}${_.padStart(
-                s,
-                64,
-                "0"
-            )}${_.padStart(v.toString(16), 2, "0")}`;
         } else {
             const { content, certifier } = params;
             let signature = params.signature;

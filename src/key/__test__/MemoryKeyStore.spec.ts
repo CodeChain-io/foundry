@@ -1,8 +1,8 @@
 import {
-    recoverEcdsa,
-    verifyEcdsa,
+    getAccountIdFromPublic,
     getPublicFromPrivate,
-    getAccountIdFromPublic
+    recoverEcdsa,
+    verifyEcdsa
 } from "../../utils";
 import { MemoryKeyStore } from "../MemoryKeyStore";
 
@@ -53,10 +53,6 @@ test("sign", async () => {
         key,
         message
     });
-    const r = `${signature.substr(0, 64)}`;
-    const s = `${signature.substr(64, 64)}`;
-    const v = Number.parseInt(signature.substr(128, 2), 16);
-
-    expect(verifyEcdsa(message, { r, s, v }, publicKey)).toBe(true);
-    expect(recoverEcdsa(message, { r, s, v })).toEqual(publicKey);
+    expect(verifyEcdsa(message, signature, publicKey)).toBe(true);
+    expect(recoverEcdsa(message, signature)).toEqual(publicKey);
 });

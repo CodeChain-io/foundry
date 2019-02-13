@@ -83,17 +83,8 @@ test("sign", () => {
         seq: 0,
         fee: 0
     });
-    const { v, r, s } = signed.signature();
-    expect(v).toBe(1);
-    expect(r.toEncodeObject()).toEqual(
-        new U256(
-            "0x3f9bcff484bd5f1d5549f912f9eeaf8c2fe349b257bde2b61fb1036013d4e44c"
-        ).toEncodeObject()
-    );
-    expect(s.toEncodeObject()).toEqual(
-        new U256(
-            "0x204a4215d26cb879eaad2028fe1a7898e4cf9a5d979eb383e0a384140d6e04c1"
-        ).toEncodeObject()
+    expect(signed.signature()).toBe(
+        "3f9bcff484bd5f1d5549f912f9eeaf8c2fe349b257bde2b61fb1036013d4e44c204a4215d26cb879eaad2028fe1a7898e4cf9a5d979eb383e0a384140d6e04c101"
     );
 });
 

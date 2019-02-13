@@ -85,12 +85,10 @@ export abstract class Transaction {
             throw Error("The tx fee is already set");
         }
         this._fee = U64.ensure(fee);
-        const { r, s, v } = signEcdsa(
-            this.hash().value,
-            H256.ensure(secret).value
+        return new SignedTransaction(
+            this,
+            signEcdsa(this.hash().value, H256.ensure(secret).value)
         );
-        const sig = SignedTransaction.convertRsvToSignatureString({ r, s, v });
-        return new SignedTransaction(this, sig);
     }
 
     public toJSON() {

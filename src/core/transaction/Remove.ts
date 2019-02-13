@@ -26,12 +26,7 @@ export class Remove extends Transaction {
         if ("secret" in params) {
             const { hash, secret } = params;
             this._hash = hash;
-            const { r, s, v } = signEcdsa(hash.value, secret.value);
-            this.signature = `${_.padStart(r, 64, "0")}${_.padStart(
-                s,
-                64,
-                "0"
-            )}${_.padStart(v.toString(16), 2, "0")}`;
+            this.signature = signEcdsa(hash.value, secret.value);
         } else {
             let signature = params.signature;
             if (signature.startsWith("0x")) {

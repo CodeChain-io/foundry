@@ -80,13 +80,7 @@ class KeyManager implements KeyManagementAPI {
         if (passphrase !== this.passphraseMap[key]) {
             return Promise.reject("The passphrase does not match");
         }
-        const { r, s, v } = signEcdsa(message, this.privateKeyMap[key]);
-        const sig = `${_.padStart(r, 64, "0")}${_.padStart(
-            s,
-            64,
-            "0"
-        )}${_.padStart(v.toString(16), 2, "0")}`;
-        return Promise.resolve(sig);
+        return Promise.resolve(signEcdsa(message, this.privateKeyMap[key]));
     }
 }
 

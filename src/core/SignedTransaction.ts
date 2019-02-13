@@ -1,4 +1,4 @@
-import { H160, H256, H512, PlatformAddress, U256 } from "codechain-primitives";
+import { H160, H256, H512, PlatformAddress } from "codechain-primitives";
 import * as _ from "lodash";
 
 import { blake160, blake256, recoverEcdsa } from "../utils";
@@ -24,64 +24,30 @@ const RLP = require("rlp");
  * - A seq is not identical to the signer's seq.
  */
 export class SignedTransaction {
-    /**
-     * Convert r, s, v values of an ECDSA signature to a string.
-     * @param params.r The r value of an ECDSA signature, which is up to 32 bytes of hexadecimal string.
-     * @param params.s The s value of an ECDSA signature, which is up to 32 bytes of hexadecimal string.
-     * @param params.v The recovery parameter of an ECDSA signature.
-     * @returns A 65 byte hexadecimal string.
-     */
-    public static convertRsvToSignatureString(params: {
-        r: string;
-        s: string;
-        v: number;
-    }) {
-        const { r, s, v } = params;
-        return `0x${_.padStart(r, 64, "0")}${_.padStart(
-            s,
-            64,
-            "0"
-        )}${_.padStart(v.toString(16), 2, "0")}`;
-    }
-
-    private static convertSignatureStringToRsv(
-        signature: string
-    ): { r: string; s: string; v: number } {
-        if (signature.startsWith("0x")) {
-            signature = signature.substr(2);
-        }
-        const r = `0x${signature.substr(0, 64)}`;
-        const s = `0x${signature.substr(64, 64)}`;
-        const v = Number.parseInt(signature.substr(128, 2), 16);
-        return { r, s, v };
-    }
     public unsigned: Transaction;
-    public v: number;
-    public r: U256;
-    public s: U256;
     public blockNumber: number | null;
     public blockHash: H256 | null;
     public transactionIndex: number | null;
+    private _signature: string;
 
     /**
      * @param unsigned A Transaction.
-     * @param sig An ECDSA signature which is a 65 byte hexadecimal string.
+     * @param signature An ECDSA signature which is a 65 byte hexadecimal string.
      * @param blockNumber The block number of the block that contains the tx.
      * @param blockHash The hash of the block that contains the tx.
      * @param transactionIndex The index(location) of the tx within the block.
      */
     constructor(
         unsigned: Transaction,
-        sig: string,
+        signature: string,
         blockNumber?: number,
         blockHash?: H256,
         transactionIndex?: number
     ) {
         this.unsigned = unsigned;
-        const { r, s, v } = SignedTransaction.convertSignatureStringToRsv(sig);
-        this.v = v;
-        this.r = new U256(r);
-        this.s = new U256(s);
+        this._signature = signature.startsWith("0x")
+            ? signature.substr(2)
+            : signature;
         this.blockNumber = blockNumber === undefined ? null : blockNumber;
         this.blockHash = blockHash || null;
         this.transactionIndex =
@@ -92,22 +58,16 @@ export class SignedTransaction {
      * Get the signature of a tx.
      */
     public signature() {
-        const { v, r, s } = this;
-        return { v, r, s };
+        return this._signature;
     }
 
     /**
      * Convert to an object for RLP encoding.
      */
     public toEncodeObject(): any[] {
-        const { unsigned, v, r, s } = this;
-        const sig = `0x${_.padStart(r.value.toString(16), 64, "0")}${_.padStart(
-            s.value.toString(16),
-            64,
-            "0"
-        )}${_.padStart(v.toString(16), 2, "0")}`;
+        const { unsigned, _signature } = this;
         const result = unsigned.toEncodeObject();
-        result.push(sig);
+        result.push(`0x${_signature}`);
         return result;
     }
 
@@ -137,12 +97,8 @@ export class SignedTransaction {
      * @deprecated
      */
     public getSignerAccountId(): H160 {
-        const { r, s, v, unsigned } = this;
-        const publicKey = recoverEcdsa(unsigned.hash().value, {
-            r: r.value.toString(16),
-            s: s.value.toString(16),
-            v
-        });
+        const { _signature, unsigned } = this;
+        const publicKey = recoverEcdsa(unsigned.hash().value, _signature);
         return new H160(blake160(publicKey));
     }
 
@@ -160,14 +116,8 @@ export class SignedTransaction {
      * @returns A public key.
      */
     public getSignerPublic(): H512 {
-        const { r, s, v, unsigned } = this;
-        return new H512(
-            recoverEcdsa(unsigned.hash().value, {
-                r: r.value.toString(16),
-                s: s.value.toString(16),
-                v
-            })
-        );
+        const { _signature, unsigned } = this;
+        return new H512(recoverEcdsa(unsigned.hash().value, _signature));
     }
 
     /**
@@ -180,20 +130,13 @@ export class SignedTransaction {
             blockHash,
             transactionIndex,
             unsigned,
-            v,
-            r,
-            s
+            _signature
         } = this;
-        const sig = SignedTransaction.convertRsvToSignatureString({
-            r: r.value.toString(16),
-            s: s.value.toString(16),
-            v
-        });
         const result = unsigned.toJSON();
         result.blockNumber = blockNumber;
         result.blockHash = blockHash === null ? null : blockHash.toJSON();
         result.transactionIndex = transactionIndex;
-        result.sig = sig;
+        result.sig = `0x${_signature}`;
         result.hash = this.hash().toJSON();
         return result;
     }
