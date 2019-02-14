@@ -1,0 +1,10 @@
+yarn.lock
+yarn-error.log
+node_modules
+
+/lib/
+/gh-pages/
+
+# Visual Studio Code - https://code.visualstudio.com/
+.settings/
+.vscode/
