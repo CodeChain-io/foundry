@@ -1,0 +1,11 @@
+{
+  "name": "codechain-sdk-stakeholder-helper",
+  "version": "0.1.0",
+  "description": "A JavaScript implementation for CodeChain stake token related custom actions and custom transactions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "CodeChain Team <codechain@kodebox.io>",
+  "license": "ISC"
+}
