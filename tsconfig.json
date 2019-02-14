@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["es7"],
+    "types": ["jest", "node"],
+    "module": "commonjs",
+    "declaration": true,
+    "outDir": "lib",
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "downlevelIteration": true
+  },
+  "include": ["./src/**/*"],
+  "exclude": ["./src/**/*.test.ts"]
+}
