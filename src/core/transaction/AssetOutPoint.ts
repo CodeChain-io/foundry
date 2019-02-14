@@ -7,7 +7,7 @@ export interface AssetOutPointJSON {
     shardId: number;
     quantity: string;
     lockScriptHash?: string;
-    parameters?: Buffer[];
+    parameters?: string[];
 }
 
 export interface AssetOutPointData {
@@ -54,7 +54,7 @@ export class AssetOutPoint {
             parameters:
                 parameters == null
                     ? undefined
-                    : parameters.map(p => Buffer.from(p))
+                    : parameters.map(p => Buffer.from(p, "hex"))
         });
     }
     public readonly tracker: H256;
@@ -112,13 +112,23 @@ export class AssetOutPoint {
      * @returns An AssetOutPoint JSON object.
      */
     public toJSON(): AssetOutPointJSON {
-        const { tracker, index, assetType, shardId, quantity } = this;
+        const {
+            tracker,
+            index,
+            assetType,
+            shardId,
+            quantity,
+            lockScriptHash,
+            parameters
+        } = this;
         return {
             tracker: tracker.toJSON(),
             index,
             assetType: assetType.toJSON(),
             shardId,
-            quantity: quantity.toJSON()
+            quantity: quantity.toJSON(),
+            lockScriptHash: lockScriptHash && lockScriptHash.toJSON(),
+            parameters: parameters && parameters.map(p => p.toString("hex"))
         };
     }
 }
