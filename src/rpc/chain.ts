@@ -359,7 +359,7 @@ export class ChainRpc {
         }
         let result = await attemptToGet();
         while (
-            result === null &&
+            result == null &&
             timeout !== undefined &&
             Date.now() - startTime < timeout
         ) {
@@ -444,7 +444,7 @@ export class ChainRpc {
                     `0x${H256.ensure(transactionHash).value}`
                 ])
                 .then(result => {
-                    if (typeof result === "string" || result === null) {
+                    if (typeof result === "string" || result == null) {
                         return resolve(result);
                     }
                     reject(
@@ -776,7 +776,7 @@ export class ChainRpc {
                 ])
                 .then(result => {
                     try {
-                        resolve(result === null ? null : Text.fromJSON(result));
+                        resolve(result == null ? null : Text.fromJSON(result));
                     } catch (e) {
                         reject(
                             Error(

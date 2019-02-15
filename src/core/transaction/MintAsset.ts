@@ -246,9 +246,9 @@ class AssetMintTransaction {
             shardId,
             metadata,
             output: output.toJSON(),
-            approver: approver === null ? null : approver.toString(),
+            approver: approver == null ? null : approver.toString(),
             administrator:
-                administrator === null ? null : administrator.toString(),
+                administrator == null ? null : administrator.toString(),
             allowedScriptHashes: allowedScriptHashes.map(hash => hash.toJSON())
         };
     }

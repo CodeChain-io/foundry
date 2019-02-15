@@ -173,7 +173,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
      */
     public getComposedAsset(): Asset {
         const { lockScriptHash, parameters, supply } = this._transaction.output;
-        if (supply === null) {
+        if (supply == null) {
             throw Error("not implemented");
         }
         return new Asset({
@@ -349,9 +349,9 @@ class AssetComposeTransaction {
         this.shardId = shardId;
         this.metadata = metadata;
         this.approver =
-            approver === null ? null : PlatformAddress.ensure(approver);
+            approver == null ? null : PlatformAddress.ensure(approver);
         this.administrator =
-            administrator === null
+            administrator == null
                 ? null
                 : PlatformAddress.ensure(administrator);
         this.allowedScriptHashes = allowedScriptHashes;
@@ -368,9 +368,9 @@ class AssetComposeTransaction {
             networkId: this.networkId,
             shardId: this.shardId,
             metadata: this.metadata,
-            approver: this.approver === null ? null : this.approver.toString(),
+            approver: this.approver == null ? null : this.approver.toString(),
             administrator:
-                this.administrator === null
+                this.administrator == null
                     ? null
                     : this.administrator.toString(),
             allowedScriptHashes: this.allowedScriptHashes.map(hash =>

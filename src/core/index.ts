@@ -560,7 +560,7 @@ export class Core {
         approvals?: string[];
     }): MintAsset {
         const { scheme, recipient, approvals = [] } = params;
-        if (scheme !== null && typeof scheme !== "object") {
+        if (scheme != null && typeof scheme !== "object") {
             throw Error(
                 `Expected scheme param to be either an AssetScheme or an object but found ${scheme}`
             );
@@ -619,7 +619,7 @@ export class Core {
         approvals?: string[];
     }): ChangeAssetScheme {
         const { shardId, assetType, scheme, approvals = [] } = params;
-        if (scheme !== null && typeof scheme !== "object") {
+        if (scheme != null && typeof scheme !== "object") {
             throw Error(
                 `Expected scheme param to be either an AssetScheme or an object but found ${scheme}`
             );
@@ -938,7 +938,7 @@ function checkMetadata(metadata: string) {
 }
 
 function checkApprover(approver: PlatformAddress | string | null) {
-    if (approver !== null && !PlatformAddress.check(approver)) {
+    if (approver != null && !PlatformAddress.check(approver)) {
         throw Error(
             `Expected approver param to be either null or a PlatformAddress value but found ${approver}`
         );
@@ -946,7 +946,7 @@ function checkApprover(approver: PlatformAddress | string | null) {
 }
 
 function checkAdministrator(administrator: PlatformAddress | string | null) {
-    if (administrator !== null && !PlatformAddress.check(administrator)) {
+    if (administrator != null && !PlatformAddress.check(administrator)) {
         throw Error(
             `Expected administrator param to be either null or a PlatformAddress value but found ${administrator}`
         );
@@ -1071,7 +1071,7 @@ function checkAssetOutPoint(
               parameters?: Buffer[];
           }
 ) {
-    if (value !== null && typeof value !== "object") {
+    if (value != null && typeof value !== "object") {
         throw Error(
             `Expected assetOutPoint param to be either an AssetOutPoint or an object but found ${value}`
         );
@@ -1099,7 +1099,7 @@ function checkAssetOutPoint(
 }
 
 function checkOrder(order: Order | null) {
-    if (order !== null && !(order instanceof Order)) {
+    if (order != null && !(order instanceof Order)) {
         throw Error(
             `Expected order param to be either null or an Order value but found ${order}`
         );
@@ -1161,7 +1161,7 @@ function checkParameters(parameters: Buffer[]) {
 }
 
 function checkTimelock(timelock: Timelock | null) {
-    if (timelock === null) {
+    if (timelock == null) {
         return;
     }
     const { type, value } = timelock;

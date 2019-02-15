@@ -394,7 +394,7 @@ export class TransferAsset extends Transaction implements AssetTransaction {
         const encoded: any[] = this._transaction.toEncodeObject();
         encoded.push(metadata);
         encoded.push(approvals);
-        if (expiration === null) {
+        if (expiration == null) {
             encoded.push([]);
         } else {
             encoded.push([expiration]);

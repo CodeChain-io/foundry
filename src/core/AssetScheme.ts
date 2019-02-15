@@ -38,13 +38,13 @@ export class AssetScheme {
             metadata,
             supply: U64.ensure(supply),
             approver:
-                approver === null ? null : PlatformAddress.ensure(approver),
+                approver == null ? null : PlatformAddress.ensure(approver),
             administrator:
-                administrator === null
+                administrator == null
                     ? null
                     : PlatformAddress.ensure(administrator),
             allowedScriptHashes:
-                allowedScriptHashes === null
+                allowedScriptHashes == null
                     ? []
                     : allowedScriptHashes.map((hash: string) =>
                           H160.ensure(hash)
@@ -97,9 +97,9 @@ export class AssetScheme {
         return {
             metadata,
             supply: supply.toJSON(),
-            approver: approver === null ? null : approver.toString(),
+            approver: approver == null ? null : approver.toString(),
             administrator:
-                administrator === null ? null : administrator.toString(),
+                administrator == null ? null : administrator.toString(),
             allowedScriptHashes: allowedScriptHashes.map(hash => hash.toJSON()),
             pool: pool.map(a => ({
                 assetType: a.assetType.toJSON(),

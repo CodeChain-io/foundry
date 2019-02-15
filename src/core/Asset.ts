@@ -51,7 +51,7 @@ export class Asset {
             lockScriptHash: new H160(lockScriptHash),
             parameters: parameters.map((p: string) => Buffer.from(p, "hex")),
             quantity: U64.ensure(quantity),
-            orderHash: orderHash === null ? orderHash : H256.ensure(orderHash),
+            orderHash: orderHash == null ? orderHash : H256.ensure(orderHash),
             tracker: new H256(tracker),
             transactionOutputIndex
         });
@@ -110,7 +110,7 @@ export class Asset {
             lockScriptHash: lockScriptHash.toJSON(),
             parameters: parameters.map((p: Buffer) => p.toString("hex")),
             quantity: quantity.toJSON(),
-            orderHash: orderHash === null ? null : orderHash.toJSON(),
+            orderHash: orderHash == null ? null : orderHash.toJSON(),
             tracker: tracker.toJSON(),
             transactionOutputIndex: index
         };

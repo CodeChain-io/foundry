@@ -430,7 +430,7 @@ export class Key {
     }
 
     private async ensureKeyStore(): Promise<KeyStore> {
-        if (this.keyStore === null) {
+        if (this.keyStore == null) {
             if (this.keyStoreType === "local") {
                 this.keyStore = await LocalKeyStore.create();
             } else if (this.keyStoreType === "memory") {
@@ -463,7 +463,7 @@ function isKeyStoreType(value: any) {
     if (typeof value === "string") {
         return value === "local" || value === "memory";
     }
-    if (typeof value === "object" && value !== null) {
+    if (typeof value === "object" && value != null) {
         return (
             (value.type === "local" && typeof value.path === "string") ||
             (value.type === "remote" && typeof value.url === "string")

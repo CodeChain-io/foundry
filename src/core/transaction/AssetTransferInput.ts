@@ -126,7 +126,7 @@ export class AssetTransferInput {
 }
 
 function convertTimelockToEncodeObject(timelock: Timelock | null) {
-    if (timelock === null) {
+    if (timelock == null) {
         return [];
     }
     const { type, value } = timelock;

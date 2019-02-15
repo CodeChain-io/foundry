@@ -292,7 +292,7 @@ export class AccountRpc {
                     newPassphrase
                 ])
                 .then(result => {
-                    if (result === null) {
+                    if (result == null) {
                         return resolve(null);
                     }
                     reject(

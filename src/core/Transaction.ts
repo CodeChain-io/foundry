@@ -116,11 +116,11 @@ export abstract class Transaction {
         fee: U64 | string | number;
     }): SignedTransaction {
         const { secret, seq, fee } = params;
-        if (this._seq !== null) {
+        if (this._seq != null) {
             throw Error("The tx seq is already set");
         }
         this._seq = seq;
-        if (this._fee !== null) {
+        if (this._fee != null) {
             throw Error("The tx fee is already set");
         }
         this._fee = U64.ensure(fee);

@@ -128,7 +128,7 @@ export class EngineRpc {
                     blockNumber
                 ])
                 .then(result => {
-                    if (result === null) {
+                    if (result == null) {
                         return resolve(null);
                     } else if (
                         typeof result === "string" &&

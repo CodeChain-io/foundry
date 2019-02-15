@@ -110,9 +110,9 @@ class AssetSchemeChangeTransaction {
         this.assetType = assetType;
         this.metadata = metadata;
         this.approver =
-            approver === null ? null : PlatformAddress.ensure(approver);
+            approver == null ? null : PlatformAddress.ensure(approver);
         this.administrator =
-            administrator === null
+            administrator == null
                 ? null
                 : PlatformAddress.ensure(administrator);
         this.allowedScriptHashes = allowedScriptHashes;
