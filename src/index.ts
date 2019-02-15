@@ -24,7 +24,7 @@ export const getCCSBalance = async (
         )
         .then(data => {
             if (data == null) {
-                throw Error("The custom action data is null");
+                return new U64(0);
             }
             const balance = RLP.decode(Buffer.from(data, "hex"));
             return U64.ensure("0x" + balance.toString("hex"));
