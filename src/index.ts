@@ -39,7 +39,7 @@ export const getCCSHolders = (
         .getCustomActionData(HANDLER_ID, ["StakeholderAddresses"], blockNumber)
         .then(data => {
             if (data == null) {
-                throw Error("The custom action data is null");
+                throw Error("never");
             }
             const accountIds: string[] = RLP.decode(
                 Buffer.from(data, "hex")
