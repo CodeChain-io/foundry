@@ -1,5 +1,5 @@
 import { SDK } from "codechain-sdk";
-import { H160, PlatformAddress } from "codechain-sdk/lib/core/classes";
+import { PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
 import { Custom } from "codechain-sdk/lib/core/transaction/Custom";
 
 const RLP = require("rlp");
@@ -9,24 +9,47 @@ const TRANSFER_CSS_ACTION_ID = 1;
 
 export const getCCSBalance = async (
     sdk: SDK,
-    address: string,
+    address: PlatformAddress | string,
     blockNumber?: number
-): Promise<any> => {
-    // FIXME: Interpret the result
-    return sdk.rpc.engine.getCustomActionData(
-        HANDLER_ID,
-        [H160.ensure(address).toEncodeObject()],
-        blockNumber
-    );
+): Promise<U64> => {
+    return sdk.rpc.engine
+        .getCustomActionData(
+            HANDLER_ID,
+            [
+                PlatformAddress.ensure(address)
+                    .getAccountId()
+                    .toEncodeObject()
+            ],
+            blockNumber
+        )
+        .then(data => {
+            if (data == null) {
+                throw Error("The custom action data is null");
+            }
+            const balance = RLP.decode(Buffer.from(data, "hex"));
+            return U64.ensure("0x" + balance.toString("hex"));
+        });
 };
 
-export const getCCSHolders = (sdk: SDK, blockNumber?: number): Promise<any> => {
-    // FIXME: Interpret the result
-    return sdk.rpc.engine.getCustomActionData(
-        HANDLER_ID,
-        ["StakeholderAddresses"],
-        blockNumber
-    );
+export const getCCSHolders = (
+    sdk: SDK,
+    blockNumber?: number
+): Promise<PlatformAddress[]> => {
+    return sdk.rpc.engine
+        .getCustomActionData(HANDLER_ID, ["StakeholderAddresses"], blockNumber)
+        .then(data => {
+            if (data == null) {
+                throw Error("The custom action data is null");
+            }
+            const accountIds: string[] = RLP.decode(
+                Buffer.from(data, "hex")
+            ).map((buf: Buffer) => buf.toString("hex"));
+            return accountIds.map(accountId =>
+                PlatformAddress.fromAccountId(accountId, {
+                    networkId: sdk.networkId
+                })
+            );
+        });
 };
 
 export const createTransferCCSTransaction = (
