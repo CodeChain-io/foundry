@@ -7,5 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "CodeChain Team <codechain@kodebox.io>",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "codechain-sdk": "https://github.com/joojis/codechain-sdk-js.git#corgi",
+    "rlp": "^2.2.2"
+  }
 }
