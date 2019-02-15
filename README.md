@@ -9,7 +9,7 @@ It adds the following features to [CodeChain SDK for JavaScript](https://github.
 
 - Get the list of stakeholders
 - Get the stake token balance of a stakeholder
-- Send stake tokens
+- Transfer stake tokens to another address
 
 ## How to
 
@@ -52,12 +52,12 @@ getCCSBalance("tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd")
   })
 ```
 
-### Send stake tokens
+### Transfer stake tokens to another address
 ```js
 const sdk = ...
 const { createTransferCCSTransaction } = require("codechain-sdk-stakeholder-helper");
 
-// Send 100 tokens to tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f
+// Transfer 100 tokens to tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f
 const tx = createTransferCCSTransaction(sdk, "tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f", 100);
 const signedTx = tx.sign({ secret: "...", seq: "...", fee: "..." });
 sdk.rpc.chain.sendSignedTransaction(signedTx)
