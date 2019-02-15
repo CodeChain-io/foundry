@@ -5,7 +5,7 @@ import { Custom } from "codechain-sdk/lib/core/transaction/Custom";
 const RLP = require("rlp");
 
 const HANDLER_ID = 2;
-const TRANSFER_CSS_ACTION_ID = 1;
+const TRANSFER_CCS_ACTION_ID = 1;
 
 export const getCCSBalance = async (
     sdk: SDK,
@@ -61,7 +61,7 @@ export const createTransferCCSTransaction = (
         handlerId: HANDLER_ID,
         bytes: Buffer.from([
             RLP.encode(
-                TRANSFER_CSS_ACTION_ID,
+                TRANSFER_CCS_ACTION_ID,
                 PlatformAddress.ensure(recipient).accountId.toEncodeObject(),
                 quantity
             )
