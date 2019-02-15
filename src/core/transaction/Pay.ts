@@ -2,6 +2,11 @@ import { PlatformAddress, U64 } from "../classes";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
+export interface PayActionJSON {
+    receiver: string;
+    quantity: string;
+}
+
 export class Pay extends Transaction {
     private readonly receiver: PlatformAddress;
     private readonly quantity: U64;
@@ -28,10 +33,10 @@ export class Pay extends Transaction {
         ];
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): PayActionJSON {
         return {
             receiver: this.receiver.value,
-            quantity: this.quantity.toEncodeObject()
+            quantity: this.quantity.toJSON()
         };
     }
 }

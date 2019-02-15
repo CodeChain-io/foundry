@@ -31,7 +31,7 @@ test("toJSON", () => {
             "1111111111111111111111111111111111111111",
             { networkId: "tc" }
         ),
-        extraData: Buffer.from([]),
+        extraData: [],
         transactionsRoot: new H256(
             "1111111111111111111111111111111111111111111111111111111111111111"
         ),

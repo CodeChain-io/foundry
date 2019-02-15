@@ -18,10 +18,30 @@ import {
 } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { AssetTransferOutputValue, NetworkId } from "../types";
-import { AssetTransferInput } from "./AssetTransferInput";
-import { AssetTransferOutput } from "./AssetTransferOutput";
+import {
+    AssetTransferInput,
+    AssetTransferInputJSON
+} from "./AssetTransferInput";
+import {
+    AssetTransferOutput,
+    AssetTransferOutputJSON
+} from "./AssetTransferOutput";
+import { OrderOnTransferJSON } from "./OrderOnTransfer";
 
 const RLP = require("rlp");
+
+export interface AssetTransferTransactionJSON {
+    networkId: string;
+    burns: AssetTransferInputJSON[];
+    inputs: AssetTransferInputJSON[];
+    outputs: AssetTransferOutputJSON[];
+    orders: OrderOnTransferJSON[];
+}
+export interface TransferAssetActionJSON extends AssetTransferTransactionJSON {
+    metadata: string;
+    approvals: string[];
+    expiration: number | null;
+}
 
 export class TransferAsset extends Transaction implements AssetTransaction {
     private readonly _transaction: AssetTransferTransaction;
@@ -382,12 +402,14 @@ export class TransferAsset extends Transaction implements AssetTransaction {
         return encoded;
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): TransferAssetActionJSON {
         const json = this._transaction.toJSON();
-        json.metadata = this.metadata;
-        json.approvals = this.approvals;
-        json.expiration = this.expiration;
-        return json;
+        return {
+            ...json,
+            metadata: this.metadata,
+            approvals: this.approvals,
+            expiration: this.expiration
+        };
     }
 }
 
@@ -445,7 +467,7 @@ class AssetTransferTransaction {
      * Convert to an AssetTransferTransaction JSON object.
      * @returns An AssetTransferTransaction JSON object.
      */
-    public toJSON(): any {
+    public toJSON(): AssetTransferTransactionJSON {
         const { networkId, burns, inputs, outputs, orders } = this;
         return {
             networkId,

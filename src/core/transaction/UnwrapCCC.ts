@@ -8,8 +8,19 @@ import {
 import { AssetTransferInput, H256 } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { NetworkId } from "../types";
+import { AssetTransferInputJSON } from "./AssetTransferInput";
 
 const RLP = require("rlp");
+
+export interface AssetUnwrapCCCTransactionJSON {
+    networkId: string;
+    burn: AssetTransferInputJSON;
+}
+
+export interface UnwrapCCCActionJSON {
+    networkId: string;
+    burn: AssetTransferInputJSON;
+}
 
 export class UnwrapCCC extends Transaction implements AssetTransaction {
     private readonly _transaction: AssetUnwrapCCCTransaction;
@@ -70,7 +81,7 @@ export class UnwrapCCC extends Transaction implements AssetTransaction {
         return encoded;
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): UnwrapCCCActionJSON {
         const json = this._transaction.toJSON();
         return json;
     }
@@ -124,7 +135,7 @@ class AssetUnwrapCCCTransaction {
      * Convert to an AssetUnwrapCCCTransactionJSON object.
      * @returns An AssetUnwrapCCCTransactionJSON object.
      */
-    public toJSON(): any {
+    public toJSON(): AssetUnwrapCCCTransactionJSON {
         const { networkId, burn } = this;
         return {
             networkId,

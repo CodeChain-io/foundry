@@ -6,6 +6,20 @@ import { NetworkId } from "../types";
 
 const RLP = require("rlp");
 
+export interface AssetSchemeChangeTransactionJSON {
+    networkId: string;
+    shardId: number;
+    assetType: string;
+    metadata: string;
+    approver: string | null;
+    administrator: string | null;
+    allowedScriptHashes: string[];
+}
+
+export interface ChangeAssetSchemeActionJSON
+    extends AssetSchemeChangeTransactionJSON {
+    approvals: string[];
+}
 export class ChangeAssetScheme extends Transaction {
     private readonly _transaction: AssetSchemeChangeTransaction;
     private readonly approvals: string[];
@@ -37,16 +51,18 @@ export class ChangeAssetScheme extends Transaction {
         return "changeAssetScheme";
     }
 
-    protected actionToEncodeObject(): any[] {
+    protected actionToEncodeObject(): (any)[] {
         const encoded = this._transaction.toEncodeObject();
         encoded.push(this.approvals);
         return encoded;
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): ChangeAssetSchemeActionJSON {
         const json = this._transaction.toJSON();
-        json.approvals = this.approvals;
-        return json;
+        return {
+            ...json,
+            approvals: this.approvals
+        };
     }
 }
 
@@ -106,7 +122,7 @@ class AssetSchemeChangeTransaction {
      * Convert to an AssetSchemeChangeTransaction JSON object.
      * @returns An AssetSchemeChangeTransaction JSON object.
      */
-    public toJSON(): any {
+    public toJSON(): AssetSchemeChangeTransactionJSON {
         return {
             networkId: this.networkId,
             shardId: this.shardId,

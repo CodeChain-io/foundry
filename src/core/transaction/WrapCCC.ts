@@ -21,6 +21,14 @@ export interface WrapCCCAddressData {
     payer: PlatformAddress;
 }
 
+export interface WrapCCCActionJSON {
+    shardId: number;
+    lockScriptHash: string;
+    parameters: string[];
+    quantity: string;
+    payer: string;
+}
+
 export class WrapCCC extends Transaction implements AssetTransaction {
     private readonly shardId: number;
     private readonly lockScriptHash: H160;
@@ -115,7 +123,7 @@ export class WrapCCC extends Transaction implements AssetTransaction {
         ];
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): WrapCCCActionJSON {
         const { shardId, lockScriptHash, parameters, quantity, payer } = this;
         return {
             shardId,

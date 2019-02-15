@@ -3,9 +3,22 @@ import { Asset } from "../Asset";
 import { AssetScheme, H160, H256, PlatformAddress } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { NetworkId } from "../types";
-import { AssetMintOutput } from "./AssetMintOutput";
+import { AssetMintOutput, AssetMintOutputJSON } from "./AssetMintOutput";
 
 const RLP = require("rlp");
+
+export interface AssetMintTransactionJSON {
+    networkId: string;
+    shardId: number;
+    metadata: string;
+    output: AssetMintOutputJSON;
+    approver: string | null;
+    administrator: string | null;
+    allowedScriptHashes: string[];
+}
+export interface MintAssetActionJSON extends AssetMintTransactionJSON {
+    approvals: string[];
+}
 
 export class MintAsset extends Transaction implements AssetTransaction {
     private readonly _transaction: AssetMintTransaction;
@@ -141,10 +154,12 @@ export class MintAsset extends Transaction implements AssetTransaction {
         return encoded;
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): MintAssetActionJSON {
         const json = this._transaction.toJSON();
-        json.approvals = this.approvals;
-        return json;
+        return {
+            ...json,
+            approvals: this.approvals
+        };
     }
 }
 
@@ -216,7 +231,7 @@ class AssetMintTransaction {
      * Convert to an AssetMintTransaction JSON object.
      * @returns An AssetMintTransaction JSON object.
      */
-    public toJSON(): any {
+    public toJSON(): AssetMintTransactionJSON {
         const {
             networkId,
             shardId,

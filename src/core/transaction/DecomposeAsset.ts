@@ -12,8 +12,21 @@ import {
 } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { AssetTransferOutputValue, NetworkId } from "../types";
+import { AssetTransferInputJSON } from "./AssetTransferInput";
+import { AssetTransferOutputJSON } from "./AssetTransferOutput";
 
 const RLP = require("rlp");
+
+export interface AssetDecomposeTransactionJSON {
+    input: AssetTransferInputJSON;
+    outputs: AssetTransferOutputJSON[];
+    networkId: string;
+}
+
+export interface DecomposeAssetActionJSON
+    extends AssetDecomposeTransactionJSON {
+    approvals: string[];
+}
 
 export class DecomposeAsset extends Transaction implements AssetTransaction {
     private readonly _transaction: AssetDecomposeTransaction;
@@ -173,10 +186,12 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
         return encoded;
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): DecomposeAssetActionJSON {
         const json = this._transaction.toJSON();
-        json.approvals = this.approvals;
-        return json;
+        return {
+            ...json,
+            approvals: this.approvals
+        };
     }
 }
 
@@ -213,7 +228,7 @@ class AssetDecomposeTransaction {
      * Convert to an AssetDecomposeTransaction JSON object.
      * @returns An AssetDecomposeTransaction JSON object.
      */
-    public toJSON(): any {
+    public toJSON(): AssetDecomposeTransactionJSON {
         const { input, outputs, networkId } = this;
         return {
             input: input.toJSON(),

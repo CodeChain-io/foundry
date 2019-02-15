@@ -3,6 +3,11 @@ import { U64 } from "codechain-primitives";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
+export interface CustomActionJSON {
+    handlerId: string;
+    buffer: number[];
+}
+
 export class Custom extends Transaction {
     private readonly handlerId: U64;
     private readonly bytes: Buffer;
@@ -26,11 +31,11 @@ export class Custom extends Transaction {
         return [0xff, handlerId.toEncodeObject(), bytes];
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): CustomActionJSON {
         const { handlerId, bytes } = this;
         return {
             handlerId: handlerId.toJSON(),
-            buffer: bytes
+            buffer: [...bytes]
         };
     }
 }

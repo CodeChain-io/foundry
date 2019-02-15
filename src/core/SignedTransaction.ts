@@ -4,10 +4,18 @@ import * as _ from "lodash";
 import { blake160, blake256, recoverEcdsa } from "../utils";
 
 import { Asset } from "./Asset";
-import { Transaction } from "./Transaction";
+import { Transaction, TransactionJSON } from "./Transaction";
 import { NetworkId } from "./types";
 
 const RLP = require("rlp");
+
+export interface SignedTransactionJSON extends TransactionJSON {
+    blockNumber: number | null;
+    blockHash: string | null;
+    transactionIndex: number | null;
+    sig: string;
+    hash: string;
+}
 
 /**
  * A [Transaction](tx.html) signed by a private key. It is possible to request
@@ -124,7 +132,7 @@ export class SignedTransaction {
      * Convert to a SignedTransaction JSON object.
      * @returns A SignedTransaction JSON object.
      */
-    public toJSON() {
+    public toJSON(): SignedTransactionJSON {
         const {
             blockNumber,
             blockHash,
@@ -132,12 +140,14 @@ export class SignedTransaction {
             unsigned,
             _signature
         } = this;
-        const result = unsigned.toJSON();
-        result.blockNumber = blockNumber;
-        result.blockHash = blockHash === null ? null : blockHash.toJSON();
-        result.transactionIndex = transactionIndex;
-        result.sig = `0x${_signature}`;
-        result.hash = this.hash().toJSON();
+        const result = {
+            ...unsigned.toJSON(),
+            blockNumber,
+            blockHash: blockHash === null ? null : blockHash.toJSON(),
+            transactionIndex,
+            sig: `0x${_signature}`,
+            hash: this.hash().toJSON()
+        };
         return result;
     }
 }

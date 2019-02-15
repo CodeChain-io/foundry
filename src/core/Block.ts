@@ -1,6 +1,7 @@
 import { H256, PlatformAddress, U256 } from "codechain-primitives";
 
 import { SignedTransaction } from "./SignedTransaction";
+import { TransactionJSON } from "./Transaction";
 import { fromJSONToSignedTransaction } from "./transaction/json";
 
 // Disable lint error from using "number" as variable name
@@ -11,14 +12,28 @@ export interface BlockData {
     timestamp: number;
     number: number;
     author: PlatformAddress;
-    extraData: Buffer;
+    extraData: number[];
     transactionsRoot: H256;
     stateRoot: H256;
     invoicesRoot: H256;
     score: U256;
-    seal: Buffer[];
+    seal: number[][];
     hash: H256;
     transactions: SignedTransaction[];
+}
+export interface BlockJSON {
+    parentHash: string;
+    timestamp: number;
+    number: number;
+    author: string;
+    extraData: number[];
+    transactionsRoot: string;
+    stateRoot: string;
+    invoicesRoot: string;
+    score: string;
+    seal: number[][];
+    hash: string;
+    transactions: TransactionJSON[];
 }
 /**
  * Block is the unit of processes being handled by CodeChain. Contains information related to SignedTransaction's list and block creation.
@@ -58,12 +73,12 @@ export class Block {
     public timestamp: number;
     public number: number;
     public author: PlatformAddress;
-    public extraData: Buffer;
+    public extraData: number[];
     public transactionsRoot: H256;
     public stateRoot: H256;
     public invoicesRoot: H256;
     public score: U256;
-    public seal: Buffer[];
+    public seal: number[][];
     public hash: H256;
     public transactions: SignedTransaction[];
 
@@ -96,7 +111,7 @@ export class Block {
         this.transactions = transactions;
     }
 
-    public toJSON() {
+    public toJSON(): BlockJSON {
         const {
             parentHash,
             timestamp,
@@ -116,12 +131,12 @@ export class Block {
             timestamp,
             number,
             author: author.toString(),
-            extraData,
+            extraData: [...extraData],
             transactionsRoot: transactionsRoot.toJSON(),
             stateRoot: stateRoot.toJSON(),
             invoicesRoot: invoicesRoot.toJSON(),
             score: score.value.toString(),
-            seal,
+            seal: seal.map(buffer => [...buffer]),
             hash: hash.toJSON(),
             transactions: transactions.map(p => p.toJSON())
         };

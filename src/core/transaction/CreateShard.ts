@@ -1,6 +1,9 @@
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
+/* tslint:disable:no-empty-interface */
+export interface CreateShardActionJSON {}
+
 export class CreateShard extends Transaction {
     public constructor(networkId: NetworkId) {
         super(networkId);
@@ -14,7 +17,7 @@ export class CreateShard extends Transaction {
         return [4];
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): CreateShardActionJSON {
         return {};
     }
 }

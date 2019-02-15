@@ -2,6 +2,22 @@ import { H256, U64 } from "codechain-primitives";
 
 import { blake256, signEcdsa } from "../utils";
 import { SignedTransaction } from "./SignedTransaction";
+import { ChangeAssetSchemeActionJSON } from "./transaction/ChangeAssetScheme";
+import { ComposeAssetActionJSON } from "./transaction/ComposeAsset";
+import { CreateShardActionJSON } from "./transaction/CreateShard";
+import { CustomActionJSON } from "./transaction/Custom";
+import { DecomposeAssetActionJSON } from "./transaction/DecomposeAsset";
+import { IncreaseAssetSupplyActionJSON } from "./transaction/IncreaseAssetSupply";
+import { MintAssetActionJSON } from "./transaction/MintAsset";
+import { PayActionJSON } from "./transaction/Pay";
+import { RemoveActionJSON } from "./transaction/Remove";
+import { SetRegularKeyActionJSON } from "./transaction/SetRegularKey";
+import { SetShardOwnersActionJSON } from "./transaction/SetShardOwners";
+import { SetShardUsersActionJSON } from "./transaction/SetShardUsers";
+import { StoreActionJSON } from "./transaction/Store";
+import { TransferAssetActionJSON } from "./transaction/TransferAsset";
+import { UnwrapCCCActionJSON } from "./transaction/UnwrapCCC";
+import { WrapCCCActionJSON } from "./transaction/WrapCCC";
 import { NetworkId } from "./types";
 
 const RLP = require("rlp");
@@ -9,7 +25,30 @@ const RLP = require("rlp");
 export interface AssetTransaction {
     tracker(): H256;
 }
+type ActionJSON =
+    | PayActionJSON
+    | SetRegularKeyActionJSON
+    | SetShardOwnersActionJSON
+    | SetShardUsersActionJSON
+    | IncreaseAssetSupplyActionJSON
+    | CreateShardActionJSON
+    | MintAssetActionJSON
+    | TransferAssetActionJSON
+    | ComposeAssetActionJSON
+    | DecomposeAssetActionJSON
+    | ChangeAssetSchemeActionJSON
+    | StoreActionJSON
+    | RemoveActionJSON
+    | CustomActionJSON
+    | WrapCCCActionJSON
+    | UnwrapCCCActionJSON;
 
+export interface TransactionJSON {
+    action: ActionJSON & { type: string };
+    networkId: string;
+    seq: number | null;
+    fee: string | null;
+}
 /**
  * A unit that collects transaction and requests processing to the network. A parsel signer pays for CCC processing fees.
  *
@@ -91,27 +130,25 @@ export abstract class Transaction {
         );
     }
 
-    public toJSON() {
+    public toJSON(): TransactionJSON {
         const seq = this._seq;
         const fee = this._fee;
         const networkId = this._networkId;
         const action = this.actionToJSON();
-        action.type = this.type();
-        const result: any = {
+        const result: TransactionJSON = {
             networkId,
-            action
+            action: {
+                ...action,
+                type: this.type()
+            },
+            seq: seq != null ? seq : null,
+            fee: fee != null ? fee.toJSON() : null
         };
-        if (seq != null) {
-            result.seq = seq;
-        }
-        if (fee != null) {
-            result.fee = fee.toJSON();
-        }
         return result;
     }
 
     public abstract type(): string;
 
-    protected abstract actionToJSON(): any;
+    protected abstract actionToJSON(): ActionJSON;
     protected abstract actionToEncodeObject(): any[];
 }

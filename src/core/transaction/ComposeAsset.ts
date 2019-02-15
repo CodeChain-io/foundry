@@ -19,9 +19,24 @@ import {
 } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { NetworkId } from "../types";
-import { AssetMintOutput } from "./AssetMintOutput";
+import { AssetMintOutput, AssetMintOutputJSON } from "./AssetMintOutput";
+import { AssetTransferInputJSON } from "./AssetTransferInput";
 
 const RLP = require("rlp");
+
+export interface AssetComposeTransactionJSON {
+    networkId: string;
+    shardId: number;
+    metadata: string;
+    approver: string | null;
+    administrator: string | null;
+    allowedScriptHashes: string[];
+    output: AssetMintOutputJSON;
+    inputs: AssetTransferInputJSON[];
+}
+export interface ComposeAssetActionJSON extends AssetComposeTransactionJSON {
+    approvals: string[];
+}
 
 export class ComposeAsset extends Transaction implements AssetTransaction {
     private readonly _transaction: AssetComposeTransaction;
@@ -272,10 +287,12 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
         return encoded;
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): ComposeAssetActionJSON {
         const json = this._transaction.toJSON();
-        json.approvals = this.approvals;
-        return json;
+        return {
+            ...json,
+            approvals: this.approvals
+        };
     }
 }
 
@@ -346,7 +363,7 @@ class AssetComposeTransaction {
      * Convert to an AssetComposeTransaction JSON object.
      * @returns An AssetComposeTransaction JSON object.
      */
-    public toJSON(): any {
+    public toJSON(): AssetComposeTransactionJSON {
         return {
             networkId: this.networkId,
             shardId: this.shardId,

@@ -2,6 +2,11 @@ import { PlatformAddress } from "../classes";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
+export interface SetShardUsersActionJSON {
+    shardId: number;
+    users: string[];
+}
+
 export class SetShardUsers extends Transaction {
     private readonly shardId: number;
     private readonly users: PlatformAddress[];
@@ -27,7 +32,7 @@ export class SetShardUsers extends Transaction {
         ];
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): SetShardUsersActionJSON {
         const { shardId, users } = this;
         return {
             shardId,

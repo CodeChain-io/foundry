@@ -8,6 +8,12 @@ import { NetworkId } from "../types";
 
 const RLP = require("rlp");
 
+export interface StoreActionJSON {
+    content: string;
+    certifier: string;
+    signature: string;
+}
+
 export class Store extends Transaction {
     private content: string;
     private certifier: PlatformAddress;
@@ -72,7 +78,7 @@ export class Store extends Transaction {
         ];
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): StoreActionJSON {
         const { content, certifier, signature } = this;
         return {
             content,

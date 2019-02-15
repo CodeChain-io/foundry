@@ -5,6 +5,11 @@ import { H256 } from "../classes";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
+export interface RemoveActionJSON {
+    hash: string;
+    signature: string;
+}
+
 export class Remove extends Transaction {
     private readonly _hash: H256;
     private readonly signature: string;
@@ -46,7 +51,7 @@ export class Remove extends Transaction {
         return [9, _hash.toEncodeObject(), `0x${signature}`];
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): RemoveActionJSON {
         const { _hash, signature } = this;
         return {
             hash: _hash.toEncodeObject(),

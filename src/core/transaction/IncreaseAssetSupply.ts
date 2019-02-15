@@ -2,9 +2,21 @@ import { H160, H256 } from "codechain-primitives";
 import { blake256 } from "../../utils";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
-import { AssetMintOutput } from "./AssetMintOutput";
+import { AssetMintOutput, AssetMintOutputJSON } from "./AssetMintOutput";
 
 const RLP = require("rlp");
+
+export interface IncreaseAssetSupplyTransactionJSON {
+    networkId: string;
+    shardId: number;
+    assetType: string;
+    output: AssetMintOutputJSON;
+}
+
+export interface IncreaseAssetSupplyActionJSON
+    extends IncreaseAssetSupplyTransactionJSON {
+    approvals: string[];
+}
 
 export class IncreaseAssetSupply extends Transaction {
     private readonly transaction: IncreaseAssetSupplyTransaction;
@@ -37,10 +49,12 @@ export class IncreaseAssetSupply extends Transaction {
         return encoded;
     }
 
-    protected actionToJSON(): any {
+    protected actionToJSON(): IncreaseAssetSupplyActionJSON {
         const json = this.transaction.toJSON();
-        json.approvals = this.approvals;
-        return json;
+        return {
+            ...json,
+            approvals: this.approvals
+        };
     }
 }
 
@@ -62,7 +76,7 @@ class IncreaseAssetSupplyTransaction {
         this.output = new AssetMintOutput(params.output);
     }
 
-    public toJSON(): any {
+    public toJSON(): IncreaseAssetSupplyTransactionJSON {
         return {
             networkId: this.networkId,
             shardId: this.shardId,
