@@ -43,6 +43,7 @@ class SDK {
     public core: Core;
     public key: Key;
     public util = SDK.util;
+    private _networkId: string;
 
     /**
      * @param params.server HTTP RPC server address
@@ -81,6 +82,11 @@ class SDK {
             networkId: networkIdOpt || networkId,
             keyStoreType
         });
+        this._networkId = networkIdOpt || networkId;
+    }
+
+    public get networkId() {
+        return this._networkId;
     }
 }
 
