@@ -54,17 +54,15 @@ export const getCCSHolders = (
 
 export const createTransferCCSTransaction = (
     sdk: SDK,
-    recipient: string,
-    quantity: number
+    recipient: PlatformAddress | string,
+    quantity: U64 | string | number
 ): Custom => {
     return sdk.core.createCustomTransaction({
         handlerId: HANDLER_ID,
-        bytes: Buffer.from([
-            RLP.encode(
-                TRANSFER_CCS_ACTION_ID,
-                PlatformAddress.ensure(recipient).accountId.toEncodeObject(),
-                quantity
-            )
+        bytes: RLP.encode([
+            TRANSFER_CCS_ACTION_ID,
+            PlatformAddress.ensure(recipient).accountId.toEncodeObject(),
+            U64.ensure(quantity).toEncodeObject()
         ])
     });
 };
