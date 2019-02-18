@@ -1,5 +1,4 @@
-CodeChain SDK Stakeholder Helper
-==============
+# CodeChain SDK Stakeholder Helper
 
 A JavaScript implementation for CodeChain stake token related custom actions and custom transactions
 
@@ -24,6 +23,7 @@ yarn add codechain-sdk-stakeholder-helper
 ```
 
 ### Get the list of stakeholders
+
 ```js
 const SDK = require("codechain-sdk");
 const { getCCSHolders } = require("codechain-sdk-stakeholder-helper");
@@ -35,24 +35,26 @@ const sdk = new SDK({
 
 getCCSHolders(sdk)
   .then(holders => {
-    for(const holder of holders) {
-      console.log(holder.toString());
-    }
+    // holders: PlatformAddress[]
+    ...
   });
 ```
 
 ### Get the stake token balance of a stakeholder
+
 ```js
 const sdk = ...
 const { getCCSBalance } = require("codechain-sdk-stakeholder-helper");
 
-getCCSBalance("tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd")
+getCCSBalance(sdk, "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd")
   .then(balance => {
-    console.log(balance.toString())
+    // balance: U64
+    ...
   })
 ```
 
 ### Transfer stake tokens to another address
+
 ```js
 const sdk = ...
 const { createTransferCCSTransaction } = require("codechain-sdk-stakeholder-helper");
@@ -62,6 +64,7 @@ const tx = createTransferCCSTransaction(sdk, "tccq94guhkrfndnehnca06dlkxcfuq0gdl
 const signedTx = tx.sign({ secret: "...", seq: "...", fee: "..." });
 sdk.rpc.chain.sendSignedTransaction(signedTx)
   .then(txhash => {
-    console.log(txhash.toString())
+    // txhash: H256
+    ...
   });
 ```
