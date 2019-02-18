@@ -14,10 +14,10 @@ export class NodeRpc {
      * Sends ping to check whether CodeChain's RPC server is responding or not.
      * @returns String "pong"
      */
-    public ping(): Promise<string> {
+    public ping(id?: string): Promise<string> {
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("ping", [])
+                .sendRpcRequest("ping", [], id)
                 .then(result => {
                     if (typeof result === "string") {
                         return resolve(result);
