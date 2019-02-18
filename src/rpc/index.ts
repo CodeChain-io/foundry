@@ -80,9 +80,9 @@ export class Rpc {
         this.devel = new DevelRpc(this);
     }
 
-    public sendRpcRequest = (name: string, params: any[]) => {
+    public sendRpcRequest = (name: string, params: any[], id?: string) => {
         return new Promise<any>((resolve, reject) => {
-            this.client.request(name, params, (err: any, res: any) => {
+            this.client.request(name, params, id, (err: any, res: any) => {
                 if (err) {
                     return reject(
                         Error(`An error occurred while ${name}: ${err}`)
