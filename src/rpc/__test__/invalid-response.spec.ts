@@ -101,7 +101,7 @@ describe("Invalid response", () => {
             });
         });
 
-        describe("getTransactionById", () => {
+        describe("getTransactionByTracker", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
@@ -167,7 +167,7 @@ describe("Invalid response", () => {
                 });
         });
 
-        describe("getTransactionById", () => {
+        describe("getTransactionByTracker", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
