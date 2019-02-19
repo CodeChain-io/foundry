@@ -8,6 +8,7 @@
     "lib"
   ],
   "scripts": {
+    "build": "tsc -p .",
     "test": "yarn lint",
     "lint": "tslint -p . && prettier 'src/**/*.{ts,js,json}' -l",
     "fmt": "tslint -p . --fix && prettier 'src/**/*.{ts,js,json}' --write"
