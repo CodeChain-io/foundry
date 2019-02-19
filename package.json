@@ -2,11 +2,8 @@
   "name": "codechain-sdk-stakeholder-helper",
   "version": "0.1.0",
   "description": "A JavaScript implementation for CodeChain stake token related custom actions and custom transactions",
-  "main": "lib/index.js",
-  "typings": "./lib/index.d.ts",
-  "files": [
-    "lib"
-  ],
+  "author": "CodeChain Team <codechain@kodebox.io>",
+  "license": "ISC",
   "scripts": {
     "build": "tsc -p .",
     "test": "yarn lint",
@@ -14,8 +11,22 @@
     "fmt": "tslint -p . --fix && prettier 'src/**/*.{ts,js,json}' --write",
     "prepublishOnly": "yarn build"
   },
-  "author": "CodeChain Team <codechain@kodebox.io>",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeChain-io/codechain-sdk-stakeholder-helper.git"
+  },
+  "homepage": "https://github.com/CodeChain-io/codechain-sdk-stakeholder-helper#readme",
+  "bugs": {
+    "url": "https://github.com/CodeChain-io/codechain-sdk-stakeholder-helper/issues"
+  },
+  "main": "lib/index.js",
+  "typings": "./lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "keywords": [
+    "CodeChain"
+  ],
   "dependencies": {
     "codechain-sdk": "https://github.com/joojis/codechain-sdk-js.git#corgi",
     "rlp": "^2.2.2"
