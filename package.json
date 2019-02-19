@@ -11,7 +11,8 @@
     "build": "tsc -p .",
     "test": "yarn lint",
     "lint": "tslint -p . && prettier 'src/**/*.{ts,js,json}' -l",
-    "fmt": "tslint -p . --fix && prettier 'src/**/*.{ts,js,json}' --write"
+    "fmt": "tslint -p . --fix && prettier 'src/**/*.{ts,js,json}' --write",
+    "prepublishOnly": "yarn build"
   },
   "author": "CodeChain Team <codechain@kodebox.io>",
   "license": "ISC",
