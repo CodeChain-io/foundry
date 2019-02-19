@@ -8,12 +8,21 @@
     "lib"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "yarn lint",
+    "lint": "tslint -p . && prettier 'src/**/*.{ts,js,json}' -l",
+    "fmt": "tslint -p . --fix && prettier 'src/**/*.{ts,js,json}' --write"
   },
   "author": "CodeChain Team <codechain@kodebox.io>",
   "license": "ISC",
   "dependencies": {
     "codechain-sdk": "https://github.com/joojis/codechain-sdk-js.git#corgi",
     "rlp": "^2.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^11.9.4",
+    "prettier": "^1.16.4",
+    "tslint": "^5.12.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.3.3"
   }
 }
