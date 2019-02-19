@@ -8,11 +8,11 @@ It adds the following features to [CodeChain SDK for JavaScript](https://github.
 
 - Get the list of stakeholders
 - Get the stake token balance of a stakeholder
-- Transfer stake tokens to another address
+- Transfer stake tokens
 
 ## How to
 
-First, you need to install the package.
+You first need to install the package.
 
 ```sh
 # npm
@@ -53,7 +53,7 @@ getCCSBalance(sdk, "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd")
   })
 ```
 
-### Transfer stake tokens to another address
+### Transfer stake tokens
 
 ```js
 const sdk = ...
