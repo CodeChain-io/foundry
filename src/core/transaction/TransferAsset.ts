@@ -1,5 +1,6 @@
 import * as _ from "lodash";
 
+import { U64Value } from "codechain-primitives/lib";
 import {
     blake128,
     blake256,
@@ -202,7 +203,7 @@ export class TransferAsset extends Transaction implements AssetTransaction {
      */
     public addOrder(params: {
         order: Order;
-        spentQuantity: U64 | string | number;
+        spentQuantity: U64Value;
         inputIndices: number[];
         outputIndices: number[];
     }) {

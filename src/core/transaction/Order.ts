@@ -1,4 +1,10 @@
-import { AssetTransferAddress, H160, H256, U64 } from "codechain-primitives";
+import {
+    AssetTransferAddress,
+    H160,
+    H256,
+    U64,
+    U64Value
+} from "codechain-primitives";
 
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
@@ -345,7 +351,7 @@ export class Order {
      * Return the consumed order
      * @param params.quantity the consumed quantity of the asset to give
      */
-    public consume(quantity: U64 | number | string): Order {
+    public consume(quantity: U64Value): Order {
         const {
             assetTypeFrom,
             assetTypeTo,

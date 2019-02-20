@@ -1,4 +1,15 @@
-import { H160, H256, H512, PlatformAddress, U64 } from "codechain-primitives";
+import {
+    H160,
+    H160Value,
+    H256,
+    H256Value,
+    H512,
+    H512Value,
+    PlatformAddress,
+    PlatformAddressValue,
+    U64,
+    U64Value
+} from "codechain-primitives";
 
 import { Rpc } from ".";
 import { Asset } from "../core/Asset";
@@ -75,10 +86,10 @@ export class ChainRpc {
     public async sendTransaction(
         tx: Transaction,
         options?: {
-            account?: PlatformAddress | string;
+            account?: PlatformAddressValue;
             passphrase?: string;
             seq?: number | null;
-            fee?: U64 | string | number;
+            fee?: U64Value;
         }
     ): Promise<H256> {
         if (!(tx instanceof Transaction)) {
@@ -118,9 +129,7 @@ export class ChainRpc {
      * @param hash SignedTransaction's hash
      * @returns SignedTransaction, or null when SignedTransaction was not found.
      */
-    public getTransaction(
-        hash: H256 | string
-    ): Promise<SignedTransaction | null> {
+    public getTransaction(hash: H256Value): Promise<SignedTransaction | null> {
         if (!H256.check(hash)) {
             throw Error(
                 `Expected the first argument of getTransaction to be an H256 value but found ${hash}`
@@ -157,7 +166,7 @@ export class ChainRpc {
      * @returns boolean, or null when transaction of given hash not exists.
      */
     public async getTransactionResult(
-        hash: H256 | string,
+        hash: H256Value,
         options: { timeout?: number } = {}
     ): Promise<boolean | null> {
         if (!H256.check(hash)) {
@@ -208,7 +217,7 @@ export class ChainRpc {
      * @returns The regular key of account at specified block.
      */
     public getRegularKey(
-        address: PlatformAddress | string,
+        address: PlatformAddressValue,
         blockNumber?: number
     ): Promise<H512 | null> {
         if (!PlatformAddress.check(address)) {
@@ -249,7 +258,7 @@ export class ChainRpc {
      * @return The platform address that can use the regular key at the specified block.
      */
     public getRegularKeyOwner(
-        regularKey: H512 | string,
+        regularKey: H512Value,
         blockNumber?: number
     ): Promise<PlatformAddress | null> {
         if (!H512.check(regularKey)) {
@@ -294,7 +303,7 @@ export class ChainRpc {
      * @returns A shard id.
      */
     public getShardIdByHash(
-        hash: H256 | string,
+        hash: H256Value,
         blockNumber?: number
     ): Promise<number | null> {
         if (!H256.check(hash)) {
@@ -400,7 +409,7 @@ export class ChainRpc {
      * @returns A transaction, or null when transaction of given hash not exists.
      */
     public getTransactionByTracker(
-        tracker: H256 | string
+        tracker: H256Value
     ): Promise<SignedTransaction | null> {
         if (!H256.check(tracker)) {
             throw Error(
@@ -438,7 +447,7 @@ export class ChainRpc {
      * @returns List of boolean, or null when transaction of given hash not exists.
      */
     public async getTransactionResultsByTracker(
-        tracker: H256 | string,
+        tracker: H256Value,
         options: { timeout?: number } = {}
     ): Promise<boolean[]> {
         if (!H256.check(tracker)) {
@@ -492,7 +501,7 @@ export class ChainRpc {
      * @returns Balance of account at the specified block, or null if no such block exists.
      */
     public getBalance(
-        address: PlatformAddress | string,
+        address: PlatformAddressValue,
         blockNumber?: number
     ): Promise<U64> {
         if (!PlatformAddress.check(address)) {
@@ -536,7 +545,7 @@ export class ChainRpc {
      * @returns Null if the transaction is not involved in the chain or succeeded. If the transaction failed, this should return the reason for the transaction failing.
      */
     public async getErrorHint(
-        transactionHash: H256 | string
+        transactionHash: H256Value
     ): Promise<string | null> {
         if (!H256.check(transactionHash)) {
             throw Error(
@@ -569,7 +578,7 @@ export class ChainRpc {
      * @returns Seq of account at the specified block, or null if no such block exists.
      */
     public getSeq(
-        address: PlatformAddress | string,
+        address: PlatformAddressValue,
         blockNumber?: number
     ): Promise<number> {
         if (!PlatformAddress.check(address)) {
@@ -655,7 +664,7 @@ export class ChainRpc {
      * @returns Block, if block exists. Else, returns null.
      */
     public async getBlock(
-        hashOrNumber: H256 | string | number
+        hashOrNumber: H256Value | number
     ): Promise<Block | null> {
         let result;
         if (hashOrNumber instanceof H256 || typeof hashOrNumber === "string") {
@@ -688,7 +697,7 @@ export class ChainRpc {
      * @returns AssetScheme, if asset scheme exists. Else, returns null.
      */
     public getAssetSchemeByTracker(
-        tracker: H256 | string,
+        tracker: H256Value,
         shardId: number,
         blockNumber?: number | null
     ): Promise<AssetScheme | null> {
@@ -741,7 +750,7 @@ export class ChainRpc {
      * @returns AssetScheme, if asset scheme exists. Else, returns null.
      */
     public getAssetSchemeByType(
-        assetType: H160 | string,
+        assetType: H160Value,
         shardId: number,
         blockNumber?: number | null
     ): Promise<AssetScheme | null> {
@@ -795,7 +804,7 @@ export class ChainRpc {
      * @returns Asset, if asset exists, Else, returns null.
      */
     public getAsset(
-        tracker: H256 | string,
+        tracker: H256Value,
         index: number,
         shardId: number,
         blockNumber?: number
@@ -860,7 +869,7 @@ export class ChainRpc {
      * @returns Text, if text exists. Else, returns null.
      */
     public getText(
-        txHash: H256 | string,
+        txHash: H256Value,
         blockNumber?: number | null
     ): Promise<Text | null> {
         if (!H256.check(txHash)) {
@@ -903,7 +912,7 @@ export class ChainRpc {
      * @returns True, if the asset is spent. False, if the asset is not spent. Null, if no such asset exists.
      */
     public isAssetSpent(
-        txhash: H256 | string,
+        txhash: H256Value,
         index: number,
         shardId: number,
         blockNumber?: number
@@ -1149,7 +1158,7 @@ export class ChainRpc {
      */
     public executeTransaction(
         tx: Transaction,
-        sender: PlatformAddress | string
+        sender: PlatformAddressValue
     ): Promise<boolean> {
         if (!(tx instanceof Transaction)) {
             throw Error(

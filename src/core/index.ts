@@ -1,12 +1,18 @@
 import {
     AssetTransferAddress,
+    AssetTransferAddressValue,
     H128,
     H160,
+    H160Value,
     H256,
+    H256Value,
     H512,
+    H512Value,
     PlatformAddress,
+    PlatformAddressValue,
     U256,
-    U64
+    U64,
+    U64Value
 } from "codechain-primitives";
 
 import { Asset } from "./Asset";
@@ -94,8 +100,8 @@ export class Core {
      * @throws Given number or string for quantity is invalid for converting it to U64
      */
     public createPayTransaction(params: {
-        recipient: PlatformAddress | string;
-        quantity: U64 | number | string;
+        recipient: PlatformAddressValue;
+        quantity: U64Value;
     }): Pay {
         const { recipient, quantity } = params;
         checkPlatformAddressRecipient(recipient);
@@ -113,7 +119,7 @@ export class Core {
      * @throws Given string for key is invalid for converting it to H512
      */
     public createSetRegularKeyTransaction(params: {
-        key: H512 | string;
+        key: H512Value;
     }): SetRegularKey {
         const { key } = params;
         checkKey(key);
@@ -124,7 +130,7 @@ export class Core {
      * Creates CreateShard type which can create new shard
      */
     public createCreateShardTransaction(params: {
-        users: Array<PlatformAddress | string>;
+        users: Array<PlatformAddressValue>;
     }): CreateShard {
         const { users } = params;
         return new CreateShard(
@@ -137,7 +143,7 @@ export class Core {
 
     public createSetShardOwnersTransaction(params: {
         shardId: number;
-        owners: Array<PlatformAddress | string>;
+        owners: Array<PlatformAddressValue>;
     }): SetShardOwners {
         const { shardId, owners } = params;
         checkShardId(shardId);
@@ -158,7 +164,7 @@ export class Core {
      */
     public createSetShardUsersTransaction(params: {
         shardId: number;
-        users: Array<PlatformAddress | string>;
+        users: Array<PlatformAddressValue>;
     }): SetShardUsers {
         const { shardId, users } = params;
         checkShardId(shardId);
@@ -186,16 +192,16 @@ export class Core {
         params:
             | {
                   shardId: number;
-                  lockScriptHash: H160 | string;
+                  lockScriptHash: H160Value;
                   parameters: Buffer[];
-                  quantity: U64 | number | string;
-                  payer: PlatformAddress | string;
+                  quantity: U64Value;
+                  payer: PlatformAddressValue;
               }
             | {
                   shardId: number;
-                  recipient: AssetTransferAddress | string;
-                  quantity: U64 | number | string;
-                  payer: PlatformAddress | string;
+                  recipient: AssetTransferAddressValue;
+                  quantity: U64Value;
+                  payer: PlatformAddressValue;
               }
     ): WrapCCC {
         const { shardId, quantity, payer } = params;
@@ -238,12 +244,12 @@ export class Core {
         params:
             | {
                   content: string;
-                  certifier: PlatformAddress | string;
+                  certifier: PlatformAddressValue;
                   signature: string;
               }
             | {
                   content: string;
-                  secret: H256 | string;
+                  secret: H256Value;
               }
     ): Store {
         let storeParams;
@@ -277,11 +283,11 @@ export class Core {
     public createRemoveTransaction(
         params:
             | {
-                  hash: H256 | string;
-                  secret: H256 | string;
+                  hash: H256Value;
+                  secret: H256Value;
               }
             | {
-                  hash: H256 | string;
+                  hash: H256Value;
                   signature: string;
               }
     ): Remove {
@@ -342,11 +348,11 @@ export class Core {
     public createAssetScheme(params: {
         shardId: number;
         metadata: string;
-        supply: U64 | number | string;
-        approver?: PlatformAddress | string;
-        registrar?: PlatformAddress | string;
+        supply: U64Value;
+        approver?: PlatformAddressValue;
+        registrar?: PlatformAddressValue;
         allowedScriptHashes?: H160[];
-        pool?: { assetType: H160 | string; quantity: number }[];
+        pool?: { assetType: H160Value; quantity: number }[];
     }): AssetScheme {
         const {
             shardId,
@@ -382,42 +388,42 @@ export class Core {
 
     public createOrder(
         params: {
-            assetTypeFrom: H160 | string;
-            assetTypeTo: H160 | string;
-            assetTypeFee?: H160 | string;
+            assetTypeFrom: H160Value;
+            assetTypeTo: H160Value;
+            assetTypeFee?: H160Value;
             shardIdFrom: number;
             shardIdTo: number;
             shardIdFee?: number;
-            assetQuantityFrom: U64 | number | string;
-            assetQuantityTo: U64 | number | string;
-            assetQuantityFee?: U64 | number | string;
+            assetQuantityFrom: U64Value;
+            assetQuantityTo: U64Value;
+            assetQuantityFee?: U64Value;
             originOutputs:
                 | AssetOutPoint[]
                 | {
-                      tracker: H256 | string;
+                      tracker: H256Value;
                       index: number;
-                      assetType: H160 | string;
+                      assetType: H160Value;
                       shardId: number;
-                      quantity: U64 | number | string;
-                      lockScriptHash?: H256 | string;
+                      quantity: U64Value;
+                      lockScriptHash?: H256Value;
                       parameters?: Buffer[];
                   }[];
-            expiration: U64 | number | string;
+            expiration: U64Value;
         } & (
             | {
-                  lockScriptHashFrom: H160 | string;
+                  lockScriptHashFrom: H160Value;
                   parametersFrom: Buffer[];
               }
             | {
-                  recipientFrom: AssetTransferAddress | string;
+                  recipientFrom: AssetTransferAddressValue;
               }) &
             (
                 | {
-                      lockScriptHashFee: H160 | string;
+                      lockScriptHashFee: H160Value;
                       parametersFee: Buffer[];
                   }
                 | {
-                      recipientFee: AssetTransferAddress | string;
+                      recipientFee: AssetTransferAddressValue;
                   }
                 | {})
     ): Order {
@@ -532,7 +538,7 @@ export class Core {
     }
     public createOrderOnTransfer(params: {
         order: Order;
-        spentQuantity: U64 | string | number;
+        spentQuantity: U64Value;
         inputIndices: number[];
         outputIndices: number[];
     }) {
@@ -557,12 +563,12 @@ export class Core {
                   networkId?: NetworkId;
                   shardId: number;
                   metadata: string;
-                  approver?: PlatformAddress | string;
-                  registrar?: PlatformAddress | string;
+                  approver?: PlatformAddressValue;
+                  registrar?: PlatformAddressValue;
                   allowedScriptHashes?: H160[];
-                  supply?: U64 | number | string;
+                  supply?: U64Value;
               };
-        recipient: AssetTransferAddress | string;
+        recipient: AssetTransferAddressValue;
         approvals?: string[];
     }): MintAsset {
         const { scheme, recipient, approvals = [] } = params;
@@ -610,14 +616,14 @@ export class Core {
 
     public createChangeAssetSchemeTransaction(params: {
         shardId: number;
-        assetType: H160 | string;
+        assetType: H160Value;
         scheme:
             | AssetScheme
             | {
                   networkId?: NetworkId;
                   metadata: string;
-                  approver?: PlatformAddress | string;
-                  registrar?: PlatformAddress | string;
+                  approver?: PlatformAddressValue;
+                  registrar?: PlatformAddressValue;
                   allowedScriptHashes?: H160[];
               };
         approvals?: string[];
@@ -657,9 +663,9 @@ export class Core {
 
     public createIncreaseAssetSupplyTransaction(params: {
         shardId: number;
-        assetType: H160 | string;
-        recipient: AssetTransferAddress | string;
-        supply?: U64 | number | string;
+        assetType: H160Value;
+        recipient: AssetTransferAddressValue;
+        supply?: U64Value;
         approvals?: string[];
     }): IncreaseAssetSupply {
         const {
@@ -723,7 +729,7 @@ export class Core {
 
     public createUnwrapCCCTransaction(params: {
         burn: AssetTransferInput | Asset;
-        receiver: PlatformAddress | string;
+        receiver: PlatformAddressValue;
         networkId?: NetworkId;
     }): UnwrapCCC {
         const { burn, networkId = this.networkId } = params;
@@ -751,12 +757,12 @@ export class Core {
         assetOutPoint:
             | AssetOutPoint
             | {
-                  tracker: H256 | string;
+                  tracker: H256Value;
                   index: number;
-                  assetType: H160 | string;
+                  assetType: H160Value;
                   shardId: number;
-                  quantity: U64 | number | string;
-                  lockScriptHash?: H256 | string;
+                  quantity: U64Value;
+                  lockScriptHash?: H256Value;
                   parameters?: Buffer[];
               };
         timelock?: null | Timelock;
@@ -808,11 +814,11 @@ export class Core {
     }
 
     public createAssetOutPoint(params: {
-        tracker: H256 | string;
+        tracker: H256Value;
         index: number;
-        assetType: H160 | string;
+        assetType: H160Value;
         shardId: number;
-        quantity: U64 | number | string;
+        quantity: U64Value;
     }): AssetOutPoint {
         const { tracker, index, assetType, shardId, quantity } = params;
         checkTracker(tracker);
@@ -831,15 +837,15 @@ export class Core {
 
     public createAssetTransferOutput(
         params: {
-            assetType: H160 | string;
+            assetType: H160Value;
             shardId: number;
-            quantity: U64 | number | string;
+            quantity: U64Value;
         } & (
             | {
-                  recipient: AssetTransferAddress | string;
+                  recipient: AssetTransferAddressValue;
               }
             | {
-                  lockScriptHash: H256 | string;
+                  lockScriptHash: H256Value;
                   parameters: Buffer[];
               })
     ): AssetTransferOutput {
@@ -882,7 +888,7 @@ function checkNetworkId(networkId: NetworkId) {
     }
 }
 
-function checkPlatformAddressRecipient(recipient: PlatformAddress | string) {
+function checkPlatformAddressRecipient(recipient: PlatformAddressValue) {
     if (!PlatformAddress.check(recipient)) {
         throw Error(
             `Expected recipient param to be a PlatformAddress but found ${recipient}`
@@ -891,7 +897,7 @@ function checkPlatformAddressRecipient(recipient: PlatformAddress | string) {
 }
 
 function checkAssetTransferAddressRecipient(
-    recipient: AssetTransferAddress | string
+    recipient: AssetTransferAddressValue
 ) {
     if (!AssetTransferAddress.check(recipient)) {
         throw Error(
@@ -900,7 +906,7 @@ function checkAssetTransferAddressRecipient(
     }
 }
 
-function checkAmount(amount: U64 | number | string) {
+function checkAmount(amount: U64Value) {
     if (!U64.check(amount)) {
         throw Error(
             `Expected amount param to be a U64 value but found ${amount}`
@@ -908,7 +914,7 @@ function checkAmount(amount: U64 | number | string) {
     }
 }
 
-function checkExpiration(expiration: U64 | number | string) {
+function checkExpiration(expiration: U64Value) {
     if (!U64.check(expiration)) {
         throw Error(
             `Expected expiration param to be a U64 value but found ${expiration}`
@@ -916,7 +922,7 @@ function checkExpiration(expiration: U64 | number | string) {
     }
 }
 
-function checkKey(key: H512 | string) {
+function checkKey(key: H512Value) {
     if (!H512.check(key)) {
         throw Error(`Expected key param to be an H512 value but found ${key}`);
     }
@@ -943,7 +949,7 @@ function checkMetadata(metadata: string) {
     }
 }
 
-function checkApprover(approver: PlatformAddress | string | null) {
+function checkApprover(approver: PlatformAddressValue | null) {
     if (approver != null && !PlatformAddress.check(approver)) {
         throw Error(
             `Expected approver param to be either null or a PlatformAddress value but found ${approver}`
@@ -951,7 +957,7 @@ function checkApprover(approver: PlatformAddress | string | null) {
     }
 }
 
-function checkregistrar(registrar: PlatformAddress | string | null) {
+function checkregistrar(registrar: PlatformAddressValue | null) {
     if (registrar != null && !PlatformAddress.check(registrar)) {
         throw Error(
             `Expected registrar param to be either null or a PlatformAddress value but found ${registrar}`
@@ -959,7 +965,7 @@ function checkregistrar(registrar: PlatformAddress | string | null) {
     }
 }
 
-function checkCertifier(certifier: PlatformAddress | string) {
+function checkCertifier(certifier: PlatformAddressValue) {
     if (!PlatformAddress.check(certifier)) {
         throw Error(
             `Expected certifier param to be a PlatformAddress but found ${certifier}`
@@ -967,7 +973,7 @@ function checkCertifier(certifier: PlatformAddress | string) {
     }
 }
 
-function checkPayer(payer: PlatformAddress | string) {
+function checkPayer(payer: PlatformAddressValue) {
     if (!PlatformAddress.check(payer)) {
         throw Error(
             `Expected payer param to be a PlatformAddress but found ${payer}`
@@ -975,7 +981,7 @@ function checkPayer(payer: PlatformAddress | string) {
     }
 }
 
-function checkOwners(owners: Array<PlatformAddress | string>) {
+function checkOwners(owners: Array<PlatformAddressValue>) {
     if (!Array.isArray(owners)) {
         throw Error(`Expected owners param to be an array but found ${owners}`);
     }
@@ -988,7 +994,7 @@ function checkOwners(owners: Array<PlatformAddress | string>) {
     });
 }
 
-function checkUsers(users: Array<PlatformAddress | string>) {
+function checkUsers(users: Array<PlatformAddressValue>) {
     if (!Array.isArray(users)) {
         throw Error(`Expected users param to be an array but found ${users}`);
     }
@@ -1042,7 +1048,7 @@ function checkTransferOutputs(outputs: Array<AssetTransferOutput>) {
     });
 }
 
-function checkTracker(value: H256 | string) {
+function checkTracker(value: H256Value) {
     if (!H256.check(value)) {
         throw Error(
             `Expected tracker param to be an H256 value but found ${value}`
@@ -1056,7 +1062,7 @@ function checkIndex(index: number) {
     }
 }
 
-function checkAssetType(value: H160 | string) {
+function checkAssetType(value: H160Value) {
     if (!H160.check(value)) {
         throw Error(
             `Expected assetType param to be an H160 value but found ${value}`
@@ -1068,12 +1074,12 @@ function checkAssetOutPoint(
     value:
         | AssetOutPoint
         | {
-              tracker: H256 | string;
+              tracker: H256Value;
               index: number;
-              assetType: H160 | string;
+              assetType: H160Value;
               shardId: number;
-              quantity: U64 | number | string;
-              lockScriptHash?: H256 | string;
+              quantity: U64Value;
+              lockScriptHash?: H256Value;
               parameters?: Buffer[];
           }
 ) {
@@ -1127,7 +1133,7 @@ function checkIndices(indices: Array<number>) {
     });
 }
 
-function checkLockScriptHash(value: H160 | string) {
+function checkLockScriptHash(value: H160Value) {
     if (!H160.check(value)) {
         throw Error(
             `Expected lockScriptHash param to be an H160 value but found ${value}`
@@ -1135,7 +1141,7 @@ function checkLockScriptHash(value: H160 | string) {
     }
 }
 
-function checkTransactionHash(value: H256 | string) {
+function checkTransactionHash(value: H256Value) {
     if (!H256.check(value)) {
         throw Error(
             `Expected hash param to be an H256 value but found ${value}`
@@ -1143,7 +1149,7 @@ function checkTransactionHash(value: H256 | string) {
     }
 }
 
-function checkSecret(value: H256 | string) {
+function checkSecret(value: H256Value) {
     if (!H256.check(value)) {
         throw Error(
             `Expected secret param to be an H256 value but found ${value}`

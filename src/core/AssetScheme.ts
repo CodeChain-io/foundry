@@ -1,5 +1,6 @@
 import {
     AssetTransferAddress,
+    AssetTransferAddressValue,
     H160,
     PlatformAddress,
     U64
@@ -106,7 +107,7 @@ export class AssetScheme {
     }
 
     public createMintTransaction(params: {
-        recipient: AssetTransferAddress | string;
+        recipient: AssetTransferAddressValue;
     }): MintAsset {
         const { recipient } = params;
         const {

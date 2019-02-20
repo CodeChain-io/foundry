@@ -1,5 +1,11 @@
 import { Buffer } from "buffer";
-import { AssetTransferAddress, H160, H256, U64 } from "codechain-primitives";
+import {
+    AssetTransferAddress,
+    AssetTransferAddressValue,
+    H160,
+    H256,
+    U64
+} from "codechain-primitives";
 
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";
@@ -128,7 +134,7 @@ export class Asset {
 
     public createTransferTransaction(params: {
         recipients?: Array<{
-            address: AssetTransferAddress | string;
+            address: AssetTransferAddressValue;
             quantity: U64;
         }>;
         timelock?: null | Timelock;

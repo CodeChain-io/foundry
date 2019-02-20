@@ -1,4 +1,4 @@
-import { H256, U64 } from "codechain-primitives";
+import { H256, H256Value, U64, U64Value } from "codechain-primitives";
 
 import { blake256, signEcdsa } from "../utils";
 import { SignedTransaction } from "./SignedTransaction";
@@ -81,7 +81,7 @@ export abstract class Transaction {
         this._seq = seq;
     }
 
-    public setFee(fee: U64 | string | number) {
+    public setFee(fee: U64Value) {
         this._fee = U64.ensure(fee);
     }
 
@@ -111,9 +111,9 @@ export abstract class Transaction {
     }
 
     public sign(params: {
-        secret: H256 | string;
+        secret: H256Value;
         seq: number;
-        fee: U64 | string | number;
+        fee: U64Value;
     }): SignedTransaction {
         const { secret, seq, fee } = params;
         if (this._seq != null) {

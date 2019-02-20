@@ -1,4 +1,7 @@
-import { PlatformAddress } from "codechain-primitives/lib";
+import {
+    PlatformAddress,
+    PlatformAddressValue
+} from "codechain-primitives/lib";
 import { SDK } from "../src";
 import { AssetTransferAddress, MintAsset } from "../src/core/classes";
 
@@ -66,7 +69,7 @@ async function setRegularKey() {
 }
 
 async function sendCCCToOther(
-    address: PlatformAddress | string,
+    address: PlatformAddressValue,
     recipient: PlatformAddress,
     secret: string,
     quantity: number

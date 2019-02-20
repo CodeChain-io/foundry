@@ -1,4 +1,9 @@
-import { H256, PlatformAddress } from "codechain-primitives";
+import {
+    H256,
+    H256Value,
+    PlatformAddress,
+    PlatformAddressValue
+} from "codechain-primitives";
 
 import { Transaction } from "../core/Transaction";
 
@@ -87,10 +92,7 @@ export class AccountRpc {
      * @param passphrase A passphrase to be used by the account owner
      * @returns The account
      */
-    public importRaw(
-        secret: H256 | string,
-        passphrase?: string
-    ): Promise<string> {
+    public importRaw(secret: H256Value, passphrase?: string): Promise<string> {
         if (!H256.check(secret)) {
             throw Error(
                 `Expected the first argument to be an H256 value but found ${secret}`
@@ -129,8 +131,8 @@ export class AccountRpc {
      * @param passphrase The account's passphrase
      */
     public sign(
-        messageDigest: H256 | string,
-        address: PlatformAddress | string,
+        messageDigest: H256Value,
+        address: PlatformAddressValue,
         passphrase?: string
     ): Promise<string> {
         if (!H256.check(messageDigest)) {
@@ -180,7 +182,7 @@ export class AccountRpc {
      */
     public sendTransaction(params: {
         tx: Transaction;
-        account: PlatformAddress | string;
+        account: PlatformAddressValue;
         passphrase?: string;
     }): Promise<{ hash: H256; seq: number }> {
         const { tx, account, passphrase } = params;
@@ -218,7 +220,7 @@ export class AccountRpc {
      * @param duration Time to keep the account unlocked. The default value is 300(seconds). Passing 0 unlocks the account indefinitely.
      */
     public unlock(
-        address: PlatformAddress | string,
+        address: PlatformAddressValue,
         passphrase?: string,
         duration?: number
     ): Promise<null> {
@@ -270,7 +272,7 @@ export class AccountRpc {
      * @param newPassphrase The new passphrase for the account
      */
     public changePassword(
-        address: PlatformAddress | string,
+        address: PlatformAddressValue,
         oldPassphrase: string,
         newPassphrase: string
     ): Promise<null> {

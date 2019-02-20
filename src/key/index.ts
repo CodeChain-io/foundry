@@ -1,7 +1,9 @@
 import {
     AssetTransferAddress,
     H256,
-    PlatformAddress
+    PlatformAddress,
+    PlatformAddressValue,
+    U64Value
 } from "codechain-primitives";
 
 import {
@@ -171,7 +173,7 @@ export class Key {
         transaction: AssetTransaction,
         params: {
             keyStore?: KeyStore;
-            account: PlatformAddress | string;
+            account: PlatformAddressValue;
             passphrase?: string;
         }
     ): Promise<string> {
@@ -211,9 +213,9 @@ export class Key {
         tx: Transaction,
         params: {
             keyStore?: KeyStore;
-            account: PlatformAddress | string;
+            account: PlatformAddressValue;
             passphrase?: string;
-            fee: U64 | string | number;
+            fee: U64Value;
             seq: number;
         }
     ): Promise<SignedTransaction> {
