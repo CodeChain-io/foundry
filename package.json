@@ -11,7 +11,8 @@
     "posttest": "yarn lint",
     "docs": "typedoc --out gh-pages/$npm_package_version --name \"CodeChain JavaScript SDK (Alpha)\" --mode file --readme API.md --excludePrivate --excludeProtected",
     "docs-dev": "nodemon -e ts --watch src --watch API.md --exec 'yarn docs'",
-    "docs-prepare": "[ -d 'gh-pages' ] || git clone -b gh-pages git@github.com:CodeChain-io/codechain-sdk-js.git gh-pages && cd gh-pages && git pull"
+    "docs-prepare": "[ -d 'gh-pages' ] || git clone -b gh-pages git@github.com:CodeChain-io/codechain-sdk-js.git gh-pages && cd gh-pages && git pull",
+    "prepublishOnly": "yarn build"
   },
   "repository": {
     "type": "git",
