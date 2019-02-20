@@ -290,6 +290,41 @@ export class ChainRpc {
         });
     }
 
+    public getShardIdByHash(
+        hash: H256 | string,
+        blockNumber?: number
+    ): Promise<number | null> {
+        if (!H256.check(hash)) {
+            throw Error(
+                `Expected the first argument of getShardIdByHash to be an H256 value but found ${hash}`
+            );
+        }
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the second argument of getShardIdByHash to be a number but found ${blockNumber}`
+            );
+        }
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getShardIdByHash", [
+                    H256.ensure(hash).toJSON(),
+                    blockNumber
+                ])
+                .then(result => {
+                    if (result === null || typeof result === "number") {
+                        resolve(result);
+                    } else {
+                        reject(
+                            Error(
+                                `Expected chain_getShardIdByHash to return either number or null but it returned ${result}`
+                            )
+                        );
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
     /**
      * Gets a transaction of given hash.
      * @param tracker The tracker of which to get the corresponding transaction of.
