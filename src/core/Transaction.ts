@@ -106,7 +106,7 @@ export abstract class Transaction {
         return RLP.encode(this.toEncodeObject());
     }
 
-    public hash(): H256 {
+    public unsignedHash(): H256 {
         return new H256(blake256(this.rlpBytes()));
     }
 
@@ -126,7 +126,7 @@ export abstract class Transaction {
         this._fee = U64.ensure(fee);
         return new SignedTransaction(
             this,
-            signEcdsa(this.hash().value, H256.ensure(secret).value)
+            signEcdsa(this.unsignedHash().value, H256.ensure(secret).value)
         );
     }
 

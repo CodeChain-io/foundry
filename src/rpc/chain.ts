@@ -112,7 +112,11 @@ export class ChainRpc {
         }
         tx.setFee(fee);
         const address = PlatformAddress.ensure(account);
-        const sig = await this.rpc.account.sign(tx.hash(), address, passphrase);
+        const sig = await this.rpc.account.sign(
+            tx.unsignedHash(),
+            address,
+            passphrase
+        );
         return this.sendSignedTransaction(new SignedTransaction(tx, sig));
     }
 

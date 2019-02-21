@@ -104,7 +104,7 @@ export class WrapCCC extends Transaction implements AssetTransaction {
     }
 
     public tracker() {
-        return this.hash();
+        return this.unsignedHash();
     }
 
     public type(): string {

@@ -61,7 +61,7 @@ test("hash", () => {
     );
     t.setFee(0);
     t.setSeq(0);
-    expect(t.hash()).toEqual(
+    expect(t.unsignedHash()).toEqual(
         new H256(
             "3b578bebb32cae770ab1094d572a4721b624fc101bb88fbc580eeb2931f65665"
         )

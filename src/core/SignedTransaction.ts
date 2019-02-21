@@ -106,7 +106,10 @@ export class SignedTransaction {
      */
     public getSignerAccountId(): H160 {
         const { _signature, unsigned } = this;
-        const publicKey = recoverEcdsa(unsigned.hash().value, _signature);
+        const publicKey = recoverEcdsa(
+            unsigned.unsignedHash().value,
+            _signature
+        );
         return new H160(blake160(publicKey));
     }
 
@@ -125,7 +128,9 @@ export class SignedTransaction {
      */
     public getSignerPublic(): H512 {
         const { _signature, unsigned } = this;
-        return new H512(recoverEcdsa(unsigned.hash().value, _signature));
+        return new H512(
+            recoverEcdsa(unsigned.unsignedHash().value, _signature)
+        );
     }
 
     /**

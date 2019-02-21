@@ -254,7 +254,7 @@ export class Key {
         const accountId = PlatformAddress.ensure(account).getAccountId();
         const sig = await keyStore.platform.sign({
             key: accountId.value,
-            message: tx.hash().value,
+            message: tx.unsignedHash().value,
             passphrase
         });
         return new SignedTransaction(tx, sig);
