@@ -336,6 +336,72 @@ export class ChainRpc {
     }
 
     /**
+     * Gets the owners of the shard.
+     * @param shardId A shard id.
+     * @returns The platform addresses of the owners.
+     */
+    public getShardOwners(
+        shardId: number,
+        blockNumber?: number
+    ): Promise<PlatformAddress[] | null> {
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getShardOwners", [shardId, blockNumber])
+                .then(result => {
+                    try {
+                        resolve(
+                            result === null
+                                ? null
+                                : (result as string[]).map(str =>
+                                      PlatformAddress.ensure(str)
+                                  )
+                        );
+                    } catch (e) {
+                        reject(
+                            Error(
+                                `Expected chain_getShardOwners to return either null or an array of PlatformAddress, but an error occurred: ${e.toString()}`
+                            )
+                        );
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    /**
+     * Gets the users of the shard.
+     * @param shardId A shard id.
+     * @returns The platform addresses of the users.
+     */
+    public getShardUsers(
+        shardId: number,
+        blockNumber?: number
+    ): Promise<PlatformAddress[] | null> {
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getShardUsers", [shardId, blockNumber])
+                .then(result => {
+                    try {
+                        resolve(
+                            result === null
+                                ? null
+                                : (result as string[]).map(str =>
+                                      PlatformAddress.ensure(str)
+                                  )
+                        );
+                    } catch (e) {
+                        reject(
+                            Error(
+                                `Expected chain_getShardUsers to return either null or an array of PlatformAddress, but an error occurred: ${e.toString()}`
+                            )
+                        );
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    /**
      * Gets a transaction of given hash.
      * @param tracker The tracker of which to get the corresponding transaction of.
      * @returns A transaction, or null when transaction of given hash not exists.
