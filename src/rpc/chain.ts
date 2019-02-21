@@ -294,6 +294,12 @@ export class ChainRpc {
         });
     }
 
+    /**
+     * Gets the shard id of the given hash of a CreateShard transaction.
+     * @param hash A transaction hash of a CreateShard transaction.
+     * @param blockNumber A block number.
+     * @returns A shard id.
+     */
     public getShardIdByHash(
         hash: H256 | string,
         blockNumber?: number
