@@ -123,8 +123,16 @@ export class Core {
     /**
      * Creates CreateShard type which can create new shard
      */
-    public createCreateShardTransaction(): CreateShard {
-        return new CreateShard(this.networkId);
+    public createCreateShardTransaction(params: {
+        users: Array<PlatformAddress | string>;
+    }): CreateShard {
+        const { users } = params;
+        return new CreateShard(
+            {
+                users: users.map(PlatformAddress.ensure)
+            },
+            this.networkId
+        );
     }
 
     public createSetShardOwnersTransaction(params: {

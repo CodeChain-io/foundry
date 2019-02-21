@@ -179,9 +179,11 @@ export function fromJSONToTransaction(result: any): Transaction {
             tx = new SetRegularKey(key, networkId);
             break;
         }
-        case "createShard":
-            tx = new CreateShard(networkId);
+        case "createShard": {
+            const users = action.users.map(PlatformAddress.ensure);
+            tx = new CreateShard({ users }, networkId);
             break;
+        }
         case "setShardOwners": {
             const shardId = action.shardId;
             const owners = action.owners.map(PlatformAddress.ensure);
