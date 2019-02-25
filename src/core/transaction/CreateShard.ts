@@ -2,8 +2,9 @@ import { PlatformAddress } from "codechain-primitives/lib";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
-/* tslint:disable:no-empty-interface */
-export interface CreateShardActionJSON {}
+export interface CreateShardActionJSON {
+    users: string[];
+}
 
 export class CreateShard extends Transaction {
     private readonly users: PlatformAddress[];
@@ -29,6 +30,7 @@ export class CreateShard extends Transaction {
     }
 
     protected actionToJSON(): CreateShardActionJSON {
-        return {};
+        const { users } = this;
+        return { users: users.map(user => user.toString()) };
     }
 }

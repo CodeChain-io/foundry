@@ -36,7 +36,7 @@ export class SetShardUsers extends Transaction {
         const { shardId, users } = this;
         return {
             shardId,
-            users: users.map(user => user.value)
+            users: users.map(user => user.toString())
         };
     }
 }
