@@ -13,6 +13,7 @@ export interface SignedTransactionJSON extends TransactionJSON {
     blockNumber: number | null;
     blockHash: string | null;
     transactionIndex: number | null;
+    invoice: boolean | null;
     sig: string;
     hash: string;
 }
@@ -36,6 +37,7 @@ export class SignedTransaction {
     public blockNumber: number | null;
     public blockHash: H256 | null;
     public transactionIndex: number | null;
+    public invoice: boolean | null;
     private _signature: string;
 
     /**
@@ -44,13 +46,15 @@ export class SignedTransaction {
      * @param blockNumber The block number of the block that contains the tx.
      * @param blockHash The hash of the block that contains the tx.
      * @param transactionIndex The index(location) of the tx within the block.
+     * @param invoice The result of the transaction.
      */
     constructor(
         unsigned: Transaction,
         signature: string,
         blockNumber?: number,
         blockHash?: H256,
-        transactionIndex?: number
+        transactionIndex?: number,
+        invoice?: boolean
     ) {
         this.unsigned = unsigned;
         this._signature = signature.startsWith("0x")
@@ -60,6 +64,7 @@ export class SignedTransaction {
         this.blockHash = blockHash || null;
         this.transactionIndex =
             transactionIndex === undefined ? null : transactionIndex;
+        this.invoice = invoice === undefined ? null : invoice;
     }
 
     /**
@@ -142,6 +147,7 @@ export class SignedTransaction {
             blockNumber,
             blockHash,
             transactionIndex,
+            invoice,
             unsigned,
             _signature
         } = this;
@@ -150,6 +156,7 @@ export class SignedTransaction {
             blockNumber,
             blockHash: blockHash === null ? null : blockHash.toJSON(),
             transactionIndex,
+            invoice,
             sig: `0x${_signature}`,
             hash: this.hash().toJSON()
         };
