@@ -387,9 +387,13 @@ describe("rpc", () => {
                 );
             });
 
-            test("getInvoice", async () => {
-                expect(await sdk.rpc.chain.getInvoice(txHash)).toEqual(true);
-                expect(await sdk.rpc.chain.getInvoice(invalidHash)).toBe(null);
+            test("getTransactionResult", async () => {
+                expect(
+                    await sdk.rpc.chain.getTransactionResult(txHash)
+                ).toEqual(true);
+                expect(
+                    await sdk.rpc.chain.getTransactionResult(invalidHash)
+                ).toBe(null);
             });
         });
 
@@ -434,9 +438,9 @@ describe("rpc", () => {
                 ).toEqual((mintTransaction as any).actionToJSON());
             });
 
-            test("getInvoicesByTracker", async () => {
+            test("getTransactionResultsByTracker", async () => {
                 expect(
-                    await sdk.rpc.chain.getInvoicesByTracker(
+                    await sdk.rpc.chain.getTransactionResultsByTracker(
                         mintTransaction.tracker()
                     )
                 ).toEqual([true]);

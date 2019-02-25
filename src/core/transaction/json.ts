@@ -284,7 +284,7 @@ export function fromJSONToTransaction(result: any): Transaction {
  * @returns A SignedTransaction.
  */
 export function fromJSONToSignedTransaction(data: any) {
-    const { sig, blockNumber, blockHash, transactionIndex, invoice } = data;
+    const { sig, blockNumber, blockHash, transactionIndex, result } = data;
     if (typeof sig !== "string") {
         throw Error("Unexpected type of sig");
     }
@@ -295,7 +295,7 @@ export function fromJSONToSignedTransaction(data: any) {
             blockNumber,
             new H256(blockHash),
             transactionIndex,
-            invoice
+            result
         );
     } else {
         return new SignedTransaction(fromJSONToTransaction(data), sig);

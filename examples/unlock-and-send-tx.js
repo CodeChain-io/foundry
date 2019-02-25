@@ -17,12 +17,12 @@ const tx = sdk.core.createPayTransaction({
 
 (async () => {
     await sdk.rpc.account.unlock(ACCOUNT_ADDRESS, ACCOUNT_PASSPHRASE);
-    const result = await sdk.rpc.account.sendTransaction({
+    const hash = (await sdk.rpc.account.sendTransaction({
         tx,
         account: ACCOUNT_ADDRESS
-    });
-    const invoice = await sdk.rpc.chain.getInvoice(result.hash, {
+    })).hash;
+    const result = await sdk.rpc.chain.getTransactionResult(hash, {
         timeout: 300 * 1000
     });
-    console.log(invoice); // { success: true }
+    console.log(result); // true
 })().catch(console.error);

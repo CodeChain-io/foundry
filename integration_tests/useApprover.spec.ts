@@ -60,7 +60,7 @@ async function setRegularKey() {
         })
     );
 
-    await sdk.rpc.chain.getInvoice(hash, {
+    await sdk.rpc.chain.getTransactionResult(hash, {
         timeout: 5 * 60 * 1000
     });
 }
@@ -84,11 +84,11 @@ async function sendCCCToOther(
         })
     );
 
-    const invoice = await sdk.rpc.chain.getInvoice(hash, {
+    const result = await sdk.rpc.chain.getTransactionResult(hash, {
         timeout: 5 * 60 * 1000
     });
-    expect(invoice).toBeTruthy();
-    expect(invoice!).toBe(true);
+    expect(result).toBeTruthy();
+    expect(result!).toBe(true);
 }
 
 async function mintAssetUsingMaster(
@@ -119,14 +119,14 @@ async function mintAssetUsingMaster(
         })
     );
 
-    const mintTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+    const mintTxResults = await sdk.rpc.chain.getTransactionResultsByTracker(
         mintTx.tracker(),
         {
             timeout: 5 * 60 * 1000
         }
     );
-    expect(mintTxInvoices.length).toBe(1);
-    expect(mintTxInvoices[0]).toBe(true);
+    expect(mintTxResults.length).toBe(1);
+    expect(mintTxResults[0]).toBe(true);
     return mintTx;
 }
 
@@ -164,14 +164,14 @@ async function transferAssetUsingRegular(
         })
     );
 
-    const transferTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+    const transferTxResults = await sdk.rpc.chain.getTransactionResultsByTracker(
         transferTx.tracker(),
         {
             timeout: 5 * 60 * 1000
         }
     );
-    expect(transferTxInvoices.length).toBe(2);
-    expect(transferTxInvoices[1]).toBe(true);
+    expect(transferTxResults.length).toBe(2);
+    expect(transferTxResults[1]).toBe(true);
 }
 async function transferAssetUsingOther(
     mintTx: MintAsset,
@@ -212,12 +212,12 @@ async function transferAssetUsingOther(
         })
     );
 
-    const transferTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+    const transferTxResults = await sdk.rpc.chain.getTransactionResultsByTracker(
         transferTx.tracker(),
         {
             timeout: 5 * 60 * 1000
         }
     );
-    expect(transferTxInvoices.length).toBe(1);
-    expect(transferTxInvoices[0]).toBe(false);
+    expect(transferTxResults.length).toBe(1);
+    expect(transferTxResults[0]).toBe(false);
 }

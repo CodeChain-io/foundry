@@ -15,7 +15,7 @@ export interface BlockData {
     extraData: number[];
     transactionsRoot: H256;
     stateRoot: H256;
-    invoicesRoot: H256;
+    resultsRoot: H256;
     score: U256;
     seal: number[][];
     hash: H256;
@@ -29,7 +29,7 @@ export interface BlockJSON {
     extraData: number[];
     transactionsRoot: string;
     stateRoot: string;
-    invoicesRoot: string;
+    resultsRoot: string;
     score: string;
     seal: number[][];
     hash: string;
@@ -48,7 +48,7 @@ export class Block {
             extraData,
             transactionsRoot,
             stateRoot,
-            invoicesRoot,
+            resultsRoot,
             score,
             seal,
             hash,
@@ -62,7 +62,7 @@ export class Block {
             extraData,
             transactionsRoot: new H256(transactionsRoot),
             stateRoot: new H256(stateRoot),
-            invoicesRoot: new H256(invoicesRoot),
+            resultsRoot: new H256(resultsRoot),
             score: new U256(score),
             seal,
             hash: new H256(hash),
@@ -76,7 +76,7 @@ export class Block {
     public extraData: number[];
     public transactionsRoot: H256;
     public stateRoot: H256;
-    public invoicesRoot: H256;
+    public resultsRoot: H256;
     public score: U256;
     public seal: number[][];
     public hash: H256;
@@ -91,7 +91,7 @@ export class Block {
             extraData,
             transactionsRoot,
             stateRoot,
-            invoicesRoot,
+            resultsRoot,
             score,
             seal,
             hash,
@@ -104,7 +104,7 @@ export class Block {
         this.extraData = extraData;
         this.transactionsRoot = transactionsRoot;
         this.stateRoot = stateRoot;
-        this.invoicesRoot = invoicesRoot;
+        this.resultsRoot = resultsRoot;
         this.score = score;
         this.seal = seal;
         this.hash = hash;
@@ -120,7 +120,7 @@ export class Block {
             extraData,
             transactionsRoot,
             stateRoot,
-            invoicesRoot,
+            resultsRoot,
             score,
             seal,
             hash,
@@ -134,7 +134,7 @@ export class Block {
             extraData: [...extraData],
             transactionsRoot: transactionsRoot.toJSON(),
             stateRoot: stateRoot.toJSON(),
-            invoicesRoot: invoicesRoot.toJSON(),
+            resultsRoot: resultsRoot.toJSON(),
             score: score.value.toString(),
             seal: seal.map(buffer => [...buffer]),
             hash: hash.toJSON(),

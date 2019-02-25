@@ -49,12 +49,12 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             passphrase: ""
         }
     );
-    const mintTxByNonShardUserInvoice = await sdk.rpc.chain.getInvoice(
+    const mintTxByNonShardUserResult = await sdk.rpc.chain.getTransactionResult(
         mintTxByNonShardUserHash
     );
     console.log(
         "MintAsset by a non-shard user result:",
-        mintTxByNonShardUserInvoice
+        mintTxByNonShardUserResult
     );
 
     const mintTxByShardUserHash = await sdk.rpc.chain.sendTransaction(
@@ -67,10 +67,10 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             passphrase: ACCOUNT_PASSPHRASE
         }
     );
-    const mintTxByShardUserInvoice = await sdk.rpc.chain.getInvoice(
+    const mintTxByShardUserResult = await sdk.rpc.chain.getTransactionResult(
         mintTxByShardUserHash
     );
-    console.log("MintAsset by a shard user result:", mintTxByShardUserInvoice);
+    console.log("MintAsset by a shard user result:", mintTxByShardUserResult);
 })().catch(err => {
     console.error(`Error:`, err);
 });

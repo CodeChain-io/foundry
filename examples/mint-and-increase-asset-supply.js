@@ -38,16 +38,16 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         passphrase: ACCOUNT_PASSPHRASE
     });
 
-    const mintTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+    const mintTxResults = await sdk.rpc.chain.getTransactionResultsByTracker(
         mintTx.tracker(),
         {
             timeout: 300 * 1000
         }
     );
-    if (!mintTxInvoices[0]) {
+    if (!mintTxResults[0]) {
         throw Error(
             `AssetMintTransaction failed: ${JSON.stringify(
-                mintTxInvoices[0].error
+                mintTxResults[0].error
             )}`
         );
     }
@@ -66,17 +66,17 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         passphrase: ACCOUNT_PASSPHRASE
     });
 
-    const increaseAssetSupplyTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+    const increaseAssetSupplyTxResults = await sdk.rpc.chain.getTransactionResultsByTracker(
         increaseAssetSupplyTx.tracker(),
         {
             timeout: 300 * 1000
         }
     );
 
-    if (!increaseAssetSupplyTxInvoices[0]) {
+    if (!increaseAssetSupplyTxResults[0]) {
         throw Error(
             `increaseAssetSupply failed: ${JSON.stringify(
-                increaseAssetSupplyTxInvoices[0].error
+                increaseAssetSupplyTxResults[0].error
             )}`
         );
     }

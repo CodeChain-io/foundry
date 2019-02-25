@@ -129,10 +129,10 @@ sdk.rpc.chain
     passphrase: "satoshi"
   })
   .then(function(hash) {
-    return sdk.rpc.chain.getTransactionInvoice(hash, { timeout: 300 * 1000 });
+    return sdk.rpc.chain.getTransactionResult(hash, { timeout: 300 * 1000 });
   })
-  .then(function(invoice) {
-    console.log(invoice); // { success: true }
+  .then(function(result) {
+    console.log(result); // true
   });
 ```
 
@@ -166,10 +166,10 @@ sdk.rpc.chain
     );
   })
   .then(function(hash) {
-    return sdk.rpc.chain.getTransactionInvoice(hash, { timeout: 300 * 1000 });
+    return sdk.rpc.chain.getTransactionResult(hash, { timeout: 300 * 1000 });
   })
-  .then(function(invoice) {
-    console.log(invoice); // { success: true }
+  .then(function(result) {
+    console.log(result); // true
   });
 ```
 
@@ -226,15 +226,15 @@ sdk.rpc.chain
     passphrase: "satoshi"
   })
   .then(function(hash) {
-    // Get the invoice of the transaction.
-    return sdk.rpc.chain.getTransactionInvoice(hash, {
-      // Wait up to 120 seconds to get the invoice.
+    // Get the result of the transaction.
+    return sdk.rpc.chain.getTransactionResult(hash, {
+      // Wait up to 120 seconds to get the result.
       timeout: 120 * 1000
     });
   })
-  .then(function(invoice) {
-    // The invoice of mint transaction is  { success: boolean }.
-    console.log(invoice); // [{ success: true }]
+  .then(function(result) {
+    // The result of mint transaction is  boolean.
+    console.log(result); // true
   });
 ```
 

@@ -29,12 +29,15 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const wrapCCCInvoice = await sdk.rpc.chain.getInvoice(wrapCCCSignedHash, {
-        // Wait up to 120 seconds to get the invoice.
-        timeout: 120 * 1000
-    });
-    if (!wrapCCCInvoice) {
-        throw Error(`WrapCCC failed: ${JSON.stringify(wrapCCCInvoice.error)}`);
+    const wrapCCCResult = await sdk.rpc.chain.getTransactionResult(
+        wrapCCCSignedHash,
+        {
+            // Wait up to 120 seconds to get the result.
+            timeout: 120 * 1000
+        }
+    );
+    if (!wrapCCCResult) {
+        throw Error("WrapCCC failed");
     }
     const balanceAfterWrapCCC = await sdk.rpc.chain.getBalance(ACCOUNT_ADDRESS);
     console.log("Wrap finish");
@@ -48,16 +51,12 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const unwrapCCCTxInvoice = await sdk.rpc.chain.getInvoice(hash, {
-        // Wait up to 120 seconds to get the invoice.
+    const unwrapCCCTxResult = await sdk.rpc.chain.getTransactionResult(hash, {
+        // Wait up to 120 seconds to get the result.
         timeout: 120 * 1000
     });
-    if (!unwrapCCCTxInvoice) {
-        throw Error(
-            `AssetUnwrapCCCTransaction failed: ${JSON.stringify(
-                unwrapCCCTxInvoice.error
-            )}`
-        );
+    if (!unwrapCCCTxResult) {
+        throw Error("AssetUnwrapCCCTransaction failed");
     }
     const balanceAfterUnwrapCCC = await sdk.rpc.chain.getBalance(
         ACCOUNT_ADDRESS

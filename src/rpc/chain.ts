@@ -158,22 +158,22 @@ export class ChainRpc {
     }
 
     /**
-     * Gets invoices of given tx.
+     * Gets the transaction result of given tx.
      * @param hash The tx hash of which to get the corresponding tx of.
      * @param options.timeout Indicating milliseconds to wait the tx to be confirmed.
-     * @returns List of invoice, or null when no such tx exists.
+     * @returns boolean, or null when transaction of given hash not exists.
      */
-    public async getInvoice(
+    public async getTransactionResult(
         hash: H256 | string,
         options: { timeout?: number } = {}
     ): Promise<boolean | null> {
         if (!H256.check(hash)) {
             throw Error(
-                `Expected the first argument of getInvoice to be an H256 value but found ${hash}`
+                `Expected the first argument of getTransactionResult to be an H256 value but found ${hash}`
             );
         }
         const attemptToGet = async () => {
-            return this.rpc.sendRpcRequest("chain_getInvoice", [
+            return this.rpc.sendRpcRequest("chain_getTransactionResult", [
                 `0x${H256.ensure(hash).value}`
             ]);
         };
@@ -183,7 +183,7 @@ export class ChainRpc {
             (typeof timeout !== "number" || timeout < 0)
         ) {
             throw Error(
-                `Expected timeout param of getInvoice to be non-negative number but found ${timeout}`
+                `Expected timeout param of getTransactionResult to be non-negative number but found ${timeout}`
             );
         }
         const startTime = Date.now();
@@ -203,7 +203,7 @@ export class ChainRpc {
             return JSON.parse(result);
         } catch (e) {
             throw Error(
-                `Expected chain_getInvoice to return either null or JSON of boolean, but an error occurred: ${e.toString()}`
+                `Expected chain_getTransactionResult to return either null or JSON of boolean, but an error occurred: ${e.toString()}`
             );
         }
     }
@@ -439,24 +439,25 @@ export class ChainRpc {
     }
 
     /**
-     * Gets invoice of a transaction of given tracker.
+     * Gets results of a transaction of given tracker.
      * @param tracker The transaction hash of which to get the corresponding transaction of.
      * @param options.timeout Indicating milliseconds to wait the transaction to be confirmed.
-     * @returns boolean, or null when transaction of given hash not exists.
+     * @returns List of boolean, or null when transaction of given hash not exists.
      */
-    public async getInvoicesByTracker(
+    public async getTransactionResultsByTracker(
         tracker: H256 | string,
         options: { timeout?: number } = {}
     ): Promise<boolean[]> {
         if (!H256.check(tracker)) {
             throw Error(
-                `Expected the first argument of getInvoicesByTracker to be an H256 value but found ${tracker}`
+                `Expected the first argument of getTransactionResultsByTracker to be an H256 value but found ${tracker}`
             );
         }
         const attemptToGet = async () => {
-            return this.rpc.sendRpcRequest("chain_getInvoicesByTracker", [
-                `0x${H256.ensure(tracker).value}`
-            ]);
+            return this.rpc.sendRpcRequest(
+                "chain_getTransactionResultsByTracker",
+                [`0x${H256.ensure(tracker).value}`]
+            );
         };
         const startTime = Date.now();
         const { timeout } = options;
@@ -465,7 +466,7 @@ export class ChainRpc {
             (typeof timeout !== "number" || timeout < 0)
         ) {
             throw Error(
-                `Expected timeout param of getInvoicesByTracker to be non-negative number but found ${timeout}`
+                `Expected timeout param of getTransactionResultsByTracker to be non-negative number but found ${timeout}`
             );
         }
         let result = await attemptToGet();
@@ -484,7 +485,7 @@ export class ChainRpc {
             return result.map(JSON.parse);
         } catch (e) {
             throw Error(
-                `Expected chain_getInvoicesByTracker to return JSON of boolean[], but an error occurred: ${e.toString()}. received: ${JSON.stringify(
+                `Expected chain_getTransactionResultsByTracker to return JSON of boolean[], but an error occurred: ${e.toString()}. received: ${JSON.stringify(
                     result
                 )}`
             );

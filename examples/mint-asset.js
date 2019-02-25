@@ -32,13 +32,13 @@ const tx = sdk.core.createMintAssetTransaction({
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    // Get the invoice of the tx.
-    const invoice = await sdk.rpc.chain.getInvoice(hash, {
-        // Wait up to 120 seconds to get the invoice.
+    // Get the result of the tx.
+    const result = await sdk.rpc.chain.getTransactionResult(hash, {
+        // Wait up to 120 seconds to get the result.
         timeout: 120 * 1000
     });
-    // The invoice of asset-transaction-group tx is an array of the object that has
+    // The result of asset-transaction-group tx is an array of the object that has
     // type { success: boolean }. Each object represents the result of each
     // transaction.
-    console.log(invoice); // [{ success: true }]
+    console.log(result); // true
 })().catch(console.error);

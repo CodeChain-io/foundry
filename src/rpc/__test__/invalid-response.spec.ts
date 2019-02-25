@@ -124,21 +124,25 @@ describe("Invalid response", () => {
             test.skip("Invalid type", done => done.fail("not implemented"));
         });
 
-        describe("getInvoice", () => {
+        describe("getTransactionResult", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .getInvoice(hashH256)
+                    .getTransactionResult(hashH256)
                     .then(() => done.fail())
                     .catch(e => {
-                        expect(e.toString()).toContain("chain_getInvoice");
+                        expect(e.toString()).toContain(
+                            "chain_getTransactionResult"
+                        );
                         expect(e.toString()).toContain("JSON of boolean");
                         done();
                     });
             });
 
-            test.skip("Invalid invoice", done => done.fail("not implemented"));
-            test.skip("Invalid invoices", done => done.fail("not implemented"));
+            test.skip("Invalid transaction result", done =>
+                done.fail("not implemented"));
+            test.skip("Invalid transaction results", done =>
+                done.fail("not implemented"));
         });
 
         test("getRegularKey", done => {
@@ -189,24 +193,26 @@ describe("Invalid response", () => {
             });
         });
 
-        describe("getInvoicesByTracker", () => {
+        describe("getTransactionResultsByTracker", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce([]);
                 chainRpc
-                    .getInvoicesByTracker(hashH256)
-                    .then(invoices => {
-                        expect(invoices).toEqual([]);
+                    .getTransactionResultsByTracker(hashH256)
+                    .then(results => {
+                        expect(results).toEqual([]);
                         done();
                     })
                     .catch(e => {
-                        expect(e.toString()).toContain("chain_getInvoice");
-                        expect(e.toString()).toContain("JSON of Invoice");
+                        expect(e.toString()).toContain(
+                            "chain_getTransactionResult"
+                        );
+                        expect(e.toString()).toContain("JSON of boolean");
                         expect(e.toString()).toContain("undefined");
                         done();
                     });
             });
 
-            test.skip("Invalid invoice", done => done.fail("not implemented"));
+            test.skip("Invalid result", done => done.fail("not implemented"));
         });
 
         test("getSeq", done => {

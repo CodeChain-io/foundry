@@ -117,42 +117,42 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         passphrase: ACCOUNT_PASSPHRASE
     });
 
-    const goldMintTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+    const goldMintTxResults = await sdk.rpc.chain.getTransactionResultsByTracker(
         goldMintTx.tracker(),
         {
             timeout: 300 * 1000
         }
     );
-    if (!goldMintTxInvoices[0]) {
+    if (!goldMintTxResults[0]) {
         throw Error(
             `AssetMintTransaction failed: ${JSON.stringify(
-                goldMintTxInvoices[0].error
+                goldMintTxResults[0].error
             )}`
         );
     }
-    const silverMintTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+    const silverMintTxResults = await sdk.rpc.chain.getTransactionResultsByTracker(
         silverMintTx.tracker(),
         {
             timeout: 300 * 1000
         }
     );
-    if (!silverMintTxInvoices[0]) {
+    if (!silverMintTxResults[0]) {
         throw Error(
             `AssetMintTransaction failed: ${JSON.stringify(
-                silverMintTxInvoices[0].error
+                silverMintTxResults[0].error
             )}`
         );
     }
-    const transferTxInvoices = await sdk.rpc.chain.getInvoicesByTracker(
+    const transferTxResults = await sdk.rpc.chain.getTransactionResultsByTracker(
         transferTx.tracker(),
         {
             timeout: 300 * 1000
         }
     );
-    if (!transferTxInvoices[0]) {
+    if (!transferTxResults[0]) {
         throw Error(
             `AssetTransferTransaction failed: ${JSON.stringify(
-                transferTxInvoices[0].error
+                transferTxResults[0].error
             )}`
         );
     }

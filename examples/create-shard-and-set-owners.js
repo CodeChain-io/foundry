@@ -47,10 +47,10 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             passphrase: ACCOUNT_PASSPHRASE
         }
     );
-    const setShardOwnersInvoice = await sdk.rpc.chain.getInvoice(
+    const setShardOwnersResult = await sdk.rpc.chain.getTransactionResult(
         setShardOwnersHash
     );
-    if (!setShardOwnersInvoice) {
+    if (!setShardOwnersResult) {
         throw Error("SetShardUsers transaction failed");
     }
 

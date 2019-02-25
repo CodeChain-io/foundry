@@ -21,8 +21,8 @@ const tx = sdk.core.createPayTransaction({
         passphrase: ACCOUNT_PASSPHRASE
         // fee and seq are optional
     });
-    const invoice = await sdk.rpc.chain.getInvoice(hash, {
+    const result = await sdk.rpc.chain.getTransactionResult(hash, {
         timeout: 300 * 1000
     });
-    console.log(invoice); // { success: true }
+    console.log(result); // true
 })().catch(console.error);
