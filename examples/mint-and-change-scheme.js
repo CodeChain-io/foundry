@@ -52,6 +52,27 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         );
     }
 
+    await sdk.rpc.chain.sendTransaction(
+        sdk.core.createPayTransaction({
+            recipient: bobAddress,
+            quantity: 1
+        }),
+        {
+            account: ACCOUNT_ADDRESS,
+            passphrase: ACCOUNT_PASSPHRASE
+        }
+    );
+    await sdk.rpc.chain.sendTransaction(
+        sdk.core.createPayTransaction({
+            recipient: carolAddress,
+            quantity: 1
+        }),
+        {
+            account: ACCOUNT_ADDRESS,
+            passphrase: ACCOUNT_PASSPHRASE
+        }
+    );
+
     const assetSchemeChangeTx = sdk.core.createChangeAssetSchemeTransaction({
         assetType: mintTx.getMintedAsset().assetType,
         shardId,
