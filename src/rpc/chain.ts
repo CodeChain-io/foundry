@@ -40,14 +40,7 @@ export class ChainRpc {
             );
         }
         return new Promise((resolve, reject) => {
-            const bytes = Array.from(tx.rlpBytes())
-                .map(
-                    byte =>
-                        byte < 0x10
-                            ? `0${byte.toString(16)}`
-                            : byte.toString(16)
-                )
-                .join("");
+            const bytes = tx.rlpBytes().toString("hex");
             this.rpc
                 .sendRpcRequest("chain_sendSignedTransaction", [`0x${bytes}`])
                 .then(result => {
