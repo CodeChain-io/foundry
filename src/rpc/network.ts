@@ -185,20 +185,20 @@ export class NetworkRpc {
      * Add the IP to whitelist
      * @param ip Node IP
      */
-    public addToWhitelist(ip: string, tag?: string): Promise<null> {
-        if (!isIpAddressString(ip)) {
+    public addToWhitelist(ipCidr: string, tag?: string): Promise<null> {
+        if (!isIpCidrAddressString(ipCidr)) {
             throw Error(
-                `Expected the first argument of addToWhitelist to be an IP address string but found ${ip}`
+                `Expected the first argument of addToWhitelist to be an IP Cidr block address string but found ${ipCidr}`
             );
         }
         if (tag !== undefined && typeof tag !== "string") {
             throw Error(
-                `Expected the second arguments of addToWhitelist to be an IP address string but found ${tag}`
+                `Expected the second arguments of addToWhitelist to be a string but found ${tag}`
             );
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("net_addToWhitelist", [ip, tag || null])
+                .sendRpcRequest("net_addToWhitelist", [ipCidr, tag || null])
                 .then(result => {
                     if (result === null) {
                         return resolve(null);
@@ -217,15 +217,15 @@ export class NetworkRpc {
      * Remove the IP from whitelist
      * @param ip Node IP
      */
-    public removeFromWhitelist(ip: string): Promise<null> {
-        if (!isIpAddressString(ip)) {
+    public removeFromWhitelist(ipCidr: string): Promise<null> {
+        if (!isIpCidrAddressString(ipCidr)) {
             throw Error(
-                `Expected the first argument of removeFromWhitelist to be an IP address string but found ${ip}`
+                `Expected the first argument of removeFromWhitelist to be an IP Cidr block address string but found ${ipCidr}`
             );
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("net_removeFromWhitelist", [ip])
+                .sendRpcRequest("net_removeFromWhitelist", [ipCidr])
                 .then(result => {
                     if (result === null) {
                         return resolve(null);
@@ -244,20 +244,20 @@ export class NetworkRpc {
      * Add the IP to blacklist
      * @param ip Node IP
      */
-    public addToBlacklist(ip: string, tag?: string): Promise<null> {
-        if (!isIpAddressString(ip)) {
+    public addToBlacklist(ipCidr: string, tag?: string): Promise<null> {
+        if (!isIpCidrAddressString(ipCidr)) {
             throw Error(
-                `Expected the first argument of addToBlacklist to be an IP address string but found ${ip}`
+                `Expected the first argument of addToBlacklist to be an IP Cidr block address string but found ${ipCidr}`
             );
         }
         if (tag !== undefined && typeof tag !== "string") {
             throw Error(
-                `Expected the second arguments of addToWhitelist to be an IP address string but found ${tag}`
+                `Expected the second arguments of addToWhitelist to be a string but found ${tag}`
             );
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("net_addToBlacklist", [ip, tag || null])
+                .sendRpcRequest("net_addToBlacklist", [ipCidr, tag || null])
                 .then(result => {
                     if (result === null) {
                         return resolve(null);
@@ -275,15 +275,15 @@ export class NetworkRpc {
      * Remove the IP from blacklist
      * @param ip Node IP
      */
-    public removeFromBlacklist(ip: string): Promise<null> {
-        if (!isIpAddressString(ip)) {
+    public removeFromBlacklist(ipCidr: string): Promise<null> {
+        if (!isIpCidrAddressString(ipCidr)) {
             throw Error(
-                `Expected the first argument of removeFromBlacklist to be an IP address string but found ${ip}`
+                `Expected the first argument of removeFromBlacklist to be an IP Cidr block address string but found ${ipCidr}`
             );
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("net_removeFromBlacklist", [ip])
+                .sendRpcRequest("net_removeFromBlacklist", [ipCidr])
                 .then(result => {
                     if (result === null) {
                         return resolve(null);
@@ -449,6 +449,12 @@ export class NetworkRpc {
 
 function isIpAddressString(value: any): boolean {
     return /\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b/.test(value);
+}
+
+function isIpCidrAddressString(value: any): boolean {
+    return /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/([0-9]|[1-2][0-9]|3[0-2]))?$/.test(
+        value
+    );
 }
 
 function isSocketAddressString(value: any): boolean {
