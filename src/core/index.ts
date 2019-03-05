@@ -729,22 +729,26 @@ export class Core {
 
     public createUnwrapCCCTransaction(params: {
         burn: AssetTransferInput | Asset;
+        receiver: PlatformAddress | string;
         networkId?: NetworkId;
     }): UnwrapCCC {
         const { burn, networkId = this.networkId } = params;
+        const receiver = PlatformAddress.ensure(params.receiver);
         checkNetworkId(networkId);
         if (burn instanceof Asset) {
             const burnInput = burn.createTransferInput();
             checkTransferBurns([burnInput]);
             return new UnwrapCCC({
                 burn: burnInput,
-                networkId
+                networkId,
+                receiver
             });
         } else {
             checkTransferBurns([burn]);
             return new UnwrapCCC({
                 burn,
-                networkId
+                networkId,
+                receiver
             });
         }
     }

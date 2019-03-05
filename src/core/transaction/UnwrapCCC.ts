@@ -1,3 +1,4 @@
+import { PlatformAddress } from "codechain-primitives/lib";
 import {
     blake128,
     blake256,
@@ -15,11 +16,13 @@ const RLP = require("rlp");
 export interface AssetUnwrapCCCTransactionJSON {
     networkId: string;
     burn: AssetTransferInputJSON;
+    receiver: string;
 }
 
 export interface UnwrapCCCActionJSON {
     networkId: string;
     burn: AssetTransferInputJSON;
+    receiver: string;
 }
 
 export class UnwrapCCC extends Transaction implements AssetTransaction {
@@ -27,6 +30,7 @@ export class UnwrapCCC extends Transaction implements AssetTransaction {
     public constructor(input: {
         burn: AssetTransferInput;
         networkId: NetworkId;
+        receiver: PlatformAddress;
     }) {
         super(input.networkId);
 
@@ -43,7 +47,7 @@ export class UnwrapCCC extends Transaction implements AssetTransaction {
         type: "input" | "burn";
         index: number;
     }): H256 {
-        const { networkId } = this._transaction;
+        const { networkId, burn, receiver } = this._transaction;
         const { tag = { input: "all", output: "all" } as SignatureTag } =
             params || {};
         if (tag.input !== "all" || tag.output !== "all") {
@@ -53,8 +57,9 @@ export class UnwrapCCC extends Transaction implements AssetTransaction {
         return new H256(
             blake256WithKey(
                 new AssetUnwrapCCCTransaction({
-                    burn: this._transaction.burn.withoutScript(),
-                    networkId
+                    burn: burn.withoutScript(),
+                    networkId,
+                    receiver
                 }).rlpBytes(),
                 Buffer.from(blake128(encodeSignatureTag(tag)), "hex")
             )
@@ -90,6 +95,7 @@ export class UnwrapCCC extends Transaction implements AssetTransaction {
 interface AssetUnwrapCCCTransactionData {
     burn: AssetTransferInput;
     networkId: NetworkId;
+    receiver: PlatformAddress;
 }
 /**
  * Spend a wrapped CCC asset and change it to CCC.
@@ -106,22 +112,29 @@ interface AssetUnwrapCCCTransactionData {
 class AssetUnwrapCCCTransaction {
     public readonly burn: AssetTransferInput;
     public readonly networkId: NetworkId;
+    public readonly receiver: PlatformAddress;
 
     /**
      * @param params.burn An AssetTransferInput of which asset type is wrapped CCC.
      * @param params.networkId A network ID of the transaction.
      */
     constructor(params: AssetUnwrapCCCTransactionData) {
-        const { burn, networkId } = params;
+        const { burn, networkId, receiver } = params;
         this.burn = burn;
         this.networkId = networkId;
+        this.receiver = receiver;
     }
 
     /**
      * Convert to an object for RLP encoding.
      */
     public toEncodeObject() {
-        return [0x11, this.networkId, this.burn.toEncodeObject()];
+        return [
+            0x11,
+            this.networkId,
+            this.burn.toEncodeObject(),
+            this.receiver.accountId.toEncodeObject()
+        ];
     }
 
     /**
@@ -136,10 +149,11 @@ class AssetUnwrapCCCTransaction {
      * @returns An AssetUnwrapCCCTransactionJSON object.
      */
     public toJSON(): AssetUnwrapCCCTransactionJSON {
-        const { networkId, burn } = this;
+        const { networkId, burn, receiver } = this;
         return {
             networkId,
-            burn: burn.toJSON()
+            burn: burn.toJSON(),
+            receiver: receiver.value
         };
     }
 }

@@ -44,7 +44,8 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
     // Unwrap the wrapped CCC asset created before.
     const unwrapCCCTx = sdk.core.createUnwrapCCCTransaction({
-        burn: wrapCCC.getAsset() // After sendTransaction, the fee and seq field of wrapCCC is filled.
+        burn: wrapCCC.getAsset(), // After sendTransaction, the fee and seq field of wrapCCC is filled.
+        receiver: ACCOUNT_ADDRESS
     });
     await sdk.key.signTransactionBurn(unwrapCCCTx, 0);
     const hash = await sdk.rpc.chain.sendTransaction(unwrapCCCTx, {

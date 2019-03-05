@@ -162,9 +162,11 @@ export function fromJSONToTransaction(result: any): Transaction {
         }
         case "unwrapCCC": {
             const burn = AssetTransferInput.fromJSON(action.burn);
+            const receiver = PlatformAddress.ensure(action.receiver);
             tx = new UnwrapCCC({
                 burn,
-                networkId
+                networkId,
+                receiver
             });
             break;
         }
