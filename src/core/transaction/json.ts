@@ -38,10 +38,10 @@ export function fromJSONToTransaction(result: any): Transaction {
                 action.approver == null
                     ? null
                     : PlatformAddress.ensure(action.approver);
-            const administrator =
-                action.administrator == null
+            const registrar =
+                action.registrar == null
                     ? null
-                    : PlatformAddress.ensure(action.administrator);
+                    : PlatformAddress.ensure(action.registrar);
             const allowedScriptHashes =
                 action.allowedScriptHashes == null
                     ? null
@@ -55,7 +55,7 @@ export function fromJSONToTransaction(result: any): Transaction {
                 metadata,
                 output,
                 approver,
-                administrator,
+                registrar,
                 allowedScriptHashes,
                 approvals
             });
@@ -68,10 +68,10 @@ export function fromJSONToTransaction(result: any): Transaction {
                 action.approver == null
                     ? null
                     : PlatformAddress.ensure(action.approver);
-            const administrator =
-                action.administrator == null
+            const registrar =
+                action.registrar == null
                     ? null
-                    : PlatformAddress.ensure(action.administrator);
+                    : PlatformAddress.ensure(action.registrar);
             const allowedScriptHashes = action.allowedScriptHashes.map(
                 (hash: string) => H160.ensure(hash)
             );
@@ -81,7 +81,7 @@ export function fromJSONToTransaction(result: any): Transaction {
                 assetType,
                 metadata,
                 approver,
-                administrator,
+                registrar,
                 allowedScriptHashes,
                 approvals
             });
@@ -138,10 +138,10 @@ export function fromJSONToTransaction(result: any): Transaction {
                 action.approver == null
                     ? null
                     : PlatformAddress.ensure(action.approver);
-            const administrator =
-                action.administrator == null
+            const registrar =
+                action.registrar == null
                     ? null
-                    : PlatformAddress.ensure(action.administrator);
+                    : PlatformAddress.ensure(action.registrar);
             const allowedScriptHashes = action.allowedScriptHashes.map(
                 (hash: string) => H160.ensure(hash)
             );
@@ -152,7 +152,7 @@ export function fromJSONToTransaction(result: any): Transaction {
                 shardId,
                 metadata,
                 approver,
-                administrator,
+                registrar,
                 allowedScriptHashes,
                 inputs,
                 output,

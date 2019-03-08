@@ -12,7 +12,7 @@ export interface AssetSchemeChangeTransactionJSON {
     assetType: string;
     metadata: string;
     approver: string | null;
-    administrator: string | null;
+    registrar: string | null;
     allowedScriptHashes: string[];
 }
 
@@ -29,7 +29,7 @@ export class ChangeAssetScheme extends Transaction {
         shardId: number;
         metadata: string;
         approver: PlatformAddress | null;
-        administrator: PlatformAddress | null;
+        registrar: PlatformAddress | null;
         allowedScriptHashes: H160[];
         approvals: string[];
     }) {
@@ -75,7 +75,7 @@ class AssetSchemeChangeTransaction {
     public readonly assetType: H160;
     public readonly metadata: string;
     public readonly approver: PlatformAddress | null;
-    public readonly administrator: PlatformAddress | null;
+    public readonly registrar: PlatformAddress | null;
     public readonly allowedScriptHashes: H160[];
 
     /**
@@ -84,7 +84,7 @@ class AssetSchemeChangeTransaction {
      * @param params.assetType A asset type of the asset that this transaction changes.
      * @param params.metadata A changed metadata of the asset.
      * @param params.approver A changed approver of the asset.
-     * @param params.administrator A changed administrator of the asset.
+     * @param params.registrar A changed registrar of the asset.
      * @param params.allowedScriptHashes Allowed lock script hashes of the asset.
      */
     constructor(params: {
@@ -93,7 +93,7 @@ class AssetSchemeChangeTransaction {
         assetType: H160;
         metadata: string;
         approver: PlatformAddress | null;
-        administrator: PlatformAddress | null;
+        registrar: PlatformAddress | null;
         allowedScriptHashes: H160[];
     }) {
         const {
@@ -102,7 +102,7 @@ class AssetSchemeChangeTransaction {
             assetType,
             metadata,
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes
         } = params;
         this.networkId = networkId;
@@ -111,10 +111,8 @@ class AssetSchemeChangeTransaction {
         this.metadata = metadata;
         this.approver =
             approver == null ? null : PlatformAddress.ensure(approver);
-        this.administrator =
-            administrator == null
-                ? null
-                : PlatformAddress.ensure(administrator);
+        this.registrar =
+            registrar == null ? null : PlatformAddress.ensure(registrar);
         this.allowedScriptHashes = allowedScriptHashes;
     }
 
@@ -129,10 +127,8 @@ class AssetSchemeChangeTransaction {
             assetType: this.assetType.toEncodeObject(),
             metadata: this.metadata,
             approver: this.approver == null ? null : this.approver.toString(),
-            administrator:
-                this.administrator == null
-                    ? null
-                    : this.administrator.toString(),
+            registrar:
+                this.registrar == null ? null : this.registrar.toString(),
             allowedScriptHashes: this.allowedScriptHashes.map(hash =>
                 hash.toJSON()
             )
@@ -149,7 +145,7 @@ class AssetSchemeChangeTransaction {
             assetType,
             metadata,
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes
         } = this;
         return [
@@ -159,9 +155,7 @@ class AssetSchemeChangeTransaction {
             assetType.toEncodeObject(),
             metadata,
             approver ? [approver.getAccountId().toEncodeObject()] : [],
-            administrator
-                ? [administrator.getAccountId().toEncodeObject()]
-                : [],
+            registrar ? [registrar.getAccountId().toEncodeObject()] : [],
             allowedScriptHashes.map(hash => hash.toEncodeObject())
         ];
     }

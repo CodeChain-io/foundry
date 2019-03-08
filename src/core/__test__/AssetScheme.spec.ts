@@ -7,7 +7,7 @@ test("toJSON", () => {
         metadata: "abcd",
         supply: new U64(111),
         approver: null,
-        administrator: null,
+        registrar: null,
         allowedScriptHashes: [],
         pool: []
     });

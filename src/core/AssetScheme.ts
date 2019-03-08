@@ -13,7 +13,7 @@ export interface AssetSchemeJSON {
     metadata: string;
     supply: string;
     approver: string | null;
-    administrator: string | null;
+    registrar: string | null;
     allowedScriptHashes: string[] | null;
     pool: {
         assetType: string;
@@ -30,7 +30,7 @@ export class AssetScheme {
             metadata,
             supply,
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes,
             pool
         } = data;
@@ -39,10 +39,8 @@ export class AssetScheme {
             supply: U64.ensure(supply),
             approver:
                 approver == null ? null : PlatformAddress.ensure(approver),
-            administrator:
-                administrator == null
-                    ? null
-                    : PlatformAddress.ensure(administrator),
+            registrar:
+                registrar == null ? null : PlatformAddress.ensure(registrar),
             allowedScriptHashes:
                 allowedScriptHashes == null
                     ? []
@@ -61,7 +59,7 @@ export class AssetScheme {
     public readonly metadata: string;
     public readonly supply: U64;
     public readonly approver: PlatformAddress | null;
-    public readonly administrator: PlatformAddress | null;
+    public readonly registrar: PlatformAddress | null;
     public readonly allowedScriptHashes: H160[];
     public readonly pool: { assetType: H160; quantity: U64 }[];
 
@@ -71,7 +69,7 @@ export class AssetScheme {
         metadata: string;
         supply: U64;
         approver: PlatformAddress | null;
-        administrator: PlatformAddress | null;
+        registrar: PlatformAddress | null;
         allowedScriptHashes: H160[];
         pool: { assetType: H160; quantity: U64 }[];
     }) {
@@ -79,7 +77,7 @@ export class AssetScheme {
         this.shardId = data.shardId;
         this.metadata = data.metadata;
         this.approver = data.approver;
-        this.administrator = data.administrator;
+        this.registrar = data.registrar;
         this.allowedScriptHashes = data.allowedScriptHashes;
         this.supply = data.supply;
         this.pool = data.pool;
@@ -90,7 +88,7 @@ export class AssetScheme {
             metadata,
             supply,
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes,
             pool
         } = this;
@@ -98,8 +96,7 @@ export class AssetScheme {
             metadata,
             supply: supply.toJSON(),
             approver: approver == null ? null : approver.toString(),
-            administrator:
-                administrator == null ? null : administrator.toString(),
+            registrar: registrar == null ? null : registrar.toString(),
             allowedScriptHashes: allowedScriptHashes.map(hash => hash.toJSON()),
             pool: pool.map(a => ({
                 assetType: a.assetType.toJSON(),
@@ -118,7 +115,7 @@ export class AssetScheme {
             metadata,
             supply,
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes
         } = this;
         if (networkId === undefined) {
@@ -136,7 +133,7 @@ export class AssetScheme {
                 recipient: AssetTransferAddress.ensure(recipient)
             }),
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes,
             approvals: []
         });

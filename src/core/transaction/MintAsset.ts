@@ -13,7 +13,7 @@ export interface AssetMintTransactionJSON {
     metadata: string;
     output: AssetMintOutputJSON;
     approver: string | null;
-    administrator: string | null;
+    registrar: string | null;
     allowedScriptHashes: string[];
 }
 export interface MintAssetActionJSON extends AssetMintTransactionJSON {
@@ -30,7 +30,7 @@ export class MintAsset extends Transaction implements AssetTransaction {
         metadata: string;
         output: AssetMintOutput;
         approver: PlatformAddress | null;
-        administrator: PlatformAddress | null;
+        registrar: PlatformAddress | null;
         allowedScriptHashes: H160[];
         approvals: string[];
     }) {
@@ -83,7 +83,7 @@ export class MintAsset extends Transaction implements AssetTransaction {
             metadata,
             output: { supply },
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes
         } = this._transaction;
         if (supply == null) {
@@ -95,7 +95,7 @@ export class MintAsset extends Transaction implements AssetTransaction {
             metadata,
             supply,
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes,
             pool: []
         });
@@ -178,7 +178,7 @@ function convertU16toHex(id: number) {
  *  will be set as the maximum value of a 64-bit unsigned integer by default.
  *  - If approver exists, the approver must be the Signer of the Transaction when
  *  sending the created asset through AssetTransferTransaction.
- *  - If administrator exists, the administrator can transfer without unlocking.
+ *  - If registrar exists, the registrar can transfer without unlocking.
  */
 class AssetMintTransaction {
     public readonly networkId: NetworkId;
@@ -186,7 +186,7 @@ class AssetMintTransaction {
     public readonly metadata: string;
     public readonly output: AssetMintOutput;
     public readonly approver: PlatformAddress | null;
-    public readonly administrator: PlatformAddress | null;
+    public readonly registrar: PlatformAddress | null;
     public readonly allowedScriptHashes: H160[];
 
     /**
@@ -197,7 +197,7 @@ class AssetMintTransaction {
      * @param data.output.parameters Parameters of the output.
      * @param data.output.supply Asset supply of the output.
      * @param data.approver A approver of the asset.
-     * @param data.administrator A administrator of the asset.
+     * @param data.registrar A registrar of the asset.
      * @param data.allowedScriptHashes Allowed lock script hashes of the asset.
      */
     constructor(data: {
@@ -206,7 +206,7 @@ class AssetMintTransaction {
         metadata: string;
         output: AssetMintOutput;
         approver: PlatformAddress | null;
-        administrator: PlatformAddress | null;
+        registrar: PlatformAddress | null;
         allowedScriptHashes: H160[];
     }) {
         const {
@@ -215,7 +215,7 @@ class AssetMintTransaction {
             metadata,
             output,
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes
         } = data;
         this.networkId = networkId;
@@ -223,7 +223,7 @@ class AssetMintTransaction {
         this.metadata = metadata;
         this.output = output;
         this.approver = approver;
-        this.administrator = administrator;
+        this.registrar = registrar;
         this.allowedScriptHashes = allowedScriptHashes;
     }
 
@@ -238,7 +238,7 @@ class AssetMintTransaction {
             metadata,
             output,
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes
         } = this;
         return {
@@ -247,8 +247,7 @@ class AssetMintTransaction {
             metadata,
             output: output.toJSON(),
             approver: approver == null ? null : approver.toString(),
-            administrator:
-                administrator == null ? null : administrator.toString(),
+            registrar: registrar == null ? null : registrar.toString(),
             allowedScriptHashes: allowedScriptHashes.map(hash => hash.toJSON())
         };
     }
@@ -263,7 +262,7 @@ class AssetMintTransaction {
             metadata,
             output: { lockScriptHash, parameters, supply },
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes
         } = this;
         return [
@@ -275,9 +274,7 @@ class AssetMintTransaction {
             parameters.map(parameter => Buffer.from(parameter)),
             supply.toEncodeObject(),
             approver ? [approver.getAccountId().toEncodeObject()] : [],
-            administrator
-                ? [administrator.getAccountId().toEncodeObject()]
-                : [],
+            registrar ? [registrar.getAccountId().toEncodeObject()] : [],
             allowedScriptHashes.map(hash => hash.toEncodeObject())
         ];
     }

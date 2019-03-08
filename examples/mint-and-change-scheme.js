@@ -26,7 +26,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             icon_url: "https://gold.image/"
         }),
         supply: 10000,
-        administrator: ACCOUNT_ADDRESS
+        registrar: ACCOUNT_ADDRESS
     });
     const mintTx = sdk.core.createMintAssetTransaction({
         scheme: goldAssetScheme,
@@ -83,7 +83,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
                 icon_url: "https://gold.image/"
             }),
             approver: bobAddress,
-            administrator: carolAddress
+            registrar: carolAddress
         }
     });
 

@@ -334,17 +334,17 @@ export class Core {
      * @param params.approver Platform account or null. If account is present, the
      * tx that includes AssetTransferTransaction of this asset must be signed by
      * the approver account.
-     * @param params.administrator Platform account or null. The administrator
+     * @param params.registrar Platform account or null. The registrar
      * can transfer the asset without unlocking.
      * @throws Given string for approver is invalid for converting it to paltform account
-     * @throws Given string for administrator is invalid for converting it to paltform account
+     * @throws Given string for registrar is invalid for converting it to paltform account
      */
     public createAssetScheme(params: {
         shardId: number;
         metadata: string;
         supply: U64 | number | string;
         approver?: PlatformAddress | string;
-        administrator?: PlatformAddress | string;
+        registrar?: PlatformAddress | string;
         allowedScriptHashes?: H160[];
         pool?: { assetType: H160 | string; quantity: number }[];
     }): AssetScheme {
@@ -353,7 +353,7 @@ export class Core {
             metadata,
             supply,
             approver = null,
-            administrator = null,
+            registrar = null,
             allowedScriptHashes = null,
             pool = []
         } = params;
@@ -361,7 +361,7 @@ export class Core {
         checkMetadata(metadata);
         checkAmount(supply);
         checkApprover(approver);
-        checkAdministrator(administrator);
+        checkregistrar(registrar);
         return new AssetScheme({
             networkId: this.networkId,
             shardId,
@@ -369,10 +369,8 @@ export class Core {
             supply: U64.ensure(supply),
             approver:
                 approver == null ? null : PlatformAddress.ensure(approver),
-            administrator:
-                administrator == null
-                    ? null
-                    : PlatformAddress.ensure(administrator),
+            registrar:
+                registrar == null ? null : PlatformAddress.ensure(registrar),
             allowedScriptHashes:
                 allowedScriptHashes == null ? [] : allowedScriptHashes,
             pool: pool.map(({ assetType, quantity: assetQuantity }) => ({
@@ -560,7 +558,7 @@ export class Core {
                   shardId: number;
                   metadata: string;
                   approver?: PlatformAddress | string;
-                  administrator?: PlatformAddress | string;
+                  registrar?: PlatformAddress | string;
                   allowedScriptHashes?: H160[];
                   supply?: U64 | number | string;
               };
@@ -578,7 +576,7 @@ export class Core {
             shardId,
             metadata,
             approver: approver = null,
-            administrator: administrator = null,
+            registrar: registrar = null,
             allowedScriptHashes = null,
             supply = U64.MAX_VALUE
         } = scheme;
@@ -590,17 +588,15 @@ export class Core {
         checkShardId(shardId);
         checkMetadata(metadata);
         checkApprover(approver);
-        checkAdministrator(administrator);
+        checkregistrar(registrar);
         checkAmount(supply);
         return new MintAsset({
             networkId,
             shardId,
             approver:
                 approver == null ? null : PlatformAddress.ensure(approver),
-            administrator:
-                administrator == null
-                    ? null
-                    : PlatformAddress.ensure(administrator),
+            registrar:
+                registrar == null ? null : PlatformAddress.ensure(registrar),
             allowedScriptHashes:
                 allowedScriptHashes == null ? [] : allowedScriptHashes,
             metadata,
@@ -621,7 +617,7 @@ export class Core {
                   networkId?: NetworkId;
                   metadata: string;
                   approver?: PlatformAddress | string;
-                  administrator?: PlatformAddress | string;
+                  registrar?: PlatformAddress | string;
                   allowedScriptHashes?: H160[];
               };
         approvals?: string[];
@@ -636,14 +632,14 @@ export class Core {
             networkId = this.networkId,
             metadata,
             approver: approver = null,
-            administrator: administrator = null,
+            registrar: registrar = null,
             allowedScriptHashes = null
         } = scheme;
         checkNetworkId(networkId);
         checkAssetType(assetType);
         checkMetadata(metadata);
         checkApprover(approver);
-        checkAdministrator(administrator);
+        checkregistrar(registrar);
         return new ChangeAssetScheme({
             networkId,
             shardId,
@@ -651,10 +647,8 @@ export class Core {
             metadata,
             approver:
                 approver == null ? null : PlatformAddress.ensure(approver),
-            administrator:
-                administrator == null
-                    ? null
-                    : PlatformAddress.ensure(administrator),
+            registrar:
+                registrar == null ? null : PlatformAddress.ensure(registrar),
             allowedScriptHashes:
                 allowedScriptHashes == null ? [] : allowedScriptHashes,
             approvals
@@ -957,10 +951,10 @@ function checkApprover(approver: PlatformAddress | string | null) {
     }
 }
 
-function checkAdministrator(administrator: PlatformAddress | string | null) {
-    if (administrator != null && !PlatformAddress.check(administrator)) {
+function checkregistrar(registrar: PlatformAddress | string | null) {
+    if (registrar != null && !PlatformAddress.check(registrar)) {
         throw Error(
-            `Expected administrator param to be either null or a PlatformAddress value but found ${administrator}`
+            `Expected registrar param to be either null or a PlatformAddress value but found ${registrar}`
         );
     }
 }

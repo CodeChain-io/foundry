@@ -29,7 +29,7 @@ export interface AssetComposeTransactionJSON {
     shardId: number;
     metadata: string;
     approver: string | null;
-    administrator: string | null;
+    registrar: string | null;
     allowedScriptHashes: string[];
     output: AssetMintOutputJSON;
     inputs: AssetTransferInputJSON[];
@@ -46,7 +46,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
         shardId: number;
         metadata: string;
         approver: PlatformAddress | null;
-        administrator: PlatformAddress | null;
+        registrar: PlatformAddress | null;
         allowedScriptHashes: H160[];
         inputs: AssetTransferInput[];
         output: AssetMintOutput;
@@ -114,7 +114,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
             shardId,
             metadata,
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes
         } = this._transaction;
         return new H256(
@@ -124,7 +124,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
                     shardId,
                     metadata,
                     approver,
-                    administrator,
+                    registrar,
                     allowedScriptHashes,
                     inputs,
                     output
@@ -199,7 +199,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
             inputs,
             output: { supply },
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes
         } = this._transaction;
         if (supply == null) {
@@ -211,7 +211,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
             metadata,
             supply,
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes,
             pool: _.toPairs(
                 // NOTE: Get the sum of each asset type
@@ -310,7 +310,7 @@ class AssetComposeTransaction {
     public readonly shardId: number;
     public readonly metadata: string;
     public readonly approver: PlatformAddress | null;
-    public readonly administrator: PlatformAddress | null;
+    public readonly registrar: PlatformAddress | null;
     public readonly allowedScriptHashes: H160[];
     public readonly inputs: AssetTransferInput[];
     public readonly output: AssetMintOutput;
@@ -320,7 +320,7 @@ class AssetComposeTransaction {
      * @param params.shardId A shard ID of the transaction.
      * @param params.metadata A metadata of the asset.
      * @param params.approver A approver of the asset.
-     * @param params.administrator A administrator of the asset.
+     * @param params.registrar A registrar of the asset.
      * @param params.allowedScriptHashes Allowed lock script hashes of the asset.
      * @param params.inputs A list of inputs of the transaction.
      * @param params.output An output of the transaction.
@@ -330,7 +330,7 @@ class AssetComposeTransaction {
         shardId: number;
         metadata: string;
         approver: PlatformAddress | null;
-        administrator: PlatformAddress | null;
+        registrar: PlatformAddress | null;
         allowedScriptHashes: H160[];
         inputs: AssetTransferInput[];
         output: AssetMintOutput;
@@ -340,7 +340,7 @@ class AssetComposeTransaction {
             shardId,
             metadata,
             approver,
-            administrator,
+            registrar,
             allowedScriptHashes,
             inputs,
             output
@@ -350,10 +350,8 @@ class AssetComposeTransaction {
         this.metadata = metadata;
         this.approver =
             approver == null ? null : PlatformAddress.ensure(approver);
-        this.administrator =
-            administrator == null
-                ? null
-                : PlatformAddress.ensure(administrator);
+        this.registrar =
+            registrar == null ? null : PlatformAddress.ensure(registrar);
         this.allowedScriptHashes = allowedScriptHashes;
         this.inputs = inputs;
         this.output = new AssetMintOutput(output);
@@ -369,10 +367,8 @@ class AssetComposeTransaction {
             shardId: this.shardId,
             metadata: this.metadata,
             approver: this.approver == null ? null : this.approver.toString(),
-            administrator:
-                this.administrator == null
-                    ? null
-                    : this.administrator.toString(),
+            registrar:
+                this.registrar == null ? null : this.registrar.toString(),
             allowedScriptHashes: this.allowedScriptHashes.map(hash =>
                 hash.toJSON()
             ),
@@ -391,7 +387,7 @@ class AssetComposeTransaction {
             this.shardId,
             this.metadata,
             this.approver ? [this.approver.toString()] : [],
-            this.administrator ? [this.administrator.toString()] : [],
+            this.registrar ? [this.registrar.toString()] : [],
             this.allowedScriptHashes.map(hash => hash.toEncodeObject()),
             this.inputs.map(input => input.toEncodeObject()),
             this.output.lockScriptHash.toEncodeObject(),
