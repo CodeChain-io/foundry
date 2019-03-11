@@ -1,4 +1,4 @@
-import { H256, PlatformAddress, U256, U64 } from "codechain-primitives";
+import { H256, PlatformAddress, U64 } from "codechain-primitives";
 import { Pay } from "../transaction/Pay";
 
 import { fromJSONToTransaction } from "../transaction/json";

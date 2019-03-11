@@ -365,7 +365,8 @@ describe("Invalid response", () => {
                         expect(e.toString()).toContain(
                             "chain_getPendingTransactions"
                         );
-                        expect(e.toString()).toContain("array");
+                        expect(e.toString()).toContain("transactions");
+                        expect(e.toString()).toContain("lastTimestamp");
                         expect(e.toString()).toContain("undefined");
                         done();
                     });

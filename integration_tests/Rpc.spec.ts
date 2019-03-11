@@ -400,7 +400,7 @@ describe("rpc", () => {
         describe.skip("with pending transactions", () => {
             test("getPendingTransactions", async () => {
                 const pendingTransactions = await sdk.rpc.chain.getPendingTransactions();
-                expect(pendingTransactions[0]).toEqual(
+                expect(pendingTransactions.transactions[0]).toEqual(
                     expect.any(SignedTransaction)
                 );
             });
