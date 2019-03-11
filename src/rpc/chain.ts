@@ -948,13 +948,28 @@ export class ChainRpc {
     }
 
     /**
-     * Gets pending transactions.
+     * Gets pending transactions which have the insertion timestamp in the given range.
+     * @param from The lower bound of the insertion timestamp.
+     * @param to The upper bound of the insertion timestamp.
      * @returns List of SignedTransaction, with each tx has null for blockNumber/blockHash/transactionIndex.
      */
-    public getPendingTransactions(): Promise<SignedTransaction[]> {
+    public getPendingTransactions(
+        from?: number | null,
+        to?: number | null
+    ): Promise<SignedTransaction[]> {
+        if (from != null && !isNonNegativeInterger(from)) {
+            throw Error(
+                `Expected the first argument of getPendingTransactions to be a non-negative integer but found ${from}`
+            );
+        }
+        if (to != null && !isNonNegativeInterger(to)) {
+            throw Error(
+                `Expected the second argument of getPendingTransactions to be a non-negative integer but found ${to}`
+            );
+        }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getPendingTransactions", [])
+                .sendRpcRequest("chain_getPendingTransactions", [from, to])
                 .then(result => {
                     if (!Array.isArray(result)) {
                         return reject(
