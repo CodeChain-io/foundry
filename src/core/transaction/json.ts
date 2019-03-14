@@ -7,6 +7,7 @@ import {
     Transaction,
     U64
 } from "../classes";
+import { SignedTransactionJSON } from "../SignedTransaction";
 import { AssetMintOutput } from "./AssetMintOutput";
 import { AssetTransferInput } from "./AssetTransferInput";
 import { AssetTransferOutput } from "./AssetTransferOutput";
@@ -279,18 +280,22 @@ export function fromJSONToTransaction(result: any): Transaction {
     return tx;
 }
 
-// FIXME: any
 /**
  * Create a SignedTransaction from a SignedTransaction JSON object.
  * @param data A SignedTransaction JSON object.
  * @returns A SignedTransaction.
  */
-export function fromJSONToSignedTransaction(data: any) {
+export function fromJSONToSignedTransaction(data: SignedTransactionJSON) {
     const { sig, blockNumber, blockHash, transactionIndex, result } = data;
     if (typeof sig !== "string") {
         throw Error("Unexpected type of sig");
     }
-    if (blockNumber) {
+    if (
+        blockNumber != null &&
+        blockHash != null &&
+        transactionIndex != null &&
+        result != null
+    ) {
         return new SignedTransaction(
             fromJSONToTransaction(data),
             sig,

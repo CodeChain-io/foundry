@@ -1,7 +1,6 @@
 import { H256, PlatformAddress, U256 } from "codechain-primitives";
 
-import { SignedTransaction } from "./SignedTransaction";
-import { TransactionJSON } from "./Transaction";
+import { SignedTransaction, SignedTransactionJSON } from "./SignedTransaction";
 import { fromJSONToSignedTransaction } from "./transaction/json";
 
 // Disable lint error from using "number" as variable name
@@ -33,13 +32,13 @@ export interface BlockJSON {
     score: string;
     seal: number[][];
     hash: string;
-    transactions: TransactionJSON[];
+    transactions: SignedTransactionJSON[];
 }
 /**
  * Block is the unit of processes being handled by CodeChain. Contains information related to SignedTransaction's list and block creation.
  */
 export class Block {
-    public static fromJSON(data: any) {
+    public static fromJSON(data: BlockJSON) {
         const {
             parentHash,
             timestamp,
