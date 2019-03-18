@@ -506,6 +506,7 @@ describe("rpc", () => {
             let mintTransaction: MintAsset;
             let transferTransaction: TransferAsset;
             let blockNumber: number;
+            let signedTransaction: SignedTransaction;
             const shardId = 0;
             const wrongShardId = 1;
 
@@ -539,13 +540,12 @@ describe("rpc", () => {
                         fee: 10
                     })
                 );
-                await sdk.rpc.chain.sendSignedTransaction(
-                    transferTransaction.sign({
-                        secret: signerSecret,
-                        seq: seq + 1,
-                        fee: 10
-                    })
-                );
+                signedTransaction = transferTransaction.sign({
+                    secret: signerSecret,
+                    seq: seq + 1,
+                    fee: 10
+                });
+                await sdk.rpc.chain.sendSignedTransaction(signedTransaction);
                 blockNumber = await sdk.rpc.chain.getBestBlockNumber();
             });
 
@@ -611,6 +611,20 @@ describe("rpc", () => {
                         wrongShardId
                     )
                 ).toBe(null);
+            });
+
+            test("executeVM", async () => {
+                expect(
+                    await sdk.rpc.chain.executeVM(
+                        signedTransaction,
+                        [
+                            mintTransaction
+                                .getMintedAsset()
+                                .parameters.map(param => param.toString("hex"))
+                        ],
+                        [0]
+                    )
+                ).toEqual(["unlocked"]);
             });
         });
     });

@@ -1210,6 +1210,151 @@ export class ChainRpc {
                 .catch(reject);
         });
     }
+
+    /**
+     * Gets the id of the latest block.
+     * @returns A number and the hash of the latest block.
+     */
+    public getBestBlockId(): Promise<{ hash: H256; number: number }> {
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getBestBlockId", [])
+                .then(result => {
+                    if (
+                        result.hasOwnProperty("hash") &&
+                        result.hasOwnProperty("number")
+                    ) {
+                        return resolve(result);
+                    } else {
+                        reject(
+                            Error(
+                                `Expected chain_getBestBlockId to return a number and an H256 value , but it returned ${result}`
+                            )
+                        );
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    /**
+     * Gets the number of transactions within a block that corresponds with the given hash.
+     * @param hash The block hash.
+     * @returns A number of transactions within a block.
+     */
+    public getBlockTransactionCountByHash(
+        hash: H256Value
+    ): Promise<number | null> {
+        if (!H256.check(hash)) {
+            throw Error(
+                `Expected the first argument of getBlockTransactionCountByHash to be an H256 value but found ${hash}`
+            );
+        }
+
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getBlockTransactionCountByHash", [hash])
+                .then(result => {
+                    if (result == null || typeof result === "number") {
+                        return resolve(result);
+                    } else {
+                        reject(
+                            Error(
+                                `Expected chain_getBlockTransactionCountByHash to return either null or a number but it returned ${result}`
+                            )
+                        );
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    /**
+     * Gets the count of the pending transactions within the given range from the transaction queues.
+     * @param from The lower bound of collected pending transactions. If null, there is no lower bound.
+     * @param to The upper bound of collected pending transactions. If null, there is no upper bound.
+     * @returns The count of the pending transactions.
+     */
+    public getPendingTransactionsCount(
+        from?: number | null,
+        to?: number | null
+    ): Promise<number> {
+        if (from != null && !isNonNegativeInterger(from)) {
+            throw Error(
+                `Expected the first argument of getPendingTransactions to be a non-negative integer but found ${from}`
+            );
+        }
+        if (to != null && !isNonNegativeInterger(to)) {
+            throw Error(
+                `Expected the second argument of getPendingTransactions to be a non-negative integer but found ${to}`
+            );
+        }
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getPendingTransactionsCount", [from, to])
+                .then(result => {
+                    if (typeof result === "number") {
+                        resolve(result);
+                    } else {
+                        reject(
+                            Error(
+                                `Expected chain_getPendingTransactionsCount to return a number but returned ${result}`
+                            )
+                        );
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    /**
+     * Execute the inputs of the AssetTransfer transaction in the CodeChain VM.
+     * @param transaction The transaction that its inputs will be executed.
+     * @param parameters Parameters of the outputs as an array.
+     * @param indices Indices of inputs to run in VM.
+     * @returns The results of VM execution.
+     */
+    public executeVM(
+        transaction: SignedTransaction,
+        parameters: string[][],
+        indices: number[]
+    ): Promise<string[]> {
+        if (!(transaction instanceof SignedTransaction)) {
+            throw Error(
+                `Expected the first argument of executeVM to be a Transaction but found ${transaction}`
+            );
+        }
+        if (parameters.length !== indices.length) {
+            throw Error(`The length of paramters and indices must be equal`);
+        }
+        const params = parameters.map(parameter =>
+            parameter.map(string => {
+                if (/^[0-9a-f]+$/g.test(string)) {
+                    return [...Buffer.from(string, "hex")];
+                } else {
+                    throw Error(
+                        `Parameters should be array of array of hex string`
+                    );
+                }
+            })
+        );
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_executeVM", [
+                    transaction,
+                    params,
+                    indices
+                ])
+                .then(result => {
+                    if (result.every((str: any) => typeof str === "string")) {
+                        resolve(result);
+                    } else {
+                        throw Error(`Failed to execute VM`);
+                    }
+                })
+                .catch(reject);
+        });
+    }
 }
 
 function isNonNegativeInterger(value: any): boolean {
