@@ -16,11 +16,11 @@ const ACCOUNT_ADDRESS =
 
     const goldAssetScheme = sdk.core.createAssetScheme({
         shardId,
-        metadata: JSON.stringify({
+        metadata: {
             name: "Gold",
             description: "An asset example",
             icon_url: "https://gold.image/"
-        }),
+        },
         supply: 10000,
         administrator: ACCOUNT_ADDRESS
     });

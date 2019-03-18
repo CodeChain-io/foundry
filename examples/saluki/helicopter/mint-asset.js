@@ -23,11 +23,11 @@ sdk.key
             scheme: {
                 shardId: 0,
                 worldId: 0,
-                metadata: JSON.stringify({
+                metadata: {
                     name: "Saluki Coin",
                     icon_url:
                         "https://upload.wikimedia.org/wikipedia/commons/3/31/Red_Smooth_Saluki.jpg"
-                }),
+                },
                 supply: 500
             },
             recipient: address

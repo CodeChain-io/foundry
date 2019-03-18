@@ -99,11 +99,11 @@ async function mintAssetUsingMaster(
 ): Promise<MintAsset> {
     const assetScheme = sdk.core.createAssetScheme({
         shardId: 0,
-        metadata: JSON.stringify({
+        metadata: {
             name: "Gold",
             description: "An asset example",
             icon_url: "https://gold.image/"
-        }),
+        },
         supply: 10000,
         approver: masterAddress
     });

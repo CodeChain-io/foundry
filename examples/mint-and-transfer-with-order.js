@@ -17,11 +17,11 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
     const goldAssetScheme = sdk.core.createAssetScheme({
         shardId,
-        metadata: JSON.stringify({
+        metadata: {
             name: "Gold",
             description: "An asset example",
             icon_url: "https://gold.image/"
-        }),
+        },
         supply: 10000,
         registrar: null
     });
@@ -32,11 +32,11 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
     const silverAssetScheme = sdk.core.createAssetScheme({
         shardId,
-        metadata: JSON.stringify({
+        metadata: {
             name: "Silver",
             description: "An asset example",
             icon_url: "https://silver.image/"
-        }),
+        },
         supply: 100000,
         registrar: null
     });

@@ -27,7 +27,7 @@ export class ChangeAssetScheme extends Transaction {
         networkId: NetworkId;
         assetType: H160;
         shardId: number;
-        metadata: string;
+        metadata: string | object;
         approver: PlatformAddress | null;
         registrar: PlatformAddress | null;
         allowedScriptHashes: H160[];
@@ -99,7 +99,7 @@ class AssetSchemeChangeTransaction {
         networkId: NetworkId;
         shardId: number;
         assetType: H160;
-        metadata: string;
+        metadata: string | object;
         approver: PlatformAddress | null;
         registrar: PlatformAddress | null;
         allowedScriptHashes: H160[];
@@ -116,7 +116,8 @@ class AssetSchemeChangeTransaction {
         this.networkId = networkId;
         this.shardId = shardId;
         this.assetType = assetType;
-        this.metadata = metadata;
+        this.metadata =
+            typeof metadata === "string" ? metadata : JSON.stringify(metadata);
         this.approver =
             approver == null ? null : PlatformAddress.ensure(approver);
         this.registrar =

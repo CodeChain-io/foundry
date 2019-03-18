@@ -347,7 +347,7 @@ export class Core {
      */
     public createAssetScheme(params: {
         shardId: number;
-        metadata: string;
+        metadata: string | object;
         supply: U64Value;
         approver?: PlatformAddressValue;
         registrar?: PlatformAddressValue;
@@ -356,15 +356,18 @@ export class Core {
     }): AssetScheme {
         const {
             shardId,
-            metadata,
             supply,
             approver = null,
             registrar = null,
             allowedScriptHashes = null,
             pool = []
         } = params;
+        checkMetadata(params.metadata);
+        const metadata =
+            typeof params.metadata === "string"
+                ? params.metadata
+                : JSON.stringify(params.metadata);
         checkShardId(shardId);
-        checkMetadata(metadata);
         checkAmount(supply);
         checkApprover(approver);
         checkregistrar(registrar);
@@ -562,7 +565,7 @@ export class Core {
             | {
                   networkId?: NetworkId;
                   shardId: number;
-                  metadata: string;
+                  metadata: string | object;
                   approver?: PlatformAddressValue;
                   registrar?: PlatformAddressValue;
                   allowedScriptHashes?: H160[];
@@ -580,19 +583,22 @@ export class Core {
         const {
             networkId = this.networkId,
             shardId,
-            metadata,
             approver: approver = null,
             registrar: registrar = null,
             allowedScriptHashes = null,
             supply = U64.MAX_VALUE
         } = scheme;
+        checkMetadata(scheme.metadata);
+        const metadata =
+            typeof scheme.metadata === "string"
+                ? scheme.metadata
+                : JSON.stringify(scheme.metadata);
         checkAssetTransferAddressRecipient(recipient);
         checkNetworkId(networkId);
         if (shardId === undefined) {
             throw Error(`shardId is undefined`);
         }
         checkShardId(shardId);
-        checkMetadata(metadata);
         checkApprover(approver);
         checkregistrar(registrar);
         checkAmount(supply);
@@ -621,7 +627,7 @@ export class Core {
             | AssetScheme
             | {
                   networkId?: NetworkId;
-                  metadata: string;
+                  metadata: string | object;
                   approver?: PlatformAddressValue;
                   registrar?: PlatformAddressValue;
                   allowedScriptHashes?: H160[];
@@ -636,14 +642,17 @@ export class Core {
         }
         const {
             networkId = this.networkId,
-            metadata,
             approver: approver = null,
             registrar: registrar = null,
             allowedScriptHashes = null
         } = scheme;
+        checkMetadata(scheme.metadata);
+        const metadata =
+            typeof scheme.metadata === "string"
+                ? scheme.metadata
+                : JSON.stringify(scheme.metadata);
         checkNetworkId(networkId);
         checkAssetType(assetType);
-        checkMetadata(metadata);
         checkApprover(approver);
         checkregistrar(registrar);
         return new ChangeAssetScheme({
@@ -697,7 +706,7 @@ export class Core {
         outputs?: AssetTransferOutput[];
         orders?: OrderOnTransfer[];
         networkId?: NetworkId;
-        metadata?: string;
+        metadata?: string | object;
         approvals?: string[];
         expiration?: number;
     }): TransferAsset {
@@ -711,6 +720,7 @@ export class Core {
             approvals = [],
             expiration = null
         } = params || {};
+        checkMetadata(metadata);
         checkTransferBurns(burns);
         checkTransferInputs(inputs);
         checkTransferOutputs(outputs);
@@ -721,7 +731,10 @@ export class Core {
             outputs,
             orders,
             networkId,
-            metadata,
+            metadata:
+                typeof metadata === "string"
+                    ? metadata
+                    : JSON.stringify(metadata),
             approvals,
             expiration
         });
@@ -941,10 +954,14 @@ function checkShardId(shardId: number) {
     }
 }
 
-function checkMetadata(metadata: string) {
-    if (typeof metadata !== "string") {
+function checkMetadata(metadata: string | object) {
+    if (
+        typeof metadata !== "string" &&
+        typeof metadata !== "object" &&
+        metadata != null
+    ) {
         throw Error(
-            `Expected metadata param to be a string but found ${metadata}`
+            `Expected metadata param to be either a string or an object but found ${metadata}`
         );
     }
 }

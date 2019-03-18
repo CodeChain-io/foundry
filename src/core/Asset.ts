@@ -139,7 +139,7 @@ export class Asset {
         }>;
         timelock?: null | Timelock;
         networkId: NetworkId;
-        metadata?: string;
+        metadata?: string | object;
         approvals?: string[];
         expiration?: number;
     }): TransferAsset {

@@ -17,11 +17,11 @@ const address = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
 const tx = sdk.core.createMintAssetTransaction({
     scheme: {
         shardId: 0,
-        metadata: JSON.stringify({
+        metadata: {
             name: "Silver Coin",
             description: "...",
             icon_url: "..."
-        }),
+        },
         supply: 100000000
     },
     recipient: address

@@ -56,14 +56,17 @@ export class TransferAsset extends Transaction implements AssetTransaction {
         outputs: AssetTransferOutput[];
         orders: OrderOnTransfer[];
         networkId: NetworkId;
-        metadata: string;
+        metadata: string | object;
         approvals: string[];
         expiration: number | null;
     }) {
         super(input.networkId);
 
         this._transaction = new AssetTransferTransaction(input);
-        this.metadata = input.metadata;
+        this.metadata =
+            typeof input.metadata === "string"
+                ? input.metadata
+                : JSON.stringify(input.metadata);
         this.approvals = input.approvals;
         this.expiration = input.expiration;
     }

@@ -67,7 +67,7 @@ export class AssetScheme {
     constructor(data: {
         networkId?: NetworkId;
         shardId?: number;
-        metadata: string;
+        metadata: string | object;
         supply: U64;
         approver: PlatformAddress | null;
         registrar: PlatformAddress | null;
@@ -76,7 +76,10 @@ export class AssetScheme {
     }) {
         this.networkId = data.networkId;
         this.shardId = data.shardId;
-        this.metadata = data.metadata;
+        this.metadata =
+            typeof data.metadata === "string"
+                ? data.metadata
+                : JSON.stringify(data.metadata);
         this.approver = data.approver;
         this.registrar = data.registrar;
         this.allowedScriptHashes = data.allowedScriptHashes;
