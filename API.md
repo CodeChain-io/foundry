@@ -68,7 +68,7 @@ var secret = SDK.util.generatePrivateKey();
 console.log("Your secret:", secret);
 
 var account = SDK.util.getAccountIdFromPrivate(secret);
-var address = SDK.Key.classes.PlatformAddress.fromAccountId(account, {
+var address = SDK.Core.classes.PlatformAddress.fromAccountId(account, {
   networkId: "tc"
 });
 console.log("Your CodeChain address:", address.toString());
@@ -145,7 +145,7 @@ var SDK = require("codechain-sdk");
 
 var sdk = new SDK({ server: "http://localhost:8080" });
 
-var tx = sdk.core.createPaymentTransaction({
+var tx = sdk.core.createPayTransaction({
   recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
   quantity: 10000
 });
@@ -156,12 +156,12 @@ var accountSecret =
 
 sdk.rpc.chain
   .getSeq(account)
-  .then(function(nonce) {
+  .then(function(seq) {
     return sdk.rpc.chain.sendSignedTransaction(
       tx.sign({
         secret: accountSecret,
         fee: 10,
-        nonce: nonce
+        seq: seq
       })
     );
   })
@@ -201,41 +201,39 @@ sdk.key
 var SDK = require("codechain-sdk");
 var sdk = new SDK({ server: "http://localhost:8080" });
 
-// If you want to know how to create an address, see the example "Create an
-// asset transfer address".
-var address =
-  "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
-
-// Send a change-shard-state transaction to process the transaction.
-var tx = sdk.core.createMintAssetTransaction({
-  scheme: {
-    shardId: 0,
-    metadata: JSON.stringify({
-      name: "Silver Coin",
-      description: "...",
-      icon_url: "..."
-    }),
-    supply: 100000000
-  },
-  recipient: address
-});
-
-sdk.rpc.chain
-  .sendTransaction(tx, {
-    account: "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd",
-    passphrase: "satoshi"
-  })
-  .then(function(hash) {
-    // Get the result of the transaction.
-    return sdk.rpc.chain.getTransactionResult(hash, {
-      // Wait up to 120 seconds to get the result.
-      timeout: 120 * 1000
-    });
-  })
-  .then(function(result) {
-    // The result of the mint transaction is a boolean.
-    console.log(result); // true
+async function mintNewAsset() {
+  var address = await sdk.key.createAssetTransferAddress()
+  var tx = sdk.core.createMintAssetTransaction({
+    scheme: {
+      shardId: 0,
+      metadata: JSON.stringify({
+        name: "Silver Coin",
+        description: "...",
+        icon_url: "..."
+      }),
+      supply: 100000000
+    },
+    recipient: address
   });
+
+  sdk.rpc.chain
+    .sendTransaction(tx, {
+      account: "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd",
+      passphrase: "satoshi"
+    })
+    .then(function(hash) {
+      // Get the result of the transaction.
+      return sdk.rpc.chain.getTransactionResult(hash, {
+        // Wait up to 120 seconds to get the result.
+        timeout: 120 * 1000
+      });
+    })
+    .then(function(result) {
+      // The result of the mint transaction is a boolean.
+      console.log(result); // true
+    });
+}
+mintNewAsset();
 ```
 
 ---
