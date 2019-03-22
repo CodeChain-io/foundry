@@ -2,16 +2,16 @@
 
 - [Install package](#install-package)
 - [Usage examples](#usage-examples)
-    - [Setup the test account](#setup-the-test-account)
-    - [Get the latest block number](#get-the-latest-block-number)
-    - [Create a new account with a private key](#create-a-new-account-with-a-private-key)
-    - [Create a new account with RPC](#create-a-new-account-with-rpc)
-    - [Get the balance of an account](#get-the-balance-of-an-account)
-    - [Send a payment transaction via sendTransaction](#send-a-payment-transaction-via-sendtransaction)
-    - [Send a payment transaction via sendSignedTransaction](#send-a-payment-transaction-via-sendsignedtransaction)
-    - [Create an asset transfer address](#create-an-asset-transfer-address)
-    - [Mint a new asset](#mint-a-new-asset)
-    - [Transfer assets](#transfer-assets)
+  - [Setup the test account](#setup-the-test-account)
+  - [Get the latest block number](#get-the-latest-block-number)
+  - [Create a new account with a private key](#create-a-new-account-with-a-private-key)
+  - [Create a new account with RPC](#create-a-new-account-with-rpc)
+  - [Get the balance of an account](#get-the-balance-of-an-account)
+  - [Send a payment transaction via sendTransaction](#send-a-payment-transaction-via-sendtransaction)
+  - [Send a payment transaction via sendSignedTransaction](#send-a-payment-transaction-via-sendsignedtransaction)
+  - [Create an asset transfer address](#create-an-asset-transfer-address)
+  - [Mint a new asset](#mint-a-new-asset)
+  - [Transfer assets](#transfer-assets)
 - [SDK modules](#sdk-modules)
 
 # Install package
@@ -29,7 +29,7 @@ Make sure that your CodeChain RPC server is listening. In the examples, we assum
 
 ## Setup the test account
 
-Before you begin to meet various examples, you need to setup the account. The given account below(`tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78`) holds 100000 CCC at the genesis block. It's a sufficient quantity to pay for the transaction fee.
+Before you begin to meet various examples, you need to setup the account. The given account below(`tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd`) holds 100000 CCC at the genesis block. It's a sufficient quantity to pay for the transaction fee.
 
 ```javascript
 var SDK = require("codechain-sdk");
@@ -38,7 +38,7 @@ var sdk = new SDK({ server: "http://localhost:8080" });
 var secret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
 var passphrase = "satoshi";
 sdk.rpc.account.importRaw(secret, passphrase).then(function(account) {
-  console.log(account); // tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78
+  console.log(account); // tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd
 });
 ```
 
@@ -86,7 +86,7 @@ var sdk = new SDK({ server: "http://localhost:8080" });
 
 var passphrase = "my-secret";
 sdk.rpc.account.create(passphrase).then(function(account) {
-  console.log(account); // string that starts with "ccc". For example: tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78
+  console.log(account); // string that starts with either "tcc"(Solo testnet) or "ccc"(mainnet). For example: tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd
 });
 ```
 
@@ -94,14 +94,14 @@ sdk.rpc.account.create(passphrase).then(function(account) {
 
 ## Get the balance of an account
 
-You can get the balance of an account using `getBalance` method in `sdk.rpc.chain`. See also `getNonce`, `getRegularKey`.
+You can get the balance of an account using `getBalance` method in `sdk.rpc.chain`. See also `getSeq`, `getRegularKey`.
 
 ```javascript
 var SDK = require("codechain-sdk");
 var sdk = new SDK({ server: "http://localhost:8080" });
 
 sdk.rpc.chain
-  .getBalance("tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78")
+  .getBalance("tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd")
   .then(function(balance) {
     // the balance is a U256 instance at this moment. Use toString() to print it out.
     console.log(balance.toString()); // the quantity of CCC that the account has.
@@ -118,14 +118,14 @@ When you create an account, the CCC balance is 0. CCC is needed to pay for the t
 var SDK = require("codechain-sdk");
 var sdk = new SDK({ server: "http://localhost:8080" });
 
-var tx = sdk.core.createPaymentTransaction({
-  recipient: "tccqruq09sfgax77nj4gukjcuq69uzeyv0jcs7vzngg",
+var tx = sdk.core.createPayTransaction({
+  recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
   quantity: 10000
 });
 
 sdk.rpc.chain
   .sendTransaction(tx, {
-    account: "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78",
+    account: "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd",
     passphrase: "satoshi"
   })
   .then(function(hash) {
@@ -146,16 +146,16 @@ var SDK = require("codechain-sdk");
 var sdk = new SDK({ server: "http://localhost:8080" });
 
 var tx = sdk.core.createPaymentTransaction({
-  recipient: "tccqruq09sfgax77nj4gukjcuq69uzeyv0jcs7vzngg",
+  recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
   quantity: 10000
 });
 
-var account = "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78";
+var account = "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd";
 var accountSecret =
   "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
 
 sdk.rpc.chain
-  .getNonce(account)
+  .getSeq(account)
   .then(function(nonce) {
     return sdk.rpc.chain.sendSignedTransaction(
       tx.sign({
@@ -207,7 +207,7 @@ var address =
   "tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze";
 
 // Send a change-shard-state transaction to process the transaction.
-var tx = sdk.core.createAssetMintTransaction({
+var tx = sdk.core.createMintAssetTransaction({
   scheme: {
     shardId: 0,
     metadata: JSON.stringify({
@@ -222,7 +222,7 @@ var tx = sdk.core.createAssetMintTransaction({
 
 sdk.rpc.chain
   .sendTransaction(tx, {
-    account: "tccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9my9a2k78",
+    account: "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd",
     passphrase: "satoshi"
   })
   .then(function(hash) {
@@ -233,7 +233,7 @@ sdk.rpc.chain
     });
   })
   .then(function(result) {
-    // The result of mint transaction is  boolean.
+    // The result of the mint transaction is a boolean.
     console.log(result); // true
   });
 ```
@@ -242,7 +242,7 @@ sdk.rpc.chain
 
 ## Transfer assets
 
-A brief version of the example will be uploaded soon. The entire example can be viewed [here](https://github.com/CodeChain-io/codechain-sdk-js/blob/master/examples/mint-and-transfer.js).
+The entire example can be viewed [here](https://github.com/CodeChain-io/codechain-sdk-js/blob/master/examples/mint-and-transfer.js).
 
 ---
 
@@ -253,6 +253,7 @@ A brief version of the example will be uploaded soon. The entire example can be 
   - [chain](classes/chainrpc.html)
   - [network](classes/networkrpc.html)
   - [account](classes/accountrpc.html)
+  - [engine](classes/enginerpc.html)
 - [Core](classes/core.html)
   - [classes](classes/core.html#classes-1) (Block, Transaction, ...)
 - [Utility](classes/sdk.html#util)
