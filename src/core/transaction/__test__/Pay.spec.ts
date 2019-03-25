@@ -1,7 +1,7 @@
 import { H256, PlatformAddress, U64 } from "codechain-primitives";
-import { Pay } from "../transaction/Pay";
+import { Pay } from "../Pay";
 
-import { fromJSONToTransaction } from "../transaction/json";
+import { fromJSONToTransaction } from "../json";
 
 test("rlp", () => {
     const t = new Pay(
