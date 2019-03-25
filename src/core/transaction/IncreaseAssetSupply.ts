@@ -1,7 +1,7 @@
 import { H160, H256 } from "codechain-primitives";
 import { blake256 } from "../../utils";
 import { Asset } from "../Asset";
-import { Transaction } from "../Transaction";
+import { AssetTransaction, Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 import { AssetMintOutput, AssetMintOutputJSON } from "./AssetMintOutput";
 
@@ -19,7 +19,8 @@ export interface IncreaseAssetSupplyActionJSON
     approvals: string[];
 }
 
-export class IncreaseAssetSupply extends Transaction {
+export class IncreaseAssetSupply extends Transaction
+    implements AssetTransaction {
     private readonly transaction: IncreaseAssetSupplyTransaction;
     private readonly approvals: string[];
 
