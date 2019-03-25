@@ -1,8 +1,8 @@
-import { H256 } from "codechain-primitives";
+import { H160 } from "codechain-primitives";
 import * as _ from "lodash";
 
 import {
-    blake256,
+    blake160,
     generatePrivateKey,
     getAccountIdFromPublic,
     getPublicFromPrivate,
@@ -89,6 +89,6 @@ export class MemoryKeyStore implements KeyStore {
     public asset = new KeyManager(this.getHash);
 
     private getHash(publicKey: string): string {
-        return H256.ensure(blake256(publicKey)).value;
+        return H160.ensure(blake160(publicKey)).value;
     }
 }
