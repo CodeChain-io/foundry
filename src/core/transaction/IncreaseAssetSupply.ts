@@ -39,6 +39,14 @@ export class IncreaseAssetSupply extends Transaction {
         return new H256(blake256(this.transaction.rlpBytes()));
     }
 
+    /**
+     * Add an approval to transaction.
+     * @param approval An approval
+     */
+    public addApproval(approval: string) {
+        this.approvals.push(approval);
+    }
+
     public type(): string {
         return "increaseAssetSupply";
     }

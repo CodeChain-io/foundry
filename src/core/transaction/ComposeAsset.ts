@@ -68,6 +68,14 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
     }
 
     /**
+     * Add an approval to transaction.
+     * @param approval An approval
+     */
+    public addApproval(approval: string) {
+        this.approvals.push(approval);
+    }
+
+    /**
      * Get a hash of the transaction that doesn't contain the scripts. The hash
      * is used as a message to create a signature for a transaction.
      * @returns A hash.

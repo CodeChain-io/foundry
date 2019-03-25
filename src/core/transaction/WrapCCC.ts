@@ -107,6 +107,14 @@ export class WrapCCC extends Transaction implements AssetTransaction {
         return this.unsignedHash();
     }
 
+    /**
+     * Add an approval to transaction.
+     * @param approval An approval
+     */
+    public addApproval(_approval: string) {
+        throw Error("Cannot approve WrapCCC");
+    }
+
     public type(): string {
         return "wrapCCC";
     }

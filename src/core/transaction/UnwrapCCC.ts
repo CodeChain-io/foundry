@@ -77,6 +77,14 @@ export class UnwrapCCC extends Transaction implements AssetTransaction {
         return new H256(blake256(this._transaction.rlpBytes()));
     }
 
+    /**
+     * Add an approval to transaction.
+     * @param approval An approval
+     */
+    public addApproval(_approval: string) {
+        throw Error("Cannot approve UnwrapCCC");
+    }
+
     public type(): string {
         return "unwrapCCC";
     }

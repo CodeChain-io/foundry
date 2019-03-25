@@ -77,6 +77,14 @@ export class TransferAsset extends Transaction implements AssetTransaction {
     }
 
     /**
+     * Add an approval to transaction.
+     * @param approval An approval
+     */
+    public addApproval(approval: string) {
+        this.approvals.push(approval);
+    }
+
+    /**
      * Add an AssetTransferInput to burn.
      * @param burns An array of either an AssetTransferInput or an Asset.
      * @returns The TransferAsset, which is modified by adding them.
