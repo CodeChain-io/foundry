@@ -24,14 +24,19 @@ import { NetworkId } from "../core/types";
 export class ChainRpc {
     private rpc: Rpc;
     private transactionSigner?: string;
+    private fallbackServers?: string[];
 
     /**
      * @hidden
      */
-    constructor(rpc: Rpc, options: { transactionSigner?: string }) {
-        const { transactionSigner } = options;
+    constructor(
+        rpc: Rpc,
+        options: { transactionSigner?: string; fallbackServers?: string[] }
+    ) {
+        const { transactionSigner, fallbackServers } = options;
         this.rpc = rpc;
         this.transactionSigner = transactionSigner;
+        this.fallbackServers = fallbackServers;
     }
 
     /**
@@ -47,8 +52,15 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             const bytes = tx.rlpBytes().toString("hex");
+            const fallbackServers = this.fallbackServers;
             this.rpc
-                .sendRpcRequest("mempool_sendSignedTransaction", [`0x${bytes}`])
+                .sendRpcRequest(
+                    "mempool_sendSignedTransaction",
+                    [`0x${bytes}`],
+                    {
+                        fallbackServers
+                    }
+                )
                 .then(result => {
                     try {
                         resolve(new H256(result));
@@ -133,10 +145,13 @@ export class ChainRpc {
             );
         }
         return new Promise((resolve, reject) => {
+            const fallbackServers = this.fallbackServers;
             this.rpc
-                .sendRpcRequest("chain_getTransaction", [
-                    `0x${H256.ensure(hash).value}`
-                ])
+                .sendRpcRequest(
+                    "chain_getTransaction",
+                    [`0x${H256.ensure(hash).value}`],
+                    { fallbackServers }
+                )
                 .then(result => {
                     try {
                         resolve(
@@ -169,7 +184,8 @@ export class ChainRpc {
         }
         const result = await this.rpc.sendRpcRequest(
             "chain_containsTransaction",
-            [`0x${H256.ensure(hash).value}`]
+            [`0x${H256.ensure(hash).value}`],
+            { fallbackServers: this.fallbackServers }
         );
         try {
             return JSON.parse(result);
@@ -190,6 +206,7 @@ export class ChainRpc {
         address: PlatformAddressValue,
         blockNumber?: number
     ): Promise<H512 | null> {
+        const fallbackServers = this.fallbackServers;
         if (!PlatformAddress.check(address)) {
             throw Error(
                 `Expected the first argument of getRegularKey to be a PlatformAddress value but found ${address}`
@@ -202,10 +219,11 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getRegularKey", [
-                    `${PlatformAddress.ensure(address).value}`,
-                    blockNumber
-                ])
+                .sendRpcRequest(
+                    "chain_getRegularKey",
+                    [`${PlatformAddress.ensure(address).value}`, blockNumber],
+                    { fallbackServers }
+                )
                 .then(result => {
                     try {
                         resolve(result === null ? null : new H512(result));
@@ -231,6 +249,7 @@ export class ChainRpc {
         regularKey: H512Value,
         blockNumber?: number
     ): Promise<PlatformAddress | null> {
+        const fallbackServers = this.fallbackServers;
         if (!H512.check(regularKey)) {
             throw Error(
                 `Expected the first argument of getRegularKeyOwner to be an H512 value but found ${regularKey}`
@@ -243,10 +262,11 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getRegularKeyOwner", [
-                    `0x${H512.ensure(regularKey).value}`,
-                    blockNumber
-                ])
+                .sendRpcRequest(
+                    "chain_getRegularKeyOwner",
+                    [`0x${H512.ensure(regularKey).value}`, blockNumber],
+                    { fallbackServers }
+                )
                 .then(result => {
                     try {
                         resolve(
@@ -276,6 +296,7 @@ export class ChainRpc {
         hash: H256Value,
         blockNumber?: number
     ): Promise<number | null> {
+        const fallbackServers = this.fallbackServers;
         if (!H256.check(hash)) {
             throw Error(
                 `Expected the first argument of getShardIdByHash to be an H256 value but found ${hash}`
@@ -288,10 +309,11 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getShardIdByHash", [
-                    H256.ensure(hash).toJSON(),
-                    blockNumber
-                ])
+                .sendRpcRequest(
+                    "chain_getShardIdByHash",
+                    [H256.ensure(hash).toJSON(), blockNumber],
+                    { fallbackServers }
+                )
                 .then(result => {
                     if (result === null || typeof result === "number") {
                         resolve(result);
@@ -316,9 +338,14 @@ export class ChainRpc {
         shardId: number,
         blockNumber?: number
     ): Promise<PlatformAddress[] | null> {
+        const fallbackServers = this.fallbackServers;
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getShardOwners", [shardId, blockNumber])
+                .sendRpcRequest(
+                    "chain_getShardOwners",
+                    [shardId, blockNumber],
+                    { fallbackServers }
+                )
                 .then(result => {
                     try {
                         resolve(
@@ -349,9 +376,12 @@ export class ChainRpc {
         shardId: number,
         blockNumber?: number
     ): Promise<PlatformAddress[] | null> {
+        const fallbackServers = this.fallbackServers;
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getShardUsers", [shardId, blockNumber])
+                .sendRpcRequest("chain_getShardUsers", [shardId, blockNumber], {
+                    fallbackServers
+                })
                 .then(result => {
                     try {
                         resolve(
@@ -381,6 +411,7 @@ export class ChainRpc {
     public getTransactionByTracker(
         tracker: H256Value
     ): Promise<SignedTransaction | null> {
+        const fallbackServers = this.fallbackServers;
         if (!H256.check(tracker)) {
             throw Error(
                 `Expected the first argument of getTransactionByTracker to be an H256 value but found ${tracker}`
@@ -388,9 +419,11 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getTransactionByTracker", [
-                    `0x${H256.ensure(tracker).value}`
-                ])
+                .sendRpcRequest(
+                    "chain_getTransactionByTracker",
+                    [`0x${H256.ensure(tracker).value}`],
+                    { fallbackServers }
+                )
                 .then(result => {
                     try {
                         resolve(
@@ -420,6 +453,7 @@ export class ChainRpc {
         tracker: H256Value,
         options: { timeout?: number } = {}
     ): Promise<boolean[]> {
+        const fallbackServers = this.fallbackServers;
         if (!H256.check(tracker)) {
             throw Error(
                 `Expected the first argument of getTransactionResultsByTracker to be an H256 value but found ${tracker}`
@@ -428,7 +462,8 @@ export class ChainRpc {
         const attemptToGet = async () => {
             return this.rpc.sendRpcRequest(
                 "mempool_getTransactionResultsByTracker",
-                [`0x${H256.ensure(tracker).value}`]
+                [`0x${H256.ensure(tracker).value}`],
+                { fallbackServers }
             );
         };
         const startTime = Date.now();
@@ -474,6 +509,7 @@ export class ChainRpc {
         address: PlatformAddressValue,
         blockNumber?: number
     ): Promise<U64> {
+        const fallbackServers = this.fallbackServers;
         if (!PlatformAddress.check(address)) {
             throw Error(
                 `Expected the first argument of getBalance to be a PlatformAddress value but found ${address}`
@@ -486,10 +522,11 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getBalance", [
-                    `${PlatformAddress.ensure(address).value}`,
-                    blockNumber
-                ])
+                .sendRpcRequest(
+                    "chain_getBalance",
+                    [`${PlatformAddress.ensure(address).value}`, blockNumber],
+                    { fallbackServers }
+                )
                 .then(result => {
                     try {
                         // FIXME: Need to discuss changing the return type to `U64 | null`. It's a
@@ -517,6 +554,7 @@ export class ChainRpc {
     public async getErrorHint(
         transactionHash: H256Value
     ): Promise<string | null> {
+        const fallbackServers = this.fallbackServers;
         if (!H256.check(transactionHash)) {
             throw Error(
                 `Expected the first argument of getErrorHint to be an H256 value but found ${transactionHash}`
@@ -525,7 +563,8 @@ export class ChainRpc {
         return new Promise((resolve, reject) => {
             this.rpc
                 .sendRpcRequest("mempool_getErrorHint", [
-                    `0x${H256.ensure(transactionHash).value}`
+                    `0x${H256.ensure(transactionHash).value}`,
+                    { fallbackServers }
                 ])
                 .then(result => {
                     if (typeof result === "string" || result == null) {
@@ -551,6 +590,7 @@ export class ChainRpc {
         address: PlatformAddressValue,
         blockNumber?: number
     ): Promise<number> {
+        const fallbackServers = this.fallbackServers;
         if (!PlatformAddress.check(address)) {
             throw Error(
                 `Expected the first argument of getSeq to be a PlatformAddress value but found ${address}`
@@ -563,10 +603,11 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getSeq", [
-                    `${PlatformAddress.ensure(address).value}`,
-                    blockNumber
-                ])
+                .sendRpcRequest(
+                    "chain_getSeq",
+                    [`${PlatformAddress.ensure(address).value}`, blockNumber],
+                    { fallbackServers }
+                )
                 .then(async result => {
                     if (result == null) {
                         throw Error("chain_getSeq returns undefined");
@@ -582,9 +623,12 @@ export class ChainRpc {
      * @returns Number of the latest block.
      */
     public getBestBlockNumber(): Promise<number> {
+        const fallbackServers = this.fallbackServers;
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getBestBlockNumber", [])
+                .sendRpcRequest("chain_getBestBlockNumber", [], {
+                    fallbackServers
+                })
                 .then(result => {
                     if (typeof result === "number") {
                         return resolve(result);
@@ -605,6 +649,7 @@ export class ChainRpc {
      * @returns BlockHash, if block exists. Else, returns null.
      */
     public getBlockHash(blockNumber: number): Promise<H256 | null> {
+        const fallbackServers = this.fallbackServers;
         if (!isNonNegativeInterger(blockNumber)) {
             throw Error(
                 `Expected the first argument of getBlockHash to be a non-negative integer but found ${blockNumber}`
@@ -612,7 +657,9 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getBlockHash", [blockNumber])
+                .sendRpcRequest("chain_getBlockHash", [blockNumber], {
+                    fallbackServers
+                })
                 .then(result => {
                     try {
                         resolve(result === null ? null : new H256(result));
@@ -637,14 +684,19 @@ export class ChainRpc {
         hashOrNumber: H256Value | number
     ): Promise<Block | null> {
         let result;
+        const fallbackServers = this.fallbackServers;
         if (hashOrNumber instanceof H256 || typeof hashOrNumber === "string") {
-            result = await this.rpc.sendRpcRequest("chain_getBlockByHash", [
-                `0x${H256.ensure(hashOrNumber).value}`
-            ]);
+            result = await this.rpc.sendRpcRequest(
+                "chain_getBlockByHash",
+                [`0x${H256.ensure(hashOrNumber).value}`],
+                { fallbackServers }
+            );
         } else if (typeof hashOrNumber === "number") {
-            result = await this.rpc.sendRpcRequest("chain_getBlockByNumber", [
-                hashOrNumber
-            ]);
+            result = await this.rpc.sendRpcRequest(
+                "chain_getBlockByNumber",
+                [hashOrNumber],
+                { fallbackServers }
+            );
         } else {
             throw Error(
                 `Expected the first argument of getBlock to be either a number or an H256 value but found ${hashOrNumber}`
@@ -671,6 +723,7 @@ export class ChainRpc {
         shardId: number,
         blockNumber?: number | null
     ): Promise<AssetScheme | null> {
+        const fallbackServers = this.fallbackServers;
         if (!H256.check(tracker)) {
             throw Error(
                 `Expected the first arugment of getAssetSchemeByTracker to be an H256 value but found ${tracker}`
@@ -688,11 +741,11 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getAssetSchemeByTracker", [
-                    `0x${H256.ensure(tracker).value}`,
-                    shardId,
-                    blockNumber
-                ])
+                .sendRpcRequest(
+                    "chain_getAssetSchemeByTracker",
+                    [`0x${H256.ensure(tracker).value}`, shardId, blockNumber],
+                    { fallbackServers }
+                )
                 .then(result => {
                     try {
                         resolve(
@@ -724,6 +777,7 @@ export class ChainRpc {
         shardId: number,
         blockNumber?: number | null
     ): Promise<AssetScheme | null> {
+        const fallbackServers = this.fallbackServers;
         if (!H160.check(assetType)) {
             throw Error(
                 `Expected the first arugment of getAssetSchemeByType to be an H160 value but found ${assetType}`
@@ -741,11 +795,11 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getAssetSchemeByType", [
-                    `0x${H160.ensure(assetType).value}`,
-                    shardId,
-                    blockNumber
-                ])
+                .sendRpcRequest(
+                    "chain_getAssetSchemeByType",
+                    [`0x${H160.ensure(assetType).value}`, shardId, blockNumber],
+                    { fallbackServers }
+                )
                 .then(result => {
                     try {
                         resolve(
@@ -779,6 +833,7 @@ export class ChainRpc {
         shardId: number,
         blockNumber?: number
     ): Promise<Asset | null> {
+        const fallbackServers = this.fallbackServers;
         if (!H256.check(tracker)) {
             throw Error(
                 `Expected the first argument of getAsset to be an H256 value but found ${tracker}`
@@ -801,12 +856,16 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getAsset", [
-                    `0x${H256.ensure(tracker).value}`,
-                    index,
-                    shardId,
-                    blockNumber
-                ])
+                .sendRpcRequest(
+                    "chain_getAsset",
+                    [
+                        `0x${H256.ensure(tracker).value}`,
+                        index,
+                        shardId,
+                        blockNumber
+                    ],
+                    { fallbackServers }
+                )
                 .then(result => {
                     if (result === null) {
                         return resolve(null);
@@ -842,6 +901,7 @@ export class ChainRpc {
         txHash: H256Value,
         blockNumber?: number | null
     ): Promise<Text | null> {
+        const fallbackServers = this.fallbackServers;
         if (!H256.check(txHash)) {
             throw Error(
                 `Expected the first arugment of getText to be an H256 value but found ${txHash}`
@@ -854,10 +914,11 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getText", [
-                    `0x${H256.ensure(txHash).value}`,
-                    blockNumber
-                ])
+                .sendRpcRequest(
+                    "chain_getText",
+                    [`0x${H256.ensure(txHash).value}`, blockNumber],
+                    { fallbackServers }
+                )
                 .then(result => {
                     try {
                         resolve(result == null ? null : Text.fromJSON(result));
@@ -887,6 +948,7 @@ export class ChainRpc {
         shardId: number,
         blockNumber?: number
     ): Promise<boolean | null> {
+        const fallbackServers = this.fallbackServers;
         if (!H256.check(txhash)) {
             throw Error(
                 `Expected the first argument of isAssetSpent to be an H256 value but found ${txhash}`
@@ -905,12 +967,16 @@ export class ChainRpc {
 
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_isAssetSpent", [
-                    `0x${H256.ensure(txhash).value}`,
-                    index,
-                    shardId,
-                    blockNumber
-                ])
+                .sendRpcRequest(
+                    "chain_isAssetSpent",
+                    [
+                        `0x${H256.ensure(txhash).value}`,
+                        index,
+                        shardId,
+                        blockNumber
+                    ],
+                    { fallbackServers }
+                )
                 .then(result => {
                     if (result === null || typeof result === "boolean") {
                         resolve(result);
@@ -939,6 +1005,7 @@ export class ChainRpc {
         transactions: SignedTransaction[];
         lastTimestamp: number | null;
     }> {
+        const fallbackServers = this.fallbackServers;
         if (from != null && !isNonNegativeInterger(from)) {
             throw Error(
                 `Expected the first argument of getPendingTransactions to be a non-negative integer but found ${from}`
@@ -951,7 +1018,9 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("mempool_getPendingTransactions", [from, to])
+                .sendRpcRequest("mempool_getPendingTransactions", [from, to], {
+                    fallbackServers
+                })
                 .then(result => {
                     try {
                         const resultTransactions = result.transactions;
@@ -996,9 +1065,10 @@ export class ChainRpc {
      * @returns A network ID, e.g. "tc".
      */
     public getNetworkId(): Promise<NetworkId> {
+        const fallbackServers = this.fallbackServers;
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getNetworkId", [])
+                .sendRpcRequest("chain_getNetworkId", [], { fallbackServers })
                 .then(result => {
                     if (typeof result === "string") {
                         resolve(result);
@@ -1020,6 +1090,7 @@ export class ChainRpc {
      * @returns A number of shards
      */
     public getNumberOfShards(blockNumber?: number): Promise<number> {
+        const fallbackServers = this.fallbackServers;
         if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
             throw Error(
                 `Expected the first argument of getNumberOfShards to be a number but found ${blockNumber}`
@@ -1028,7 +1099,9 @@ export class ChainRpc {
 
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getNumberOfShards", [blockNumber])
+                .sendRpcRequest("chain_getNumberOfShards", [blockNumber], {
+                    fallbackServers
+                })
                 .then(result => {
                     if (result === null || typeof result === "number") {
                         resolve(result);
@@ -1049,9 +1122,12 @@ export class ChainRpc {
      * @returns The platform addresses in the genesis block.
      */
     public getGenesisAccounts(): Promise<PlatformAddress[]> {
+        const fallbackServers = this.fallbackServers;
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getGenesisAccounts", [])
+                .sendRpcRequest("chain_getGenesisAccounts", [], {
+                    fallbackServers
+                })
                 .then(result => {
                     try {
                         resolve(
@@ -1081,6 +1157,7 @@ export class ChainRpc {
         shardId: number,
         blockNumber?: number
     ): Promise<H256 | null> {
+        const fallbackServers = this.fallbackServers;
         if (!isShardIdValue(shardId)) {
             throw Error(
                 `Expected the first argument of getShardRoot to be a shard ID value but found ${shardId}`
@@ -1094,7 +1171,9 @@ export class ChainRpc {
 
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getShardRoot", [shardId, blockNumber])
+                .sendRpcRequest("chain_getShardRoot", [shardId, blockNumber], {
+                    fallbackServers
+                })
                 .then(result => {
                     try {
                         resolve(result === null ? null : new H256(result));
@@ -1116,6 +1195,7 @@ export class ChainRpc {
      * @returns The amount of mining reward, or null if the given block number is not mined yet.
      */
     public getMiningReward(blockNumber: number): Promise<U64 | null> {
+        const fallbackServers = this.fallbackServers;
         if (!isNonNegativeInterger(blockNumber)) {
             throw Error(
                 `Expected the argument of getMiningReward to be a non-negative integer but found ${blockNumber}`
@@ -1124,7 +1204,9 @@ export class ChainRpc {
 
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getMiningReward", [blockNumber])
+                .sendRpcRequest("chain_getMiningReward", [blockNumber], {
+                    fallbackServers
+                })
                 .then(result => {
                     try {
                         resolve(result === null ? null : new U64(result));
@@ -1150,6 +1232,7 @@ export class ChainRpc {
         tx: Transaction,
         sender: PlatformAddressValue
     ): Promise<string | null> {
+        const fallbackServers = this.fallbackServers;
         if (!(tx instanceof Transaction)) {
             throw Error(
                 `Expected the first argument of executeTransaction to be a Transaction but found ${tx}`
@@ -1162,10 +1245,11 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_executeTransaction", [
-                    tx.toJSON(),
-                    PlatformAddress.ensure(sender).toString()
-                ])
+                .sendRpcRequest(
+                    "chain_executeTransaction",
+                    [tx.toJSON(), PlatformAddress.ensure(sender).toString()],
+                    { fallbackServers }
+                )
                 .then(resolve)
                 .catch(reject);
         });
@@ -1176,9 +1260,10 @@ export class ChainRpc {
      * @returns A number and the hash of the latest block.
      */
     public getBestBlockId(): Promise<{ hash: H256; number: number }> {
+        const fallbackServers = this.fallbackServers;
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getBestBlockId", [])
+                .sendRpcRequest("chain_getBestBlockId", [], { fallbackServers })
                 .then(result => {
                     if (
                         result.hasOwnProperty("hash") &&
@@ -1205,6 +1290,7 @@ export class ChainRpc {
     public getBlockTransactionCountByHash(
         hash: H256Value
     ): Promise<number | null> {
+        const fallbackServers = this.fallbackServers;
         if (!H256.check(hash)) {
             throw Error(
                 `Expected the first argument of getBlockTransactionCountByHash to be an H256 value but found ${hash}`
@@ -1213,7 +1299,11 @@ export class ChainRpc {
 
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_getBlockTransactionCountByHash", [hash])
+                .sendRpcRequest(
+                    "chain_getBlockTransactionCountByHash",
+                    [hash],
+                    { fallbackServers }
+                )
                 .then(result => {
                     if (result == null || typeof result === "number") {
                         return resolve(result);
@@ -1239,6 +1329,7 @@ export class ChainRpc {
         from?: number | null,
         to?: number | null
     ): Promise<number> {
+        const fallbackServers = this.fallbackServers;
         if (from != null && !isNonNegativeInterger(from)) {
             throw Error(
                 `Expected the first argument of getPendingTransactions to be a non-negative integer but found ${from}`
@@ -1251,10 +1342,11 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("mempool_getPendingTransactionsCount", [
-                    from,
-                    to
-                ])
+                .sendRpcRequest(
+                    "mempool_getPendingTransactionsCount",
+                    [from, to],
+                    { fallbackServers }
+                )
                 .then(result => {
                     if (typeof result === "number") {
                         resolve(result);
@@ -1282,6 +1374,7 @@ export class ChainRpc {
         parameters: string[][],
         indices: number[]
     ): Promise<string[]> {
+        const fallbackServers = this.fallbackServers;
         if (!(transaction instanceof SignedTransaction)) {
             throw Error(
                 `Expected the first argument of executeVM to be a Transaction but found ${transaction}`
@@ -1303,11 +1396,11 @@ export class ChainRpc {
         );
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("chain_executeVM", [
-                    transaction,
-                    params,
-                    indices
-                ])
+                .sendRpcRequest(
+                    "chain_executeVM",
+                    [transaction, params, indices],
+                    { fallbackServers }
+                )
                 .then(result => {
                     if (result.every((str: any) => typeof str === "string")) {
                         resolve(result);

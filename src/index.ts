@@ -56,6 +56,7 @@ class SDK {
         networkId?: NetworkId;
         options?: {
             transactionSigner?: string;
+            fallbackServers?: string[];
         };
     }) {
         const {

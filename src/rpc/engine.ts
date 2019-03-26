@@ -7,12 +7,14 @@ const RLP = require("rlp");
 
 export class EngineRpc {
     private rpc: Rpc;
-
+    private fallbackServers?: string[];
     /**
      * @hidden
      */
-    constructor(rpc: Rpc) {
+    constructor(rpc: Rpc, options: { fallbackServers?: string[] }) {
         this.rpc = rpc;
+        const { fallbackServers } = options;
+        this.fallbackServers = fallbackServers;
     }
 
     /**
@@ -20,9 +22,10 @@ export class EngineRpc {
      * @returns PlatformAddress or null
      */
     public getCoinbase(): Promise<PlatformAddress | null> {
+        const fallbackServers = this.fallbackServers;
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("engine_getCoinbase", [])
+                .sendRpcRequest("engine_getCoinbase", [], { fallbackServers })
                 .then(result => {
                     try {
                         resolve(
@@ -47,9 +50,12 @@ export class EngineRpc {
      * @returns PlatformAddress or null
      */
     public getBlockReward(): Promise<U64> {
+        const fallbackServers = this.fallbackServers;
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("engine_getBlockReward", [])
+                .sendRpcRequest("engine_getBlockReward", [], {
+                    fallbackServers
+                })
                 .then(result => {
                     try {
                         resolve(U64.ensure(result));
@@ -70,9 +76,12 @@ export class EngineRpc {
      * @returns PlatformAddress or null
      */
     public getRecommendedConfirmation(): Promise<number> {
+        const fallbackServers = this.fallbackServers;
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("engine_getRecommendedConfirmation", [])
+                .sendRpcRequest("engine_getRecommendedConfirmation", [], {
+                    fallbackServers
+                })
                 .then(result => {
                     if (typeof result === "number") {
                         return resolve(result);
@@ -120,13 +129,14 @@ export class EngineRpc {
         }
 
         return new Promise((resolve, reject) => {
+            const fallbackServers = this.fallbackServers;
             const rlpKeyFragments = toHex(RLP.encode(keyFragments));
             this.rpc
-                .sendRpcRequest("engine_getCustomActionData", [
-                    handlerId,
-                    `0x${rlpKeyFragments}`,
-                    blockNumber
-                ])
+                .sendRpcRequest(
+                    "engine_getCustomActionData",
+                    [handlerId, `0x${rlpKeyFragments}`, blockNumber],
+                    { fallbackServers }
+                )
                 .then(result => {
                     if (result == null) {
                         return resolve(null);

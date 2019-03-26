@@ -39,6 +39,7 @@ export class Rpc {
      */
     public devel: DevelRpc;
     private client: any;
+    private server: string;
 
     /**
      * @param params.server HTTP RPC server address.
@@ -48,54 +49,75 @@ export class Rpc {
         server: string;
         options?: {
             transactionSigner?: string;
+            fallbackServers?: string[];
         };
     }) {
         const { server, options = {} } = params;
-        this.client = jaysonBrowserClient((request: any, callback: any) => {
-            fetch(server, {
-                method: "POST",
-                body: request,
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-                .then(res => {
-                    return res.text();
+        this.server = server;
+        this.client = (rpcServer: string) => {
+            return jaysonBrowserClient((request: any, callback: any) => {
+                fetch(rpcServer, {
+                    method: "POST",
+                    body: request,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
                 })
-                .then(text => {
-                    return callback(null, text);
-                })
-                .catch(err => {
-                    return callback(err);
-                });
-        });
+                    .then(res => {
+                        return res.text();
+                    })
+                    .then(text => {
+                        return callback(null, text);
+                    })
+                    .catch(err => {
+                        return callback(err);
+                    });
+            });
+        };
 
         this.node = new NodeRpc(this);
         this.chain = new ChainRpc(this, options);
         this.network = new NetworkRpc(this);
         this.account = new AccountRpc(this);
-        this.engine = new EngineRpc(this);
+        this.engine = new EngineRpc(this, options);
         this.devel = new DevelRpc(this);
     }
 
-    public sendRpcRequest = (
+    public sendRpcRequest = async (
         name: string,
         params: any[],
-        options?: { id?: string }
+        options?: { id?: string; fallbackServers?: string[] }
     ) => {
-        return new Promise<any>((resolve, reject) => {
+        const { fallbackServers } = options || { fallbackServers: [] };
+        const allServers: string[] =
+            fallbackServers === undefined
+                ? [this.server]
+                : [this.server, ...fallbackServers];
+        const errors: any[] = [];
+        for (const server of allServers) {
             const { id } = options || { id: undefined };
-            this.client.request(name, params, id, (err: any, res: any) => {
-                if (err) {
-                    return reject(
-                        Error(`An error occurred while ${name}: ${err}`)
+            try {
+                return new Promise<any>((resolve, reject) => {
+                    this.client(server).request(
+                        name,
+                        params,
+                        id,
+                        (err: any, res: any) => {
+                            if (err || res.error) {
+                                reject(err || res.error);
+                            } else {
+                                resolve(res.result);
+                            }
+                        }
                     );
-                } else if (res.error) {
-                    // FIXME: Throw Error with a description
-                    return reject(res.error);
-                }
-                resolve(res.result);
-            });
-        });
+                });
+            } catch (err) {
+                errors.push({ [server]: err });
+            }
+        }
+        if (errors.length === 1) {
+            return Promise.reject(errors[0][this.server]);
+        }
+        return Promise.reject(errors);
     };
 }
