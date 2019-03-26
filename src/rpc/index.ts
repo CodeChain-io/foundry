@@ -80,8 +80,13 @@ export class Rpc {
         this.devel = new DevelRpc(this);
     }
 
-    public sendRpcRequest = (name: string, params: any[], id?: string) => {
+    public sendRpcRequest = (
+        name: string,
+        params: any[],
+        options?: { id?: string }
+    ) => {
         return new Promise<any>((resolve, reject) => {
+            const { id } = options || { id: undefined };
             this.client.request(name, params, id, (err: any, res: any) => {
                 if (err) {
                     return reject(

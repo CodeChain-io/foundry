@@ -17,7 +17,7 @@ export class NodeRpc {
     public ping(id?: string): Promise<string> {
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("ping", [], id)
+                .sendRpcRequest("ping", [], { id })
                 .then(result => {
                     if (typeof result === "string") {
                         return resolve(result);
