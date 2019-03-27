@@ -286,23 +286,17 @@ export function fromJSONToTransaction(result: any): Transaction {
  * @returns A SignedTransaction.
  */
 export function fromJSONToSignedTransaction(data: SignedTransactionJSON) {
-    const { sig, blockNumber, blockHash, transactionIndex, result } = data;
+    const { sig, blockNumber, blockHash, transactionIndex } = data;
     if (typeof sig !== "string") {
         throw Error("Unexpected type of sig");
     }
-    if (
-        blockNumber != null &&
-        blockHash != null &&
-        transactionIndex != null &&
-        result != null
-    ) {
+    if (blockNumber != null && blockHash != null && transactionIndex != null) {
         return new SignedTransaction(
             fromJSONToTransaction(data),
             sig,
             blockNumber,
             new H256(blockHash),
-            transactionIndex,
-            result
+            transactionIndex
         );
     } else {
         return new SignedTransaction(fromJSONToTransaction(data), sig);

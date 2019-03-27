@@ -1179,7 +1179,7 @@ export class ChainRpc {
     public executeTransaction(
         tx: Transaction,
         sender: PlatformAddressValue
-    ): Promise<boolean> {
+    ): Promise<string | null> {
         if (!(tx instanceof Transaction)) {
             throw Error(
                 `Expected the first argument of executeTransaction to be a Transaction but found ${tx}`
@@ -1196,17 +1196,7 @@ export class ChainRpc {
                     tx.toJSON(),
                     PlatformAddress.ensure(sender).toString()
                 ])
-                .then(result => {
-                    if (typeof result === "boolean") {
-                        resolve(result);
-                    } else {
-                        reject(
-                            Error(
-                                `Expected chain_executeTransaction to return a boolean but it returned ${result}`
-                            )
-                        );
-                    }
-                })
+                .then(resolve)
                 .catch(reject);
         });
     }

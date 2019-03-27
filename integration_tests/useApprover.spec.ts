@@ -167,14 +167,10 @@ async function transferAssetUsingRegular(
         })
     );
 
-    const transferTxResults = await sdk.rpc.chain.getTransactionResultsByTracker(
-        transferTx.tracker(),
-        {
-            timeout: 5 * 60 * 1000
-        }
+    const tx = await sdk.rpc.chain.getTransactionByTracker(
+        transferTx.tracker()
     );
-    expect(transferTxResults.length).toBe(2);
-    expect(transferTxResults[1]).toBe(true);
+    expect(tx).not.toBeNull();
 }
 async function transferAssetUsingOther(
     mintTx: MintAsset,
@@ -215,12 +211,8 @@ async function transferAssetUsingOther(
         })
     );
 
-    const transferTxResults = await sdk.rpc.chain.getTransactionResultsByTracker(
-        transferTx.tracker(),
-        {
-            timeout: 5 * 60 * 1000
-        }
+    const tx = await sdk.rpc.chain.getTransactionByTracker(
+        transferTx.tracker()
     );
-    expect(transferTxResults.length).toBe(1);
-    expect(transferTxResults[0]).toBe(false);
+    expect(tx).toBeNull();
 }
