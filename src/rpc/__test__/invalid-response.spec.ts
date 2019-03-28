@@ -204,7 +204,7 @@ describe("Invalid response", () => {
                     })
                     .catch(e => {
                         expect(e.toString()).toContain(
-                            "chain_getTransactionResultsByTracker"
+                            "mempool_getTransactionResultsByTracker"
                         );
                         expect(e.toString()).toContain("JSON of boolean");
                         expect(e.toString()).toContain("undefined");
@@ -363,7 +363,7 @@ describe("Invalid response", () => {
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain(
-                            "chain_getPendingTransactions"
+                            "mempool_getPendingTransactions"
                         );
                         expect(e.toString()).toContain("transactions");
                         expect(e.toString()).toContain("lastTimestamp");
