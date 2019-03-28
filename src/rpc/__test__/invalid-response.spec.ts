@@ -204,7 +204,7 @@ describe("Invalid response", () => {
                     })
                     .catch(e => {
                         expect(e.toString()).toContain(
-                            "chain_getTransactionResult"
+                            "chain_getTransactionResultsByTracker"
                         );
                         expect(e.toString()).toContain("JSON of boolean");
                         expect(e.toString()).toContain("undefined");
