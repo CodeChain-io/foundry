@@ -63,9 +63,9 @@ async function setRegularKey() {
         })
     );
 
-    await sdk.rpc.chain.getTransactionResult(hash, {
-        timeout: 5 * 60 * 1000
-    });
+    while (!(await sdk.rpc.chain.containTransaction(hash))) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
 }
 
 async function sendCCCToOther(
@@ -87,9 +87,7 @@ async function sendCCCToOther(
         })
     );
 
-    const result = await sdk.rpc.chain.getTransactionResult(hash, {
-        timeout: 5 * 60 * 1000
-    });
+    const result = await sdk.rpc.chain.containTransaction(hash);
     expect(result).toBeTruthy();
     expect(result!).toBe(true);
 }

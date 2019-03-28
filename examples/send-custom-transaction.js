@@ -23,7 +23,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             passphrase: ACCOUNT_PASSPHRASE
         }
     );
-    const result = await sdk.rpc.chain.getTransactionResult(hash);
+    const result = await sdk.rpc.chain.containTransaction(hash);
     console.log("result:", result);
 })().catch(err => {
     console.error(`Error:`, err);

@@ -160,52 +160,25 @@ export class ChainRpc {
     }
 
     /**
-     * Gets the transaction result of given tx.
+     * Queries whether the chain has the transaction of given tx.
      * @param hash The tx hash of which to get the corresponding tx of.
-     * @param options.timeout Indicating milliseconds to wait the tx to be confirmed.
-     * @returns boolean, or null when transaction of given hash not exists.
+     * @returns boolean when transaction of given hash not exists.
      */
-    public async getTransactionResult(
-        hash: H256Value,
-        options: { timeout?: number } = {}
-    ): Promise<boolean | null> {
+    public async containTransaction(hash: H256Value): Promise<boolean> {
         if (!H256.check(hash)) {
             throw Error(
-                `Expected the first argument of getTransactionResult to be an H256 value but found ${hash}`
+                `Expected the first argument of containTransaction to be an H256 value but found ${hash}`
             );
         }
-        const attemptToGet = async () => {
-            return this.rpc.sendRpcRequest("chain_getTransactionResult", [
-                `0x${H256.ensure(hash).value}`
-            ]);
-        };
-        const { timeout } = options;
-        if (
-            timeout !== undefined &&
-            (typeof timeout !== "number" || timeout < 0)
-        ) {
-            throw Error(
-                `Expected timeout param of getTransactionResult to be non-negative number but found ${timeout}`
-            );
-        }
-        const startTime = Date.now();
-        let result = await attemptToGet();
-        while (
-            result === null &&
-            timeout !== undefined &&
-            Date.now() - startTime < timeout
-        ) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            result = await attemptToGet();
-        }
-        if (result === null) {
-            return null;
-        }
+        const result = await this.rpc.sendRpcRequest(
+            "chain_containTransaction",
+            [`0x${H256.ensure(hash).value}`]
+        );
         try {
             return JSON.parse(result);
         } catch (e) {
             throw Error(
-                `Expected chain_getTransactionResult to return either null or JSON of boolean, but an error occurred: ${e.toString()}`
+                `Expected chain_containTransaction to return JSON of boolean, but an error occurred: ${e.toString()}`
             );
         }
     }

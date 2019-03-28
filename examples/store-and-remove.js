@@ -24,9 +24,7 @@ const privForStore = sdk.util.generatePrivateKey();
         passphrase: ACCOUNT_PASSPHRASE
     });
     const storeHash = storeResult.hash;
-    const result1 = await sdk.rpc.chain.getTransactionResult(storeHash, {
-        timeout: 300 * 1000
-    });
+    const result1 = await sdk.rpc.chain.containTransaction(storeHash);
     console.log(result1); // true
 
     // To get the text, use hash of signed tx
@@ -48,8 +46,6 @@ const privForStore = sdk.util.generatePrivateKey();
         passphrase: ACCOUNT_PASSPHRASE
     });
     const removeHash = removeResult.hash;
-    const result2 = await sdk.rpc.chain.getTransactionResult(removeHash, {
-        timeout: 300 * 1000
-    });
+    const result2 = await sdk.rpc.chain.containTransaction(removeHash);
     console.log(result2); // true
 })().catch(console.error);

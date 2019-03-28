@@ -15,7 +15,7 @@ const sdk = new SDK({
 const { H160, H256 } = SDK.Core.classes;
 
 test("AssetMintTransaction fromJSONToTransaction", async () => {
-    const metadata = "";
+    const metadata = `{seed: ${Math.random()}}`;
     const lockScriptHash = new H160("0000000000000000000000000000000000000000");
     const supply = 100;
     const approver = null;
@@ -25,6 +25,9 @@ test("AssetMintTransaction fromJSONToTransaction", async () => {
         supply,
         approver
     });
+    while (!(await sdk.rpc.chain.containTransaction(hash))) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
     const tx = await sdk.rpc.chain.getTransaction(hash);
     if (tx == null) {
         throw Error("Cannot get the tx");
@@ -33,7 +36,7 @@ test("AssetMintTransaction fromJSONToTransaction", async () => {
     expect(tx.unsigned.type()).toEqual("mintAsset");
 
     expect(tx.unsigned.toJSON().action).toMatchObject({
-        metadata: expect.anything(),
+        metadata,
         output: {
             lockScriptHash: expect.anything(),
             // FIXME: Buffer[]

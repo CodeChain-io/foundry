@@ -33,10 +33,7 @@ const tx = sdk.core.createMintAssetTransaction({
         passphrase: ACCOUNT_PASSPHRASE
     });
     // Get the result of the tx.
-    const result = await sdk.rpc.chain.getTransactionResult(hash, {
-        // Wait up to 120 seconds to get the result.
-        timeout: 120 * 1000
-    });
+    const result = await sdk.rpc.chain.containTransaction(hash);
     // The result of asset-transaction-group tx is an array of the object that has
     // type { success: boolean }. Each object represents the result of each
     // transaction.

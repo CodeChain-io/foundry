@@ -50,9 +50,9 @@ const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
         })
     );
 
-    await sdk.rpc.chain.getTransactionResult(hash, {
-        timeout: 60 * 60 * 1000
-    });
+    while (!(await sdk.rpc.chain.containTransaction(hash))) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
     console.log("The tx contains 'setRegularkey' has been mined");
 
     const beforeBalance = await sdk.rpc.chain.getBalance(masterAddress);
@@ -72,9 +72,9 @@ const regularPublic = SDK.util.getPublicFromPrivate(regularSecret);
             fee: 10
         })
     );
-    await sdk.rpc.chain.getTransactionResult(hash2, {
-        timeout: 60 * 60 * 1000
-    });
+    while (!(await sdk.rpc.chain.containTransaction(hash2))) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
     console.log("The tx signed with 'regularSecret' has been mined");
 
     const afterBalance = await sdk.rpc.chain.getBalance(masterAddress);
