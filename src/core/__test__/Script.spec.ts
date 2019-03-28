@@ -1,26 +1,6 @@
 import { Script } from "../Script";
 
-const {
-    NOP,
-    BURN,
-    NOT,
-    EQ,
-    JMP,
-    JNZ,
-    JZ,
-    PUSH,
-    POP,
-    PUSHB,
-    DUP,
-    SWAP,
-    COPY,
-    DROP,
-    CHKSIG,
-    BLAKE256,
-    SHA256,
-    RIPEMD160,
-    KECCAK256
-} = Script.Opcode;
+const { NOP, PUSH, PUSHB, CHKTIMELOCK } = Script.Opcode;
 
 test("Script.empty()", () => {
     expect(() => {
@@ -69,4 +49,26 @@ test("toToken() throws when the parameter is expected but not exists", () => {
     expect(() => {
         new Script(Buffer.from([PUSHB, 3, 0xaa, 0xbb])).toTokens();
     }).toThrow("The parameter of PUSHB is expected but not exists");
+});
+
+test("toToken() CHECKTIMELOCK", () => {
+    expect(() => {
+        new Script(Buffer.from([CHKTIMELOCK, 0])).toTokens();
+    }).toThrow("0 is an invalid timelock type");
+
+    const block = new Script(Buffer.from([CHKTIMELOCK, 1])).toTokens();
+    expect(block).toEqual(["CHKTIMELOCK", "BLOCK"]);
+
+    const blockAge = new Script(Buffer.from([CHKTIMELOCK, 2])).toTokens();
+    expect(blockAge).toEqual(["CHKTIMELOCK", "BLOCK_AGE"]);
+
+    const time = new Script(Buffer.from([CHKTIMELOCK, 3])).toTokens();
+    expect(time).toEqual(["CHKTIMELOCK", "TIME"]);
+
+    const timeAge = new Script(Buffer.from([CHKTIMELOCK, 4])).toTokens();
+    expect(timeAge).toEqual(["CHKTIMELOCK", "TIME_AGE"]);
+
+    expect(() => {
+        new Script(Buffer.from([CHKTIMELOCK, 5])).toTokens();
+    }).toThrow("5 is an invalid timelock type");
 });

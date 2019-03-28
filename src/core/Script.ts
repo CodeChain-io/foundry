@@ -69,7 +69,8 @@ export class Script {
             SHA256,
             RIPEMD160,
             KECCAK256,
-            BLAKE160
+            BLAKE160,
+            CHKTIMELOCK
         } = Script.Opcode;
         let cursor = 0;
         while (cursor < data.length) {
@@ -129,6 +130,34 @@ export class Script {
                     tokens.push(name);
                     tokens.push(`0x${val.toString(16).toUpperCase()}`);
                     break;
+                case CHKTIMELOCK: {
+                    tokens.push(name);
+                    let type;
+                    try {
+                        type = data.readUInt8(cursor++);
+                    } catch (_) {
+                        throw Error(
+                            `The parameter of ${name} is expected but not exists`
+                        );
+                    }
+                    switch (type) {
+                        case 1:
+                            tokens.push("BLOCK");
+                            break;
+                        case 2:
+                            tokens.push("BLOCK_AGE");
+                            break;
+                        case 3:
+                            tokens.push("TIME");
+                            break;
+                        case 4:
+                            tokens.push("TIME_AGE");
+                            break;
+                        default:
+                            throw Error(`${type} is an invalid timelock type`);
+                    }
+                    break;
+                }
                 default:
                     throw Error(
                         `Unknown opcode: 0x${opcode.toString(16).toUpperCase()}`
