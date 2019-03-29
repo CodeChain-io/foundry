@@ -1,4 +1,4 @@
-import { blake160, blake256, blake256WithKey } from "../../utils";
+import { blake160, blake256 } from "../../utils";
 import { Asset } from "../Asset";
 import { AssetScheme, H160, H256, PlatformAddress } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
@@ -118,40 +118,6 @@ export class MintAsset extends Transaction implements AssetTransaction {
         return new H160(blake);
     }
 
-    /**
-     * Get the asset address of the output.
-     * @returns An asset address which is H256.
-     */
-    public getAssetAddress(): H256 {
-        const { shardId } = this._transaction;
-        const blake = blake256WithKey(
-            this.tracker().value,
-            new Uint8Array([
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00
-            ])
-        );
-        const shardPrefix = convertU16toHex(shardId);
-        const prefix = `4100${shardPrefix}`;
-        return new H256(
-            blake.replace(new RegExp(`^.{${prefix.length}}`), prefix)
-        );
-    }
-
     public type(): string {
         return "mintAsset";
     }
@@ -169,12 +135,6 @@ export class MintAsset extends Transaction implements AssetTransaction {
             approvals: this.approvals
         };
     }
-}
-
-function convertU16toHex(id: number) {
-    const hi: string = ("0" + ((id >> 8) & 0xff).toString(16)).slice(-2);
-    const lo: string = ("0" + (id & 0xff).toString(16)).slice(-2);
-    return hi + lo;
 }
 
 /**

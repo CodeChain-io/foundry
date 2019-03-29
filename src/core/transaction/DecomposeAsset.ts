@@ -150,40 +150,6 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
         );
     }
 
-    /**
-     * Get the asset address of an output.
-     * @param index An index indicating the output.
-     * @returns An asset address which is H256.
-     */
-    public getAssetAddress(index: number): H256 {
-        const iv = new Uint8Array([
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            (index >> 56) & 0xff,
-            (index >> 48) & 0xff,
-            (index >> 40) & 0xff,
-            (index >> 32) & 0xff,
-            (index >> 24) & 0xff,
-            (index >> 16) & 0xff,
-            (index >> 8) & 0xff,
-            index & 0xff
-        ]);
-        const shardId = this._transaction.outputs[index].shardId;
-
-        const blake = blake256WithKey(this.tracker().value, iv);
-        const shardPrefix = convertU16toHex(shardId);
-        const prefix = `4100${shardPrefix}`;
-        return new H256(
-            blake.replace(new RegExp(`^.{${prefix.length}}`), prefix)
-        );
-    }
-
     public type(): string {
         return "decomposeAsset";
     }
@@ -201,12 +167,6 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
             approvals: this.approvals
         };
     }
-}
-
-function convertU16toHex(id: number) {
-    const hi: string = ("0" + ((id >> 8) & 0xff).toString(16)).slice(-2);
-    const lo: string = ("0" + (id & 0xff).toString(16)).slice(-2);
-    return hi + lo;
 }
 
 /**
