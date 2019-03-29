@@ -3,7 +3,7 @@ import {
     PlatformAddressValue
 } from "codechain-primitives/lib";
 import { SDK } from "../src";
-import { AssetTransferAddress, MintAsset } from "../src/core/classes";
+import { AssetAddress, MintAsset } from "../src/core/classes";
 
 import {
     ACCOUNT_ADDRESS,
@@ -39,7 +39,7 @@ test("checkApproverValidation", async () => {
     });
     await sendCCCToOther(ACCOUNT_ADDRESS, masterAddress, ACCOUNT_SECRET, 1_000);
 
-    const aliceAddress = await sdk.key.createAssetTransferAddress();
+    const aliceAddress = await sdk.key.createAssetAddress();
     const mintTx = await mintAssetUsingMaster(aliceAddress);
     await setRegularKey();
     await sendCCCToOther(masterAddress, otherAddress, regularSecret, 100);
@@ -93,7 +93,7 @@ async function sendCCCToOther(
 }
 
 async function mintAssetUsingMaster(
-    aliceAddress: AssetTransferAddress
+    aliceAddress: AssetAddress
 ): Promise<MintAsset> {
     const assetScheme = sdk.core.createAssetScheme({
         shardId: 0,
@@ -133,7 +133,7 @@ async function mintAssetUsingMaster(
 
 async function transferAssetUsingRegular(
     mintTx: MintAsset,
-    aliceAddress: AssetTransferAddress,
+    aliceAddress: AssetAddress,
     bobAddress: string
 ) {
     const asset = mintTx.getMintedAsset();
@@ -172,7 +172,7 @@ async function transferAssetUsingRegular(
 }
 async function transferAssetUsingOther(
     mintTx: MintAsset,
-    aliceAddress: AssetTransferAddress,
+    aliceAddress: AssetAddress,
     bobAddress: string
 ) {
     const asset = mintTx.getMintedAsset();

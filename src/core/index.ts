@@ -1,6 +1,6 @@
 import {
-    AssetTransferAddress,
-    AssetTransferAddressValue,
+    AssetAddress,
+    AssetAddressValue,
     H128,
     H160,
     H160Value,
@@ -77,7 +77,7 @@ export class Core {
         Script,
         // Addresses
         PlatformAddress,
-        AssetTransferAddress
+        AssetAddress
     };
 
     public classes = Core.classes;
@@ -199,7 +199,7 @@ export class Core {
               }
             | {
                   shardId: number;
-                  recipient: AssetTransferAddressValue;
+                  recipient: AssetAddressValue;
                   quantity: U64Value;
                   payer: PlatformAddressValue;
               }
@@ -210,10 +210,10 @@ export class Core {
         checkPayer(payer);
         let data;
         if ("recipient" in params) {
-            checkAssetTransferAddressRecipient(params.recipient);
+            checkAssetAddressRecipient(params.recipient);
             data = {
                 shardId,
-                recipient: AssetTransferAddress.ensure(params.recipient),
+                recipient: AssetAddress.ensure(params.recipient),
                 quantity: U64.ensure(quantity),
                 payer: PlatformAddress.ensure(payer)
             };
@@ -418,7 +418,7 @@ export class Core {
                   parametersFrom: Buffer[];
               }
             | {
-                  recipientFrom: AssetTransferAddressValue;
+                  recipientFrom: AssetAddressValue;
               }) &
             (
                 | {
@@ -426,7 +426,7 @@ export class Core {
                       parametersFee: Buffer[];
                   }
                 | {
-                      recipientFee: AssetTransferAddressValue;
+                      recipientFee: AssetAddressValue;
                   }
                 | {})
     ): Order {
@@ -499,9 +499,9 @@ export class Core {
         let feeParams;
 
         if ("recipientFrom" in params) {
-            checkAssetTransferAddressRecipient(params.recipientFrom);
+            checkAssetAddressRecipient(params.recipientFrom);
             toParams = {
-                recipientFrom: AssetTransferAddress.ensure(params.recipientFrom)
+                recipientFrom: AssetAddress.ensure(params.recipientFrom)
             };
         } else {
             const { lockScriptHashFrom, parametersFrom } = params;
@@ -514,9 +514,9 @@ export class Core {
         }
 
         if ("recipientFee" in params) {
-            checkAssetTransferAddressRecipient(params.recipientFee);
+            checkAssetAddressRecipient(params.recipientFee);
             feeParams = {
-                recipientFee: AssetTransferAddress.ensure(params.recipientFee)
+                recipientFee: AssetAddress.ensure(params.recipientFee)
             };
         } else if ("lockScriptHashFee" in params) {
             const { lockScriptHashFee, parametersFee } = params;
@@ -571,7 +571,7 @@ export class Core {
                   allowedScriptHashes?: H160[];
                   supply?: U64Value;
               };
-        recipient: AssetTransferAddressValue;
+        recipient: AssetAddressValue;
         approvals?: string[];
     }): MintAsset {
         const { scheme, recipient, approvals = [] } = params;
@@ -593,7 +593,7 @@ export class Core {
             typeof scheme.metadata === "string"
                 ? scheme.metadata
                 : JSON.stringify(scheme.metadata);
-        checkAssetTransferAddressRecipient(recipient);
+        checkAssetAddressRecipient(recipient);
         checkNetworkId(networkId);
         if (shardId === undefined) {
             throw Error(`shardId is undefined`);
@@ -614,7 +614,7 @@ export class Core {
             metadata,
             output: new AssetMintOutput({
                 supply: U64.ensure(supply),
-                recipient: AssetTransferAddress.ensure(recipient)
+                recipient: AssetAddress.ensure(recipient)
             }),
             approvals
         });
@@ -673,7 +673,7 @@ export class Core {
     public createIncreaseAssetSupplyTransaction(params: {
         shardId: number;
         assetType: H160Value;
-        recipient: AssetTransferAddressValue;
+        recipient: AssetAddressValue;
         supply?: U64Value;
         approvals?: string[];
     }): IncreaseAssetSupply {
@@ -694,7 +694,7 @@ export class Core {
             assetType: H160.ensure(assetType),
             output: new AssetMintOutput({
                 supply: U64.ensure(supply),
-                recipient: AssetTransferAddress.ensure(recipient)
+                recipient: AssetAddress.ensure(recipient)
             }),
             approvals
         });
@@ -855,7 +855,7 @@ export class Core {
             quantity: U64Value;
         } & (
             | {
-                  recipient: AssetTransferAddressValue;
+                  recipient: AssetAddressValue;
               }
             | {
                   lockScriptHash: H256Value;
@@ -869,9 +869,9 @@ export class Core {
         checkAmount(quantity);
         if ("recipient" in params) {
             const { recipient } = params;
-            checkAssetTransferAddressRecipient(recipient);
+            checkAssetAddressRecipient(recipient);
             return new AssetTransferOutput({
-                recipient: AssetTransferAddress.ensure(recipient),
+                recipient: AssetAddress.ensure(recipient),
                 assetType: H160.ensure(assetType),
                 shardId,
                 quantity
@@ -909,12 +909,10 @@ function checkPlatformAddressRecipient(recipient: PlatformAddressValue) {
     }
 }
 
-function checkAssetTransferAddressRecipient(
-    recipient: AssetTransferAddressValue
-) {
-    if (!AssetTransferAddress.check(recipient)) {
+function checkAssetAddressRecipient(recipient: AssetAddressValue) {
+    if (!AssetAddress.check(recipient)) {
         throw Error(
-            `Expected recipient param to be a AssetTransferAddress but found ${recipient}`
+            `Expected recipient param to be a AssetAddress but found ${recipient}`
         );
     }
 }

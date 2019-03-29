@@ -11,7 +11,7 @@ const ACCOUNT_ADDRESS =
 
 (async () => {
     const shardId = 0;
-    const aliceAddress = await sdk.key.createAssetTransferAddress();
+    const aliceAddress = await sdk.key.createAssetAddress();
     const seq = await sdk.rpc.chain.getSeq(ACCOUNT_ADDRESS);
 
     const goldAssetScheme = sdk.core.createAssetScheme({

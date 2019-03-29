@@ -40,7 +40,7 @@ function extractTransactions(block) {
 }
 
 const {
-    AssetTransferAddress,
+    AssetAddress,
     AssetMintTransaction,
     AssetTransferTransaction
 } = sdk.core.classes;
@@ -54,13 +54,9 @@ function extractAddresses(transactions) {
                         "hex"
                     );
                     return [
-                        AssetTransferAddress.fromTypeAndPayload(
-                            1,
-                            publicKeyHash,
-                            {
-                                networkId: "sc"
-                            }
-                        ).value
+                        AssetAddress.fromTypeAndPayload(1, publicKeyHash, {
+                            networkId: "sc"
+                        }).value
                     ];
                 } else {
                     return [];
@@ -72,7 +68,7 @@ function extractAddresses(transactions) {
                         const publicKeyHash = output.parameters[0].toString(
                             "hex"
                         );
-                        return AssetTransferAddress.fromTypeAndPayload(
+                        return AssetAddress.fromTypeAndPayload(
                             1,
                             publicKeyHash,
                             {

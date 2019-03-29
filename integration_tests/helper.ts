@@ -51,7 +51,7 @@ export const mintAsset = async ({
         supply,
         approver
     });
-    const assetAddress = sdk.core.classes.AssetTransferAddress.fromTypeAndPayload(
+    const assetAddress = sdk.core.classes.AssetAddress.fromTypeAndPayload(
         0,
         lockScriptHash,
         { networkId: CODECHAIN_NETWORK_ID }

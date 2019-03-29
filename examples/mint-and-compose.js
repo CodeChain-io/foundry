@@ -11,7 +11,7 @@ const ACCOUNT_ADDRESS =
 const ACCOUNT_PASSPHRASE = "satoshi";
 
 (async () => {
-    const aliceAddress = await sdk.key.createAssetTransferAddress({
+    const aliceAddress = await sdk.key.createAssetAddress({
         type: "P2PKH"
     });
 

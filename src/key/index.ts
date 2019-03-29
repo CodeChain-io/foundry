@@ -1,5 +1,5 @@
 import {
-    AssetTransferAddress,
+    AssetAddress,
     H256,
     PlatformAddress,
     PlatformAddressValue,
@@ -94,18 +94,18 @@ export class Key {
     }
 
     /**
-     * Creates a new asset transfer address
-     * @param params.type The type of AssetTransferAddress. The default value is "P2PKH".
+     * Creates a new asset address
+     * @param params.type The type of AssetAddress. The default value is "P2PKH".
      * @param params.keyStore A key store.
-     * @returns A new platform address
+     * @returns A new asset address
      */
-    public async createAssetTransferAddress(
+    public async createAssetAddress(
         params: {
             type?: "P2PKH" | "P2PKHBurn";
             keyStore?: KeyStore;
             passphrase?: string;
         } = {}
-    ): Promise<AssetTransferAddress> {
+    ): Promise<AssetAddress> {
         const {
             keyStore = await this.ensureKeyStore(),
             type = "P2PKH",
@@ -125,7 +125,7 @@ export class Key {
             return p2pkhBurn.createAddress({ passphrase });
         } else {
             throw Error(
-                `Expected the type param of createAssetTransferAddress to be either P2PKH or P2PKHBurn but found ${type}`
+                `Expected the type param of createAssetAddress to be either P2PKH or P2PKHBurn but found ${type}`
             );
         }
     }

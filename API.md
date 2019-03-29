@@ -9,7 +9,7 @@
   - [Get the balance of an account](#get-the-balance-of-an-account)
   - [Send a payment transaction via sendTransaction](#send-a-payment-transaction-via-sendtransaction)
   - [Send a payment transaction via sendSignedTransaction](#send-a-payment-transaction-via-sendsignedtransaction)
-  - [Create an asset transfer address](#create-an-asset-transfer-address)
+  - [Create an asset address](#create-an-asset-address)
   - [Mint a new asset](#mint-a-new-asset)
   - [Transfer assets](#transfer-assets)
 - [SDK modules](#sdk-modules)
@@ -175,7 +175,7 @@ sdk.rpc.chain
 
 ---
 
-## Create an asset transfer address
+## Create an asset address
 
 ```javascript
 var SDK = require("codechain-sdk");
@@ -184,7 +184,7 @@ var sdk = new SDK({
 });
 
 sdk.key
-  .createAssetTransferAddress()
+  .createAssetAddress()
   .then(function(address) {
     // This type of address is used to receive assets when minting or transferring them.
     // Example: tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze
@@ -202,11 +202,11 @@ var SDK = require("codechain-sdk");
 var sdk = new SDK({ server: "http://localhost:8080" });
 
 async function mintNewAsset() {
-  var address = await sdk.key.createAssetTransferAddress()
+  var address = await sdk.key.createAssetAddress();
   var tx = sdk.core.createMintAssetTransaction({
     scheme: {
       shardId: 0,
-      metadata:{
+      metadata: {
         name: "Silver Coin",
         description: "...",
         icon_url: "..."

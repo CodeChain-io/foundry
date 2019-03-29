@@ -10,7 +10,7 @@ import {
 } from "../../utils";
 import { Asset } from "../Asset";
 import {
-    AssetTransferAddress,
+    AssetAddress,
     H160,
     H256,
     Order,
@@ -183,7 +183,7 @@ export class TransferAsset extends Transaction implements AssetTransaction {
                 const { assetType, shardId, quantity, recipient } = output;
                 this._transaction.outputs.push(
                     new AssetTransferOutput({
-                        recipient: AssetTransferAddress.ensure(recipient),
+                        recipient: AssetAddress.ensure(recipient),
                         quantity: U64.ensure(quantity),
                         assetType: H160.ensure(assetType),
                         shardId

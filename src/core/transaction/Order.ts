@@ -1,10 +1,4 @@
-import {
-    AssetTransferAddress,
-    H160,
-    H256,
-    U64,
-    U64Value
-} from "codechain-primitives";
+import { AssetAddress, H160, H256, U64, U64Value } from "codechain-primitives";
 
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
@@ -59,8 +53,8 @@ export interface OrderAddressData {
     assetQuantityFee?: U64;
     originOutputs: AssetOutPoint[];
     expiration: U64;
-    recipientFrom: AssetTransferAddress;
-    recipientFee: AssetTransferAddress;
+    recipientFrom: AssetAddress;
+    recipientFee: AssetAddress;
 }
 
 export class Order {
@@ -148,7 +142,7 @@ export class Order {
                       parametersFrom: Buffer[];
                   }
                 | {
-                      recipientFrom: AssetTransferAddress;
+                      recipientFrom: AssetAddress;
                   }) &
             (
                 | {
@@ -156,7 +150,7 @@ export class Order {
                       parametersFee: Buffer[];
                   }
                 | {
-                      recipientFee: AssetTransferAddress;
+                      recipientFee: AssetAddress;
                   })
     ) {
         if ("recipientFrom" in data) {
@@ -415,7 +409,7 @@ export class Order {
 }
 
 function decomposeRecipient(
-    recipient: AssetTransferAddress
+    recipient: AssetAddress
 ): {
     lockScriptHash: H160;
     parameters: Buffer[];
@@ -443,7 +437,7 @@ function decomposeRecipient(
             };
         default:
             throw Error(
-                `Unexpected type of AssetTransferAddress: ${type}, ${recipient}`
+                `Unexpected type of AssetAddress: ${type}, ${recipient}`
             );
     }
 }

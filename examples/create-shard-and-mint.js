@@ -42,7 +42,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     const mintTxByNonShardUserHash = await sdk.rpc.chain.sendTransaction(
         sdk.core.createMintAssetTransaction({
             scheme: { shardId, metadata: "" },
-            recipient: await sdk.key.createAssetTransferAddress()
+            recipient: await sdk.key.createAssetAddress()
         }),
         {
             account: account2,
@@ -60,7 +60,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     const mintTxByShardUserHash = await sdk.rpc.chain.sendTransaction(
         sdk.core.createMintAssetTransaction({
             scheme: { shardId, metadata: "" },
-            recipient: await sdk.key.createAssetTransferAddress()
+            recipient: await sdk.key.createAssetAddress()
         }),
         {
             account: ACCOUNT_ADDRESS,

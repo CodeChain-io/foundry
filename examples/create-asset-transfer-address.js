@@ -8,7 +8,7 @@ const sdk = new SDK({
 (async () => {
     // LocalKeyStore creates `keystore.db` file in the working directory.
     const keyStore = await sdk.key.createLocalKeyStore();
-    const address = await sdk.key.createAssetTransferAddress({
+    const address = await sdk.key.createAssetAddress({
         type: "P2PKH", // It supports P2PKH(Pay to Public Key Hash) lock/unlock scripts.
         keyStore
     });

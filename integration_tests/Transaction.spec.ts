@@ -51,8 +51,8 @@ test("AssetMintTransaction fromJSONToTransaction", async () => {
 
 test("AssetTransferTransaction fromJSONToTransaction", async () => {
     const shardId = 0;
-    const addressA = await sdk.key.createAssetTransferAddress();
-    const addressB = await sdk.key.createAssetTransferAddress();
+    const addressA = await sdk.key.createAssetAddress();
+    const addressB = await sdk.key.createAssetAddress();
     const mintTx = sdk.core
         .createAssetScheme({
             shardId,

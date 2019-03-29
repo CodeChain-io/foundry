@@ -1,8 +1,4 @@
-import {
-    AssetTransferAddressValue,
-    H160Value,
-    U64Value
-} from "codechain-primitives";
+import { AssetAddressValue, H160Value, U64Value } from "codechain-primitives";
 
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 
@@ -14,5 +10,5 @@ export type AssetTransferOutputValue =
           quantity: U64Value;
           assetType: H160Value;
           shardId: number;
-          recipient: AssetTransferAddressValue;
+          recipient: AssetAddressValue;
       };

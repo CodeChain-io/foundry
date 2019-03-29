@@ -12,8 +12,8 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 (async () => {
     const shardId = 0;
-    const aliceAddress = await sdk.key.createAssetTransferAddress();
-    const bobAddress = await sdk.key.createAssetTransferAddress({
+    const aliceAddress = await sdk.key.createAssetAddress();
+    const bobAddress = await sdk.key.createAssetAddress({
         type: "P2PKH"
     });
     // Create asset named Gold. Total supply of Gold is 0xfff. The approver is set

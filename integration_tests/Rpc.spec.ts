@@ -419,7 +419,7 @@ describe("rpc", () => {
                         approver: undefined
                     })
                     .createMintTransaction({
-                        recipient: await sdk.key.createAssetTransferAddress()
+                        recipient: await sdk.key.createAssetAddress()
                     });
                 await sdk.rpc.chain.sendSignedTransaction(
                     mintTransaction.sign({
@@ -519,14 +519,14 @@ describe("rpc", () => {
                         approver: undefined
                     })
                     .createMintTransaction({
-                        recipient: await sdk.key.createAssetTransferAddress()
+                        recipient: await sdk.key.createAssetAddress()
                     });
                 const mintedAsset = mintTransaction.getMintedAsset();
                 transferTransaction = sdk.core
                     .createTransferAssetTransaction()
                     .addInputs(mintedAsset)
                     .addOutputs({
-                        recipient: await sdk.key.createAssetTransferAddress(),
+                        recipient: await sdk.key.createAssetAddress(),
                         quantity: 10,
                         assetType: mintedAsset.assetType,
                         shardId

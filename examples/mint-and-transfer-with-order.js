@@ -12,8 +12,8 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 (async () => {
     const shardId = 0;
-    const aliceAddress = await sdk.key.createAssetTransferAddress();
-    const bobAddress = await sdk.key.createAssetTransferAddress();
+    const aliceAddress = await sdk.key.createAssetAddress();
+    const bobAddress = await sdk.key.createAssetAddress();
 
     const goldAssetScheme = sdk.core.createAssetScheme({
         shardId,

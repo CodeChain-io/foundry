@@ -1,6 +1,6 @@
 import {
-    AssetTransferAddress,
-    AssetTransferAddressValue,
+    AssetAddress,
+    AssetAddressValue,
     H160,
     PlatformAddress,
     U64
@@ -110,7 +110,7 @@ export class AssetScheme {
     }
 
     public createMintTransaction(params: {
-        recipient: AssetTransferAddressValue;
+        recipient: AssetAddressValue;
     }): MintAsset {
         const { recipient } = params;
         const {
@@ -134,7 +134,7 @@ export class AssetScheme {
             metadata,
             output: new AssetMintOutput({
                 supply,
-                recipient: AssetTransferAddress.ensure(recipient)
+                recipient: AssetAddress.ensure(recipient)
             }),
             approver,
             registrar,

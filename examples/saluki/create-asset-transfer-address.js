@@ -8,7 +8,7 @@ const sdk = new SDK({
 (async () => {
     // LocalKeyStore creates `keystore.db` file in the working directory.
     const keyStore = await sdk.key.createLocalKeyStore();
-    const address = await sdk.key.createAssetTransferAddress({
+    const address = await sdk.key.createAssetAddress({
         keyStore
     });
     // You can mint assets using this address.

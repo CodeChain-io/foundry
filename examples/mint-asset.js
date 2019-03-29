@@ -11,7 +11,7 @@ const ACCOUNT_ADDRESS =
 const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 // If you want to know how to create an address, see the example "Create an
-// asset transfer address".
+// asset address".
 const address = "tcaqyqckq0zgdxgpck6tjdg4qmp52p2vx3qaexqnegylk";
 
 const tx = sdk.core.createMintAssetTransaction({

@@ -3,7 +3,7 @@ import * as _ from "lodash";
 import { blake128, blake256, blake256WithKey } from "../../utils";
 import {
     Asset,
-    AssetTransferAddress,
+    AssetAddress,
     AssetTransferInput,
     AssetTransferOutput,
     H160,
@@ -102,7 +102,7 @@ export class DecomposeAsset extends Transaction implements AssetTransaction {
                 const { assetType, shardId, quantity, recipient } = output;
                 this._transaction.outputs.push(
                     new AssetTransferOutput({
-                        recipient: AssetTransferAddress.ensure(recipient),
+                        recipient: AssetAddress.ensure(recipient),
                         quantity: U64.ensure(quantity),
                         assetType: H160.ensure(assetType),
                         shardId

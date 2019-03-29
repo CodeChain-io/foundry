@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import {
-    AssetTransferAddress,
-    AssetTransferAddressValue,
+    AssetAddress,
+    AssetAddressValue,
     H160,
     H256,
     U64
@@ -134,7 +134,7 @@ export class Asset {
 
     public createTransferTransaction(params: {
         recipients?: Array<{
-            address: AssetTransferAddressValue;
+            address: AssetAddressValue;
             quantity: U64;
         }>;
         timelock?: null | Timelock;
@@ -166,9 +166,7 @@ export class Asset {
             outputs: recipients.map(
                 recipient =>
                     new AssetTransferOutput({
-                        recipient: AssetTransferAddress.ensure(
-                            recipient.address
-                        ),
+                        recipient: AssetAddress.ensure(recipient.address),
                         assetType,
                         shardId,
                         quantity: recipient.quantity

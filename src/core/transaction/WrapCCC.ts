@@ -2,7 +2,7 @@ import { H160, PlatformAddress, U64 } from "codechain-primitives";
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
 import { Asset } from "../Asset";
-import { AssetTransferAddress } from "../classes";
+import { AssetAddress } from "../classes";
 import { AssetTransaction, Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
@@ -16,7 +16,7 @@ export interface WrapCCCData {
 
 export interface WrapCCCAddressData {
     shardId: number;
-    recipient: AssetTransferAddress;
+    recipient: AssetAddress;
     quantity: U64;
     payer: PlatformAddress;
 }
@@ -62,7 +62,7 @@ export class WrapCCC extends Transaction implements AssetTransaction {
                     break;
                 default:
                     throw Error(
-                        `Unexpected type of AssetTransferAddress: ${type}, ${
+                        `Unexpected type of AssetAddress: ${type}, ${
                             data.recipient
                         }`
                     );

@@ -14,7 +14,7 @@ if (!sdk.core.classes.PlatformAddress.check(parcelSender)) {
 
 (async () => {
     const keyStore = await sdk.key.createLocalKeyStore();
-    const aliceAddress = await sdk.key.createAssetTransferAddress({
+    const aliceAddress = await sdk.key.createAssetAddress({
         type: "P2PKH",
         keyStore
     });

@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { AssetTransferAddress, H160, H256 } from "codechain-primitives";
+import { AssetAddress, H160, H256 } from "codechain-primitives";
 
 import { Script } from "../core/Script";
 import { NetworkId } from "../core/types";
@@ -31,10 +31,10 @@ export class P2PKH {
 
     public async createAddress(
         options: { passphrase?: string } = {}
-    ): Promise<AssetTransferAddress> {
+    ): Promise<AssetAddress> {
         const { passphrase } = options;
         const hash = await this.rawKeyStore.asset.createKey({ passphrase });
-        return AssetTransferAddress.fromTypeAndPayload(1, hash, {
+        return AssetAddress.fromTypeAndPayload(1, hash, {
             networkId: this.networkId
         });
     }

@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { AssetTransferAddress, H160, U64 } from "codechain-primitives";
+import { AssetAddress, H160, U64 } from "codechain-primitives";
 
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
@@ -21,7 +21,7 @@ export interface AssetTransferOutputData {
 }
 
 export interface AssetTransferOutputAddressData {
-    recipient: AssetTransferAddress;
+    recipient: AssetAddress;
     assetType: H160;
     shardId: number;
     quantity: U64;
@@ -91,7 +91,7 @@ export class AssetTransferOutput {
                     break;
                 default:
                     throw Error(
-                        `Unexpected type of AssetTransferAddress: ${type}, ${
+                        `Unexpected type of AssetAddress: ${type}, ${
                             data.recipient
                         }`
                     );

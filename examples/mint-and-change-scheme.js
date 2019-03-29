@@ -12,7 +12,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
 
 (async () => {
     const shardId = 0;
-    const aliceAddress = await sdk.key.createAssetTransferAddress();
+    const aliceAddress = await sdk.key.createAssetAddress();
     const bobAddress = await sdk.key.createPlatformAddress();
     const carolAddress = "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5";
 
