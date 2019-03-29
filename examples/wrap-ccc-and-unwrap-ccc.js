@@ -29,7 +29,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const wrapCCCResult = await sdk.rpc.chain.containTransaction(
+    const wrapCCCResult = await sdk.rpc.chain.containsTransaction(
         wrapCCCSignedHash
     );
     if (!wrapCCCResult) {
@@ -48,7 +48,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const unwrapCCCTxResult = await sdk.rpc.chain.containTransaction(hash);
+    const unwrapCCCTxResult = await sdk.rpc.chain.containsTransaction(hash);
     if (!unwrapCCCTxResult) {
         throw Error("AssetUnwrapCCCTransaction failed");
     }

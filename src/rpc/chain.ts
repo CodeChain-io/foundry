@@ -164,10 +164,10 @@ export class ChainRpc {
      * @param hash The tx hash of which to get the corresponding tx of.
      * @returns boolean when transaction of given hash not exists.
      */
-    public async containTransaction(hash: H256Value): Promise<boolean> {
+    public async containsTransaction(hash: H256Value): Promise<boolean> {
         if (!H256.check(hash)) {
             throw Error(
-                `Expected the first argument of containTransaction to be an H256 value but found ${hash}`
+                `Expected the first argument of containsTransaction to be an H256 value but found ${hash}`
             );
         }
         const result = await this.rpc.sendRpcRequest(
@@ -181,6 +181,19 @@ export class ChainRpc {
                 `Expected chain_containTransaction to return JSON of boolean, but an error occurred: ${e.toString()}`
             );
         }
+    }
+
+    /**
+     * @deprecated since version 0.7.1
+     * Queries whether the chain has the transaction of given tx.
+     * @param hash The tx hash of which to get the corresponding tx of.
+     * @returns boolean when transaction of given hash not exists.
+     */
+    public containTransaction(hash: H256Value): Promise<boolean> {
+        console.error(
+            "containTransaction is deprecated. Use containsTransaction"
+        );
+        return this.containsTransaction(hash);
     }
 
     /**

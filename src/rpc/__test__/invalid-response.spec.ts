@@ -124,11 +124,11 @@ describe("Invalid response", () => {
             test.skip("Invalid type", done => done.fail("not implemented"));
         });
 
-        describe("containTransaction", () => {
+        describe("containsTransaction", () => {
             test("undefined", done => {
                 rpc.sendRpcRequest = jest.fn().mockResolvedValueOnce(undefined);
                 chainRpc
-                    .containTransaction(hashH256)
+                    .containsTransaction(hashH256)
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain(

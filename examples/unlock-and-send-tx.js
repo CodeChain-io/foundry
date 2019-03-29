@@ -21,6 +21,6 @@ const tx = sdk.core.createPayTransaction({
         tx,
         account: ACCOUNT_ADDRESS
     })).hash;
-    const result = await sdk.rpc.chain.containTransaction(hash);
+    const result = await sdk.rpc.chain.containsTransaction(hash);
     console.log(result); // true
 })().catch(console.error);

@@ -387,12 +387,12 @@ describe("rpc", () => {
                 );
             });
 
-            test("containTransaction", async () => {
-                expect(await sdk.rpc.chain.containTransaction(txHash)).toEqual(
+            test("containsTransaction", async () => {
+                expect(await sdk.rpc.chain.containsTransaction(txHash)).toEqual(
                     true
                 );
                 expect(
-                    await sdk.rpc.chain.containTransaction(invalidHash)
+                    await sdk.rpc.chain.containsTransaction(invalidHash)
                 ).toEqual(false);
             });
         });

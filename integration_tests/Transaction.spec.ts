@@ -25,7 +25,7 @@ test("AssetMintTransaction fromJSONToTransaction", async () => {
         supply,
         approver
     });
-    while (!(await sdk.rpc.chain.containTransaction(hash))) {
+    while (!(await sdk.rpc.chain.containsTransaction(hash))) {
         await new Promise(resolve => setTimeout(resolve, 100));
     }
     const tx = await sdk.rpc.chain.getTransaction(hash);

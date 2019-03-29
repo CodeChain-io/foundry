@@ -47,7 +47,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
             passphrase: ACCOUNT_PASSPHRASE
         }
     );
-    const setShardUsersResult = await sdk.rpc.chain.containTransaction(
+    const setShardUsersResult = await sdk.rpc.chain.containsTransaction(
         setShardUsersHash
     );
     if (!setShardUsersResult) {

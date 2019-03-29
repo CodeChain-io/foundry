@@ -29,7 +29,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         account: ACCOUNT_ADDRESS,
         passphrase: ACCOUNT_PASSPHRASE
     });
-    const result = await sdk.rpc.chain.containTransaction(hash);
+    const result = await sdk.rpc.chain.containsTransaction(hash);
     console.log(result); // true
 
     // Difference should be sdk.rpc.chain.transactionFee + quantity
