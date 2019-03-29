@@ -174,12 +174,7 @@ export type EcdsaSignature = string;
  * @returns 65 byte hexstring of ECDSA signature
  */
 export const signEcdsa = (message: string, priv: string): EcdsaSignature => {
-    const { r, s, v } = _signEcdsa(message, priv);
-    return `${_.padStart(r, 64, "0")}${_.padStart(s, 64, "0")}${_.padStart(
-        v.toString(16),
-        2,
-        "0"
-    )}`;
+    return _signEcdsa(message, priv);
 };
 
 /**
@@ -197,10 +192,7 @@ export const verifyEcdsa = (
     if (signature.startsWith("0x")) {
         signature = signature.substr(2);
     }
-    const r = signature.substr(0, 64);
-    const s = signature.substr(64, 64);
-    const v = Number.parseInt(signature.substr(128, 2), 16);
-    return _verifyEcdsa(message, { r, s, v }, pub);
+    return _verifyEcdsa(message, signature, pub);
 };
 
 /**
@@ -216,10 +208,7 @@ export const recoverEcdsa = (
     if (signature.startsWith("0x")) {
         signature = signature.substr(2);
     }
-    const r = signature.substr(0, 64);
-    const s = signature.substr(64, 64);
-    const v = Number.parseInt(signature.substr(128, 2), 16);
-    return _recoverEcdsa(message, { r, s, v });
+    return _recoverEcdsa(message, signature);
 };
 
 /**
