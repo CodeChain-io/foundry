@@ -1,5 +1,5 @@
 {
-  "name": "codechain-sdk-stakeholder-helper",
+  "name": "codechain-stakeholder-sdk",
   "version": "0.1.0",
   "description": "A JavaScript implementation for CodeChain stake token related custom actions and custom transactions",
   "author": "CodeChain Team <codechain@kodebox.io>",
@@ -13,11 +13,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CodeChain-io/codechain-sdk-stakeholder-helper.git"
+    "url": "git+https://github.com/CodeChain-io/codechain-stakeholder-sdk.git"
   },
-  "homepage": "https://github.com/CodeChain-io/codechain-sdk-stakeholder-helper#readme",
+  "homepage": "https://github.com/CodeChain-io/codechain-stakeholder-sdk#readme",
   "bugs": {
-    "url": "https://github.com/CodeChain-io/codechain-sdk-stakeholder-helper/issues"
+    "url": "https://github.com/CodeChain-io/codechain-stakeholder-sdk/issues"
   },
   "main": "lib/index.js",
   "typings": "./lib/index.d.ts",
