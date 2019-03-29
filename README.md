@@ -1,4 +1,4 @@
-# CodeChain SDK Stakeholder Helper
+# CodeChain Stakeholder SDK
 
 A JavaScript implementation for CodeChain stake token related custom actions and custom transactions
 
@@ -16,17 +16,17 @@ You first need to install the package.
 
 ```sh
 # npm
-npm install codechain-sdk-stakeholder-helper
+npm install codechain-stakeholder-sdk
 
 # yarn
-yarn add codechain-sdk-stakeholder-helper
+yarn add codechain-stakeholder-sdk
 ```
 
 ### Get the list of stakeholders
 
 ```js
 const SDK = require("codechain-sdk");
-const { getCCSHolders } = require("codechain-sdk-stakeholder-helper");
+const { getCCSHolders } = require("codechain-stakeholder-sdk");
 
 const sdk = new SDK({
   server: "http://localhost:8080",
@@ -44,7 +44,7 @@ getCCSHolders(sdk)
 
 ```js
 const sdk = ...
-const { getCCSBalance } = require("codechain-sdk-stakeholder-helper");
+const { getCCSBalance } = require("codechain-stakeholder-sdk");
 
 getCCSBalance(sdk, "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd")
   .then(balance => {
@@ -57,7 +57,7 @@ getCCSBalance(sdk, "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd")
 
 ```js
 const sdk = ...
-const { createTransferCCSTransaction } = require("codechain-sdk-stakeholder-helper");
+const { createTransferCCSTransaction } = require("codechain-stakeholder-sdk");
 
 // Transfer 100 tokens to tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f
 const tx = createTransferCCSTransaction(sdk, "tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f", 100);
