@@ -184,19 +184,6 @@ export class ChainRpc {
     }
 
     /**
-     * @deprecated since version 0.7.1
-     * Queries whether the chain has the transaction of given tx.
-     * @param hash The tx hash of which to get the corresponding tx of.
-     * @returns boolean when transaction of given hash not exists.
-     */
-    public containTransaction(hash: H256Value): Promise<boolean> {
-        console.error(
-            "containTransaction is deprecated. Use containsTransaction"
-        );
-        return this.containsTransaction(hash);
-    }
-
-    /**
      * Gets the regular key of an account of given address, recorded in the block of given blockNumber. If blockNumber is not given, then returns the regular key in the most recent block.
      * @param address An account address
      * @param blockNumber The specific block number to get account's regular key at given address.
