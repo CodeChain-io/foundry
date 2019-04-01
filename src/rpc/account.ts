@@ -188,12 +188,12 @@ export class AccountRpc {
         const { tx, account, passphrase } = params;
         if (!PlatformAddress.check(account)) {
             throw Error(
-                `Expected account is a PlatformAddress value but found ${account}`
+                `Expected the account param to be a PlatformAddress value but found ${account}`
             );
         }
         if (passphrase && typeof passphrase !== "string") {
             throw Error(
-                `Expected the third argument to be a string but found ${passphrase}`
+                `Expected the passphrase param to be a string but found ${passphrase}`
             );
         }
         if (tx.fee() == null && this.transactionFee != null) {
