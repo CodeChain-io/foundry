@@ -171,14 +171,14 @@ export class ChainRpc {
             );
         }
         const result = await this.rpc.sendRpcRequest(
-            "chain_containTransaction",
+            "chain_containsTransaction",
             [`0x${H256.ensure(hash).value}`]
         );
         try {
             return JSON.parse(result);
         } catch (e) {
             throw Error(
-                `Expected chain_containTransaction to return JSON of boolean, but an error occurred: ${e.toString()}`
+                `Expected chain_containsTransaction to return JSON of boolean, but an error occurred: ${e.toString()}`
             );
         }
     }

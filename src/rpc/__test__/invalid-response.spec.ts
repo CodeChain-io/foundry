@@ -132,7 +132,7 @@ describe("Invalid response", () => {
                     .then(() => done.fail())
                     .catch(e => {
                         expect(e.toString()).toContain(
-                            "chain_containTransaction"
+                            "chain_containsTransaction"
                         );
                         expect(e.toString()).toContain("JSON of boolean");
                         done();
