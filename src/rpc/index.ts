@@ -43,13 +43,11 @@ export class Rpc {
     /**
      * @param params.server HTTP RPC server address.
      * @param params.options.transactionSigner The default account to sign the tx
-     * @param params.options.transactionFee The default quantity for the tx fee
      */
     constructor(params: {
         server: string;
         options?: {
             transactionSigner?: string;
-            transactionFee?: number;
         };
     }) {
         const { server, options = {} } = params;
@@ -75,7 +73,7 @@ export class Rpc {
         this.node = new NodeRpc(this);
         this.chain = new ChainRpc(this, options);
         this.network = new NetworkRpc(this);
-        this.account = new AccountRpc(this, options);
+        this.account = new AccountRpc(this);
         this.engine = new EngineRpc(this);
         this.devel = new DevelRpc(this);
     }

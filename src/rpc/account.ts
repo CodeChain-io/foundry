@@ -2,24 +2,23 @@ import {
     H256,
     H256Value,
     PlatformAddress,
-    PlatformAddressValue
+    PlatformAddressValue,
+    U64Value
 } from "codechain-primitives";
 
 import { Transaction } from "../core/Transaction";
 
 import { Rpc } from ".";
+import { getMinimumFee } from "./chain";
 
 export class AccountRpc {
     private rpc: Rpc;
-    private readonly transactionFee?: number;
 
     /**
      * @hidden
      */
-    constructor(rpc: Rpc, options: { transactionFee?: number }) {
-        const { transactionFee } = options;
+    constructor(rpc: Rpc) {
         this.rpc = rpc;
-        this.transactionFee = transactionFee;
     }
 
     /**
@@ -183,9 +182,10 @@ export class AccountRpc {
     public sendTransaction(params: {
         tx: Transaction;
         account: PlatformAddressValue;
+        fee?: U64Value;
         passphrase?: string;
     }): Promise<{ hash: H256; seq: number }> {
-        const { tx, account, passphrase } = params;
+        const { tx, fee, account, passphrase } = params;
         if (!PlatformAddress.check(account)) {
             throw Error(
                 `Expected the account param to be a PlatformAddress value but found ${account}`
@@ -196,10 +196,12 @@ export class AccountRpc {
                 `Expected the passphrase param to be a string but found ${passphrase}`
             );
         }
-        if (tx.fee() == null && this.transactionFee != null) {
-            tx.setFee(this.transactionFee);
+        if (fee) {
+            tx.setFee(fee);
         }
-
+        if (tx.fee() == null) {
+            tx.setFee(getMinimumFee(tx));
+        }
         return this.rpc
             .sendRpcRequest("account_sendTransaction", [
                 tx.toJSON(),

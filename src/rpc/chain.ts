@@ -24,19 +24,14 @@ import { NetworkId } from "../core/types";
 export class ChainRpc {
     private rpc: Rpc;
     private transactionSigner?: string;
-    private transactionFee?: number;
 
     /**
      * @hidden
      */
-    constructor(
-        rpc: Rpc,
-        options: { transactionSigner?: string; transactionFee?: number }
-    ) {
-        const { transactionSigner, transactionFee } = options;
+    constructor(rpc: Rpc, options: { transactionSigner?: string }) {
+        const { transactionSigner } = options;
         this.rpc = rpc;
         this.transactionSigner = transactionSigner;
-        this.transactionFee = transactionFee;
     }
 
     /**
@@ -100,8 +95,10 @@ export class ChainRpc {
         const {
             account = this.transactionSigner,
             passphrase,
-            fee = this.transactionFee
-        } = options || { passphrase: undefined };
+            fee = getMinimumFee(tx)
+        } = options || {
+            passphrase: undefined
+        };
         if (!account) {
             throw Error("The account to sign the tx is not specified");
         } else if (!PlatformAddress.check(account)) {
@@ -1334,4 +1331,31 @@ function isShardIdValue(value: any): boolean {
         value >= 0 &&
         value <= 0xffff
     );
+}
+
+export function getMinimumFee(tx: Transaction): number {
+    switch (tx.type()) {
+        case "pay":
+            return 100;
+        case "setRegularKey":
+            return 10000;
+        case "store":
+            return 5000;
+        case "remove":
+            return 5000;
+        case "mintAsset":
+            return 100000;
+        case "transferAsset":
+            return 100;
+        case "changeAssetScheme":
+            return 100000;
+        case "increaseAssetSupply":
+            return 100000;
+        case "wrapCCC":
+            return 100000;
+        case "unwrapCCC":
+            return 100;
+        default:
+            return 10;
+    }
 }

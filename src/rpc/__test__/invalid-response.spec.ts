@@ -391,7 +391,7 @@ describe("Invalid response", () => {
     });
 
     describe("AccountRpc", () => {
-        const accountRpc = new AccountRpc(rpc, {});
+        const accountRpc = new AccountRpc(rpc);
         const hashH256 =
             "0x0000000000000000000000000000000000000000000000000000000000000000";
         const secret =

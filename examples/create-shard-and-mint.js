@@ -15,7 +15,7 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
     await sdk.rpc.chain.sendTransaction(
         sdk.core.createPayTransaction({
             recipient: account2,
-            quantity: 10000
+            quantity: 1000000
         }),
         {
             account: ACCOUNT_ADDRESS,

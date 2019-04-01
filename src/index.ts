@@ -54,10 +54,8 @@ class SDK {
         server: string;
         keyStoreType?: KeyStoreType;
         networkId?: NetworkId;
-        // Deprecated. It will be removed at 0.2.0
         options?: {
             transactionSigner?: string;
-            transactionFee?: number;
         };
     }) {
         const {
@@ -66,13 +64,10 @@ class SDK {
             networkId = "tc",
             options
         } = params;
-        const { transactionSigner, transactionFee = 10 } = options || {
-            transactionSigner: undefined
-        };
 
         this.rpc = new Rpc({
             server,
-            options: { transactionSigner, transactionFee }
+            options
         });
         this.core = new Core({ networkId });
         this.key = new Key({
