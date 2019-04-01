@@ -56,7 +56,6 @@ class SDK {
         networkId?: NetworkId;
         // Deprecated. It will be removed at 0.2.0
         options?: {
-            networkId?: NetworkId;
             transactionSigner?: string;
             transactionFee?: number;
         };
@@ -67,22 +66,20 @@ class SDK {
             networkId = "tc",
             options
         } = params;
-        const {
-            networkId: networkIdOpt,
-            transactionSigner,
-            transactionFee = 10
-        } = options || { networkId: undefined, transactionSigner: undefined };
+        const { transactionSigner, transactionFee = 10 } = options || {
+            transactionSigner: undefined
+        };
 
         this.rpc = new Rpc({
             server,
             options: { transactionSigner, transactionFee }
         });
-        this.core = new Core({ networkId: networkIdOpt || networkId });
+        this.core = new Core({ networkId });
         this.key = new Key({
-            networkId: networkIdOpt || networkId,
+            networkId,
             keyStoreType
         });
-        this._networkId = networkIdOpt || networkId;
+        this._networkId = networkId;
     }
 
     public get networkId() {
