@@ -13,7 +13,10 @@ describe("examples", () => {
     const excludes = [
         "import-test-account",
         "mint-and-compose",
-        "mint-and-compose-and-decompose"
+        "mint-and-compose-and-decompose",
+        "create-shard-and-mint",
+        "create-shard-and-set-owners",
+        "create-shard-and-set-users"
     ];
     const tests: string[] = readdirSync("examples/")
         .filter(filename => filename.endsWith(".js"))

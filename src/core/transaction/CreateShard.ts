@@ -13,6 +13,7 @@ export class CreateShard extends Transaction {
         params: { users: PlatformAddress[] },
         networkId: NetworkId
     ) {
+        throw Error("CreateShard is disabled");
         super(networkId);
         const { users } = params;
         this.users = users;
