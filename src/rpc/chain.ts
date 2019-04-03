@@ -562,10 +562,11 @@ export class ChainRpc {
         }
         return new Promise((resolve, reject) => {
             this.rpc
-                .sendRpcRequest("mempool_getErrorHint", [
-                    `0x${H256.ensure(transactionHash).value}`,
+                .sendRpcRequest(
+                    "mempool_getErrorHint",
+                    [`0x${H256.ensure(transactionHash).value}`],
                     { fallbackServers }
-                ])
+                )
                 .then(result => {
                     if (typeof result === "string" || result == null) {
                         return resolve(result);
