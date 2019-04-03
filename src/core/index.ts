@@ -623,6 +623,7 @@ export class Core {
     public createChangeAssetSchemeTransaction(params: {
         shardId: number;
         assetType: H160Value;
+        seq?: number;
         scheme:
             | AssetScheme
             | {
@@ -634,7 +635,7 @@ export class Core {
               };
         approvals?: string[];
     }): ChangeAssetScheme {
-        const { shardId, assetType, scheme, approvals = [] } = params;
+        const { shardId, assetType, seq = 0, scheme, approvals = [] } = params;
         if (scheme != null && typeof scheme !== "object") {
             throw Error(
                 `Expected scheme param to be either an AssetScheme or an object but found ${scheme}`
@@ -659,6 +660,7 @@ export class Core {
             networkId,
             shardId,
             assetType: H160.ensure(assetType),
+            seq,
             metadata,
             approver:
                 approver == null ? null : PlatformAddress.ensure(approver),
@@ -673,6 +675,7 @@ export class Core {
     public createIncreaseAssetSupplyTransaction(params: {
         shardId: number;
         assetType: H160Value;
+        seq?: number;
         recipient: AssetAddressValue;
         supply?: U64Value;
         approvals?: string[];
@@ -681,6 +684,7 @@ export class Core {
             shardId,
             assetType,
             recipient,
+            seq = 0,
             supply = U64.MAX_VALUE,
             approvals = []
         } = params;
@@ -692,6 +696,7 @@ export class Core {
             networkId: this.networkId,
             shardId,
             assetType: H160.ensure(assetType),
+            seq,
             output: new AssetMintOutput({
                 supply: U64.ensure(supply),
                 recipient: AssetAddress.ensure(recipient)

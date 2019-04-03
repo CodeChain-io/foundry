@@ -11,6 +11,7 @@ export interface IncreaseAssetSupplyTransactionJSON {
     networkId: string;
     shardId: number;
     assetType: string;
+    seq: number;
     output: AssetMintOutputJSON;
 }
 
@@ -28,6 +29,7 @@ export class IncreaseAssetSupply extends Transaction
         networkId: NetworkId;
         shardId: number;
         assetType: H160;
+        seq: number;
         output: AssetMintOutput;
         approvals: string[];
     }) {
@@ -93,6 +95,7 @@ export class IncreaseAssetSupply extends Transaction
 class IncreaseAssetSupplyTransaction {
     public readonly shardId: number;
     public readonly assetType: H160;
+    public readonly seq: number;
     public readonly output: AssetMintOutput;
     private readonly networkId: NetworkId;
 
@@ -100,10 +103,12 @@ class IncreaseAssetSupplyTransaction {
         networkId: NetworkId;
         shardId: number;
         assetType: H160;
+        seq: number;
         output: AssetMintOutput;
     }) {
         this.networkId = params.networkId;
         this.shardId = params.shardId;
+        this.seq = params.seq;
         this.assetType = params.assetType;
         this.output = new AssetMintOutput(params.output);
     }
@@ -113,6 +118,7 @@ class IncreaseAssetSupplyTransaction {
             networkId: this.networkId,
             shardId: this.shardId,
             assetType: this.assetType.toEncodeObject(),
+            seq: this.seq,
             output: this.output.toJSON()
         };
     }
@@ -123,6 +129,7 @@ class IncreaseAssetSupplyTransaction {
             this.networkId,
             this.shardId,
             this.assetType.toEncodeObject(),
+            this.seq,
             this.output.lockScriptHash.toEncodeObject(),
             this.output.parameters.map(parameter => Buffer.from(parameter)),
             this.output.supply.toEncodeObject()

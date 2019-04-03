@@ -20,6 +20,7 @@ export interface AssetSchemeJSON {
         assetType: string;
         quantity: string;
     }[];
+    seq: number;
 }
 
 /**
@@ -33,7 +34,8 @@ export class AssetScheme {
             approver,
             registrar,
             allowedScriptHashes,
-            pool
+            pool,
+            seq
         } = data;
         return new AssetScheme({
             metadata,
@@ -51,7 +53,8 @@ export class AssetScheme {
             pool: pool.map(({ assetType, quantity: assetQuantity }: any) => ({
                 assetType: H160.ensure(assetType),
                 quantity: U64.ensure(assetQuantity)
-            }))
+            })),
+            seq
         });
     }
 
@@ -63,6 +66,7 @@ export class AssetScheme {
     public readonly registrar: PlatformAddress | null;
     public readonly allowedScriptHashes: H160[];
     public readonly pool: { assetType: H160; quantity: U64 }[];
+    public readonly seq: number;
 
     constructor(data: {
         networkId?: NetworkId;
@@ -73,6 +77,7 @@ export class AssetScheme {
         registrar: PlatformAddress | null;
         allowedScriptHashes: H160[];
         pool: { assetType: H160; quantity: U64 }[];
+        seq?: number;
     }) {
         this.networkId = data.networkId;
         this.shardId = data.shardId;
@@ -85,6 +90,7 @@ export class AssetScheme {
         this.allowedScriptHashes = data.allowedScriptHashes;
         this.supply = data.supply;
         this.pool = data.pool;
+        this.seq = data.seq || 0;
     }
 
     public toJSON(): AssetSchemeJSON {
@@ -94,7 +100,8 @@ export class AssetScheme {
             approver,
             registrar,
             allowedScriptHashes,
-            pool
+            pool,
+            seq
         } = this;
         return {
             metadata,
@@ -105,7 +112,8 @@ export class AssetScheme {
             pool: pool.map(a => ({
                 assetType: a.assetType.toJSON(),
                 quantity: a.quantity.toJSON()
-            }))
+            })),
+            seq
         };
     }
 

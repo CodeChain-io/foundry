@@ -10,6 +10,7 @@ export interface AssetSchemeChangeTransactionJSON {
     networkId: string;
     shardId: number;
     assetType: string;
+    seq: number;
     metadata: string;
     approver: string | null;
     registrar: string | null;
@@ -27,6 +28,7 @@ export class ChangeAssetScheme extends Transaction {
         networkId: NetworkId;
         assetType: H160;
         shardId: number;
+        seq: number;
         metadata: string | object;
         approver: PlatformAddress | null;
         registrar: PlatformAddress | null;
@@ -81,6 +83,7 @@ class AssetSchemeChangeTransaction {
     public readonly networkId: NetworkId;
     public readonly shardId: number;
     public readonly assetType: H160;
+    public readonly seq: number;
     public readonly metadata: string;
     public readonly approver: PlatformAddress | null;
     public readonly registrar: PlatformAddress | null;
@@ -99,6 +102,7 @@ class AssetSchemeChangeTransaction {
         networkId: NetworkId;
         shardId: number;
         assetType: H160;
+        seq: number;
         metadata: string | object;
         approver: PlatformAddress | null;
         registrar: PlatformAddress | null;
@@ -108,6 +112,7 @@ class AssetSchemeChangeTransaction {
             networkId,
             shardId,
             assetType,
+            seq,
             metadata,
             approver,
             registrar,
@@ -116,6 +121,7 @@ class AssetSchemeChangeTransaction {
         this.networkId = networkId;
         this.shardId = shardId;
         this.assetType = assetType;
+        this.seq = seq;
         this.metadata =
             typeof metadata === "string" ? metadata : JSON.stringify(metadata);
         this.approver =
@@ -134,6 +140,7 @@ class AssetSchemeChangeTransaction {
             networkId: this.networkId,
             shardId: this.shardId,
             assetType: this.assetType.toEncodeObject(),
+            seq: this.seq,
             metadata: this.metadata,
             approver: this.approver == null ? null : this.approver.toString(),
             registrar:
@@ -152,6 +159,7 @@ class AssetSchemeChangeTransaction {
             networkId,
             shardId,
             assetType,
+            seq,
             metadata,
             approver,
             registrar,
@@ -162,6 +170,7 @@ class AssetSchemeChangeTransaction {
             networkId,
             shardId,
             assetType.toEncodeObject(),
+            seq,
             metadata,
             approver ? [approver.getAccountId().toEncodeObject()] : [],
             registrar ? [registrar.getAccountId().toEncodeObject()] : [],

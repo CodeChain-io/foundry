@@ -64,6 +64,7 @@ export function fromJSONToTransaction(result: any): Transaction {
         }
         case "changeAssetScheme": {
             const { metadata, approvals, shardId } = action;
+            const assetSchemeSeq = action.seq;
             const assetType = new H160(action.assetType);
             const approver =
                 action.approver == null
@@ -80,6 +81,7 @@ export function fromJSONToTransaction(result: any): Transaction {
                 networkId,
                 shardId,
                 assetType,
+                seq: assetSchemeSeq,
                 metadata,
                 approver,
                 registrar,
@@ -90,12 +92,14 @@ export function fromJSONToTransaction(result: any): Transaction {
         }
         case "increaseAssetSupply": {
             const { approvals, shardId } = action;
+            const assetSchemeSeq = action.seq;
             const assetType = new H160(action.assetType);
             const output = AssetMintOutput.fromJSON(action.output);
             tx = new IncreaseAssetSupply({
                 networkId,
                 shardId,
                 assetType,
+                seq: assetSchemeSeq,
                 output,
                 approvals
             });
