@@ -1062,6 +1062,45 @@ export class ChainRpc {
     }
 
     /**
+     * Gets the minimum transaction fee of the given transaction type in the given block.
+     * @param transactionType
+     * @param blockNumber
+     * @returns The minimum transaction fee of the corresponding transactionType in the unit of CCC.
+     */
+    public getMinTransactionFee(
+        transactionType: string,
+        blockNumber?: number | null
+    ): Promise<number | null> {
+        const fallbackServers = this.fallbackServers;
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the second argument of getMinTransactionFee to be non-negative integer but found ${blockNumber}`
+            );
+        }
+
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest(
+                    "chain_getMinTransactionFee",
+                    [transactionType, blockNumber],
+                    { fallbackServers }
+                )
+                .then(result => {
+                    if (result === null || typeof result === "number") {
+                        resolve(result);
+                    } else {
+                        reject(
+                            Error(
+                                `Expected chain_getMinTransactionFee to return either null or a number but it returned ${result}`
+                            )
+                        );
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    /**
      * Gets the network ID of the node.
      * @returns A network ID, e.g. "tc".
      */
