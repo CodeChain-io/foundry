@@ -13,11 +13,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CodeChain-io/codechain-stakeholder-sdk.git"
+    "url": "git+https://github.com/CodeChain-io/codechain-stakeholder-sdk-js.git"
   },
-  "homepage": "https://github.com/CodeChain-io/codechain-stakeholder-sdk#readme",
+  "homepage": "https://github.com/CodeChain-io/codechain-stakeholder-sdk-js#readme",
   "bugs": {
-    "url": "https://github.com/CodeChain-io/codechain-stakeholder-sdk/issues"
+    "url": "https://github.com/CodeChain-io/codechain-stakeholder-sdk-js/issues"
   },
   "main": "lib/index.js",
   "typings": "./lib/index.d.ts",
