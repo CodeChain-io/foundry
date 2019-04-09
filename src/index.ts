@@ -1,5 +1,5 @@
+import { PlatformAddress, U64 } from "codechain-primitives/lib";
 import { SDK } from "codechain-sdk";
-import { PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
 import { Custom } from "codechain-sdk/lib/core/transaction/Custom";
 
 const RLP = require("rlp");
