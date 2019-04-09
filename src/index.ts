@@ -1,4 +1,9 @@
-import { PlatformAddress, U64 } from "codechain-primitives/lib";
+import {
+    PlatformAddress,
+    PlatformAddressValue,
+    U64,
+    U64Value
+} from "codechain-primitives/lib";
 import { SDK } from "codechain-sdk";
 import { Custom } from "codechain-sdk/lib/core/transaction/Custom";
 
@@ -9,7 +14,7 @@ const TRANSFER_CCS_ACTION_ID = 1;
 
 export const getUndelegatedCCS = async (
     sdk: SDK,
-    address: PlatformAddress | string,
+    address: PlatformAddressValue,
     blockNumber?: number
 ): Promise<U64> => {
     return sdk.rpc.engine
@@ -54,9 +59,8 @@ export const getCCSHolders = (
 
 export const createTransferCCSTransaction = (
     sdk: SDK,
-    recipient: PlatformAddress | string,
-    quantity: U64 | string | number
-): Custom => {
+    recipient: PlatformAddressValue,
+    quantity: U64Value
     return sdk.core.createCustomTransaction({
         handlerId: HANDLER_ID,
         bytes: RLP.encode([
