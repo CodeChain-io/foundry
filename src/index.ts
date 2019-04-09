@@ -12,11 +12,11 @@ const RLP = require("rlp");
 const HANDLER_ID = 2;
 const TRANSFER_CCS_ACTION_ID = 1;
 
-export const getUndelegatedCCS = async (
+export async function getUndelegatedCCS(
     sdk: SDK,
     address: PlatformAddressValue,
     blockNumber?: number
-): Promise<U64> => {
+): Promise<U64> {
     return sdk.rpc.engine
         .getCustomActionData(
             HANDLER_ID,
@@ -34,12 +34,12 @@ export const getUndelegatedCCS = async (
             const balance = RLP.decode(Buffer.from(data, "hex"));
             return U64.ensure("0x" + balance.toString("hex"));
         });
-};
+}
 
-export const getCCSHolders = (
+export async function getCCSHolders(
     sdk: SDK,
     blockNumber?: number
-): Promise<PlatformAddress[]> => {
+): Promise<PlatformAddress[]> {
     return sdk.rpc.engine
         .getCustomActionData(HANDLER_ID, ["StakeholderAddresses"], blockNumber)
         .then(data => {
@@ -55,12 +55,13 @@ export const getCCSHolders = (
                 })
             );
         });
-};
+}
 
-export const createTransferCCSTransaction = (
+export function createTransferCCSTransaction(
     sdk: SDK,
     recipient: PlatformAddressValue,
     quantity: U64Value
+): Custom {
     return sdk.core.createCustomTransaction({
         handlerId: HANDLER_ID,
         bytes: RLP.encode([
@@ -69,4 +70,4 @@ export const createTransferCCSTransaction = (
             U64.ensure(quantity).toEncodeObject()
         ])
     });
-};
+}
