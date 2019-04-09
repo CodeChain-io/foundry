@@ -8,7 +8,11 @@ It adds the following features to [CodeChain SDK for JavaScript](https://github.
 
 - Get the list of stakeholders
 - Get the stake token balance of a stakeholder
+- Get the list of delegations that a stakeholder delegated to delegatees
+- Get the list of all pending revocations
 - Transfer stake tokens
+- Delegate stake tokens
+- Request to revoke delegated stake tokens
 
 ## How to
 
@@ -53,6 +57,36 @@ getUndelegatedCCS(sdk, "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd")
   })
 ```
 
+### Get the list of delegations that a stakeholder delegated to delegatees
+
+```js
+const sdk = ...
+const { getDelegations } = require("codechain-stakeholder-sdk");
+
+getDelegations(sdk, "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd")
+  .then(({ delegatee, quantity }) => {
+    // delegatee: PlatformAddress
+    // quantity: U64
+    ...
+  })
+```
+
+### Get the list of all pending revocations
+
+```js
+const sdk = ...
+const { getPendingRevocations } = require("codechain-stakeholder-sdk");
+
+getPendingRevocations(sdk)
+  .then(({ delegator, delegatee, endTime, quantity }) => {
+    // delegator: PlatformAddress
+    // delegatee: PlatformAddress
+    // endTime: number
+    // quantity: U64
+    ...
+  })
+```
+
 ### Transfer stake tokens
 
 ```js
@@ -61,6 +95,38 @@ const { createTransferCCSTransaction } = require("codechain-stakeholder-sdk");
 
 // Transfer 100 tokens to tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f
 const tx = createTransferCCSTransaction(sdk, "tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f", 100);
+const signedTx = tx.sign({ secret: "...", seq: "...", fee: "..." });
+sdk.rpc.chain.sendSignedTransaction(signedTx)
+  .then(txhash => {
+    // txhash: H256
+    ...
+  });
+```
+
+### Delegate stake tokens
+
+```js
+const sdk = ...
+const { createDelegateCCSTransaction } = require("codechain-stakeholder-sdk");
+
+// Delegate 100 tokens to tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f
+const tx = createDelegateCCSTransaction(sdk, "tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f", 100);
+const signedTx = tx.sign({ secret: "...", seq: "...", fee: "..." });
+sdk.rpc.chain.sendSignedTransaction(signedTx)
+  .then(txhash => {
+    // txhash: H256
+    ...
+  });
+```
+
+### Request to revoke delegated stake tokens
+
+```js
+const sdk = ...
+const { createRequestRevokeTransaction } = require("codechain-stakeholder-sdk");
+
+// Request to revoke 100 token delegated to tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f
+const tx = createRequestRevokeTransaction(sdk, "tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f", 100);
 const signedTx = tx.sign({ secret: "...", seq: "...", fee: "..." });
 sdk.rpc.chain.sendSignedTransaction(signedTx)
   .then(txhash => {
