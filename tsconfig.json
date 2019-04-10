@@ -12,6 +12,6 @@
     "noUnusedParameters": true,
     "downlevelIteration": true
   },
-  "include": ["./src/**/*"],
+  "include": ["./src/**/*", "./bin/**/*"],
   "exclude": ["./src/**/*.test.ts"]
 }

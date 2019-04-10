@@ -7,8 +7,8 @@
   "scripts": {
     "build": "tsc -p .",
     "test": "yarn lint",
-    "lint": "tslint -p . && prettier 'src/**/*.{ts,js,json}' -l",
-    "fmt": "tslint -p . --fix && prettier 'src/**/*.{ts,js,json}' --write",
+    "lint": "tslint -p . && prettier '{src,bin}/**/*.{ts,js,json}' -l",
+    "fmt": "tslint -p . --fix && prettier '{src,bin}/**/*.{ts,js,json}' --write",
     "prepublishOnly": "yarn build"
   },
   "repository": {
@@ -19,11 +19,14 @@
   "bugs": {
     "url": "https://github.com/CodeChain-io/codechain-stakeholder-sdk-js/issues"
   },
-  "main": "lib/index.js",
-  "typings": "./lib/index.d.ts",
+  "main": "lib/src/index.js",
+  "typings": "./lib/src/index.d.ts",
   "files": [
     "lib"
   ],
+  "bin": {
+    "ccstake": "lib/bin/index.js"
+  },
   "keywords": [
     "CodeChain"
   ],
