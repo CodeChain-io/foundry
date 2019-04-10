@@ -18,6 +18,7 @@ export class Script {
         COPY: 0x35,
         DROP: 0x36,
         CHKSIG: 0x80,
+        CHKMULTISIG: 0x81,
         BLAKE256: 0x90,
         SHA256: 0x91,
         RIPEMD160: 0x92,
@@ -65,6 +66,7 @@ export class Script {
             COPY,
             DROP,
             CHKSIG,
+            CHKMULTISIG,
             BLAKE256,
             SHA256,
             RIPEMD160,
@@ -85,6 +87,7 @@ export class Script {
                 case DUP:
                 case SWAP:
                 case CHKSIG:
+                case CHKMULTISIG:
                 case BLAKE256:
                 case SHA256:
                 case RIPEMD160:
