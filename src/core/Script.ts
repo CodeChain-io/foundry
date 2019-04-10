@@ -5,6 +5,8 @@ export class Script {
     public static Opcode = {
         NOP: 0x00,
         BURN: 0x01,
+        SUCCESS: 0x02,
+        FAIL: 0x03,
         NOT: 0x10,
         EQ: 0x11,
         JMP: 0x20,
@@ -24,6 +26,7 @@ export class Script {
         RIPEMD160: 0x92,
         KECCAK256: 0x93,
         BLAKE160: 0x94,
+        BLKNUM: 0xa0,
         CHKTIMELOCK: 0xb0
     };
 
@@ -53,6 +56,8 @@ export class Script {
         const {
             NOP,
             BURN,
+            SUCCESS,
+            FAIL,
             NOT,
             EQ,
             JMP,
@@ -72,6 +77,7 @@ export class Script {
             RIPEMD160,
             KECCAK256,
             BLAKE160,
+            BLKNUM,
             CHKTIMELOCK
         } = Script.Opcode;
         let cursor = 0;
@@ -81,6 +87,8 @@ export class Script {
             switch (opcode) {
                 case NOP:
                 case BURN:
+                case SUCCESS:
+                case FAIL:
                 case NOT:
                 case EQ:
                 case POP:
@@ -93,6 +101,7 @@ export class Script {
                 case RIPEMD160:
                 case KECCAK256:
                 case BLAKE160:
+                case BLKNUM:
                     tokens.push(name);
                     break;
                 case PUSHB:
