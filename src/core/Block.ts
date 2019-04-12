@@ -156,8 +156,10 @@ export class Block {
         blockHeader.push(score.toEncodeObject());
         blockHeader.push(number);
         blockHeader.push(timestamp);
-        blockHeader.push(extraData);
-        blockHeader.push(...seal.map(s => Buffer.from(s).toString("hex")));
+        blockHeader.push(`0x${Buffer.from(extraData).toString("hex")}`);
+        blockHeader.push(
+            ...seal.map(s => `0x${Buffer.from(s).toString("hex")}`)
+        );
 
         const encoded: Buffer = RLP.encode([
             blockHeader,
