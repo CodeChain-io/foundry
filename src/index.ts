@@ -7,7 +7,7 @@ const RLP = require("rlp");
 const HANDLER_ID = 2;
 const TRANSFER_CCS_ACTION_ID = 1;
 
-export const getCCSBalance = async (
+export const getUndelegatedCCS = async (
     sdk: SDK,
     address: PlatformAddress | string,
     blockNumber?: number

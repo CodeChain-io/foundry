@@ -40,13 +40,13 @@ getCCSHolders(sdk)
   });
 ```
 
-### Get the stake token balance of a stakeholder
+### Get the quantity of undelegated stake token of a stakeholder
 
 ```js
 const sdk = ...
-const { getCCSBalance } = require("codechain-stakeholder-sdk");
+const { getUndelegatedCCS } = require("codechain-stakeholder-sdk");
 
-getCCSBalance(sdk, "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd")
+getUndelegatedCCS(sdk, "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd")
   .then(balance => {
     // balance: U64
     ...
