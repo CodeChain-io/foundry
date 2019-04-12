@@ -3,6 +3,8 @@ import { H256, PlatformAddress, U256 } from "codechain-primitives";
 import { SignedTransaction, SignedTransactionJSON } from "./SignedTransaction";
 import { fromJSONToSignedTransaction } from "./transaction/json";
 
+const RLP = require("rlp");
+
 // Disable lint error from using "number" as variable name
 // tslint:disable:variable-name
 
@@ -130,5 +132,38 @@ export class Block {
             hash: hash.toJSON(),
             transactions: transactions.map(p => p.toJSON())
         };
+    }
+
+    public getSize(): number {
+        const {
+            parentHash,
+            timestamp,
+            number,
+            author,
+            extraData,
+            transactionsRoot,
+            stateRoot,
+            score,
+            seal,
+            transactions
+        } = this;
+
+        const blockHeader: any[] = [];
+        blockHeader.push(parentHash.toEncodeObject());
+        blockHeader.push(author.getAccountId().toEncodeObject());
+        blockHeader.push(stateRoot.toEncodeObject());
+        blockHeader.push(transactionsRoot.toEncodeObject());
+        blockHeader.push(score.toEncodeObject());
+        blockHeader.push(number);
+        blockHeader.push(timestamp);
+        blockHeader.push(extraData);
+        blockHeader.push(...seal.map(s => Buffer.from(s).toString("hex")));
+
+        const encoded: Buffer = RLP.encode([
+            blockHeader,
+            transactions.map(tx => tx.toEncodeObject())
+        ]);
+
+        return encoded.byteLength;
     }
 }
