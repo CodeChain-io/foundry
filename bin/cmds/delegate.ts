@@ -77,7 +77,7 @@ async function printSummary(
     console.group("Delegator", delegator.value);
     {
         const { balance, undelegated, delegationsTo } = summary.get(delegator);
-        console.log("CCS Balance:", ...minusChangeArgs(balance, changes));
+        console.log("CCS Balance:", balance);
         console.log(
             "Undelegated CCS:",
             ...minusChangeArgs(undelegated, changes)
