@@ -80,7 +80,7 @@ export async function summarize(sdk: SDK, blockNumber: number) {
         const delegateeSummary =
             aggregate[delegatee.value] || new AccountSummary();
         delegatorSummary.revocationsTo.values.push(revocation);
-        delegatorSummary.revocationsFrom.values.push(revocation);
+        delegateeSummary.revocationsFrom.values.push(revocation);
         aggregate[delegator.value] = delegatorSummary;
         aggregate[delegatee.value] = delegateeSummary;
     }
