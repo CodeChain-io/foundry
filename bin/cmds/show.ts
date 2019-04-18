@@ -76,7 +76,7 @@ async function show(sdk: SDK, account: PlatformAddress, blockNumber: number) {
         for (const { delegatee, endTime, quantity } of summary.revocationsTo
             .values) {
             table.push([
-                new Date(endTime).toISOString(),
+                new Date(endTime * 1000).toISOString(),
                 delegatee.toString(),
                 quantity.toLocaleString()
             ]);
@@ -108,7 +108,7 @@ async function show(sdk: SDK, account: PlatformAddress, blockNumber: number) {
         for (const { delegator, endTime, quantity } of summary.revocationsFrom
             .values) {
             table.push([
-                new Date(endTime).toISOString(),
+                new Date(endTime * 1000).toISOString(),
                 delegator.toString(),
                 quantity.toLocaleString()
             ]);
