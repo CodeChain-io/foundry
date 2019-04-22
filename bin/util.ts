@@ -132,16 +132,16 @@ export function percent(a: U64, b: U64): string {
         .toFixed(digits);
 }
 
-export function plusChangeArgs(a: U64, b: U64 | undefined): string[] {
-    if (b === undefined) {
+export function plusChangeArgs(a: U64, b: U64): string[] {
+    if (b.isEqualTo(0)) {
         return [a.toLocaleString()];
     } else {
         return [a.toLocaleString(), "=>", a.plus(b).toLocaleString()];
     }
 }
 
-export function minusChangeArgs(a: U64, b: U64 | undefined): string[] {
-    if (b === undefined) {
+export function minusChangeArgs(a: U64, b: U64): string[] {
+    if (b.isEqualTo(0)) {
         return [a.toLocaleString()];
     } else {
         if (a.isGreaterThanOrEqualTo(b)) {

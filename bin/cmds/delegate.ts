@@ -19,6 +19,7 @@ interface DelegateParams extends GlobalParams {
     from: PlatformAddress;
     to: PlatformAddress;
     quantity: U64;
+    fee: number;
 }
 
 export const module: yargs.CommandModule<GlobalParams, DelegateParams> = {
@@ -37,6 +38,10 @@ export const module: yargs.CommandModule<GlobalParams, DelegateParams> = {
             .option("quantity", {
                 coerce: coerce("quantity", U64.ensure),
                 demand: true
+            })
+            .option("fee", {
+                number: true,
+                default: 0
             });
     },
     handler: asyncHandler(async argv => {
@@ -45,7 +50,10 @@ export const module: yargs.CommandModule<GlobalParams, DelegateParams> = {
         console.log("=== Confirm your action ===");
         console.log("Action:", "Delegate");
         console.log("Quantity:", argv.quantity.toLocaleString());
-        await printSummary(sdk, blockNumber, argv.from, argv.to, argv.quantity);
+        await printSummary(sdk, blockNumber, argv.from, argv.to, {
+            ccsChanges: argv.quantity,
+            cccChanges: U64.ensure(argv.fee)
+        });
 
         const passphrase = await askPasspharaseFor(argv.from);
 
@@ -53,7 +61,7 @@ export const module: yargs.CommandModule<GlobalParams, DelegateParams> = {
         const signed = await sdk.key.signTransaction(tx, {
             account: argv.from,
             passphrase,
-            fee: 10,
+            fee: argv.fee,
             seq: await sdk.rpc.chain.getSeq(argv.from)
         });
         console.log("Sending tx:", signed.hash().value);
@@ -70,21 +78,30 @@ async function printSummary(
     blockNumber: number,
     delegator: PlatformAddress,
     delegatee: PlatformAddress,
-    changes?: U64
+    changes?: {
+        ccsChanges: U64;
+        cccChanges: U64;
+    }
 ) {
+    const { ccsChanges = new U64(0), cccChanges = new U64(0) } = changes || {};
     const summary = await summarize(sdk, blockNumber);
 
     console.group("Delegator", delegator.value);
     {
+        const cccBalance = await sdk.rpc.chain.getBalance(
+            delegator,
+            blockNumber
+        );
         const { balance, undelegated, delegationsTo } = summary.get(delegator);
+        console.log("CCC Balance:", ...minusChangeArgs(cccBalance, cccChanges));
         console.log("CCS Balance:", balance.toLocaleString());
         console.log(
             "Undelegated CCS:",
-            ...minusChangeArgs(undelegated, changes)
+            ...minusChangeArgs(undelegated, ccsChanges)
         );
         console.log(
             "Delegations (out):",
-            ...plusChangeArgs(delegationsTo.sum, changes)
+            ...plusChangeArgs(delegationsTo.sum, ccsChanges)
         );
     }
     console.groupEnd();
@@ -98,13 +115,13 @@ async function printSummary(
         console.log("Undelegated CCS:", undelegated.toLocaleString());
         console.log(
             "Delegations (in):",
-            ...plusChangeArgs(delegationsFrom.sum, changes)
+            ...plusChangeArgs(delegationsFrom.sum, ccsChanges)
         );
     }
     console.groupEnd();
 
     console.log(
         "Delegations between:",
-        ...plusChangeArgs(summary.delegations(delegator, delegatee), changes)
+        ...plusChangeArgs(summary.delegations(delegator, delegatee), ccsChanges)
     );
 }

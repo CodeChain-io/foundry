@@ -10,6 +10,7 @@ import {
     asyncHandler,
     coerce,
     formatTimestamp,
+    minusChangeArgs,
     plusChangeArgs,
     prologue,
     waitForTx
@@ -19,6 +20,7 @@ interface RequestRevokeParams extends GlobalParams {
     delegator: PlatformAddress;
     delegatee: PlatformAddress;
     quantity: U64;
+    fee: number;
 }
 
 export const module: yargs.CommandModule<GlobalParams, RequestRevokeParams> = {
@@ -37,6 +39,10 @@ export const module: yargs.CommandModule<GlobalParams, RequestRevokeParams> = {
             .option("quantity", {
                 coerce: coerce("quantity", U64.ensure),
                 demand: true
+            })
+            .option("fee", {
+                number: true,
+                default: 0
             });
     },
     handler: asyncHandler(async argv => {
@@ -45,13 +51,10 @@ export const module: yargs.CommandModule<GlobalParams, RequestRevokeParams> = {
         console.log("=== Confirm your action ===");
         console.log("Action:", "RequestRevoke");
         console.log("Quantity:", argv.quantity.toString(10));
-        await printSummary(
-            sdk,
-            blockNumber,
-            argv.delegator,
-            argv.delegatee,
-            argv.quantity
-        );
+        await printSummary(sdk, blockNumber, argv.delegator, argv.delegatee, {
+            ccsChanges: argv.quantity,
+            cccChanges: U64.ensure(argv.fee)
+        });
 
         const passphrase = await askPasspharaseFor(argv.delegator);
 
@@ -63,7 +66,7 @@ export const module: yargs.CommandModule<GlobalParams, RequestRevokeParams> = {
         const signed = await sdk.key.signTransaction(tx, {
             account: argv.delegator,
             passphrase,
-            fee: 10,
+            fee: argv.fee,
             seq: await sdk.rpc.chain.getSeq(argv.delegator)
         });
         console.log("Sending tx:", signed.hash().value);
@@ -96,8 +99,12 @@ async function printSummary(
     blockNumber: number,
     delegator: PlatformAddress,
     delegatee: PlatformAddress,
-    changes?: U64
+    changes?: {
+        ccsChanges: U64;
+        cccChanges: U64;
+    }
 ) {
+    const { ccsChanges = new U64(0), cccChanges = new U64(0) } = changes || {};
     const summary = await summarize(sdk, blockNumber);
 
     console.group("Delegator", delegator.value);
@@ -113,25 +120,30 @@ async function printSummary(
         console.log("Delegations (out):", delegationsTo.sum.toLocaleString());
         console.log(
             "Pending Revocations (out):",
-            ...plusChangeArgs(revocationsTo.sum, changes)
+            ...plusChangeArgs(revocationsTo.sum, ccsChanges)
         );
     }
     console.groupEnd();
 
     console.group("Delegatee", delegatee.value);
     {
+        const cccBalance = await sdk.rpc.chain.getBalance(
+            delegator,
+            blockNumber
+        );
         const {
             balance,
             undelegated,
             delegationsFrom,
             revocationsFrom
         } = summary.get(delegatee);
+        console.log("CCC Balance:", ...minusChangeArgs(cccBalance, cccChanges));
         console.log("CCS Balance:", balance.toLocaleString());
         console.log("Undelegated CCS:", undelegated.toLocaleString());
         console.log("Delegations (in):", delegationsFrom.sum.toLocaleString());
         console.log(
             "Pending Revocations (in):",
-            ...plusChangeArgs(revocationsFrom.sum, changes)
+            ...plusChangeArgs(revocationsFrom.sum, ccsChanges)
         );
     }
     console.groupEnd();
@@ -144,7 +156,7 @@ async function printSummary(
         "Pending revocations between:",
         ...plusChangeArgs(
             summary.revocations(delegator, delegatee).sum,
-            changes
+            ccsChanges
         )
     );
 
