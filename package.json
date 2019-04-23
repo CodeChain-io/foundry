@@ -18,7 +18,7 @@
     "type": "git",
     "url": "git+https://github.com/CodeChain-io/codechain-sdk-js.git"
   },
-  "author": "CodeChain Team <codechain@kodebox.io>",
+  "author": "CodeChain Team <hi@codechain.io>",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/CodeChain-io/codechain-sdk-js/issues"
