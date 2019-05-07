@@ -7,8 +7,8 @@
   - [Create a new account with a private key](#create-a-new-account-with-a-private-key)
   - [Create a new account with RPC](#create-a-new-account-with-rpc)
   - [Get the balance of an account](#get-the-balance-of-an-account)
-  - [Send a payment transaction via sendTransaction](#send-a-payment-transaction-via-sendtransaction)
-  - [Send a payment transaction via sendSignedTransaction](#send-a-payment-transaction-via-sendsignedtransaction)
+  - [Send a pay transaction via sendTransaction](#send-a-pay-transaction-via-sendtransaction)
+  - [Send a pay transaction via sendSignedTransaction](#send-a-pay-transaction-via-sendsignedtransaction)
   - [Create an asset address](#create-an-asset-address)
   - [Mint a new asset](#mint-a-new-asset)
   - [Transfer assets](#transfer-assets)
@@ -37,9 +37,10 @@ var sdk = new SDK({ server: "http://localhost:8080" });
 
 var secret = "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
 var passphrase = "satoshi";
-sdk.rpc.account.importRaw(secret, passphrase).then(function(account) {
-  console.log(account); // tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd
-});
+sdk.rpc.account.importRaw(secret, passphrase)
+  .then(function(account) {
+    console.log(account); // tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd
+  });
 ```
 
 ---
@@ -103,16 +104,16 @@ var sdk = new SDK({ server: "http://localhost:8080" });
 sdk.rpc.chain
   .getBalance("tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd")
   .then(function(balance) {
-    // the balance is a U256 instance at this moment. Use toString() to print it out.
+    // the balance is a U64 instance at this moment. Use toString() to print it out.
     console.log(balance.toString()); // the quantity of CCC that the account has.
   });
 ```
 
 ---
 
-## Send a payment transaction via sendTransaction
+## Send a pay transaction via sendTransaction
 
-When you create an account, the CCC balance is 0. CCC is needed to pay for the transaction's fee. The fee must be at least 10 for any transaction. The example below shows the sending of 10000 CCC from the test account(`tccqzn..9a2k78`) to the account(`tccqru..7vzngg`).
+When you create an account, the CCC balance is 0. CCC is needed to pay for the transaction's fee. The fee must be at least 10 for any transaction. The example below shows the sending of 10000 CCC from the test account(`tccq9h..amrrgd`) to the account(`tccqxv..ezqghw`).
 
 ```javascript
 var SDK = require("codechain-sdk");
@@ -129,7 +130,7 @@ sdk.rpc.chain
     passphrase: "satoshi"
   })
   .then(function(hash) {
-    return sdk.rpc.chain.getTransactionResult(hash, { timeout: 300 * 1000 });
+    return sdk.rpc.chain.containsTransaction(hash);
   })
   .then(function(result) {
     console.log(result); // true
@@ -138,7 +139,7 @@ sdk.rpc.chain
 
 ---
 
-## Send a payment transaction via sendSignedTransaction
+## Send a pay transaction via sendSignedTransaction
 
 ```javascript
 var SDK = require("codechain-sdk");
@@ -166,7 +167,7 @@ sdk.rpc.chain
     );
   })
   .then(function(hash) {
-    return sdk.rpc.chain.getTransactionResult(hash, { timeout: 300 * 1000 });
+    return sdk.rpc.chain.containsTransaction(hash);
   })
   .then(function(result) {
     console.log(result); // true
@@ -187,7 +188,7 @@ sdk.key
   .createAssetAddress()
   .then(function(address) {
     // This type of address is used to receive assets when minting or transferring them.
-    // Example: tcaqqq9pgkq69z488qlkvhkpcxcgfd3cqlkzgxyq9cewxuda8qqz7jtlvctt5eze
+    // Example: tcaqyqsrfw3cg4h4fgxcfj3lsw49jcqzcxs5qpqtxfjfp
     console.log(address.toString());
   })
   .catch(console.error);
@@ -222,14 +223,9 @@ async function mintNewAsset() {
       passphrase: "satoshi"
     })
     .then(function(hash) {
-      // Get the result of the transaction.
-      return sdk.rpc.chain.getTransactionResult(hash, {
-        // Wait up to 120 seconds to get the result.
-        timeout: 120 * 1000
-      });
+      return sdk.rpc.chain.containsTransaction(hash);
     })
     .then(function(result) {
-      // The result of the mint transaction is a boolean.
       console.log(result); // true
     });
 }

@@ -7,5 +7,5 @@ const sdk = new SDK({
 
 (async () => {
     const address = await sdk.rpc.account.create("my-secret");
-    console.log(address); // string that starts with "ccc"(mainnet) or "tcc"(testnet). For example: cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7
+    console.log(address); // string that starts with "ccc"(mainnet) or "tcc"(Solo testnet). For example: cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7
 })().catch(console.error);

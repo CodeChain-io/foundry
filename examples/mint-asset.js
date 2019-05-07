@@ -34,8 +34,5 @@ const tx = sdk.core.createMintAssetTransaction({
     });
     // Get the result of the tx.
     const result = await sdk.rpc.chain.containsTransaction(hash);
-    // The result of asset-transaction-group tx is an array of the object that has
-    // type { success: boolean }. Each object represents the result of each
-    // transaction.
     console.log(result); // true
 })().catch(console.error);
