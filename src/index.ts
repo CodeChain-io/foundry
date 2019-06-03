@@ -13,6 +13,7 @@ const HANDLER_ID = 2;
 const TRANSFER_CCS_ACTION_ID = 1;
 const DELEGATE_CCS_ACTION_ID = 2;
 const REVOKE_ACTION_ID = 3;
+const SELF_NOMINATE_ACTION_ID = 4;
 
 export async function getUndelegatedCCS(
     sdk: SDK,
@@ -130,6 +131,21 @@ export function createRevokeTransaction(
             REVOKE_ACTION_ID,
             PlatformAddress.ensure(delegatee).accountId.toEncodeObject(),
             U64.ensure(quantity).toEncodeObject()
+        ])
+    });
+}
+
+export function createSelfNominateTransaction(
+    sdk: SDK,
+    deposit: U64Value,
+    metadata: Buffer | string
+): Custom {
+    return sdk.core.createCustomTransaction({
+        handlerId: HANDLER_ID,
+        bytes: RLP.encode([
+            SELF_NOMINATE_ACTION_ID,
+            U64.ensure(deposit).toEncodeObject(),
+            metadata
         ])
     });
 }

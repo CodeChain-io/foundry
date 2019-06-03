@@ -4,6 +4,7 @@ import * as yargs from "yargs";
 
 import { module as delegateModule } from "./cmds/delegate";
 import { module as revokeModule } from "./cmds/revoke";
+import { module as selfNominateModule } from "./cmds/selfNominate";
 import { module as showModule } from "./cmds/show";
 import { module as transferModule } from "./cmds/transfer";
 
@@ -30,6 +31,7 @@ const _argv = yargs
     .command(transferModule)
     .command(delegateModule)
     .command(revokeModule)
+    .command(selfNominateModule)
     .demandCommand()
     .recommendCommands()
     .showHelpOnFail(true)

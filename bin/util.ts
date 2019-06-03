@@ -9,7 +9,7 @@ import * as yargs from "yargs";
 
 const PromptPassword = require("prompt-password");
 
-async function newSDK(params: {
+export async function newSDK(params: {
     server: string;
     keyStoreType?: KeyStoreType;
     options?: {
