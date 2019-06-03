@@ -65,26 +65,6 @@ async function show(sdk: SDK, account: PlatformAddress, blockNumber: number) {
     }
     console.groupEnd();
 
-    if (summary.revocationsTo.values.length > 0) {
-        console.group(
-            `Scheduled revocations to: Total ${summary.revocationsTo.sum.toLocaleString()} CCS`
-        );
-        const table = createTable(
-            ["Time", "Delegatee", "Quantity"],
-            ["left", "left", "right"]
-        );
-        for (const { delegatee, endTime, quantity } of summary.revocationsTo
-            .values) {
-            table.push([
-                new Date(endTime * 1000).toISOString(),
-                delegatee.toString(),
-                quantity.toLocaleString()
-            ]);
-        }
-        console.log(table.toString());
-        console.groupEnd();
-    }
-
     console.group(
         `Delegations from: Total ${summary.delegationsFrom.sum.toLocaleString()} CCS`
     );
@@ -96,26 +76,6 @@ async function show(sdk: SDK, account: PlatformAddress, blockNumber: number) {
         console.log(table.toString());
     }
     console.groupEnd();
-
-    if (summary.revocationsFrom.values.length > 0) {
-        console.group(
-            `Scheduled revocations from: Total ${summary.revocationsFrom.sum.toLocaleString()} CCS`
-        );
-        const table = createTable(
-            ["Time", "Delegator", "Quantity"],
-            ["left", "left", "right"]
-        );
-        for (const { delegator, endTime, quantity } of summary.revocationsFrom
-            .values) {
-            table.push([
-                new Date(endTime * 1000).toISOString(),
-                delegator.toString(),
-                quantity.toLocaleString()
-            ]);
-        }
-        console.log(table.toString());
-        console.groupEnd();
-    }
 }
 
 async function overview(sdk: SDK, blockNumber: number) {
@@ -132,20 +92,14 @@ async function overview(sdk: SDK, blockNumber: number) {
             "CCS",
             "Undelegated",
             "Delegations\n(Out)",
-            "Delegations\n(In)",
-            "Revocations\n(Out)",
-            "Revocations\n(In)"
+            "Delegations\n(In)"
         ],
         ["left", "right", "right", "right", "right", "right", "right", "right"]
     );
     for (const account of summary.ccsHolders) {
-        const {
-            undelegated,
-            delegationsTo,
-            revocationsTo,
-            delegationsFrom,
-            revocationsFrom
-        } = summary.get(account);
+        const { undelegated, delegationsTo, delegationsFrom } = summary.get(
+            account
+        );
         const balance = undelegated.plus(delegationsTo.sum);
         const share = percent(balance, summary.totalCCS);
         table.push([
@@ -154,9 +108,7 @@ async function overview(sdk: SDK, blockNumber: number) {
             balance.toLocaleString(),
             undelegated.toLocaleString(),
             delegationsTo.sum.toLocaleString(),
-            delegationsFrom.sum.toLocaleString(),
-            revocationsTo.sum.toLocaleString(),
-            revocationsFrom.sum.toLocaleString()
+            delegationsFrom.sum.toLocaleString()
         ]);
     }
     console.log(table.toString());

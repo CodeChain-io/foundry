@@ -12,7 +12,6 @@ const RLP = require("rlp");
 const HANDLER_ID = 2;
 const TRANSFER_CCS_ACTION_ID = 1;
 const DELEGATE_CCS_ACTION_ID = 2;
-const REQUEST_REVOKE_ACTION_ID = 3;
 
 export async function getUndelegatedCCS(
     sdk: SDK,
@@ -78,44 +77,6 @@ export async function getDelegations(
     });
 }
 
-export interface Revocation {
-    delegator: PlatformAddress;
-    delegatee: PlatformAddress;
-    endTime: number;
-    quantity: U64;
-}
-
-export async function getPendingRevocations(
-    sdk: SDK,
-    blockNumber?: number
-): Promise<Revocation[]> {
-    const data = await sdk.rpc.engine.getCustomActionData(
-        2,
-        ["Revocations"],
-        blockNumber
-    );
-    if (data == null) {
-        return [];
-    }
-    const list: Buffer[][] = RLP.decode(Buffer.from(data, "hex"));
-    return list.map(([delegator, delegatee, endTime, quantity]) => {
-        return {
-            delegator: decodePlatformAddress(sdk, delegator),
-            delegatee: decodePlatformAddress(sdk, delegatee),
-            endTime: decodeNumber(endTime),
-            quantity: decodeU64(quantity)
-        };
-    });
-}
-
-function decodeNumber(buffer: Buffer): number {
-    const parsed = parseInt(buffer.toString("hex"), 16);
-    if (isNaN(parsed)) {
-        throw new Error("buffer is not a number");
-    }
-    return parsed;
-}
-
 function decodeU64(buffer: Buffer): U64 {
     return U64.ensure("0x" + buffer.toString("hex"));
 }
@@ -151,21 +112,6 @@ export function createDelegateCCSTransaction(
         handlerId: HANDLER_ID,
         bytes: RLP.encode([
             DELEGATE_CCS_ACTION_ID,
-            PlatformAddress.ensure(delegatee).accountId.toEncodeObject(),
-            U64.ensure(quantity).toEncodeObject()
-        ])
-    });
-}
-
-export function createRequestRevokeTransaction(
-    sdk: SDK,
-    delegatee: PlatformAddressValue,
-    quantity: U64Value
-): Custom {
-    return sdk.core.createCustomTransaction({
-        handlerId: HANDLER_ID,
-        bytes: RLP.encode([
-            REQUEST_REVOKE_ACTION_ID,
             PlatformAddress.ensure(delegatee).accountId.toEncodeObject(),
             U64.ensure(quantity).toEncodeObject()
         ])

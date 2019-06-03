@@ -12,7 +12,6 @@ It adds the following features to [CodeChain SDK for JavaScript](https://github.
 - Get the list of all pending revocations
 - Transfer stake tokens
 - Delegate stake tokens
-- Request to revoke delegated stake tokens
 
 ## How to
 
@@ -111,22 +110,6 @@ const { createDelegateCCSTransaction } = require("codechain-stakeholder-sdk");
 
 // Delegate 100 tokens to tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f
 const tx = createDelegateCCSTransaction(sdk, "tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f", 100);
-const signedTx = tx.sign({ secret: "...", seq: "...", fee: "..." });
-sdk.rpc.chain.sendSignedTransaction(signedTx)
-  .then(txhash => {
-    // txhash: H256
-    ...
-  });
-```
-
-### Request to revoke delegated stake tokens
-
-```js
-const sdk = ...
-const { createRequestRevokeTransaction } = require("codechain-stakeholder-sdk");
-
-// Request to revoke 100 token delegated to tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f
-const tx = createRequestRevokeTransaction(sdk, "tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f", 100);
 const signedTx = tx.sign({ secret: "...", seq: "...", fee: "..." });
 sdk.rpc.chain.sendSignedTransaction(signedTx)
   .then(txhash => {

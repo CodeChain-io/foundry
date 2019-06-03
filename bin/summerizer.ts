@@ -5,9 +5,7 @@ import {
     Delegation,
     getCCSHolders,
     getDelegations,
-    getPendingRevocations,
-    getUndelegatedCCS,
-    Revocation
+    getUndelegatedCCS
 } from "../src";
 
 interface DelegationFrom {
@@ -34,8 +32,6 @@ export class AccountSummary {
     public undelegated = new U64(0);
     public delegationsTo = new QuantitySummerizableArray<Delegation>();
     public delegationsFrom = new QuantitySummerizableArray<DelegationFrom>();
-    public revocationsTo = new QuantitySummerizableArray<Revocation>();
-    public revocationsFrom = new QuantitySummerizableArray<Revocation>();
 }
 
 export async function summarize(sdk: SDK, blockNumber: number) {
@@ -48,7 +44,6 @@ export async function summarize(sdk: SDK, blockNumber: number) {
     const allDelegations = await Promise.all(
         ccsHolders.map(ccsHolder => getDelegations(sdk, ccsHolder, blockNumber))
     );
-    const pendingRevocations = await getPendingRevocations(sdk, blockNumber);
 
     const aggregate: { [address: string]: AccountSummary } = {};
 
@@ -73,18 +68,6 @@ export async function summarize(sdk: SDK, blockNumber: number) {
         }
     }
 
-    for (const revocation of pendingRevocations) {
-        const { delegator, delegatee } = revocation;
-        const delegatorSummary =
-            aggregate[delegator.value] || new AccountSummary();
-        const delegateeSummary =
-            aggregate[delegatee.value] || new AccountSummary();
-        delegatorSummary.revocationsTo.values.push(revocation);
-        delegateeSummary.revocationsFrom.values.push(revocation);
-        aggregate[delegator.value] = delegatorSummary;
-        aggregate[delegatee.value] = delegateeSummary;
-    }
-
     return {
         totalCCS: getTotalCCS(allUndelegateds, allDelegations),
         ccsHolders,
@@ -96,13 +79,6 @@ export async function summarize(sdk: SDK, blockNumber: number) {
                 x => x.delegatee.value === delegatee.value
             );
             return sumU64(delegations.map(x => x.quantity));
-        },
-        revocations(delegator: PlatformAddress, delegatee: PlatformAddress) {
-            const result = new QuantitySummerizableArray<Revocation>();
-            result.values = this.get(delegator).revocationsTo.values.filter(
-                x => x.delegatee.value === delegatee.value
-            );
-            return result;
         }
     };
 }

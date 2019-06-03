@@ -2,7 +2,6 @@
 
 import * as yargs from "yargs";
 
-import { module as beginRevokeModule } from "./cmds/beginRevoke";
 import { module as delegateModule } from "./cmds/delegate";
 import { module as showModule } from "./cmds/show";
 import { module as transferModule } from "./cmds/transfer";
@@ -29,7 +28,6 @@ const _argv = yargs
     .command(showModule)
     .command(transferModule)
     .command(delegateModule)
-    .command(beginRevokeModule)
     .demandCommand()
     .recommendCommands()
     .showHelpOnFail(true)
