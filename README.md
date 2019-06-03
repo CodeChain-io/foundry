@@ -117,3 +117,19 @@ sdk.rpc.chain.sendSignedTransaction(signedTx)
     ...
   });
 ```
+
+### Revoke stake tokens
+
+```js
+const sdk = ...
+const { createRevokeTransaction } = require("codechain-stakeholder-sdk");
+
+// Revoke 100 tokens delegated to tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f
+const tx = createRevokeTransaction(sdk, "tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f", 100);
+const signedTx = tx.sign({ secret: "...", seq: "...", fee: "..." });
+sdk.rpc.chain.sendSignedTransaction(signedTx)
+  .then(txhash => {
+    // txhash: H256
+    ...
+  });
+```

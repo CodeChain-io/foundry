@@ -12,6 +12,7 @@ const RLP = require("rlp");
 const HANDLER_ID = 2;
 const TRANSFER_CCS_ACTION_ID = 1;
 const DELEGATE_CCS_ACTION_ID = 2;
+const REVOKE_ACTION_ID = 3;
 
 export async function getUndelegatedCCS(
     sdk: SDK,
@@ -112,6 +113,21 @@ export function createDelegateCCSTransaction(
         handlerId: HANDLER_ID,
         bytes: RLP.encode([
             DELEGATE_CCS_ACTION_ID,
+            PlatformAddress.ensure(delegatee).accountId.toEncodeObject(),
+            U64.ensure(quantity).toEncodeObject()
+        ])
+    });
+}
+
+export function createRevokeTransaction(
+    sdk: SDK,
+    delegatee: PlatformAddressValue,
+    quantity: U64Value
+): Custom {
+    return sdk.core.createCustomTransaction({
+        handlerId: HANDLER_ID,
+        bytes: RLP.encode([
+            REVOKE_ACTION_ID,
             PlatformAddress.ensure(delegatee).accountId.toEncodeObject(),
             U64.ensure(quantity).toEncodeObject()
         ])
