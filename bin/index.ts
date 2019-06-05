@@ -6,6 +6,7 @@ import { module as delegateModule } from "./cmds/delegate";
 import { module as revokeModule } from "./cmds/revoke";
 import { module as selfNominateModule } from "./cmds/selfNominate";
 import { module as showModule } from "./cmds/show";
+import { module as signModule } from "./cmds/sign";
 import { module as transferModule } from "./cmds/transfer";
 
 export interface GlobalParams {
@@ -32,6 +33,7 @@ const _argv = yargs
     .command(delegateModule)
     .command(revokeModule)
     .command(selfNominateModule)
+    .command(signModule)
     .demandCommand()
     .recommendCommands()
     .showHelpOnFail(true)
