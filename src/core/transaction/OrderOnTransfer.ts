@@ -7,15 +7,23 @@ const RLP = require("rlp");
 export interface OrderOnTransferJSON {
     order: OrderJSON;
     spentQuantity: string;
-    inputIndices: number[];
-    outputIndices: number[];
+    inputFromIndices: number[];
+    inputFeeIndices: number[];
+    outputFromIndices: number[];
+    outputToIndices: number[];
+    outputOwnedFeeIndices: number[];
+    outputTransferredFeeIndices: number[];
 }
 
 export interface OrderOnTransferData {
     order: Order;
     spentQuantity: U64;
-    inputIndices: number[];
-    outputIndices: number[];
+    inputFromIndices: number[];
+    inputFeeIndices: number[];
+    outputFromIndices: number[];
+    outputToIndices: number[];
+    outputOwnedFeeIndices: number[];
+    outputTransferredFeeIndices: number[];
 }
 
 export class OrderOnTransfer {
@@ -25,19 +33,36 @@ export class OrderOnTransfer {
      * @returns An Order.
      */
     public static fromJSON(data: OrderOnTransferJSON) {
-        const { order, spentQuantity, inputIndices, outputIndices } = data;
+        const {
+            order,
+            spentQuantity,
+            inputFromIndices,
+            inputFeeIndices,
+            outputFromIndices,
+            outputToIndices,
+            outputOwnedFeeIndices,
+            outputTransferredFeeIndices
+        } = data;
         return new OrderOnTransfer({
             order: Order.fromJSON(order),
             spentQuantity: U64.ensure(spentQuantity),
-            inputIndices,
-            outputIndices
+            inputFromIndices,
+            inputFeeIndices,
+            outputFromIndices,
+            outputToIndices,
+            outputOwnedFeeIndices,
+            outputTransferredFeeIndices
         });
     }
 
     public readonly order: Order;
     public readonly spentQuantity: U64;
-    public inputIndices: number[];
-    public outputIndices: number[];
+    public inputFromIndices: number[];
+    public inputFeeIndices: number[];
+    public outputFromIndices: number[];
+    public outputToIndices: number[];
+    public outputOwnedFeeIndices: number[];
+    public outputTransferredFeeIndices: number[];
 
     /**
      * @param params.order An order to apply to the transfer transaction.
@@ -46,23 +71,49 @@ export class OrderOnTransfer {
      * @param data.outputIndices The indices of outputs affected by the order
      */
     constructor(data: OrderOnTransferData) {
-        const { order, spentQuantity, inputIndices, outputIndices } = data;
+        const {
+            order,
+            spentQuantity,
+            inputFromIndices,
+            inputFeeIndices,
+            outputFromIndices,
+            outputToIndices,
+            outputOwnedFeeIndices,
+            outputTransferredFeeIndices
+        } = data;
         this.order = order;
         this.spentQuantity = spentQuantity;
-        this.inputIndices = inputIndices;
-        this.outputIndices = outputIndices;
+        this.inputFromIndices = inputFromIndices;
+        this.inputFeeIndices = inputFeeIndices;
+        this.outputFromIndices = outputFromIndices;
+        this.outputToIndices = outputToIndices;
+        this.outputOwnedFeeIndices = outputOwnedFeeIndices;
+        this.outputTransferredFeeIndices = outputTransferredFeeIndices;
     }
 
     /**
      * Convert to an object for RLP encoding.
      */
     public toEncodeObject() {
-        const { order, spentQuantity, inputIndices, outputIndices } = this;
+        const {
+            order,
+            spentQuantity,
+            inputFromIndices,
+            inputFeeIndices,
+            outputFromIndices,
+            outputToIndices,
+            outputOwnedFeeIndices,
+            outputTransferredFeeIndices
+        } = this;
         return [
             order.toEncodeObject(),
             spentQuantity.toEncodeObject(),
-            inputIndices,
-            outputIndices
+            inputFromIndices,
+            inputFeeIndices,
+            outputFromIndices,
+            outputToIndices,
+            outputOwnedFeeIndices,
+            outputTransferredFeeIndices
         ];
     }
 
@@ -78,12 +129,25 @@ export class OrderOnTransfer {
      * @returns An OrderOnTransferJSON object.
      */
     public toJSON(): OrderOnTransferJSON {
-        const { order, spentQuantity, inputIndices, outputIndices } = this;
+        const {
+            order,
+            spentQuantity,
+            inputFromIndices,
+            inputFeeIndices,
+            outputFromIndices,
+            outputToIndices,
+            outputOwnedFeeIndices,
+            outputTransferredFeeIndices
+        } = this;
         return {
             order: order.toJSON(),
             spentQuantity: spentQuantity.toJSON(),
-            inputIndices,
-            outputIndices
+            inputFromIndices,
+            inputFeeIndices,
+            outputFromIndices,
+            outputToIndices,
+            outputOwnedFeeIndices,
+            outputTransferredFeeIndices
         };
     }
 
