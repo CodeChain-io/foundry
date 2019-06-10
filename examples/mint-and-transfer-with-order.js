@@ -99,8 +99,9 @@ const ACCOUNT_PASSPHRASE = process.env.ACCOUNT_PASSPHRASE || "satoshi";
         .addOrder({
             order,
             spentQuantity: 100,
-            inputIndices: [0],
-            outputIndices: [0, 1]
+            inputFromIndices: [0],
+            outputFromIndices: [0],
+            outputToIndices: [1]
         });
     await sdk.key.signTransactionInput(transferTx, 1);
 

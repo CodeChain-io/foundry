@@ -215,21 +215,46 @@ export class TransferAsset extends Transaction implements AssetTransaction {
     public addOrder(params: {
         order: Order;
         spentQuantity: U64Value;
-        inputIndices: number[];
-        outputIndices: number[];
+        inputFromIndices: number[];
+        inputFeeIndices: number[];
+        outputFromIndices: number[];
+        outputToIndices: number[];
+        outputOwnedFeeIndices: number[];
+        outputTransferredFeeIndices: number[];
     }) {
-        const { order, spentQuantity, inputIndices, outputIndices } = params;
-        if (inputIndices.length === 0) {
-            throw Error(`inputIndices should not be empty`);
+        const {
+            order,
+            spentQuantity,
+            inputFromIndices = [],
+            inputFeeIndices = [],
+            outputFromIndices = [],
+            outputToIndices = [],
+            outputOwnedFeeIndices = [],
+            outputTransferredFeeIndices = []
+        } = params;
+        if (inputFromIndices.length === 0) {
+            throw Error(`inputFromIndices should not be empty`);
         }
+        const inputIndices = inputFromIndices.concat(inputFeeIndices);
+        const outputIndices = outputFromIndices
+            .concat(outputToIndices)
+            .concat(outputOwnedFeeIndices)
+            .concat(outputTransferredFeeIndices);
 
         for (const orderOnTx of this._transaction.orders) {
-            const setInputs = new Set(orderOnTx.inputIndices);
-            const setOutputs = new Set(orderOnTx.outputIndices);
-            const inputIntersection = [...new Set(inputIndices)].filter(x =>
+            const setInputs = new Set(
+                orderOnTx.inputFromIndices.concat(orderOnTx.inputFeeIndices)
+            );
+            const setOutputs = new Set(
+                orderOnTx.outputFromIndices
+                    .concat(orderOnTx.outputToIndices)
+                    .concat(orderOnTx.outputOwnedFeeIndices)
+                    .concat(orderOnTx.outputTransferredFeeIndices)
+            );
+            const inputIntersection = inputIndices.filter(x =>
                 setInputs.has(x)
             );
-            const outputIntersection = [...new Set(outputIndices)].filter(x =>
+            const outputIntersection = outputIndices.filter(x =>
                 setOutputs.has(x)
             );
             if (inputIntersection.length > 0 || outputIntersection.length > 0) {
@@ -239,12 +264,17 @@ export class TransferAsset extends Transaction implements AssetTransaction {
             }
         }
 
+        // NOTE: Do not empty any of the indices 
         this._transaction.orders.push(
             new OrderOnTransfer({
                 order,
                 spentQuantity: U64.ensure(spentQuantity),
-                inputIndices,
-                outputIndices
+                inputFromIndices,
+                inputFeeIndices,
+                outputFromIndices,
+                outputToIndices,
+                outputOwnedFeeIndices,
+                outputTransferredFeeIndices
             })
         );
         return this;

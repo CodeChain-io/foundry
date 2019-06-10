@@ -542,20 +542,41 @@ export class Core {
     public createOrderOnTransfer(params: {
         order: Order;
         spentQuantity: U64Value;
-        inputIndices: number[];
-        outputIndices: number[];
+        inputFromIndices: number[];
+        inputFeeIndices: number[];
+        outputFromIndices: number[];
+        outputToIndices: number[];
+        outputOwnedFeeIndices: number[];
+        outputTransferredFeeIndices: number[];
     }) {
-        const { order, spentQuantity, inputIndices, outputIndices } = params;
+        const {
+            order,
+            spentQuantity,
+            inputFromIndices,
+            inputFeeIndices,
+            outputFromIndices,
+            outputToIndices,
+            outputOwnedFeeIndices,
+            outputTransferredFeeIndices
+        } = params;
         checkOrder(order);
         checkAmount(spentQuantity);
-        checkIndices(inputIndices);
-        checkIndices(outputIndices);
+        checkIndices(inputFromIndices);
+        checkIndices(inputFeeIndices);
+        checkIndices(outputFromIndices);
+        checkIndices(outputToIndices);
+        checkIndices(outputOwnedFeeIndices);
+        checkIndices(outputTransferredFeeIndices);
 
         return new OrderOnTransfer({
             order,
             spentQuantity: U64.ensure(spentQuantity),
-            inputIndices,
-            outputIndices
+            inputFromIndices,
+            inputFeeIndices,
+            outputFromIndices,
+            outputToIndices,
+            outputOwnedFeeIndices,
+            outputTransferredFeeIndices
         });
     }
 

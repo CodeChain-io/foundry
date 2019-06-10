@@ -305,7 +305,10 @@ export class Key {
         if (tx instanceof TransferAsset) {
             let flag = false;
             for (const order of tx.orders()) {
-                if (order.inputIndices.indexOf(index) !== -1) {
+                const inputIndices = order.inputFromIndices.concat(
+                    order.inputFeeIndices
+                );
+                if (inputIndices.indexOf(index) !== -1) {
                     message = order.order.hash();
                     flag = true;
                     break;
