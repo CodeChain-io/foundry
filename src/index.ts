@@ -46,10 +46,15 @@ export async function getCCSHolders(
         blockNumber
     );
     if (data == null) {
-        throw Error("never");
+        throw Error("Expected non-null value, but got a null");
     }
-    const list: Buffer[] = RLP.decode(Buffer.from(data, "hex"));
-    return list.map(buf => decodePlatformAddress(sdk, buf));
+    const decoded = RLP.decode(Buffer.from(data, "hex"));
+    if (!isArrayOf<Buffer>(decoded, Buffer.isBuffer)) {
+        throw Error(
+            "Expected a rlp of Array<Buffer>, but got an invalid shaped value"
+        );
+    }
+    return decoded.map(buf => decodePlatformAddress(sdk, buf));
 }
 
 export interface Delegation {
@@ -63,20 +68,41 @@ export async function getDelegations(
     blockNumber?: number
 ): Promise<Delegation[]> {
     const data = await sdk.rpc.engine.getCustomActionData(
-        2,
+        HANDLER_ID,
         ["Delegation", delegator.accountId.toEncodeObject()],
         blockNumber
     );
     if (data == null) {
         return [];
     }
-    const list: Buffer[][] = RLP.decode(Buffer.from(data, "hex"));
-    return list.map(([delegatee, quantity]) => {
+    const decoded = RLP.decode(Buffer.from(data, "hex"));
+    function isDelegationShape(entry: any): entry is Buffer[] {
+        return entry != null && Array.isArray(entry) && entry.length === 2;
+    }
+    if (!isArrayOf<Buffer[]>(decoded, isDelegationShape)) {
+        throw new Error(
+            "Expected a rlp of Array<Buffer[4]>, but got an invalid shaped value"
+        );
+    }
+    return decoded.map(([delegatee, quantity]) => {
         return {
             delegatee: decodePlatformAddress(sdk, delegatee),
             quantity: decodeU64(quantity)
         };
     });
+}
+
+function isArrayOf<T>(
+    list: any,
+    predicate: (entry: any) => entry is T
+): list is Array<T> {
+    if (list == null) {
+        return false;
+    }
+    if (!Array.isArray(list)) {
+        return false;
+    }
+    return list.every(predicate);
 }
 
 function decodeUInt(buffer: Buffer): number {
