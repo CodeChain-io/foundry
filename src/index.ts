@@ -1,4 +1,6 @@
 import {
+    H256,
+    H512,
     PlatformAddress,
     PlatformAddressValue,
     U64,
@@ -92,6 +94,149 @@ export async function getDelegations(
     });
 }
 
+export interface Candidate {
+    pubkey: H512;
+    deposit: U64;
+    nominationEndsAt: U64;
+    metadata: Buffer;
+}
+
+export async function getCandidates(
+    sdk: SDK,
+    blockNumber?: number
+): Promise<Candidate[]> {
+    const data = await sdk.rpc.engine.getCustomActionData(
+        HANDLER_ID,
+        ["Candidates"],
+        blockNumber
+    );
+    if (data == null) {
+        return [];
+    }
+    const decoded = RLP.decode(Buffer.from(data, "hex"));
+    function isCandidateShape(entry: any): entry is Buffer[] {
+        return entry != null && Array.isArray(entry) && entry.length === 4;
+    }
+    if (!isArrayOf<Buffer[]>(decoded, isCandidateShape)) {
+        throw new Error(
+            "Expected a rlp of Array<Buffer[4]>, but got an invalid shaped value"
+        );
+    }
+    return decoded.map(([pubkey, deposit, nominationEndsAt, metadata]) => ({
+        pubkey: decodeH512(pubkey),
+        deposit: decodeU64(deposit),
+        nominationEndsAt: decodeU64(nominationEndsAt),
+        metadata
+    }));
+}
+
+export interface Prisoner {
+    address: PlatformAddress;
+    deposit: U64;
+    custodyUntil: U64;
+    releasedAt: U64;
+}
+
+export async function getJailed(
+    sdk: SDK,
+    blockNumber?: number
+): Promise<Prisoner[]> {
+    const data = await sdk.rpc.engine.getCustomActionData(
+        HANDLER_ID,
+        ["Jail"],
+        blockNumber
+    );
+    if (data == null) {
+        return [];
+    }
+    const decoded = RLP.decode(Buffer.from(data, "hex"));
+    const isCandidateShape = (entry: any): entry is Buffer[] =>
+        entry != null && Array.isArray(entry) && entry.length === 4;
+    if (!isArrayOf<Buffer[]>(decoded, isCandidateShape)) {
+        throw new Error(
+            "Expected a rlp of Array<Buffer[4]>, but got an invalid shaped value"
+        );
+    }
+    return decoded.map(([address, deposit, custodyUntil, releasedAt]) => ({
+        address: decodePlatformAddress(sdk, address),
+        deposit: decodeU64(deposit),
+        custodyUntil: decodeU64(custodyUntil),
+        releasedAt: decodeU64(releasedAt)
+    }));
+}
+
+export async function getBanned(
+    sdk: SDK,
+    blockNumber?: number
+): Promise<PlatformAddress[]> {
+    const data = await sdk.rpc.engine.getCustomActionData(
+        HANDLER_ID,
+        ["Banned"],
+        blockNumber
+    );
+    if (data == null) {
+        return [];
+    }
+    const decoded = RLP.decode(Buffer.from(data, "hex"));
+    if (!isArrayOf<Buffer>(decoded, Buffer.isBuffer)) {
+        throw new Error(
+            "Expected a rlp of Array<Buffer>, but an invalid shaped value"
+        );
+    }
+    return decoded.map(address => decodePlatformAddress(sdk, address));
+}
+
+interface IntermediateRewards {
+    previous: IntermediateReward[];
+    current: IntermediateReward[];
+}
+interface IntermediateReward {
+    address: PlatformAddress;
+    quantity: U64;
+}
+
+export async function getIntermediateRewards(
+    sdk: SDK,
+    blockNumber?: number
+): Promise<IntermediateRewards> {
+    const data = await sdk.rpc.engine.getCustomActionData(
+        HANDLER_ID,
+        ["IntermediateRewards"],
+        blockNumber
+    );
+    if (data == null) {
+        return {
+            previous: [],
+            current: []
+        };
+    }
+    const decoded = RLP.decode(Buffer.from(data, "hex"));
+    function isIntermediateRewardShape(entry: any): entry is Buffer[] {
+        return entry != null && Array.isArray(entry) && entry.length === 2;
+    }
+    function isIntermediateRewardsFieldShape(entry: any): entry is Buffer[][] {
+        return isArrayOf<Buffer[]>(entry, isIntermediateRewardShape);
+    }
+    if (
+        !isArrayOf<Buffer[][]>(decoded, isIntermediateRewardsFieldShape) ||
+        decoded.length !== 2
+    ) {
+        throw new Error(
+            "Expected a rlp of Buffer[2][][2], but an invalid shaped value"
+        );
+    }
+    function convert(entries: Buffer[][]): IntermediateReward[] {
+        return entries.map(([address, quantity]) => ({
+            address: decodePlatformAddress(sdk, address),
+            quantity: decodeU64(quantity)
+        }));
+    }
+    return {
+        previous: convert(decoded[0]),
+        current: convert(decoded[1])
+    };
+}
+
 function isArrayOf<T>(
     list: any,
     predicate: (entry: any) => entry is T
@@ -111,6 +256,14 @@ function decodeUInt(buffer: Buffer): number {
 
 function decodeU64(buffer: Buffer): U64 {
     return U64.ensure("0x" + buffer.toString("hex"));
+}
+
+function decodeH256(buffer: Buffer): H256 {
+    return H256.ensure("0x" + buffer.toString("hex"));
+}
+
+function decodeH512(buffer: Buffer): H512 {
+    return H512.ensure("0x" + buffer.toString("hex"));
 }
 
 function decodePlatformAddress(sdk: SDK, buffer: Buffer): PlatformAddress {
