@@ -72,6 +72,9 @@ export async function summarize(sdk: SDK, blockNumber: number) {
         totalCCS: getTotalCCS(allUndelegateds, allDelegations),
         ccsHolders,
         get(account: PlatformAddress) {
+            if (!aggregate[account.value]) {
+                aggregate[account.value] = new AccountSummary();
+            }
             return aggregate[account.value];
         },
         delegations(delegator: PlatformAddress, delegatee: PlatformAddress) {
