@@ -5,7 +5,7 @@ import { NetworkId } from "../types";
 
 export interface CustomActionJSON {
     handlerId: string;
-    buffer: number[];
+    bytes: number[];
 }
 
 export class Custom extends Transaction {
@@ -35,7 +35,7 @@ export class Custom extends Transaction {
         const { handlerId, bytes } = this;
         return {
             handlerId: handlerId.toJSON(),
-            buffer: [...bytes]
+            bytes: [...bytes]
         };
     }
 }
