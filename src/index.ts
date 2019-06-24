@@ -25,3 +25,5 @@ export {
     actionFromCustom,
     actionFromRLP
 } from "./transactions";
+
+export { TermMetadata, getTermMetadata, getPossibleAuthors } from "./rpc";
