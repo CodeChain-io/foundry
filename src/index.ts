@@ -237,6 +237,42 @@ export async function getIntermediateRewards(
     };
 }
 
+interface Validator {
+    weight: U64;
+    delegation: U64;
+    deposit: U64;
+    pubkey: H512;
+}
+
+export async function getValidators(
+    sdk: SDK,
+    blockNumber?: number
+): Promise<Validator[]> {
+    const data = await sdk.rpc.engine.getCustomActionData(
+        HANDLER_ID,
+        ["Validators"],
+        blockNumber
+    );
+    if (data == null) {
+        return [];
+    }
+    const decoded = RLP.decode(Buffer.from(data, "hex"));
+    function isValidatorShape(entry: any): entry is Buffer[] {
+        return entry != null && Array.isArray(entry) && entry.length === 4;
+    }
+    if (!isArrayOf<Buffer[]>(decoded, isValidatorShape)) {
+        throw new Error(
+            "Expected a rlp of Buffer[4][], but an invalid shaped value"
+        );
+    }
+    return decoded.map(([weight, delegation, deposit, pubkey]) => ({
+        weight: decodeU64(weight),
+        delegation: decodeU64(delegation),
+        deposit: decodeU64(deposit),
+        pubkey: decodeH512(pubkey)
+    }));
+}
+
 function isArrayOf<T>(
     list: any,
     predicate: (entry: any) => entry is T
