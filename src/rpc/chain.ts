@@ -92,12 +92,13 @@ export class ChainRpc {
      */
     public async sendTransaction(
         tx: Transaction,
-        options?: {
+        options: {
             account?: PlatformAddressValue;
             passphrase?: string;
             seq?: number | null;
             fee?: U64Value;
-        }
+            blockNumber?: number;
+        } = {}
     ): Promise<H256> {
         if (!(tx instanceof Transaction)) {
             throw Error(
@@ -107,10 +108,9 @@ export class ChainRpc {
         const {
             account = this.transactionSigner,
             passphrase,
-            fee = getMinimumFee(tx)
-        } = options || {
-            passphrase: undefined
-        };
+            blockNumber,
+            fee = await this.getMinTransactionFee(tx.type(), blockNumber)
+        } = options;
         if (!account) {
             throw Error("The account to sign the tx is not specified");
         } else if (!PlatformAddress.check(account)) {
@@ -118,7 +118,7 @@ export class ChainRpc {
                 `Expected account param of sendTransaction to be a PlatformAddress value but found ${account}`
             );
         }
-        const { seq = await this.getSeq(account) } = options || {};
+        const { seq = await this.getSeq(account) } = options;
         tx.setSeq(seq!);
         if (!fee) {
             throw Error("The fee of the tx is not specified");
@@ -1464,31 +1464,4 @@ function isShardIdValue(value: any): boolean {
         value >= 0 &&
         value <= 0xffff
     );
-}
-
-export function getMinimumFee(tx: Transaction): number {
-    switch (tx.type()) {
-        case "pay":
-            return 100;
-        case "setRegularKey":
-            return 10000;
-        case "store":
-            return 5000;
-        case "remove":
-            return 5000;
-        case "mintAsset":
-            return 100000;
-        case "transferAsset":
-            return 100;
-        case "changeAssetScheme":
-            return 100000;
-        case "increaseAssetSupply":
-            return 100000;
-        case "wrapCCC":
-            return 100000;
-        case "unwrapCCC":
-            return 100;
-        default:
-            return 10;
-    }
 }

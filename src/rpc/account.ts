@@ -9,7 +9,6 @@ import {
 import { Transaction } from "../core/Transaction";
 
 import { Rpc } from ".";
-import { getMinimumFee } from "./chain";
 
 export class AccountRpc {
     private rpc: Rpc;
@@ -179,13 +178,14 @@ export class AccountRpc {
      * @param params.account The platform account to sign the tx
      * @param params.passphrase The account's passphrase
      */
-    public sendTransaction(params: {
+    public async sendTransaction(params: {
         tx: Transaction;
         account: PlatformAddressValue;
         fee?: U64Value;
         passphrase?: string;
+        blockNumber?: number;
     }): Promise<{ hash: H256; seq: number }> {
-        const { tx, fee, account, passphrase } = params;
+        const { tx, fee, account, passphrase, blockNumber } = params;
         if (!PlatformAddress.check(account)) {
             throw Error(
                 `Expected the account param to be a PlatformAddress value but found ${account}`
@@ -200,20 +200,27 @@ export class AccountRpc {
             tx.setFee(fee);
         }
         if (tx.fee() == null) {
-            tx.setFee(getMinimumFee(tx));
+            const minFee = await this.rpc.chain.getMinTransactionFee(
+                tx.type(),
+                blockNumber
+            );
+            if (minFee === null) {
+                throw new Error("The fee of the tx is not specified");
+            }
+            tx.setFee(minFee);
         }
-        return this.rpc
-            .sendRpcRequest("account_sendTransaction", [
+        const result = await this.rpc.sendRpcRequest(
+            "account_sendTransaction",
+            [
                 tx.toJSON(),
                 PlatformAddress.ensure(account).toString(),
                 passphrase
-            ])
-            .then(result => {
-                return {
-                    hash: H256.ensure(result.hash),
-                    seq: result.seq
-                };
-            });
+            ]
+        );
+        return {
+            hash: H256.ensure(result.hash),
+            seq: result.seq
+        };
     }
     /**
      * Unlocks the account.
