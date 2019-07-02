@@ -19,6 +19,9 @@ export function decodeUInt(buffer: Buffer): number {
 }
 
 export function decodeU64(buffer: Buffer): U64 {
+    if (buffer.length === 0) {
+        return new U64(0);
+    }
     return U64.ensure("0x" + buffer.toString("hex"));
 }
 
