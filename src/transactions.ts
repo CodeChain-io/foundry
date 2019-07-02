@@ -14,6 +14,7 @@ export const TRANSFER_CCS_ACTION_ID = 1;
 export const DELEGATE_CCS_ACTION_ID = 2;
 export const REVOKE_ACTION_ID = 3;
 export const SELF_NOMINATE_ACTION_ID = 4;
+export const CHANGE_PARAMS_ACTION_ID = 0xff;
 
 export function createTransferCCSTransaction(
     sdk: SDK,
@@ -99,7 +100,15 @@ interface SelfNominate {
     metadata: Buffer;
 }
 
-type Action = TransferCCS | DelegateCCS | Revoke | SelfNominate;
+interface ChangeParams {
+    type: "changeParams";
+    metadataSeq: U64;
+    // TODO: Use concrete type when it is needed.
+    params: any;
+    signatures: any[];
+}
+
+type Action = TransferCCS | DelegateCCS | Revoke | SelfNominate | ChangeParams;
 
 export function actionFromCustom(sdk: SDK, custom: Custom): Action | null {
     const { handlerId, bytes } = custom as any;
@@ -173,6 +182,19 @@ export function actionFromRLP(sdk: SDK, rlp: Buffer): Action {
                 type: "selfNominate",
                 deposit: decodeU64(decoded[1]),
                 metadata: decoded[2]
+            };
+        case CHANGE_PARAMS_ACTION_ID:
+            if (decoded.length <= 3) {
+                throw new Error(
+                    "A length of a RLP list of a changeParams action should be more than 3"
+                );
+            }
+            const signatures = decoded.slice(3);
+            return {
+                type: "changeParams",
+                metadataSeq: decodeU64(decoded[1]),
+                params: decoded[2],
+                signatures
             };
         default:
             throw new Error("Invalid tag for a stake action");
