@@ -19,7 +19,7 @@ import { SignedTransaction } from "../core/SignedTransaction";
 import { Text } from "../core/Text";
 import { Transaction } from "../core/Transaction";
 import { fromJSONToSignedTransaction } from "../core/transaction/json";
-import { NetworkId } from "../core/types";
+import { CommonParams, NetworkId } from "../core/types";
 
 export class ChainRpc {
     private rpc: Rpc;
@@ -1446,6 +1446,90 @@ export class ChainRpc {
                         resolve(result);
                     } else {
                         throw Error(`Failed to execute VM`);
+                    }
+                })
+                .catch(reject);
+        });
+    }
+
+    /**
+     * Gets the common parameters.
+     * @param blockNumber A block nubmer.
+     * @returns The coomon params, or null if the given block number is not mined yet.
+     */
+    public getCommonParams(blockNumber?: number): Promise<CommonParams | null> {
+        const fallbackServers = this.fallbackServers;
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the argument of getCommonParams to be a non-negative integer but found ${blockNumber}`
+            );
+        }
+
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getCommonParams", [blockNumber], {
+                    fallbackServers
+                })
+                .then(result => {
+                    try {
+                        if (result === null) {
+                            return resolve(null);
+                        }
+                        resolve({
+                            maxExtraDataSize: new U64(result.maxExtraDataSize),
+                            maxAssetSchemeMetadataSize: new U64(
+                                result.maxAssetSchemeMetadataSize
+                            ),
+                            maxTransferMetadataSize: new U64(
+                                result.maxTransferMetadataSize
+                            ),
+                            maxTextContentSize: new U64(
+                                result.maxTextContentSize
+                            ),
+                            networkID: result.networkID,
+                            minPayCost: new U64(result.minPayCost),
+                            minSetRegularKeyCost: new U64(
+                                result.minSetRegularKeyCost
+                            ),
+                            minCreateShardCost: new U64(
+                                result.minCreateShardCost
+                            ),
+                            minSetShardOwnersCost: new U64(
+                                result.minSetShardOwnersCost
+                            ),
+                            minSetShardUsersCost: new U64(
+                                result.minSetShardUsersCost
+                            ),
+                            minWrapCccCost: new U64(result.minWrapCccCost),
+                            minCustomCost: new U64(result.minCustomCost),
+                            minStoreCost: new U64(result.minStoreCost),
+                            minRemoveCost: new U64(result.minRemoveCost),
+                            minMintAssetCost: new U64(result.minMintAssetCost),
+                            minTransferAssetCost: new U64(
+                                result.minTransferAssetCost
+                            ),
+                            minChangeAssetSchemeCost: new U64(
+                                result.minChangeAssetSchemeCost
+                            ),
+                            minIncreaseAssetSupplyCost: new U64(
+                                result.minIncreaseAssetSupplyCost
+                            ),
+                            minComposeAssetCost: new U64(
+                                result.minComposeAssetCost
+                            ),
+                            minDecomposeAssetCost: new U64(
+                                result.minDecomposeAssetCost
+                            ),
+                            minUnwrapCccCost: new U64(result.minUnwrapCccCost),
+                            maxBodySize: new U64(result.maxBodySize),
+                            snapshotPeriod: new U64(result.snapshotPeriod)
+                        });
+                    } catch (e) {
+                        reject(
+                            Error(
+                                `Expected chain_getCommonParams to return a common params struct, but an error occurred: ${e.toString()}`
+                            )
+                        );
                     }
                 })
                 .catch(reject);
