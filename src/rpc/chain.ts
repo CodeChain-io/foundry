@@ -1577,6 +1577,44 @@ export class ChainRpc {
                 .catch(reject);
         });
     }
+
+    /**
+     * Get the signer of the given transaction hash.
+     * @param hash The tx hash of which to get the signer of the tx.
+     * @returns A platform address of the signer, or null if the transaction hash does not exist.
+     */
+    public getTransactionSigner(
+        hash: H256Value
+    ): Promise<PlatformAddress | null> {
+        const fallbackServers = this.fallbackServers;
+        if (!H256.check(hash)) {
+            throw Error(
+                `Expected the first argument of getTransactionSigner to be an H256 value but found ${hash}`
+            );
+        }
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getTransactionSigner", [hash], {
+                    fallbackServers
+                })
+                .then(result => {
+                    try {
+                        if (result === null) {
+                            return resolve(null);
+                        }
+
+                        resolve(PlatformAddress.fromString(result));
+                    } catch (e) {
+                        reject(
+                            Error(
+                                `Expected chain_getTransactionSigner to return a platform addresses, but an error occurred: ${e.toString()}`
+                            )
+                        );
+                    }
+                })
+                .catch(reject);
+        });
+    }
 }
 
 function isNonNegativeInterger(value: any): boolean {
