@@ -1615,6 +1615,38 @@ export class ChainRpc {
                 .catch(reject);
         });
     }
+
+    /**
+     * Gets the sequence of the chain's metadata.
+     * @param blockNumber A block number.
+     * @returns A sequence number, or null if the given block number is not mined yet.
+     */
+    public getMetadataSeq(blockNumber?: number): Promise<number | null> {
+        const fallbackServers = this.fallbackServers;
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the argument of getMetadataSeq to be a non-negative integer but found ${blockNumber}`
+            );
+        }
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getMetadataSeq", [blockNumber], {
+                    fallbackServers
+                })
+                .then(result => {
+                    if (result === null || typeof result === "number") {
+                        return resolve(result);
+                    } else {
+                        reject(
+                            Error(
+                                `Expected chain_getMetadataSeq to return a sequence number or null, but it returned ${result}`
+                            )
+                        );
+                    }
+                })
+                .catch(reject);
+        });
+    }
 }
 
 function isNonNegativeInterger(value: any): boolean {
