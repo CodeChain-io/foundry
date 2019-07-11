@@ -1535,6 +1535,48 @@ export class ChainRpc {
                 .catch(reject);
         });
     }
+
+    /**
+     * Get the list of accounts that can generate the blocks at the given block number.
+     * @params blockNumber A block number.
+     * @returns A list of possible authors, or null if anyone can generate the block
+     */
+    public getPossibleAuthors(
+        blockNumber?: number
+    ): Promise<PlatformAddress[] | null> {
+        const fallbackServers = this.fallbackServers;
+        if (blockNumber !== undefined && !isNonNegativeInterger(blockNumber)) {
+            throw Error(
+                `Expected the argument of getPossibleAuthors to be a non-negative integer but found ${blockNumber}`
+            );
+        }
+        return new Promise((resolve, reject) => {
+            this.rpc
+                .sendRpcRequest("chain_getPossibleAuthors", [blockNumber], {
+                    fallbackServers
+                })
+                .then(result => {
+                    try {
+                        if (result === null) {
+                            return resolve(null);
+                        }
+
+                        resolve(
+                            result.map((address: string) =>
+                                PlatformAddress.fromString(address)
+                            )
+                        );
+                    } catch (e) {
+                        reject(
+                            Error(
+                                `Expected chain_getPossibleAuthors to return a list of platform addresses, but an error occurred: ${e.toString()}`
+                            )
+                        );
+                    }
+                })
+                .catch(reject);
+        });
+    }
 }
 
 function isNonNegativeInterger(value: any): boolean {
