@@ -264,7 +264,7 @@ export class TransferAsset extends Transaction implements AssetTransaction {
             }
         }
 
-        // NOTE: Do not empty any of the indices 
+        // NOTE: Do not empty any of the indices
         this._transaction.orders.push(
             new OrderOnTransfer({
                 order,
