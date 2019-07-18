@@ -1,6 +1,6 @@
 {
   "name": "codechain-stakeholder-sdk",
-  "version": "0.1.0",
+  "version": "2.0.0-alpha.1",
   "description": "A JavaScript implementation for CodeChain stake token related custom actions and custom transactions",
   "author": "CodeChain Team <hi@codechain.io>",
   "license": "ISC",
