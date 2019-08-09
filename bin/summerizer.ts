@@ -67,10 +67,10 @@ export async function summarize(sdk: SDK, blockNumber: number) {
             aggregate[delegatee.value] = delegateeSummary;
         }
     }
-
+    const accounts = Object.keys(aggregate).map(PlatformAddress.ensure);
     return {
         totalCCS: getTotalCCS(allUndelegateds, allDelegations),
-        ccsHolders,
+        accounts,
         get(account: PlatformAddress) {
             if (!aggregate[account.value]) {
                 aggregate[account.value] = new AccountSummary();

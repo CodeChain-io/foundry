@@ -96,7 +96,7 @@ async function overview(sdk: SDK, blockNumber: number) {
         ],
         ["left", "right", "right", "right", "right", "right", "right", "right"]
     );
-    for (const account of summary.ccsHolders) {
+    for (const account of summary.accounts) {
         const { undelegated, delegationsTo, delegationsFrom } = summary.get(
             account
         );
