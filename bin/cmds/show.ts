@@ -44,6 +44,8 @@ async function show(sdk: SDK, account: PlatformAddress, blockNumber: number) {
     const summary = summaryAll.get(account);
 
     /* balance */
+    const cccBalance = await sdk.rpc.chain.getBalance(account, blockNumber);
+    console.log(`CCC balance: ${cccBalance.toLocaleString()}`);
     const balance = summary.balance;
     const totalCCS = summaryAll.totalCCS;
     const share = percent(balance, totalCCS);
