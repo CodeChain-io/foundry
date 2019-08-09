@@ -1,5 +1,5 @@
-import { PlatformAddress } from "codechain-primitives/lib";
 import { SDK } from "codechain-sdk";
+import { PlatformAddress } from "codechain-sdk/lib/core/classes";
 
 export interface TermMetadata {
     lastTermFinishedBlockNumber: number;

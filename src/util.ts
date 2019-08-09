@@ -1,5 +1,5 @@
-import { H512, PlatformAddress, U64 } from "codechain-primitives/lib";
 import { SDK } from "codechain-sdk";
+import { H512, PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
 
 export function isArrayOf<T>(
     list: any,

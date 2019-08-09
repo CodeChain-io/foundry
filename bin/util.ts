@@ -1,8 +1,11 @@
 import * as Table from "cli-table3";
 import { HorizontalAlignment } from "cli-table3";
-import { PlatformAddress, U64 } from "codechain-primitives";
 import { SDK } from "codechain-sdk";
-import { SignedTransaction } from "codechain-sdk/lib/core/classes";
+import {
+    PlatformAddress,
+    SignedTransaction,
+    U64
+} from "codechain-sdk/lib/core/classes";
 import { KeyStoreType } from "codechain-sdk/lib/key";
 import * as fs from "fs";
 import * as yargs from "yargs";

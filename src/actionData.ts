@@ -1,11 +1,10 @@
-import {
-    H512,
-    PlatformAddress,
-    PlatformAddressValue,
-    U64
-} from "codechain-primitives/lib";
+// FIXME: The SDK doesn't export PlatformAddressValue.
+// In the import statement below uses "codechain-primitives" which is installed by the SDK.
+// We should use the SDK's PlatformAddressValue when the SDK is updated.
+import { PlatformAddressValue } from "codechain-primitives";
 import { SDK } from "codechain-sdk";
-const RLP = require("rlp");
+import { H512, PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
+
 import { HANDLER_ID } from "./index";
 import {
     decodeH512,
@@ -13,6 +12,8 @@ import {
     decodeU64,
     isArrayOf
 } from "./util";
+
+const RLP = require("rlp");
 
 export async function getUndelegatedCCS(
     sdk: SDK,

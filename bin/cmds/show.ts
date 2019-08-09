@@ -1,5 +1,5 @@
-import { PlatformAddress } from "codechain-primitives";
 import { SDK } from "codechain-sdk";
+import { PlatformAddress } from "codechain-sdk/lib/core/classes";
 import * as yargs from "yargs";
 
 import { GlobalParams } from "../index";

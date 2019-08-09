@@ -1,5 +1,5 @@
-import { PlatformAddress, U64, U64Value } from "codechain-primitives/lib";
 import { SDK } from "codechain-sdk";
+import { PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
 import * as yargs from "yargs";
 
 import { GlobalParams } from "..";
