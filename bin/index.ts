@@ -8,6 +8,7 @@ import { module as selfNominateModule } from "./cmds/selfNominate";
 import { module as showModule } from "./cmds/show";
 import { module as signModule } from "./cmds/sign";
 import { module as transferModule } from "./cmds/transfer";
+import { module as validators } from "./cmds/validators";
 
 export interface GlobalParams {
     "keys-path": string;
@@ -33,6 +34,7 @@ const _argv = yargs
     .command(delegateModule)
     .command(revokeModule)
     .command(selfNominateModule)
+    .command(validators)
     .command(signModule)
     .demandCommand()
     .recommendCommands()
