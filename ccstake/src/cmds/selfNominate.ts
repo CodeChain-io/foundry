@@ -1,9 +1,9 @@
 import { SDK } from "codechain-sdk";
 import { PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
+import { createSelfNominateTransaction } from "codechain-stakeholder-sdk";
 import * as yargs from "yargs";
 
 import { GlobalParams } from "..";
-import { createSelfNominateTransaction } from "../../src";
 import {
     askPasspharaseFor,
     asyncHandler,

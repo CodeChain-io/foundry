@@ -1,9 +1,9 @@
 import { SDK } from "codechain-sdk";
 import { PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
+import { createRevokeTransaction } from "codechain-stakeholder-sdk";
 import * as yargs from "yargs";
 
 import { GlobalParams } from "..";
-import { createDelegateCCSTransaction } from "../../src";
 import { summarize } from "../summerizer";
 import {
     askPasspharaseFor,
@@ -15,24 +15,24 @@ import {
     waitForTx
 } from "../util";
 
-interface DelegateParams extends GlobalParams {
-    from: PlatformAddress;
-    to: PlatformAddress;
+interface RevokeParams extends GlobalParams {
+    delegator: PlatformAddress;
+    delegatee: PlatformAddress;
     quantity: U64;
     fee: number;
 }
 
-export const module: yargs.CommandModule<GlobalParams, DelegateParams> = {
-    command: "delegate",
-    describe: "Delegate CCS to an account",
+export const module: yargs.CommandModule<GlobalParams, RevokeParams> = {
+    command: "revoke",
+    describe: "Revoke delegation to an account",
     builder(args) {
         return args
-            .option("from", {
-                coerce: coerce("from", PlatformAddress.ensure),
+            .option("delegator", {
+                coerce: coerce("delegator", PlatformAddress.ensure),
                 demand: true
             })
-            .option("to", {
-                coerce: coerce("to", PlatformAddress.ensure),
+            .option("delegatee", {
+                coerce: coerce("delegatee", PlatformAddress.ensure),
                 demand: true
             })
             .option("quantity", {
@@ -48,28 +48,28 @@ export const module: yargs.CommandModule<GlobalParams, DelegateParams> = {
         const { sdk, blockNumber } = await prologue(argv);
 
         console.log("=== Confirm your action ===");
-        console.log("Action:", "Delegate");
-        console.log("Quantity:", argv.quantity.toLocaleString());
-        await printSummary(sdk, blockNumber, argv.from, argv.to, {
+        console.log("Action:", "Revoke");
+        console.log("Quantity:", argv.quantity.toString(10));
+        await printSummary(sdk, blockNumber, argv.delegator, argv.delegatee, {
             ccsChanges: argv.quantity,
             cccChanges: U64.ensure(argv.fee)
         });
 
-        const passphrase = await askPasspharaseFor(argv.from);
+        const passphrase = await askPasspharaseFor(argv.delegator);
 
-        const tx = createDelegateCCSTransaction(sdk, argv.to, argv.quantity);
+        const tx = createRevokeTransaction(sdk, argv.delegatee, argv.quantity);
         const signed = await sdk.key.signTransaction(tx, {
-            account: argv.from,
+            account: argv.delegator,
             passphrase,
             fee: argv.fee,
-            seq: await sdk.rpc.chain.getSeq(argv.from)
+            seq: await sdk.rpc.chain.getSeq(argv.delegator)
         });
         console.log("Sending tx:", signed.hash().value);
 
         const newBlockNumber = await waitForTx(sdk, signed);
         console.log("Tx is contained in block #", newBlockNumber);
 
-        await printSummary(sdk, newBlockNumber, argv.from, argv.to);
+        await printSummary(sdk, newBlockNumber, argv.delegator, argv.delegatee);
     })
 };
 
@@ -79,11 +79,12 @@ async function printSummary(
     delegator: PlatformAddress,
     delegatee: PlatformAddress,
     changes?: {
-        ccsChanges: U64;
         cccChanges: U64;
+        ccsChanges: U64;
     }
 ) {
     const { ccsChanges = new U64(0), cccChanges = new U64(0) } = changes || {};
+
     const summary = await summarize(sdk, blockNumber);
 
     console.group("Delegator", delegator.value);
@@ -97,11 +98,11 @@ async function printSummary(
         console.log("CCS Balance:", balance.toLocaleString());
         console.log(
             "Undelegated CCS:",
-            ...minusChangeArgs(undelegated, ccsChanges)
+            ...plusChangeArgs(undelegated, ccsChanges)
         );
         console.log(
             "Delegations (out):",
-            ...plusChangeArgs(delegationsTo.sum, ccsChanges)
+            ...minusChangeArgs(delegationsTo.sum, ccsChanges)
         );
     }
     console.groupEnd();
@@ -115,13 +116,16 @@ async function printSummary(
         console.log("Undelegated CCS:", undelegated.toLocaleString());
         console.log(
             "Delegations (in):",
-            ...plusChangeArgs(delegationsFrom.sum, ccsChanges)
+            ...minusChangeArgs(delegationsFrom.sum, ccsChanges)
         );
     }
     console.groupEnd();
 
     console.log(
         "Delegations between:",
-        ...plusChangeArgs(summary.delegations(delegator, delegatee), ccsChanges)
+        ...minusChangeArgs(
+            summary.delegations(delegator, delegatee),
+            ccsChanges
+        )
     );
 }

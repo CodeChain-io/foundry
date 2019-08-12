@@ -1,14 +1,14 @@
 import { PlatformAddress } from "codechain-sdk/lib/core/classes";
-import * as yargs from "yargs";
-
-import { GlobalParams } from "..";
 import {
     getBanned,
     getCandidates,
     getJailed,
     getTermMetadata,
     getValidators
-} from "../../src";
+} from "codechain-stakeholder-sdk";
+import * as yargs from "yargs";
+
+import { GlobalParams } from "..";
 import { summarize } from "../summerizer";
 import { asyncHandler, createTable, prologue } from "../util";
 

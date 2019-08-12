@@ -1,7 +1,7 @@
 {
-  "name": "codechain-stakeholder-sdk",
-  "version": "2.0.0-alpha.2",
-  "description": "A JavaScript implementation for CodeChain stake token related custom actions and custom transactions",
+  "name": "codechain-stakeholder-cli",
+  "version": "2.0.0-alpha.1",
+  "description": "A CLI for CodeChain stakeholders",
   "author": "CodeChain Team <hi@codechain.io>",
   "license": "ISC",
   "scripts": {
@@ -19,26 +19,30 @@
   "bugs": {
     "url": "https://github.com/CodeChain-io/codechain-stakeholder-sdk-js/issues"
   },
-  "main": "lib/index.js",
-  "typings": "./lib/index.d.ts",
   "files": [
-    "lib"
+    "build"
   ],
+  "bin": {
+    "ccstake": "build/index.js"
+  },
   "keywords": [
     "CodeChain"
   ],
   "dependencies": {
-    "rlp": "^2.2.2"
+    "codechain-sdk": "^2.0.0-alpha.2",
+    "codechain-stakeholder-sdk": "^2.0.0-alpha.2",
+    "cli-table3": "^0.5.1",
+    "prompt-password": "^1.2.0",
+    "rlp": "^2.2.2",
+    "yargs": "^13.2.2"
   },
   "devDependencies": {
     "@types/node": "^11.9.4",
-    "codechain-sdk": "^2.0.0-alpha.2",
+    "@types/yargs": "^13.0.0",
     "prettier": "^1.16.4",
     "tslint": "^5.12.1",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^3.3.3"
   },
-  "peerDependencies": {
-    "codechain-sdk": "^2.0.0-alpha.2"
-  }
+  "peerDependencies": {}
 }

@@ -4,7 +4,6 @@ import * as yargs from "yargs";
 const RLP = require("rlp");
 
 import { GlobalParams } from "..";
-import { decodeU64 } from "../../src/util";
 import {
     askPasspharaseFor,
     asyncHandler,
@@ -107,4 +106,11 @@ async function printSummary(
         );
     }
     console.groupEnd();
+}
+
+function decodeU64(buffer: Buffer): U64 {
+    if (buffer.length === 0) {
+        return new U64(0);
+    }
+    return U64.ensure("0x" + buffer.toString("hex"));
 }

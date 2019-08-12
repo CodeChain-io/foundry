@@ -5,7 +5,7 @@
     "types": ["node"],
     "module": "commonjs",
     "declaration": true,
-    "outDir": "lib",
+    "outDir": "build",
     "strict": true,
     "noImplicitAny": true,
     "noUnusedParameters": true,

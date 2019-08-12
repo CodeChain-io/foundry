@@ -1,13 +1,13 @@
 import { SDK } from "codechain-sdk";
 import { PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
-import * as yargs from "yargs";
-
-import { GlobalParams } from "..";
 import {
     createTransferCCSTransaction,
     getDelegations,
     getUndelegatedCCS
-} from "../../src";
+} from "codechain-stakeholder-sdk";
+import * as yargs from "yargs";
+
+import { GlobalParams } from "..";
 import { sumU64 } from "../summerizer";
 import {
     askPasspharaseFor,

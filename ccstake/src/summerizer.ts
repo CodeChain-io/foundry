@@ -1,12 +1,11 @@
 import { SDK } from "codechain-sdk";
 import { PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
-
 import {
     Delegation,
     getCCSHolders,
     getDelegations,
     getUndelegatedCCS
-} from "../src";
+} from "codechain-stakeholder-sdk";
 
 interface DelegationFrom {
     delegator: PlatformAddress;
