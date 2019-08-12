@@ -4,7 +4,9 @@ import {
     getCandidates,
     getJailed,
     getTermMetadata,
-    getValidators
+    getValidators,
+    Validator,
+    Candidate
 } from "codechain-stakeholder-sdk";
 import * as yargs from "yargs";
 
@@ -46,21 +48,22 @@ export const module: yargs.CommandModule<GlobalParams, GlobalParams> = {
                 "Delegation (CCS)",
                 "Deposit (CCC)"
             ]);
-            validators.sort((a, b) => {
+            const desc = (a: Validator, b: Validator) => {
                 if (a.delegation.gt(b.delegation)) {
-                    return 1;
+                    return -1;
                 }
                 if (a.delegation.lt(b.delegation)) {
-                    return -1;
-                }
-                if (a.deposit.gt(b.deposit)) {
                     return 1;
                 }
-                if (a.deposit.lt(b.deposit)) {
+                if (a.deposit.gt(b.deposit)) {
                     return -1;
                 }
+                if (a.deposit.lt(b.deposit)) {
+                    return 1;
+                }
                 return 0;
-            });
+            };
+            validators.sort(desc);
             for (const { pubkey, delegation, deposit } of validators) {
                 table.push([
                     PlatformAddress.fromPublic(pubkey, {
@@ -83,21 +86,25 @@ export const module: yargs.CommandModule<GlobalParams, GlobalParams> = {
                 const delegation = summary.get(address).delegationsFrom.sum;
                 return { ...c, address, delegation };
             });
-            sortedCandidats.sort((a, b) => {
+            const desc = (
+                a: typeof sortedCandidats[0],
+                b: typeof sortedCandidats[0]
+            ) => {
                 if (a.delegation.gt(b.delegation)) {
-                    return 1;
+                    return -1;
                 }
                 if (a.delegation.lt(b.delegation)) {
-                    return -1;
-                }
-                if (a.deposit.gt(b.deposit)) {
                     return 1;
                 }
-                if (a.deposit.lt(b.deposit)) {
+                if (a.deposit.gt(b.deposit)) {
                     return -1;
                 }
+                if (a.deposit.lt(b.deposit)) {
+                    return 1;
+                }
                 return 0;
-            });
+            };
+            sortedCandidats.sort(desc);
             const table = createTable([
                 "Address",
                 "Delegation (CCS)",
