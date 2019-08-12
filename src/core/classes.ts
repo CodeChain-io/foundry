@@ -1,9 +1,9 @@
-export { H128 } from "codechain-primitives";
-export { H160 } from "codechain-primitives";
-export { H256 } from "codechain-primitives";
-export { H512 } from "codechain-primitives";
-export { U64 } from "codechain-primitives";
-export { U256 } from "codechain-primitives";
+export { H128, H128Value } from "codechain-primitives";
+export { H160, H160Value } from "codechain-primitives";
+export { H256, H256Value } from "codechain-primitives";
+export { H512, H512Value } from "codechain-primitives";
+export { U64, U64Value } from "codechain-primitives";
+export { U256, U256Value } from "codechain-primitives";
 
 export { Block } from "./Block";
 export { Transaction } from "./Transaction";
@@ -35,4 +35,9 @@ export { AssetScheme } from "./AssetScheme";
 
 export { Script } from "./Script";
 
-export { PlatformAddress, AssetAddress } from "codechain-primitives";
+export {
+    PlatformAddress,
+    PlatformAddressValue,
+    AssetAddress,
+    AssetAddressValue
+} from "codechain-primitives";
