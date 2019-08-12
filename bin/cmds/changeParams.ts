@@ -39,7 +39,7 @@ export const module: yargs.CommandModule<GlobalParams, ChangeParams> = {
             })
             .option("fee", {
                 number: true,
-                default: 0
+                demand: true
             });
     },
     handler: asyncHandler(async argv => {
