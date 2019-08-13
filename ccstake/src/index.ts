@@ -2,6 +2,7 @@
 
 import * as yargs from "yargs";
 
+import { module as batchDelegate } from "./cmds/batchDelegate";
 import { module as changeParams } from "./cmds/changeParams";
 import { module as delegateModule } from "./cmds/delegate";
 import { module as revokeModule } from "./cmds/revoke";
@@ -33,6 +34,7 @@ const _argv = yargs
     .command(showModule)
     .command(transferModule)
     .command(delegateModule)
+    .command(batchDelegate)
     .command(revokeModule)
     .command(selfNominateModule)
     .command(validators)
