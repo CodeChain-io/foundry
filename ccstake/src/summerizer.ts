@@ -1,3 +1,4 @@
+import { PlatformAddressValue } from "codechain-primitives/lib";
 import { SDK } from "codechain-sdk";
 import { PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
 import {
@@ -33,7 +34,20 @@ export class AccountSummary {
     public delegationsFrom = new QuantitySummerizableArray<DelegationFrom>();
 }
 
-export async function summarize(sdk: SDK, blockNumber: number) {
+export interface Summary {
+    totalCCS: U64;
+    accounts: PlatformAddress[];
+    get(account: PlatformAddressValue): AccountSummary;
+    delegations(
+        delegator: PlatformAddressValue,
+        delegatee: PlatformAddressValue
+    ): U64;
+}
+
+export async function summarize(
+    sdk: SDK,
+    blockNumber: number
+): Promise<Summary> {
     const ccsHolders = await getCCSHolders(sdk, blockNumber);
     const allUndelegateds = await Promise.all(
         ccsHolders.map(ccsHolder =>
@@ -67,22 +81,29 @@ export async function summarize(sdk: SDK, blockNumber: number) {
         }
     }
     const accounts = Object.keys(aggregate).map(PlatformAddress.ensure);
-    return {
+    const summary: Summary = {
         totalCCS: getTotalCCS(allUndelegateds, allDelegations),
         accounts,
-        get(account: PlatformAddress) {
-            if (!aggregate[account.value]) {
-                aggregate[account.value] = new AccountSummary();
+        get(accountValue: PlatformAddressValue) {
+            const account = PlatformAddress.ensure(accountValue).toString();
+            if (!aggregate[account]) {
+                aggregate[account] = new AccountSummary();
             }
-            return aggregate[account.value];
+            return aggregate[account];
         },
-        delegations(delegator: PlatformAddress, delegatee: PlatformAddress) {
+        delegations(
+            delegatorValue: PlatformAddressValue,
+            delegateeValue: PlatformAddressValue
+        ) {
+            const delegator = PlatformAddress.ensure(delegatorValue);
+            const delegatee = PlatformAddress.ensure(delegateeValue);
             const delegations = this.get(delegator).delegationsTo.values.filter(
-                x => x.delegatee.value === delegatee.value
+                x => x.delegatee.toString() === delegatee.toString()
             );
             return sumU64(delegations.map(x => x.quantity));
         }
     };
+    return summary;
 }
 
 function getTotalCCS(balances: U64[], allDelegations: Delegation[][]) {
