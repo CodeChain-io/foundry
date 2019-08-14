@@ -9,8 +9,7 @@ import {
 import { KeyStoreType } from "codechain-sdk/lib/key";
 import * as fs from "fs";
 import * as yargs from "yargs";
-
-const PromptPassword = require("prompt-password");
+import * as prompts from "prompts";
 
 export async function newSDK(params: {
     server: string;
@@ -61,18 +60,12 @@ export async function prologue(argv: {
 export async function askPasspharaseFor(
     account: PlatformAddress
 ): Promise<string> {
-    const prompt = new PromptPassword({
+    const password = await prompts({
         type: "password",
         message: `To continue, enter passphrase for ${account.value}`,
         name: "password"
     });
-
-    return new Promise((resolve, reject) =>
-        prompt
-            .run()
-            .then(resolve)
-            .catch(reject)
-    );
+    return password.password;
 }
 
 export async function waitForTx(

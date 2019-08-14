@@ -32,13 +32,14 @@
     "cli-table3": "^0.5.1",
     "codechain-sdk": "^2.0.0-alpha.2",
     "codechain-stakeholder-sdk": "^2.0.0-alpha.3",
-    "prompt-password": "^1.2.0",
+    "prompts": "^2.2.1",
     "rlp": "^2.2.2",
     "strip-ansi": "^5.2.0",
     "yargs": "^13.2.2"
   },
   "devDependencies": {
     "@types/node": "^11.9.4",
+    "@types/prompts": "^2.0.1",
     "@types/yargs": "^13.0.0",
     "prettier": "^1.16.4",
     "tslint": "^5.12.1",
