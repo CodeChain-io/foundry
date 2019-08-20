@@ -9,7 +9,9 @@
     "strict": true,
     "noImplicitAny": true,
     "noUnusedParameters": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo"
   },
   "include": ["./src/**/*"],
   "exclude": ["./src/**/*.test.ts"]
