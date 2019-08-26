@@ -3,19 +3,42 @@
 // We should use the SDK's PlatformAddressValue when the SDK is updated.
 import { PlatformAddressValue, U64Value } from "codechain-primitives/lib";
 import { SDK } from "codechain-sdk";
-import { PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
+import { H512, PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
 import { Custom } from "codechain-sdk/lib/core/transaction/Custom";
+import * as RLP from "rlp";
 
 import { HANDLER_ID } from "./index";
-import { decodePlatformAddress, decodeU64, decodeUInt } from "./util";
-
-const RLP = require("rlp");
+import { ConsensusMessage, isStep } from "./message";
+import {
+    decodeH512,
+    decodePlatformAddress,
+    decodeU64,
+    decodeUInt
+} from "./util";
 
 export const TRANSFER_CCS_ACTION_ID = 1;
 export const DELEGATE_CCS_ACTION_ID = 2;
 export const REVOKE_ACTION_ID = 3;
 export const SELF_NOMINATE_ACTION_ID = 4;
+export const REPORT_DOUBLE_VOTE_ACTION_ID = 5;
 export const CHANGE_PARAMS_ACTION_ID = 0xff;
+
+function messageToEncodeObject(message: ConsensusMessage) {
+    return [
+        [
+            [
+                message.on.step.height.toEncodeObject(),
+                message.on.step.view.toEncodeObject(),
+                message.on.step.step
+            ],
+            message.on.blockHash == null
+                ? []
+                : [message.on.blockHash.toEncodeObject()]
+        ],
+        message.signature.toEncodeObject(),
+        message.signerIndex.toEncodeObject()
+    ];
+}
 
 export function createTransferCCSTransaction(
     sdk: SDK,
@@ -77,6 +100,21 @@ export function createSelfNominateTransaction(
     });
 }
 
+export function createReportDoubleVoteTransaction(
+    sdk: SDK,
+    message1: ConsensusMessage,
+    message2: ConsensusMessage
+): Custom {
+    return sdk.core.createCustomTransaction({
+        handlerId: HANDLER_ID,
+        bytes: RLP.encode([
+            REPORT_DOUBLE_VOTE_ACTION_ID,
+            messageToEncodeObject(message1),
+            messageToEncodeObject(message2)
+        ])
+    });
+}
+
 interface TransferCCS {
     type: "transferCCS";
     recipient: PlatformAddress;
@@ -101,6 +139,12 @@ interface SelfNominate {
     metadata: Buffer;
 }
 
+interface ReportDoubleVote {
+    type: "reportDoubleVote";
+    message1: ConsensusMessage;
+    message2: ConsensusMessage;
+}
+
 interface ChangeParams {
     type: "changeParams";
     metadataSeq: U64;
@@ -109,7 +153,13 @@ interface ChangeParams {
     signatures: any[];
 }
 
-type Action = TransferCCS | DelegateCCS | Revoke | SelfNominate | ChangeParams;
+type Action =
+    | TransferCCS
+    | DelegateCCS
+    | Revoke
+    | SelfNominate
+    | ReportDoubleVote
+    | ChangeParams;
 
 export function actionFromCustom(sdk: SDK, custom: Custom): Action | null {
     const { handlerId, bytes } = custom as any;
@@ -120,6 +170,58 @@ export function actionFromCustom(sdk: SDK, custom: Custom): Action | null {
         throw new Error("bytes should be a number");
     }
     return actionFromRLP(sdk, bytes);
+}
+
+function decodeMessage(list: any[]): ConsensusMessage {
+    if (list.length !== 3) {
+        throw new Error(
+            "The raw value of ConsensusMessage should be a list of length 3"
+        );
+    }
+    if (!Array.isArray(list[0]) || list[0].length !== 2) {
+        throw new Error("The raw value of VoteOn should be a list of length 3");
+    }
+    if (!Array.isArray(list[0][0]) || list[0][0].length !== 3) {
+        throw new Error(
+            "The raw value of VoteStep should be a list of length 3"
+        );
+    }
+    const step: number = decodeUInt(list[0][0][2]);
+    if (!isStep(step)) {
+        throw new Error("The consensus step should be in valid range");
+    }
+
+    const voteStep: ConsensusMessage["on"]["step"] = {
+        height: decodeU64(list[0][0][0]),
+        view: decodeU64(list[0][0][1]),
+        step
+    };
+
+    if (!Array.isArray(list[0][1])) {
+        throw new Error("The raw value of blockHash should be a list");
+    }
+    let blockHash: H512 | null;
+    if (list[0][1].length === 0) {
+        blockHash = null;
+    } else if (list[0][1].length === 1) {
+        blockHash = decodeH512(list[0][1][0]);
+    } else {
+        throw new Error(
+            "The raw value of blockHash should be a list of length 0 or 1"
+        );
+    }
+
+    const signature = decodeH512(list[1]);
+    const signerIndex = decodeU64(list[2]);
+
+    return {
+        on: {
+            step: voteStep,
+            blockHash
+        },
+        signature,
+        signerIndex
+    };
 }
 
 export function actionFromRLP(sdk: SDK, rlp: Buffer): Action {
@@ -184,13 +286,24 @@ export function actionFromRLP(sdk: SDK, rlp: Buffer): Action {
                 deposit: decodeU64(decoded[1]),
                 metadata: decoded[2]
             };
+        case REPORT_DOUBLE_VOTE_ACTION_ID:
+            if (decoded.length !== 3) {
+                throw new Error(
+                    "A length of a RLP list of a reportDoubleVote action must be 3"
+                );
+            }
+            return {
+                type: "reportDoubleVote",
+                message1: decodeMessage(decoded[1]),
+                message2: decodeMessage(decoded[2])
+            };
         case CHANGE_PARAMS_ACTION_ID:
             if (decoded.length <= 3) {
                 throw new Error(
                     "A length of a RLP list of a changeParams action should be more than 3"
                 );
             }
-            const signatures = decoded.slice(3);
+            const signatures: any = decoded.slice(3);
             return {
                 type: "changeParams",
                 metadataSeq: decodeU64(decoded[1]),

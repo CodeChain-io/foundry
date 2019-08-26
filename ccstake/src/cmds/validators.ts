@@ -1,12 +1,12 @@
 import { PlatformAddress } from "codechain-sdk/lib/core/classes";
 import {
+    Candidate,
     getBanned,
     getCandidates,
     getJailed,
     getTermMetadata,
     getValidators,
-    Validator,
-    Candidate
+    Validator
 } from "codechain-stakeholder-sdk";
 import * as yargs from "yargs";
 
