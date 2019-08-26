@@ -20,6 +20,7 @@ export {
 export {
     createTransferCCSTransaction,
     createDelegateCCSTransaction,
+    createRedelegateTransaction,
     createReportDoubleVoteTransaction,
     createRevokeTransaction,
     createSelfNominateTransaction,

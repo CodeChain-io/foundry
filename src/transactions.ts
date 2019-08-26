@@ -21,6 +21,7 @@ export const DELEGATE_CCS_ACTION_ID = 2;
 export const REVOKE_ACTION_ID = 3;
 export const SELF_NOMINATE_ACTION_ID = 4;
 export const REPORT_DOUBLE_VOTE_ACTION_ID = 5;
+export const REDELEGATE_ACTION_ID = 6;
 export const CHANGE_PARAMS_ACTION_ID = 0xff;
 
 function messageToEncodeObject(message: ConsensusMessage) {
@@ -115,6 +116,23 @@ export function createReportDoubleVoteTransaction(
     });
 }
 
+export function createRedelegateTransaction(
+    sdk: SDK,
+    prevDelegatee: PlatformAddressValue,
+    nextDelegatee: PlatformAddressValue,
+    quantity: U64Value
+): Custom {
+    return sdk.core.createCustomTransaction({
+        handlerId: HANDLER_ID,
+        bytes: RLP.encode([
+            REDELEGATE_ACTION_ID,
+            PlatformAddress.ensure(prevDelegatee).accountId.toEncodeObject(),
+            PlatformAddress.ensure(nextDelegatee).accountId.toEncodeObject(),
+            U64.ensure(quantity).toEncodeObject()
+        ])
+    });
+}
+
 interface TransferCCS {
     type: "transferCCS";
     recipient: PlatformAddress;
@@ -145,6 +163,13 @@ interface ReportDoubleVote {
     message2: ConsensusMessage;
 }
 
+interface Redelegate {
+    type: "redelegate";
+    prevDelegatee: PlatformAddress;
+    nextDelegatee: PlatformAddress;
+    quantity: U64;
+}
+
 interface ChangeParams {
     type: "changeParams";
     metadataSeq: U64;
@@ -159,6 +184,7 @@ type Action =
     | Revoke
     | SelfNominate
     | ReportDoubleVote
+    | Redelegate
     | ChangeParams;
 
 export function actionFromCustom(sdk: SDK, custom: Custom): Action | null {
@@ -296,6 +322,18 @@ export function actionFromRLP(sdk: SDK, rlp: Buffer): Action {
                 type: "reportDoubleVote",
                 message1: decodeMessage(decoded[1]),
                 message2: decodeMessage(decoded[2])
+            };
+        case REDELEGATE_ACTION_ID:
+            if (decoded.length !== 4) {
+                throw new Error(
+                    "A length of a RLP list of a redelegate action must be 4"
+                );
+            }
+            return {
+                type: "redelegate",
+                prevDelegatee: decodePlatformAddress(sdk, decoded[1]),
+                nextDelegatee: decodePlatformAddress(sdk, decoded[2]),
+                quantity: decodeU64(decoded[3])
             };
         case CHANGE_PARAMS_ACTION_ID:
             if (decoded.length <= 3) {
