@@ -8,6 +8,7 @@ import {
     getValidators,
     Validator
 } from "codechain-stakeholder-sdk";
+import stripAnsi from "strip-ansi";
 import * as yargs from "yargs";
 
 import { GlobalParams } from "..";
@@ -124,7 +125,7 @@ export const module: yargs.CommandModule<GlobalParams, GlobalParams> = {
                     delegation.toLocaleString(),
                     deposit.toLocaleString(),
                     nominationEndsAt.toString(),
-                    metadata.toString()
+                    stripAnsi(metadata.toString())
                 ]);
             }
             console.log(table.toString());
