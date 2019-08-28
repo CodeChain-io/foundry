@@ -1,3 +1,4 @@
+import { blake256, H512, recoverSchnorr } from "codechain-primitives";
 import * as RLP from "rlp";
 
 import {
@@ -43,6 +44,17 @@ export default class ReportDoubleVote {
 
     public get type(): "reportDoubleVote" {
         return "reportDoubleVote";
+    }
+
+    public criminal(): H512 {
+        const { message1 } = this;
+        const digest = blake256(RLP.encode(messageToEncodeObject(message1)[0]));
+        const signature = message1.signature.toString();
+        const pubkey = recoverSchnorr(digest, {
+            r: signature.slice(0, 64),
+            s: signature.slice(64)
+        });
+        return H512.ensure(pubkey);
     }
 
     public toBytes(): Buffer {
