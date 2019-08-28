@@ -1,5 +1,10 @@
 import { SDK } from "codechain-sdk";
-import { H512, PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
+import {
+    H256,
+    H512,
+    PlatformAddress,
+    U64
+} from "codechain-sdk/lib/core/classes";
 
 export function isArrayOf<T>(
     list: any,
@@ -23,6 +28,10 @@ export function decodeU64(buffer: Buffer): U64 {
         return new U64(0);
     }
     return U64.ensure("0x" + buffer.toString("hex"));
+}
+
+export function decodeH256(buffer: Buffer): H256 {
+    return H256.ensure("0x" + buffer.toString("hex"));
 }
 
 export function decodeH512(buffer: Buffer): H512 {

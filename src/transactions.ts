@@ -3,13 +3,14 @@
 // We should use the SDK's PlatformAddressValue when the SDK is updated.
 import { PlatformAddressValue, U64Value } from "codechain-primitives/lib";
 import { SDK } from "codechain-sdk";
-import { H512, PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
+import { H256, PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
 import { Custom } from "codechain-sdk/lib/core/transaction/Custom";
 import * as RLP from "rlp";
 
 import { HANDLER_ID } from "./index";
 import { ConsensusMessage, isStep } from "./message";
 import {
+    decodeH256,
     decodeH512,
     decodePlatformAddress,
     decodeU64,
@@ -226,11 +227,11 @@ function decodeMessage(list: any[]): ConsensusMessage {
     if (!Array.isArray(list[0][1])) {
         throw new Error("The raw value of blockHash should be a list");
     }
-    let blockHash: H512 | null;
+    let blockHash: H256 | null;
     if (list[0][1].length === 0) {
         blockHash = null;
     } else if (list[0][1].length === 1) {
-        blockHash = decodeH512(list[0][1][0]);
+        blockHash = decodeH256(list[0][1][0]);
     } else {
         throw new Error(
             "The raw value of blockHash should be a list of length 0 or 1"
