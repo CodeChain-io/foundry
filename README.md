@@ -10,7 +10,7 @@ It adds the following features to [CodeChain SDK for JavaScript](https://github.
 - Call staking related RPC
 - Create staking transactions
 
-## How to
+## API Examples
 
 You first need to install the package.
 
@@ -193,6 +193,23 @@ const signedTx = tx.sign({ secret: "...", seq: "...", fee: "..." });
 const txhash = await sdk.rpc.chain.sendSignedTransaction(signedTx);
 ```
 
+#### Redelegate stake tokens
+
+```js
+import { createRedelegateTransaction } from "codechain-stakeholder-sdk";
+
+// Redelegate 100 tokens to "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5"
+// which was delegated to "tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f".
+const tx = createRedelegateTransaction(
+  sdk,
+  "tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f",
+  "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5",
+  100
+);
+const signedTx = tx.sign({ secret: "...", seq: "...", fee: "..." });
+const txhash = await sdk.rpc.chain.sendSignedTransaction(signedTx);
+```
+
 #### Self-nominate
 
 ```js
@@ -200,6 +217,17 @@ import { createSelfNominateTransaction } from "codechain-stakeholder-sdk";
 
 // Self-nominate with 1000 CCC and metadata
 const tx = createSelfNominateTransaction(sdk, 1000, "some-metadata");
+const signedTx = tx.sign({ secret: "...", seq: "...", fee: "..." });
+const txhash = await sdk.rpc.chain.sendSignedTransaction(signedTx);
+```
+
+#### Report double vote
+
+```js
+import { createReportDoubleVoteTransaction } from "codechain-stakeholder-sdk";
+
+// Report double vote message
+const tx = createReportDoubleVoteTransaction(sdk, message1, message2);
 const signedTx = tx.sign({ secret: "...", seq: "...", fee: "..." });
 const txhash = await sdk.rpc.chain.sendSignedTransaction(signedTx);
 ```
