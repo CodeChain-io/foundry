@@ -20,6 +20,9 @@ export function isArrayOf<T>(
 }
 
 export function decodeUInt(buffer: Buffer): number {
+    if (buffer.length === 0) {
+        return 0;
+    }
     return buffer.readUIntBE(0, buffer.length);
 }
 
