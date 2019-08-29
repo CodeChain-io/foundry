@@ -34,6 +34,14 @@ export const module: yargs.CommandModule<GlobalParams, GlobalParams> = {
             getJailed(sdk, blockNumber),
             getBanned(sdk, blockNumber)
         ]);
+        const metadataMap = new Map(
+            candidates.map(candidate => {
+                const address = PlatformAddress.fromPublic(candidate.pubkey, {
+                    networkId: sdk.networkId
+                });
+                return [address.toString(), candidate.metadata];
+            })
+        );
         const summary = await summarize(sdk, blockNumber);
 
         console.log("Current Term:", termMetadata!.currentTermId);
@@ -47,7 +55,8 @@ export const module: yargs.CommandModule<GlobalParams, GlobalParams> = {
             const table = createTable([
                 "Address",
                 "Delegation (CCS)",
-                "Deposit (CCC)"
+                "Deposit (CCC)",
+                "Metadata"
             ]);
             const desc = (a: Validator, b: Validator) => {
                 if (a.delegation.gt(b.delegation)) {
@@ -66,12 +75,14 @@ export const module: yargs.CommandModule<GlobalParams, GlobalParams> = {
             };
             validators.sort(desc);
             for (const { pubkey, delegation, deposit } of validators) {
+                const address = PlatformAddress.fromPublic(pubkey, {
+                    networkId: sdk.networkId
+                }).toString();
                 table.push([
-                    PlatformAddress.fromPublic(pubkey, {
-                        networkId: sdk.networkId
-                    }).toString(),
+                    address,
                     delegation.toLocaleString(),
-                    deposit.toLocaleString()
+                    deposit.toLocaleString(),
+                    escapeMetadata(metadataMap.get(address))
                 ]);
             }
             console.log(table.toString());
@@ -125,7 +136,7 @@ export const module: yargs.CommandModule<GlobalParams, GlobalParams> = {
                     delegation.toLocaleString(),
                     deposit.toLocaleString(),
                     nominationEndsAt.toString(),
-                    stripAnsi(metadata.toString())
+                    escapeMetadata(metadata)
                 ]);
             }
             console.log(table.toString());
@@ -168,3 +179,11 @@ export const module: yargs.CommandModule<GlobalParams, GlobalParams> = {
         console.groupEnd();
     })
 };
+
+function escapeMetadata(metadata: Buffer | undefined) {
+    if (metadata === undefined) {
+        return "";
+    } else {
+        return stripAnsi(metadata.toString());
+    }
+}
