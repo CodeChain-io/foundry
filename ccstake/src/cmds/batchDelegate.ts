@@ -56,7 +56,7 @@ export const module: yargs.CommandModule<GlobalParams, BatchDelegateParams> = {
         printPlan(planned);
         await confirm();
         await check(sdk, planned);
-        await execute(sdk, passwords, input.stakeholders, planned, dryRun);
+        await execute(sdk, passwords, input.accounts, planned, dryRun);
     })
 };
 
@@ -66,18 +66,18 @@ function preCheck(input: BatchDelegation, summary: Summary) {
         .reduce((a: U64, b: U64) => a.plus(b), new U64(0));
 
     let availableCCS = new U64(0);
-    for (const stakeholder of input.stakeholders) {
-        availableCCS = availableCCS.plus(summary.get(stakeholder).undelegated);
+    for (const account of input.accounts) {
+        availableCCS = availableCCS.plus(summary.get(account).undelegated);
         for (const delegatee of input.validators) {
             availableCCS = availableCCS.plus(
-                summary.delegations(stakeholder, delegatee)
+                summary.delegations(account, delegatee)
             );
         }
     }
 
     if (availableCCS.lt(totalCCSToDelegate)) {
         throw new Error(
-            `stakeholders' available CCS (${availableCCS.toLocaleString()}) are less than the sum of distributions (${totalCCSToDelegate.toLocaleString()})`
+            `accounts' available CCS (${availableCCS.toLocaleString()}) are less than the sum of distributions (${totalCCSToDelegate.toLocaleString()})`
         );
     }
 }
@@ -132,8 +132,11 @@ async function plan(input: BatchDelegation, summary: Summary): Promise<Tx[]> {
         },
         getNeedRevokes() {
             const result = [];
-            for (const { validator, quantity } of input.distributions) {
-                const delegations = input.stakeholders
+            for (const {
+                delegatee: validator,
+                quantity
+            } of input.distributions) {
+                const delegations = input.accounts
                     .map(x => this.delegation(x, validator).value)
                     .reduce(U64.plus, new U64(0));
                 if (delegations.gt(quantity)) {
@@ -147,8 +150,11 @@ async function plan(input: BatchDelegation, summary: Summary): Promise<Tx[]> {
         },
         getNeedDelegations() {
             const result = [];
-            for (const { validator, quantity } of input.distributions) {
-                const delegations = input.stakeholders
+            for (const {
+                delegatee: validator,
+                quantity
+            } of input.distributions) {
+                const delegations = input.accounts
                     .map(x => this.delegation(x, validator).value)
                     .reduce(U64.plus, new U64(0));
                 if (quantity.gt(delegations)) {
@@ -162,13 +168,11 @@ async function plan(input: BatchDelegation, summary: Summary): Promise<Tx[]> {
         }
     };
     // initialize tracer from summary
-    for (const stakeholder of input.stakeholders) {
-        tracer.undelegated(stakeholder).value = summary.get(
-            stakeholder
-        ).undelegated;
+    for (const account of input.accounts) {
+        tracer.undelegated(account).value = summary.get(account).undelegated;
         for (const validator of input.validators) {
-            const delegation = summary.delegations(stakeholder, validator);
-            tracer.delegation(stakeholder, validator).value = delegation;
+            const delegation = summary.delegations(account, validator);
+            tracer.delegation(account, validator).value = delegation;
         }
     }
 
@@ -249,11 +253,11 @@ async function plan(input: BatchDelegation, summary: Summary): Promise<Tx[]> {
         revokeAll: for (const needDelegation of tracer.getNeedDelegations()) {
             const { validator: next, toDelegate } = needDelegation;
             const toRedelegate = min(toRevoke, toDelegate);
-            for (const stakeholder of input.stakeholders) {
-                const delegation = tracer.delegation(stakeholder, prev).value;
+            for (const account of input.accounts) {
+                const delegation = tracer.delegation(account, prev).value;
                 const quantity = cap(toRedelegate, accumulated, delegation);
                 accumulated = accumulated.plus(quantity);
-                redelegate(stakeholder, prev, next, quantity);
+                redelegate(account, prev, next, quantity);
                 if (accumulated.isEqualTo(toRevoke)) {
                     break revokeAll; // to get next needRevoke;
                 } else if (accumulated.isEqualTo(toDelegate)) {
@@ -267,11 +271,11 @@ async function plan(input: BatchDelegation, summary: Summary): Promise<Tx[]> {
     for (const { validator, toRevoke } of tracer.getNeedRevokes()) {
         let accumulated = new U64(0);
         // Greedy: First come, first revoke.
-        for (const stakeholder of input.stakeholders) {
-            const delegation = tracer.delegation(stakeholder, validator).value;
+        for (const account of input.accounts) {
+            const delegation = tracer.delegation(account, validator).value;
             const quantity = cap(toRevoke, accumulated, delegation);
             accumulated = accumulated.plus(quantity);
-            revoke(stakeholder, validator, quantity);
+            revoke(account, validator, quantity);
             if (accumulated.isEqualTo(toRevoke)) {
                 break;
             }
@@ -282,11 +286,11 @@ async function plan(input: BatchDelegation, summary: Summary): Promise<Tx[]> {
     for (const { validator, toDelegate } of tracer.getNeedDelegations()) {
         let accumulated = new U64(0);
         // Greedy: First come, first delegate.
-        for (const stakeholder of input.stakeholders) {
-            const undelegated = tracer.undelegated(stakeholder).value;
+        for (const account of input.accounts) {
+            const undelegated = tracer.undelegated(account).value;
             const quantity = cap(toDelegate, accumulated, undelegated);
             accumulated = accumulated.plus(quantity);
-            delegate(stakeholder, validator, quantity);
+            delegate(account, validator, quantity);
             if (accumulated.isEqualTo(toDelegate)) {
                 break;
             }
@@ -301,7 +305,7 @@ async function printPlan(planned: Tx[]) {
         "Id",
         "Action",
         "Quantity",
-        "Delegator",
+        "Account",
         "Delegatee",
         "Next Delegatee(redelegate)"
     ]);
@@ -381,7 +385,7 @@ async function check(sdk: SDK, planned: Tx[]) {
         const balance = await sdk.rpc.chain.getBalance(delegator);
         if (balance < fee) {
             throw new Error(
-                `Stakeholder ${delegator} doesn't have enough CCC ${fee}`
+                `Account ${delegator} doesn't have enough CCC ${fee}`
             );
         }
     }
@@ -390,13 +394,13 @@ async function check(sdk: SDK, planned: Tx[]) {
 async function execute(
     sdk: SDK,
     passwords: Map<string, string>,
-    stakeholders: PlatformAddress[],
+    accounts: PlatformAddress[],
     planned: Tx[],
     dryRun: boolean
 ) {
     const seqs = new Map<string, number>(
         await Promise.all(
-            stakeholders.map<Promise<[string, number]>>(async s => [
+            accounts.map<Promise<[string, number]>>(async s => [
                 s.toString(),
                 await sdk.rpc.chain.getSeq(s)
             ])
@@ -549,36 +553,36 @@ class BatchDelegation {
     }
 
     public static fromJSON(json: any) {
-        const stakeholders: PlatformAddress[] = json.stakeholders.map(
-            (x: any) => PlatformAddress.ensure(x)
+        const accounts: PlatformAddress[] = json.accounts.map((x: any) =>
+            PlatformAddress.ensure(x)
         );
-        checkUniqueSet(stakeholders.map(x => x.toString()));
+        checkUniqueSet(accounts.map(x => x.toString()));
         const fee = json.fee;
         const distributions: Distribution[] = json.distributions.map((x: any) =>
             Distribution.fromJSON(x)
         );
-        checkUniqueSet(distributions.map(x => x.validator.toString()));
+        checkUniqueSet(distributions.map(x => x.delegatee.toString()));
         return new BatchDelegation({
-            stakeholders,
+            accounts,
             fee,
             distributions
         });
     }
 
-    public stakeholders: PlatformAddress[];
+    public accounts: PlatformAddress[];
     public fee: number;
     public distributions: Distribution[];
 
     constructor(
-        params: Pick<BatchDelegation, "stakeholders" | "fee" | "distributions">
+        params: Pick<BatchDelegation, "accounts" | "fee" | "distributions">
     ) {
-        this.stakeholders = params.stakeholders;
+        this.accounts = params.accounts;
         this.fee = params.fee;
         this.distributions = params.distributions;
     }
 
     get validators() {
-        return this.distributions.map(x => x.validator);
+        return this.distributions.map(x => x.delegatee);
     }
 }
 
@@ -595,16 +599,16 @@ function checkUniqueSet(values: string[]) {
 class Distribution {
     public static fromJSON(json: any) {
         return new Distribution({
-            validator: PlatformAddress.ensure(json.validator),
+            delegatee: PlatformAddress.ensure(json.delegatee),
             quantity: U64.ensure(json.quantity)
         });
     }
 
-    public validator: PlatformAddress;
+    public delegatee: PlatformAddress;
     public quantity: U64;
 
-    constructor(params: Pick<Distribution, "validator" | "quantity">) {
-        this.validator = params.validator;
+    constructor(params: Pick<Distribution, "delegatee" | "quantity">) {
+        this.delegatee = params.delegatee;
         this.quantity = params.quantity;
     }
 }

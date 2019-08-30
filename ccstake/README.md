@@ -122,22 +122,22 @@ To manage multiple delegations to validators across multiple stakeholder account
 The distribution file is a json file similar to this:
 ```json
 {
-  "stakeholders": [
+  "accounts": [
     "cccq9qwg08jnn4agnaex3pty5hcq04m2h87ryxh9p5q",
     "cccqyuzgh3y8w3xtrzdfrjs6yk6wrhh30y6gys2nv6l",
   ],
   "fee": 10,
   "distributions": [
     {
-      "validator": "cccq98jmz9muznaun3xhtmumt7txx8d4ehdlcn5v3hz",
+      "delegatee": "cccq98jmz9muznaun3xhtmumt7txx8d4ehdlcn5v3hz",
       "quantity": 10000
     },
     {
-      "validator": "cccqyyk336h4d5ddv20h6hhdh35u6r7j5dn7chl2xaz",
+      "delegatee": "cccqyyk336h4d5ddv20h6hhdh35u6r7j5dn7chl2xaz",
       "quantity": 20000
     },
     {
-      "validator": "cccq8hekjzqhpcha528jalj2qyjhd5849kpxgrhfc76",
+      "delegatee": "cccq8hekjzqhpcha528jalj2qyjhd5849kpxgrhfc76",
       "quantity": 30000
     },
   ]
@@ -151,7 +151,7 @@ The password file is similar to this:
     { "address": "cccqyuzgh3y8w3xtrzdfrjs6yk6wrhh30y6gys2nv6l", "password": "very-strong" }
 ]
 ```
-The password file should contain passwords of all stakeholders in the distribution file.
+The password file should contain passwords of all accounts in the distribution file.
 
 When these file is prepared, you can `--dry-run` to see if the planned transactions distribute accordingly.
 
