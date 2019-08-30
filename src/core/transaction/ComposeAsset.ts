@@ -237,7 +237,7 @@ export class ComposeAsset extends Transaction implements AssetTransaction {
                 }, {})
             ).map(([assetType, assetQuantity]) => ({
                 assetType: H160.ensure(assetType),
-                quantity: U64.ensure(assetQuantity as number)
+                quantity: U64.ensure((assetQuantity as unknown) as number)
             }))
         });
     }
