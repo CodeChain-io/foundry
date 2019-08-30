@@ -240,7 +240,8 @@ async function plan(input: BatchDelegation, summary: Summary): Promise<Tx[]> {
     }
 
     // Plan Redelegation
-    const min = (lhs: U64, rhs: U64) => (lhs.gt(rhs) ? lhs : rhs);
+    const min = (lhs: U64, rhs: U64) => (lhs.gt(rhs) ? rhs : lhs);
+
     for (const needRevoke of tracer.getNeedRevokes()) {
         // Greedy: First come, first redelegate.
         const { validator: prev, toRevoke } = needRevoke;
