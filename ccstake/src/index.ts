@@ -28,9 +28,9 @@ const _argv = yargs
         default: "./keystore.db"
     })
     .option("rpc-server", {
-        describe: "The RPC server URL",
+        describe: `The URL of RPC server (example: "https://localhost:8080)"`,
         string: true,
-        default: "https://rpc.codechain.io/"
+        demand: true
     })
     .group(["keys-path", "rpc-server", "version", "help"], "Common:")
     .command(showModule)

@@ -41,10 +41,10 @@ Commands:
   ccstake change-params                     Change CodeChain network parameter
 
 Common:
-  --version     Show version number                                    [boolean]
   --keys-path   The path to storing the keys [string] [default: "./keystore.db"]
-  --rpc-server  The RPC server URL
-                                 [string] [default: "https://rpc.codechain.io/"]
+  --rpc-server  The URL of RPC server (example: "http://localhost:8080)"
+                                                             [string] [required]
+  --version     Show version number                                    [boolean]
   --help        Show help                                              [boolean]
 
 Not enough non-option arguments: got 0, need at least 1
@@ -72,6 +72,7 @@ To transfer CCS to someone from an account, you can use the `transfer` command.
 
 ```bash
 $> ccstake transfer \
+     --rpc-server http://localhost:8080 \
      --account cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
      --recipient cccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6y4u3qm5 \
      --quantity 10000 \
@@ -84,6 +85,7 @@ To delegate CCS to someone from an account, you can use the `delegate` command.
 
 ```bash
 $> ccstake delegate \
+     --rpc-server http://localhost:8080 \
      --account cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
      --delegatee cccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6y4u3qm5 \
      --quantity 10000 \
@@ -96,6 +98,7 @@ To revoke delegated CCS from a delegatee to an account, you can use the `revoke`
 
 ```bash
 $> ccstake revoke \
+     --rpc-server http://localhost:8080 \
      --account cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
      --delegatee cccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6y4u3qm5 \
      --quantity 10000 \
@@ -108,6 +111,7 @@ To move a delegation from an existing delegatee to another delegatee, you can us
 
 ```bash
 $> ccstake redelegate \
+     --rpc-server http://localhost:8080 \
      --account cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
      --previous-delegatee cccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6y4u3qm5 \
      --next-delegatee cccq9qwg08jnn4agnaex3pty5hcq04m2h87ryxh9p5q \
@@ -157,6 +161,7 @@ When these file is prepared, you can `--dry-run` to see if the planned transacti
 
 ```bash
 $> ccstake batch-delegate ./distribution.json \
+     --rpc-server http://localhost:8080 \
      --password-path=./passwords.json \
      --dry-run
 ```
@@ -165,6 +170,7 @@ If you are satisfied with the plan, you can go ahead with the following command:
 
 ```bash
 $> ccstake batch-delegate ./distribution.json \
+     --rpc-server http://localhost:8080 \
      --password-path=./passwords.json
 ```
 
@@ -185,6 +191,7 @@ When you've collected enough signatures, and the transaction is ready to be sent
 
 ```bash
 $> ccstake change-params \
+     --rpc-server http://localhost:8080 \
      --transaction <prepared transaction here> \
      --account cccq9qwg08jnn4agnaex3pty5hcq04m2h87ryxh9p5q \
      --fee 10
@@ -197,6 +204,7 @@ If the message is successfully signed, you can send it to the proposer manually.
 
 ```bash
 $> ccstake sign \
+     --rpc-server http://localhost:8080 \
      --account cccq9qwg08jnn4agnaex3pty5hcq04m2h87ryxh9p5q \
      --message <proposed parameters> \
 ```
@@ -218,6 +226,7 @@ When you are ready to become a valiator, you can self-nominate with this command
 
 ```bash
 $> ccstake self-nominate \
+     --rpc-server http://localhost:8080 \
      --account cccq9qwg08jnn4agnaex3pty5hcq04m2h87ryxh9p5q \
      --deposit 10000000 \
      --metadata "CodeChain validator <http://codechain.io/>" \
