@@ -15,7 +15,7 @@ import {
 
 interface ChangeParams extends GlobalParams {
     transaction: Buffer;
-    "fee-payer": PlatformAddress;
+    account: PlatformAddress;
     fee: number;
 }
 
@@ -32,8 +32,8 @@ export const module: yargs.CommandModule<GlobalParams, ChangeParams> = {
                 }),
                 demand: true
             })
-            .option("fee-payer", {
-                coerce: coerce("fee-payer", PlatformAddress.ensure),
+            .option("account", {
+                coerce: coerce("account", PlatformAddress.ensure),
                 demand: true
             })
             .option("fee", {
@@ -43,31 +43,30 @@ export const module: yargs.CommandModule<GlobalParams, ChangeParams> = {
     },
     handler: asyncHandler(async argv => {
         const { sdk, blockNumber } = await prologue(argv);
-        const feePayer = argv["fee-payer"];
 
         console.log("=== Confirm your action ===");
         console.log("Action:", "ChangeParams");
         console.log("Encoded transaction:", argv.transaction.toString("hex"));
-        await printSummary(sdk, blockNumber, feePayer, argv.fee);
+        await printSummary(sdk, blockNumber, argv.account, argv.fee);
 
-        const passphrase = await askPasspharaseFor(feePayer);
+        const passphrase = await askPasspharaseFor(argv.account);
 
         const tx = sdk.core.createCustomTransaction({
             handlerId: 2,
             bytes: argv.transaction
         });
         const signed = await sdk.key.signTransaction(tx, {
-            account: feePayer,
+            account: argv.account,
             passphrase,
             fee: argv.fee,
-            seq: await sdk.rpc.chain.getSeq(feePayer)
+            seq: await sdk.rpc.chain.getSeq(argv.account)
         });
         console.log("Sending tx:", signed.hash().value);
 
         const newBlockNumber = await waitForTx(sdk, signed);
         console.log("Tx is contained in block #", newBlockNumber);
 
-        await printSummary(sdk, newBlockNumber, feePayer);
+        await printSummary(sdk, newBlockNumber, argv.account);
     })
 };
 
@@ -91,15 +90,12 @@ function ensureBasicCheck(encodedTransaction: Buffer) {
 async function printSummary(
     sdk: SDK,
     blockNumber: number,
-    feePayer: PlatformAddress,
+    account: PlatformAddress,
     cccChange: number = 0
 ) {
-    console.group("Fee payer", feePayer.toString());
+    console.group("Account", account.toString());
     {
-        const cccBalance = await sdk.rpc.chain.getBalance(
-            feePayer,
-            blockNumber
-        );
+        const cccBalance = await sdk.rpc.chain.getBalance(account, blockNumber);
         console.log(
             "CCC Balance:",
             ...minusChangeArgs(cccBalance, new U64(cccChange))

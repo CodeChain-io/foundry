@@ -72,8 +72,8 @@ To transfer CCS to someone from an account, you can use the `transfer` command.
 
 ```bash
 $> ccstake transfer \
-     --from cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
-     --to cccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6y4u3qm5 \
+     --account cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
+     --recipient cccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6y4u3qm5 \
      --quantity 10000 \
      --fee 10
 ```
@@ -84,19 +84,19 @@ To delegate CCS to someone from an account, you can use the `delegate` command.
 
 ```bash
 $> ccstake delegate \
-     --from cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
-     --to cccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6y4u3qm5 \
+     --account cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
+     --delegatee cccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6y4u3qm5 \
      --quantity 10000 \
      --fee 10
 ```
 
 #### revoke
 
-To revoke delegated CCS from a delegatee to a delegator, you can use the `revoke` command.
+To revoke delegated CCS from a delegatee to an account, you can use the `revoke` command.
 
 ```bash
 $> ccstake revoke \
-     --delegator cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
+     --account cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
      --delegatee cccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6y4u3qm5 \
      --quantity 10000 \
      --fee 10
@@ -104,11 +104,11 @@ $> ccstake revoke \
 
 #### Redelegate
 
-To move a delegation from an existing delegatee to another account, you can use the `redelegate` command.
+To move a delegation from an existing delegatee to another delegatee, you can use the `redelegate` command.
 
 ```bash
 $> ccstake redelegate \
-     --delegator cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
+     --account cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
      --previous-delegatee cccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6y4u3qm5 \
      --next-delegatee cccq9qwg08jnn4agnaex3pty5hcq04m2h87ryxh9p5q \
      --quantity 10000 \
@@ -186,7 +186,7 @@ When you've collected enough signatures, and the transaction is ready to be sent
 ```bash
 $> ccstake change-params \
      --transaction <prepared transaction here> \
-     --fee-payer cccq9qwg08jnn4agnaex3pty5hcq04m2h87ryxh9p5q \
+     --account cccq9qwg08jnn4agnaex3pty5hcq04m2h87ryxh9p5q \
      --fee 10
 ```
 

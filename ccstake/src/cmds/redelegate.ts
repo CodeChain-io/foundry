@@ -16,7 +16,7 @@ import {
 } from "../util";
 
 interface RedelegateParams extends GlobalParams {
-    delegator: PlatformAddress;
+    account: PlatformAddress;
     "previous-delegatee": PlatformAddress;
     "next-delegatee": PlatformAddress;
     quantity: U64;
@@ -28,8 +28,8 @@ export const module: yargs.CommandModule<GlobalParams, RedelegateParams> = {
     describe: "Move a delegation to another account",
     builder(args) {
         return args
-            .option("delegator", {
-                coerce: coerce("delegator", PlatformAddress.ensure),
+            .option("account", {
+                coerce: coerce("account", PlatformAddress.ensure),
                 demand: true
             })
             .option("previous-delegatee", {
@@ -57,7 +57,7 @@ export const module: yargs.CommandModule<GlobalParams, RedelegateParams> = {
         await printSummary(
             sdk,
             blockNumber,
-            argv.delegator,
+            argv.account,
             argv["previous-delegatee"],
             argv["next-delegatee"],
             {
@@ -66,7 +66,7 @@ export const module: yargs.CommandModule<GlobalParams, RedelegateParams> = {
             }
         );
 
-        const passphrase = await askPasspharaseFor(argv.delegator);
+        const passphrase = await askPasspharaseFor(argv.account);
 
         const tx = createRedelegateTransaction(
             sdk,
@@ -75,10 +75,10 @@ export const module: yargs.CommandModule<GlobalParams, RedelegateParams> = {
             argv.quantity
         );
         const signed = await sdk.key.signTransaction(tx, {
-            account: argv.delegator,
+            account: argv.account,
             passphrase,
             fee: argv.fee,
-            seq: await sdk.rpc.chain.getSeq(argv.delegator)
+            seq: await sdk.rpc.chain.getSeq(argv.account)
         });
         console.log("Sending tx:", signed.hash().value);
 
@@ -88,7 +88,7 @@ export const module: yargs.CommandModule<GlobalParams, RedelegateParams> = {
         await printSummary(
             sdk,
             newBlockNumber,
-            argv.delegator,
+            argv.account,
             argv["previous-delegatee"],
             argv["next-delegatee"]
         );
@@ -98,7 +98,7 @@ export const module: yargs.CommandModule<GlobalParams, RedelegateParams> = {
 async function printSummary(
     sdk: SDK,
     blockNumber: number,
-    delegator: PlatformAddress,
+    account: PlatformAddress,
     previousDelegatee: PlatformAddress,
     nextDelegatee: PlatformAddress,
     changes?: {
@@ -109,14 +109,11 @@ async function printSummary(
     const { ccsChanges = new U64(0), cccChanges = new U64(0) } = changes || {};
     const summary = await summarize(sdk, blockNumber);
 
-    console.group("Delegator", delegator.value);
+    console.group("Account", account.value);
     {
-        const cccBalance = await sdk.rpc.chain.getBalance(
-            delegator,
-            blockNumber
-        );
+        const cccBalance = await sdk.rpc.chain.getBalance(account, blockNumber);
         console.log("CCC Balance:", ...minusChangeArgs(cccBalance, cccChanges));
-        const { balance, undelegated, delegationsTo } = summary.get(delegator);
+        const { balance, undelegated, delegationsTo } = summary.get(account);
         console.log("CCS Balance:", balance.toLocaleString());
         console.log("Undelegated CCS:", undelegated.toLocaleString());
         console.log("Delegations (out):", delegationsTo.sum.toLocaleString());
@@ -152,17 +149,17 @@ async function printSummary(
     console.groupEnd();
 
     console.log(
-        `Delegations between ${delegator.value} ${previousDelegatee.value} (previous delegator):`,
+        `Delegations between ${account.value} ${previousDelegatee.value} (previous delegatee):`,
         ...minusChangeArgs(
-            summary.delegations(delegator, previousDelegatee),
+            summary.delegations(account, previousDelegatee),
             ccsChanges
         )
     );
 
     console.log(
-        `Delegations between ${delegator.value} ${nextDelegatee.value} (next delegator):`,
+        `Delegations between ${account.value} ${nextDelegatee.value} (next delegatee):`,
         ...plusChangeArgs(
-            summary.delegations(delegator, nextDelegatee),
+            summary.delegations(account, nextDelegatee),
             ccsChanges
         )
     );

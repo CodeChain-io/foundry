@@ -20,8 +20,8 @@ import {
 } from "../util";
 
 interface TransferParams extends GlobalParams {
-    from: PlatformAddress;
-    to: PlatformAddress;
+    account: PlatformAddress;
+    recipient: PlatformAddress;
     quantity: U64;
     fee: number;
 }
@@ -31,12 +31,12 @@ export const module: yargs.CommandModule<GlobalParams, TransferParams> = {
     describe: "Transfer CCS to an account",
     builder(args) {
         return args
-            .option("from", {
-                coerce: coerce("from", PlatformAddress.ensure),
+            .option("account", {
+                coerce: coerce("account", PlatformAddress.ensure),
                 demand: true
             })
-            .option("to", {
-                coerce: coerce("to", PlatformAddress.ensure),
+            .option("recipient", {
+                coerce: coerce("recipient", PlatformAddress.ensure),
                 demand: true
             })
             .option("quantity", {
@@ -54,19 +54,23 @@ export const module: yargs.CommandModule<GlobalParams, TransferParams> = {
         console.log("=== Confirm your action ===");
         console.log("Action:", "Transfer");
         console.log("Quantity:", argv.quantity.toLocaleString());
-        await printSummary(sdk, blockNumber, argv.from, argv.to, {
+        await printSummary(sdk, blockNumber, argv.account, argv.recipient, {
             ccsChanges: argv.quantity,
             cccChanges: U64.ensure(argv.fee)
         });
 
-        const passphrase = await askPasspharaseFor(argv.from);
+        const passphrase = await askPasspharaseFor(argv.account);
 
-        const tx = createTransferCCSTransaction(sdk, argv.to, argv.quantity);
+        const tx = createTransferCCSTransaction(
+            sdk,
+            argv.recipient,
+            argv.quantity
+        );
         const signed = await sdk.key.signTransaction(tx, {
-            account: argv.from,
+            account: argv.account,
             passphrase,
             fee: argv.fee,
-            seq: await sdk.rpc.chain.getSeq(argv.from)
+            seq: await sdk.rpc.chain.getSeq(argv.account)
         });
         console.log("Sending tx:", signed.hash().value);
 
@@ -74,15 +78,15 @@ export const module: yargs.CommandModule<GlobalParams, TransferParams> = {
         console.log("Tx is contained in block #", newBlockNumber);
 
         console.log("Balances after action");
-        await printSummary(sdk, newBlockNumber, argv.from, argv.to);
+        await printSummary(sdk, newBlockNumber, argv.account, argv.recipient);
     })
 };
 
 async function printSummary(
     sdk: SDK,
     blockNumber: number,
-    sender: PlatformAddress,
-    receiver: PlatformAddress,
+    account: PlatformAddress,
+    recipient: PlatformAddress,
     changes?: {
         ccsChanges: U64;
         cccChanges: U64;
@@ -90,11 +94,11 @@ async function printSummary(
 ) {
     const { ccsChanges = new U64(0), cccChanges = new U64(0) } = changes || {};
 
-    console.group("Sender", sender.value);
+    console.group("Account", account.value);
     {
-        const cccBalance = await sdk.rpc.chain.getBalance(sender, blockNumber);
-        const undelegated = await getUndelegatedCCS(sdk, sender, blockNumber);
-        const delegations = await getDelegations(sdk, sender, blockNumber);
+        const cccBalance = await sdk.rpc.chain.getBalance(account, blockNumber);
+        const undelegated = await getUndelegatedCCS(sdk, account, blockNumber);
+        const delegations = await getDelegations(sdk, account, blockNumber);
         const balance = undelegated.plus(
             sumU64(delegations.map(x => x.quantity))
         );
@@ -107,10 +111,14 @@ async function printSummary(
     }
     console.groupEnd();
 
-    console.group("Receiver", receiver.value);
+    console.group("Recipient", recipient.value);
     {
-        const undelegated = await getUndelegatedCCS(sdk, receiver, blockNumber);
-        const delegations = await getDelegations(sdk, receiver, blockNumber);
+        const undelegated = await getUndelegatedCCS(
+            sdk,
+            recipient,
+            blockNumber
+        );
+        const delegations = await getDelegations(sdk, recipient, blockNumber);
         const balance = undelegated.plus(
             sumU64(delegations.map(x => x.quantity))
         );
