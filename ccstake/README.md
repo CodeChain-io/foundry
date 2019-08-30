@@ -34,6 +34,7 @@ Commands:
   ccstake batch-delegate                    Batch manage delegations through
   <distribution-file>                       distribution file
   ccstake revoke                            Revoke delegation to an account
+  ccstake redelegate                        Move a delegation to another account
   ccstake self-nominate                     Self nominate as a candidate
   ccstake validators                        Show validators
   ccstake sign                              Sign a message
@@ -97,6 +98,19 @@ To revoke delegated CCS from a delegatee to a delegator, you can use the `revoke
 $> ccstake revoke \
      --delegator cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
      --delegatee cccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6y4u3qm5 \
+     --quantity 10000 \
+     --fee 10
+```
+
+#### Redelegate
+
+To move a delegation from an existing delegatee to another account, you can use the `redelegate` command.
+
+```bash
+$> ccstake redelegate \
+     --delegator cccqxyyc4yu3pc2pzl2y0tec26qxau3a27lq5ntee9j \
+     --previous-delegatee cccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6y4u3qm5 \
+     --next-delegatee cccq9qwg08jnn4agnaex3pty5hcq04m2h87ryxh9p5q \
      --quantity 10000 \
      --fee 10
 ```
