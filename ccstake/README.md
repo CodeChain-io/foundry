@@ -39,7 +39,7 @@ Commands:
   ccstake sign                              Sign a message
   ccstake change-params                     Change CodeChain network parameter
 
-Options:
+Common:
   --version     Show version number                                    [boolean]
   --keys-path   The path to storing the keys [string] [default: "./keystore.db"]
   --rpc-server  The RPC server URL

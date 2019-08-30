@@ -31,6 +31,7 @@ const _argv = yargs
         string: true,
         default: "https://rpc.codechain.io/"
     })
+    .group(["keys-path", "rpc-server", "version", "help"], "Common:")
     .command(showModule)
     .command(transferModule)
     .command(delegateModule)
