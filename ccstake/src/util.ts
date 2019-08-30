@@ -65,6 +65,9 @@ export async function askPasspharaseFor(
         message: `To continue, enter passphrase for ${account.value}`,
         name: "password"
     });
+    if (password.password === undefined) {
+        throw new Error("Cancelled!");
+    }
     return password.password;
 }
 
