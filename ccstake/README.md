@@ -139,7 +139,7 @@ The distribution file is a json file similar to this:
     {
       "delegatee": "cccq8hekjzqhpcha528jalj2qyjhd5849kpxgrhfc76",
       "quantity": 30000
-    },
+    }
   ]
 }
 ```
