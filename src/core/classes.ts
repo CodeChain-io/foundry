@@ -10,9 +10,7 @@ export { Transaction } from "./Transaction";
 export { SignedTransaction } from "./SignedTransaction";
 
 export { ChangeAssetScheme } from "./transaction/ChangeAssetScheme";
-export { ComposeAsset } from "./transaction/ComposeAsset";
 export { CreateShard } from "./transaction/CreateShard";
-export { DecomposeAsset } from "./transaction/DecomposeAsset";
 export { MintAsset } from "./transaction/MintAsset";
 export { Pay } from "./transaction/Pay";
 export { Remove } from "./transaction/Remove";

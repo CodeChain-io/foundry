@@ -12,10 +12,8 @@ import { AssetMintOutput } from "./AssetMintOutput";
 import { AssetTransferInput } from "./AssetTransferInput";
 import { AssetTransferOutput } from "./AssetTransferOutput";
 import { ChangeAssetScheme } from "./ChangeAssetScheme";
-import { ComposeAsset } from "./ComposeAsset";
 import { CreateShard } from "./CreateShard";
 import { Custom } from "./Custom";
-import { DecomposeAsset } from "./DecomposeAsset";
 import { IncreaseAssetSupply } from "./IncreaseAssetSupply";
 import { MintAsset } from "./MintAsset";
 import { OrderOnTransfer } from "./OrderOnTransfer";
@@ -122,46 +120,6 @@ export function fromJSONToTransaction(result: any): Transaction {
                 metadata,
                 approvals,
                 expiration
-            });
-            break;
-        }
-        case "decomposeAsset": {
-            const approvals = action.approvals;
-            const input = AssetTransferInput.fromJSON(action.input);
-            const outputs = action.outputs.map(AssetTransferOutput.fromJSON);
-            tx = new DecomposeAsset({
-                input,
-                outputs,
-                networkId,
-                approvals
-            });
-            break;
-        }
-        case "composeAsset": {
-            const { shardId, metadata, approvals } = action;
-            const approver =
-                action.approver == null
-                    ? null
-                    : PlatformAddress.ensure(action.approver);
-            const registrar =
-                action.registrar == null
-                    ? null
-                    : PlatformAddress.ensure(action.registrar);
-            const allowedScriptHashes = action.allowedScriptHashes.map(
-                (hash: string) => H160.ensure(hash)
-            );
-            const inputs = action.inputs.map(AssetTransferInput.fromJSON);
-            const output = AssetMintOutput.fromJSON(action.output);
-            tx = new ComposeAsset({
-                networkId,
-                shardId,
-                metadata,
-                approver,
-                registrar,
-                allowedScriptHashes,
-                inputs,
-                output,
-                approvals
             });
             break;
         }

@@ -15,8 +15,6 @@ import {
     UnwrapCCC
 } from "../core/classes";
 import { AssetTransaction } from "../core/Transaction";
-import { ComposeAsset } from "../core/transaction/ComposeAsset";
-import { DecomposeAsset } from "../core/transaction/DecomposeAsset";
 import { TransferAsset } from "../core/transaction/TransferAsset";
 import { NetworkId } from "../core/types";
 import { SignatureTag } from "../utils";
@@ -270,7 +268,7 @@ export class Key {
      * @param params.passphrase The passphrase for the given input.
      */
     public async signTransactionInput(
-        tx: TransferAsset | ComposeAsset | DecomposeAsset,
+        tx: TransferAsset,
         index: number,
         params: {
             keyStore?: KeyStore;
@@ -321,15 +319,6 @@ export class Key {
                     index
                 });
             }
-        } else if (tx instanceof ComposeAsset) {
-            // FIXME: check type
-            message = tx.hashWithoutScript({
-                tag: signatureTag,
-                index
-            });
-        } else if (tx instanceof DecomposeAsset) {
-            // FIXME: check signature tag
-            message = tx.hashWithoutScript();
         } else {
             throw Error(`Invalid tx`);
         }

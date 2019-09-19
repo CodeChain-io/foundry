@@ -3,10 +3,8 @@ import { H256, H256Value, U64, U64Value } from "codechain-primitives";
 import { blake256, signEcdsa } from "../utils";
 import { SignedTransaction } from "./SignedTransaction";
 import { ChangeAssetSchemeActionJSON } from "./transaction/ChangeAssetScheme";
-import { ComposeAssetActionJSON } from "./transaction/ComposeAsset";
 import { CreateShardActionJSON } from "./transaction/CreateShard";
 import { CustomActionJSON } from "./transaction/Custom";
-import { DecomposeAssetActionJSON } from "./transaction/DecomposeAsset";
 import { IncreaseAssetSupplyActionJSON } from "./transaction/IncreaseAssetSupply";
 import { MintAssetActionJSON } from "./transaction/MintAsset";
 import { PayActionJSON } from "./transaction/Pay";
@@ -36,8 +34,6 @@ type ActionJSON =
     | CreateShardActionJSON
     | MintAssetActionJSON
     | TransferAssetActionJSON
-    | ComposeAssetActionJSON
-    | DecomposeAssetActionJSON
     | ChangeAssetSchemeActionJSON
     | StoreActionJSON
     | RemoveActionJSON
