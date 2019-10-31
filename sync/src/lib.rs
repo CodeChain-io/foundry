@@ -33,11 +33,9 @@ extern crate tempfile;
 extern crate trie_standardmap;
 
 mod block;
-mod snapshot;
 mod transaction;
 
 pub use crate::block::{BlockSyncEvent, BlockSyncExtension, BlockSyncSender};
-pub use crate::snapshot::SnapshotService;
 pub use crate::transaction::TransactionSyncExtension;
 
 #[cfg(test)]

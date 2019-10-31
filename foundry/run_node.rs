@@ -30,7 +30,7 @@ use ckeystore::KeyStore;
 use clap::ArgMatches;
 use clogger::{self, EmailAlarm, LoggerConfig};
 use cnetwork::{Filters, NetworkConfig, NetworkControl, NetworkService, RoutingTable, SocketAddr};
-use csync::{BlockSyncExtension, BlockSyncSender, SnapshotService, TransactionSyncExtension};
+use csync::{BlockSyncExtension, BlockSyncSender, TransactionSyncExtension};
 use ctimer::TimerLoop;
 use ctrlc::CtrlC;
 use fdlimit::raise_fd_limit;
@@ -322,19 +322,6 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
     let ws_server = {
         if !config.ws.disable.unwrap() {
             Some(rpc_ws_start(&config.rpc_ws_config(), config.rpc.enable_devel_api, &rpc_apis_deps)?)
-        } else {
-            None
-        }
-    };
-
-    let _snapshot_service = {
-        if !config.snapshot.disable.unwrap() {
-            // FIXME: Let's make it load snapshot period dynamically to support changing the period.
-            let client = client.client();
-            let snapshot_period = client.common_params(BlockId::Latest).unwrap().snapshot_period();
-            let service = SnapshotService::new(Arc::clone(&client), config.snapshot.path.unwrap(), snapshot_period);
-            client.add_notify(Arc::downgrade(&service) as Weak<dyn ChainNotify>);
-            Some(service)
         } else {
             None
         }
