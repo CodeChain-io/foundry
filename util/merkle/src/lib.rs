@@ -16,6 +16,8 @@
 
 extern crate codechain_crypto as ccrypto;
 extern crate codechain_db as cdb;
+#[macro_use]
+extern crate rlp_derive;
 
 #[cfg(test)]
 extern crate trie_standardmap as standardmap;
@@ -29,6 +31,8 @@ use primitives::H256;
 mod nibbleslice;
 pub mod node;
 mod skewed;
+#[allow(dead_code)]
+pub mod snapshot;
 pub mod triedb;
 pub mod triedbmut;
 pub mod triehash;
