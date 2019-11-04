@@ -53,6 +53,7 @@ pub enum Error {
         idx: usize,
         parent_height: u64,
     },
+    IBC(String),
 }
 
 #[derive(Clone, Copy)]
@@ -72,6 +73,7 @@ enum ErrorID {
     SignatureOfInvalid = 12,
     InsufficientStakes = 13,
     InvalidValidatorIndex = 14,
+    IBC = 35,
 }
 
 impl Encodable for ErrorID {
@@ -98,6 +100,7 @@ impl Decodable for ErrorID {
             12 => Ok(ErrorID::SignatureOfInvalid),
             13 => Ok(ErrorID::InsufficientStakes),
             14 => Ok(ErrorID::InvalidValidatorIndex),
+            35 => Ok(ErrorID::IBC),
             _ => Err(DecoderError::Custom("Unexpected ActionTag Value")),
         }
     }
@@ -123,6 +126,7 @@ impl TaggedRlp for RlpHelper {
             ErrorID::SignatureOfInvalid => 2,
             ErrorID::InsufficientStakes => 3,
             ErrorID::InvalidValidatorIndex => 3,
+            ErrorID::IBC => 1,
         })
     }
 }
@@ -165,6 +169,7 @@ impl Encodable for Error {
                 idx,
                 parent_height,
             } => RlpHelper::new_tagged_list(s, ErrorID::InvalidValidatorIndex).append(idx).append(parent_height),
+            Error::IBC(msg) => RlpHelper::new_tagged_list(s, ErrorID::IBC).append(msg),
         };
     }
 }
@@ -200,6 +205,7 @@ impl Decodable for Error {
                 idx: rlp.val_at(1)?,
                 parent_height: rlp.val_at(2)?,
             },
+            ErrorID::IBC => Error::IBC(rlp.val_at(1)?),
         };
         RlpHelper::check_size(rlp, tag)?;
         Ok(error)
@@ -239,6 +245,7 @@ impl Display for Error {
                 idx,
                 parent_height,
             } => write!(f, "The validator index {} is invalid at the parent hash {}", idx, parent_height),
+            Error::IBC(msg) => write!(f, "IBC: {}", msg),
         }
     }
 }

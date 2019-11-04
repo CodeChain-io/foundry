@@ -32,6 +32,7 @@ pub use self::types::{Height, Step, View};
 pub use super::{stake, ValidatorSet};
 use crate::client::ConsensusClient;
 use crate::codechain_machine::CodeChainMachine;
+use crate::ibc;
 use crate::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::ChainNotify;
 use crossbeam_channel as crossbeam;
@@ -71,6 +72,7 @@ pub struct Tendermint {
     action_handlers: Vec<Arc<dyn ActionHandler>>,
     /// stake object to register client data later
     stake: Arc<stake::Stake>,
+    ibc: Arc<ibc::custom_action_handler::IBC>,
     /// Chain notify
     chain_notify: Arc<TendermintChainNotify>,
     has_signer: AtomicBool,
@@ -90,6 +92,7 @@ impl Tendermint {
     pub fn new(our_params: TendermintParams, machine: CodeChainMachine) -> Arc<Self> {
         let validators = Arc::clone(&our_params.validators);
         let stake = Arc::new(stake::Stake::new(our_params.genesis_stakes));
+        let ibc = Arc::new(ibc::custom_action_handler::IBC::new());
         let timeouts = our_params.timeouts;
         let machine = Arc::new(machine);
 
@@ -101,7 +104,7 @@ impl Tendermint {
             inner,
             quit_tendermint,
         ) = worker::spawn(our_params.validators);
-        let action_handlers: Vec<Arc<dyn ActionHandler>> = vec![stake.clone()];
+        let action_handlers: Vec<Arc<dyn ActionHandler>> = vec![stake.clone(), ibc.clone()];
         let chain_notify = Arc::new(TendermintChainNotify::new(inner.clone()));
 
         Arc::new(Tendermint {
@@ -118,6 +121,7 @@ impl Tendermint {
             machine,
             action_handlers,
             stake,
+            ibc,
             chain_notify,
             has_signer: false.into(),
         })

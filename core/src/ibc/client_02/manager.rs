@@ -18,9 +18,14 @@ use super::new_state;
 use super::types::{ConsensusState, State};
 use crate::ibc;
 
-struct Manager {}
+#[derive(Default)]
+pub struct Manager {}
 
 impl Manager {
+    pub fn new() -> Self {
+        Manager {}
+    }
+
     pub fn create(&self, ctx: &dyn ibc::Context, id: &str, cs: &dyn ConsensusState) -> Result<Box<dyn State>, String> {
         let state = new_state(id, ctx, cs.kind());
         if state.exists(ctx) {
