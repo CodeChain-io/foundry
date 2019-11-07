@@ -82,6 +82,9 @@ pub trait Trie {
 
     /// What is the value of the given key in this trie?
     fn get(&self, key: &[u8]) -> Result<Option<DBValue>>;
+
+    /// Does all the nodes in this trie exist in the underlying database?
+    fn is_complete(&self) -> bool;
 }
 
 /// A key-value datastore implemented as a database-backed modified Merkle tree.
