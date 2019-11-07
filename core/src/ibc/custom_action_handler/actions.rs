@@ -21,6 +21,7 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::sync::Arc;
 
 const ACTION_CREATE_CLIENT: u8 = 1;
+const ACTION_UPDATE_CLIENT: u8 = 2;
 
 #[derive(Debug, PartialEq)]
 pub enum Action {
@@ -28,6 +29,10 @@ pub enum Action {
         id: String,
         kind: u8,
         consensus_state: Vec<u8>,
+    },
+    UpdateClient {
+        id: String,
+        header: Vec<u8>,
     },
 }
 
@@ -39,6 +44,9 @@ impl Action {
     ) -> Result<(), SyntaxError> {
         match self {
             Action::CreateClient {
+                ..
+            } => {}
+            Action::UpdateClient {
                 ..
             } => {}
         }
@@ -55,6 +63,12 @@ impl Encodable for Action {
                 consensus_state,
             } => {
                 s.begin_list(4).append(&ACTION_CREATE_CLIENT).append(id).append(kind).append(consensus_state);
+            }
+            Action::UpdateClient {
+                id,
+                header,
+            } => {
+                s.begin_list(3).append(&ACTION_UPDATE_CLIENT).append(id).append(header);
             }
         };
     }
@@ -78,7 +92,19 @@ impl Decodable for Action {
                     consensus_state: rlp.val_at(3)?,
                 })
             }
-
+            ACTION_UPDATE_CLIENT => {
+                let item_count = rlp.item_count()?;
+                if item_count != 3 {
+                    return Err(DecoderError::RlpInvalidLength {
+                        expected: 3,
+                        got: item_count,
+                    })
+                }
+                Ok(Action::UpdateClient {
+                    id: rlp.val_at(1)?,
+                    header: rlp.val_at(2)?,
+                })
+            }
             _ => Err(DecoderError::Custom("Unexpected IBC Action Type")),
         }
     }
