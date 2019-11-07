@@ -16,6 +16,7 @@
 
 mod action;
 mod block;
+mod ibc;
 mod transaction;
 mod unsigned_transaction;
 mod work;
@@ -23,10 +24,10 @@ mod work;
 pub use self::action::{Action, ActionWithTracker};
 pub use self::block::Block;
 pub use self::block::BlockNumberAndHash;
+pub use self::ibc::IBCQueryResult;
 pub use self::transaction::{PendingTransactions, Transaction};
 pub use self::unsigned_transaction::UnsignedTransaction;
 pub use self::work::Work;
-
 use ctypes::TxHash;
 
 #[derive(Debug, Serialize, Deserialize)]

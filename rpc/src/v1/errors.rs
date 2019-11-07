@@ -64,6 +64,8 @@ mod codes {
     pub const SHARD_TRANSACTION_ONLY_IN_EXECUTE_TRANSACITON: i64 = -32047;
     pub const STATE_NOT_EXIST: i64 = -32048;
     pub const ACTION_DATA_HANDLER_NOT_FOUND: i64 = -32049;
+    pub const IBC_CLIENT_NOT_EXIST: i64 = -32050;
+    pub const IBC_CLIENT_ROOT_NOT_EXIST: i64 = -32051;
     pub const UNKNOWN_ERROR: i64 = -32099;
 }
 
@@ -249,6 +251,22 @@ pub fn io(error: std::io::Error) -> Error {
     Error {
         code: ErrorCode::InternalError,
         message: format!("{}", error),
+        data: None,
+    }
+}
+
+pub fn ibc_client_not_exist() -> Error {
+    Error {
+        code: ErrorCode::ServerError(codes::IBC_CLIENT_NOT_EXIST),
+        message: "IBC client does not exist".to_string(),
+        data: None,
+    }
+}
+
+pub fn ibc_client_root_not_exist() -> Error {
+    Error {
+        code: ErrorCode::ServerError(codes::IBC_CLIENT_ROOT_NOT_EXIST),
+        message: "IBC client root does not exist".to_string(),
         data: None,
     }
 }
