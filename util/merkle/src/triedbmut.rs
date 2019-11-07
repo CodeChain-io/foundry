@@ -417,6 +417,10 @@ impl<'a> Trie for TrieDBMut<'a> {
 
         t.get(key)
     }
+
+    fn is_complete(&self) -> bool {
+        TrieDB::try_new(self.db, self.root).map(|t| t.is_complete()).unwrap_or(false)
+    }
 }
 
 impl<'a> TrieMut for TrieDBMut<'a> {
