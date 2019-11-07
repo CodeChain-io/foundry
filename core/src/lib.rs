@@ -48,7 +48,7 @@ mod db;
 mod db_version;
 pub mod encoded;
 mod error;
-mod ibc;
+pub mod ibc;
 mod invoice;
 mod miner;
 mod peer_db;

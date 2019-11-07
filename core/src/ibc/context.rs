@@ -43,7 +43,7 @@ impl<'a> Context for TopLevelContext<'a> {
     }
 }
 
-pub struct TopLevelKVStore<'a> {
+struct TopLevelKVStore<'a> {
     state: &'a mut TopLevelState,
 }
 

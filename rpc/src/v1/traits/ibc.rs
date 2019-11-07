@@ -14,16 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub mod client_02;
-#[allow(dead_code)]
-#[allow(unused_variables)]
-mod commitment_23;
-pub mod context;
-#[allow(dead_code)]
-#[allow(unused_variables)]
-pub mod custom_action_handler;
-mod kv_store;
+use super::super::types::IBCQueryResult;
+use jsonrpc_core::Result;
 
-pub use self::client_02 as client;
-pub use self::context::Context;
-pub use self::kv_store::KVStore;
+
+#[rpc(server)]
+pub trait IBC {
+    #[rpc(name = "ibc_query_client_consensus_state")]
+    fn query_client_consensus_state(
+        &self,
+        client_id: String,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQueryResult>>;
+
+    #[rpc(name = "ibc_query_header")]
+    fn query_header(&self, block_number: Option<u64>) -> Result<Option<String>>;
+
+    /// Gets the other chain's root saved in the light client
+    #[rpc(name = "ibc_query_client_root")]
+    fn query_client_root(
+        &self,
+        client_id: String,
+        other_block_number: u64,
+        this_block_number: Option<u64>,
+    ) -> Result<Option<IBCQueryResult>>;
+}
