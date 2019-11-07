@@ -22,14 +22,16 @@ use std::time::Duration;
 use ccore::encoded::Header as EncodedHeader;
 use ccore::{
     Block, BlockChainClient, BlockChainTrait, BlockId, BlockImportError, BlockStatus, ChainNotify, Client, ImportBlock,
-    ImportError, UnverifiedTransaction,
+    ImportError, StateInfo, UnverifiedTransaction,
 };
+use cdb::AsHashDB;
+use cmerkle::{Trie, TrieFactory};
 use cnetwork::{Api, EventSender, NetworkExtension, NodeId};
-use cstate::FindActionHandler;
+use cstate::{FindActionHandler, TopStateView};
 use ctimer::TimerToken;
 use ctypes::header::{Header, Seal};
 use ctypes::transaction::Action;
-use ctypes::{BlockHash, BlockNumber};
+use ctypes::{BlockHash, BlockNumber, ShardId};
 use primitives::{H256, U256};
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
@@ -53,7 +55,58 @@ pub struct TokenInfo {
     request_id: Option<u64>,
 }
 
+#[derive(Debug)]
+enum State {
+    SnapshotHeader(BlockHash),
+    SnapshotBody(BlockHash),
+    SnapshotTopChunk(H256),
+    SnapshotShardChunk(ShardId, H256),
+    Full,
+}
+
+impl State {
+    fn initial(client: &Client, snapshot_target: Option<(H256, u64)>) -> Self {
+        let (hash, num) = match snapshot_target {
+            Some((h, n)) => (h.into(), n),
+            None => return State::Full,
+        };
+        let header = match client.block_header(&num.into()) {
+            Some(h) if h.hash() == hash => h,
+            _ => return State::SnapshotHeader(hash),
+        };
+        if client.block_body(&hash.into()).is_none() {
+            return State::SnapshotBody(hash)
+        }
+
+        let state_db = client.state_db().read();
+        let state_root = header.state_root();
+        let top_trie = TrieFactory::readonly(state_db.as_hashdb(), &state_root);
+        if !top_trie.map(|t| t.is_complete()).unwrap_or(false) {
+            return State::SnapshotTopChunk(state_root)
+        }
+
+        let top_state = client.state_at(hash.into()).expect("Top level state at the snapshot header exists");
+        let metadata = top_state.metadata().unwrap().expect("Metadata must exist for the snapshot block");
+        let shard_num = *metadata.number_of_shards();
+        let empty_shard = (0..shard_num).find_map(|n| {
+            let shard_root = top_state.shard_root(n).unwrap().expect("Shard root must exist");
+            let trie = TrieFactory::readonly(state_db.as_hashdb(), &shard_root);
+            if !trie.map(|t| t.is_complete()).unwrap_or(false) {
+                Some((n, shard_root))
+            } else {
+                None
+            }
+        });
+        if let Some((shard_id, shard_root)) = empty_shard {
+            return State::SnapshotShardChunk(shard_id, shard_root)
+        }
+
+        State::Full
+    }
+}
+
 pub struct Extension {
+    state: State,
     requests: HashMap<NodeId, Vec<(u64, RequestMessage)>>,
     connected_nodes: HashSet<NodeId>,
     header_downloaders: HashMap<NodeId, HeaderDownloader>,
@@ -68,9 +121,11 @@ pub struct Extension {
 }
 
 impl Extension {
-    pub fn new(client: Arc<Client>, api: Box<dyn Api>, _snapshot_target: Option<(H256, u64)>) -> Extension {
+    pub fn new(client: Arc<Client>, api: Box<dyn Api>, snapshot_target: Option<(H256, u64)>) -> Extension {
         api.set_timer(SYNC_TIMER_TOKEN, Duration::from_millis(SYNC_TIMER_INTERVAL)).expect("Timer set succeeds");
 
+        let state = State::initial(&client, snapshot_target);
+        cdebug!(SYNC, "Initial state is {:?}", state);
         let mut header = client.best_header();
         let mut hollow_headers = vec![header.decode()];
         while client.block_body(&BlockId::Hash(header.hash())).is_none() {
@@ -89,6 +144,7 @@ impl Extension {
         }
         cinfo!(SYNC, "Sync extension initialized");
         Extension {
+            state,
             requests: Default::default(),
             connected_nodes: Default::default(),
             header_downloaders: Default::default(),
@@ -318,22 +374,28 @@ impl NetworkExtension<Event> for Extension {
 
     fn on_timeout(&mut self, token: TimerToken) {
         match token {
-            SYNC_TIMER_TOKEN => {
-                let mut peer_ids: Vec<_> = self.header_downloaders.keys().cloned().collect();
-                peer_ids.shuffle(&mut thread_rng());
+            SYNC_TIMER_TOKEN => match self.state {
+                State::SnapshotHeader(..) => unimplemented!(),
+                State::SnapshotBody(..) => unimplemented!(),
+                State::SnapshotTopChunk(..) => unimplemented!(),
+                State::SnapshotShardChunk(..) => unimplemented!(),
+                State::Full => {
+                    let mut peer_ids: Vec<_> = self.header_downloaders.keys().cloned().collect();
+                    peer_ids.shuffle(&mut thread_rng());
 
-                for id in &peer_ids {
-                    let request = self.header_downloaders.get_mut(id).and_then(HeaderDownloader::create_request);
-                    if let Some(request) = request {
-                        self.send_header_request(id, request);
-                        break
+                    for id in &peer_ids {
+                        let request = self.header_downloaders.get_mut(id).and_then(HeaderDownloader::create_request);
+                        if let Some(request) = request {
+                            self.send_header_request(id, request);
+                            break
+                        }
+                    }
+
+                    for id in &peer_ids {
+                        self.send_body_request(id);
                     }
                 }
-
-                for id in peer_ids {
-                    self.send_body_request(&id);
-                }
-            }
+            },
             SYNC_EXPIRE_TOKEN_BEGIN..=SYNC_EXPIRE_TOKEN_END => {
                 self.check_sync_variable();
                 let (id, request_id) = {
@@ -559,33 +621,39 @@ impl Extension {
                 return
             }
 
-            match response {
-                ResponseMessage::Headers(headers) => {
-                    self.dismiss_request(from, id);
-                    self.on_header_response(from, &headers)
-                }
-                ResponseMessage::Bodies(bodies) => {
-                    self.check_sync_variable();
-                    let hashes = match request {
-                        RequestMessage::Bodies(hashes) => hashes,
-                        _ => unreachable!(),
-                    };
-                    assert_eq!(bodies.len(), hashes.len());
-                    if let Some(token) = self.tokens.get(from) {
-                        if let Some(token_info) = self.tokens_info.get_mut(token) {
-                            if token_info.request_id.is_none() {
-                                ctrace!(SYNC, "Expired before handling response");
-                                return
-                            }
-                            self.api.clear_timer(*token).expect("Timer clear succeed");
-                            token_info.request_id = None;
-                        }
+            match self.state {
+                State::SnapshotHeader(..) => unimplemented!(),
+                State::SnapshotBody(..) => unimplemented!(),
+                State::SnapshotTopChunk(..) => unimplemented!(),
+                State::SnapshotShardChunk(..) => unimplemented!(),
+                State::Full => match response {
+                    ResponseMessage::Headers(headers) => {
+                        self.dismiss_request(from, id);
+                        self.on_header_response(from, &headers)
                     }
-                    self.dismiss_request(from, id);
-                    self.on_body_response(hashes, bodies);
-                    self.check_sync_variable();
-                }
-                ResponseMessage::StateChunk(..) => unimplemented!(),
+                    ResponseMessage::Bodies(bodies) => {
+                        self.check_sync_variable();
+                        let hashes = match request {
+                            RequestMessage::Bodies(hashes) => hashes,
+                            _ => unreachable!(),
+                        };
+                        assert_eq!(bodies.len(), hashes.len());
+                        if let Some(token) = self.tokens.get(from) {
+                            if let Some(token_info) = self.tokens_info.get_mut(token) {
+                                if token_info.request_id.is_none() {
+                                    ctrace!(SYNC, "Expired before handling response");
+                                    return
+                                }
+                                self.api.clear_timer(*token).expect("Timer clear succeed");
+                                token_info.request_id = None;
+                            }
+                        }
+                        self.dismiss_request(from, id);
+                        self.on_body_response(hashes, bodies);
+                        self.check_sync_variable();
+                    }
+                    ResponseMessage::StateChunk(..) => unimplemented!(),
+                },
             }
         }
     }
