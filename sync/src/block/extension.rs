@@ -57,7 +57,7 @@ pub struct TokenInfo {
 
 #[derive(Debug)]
 enum State {
-    SnapshotHeader(BlockHash),
+    SnapshotHeader(BlockHash, u64),
     SnapshotBody(BlockHash),
     SnapshotTopChunk(H256),
     SnapshotShardChunk(ShardId, H256),
@@ -72,7 +72,7 @@ impl State {
         };
         let header = match client.block_header(&num.into()) {
             Some(h) if h.hash() == hash => h,
-            _ => return State::SnapshotHeader(hash),
+            _ => return State::SnapshotHeader(hash, num),
         };
         if client.block_body(&hash.into()).is_none() {
             return State::SnapshotBody(hash)
@@ -374,28 +374,38 @@ impl NetworkExtension<Event> for Extension {
 
     fn on_timeout(&mut self, token: TimerToken) {
         match token {
-            SYNC_TIMER_TOKEN => match self.state {
-                State::SnapshotHeader(..) => unimplemented!(),
-                State::SnapshotBody(..) => unimplemented!(),
-                State::SnapshotTopChunk(..) => unimplemented!(),
-                State::SnapshotShardChunk(..) => unimplemented!(),
-                State::Full => {
-                    let mut peer_ids: Vec<_> = self.header_downloaders.keys().cloned().collect();
-                    peer_ids.shuffle(&mut thread_rng());
+            SYNC_TIMER_TOKEN => {
+                let mut peer_ids: Vec<_> = self.header_downloaders.keys().cloned().collect();
+                peer_ids.shuffle(&mut thread_rng());
 
-                    for id in &peer_ids {
-                        let request = self.header_downloaders.get_mut(id).and_then(HeaderDownloader::create_request);
-                        if let Some(request) = request {
-                            self.send_header_request(id, request);
-                            break
+                match self.state {
+                    State::SnapshotHeader(_, num) => {
+                        for id in &peer_ids {
+                            self.send_header_request(id, RequestMessage::Headers {
+                                start_number: num,
+                                max_count: 1,
+                            });
                         }
                     }
+                    State::SnapshotBody(..) => unimplemented!(),
+                    State::SnapshotTopChunk(..) => unimplemented!(),
+                    State::SnapshotShardChunk(..) => unimplemented!(),
+                    State::Full => {
+                        for id in &peer_ids {
+                            let request =
+                                self.header_downloaders.get_mut(id).and_then(HeaderDownloader::create_request);
+                            if let Some(request) = request {
+                                self.send_header_request(id, request);
+                                break
+                            }
+                        }
 
-                    for id in &peer_ids {
-                        self.send_body_request(id);
+                        for id in &peer_ids {
+                            self.send_body_request(id);
+                        }
                     }
                 }
-            },
+            }
             SYNC_EXPIRE_TOKEN_BEGIN..=SYNC_EXPIRE_TOKEN_END => {
                 self.check_sync_variable();
                 let (id, request_id) = {
@@ -471,31 +481,51 @@ pub enum Event {
 
 impl Extension {
     fn new_headers(&mut self, imported: Vec<BlockHash>, enacted: Vec<BlockHash>, retracted: Vec<BlockHash>) {
-        for peer in self.header_downloaders.values_mut() {
-            peer.mark_as_imported(imported.clone());
-        }
-        let mut headers_to_download: Vec<_> = enacted
-            .into_iter()
-            .map(|hash| self.client.block_header(&BlockId::Hash(hash)).expect("Enacted header must exist"))
-            .collect();
-        headers_to_download.sort_unstable_by_key(EncodedHeader::number);
-        #[allow(clippy::redundant_closure)]
-        // False alarm. https://github.com/rust-lang/rust-clippy/issues/1439
-        headers_to_download.dedup_by_key(|h| h.hash());
+        if let Some(next_state) = match self.state {
+            State::SnapshotHeader(hash, ..) => {
+                if imported.contains(&hash) {
+                    let header = self.client.block_header(&BlockId::Hash(hash)).expect("Imported header must exist");
+                    Some(State::SnapshotTopChunk(header.state_root()))
+                } else {
+                    None
+                }
+            }
+            State::SnapshotBody(..) => unimplemented!(),
+            State::SnapshotTopChunk(..) => unimplemented!(),
+            State::SnapshotShardChunk(..) => unimplemented!(),
+            State::Full => {
+                for peer in self.header_downloaders.values_mut() {
+                    peer.mark_as_imported(imported.clone());
+                }
 
-        let headers: Vec<_> = headers_to_download
-            .into_iter()
-            .filter(|header| self.client.block_body(&BlockId::Hash(header.hash())).is_none())
-            .collect(); // FIXME: No need to collect here if self is not borrowed.
-        for header in headers {
-            let parent = self
-                .client
-                .block_header(&BlockId::Hash(header.parent_hash()))
-                .expect("Enacted header must have parent");
-            let is_empty = header.transactions_root() == parent.transactions_root();
-            self.body_downloader.add_target(&header.decode(), is_empty);
+                let mut headers_to_download: Vec<_> = enacted
+                    .into_iter()
+                    .map(|hash| self.client.block_header(&BlockId::Hash(hash)).expect("Enacted header must exist"))
+                    .collect();
+                headers_to_download.sort_unstable_by_key(EncodedHeader::number);
+                #[allow(clippy::redundant_closure)]
+                // False alarm. https://github.com/rust-lang/rust-clippy/issues/1439
+                headers_to_download.dedup_by_key(|h| h.hash());
+
+                let headers: Vec<_> = headers_to_download
+                    .into_iter()
+                    .filter(|header| self.client.block_body(&BlockId::Hash(header.hash())).is_none())
+                    .collect(); // FIXME: No need to collect here if self is not borrowed.
+                for header in headers {
+                    let parent = self
+                        .client
+                        .block_header(&BlockId::Hash(header.parent_hash()))
+                        .expect("Enacted header must have parent");
+                    let is_empty = header.transactions_root() == parent.transactions_root();
+                    self.body_downloader.add_target(&header.decode(), is_empty);
+                }
+                self.body_downloader.remove_target(&retracted);
+                None
+            }
+        } {
+            cdebug!(SYNC, "Transitioning state to {:?}", next_state);
+            self.state = next_state;
         }
-        self.body_downloader.remove_target(&retracted);
     }
 
     fn new_blocks(&mut self, imported: Vec<BlockHash>, invalid: Vec<BlockHash>) {
@@ -621,39 +651,33 @@ impl Extension {
                 return
             }
 
-            match self.state {
-                State::SnapshotHeader(..) => unimplemented!(),
-                State::SnapshotBody(..) => unimplemented!(),
-                State::SnapshotTopChunk(..) => unimplemented!(),
-                State::SnapshotShardChunk(..) => unimplemented!(),
-                State::Full => match response {
-                    ResponseMessage::Headers(headers) => {
-                        self.dismiss_request(from, id);
-                        self.on_header_response(from, &headers)
-                    }
-                    ResponseMessage::Bodies(bodies) => {
-                        self.check_sync_variable();
-                        let hashes = match request {
-                            RequestMessage::Bodies(hashes) => hashes,
-                            _ => unreachable!(),
-                        };
-                        assert_eq!(bodies.len(), hashes.len());
-                        if let Some(token) = self.tokens.get(from) {
-                            if let Some(token_info) = self.tokens_info.get_mut(token) {
-                                if token_info.request_id.is_none() {
-                                    ctrace!(SYNC, "Expired before handling response");
-                                    return
-                                }
-                                self.api.clear_timer(*token).expect("Timer clear succeed");
-                                token_info.request_id = None;
+            match response {
+                ResponseMessage::Headers(headers) => {
+                    self.dismiss_request(from, id);
+                    self.on_header_response(from, &headers)
+                }
+                ResponseMessage::Bodies(bodies) => {
+                    self.check_sync_variable();
+                    let hashes = match request {
+                        RequestMessage::Bodies(hashes) => hashes,
+                        _ => unreachable!(),
+                    };
+                    assert_eq!(bodies.len(), hashes.len());
+                    if let Some(token) = self.tokens.get(from) {
+                        if let Some(token_info) = self.tokens_info.get_mut(token) {
+                            if token_info.request_id.is_none() {
+                                ctrace!(SYNC, "Expired before handling response");
+                                return
                             }
+                            self.api.clear_timer(*token).expect("Timer clear succeed");
+                            token_info.request_id = None;
                         }
-                        self.dismiss_request(from, id);
-                        self.on_body_response(hashes, bodies);
-                        self.check_sync_variable();
                     }
-                    ResponseMessage::StateChunk(..) => unimplemented!(),
-                },
+                    self.dismiss_request(from, id);
+                    self.on_body_response(hashes, bodies);
+                    self.check_sync_variable();
+                }
+                ResponseMessage::StateChunk(..) => unimplemented!(),
             }
         }
     }
@@ -722,40 +746,66 @@ impl Extension {
 
     fn on_header_response(&mut self, from: &NodeId, headers: &[Header]) {
         ctrace!(SYNC, "Received header response from({}) with length({})", from, headers.len());
-        let (mut completed, peer_is_caught_up) = if let Some(peer) = self.header_downloaders.get_mut(from) {
-            let encoded: Vec<_> = headers.iter().map(|h| EncodedHeader::new(h.rlp_bytes().to_vec())).collect();
-            peer.import_headers(&encoded);
-            (peer.downloaded(), peer.is_caught_up())
-        } else {
-            (Vec::new(), true)
-        };
-        completed.sort_unstable_by_key(EncodedHeader::number);
-
-        let mut exists = Vec::new();
-        let mut queued = Vec::new();
-
-        for header in completed {
-            let hash = header.hash();
-            match self.client.import_header(header.clone().into_inner()) {
-                Err(BlockImportError::Import(ImportError::AlreadyInChain)) => exists.push(hash),
-                Err(BlockImportError::Import(ImportError::AlreadyQueued)) => queued.push(hash),
-                // FIXME: handle import errors
-                Err(err) => {
-                    cwarn!(SYNC, "Cannot import header({}): {:?}", header.hash(), err);
-                    break
+        match self.state {
+            State::SnapshotHeader(hash, _) => match headers {
+                [header] if header.hash() == hash => {
+                    match self.client.import_header(header.rlp_bytes().to_vec()) {
+                        Ok(_) | Err(BlockImportError::Import(ImportError::AlreadyInChain)) => {}
+                        Err(BlockImportError::Import(ImportError::AlreadyQueued)) => {}
+                        // FIXME: handle import errors
+                        Err(err) => {
+                            cwarn!(SYNC, "Cannot import header({}): {:?}", header.hash(), err);
+                        }
+                    }
                 }
-                _ => {}
-            }
-        }
+                _ => cdebug!(
+                    SYNC,
+                    "Peer {} responded with a invalid response. requested hash: {}, response length: {}",
+                    from,
+                    hash,
+                    headers.len()
+                ),
+            },
+            State::SnapshotBody(..) => {}
+            State::SnapshotTopChunk(..) => {}
+            State::SnapshotShardChunk(..) => {}
+            State::Full => {
+                let (mut completed, peer_is_caught_up) = if let Some(peer) = self.header_downloaders.get_mut(from) {
+                    let encoded: Vec<_> = headers.iter().map(|h| EncodedHeader::new(h.rlp_bytes().to_vec())).collect();
+                    peer.import_headers(&encoded);
+                    (peer.downloaded(), peer.is_caught_up())
+                } else {
+                    (Vec::new(), true)
+                };
+                completed.sort_unstable_by_key(EncodedHeader::number);
 
-        let request = self.header_downloaders.get_mut(from).and_then(|peer| {
-            peer.mark_as_queued(queued);
-            peer.mark_as_imported(exists);
-            peer.create_request()
-        });
-        if !peer_is_caught_up {
-            if let Some(request) = request {
-                self.send_header_request(from, request);
+                let mut exists = Vec::new();
+                let mut queued = Vec::new();
+
+                for header in completed {
+                    let hash = header.hash();
+                    match self.client.import_header(header.clone().into_inner()) {
+                        Err(BlockImportError::Import(ImportError::AlreadyInChain)) => exists.push(hash),
+                        Err(BlockImportError::Import(ImportError::AlreadyQueued)) => queued.push(hash),
+                        // FIXME: handle import errors
+                        Err(err) => {
+                            cwarn!(SYNC, "Cannot import header({}): {:?}", header.hash(), err);
+                            break
+                        }
+                        _ => {}
+                    }
+                }
+
+                let request = self.header_downloaders.get_mut(from).and_then(|peer| {
+                    peer.mark_as_queued(queued);
+                    peer.mark_as_imported(exists);
+                    peer.create_request()
+                });
+                if !peer_is_caught_up {
+                    if let Some(request) = request {
+                        self.send_header_request(from, request);
+                    }
+                }
             }
         }
     }
