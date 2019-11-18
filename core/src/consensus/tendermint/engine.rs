@@ -37,6 +37,7 @@ use super::worker;
 use super::{ChainNotify, Tendermint, SEAL_FIELDS};
 use crate::account_provider::AccountProvider;
 use crate::block::*;
+use crate::client::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::client::{Client, ConsensusClient};
 use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::tendermint::params::TimeGapParams;
@@ -312,6 +313,10 @@ impl ConsensusEngine for Tendermint {
         let (result, receiver) = crossbeam::bounded(1);
         self.inner.send(worker::Event::Restore(result)).unwrap();
         receiver.recv().unwrap();
+    }
+
+    fn register_snapshot_notify_sender(&self, sender: SnapshotNotifySender) {
+        self.snapshot_notify_sender_initializer.send(sender).unwrap();
     }
 
     fn get_best_block_from_best_proposal_header(&self, header: &HeaderView<'_>) -> BlockHash {
