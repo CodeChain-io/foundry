@@ -236,6 +236,8 @@ pub trait ConsensusEngine: Sync + Send {
 
     fn register_chain_notify(&self, _: &Client) {}
 
+    fn complete_register(&self) {}
+
     fn get_best_block_from_best_proposal_header(&self, header: &HeaderView<'_>) -> BlockHash {
         header.hash()
     }
