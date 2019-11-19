@@ -353,7 +353,7 @@ impl ConsensusEngine for Tendermint {
     }
 }
 
-fn is_term_changed(header: &Header, parent: &Header, term_seconds: u64) -> bool {
+pub(super) fn is_term_changed(header: &Header, parent: &Header, term_seconds: u64) -> bool {
     if term_seconds == 0 {
         return false
     }
