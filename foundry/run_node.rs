@@ -334,7 +334,8 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
         let (tx, rx) = snapshot_notify::create();
         client.engine().register_snapshot_notify_sender(tx);
         if !config.snapshot.disable.unwrap() {
-            let service = Arc::new(SnapshotService::new(client, rx, config.snapshot.path.unwrap()));
+            let service =
+                Arc::new(SnapshotService::new(client, rx, config.snapshot.path.unwrap(), config.snapshot.expiration));
             Some(service)
         } else {
             None
