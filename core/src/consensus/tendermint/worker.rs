@@ -1647,6 +1647,8 @@ impl Worker {
             }
         };
 
+        self.send_snapshot_notify(c.as_ref(), enacted.as_slice());
+
         if self.step.is_commit() && (imported.len() + enacted.len() == 1) {
             let (_, committed_block_hash) = self.step.committed().expect("Commit state always has block_hash");
             if imported.first() == Some(&committed_block_hash) {
@@ -1695,6 +1697,26 @@ impl Worker {
             if let Some(last_proposal_header) = last_proposal_header {
                 self.on_imported_proposal(&last_proposal_header);
             }
+        }
+    }
+
+    // Notify once for the latest block even if multiple blocks have been enacted.
+    fn send_snapshot_notify(&mut self, c: &dyn ConsensusClient, enacted: &[BlockHash]) {
+        let mut last_snapshot_point = None;
+        for block_hash in enacted.iter().rev() {
+            let block_id = BlockId::Hash(*block_hash);
+
+            if c.current_term_id(block_id).expect("State trie should exist for enacted block") > 0 {
+                let last_term_finished_block_num = c.last_term_finished_block_num(block_id).expect("Block is enacted");
+                let block_number = c.block_number(&block_id).expect("Block number should exist for enacted block");
+                if last_term_finished_block_num + 1 == block_number {
+                    last_snapshot_point = Some(block_hash);
+                }
+            }
+        }
+        if let Some(last_snapshot_point) = last_snapshot_point {
+            // TODO: Reduce the snapshot frequency.
+            self.snapshot_notify_sender.notify(*last_snapshot_point);
         }
     }
 
