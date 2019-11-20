@@ -20,6 +20,7 @@ mod devel;
 mod engine;
 mod mempool;
 mod net;
+mod snapshot;
 
 pub use self::account::Account;
 pub use self::chain::Chain;
@@ -27,3 +28,4 @@ pub use self::devel::Devel;
 pub use self::engine::Engine;
 pub use self::mempool::Mempool;
 pub use self::net::Net;
+pub use self::snapshot::Snapshot;
