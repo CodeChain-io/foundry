@@ -273,3 +273,11 @@ pub fn invalid_custom_action(err: String) -> Error {
         data: None,
     }
 }
+
+pub fn io(error: std::io::Error) -> Error {
+    Error {
+        code: ErrorCode::InternalError,
+        message: format!("{}", error),
+        data: None,
+    }
+}
