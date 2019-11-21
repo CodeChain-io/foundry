@@ -28,7 +28,7 @@ pub use self::client::Client;
 pub use self::config::ClientConfig;
 pub use self::test_client::TestBlockChainClient;
 
-use crate::block::{ClosedBlock, OpenBlock, SealedBlock};
+use crate::block::{Block, ClosedBlock, OpenBlock, SealedBlock};
 use crate::blockchain_info::BlockChainInfo;
 use crate::consensus::EngineError;
 use crate::encoded;
@@ -41,7 +41,7 @@ use cmerkle::Result as TrieResult;
 use cnetwork::NodeId;
 use cstate::{AssetScheme, FindActionHandler, OwnedAsset, StateResult, TopLevelState, TopStateView};
 use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
-use ctypes::{BlockHash, BlockNumber, CommonParams, Header, ShardId, Tracker, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
 use primitives::{Bytes, H160, H256, U256};
@@ -193,9 +193,9 @@ pub trait ImportBlock {
     /// Import a header into the blockchain
     fn import_header(&self, bytes: Bytes) -> Result<BlockHash, BlockImportError>;
 
-    /// Import a trusted bootstrap header into the blockchain
-    /// Bootstrap headers don't execute any verifications
-    fn import_bootstrap_header(&self, bytes: &Header) -> Result<BlockHash, BlockImportError>;
+    /// Import a trusted bootstrap block into the blockchain
+    /// Bootstrap blocks don't execute any verifications
+    fn import_bootstrap_block(&self, bytes: &Block) -> Result<BlockHash, BlockImportError>;
 
     /// Import sealed block. Skips all verifications.
     fn import_sealed_block(&self, block: &SealedBlock) -> ImportResult;
