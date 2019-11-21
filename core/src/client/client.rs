@@ -20,7 +20,7 @@ use super::{
     ClientConfig, DatabaseClient, EngineClient, EngineInfo, ExecuteClient, ImportBlock, ImportResult,
     MiningBlockChainClient, Shard, StateInfo, StateOrBlock, TextClient,
 };
-use crate::block::{ClosedBlock, IsBlock, OpenBlock, SealedBlock};
+use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock, SealedBlock};
 use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, InvoiceProvider, TransactionAddress};
 use crate::client::{ConsensusClient, SnapshotClient, TermInfo};
 use crate::consensus::{CodeChainEngine, EngineError};
@@ -41,7 +41,7 @@ use cstate::{
 };
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
-use ctypes::{BlockHash, BlockNumber, CommonParams, Header, ShardId, Tracker, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
 use cvm::{decode, execute, ChainTimeInfo, ScriptResult, VMConfig};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
@@ -635,13 +635,13 @@ impl ImportBlock for Client {
         Ok(self.importer.header_queue.import(unverified)?)
     }
 
-    fn import_bootstrap_header(&self, header: &Header) -> Result<BlockHash, BlockImportError> {
-        if self.block_chain().is_known_header(&header.hash()) {
+    fn import_bootstrap_block(&self, block: &Block) -> Result<BlockHash, BlockImportError> {
+        if self.block_chain().is_known(&block.header.hash()) {
             return Err(BlockImportError::Import(ImportError::AlreadyInChain))
         }
         let import_lock = self.importer.import_lock.lock();
-        self.importer.import_bootstrap_header(header, self, &import_lock);
-        Ok(header.hash())
+        self.importer.import_bootstrap_block(block, self, &import_lock);
+        Ok(block.header.hash())
     }
 
     fn import_sealed_block(&self, block: &SealedBlock) -> ImportResult {
