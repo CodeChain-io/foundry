@@ -999,6 +999,12 @@ impl TopState for TopLevelState {
         metadata.increase_seq();
         Ok(())
     }
+
+    fn update_term_params(&mut self) -> StateResult<()> {
+        let mut metadata = self.get_metadata_mut()?;
+        metadata.update_term_params();
+        Ok(())
+    }
 }
 
 fn is_active_account(state: &dyn TopStateView, address: &Address) -> TrieResult<bool> {
