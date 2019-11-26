@@ -24,7 +24,7 @@ use std::sync::{Arc, Weak};
 use ckey::{public_to_address, Address};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::{ActionHandler, TopStateView};
+use cstate::{ActionHandler, TopState, TopStateView};
 use ctypes::{BlockHash, CommonParams, Header};
 use num_rational::Ratio;
 
@@ -232,6 +232,7 @@ impl ConsensusEngine for Tendermint {
 
         stake::on_term_close(block.state_mut(), block_number, &inactive_validators)?;
 
+        block.state_mut().update_term_params()?;
         Ok(())
     }
 
