@@ -143,9 +143,30 @@ impl ConsensusEngine for Tendermint {
 
     /// Block transformation functions, before the transactions.
     fn on_open_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
+        let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
+
+        let block_number = block.header().number();
         let metadata = block.state().metadata()?.expect("Metadata must exist");
-        if block.header().number() == metadata.last_term_finished_block_num() + 1 {
-            // FIXME: on_term_open
+        if block_number == metadata.last_term_finished_block_num() + 1 {
+            match metadata.current_term_id() {
+                0 => {},
+                _ => {
+                    let rewards = stake::drain_current_rewards(block.state_mut())?;
+                    let banned = stake::Banned::load_from_state(block.state())?;
+                    let start_of_the_current_term_header =
+                    encoded::Header::new(block.header().clone().rlp_bytes().to_vec());
+
+                    let pending_rewards = calculate_pending_rewards_of_the_term(
+                        &*client,
+                        &*self.validators,
+                        rewards,
+                        start_of_the_current_term_header,
+                        &banned,
+                    )?;
+
+                    stake::update_calculated_rewards(block.state_mut(), pending_rewards)?;
+                }
+            }
         }
         Ok(())
     }
@@ -205,32 +226,11 @@ impl ConsensusEngine for Tendermint {
         let inactive_validators = match term {
             0 => Vec::new(),
             _ => {
-                let rewards = stake::drain_previous_rewards(block.state_mut())?;
-                let start_of_the_current_term = metadata.last_term_finished_block_num() + 1;
-
-                if term > 1 {
-                    let banned = stake::Banned::load_from_state(block.state())?;
-                    let start_of_the_current_term_header = if block_number == start_of_the_current_term {
-                        encoded::Header::new(block.header().clone().rlp_bytes().to_vec())
-                    } else {
-                        client.block_header(&start_of_the_current_term.into()).unwrap()
-                    };
-
-                    let pending_rewards = calculate_pending_rewards_of_the_term(
-                        &*client,
-                        &*self.validators,
-                        rewards,
-                        start_of_the_current_term_header,
-                        &banned,
-                    )?;
-
-                    for (address, reward) in pending_rewards {
-                        self.machine.add_balance(block, &address, reward)?;
-                    }
+                for (address, reward) in stake::drain_calculated_rewards(block.state_mut())? {
+                    self.machine.add_balance(block, &address, reward)?;
                 }
 
-                stake::move_current_to_previous_intermediate_rewards(block.state_mut())?;
-
+                let start_of_the_current_term = metadata.last_term_finished_block_num() + 1;
                 let validators = stake::Validators::load_from_state(block.state())?
                     .into_iter()
                     .map(|val| public_to_address(val.pubkey()))

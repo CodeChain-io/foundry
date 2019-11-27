@@ -328,17 +328,24 @@ pub fn add_intermediate_rewards(state: &mut TopLevelState, address: Address, rew
     Ok(())
 }
 
-pub fn drain_previous_rewards(state: &mut TopLevelState) -> StateResult<BTreeMap<Address, u64>> {
+pub fn drain_current_rewards(state: &mut TopLevelState) -> StateResult<BTreeMap<Address, u64>> {
     let mut rewards = IntermediateRewards::load_from_state(state)?;
-    let drained = rewards.drain_previous();
+    let drained = rewards.drain_current();
     rewards.save_to_state(state)?;
     Ok(drained)
 }
 
-pub fn move_current_to_previous_intermediate_rewards(state: &mut TopLevelState) -> StateResult<()> {
+pub fn update_calculated_rewards(state: &mut TopLevelState, values: HashMap<Address, u64>) -> StateResult<()> {
     let mut rewards = IntermediateRewards::load_from_state(state)?;
-    rewards.move_current_to_previous();
+    rewards.update_calculated(values.into_iter().collect());
     rewards.save_to_state(state)
+}
+
+pub fn drain_calculated_rewards(state: &mut TopLevelState) -> StateResult<BTreeMap<Address, u64>> {
+    let mut rewards = IntermediateRewards::load_from_state(state)?;
+    let drained = rewards.drain_calculated();
+    rewards.save_to_state(state)?;
+    Ok(drained)
 }
 
 pub fn update_validator_weights(state: &mut TopLevelState, block_author: &Address) -> StateResult<()> {

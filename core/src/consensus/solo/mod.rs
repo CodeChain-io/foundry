@@ -19,7 +19,7 @@ mod params;
 use std::sync::{Arc, Weak};
 
 use ckey::Address;
-use cstate::{ActionHandler, HitHandler};
+use cstate::{ActionHandler, HitHandler, TopStateView};
 use ctypes::{CommonParams, Header};
 use parking_lot::RwLock;
 
@@ -83,6 +83,16 @@ impl ConsensusEngine for Solo {
         Seal::Solo
     }
 
+    fn on_open_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
+        let block_number = block.header().number();
+        let metadata = block.state().metadata()?.expect("Metadata must exist");
+        if block_number == metadata.last_term_finished_block_num() + 1 {
+            let rewards = stake::drain_current_rewards(block.state_mut())?;
+            stake::update_calculated_rewards(block.state_mut(), rewards.into_iter().collect())?;
+        }
+        Ok(())
+    }
+
     fn on_close_block(
         &self,
         block: &mut ExecutedBlock,
@@ -128,8 +138,7 @@ impl ConsensusEngine for Solo {
             }
             header.number()
         };
-        stake::move_current_to_previous_intermediate_rewards(&mut block.state_mut())?;
-        let rewards = stake::drain_previous_rewards(&mut block.state_mut())?;
+        let rewards = stake::drain_calculated_rewards(&mut block.state_mut())?;
         for (address, reward) in rewards {
             self.machine.add_balance(block, &address, reward)?;
         }
