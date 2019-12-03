@@ -1522,7 +1522,26 @@ export class ChainRpc {
                             ),
                             minUnwrapCccCost: new U64(result.minUnwrapCccCost),
                             maxBodySize: new U64(result.maxBodySize),
-                            snapshotPeriod: new U64(result.snapshotPeriod)
+                            snapshotPeriod: new U64(result.snapshotPeriod),
+                            termSeconds: new U64(result.termSeconds),
+                            nominationExpiration: new U64(
+                                result.nominationExpiration
+                            ),
+                            custodyPeriod: new U64(result.custodyPeriod),
+                            releasePeriod: new U64(result.releasePeriod),
+                            maxNumOfValidators: new U64(
+                                result.maxNumOfValidators
+                            ),
+                            minNumOfValidators: new U64(
+                                result.minNumOfValidators
+                            ),
+                            delegationThreshold: new U64(
+                                result.delegationThreshold
+                            ),
+                            minDeposit: new U64(result.minDeposit),
+                            maxCandidateMetadataSize: new U64(
+                                result.maxCandidateMetadataSize
+                            )
                         });
                     } catch (e) {
                         reject(
