@@ -60,6 +60,10 @@ impl HeaderDownloader {
         }
     }
 
+    pub fn update_pivot(&mut self, hash: BlockHash) {
+        self.pivot = hash;
+    }
+
     pub fn best_hash(&self) -> BlockHash {
         self.best_hash
     }
