@@ -147,14 +147,25 @@ impl ConsensusEngine for Tendermint {
 
         let block_number = block.header().number();
         let metadata = block.state().metadata()?.expect("Metadata must exist");
+        let term = metadata.current_term_id();
+
+        match term {
+            0 => {}
+            _ => {
+                let mut validators = stake::CurrentValidators::load_from_state(block.state())?;
+                validators.update(stake::NextValidators::load_from_state(block.state())?.clone());
+                validators.save_to_state(block.state_mut())?;
+            }
+        }
+
         if block_number == metadata.last_term_finished_block_num() + 1 {
-            match metadata.current_term_id() {
-                0 => {},
+            match term {
+                0 => {}
                 _ => {
                     let rewards = stake::drain_current_rewards(block.state_mut())?;
                     let banned = stake::Banned::load_from_state(block.state())?;
                     let start_of_the_current_term_header =
-                    encoded::Header::new(block.header().clone().rlp_bytes().to_vec());
+                        encoded::Header::new(block.header().clone().rlp_bytes().to_vec());
 
                     let pending_rewards = calculate_pending_rewards_of_the_term(
                         &*client,
@@ -231,7 +242,7 @@ impl ConsensusEngine for Tendermint {
                 }
 
                 let start_of_the_current_term = metadata.last_term_finished_block_num() + 1;
-                let validators = stake::Validators::load_from_state(block.state())?
+                let validators = stake::NextValidators::load_from_state(block.state())?
                     .into_iter()
                     .map(|val| public_to_address(val.pubkey()))
                     .collect();
