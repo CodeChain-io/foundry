@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use std::fmt::{Display, Formatter};
 use std::io::Error as IoError;
 
 use primitives::H256;
@@ -53,6 +54,17 @@ impl From<ChunkError> for Error {
     }
 }
 
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            Error::IoError(err) => write!(f, "IoError: {}", err),
+            Error::RlpDecoderError(err) => write!(f, "RlpDecoderError: {}", err),
+            Error::TrieError(err) => write!(f, "TrieError: {}", err),
+            Error::ChunkError(err) => write!(f, "ChunkError: {}", err),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum ChunkError {
     TooBig,
@@ -62,4 +74,18 @@ pub enum ChunkError {
         actual: H256,
     },
     InvalidContent,
+}
+
+impl Display for ChunkError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            ChunkError::TooBig => write!(f, "Chunk has too many elements"),
+            ChunkError::InvalidHeight => write!(f, "Chunk height is unexpected height"),
+            ChunkError::ChunkRootMismatch {
+                expected,
+                actual,
+            } => write!(f, "Chunk root is different from expected. expected: {}, actual: {}", expected, actual),
+            ChunkError::InvalidContent => write!(f, "Chunk content is invalid"),
+        }
+    }
 }
