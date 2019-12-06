@@ -33,6 +33,7 @@ extern crate tempfile;
 extern crate trie_standardmap;
 
 mod block;
+pub mod snapshot;
 mod transaction;
 
 pub use crate::block::{BlockSyncEvent, BlockSyncExtension, BlockSyncSender};

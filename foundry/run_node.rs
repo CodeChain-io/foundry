@@ -19,6 +19,7 @@ use std::path::Path;
 use std::sync::{Arc, Weak};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use ccore::snapshot_notify;
 use ccore::{
     AccountProvider, AccountProviderError, BlockId, ChainNotify, ClientConfig, ClientService, EngineInfo, EngineType,
     Miner, MinerService, Scheme, NUM_COLUMNS,
@@ -30,6 +31,7 @@ use ckeystore::KeyStore;
 use clap::ArgMatches;
 use clogger::{self, EmailAlarm, LoggerConfig};
 use cnetwork::{Filters, NetworkConfig, NetworkControl, NetworkService, RoutingTable, SocketAddr};
+use csync::snapshot::Service as SnapshotService;
 use csync::{BlockSyncExtension, BlockSyncSender, TransactionSyncExtension};
 use ctimer::TimerLoop;
 use ctrlc::CtrlC;
@@ -322,6 +324,18 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
     let ws_server = {
         if !config.ws.disable.unwrap() {
             Some(rpc_ws_start(&config.rpc_ws_config(), config.rpc.enable_devel_api, &rpc_apis_deps)?)
+        } else {
+            None
+        }
+    };
+
+    let _snapshot_service = {
+        if !config.snapshot.disable.unwrap() {
+            let client = client.client();
+            let (tx, rx) = snapshot_notify::create();
+            client.engine().register_snapshot_notify_sender(tx);
+            let service = Arc::new(SnapshotService::new(client, rx, config.snapshot.path.unwrap()));
+            Some(service)
         } else {
             None
         }

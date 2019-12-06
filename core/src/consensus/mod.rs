@@ -47,6 +47,7 @@ use primitives::Bytes;
 use self::bit_set::BitSet;
 use crate::account_provider::AccountProvider;
 use crate::block::{ExecutedBlock, SealedBlock};
+use crate::client::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::client::ConsensusClient;
 use crate::codechain_machine::CodeChainMachine;
 use crate::error::Error;
@@ -237,6 +238,8 @@ pub trait ConsensusEngine: Sync + Send {
     fn register_chain_notify(&self, _: &Client) {}
 
     fn complete_register(&self) {}
+
+    fn register_snapshot_notify_sender(&self, _sender: SnapshotNotifySender) {}
 
     fn get_best_block_from_best_proposal_header(&self, header: &HeaderView<'_>) -> BlockHash {
         header.hash()
