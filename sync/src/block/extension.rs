@@ -27,7 +27,7 @@ use cmerkle::snapshot::ChunkDecompressor;
 use cmerkle::snapshot::Restore as SnapshotRestore;
 use cmerkle::{skewed_merkle_root, Trie, TrieFactory};
 use cnetwork::{Api, EventSender, NetworkExtension, NodeId};
-use cstate::{FindActionHandler, TopStateView};
+use cstate::{FindActionHandler, TopLevelState, TopStateView};
 use ctimer::TimerToken;
 use ctypes::header::{Header, Seal};
 use ctypes::transaction::Action;
@@ -70,7 +70,11 @@ enum State {
         block: BlockHash,
         restore: SnapshotRestore,
     },
-    SnapshotShardChunk(ShardId, H256),
+    SnapshotShardChunk {
+        block: BlockHash,
+        shard_id: ShardId,
+        restore: SnapshotRestore,
+    },
     Full,
 }
 
@@ -117,7 +121,11 @@ impl State {
             }
         });
         if let Some((shard_id, shard_root)) = empty_shard {
-            return State::SnapshotShardChunk(shard_id, shard_root)
+            return State::SnapshotShardChunk {
+                block: hash,
+                shard_id,
+                restore: SnapshotRestore::new(shard_root),
+            }
         }
 
         State::Full
@@ -143,9 +151,43 @@ impl State {
                 restore: SnapshotRestore::new(header.state_root()),
             },
             State::SnapshotTopChunk {
+                block,
                 ..
-            } => unimplemented!(),
-            State::SnapshotShardChunk(..) => State::Full,
+            } => {
+                let header = client.block_header(&(*block).into()).expect("Snapshot header must exist");
+                let state_root = header.state_root();
+                let state_db = client.state_db().read();
+                let top_state = TopLevelState::from_existing(state_db.clone(&state_root), state_root).unwrap();
+                let shard_root = top_state.shard_root(0).unwrap().expect("Shard 0 always exists");
+                State::SnapshotShardChunk {
+                    block: *block,
+                    shard_id: 0,
+                    restore: SnapshotRestore::new(shard_root),
+                }
+            }
+            State::SnapshotShardChunk {
+                block,
+                shard_id,
+                ..
+            } => {
+                let top_state = client.state_at((*block).into()).expect("State at the snapshot header must exist");
+                let metadata = top_state.metadata().unwrap().expect("Metadata must exist for snapshot block");
+                let shard_num = *metadata.number_of_shards();
+                if shard_id + 1 == shard_num {
+                    State::Full
+                } else {
+                    let next_shard = shard_id + 1;
+                    let shard_root = top_state
+                        .shard_root(next_shard)
+                        .expect("Top level state must be valid")
+                        .expect("Shard root must exist");
+                    State::SnapshotShardChunk {
+                        block: *block,
+                        shard_id: next_shard,
+                        restore: SnapshotRestore::new(shard_root),
+                    }
+                }
+            }
             State::Full => State::Full,
         }
     }
@@ -228,8 +270,11 @@ impl Extension {
                     block,
                     ..
                 } => *block,
-                State::SnapshotShardChunk(..) => unimplemented!(),
-                State::Full => unreachable!("Trying to transition state from State::Full"),
+                State::SnapshotShardChunk {
+                    block,
+                    ..
+                } => *block,
+                State::Full => panic!("Trying to transit the state from State::Full"),
             };
             self.client.force_update_best_block(&best_hash);
             for downloader in self.header_downloaders.values_mut() {
@@ -551,7 +596,17 @@ impl NetworkExtension<Event> for Extension {
                             self.move_state();
                         }
                     }
-                    State::SnapshotShardChunk(..) => unimplemented!(),
+                    State::SnapshotShardChunk {
+                        block,
+                        ref mut restore,
+                        ..
+                    } => {
+                        if let Some(root) = restore.next_to_feed() {
+                            self.send_chunk_request(&block, &root);
+                        } else {
+                            self.move_state();
+                        }
+                    }
                     State::Full => {
                         for id in &peer_ids {
                             let request =
@@ -946,13 +1001,6 @@ impl Extension {
                     headers.len()
                 ),
             },
-            State::SnapshotBody {
-                ..
-            } => {}
-            State::SnapshotTopChunk {
-                ..
-            } => {}
-            State::SnapshotShardChunk(..) => {}
             State::Full => {
                 let (mut completed, peer_is_caught_up) = if let Some(peer) = self.header_downloaders.get_mut(from) {
                     let encoded: Vec<_> = headers.iter().map(|h| EncodedHeader::new(h.rlp_bytes().to_vec())).collect();
@@ -991,6 +1039,7 @@ impl Extension {
                     }
                 }
             }
+            _ => {}
         }
     }
 
@@ -1071,8 +1120,14 @@ impl Extension {
                 block,
                 ref mut restore,
             } => (block, restore),
+            State::SnapshotShardChunk {
+                block,
+                ref mut restore,
+                ..
+            } => (block, restore),
             _ => return,
         };
+        assert_eq!(roots.len(), chunks.len());
         for (r, c) in roots.iter().zip(chunks) {
             if c.is_empty() {
                 cdebug!(SYNC, "Peer {} sent empty response for chunk request {}", from, r);
