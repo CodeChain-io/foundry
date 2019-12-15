@@ -98,7 +98,6 @@ impl Config {
             },
             mem_pool_fee_bump_shift: self.mining.mem_pool_fee_bump_shift.unwrap(),
             allow_create_shard: self.mining.allow_create_shard.unwrap_or(false),
-            new_work_notify: self.mining.notify_work.clone().unwrap(),
             force_sealing: self.mining.force_sealing.unwrap(),
             reseal_on_own_transaction,
             reseal_on_external_transaction,
@@ -225,7 +224,6 @@ pub struct Mining {
     pub mem_pool_mem_limit: Option<usize>,
     pub mem_pool_fee_bump_shift: Option<usize>,
     pub allow_create_shard: Option<bool>,
-    pub notify_work: Option<Vec<String>>,
     pub force_sealing: Option<bool>,
     pub reseal_on_txs: Option<String>,
     pub reseal_min_period: Option<u64>,
@@ -398,9 +396,6 @@ impl Mining {
         if other.allow_create_shard.is_some() {
             self.allow_create_shard = other.allow_create_shard;
         }
-        if other.notify_work.is_some() {
-            self.notify_work = other.notify_work.clone();
-        }
         if other.force_sealing.is_some() {
             self.force_sealing = other.force_sealing;
         }
@@ -484,9 +479,6 @@ impl Mining {
         }
         if matches.is_present("allow-create-shard") {
             self.allow_create_shard = Some(true)
-        }
-        if let Some(notify_work) = matches.values_of("notify-work") {
-            self.notify_work = Some(notify_work.map(|a| a.into()).collect());
         }
         if matches.is_present("force-sealing") {
             self.force_sealing = Some(true);

@@ -42,7 +42,8 @@ impl SealingQueue {
     /// Return a reference to the item at the top of the queue (or `None` if the queue is empty);
     /// this constitutes using the item and will remain in the queue for at least another
     /// `max_size` invocations of `push()`.
-    pub fn use_last_ref(&mut self) -> Option<&ClosedBlock> {
+    #[cfg(test)]
+    fn use_last_ref(&mut self) -> Option<&ClosedBlock> {
         if let Some(x) = self.pending.take() {
             self.in_use.push(x);
         }

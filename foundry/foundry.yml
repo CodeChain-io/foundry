@@ -183,14 +183,6 @@ args:
         long: allow-create-shard
         help: Make the miner allow CreateShard transactions
         takes_value: false
-    - notify-work:
-        long: notify-work
-        value_name: URLS
-        help: URLs to which work package notifications are pushed.
-        takes_value: true
-        multiple: true
-        conflicts_with:
-            - no-miner
     - force-sealing:
         long: force-sealing
         help: Force the node to author new blocks as if it were always sealing/mining.
