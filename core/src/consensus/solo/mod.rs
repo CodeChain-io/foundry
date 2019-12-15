@@ -71,8 +71,8 @@ impl ConsensusEngine for Solo {
         &self.machine
     }
 
-    fn seals_internally(&self) -> Option<bool> {
-        Some(true)
+    fn seals_internally(&self) -> bool {
+        true
     }
 
     fn engine_type(&self) -> EngineType {
@@ -183,7 +183,7 @@ mod tests {
         let term_common_params = CommonParams::default_for_test();
         let b = b.close_and_lock(&genesis_header, Some(&term_common_params)).unwrap();
         if let Some(seal) = engine.generate_seal(Some(b.block()), &genesis_header).seal_fields() {
-            assert!(b.try_seal(&*engine, seal).is_ok());
+            b.seal_block(seal);
         }
     }
 

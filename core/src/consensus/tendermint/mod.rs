@@ -217,7 +217,7 @@ mod tests {
         let proposer = insert_and_register(&tap, scheme.engine.as_ref(), "1");
 
         let (b, seal) = propose_default(&scheme, proposer);
-        assert!(b.lock().try_seal(scheme.engine.as_ref(), seal).is_ok());
+        b.lock().seal_block(seal);
     }
 
     #[test]

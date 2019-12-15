@@ -514,8 +514,6 @@ impl ImportBlock for TestBlockChainClient {
     }
 
     fn set_min_timer(&self) {}
-
-    fn set_max_timer(&self) {}
 }
 
 

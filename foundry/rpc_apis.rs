@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2019 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -42,7 +42,6 @@ impl ApiDependencies {
             );
         }
         handler.extend_with(EngineClient::new(Arc::clone(&self.client), Arc::clone(&self.miner)).to_delegate());
-        handler.extend_with(MinerClient::new(Arc::clone(&self.client), Arc::clone(&self.miner)).to_delegate());
         handler.extend_with(NetClient::new(Arc::clone(&self.network_control)).to_delegate());
         handler.extend_with(
             AccountClient::new(Arc::clone(&self.account_provider), Arc::clone(&self.client), Arc::clone(&self.miner))

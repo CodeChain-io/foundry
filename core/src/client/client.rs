@@ -315,8 +315,6 @@ impl Client {
     }
 }
 
-/// When RESEAL_MAX_TIMER invoked, a block is created although the block is empty.
-const RESEAL_MAX_TIMER_TOKEN: TimerToken = 0;
 /// The minimum time between blocks, the miner creates a block when RESEAL_MIN_TIMER is invoked.
 /// Do not create a block before RESEAL_MIN_TIMER event.
 const RESEAL_MIN_TIMER_TOKEN: TimerToken = 1;
@@ -324,12 +322,6 @@ const RESEAL_MIN_TIMER_TOKEN: TimerToken = 1;
 impl TimeoutHandler for Client {
     fn on_timeout(&self, token: TimerToken) {
         match token {
-            RESEAL_MAX_TIMER_TOKEN => {
-                // Working in PoW only
-                if self.engine().seals_internally().is_none() && !self.importer.miner.prepare_work_sealing(self) {
-                    self.update_sealing(BlockId::Latest, true);
-                }
-            }
             RESEAL_MIN_TIMER_TOKEN => {
                 // Checking self.ready_transactions() for efficiency
                 if !self.engine().engine_type().ignore_reseal_min_period() && !self.is_pending_queue_empty() {
@@ -688,20 +680,6 @@ impl ImportBlock for Client {
                 // Since set_min_timer could be called in multi thread, ignore the TokenAlreadyScheduled error
             }
             Err(err) => unreachable!("Reseal min timer should not fail but failed with {:?}", err),
-        }
-    }
-
-    fn set_max_timer(&self) {
-        self.reseal_timer.cancel(RESEAL_MAX_TIMER_TOKEN).expect("Reseal max timer clear succeeds");
-        match self
-            .reseal_timer
-            .schedule_once(self.importer.miner.get_options().reseal_max_period, RESEAL_MAX_TIMER_TOKEN)
-        {
-            Ok(_) => {}
-            Err(TimerScheduleError::TokenAlreadyScheduled) => {
-                // Since set_max_timer could be called in multi thread, ignore the TokenAlreadyScheduled error
-            }
-            Err(err) => unreachable!("Reseal max timer should not fail but failed with {:?}", err),
         }
     }
 }

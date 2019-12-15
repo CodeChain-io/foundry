@@ -267,7 +267,6 @@ dependencies = [
  "codechain-types",
  "codechain-vm",
  "crossbeam-channel",
- "cuckoo",
  "hyper 0.10.0-a.0",
  "kvdb",
  "kvdb-memorydb",
@@ -724,15 +723,6 @@ dependencies = [
  "kernel32-sys",
  "libc",
  "winapi 0.2.8",
-]
-
-[[package]]
-name = "cuckoo"
-version = "0.1.0"
-source = "git+https://github.com/CodeChain-io/rust-cuckoo.git?rev=280cab9c#280cab9c777ed4c736b9590ebf62b9fc440fadbd"
-dependencies = [
- "byteorder",
- "rust-crypto",
 ]
 
 [[package]]

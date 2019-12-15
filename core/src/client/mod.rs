@@ -206,8 +206,6 @@ pub trait ImportBlock {
 
     /// Set reseal min timer as reseal_min_period, for creating blocks with transactions which are pending because of reseal_min_period
     fn set_min_timer(&self);
-    /// Set reseal max timer as reseal_max_period, for creating empty blocks every reseal_max_period
-    fn set_max_timer(&self);
 }
 
 /// Blockchain database client. Owns and manages a blockchain and a block queue.

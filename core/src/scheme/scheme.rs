@@ -35,7 +35,7 @@ use super::pod_state::{PodAccounts, PodShards};
 use super::seal::Generic as GenericSeal;
 use super::Genesis;
 use crate::codechain_machine::CodeChainMachine;
-use crate::consensus::{BlakePoW, CodeChainEngine, Cuckoo, NullEngine, SimplePoA, Solo, Tendermint};
+use crate::consensus::{CodeChainEngine, NullEngine, SimplePoA, Solo, Tendermint};
 use crate::error::{Error, SchemeError};
 
 /// Parameters for a block chain; includes both those intrinsic to the design of the
@@ -105,8 +105,6 @@ impl Scheme {
             cjson::scheme::Engine::Solo(solo) => Arc::new(Solo::new(solo.params.into(), machine)),
             cjson::scheme::Engine::SimplePoA(simple_poa) => Arc::new(SimplePoA::new(simple_poa.params.into(), machine)),
             cjson::scheme::Engine::Tendermint(tendermint) => Tendermint::new(tendermint.params.into(), machine),
-            cjson::scheme::Engine::Cuckoo(cuckoo) => Arc::new(Cuckoo::new(cuckoo.params.into(), machine)),
-            cjson::scheme::Engine::BlakePoW(blake_pow) => Arc::new(BlakePoW::new(blake_pow.params.into(), machine)),
         }
     }
 
@@ -251,22 +249,8 @@ impl Scheme {
         load_bundled!("tendermint")
     }
 
-    /// Create a new Scheme with Cuckoo PoW consensus.
-    pub fn new_test_cuckoo() -> Self {
-        load_bundled!("cuckoo")
-    }
-
-    /// Create a new Scheme with Blake PoW consensus.
-    pub fn new_test_blake_pow() -> Self {
-        load_bundled!("blake_pow")
-    }
-
     pub fn new_mainnet() -> Self {
         load_bundled!("mainnet")
-    }
-
-    pub fn new_husky() -> Self {
-        load_bundled!("husky")
     }
 
     pub fn new_saluki() -> Self {

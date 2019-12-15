@@ -95,8 +95,6 @@ pub enum BlockError {
     InvalidScore(Mismatch<U256>),
     /// Proof-of-work aspect of seal is invalid.
     InvalidProofOfWork,
-    /// Score of proof-of-work is out of bound.
-    PowOutOfBounds(OutOfBounds<U256>),
     /// Some low-level aspect of the seal is incorrect.
     InvalidSeal,
     /// Timestamp header field is invalid.
@@ -147,7 +145,6 @@ impl fmt::Display for BlockError {
             ScoreOutOfBounds(oob) => format!("Invalid block score: {}", oob),
             InvalidScore(oob) => format!("Invalid block score: {}", oob),
             InvalidProofOfWork => "Invalid proof of work.".into(),
-            PowOutOfBounds(oob) => format!("Invalid proof of work: {}", oob),
             InvalidSeal => "Block has invalid seal.".into(),
             InvalidTimestamp(oob) => format!("Invalid timestamp in header: {}", oob),
             TemporarilyInvalid(oob) => format!("Future timestamp in header: {}", oob),

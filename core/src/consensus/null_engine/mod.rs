@@ -51,6 +51,10 @@ impl ConsensusEngine for NullEngine {
         &self.machine
     }
 
+    fn seals_internally(&self) -> bool {
+        true
+    }
+
     fn engine_type(&self) -> EngineType {
         EngineType::Solo
     }

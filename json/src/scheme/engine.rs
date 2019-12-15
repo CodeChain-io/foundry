@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2019 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{BlakePoW, Cuckoo, NullEngine, SimplePoA, Solo, Tendermint};
+use super::{NullEngine, SimplePoA, Solo, Tendermint};
 
 /// Engine deserialization.
 #[derive(Debug, PartialEq, Deserialize)]
@@ -25,8 +25,6 @@ pub enum Engine {
     Solo(Solo),
     SimplePoA(SimplePoA),
     Tendermint(Box<Tendermint>),
-    Cuckoo(Box<Cuckoo>),
-    BlakePoW(BlakePoW),
 }
 
 #[cfg(test)]
@@ -88,36 +86,6 @@ mod tests {
         let deserialized: Engine = serde_json::from_str(s).unwrap();
         match deserialized {
             Engine::Tendermint(_) => {} // Tendermint is unit tested in its own file.
-            _ => panic!(),
-        };
-
-        let s = r#"{
-            "cuckoo": {
-                "params": {
-                    "blockReward": "0x0d",
-                    "minScore" : "0x020000",
-                    "maxVertex" : "16",
-                    "maxEdge" : "8",
-                    "cycleLength" : "6"
-                }
-            }
-        }"#;
-        let deserialized: Engine = serde_json::from_str(s).unwrap();
-        match deserialized {
-            Engine::Cuckoo(_) => {} // Tendermint is unit tested in its own file.
-            _ => panic!(),
-        };
-
-        let s = r#"{
-            "blakePoW": {
-                "params": {
-                    "blockReward": "0x0d"
-                }
-            }
-        }"#;
-        let deserialized: Engine = serde_json::from_str(s).unwrap();
-        match deserialized {
-            Engine::BlakePoW(_) => {} // BlakePoW is unit tested in its own file.
             _ => panic!(),
         };
     }

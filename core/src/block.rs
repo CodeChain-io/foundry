@@ -375,19 +375,11 @@ impl LockedBlock {
     /// Provide a valid seal in order to turn this into a `SealedBlock`.
     /// This does check the validity of `seal` with the engine.
     /// Returns the `ClosedBlock` back again if the seal is no good.
-    pub fn try_seal(
-        mut self,
-        engine: &dyn CodeChainEngine,
-        seal: Vec<Bytes>,
-    ) -> Result<SealedBlock, (Error, LockedBlock)> {
+    pub fn seal_block(mut self, seal: Vec<Bytes>) -> SealedBlock {
         self.block.header.set_seal(seal);
 
-        // TODO: passing state context to avoid engines owning it?
-        match engine.verify_local_seal(&self.block.header) {
-            Err(e) => Err((e, self)),
-            _ => Ok(SealedBlock {
-                block: self.block,
-            }),
+        SealedBlock {
+            block: self.block,
         }
     }
 

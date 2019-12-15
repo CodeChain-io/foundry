@@ -69,8 +69,8 @@ impl ConsensusEngine for Tendermint {
     }
 
     /// Should this node participate.
-    fn seals_internally(&self) -> Option<bool> {
-        Some(self.has_signer.load(AtomicOrdering::SeqCst))
+    fn seals_internally(&self) -> bool {
+        self.has_signer.load(AtomicOrdering::SeqCst)
     }
 
     fn engine_type(&self) -> EngineType {
