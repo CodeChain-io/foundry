@@ -1,5 +1,5 @@
 [package]
-name = "codechain"
+name = "foundry"
 version = "0.0.0"
 license = "AGPL-3.0"
 authors = ["CodeChain Team <hi@codechain.io>"]
@@ -57,8 +57,8 @@ cidr = "0.0.4"
 vergen = "2"
 
 [[bin]]
-path = "codechain/main.rs"
-name = "codechain"
+path = "foundry/main.rs"
+name = "foundry"
 
 [profile.release]
 lto = true

@@ -69,7 +69,7 @@ use crate::run_node::run_node;
 use crate::subcommand::run_subcommand;
 
 pub const APP_INFO: AppInfo = AppInfo {
-    name: "codechain",
+    name: "foundry",
     author: "Kodebox",
 };
 
@@ -84,7 +84,7 @@ fn main() -> Result<(), String> {
 }
 
 fn run() -> Result<(), String> {
-    let yaml = load_yaml!("codechain.yml");
+    let yaml = load_yaml!("foundry.yml");
     let version = env!("CARGO_PKG_VERSION");
     let matches = clap::App::from_yaml(yaml).version(version).get_matches();
 
