@@ -395,8 +395,6 @@ impl MemPool {
             .filter(|&(_, ref item)| !item.origin.is_local())
             .map(|(hash, item)| (hash, item, current_block_number.saturating_sub(item.inserted_block_number)))
             .filter_map(|(hash, item, time_diff)| {
-                // FIXME: In PoW, current_timestamp can be roll-backed.
-                // In that case, transactions which are removed in here can be recovered.
                 if let Some(expiration) = item.expiration() {
                     if expiration < current_timestamp {
                         return Some(*hash)
@@ -946,11 +944,6 @@ impl MemPool {
             })
             .map(|t| t.tx.clone())
             .collect()
-    }
-
-    /// Returns true if there is at least one local transaction pending
-    pub fn has_local_pending_transactions(&self) -> bool {
-        self.current.queue.iter().any(|tx| tx.origin.is_local())
     }
 
     /// Returns Some(true) if the given transaction is local and None for not found.

@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2019 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -28,9 +28,6 @@ pub enum ChainType {
     Solo,
     SimplePoA,
     Tendermint,
-    Cuckoo,
-    BlakePoW,
-    Husky,
     Saluki,
     Corgi,
     Beagle,
@@ -52,9 +49,6 @@ impl FromStr for ChainType {
             "solo" => ChainType::Solo,
             "simple_poa" => ChainType::SimplePoA,
             "tendermint" => ChainType::Tendermint,
-            "cuckoo" => ChainType::Cuckoo,
-            "blake_pow" => ChainType::BlakePoW,
-            "husky" => ChainType::Husky,
             "saluki" => ChainType::Saluki,
             "corgi" => ChainType::Corgi,
             "beagle" => ChainType::Beagle,
@@ -101,9 +95,6 @@ impl fmt::Display for ChainType {
             ChainType::Solo => "solo",
             ChainType::SimplePoA => "simple_poa",
             ChainType::Tendermint => "tendermint",
-            ChainType::Cuckoo => "cuckoo",
-            ChainType::BlakePoW => "blake_pow",
-            ChainType::Husky => "husky",
             ChainType::Saluki => "saluki",
             ChainType::Corgi => "corgi",
             ChainType::Beagle => "beagle",
@@ -119,9 +110,6 @@ impl ChainType {
             ChainType::Solo => Ok(Scheme::new_test_solo()),
             ChainType::SimplePoA => Ok(Scheme::new_test_simple_poa()),
             ChainType::Tendermint => Ok(Scheme::new_test_tendermint()),
-            ChainType::Cuckoo => Ok(Scheme::new_test_cuckoo()),
-            ChainType::BlakePoW => Ok(Scheme::new_test_blake_pow()),
-            ChainType::Husky => Ok(Scheme::new_husky()),
             ChainType::Saluki => Ok(Scheme::new_saluki()),
             ChainType::Corgi => Ok(Scheme::new_corgi()),
             ChainType::Beagle => Ok(Scheme::new_beagle()),

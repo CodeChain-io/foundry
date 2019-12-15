@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::fmt;
-
 use ccore::AccountProviderError;
 use ccore::Error as CoreError;
 use ckey::Error as KeyError;
@@ -46,8 +44,6 @@ impl From<HexError> for ConversionError {
 }
 
 mod codes {
-    pub const NO_AUTHOR: i64 = -32002;
-    pub const NO_WORK_REQUIRED: i64 = -32004;
     pub const HEX_ERROR: i64 = -32007;
     pub const RLP_ERROR: i64 = -32009;
     pub const CORE_ERROR: i64 = -32010;
@@ -231,22 +227,6 @@ pub fn account_provider(error: AccountProviderError) -> Error {
     }
 }
 
-pub fn no_author() -> Error {
-    Error {
-        code: ErrorCode::ServerError(codes::NO_AUTHOR),
-        message: "Author not configured. Run Parity with --author to configure.".into(),
-        data: None,
-    }
-}
-
-pub fn no_work_required() -> Error {
-    Error {
-        code: ErrorCode::ServerError(codes::NO_WORK_REQUIRED),
-        message: "External work is only required for Proof of Work engines.".into(),
-        data: None,
-    }
-}
-
 pub fn network_control(error: &NetworkControlError) -> Error {
     match error {
         NetworkControlError::NotConnected => Error {
@@ -291,16 +271,5 @@ pub fn invalid_custom_action(err: String) -> Error {
         code: ErrorCode::ServerError(codes::ACTION_DATA_HANDLER_NOT_FOUND),
         message: format!("Custom action is invalid: {}", err),
         data: None,
-    }
-}
-
-/// Internal error signifying a logic error in code.
-/// Should not be used when function can just fail
-/// because of invalid parameters or incomplete node state.
-pub fn internal<T: fmt::Debug>(error: &str, data: T) -> Error {
-    Error {
-        code: ErrorCode::InternalError,
-        message: format!("Internal error occurred: {}", error),
-        data: Some(Value::String(format!("{:?}", data))),
     }
 }

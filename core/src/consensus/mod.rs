@@ -15,8 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 mod bit_set;
-mod blake_pow;
-mod cuckoo;
 mod null_engine;
 mod signer;
 mod simple_poa;
@@ -25,8 +23,6 @@ pub mod stake;
 mod tendermint;
 mod validator_set;
 
-pub use self::blake_pow::BlakePoW;
-pub use self::cuckoo::Cuckoo;
 pub use self::null_engine::NullEngine;
 pub use self::simple_poa::SimplePoA;
 pub use self::solo::Solo;
@@ -96,7 +92,6 @@ impl Seal {
 pub enum EngineType {
     PoA,
     PBFT,
-    PoW,
     Solo,
 }
 
@@ -106,7 +101,6 @@ impl EngineType {
             EngineType::PoA => true,
             EngineType::PBFT => true,
             EngineType::Solo => false,
-            EngineType::PoW => false,
         }
     }
 
@@ -115,7 +109,6 @@ impl EngineType {
             EngineType::PoA => false,
             EngineType::PBFT => true,
             EngineType::Solo => false,
-            EngineType::PoW => false,
         }
     }
 
@@ -124,7 +117,6 @@ impl EngineType {
             EngineType::PoA => false,
             EngineType::PBFT => true,
             EngineType::Solo => false,
-            EngineType::PoW => false,
         }
     }
 
@@ -133,7 +125,6 @@ impl EngineType {
             EngineType::PoA => false,
             EngineType::PBFT => true,
             EngineType::Solo => true,
-            EngineType::PoW => false,
         }
     }
 }
@@ -151,12 +142,9 @@ pub trait ConsensusEngine: Sync + Send {
         0
     }
 
-    /// None means that it requires external input (e.g. PoW) to seal a block.
-    /// Some(true) means the engine is currently prime for seal generation (i.e. node is the current validator).
-    /// Some(false) means that the node might seal internally but is not qualified now.
-    fn seals_internally(&self) -> Option<bool> {
-        None
-    }
+    /// true means the engine is currently prime for seal generation (i.e. node is the current validator).
+    /// false means that the node might seal internally but is not qualified now.
+    fn seals_internally(&self) -> bool;
 
     /// The type of this engine.
     fn engine_type(&self) -> EngineType;
@@ -175,20 +163,6 @@ pub trait ConsensusEngine: Sync + Send {
     }
 
     fn proposal_generated(&self, _sealed_block: &SealedBlock) {}
-
-    /// Verify a locally-generated seal of a header.
-    ///
-    /// If this engine seals internally,
-    /// no checks have to be done here, since all internally generated seals
-    /// should be valid.
-    ///
-    /// Externally-generated seals (e.g. PoW) will need to be checked for validity.
-    ///
-    /// It is fine to require access to state or a full client for this function, since
-    /// light clients do not generate seals.
-    fn verify_local_seal(&self, _header: &Header) -> Result<(), Error> {
-        Ok(())
-    }
 
     /// Phase 1 quick block verification. Only does checks that are cheap. Returns either a null `Ok` or a general error detailing the problem with import.
     fn verify_header_basic(&self, _header: &Header) -> Result<(), Error> {
@@ -265,7 +239,6 @@ pub trait ConsensusEngine: Sync + Send {
         header.hash()
     }
 
-    /// In PoW consensus, the higher scored block becomes the best block.
     /// In Tendermint consensus, the highest scored block may not be the best block.
     /// Only the descendant of the current best block could be the next best block in Tendermint consensus.
     fn can_change_canon_chain(

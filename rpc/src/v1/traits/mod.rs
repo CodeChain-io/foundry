@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2019 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,6 @@ mod chain;
 mod devel;
 mod engine;
 mod mempool;
-mod miner;
 mod net;
 
 pub use self::account::Account;
@@ -27,5 +26,4 @@ pub use self::chain::Chain;
 pub use self::devel::Devel;
 pub use self::engine::Engine;
 pub use self::mempool::Mempool;
-pub use self::miner::Miner;
 pub use self::net::Net;
