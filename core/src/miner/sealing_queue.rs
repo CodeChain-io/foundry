@@ -49,10 +49,11 @@ impl SealingQueue {
         self.in_use.last()
     }
 
-    pub fn take_used_if<P>(&mut self, predicate: P) -> Option<ClosedBlock>
+    #[cfg(test)]
+    fn has_used_if<P>(&mut self, predicate: P) -> bool
     where
         P: Fn(&ClosedBlock) -> bool, {
-        self.in_use.iter().position(|r| predicate(r)).map(|i| self.in_use.remove(i))
+        self.in_use.iter().any(predicate)
     }
 }
 
@@ -83,7 +84,7 @@ mod tests {
 
         q.push(b);
 
-        assert!(q.take_used_if(|b| b.hash() == h).is_none());
+        assert!(!q.has_used_if(|b| b.hash() == h));
     }
 
     #[test]
@@ -95,7 +96,7 @@ mod tests {
         q.push(b);
         q.use_last_ref();
 
-        assert!(q.take_used_if(|b| b.hash() == h).is_some());
+        assert!(q.has_used_if(|b| b.hash() == h));
     }
 
     #[test]
@@ -110,7 +111,7 @@ mod tests {
         q.push(b2);
         q.use_last_ref();
 
-        assert!(q.take_used_if(|b| b.hash() == h1).is_some());
+        assert!(q.has_used_if(|b| b.hash() == h1));
     }
 
     #[test]
@@ -124,7 +125,7 @@ mod tests {
         q.push(b2);
         q.use_last_ref();
 
-        assert!(q.take_used_if(|b| b.hash() == h1).is_none());
+        assert!(!q.has_used_if(|b| b.hash() == h1));
     }
 
     #[test]
@@ -171,6 +172,6 @@ mod tests {
         q.push(b2);
         q.use_last_ref();
 
-        assert!(q.take_used_if(|b| b.hash() == h).is_none());
+        assert!(!q.has_used_if(|b| b.hash() == h));
     }
 }

@@ -623,16 +623,6 @@ impl super::EngineClient for TestBlockChainClient {
         self.miner.update_sealing(self, parent_block, allow_empty_block)
     }
 
-    fn submit_seal(&self, block_hash: BlockHash, seal: Vec<Bytes>) {
-        if self.miner.submit_seal(self, block_hash, seal).is_err() {
-            cwarn!(CLIENT, "Wrong internal seal submission!")
-        }
-    }
-
-    fn score_to_target(&self, _score: &U256) -> U256 {
-        U256::zero()
-    }
-
     fn update_best_as_committed(&self, _block_hash: BlockHash) {}
 
     fn get_kvdb(&self) -> Arc<dyn KeyValueDB> {

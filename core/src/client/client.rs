@@ -544,18 +544,6 @@ impl EngineClient for Client {
         }
     }
 
-    /// Submit a seal for a block in the mining queue.
-    fn submit_seal(&self, block_hash: BlockHash, seal: Vec<Bytes>) {
-        if self.importer.miner.submit_seal(self, block_hash, seal).is_err() {
-            cwarn!(CLIENT, "Wrong internal seal submission!")
-        }
-    }
-
-    /// Convert PoW difficulty to target.
-    fn score_to_target(&self, score: &U256) -> U256 {
-        self.engine.score_to_target(score)
-    }
-
     /// Update the best block as the given block hash.
     ///
     /// Used in Tendermint, when going to the commit step.
