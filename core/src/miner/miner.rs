@@ -36,7 +36,6 @@ use super::mem_pool::{Error as MemPoolError, MemPool};
 pub use super::mem_pool_types::MemPoolFees;
 use super::mem_pool_types::{AccountDetails, MemPoolInput, TxOrigin, TxTimelock};
 use super::sealing_queue::SealingQueue;
-use super::work_notify::{NotifyWork, WorkPoster};
 use super::{MinerService, MinerStatus, TransactionImportResult};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::block::{ClosedBlock, IsBlock};
@@ -54,8 +53,6 @@ use std::borrow::Borrow;
 /// Configures the behaviour of the miner.
 #[derive(Debug, PartialEq)]
 pub struct MinerOptions {
-    /// URLs to notify when there is new work.
-    pub new_work_notify: Vec<String>,
     /// Force the miner to reseal, even when nobody has asked for work.
     pub force_sealing: bool,
     /// Reseal on receipt of new external transactions.
@@ -85,7 +82,6 @@ pub struct MinerOptions {
 impl Default for MinerOptions {
     fn default() -> Self {
         MinerOptions {
-            new_work_notify: vec![],
             force_sealing: false,
             reseal_on_external_transaction: true,
             reseal_on_own_transaction: true,
@@ -128,17 +124,11 @@ pub struct Miner {
     sealing_enabled: AtomicBool,
 
     accounts: Option<Arc<AccountProvider>>,
-    notifiers: RwLock<Vec<Box<dyn NotifyWork>>>,
     malicious_users: RwLock<HashSet<Address>>,
     immune_users: RwLock<HashSet<Address>>,
 }
 
 impl Miner {
-    /// Push listener that will handle new jobs
-    pub fn add_work_listener(&self, notifier: Box<dyn NotifyWork>) {
-        self.notifiers.write().push(notifier);
-    }
-
     pub fn new(
         options: MinerOptions,
         scheme: &Scheme,
@@ -167,12 +157,6 @@ impl Miner {
             options.mem_pool_fees,
         )));
 
-        let notifiers: Vec<Box<dyn NotifyWork>> = if options.new_work_notify.is_empty() {
-            Vec::new()
-        } else {
-            vec![Box::new(WorkPoster::new(&options.new_work_notify))]
-        };
-
         Self {
             mem_pool,
             transaction_listener: RwLock::new(vec![]),
@@ -188,7 +172,6 @@ impl Miner {
             options,
             sealing_enabled: AtomicBool::new(true),
             accounts,
-            notifiers: RwLock::new(notifiers),
             malicious_users: RwLock::new(HashSet::new()),
             immune_users: RwLock::new(HashSet::new()),
         }
@@ -394,50 +377,29 @@ impl Miner {
 
     /// Prepares work which has to be done to seal.
     fn prepare_work(&self, block: ClosedBlock, original_work_hash: Option<H256>) {
-        let (work, is_new) = {
-            let mut sealing_work = self.sealing_work.lock();
-            let last_work_hash = sealing_work.queue.peek_last_ref().map(|pb| pb.block().header().hash());
+        let mut sealing_work = self.sealing_work.lock();
+        let last_work_hash = sealing_work.queue.peek_last_ref().map(|pb| pb.block().header().hash());
+        ctrace!(
+            MINER,
+            "prepare_work: Checking whether we need to reseal: orig={:?} last={:?}, this={:?}",
+            original_work_hash,
+            last_work_hash,
+            block.block().header().hash()
+        );
+        if last_work_hash.map_or(true, |h| h != block.block().header().hash()) {
             ctrace!(
                 MINER,
-                "prepare_work: Checking whether we need to reseal: orig={:?} last={:?}, this={:?}",
-                original_work_hash,
-                last_work_hash,
+                "prepare_work: Pushing a new, refreshed or borrowed pending {}...",
                 block.block().header().hash()
             );
-            let (work, is_new) = if last_work_hash.map_or(true, |h| h != block.block().header().hash()) {
-                ctrace!(
-                    MINER,
-                    "prepare_work: Pushing a new, refreshed or borrowed pending {}...",
-                    block.block().header().hash()
-                );
-                let pow_hash = *block.block().header().hash();
-                let number = block.block().header().number();
-                let score = *block.block().header().score();
-                let is_new = original_work_hash.map_or(true, |h| *block.block().header().hash() != h);
-                sealing_work.queue.push(block);
-                // If push notifications are enabled we assume all work items are used.
-                if !self.notifiers.read().is_empty() && is_new {
-                    sealing_work.queue.use_last_ref();
-                }
-                (Some((pow_hash, score, number)), is_new)
-            } else {
-                (None, false)
-            };
-            ctrace!(
-                MINER,
-                "prepare_work: leaving (last={:?})",
-                sealing_work.queue.peek_last_ref().map(|b| b.block().header().hash())
-            );
-            (work, is_new)
+            sealing_work.queue.push(block);
+            // If push notifications are enabled we assume all work items are used.
         };
-        if is_new {
-            if let Some((pow_hash, score, _number)) = work {
-                let target = self.engine.score_to_target(&score);
-                for notifier in self.notifiers.read().iter() {
-                    notifier.notify(pow_hash, target)
-                }
-            }
-        }
+        ctrace!(
+            MINER,
+            "prepare_work: leaving (last={:?})",
+            sealing_work.queue.peek_last_ref().map(|b| b.block().header().hash())
+        );
     }
 
     /// Prepares new block for sealing including top transactions from queue.

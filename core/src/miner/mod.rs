@@ -20,7 +20,6 @@ mod mem_pool_types;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod miner;
 mod sealing_queue;
-mod work_notify;
 
 use std::ops::Range;
 

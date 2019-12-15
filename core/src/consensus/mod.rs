@@ -42,7 +42,7 @@ use ctypes::errors::SyntaxError;
 use ctypes::transaction::Action;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockHash, CommonParams, Header};
-use primitives::{Bytes, U256};
+use primitives::Bytes;
 
 use self::bit_set::BitSet;
 use crate::account_provider::AccountProvider;
@@ -220,10 +220,6 @@ pub trait ConsensusEngine: Sync + Send {
     fn register_network_extension_to_service(&self, _: &NetworkService) {}
 
     fn register_time_gap_config_to_worker(&self, _time_gap_params: TimeGapParams) {}
-
-    fn score_to_target(&self, _score: &U256) -> U256 {
-        U256::zero()
-    }
 
     fn block_reward(&self, block_number: u64) -> u64;
 
