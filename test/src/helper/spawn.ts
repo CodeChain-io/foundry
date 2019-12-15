@@ -232,7 +232,7 @@ export default class CodeChain {
             this.restarts++;
             this.process = { state: "initializing" };
             const child = spawn(
-                `target/${useDebugBuild ? "debug" : "release"}/codechain`,
+                `target/${useDebugBuild ? "debug" : "release"}/foundry`,
                 [
                     ...baseArgs,
                     "--chain",
