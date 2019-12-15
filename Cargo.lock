@@ -262,7 +262,6 @@ dependencies = [
  "codechain-merkle",
  "codechain-network",
  "codechain-state",
- "codechain-stratum",
  "codechain-timer",
  "codechain-types",
  "codechain-vm",
@@ -514,24 +513,6 @@ dependencies = [
  "rlp_derive",
  "rustc-hex 1.0.0",
  "util-error",
-]
-
-[[package]]
-name = "codechain-stratum"
-version = "1.11.0"
-dependencies = [
- "codechain-crypto",
- "codechain-json",
- "codechain-logger",
- "env_logger 0.6.0",
- "jsonrpc-core",
- "jsonrpc-derive",
- "jsonrpc-tcp-server",
- "log 0.4.6",
- "parking_lot 0.6.4",
- "primitives",
- "tokio-core",
- "tokio-io",
 ]
 
 [[package]]
@@ -959,7 +940,6 @@ dependencies = [
  "codechain-network",
  "codechain-rpc",
  "codechain-state",
- "codechain-stratum",
  "codechain-sync",
  "codechain-timer",
  "codechain-types",
@@ -1342,18 +1322,6 @@ dependencies = [
  "tokio",
  "tokio-codec",
  "unicase 2.1.0",
-]
-
-[[package]]
-name = "jsonrpc-tcp-server"
-version = "14.0.3"
-source = "git+https://github.com/paritytech/jsonrpc.git?tag=v14.0.3#2135c25df57715238f1709365e3ea3bedc88e030"
-dependencies = [
- "jsonrpc-core",
- "jsonrpc-server-utils",
- "log 0.4.6",
- "parking_lot 0.9.0",
- "tokio-service",
 ]
 
 [[package]]

@@ -747,10 +747,6 @@ impl MinerService for Miner {
         }
     }
 
-    fn can_produce_work_package(&self) -> bool {
-        false
-    }
-
     fn engine_type(&self) -> EngineType {
         self.engine.engine_type()
     }
@@ -853,28 +849,6 @@ impl MinerService for Miner {
             if !self.options.no_reseal_timer {
                 chain.set_min_timer();
             }
-        }
-    }
-
-    fn submit_seal<C: ImportBlock>(&self, chain: &C, block_hash: BlockHash, seal: Vec<Bytes>) -> Result<(), Error> {
-        if let Some(b) = self.sealing_work.lock().queue.take_used_if(|b| b.hash() == *block_hash) {
-            ctrace!(
-                MINER,
-                "Submitted block {}={}={} with seal {:?}",
-                block_hash,
-                b.hash(),
-                b.header().bare_hash(),
-                seal
-            );
-            let sealed = b.lock().seal_block(seal);
-            let n = sealed.header().number();
-            let h = sealed.header().hash();
-            chain.import_sealed_block(&sealed)?;
-            cinfo!(MINER, "Submitted block imported OK. #{}: {}", n, h);
-            Ok(())
-        } else {
-            cwarn!(MINER, "Submitted solution rejected: Block unknown or out of date.");
-            Err(Error::PowHashInvalid)
         }
     }
 

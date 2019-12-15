@@ -177,10 +177,6 @@ pub enum Error {
     Engine(EngineError),
     /// Key error.
     Key(KeyError),
-    /// PoW hash is invalid or out of date.
-    PowHashInvalid,
-    /// The value of the nonce or mishash is invalid.
-    PowInvalid,
     Scheme(SchemeError),
     /// Account Provider error.
     AccountProvider(AccountProviderError),
@@ -200,8 +196,6 @@ impl fmt::Display for Error {
             Error::Import(err) => err.fmt(f),
             Error::Engine(err) => err.fmt(f),
             Error::Key(err) => err.fmt(f),
-            Error::PowHashInvalid => f.write_str("Invalid or out of date PoW hash."),
-            Error::PowInvalid => f.write_str("Invalid nonce or mishash"),
             Error::Scheme(err) => err.fmt(f),
             Error::AccountProvider(err) => err.fmt(f),
             Error::Trie(err) => err.fmt(f),

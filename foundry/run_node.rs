@@ -20,8 +20,8 @@ use std::sync::{Arc, Weak};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use ccore::{
-    AccountProvider, AccountProviderError, BlockId, ChainNotify, Client, ClientConfig, ClientService, EngineInfo,
-    EngineType, Miner, MinerService, Scheme, Stratum, StratumConfig, StratumError, NUM_COLUMNS,
+    AccountProvider, AccountProviderError, BlockId, ChainNotify, ClientConfig, ClientService, EngineInfo, EngineType,
+    Miner, MinerService, Scheme, NUM_COLUMNS,
 };
 use cdiscovery::{Config, Discovery};
 use ckey::{Address, NetworkId, PlatformAddress};
@@ -102,20 +102,6 @@ fn client_start(
     reseal_timer.set_handler(Arc::downgrade(&service.client()));
 
     Ok(service)
-}
-
-fn stratum_start(cfg: &StratumConfig, miner: &Arc<Miner>, client: Arc<Client>) -> Result<(), String> {
-    match Stratum::start(cfg, Arc::clone(&miner), client) {
-        // FIXME: Add specified condition like AddrInUse
-        Err(StratumError::Service(_)) =>
-            Err(format!("STRATUM address {} is already in use, make sure that another instance of a CodeChain node is not running or change the address using the --stratum-port option.", cfg.port)),
-        Err(e) => Err(format!("STRATUM start error: {:?}", e)),
-        Ok(stratum) => {
-            miner.add_work_listener(Box::new(stratum));
-            cinfo!(STRATUM, "Listening on {}", cfg.port);
-            Ok(())
-        }
-    }
 }
 
 fn new_miner(
@@ -340,10 +326,6 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
             None
         }
     };
-
-    if !config.stratum.disable.unwrap() {
-        stratum_start(&config.stratum_config(), &miner, client.client())?
-    }
 
     let _snapshot_service = {
         if !config.snapshot.disable.unwrap() {

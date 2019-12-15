@@ -263,16 +263,6 @@ args:
     - no-snapshot:
         long: no-snapshot
         help: Disable snapshots
-    - no-stratum:
-        long: no-stratum
-        help: Do not run Stratum server for miner push notification.
-    - stratum-port:
-        long: stratum-port
-        value_name: PORT
-        help: Specify the port portion of the Stratum server.
-        takes_value: true
-        conflicts_with:
-            - no-stratum
     - whitelist-path:
         long: whitelist-path
         value_name: PATH

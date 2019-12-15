@@ -13,6 +13,4 @@ min_pay_transaction_cost = 200
 
 [snapshot]
 
-[stratum]
-
 [email_alarm]

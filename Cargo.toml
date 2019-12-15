@@ -31,7 +31,6 @@ codechain-sync = { path = "sync" }
 codechain-timer = { path = "util/timer" }
 codechain-types = { path = "types" }
 codechain-vm = { path = "vm" }
-codechain-stratum = { path = "stratum" }
 ctrlc = { git = "https://github.com/paritytech/rust-ctrlc.git" }
 fdlimit = "0.1"
 finally-block = "0.1"

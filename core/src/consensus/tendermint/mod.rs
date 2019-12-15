@@ -127,19 +127,16 @@ const SEAL_FIELDS: usize = 4;
 mod tests {
     use ccrypto::blake256;
     use ckey::Address;
-    use ctypes::{CommonParams, Header};
-    use primitives::Bytes;
+    use ctypes::Header;
 
     use super::super::BitSet;
     use super::message::VoteStep;
     use crate::account_provider::AccountProvider;
-    use crate::block::{ClosedBlock, OpenBlock};
     use crate::client::TestBlockChainClient;
-    use crate::consensus::{CodeChainEngine, EngineError, Seal};
+    use crate::consensus::{EngineError, Seal};
     use crate::error::BlockError;
     use crate::error::Error;
     use crate::scheme::Scheme;
-    use crate::tests::helpers::get_temp_state_db;
 
     use super::*;
 
@@ -155,26 +152,9 @@ mod tests {
         (scheme, tap, test_client)
     }
 
-    fn propose_default(scheme: &Scheme, proposer: Address) -> (ClosedBlock, Vec<Bytes>) {
-        let db = get_temp_state_db();
-        let db = scheme.ensure_genesis_state(db).unwrap();
-        let genesis_header = scheme.genesis_header();
-        let b = OpenBlock::try_new(scheme.engine.as_ref(), db, &genesis_header, proposer, vec![]).unwrap();
-        let seal = scheme.engine.generate_seal(None, &genesis_header).seal_fields().unwrap();
-        let term_common_params = CommonParams::default_for_test();
-        let b = b.close(&genesis_header, Some(&term_common_params)).unwrap();
-        (b, seal)
-    }
-
     fn insert_and_unlock(tap: &Arc<AccountProvider>, acc: &str) -> Address {
         let addr = tap.insert_account(blake256(acc).into(), &acc.into()).unwrap();
         tap.unlock_account_permanently(addr, acc.into()).unwrap();
-        addr
-    }
-
-    fn insert_and_register(tap: &Arc<AccountProvider>, engine: &dyn CodeChainEngine, acc: &str) -> Address {
-        let addr = insert_and_unlock(tap, acc);
-        engine.set_signer(tap.clone(), addr);
         addr
     }
 
@@ -207,17 +187,6 @@ mod tests {
                 panic!("Should be error, got Ok");
             }
         }
-    }
-
-    #[test]
-    #[ignore] // FIXME
-    fn generate_seal() {
-        let (scheme, tap, _c) = setup();
-
-        let proposer = insert_and_register(&tap, scheme.engine.as_ref(), "1");
-
-        let (b, seal) = propose_default(&scheme, proposer);
-        b.lock().seal_block(seal);
     }
 
     #[test]

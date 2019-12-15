@@ -20,7 +20,6 @@ mod mem_pool_types;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod miner;
 mod sealing_queue;
-mod stratum;
 mod work_notify;
 
 use std::ops::Range;
@@ -34,7 +33,6 @@ use primitives::Bytes;
 
 pub use self::mem_pool_types::MemPoolFees;
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};
-pub use self::stratum::{Config as StratumConfig, Error as StratumError, Stratum};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::client::{
     AccountData, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo,
@@ -78,9 +76,6 @@ pub trait MinerService: Send + Sync {
     ) where
         C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock;
 
-    /// PoW chain - can produce work package
-    fn can_produce_work_package(&self) -> bool;
-
     /// Get the type of consensus engine.
     fn engine_type(&self) -> EngineType;
 
@@ -100,10 +95,6 @@ pub trait MinerService: Send + Sync {
             + EngineInfo
             + FindActionHandler
             + TermInfo;
-
-    /// Submit `seal` as a valid solution for the header of `pow_hash`.
-    /// Will check the seal, but not actually insert the block into the chain.
-    fn submit_seal<C: ImportBlock>(&self, chain: &C, pow_hash: BlockHash, seal: Vec<Bytes>) -> Result<(), Error>;
 
     /// Imports transactions to mem pool.
     fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(

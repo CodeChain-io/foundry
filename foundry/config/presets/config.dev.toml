@@ -52,9 +52,5 @@ max_connections = 100
 disable = false
 path = "snapshot"
 
-[stratum]
-disable = false
-port = 8008
-
 [email_alarm]
 disable = true

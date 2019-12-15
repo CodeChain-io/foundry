@@ -17,7 +17,6 @@ codechain-network = { path = "../network" }
 codechain-state = { path = "../state" }
 codechain-timer = { path = "../util/timer" }
 codechain-types = { path = "../types" }
-codechain-stratum = { path = "../stratum" }
 codechain-vm = { path = "../vm" }
 crossbeam-channel = "0.3"
 hyper = { git = "https://github.com/paritytech/hyper", default-features = false }

@@ -27,7 +27,6 @@ extern crate codechain_logger as clogger;
 extern crate codechain_merkle as cmerkle;
 extern crate codechain_network as cnetwork;
 extern crate codechain_state as cstate;
-extern crate codechain_stratum as cstratum;
 extern crate codechain_timer as ctimer;
 extern crate codechain_types as ctypes;
 extern crate codechain_vm as cvm;
@@ -71,7 +70,7 @@ pub use crate::client::{
 pub use crate::consensus::{EngineType, TimeGapParams};
 pub use crate::db::{COL_STATE, NUM_COLUMNS};
 pub use crate::error::{BlockImportError, Error, ImportError};
-pub use crate::miner::{MemPoolFees, Miner, MinerOptions, MinerService, Stratum, StratumConfig, StratumError};
+pub use crate::miner::{MemPoolFees, Miner, MinerOptions, MinerService};
 pub use crate::scheme::Scheme;
 pub use crate::service::ClientService;
 pub use crate::transaction::{

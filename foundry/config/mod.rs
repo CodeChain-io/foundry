@@ -20,7 +20,7 @@ use std::fs;
 use std::str::{self, FromStr};
 use std::time::Duration;
 
-use ccore::{MemPoolFees, MinerOptions, StratumConfig, TimeGapParams};
+use ccore::{MemPoolFees, MinerOptions, TimeGapParams};
 use cidr::IpCidr;
 use ckey::PlatformAddress;
 use clap;
@@ -41,7 +41,6 @@ pub struct Config {
     pub rpc: Rpc,
     pub ws: Ws,
     pub snapshot: Snapshot,
-    pub stratum: Stratum,
     #[serde(default)]
     pub email_alarm: EmailAlarm,
 }
@@ -55,7 +54,6 @@ impl Config {
         self.rpc.merge(&other.rpc);
         self.ws.merge(&other.ws);
         self.snapshot.merge(&other.snapshot);
-        self.stratum.merge(&other.stratum);
         self.email_alarm.merge(&other.email_alarm);
     }
 
@@ -197,17 +195,6 @@ impl Config {
             blacklist,
         })
     }
-
-    pub fn stratum_config(&self) -> StratumConfig {
-        debug_assert!(!self.stratum.disable.unwrap());
-
-        // FIXME: Add listen_addr and secret
-        StratumConfig {
-            listen_addr: "127.0.0.1".to_string(),
-            port: self.stratum.port.unwrap(),
-            secret: None,
-        }
-    }
 }
 
 #[derive(Deserialize)]
@@ -312,14 +299,6 @@ pub struct Snapshot {
     pub disable: Option<bool>,
     pub path: Option<String>,
 }
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Stratum {
-    pub disable: Option<bool>,
-    pub port: Option<u16>,
-}
-
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -745,28 +724,6 @@ impl Snapshot {
     }
 }
 
-impl Stratum {
-    pub fn merge(&mut self, other: &Stratum) {
-        if other.disable.is_some() {
-            self.disable = other.disable;
-        }
-        if other.port.is_some() {
-            self.port = other.port;
-        }
-    }
-
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
-        if matches.is_present("no-stratum") {
-            self.disable = Some(true);
-        }
-
-        if let Some(port) = matches.value_of("stratum-port") {
-            self.port = Some(port.parse().map_err(|_| "Invalid port")?);
-        }
-        Ok(())
-    }
-}
-
 impl EmailAlarm {
     pub fn merge(&mut self, other: &EmailAlarm) {
         if other.disable.is_some() {
@@ -837,7 +794,6 @@ pub fn load_config(matches: &clap::ArgMatches<'_>) -> Result<Config, String> {
     config.rpc.overwrite_with(&matches)?;
     config.ws.overwrite_with(&matches)?;
     config.snapshot.overwrite_with(&matches)?;
-    config.stratum.overwrite_with(&matches)?;
     config.email_alarm.overwrite_with(&matches)?;
     Ok(config)
 }

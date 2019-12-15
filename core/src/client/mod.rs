@@ -100,12 +100,6 @@ pub trait EngineClient: Sync + Send + BlockChainTrait + ImportBlock {
     /// Make a new block and seal it.
     fn update_sealing(&self, parent_block: BlockId, allow_empty_block: bool);
 
-    /// Submit a seal for a block in the mining queue.
-    fn submit_seal(&self, block_hash: BlockHash, seal: Vec<Bytes>);
-
-    /// Convert PoW difficulty to target.
-    fn score_to_target(&self, score: &U256) -> U256;
-
     /// Update the best block as the given block hash
     ///
     /// Used in Tendermint, when going to the commit step.
