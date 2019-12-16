@@ -349,12 +349,6 @@ pub fn drain_calculated_rewards(state: &mut TopLevelState) -> StateResult<BTreeM
     Ok(drained)
 }
 
-pub fn update_validator_weights(state: &mut TopLevelState, block_author: &Address) -> StateResult<()> {
-    let mut validators = NextValidators::load_from_state(state)?;
-    validators.update_weight(block_author);
-    validators.save_to_state(state)
-}
-
 fn change_params(
     state: &mut TopLevelState,
     metadata_seq: u64,

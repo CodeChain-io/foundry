@@ -235,7 +235,6 @@ impl<'a> Delegation<'a> {
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, RlpDecodable, RlpEncodable)]
 pub struct Validator {
-    weight: StakeQuantity,
     delegation: StakeQuantity,
     deposit: Deposit,
     pubkey: Public,
@@ -244,7 +243,6 @@ pub struct Validator {
 impl Validator {
     pub fn new_for_test(delegation: StakeQuantity, deposit: Deposit, pubkey: Public) -> Self {
         Self {
-            weight: delegation,
             delegation,
             deposit,
             pubkey,
@@ -253,15 +251,10 @@ impl Validator {
 
     fn new(delegation: StakeQuantity, deposit: Deposit, pubkey: Public) -> Self {
         Self {
-            weight: delegation,
             delegation,
             deposit,
             pubkey,
         }
-    }
-
-    fn reset(&mut self) {
-        self.weight = self.delegation;
     }
 
     pub fn pubkey(&self) -> &Public {
@@ -343,28 +336,6 @@ impl NextValidators {
         Ok(())
     }
 
-    pub fn update_weight(&mut self, block_author: &Address) {
-        let min_delegation = self.min_delegation();
-        for Validator {
-            weight,
-            pubkey,
-            ..
-        } in self.0.iter_mut().rev()
-        {
-            if public_to_address(pubkey) == *block_author {
-                // block author
-                *weight = weight.saturating_sub(min_delegation);
-                break
-            }
-            // neglecting validators
-            *weight = weight.saturating_sub(min_delegation * 2);
-        }
-        if self.0.iter().all(|validator| validator.weight == 0) {
-            self.0.iter_mut().for_each(Validator::reset);
-        }
-        self.0.sort_unstable();
-    }
-
     pub fn remove(&mut self, target: &Address) {
         self.0.retain(
             |Validator {
@@ -376,10 +347,6 @@ impl NextValidators {
 
     pub fn delegation(&self, pubkey: &Public) -> Option<StakeQuantity> {
         self.0.iter().find(|validator| validator.pubkey == *pubkey).map(|&validator| validator.delegation)
-    }
-
-    fn min_delegation(&self) -> StakeQuantity {
-        self.0.iter().map(|&validator| validator.delegation).min().expect("There must be at least one validators")
     }
 }
 
@@ -1847,7 +1814,6 @@ mod tests {
                     pubkey: *pubkey,
                     deposit: 0,
                     delegation: 0,
-                    weight: 0,
                 })
                 .collect(),
         );
