@@ -26,10 +26,10 @@ jobs:
         run: |
           mkdir artifacts
           echo ${{github.sha}} ${{github.ref}} | tee artifacts/git-ref
-          shasum -a 256 codechain | tee artifacts/sha256sums
-          CODECHAIN_VERSION="$(./codechain --version | cut -d ' ' -f 2)"
-          tar cvfz artifacts/codechain-${CODECHAIN_VERSION}-$(uname -m)-$(echo $(uname) | tr '[:upper:]' '[:lower:]').tar.gz codechain
+          shasum -a 256 foundry | tee artifacts/sha256sums
+          FOUNDRY_VERSION="$(./foundry --version | cut -d ' ' -f 2)"
+          tar cvfz artifacts/foundry-${FOUNDRY_VERSION}-$(uname -m)-$(echo $(uname) | tr '[:upper:]' '[:lower:]').tar.gz foundry
       - uses: actions/upload-artifact@v1
         with:
-          name: codechain-${{ matrix.os }}
+          name: foundry-${{ matrix.os }}
           path: target/release/artifacts
