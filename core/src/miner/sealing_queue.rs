@@ -16,22 +16,17 @@
 
 use crate::block::ClosedBlock;
 
+#[derive(Default)]
 pub struct SealingQueue {
     /// Not yet being sealed by a miner, but if one asks for work, we'd prefer they do this.
     pending: Option<ClosedBlock>,
     /// Currently being sealed by miners.
     in_use: Vec<ClosedBlock>,
-    /// The maximum allowable number of items in_use.
-    max_size: usize,
 }
 
 impl SealingQueue {
-    pub fn new(max_size: usize) -> Self {
-        Self {
-            pending: None,
-            in_use: Vec::new(),
-            max_size,
-        }
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Return a reference to the item at the top of the queue (or `None` if the queue is empty);
@@ -50,9 +45,6 @@ impl SealingQueue {
     pub fn use_last_ref(&mut self) -> Option<&ClosedBlock> {
         if let Some(x) = self.pending.take() {
             self.in_use.push(x);
-            if self.in_use.len() > self.max_size {
-                self.in_use.remove(0);
-            }
         }
         self.in_use.last()
     }
@@ -74,8 +66,6 @@ mod tests {
     use crate::scheme::Scheme;
     use crate::tests::helpers::get_temp_state_db;
 
-    const QUEUE_SIZE: usize = 2;
-
     fn create_closed_block(address: Address) -> ClosedBlock {
         let scheme = Scheme::new_test();
         let genesis_header = scheme.genesis_header();
@@ -87,7 +77,7 @@ mod tests {
 
     #[test]
     fn fail_to_find_when_pushed() {
-        let mut q = SealingQueue::new(QUEUE_SIZE);
+        let mut q = SealingQueue::new();
         let b = create_closed_block(Address::default());
         let h = b.hash();
 
@@ -98,7 +88,7 @@ mod tests {
 
     #[test]
     fn find_when_pushed_and_used() {
-        let mut q = SealingQueue::new(QUEUE_SIZE);
+        let mut q = SealingQueue::new();
         let b = create_closed_block(Address::default());
         let h = b.hash();
 
@@ -110,7 +100,7 @@ mod tests {
 
     #[test]
     fn find_when_others_used() {
-        let mut q = SealingQueue::new(QUEUE_SIZE);
+        let mut q = SealingQueue::new();
         let b1 = create_closed_block(Address::from(1));
         let b2 = create_closed_block(Address::from(2));
         let h1 = b1.hash();
@@ -124,23 +114,8 @@ mod tests {
     }
 
     #[test]
-    fn fail_to_find_when_too_many_used() {
-        let mut q = SealingQueue::new(1);
-        let b1 = create_closed_block(Address::from(1));
-        let b2 = create_closed_block(Address::from(2));
-        let h1 = b1.hash();
-
-        q.push(b1);
-        q.use_last_ref();
-        q.push(b2);
-        q.use_last_ref();
-
-        assert!(q.take_used_if(|b| b.hash() == h1).is_none());
-    }
-
-    #[test]
     fn fail_to_find_when_not_used_and_then_pushed() {
-        let mut q = SealingQueue::new(QUEUE_SIZE);
+        let mut q = SealingQueue::new();
         let b1 = create_closed_block(Address::from(1));
         let b2 = create_closed_block(Address::from(2));
         let h1 = b1.hash();
@@ -154,7 +129,7 @@ mod tests {
 
     #[test]
     fn peek_correctly_after_push() {
-        let mut q = SealingQueue::new(QUEUE_SIZE);
+        let mut q = SealingQueue::new();
         let b1 = create_closed_block(Address::from(1));
         let b2 = create_closed_block(Address::from(2));
         let h1 = b1.hash();
@@ -169,7 +144,7 @@ mod tests {
 
     #[test]
     fn inspect_correctly() {
-        let mut q = SealingQueue::new(QUEUE_SIZE);
+        let mut q = SealingQueue::new();
         let b1 = create_closed_block(Address::from(1));
         let b2 = create_closed_block(Address::from(2));
         let h1 = b1.hash();
@@ -186,7 +161,7 @@ mod tests {
 
     #[test]
     fn fail_to_find_when_not_used_peeked_and_then_pushed() {
-        let mut q = SealingQueue::new(QUEUE_SIZE);
+        let mut q = SealingQueue::new();
         let b1 = create_closed_block(Address::from(1));
         let b2 = create_closed_block(Address::from(2));
         let h = b1.hash();

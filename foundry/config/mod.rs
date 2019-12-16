@@ -107,7 +107,6 @@ impl Config {
             reseal_min_period: Duration::from_millis(self.mining.reseal_min_period.unwrap()),
             reseal_max_period: Duration::from_millis(self.mining.reseal_max_period.unwrap()),
             no_reseal_timer: self.mining.no_reseal_timer.unwrap(),
-            work_queue_size: self.mining.work_queue_size.unwrap(),
             mem_pool_fees,
         })
     }
@@ -245,7 +244,6 @@ pub struct Mining {
     pub reseal_min_period: Option<u64>,
     pub reseal_max_period: Option<u64>,
     pub no_reseal_timer: Option<bool>,
-    pub work_queue_size: Option<usize>,
     pub allowed_past_gap: Option<u64>,
     pub allowed_future_gap: Option<u64>,
     pub min_pay_transaction_cost: Option<u64>,
@@ -439,9 +437,6 @@ impl Mining {
         if other.no_reseal_timer.is_some() {
             self.no_reseal_timer = other.no_reseal_timer;
         }
-        if other.work_queue_size.is_some() {
-            self.work_queue_size = other.work_queue_size;
-        }
         if other.min_pay_transaction_cost.is_some() {
             self.min_pay_transaction_cost = other.min_pay_transaction_cost;
         }
@@ -528,9 +523,6 @@ impl Mining {
         }
         if matches.is_present("no-reseal-timer") {
             self.no_reseal_timer = Some(true);
-        }
-        if let Some(work_queue_size) = matches.value_of("work-queue-size") {
-            self.work_queue_size = Some(work_queue_size.parse().map_err(|_| "Invalid size")?);
         }
         if let Some(allowed_past_gap) = matches.value_of("allowed-past-gap") {
             self.allowed_past_gap = Some(allowed_past_gap.parse().map_err(|_| "Invalid time gap")?);

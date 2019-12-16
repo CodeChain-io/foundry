@@ -78,8 +78,6 @@ pub struct MinerOptions {
     /// Local transactions ignore this option.
     pub mem_pool_fee_bump_shift: usize,
     pub allow_create_shard: bool,
-    /// How many historical work packages can we store before running out?
-    pub work_queue_size: usize,
     /// Minimum fees configured by the machine.
     pub mem_pool_fees: MemPoolFees,
 }
@@ -98,7 +96,6 @@ impl Default for MinerOptions {
             mem_pool_memory_limit: Some(2 * 1024 * 1024),
             mem_pool_fee_bump_shift: 3,
             allow_create_shard: false,
-            work_queue_size: 20,
             mem_pool_fees: Default::default(),
         }
     }
@@ -184,7 +181,7 @@ impl Miner {
             params: RwLock::new(AuthoringParams::default()),
             sealing_block_last_request: Mutex::new(0),
             sealing_work: Mutex::new(SealingWork {
-                queue: SealingQueue::new(options.work_queue_size),
+                queue: SealingQueue::new(),
                 enabled: options.force_sealing,
             }),
             engine: scheme.engine.clone(),
@@ -879,19 +876,6 @@ impl MinerService for Miner {
             cwarn!(MINER, "Submitted solution rejected: Block unknown or out of date.");
             Err(Error::PowHashInvalid)
         }
-    }
-
-    fn map_sealing_work<C, F, T>(&self, client: &C, f: F) -> Option<T>
-    where
-        C: AccountData + BlockChainTrait + BlockProducer + ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo,
-        F: FnOnce(&ClosedBlock) -> T, {
-        ctrace!(MINER, "map_sealing_work: entering");
-        self.prepare_work_sealing(client);
-        ctrace!(MINER, "map_sealing_work: sealing prepared");
-        let mut sealing_work = self.sealing_work.lock();
-        let ret = sealing_work.queue.use_last_ref();
-        ctrace!(MINER, "map_sealing_work: leaving use_last_ref={:?}", ret.as_ref().map(|b| b.block().header().hash()));
-        ret.map(f)
     }
 
     fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
