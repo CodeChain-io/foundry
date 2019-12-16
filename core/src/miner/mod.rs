@@ -36,7 +36,6 @@ pub use self::mem_pool_types::MemPoolFees;
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};
 pub use self::stratum::{Config as StratumConfig, Error as StratumError, Stratum};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
-use crate::block::ClosedBlock;
 use crate::client::{
     AccountData, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo,
 };
@@ -105,13 +104,6 @@ pub trait MinerService: Send + Sync {
     /// Submit `seal` as a valid solution for the header of `pow_hash`.
     /// Will check the seal, but not actually insert the block into the chain.
     fn submit_seal<C: ImportBlock>(&self, chain: &C, pow_hash: BlockHash, seal: Vec<Bytes>) -> Result<(), Error>;
-
-    /// Get the sealing work package and if `Some`, apply some transform.
-    fn map_sealing_work<C, F, T>(&self, client: &C, f: F) -> Option<T>
-    where
-        C: AccountData + BlockChainTrait + BlockProducer + ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo,
-        F: FnOnce(&ClosedBlock) -> T,
-        Self: Sized;
 
     /// Imports transactions to mem pool.
     fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
