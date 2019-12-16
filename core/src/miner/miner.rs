@@ -26,7 +26,7 @@ use ckey::{public_to_address, Address, Password, PlatformAddress, Public};
 use cstate::{FindActionHandler, TopLevelState};
 use ctypes::errors::{HistoryError, RuntimeError};
 use ctypes::transaction::{Action, IncompleteTransaction, Timelock};
-use ctypes::{BlockHash, BlockNumber, Header, TxHash};
+use ctypes::{BlockHash, BlockNumber, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
@@ -39,7 +39,7 @@ use super::sealing_queue::SealingQueue;
 use super::work_notify::{NotifyWork, WorkPoster};
 use super::{MinerService, MinerStatus, TransactionImportResult};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
-use crate::block::{Block, ClosedBlock, IsBlock};
+use crate::block::{ClosedBlock, IsBlock};
 use crate::client::{
     AccountData, BlockChainTrait, BlockProducer, Client, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo,
 };
@@ -204,21 +204,6 @@ impl Miner {
     /// Set a callback to be notified about imported transactions' hashes.
     pub fn add_transactions_listener(&self, f: Box<dyn Fn(&[TxHash]) + Send + Sync>) {
         self.transaction_listener.write().push(f);
-    }
-
-    /// Get `Some` `clone()` of the current pending block's state or `None` if we're not sealing.
-    pub fn pending_state(&self, latest_block_number: BlockNumber) -> Option<TopLevelState> {
-        self.map_pending_block(|b| b.state().clone(), latest_block_number)
-    }
-
-    /// Get `Some` `clone()` of the current pending block or `None` if we're not sealing.
-    pub fn pending_block(&self, latest_block_number: BlockNumber) -> Option<Block> {
-        self.map_pending_block(IsBlock::to_base, latest_block_number)
-    }
-
-    /// Get `Some` `clone()` of the current pending block header or `None` if we're not sealing.
-    pub fn pending_block_header(&self, latest_block_number: BlockNumber) -> Option<Header> {
-        self.map_pending_block(|b| b.header().clone(), latest_block_number)
     }
 
     pub fn get_options(&self) -> &MinerOptions {
@@ -675,19 +660,6 @@ impl Miner {
     /// Are we allowed to do a non-mandatory reseal?
     fn transaction_reseal_allowed(&self) -> bool {
         self.sealing_enabled.load(Ordering::Relaxed) && (Instant::now() > *self.next_allowed_reseal.lock())
-    }
-
-    fn map_pending_block<F, T>(&self, f: F, latest_block_number: BlockNumber) -> Option<T>
-    where
-        F: FnOnce(&ClosedBlock) -> T, {
-        let sealing_work = self.sealing_work.lock();
-        sealing_work.queue.peek_last_ref().and_then(|b| {
-            if b.block().header().number() > latest_block_number {
-                Some(f(b))
-            } else {
-                None
-            }
-        })
     }
 
     fn is_allowed_transaction(&self, action: &Action) -> bool {
