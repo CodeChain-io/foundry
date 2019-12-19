@@ -87,12 +87,6 @@ impl TxOrigin {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, RlpEncodable, RlpDecodable)]
-pub struct TxTimelock {
-    pub block: Option<BlockNumber>,
-    pub timestamp: Option<u64>,
-}
-
 #[derive(Clone, Copy, Debug)]
 /// Light structure used to identify transaction and its order
 pub struct TransactionOrder {
@@ -113,8 +107,6 @@ pub struct TransactionOrder {
     pub insertion_id: u64,
     /// Origin of the transaction
     pub origin: TxOrigin,
-    /// Timelock
-    pub timelock: TxTimelock,
 }
 
 impl TransactionOrder {
@@ -130,7 +122,6 @@ impl TransactionOrder {
             hash: item.hash(),
             insertion_id: item.insertion_id,
             origin: item.origin,
-            timelock: item.timelock,
         }
     }
 
@@ -178,11 +169,6 @@ impl Ord for TransactionOrder {
             return b.fee.cmp(&self.fee)
         }
 
-        // Compare timelock, prefer the nearer from the present.
-        if self.timelock != b.timelock {
-            return self.timelock.cmp(&b.timelock)
-        }
-
         // Lastly compare insertion_id
         self.insertion_id.cmp(&b.insertion_id)
     }
@@ -201,8 +187,6 @@ pub struct MemPoolItem {
     pub inserted_timestamp: u64,
     /// ID assigned upon insertion, should be unique.
     pub insertion_id: u64,
-    /// A timelock.
-    pub timelock: TxTimelock,
 }
 
 impl MemPoolItem {
@@ -212,7 +196,6 @@ impl MemPoolItem {
         inserted_block_number: PoolingInstant,
         inserted_timestamp: u64,
         insertion_id: u64,
-        timelock: TxTimelock,
     ) -> Self {
         MemPoolItem {
             tx,
@@ -220,7 +203,6 @@ impl MemPoolItem {
             inserted_block_number,
             inserted_timestamp,
             insertion_id,
-            timelock,
         }
     }
 

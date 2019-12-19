@@ -267,10 +267,7 @@ impl MemPool {
 
             let id = self.next_transaction_id;
             self.next_transaction_id += 1;
-            let item = MemPoolItem::new(tx, origin, inserted_block_number, inserted_timestamp, id, TxTimelock {
-                block: None,
-                timestamp: None,
-            });
+            let item = MemPoolItem::new(tx, origin, inserted_block_number, inserted_timestamp, id);
             let order = TransactionOrder::for_transaction(&item, client_account.seq);
             let order_with_tag = TransactionOrderWithTag::new(order, QueueTag::New);
 
@@ -893,7 +890,6 @@ pub mod test {
     use std::cmp::Ordering;
 
     use crate::client::{AccountData, TestBlockChainClient};
-    use crate::miner::mem_pool_types::TxTimelock;
     use ckey::{Generator, KeyPair, Random};
     use ctypes::transaction::{Action, Transaction};
 
@@ -904,234 +900,6 @@ pub mod test {
     fn origin_ordering() {
         assert_eq!(TxOrigin::Local.cmp(&TxOrigin::External), Ordering::Less);
         assert_eq!(TxOrigin::External.cmp(&TxOrigin::Local), Ordering::Greater);
-    }
-
-    #[test]
-    fn timelock_ordering() {
-        assert_eq!(
-            TxTimelock {
-                block: None,
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: None
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: None,
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: None,
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-
-        // Block is the prior condition.
-        assert_eq!(
-            TxTimelock {
-                block: Some(9),
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: None
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(9),
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(9),
-                timestamp: Some(100)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: None
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(9),
-                timestamp: Some(99)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(9),
-                timestamp: Some(101)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(11),
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: None
-            }),
-            Ordering::Greater
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(11),
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Greater
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(11),
-                timestamp: Some(100)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: None
-            }),
-            Ordering::Greater
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(11),
-                timestamp: Some(99)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Greater
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(11),
-                timestamp: Some(101)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Greater
-        );
-
-        // Compare timestamp if blocks are equal.
-        assert_eq!(
-            TxTimelock {
-                block: Some(10),
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(10),
-                timestamp: Some(99)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Equal
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(10),
-                timestamp: Some(101)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Greater
-        );
-        assert_eq!(
-            TxTimelock {
-                block: None,
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: None,
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: None,
-                timestamp: Some(99)
-            }
-            .cmp(&TxTimelock {
-                block: None,
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: None,
-                timestamp: Some(100)
-            }
-            .cmp(&TxTimelock {
-                block: None,
-                timestamp: Some(100)
-            }),
-            Ordering::Equal
-        );
-        assert_eq!(
-            TxTimelock {
-                block: None,
-                timestamp: Some(101)
-            }
-            .cmp(&TxTimelock {
-                block: None,
-                timestamp: Some(100)
-            }),
-            Ordering::Greater
-        );
     }
 
     #[test]
@@ -1149,12 +917,8 @@ pub mod test {
                 quantity,
             },
         };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
         let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
+        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0);
 
         assert_eq!(fee + quantity, item.cost());
     }
@@ -1162,15 +926,6 @@ pub mod test {
     #[test]
     fn txorigin_encode_and_decode() {
         rlp_encode_and_decode_test!(TxOrigin::External);
-    }
-
-    #[test]
-    fn txtimelock_encode_and_decode() {
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
-        rlp_encode_and_decode_test!(timelock);
     }
 
     #[test]
@@ -1203,12 +958,8 @@ pub mod test {
                 quantity: 0,
             },
         };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
         let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
+        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0);
 
         rlp_encode_and_decode_test!(item);
     }
