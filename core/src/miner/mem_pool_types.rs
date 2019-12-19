@@ -409,15 +409,13 @@ impl FutureQueue {
 pub struct MemPoolInput {
     pub transaction: SignedTransaction,
     pub origin: TxOrigin,
-    pub timelock: TxTimelock,
 }
 
 impl MemPoolInput {
-    pub fn new(transaction: SignedTransaction, origin: TxOrigin, timelock: TxTimelock) -> Self {
+    pub fn new(transaction: SignedTransaction, origin: TxOrigin) -> Self {
         Self {
             transaction,
             origin,
-            timelock,
         }
     }
 }

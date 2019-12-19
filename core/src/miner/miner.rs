@@ -25,7 +25,7 @@ use std::time::{Duration, Instant};
 use ckey::{public_to_address, Address, Password, PlatformAddress, Public};
 use cstate::{FindActionHandler, TopLevelState};
 use ctypes::errors::{HistoryError, RuntimeError};
-use ctypes::transaction::{Action, IncompleteTransaction, Timelock};
+use ctypes::transaction::{Action, IncompleteTransaction};
 use ctypes::{BlockHash, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
@@ -34,7 +34,7 @@ use primitives::Bytes;
 
 use super::mem_pool::{Error as MemPoolError, MemPool};
 pub use super::mem_pool_types::MemPoolFees;
-use super::mem_pool_types::{AccountDetails, MemPoolInput, TxOrigin, TxTimelock};
+use super::mem_pool_types::{AccountDetails, MemPoolInput, TxOrigin};
 use super::{MinerService, MinerStatus, TransactionImportResult};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::block::{ClosedBlock, IsBlock};
@@ -255,10 +255,9 @@ impl Miner {
                     e
                 })?;
 
-                let timelock = self.calculate_timelock(&tx, client)?;
                 let tx_hash = tx.hash();
 
-                to_insert.push(MemPoolInput::new(tx, origin, timelock));
+                to_insert.push(MemPoolInput::new(tx, origin));
                 tx_hashes.push(tx_hash);
                 Ok(())
             })
@@ -296,54 +295,6 @@ impl Miner {
         }
 
         results
-    }
-
-    fn calculate_timelock<C: BlockChainTrait>(&self, tx: &SignedTransaction, client: &C) -> Result<TxTimelock, Error> {
-        let mut max_block = None;
-        let mut max_timestamp = None;
-        if let Action::TransferAsset {
-            inputs,
-            ..
-        } = &tx.action
-        {
-            for input in inputs {
-                if let Some(timelock) = input.timelock {
-                    let (is_block_number, value) = match timelock {
-                        Timelock::Block(value) => (true, value),
-                        Timelock::BlockAge(value) => (
-                            true,
-                            client.transaction_block_number(&input.prev_out.tracker).ok_or_else(|| {
-                                Error::History(HistoryError::Timelocked {
-                                    timelock,
-                                    remaining_time: u64::max_value(),
-                                })
-                            })? + value,
-                        ),
-                        Timelock::Time(value) => (false, value),
-                        Timelock::TimeAge(value) => (
-                            false,
-                            client.transaction_block_timestamp(&input.prev_out.tracker).ok_or_else(|| {
-                                Error::History(HistoryError::Timelocked {
-                                    timelock,
-                                    remaining_time: u64::max_value(),
-                                })
-                            })? + value,
-                        ),
-                    };
-                    if is_block_number {
-                        if max_block.is_none() || max_block.expect("The previous guard ensures") < value {
-                            max_block = Some(value);
-                        }
-                    } else if max_timestamp.is_none() || max_timestamp.expect("The previous guard ensures") < value {
-                        max_timestamp = Some(value);
-                    }
-                }
-            }
-        };
-        Ok(TxTimelock {
-            block: max_block,
-            timestamp: max_timestamp,
-        })
     }
 
     /// Prepares new block for sealing including top transactions from queue.

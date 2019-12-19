@@ -28,7 +28,7 @@ use table::Table;
 use super::backup;
 use super::mem_pool_types::{
     AccountDetails, CurrentQueue, FutureQueue, MemPoolFees, MemPoolInput, MemPoolItem, MemPoolStatus, PoolingInstant,
-    QueueTag, TransactionOrder, TransactionOrderWithTag, TxOrigin,
+    QueueTag, TransactionOrder, TransactionOrderWithTag, TxOrigin, TxTimelock,
 };
 use super::TransactionImportResult;
 use crate::client::{AccountData, BlockChainTrait};
@@ -249,7 +249,6 @@ impl MemPool {
             let signer_public = tx.signer_public();
             let seq = tx.seq;
             let hash = tx.hash();
-            let timelock = input.timelock;
 
             let origin = if input.origin.is_local() && !self.is_local_account.contains(&signer_public) {
                 self.is_local_account.insert(signer_public);
@@ -269,7 +268,10 @@ impl MemPool {
 
             let id = self.next_transaction_id;
             self.next_transaction_id += 1;
-            let item = MemPoolItem::new(tx, origin, inserted_block_number, inserted_timestamp, id, timelock);
+            let item = MemPoolItem::new(tx, origin, inserted_block_number, inserted_timestamp, id, TxTimelock {
+                block: None,
+                timestamp: None,
+            });
             let order = TransactionOrder::for_transaction(&item, client_account.seq);
             let order_with_tag = TransactionOrderWithTag::new(order, QueueTag::New);
 
@@ -1353,42 +1355,35 @@ pub mod test {
                 balance: test_client.latest_balance(&a),
             }
         };
-        let no_timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
 
         let inserted_block_number = 1;
         let inserted_timestamp = 100;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
 
-        inputs.push(create_mempool_input_with_pay(1u64, keypair, no_timelock));
-        inputs.push(create_mempool_input_with_pay(3u64, keypair, TxTimelock {
-            block: Some(10),
-            timestamp: None,
-        }));
-        inputs.push(create_mempool_input_with_pay(5u64, keypair, no_timelock));
+        inputs.push(create_mempool_input_with_pay(1u64, keypair));
+        inputs.push(create_mempool_input_with_pay(3u64, keypair));
+        inputs.push(create_mempool_input_with_pay(5u64, keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
         let inserted_block_number = 11;
         let inserted_timestamp = 200;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
-        inputs.push(create_mempool_input_with_pay(2u64, keypair, no_timelock));
-        inputs.push(create_mempool_input_with_pay(4u64, keypair, no_timelock));
+        inputs.push(create_mempool_input_with_pay(2u64, keypair));
+        inputs.push(create_mempool_input_with_pay(4u64, keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
         let inserted_block_number = 20;
         let inserted_timestamp = 300;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
-        inputs.push(create_mempool_input_with_pay(6u64, keypair, no_timelock));
-        inputs.push(create_mempool_input_with_pay(8u64, keypair, no_timelock));
-        inputs.push(create_mempool_input_with_pay(10u64, keypair, no_timelock));
+        inputs.push(create_mempool_input_with_pay(6u64, keypair));
+        inputs.push(create_mempool_input_with_pay(8u64, keypair));
+        inputs.push(create_mempool_input_with_pay(10u64, keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
         let inserted_block_number = 21;
         let inserted_timestamp = 400;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
-        inputs.push(create_mempool_input_with_pay(7u64, keypair, no_timelock));
+        inputs.push(create_mempool_input_with_pay(7u64, keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
         let mut mem_pool_recovered = MemPool::with_limits(8192, usize::max_value(), 3, db, Default::default());
@@ -1434,9 +1429,9 @@ pub mod test {
         SignedTransaction::new_with_sign(tx, keypair.private())
     }
 
-    fn create_mempool_input_with_pay(seq: u64, keypair: KeyPair, timelock: TxTimelock) -> MemPoolInput {
+    fn create_mempool_input_with_pay(seq: u64, keypair: KeyPair) -> MemPoolInput {
         let signed = create_signed_pay(seq, keypair);
-        MemPoolInput::new(signed, TxOrigin::Local, timelock)
+        MemPoolInput::new(signed, TxOrigin::Local)
     }
 
     fn create_transaction_order(fee: u64, transaction_count: usize) -> TransactionOrder {
@@ -1483,14 +1478,10 @@ pub mod test {
                 balance: test_client.latest_balance(&a),
             }
         };
-        let no_timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
 
         let inserted_block_number = 1;
         let inserted_timestamp = 100;
-        let inputs: Vec<MemPoolInput> = txs.into_iter().map(|tx| MemPoolInput::new(tx, origin, no_timelock)).collect();
+        let inputs: Vec<MemPoolInput> = txs.into_iter().map(|tx| MemPoolInput::new(tx, origin)).collect();
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account)
     }
 
@@ -1630,17 +1621,13 @@ pub mod test {
         println!("! {}", address);
         test_client.set_balance(address, 1_000_000_000_000);
         assert_eq!(1_000_000_000_000, test_client.latest_balance(&address));
-        let no_timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
 
         let inserted_block_number = 1;
         let inserted_timestamp = 100;
         let inputs = vec![
-            create_mempool_input_with_pay(0, keypair, no_timelock),
-            create_mempool_input_with_pay(1, keypair, no_timelock),
-            create_mempool_input_with_pay(2, keypair, no_timelock),
+            create_mempool_input_with_pay(0, keypair),
+            create_mempool_input_with_pay(1, keypair),
+            create_mempool_input_with_pay(2, keypair),
         ];
         let result = mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
         assert_eq!(
