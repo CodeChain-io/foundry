@@ -28,7 +28,7 @@ use table::Table;
 use super::backup;
 use super::mem_pool_types::{
     AccountDetails, CurrentQueue, FutureQueue, MemPoolFees, MemPoolInput, MemPoolItem, MemPoolStatus, PoolingInstant,
-    QueueTag, TransactionOrder, TransactionOrderWithTag, TxOrigin, TxTimelock,
+    QueueTag, TransactionOrder, TransactionOrderWithTag, TxOrigin,
 };
 use super::TransactionImportResult;
 use crate::client::{AccountData, BlockChainTrait};
@@ -305,22 +305,16 @@ impl MemPool {
             let mut first_seq = *self.first_seqs.get(&public).unwrap_or(&0);
             let next_seq = self.next_seqs.get(&public).cloned().unwrap_or(current_seq);
 
-            let new_next_seq = if current_seq < first_seq
+            let target_seq = if current_seq < first_seq
                 || inserted_block_number < self.last_block_number
                 || inserted_timestamp < self.last_timestamp
                 || next_seq < current_seq
             {
-                self.check_transactions(public, current_seq, inserted_block_number, inserted_timestamp)
+                current_seq
             } else {
-                to_insert
-                    .get(&public)
-                    .and_then(|v| {
-                        self.check_new_transactions(public, v, next_seq, inserted_block_number, inserted_timestamp)
-                    })
-                    .unwrap_or_else(|| {
-                        self.check_transactions(public, next_seq, inserted_block_number, inserted_timestamp)
-                    })
+                next_seq
             };
+            let new_next_seq = self.check_transactions(public, target_seq);
 
             let is_this_account_local = new_local_accounts.contains(&public);
             // Need to update transactions because of height/origin change
@@ -463,15 +457,7 @@ impl MemPool {
 
         for public in keys {
             let current_seq = fetch_account(&public).seq;
-
-            let next_seq = to_insert
-                .get(&public)
-                .and_then(|v| {
-                    self.check_new_transactions(public, v, current_seq, recover_block_number, recover_timestamp)
-                })
-                .unwrap_or_else(|| {
-                    self.check_transactions(public, current_seq, recover_block_number, recover_timestamp)
-                });
+            let next_seq = self.check_transactions(public, current_seq);
 
             self.first_seqs.insert(public, current_seq);
             if next_seq > current_seq {
@@ -554,11 +540,11 @@ impl MemPool {
                 || current_timestamp < self.last_timestamp
                 || next_seq < current_seq
             {
-                self.check_transactions(public, current_seq, current_block_number, current_timestamp)
+                self.check_transactions(public, current_seq)
             } else if let Some(seq) = removed.get(&public) {
                 *seq
             } else {
-                self.check_transactions(public, next_seq, current_block_number, current_timestamp)
+                self.check_transactions(public, next_seq)
             };
 
             // Need to update the height
@@ -598,61 +584,13 @@ impl MemPool {
 
     /// Checks the timelock of transactions starting from `start_seq`.
     /// Returns the next seq of the last transaction which can be in the current queue
-    fn check_transactions(
-        &self,
-        public: Public,
-        mut start_seq: u64,
-        current_block_number: PoolingInstant,
-        current_timestamp: u64,
-    ) -> u64 {
+    fn check_transactions(&self, public: Public, start_seq: u64) -> u64 {
         let row = self
             .by_signer_public
             .row(&public)
             .expect("This function should be called after checking from `self.by_signer_public.keys()`");
 
-        while let Some(order_with_tag) = row.get(&start_seq) {
-            let order = order_with_tag.order;
-            if Self::should_wait_timelock(&order.timelock, current_block_number, current_timestamp) {
-                break
-            }
-            start_seq += 1;
-        }
-
-        start_seq
-    }
-
-    /// Checks the timelock of transactions with the given seqs.
-    /// If there are transactions which should wait timelock, returns the smallest seq by Some(seq).
-    /// If there's no transaction which should wait timelock, returns None.
-    fn check_new_transactions(
-        &self,
-        public: Public,
-        seqs: &[u64],
-        next_seq: u64,
-        current_block_number: PoolingInstant,
-        current_timestamp: u64,
-    ) -> Option<u64> {
-        let row = self
-            .by_signer_public
-            .row(&public)
-            .expect("This function should be called after checking from `self.by_signer_public.keys()`");
-
-        let mut result = None;
-
-        for seq in seqs {
-            if *seq >= next_seq {
-                continue
-            }
-            let order_with_tag = row.get(&seq).expect("Must exist");
-            let order = order_with_tag.order;
-            if Self::should_wait_timelock(&order.timelock, current_block_number, current_timestamp)
-                && (result.is_none() || (result.is_some() && result.unwrap() > *seq))
-            {
-                result = Some(*seq)
-            }
-        }
-
-        result
+        (start_seq..).find(|s| row.get(s).is_none()).expect("Open ended range does not end")
     }
 
     /// Moves the transactions which of seq is in [start_seq, end_seq -1],
@@ -950,21 +888,6 @@ impl MemPool {
     pub fn is_local_transaction(&self, tx_hash: TxHash) -> Option<bool> {
         self.by_hash.get(&tx_hash).map(|found_item| found_item.origin.is_local())
     }
-
-    /// Checks the given timelock with the current time/timestamp.
-    fn should_wait_timelock(timelock: &TxTimelock, best_block_number: BlockNumber, best_block_timestamp: u64) -> bool {
-        if let Some(block_number) = timelock.block {
-            if block_number > best_block_number {
-                return true
-            }
-        }
-        if let Some(timestamp) = timelock.timestamp {
-            if timestamp > best_block_timestamp {
-                return true
-            }
-        }
-        false
-    }
 }
 
 
@@ -973,6 +896,7 @@ pub mod test {
     use std::cmp::Ordering;
 
     use crate::client::{AccountData, TestBlockChainClient};
+    use crate::miner::mem_pool_types::TxTimelock;
     use ckey::{Generator, KeyPair, Random};
     use ctypes::transaction::{Action, AssetMintOutput, Transaction};
     use primitives::H160;
