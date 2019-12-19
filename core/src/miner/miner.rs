@@ -16,7 +16,7 @@
 
 use super::mem_pool::{Error as MemPoolError, MemPool};
 pub use super::mem_pool_types::MemPoolMinFees;
-use super::mem_pool_types::{MemPoolInput, TxOrigin, TxTimelock};
+use super::mem_pool_types::{MemPoolInput, TxOrigin};
 use super::{fetch_account_creator, MinerService, MinerStatus, TransactionImportResult};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::block::{ClosedBlock, IsBlock};
@@ -245,10 +245,9 @@ impl Miner {
                     e
                 })?;
 
-                let timelock = self.calculate_timelock(&tx, client)?;
                 let tx_hash = tx.hash();
 
-                to_insert.push(MemPoolInput::new(tx, origin, timelock));
+                to_insert.push(MemPoolInput::new(tx, origin));
                 tx_hashes.push(tx_hash);
                 Ok(())
             })
@@ -284,21 +283,6 @@ impl Miner {
     pub fn delete_all_pending_transactions(&self) {
         let mut mem_pool = self.mem_pool.write();
         mem_pool.remove_all();
-    }
-
-    // FIXME: please remove this function
-    fn calculate_timelock<C: BlockChainTrait>(
-        &self,
-        _tx: &SignedTransaction,
-        _client: &C,
-    ) -> Result<TxTimelock, Error> {
-        let max_block = None;
-        let max_timestamp = None;
-
-        Ok(TxTimelock {
-            block: max_block,
-            timestamp: max_timestamp,
-        })
     }
 
     /// Prepares new block for sealing including top transactions from queue and seal it.
