@@ -471,14 +471,12 @@ dependencies = [
  "codechain-state",
  "codechain-sync",
  "codechain-types",
- "codechain-vm",
  "jsonrpc-core",
  "jsonrpc-derive",
  "jsonrpc-http-server",
  "jsonrpc-ipc-server",
  "jsonrpc-ws-server",
  "kvdb",
- "kvdb-rocksdb",
  "lazy_static 1.2.0",
  "log 0.4.6",
  "parking_lot 0.6.4",
@@ -491,7 +489,6 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "time",
- "tokio-core",
 ]
 
 [[package]]
