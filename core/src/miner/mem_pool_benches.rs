@@ -25,7 +25,7 @@ use rand::thread_rng;
 
 use self::test::{black_box, Bencher};
 use super::mem_pool::MemPool;
-use super::mem_pool_types::{AccountDetails, MemPoolInput, PoolingInstant, TxOrigin, TxTimelock};
+use super::mem_pool_types::{AccountDetails, MemPoolInput, PoolingInstant, TxOrigin};
 use crate::transaction::SignedTransaction;
 
 const NUM_TXS: usize = 5000;
@@ -40,13 +40,9 @@ fn create_input(keypair: &KeyPair, seq: u64, block: Option<PoolingInstant>, time
             quantity: 100,
         },
     };
-    let timelock = TxTimelock {
-        block,
-        timestamp,
-    };
     let signed = SignedTransaction::new_with_sign(tx, keypair.private());
 
-    MemPoolInput::new(signed, TxOrigin::Local, timelock)
+    MemPoolInput::new(signed, TxOrigin::Local)
 }
 
 #[bench]
