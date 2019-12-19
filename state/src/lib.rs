@@ -27,7 +27,6 @@ extern crate kvdb_memorydb;
 extern crate lru_cache;
 #[macro_use]
 extern crate log;
-extern crate parking_lot;
 extern crate primitives;
 extern crate rlp;
 #[cfg(test)]

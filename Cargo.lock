@@ -505,7 +505,6 @@ dependencies = [
  "kvdb-memorydb",
  "log 0.4.6",
  "lru-cache",
- "parking_lot 0.6.4",
  "primitives",
  "rlp",
  "rlp_derive",

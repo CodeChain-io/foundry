@@ -16,7 +16,6 @@ kvdb = "0.1"
 kvdb-memorydb = "0.1"
 log = "0.4.6"
 lru-cache = "0.1.1"
-parking_lot = "0.6.0"
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
 rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
 rlp_derive = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.2" }
