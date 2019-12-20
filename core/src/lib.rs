@@ -31,31 +31,12 @@ extern crate codechain_stratum as cstratum;
 extern crate codechain_timer as ctimer;
 extern crate codechain_types as ctypes;
 extern crate codechain_vm as cvm;
-
-
-
-
-
-
-
-
-
-
 #[cfg(test)]
 extern crate rand_xorshift;
-
-
 #[macro_use]
 extern crate rlp_derive;
-
-
-
-
-
 #[macro_use]
 extern crate log;
-
-
 
 mod account_provider;
 pub mod block;

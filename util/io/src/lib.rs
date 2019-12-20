@@ -62,11 +62,8 @@
 
 #[macro_use]
 extern crate codechain_logger as clogger;
-
 #[macro_use]
 extern crate log;
-
-
 
 mod service;
 mod worker;

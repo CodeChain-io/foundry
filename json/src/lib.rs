@@ -15,10 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 extern crate codechain_key as ckey;
-
-
-
-
 #[macro_use]
 extern crate serde_derive;
 

@@ -22,10 +22,6 @@
 #[macro_use]
 extern crate error_chain;
 
-
-
-
-
 use primitives::H256;
 use std::fmt;
 

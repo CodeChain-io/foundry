@@ -16,7 +16,6 @@
 
 #![allow(deprecated)]
 
-
 extern crate codechain_crypto as ccrypto;
 extern crate codechain_io as cio;
 extern crate codechain_key as ckey;
@@ -25,13 +24,10 @@ extern crate codechain_logger as clogger;
 extern crate codechain_timer as ctimer;
 #[macro_use]
 extern crate log;
-
-
 #[macro_use]
 extern crate rlp_derive;
 
 use crossbeam_channel;
-
 
 mod addr;
 mod client;

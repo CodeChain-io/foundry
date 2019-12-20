@@ -17,8 +17,6 @@
 extern crate codechain_crypto as ccrypto;
 extern crate codechain_db as cdb;
 
-
-
 #[cfg(test)]
 extern crate trie_standardmap as standardmap;
 
