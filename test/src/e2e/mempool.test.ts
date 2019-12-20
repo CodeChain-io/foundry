@@ -15,8 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H256 } from "codechain-primitives/lib";
-import { Asset, Timelock } from "codechain-sdk/lib/core/classes";
 import "mocha";
 import { faucetAddress } from "../helper/constants";
 import CodeChain from "../helper/spawn";
@@ -66,89 +64,6 @@ describe("Future queue", function() {
         expect(await node.sdk.rpc.chain.getSeq(faucetAddress)).to.equal(
             seq + 4
         );
-    });
-
-    afterEach(async function() {
-        if (this.currentTest!.state === "failed") {
-            node.keepLogs();
-        }
-        await node.clean();
-    });
-});
-
-describe("Timelock", function() {
-    let node: CodeChain;
-
-    beforeEach(async function() {
-        node = new CodeChain({
-            argv: ["--force-sealing", "--no-reseal-timer"]
-        });
-        await node.start();
-    });
-
-    async function checkTx(txhash: H256, shouldBeConfirmed: boolean) {
-        const results = await node.sdk.rpc.chain.getTransactionResultsByTracker(
-            txhash
-        );
-        expect(results).deep.equal(shouldBeConfirmed ? [true] : []);
-    }
-
-    async function sendTransferTx(
-        asset: Asset,
-        timelock?: Timelock,
-        options: {
-            fee?: number;
-        } = {}
-    ): Promise<H256> {
-        const tx = node.sdk.core.createTransferAssetTransaction();
-        tx.addInputs(
-            timelock
-                ? asset.createTransferInput({
-                      timelock
-                  })
-                : asset.createTransferInput()
-        );
-        tx.addOutputs({
-            quantity: 1,
-            assetType: asset.assetType,
-            shardId: asset.shardId,
-            recipient: await node.createP2PKHAddress()
-        });
-        await node.signTransactionInput(tx, 0);
-        const { fee } = options;
-        await node.sendAssetTransaction(tx, { fee });
-        return tx.tracker();
-    }
-
-    describe("The current items should move to the future queue", async function() {
-        it("Minted at block 1, send transfer without timelock and then replace it with Timelock::Block(3)", async function() {
-            const asset = await node.mintAsset({ supply: 1 });
-            await node.sdk.rpc.devel.stopSealing();
-            const txhash1 = await sendTransferTx(asset, undefined);
-            const txhash2 = await sendTransferTx(
-                asset,
-                {
-                    type: "block",
-                    value: 3
-                },
-                {
-                    fee: 20
-                }
-            );
-            await checkTx(txhash1, false);
-            await checkTx(txhash2, false);
-
-            await node.sdk.rpc.devel.startSealing();
-            await node.sdk.rpc.devel.startSealing();
-            expect(await node.getBestBlockNumber()).to.equal(3);
-            await checkTx(txhash1, false);
-            await checkTx(txhash2, false);
-
-            await node.sdk.rpc.devel.startSealing();
-            expect(await node.getBestBlockNumber()).to.equal(4);
-            await checkTx(txhash1, false);
-            await checkTx(txhash2, true);
-        });
     });
 
     afterEach(async function() {
