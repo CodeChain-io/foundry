@@ -265,10 +265,10 @@ pub type ImportResult = Result<BlockHash, Error>;
 /// Provides methods used for sealing new state
 pub trait BlockProducer {
     /// Reopens an OpenBlock and updates uncles.
-    fn reopen_block(&self, block: ClosedBlock) -> OpenBlock;
+    fn reopen_block(&self, block: ClosedBlock) -> OpenBlock<'_>;
 
     /// Returns OpenBlock prepared for closing.
-    fn prepare_open_block(&self, parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock;
+    fn prepare_open_block(&self, parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock<'_>;
 }
 
 /// Extended client interface used for mining

@@ -341,7 +341,7 @@ impl Ipc {
         }
     }
 
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches) -> Result<(), String> {
+    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
         if matches.is_present("no-ipc") {
             self.disable = Some(true);
         }
@@ -377,7 +377,7 @@ impl Operating {
         }
     }
 
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches) -> Result<(), String> {
+    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
         if matches.is_present("quiet") {
             self.quiet = Some(true);
         }
@@ -486,7 +486,7 @@ impl Mining {
         }
     }
 
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches) -> Result<(), String> {
+    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
         if let Some(author) = matches.value_of("author") {
             self.author = Some(author.parse().map_err(|_| "Invalid address format")?);
         }
@@ -598,7 +598,7 @@ impl Network {
         }
     }
 
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches) -> Result<(), String> {
+    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
         if matches.is_present("no-network") {
             self.disable = Some(true);
         }
@@ -674,7 +674,7 @@ impl Rpc {
         }
     }
 
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches) -> Result<(), String> {
+    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
         if matches.is_present("no-jsonrpc") {
             self.disable = Some(true);
         }
@@ -713,7 +713,7 @@ impl Ws {
         }
     }
 
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches) -> Result<(), String> {
+    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
         if matches.is_present("no-ws") {
             self.disable = Some(true);
         }
@@ -741,7 +741,7 @@ impl Snapshot {
         }
     }
 
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches) -> Result<(), String> {
+    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
         if matches.is_present("no-snapshot") {
             self.disable = Some(true);
         }
@@ -763,7 +763,7 @@ impl Stratum {
         }
     }
 
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches) -> Result<(), String> {
+    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
         if matches.is_present("no-stratum") {
             self.disable = Some(true);
         }
@@ -788,7 +788,7 @@ impl EmailAlarm {
         }
     }
 
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches) -> Result<(), String> {
+    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
         if matches.is_present("no-email-alarm") {
             self.disable = Some(true);
         }
@@ -825,7 +825,7 @@ pub fn read_preset_config() -> &'static str {
     str::from_utf8(bytes).expect("The preset config file must be valid")
 }
 
-pub fn load_config(matches: &clap::ArgMatches) -> Result<Config, String> {
+pub fn load_config(matches: &clap::ArgMatches<'_>) -> Result<Config, String> {
     let mut config: Config = {
         let toml_string = read_preset_config().to_string();
         toml::from_str(toml_string.as_ref()).expect("The preset config file must be valid")

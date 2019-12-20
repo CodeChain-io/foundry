@@ -63,7 +63,7 @@ pub struct HeaderChain {
 
 impl HeaderChain {
     /// Create new instance of blockchain from given Genesis.
-    pub fn new(genesis: &HeaderView, db: Arc<dyn KeyValueDB>) -> Self {
+    pub fn new(genesis: &HeaderView<'_>, db: Arc<dyn KeyValueDB>) -> Self {
         // load best header
         let best_header_hash = match db.get(db::COL_EXTRA, BEST_HEADER_KEY).unwrap() {
             Some(hash) => H256::from_slice(&hash).into(),
@@ -122,7 +122,7 @@ impl HeaderChain {
     pub fn insert_header(
         &self,
         batch: &mut DBTransaction,
-        header: &HeaderView,
+        header: &HeaderView<'_>,
         engine: &dyn CodeChainEngine,
     ) -> Option<BestHeaderChanged> {
         let hash = header.hash();
@@ -222,7 +222,7 @@ impl HeaderChain {
 
     /// This function returns modified block details.
     /// Uses the given parent details or attempts to load them from the database.
-    fn new_detail_entries(&self, header: &HeaderView) -> HashMap<BlockHash, BlockDetails> {
+    fn new_detail_entries(&self, header: &HeaderView<'_>) -> HashMap<BlockHash, BlockDetails> {
         let parent_hash = header.parent_hash();
         let parent_details = self.block_details(&parent_hash).expect("Invalid parent hash");
 
@@ -240,7 +240,7 @@ impl HeaderChain {
     }
 
     /// Calculate how best block is changed
-    fn best_header_changed(&self, new_header: &HeaderView, engine: &dyn CodeChainEngine) -> BestHeaderChanged {
+    fn best_header_changed(&self, new_header: &HeaderView<'_>, engine: &dyn CodeChainEngine) -> BestHeaderChanged {
         let parent_hash_of_new_header = new_header.parent_hash();
         let parent_details_of_new_header = self.block_details(&parent_hash_of_new_header).expect("Invalid parent hash");
         let grandparent_hash_of_new_header = parent_details_of_new_header.parent;

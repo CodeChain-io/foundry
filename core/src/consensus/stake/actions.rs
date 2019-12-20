@@ -241,7 +241,7 @@ impl Encodable for Action {
 }
 
 impl Decodable for Action {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let tag = rlp.val_at(0)?;
         match tag {
             ACTION_TAG_TRANSFER_CCS => {

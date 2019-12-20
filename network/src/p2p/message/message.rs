@@ -40,7 +40,7 @@ impl Encodable for Message {
 }
 
 impl Decodable for Message {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let protocol_id = rlp.val_at(0)?;
         match protocol_id {
             REQUEST_ID => Ok(Message::Negotiation(Decodable::decode(rlp)?)),

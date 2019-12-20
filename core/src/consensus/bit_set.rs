@@ -84,7 +84,7 @@ impl BitSet {
             .sum()
     }
 
-    pub fn true_index_iter(&self) -> BitSetIndexIterator {
+    pub fn true_index_iter(&self) -> BitSetIndexIterator<'_> {
         BitSetIndexIterator {
             index: 0,
             bitset: self,
@@ -99,7 +99,7 @@ impl Default for BitSet {
 }
 
 impl fmt::Debug for BitSet {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0[..].fmt(formatter)
     }
 }
@@ -122,7 +122,7 @@ impl Encodable for BitSet {
 }
 
 impl Decodable for BitSet {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         rlp.decoder().decode_value(|bytes| {
             let expected = BITSET_SIZE;
             let got = bytes.len();

@@ -25,33 +25,18 @@ extern crate codechain_network as cnetwork;
 extern crate codechain_state as cstate;
 extern crate codechain_sync as csync;
 extern crate codechain_types as ctypes;
-extern crate codechain_vm as cvm;
-pub extern crate jsonrpc_core;
-extern crate jsonrpc_http_server;
-extern crate jsonrpc_ipc_server;
-extern crate jsonrpc_ws_server;
-extern crate kvdb;
-extern crate kvdb_rocksdb as rocksdb;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-extern crate parking_lot;
-extern crate primitives;
-extern crate rand;
-extern crate rlp;
-extern crate rustc_hex;
-extern crate rustc_serialize;
-extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate cidr;
-extern crate serde_json;
-extern crate time;
-extern crate tokio_core;
-
 #[macro_use]
 extern crate jsonrpc_derive;
+
+use cidr;
+pub use jsonrpc_core;
+use jsonrpc_http_server;
 
 pub mod rpc_server;
 pub mod v1;

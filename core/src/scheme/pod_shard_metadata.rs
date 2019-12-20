@@ -37,7 +37,7 @@ impl From<cjson::scheme::Shard> for PodShardMetadata {
 }
 
 impl fmt::Display for PodShardMetadata {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "(#seq={}; owners={:#?}; users={:#?})", self.seq, self.owners, self.users)
     }
 }

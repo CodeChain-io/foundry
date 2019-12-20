@@ -30,7 +30,7 @@ use primitives::remove_0x_prefix;
 use crate::config::ChainType;
 use crate::constants::DEFAULT_KEYS_PATH;
 
-pub fn run_account_command(matches: &ArgMatches) -> Result<(), String> {
+pub fn run_account_command(matches: &ArgMatches<'_>) -> Result<(), String> {
     if matches.subcommand.is_none() {
         println!("{}", matches.usage());
         return Ok(())
@@ -141,7 +141,7 @@ fn read_password_and_confirm() -> Option<Password> {
     }
 }
 
-fn get_global_argument(matches: &ArgMatches, arg_name: &str) -> Option<String> {
+fn get_global_argument(matches: &ArgMatches<'_>, arg_name: &str) -> Option<String> {
     match matches.value_of(arg_name) {
         Some(value) => Some(value.to_string()),
         None => match matches.subcommand() {

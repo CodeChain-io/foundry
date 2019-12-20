@@ -49,7 +49,7 @@ impl Encodable for SignedMessage {
 }
 
 impl Decodable for SignedMessage {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         if rlp.item_count()? != 2 {
             return Err(DecoderError::Custom("Cannot decode a signed message"))
         }

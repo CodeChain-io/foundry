@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-extern crate hyper;
-
 use std::io::Write;
 
+use hyper;
 use parking_lot::Mutex;
 use primitives::{H256, U256};
 
@@ -90,13 +89,13 @@ struct PostHandler {
 }
 
 impl hyper::client::Handler<HttpStream> for PostHandler {
-    fn on_request(&mut self, request: &mut Request) -> Next {
+    fn on_request(&mut self, request: &mut Request<'_>) -> Next {
         request.set_method(Method::Post);
         request.headers_mut().set(ContentType::json());
         Next::write()
     }
 
-    fn on_request_writable(&mut self, encoder: &mut hyper::Encoder<HttpStream>) -> Next {
+    fn on_request_writable(&mut self, encoder: &mut hyper::Encoder<'_, HttpStream>) -> Next {
         if let Err(e) = encoder.write_all(self.body.as_bytes()) {
             ctrace!(MINER, "Error posting work data: {}", e);
         }
@@ -108,7 +107,7 @@ impl hyper::client::Handler<HttpStream> for PostHandler {
         Next::end()
     }
 
-    fn on_response_readable(&mut self, _decoder: &mut hyper::Decoder<HttpStream>) -> Next {
+    fn on_response_readable(&mut self, _decoder: &mut hyper::Decoder<'_, HttpStream>) -> Next {
         Next::end()
     }
 

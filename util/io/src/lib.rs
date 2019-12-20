@@ -62,11 +62,11 @@
 
 #[macro_use]
 extern crate codechain_logger as clogger;
-extern crate mio;
+
 #[macro_use]
 extern crate log;
-extern crate crossbeam;
-extern crate parking_lot;
+
+
 
 mod service;
 mod worker;
@@ -89,7 +89,7 @@ pub enum IoError {
 }
 
 impl fmt::Display for IoError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // just defer to the std implementation for now.
         // we can refine the formatting when more variants are added.
         match self {

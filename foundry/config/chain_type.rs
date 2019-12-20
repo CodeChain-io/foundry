@@ -73,7 +73,7 @@ impl<'a> Deserialize<'a> for ChainType {
         impl<'a> Visitor<'a> for ChainTypeVisitor {
             type Value = ChainType;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(formatter, "a valid chain type string")
             }
 
@@ -95,7 +95,7 @@ impl<'a> Deserialize<'a> for ChainType {
 }
 
 impl fmt::Display for ChainType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             ChainType::Mainnet => "mainnet",
             ChainType::Solo => "solo",

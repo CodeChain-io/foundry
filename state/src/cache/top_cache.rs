@@ -94,7 +94,7 @@ impl TopCache {
         self.account.get(a, db)
     }
 
-    pub fn account_mut(&self, a: &Address, db: &dyn Trie) -> TrieResult<RefMut<Account>> {
+    pub fn account_mut(&self, a: &Address, db: &dyn Trie) -> TrieResult<RefMut<'_, Account>> {
         self.account.get_mut(a, db)
     }
 
@@ -106,7 +106,7 @@ impl TopCache {
         self.regular_account.get(a, db)
     }
 
-    pub fn regular_account_mut(&self, a: &RegularAccountAddress, db: &dyn Trie) -> TrieResult<RefMut<RegularAccount>> {
+    pub fn regular_account_mut(&self, a: &RegularAccountAddress, db: &dyn Trie) -> TrieResult<RefMut<'_, RegularAccount>> {
         self.regular_account.get_mut(a, db)
     }
 
@@ -118,7 +118,7 @@ impl TopCache {
         self.metadata.get(a, db)
     }
 
-    pub fn metadata_mut(&self, a: &MetadataAddress, db: &dyn Trie) -> TrieResult<RefMut<Metadata>> {
+    pub fn metadata_mut(&self, a: &MetadataAddress, db: &dyn Trie) -> TrieResult<RefMut<'_, Metadata>> {
         self.metadata.get_mut(a, db)
     }
 
@@ -126,7 +126,7 @@ impl TopCache {
         self.shard.get(a, db)
     }
 
-    pub fn shard_mut(&self, a: &ShardAddress, db: &dyn Trie) -> TrieResult<RefMut<Shard>> {
+    pub fn shard_mut(&self, a: &ShardAddress, db: &dyn Trie) -> TrieResult<RefMut<'_, Shard>> {
         self.shard.get_mut(a, db)
     }
 
@@ -139,7 +139,7 @@ impl TopCache {
         self.text.get(a, db)
     }
 
-    pub fn text_mut(&self, a: &H256, db: &dyn Trie) -> TrieResult<RefMut<Text>> {
+    pub fn text_mut(&self, a: &H256, db: &dyn Trie) -> TrieResult<RefMut<'_, Text>> {
         self.text.get_mut(a, db)
     }
 
@@ -151,7 +151,7 @@ impl TopCache {
         self.action_data.get(a, db)
     }
 
-    pub fn action_data_mut(&self, a: &H256, db: &dyn Trie) -> TrieResult<RefMut<ActionData>> {
+    pub fn action_data_mut(&self, a: &H256, db: &dyn Trie) -> TrieResult<RefMut<'_, ActionData>> {
         self.action_data.get_mut(a, db)
     }
 

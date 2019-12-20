@@ -43,7 +43,7 @@ impl BestBlockChanged {
         Some(self.best_block()?.hash())
     }
 
-    pub fn best_block(&self) -> Option<BlockView> {
+    pub fn best_block(&self) -> Option<BlockView<'_>> {
         let block = match self {
             BestBlockChanged::CanonChainAppended {
                 best_block,
@@ -82,7 +82,7 @@ impl BestHeaderChanged {
         Some(self.header()?.hash())
     }
 
-    pub fn header(&self) -> Option<HeaderView> {
+    pub fn header(&self) -> Option<HeaderView<'_>> {
         let header = match self {
             BestHeaderChanged::CanonChainAppended {
                 best_header,

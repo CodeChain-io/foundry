@@ -27,7 +27,7 @@ macro_rules! impl_hash {
         pub struct $name([u8; $size]);
 
         impl fmt::Debug for $name {
-            fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
                 let self_ref: &[u8] = &self.0;
                 write!(f, "{:?}", self_ref)
             }
@@ -66,7 +66,7 @@ macro_rules! impl_hash {
                 impl<'b> Visitor<'b> for HashVisitor {
                     type Value = $name;
 
-                    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                         write!(formatter, "a hex-encoded {}", stringify!($name))
                     }
 

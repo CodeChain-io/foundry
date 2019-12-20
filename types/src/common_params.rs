@@ -386,7 +386,7 @@ impl Encodable for CommonParams {
 }
 
 impl Decodable for CommonParams {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let size = rlp.item_count()?;
         if !VALID_SIZE.contains(&size) {
             return Err(DecoderError::RlpIncorrectListLen {

@@ -62,7 +62,7 @@ impl ShardCache {
         self.asset_scheme.get(a, db)
     }
 
-    pub fn asset_scheme_mut(&self, a: &AssetSchemeAddress, db: &dyn Trie) -> TrieResult<RefMut<AssetScheme>> {
+    pub fn asset_scheme_mut(&self, a: &AssetSchemeAddress, db: &dyn Trie) -> TrieResult<RefMut<'_, AssetScheme>> {
         self.asset_scheme.get_mut(a, db)
     }
 

@@ -49,7 +49,7 @@ impl From<cjson::scheme::Accounts> for PodAccounts {
 }
 
 impl fmt::Display for PodAccounts {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (add, acc) in &self.0 {
             writeln!(f, "{} => {}", add, acc)?;
         }
@@ -78,7 +78,7 @@ impl From<cjson::scheme::Shards> for PodShards {
 }
 
 impl fmt::Display for PodShards {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (shard_id, shard) in &self.0 {
             writeln!(f, "{}: {}", shard_id, shard)?;
         }

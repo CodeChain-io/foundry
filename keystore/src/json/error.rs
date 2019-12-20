@@ -29,7 +29,7 @@ pub enum Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match *self {
             Error::InvalidUuid => write!(f, "Invalid Uuid"),
             Error::UnsupportedVersion => write!(f, "Unsupported version"),

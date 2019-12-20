@@ -33,7 +33,7 @@ impl NodeId {
 }
 
 impl fmt::Display for NodeId {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let internal = &self.addr;
         let port = internal.port();
         match internal.ip() {

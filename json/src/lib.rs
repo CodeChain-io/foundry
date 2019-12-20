@@ -15,10 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 extern crate codechain_key as ckey;
-extern crate primitives;
-extern crate rustc_hex;
-extern crate serde;
-extern crate serde_json;
+
+
+
+
 #[macro_use]
 extern crate serde_derive;
 

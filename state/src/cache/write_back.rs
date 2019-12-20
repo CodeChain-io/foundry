@@ -210,7 +210,7 @@ where
 
     /// Pull item `a` in our cache from the trie DB.
     /// If it doesn't exist, make item equal the evaluation of `default`.
-    pub fn get_mut(&self, a: &Item::Address, db: &dyn Trie) -> cmerkle::Result<RefMut<Item>> {
+    pub fn get_mut(&self, a: &Item::Address, db: &dyn Trie) -> cmerkle::Result<RefMut<'_, Item>> {
         let contains_key = self.cache.borrow().contains_key(a);
         if !contains_key {
             let maybe_item = db.get(a.as_ref())?.map(|bytes| ::rlp::decode::<Item>(&bytes).unwrap());
@@ -268,7 +268,7 @@ impl<Item> fmt::Debug for WriteBack<Item>
 where
     Item: CacheableItem,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.cache.borrow().fmt(f)
     }
 }

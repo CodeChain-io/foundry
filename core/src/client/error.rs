@@ -32,7 +32,7 @@ impl From<UtilError> for Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), FmtError> {
         match self {
             Error::Util(err) => write!(f, "{}", err),
         }

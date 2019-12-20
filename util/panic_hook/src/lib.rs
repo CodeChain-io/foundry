@@ -16,13 +16,13 @@
 
 //! Custom panic hook with bug report link
 
-extern crate backtrace;
+
 extern crate codechain_logger as clogger;
-extern crate get_if_addrs;
-extern crate my_internet_ip;
 
 use backtrace::Backtrace;
 use clogger::EmailAlarm;
+use get_if_addrs;
+use my_internet_ip;
 use std::panic::{self, PanicInfo};
 use std::thread;
 
@@ -41,13 +41,13 @@ This is a bug. Please report it at:
     https://github.com/CodeChain-io/codechain/issues/new
 ";
 
-fn panic_hook(info: &PanicInfo) {
+fn panic_hook(info: &PanicInfo<'_>) {
     let message = panic_message(info);
     eprintln!("{}", message);
     exit_on_debug_or_env_set_on_release();
 }
 
-fn panic_hook_with_email_alarm(email_alarm: &EmailAlarm, info: &PanicInfo) {
+fn panic_hook_with_email_alarm(email_alarm: &EmailAlarm, info: &PanicInfo<'_>) {
     let message = panic_message(info);
     eprintln!("{}", message);
     let ip_addresses = get_ip_addresses();
@@ -57,7 +57,7 @@ fn panic_hook_with_email_alarm(email_alarm: &EmailAlarm, info: &PanicInfo) {
     exit_on_debug_or_env_set_on_release();
 }
 
-fn panic_message(info: &PanicInfo) -> String {
+fn panic_message(info: &PanicInfo<'_>) -> String {
     let location = info.location();
     let file = location.as_ref().map(|l| l.file()).unwrap_or("<unknown>");
     let line = location.as_ref().map(|l| l.line()).unwrap_or(0);

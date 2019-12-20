@@ -50,7 +50,7 @@ type TrackerAndAddress = (Tracker, TransactionAddresses);
 
 impl BodyDB {
     /// Create new instance of blockchain from given Genesis.
-    pub fn new(genesis: &BlockView, db: Arc<dyn KeyValueDB>) -> Self {
+    pub fn new(genesis: &BlockView<'_>, db: Arc<dyn KeyValueDB>) -> Self {
         let bdb = Self {
             body_cache: Mutex::new(LruCache::new(BODY_CACHE_SIZE)),
             address_by_hash_cache: RwLock::new(HashMap::new()),
@@ -76,7 +76,7 @@ impl BodyDB {
     /// Inserts the block body into backing cache database.
     /// Expects the body to be valid and already verified.
     /// If the body is already known, does nothing.
-    pub fn insert_body(&self, batch: &mut DBTransaction, block: &BlockView) {
+    pub fn insert_body(&self, batch: &mut DBTransaction, block: &BlockView<'_>) {
         let hash = block.hash();
 
         if self.is_known_body(&hash) {
@@ -270,7 +270,7 @@ impl BodyDB {
     }
 
     /// Create a block body from a block.
-    pub fn block_to_body(block: &BlockView) -> Bytes {
+    pub fn block_to_body(block: &BlockView<'_>) -> Bytes {
         let mut body = RlpStream::new_list(1);
         body.append_raw(block.rlp().at(1).unwrap().as_raw(), 1);
         body.out()

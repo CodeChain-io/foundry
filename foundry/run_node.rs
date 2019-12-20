@@ -221,7 +221,7 @@ pub fn open_db(cfg: &config::Operating, client_config: &ClientConfig) -> Result<
     Ok(db)
 }
 
-pub fn run_node(matches: &ArgMatches) -> Result<(), String> {
+pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
     // increase max number of open files
     raise_fd_limit();
 

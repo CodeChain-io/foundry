@@ -16,43 +16,43 @@
 
 #[macro_use]
 extern crate clap;
-extern crate futures;
+
 
 #[macro_use]
 extern crate log;
-extern crate tokio_core;
 
-extern crate serde;
+
+
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
 
-extern crate app_dirs;
+
+
 extern crate codechain_core as ccore;
 extern crate codechain_discovery as cdiscovery;
 extern crate codechain_key as ckey;
 extern crate codechain_keystore as ckeystore;
 #[macro_use]
 extern crate codechain_logger as clogger;
-extern crate cidr;
+
 extern crate codechain_network as cnetwork;
 extern crate codechain_rpc as crpc;
-extern crate codechain_state as cstate;
+
 extern crate codechain_sync as csync;
 extern crate codechain_timer as ctimer;
-extern crate codechain_types as ctypes;
-extern crate ctrlc;
-extern crate env_logger;
-extern crate fdlimit;
-extern crate finally_block;
-extern crate kvdb;
-extern crate kvdb_rocksdb;
-extern crate never_type;
-extern crate panic_hook;
-extern crate parking_lot;
-extern crate primitives;
-extern crate rpassword;
-extern crate toml;
+
+
+
+
+
+
+
+
+use panic_hook;
+
+
+
+
 
 mod config;
 mod constants;

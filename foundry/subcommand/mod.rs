@@ -22,7 +22,7 @@ use clap::ArgMatches;
 use self::account_command::run_account_command;
 use self::convert_command::run_convert_command;
 
-pub fn run_subcommand(matches: &ArgMatches) -> Result<(), String> {
+pub fn run_subcommand(matches: &ArgMatches<'_>) -> Result<(), String> {
     let subcommand = matches.subcommand.as_ref().unwrap();
     match subcommand.name.as_str() {
         "account" => run_account_command(&subcommand.matches),

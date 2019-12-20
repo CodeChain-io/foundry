@@ -48,7 +48,7 @@ pub enum Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let s = match *self {
             Error::Io(ref err) => err.to_string(),
             Error::InvalidPassword => "Invalid password".into(),

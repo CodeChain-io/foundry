@@ -631,7 +631,7 @@ impl TopLevelState {
         Ok(())
     }
 
-    fn get_account_mut(&self, a: &Address) -> TrieResult<RefMut<Account>> {
+    fn get_account_mut(&self, a: &Address) -> TrieResult<RefMut<'_, Account>> {
         debug_assert_eq!(Ok(false), self.regular_account_exists_and_not_null_by_address(a));
 
         let db = self.db.borrow();
@@ -639,21 +639,21 @@ impl TopLevelState {
         self.top_cache.account_mut(&a, &trie)
     }
 
-    fn get_regular_account_mut(&self, public: &Public) -> TrieResult<RefMut<RegularAccount>> {
+    fn get_regular_account_mut(&self, public: &Public) -> TrieResult<RefMut<'_, RegularAccount>> {
         let regular_account_address = RegularAccountAddress::new(public);
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.top_cache.regular_account_mut(&regular_account_address, &trie)
     }
 
-    fn get_metadata_mut(&self) -> TrieResult<RefMut<Metadata>> {
+    fn get_metadata_mut(&self) -> TrieResult<RefMut<'_, Metadata>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         let address = MetadataAddress::new();
         self.top_cache.metadata_mut(&address, &trie)
     }
 
-    fn get_shard_mut(&self, shard_id: ShardId) -> TrieResult<RefMut<Shard>> {
+    fn get_shard_mut(&self, shard_id: ShardId) -> TrieResult<RefMut<'_, Shard>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         let shard_address = ShardAddress::new(shard_id);
@@ -666,13 +666,13 @@ impl TopLevelState {
         self.top_cache.text(key, &trie)
     }
 
-    fn get_text_mut(&self, key: &TxHash) -> TrieResult<RefMut<Text>> {
+    fn get_text_mut(&self, key: &TxHash) -> TrieResult<RefMut<'_, Text>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.top_cache.text_mut(key, &trie)
     }
 
-    fn get_action_data_mut(&self, key: &H256) -> TrieResult<RefMut<ActionData>> {
+    fn get_action_data_mut(&self, key: &H256) -> TrieResult<RefMut<'_, ActionData>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.top_cache.action_data_mut(key, &trie)

@@ -306,7 +306,7 @@ impl Importer {
         &'a self,
         headers: impl IntoIterator<Item = &'a Header>,
         client: &Client,
-        _importer_lock: &MutexGuard<()>,
+        _importer_lock: &MutexGuard<'_, ()>,
     ) -> usize {
         let prev_best_proposal_header_hash = client.block_chain().best_proposal_header().hash();
 

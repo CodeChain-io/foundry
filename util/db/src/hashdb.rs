@@ -16,8 +16,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //! Database of byte-slices keyed to their blake2b hash.
-extern crate primitives;
-
 use primitives::H256;
 use std::collections::HashMap;
 

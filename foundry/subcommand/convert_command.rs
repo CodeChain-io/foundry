@@ -25,7 +25,7 @@ use clap::ArgMatches;
 use crate::config::ChainType;
 use primitives::remove_0x_prefix;
 
-pub fn run_convert_command(matches: &ArgMatches) -> Result<(), String> {
+pub fn run_convert_command(matches: &ArgMatches<'_>) -> Result<(), String> {
     let from = matches.value_of("from").expect("Argument 'from' is required");
     let to = matches.value_of("to").expect("Argument 'to' is required");
 
@@ -130,7 +130,7 @@ fn private_to_public(private: Private) -> Result<Public, String> {
     Ok(*keypair.public())
 }
 
-fn get_network_id(matches: &ArgMatches) -> Result<NetworkId, String> {
+fn get_network_id(matches: &ArgMatches<'_>) -> Result<NetworkId, String> {
     let chain = matches.value_of("chain").unwrap_or_else(|| "solo");
     let chain_type: ChainType = chain.parse().unwrap();
     // XXX: What should we do if the network id has been changed

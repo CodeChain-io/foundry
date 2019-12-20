@@ -53,7 +53,7 @@ pub struct BackupDataV1 {
     pub finalized_view_of_current_block: Option<View>,
 }
 
-pub fn backup(db: &dyn KeyValueDB, backup_data: BackupView) {
+pub fn backup(db: &dyn KeyValueDB, backup_data: BackupView<'_>) {
     let BackupView {
         height,
         view,

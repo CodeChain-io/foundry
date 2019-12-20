@@ -39,7 +39,7 @@ impl From<Uuid> for [u8; 16] {
 }
 
 impl fmt::Display for Uuid {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let d1 = &self.0[0..4];
         let d2 = &self.0[4..6];
         let d3 = &self.0[6..8];
@@ -109,7 +109,7 @@ struct UuidVisitor;
 impl<'a> Visitor<'a> for UuidVisitor {
     type Value = Uuid;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "a valid hex-encoded UUID")
     }
 

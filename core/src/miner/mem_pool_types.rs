@@ -55,7 +55,7 @@ impl Encodable for TxOrigin {
 }
 
 impl Decodable for TxOrigin {
-    fn decode(d: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         match d.as_val().expect("rlp decode Error") {
             LOCAL => Ok(TxOrigin::Local),
             EXTERNAL => Ok(TxOrigin::External),

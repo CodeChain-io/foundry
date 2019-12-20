@@ -22,9 +22,9 @@
 #[macro_use]
 extern crate error_chain;
 
-extern crate primitives;
-extern crate rlp;
-extern crate rustc_hex;
+
+
+
 
 use primitives::H256;
 use std::fmt;
@@ -39,7 +39,7 @@ pub enum BaseDataError {
 }
 
 impl fmt::Display for BaseDataError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             BaseDataError::NegativelyReferencedHash(hash) => {
                 write!(f, "Entry {} removed from database more times than it was added.", hash)

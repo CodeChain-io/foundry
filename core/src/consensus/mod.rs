@@ -261,7 +261,7 @@ pub trait ConsensusEngine: Sync + Send {
 
     fn register_chain_notify(&self, _: &Client) {}
 
-    fn get_best_block_from_best_proposal_header(&self, header: &HeaderView) -> BlockHash {
+    fn get_best_block_from_best_proposal_header(&self, header: &HeaderView<'_>) -> BlockHash {
         header.hash()
     }
 
@@ -327,7 +327,7 @@ pub enum EngineError {
 }
 
 impl fmt::Display for EngineError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use self::EngineError::*;
         let msg = match self {
             BlockNotAuthorized(address) => format!("Signer {} is not authorized.", address),

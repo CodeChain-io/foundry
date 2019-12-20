@@ -16,8 +16,8 @@
 
 extern crate codechain_crypto as ccrypto;
 extern crate codechain_db as cdb;
-extern crate primitives;
-extern crate rlp;
+
+
 
 #[cfg(test)]
 extern crate trie_standardmap as standardmap;
@@ -53,7 +53,7 @@ pub enum TrieError {
 }
 
 impl fmt::Display for TrieError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             TrieError::InvalidStateRoot(root) => write!(f, "Invalid state root: {}", root),
             TrieError::IncompleteDatabase(missing) => write!(f, "Database missing expected key: {}", missing),

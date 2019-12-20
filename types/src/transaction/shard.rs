@@ -339,7 +339,7 @@ const ASSET_SCHEME_CHANGE_ID: TransactionId = 0x15;
 const ASSET_INCREASE_SUPPLY_ID: TransactionId = 0x18;
 
 impl Decodable for ShardTransaction {
-    fn decode(d: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         match d.val_at(0)? {
             ASSET_MINT_ID => {
                 let item_count = d.item_count()?;

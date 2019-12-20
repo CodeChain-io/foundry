@@ -180,7 +180,7 @@ pub fn verify_block_seal(
 }
 
 /// Parameters for full verification of block family
-pub struct FullFamilyParams<'a, C: BlockChainTrait + 'a> {
+pub struct FullFamilyParams<'a, C: BlockChainTrait> {
     /// Serialized block bytes
     pub block_bytes: &'a [u8],
 
@@ -200,7 +200,7 @@ pub fn verify_block_family<C: BlockChainTrait>(
     header: &Header,
     parent: &Header,
     engine: &dyn CodeChainEngine,
-    do_full: Option<FullFamilyParams<C>>,
+    do_full: Option<FullFamilyParams<'_, C>>,
     common_params: &CommonParams,
 ) -> Result<(), Error> {
     verify_block_with_params(header, block, engine, common_params)?;

@@ -41,7 +41,7 @@ impl From<UtilError> for Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
         match self {
             Error::NodeNotFound(key) => write!(f, "State node not found: {:x}", key),
             Error::SyncError(reason) => write!(f, "Sync error: {}", reason),

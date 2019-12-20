@@ -144,20 +144,20 @@ impl Stakeholders {
         self.0.contains(address)
     }
 
-    pub fn update_by_increased_balance(&mut self, account: &StakeAccount) {
+    pub fn update_by_increased_balance(&mut self, account: &StakeAccount<'_>) {
         if account.balance > 0 {
             self.0.insert(*account.address);
         }
     }
 
-    pub fn update_by_decreased_balance(&mut self, account: &StakeAccount, delegation: &Delegation) {
+    pub fn update_by_decreased_balance(&mut self, account: &StakeAccount<'_>, delegation: &Delegation<'_>) {
         assert!(account.address == delegation.delegator);
         if account.balance == 0 && delegation.sum() == 0 {
             self.0.remove(account.address);
         }
     }
 
-    pub fn iter(&self) -> btree_set::Iter<Address> {
+    pub fn iter(&self) -> btree_set::Iter<'_, Address> {
         self.0.iter()
     }
 }
@@ -225,7 +225,7 @@ impl<'a> Delegation<'a> {
         self.delegatees.get(delegatee).cloned().unwrap_or(0)
     }
 
-    pub fn iter(&self) -> btree_map::Iter<Address, StakeQuantity> {
+    pub fn iter(&self) -> btree_map::Iter<'_, Address, StakeQuantity> {
         self.delegatees.iter()
     }
 
@@ -730,7 +730,7 @@ where
     }
 }
 
-fn decode_map_impl<K, V>(rlp: Rlp) -> BTreeMap<K, V>
+fn decode_map_impl<K, V>(rlp: Rlp<'_>) -> BTreeMap<K, V>
 where
     K: Ord + Decodable,
     V: Decodable, {

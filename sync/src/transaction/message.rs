@@ -45,7 +45,7 @@ impl Encodable for Message {
 }
 
 impl Decodable for Message {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let compressed: Vec<u8> = rlp.as_val()?;
         let uncompressed = {
             // TODO: Cache the Decoder object
