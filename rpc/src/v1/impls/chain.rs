@@ -14,33 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::convert::TryInto;
 use std::sync::Arc;
 
-use ccore::{AccountData, BlockId, EngineInfo, ExecuteClient, MiningBlockChainClient, TermInfo, TextClient};
+use ccore::{AccountData, BlockId, EngineInfo, MiningBlockChainClient, TermInfo, TextClient};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{public_to_address, NetworkId, PlatformAddress, Public};
 use cstate::FindActionHandler;
-use ctypes::transaction::{Action, ShardTransaction as ShardTransactionType};
-use ctypes::{BlockHash, BlockNumber, Tracker, TxHash};
-use primitives::Bytes as BytesArray;
+use ctypes::{BlockHash, BlockNumber, TxHash};
 
 use jsonrpc_core::Result;
 
 use super::super::errors;
 use super::super::traits::Chain;
-use super::super::types::{Block, BlockNumberAndHash, Text, Transaction, UnsignedTransaction};
+use super::super::types::{Block, BlockNumberAndHash, Text, Transaction};
 
 pub struct ChainClient<C>
 where
-    C: MiningBlockChainClient + ExecuteClient + EngineInfo, {
+    C: MiningBlockChainClient + EngineInfo, {
     client: Arc<C>,
 }
 
 impl<C> ChainClient<C>
 where
-    C: MiningBlockChainClient + AccountData + ExecuteClient + EngineInfo + TextClient,
+    C: MiningBlockChainClient + AccountData + EngineInfo + TextClient,
 {
     pub fn new(client: Arc<C>) -> Self {
         ChainClient {
@@ -51,14 +48,7 @@ where
 
 impl<C> Chain for ChainClient<C>
 where
-    C: MiningBlockChainClient
-        + AccountData
-        + ExecuteClient
-        + EngineInfo
-        + FindActionHandler
-        + TextClient
-        + TermInfo
-        + 'static,
+    C: MiningBlockChainClient + AccountData + EngineInfo + FindActionHandler + TextClient + TermInfo + 'static,
 {
     fn get_transaction(&self, transaction_hash: TxHash) -> Result<Option<Transaction>> {
         let id = transaction_hash.into();
@@ -79,10 +69,6 @@ where
 
     fn contain_transaction(&self, transaction_hash: TxHash) -> Result<bool> {
         self.contains_transaction(transaction_hash)
-    }
-
-    fn get_transaction_by_tracker(&self, tracker: Tracker) -> Result<Option<Transaction>> {
-        Ok(self.client.transaction_by_tracker(&tracker).map(From::from))
     }
 
     fn get_text(&self, transaction_hash: TxHash, block_number: Option<u64>) -> Result<Option<Text>> {
@@ -235,24 +221,5 @@ where
 
     fn get_possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>> {
         Ok(self.client.possible_authors(block_number).map_err(errors::core)?)
-    }
-
-    fn execute_vm(
-        &self,
-        tx: UnsignedTransaction,
-        params: Vec<Vec<BytesArray>>,
-        indices: Vec<usize>,
-    ) -> Result<Vec<String>> {
-        let action = tx.action.try_into().map_err(errors::conversion)?;
-        if let Action::TransferAsset {
-            inputs,
-            ..
-        } = &action
-        {
-            let transaction = Option::<ShardTransactionType>::from(action.clone()).unwrap();
-            Ok(self.client.execute_vm(&transaction, inputs, &params, &indices).map_err(errors::core)?)
-        } else {
-            Err(errors::transfer_only())
-        }
     }
 }

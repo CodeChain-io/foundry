@@ -138,7 +138,6 @@ impl Stakeholders {
         Ok(result)
     }
 
-
     #[cfg(test)]
     pub fn contains(&self, address: &Address) -> bool {
         self.0.contains(address)
@@ -333,7 +332,6 @@ impl Validators {
         result.reverse(); // Ascending order of (delegation, deposit, priority)
         Ok(Self(result))
     }
-
 
     pub fn save_to_state(&self, state: &mut TopLevelState) -> StateResult<()> {
         let key = &*VALIDATORS_KEY;

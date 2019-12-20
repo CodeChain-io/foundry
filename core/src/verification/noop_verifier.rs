@@ -16,7 +16,7 @@
 
 use ctypes::{CommonParams, Header};
 
-use super::{verification, Verifier};
+use super::Verifier;
 use crate::client::BlockChainTrait;
 use crate::consensus::CodeChainEngine;
 use crate::error::Error;
@@ -31,7 +31,6 @@ impl<C: BlockChainTrait> Verifier<C> for NoopVerifier {
         _: &Header,
         _t: &Header,
         _: &dyn CodeChainEngine,
-        _: Option<verification::FullFamilyParams<C>>,
         _common_params: &CommonParams,
     ) -> Result<(), Error> {
         Ok(())

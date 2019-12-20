@@ -19,8 +19,7 @@ use ckey::NetworkId;
 use rlp::RlpStream;
 
 use super::Action;
-use super::{AssetWrapCCCOutput, ShardTransaction};
-use crate::{Tracker, TxHash};
+use crate::TxHash;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Transaction {
@@ -51,28 +50,6 @@ impl Transaction {
         blake256(stream.as_raw()).into()
     }
 
-    pub fn tracker(&self) -> Option<Tracker> {
-        let shard_tx = match self.action.clone() {
-            Action::WrapCCC {
-                shard_id,
-                lock_script_hash,
-                parameters,
-                quantity,
-                ..
-            } => Some(ShardTransaction::WrapCCC {
-                network_id: self.network_id,
-                shard_id,
-                tx_hash: self.hash(),
-                output: AssetWrapCCCOutput {
-                    lock_script_hash,
-                    parameters,
-                    quantity,
-                },
-            }),
-            other_actions => other_actions.into(),
-        };
-        shard_tx.map(|t| t.tracker())
-    }
     pub fn is_master_key_allowed(&self) -> bool {
         match self.action {
             Action::SetRegularKey {

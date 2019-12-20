@@ -17,12 +17,11 @@
 
 use ckey::Address;
 use cstate::{StateError, TopState, TopStateView};
-use ctypes::errors::{HistoryError, SyntaxError};
-use ctypes::transaction::{Action, AssetTransferInput, Timelock};
+use ctypes::errors::SyntaxError;
+use ctypes::transaction::Action;
 use ctypes::{CommonParams, Header};
 
 use crate::block::{ExecutedBlock, IsBlock};
-use crate::client::BlockChainTrait;
 use crate::error::Error;
 use crate::transaction::{SignedTransaction, UnverifiedTransaction};
 
@@ -67,146 +66,20 @@ impl CodeChainMachine {
         Ok(SignedTransaction::try_new(p)?)
     }
 
-    /// Does verification of the transaction against the parent state.
-    pub fn verify_transaction<C: BlockChainTrait>(
-        &self,
-        tx: &SignedTransaction,
-        header: &Header,
-        client: &C,
-        verify_timelock: bool,
-    ) -> Result<(), Error> {
-        if let Action::TransferAsset {
-            inputs,
-            expiration,
-            ..
-        } = &tx.action
-        {
-            Self::verify_transaction_expiration(&expiration, header)?;
-            if verify_timelock {
-                Self::verify_transfer_timelock(inputs, header, client)?;
-            }
-        }
-        // FIXME: Filter transactions.
-        Ok(())
-    }
-
     /// Populate a header's fields based on its parent's header.
     /// Usually implements the chain scoring rule based on weight.
     pub fn populate_from_parent(&self, header: &mut Header, parent: &Header) {
         header.set_score(*parent.score());
     }
 
-    fn verify_transaction_expiration(expiration: &Option<u64>, header: &Header) -> Result<(), Error> {
-        if expiration.is_none() {
-            return Ok(())
-        }
-        let expiration = expiration.unwrap();
-
-        if expiration < header.timestamp() {
-            return Err(HistoryError::TransferExpired {
-                expiration,
-                timestamp: header.timestamp(),
-            }
-            .into())
-        }
-        Ok(())
-    }
-
-    fn verify_transfer_timelock<C: BlockChainTrait>(
-        inputs: &[AssetTransferInput],
-        header: &Header,
-        client: &C,
-    ) -> Result<(), Error> {
-        for input in inputs {
-            if let Some(timelock) = input.timelock {
-                match timelock {
-                    Timelock::Block(value) if value > header.number() => {
-                        return Err(HistoryError::Timelocked {
-                            timelock,
-                            remaining_time: value - header.number(),
-                        }
-                        .into())
-                    }
-                    Timelock::BlockAge(value) => {
-                        let absolute = client.transaction_block_number(&input.prev_out.tracker).ok_or_else(|| {
-                            Error::History(HistoryError::Timelocked {
-                                timelock,
-                                remaining_time: u64::max_value(),
-                            })
-                        })? + value;
-                        if absolute > header.number() {
-                            return Err(HistoryError::Timelocked {
-                                timelock,
-                                remaining_time: absolute - header.number(),
-                            }
-                            .into())
-                        }
-                    }
-                    Timelock::Time(value) if value > header.timestamp() => {
-                        return Err(HistoryError::Timelocked {
-                            timelock,
-                            remaining_time: value - header.timestamp(),
-                        }
-                        .into())
-                    }
-                    Timelock::TimeAge(value) => {
-                        let absolute =
-                            client.transaction_block_timestamp(&input.prev_out.tracker).ok_or_else(|| {
-                                Error::History(HistoryError::Timelocked {
-                                    timelock,
-                                    remaining_time: u64::max_value(),
-                                })
-                            })? + value;
-                        if absolute > header.timestamp() {
-                            return Err(HistoryError::Timelocked {
-                                timelock,
-                                remaining_time: absolute - header.timestamp(),
-                            }
-                            .into())
-                        }
-                    }
-                    _ => (),
-                }
-            }
-        }
-        Ok(())
-    }
-
     pub fn min_cost(params: &CommonParams, action: &Action) -> u64 {
         match action {
-            Action::MintAsset {
-                ..
-            } => params.min_asset_mint_cost(),
-            Action::TransferAsset {
-                ..
-            } => params.min_asset_transfer_cost(),
-            Action::ChangeAssetScheme {
-                ..
-            } => params.min_asset_scheme_change_cost(),
-            Action::IncreaseAssetSupply {
-                ..
-            } => params.min_asset_supply_increase_cost(),
-            Action::UnwrapCCC {
-                ..
-            } => params.min_asset_unwrap_ccc_cost(),
             Action::Pay {
                 ..
             } => params.min_pay_transaction_cost(),
             Action::SetRegularKey {
                 ..
             } => params.min_set_regular_key_transaction_cost(),
-            Action::CreateShard {
-                ..
-            } => params.min_create_shard_transaction_cost(),
-            Action::SetShardOwners {
-                ..
-            } => params.min_set_shard_owners_transaction_cost(),
-            Action::SetShardUsers {
-                ..
-            } => params.min_set_shard_users_transaction_cost(),
-            Action::WrapCCC {
-                ..
-            } => params.min_wrap_ccc_transaction_cost(),
             Action::Custom {
                 ..
             } => params.min_custom_transaction_cost(),

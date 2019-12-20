@@ -18,7 +18,6 @@ codechain-state = { path = "../state" }
 codechain-timer = { path = "../util/timer" }
 codechain-types = { path = "../types" }
 codechain-stratum = { path = "../stratum" }
-codechain-vm = { path = "../vm" }
 crossbeam-channel = "0.3"
 cuckoo = { git = "https://github.com/CodeChain-io/rust-cuckoo.git", rev = "280cab9c" }
 hyper = { git = "https://github.com/paritytech/hyper", default-features = false }

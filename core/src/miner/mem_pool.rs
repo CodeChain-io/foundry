@@ -395,14 +395,6 @@ impl MemPool {
             .filter(|&(_, ref item)| !item.origin.is_local())
             .map(|(hash, item)| (hash, item, current_block_number.saturating_sub(item.inserted_block_number)))
             .filter_map(|(hash, item, time_diff)| {
-                // FIXME: In PoW, current_timestamp can be roll-backed.
-                // In that case, transactions which are removed in here can be recovered.
-                if let Some(expiration) = item.expiration() {
-                    if expiration < current_timestamp {
-                        return Some(*hash)
-                    }
-                }
-
                 if time_diff > max_block_number {
                     return Some(*hash)
                 }
@@ -575,7 +567,6 @@ impl MemPool {
             } else if new_next_seq > next_seq {
                 self.move_queue(public, next_seq, new_next_seq, QueueTag::Current);
             }
-
 
             if new_next_seq <= first_seq {
                 self.next_seqs.remove(&public);
@@ -878,12 +869,7 @@ impl MemPool {
     /// Returns top transactions whose timestamp are in the given range from the pool ordered by priority.
     // FIXME: current_timestamp should be `u64`, not `Option<u64>`.
     // FIXME: if range_contains becomes stable, use range.contains instead of inequality.
-    pub fn top_transactions(
-        &self,
-        size_limit: usize,
-        current_timestamp: Option<u64>,
-        range: Range<u64>,
-    ) -> PendingSignedTransactions {
+    pub fn top_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingSignedTransactions {
         let mut current_size: usize = 0;
         let pending_items: Vec<_> = self
             .current
@@ -893,14 +879,6 @@ impl MemPool {
                 self.by_hash
                     .get(&t.hash)
                     .expect("All transactions in `current` and `future` are always included in `by_hash`")
-            })
-            .filter(|t| {
-                if let Some(expiration) = t.expiration() {
-                    if let Some(timestamp) = current_timestamp {
-                        return expiration >= timestamp
-                    }
-                }
-                true
             })
             .filter(|t| range.contains(&t.inserted_timestamp))
             .take_while(|t| {
@@ -953,11 +931,6 @@ impl MemPool {
         self.current.queue.iter().any(|tx| tx.origin.is_local())
     }
 
-    /// Returns Some(true) if the given transaction is local and None for not found.
-    pub fn is_local_transaction(&self, tx_hash: TxHash) -> Option<bool> {
-        self.by_hash.get(&tx_hash).map(|found_item| found_item.origin.is_local())
-    }
-
     /// Checks the given timelock with the current time/timestamp.
     fn should_wait_timelock(timelock: &TxTimelock, best_block_number: BlockNumber, best_block_timestamp: u64) -> bool {
         if let Some(block_number) = timelock.block {
@@ -974,15 +947,13 @@ impl MemPool {
     }
 }
 
-
 #[cfg(test)]
 pub mod test {
     use std::cmp::Ordering;
 
     use crate::client::{AccountData, TestBlockChainClient};
     use ckey::{Generator, KeyPair, Random};
-    use ctypes::transaction::{Action, AssetMintOutput, Transaction};
-    use primitives::H160;
+    use ctypes::transaction::{Action, Transaction};
 
     use super::*;
     use rlp::rlp_encode_and_decode_test;
@@ -1227,69 +1198,6 @@ pub mod test {
     }
 
     #[test]
-    fn mint_transaction_does_not_increase_cost() {
-        let shard_id = 0xCCC;
-
-        let fee = 100;
-        let tx = Transaction {
-            seq: 0,
-            fee,
-            network_id: "tc".into(),
-            action: Action::MintAsset {
-                network_id: "tc".into(),
-                shard_id,
-                metadata: "Metadata".to_string(),
-                output: Box::new(AssetMintOutput {
-                    lock_script_hash: H160::zero(),
-                    parameters: vec![],
-                    supply: ::std::u64::MAX,
-                }),
-                approver: None,
-                registrar: None,
-                allowed_script_hashes: vec![],
-                approvals: vec![],
-            },
-        };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
-        let keypair = Random.generate().unwrap();
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
-
-        assert_eq!(fee, item.cost());
-    }
-
-    #[test]
-    fn transfer_transaction_does_not_increase_cost() {
-        let fee = 100;
-        let tx = Transaction {
-            seq: 0,
-            fee,
-            network_id: "tc".into(),
-            action: Action::TransferAsset {
-                network_id: "tc".into(),
-                burns: vec![],
-                inputs: vec![],
-                outputs: vec![],
-                metadata: "".into(),
-                approvals: vec![],
-                expiration: None,
-            },
-        };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
-        let keypair = Random.generate().unwrap();
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
-
-        assert_eq!(fee, item.cost());
-    }
-
-    #[test]
     fn pay_transaction_increases_cost() {
         let fee = 100;
         let quantity = 100_000;
@@ -1312,44 +1220,6 @@ pub mod test {
         let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
 
         assert_eq!(fee + quantity, item.cost());
-    }
-
-    #[test]
-    fn fee_per_byte_order_simple() {
-        let order1 = create_transaction_order(1_000_000_000, 100);
-        let order2 = create_transaction_order(1_500_000_000, 300);
-        assert!(
-            order1.fee_per_byte > order2.fee_per_byte,
-            "{} must be larger than {}",
-            order1.fee_per_byte,
-            order2.fee_per_byte
-        );
-        assert_eq!(Ordering::Greater, order1.cmp(&order2));
-    }
-
-    #[test]
-    fn fee_per_byte_order_sort() {
-        let factors: Vec<Vec<usize>> = vec![
-            vec![4, 9],   // 19607
-            vec![2, 9],   // 9803
-            vec![2, 6],   // 11494
-            vec![10, 10], // 46728
-            vec![2, 8],   // 10309
-        ];
-        let mut orders: Vec<TransactionOrder> = Vec::new();
-        for factor in factors {
-            let fee = 1_000_000 * (factor[0] as u64);
-            orders.push(create_transaction_order(fee, 10 * factor[1]));
-        }
-
-        let prev_orders = orders.clone();
-        orders.sort_unstable();
-        let sorted_orders = orders;
-        assert_eq!(prev_orders[1], sorted_orders[0]);
-        assert_eq!(prev_orders[4], sorted_orders[1]);
-        assert_eq!(prev_orders[2], sorted_orders[2]);
-        assert_eq!(prev_orders[0], sorted_orders[3]);
-        assert_eq!(prev_orders[3], sorted_orders[4]);
     }
 
     #[test]
@@ -1382,38 +1252,6 @@ pub mod test {
         let signed = SignedTransaction::new_with_sign(tx, keypair.private());
 
         rlp_encode_and_decode_test!(signed);
-    }
-
-    #[test]
-    fn mempool_item_encode_and_decode() {
-        let keypair = Random.generate().unwrap();
-        let tx = Transaction {
-            seq: 0,
-            fee: 10,
-            network_id: "tc".into(),
-            action: Action::MintAsset {
-                network_id: "tc".into(),
-                shard_id: 0,
-                metadata: String::from_utf8(vec![b'a'; 1]).unwrap(),
-                approver: None,
-                registrar: None,
-                allowed_script_hashes: vec![],
-                output: Box::new(AssetMintOutput {
-                    lock_script_hash: H160::zero(),
-                    parameters: vec![],
-                    supply: ::std::u64::MAX,
-                }),
-                approvals: vec![],
-            },
-        };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
-
-        rlp_encode_and_decode_test!(item);
     }
 
     #[test]
@@ -1522,36 +1360,6 @@ pub mod test {
         MemPoolInput::new(signed, TxOrigin::Local, timelock)
     }
 
-    fn create_transaction_order(fee: u64, transaction_count: usize) -> TransactionOrder {
-        let keypair = Random.generate().unwrap();
-        let tx = Transaction {
-            seq: 0,
-            fee,
-            network_id: "tc".into(),
-            action: Action::MintAsset {
-                network_id: "tc".into(),
-                shard_id: 0,
-                metadata: String::from_utf8(vec![b'a'; transaction_count]).unwrap(),
-                approver: None,
-                registrar: None,
-                allowed_script_hashes: vec![],
-                output: Box::new(AssetMintOutput {
-                    lock_script_hash: H160::zero(),
-                    parameters: vec![],
-                    supply: ::std::u64::MAX,
-                }),
-                approvals: vec![],
-            },
-        };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
-        TransactionOrder::for_transaction(&item, 0)
-    }
-
     fn abbreviated_mempool_add(
         test_client: &TestBlockChainClient,
         mem_pool: &mut MemPool,
@@ -1627,7 +1435,7 @@ pub mod test {
                 create_signed_pay_with_fee(1, 140, keypair),
                 create_signed_pay_with_fee(2, 160, keypair)
             ],
-            mem_pool.top_transactions(std::usize::MAX, None, 0..std::u64::MAX).transactions
+            mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
         );
 
         assert_eq!(Vec::<SignedTransaction>::default(), mem_pool.future_transactions());
@@ -1686,7 +1494,7 @@ pub mod test {
 
         assert_eq!(
             vec![create_signed_pay_with_fee(0, 200, keypair), create_signed_pay_with_fee(1, 160, keypair)],
-            mem_pool.top_transactions(std::usize::MAX, None, 0..std::u64::MAX).transactions
+            mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
         );
 
         assert_eq!(Vec::<SignedTransaction>::default(), mem_pool.future_transactions());
@@ -1737,7 +1545,7 @@ pub mod test {
 
         assert_eq!(
             vec![create_signed_pay(0, keypair), create_signed_pay(1, keypair), create_signed_pay(2, keypair),],
-            mem_pool.top_transactions(std::usize::MAX, None, 0..std::u64::MAX).transactions
+            mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
         );
 
         assert_eq!(Vec::<SignedTransaction>::default(), mem_pool.future_transactions());
@@ -1753,7 +1561,7 @@ pub mod test {
 
         assert_eq!(
             vec![create_signed_pay(0, keypair),],
-            mem_pool.top_transactions(std::usize::MAX, None, 0..std::u64::MAX).transactions
+            mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
         );
 
         assert_eq!(vec![create_signed_pay(2, keypair),], mem_pool.future_transactions());

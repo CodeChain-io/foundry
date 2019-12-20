@@ -32,10 +32,9 @@ impl<C: BlockChainTrait> Verifier<C> for CanonVerifier {
         header: &Header,
         parent: &Header,
         engine: &dyn CodeChainEngine,
-        do_full: Option<verification::FullFamilyParams<C>>,
         common_params: &CommonParams,
     ) -> Result<(), Error> {
-        verification::verify_block_family(block, header, parent, engine, do_full, common_params)
+        verification::verify_block_family(block, header, parent, engine, common_params)
     }
 
     fn verify_block_final(&self, expected: &Header, got: &Header) -> Result<(), Error> {

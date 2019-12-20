@@ -255,21 +255,7 @@ impl MemPoolItem {
                 quantity,
                 ..
             } => self.tx.fee + *quantity,
-            Action::WrapCCC {
-                quantity,
-                ..
-            } => self.tx.fee + *quantity,
             _ => self.tx.fee,
-        }
-    }
-
-    pub fn expiration(&self) -> Option<u64> {
-        match &self.tx.action {
-            Action::TransferAsset {
-                expiration,
-                ..
-            } => *expiration,
-            _ => None,
         }
     }
 }
@@ -496,39 +482,12 @@ impl MemPoolFees {
     }
     pub fn min_cost(&self, action: &Action) -> u64 {
         match action {
-            Action::MintAsset {
-                ..
-            } => self.min_asset_mint_cost,
-            Action::TransferAsset {
-                ..
-            } => self.min_asset_transfer_cost,
-            Action::ChangeAssetScheme {
-                ..
-            } => self.min_asset_scheme_change_cost,
-            Action::IncreaseAssetSupply {
-                ..
-            } => self.min_asset_supply_increase_cost,
-            Action::UnwrapCCC {
-                ..
-            } => self.min_asset_unwrap_ccc_cost,
             Action::Pay {
                 ..
             } => self.min_pay_transaction_cost,
             Action::SetRegularKey {
                 ..
             } => self.min_set_regular_key_transaction_cost,
-            Action::CreateShard {
-                ..
-            } => self.min_create_shard_transaction_cost,
-            Action::SetShardOwners {
-                ..
-            } => self.min_set_shard_owners_transaction_cost,
-            Action::SetShardUsers {
-                ..
-            } => self.min_set_shard_users_transaction_cost,
-            Action::WrapCCC {
-                ..
-            } => self.min_wrap_ccc_transaction_cost,
             Action::Custom {
                 ..
             } => self.min_custom_transaction_cost,

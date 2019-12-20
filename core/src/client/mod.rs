@@ -36,9 +36,7 @@ use ckey::{Address, NetworkId, PlatformAddress, Public};
 use cmerkle::Result as TrieResult;
 use cnetwork::NodeId;
 use cstate::{FindActionHandler, Text, TopLevelState, TopStateView};
-use ctypes::transaction::{AssetTransferInput, PartialHashing};
-use ctypes::{BlockHash, BlockNumber, CommonParams, Tracker, TxHash};
-use cvm::ChainTimeInfo;
+use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
 use kvdb::KeyValueDB;
 use primitives::{Bytes, U256};
 
@@ -74,16 +72,6 @@ pub trait BlockChainTrait {
 
     /// Get the hash of block that contains the transaction, if any.
     fn transaction_block(&self, id: &TransactionId) -> Option<BlockHash>;
-
-    fn transaction_header(&self, tracker: &Tracker) -> Option<encoded::Header>;
-
-    fn transaction_block_number(&self, tracker: &Tracker) -> Option<BlockNumber> {
-        self.transaction_header(tracker).map(|header| header.number())
-    }
-
-    fn transaction_block_timestamp(&self, tracker: &Tracker) -> Option<u64> {
-        self.transaction_header(tracker).map(|header| header.timestamp())
-    }
 }
 
 pub trait EngineInfo: Send + Sync {
@@ -161,7 +149,6 @@ pub trait AccountData {
     }
 }
 
-
 /// State information to be used during client query
 pub enum StateOrBlock {
     /// State to be used, may be pending
@@ -201,7 +188,7 @@ pub trait ImportBlock {
 }
 
 /// Blockchain database client. Owns and manages a blockchain and a block queue.
-pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + ImportBlock + ChainTimeInfo {
+pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + ImportBlock {
     /// Get block queue information.
     fn queue_info(&self) -> BlockQueueInfo;
 
@@ -230,7 +217,6 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
     /// Get block status by block header hash.
     fn block_status(&self, id: &BlockId) -> BlockStatus;
 
-
     /// Get block total score.
     fn block_total_score(&self, id: &BlockId) -> Option<U256>;
 
@@ -242,11 +228,6 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
 
     /// Get invoice with given hash.
     fn error_hint(&self, hash: &TxHash) -> Option<String>;
-
-    /// Get the transaction with given tracker.
-    fn transaction_by_tracker(&self, tracker: &Tracker) -> Option<LocalizedTransaction>;
-
-    fn error_hints_by_tracker(&self, tracker: &Tracker) -> Vec<(TxHash, Option<String>)>;
 }
 
 /// Result of import block operation.
@@ -290,16 +271,6 @@ pub trait DatabaseClient {
 /// Provides methods to texts
 pub trait TextClient {
     fn get_text(&self, tx_hash: TxHash, id: BlockId) -> TrieResult<Option<Text>>;
-}
-
-pub trait ExecuteClient: ChainTimeInfo {
-    fn execute_vm(
-        &self,
-        tx: &dyn PartialHashing,
-        inputs: &[AssetTransferInput],
-        params: &[Vec<Bytes>],
-        indices: &[usize],
-    ) -> Result<Vec<String>, Error>;
 }
 
 pub trait StateInfo {

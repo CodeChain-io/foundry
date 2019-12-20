@@ -59,26 +59,9 @@ impl Decodable for TxHash {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-
     use rlp::{self, rlp_encode_and_decode_test};
 
     use super::*;
-
-    #[test]
-    fn hash_of_tx_hash_and_h256_are_the_same() {
-        let h256 = H256::random();
-        let tx_hash = TxHash(h256);
-
-        let mut hasher_of_h256 = DefaultHasher::new();
-        let mut hasher_of_tracker = DefaultHasher::new();
-
-        h256.hash(&mut hasher_of_h256);
-        tx_hash.hash(&mut hasher_of_tracker);
-
-        assert_eq!(hasher_of_h256.finish(), hasher_of_tracker.finish());
-    }
 
     #[test]
     fn rlp_of_tx_hash_can_be_decoded_to_h256() {

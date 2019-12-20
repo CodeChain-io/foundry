@@ -65,31 +65,10 @@ impl Decodable for Message {
 mod tests {
     use rlp::rlp_encode_and_decode_test;
 
-    use ccore::UnverifiedTransaction;
-    use ckey::{Address, Signature};
-    use ctypes::transaction::{Action, Transaction};
-
     use super::Message;
 
     #[test]
     fn transactions_message_rlp() {
         rlp_encode_and_decode_test!(Message::Transactions(Vec::new()));
-    }
-
-    #[test]
-    fn transactions_message_rlp_with_tx() {
-        let tx = UnverifiedTransaction::new(
-            Transaction {
-                seq: 0,
-                fee: 10,
-                action: Action::CreateShard {
-                    users: vec![Address::random(), Address::random()],
-                },
-                network_id: "tc".into(),
-            },
-            Signature::default(),
-        );
-
-        rlp_encode_and_decode_test!(Message::Transactions(vec![tx]));
     }
 }

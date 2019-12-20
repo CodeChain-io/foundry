@@ -99,7 +99,6 @@ impl Config {
                 mem_size => Some(mem_size * 1024 * 1024),
             },
             mem_pool_fee_bump_shift: self.mining.mem_pool_fee_bump_shift.unwrap(),
-            allow_create_shard: self.mining.allow_create_shard.unwrap_or(false),
             new_work_notify: self.mining.notify_work.clone().unwrap(),
             force_sealing: self.mining.force_sealing.unwrap(),
             reseal_on_own_transaction,
@@ -507,9 +506,6 @@ impl Mining {
         }
         if let Some(mem_pool_size) = matches.value_of("mem-pool-size") {
             self.mem_pool_size = Some(mem_pool_size.parse().map_err(|_| "Invalid size")?);
-        }
-        if matches.is_present("allow-create-shard") {
-            self.allow_create_shard = Some(true)
         }
         if let Some(notify_work) = matches.values_of("notify-work") {
             self.notify_work = Some(notify_work.map(|a| a.into()).collect());

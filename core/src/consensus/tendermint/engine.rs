@@ -295,7 +295,6 @@ impl ConsensusEngine for Tendermint {
         header.parent_hash()
     }
 
-
     fn can_change_canon_chain(
         &self,
         _new_header_hash: BlockHash,
@@ -314,11 +313,13 @@ impl ConsensusEngine for Tendermint {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
         let block_hash = match block_number {
             None => {
-                client.block_header(&BlockId::Latest).expect("latest block must exist").hash() // the latest block
+                client.block_header(&BlockId::Latest).expect("latest block must exist").hash()
+                // the latest block
             }
             Some(block_number) => {
                 assert_ne!(0, block_number);
-                client.block_header(&(block_number - 1).into()).ok_or(EngineError::CannotOpenBlock)?.hash() // the parent of the given block number
+                client.block_header(&(block_number - 1).into()).ok_or(EngineError::CannotOpenBlock)?.hash()
+                // the parent of the given block number
             }
         };
         Ok(Some(self.validators.addresses(&block_hash)))

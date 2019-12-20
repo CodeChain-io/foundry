@@ -15,23 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 mod action;
-mod asset;
-mod asset_input;
-mod asset_output;
-mod asset_scheme;
 mod block;
 mod text;
 mod transaction;
 mod unsigned_transaction;
 mod work;
 
-use self::asset::Asset;
-use self::asset_input::AssetTransferInput;
-use self::asset_output::{AssetMintOutput, AssetTransferOutput};
-
-pub use self::action::{Action, ActionWithTracker};
-pub use self::asset::OwnedAsset;
-pub use self::asset_scheme::AssetScheme;
+pub use self::action::Action;
 pub use self::block::Block;
 pub use self::block::BlockNumberAndHash;
 pub use self::text::Text;

@@ -29,7 +29,6 @@ use ckey::{Address, Password, PlatformAddress};
 use cstate::{FindActionHandler, TopStateView};
 use ctypes::transaction::IncompleteTransaction;
 use ctypes::{BlockHash, TxHash};
-use cvm::ChainTimeInfo;
 use primitives::Bytes;
 
 pub use self::mem_pool_types::MemPoolFees;
@@ -88,19 +87,12 @@ pub trait MinerService: Send + Sync {
     /// Returns true if we had to prepare new pending block.
     fn prepare_work_sealing<C>(&self, _: &C) -> bool
     where
-        C: AccountData + BlockChainTrait + BlockProducer + ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo;
+        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + FindActionHandler + TermInfo;
 
     /// New chain head event. Restart mining operation.
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: AccountData
-            + BlockChainTrait
-            + BlockProducer
-            + ImportBlock
-            + ChainTimeInfo
-            + EngineInfo
-            + FindActionHandler
-            + TermInfo;
+        C: AccountData + BlockChainTrait + BlockProducer + ImportBlock + EngineInfo + FindActionHandler + TermInfo;
 
     /// Submit `seal` as a valid solution for the header of `pow_hash`.
     /// Will check the seal, but not actually insert the block into the chain.
@@ -109,7 +101,7 @@ pub trait MinerService: Send + Sync {
     /// Get the sealing work package and if `Some`, apply some transform.
     fn map_sealing_work<C, F, T>(&self, client: &C, f: F) -> Option<T>
     where
-        C: AccountData + BlockChainTrait + BlockProducer + ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo,
+        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + FindActionHandler + TermInfo,
         F: FnOnce(&ClosedBlock) -> T,
         Self: Sized;
 

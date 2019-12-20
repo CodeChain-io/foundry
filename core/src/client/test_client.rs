@@ -44,8 +44,7 @@ use cstate::tests::helpers::empty_top_state;
 use cstate::{FindActionHandler, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::transaction::{Action, Transaction};
-use ctypes::{BlockHash, BlockNumber, CommonParams, Header as BlockHeader, Tracker, TxHash};
-use cvm::ChainTimeInfo;
+use ctypes::{BlockHash, BlockNumber, CommonParams, Header as BlockHeader, TxHash};
 use kvdb::KeyValueDB;
 use kvdb_memorydb;
 use parking_lot::RwLock;
@@ -456,10 +455,6 @@ impl BlockChainTrait for TestBlockChainClient {
     fn transaction_block(&self, _id: &TransactionId) -> Option<BlockHash> {
         None // Simple default.
     }
-
-    fn transaction_header(&self, _tracker: &Tracker) -> Option<encoded::Header> {
-        None
-    }
 }
 
 impl ImportBlock for TestBlockChainClient {
@@ -518,7 +513,6 @@ impl ImportBlock for TestBlockChainClient {
     fn set_max_timer(&self) {}
 }
 
-
 impl BlockChainClient for TestBlockChainClient {
     fn queue_info(&self) -> QueueInfo {
         QueueInfo {
@@ -549,7 +543,6 @@ impl BlockChainClient for TestBlockChainClient {
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {
         self.miner.count_pending_transactions(range)
     }
-
 
     fn is_pending_queue_empty(&self) -> bool {
         self.miner.status().transactions_in_pending_queue == 0
@@ -594,28 +587,10 @@ impl BlockChainClient for TestBlockChainClient {
     fn error_hint(&self, _hash: &TxHash) -> Option<String> {
         unimplemented!();
     }
-
-    fn transaction_by_tracker(&self, _: &Tracker) -> Option<LocalizedTransaction> {
-        unimplemented!();
-    }
-
-    fn error_hints_by_tracker(&self, _: &Tracker) -> Vec<(TxHash, Option<String>)> {
-        unimplemented!();
-    }
 }
 
 impl TimeoutHandler for TestBlockChainClient {
     fn on_timeout(&self, _token: TimerToken) {}
-}
-
-impl ChainTimeInfo for TestBlockChainClient {
-    fn transaction_block_age(&self, _: &Tracker, _parent_block_number: BlockNumber) -> Option<u64> {
-        Some(0)
-    }
-
-    fn transaction_time_age(&self, _: &Tracker, _parent_timestamp: u64) -> Option<u64> {
-        Some(0)
-    }
 }
 
 impl FindActionHandler for TestBlockChainClient {}

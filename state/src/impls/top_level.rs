@@ -319,10 +319,6 @@ impl TopLevelState {
                 handler.execute(bytes, self, fee_payer, signer_public)?;
                 Ok(())
             }
-            _ => {
-                // FIXME: Transactions related to Assets will be removed
-                Ok(())
-            }
         }
     }
 

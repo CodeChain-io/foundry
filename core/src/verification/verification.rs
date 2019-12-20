@@ -22,8 +22,6 @@ use ctypes::{BlockNumber, CommonParams, Header};
 use primitives::{Bytes, H256};
 use rlp::Rlp;
 
-use crate::blockchain::BlockProvider;
-use crate::client::BlockChainTrait;
 use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::CodeChainEngine;
 use crate::error::{BlockError, Error};
@@ -179,28 +177,12 @@ pub fn verify_block_seal(
     })
 }
 
-/// Parameters for full verification of block family
-pub struct FullFamilyParams<'a, C: BlockChainTrait + 'a> {
-    /// Serialized block bytes
-    pub block_bytes: &'a [u8],
-
-    /// Signed transactions
-    pub transactions: &'a [SignedTransaction],
-
-    /// Block provider to use during verification
-    pub block_provider: &'a dyn BlockProvider,
-
-    /// Engine client to use during verification
-    pub client: &'a C,
-}
-
 /// Phase 3 verification. Check block information against parent and uncles.
-pub fn verify_block_family<C: BlockChainTrait>(
+pub fn verify_block_family(
     block: &[u8],
     header: &Header,
     parent: &Header,
     engine: &dyn CodeChainEngine,
-    do_full: Option<FullFamilyParams<C>>,
     common_params: &CommonParams,
 ) -> Result<(), Error> {
     verify_block_with_params(header, block, engine, common_params)?;
@@ -209,15 +191,6 @@ pub fn verify_block_family<C: BlockChainTrait>(
     verify_parent(&header, &parent)?;
     verify_transactions_root(block, header.transactions_root(), *parent.transactions_root())?;
     engine.verify_block_family(&header, &parent)?;
-
-    let params = match do_full {
-        Some(x) => x,
-        None => return Ok(()),
-    };
-
-    for tx in params.transactions {
-        engine.machine().verify_transaction(tx, header, params.client, true)?;
-    }
 
     Ok(())
 }

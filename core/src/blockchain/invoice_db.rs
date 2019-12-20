@@ -15,14 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::collections::HashMap;
-use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
-use ctypes::{Tracker, TxHash};
+use ctypes::TxHash;
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::RwLock;
 use primitives::{H256, H264};
-use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 use crate::db::{self, CacheUpdatePolicy, Key, Readable, Writable};
 
@@ -30,8 +28,6 @@ use crate::db::{self, CacheUpdatePolicy, Key, Readable, Writable};
 ///
 /// **Does not do input data verification.**
 pub struct InvoiceDB {
-    // tracker -> transaction hashe + error hint
-    tracker_cache: RwLock<HashMap<Tracker, TrackerInvoices>>,
     // transaction hash -> error hint
     hash_cache: RwLock<HashMap<TxHash, Option<String>>>,
 
@@ -42,7 +38,6 @@ impl InvoiceDB {
     /// Create new instance of blockchain from given Genesis.
     pub fn new(db: Arc<dyn KeyValueDB>) -> Self {
         Self {
-            tracker_cache: Default::default(),
             hash_cache: Default::default(),
 
             db,
@@ -52,26 +47,12 @@ impl InvoiceDB {
     /// Inserts the block into backing cache database.
     /// Expects the block to be valid and already verified.
     /// If the block is already known, does nothing.
-    pub fn insert_invoice(
-        &self,
-        batch: &mut DBTransaction,
-        hash: TxHash,
-        tracker: Option<Tracker>,
-        error_hint: Option<String>,
-    ) {
+    pub fn insert_invoice(&self, batch: &mut DBTransaction, hash: TxHash, error_hint: Option<String>) {
         if self.is_known_error_hint(&hash) {
             return
         }
 
-        let mut hashes_cache = self.tracker_cache.write();
         let mut hint_cache = self.hash_cache.write();
-
-        if let Some(tracker) = tracker {
-            let mut hashes =
-                self.db.read_with_cache(db::COL_ERROR_HINT, &mut *hashes_cache, &tracker).unwrap_or_default();
-            hashes.push((hash, error_hint.clone()));
-            batch.write_with_cache(db::COL_ERROR_HINT, &mut *hashes_cache, tracker, hashes, CacheUpdatePolicy::Remove)
-        }
 
         batch.write_with_cache(db::COL_ERROR_HINT, &mut *hint_cache, hash, error_hint, CacheUpdatePolicy::Remove);
     }
@@ -82,9 +63,6 @@ pub trait InvoiceProvider {
     /// Returns true if invoices for given hash is known
     fn is_known_error_hint(&self, hash: &TxHash) -> bool;
 
-    /// Get error hints
-    fn error_hints_by_tracker(&self, tracker: &Tracker) -> Vec<(TxHash, Option<String>)>;
-
     /// Get error hint
     fn error_hint(&self, hash: &TxHash) -> Option<String>;
 }
@@ -94,71 +72,12 @@ impl InvoiceProvider for InvoiceDB {
         self.db.exists_with_cache(db::COL_ERROR_HINT, &self.hash_cache, hash)
     }
 
-    fn error_hints_by_tracker(&self, tracker: &Tracker) -> Vec<(TxHash, Option<String>)> {
-        self.db
-            .read_with_cache(db::COL_ERROR_HINT, &mut *self.tracker_cache.write(), tracker)
-            .map(|hashes| (*hashes).clone())
-            .unwrap_or_default()
-    }
-
     fn error_hint(&self, hash: &TxHash) -> Option<String> {
         self.db.read_with_cache(db::COL_ERROR_HINT, &mut *self.hash_cache.write(), hash)?
     }
 }
 
-#[derive(Clone, Default)]
-pub struct TrackerInvoices(Vec<(TxHash, Option<String>)>);
-
-impl Encodable for TrackerInvoices {
-    fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(self.len() * 2);
-        for (hash, error) in self.iter() {
-            s.append(hash);
-            s.append(error);
-        }
-    }
-}
-
-impl Decodable for TrackerInvoices {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
-        let item_count = rlp.item_count()?;
-        if item_count % 2 == 1 {
-            return Err(DecoderError::RlpInvalidLength {
-                expected: item_count + 1,
-                got: item_count,
-            })
-        }
-        let mut vec = Vec::with_capacity(item_count / 2);
-        // TODO: Optimzie the below code
-        for i in 0..(item_count / 2) {
-            vec.push((rlp.val_at(i * 2)?, rlp.val_at(i * 2 + 1)?));
-        }
-        Ok(vec.into())
-    }
-}
-
-impl From<Vec<(TxHash, Option<String>)>> for TrackerInvoices {
-    fn from(f: Vec<(TxHash, Option<String>)>) -> Self {
-        TrackerInvoices(f)
-    }
-}
-
-impl Deref for TrackerInvoices {
-    type Target = Vec<(TxHash, Option<String>)>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for TrackerInvoices {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 enum ErrorHintIndex {
-    TrackerToHashes = 0,
     HashToHint = 1,
 }
 
@@ -173,14 +92,6 @@ impl Key<Option<String>> for TxHash {
 
     fn key(&self) -> H264 {
         with_index(self, ErrorHintIndex::HashToHint)
-    }
-}
-
-impl Key<TrackerInvoices> for Tracker {
-    type Target = H264;
-
-    fn key(&self) -> H264 {
-        with_index(self, ErrorHintIndex::TrackerToHashes)
     }
 }
 

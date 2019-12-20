@@ -24,7 +24,6 @@ use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{BlockNumber, CommonParams, TxHash};
-use cvm::ChainTimeInfo;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -151,7 +150,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Push a transaction into the block.
-    pub fn push_transaction<C: ChainTimeInfo + FindActionHandler>(
+    pub fn push_transaction<C: FindActionHandler>(
         &mut self,
         tx: SignedTransaction,
         h: Option<TxHash>,
@@ -164,7 +163,6 @@ impl<'x> OpenBlock<'x> {
         }
 
         let hash = tx.hash();
-        let tracker = tx.tracker();
         let error = match self.block.state.apply(
             &tx,
             &hash,
@@ -183,7 +181,6 @@ impl<'x> OpenBlock<'x> {
         };
         self.block.invoices.push(Invoice {
             hash,
-            tracker,
             error: error.clone().map(|err| err.to_string()),
         });
 
@@ -194,7 +191,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Push transactions onto the block.
-    pub fn push_transactions<C: ChainTimeInfo + FindActionHandler>(
+    pub fn push_transactions<C: FindActionHandler>(
         &mut self,
         transactions: &[SignedTransaction],
         client: &C,
@@ -481,7 +478,7 @@ impl IsBlock for SealedBlock {
 }
 
 /// Enact the block given by block header, transactions and uncles
-pub fn enact<C: ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo>(
+pub fn enact<C: EngineInfo + FindActionHandler + TermInfo>(
     header: &Header,
     transactions: &[SignedTransaction],
     engine: &dyn CodeChainEngine,

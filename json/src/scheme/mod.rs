@@ -24,7 +24,6 @@ mod params;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod scheme;
 mod seal;
-mod shard;
 mod simple_poa;
 mod solo;
 mod state;
@@ -39,8 +38,7 @@ pub use self::null_engine::{NullEngine, NullEngineParams};
 pub use self::params::Params;
 pub use self::scheme::Scheme;
 pub use self::seal::{Seal, TendermintSeal};
-pub use self::shard::Shard;
 pub use self::simple_poa::{SimplePoA, SimplePoAParams};
 pub use self::solo::{Solo, SoloParams};
-pub use self::state::{Accounts, Shards};
+pub use self::state::Accounts;
 pub use self::tendermint::{Tendermint, TendermintParams};

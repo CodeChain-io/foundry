@@ -19,7 +19,7 @@ use cjson::uint::Uint;
 use ckey::{NetworkId, Signature};
 use ctypes::{BlockHash, TxHash};
 
-use super::ActionWithTracker;
+use super::Action;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,7 +31,7 @@ pub struct Transaction {
     pub seq: u64,
     pub fee: Uint,
     pub network_id: NetworkId,
-    pub action: ActionWithTracker,
+    pub action: Action,
     pub hash: TxHash,
     pub sig: Signature,
 }
@@ -64,7 +64,7 @@ impl From<LocalizedTransaction> for Transaction {
             seq: p.seq,
             fee: p.fee.into(),
             network_id: p.network_id,
-            action: ActionWithTracker::from_core(p.action.clone(), p.network_id),
+            action: Action::from_core(p.action.clone(), p.network_id),
             hash: p.hash(),
             sig,
         }
@@ -82,7 +82,7 @@ impl From<SignedTransaction> for Transaction {
             seq: p.seq,
             fee: p.fee.into(),
             network_id: p.network_id,
-            action: ActionWithTracker::from_core(p.action.clone(), p.network_id),
+            action: Action::from_core(p.action.clone(), p.network_id),
             hash: p.hash(),
             sig,
         }

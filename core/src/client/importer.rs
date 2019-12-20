@@ -237,29 +237,15 @@ impl Importer {
         let common_params = client.common_params(parent.hash().into()).unwrap();
 
         // Verify Block Family
-        self.verifier
-            .verify_block_family(
-                &block.bytes,
-                header,
-                &parent,
-                engine,
-                Some(verification::FullFamilyParams {
-                    block_bytes: &block.bytes,
-                    transactions: &block.transactions,
-                    block_provider: &*chain,
-                    client,
-                }),
-                &common_params,
-            )
-            .map_err(|e| {
-                cwarn!(
-                    CLIENT,
-                    "Stage 3 block verification failed for #{} ({})\nError: {:?}",
-                    header.number(),
-                    header.hash(),
-                    e
-                );
-            })?;
+        self.verifier.verify_block_family(&block.bytes, header, &parent, engine, &common_params).map_err(|e| {
+            cwarn!(
+                CLIENT,
+                "Stage 3 block verification failed for #{} ({})\nError: {:?}",
+                header.number(),
+                header.hash(),
+                e
+            );
+        })?;
 
         self.verifier.verify_block_external(header, engine).map_err(|e| {
             cwarn!(
@@ -270,7 +256,6 @@ impl Importer {
                 e
             );
         })?;
-
 
         // Enact Verified Block
         let db = client.state_db().read().clone(&parent.state_root());

@@ -169,7 +169,6 @@ impl VoteCollector {
             .unwrap_or_default()
     }
 
-
     /// Returns the first signature and the index of its signer for a given round and hash if exists.
     pub fn round_signature(&self, round: &VoteStep, block_hash: &BlockHash) -> Option<SchnorrSignature> {
         self.votes

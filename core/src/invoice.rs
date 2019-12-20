@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ctypes::{Tracker, TxHash};
+use ctypes::TxHash;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Invoice {
-    pub tracker: Option<Tracker>,
     pub hash: TxHash,
     pub error: Option<String>,
 }

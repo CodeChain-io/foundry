@@ -24,10 +24,9 @@ use std::time::{Duration, Instant};
 
 use ckey::{public_to_address, Address, Password, PlatformAddress, Public};
 use cstate::{FindActionHandler, TopLevelState};
-use ctypes::errors::{HistoryError, RuntimeError};
-use ctypes::transaction::{Action, IncompleteTransaction, Timelock};
+use ctypes::errors::HistoryError;
+use ctypes::transaction::{Action, IncompleteTransaction};
 use ctypes::{BlockHash, BlockNumber, Header, TxHash};
-use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
 use primitives::{Bytes, H256};
@@ -77,7 +76,6 @@ pub struct MinerOptions {
     /// then `new_fee > old_fee + old_fee >> mem_pool_fee_bump_shift` should be satisfied to replace.
     /// Local transactions ignore this option.
     pub mem_pool_fee_bump_shift: usize,
-    pub allow_create_shard: bool,
     /// How many historical work packages can we store before running out?
     pub work_queue_size: usize,
     /// Minimum fees configured by the machine.
@@ -97,7 +95,6 @@ impl Default for MinerOptions {
             mem_pool_size: 8192,
             mem_pool_memory_limit: Some(2 * 1024 * 1024),
             mem_pool_fee_bump_shift: 3,
-            allow_create_shard: false,
             work_queue_size: 20,
             mem_pool_fees: Default::default(),
         }
@@ -327,17 +324,6 @@ impl Miner {
                         e
                     })?;
 
-                // This check goes here because verify_transaction takes SignedTransaction parameter
-                self.engine.machine().verify_transaction(&tx, &fake_header, client, false).map_err(|e| {
-                    match e {
-                        Error::Syntax(_) if !origin.is_local() && !immune_users.contains(&signer_address) => {
-                            self.malicious_users.write().insert(signer_address);
-                        }
-                        _ => {}
-                    }
-                    e
-                })?;
-
                 let timelock = self.calculate_timelock(&tx, client)?;
                 let tx_hash = tx.hash();
 
@@ -381,48 +367,14 @@ impl Miner {
         results
     }
 
-    fn calculate_timelock<C: BlockChainTrait>(&self, tx: &SignedTransaction, client: &C) -> Result<TxTimelock, Error> {
-        let mut max_block = None;
-        let mut max_timestamp = None;
-        if let Action::TransferAsset {
-            inputs,
-            ..
-        } = &tx.action
-        {
-            for input in inputs {
-                if let Some(timelock) = input.timelock {
-                    let (is_block_number, value) = match timelock {
-                        Timelock::Block(value) => (true, value),
-                        Timelock::BlockAge(value) => (
-                            true,
-                            client.transaction_block_number(&input.prev_out.tracker).ok_or_else(|| {
-                                Error::History(HistoryError::Timelocked {
-                                    timelock,
-                                    remaining_time: u64::max_value(),
-                                })
-                            })? + value,
-                        ),
-                        Timelock::Time(value) => (false, value),
-                        Timelock::TimeAge(value) => (
-                            false,
-                            client.transaction_block_timestamp(&input.prev_out.tracker).ok_or_else(|| {
-                                Error::History(HistoryError::Timelocked {
-                                    timelock,
-                                    remaining_time: u64::max_value(),
-                                })
-                            })? + value,
-                        ),
-                    };
-                    if is_block_number {
-                        if max_block.is_none() || max_block.expect("The previous guard ensures") < value {
-                            max_block = Some(value);
-                        }
-                    } else if max_timestamp.is_none() || max_timestamp.expect("The previous guard ensures") < value {
-                        max_timestamp = Some(value);
-                    }
-                }
-            }
-        };
+    fn calculate_timelock<C: BlockChainTrait>(
+        &self,
+        _tx: &SignedTransaction,
+        _client: &C,
+    ) -> Result<TxTimelock, Error> {
+        let max_block = None;
+        let max_timestamp = None;
+
         Ok(TxTimelock {
             block: max_block,
             timestamp: max_timestamp,
@@ -478,9 +430,7 @@ impl Miner {
     }
 
     /// Prepares new block for sealing including top transactions from queue.
-    fn prepare_block<
-        C: AccountData + BlockChainTrait + BlockProducer + ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo,
-    >(
+    fn prepare_block<C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + FindActionHandler + TermInfo>(
         &self,
         parent_block_id: BlockId,
         chain: &C,
@@ -503,9 +453,7 @@ impl Miner {
 
             // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock
             let mem_pool = self.mem_pool.read();
-            let transactions = mem_pool
-                .top_transactions(max_body_size, Some(open_block.header().timestamp()), DEFAULT_RANGE)
-                .transactions;
+            let transactions = mem_pool.top_transactions(max_body_size, DEFAULT_RANGE).transactions;
 
             (transactions, open_block, last_work_hash, block_number)
         };
@@ -534,7 +482,7 @@ impl Miner {
         let tx_total = transactions.len();
         let mut invalid_tx_users = HashSet::new();
 
-        let immune_users = self.immune_users.read();
+        let _immune_users = self.immune_users.read();
         for tx in transactions {
             let signer_public = tx.signer_public();
             let signer_address = public_to_address(&signer_public);
@@ -554,31 +502,13 @@ impl Miner {
 
             let hash = tx.hash();
             let start = Instant::now();
-            // Check whether transaction type is allowed for sender
             let result =
-                self.engine.machine().verify_transaction(&tx, open_block.header(), chain, true).and_then(|_| {
-                    open_block.push_transaction(tx, None, chain, parent_header.number(), parent_header.timestamp())
-                });
+                open_block.push_transaction(tx, None, chain, parent_header.number(), parent_header.timestamp());
 
             match result {
                 // already have transaction - ignore
                 Err(Error::History(HistoryError::TransactionAlreadyImported)) => {}
                 Err(e) => {
-                    match e {
-                        Error::Runtime(RuntimeError::AssetSupplyOverflow)
-                        | Error::Runtime(RuntimeError::InvalidScript) => {
-                            if !self
-                                .mem_pool
-                                .read()
-                                .is_local_transaction(hash)
-                                .expect("The tx is clearly fetched from the mempool")
-                                && !immune_users.contains(&signer_address)
-                            {
-                                self.malicious_users.write().insert(signer_address);
-                            }
-                        }
-                        _ => {}
-                    }
                     invalid_tx_users.insert(signer_public);
                     invalid_transactions.push(hash);
                     cinfo!(
@@ -690,15 +620,7 @@ impl Miner {
         })
     }
 
-    fn is_allowed_transaction(&self, action: &Action) -> bool {
-        if let Action::CreateShard {
-            ..
-        } = action
-        {
-            if !self.options.allow_create_shard {
-                return false
-            }
-        }
+    fn is_allowed_transaction(&self, _action: &Action) -> bool {
         true
     }
 }
@@ -812,7 +734,7 @@ impl MinerService for Miner {
     }
 
     fn prepare_work_sealing<
-        C: AccountData + BlockChainTrait + BlockProducer + ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo,
+        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + FindActionHandler + TermInfo,
     >(
         &self,
         client: &C,
@@ -864,14 +786,8 @@ impl MinerService for Miner {
 
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: AccountData
-            + BlockChainTrait
-            + BlockProducer
-            + EngineInfo
-            + ImportBlock
-            + ChainTimeInfo
-            + FindActionHandler
-            + TermInfo, {
+        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock + FindActionHandler + TermInfo,
+    {
         ctrace!(MINER, "update_sealing: preparing a block");
 
         let parent_block_number = chain.block_header(&parent_block).expect("Parent is always exist").number();
@@ -953,7 +869,7 @@ impl MinerService for Miner {
 
     fn map_sealing_work<C, F, T>(&self, client: &C, f: F) -> Option<T>
     where
-        C: AccountData + BlockChainTrait + BlockProducer + ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo,
+        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + FindActionHandler + TermInfo,
         F: FnOnce(&ClosedBlock) -> T, {
         ctrace!(MINER, "map_sealing_work: entering");
         self.prepare_work_sealing(client);
@@ -1082,7 +998,7 @@ impl MinerService for Miner {
     fn ready_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
         // FIXME: Update the body size when the common params are updated
         let max_body_size = self.engine.machine().genesis_common_params().max_body_size();
-        self.mem_pool.read().top_transactions(max_body_size, None, range)
+        self.mem_pool.read().top_transactions(max_body_size, range)
     }
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {

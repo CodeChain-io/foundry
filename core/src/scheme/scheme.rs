@@ -22,7 +22,7 @@ use cdb::{AsHashDB, HashDB};
 use cjson;
 use ckey::Address;
 use cmerkle::{TrieFactory, TrieMut};
-use cstate::{StateDB, StateResult, StateWithCache, TopLevelState};
+use cstate::{Metadata, MetadataAddress, StateDB, StateResult, StateWithCache, TopLevelState};
 use ctypes::errors::SyntaxError;
 use ctypes::{BlockHash, CommonParams, Header};
 use parking_lot::RwLock;
@@ -112,6 +112,7 @@ impl Scheme {
     fn initialize_state(&self, db: StateDB) -> Result<StateDB, Error> {
         let root = BLAKE_NULL_RLP;
         let (db, root) = self.initialize_accounts(db, root)?;
+        let (db, root) = self.initialize_metadata(db, root)?;
         let (db, root) = self.initialize_action_handlers(db, root)?;
 
         *self.state_root_memo.write() = root;
@@ -128,6 +129,21 @@ impl Scheme {
                 debug_assert_eq!(Ok(None), r);
                 r?;
             }
+        }
+
+        Ok((db, root))
+    }
+
+    fn initialize_metadata<DB: AsHashDB>(&self, mut db: DB, mut root: H256) -> StateResult<(DB, H256)> {
+        {
+            let global_metadata = Metadata::new();
+
+            let mut t = TrieFactory::from_existing(db.as_hashdb_mut(), &mut root)?;
+            let address = MetadataAddress::new();
+
+            let r = t.insert(&*address, &global_metadata.rlp_bytes());
+            debug_assert_eq!(Ok(None), r);
+            r?;
         }
 
         Ok((db, root))

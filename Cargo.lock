@@ -265,7 +265,6 @@ dependencies = [
  "codechain-stratum",
  "codechain-timer",
  "codechain-types",
- "codechain-vm",
  "crossbeam-channel",
  "cuckoo",
  "hyper 0.10.0-a.0",
@@ -580,18 +579,6 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
-]
-
-[[package]]
-name = "codechain-vm"
-version = "0.1.0"
-dependencies = [
- "codechain-crypto",
- "codechain-key",
- "codechain-types",
- "primitives",
- "rlp",
- "secp256k1",
 ]
 
 [[package]]
@@ -967,7 +954,6 @@ dependencies = [
  "codechain-sync",
  "codechain-timer",
  "codechain-types",
- "codechain-vm",
  "ctrlc",
  "env_logger 0.5.10",
  "fdlimit",

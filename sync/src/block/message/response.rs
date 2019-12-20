@@ -140,9 +140,6 @@ impl ResponseMessage {
 mod tests {
     use rlp::{Encodable, Rlp};
 
-    use ccore::UnverifiedTransaction;
-    use ckey::{Address, Signature};
-    use ctypes::transaction::{Action, Transaction};
     use ctypes::Header;
 
     use super::ResponseMessage;
@@ -160,27 +157,6 @@ mod tests {
         });
 
         let message = ResponseMessage::Headers(headers);
-        assert_eq!(message, decode_bytes(message.message_id(), message.rlp_bytes().as_ref()));
-    }
-
-    #[test]
-    fn bodies_message_rlp() {
-        let message = ResponseMessage::Bodies(vec![vec![]]);
-        assert_eq!(message, decode_bytes(message.message_id(), message.rlp_bytes().as_ref()));
-
-        let tx = UnverifiedTransaction::new(
-            Transaction {
-                seq: 0,
-                fee: 10,
-                action: Action::CreateShard {
-                    users: vec![Address::random(), Address::random()],
-                },
-                network_id: "tc".into(),
-            },
-            Signature::default(),
-        );
-
-        let message = ResponseMessage::Bodies(vec![vec![tx]]);
         assert_eq!(message, decode_bytes(message.message_id(), message.rlp_bytes().as_ref()));
     }
 

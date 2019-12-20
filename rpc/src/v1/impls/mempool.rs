@@ -19,7 +19,7 @@ use std::sync::Arc;
 use ccore::{BlockChainClient, MiningBlockChainClient, SignedTransaction};
 use cjson::bytes::Bytes;
 use ckey::{Address, PlatformAddress};
-use ctypes::{Tracker, TxHash};
+use ctypes::TxHash;
 use rlp::Rlp;
 
 use jsonrpc_core::Result;
@@ -57,15 +57,6 @@ where
                 }
             })
             .map(Into::into)
-    }
-
-    fn get_transaction_results_by_tracker(&self, tracker: Tracker) -> Result<Vec<bool>> {
-        Ok(self
-            .client
-            .error_hints_by_tracker(&tracker)
-            .into_iter()
-            .map(|(_hash, error_hint)| error_hint.is_none())
-            .collect())
     }
 
     fn get_error_hint(&self, transaction_hash: TxHash) -> Result<Option<String>> {

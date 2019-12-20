@@ -25,9 +25,7 @@ use cmerkle::Result as TrieResult;
 use cnetwork::NodeId;
 use cstate::{ActionHandler, FindActionHandler, StateDB, Text, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
-use ctypes::transaction::{AssetTransferInput, PartialHashing};
-use ctypes::{BlockHash, BlockNumber, CommonParams, Tracker, TxHash};
-use cvm::{decode, execute, ChainTimeInfo, ScriptResult, VMConfig};
+use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::{Bytes, U256};
@@ -36,8 +34,8 @@ use rlp::Rlp;
 use super::importer::Importer;
 use super::{
     AccountData, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify, ClientConfig,
-    DatabaseClient, EngineClient, EngineInfo, Error as ClientError, ExecuteClient, ImportBlock, ImportResult,
-    MiningBlockChainClient, StateInfo, StateOrBlock, TextClient,
+    DatabaseClient, EngineClient, EngineInfo, ImportBlock, ImportResult, MiningBlockChainClient, StateInfo,
+    StateOrBlock, TextClient,
 };
 use crate::block::{ClosedBlock, IsBlock, OpenBlock, SealedBlock};
 use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, InvoiceProvider, TransactionAddress};
@@ -231,10 +229,6 @@ impl Client {
         }
     }
 
-    fn transaction_addresses(&self, tracker: &Tracker) -> Option<TransactionAddress> {
-        self.block_chain().transaction_address_by_tracker(tracker)
-    }
-
     /// Import transactions from the IO queue
     pub fn import_queued_transactions(&self, transactions: &[Bytes], peer_id: NodeId) -> usize {
         ctrace!(EXTERNAL_TX, "Importing queued");
@@ -352,52 +346,6 @@ impl TextClient for Client {
         } else {
             Ok(None)
         }
-    }
-}
-
-impl ExecuteClient for Client {
-    fn execute_vm(
-        &self,
-        tx: &dyn PartialHashing,
-        inputs: &[AssetTransferInput],
-        params: &[Vec<Bytes>],
-        indices: &[usize],
-    ) -> Result<Vec<String>, ClientError> {
-        let mut results = Vec::with_capacity(indices.len());
-        for (i, index) in indices.iter().enumerate() {
-            let input = inputs.get(*index);
-            let param = params.get(i);
-            let result = match (input, param) {
-                (Some(input), Some(param)) => {
-                    let lock_script = decode(&input.lock_script);
-                    let unlock_script = decode(&input.unlock_script);
-                    match (lock_script, unlock_script) {
-                        (Ok(lock_script), Ok(unlock_script)) => {
-                            match execute(
-                                &unlock_script,
-                                &param,
-                                &lock_script,
-                                tx,
-                                VMConfig::default(),
-                                &input,
-                                false,
-                                self,
-                                self.best_block_header().number(),
-                                self.best_block_header().timestamp(),
-                            ) {
-                                Ok(ScriptResult::Burnt) => "burnt".to_string(),
-                                Ok(ScriptResult::Unlocked) => "unlocked".to_string(),
-                                _ => "failed".to_string(),
-                            }
-                        }
-                        _ => "invalid".to_string(),
-                    }
-                }
-                _ => "invalid".to_string(),
-            };
-            results.push(result);
-        }
-        Ok(results)
     }
 }
 
@@ -546,10 +494,6 @@ impl BlockChainTrait for Client {
     fn transaction_block(&self, id: &TransactionId) -> Option<BlockHash> {
         self.transaction_address(id).map(|addr| addr.block_hash)
     }
-
-    fn transaction_header(&self, tracker: &Tracker) -> Option<encoded::Header> {
-        self.transaction_addresses(tracker).map(|addr| addr.block_hash).and_then(|hash| self.block_header(&hash.into()))
-    }
 }
 
 impl ImportBlock for Client {
@@ -627,7 +571,6 @@ impl ImportBlock for Client {
         }
     }
 }
-
 
 impl BlockChainClient for Client {
     fn queue_info(&self) -> BlockQueueInfo {
@@ -708,17 +651,6 @@ impl BlockChainClient for Client {
     fn error_hint(&self, hash: &TxHash) -> Option<String> {
         let chain = self.block_chain();
         chain.error_hint(hash)
-    }
-
-    fn transaction_by_tracker(&self, tracker: &Tracker) -> Option<LocalizedTransaction> {
-        let chain = self.block_chain();
-        let address = self.transaction_addresses(tracker);
-        address.and_then(|address| chain.transaction(&address))
-    }
-
-    fn error_hints_by_tracker(&self, tracker: &Tracker) -> Vec<(TxHash, Option<String>)> {
-        let chain = self.block_chain();
-        chain.error_hints_by_tracker(tracker)
     }
 }
 
@@ -811,16 +743,6 @@ impl MiningBlockChainClient for Client {
 
     fn get_network_id(&self) -> NetworkId {
         self.common_params(BlockId::Latest).unwrap().network_id()
-    }
-}
-
-impl ChainTimeInfo for Client {
-    fn transaction_block_age(&self, tracker: &Tracker, parent_block_number: BlockNumber) -> Option<u64> {
-        self.transaction_block_number(tracker).map(|block_number| parent_block_number - block_number)
-    }
-
-    fn transaction_time_age(&self, tracker: &Tracker, parent_timestamp: u64) -> Option<u64> {
-        self.transaction_block_timestamp(tracker).map(|block_timestamp| parent_timestamp - block_timestamp)
     }
 }
 

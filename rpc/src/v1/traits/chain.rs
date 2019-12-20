@@ -17,12 +17,11 @@
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress, Public};
-use ctypes::{BlockHash, BlockNumber, Tracker, TxHash};
-use primitives::Bytes as BytesArray;
+use ctypes::{BlockHash, BlockNumber, TxHash};
 
 use jsonrpc_core::Result;
 
-use super::super::types::{Block, BlockNumberAndHash, Text, Transaction, UnsignedTransaction};
+use super::super::types::{Block, BlockNumberAndHash, Text, Transaction};
 
 #[rpc(server)]
 pub trait Chain {
@@ -40,10 +39,6 @@ pub trait Chain {
 
     #[rpc(name = "chain_containTransaction")]
     fn contain_transaction(&self, transaction_hash: TxHash) -> Result<bool>;
-
-    /// Gets transaction with given transaction tracker.
-    #[rpc(name = "chain_getTransactionByTracker")]
-    fn get_transaction_by_tracker(&self, tracker: Tracker) -> Result<Option<Transaction>>;
 
     /// Gets text with given transaction hash.
     #[rpc(name = "chain_getText")]
@@ -120,13 +115,4 @@ pub trait Chain {
     /// Return the valid block authors
     #[rpc(name = "chain_getPossibleAuthors")]
     fn get_possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>>;
-
-    /// Execute AssetTransfer transaction inputs in VM
-    #[rpc(name = "chain_executeVM")]
-    fn execute_vm(
-        &self,
-        tx: UnsignedTransaction,
-        params: Vec<Vec<BytesArray>>,
-        indices: Vec<usize>,
-    ) -> Result<Vec<String>>;
 }

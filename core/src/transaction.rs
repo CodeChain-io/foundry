@@ -17,7 +17,7 @@
 use std::ops::Deref;
 
 use ccrypto::blake256;
-use ckey::{self, public_to_address, recover, sign, Private, Public, Signature};
+use ckey::{self, recover, sign, Private, Public, Signature};
 use ctypes::errors::SyntaxError;
 use ctypes::transaction::Transaction;
 use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
@@ -132,7 +132,7 @@ impl UnverifiedTransaction {
 
     /// Verify basic signature params. Does not attempt signer recovery.
     pub fn verify_basic(&self) -> Result<(), SyntaxError> {
-        self.action.verify()
+        Ok(())
     }
 
     /// Verify transactiosn with the common params. Does not attempt signer recovery.
@@ -159,7 +159,6 @@ pub struct PendingSignedTransactions {
     pub transactions: Vec<SignedTransaction>,
     pub last_timestamp: Option<u64>,
 }
-
 
 impl rlp::Encodable for SignedTransaction {
     fn rlp_append(&self, s: &mut RlpStream) {
@@ -197,8 +196,7 @@ impl SignedTransaction {
     /// Try to verify transaction and recover public.
     pub fn try_new(tx: UnverifiedTransaction) -> Result<Self, Error> {
         let signer_public = tx.recover_public()?;
-        let signer = public_to_address(&signer_public);
-        tx.action.verify_with_signer_address(&signer)?;
+        let _signer = public_to_address(&signer_public);
         Ok(SignedTransaction {
             tx,
             signer_public,
@@ -275,23 +273,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn unverified_transaction_rlp() {
-        rlp_encode_and_decode_test!(UnverifiedTransaction {
-            unsigned: Transaction {
-                seq: 0,
-                fee: 10,
-                action: Action::CreateShard {
-                    users: vec![Address::random(), Address::random()]
-                },
-                network_id: "tc".into(),
-            },
-            sig: Signature::default(),
-            hash: H256::default().into(),
-        }
-        .compute_hash());
-    }
-
-    #[test]
     fn encode_and_decode_pay_transaction() {
         rlp_encode_and_decode_test!(UnverifiedTransaction {
             unsigned: Transaction {
@@ -318,23 +299,6 @@ mod tests {
                 network_id: "tc".into(),
                 action: Action::SetRegularKey {
                     key: Public::random(),
-                },
-            },
-            sig: Signature::default(),
-            hash: H256::default().into(),
-        }
-        .compute_hash());
-    }
-
-    #[test]
-    fn encode_and_decode_create_shard_transaction() {
-        rlp_encode_and_decode_test!(UnverifiedTransaction {
-            unsigned: Transaction {
-                seq: 30,
-                fee: 40,
-                network_id: "tc".into(),
-                action: Action::CreateShard {
-                    users: vec![]
                 },
             },
             sig: Signature::default(),

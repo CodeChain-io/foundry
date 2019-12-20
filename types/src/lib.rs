@@ -19,8 +19,6 @@ extern crate codechain_json as cjson;
 extern crate codechain_key as ckey;
 extern crate primitives;
 extern crate rlp;
-#[macro_use]
-extern crate rlp_derive;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -29,7 +27,6 @@ extern crate serde_json;
 
 mod block_hash;
 mod common_params;
-mod tracker;
 mod tx_hash;
 
 pub mod errors;
@@ -38,10 +35,8 @@ pub mod transaction;
 pub mod util;
 
 pub type BlockNumber = u64;
-pub type ShardId = u16;
 
 pub use block_hash::BlockHash;
 pub use common_params::CommonParams;
 pub use header::Header;
-pub use tracker::Tracker;
 pub use tx_hash::TxHash;

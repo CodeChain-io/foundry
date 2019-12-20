@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{Accounts, Engine, Genesis, Params, Shards};
+use super::{Accounts, Engine, Genesis, Params};
 use serde_json;
 use serde_json::Error;
 use std::io::Read;
@@ -35,7 +35,6 @@ pub struct Scheme {
     pub genesis: Genesis,
     /// Genesis state.
     pub accounts: Accounts,
-    pub shards: Shards,
     /// Boot nodes.
     pub nodes: Option<Vec<String>>,
 }
@@ -122,8 +121,6 @@ mod tests {
                 "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvxf40sk": { "balance": "1", "seq": "1048576" },
                 "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqszkma5z": { "balance": "1", "seq": "1048576" },
                 "tccq8txq9uafdg8y2de9m2tdkhsfsj3m9nluq94hyan": { "balance": "1606938044258990275541962092341162602522202993782792835301376", "seq": "1048576" }
-            },
-            "shards": {
             }
         }"#;
         let _deserialized: Scheme = serde_json::from_str(s).unwrap();

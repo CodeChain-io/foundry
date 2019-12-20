@@ -18,7 +18,6 @@ use std::collections::BTreeMap;
 
 use ckey::PlatformAddress;
 
-use super::{Account, Shard};
+use super::Account;
 
 pub type Accounts = BTreeMap<PlatformAddress, Account>;
-pub type Shards = BTreeMap<u16, Shard>;

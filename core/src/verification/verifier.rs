@@ -16,7 +16,6 @@
 
 use ctypes::{CommonParams, Header};
 
-use super::verification;
 use crate::client::BlockChainTrait;
 use crate::consensus::CodeChainEngine;
 use crate::error::Error;
@@ -32,7 +31,6 @@ where
         header: &Header,
         parent: &Header,
         engine: &dyn CodeChainEngine,
-        do_full: Option<verification::FullFamilyParams<C>>,
         common_params: &CommonParams,
     ) -> Result<(), Error>;
 
