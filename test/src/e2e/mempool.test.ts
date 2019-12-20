@@ -15,8 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H256 } from "codechain-primitives/lib";
-import { Timelock } from "codechain-sdk/lib/core/classes";
 import "mocha";
 import { faucetAddress } from "../helper/constants";
 import CodeChain from "../helper/spawn";
