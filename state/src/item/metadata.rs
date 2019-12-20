@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ctypes::{CommonParams, ShardId, TxHash};
+use ctypes::{CommonParams, TxHash};
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -28,8 +28,6 @@ struct TermMetadata {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Metadata {
-    number_of_shards: ShardId,
-    number_of_initial_shards: ShardId,
     hashes: Vec<TxHash>,
     term: TermMetadata,
     seq: u64,
@@ -37,44 +35,13 @@ pub struct Metadata {
 }
 
 impl Metadata {
-    pub fn new(number_of_shards: ShardId) -> Self {
+    pub fn new() -> Self {
         Self {
-            number_of_shards,
-            number_of_initial_shards: number_of_shards,
             hashes: vec![],
             term: Default::default(),
             seq: 0,
             params: None,
         }
-    }
-
-    pub fn number_of_shards(&self) -> &ShardId {
-        &self.number_of_shards
-    }
-
-    pub fn add_shard(&mut self, tx_hash: TxHash) -> ShardId {
-        let r = self.number_of_shards;
-        self.number_of_shards += 1;
-        self.hashes.push(tx_hash);
-        r
-    }
-
-    #[cfg(test)]
-    pub fn set_number_of_shards(&mut self, number_of_shards: ShardId) {
-        assert!(self.number_of_shards <= number_of_shards);
-        assert_eq!(0, self.hashes.len());
-        self.number_of_shards = number_of_shards;
-        self.number_of_initial_shards = number_of_shards;
-    }
-
-    pub fn shard_id_by_hash(&self, tx_hash: &TxHash) -> Option<ShardId> {
-        debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<::ctypes::ShardId>());
-        assert!(self.hashes.len() < ::std::u16::MAX as usize);
-        self.hashes.iter().enumerate().find(|(_index, hash)| tx_hash == *hash).map(|(index, _)| {
-            let index = index as ShardId + self.number_of_initial_shards;
-            assert!(index < self.number_of_shards);
-            index
-        })
     }
 
     pub fn seq(&self) -> u64 {
@@ -110,15 +77,16 @@ impl Metadata {
 
 impl Default for Metadata {
     fn default() -> Self {
-        Self::new(0)
+        Self::new()
     }
 }
 
 impl CacheableItem for Metadata {
     type Address = MetadataAddress;
 
+    // FIXME: I'm not sure of it.
     fn is_null(&self) -> bool {
-        self.number_of_shards == 0
+        self.hashes.is_empty() && self.seq == 0
     }
 }
 
@@ -126,7 +94,7 @@ const PREFIX: u8 = super::METADATA_PREFIX;
 
 impl Encodable for Metadata {
     fn rlp_append(&self, s: &mut RlpStream) {
-        const INITIAL_LEN: usize = 4;
+        const INITIAL_LEN: usize = 2;
         const TERM_LEN: usize = 2;
         const PARAMS_LEN: usize = 2;
         let mut len = INITIAL_LEN;
@@ -143,11 +111,7 @@ impl Encodable for Metadata {
             }
             len += PARAMS_LEN;
         }
-        s.begin_list(len)
-            .append(&PREFIX)
-            .append(&self.number_of_shards)
-            .append(&self.number_of_initial_shards)
-            .append_list(&self.hashes);
+        s.begin_list(len).append(&PREFIX).append_list(&self.hashes);
         if term_changed {
             s.append(&self.term.last_term_finished_block_num).append(&self.term.current_term_id);
         }
@@ -165,27 +129,27 @@ impl Encodable for Metadata {
 impl Decodable for Metadata {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         let (term, seq, params) = match rlp.item_count()? {
-            4 => (TermMetadata::default(), 0, None),
-            6 => (
+            2 => (TermMetadata::default(), 0, None),
+            4 => (
                 TermMetadata {
-                    last_term_finished_block_num: rlp.val_at(4)?,
-                    current_term_id: rlp.val_at(5)?,
+                    last_term_finished_block_num: rlp.val_at(2)?,
+                    current_term_id: rlp.val_at(3)?,
                 },
                 0,
                 None,
             ),
-            8 => (
+            6 => (
                 TermMetadata {
-                    last_term_finished_block_num: rlp.val_at(4)?,
-                    current_term_id: rlp.val_at(5)?,
+                    last_term_finished_block_num: rlp.val_at(2)?,
+                    current_term_id: rlp.val_at(3)?,
                 },
-                rlp.val_at(6)?,
-                Some(rlp.val_at(7)?),
+                rlp.val_at(4)?,
+                Some(rlp.val_at(5)?),
             ),
             item_count => {
                 return Err(DecoderError::RlpInvalidLength {
                     got: item_count,
-                    expected: 4,
+                    expected: 2,
                 })
             }
         };
@@ -195,9 +159,7 @@ impl Decodable for Metadata {
             return Err(DecoderError::Custom("Unexpected prefix"))
         }
         Ok(Self {
-            number_of_shards: rlp.val_at(1)?,
-            number_of_initial_shards: rlp.val_at(2)?,
-            hashes: rlp.list_at(3)?,
+            hashes: rlp.list_at(1)?,
             term,
             seq,
             params,
@@ -260,23 +222,19 @@ mod tests {
     #[test]
     fn check_backward_compatibility() {
         let metadata = Metadata {
-            number_of_shards: 10,
-            number_of_initial_shards: 1,
             hashes: vec![],
             term: Default::default(),
             seq: 0,
             params: None,
         };
-        let mut rlp = RlpStream::new_list(4);
-        rlp.append(&PREFIX).append(&10u16).append(&1u16).append_list::<H256, H256>(&[]);
+        let mut rlp = RlpStream::new_list(2);
+        rlp.append(&PREFIX).append_list::<H256, H256>(&[]);
         assert_eq!(metadata.rlp_bytes(), rlp.drain());
     }
 
     #[test]
     fn metadata_without_term_with_seq() {
         let metadata = Metadata {
-            number_of_shards: 10,
-            number_of_initial_shards: 1,
             hashes: vec![],
             term: Default::default(),
             seq: 3,
@@ -288,8 +246,6 @@ mod tests {
     #[test]
     fn metadata_with_term_without_seq() {
         let metadata = Metadata {
-            number_of_shards: 10,
-            number_of_initial_shards: 1,
             hashes: vec![],
             term: TermMetadata {
                 last_term_finished_block_num: 1,
@@ -304,8 +260,6 @@ mod tests {
     #[test]
     fn metadata_with_term_and_seq() {
         let metadata = Metadata {
-            number_of_shards: 10,
-            number_of_initial_shards: 1,
             hashes: vec![],
             term: TermMetadata {
                 last_term_finished_block_num: 1,

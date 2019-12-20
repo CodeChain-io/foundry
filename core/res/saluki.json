@@ -47,12 +47,5 @@
   },
   "accounts": {
     "sccqx74ftz8ct6yks4mq3u06g2wt07zxfqrss777pj2":  { "balance": "2100000000000000000", "seq": "0" }
-  },
-  "shards": {
-    "0": {
-      "seq": 0,
-      "owners": ["sccqx74ftz8ct6yks4mq3u06g2wt07zxfqrss777pj2"],
-      "users": []
-    }
   }
 }

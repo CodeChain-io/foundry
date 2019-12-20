@@ -35,12 +35,12 @@ use std::sync::Arc;
 use ckey::{Address, NetworkId, PlatformAddress, Public};
 use cmerkle::Result as TrieResult;
 use cnetwork::NodeId;
-use cstate::{AssetScheme, FindActionHandler, OwnedAsset, StateResult, Text, TopLevelState, TopStateView};
-use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
-use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
+use cstate::{FindActionHandler, Text, TopLevelState, TopStateView};
+use ctypes::transaction::{AssetTransferInput, PartialHashing};
+use ctypes::{BlockHash, BlockNumber, CommonParams, Tracker, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
-use primitives::{Bytes, H160, H256, U256};
+use primitives::{Bytes, U256};
 
 use crate::block::{ClosedBlock, OpenBlock, SealedBlock};
 use crate::blockchain_info::BlockChainInfo;
@@ -183,16 +183,6 @@ impl From<BlockId> for StateOrBlock {
     }
 }
 
-pub trait Shard {
-    fn number_of_shards(&self, state: StateOrBlock) -> Option<ShardId>;
-
-    fn shard_id_by_hash(&self, create_shard_tx_hash: &TxHash, state: StateOrBlock) -> Option<ShardId>;
-    fn shard_root(&self, shard_id: ShardId, state: StateOrBlock) -> Option<H256>;
-
-    fn shard_owners(&self, shard_id: ShardId, state: StateOrBlock) -> Option<Vec<Address>>;
-    fn shard_users(&self, shard_id: ShardId, state: StateOrBlock) -> Option<Vec<Address>>;
-}
-
 /// Provides methods to import block into blockchain
 pub trait ImportBlock {
     /// Import a block into the blockchain.
@@ -297,35 +287,12 @@ pub trait DatabaseClient {
     fn database(&self) -> Arc<dyn KeyValueDB>;
 }
 
-/// Provides methods to access asset
-pub trait AssetClient {
-    fn get_asset_scheme(&self, asset_type: H160, shard_id: ShardId, id: BlockId) -> TrieResult<Option<AssetScheme>>;
-
-    fn get_asset(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        id: BlockId,
-    ) -> TrieResult<Option<OwnedAsset>>;
-
-    fn is_asset_spent(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        block_id: BlockId,
-    ) -> TrieResult<Option<bool>>;
-}
-
 /// Provides methods to texts
 pub trait TextClient {
     fn get_text(&self, tx_hash: TxHash, id: BlockId) -> TrieResult<Option<Text>>;
 }
 
 pub trait ExecuteClient: ChainTimeInfo {
-    fn execute_transaction(&self, transaction: &ShardTransaction, sender: &Address) -> StateResult<()>;
-
     fn execute_vm(
         &self,
         tx: &dyn PartialHashing,

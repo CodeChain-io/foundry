@@ -21,7 +21,6 @@ extern crate codechain_merkle as cmerkle;
 extern crate codechain_logger as clogger;
 extern crate codechain_key as ckey;
 extern crate codechain_types as ctypes;
-extern crate codechain_vm as cvm;
 extern crate kvdb;
 extern crate kvdb_memorydb;
 extern crate lru_cache;
@@ -50,16 +49,13 @@ pub use crate::action_handler::{ActionDataKeyBuilder, ActionHandler, FindActionH
 pub use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 pub use crate::db::StateDB;
 pub use crate::error::Error as StateError;
-pub use crate::impls::{ShardLevelState, TopLevelState};
+pub use crate::impls::TopLevelState;
 pub use crate::item::account::Account;
 pub use crate::item::action_data::ActionData;
-pub use crate::item::asset::{Asset, OwnedAsset, OwnedAssetAddress};
-pub use crate::item::asset_scheme::{AssetScheme, AssetSchemeAddress};
 pub use crate::item::metadata::{Metadata, MetadataAddress};
 pub use crate::item::regular_account::{RegularAccount, RegularAccountAddress};
-pub use crate::item::shard::{Shard, ShardAddress};
 pub use crate::item::text::Text;
-pub use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
+pub use crate::traits::{StateWithCache, TopState, TopStateView};
 
 use crate::cache::CacheableItem;
 

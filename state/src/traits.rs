@@ -16,15 +16,10 @@
 
 use ckey::{public_to_address, Address, Public, Signature};
 use cmerkle::Result as TrieResult;
-use ctypes::transaction::ShardTransaction;
-use ctypes::{BlockNumber, CommonParams, ShardId, Tracker, TxHash};
-use cvm::ChainTimeInfo;
-use primitives::{Bytes, H160, H256};
+use ctypes::{CommonParams, TxHash};
+use primitives::{Bytes, H256};
 
-use crate::{
-    Account, ActionData, AssetScheme, CacheableItem, Metadata, OwnedAsset, RegularAccount, Shard, StateDB, StateResult,
-    Text,
-};
+use crate::{Account, ActionData, CacheableItem, Metadata, RegularAccount, StateDB, StateResult, Text};
 
 
 pub trait TopStateView {
@@ -84,68 +79,9 @@ pub trait TopStateView {
 
     fn metadata(&self) -> TrieResult<Option<Metadata>>;
 
-    fn number_of_shards(&self) -> TrieResult<ShardId> {
-        Ok(*self.metadata()?.expect("Metadata must exist").number_of_shards())
-    }
-
-    fn shard_id_by_hash(&self, tx_hash: &TxHash) -> TrieResult<Option<ShardId>> {
-        Ok(self.metadata()?.and_then(|metadata| metadata.shard_id_by_hash(tx_hash)))
-    }
-
-    fn shard(&self, shard_id: ShardId) -> TrieResult<Option<Shard>>;
-    fn shard_state<'db>(&'db self, shard_id: ShardId) -> TrieResult<Option<Box<dyn ShardStateView + 'db>>>;
-
-    fn shard_root(&self, shard_id: ShardId) -> TrieResult<Option<H256>> {
-        Ok(self.shard(shard_id)?.map(|shard| *shard.root()))
-    }
-
-    fn shard_owners(&self, shard_id: ShardId) -> TrieResult<Option<Vec<Address>>> {
-        Ok(self.shard(shard_id)?.map(|shard| shard.owners().to_vec()))
-    }
-
-    fn shard_users(&self, shard_id: ShardId) -> TrieResult<Option<Vec<Address>>> {
-        Ok(self.shard(shard_id)?.map(|shard| shard.users().to_vec()))
-    }
-
-    /// Get the asset scheme.
-    fn asset_scheme(&self, shard_id: ShardId, asset_type: H160) -> TrieResult<Option<AssetScheme>> {
-        match self.shard_state(shard_id)? {
-            None => Ok(None),
-            Some(state) => state.asset_scheme(asset_type),
-        }
-    }
-
-    /// Get the asset.
-    fn asset(&self, shard_id: ShardId, tracker: Tracker, index: usize) -> TrieResult<Option<OwnedAsset>> {
-        match self.shard_state(shard_id)? {
-            None => Ok(None),
-            Some(state) => state.asset(tracker, index),
-        }
-    }
-
     fn text(&self, key: &H256) -> TrieResult<Option<Text>>;
 
     fn action_data(&self, key: &H256) -> TrieResult<Option<ActionData>>;
-}
-
-pub trait ShardStateView {
-    /// Get the asset scheme.
-    fn asset_scheme(&self, asset_type: H160) -> TrieResult<Option<AssetScheme>>;
-    /// Get the asset.
-    fn asset(&self, tracker: Tracker, index: usize) -> TrieResult<Option<OwnedAsset>>;
-}
-
-pub trait ShardState {
-    fn apply<C: ChainTimeInfo>(
-        &mut self,
-        transaction: &ShardTransaction,
-        sender: &Address,
-        shard_owners: &[Address],
-        approvers: &[Address],
-        client: &C,
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-    ) -> StateResult<()>;
 }
 
 pub trait TopState {
@@ -165,14 +101,6 @@ pub trait TopState {
 
     /// Set the regular key of account `owner_public`
     fn set_regular_key(&mut self, owner_public: &Public, key: &Public) -> StateResult<()>;
-
-    fn create_shard(&mut self, fee_payer: &Address, tx_hash: TxHash, users: Vec<Address>) -> StateResult<()>;
-    fn change_shard_owners(&mut self, shard_id: ShardId, owners: &[Address], sender: &Address) -> StateResult<()>;
-    fn change_shard_users(&mut self, shard_id: ShardId, users: &[Address], sender: &Address) -> StateResult<()>;
-
-    fn set_shard_root(&mut self, shard_id: ShardId, new_root: H256) -> StateResult<()>;
-    fn set_shard_owners(&mut self, shard_id: ShardId, new_owners: Vec<Address>) -> StateResult<()>;
-    fn set_shard_users(&mut self, shard_id: ShardId, new_users: Vec<Address>) -> StateResult<()>;
 
     fn store_text(&mut self, key: &TxHash, text: Text, sig: &Signature) -> StateResult<()>;
     fn remove_text(&mut self, key: &TxHash, sig: &Signature) -> StateResult<()>;

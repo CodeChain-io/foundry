@@ -14,46 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::collections::{HashMap, HashSet};
-
 use super::lru_cache::LruCache;
-use super::{ShardCache, TopCache};
-use crate::{Account, ActionData, AssetScheme, Metadata, OwnedAsset, RegularAccount, Shard, Text};
-
-use ctypes::ShardId;
+use super::TopCache;
+use crate::{Account, ActionData, Metadata, RegularAccount, Text};
 
 pub struct GlobalCache {
     account: LruCache<Account>,
     regular_account: LruCache<RegularAccount>,
     metadata: LruCache<Metadata>,
-    shard: LruCache<Shard>,
     text: LruCache<Text>,
     action_data: LruCache<ActionData>,
-
-    asset_scheme: LruCache<AssetScheme>,
-    asset: LruCache<OwnedAsset>,
 }
 
 impl GlobalCache {
-    pub fn new(
-        account: usize,
-        regular_account: usize,
-        shard: usize,
-        text: usize,
-        action_data: usize,
-        asset_scheme: usize,
-        asset: usize,
-    ) -> Self {
+    pub fn new(account: usize, regular_account: usize, text: usize, action_data: usize) -> Self {
         Self {
             account: LruCache::new(account),
             regular_account: LruCache::new(regular_account),
             metadata: LruCache::new(1),
-            shard: LruCache::new(shard),
             text: LruCache::new(text),
             action_data: LruCache::new(action_data),
-
-            asset_scheme: LruCache::new(asset_scheme),
-            asset: LruCache::new(asset),
         }
     }
 
@@ -62,35 +42,12 @@ impl GlobalCache {
             self.account.iter().map(|(addr, item)| (*addr, item.clone())),
             self.regular_account.iter().map(|(addr, item)| (*addr, item.clone())),
             self.metadata.iter().map(|(addr, item)| (*addr, item.clone())),
-            self.shard.iter().map(|(addr, item)| (*addr, item.clone())),
             self.text.iter().map(|(addr, item)| (*addr, item.clone())),
             self.action_data.iter().map(|(addr, item)| (*addr, item.clone())),
         )
     }
 
-    fn shard_cache(&self, shard_id: ShardId) -> ShardCache {
-        ShardCache::new(
-            self.asset_scheme
-                .iter()
-                .filter(|(addr, _)| addr.shard_id() == shard_id)
-                .map(|(addr, item)| (*addr, item.clone())),
-            self.asset.iter().filter(|(addr, _)| addr.shard_id() == shard_id).map(|(addr, item)| (*addr, item.clone())),
-        )
-    }
-
-    fn shard_ids(&self) -> HashSet<ShardId> {
-        self.asset_scheme
-            .iter()
-            .map(|(addr, _)| addr.shard_id())
-            .chain(self.asset.iter().map(|(addr, _)| addr.shard_id()))
-            .collect()
-    }
-
-    pub fn shard_caches(&self) -> HashMap<ShardId, ShardCache> {
-        self.shard_ids().into_iter().map(|shard_id| (shard_id, self.shard_cache(shard_id))).collect()
-    }
-
-    pub fn override_cache(&mut self, top_cache: &TopCache, shard_caches: &HashMap<ShardId, ShardCache>) {
+    pub fn override_cache(&mut self, top_cache: &TopCache) {
         self.clear();
 
         for (addr, item) in top_cache.cached_accounts().into_iter() {
@@ -111,12 +68,6 @@ impl GlobalCache {
                 None => self.metadata.remove(&addr),
             };
         }
-        for (addr, item) in top_cache.cached_shards().into_iter() {
-            match item {
-                Some(item) => self.shard.insert(addr, item),
-                None => self.shard.remove(&addr),
-            };
-        }
         for (addr, item) in top_cache.cached_texts().into_iter() {
             match item {
                 Some(item) => self.text.insert(addr, item),
@@ -129,37 +80,14 @@ impl GlobalCache {
                 None => self.action_data.remove(&addr),
             };
         }
-
-        let mut cached_asset_schemes: Vec<_> =
-            shard_caches.iter().flat_map(|(_, shard_cache)| shard_cache.cached_asset_schemes().into_iter()).collect();
-        cached_asset_schemes.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-        for (_, addr, item) in cached_asset_schemes.into_iter() {
-            match item {
-                Some(item) => self.asset_scheme.insert(addr, item),
-                None => self.asset_scheme.remove(&addr),
-            };
-        }
-
-        let mut cached_assets: Vec<_> =
-            shard_caches.iter().flat_map(|(_, shard_cache)| shard_cache.cached_assets().into_iter()).collect();
-        cached_assets.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-        for (_, addr, item) in cached_assets.into_iter() {
-            match item {
-                Some(item) => self.asset.insert(addr, item),
-                None => self.asset.remove(&addr),
-            };
-        }
     }
 
     pub fn clear(&mut self) {
         self.account.clear();
         self.regular_account.clear();
         self.metadata.clear();
-        self.shard.clear();
         self.text.clear();
         self.action_data.clear();
-        self.asset_scheme.clear();
-        self.asset.clear();
     }
 }
 
@@ -168,12 +96,9 @@ impl Default for GlobalCache {
         // FIXME: Set the right number
         const N_ACCOUNT: usize = 100;
         const N_REGULAR_ACCOUNT: usize = 100;
-        const N_SHARD: usize = 100;
         const N_TEXT: usize = 100;
         const N_ACTION_DATA: usize = 10;
-        const N_ASSET_SCHEME: usize = 100;
-        const N_ASSET: usize = 1000;
-        Self::new(N_ACCOUNT, N_REGULAR_ACCOUNT, N_SHARD, N_TEXT, N_ACTION_DATA, N_ASSET_SCHEME, N_ASSET)
+        Self::new(N_ACCOUNT, N_REGULAR_ACCOUNT, N_TEXT, N_ACTION_DATA)
     }
 }
 
@@ -183,12 +108,8 @@ impl Clone for GlobalCache {
             account: self.account.clone(),
             regular_account: self.regular_account.clone(),
             metadata: self.metadata.clone(),
-            shard: self.shard.clone(),
             text: self.text.clone(),
             action_data: self.action_data.clone(),
-
-            asset_scheme: self.asset_scheme.clone(),
-            asset: self.asset.clone(),
         }
     }
 }

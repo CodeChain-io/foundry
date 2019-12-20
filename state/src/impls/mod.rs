@@ -17,8 +17,6 @@
 #[cfg(test)]
 mod test_helper; // It must be placed above other modules
 
-mod shard_level;
 mod top_level;
 
-pub use self::shard_level::ShardLevelState;
 pub use self::top_level::TopLevelState;

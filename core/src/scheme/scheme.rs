@@ -22,16 +22,16 @@ use cdb::{AsHashDB, HashDB};
 use cjson;
 use ckey::Address;
 use cmerkle::{TrieFactory, TrieMut};
-use cstate::{Metadata, MetadataAddress, Shard, ShardAddress, StateDB, StateResult, StateWithCache, TopLevelState};
+use cstate::{StateDB, StateResult, StateWithCache, TopLevelState};
 use ctypes::errors::SyntaxError;
-use ctypes::{BlockHash, CommonParams, Header, ShardId};
+use ctypes::{BlockHash, CommonParams, Header};
 use parking_lot::RwLock;
 use primitives::{Bytes, H256, U256};
 use rlp::{Encodable, Rlp, RlpStream};
 
 use crate::blockchain::HeaderProvider;
 
-use super::pod_state::{PodAccounts, PodShards};
+use super::pod_state::PodAccounts;
 use super::seal::Generic as GenericSeal;
 use super::Genesis;
 use crate::codechain_machine::CodeChainMachine;
@@ -71,7 +71,6 @@ pub struct Scheme {
 
     /// Genesis state as plain old data.
     genesis_accounts: PodAccounts,
-    genesis_shards: PodShards,
 }
 
 // helper for formatting errors.
@@ -113,7 +112,6 @@ impl Scheme {
     fn initialize_state(&self, db: StateDB) -> Result<StateDB, Error> {
         let root = BLAKE_NULL_RLP;
         let (db, root) = self.initialize_accounts(db, root)?;
-        let (db, root) = self.initialize_shards(db, root)?;
         let (db, root) = self.initialize_action_handlers(db, root)?;
 
         *self.state_root_memo.write() = root;
@@ -130,44 +128,6 @@ impl Scheme {
                 debug_assert_eq!(Ok(None), r);
                 r?;
             }
-        }
-
-        Ok((db, root))
-    }
-
-    fn initialize_shards<DB: AsHashDB>(&self, mut db: DB, mut root: H256) -> Result<(DB, H256), Error> {
-        let mut shards = Vec::<(ShardAddress, Shard)>::with_capacity(self.genesis_shards.len());
-
-        // Initialize shard-level tries
-        for (shard_id, shard) in &*self.genesis_shards {
-            let shard_root = BLAKE_NULL_RLP;
-            let owners = shard.owners.clone();
-            if owners.is_empty() {
-                return Err(SyntaxError::EmptyShardOwners(*shard_id).into())
-            }
-            let users = shard.users.clone();
-            shards.push((ShardAddress::new(*shard_id), Shard::new(shard_root, owners, users)));
-        }
-
-        debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<ShardId>());
-        debug_assert!(shards.len() <= ::std::u16::MAX as usize, "{} <= {}", shards.len(), ::std::u16::MAX as usize);
-        let global_metadata = Metadata::new(shards.len() as ShardId);
-
-        // Initialize shards
-        for (address, shard) in shards.into_iter() {
-            let mut t = TrieFactory::from_existing(db.as_hashdb_mut(), &mut root)?;
-            let r = t.insert(&*address, &shard.rlp_bytes());
-            debug_assert_eq!(Ok(None), r);
-            r?;
-        }
-
-        {
-            let mut t = TrieFactory::from_existing(db.as_hashdb_mut(), &mut root)?;
-            let address = MetadataAddress::new();
-
-            let r = t.insert(&*address, &global_metadata.rlp_bytes());
-            debug_assert_eq!(Ok(None), r);
-            r?;
         }
 
         Ok((db, root))
@@ -343,7 +303,6 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
         seal_rlp,
         state_root_memo: RwLock::new(Default::default()), // will be overwritten right after.
         genesis_accounts: s.accounts.into(),
-        genesis_shards: s.shards.into(),
     };
 
     // use memoized state root if provided.

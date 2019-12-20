@@ -19,28 +19,16 @@ pub mod helpers {
 
     use cdb::AsHashDB;
     use cmerkle::{TrieFactory, TrieMut};
-    use ctypes::{BlockNumber, Tracker};
-    use cvm::ChainTimeInfo;
+
     use kvdb::KeyValueDB;
     use kvdb_memorydb;
     use primitives::H256;
     use rlp::Encodable;
 
-
     use crate::impls::TopLevelState;
     use crate::{FindActionHandler, Metadata, MetadataAddress, StateDB};
 
     pub struct TestClient {}
-
-    impl ChainTimeInfo for TestClient {
-        fn transaction_block_age(&self, _: &Tracker, _parent_block_number: BlockNumber) -> Option<u64> {
-            Some(0)
-        }
-
-        fn transaction_time_age(&self, _: &Tracker, _parent_block_timestamp: u64) -> Option<u64> {
-            Some(0)
-        }
-    }
 
     impl FindActionHandler for TestClient {}
 
@@ -83,7 +71,7 @@ pub mod helpers {
         // init trie and reset root too null
         {
             let mut t = TrieFactory::create(db.as_hashdb_mut(), &mut root);
-            t.insert(&*MetadataAddress::new(), &Metadata::new(1).rlp_bytes()).unwrap();
+            t.insert(&*MetadataAddress::new(), &Metadata::new().rlp_bytes()).unwrap();
         }
 
 

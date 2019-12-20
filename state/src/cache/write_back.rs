@@ -234,16 +234,6 @@ where
         }))
     }
 
-    pub fn create<F: FnOnce() -> Item>(&self, a: &Item::Address, f: F) -> cmerkle::Result<Item> {
-        if let Some(cached) = self.cache.borrow().get(a) {
-            assert!(cached.item.is_none());
-        }
-        let item = f();
-        self.insert(a, Entry::<Item>::new_dirty(Some(item.clone())));
-
-        Ok(item)
-    }
-
     pub fn items(&self) -> Vec<(usize, Item::Address, Option<Item>)> {
         let cache = self.cache.borrow();
         cache

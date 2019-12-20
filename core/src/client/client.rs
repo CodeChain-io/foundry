@@ -23,23 +23,21 @@ use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress, Public};
 use cmerkle::Result as TrieResult;
 use cnetwork::NodeId;
-use cstate::{
-    ActionHandler, AssetScheme, FindActionHandler, OwnedAsset, StateDB, StateResult, Text, TopLevelState, TopStateView,
-};
+use cstate::{ActionHandler, FindActionHandler, StateDB, Text, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
-use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
-use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
+use ctypes::transaction::{AssetTransferInput, PartialHashing};
+use ctypes::{BlockHash, BlockNumber, CommonParams, Tracker, TxHash};
 use cvm::{decode, execute, ChainTimeInfo, ScriptResult, VMConfig};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use primitives::{Bytes, H160, H256, U256};
+use primitives::{Bytes, U256};
 use rlp::Rlp;
 
 use super::importer::Importer;
 use super::{
-    AccountData, AssetClient, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify,
-    ClientConfig, DatabaseClient, EngineClient, EngineInfo, Error as ClientError, ExecuteClient, ImportBlock,
-    ImportResult, MiningBlockChainClient, Shard, StateInfo, StateOrBlock, TextClient,
+    AccountData, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify, ClientConfig,
+    DatabaseClient, EngineClient, EngineInfo, Error as ClientError, ExecuteClient, ImportBlock, ImportResult,
+    MiningBlockChainClient, StateInfo, StateOrBlock, TextClient,
 };
 use crate::block::{ClosedBlock, IsBlock, OpenBlock, SealedBlock};
 use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, InvoiceProvider, TransactionAddress};
@@ -347,70 +345,6 @@ impl DatabaseClient for Client {
     }
 }
 
-impl AssetClient for Client {
-    fn get_asset_scheme(&self, asset_type: H160, shard_id: ShardId, id: BlockId) -> TrieResult<Option<AssetScheme>> {
-        if let Some(state) = Client::state_at(&self, id) {
-            Ok(state.asset_scheme(shard_id, asset_type)?)
-        } else {
-            Ok(None)
-        }
-    }
-
-    fn get_asset(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        id: BlockId,
-    ) -> TrieResult<Option<OwnedAsset>> {
-        if let Some(state) = Client::state_at(&self, id) {
-            Ok(state.asset(shard_id, tracker, index)?)
-        } else {
-            Ok(None)
-        }
-    }
-
-    /// Checks whether an asset is spent or not.
-    ///
-    /// It returns None if such an asset never existed in the shard at the given block.
-    fn is_asset_spent(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        block_id: BlockId,
-    ) -> TrieResult<Option<bool>> {
-        let tx_address = match self.transaction_addresses(&tracker) {
-            Some(itx_address) => itx_address,
-            None => return Ok(None),
-        };
-
-        match self.block_number(&block_id) {
-            None => return Ok(None),
-            Some(block_number)
-                if block_number
-                    < self.block_number(&tx_address.block_hash.into()).expect("There is a successful transaction") =>
-            {
-                return Ok(None)
-            }
-            Some(_) => {}
-        }
-
-        let localized = self.transaction_by_tracker(&tracker).expect("There is a successful transaction");
-        let transaction = if let Some(tx) = Option::<ShardTransaction>::from(localized.action.clone()) {
-            tx
-        } else {
-            return Ok(None)
-        };
-        if !transaction.is_valid_shard_id_index(index, shard_id) {
-            return Ok(None)
-        }
-
-        let state = Client::state_at(&self, block_id).unwrap();
-        Ok(Some(state.asset(shard_id, tracker, index)?.is_none()))
-    }
-}
-
 impl TextClient for Client {
     fn get_text(&self, tx_hash: TxHash, id: BlockId) -> TrieResult<Option<Text>> {
         if let Some(state) = Client::state_at(&self, id) {
@@ -422,18 +356,6 @@ impl TextClient for Client {
 }
 
 impl ExecuteClient for Client {
-    fn execute_transaction(&self, transaction: &ShardTransaction, sender: &Address) -> StateResult<()> {
-        let mut state = Client::state_at(&self, BlockId::Latest).expect("Latest state MUST exist");
-        state.apply_shard_transaction(
-            transaction,
-            sender,
-            &[],
-            self,
-            self.best_block_header().number(),
-            self.best_block_header().timestamp(),
-        )
-    }
-
     fn execute_vm(
         &self,
         tx: &dyn PartialHashing,
@@ -841,33 +763,6 @@ impl AccountData for Client {
     fn regular_key_owner(&self, address: &Address, state: StateOrBlock) -> Option<Address> {
         let state = self.state_info(state)?;
         state.regular_key_owner(address).ok()?
-    }
-}
-
-impl Shard for Client {
-    fn number_of_shards(&self, state: StateOrBlock) -> Option<ShardId> {
-        let state = self.state_info(state)?;
-        state.number_of_shards().ok()
-    }
-
-    fn shard_id_by_hash(&self, create_shard_tx_hash: &TxHash, state: StateOrBlock) -> Option<u16> {
-        let state = self.state_info(state)?;
-        state.shard_id_by_hash(&create_shard_tx_hash).ok()?
-    }
-
-    fn shard_root(&self, shard_id: ShardId, state: StateOrBlock) -> Option<H256> {
-        let state = self.state_info(state)?;
-        state.shard_root(shard_id).ok()?
-    }
-
-    fn shard_owners(&self, shard_id: u16, state: StateOrBlock) -> Option<Vec<Address>> {
-        let state = self.state_info(state)?;
-        state.shard_owners(shard_id).ok()?
-    }
-
-    fn shard_users(&self, shard_id: u16, state: StateOrBlock) -> Option<Vec<Address>> {
-        let state = self.state_info(state)?;
-        state.shard_users(shard_id).ok()?
     }
 }
 

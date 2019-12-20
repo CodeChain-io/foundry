@@ -30,17 +30,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use cdb::{new_journaldb, Algorithm, AsHashDB, HashDB, JournalDB};
-use ctypes::ShardId;
 use kvdb::DBTransaction;
 use kvdb_memorydb;
 use primitives::H256;
 use util_error::UtilError;
 
-use crate::cache::{GlobalCache, ShardCache, TopCache};
+use crate::cache::{GlobalCache, TopCache};
 use crate::impls::TopLevelState;
 
 /// State database abstraction.
@@ -99,12 +97,8 @@ impl StateDB {
         self.cache.top_cache()
     }
 
-    pub fn shard_caches(&self) -> HashMap<ShardId, ShardCache> {
-        self.cache.shard_caches()
-    }
-
     pub fn override_state(&mut self, state: &TopLevelState) {
-        self.cache.override_cache(state.top_cache(), state.shard_caches());
+        self.cache.override_cache(state.top_cache());
         self.current_hash = Some(state.root());
     }
 

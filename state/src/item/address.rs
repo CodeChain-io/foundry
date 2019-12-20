@@ -23,31 +23,10 @@ macro_rules! define_address_constructor {
             $name(hash)
         }
     };
-    (SHARD, $name:ident, $prefix:expr) => {
-        fn from_hash_with_shard_id<T: AsRef<[u8]>>(input_hash: T, index: u64, shard_id: ::ctypes::ShardId) -> Self {
-            let mut hash: ::primitives::H256 =
-                ::ccrypto::Blake::blake_with_key(&input_hash, &::primitives::H128::from(index));
-            hash[0..2].copy_from_slice(&[$prefix, 0]);
-
-            debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<::ctypes::ShardId>());
-            let shard_id_bytes: [u8; 2] = shard_id.to_be_bytes();
-            hash[2..4].copy_from_slice(&shard_id_bytes);
-
-            $name(hash)
-        }
-    };
 }
 
 macro_rules! define_id_getter {
-    (TOP) => {
-    };
-    (SHARD) => {
-        pub fn shard_id(&self) -> ::ctypes::ShardId {
-            debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<ShardId>());
-            let shard_id_bytes: [u8; 2] = [self.0[2], self.0[3]];
-            ::ctypes::ShardId::from_be_bytes(shard_id_bytes)
-        }
-    };
+    (TOP) => {};
 }
 
 macro_rules! impl_address {

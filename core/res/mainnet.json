@@ -130,23 +130,5 @@
     "cccq8dhpcfqt94mx8dntxxd6420782vtd4tpvpgcgjh": {
       "balance": "10000000000"
     }
-  },
-  "shards": {
-    "0": {
-      "seq": 0,
-      "owners": [
-        "cccq8u8se8k00vcqk4pl707qe9v60hs3jj27g4rqkm9",
-        "cccq9hpz4m5sx0ea42l2hfm8nja0xzzsnx0vv0p7mzw",
-        "cccqxgwashdy0fp5cwlvp4ntkzmy3xvjedfjgfzrxf7",
-        "cccq9g0ayvrvmzcs2qf8yygat0dg9073g5xccd3sydw",
-        "cccq8r9as2drgp4xwfzz7t0xc9k977y8mw7hus3zq8e",
-        "cccqx7ycl2awx6awqyjf9ns4532xj7eg63w6v6hlnu0",
-        "cccq826j0p6fvpk02p0n5th7ukqu5clrnyldcxgrgtz",
-        "cccqyhk4388mymckk40ctf0skgkl8nf89f6sgpzwzke",
-        "cccqxgupxd5j0squ7t8w3etxjf0fn2z4axz0spycqum",
-        "cccq8dhpcfqt94mx8dntxxd6420782vtd4tpvpgcgjh"
-      ],
-      "users": []
-    }
   }
 }

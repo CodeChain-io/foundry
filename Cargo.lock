@@ -500,7 +500,6 @@ dependencies = [
  "codechain-logger",
  "codechain-merkle",
  "codechain-types",
- "codechain-vm",
  "kvdb",
  "kvdb-memorydb",
  "log 0.4.6",
