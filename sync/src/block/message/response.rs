@@ -79,7 +79,7 @@ impl ResponseMessage {
         }
     }
 
-    pub fn decode(id: u8, rlp: &Rlp) -> Result<Self, DecoderError> {
+    pub fn decode(id: u8, rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let message = match id {
             super::MESSAGE_ID_HEADERS => ResponseMessage::Headers(rlp.as_list()?),
             super::MESSAGE_ID_BODIES => {

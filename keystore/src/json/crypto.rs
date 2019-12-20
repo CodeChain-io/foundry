@@ -65,7 +65,7 @@ struct CryptoFieldVisitor;
 impl<'a> Visitor<'a> for CryptoFieldVisitor {
     type Value = CryptoField;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "a valid crypto struct description")
     }
 
@@ -98,7 +98,7 @@ struct CryptoVisitor;
 impl<'a> Visitor<'a> for CryptoVisitor {
     type Value = Crypto;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "a valid crypto object")
     }
 

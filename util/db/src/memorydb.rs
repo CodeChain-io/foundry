@@ -16,10 +16,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //! Reference-counted memory-based `HashDB` implementation.
-extern crate codechain_crypto;
-extern crate plain_hasher;
-extern crate primitives;
-extern crate rlp;
+use codechain_crypto;
+use plain_hasher;
+use primitives;
+use rlp;
 
 use super::{DBValue, HashDB};
 use codechain_crypto::{blake256, BLAKE_NULL_RLP};

@@ -163,7 +163,7 @@ impl Encodable for Metadata {
 }
 
 impl Decodable for Metadata {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let (term, seq, params) = match rlp.item_count()? {
             4 => (TermMetadata::default(), 0, None),
             6 => (

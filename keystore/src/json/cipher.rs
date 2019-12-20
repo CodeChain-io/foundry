@@ -49,7 +49,7 @@ struct CipherSerVisitor;
 impl<'a> Visitor<'a> for CipherSerVisitor {
     type Value = CipherSer;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "a valid cipher identifier")
     }
 

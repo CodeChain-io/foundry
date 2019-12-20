@@ -30,7 +30,7 @@ pub struct Mismatch<T> {
 }
 
 impl<T: fmt::Display> fmt::Display for Mismatch<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_fmt(format_args!("Expected {}, found {}", self.expected, self.found))
     }
 }
@@ -48,7 +48,7 @@ impl<T> Decodable for Mismatch<T>
 where
     T: Decodable,
 {
-    fn decode(rlp: &Rlp) -> Result<Mismatch<T>, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Mismatch<T>, DecoderError> {
         Ok(Mismatch {
             expected: rlp.val_at(0)?,
             found: rlp.val_at(1)?,
@@ -68,7 +68,7 @@ pub struct OutOfBounds<T> {
 }
 
 impl<T: fmt::Display> fmt::Display for OutOfBounds<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let msg = match (self.min.as_ref(), self.max.as_ref()) {
             (Some(min), Some(max)) => format!("Min={}, Max={}", min, max),
             (Some(min), _) => format!("Min={}", min),

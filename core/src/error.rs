@@ -44,7 +44,7 @@ pub enum ImportError {
 }
 
 impl fmt::Display for ImportError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let msg = match self {
             ImportError::AlreadyInChain => "block already in chain",
             ImportError::AlreadyQueued => "block already in the block queue",
@@ -125,7 +125,7 @@ pub enum SchemeError {
 }
 
 impl fmt::Display for SchemeError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use self::SchemeError::*;
         let msg: String = match self {
             InvalidCommonParams => "Common params are not matched with gensis block".into(),
@@ -136,7 +136,7 @@ impl fmt::Display for SchemeError {
 }
 
 impl fmt::Display for BlockError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use self::BlockError::*;
 
         let msg: String = match self {
@@ -194,7 +194,7 @@ pub enum Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::Client(err) => err.fmt(f),
             Error::Util(err) => err.fmt(f),

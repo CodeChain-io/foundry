@@ -149,7 +149,7 @@ impl Encodable for Error {
 }
 
 impl Decodable for Error {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let tag = rlp.val_at::<u8>(0)?;
         let error = match tag {
             ERORR_ID_DUPLICATED_PREVIOUS_OUTPUT => Error::DuplicatedPreviousOutput {
@@ -182,7 +182,7 @@ impl Decodable for Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
         match self {
             Error::DuplicatedPreviousOutput {
                 tracker,

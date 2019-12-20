@@ -52,7 +52,7 @@ impl Encodable for BlockHash {
 }
 
 impl Decodable for BlockHash {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         Ok(H256::decode(rlp)?.into())
     }
 }

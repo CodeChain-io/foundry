@@ -291,7 +291,7 @@ impl ConsensusEngine for Tendermint {
         client.add_notify(Arc::downgrade(&self.chain_notify) as Weak<dyn ChainNotify>);
     }
 
-    fn get_best_block_from_best_proposal_header(&self, header: &HeaderView) -> BlockHash {
+    fn get_best_block_from_best_proposal_header(&self, header: &HeaderView<'_>) -> BlockHash {
         header.parent_hash()
     }
 

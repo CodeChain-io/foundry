@@ -51,7 +51,7 @@ struct KdfSerVisitor;
 impl<'a> Visitor<'a> for KdfSerVisitor {
     type Value = KdfSer;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "a kdf algorithm identifier")
     }
 
@@ -100,7 +100,7 @@ struct PrfVisitor;
 impl<'a> Visitor<'a> for PrfVisitor {
     type Value = Prf;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "a prf algorithm identifier")
     }
 

@@ -51,7 +51,7 @@ impl From<UnverifiedTransaction> for Transaction {
 }
 
 impl rlp::Decodable for UnverifiedTransaction {
-    fn decode(d: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = d.item_count()?;
         if item_count != 5 {
             return Err(DecoderError::RlpIncorrectListLen {
@@ -168,7 +168,7 @@ impl rlp::Encodable for SignedTransaction {
 }
 
 impl rlp::Decodable for SignedTransaction {
-    fn decode(d: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         let unverified_transaction: UnverifiedTransaction = UnverifiedTransaction::decode(d)?;
         match unverified_transaction.recover_public() {
             Ok(key) => Ok(SignedTransaction {

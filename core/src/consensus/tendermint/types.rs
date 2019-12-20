@@ -133,7 +133,7 @@ impl TendermintState {
 }
 
 impl fmt::Debug for TendermintState {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             TendermintState::Propose => write!(f, "TendermintState::Propose"),
             TendermintState::ProposeWaitBlockGeneration {
@@ -179,7 +179,7 @@ impl Step {
 }
 
 impl Decodable for Step {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         match rlp.as_val()? {
             0u8 => Ok(Step::Propose),
             1 => Ok(Step::Prevote),

@@ -44,7 +44,7 @@ impl Encodable for Timelock {
 }
 
 impl Decodable for Timelock {
-    fn decode(d: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = d.item_count()?;
         if item_count != 2 {
             return Err(DecoderError::RlpIncorrectListLen {

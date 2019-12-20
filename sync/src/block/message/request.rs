@@ -76,7 +76,7 @@ impl RequestMessage {
         }
     }
 
-    pub fn decode(id: u8, rlp: &Rlp) -> Result<Self, DecoderError> {
+    pub fn decode(id: u8, rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let message = match id {
             super::MESSAGE_ID_GET_HEADERS => {
                 let item_count = rlp.item_count()?;

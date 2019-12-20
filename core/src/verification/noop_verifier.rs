@@ -31,7 +31,7 @@ impl<C: BlockChainTrait> Verifier<C> for NoopVerifier {
         _: &Header,
         _t: &Header,
         _: &dyn CodeChainEngine,
-        _: Option<verification::FullFamilyParams<C>>,
+        _: Option<verification::FullFamilyParams<'_, C>>,
         _common_params: &CommonParams,
     ) -> Result<(), Error> {
         Ok(())

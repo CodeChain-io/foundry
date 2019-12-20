@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-extern crate parking_lot;
 
 extern crate codechain_core as ccore;
 extern crate codechain_db as cdb;
@@ -26,23 +25,20 @@ extern crate codechain_state as cstate;
 extern crate codechain_timer as ctimer;
 extern crate codechain_types as ctypes;
 
-extern crate kvdb;
+
 #[cfg(test)]
 extern crate kvdb_memorydb;
 #[macro_use]
 extern crate log;
-extern crate never_type;
-extern crate primitives;
-extern crate rand;
-extern crate rlp;
-extern crate snap;
+
+
 #[cfg(test)]
 extern crate tempfile;
-extern crate time;
-extern crate token_generator;
+
+
 #[cfg(test)]
 extern crate trie_standardmap;
-extern crate util_error;
+
 
 mod block;
 mod snapshot;

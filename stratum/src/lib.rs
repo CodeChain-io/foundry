@@ -20,19 +20,14 @@ extern crate codechain_crypto as ccrypto;
 #[macro_use]
 extern crate codechain_logger as clogger;
 extern crate codechain_json as cjson;
-extern crate jsonrpc_core;
-extern crate jsonrpc_derive;
-extern crate jsonrpc_tcp_server;
-extern crate parking_lot;
-extern crate primitives;
-
 #[macro_use]
 extern crate log;
-
 #[cfg(test)]
 extern crate tokio_core;
 #[cfg(test)]
 extern crate tokio_io;
+
+use jsonrpc_core;
 
 mod traits;
 

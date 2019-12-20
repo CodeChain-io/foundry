@@ -178,7 +178,7 @@ impl Encodable for AssetScheme {
 }
 
 impl Decodable for AssetScheme {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let seq = match rlp.item_count()? {
             7 => 0,
             8 => rlp.val_at(7)?,

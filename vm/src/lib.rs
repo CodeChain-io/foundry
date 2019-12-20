@@ -17,9 +17,9 @@
 extern crate codechain_crypto as ccrypto;
 extern crate codechain_key as ckey;
 extern crate codechain_types as ctypes;
-extern crate primitives;
 
-extern crate rlp;
+
+
 #[cfg(test)]
 extern crate secp256k1;
 

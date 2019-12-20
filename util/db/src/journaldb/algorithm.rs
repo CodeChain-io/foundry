@@ -56,7 +56,7 @@ impl Algorithm {
 }
 
 impl fmt::Display for Algorithm {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Algorithm::Archive => write!(f, "archive"),
         }

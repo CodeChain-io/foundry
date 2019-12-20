@@ -17,11 +17,11 @@
 extern crate codechain_crypto as ccrypto;
 extern crate codechain_json as cjson;
 extern crate codechain_key as ckey;
-extern crate primitives;
-extern crate rlp;
+
+
 #[macro_use]
 extern crate rlp_derive;
-extern crate serde;
+
 #[macro_use]
 extern crate serde_derive;
 #[cfg(test)]

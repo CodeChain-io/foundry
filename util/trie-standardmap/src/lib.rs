@@ -16,9 +16,9 @@
 
 //! Key-value datastore with a modified Merkle tree.
 
-extern crate codechain_crypto;
-extern crate primitives;
-extern crate rlp;
+
+
+
 
 use codechain_crypto::blake256;
 use primitives::Bytes;

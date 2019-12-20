@@ -33,7 +33,7 @@ trait TaggedRlp {
         s.begin_list(Self::length_of(tag).unwrap()).append(&tag)
     }
 
-    fn check_size(rlp: &Rlp, tag: Self::Tag) -> Result<(), DecoderError> {
+    fn check_size(rlp: &Rlp<'_>, tag: Self::Tag) -> Result<(), DecoderError> {
         let item_count = rlp.item_count()?;
         let expected = Self::length_of(tag)?;
         if item_count != expected {

@@ -32,7 +32,7 @@ where
         header: &Header,
         parent: &Header,
         engine: &dyn CodeChainEngine,
-        do_full: Option<verification::FullFamilyParams<C>>,
+        do_full: Option<verification::FullFamilyParams<'_, C>>,
         common_params: &CommonParams,
     ) -> Result<(), Error>;
 

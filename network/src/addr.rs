@@ -167,7 +167,7 @@ impl PartialOrd for SocketAddr {
 }
 
 impl fmt::Display for SocketAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         self.addr.fmt(f)
     }
 }
@@ -190,7 +190,7 @@ impl Encodable for SocketAddr {
 }
 
 impl Decodable for SocketAddr {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         match rlp.item_count()? {
             5 => {
                 let ip0 = rlp.val_at(0)?;

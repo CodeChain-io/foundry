@@ -120,7 +120,7 @@ struct UintVisitor;
 impl<'a> Visitor<'a> for UintVisitor {
     type Value = Uint;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "a hex encoded or decimal uint")
     }
 

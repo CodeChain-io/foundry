@@ -68,7 +68,7 @@ impl<'db> TrieDB<'db> {
     /// Get auxiliary
     fn get_aux<T>(
         &self,
-        path: &NibbleSlice,
+        path: &NibbleSlice<'_>,
         cur_node_hash: Option<H256>,
         query: &Query<T>,
     ) -> crate::Result<Option<T>> {

@@ -22,17 +22,17 @@ extern crate codechain_logger as clogger;
 extern crate codechain_key as ckey;
 extern crate codechain_types as ctypes;
 extern crate codechain_vm as cvm;
-extern crate kvdb;
-extern crate kvdb_memorydb;
-extern crate lru_cache;
+
+
+
 #[macro_use]
 extern crate log;
-extern crate parking_lot;
-extern crate primitives;
-extern crate rlp;
+
+
+
 #[cfg(test)]
 extern crate rustc_hex;
-extern crate util_error;
+
 #[macro_use]
 extern crate rlp_derive;
 

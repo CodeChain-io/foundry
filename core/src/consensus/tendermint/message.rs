@@ -188,7 +188,7 @@ impl Encodable for TendermintMessage {
 }
 
 impl Decodable for TendermintMessage {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let id = rlp.val_at(0)?;
         Ok(match id {
             MESSAGE_ID_CONSENSUS_MESSAGE => {

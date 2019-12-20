@@ -639,7 +639,7 @@ impl Encodable for Action {
 }
 
 impl Decodable for Action {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         match rlp.val_at(0)? {
             MINT_ASSET => {
                 let item_count = rlp.item_count()?;

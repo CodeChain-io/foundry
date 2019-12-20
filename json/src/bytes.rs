@@ -107,7 +107,7 @@ struct BytesVisitor;
 impl<'a> Visitor<'a> for BytesVisitor {
     type Value = Bytes;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "a hex encoded string of bytes")
     }
 

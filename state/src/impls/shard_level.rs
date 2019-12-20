@@ -85,7 +85,7 @@ impl<'db> ShardLevelState<'db> {
         db: &RefCell<StateDB>,
         root: H256,
         cache: ShardCache,
-    ) -> cmerkle::Result<ReadOnlyShardLevelState> {
+    ) -> cmerkle::Result<ReadOnlyShardLevelState<'_>> {
         if !db.borrow().as_hashdb().contains(&root) {
             return Err(TrieError::InvalidStateRoot(root))
         }
@@ -667,7 +667,7 @@ impl<'db> ShardLevelState<'db> {
         })
     }
 
-    fn get_asset_scheme_mut(&self, shard_id: ShardId, asset_type: H160) -> cmerkle::Result<RefMut<AssetScheme>> {
+    fn get_asset_scheme_mut(&self, shard_id: ShardId, asset_type: H160) -> cmerkle::Result<RefMut<'_, AssetScheme>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.cache.asset_scheme_mut(&AssetSchemeAddress::new(asset_type, shard_id), &trie)

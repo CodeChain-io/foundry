@@ -52,7 +52,7 @@ macro_rules! impl_hash {
                 impl<'b> Visitor<'b> for HashVisitor {
                     type Value = $name;
 
-                    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                         write!(formatter, "a 0x-prefixed hex-encoded hash")
                     }
 

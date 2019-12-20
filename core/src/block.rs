@@ -55,7 +55,7 @@ impl Block {
 }
 
 impl Decodable for Block {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let got = rlp.as_raw().len();
         let expected = rlp.payload_info()?.total();
         if got > expected {
@@ -338,7 +338,7 @@ impl ClosedBlock {
     }
 
     /// Given an engine reference, reopen the `ClosedBlock` into an `OpenBlock`.
-    pub fn reopen(self, engine: &dyn CodeChainEngine) -> OpenBlock {
+    pub fn reopen(self, engine: &dyn CodeChainEngine) -> OpenBlock<'_> {
         // revert rewards (i.e. set state back at last transaction's state).
         let mut block = self.block;
         block.state = self.unclosed_state;

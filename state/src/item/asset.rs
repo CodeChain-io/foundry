@@ -116,7 +116,7 @@ impl Encodable for OwnedAsset {
 }
 
 impl Decodable for OwnedAsset {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
         if rlp.item_count()? != 6 {
             return Err(DecoderError::RlpInvalidLength {

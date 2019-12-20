@@ -21,7 +21,7 @@ use ckey::Address;
 use std::collections::hash_map;
 use std::collections::HashMap;
 
-pub fn fee_distribute(total_min_fee: u64, stakes: &HashMap<Address, u64>) -> FeeDistributeIter {
+pub fn fee_distribute(total_min_fee: u64, stakes: &HashMap<Address, u64>) -> FeeDistributeIter<'_> {
     FeeDistributeIter {
         total_stakes: stakes.values().sum(),
         total_min_fee,

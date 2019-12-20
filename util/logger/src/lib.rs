@@ -14,23 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-extern crate atty;
-extern crate colored;
-extern crate env_logger;
-extern crate lazy_static;
-extern crate log;
-extern crate parking_lot;
-extern crate sendgrid;
-extern crate serde;
-extern crate serde_derive;
-extern crate serde_json;
-extern crate time;
-
 mod email;
 mod logger;
 mod macros;
 mod structured_logger;
 
+use log;
 use log::SetLoggerError;
 
 pub use logger::Config as LoggerConfig;

@@ -69,11 +69,11 @@ impl Logger {
 }
 
 impl Log for Logger {
-    fn enabled(&self, metadata: &Metadata) -> bool {
+    fn enabled(&self, metadata: &Metadata<'_>) -> bool {
         self.filter.enabled(metadata)
     }
 
-    fn log(&self, record: &Record) {
+    fn log(&self, record: &Record<'_>) {
         if self.filter.matches(record) {
             let thread_name = thread::current().name().unwrap_or_default().to_string();
             let timestamp = time::strftime("%Y-%m-%d %H:%M:%S.%f %Z", &time::now()).unwrap();

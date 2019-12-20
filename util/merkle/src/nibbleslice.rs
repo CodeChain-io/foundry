@@ -41,7 +41,7 @@ where
     }
 
     /// Create a new nibble slice from the given HPE encoded data (e.g. output of `encoded()`).
-    pub fn from_encoded(data: &'a [u8]) -> NibbleSlice {
+    pub fn from_encoded(data: &'a [u8]) -> NibbleSlice<'_> {
         let offset = if (data[0] & 0b1_0000) == 0b1_0000 {
             1
         } else {
@@ -179,7 +179,7 @@ impl<'a> PartialOrd for NibbleSlice<'a> {
 }
 
 impl<'a> fmt::Debug for NibbleSlice<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for i in 0..self.len() {
             match i {
                 0 => write!(f, "{:01x}", self.at(i))?,

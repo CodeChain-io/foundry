@@ -61,7 +61,7 @@ impl<'a> TrieDBMut<'a> {
     /// Insert auxiliary
     fn insert_aux(
         &mut self,
-        path: NibbleSlice,
+        path: NibbleSlice<'_>,
         insert_value: &[u8],
         cur_node_hash: Option<H256>,
         old_val: &mut Option<DBValue>,
@@ -172,7 +172,7 @@ impl<'a> TrieDBMut<'a> {
     /// Remove auxiliary
     fn remove_aux(
         &mut self,
-        path: &NibbleSlice,
+        path: &NibbleSlice<'_>,
         cur_node_hash: Option<H256>,
         old_val: &mut Option<DBValue>,
     ) -> crate::Result<Option<H256>> {
@@ -280,7 +280,7 @@ impl<'a> TrieDBMut<'a> {
 }
 
 impl<'a> fmt::Display for RlpNode<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             RlpNode::Leaf(partial, value) => writeln!(f, "Leaf - key({:?}), value({:?})", partial, value),
             RlpNode::Branch(partial, children) => {
@@ -356,7 +356,7 @@ mod tests {
         t
     }
 
-    fn unpopulate_trie(t: &mut TrieDBMut, v: &[(Vec<u8>, Vec<u8>)]) {
+    fn unpopulate_trie(t: &mut TrieDBMut<'_>, v: &[(Vec<u8>, Vec<u8>)]) {
         for i in v {
             let key: &[u8] = &i.0;
             t.remove(key).unwrap();

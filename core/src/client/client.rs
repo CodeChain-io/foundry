@@ -306,7 +306,7 @@ impl Client {
         &self.state_db
     }
 
-    pub fn block_chain(&self) -> RwLockReadGuard<BlockChain> {
+    pub fn block_chain(&self) -> RwLockReadGuard<'_, BlockChain> {
         self.chain.read()
     }
 
@@ -872,12 +872,12 @@ impl Shard for Client {
 }
 
 impl BlockProducer for Client {
-    fn reopen_block(&self, block: ClosedBlock) -> OpenBlock {
+    fn reopen_block(&self, block: ClosedBlock) -> OpenBlock<'_> {
         let engine = &*self.engine;
         block.reopen(engine)
     }
 
-    fn prepare_open_block(&self, parent_block_id: BlockId, author: Address, extra_data: Bytes) -> OpenBlock {
+    fn prepare_open_block(&self, parent_block_id: BlockId, author: Address, extra_data: Bytes) -> OpenBlock<'_> {
         let engine = &*self.engine;
         let chain = self.block_chain();
         let parent_hash = self.block_hash(&parent_block_id).expect("parent exist always");

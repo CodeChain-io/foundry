@@ -71,7 +71,7 @@ impl From<KeystoreError> for Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             Error::NotUnlocked => write!(f, "Account is locked"),
             Error::NotFound => write!(f, "Account does not exist"),
@@ -199,7 +199,7 @@ impl AccountProvider {
         Ok(())
     }
 
-    pub fn get_unlocked_account(&self, address: &Address) -> Result<ScopedAccount, Error> {
+    pub fn get_unlocked_account(&self, address: &Address) -> Result<ScopedAccount<'_>, Error> {
         let mut unlocked = self.unlocked.write();
         let data = unlocked.get(address).ok_or(Error::NotUnlocked)?.clone();
         if let Unlock::OneTime = data.unlock {
@@ -220,7 +220,7 @@ impl AccountProvider {
         self.keystore.decrypt_account(address, password)
     }
 
-    pub fn get_account(&self, address: &Address, password: Option<&Password>) -> Result<ScopedAccount, Error> {
+    pub fn get_account(&self, address: &Address, password: Option<&Password>) -> Result<ScopedAccount<'_>, Error> {
         match password {
             Some(password) => Ok(ScopedAccount::from(self.decrypt_account(address, password)?)),
             None => self.get_unlocked_account(address),

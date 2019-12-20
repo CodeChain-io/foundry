@@ -57,7 +57,7 @@ impl<'a> BlockView<'a> {
     }
 
     /// Return header rlp.
-    pub fn header_rlp(&self) -> Rlp {
+    pub fn header_rlp(&self) -> Rlp<'_> {
         self.rlp.at(0).unwrap()
     }
 

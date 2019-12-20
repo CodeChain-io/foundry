@@ -138,7 +138,7 @@ impl Encodable for Account {
 }
 
 impl Decodable for Account {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
         if item_count != 4 {
             return Err(DecoderError::RlpInvalidLength {
@@ -161,7 +161,7 @@ impl Decodable for Account {
 }
 
 impl fmt::Debug for Account {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Account").field("balance", &self.balance).field("seq", &self.seq).finish()
     }
 }

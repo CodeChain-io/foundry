@@ -120,7 +120,7 @@ impl Encodable for TrackerInvoices {
 }
 
 impl Decodable for TrackerInvoices {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
         if item_count % 2 == 1 {
             return Err(DecoderError::RlpInvalidLength {

@@ -52,7 +52,7 @@ impl Encodable for ActionData {
 }
 
 impl Decodable for ActionData {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         Bytes::decode(rlp).map(ActionData)
     }
 }

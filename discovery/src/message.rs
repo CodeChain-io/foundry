@@ -37,7 +37,7 @@ impl Encodable for Message {
 }
 
 impl Decodable for Message {
-    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         if rlp.is_int() {
             Ok(Message::Request(rlp.as_val()?))
         } else {

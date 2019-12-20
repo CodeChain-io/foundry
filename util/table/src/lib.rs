@@ -56,7 +56,7 @@ where
     }
 
     /// Returns keys iterator for this Table.
-    pub fn keys(&self) -> Keys<Row, HashMap<Col, Val>> {
+    pub fn keys(&self) -> Keys<'_, Row, HashMap<Col, Val>> {
         self.map.keys()
     }
 

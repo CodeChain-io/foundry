@@ -101,7 +101,7 @@ impl BlockChain {
     pub fn insert_header(
         &self,
         batch: &mut DBTransaction,
-        header: &HeaderView,
+        header: &HeaderView<'_>,
         engine: &dyn CodeChainEngine,
     ) -> ImportRoute {
         match self.headerchain.insert_header(batch, header, engine) {
@@ -180,7 +180,7 @@ impl BlockChain {
     }
 
     /// Calculate how best block is changed
-    fn best_block_changed(&self, new_block: &BlockView, engine: &dyn CodeChainEngine) -> BestBlockChanged {
+    fn best_block_changed(&self, new_block: &BlockView<'_>, engine: &dyn CodeChainEngine) -> BestBlockChanged {
         let new_header = new_block.header_view();
         let parent_hash_of_new_block = new_header.parent_hash();
         let parent_details_of_new_block = self.block_details(&parent_hash_of_new_block).expect("Invalid parent hash");
