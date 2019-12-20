@@ -162,9 +162,8 @@ describe("sync 2 nodes", function() {
         describe("A-B diverged with the same transaction", function() {
             describe("Both transaction success", function() {
                 beforeEach(async function() {
-                    const recipient = await nodeA.createP2PKHAddress();
-                    await nodeA.mintAsset({ supply: 10, recipient });
-                    await nodeB.mintAsset({ supply: 10, recipient });
+                    await nodeA.sendPayTx({ fee: 10 });
+                    await nodeB.sendPayTx({ fee: 10 });
                     expect(await nodeA.getBestBlockNumber()).to.equal(
                         await nodeB.getBestBlockNumber()
                     );

@@ -19,6 +19,7 @@ import { SignedTransaction } from "codechain-sdk/lib/core/classes";
 import "mocha";
 import { wait } from "../helper/promise";
 import CodeChain from "../helper/spawn";
+import {faucetAddress} from "../helper/constants";
 
 describe("Memory pool size test", function() {
     let nodeA: CodeChain;
@@ -164,7 +165,7 @@ describe("Memory pool memory limit test", function() {
 
     it("To self", async function() {
         for (let i = 0; i < sizeLimit; i++) {
-            await nodeA.mintAsset({ supply: 1, seq: i, awaitMint: false });
+            await nodeA.pay(faucetAddress, 10, { seq: i });
         }
         const pendingTransactions = await nodeA.sdk.rpc.chain.getPendingTransactions();
         expect(pendingTransactions.transactions.length).to.equal(sizeLimit);
@@ -195,12 +196,7 @@ describe("Memory pool memory limit test", function() {
             const minting = [];
             for (let i = 0; i < sizeLimit; i++) {
                 minting.push(
-                    nodeA.mintAsset({
-                        supply: mintSize,
-                        seq: i,
-                        metadata,
-                        awaitMint: false
-                    })
+                    nodeA.pay(faucetAddress, 10, { seq: i})
                 );
             }
             await Promise.all(minting);

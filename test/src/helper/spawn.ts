@@ -18,18 +18,13 @@ import { expect } from "chai";
 import { ChildProcess, spawn } from "child_process";
 import { SDK } from "codechain-sdk";
 import {
-    Asset,
-    AssetAddress,
-    AssetTransferInput,
     H256,
     PlatformAddress,
     SignedTransaction,
     Transaction,
-    TransferAsset,
     U64,
     UnwrapCCC
 } from "codechain-sdk/lib/core/classes";
-import { AssetTransaction } from "codechain-sdk/lib/core/Transaction";
 import { P2PKH } from "codechain-sdk/lib/key/P2PKH";
 import { P2PKHBurn } from "codechain-sdk/lib/key/P2PKHBurn";
 import * as stake from "codechain-stakeholder-sdk";
@@ -461,65 +456,16 @@ export default class CodeChain {
         return p2pkh.createAddress();
     }
 
-    public async signTransactionP2PKHBurn(
-        txInput: AssetTransferInput,
-        txhash: H256
-    ) {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
-            this.localKeyStorePath
-        );
-        const p2pkhBurn = this.sdk.key.createP2PKHBurn({ keyStore });
-        if (txInput.prevOut.parameters === undefined) {
-            throw Error(`prevOut.parameters is undefined`);
-        }
-        const publicKeyHash = Buffer.from(
-            txInput.prevOut.parameters[0]
-        ).toString("hex");
-        txInput.setLockScript(P2PKHBurn.getLockScript());
-        txInput.setUnlockScript(
-            await p2pkhBurn.createUnlockScript(publicKeyHash, txhash)
-        );
-    }
-
-    public async signTransactionP2PKH(
-        txInput: AssetTransferInput,
-        txhash: H256
-    ) {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
-            this.localKeyStorePath
-        );
-        const p2pkh = this.sdk.key.createP2PKH({ keyStore });
-        if (txInput.prevOut.parameters === undefined) {
-            throw Error(`prevOut.parameters is undefined`);
-        }
-        const publicKeyHash = Buffer.from(
-            txInput.prevOut.parameters[0]
-        ).toString("hex");
-        txInput.setLockScript(P2PKH.getLockScript());
-        txInput.setUnlockScript(
-            await p2pkh.createUnlockScript(publicKeyHash, txhash)
-        );
-    }
-
-    public async createP2PKHBurnAddress() {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
-            this.localKeyStorePath
-        );
-        const p2pkhBurn = this.sdk.key.createP2PKHBurn({ keyStore });
-        return p2pkhBurn.createAddress();
-    }
-
-    public async createPlatformAddress() {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
-            this.localKeyStorePath
-        );
-        return this.sdk.key.createPlatformAddress({ keyStore });
-    }
-
     public async pay(
         recipient: string | PlatformAddress,
-        quantity: U64 | string | number
+        quantity: U64 | string | number,
+        options?: {
+            seq?: number
+        }
     ): Promise<H256> {
+        const {
+            seq = (await this.sdk.rpc.chain.getSeq(faucetAddress)) || 0,
+        } = options || {};
         const tx = this.sdk.core
             .createPayTransaction({
                 recipient,
@@ -527,7 +473,7 @@ export default class CodeChain {
             })
             .sign({
                 secret: faucetSecret,
-                seq: await this.sdk.rpc.chain.getSeq(faucetAddress),
+                seq,
                 fee: 10
             });
         return this.sdk.rpc.chain.sendSignedTransaction(tx);
@@ -553,78 +499,6 @@ export default class CodeChain {
             seq
         });
         return this.sdk.rpc.chain.sendSignedTransaction(signed);
-    }
-
-    public async sendAssetTransaction(
-        tx: AssetTransaction & Transaction,
-        options?: {
-            seq?: number;
-            fee?: number;
-            secret?: string;
-        }
-    ): Promise<H256> {
-        const {
-            seq = (await this.sdk.rpc.chain.getSeq(faucetAddress)) || 0,
-            fee = 10,
-            secret = faucetSecret
-        } = options || {};
-        const signed = tx.sign({
-            secret,
-            fee: fee + this.id,
-            seq
-        });
-        return this.sdk.rpc.chain.sendSignedTransaction(signed);
-    }
-
-    public async mintAsset(params: {
-        supply: U64 | number;
-        recipient?: string | AssetAddress;
-        secret?: string;
-        seq?: number;
-        metadata?: string;
-        registrar?: PlatformAddress | string;
-        awaitMint?: boolean;
-    }): Promise<Asset> {
-        const {
-            supply,
-            seq,
-            recipient = await this.createP2PKHAddress(),
-            secret,
-            metadata = "",
-            registrar,
-            awaitMint = true
-        } = params;
-        const tx = this.sdk.core.createMintAssetTransaction({
-            scheme: {
-                shardId: 0,
-                metadata,
-                supply,
-                registrar
-            },
-            recipient
-        });
-        await this.sendAssetTransaction(tx, {
-            secret,
-            seq
-        });
-        return tx.getMintedAsset();
-    }
-
-    public async signTransactionInput(tx: TransferAsset, index: number) {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
-            this.localKeyStorePath
-        );
-        await this.sdk.key.signTransactionInput(tx, index, { keyStore });
-    }
-
-    public async signTransactionBurn(
-        tx: TransferAsset | UnwrapCCC,
-        index: number
-    ) {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
-            this.localKeyStorePath
-        );
-        await this.sdk.key.signTransactionBurn(tx, index, { keyStore });
     }
 
     public async setRegularKey(
@@ -677,46 +551,6 @@ export default class CodeChain {
             });
         await this.sdk.rpc.chain.sendSignedTransaction(tx);
         return tx;
-    }
-
-    // If one only sends certainly failing transactions, the miner would not generate any block.
-    // So to clearly check the result failed, insert the failing transactions after succeessful ones.
-    public async sendAssetTransactionExpectedToFail(
-        tx: Transaction & AssetTransaction,
-        options: { seq?: number } = {}
-    ): Promise<H256> {
-        await this.sdk.rpc.devel.stopSealing();
-
-        const seq =
-            options.seq == null
-                ? await this.sdk.rpc.chain.getSeq(faucetAddress)
-                : options.seq;
-
-        const blockNumber = await this.getBestBlockNumber();
-        const signedDummyTxHash = (
-            await this.sendPayTx({
-                seq,
-                quantity: 1
-            })
-        ).hash();
-        const targetTxHash = await this.sendAssetTransaction(tx, {
-            seq: seq + 1
-        });
-
-        await this.sdk.rpc.devel.startSealing();
-        await this.waitBlockNumber(blockNumber + 1);
-
-        expect(await this.sdk.rpc.chain.containsTransaction(targetTxHash)).be
-            .false;
-        expect(await this.sdk.rpc.chain.getErrorHint(targetTxHash)).not.null;
-        expect(await this.sdk.rpc.chain.getTransaction(targetTxHash)).be.null;
-
-        expect(await this.sdk.rpc.chain.containsTransaction(signedDummyTxHash))
-            .be.true;
-        expect(await this.sdk.rpc.chain.getErrorHint(signedDummyTxHash)).null;
-        expect(await this.sdk.rpc.chain.getTransaction(signedDummyTxHash)).not
-            .be.null;
-        return targetTxHash;
     }
 
     // If one only sends certainly failing transactions, the miner would not generate any block.

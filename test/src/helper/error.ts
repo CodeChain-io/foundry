@@ -94,26 +94,6 @@ export const ERROR: any = {
         data: $containsWord("Syntax(ZeroQuantity"),
         message: $anything
     },
-    INVALID_TX_INCONSISTENT_IN_OUT: {
-        code: -32099,
-        data: $containsWord("Syntax(InconsistentTransactionInOut"),
-        message: $anything
-    },
-    INVALID_TX_ASSET_TYPE: {
-        code: -32099,
-        data: $containsWord("Syntax(InvalidAssetType"),
-        message: $anything
-    },
-    INVALID_TX_DUPLICATED_PREV_OUT: {
-        code: -32099,
-        data: $containsWord("Syntax(DuplicatedPreviousOutput"),
-        message: $anything
-    },
-    INVALID_ORIGIN_OUTPUTS: {
-        code: -32099,
-        message: $anything,
-        data: $containsWord("InvalidOriginOutputs")
-    },
     DISABLED_TRANSACTION: {
         code: -32099,
         message: $anything,

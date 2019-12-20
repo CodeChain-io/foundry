@@ -196,7 +196,6 @@ impl SignedTransaction {
     /// Try to verify transaction and recover public.
     pub fn try_new(tx: UnverifiedTransaction) -> Result<Self, Error> {
         let signer_public = tx.recover_public()?;
-        let _signer = public_to_address(&signer_public);
         Ok(SignedTransaction {
             tx,
             signer_public,
