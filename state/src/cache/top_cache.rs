@@ -106,7 +106,11 @@ impl TopCache {
         self.regular_account.get(a, db)
     }
 
-    pub fn regular_account_mut(&self, a: &RegularAccountAddress, db: &dyn Trie) -> TrieResult<RefMut<'_, RegularAccount>> {
+    pub fn regular_account_mut(
+        &self,
+        a: &RegularAccountAddress,
+        db: &dyn Trie,
+    ) -> TrieResult<RefMut<'_, RegularAccount>> {
         self.regular_account.get_mut(a, db)
     }
 

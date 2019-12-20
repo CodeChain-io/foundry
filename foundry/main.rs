@@ -16,43 +16,22 @@
 
 #[macro_use]
 extern crate clap;
-
-
 #[macro_use]
 extern crate log;
-
-
-
 #[macro_use]
 extern crate serde_derive;
-
-
-
 extern crate codechain_core as ccore;
 extern crate codechain_discovery as cdiscovery;
 extern crate codechain_key as ckey;
 extern crate codechain_keystore as ckeystore;
 #[macro_use]
 extern crate codechain_logger as clogger;
-
 extern crate codechain_network as cnetwork;
 extern crate codechain_rpc as crpc;
-
 extern crate codechain_sync as csync;
 extern crate codechain_timer as ctimer;
 
-
-
-
-
-
-
-
 use panic_hook;
-
-
-
-
 
 mod config;
 mod constants;

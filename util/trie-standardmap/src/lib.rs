@@ -16,10 +16,6 @@
 
 //! Key-value datastore with a modified Merkle tree.
 
-
-
-
-
 use codechain_crypto::blake256;
 use primitives::Bytes;
 use primitives::H256;

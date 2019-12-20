@@ -16,7 +16,6 @@
 
 //! Custom panic hook with bug report link
 
-
 extern crate codechain_logger as clogger;
 
 use backtrace::Backtrace;

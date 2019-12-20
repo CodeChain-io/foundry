@@ -18,15 +18,7 @@
 
 #[macro_use]
 extern crate log;
-
-
-
-
-
-
-
 extern crate codechain_crypto as ccrypto;
-
 #[macro_use]
 extern crate codechain_logger as clogger;
 extern crate codechain_network as cnetwork;
