@@ -14,12 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::ops::Deref;
-
 use cjson::uint::Uint;
-use cstate::{Asset as AssetType, OwnedAsset as OwnedAssetType};
 use primitives::H160;
-use rustc_serialize::hex::ToHex;
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -35,26 +31,4 @@ pub struct OwnedAsset {
     asset: Asset,
     lock_script_hash: H160,
     parameters: Vec<String>,
-}
-
-impl From<AssetType> for Asset {
-    fn from(asset: AssetType) -> Self {
-        Self {
-            asset_type: *asset.asset_type(),
-            quantity: asset.quantity().into(),
-        }
-    }
-}
-
-impl From<OwnedAssetType> for OwnedAsset {
-    fn from(asset: OwnedAssetType) -> Self {
-        Self {
-            asset: Asset {
-                asset_type: *asset.asset_type(),
-                quantity: asset.quantity().into(),
-            },
-            lock_script_hash: *asset.lock_script_hash(),
-            parameters: asset.parameters().iter().map(Deref::deref).map(<[u8]>::to_hex).collect(),
-        }
-    }
 }

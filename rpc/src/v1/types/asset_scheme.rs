@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use cjson::uint::Uint;
-use ckey::{NetworkId, PlatformAddress};
-use cstate::AssetScheme as AssetSchemeType;
+use ckey::PlatformAddress;
+
 use primitives::H160;
 
 use super::Asset;
@@ -31,21 +31,4 @@ pub struct AssetScheme {
     allowed_script_hashes: Vec<H160>,
     pool: Vec<Asset>,
     seq: u64,
-}
-
-impl AssetScheme {
-    pub fn from_core(asset_scheme: AssetSchemeType, network_id: NetworkId) -> Self {
-        Self {
-            metadata: asset_scheme.metadata().clone(),
-            supply: asset_scheme.supply().into(),
-            approver: asset_scheme.approver().as_ref().map(|approver| PlatformAddress::new_v1(network_id, *approver)),
-            registrar: asset_scheme
-                .registrar()
-                .as_ref()
-                .map(|registrar| PlatformAddress::new_v1(network_id, *registrar)),
-            allowed_script_hashes: asset_scheme.allowed_script_hashes().to_owned(),
-            pool: asset_scheme.pool().iter().map(|asset| asset.clone().into()).collect(),
-            seq: asset_scheme.seq() as u64,
-        }
-    }
 }

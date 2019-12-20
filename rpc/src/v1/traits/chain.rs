@@ -17,12 +17,12 @@
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress, Public};
-use ctypes::{BlockHash, BlockNumber, ShardId, Tracker, TxHash};
-use primitives::{Bytes as BytesArray, H160, H256};
+use ctypes::{BlockHash, BlockNumber, Tracker, TxHash};
+use primitives::Bytes as BytesArray;
 
 use jsonrpc_core::Result;
 
-use super::super::types::{AssetScheme, Block, BlockNumberAndHash, OwnedAsset, Text, Transaction, UnsignedTransaction};
+use super::super::types::{Block, BlockNumberAndHash, Text, Transaction, UnsignedTransaction};
 
 #[rpc(server)]
 pub trait Chain {
@@ -45,47 +45,9 @@ pub trait Chain {
     #[rpc(name = "chain_getTransactionByTracker")]
     fn get_transaction_by_tracker(&self, tracker: Tracker) -> Result<Option<Transaction>>;
 
-    /// Gets asset scheme with given transaction tracker.
-    #[rpc(name = "chain_getAssetSchemeByTracker")]
-    fn get_asset_scheme_by_tracker(
-        &self,
-        tracker: Tracker,
-        shard_id: ShardId,
-        block_number: Option<u64>,
-    ) -> Result<Option<AssetScheme>>;
-
-    /// Gets asset scheme with given asset type.
-    #[rpc(name = "chain_getAssetSchemeByType")]
-    fn get_asset_scheme_by_type(
-        &self,
-        asset_type: H160,
-        shard_id: ShardId,
-        block_number: Option<u64>,
-    ) -> Result<Option<AssetScheme>>;
-
     /// Gets text with given transaction hash.
     #[rpc(name = "chain_getText")]
     fn get_text(&self, transaction_hash: TxHash, block_number: Option<u64>) -> Result<Option<Text>>;
-
-    /// Gets asset with given asset type.
-    #[rpc(name = "chain_getAsset")]
-    fn get_asset(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        block_number: Option<u64>,
-    ) -> Result<Option<OwnedAsset>>;
-
-    /// Checks whether an asset is spent or not.
-    #[rpc(name = "chain_isAssetSpent")]
-    fn is_asset_spent(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        block_number: Option<u64>,
-    ) -> Result<Option<bool>>;
 
     /// Gets seq with given account.
     #[rpc(name = "chain_getSeq")]
@@ -106,26 +68,6 @@ pub trait Chain {
     /// Gets the genesis accounts
     #[rpc(name = "chain_getGenesisAccounts")]
     fn get_genesis_accounts(&self) -> Result<Vec<PlatformAddress>>;
-
-    /// Gets the number of shards
-    #[rpc(name = "chain_getNumberOfShards")]
-    fn get_number_of_shards(&self, block_number: Option<u64>) -> Result<Option<ShardId>>;
-
-    /// Gets shard id
-    #[rpc(name = "chain_getShardIdByHash")]
-    fn get_shard_id_by_hash(&self, create_shard_tx_hash: TxHash, block_number: Option<u64>) -> Result<Option<ShardId>>;
-
-    /// Gets shard root
-    #[rpc(name = "chain_getShardRoot")]
-    fn get_shard_root(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<H256>>;
-
-    /// Gets shard owners
-    #[rpc(name = "chain_getShardOwners")]
-    fn get_shard_owners(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>>;
-
-    /// Gets shard users
-    #[rpc(name = "chain_getShardUsers")]
-    fn get_shard_users(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>>;
 
     /// Gets number of best block.
     #[rpc(name = "chain_getBestBlockNumber")]
@@ -178,10 +120,6 @@ pub trait Chain {
     /// Return the valid block authors
     #[rpc(name = "chain_getPossibleAuthors")]
     fn get_possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>>;
-
-    /// Execute Transactions
-    #[rpc(name = "chain_executeTransaction")]
-    fn execute_transaction(&self, tx: UnsignedTransaction, sender: PlatformAddress) -> Result<Option<String>>;
 
     /// Execute AssetTransfer transaction inputs in VM
     #[rpc(name = "chain_executeVM")]

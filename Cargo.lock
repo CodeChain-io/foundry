@@ -462,7 +462,6 @@ version = "0.1.0"
 dependencies = [
  "cidr",
  "codechain-core",
- "codechain-crypto",
  "codechain-json",
  "codechain-key",
  "codechain-keystore",
