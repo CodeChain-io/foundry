@@ -19,7 +19,6 @@ mod mem_pool;
 mod mem_pool_types;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod miner;
-mod sealing_queue;
 
 use std::ops::Range;
 
@@ -77,11 +76,6 @@ pub trait MinerService: Send + Sync {
 
     /// Get the type of consensus engine.
     fn engine_type(&self) -> EngineType;
-
-    /// Returns true if we had to prepare new pending block.
-    fn prepare_work_sealing<C>(&self, _: &C) -> bool
-    where
-        C: AccountData + BlockChainTrait + BlockProducer + ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo;
 
     /// New chain head event. Restart mining operation.
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
@@ -158,8 +152,6 @@ pub struct MinerStatus {
     pub transactions_in_pending_queue: usize,
     /// Number of transactions in queue with state `future` (not yet ready to be included in block)
     pub transactions_in_future_queue: usize,
-    /// Number of transactions included in currently mined block
-    pub tranasction_in_pending_block: usize,
 }
 
 /// Represents the result of importing tranasction.
