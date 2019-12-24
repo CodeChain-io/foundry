@@ -105,7 +105,11 @@ impl ValidatorSet for RoundRobinValidator {
         *self.client.write() = Some(client);
     }
 
-    fn addresses(&self, _parent: &BlockHash) -> Vec<Address> {
+    fn current_addresses(&self, _hash: &BlockHash) -> Vec<Address> {
+        self.validators.iter().map(public_to_address).collect()
+    }
+
+    fn next_addresses(&self, _hash: &BlockHash) -> Vec<Address> {
         self.validators.iter().map(public_to_address).collect()
     }
 }

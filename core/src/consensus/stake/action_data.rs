@@ -443,6 +443,12 @@ impl Deref for CurrentValidators {
     }
 }
 
+impl From<CurrentValidators> for Vec<Validator> {
+    fn from(val: CurrentValidators) -> Self {
+        val.0
+    }
+}
+
 #[derive(Default, Debug, PartialEq)]
 pub struct IntermediateRewards {
     current: BTreeMap<Address, u64>,
