@@ -24,7 +24,7 @@ use parking_lot::RwLock;
 use super::{RoundRobinValidator, ValidatorSet};
 use crate::client::ConsensusClient;
 use crate::consensus::bit_set::BitSet;
-use crate::consensus::stake::{get_validators, Validator};
+use crate::consensus::stake::{CurrentValidators, NextValidators, Validator};
 use crate::consensus::EngineError;
 
 /// Validator set containing a known set of public keys.
@@ -41,10 +41,10 @@ impl DynamicValidator {
         }
     }
 
-    fn validators(&self, parent: BlockHash) -> Option<Vec<Validator>> {
+    fn next_validators(&self, hash: BlockHash) -> Option<Vec<Validator>> {
         let client: Arc<dyn ConsensusClient> =
             self.client.read().as_ref().and_then(Weak::upgrade).expect("Client is not initialized");
-        let block_id = parent.into();
+        let block_id = hash.into();
         let term_id = client.current_term_id(block_id).expect(
             "valdators() is called when creating a block or verifying a block.
             Minor creates a block only when the parent block is imported.
@@ -54,7 +54,7 @@ impl DynamicValidator {
             return None
         }
         let state = client.state_at(block_id)?;
-        let validators = get_validators(&state).unwrap();
+        let validators = NextValidators::load_from_state(&state).unwrap();
         if validators.is_empty() {
             None
         } else {
@@ -64,12 +64,39 @@ impl DynamicValidator {
         }
     }
 
-    fn validators_pubkey(&self, parent: BlockHash) -> Option<Vec<Public>> {
-        self.validators(parent).map(|validators| validators.into_iter().map(|val| *val.pubkey()).collect())
+    fn current_validators(&self, hash: BlockHash) -> Option<Vec<Validator>> {
+        let client: Arc<dyn ConsensusClient> =
+            self.client.read().as_ref().and_then(Weak::upgrade).expect("Client is not initialized");
+        let block_id = hash.into();
+        let term_id = client.current_term_id(block_id).expect(
+            "valdators() is called when creating a block or verifying a block.
+            Minor creates a block only when the parent block is imported.
+            The n'th block is verified only when the parent block is imported.",
+        );
+        if term_id == 0 {
+            return None
+        }
+        let state = client.state_at(block_id)?;
+        let validators = CurrentValidators::load_from_state(&state).unwrap();
+        if validators.is_empty() {
+            None
+        } else {
+            let mut validators: Vec<_> = validators.into();
+            validators.reverse();
+            Some(validators)
+        }
+    }
+
+    fn validators_pubkey(&self, hash: BlockHash) -> Option<Vec<Public>> {
+        self.next_validators(hash).map(|validators| validators.into_iter().map(|val| *val.pubkey()).collect())
+    }
+
+    fn current_validators_pubkey(&self, hash: BlockHash) -> Option<Vec<Public>> {
+        self.current_validators(hash).map(|validators| validators.into_iter().map(|val| *val.pubkey()).collect())
     }
 
     pub fn proposer_index(&self, parent: BlockHash, prev_proposer_index: usize, proposed_view: usize) -> usize {
-        if let Some(validators) = self.validators(parent) {
+        if let Some(validators) = self.next_validators(parent) {
             let num_validators = validators.len();
             proposed_view % num_validators
         } else {
@@ -136,7 +163,7 @@ impl ValidatorSet for DynamicValidator {
     }
 
     fn count(&self, parent: &BlockHash) -> usize {
-        if let Some(validators) = self.validators(*parent) {
+        if let Some(validators) = self.next_validators(*parent) {
             validators.len()
         } else {
             self.initial_list.count(parent)
@@ -144,7 +171,7 @@ impl ValidatorSet for DynamicValidator {
     }
 
     fn check_enough_votes(&self, parent: &BlockHash, votes: &BitSet) -> Result<(), EngineError> {
-        if let Some(validators) = self.validators(*parent) {
+        if let Some(validators) = self.next_validators(*parent) {
             let mut voted_delegation = 0u64;
             let n_validators = validators.len();
             for index in votes.true_index_iter() {
@@ -181,11 +208,19 @@ impl ValidatorSet for DynamicValidator {
         *client_lock = Some(client);
     }
 
-    fn addresses(&self, parent: &BlockHash) -> Vec<Address> {
-        if let Some(validators) = self.validators_pubkey(*parent) {
+    fn current_addresses(&self, hash: &BlockHash) -> Vec<Address> {
+        if let Some(validators) = self.current_validators_pubkey(*hash) {
             validators.iter().map(public_to_address).collect()
         } else {
-            self.initial_list.addresses(parent)
+            self.initial_list.next_addresses(hash)
+        }
+    }
+
+    fn next_addresses(&self, hash: &BlockHash) -> Vec<Address> {
+        if let Some(validators) = self.validators_pubkey(*hash) {
+            validators.iter().map(public_to_address).collect()
+        } else {
+            self.initial_list.next_addresses(hash)
         }
     }
 }

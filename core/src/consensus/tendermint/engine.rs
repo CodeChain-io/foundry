@@ -342,7 +342,7 @@ impl ConsensusEngine for Tendermint {
                 client.block_header(&(block_number - 1).into()).ok_or(EngineError::CannotOpenBlock)?.hash() // the parent of the given block number
             }
         };
-        Ok(Some(self.validators.addresses(&block_hash)))
+        Ok(Some(self.validators.next_addresses(&block_hash)))
     }
 }
 
@@ -389,10 +389,7 @@ fn aggregate_work_info(
         end_of_the_last_term + 1
     };
     let mut header = start_of_the_next_term_header;
-    let mut parent_validators = {
-        let parent_header = chain.block_header(&header.parent_hash().into()).unwrap();
-        validators.addresses(&parent_header.parent_hash())
-    };
+    let mut parent_validators = validators.current_addresses(&header.parent_hash());
     while start_of_the_current_term != header.number() {
         for index in TendermintSealView::new(&header.seal()).bitset()?.true_index_iter() {
             let signer = *parent_validators.get(index).expect("The seal must be the signature of the validator");
@@ -400,12 +397,7 @@ fn aggregate_work_info(
         }
 
         header = chain.block_header(&header.parent_hash().into()).unwrap();
-        parent_validators = {
-            // The seal of the current block has the signatures of the parent block.
-            // It needs the hash of the grand parent block to find the validators of the parent block.
-            let parent_header = chain.block_header(&header.parent_hash().into()).unwrap();
-            validators.addresses(&parent_header.parent_hash())
-        };
+        parent_validators = validators.current_addresses(&header.parent_hash());
 
         let author = header.author();
         let info = work_info.entry(author).or_default();

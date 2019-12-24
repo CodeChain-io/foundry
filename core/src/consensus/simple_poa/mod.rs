@@ -149,7 +149,7 @@ impl ConsensusEngine for SimplePoA {
     fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {
         // TODO: It works because the round robin validator doesn't use the parent hash.
         let parent = H256::from(0).into();
-        Ok(Some(self.validators.addresses(&parent)))
+        Ok(Some(self.validators.next_addresses(&parent)))
     }
 }
 

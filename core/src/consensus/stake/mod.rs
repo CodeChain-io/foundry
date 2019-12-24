@@ -317,10 +317,6 @@ pub fn get_stakes(state: &TopLevelState) -> StateResult<HashMap<Address, u64>> {
     Ok(result)
 }
 
-pub fn get_validators(state: &TopLevelState) -> StateResult<NextValidators> {
-    NextValidators::load_from_state(state)
-}
-
 pub fn add_intermediate_rewards(state: &mut TopLevelState, address: Address, reward: u64) -> StateResult<()> {
     let mut rewards = IntermediateRewards::load_from_state(state)?;
     rewards.add_quantity(address, reward);
