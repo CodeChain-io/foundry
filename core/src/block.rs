@@ -215,9 +215,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Turn this into a `ClosedBlock`.
-    pub fn close(mut self, term_common_params: Option<&CommonParams>) -> Result<ClosedBlock, Error> {
-        let unclosed_state = self.block.state.clone();
-
+    fn close_impl(&mut self, term_common_params: Option<&CommonParams>) -> Result<(), Error> {
         if let Err(e) = self.engine.on_close_block(&mut self.block, term_common_params) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
@@ -229,16 +227,24 @@ impl<'x> OpenBlock<'x> {
                 e
             })?;
         }
-
         let state_root = self.block.state.commit().map_err(|e| {
             warn!("Encountered error on state commit: {}", e);
             e
         })?;
+        self.block.header.set_state_root(state_root);
+        Ok(())
+    }
+
+    /// Turn this into a `ClosedBlock`.
+    pub fn close(mut self, term_common_params: Option<&CommonParams>) -> Result<ClosedBlock, Error> {
+        let unclosed_state = self.block.state.clone();
+
+        self.close_impl(term_common_params)?;
+
         self.block.header.set_transactions_root(skewed_merkle_root(
             BLAKE_NULL_RLP,
             self.block.transactions.iter().map(Encodable::rlp_bytes),
         ));
-        self.block.header.set_state_root(state_root);
 
         Ok(ClosedBlock {
             block: self.block,
@@ -248,22 +254,8 @@ impl<'x> OpenBlock<'x> {
 
     /// Turn this into a `LockedBlock`.
     pub fn close_and_lock(mut self, term_common_params: Option<&CommonParams>) -> Result<LockedBlock, Error> {
-        if let Err(e) = self.engine.on_close_block(&mut self.block, term_common_params) {
-            warn!("Encountered error on closing the block: {}", e);
-            return Err(e)
-        }
-        let header = self.block.header().clone();
-        for handler in self.engine.action_handlers() {
-            handler.on_close_block(self.block.state_mut(), &header).map_err(|e| {
-                warn!("Encountered error in {}::on_close_block", handler.name());
-                e
-            })?;
-        }
+        self.close_impl(term_common_params)?;
 
-        let state_root = self.block.state.commit().map_err(|e| {
-            warn!("Encountered error on state commit: {}", e);
-            e
-        })?;
         if self.block.header.transactions_root() == &BLAKE_NULL_RLP {
             self.block.header.set_transactions_root(skewed_merkle_root(
                 BLAKE_NULL_RLP,
@@ -274,7 +266,6 @@ impl<'x> OpenBlock<'x> {
             self.block.header.transactions_root(),
             &skewed_merkle_root(BLAKE_NULL_RLP, self.block.transactions.iter().map(Encodable::rlp_bytes),)
         );
-        self.block.header.set_state_root(state_root);
 
         Ok(LockedBlock {
             block: self.block,
