@@ -160,7 +160,7 @@ impl ConsensusEngine for Tendermint {
 
         if block_number == metadata.last_term_finished_block_num() + 1 {
             match term {
-                0 => {}
+                0 | 1 => {}
                 _ => {
                     let rewards = stake::drain_current_rewards(block.state_mut())?;
                     let banned = stake::Banned::load_from_state(block.state())?;
