@@ -389,20 +389,24 @@ fn aggregate_work_info(
         end_of_the_last_term + 1
     };
     let mut header = start_of_the_next_term_header;
-    let mut parent_validators = validators.current_addresses(&header.parent_hash());
+    // FIXME: Use method from `ValidatorSet` interface
+    let mut current_validators = {
+        let state = chain.state_at(header.parent_hash().into()).expect("The block's state must exist");
+        stake::CurrentValidators::load_from_state(&state)?.addresses()
+    };
     while start_of_the_current_term != header.number() {
         for index in TendermintSealView::new(&header.seal()).bitset()?.true_index_iter() {
-            let signer = *parent_validators.get(index).expect("The seal must be the signature of the validator");
+            let signer = *current_validators.get(index).expect("The seal must be the signature of the validator");
             work_info.entry(signer).or_default().signed += 1;
         }
 
         header = chain.block_header(&header.parent_hash().into()).unwrap();
-        parent_validators = validators.current_addresses(&header.parent_hash());
+        current_validators = validators.current_addresses(&header.parent_hash());
 
         let author = header.author();
         let info = work_info.entry(author).or_default();
         info.proposed += 1;
-        info.missed += parent_validators.len() - TendermintSealView::new(&header.seal()).bitset()?.count();
+        info.missed += current_validators.len() - TendermintSealView::new(&header.seal()).bitset()?.count();
     }
 
     Ok(work_info)

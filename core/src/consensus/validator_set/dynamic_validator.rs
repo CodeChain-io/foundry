@@ -104,6 +104,44 @@ impl DynamicValidator {
             (prev_proposer_index + proposed_view + 1) % num_validators
         }
     }
+
+    pub fn get_current(&self, hash: &BlockHash, index: usize) -> Option<Public> {
+        let validators = self.current_validators_pubkey(*hash)?;
+        let n_validators = validators.len();
+        Some(*validators.get(index % n_validators).unwrap())
+    }
+
+    pub fn check_enough_votes_with_current(&self, hash: &BlockHash, votes: &BitSet) -> Result<(), EngineError> {
+        if let Some(validators) = self.current_validators(*hash) {
+            let mut voted_delegation = 0u64;
+            let n_validators = validators.len();
+            for index in votes.true_index_iter() {
+                assert!(index < n_validators);
+                let validator = validators.get(index).ok_or_else(|| {
+                    EngineError::ValidatorNotExist {
+                        height: 0, // FIXME
+                        index,
+                    }
+                })?;
+                voted_delegation += validator.delegation();
+            }
+            let total_delegation: u64 = validators.iter().map(Validator::delegation).sum();
+            if voted_delegation * 3 > total_delegation * 2 {
+                Ok(())
+            } else {
+                let threshold = total_delegation as usize * 2 / 3;
+                Err(EngineError::BadSealFieldSize(OutOfBounds {
+                    min: Some(threshold),
+                    max: Some(total_delegation as usize),
+                    found: voted_delegation as usize,
+                }))
+            }
+        } else {
+            let client = self.client.read().as_ref().and_then(Weak::upgrade).expect("Client is not initialized");
+            let header = client.block_header(&(*hash).into()).unwrap();
+            self.check_enough_votes(&header.parent_hash(), votes)
+        }
+    }
 }
 
 impl ValidatorSet for DynamicValidator {
