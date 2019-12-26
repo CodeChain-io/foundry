@@ -24,7 +24,7 @@ use parking_lot::RwLock;
 use super::{RoundRobinValidator, ValidatorSet};
 use crate::client::ConsensusClient;
 use crate::consensus::bit_set::BitSet;
-use crate::consensus::stake::{CurrentValidators, NextValidators, Validator};
+use crate::consensus::stake::{CurrentValidators, NextValidators, PreviousValidators, Validator};
 use crate::consensus::EngineError;
 
 /// Validator set containing a known set of public keys.
@@ -87,12 +87,39 @@ impl DynamicValidator {
         }
     }
 
+    fn previous_validators(&self, hash: BlockHash) -> Option<Vec<Validator>> {
+        let client: Arc<dyn ConsensusClient> =
+            self.client.read().as_ref().and_then(Weak::upgrade).expect("Client is not initialized");
+        let block_id = hash.into();
+        let term_id = client.current_term_id(block_id).expect(
+            "valdators() is called when creating a block or verifying a block.
+            Minor creates a block only when the parent block is imported.
+            The n'th block is verified only when the parent block is imported.",
+        );
+        if term_id == 0 {
+            return None
+        }
+        let state = client.state_at(block_id)?;
+        let validators = PreviousValidators::load_from_state(&state).unwrap();
+        if validators.is_empty() {
+            None
+        } else {
+            let mut validators: Vec<_> = validators.into();
+            validators.reverse();
+            Some(validators)
+        }
+    }
+
     fn validators_pubkey(&self, hash: BlockHash) -> Option<Vec<Public>> {
         self.next_validators(hash).map(|validators| validators.into_iter().map(|val| *val.pubkey()).collect())
     }
 
     fn current_validators_pubkey(&self, hash: BlockHash) -> Option<Vec<Public>> {
         self.current_validators(hash).map(|validators| validators.into_iter().map(|val| *val.pubkey()).collect())
+    }
+
+    fn previous_validators_pubkey(&self, hash: BlockHash) -> Option<Vec<Public>> {
+        self.previous_validators(hash).map(|validators| validators.into_iter().map(|val| *val.pubkey()).collect())
     }
 
     pub fn proposer_index(&self, parent: BlockHash, prev_proposer_index: usize, proposed_view: usize) -> usize {
@@ -102,6 +129,44 @@ impl DynamicValidator {
         } else {
             let num_validators = self.initial_list.count(&parent);
             (prev_proposer_index + proposed_view + 1) % num_validators
+        }
+    }
+
+    pub fn get_current(&self, hash: &BlockHash, index: usize) -> Option<Public> {
+        let validators = self.current_validators_pubkey(*hash)?;
+        let n_validators = validators.len();
+        Some(*validators.get(index % n_validators).unwrap())
+    }
+
+    pub fn check_enough_votes_with_current(&self, hash: &BlockHash, votes: &BitSet) -> Result<(), EngineError> {
+        if let Some(validators) = self.current_validators(*hash) {
+            let mut voted_delegation = 0u64;
+            let n_validators = validators.len();
+            for index in votes.true_index_iter() {
+                assert!(index < n_validators);
+                let validator = validators.get(index).ok_or_else(|| {
+                    EngineError::ValidatorNotExist {
+                        height: 0, // FIXME
+                        index,
+                    }
+                })?;
+                voted_delegation += validator.delegation();
+            }
+            let total_delegation: u64 = validators.iter().map(Validator::delegation).sum();
+            if voted_delegation * 3 > total_delegation * 2 {
+                Ok(())
+            } else {
+                let threshold = total_delegation as usize * 2 / 3;
+                Err(EngineError::BadSealFieldSize(OutOfBounds {
+                    min: Some(threshold),
+                    max: Some(total_delegation as usize),
+                    found: voted_delegation as usize,
+                }))
+            }
+        } else {
+            let client = self.client.read().as_ref().and_then(Weak::upgrade).expect("Client is not initialized");
+            let header = client.block_header(&(*hash).into()).unwrap();
+            self.check_enough_votes(&header.parent_hash(), votes)
         }
     }
 }
@@ -206,6 +271,14 @@ impl ValidatorSet for DynamicValidator {
         let mut client_lock = self.client.write();
         assert!(client_lock.is_none());
         *client_lock = Some(client);
+    }
+
+    fn previous_addresses(&self, hash: &BlockHash) -> Vec<Address> {
+        if let Some(validators) = self.previous_validators_pubkey(*hash) {
+            validators.iter().map(public_to_address).collect()
+        } else {
+            self.initial_list.previous_addresses(hash)
+        }
     }
 
     fn current_addresses(&self, hash: &BlockHash) -> Vec<Address> {

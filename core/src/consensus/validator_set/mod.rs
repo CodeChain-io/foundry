@@ -57,6 +57,8 @@ pub trait ValidatorSet: Send + Sync {
     /// Allows blockchain state access.
     fn register_client(&self, _client: Weak<dyn ConsensusClient>) {}
 
+    fn previous_addresses(&self, _hash: &BlockHash) -> Vec<Address>;
+
     fn current_addresses(&self, _hash: &BlockHash) -> Vec<Address>;
 
     fn next_addresses(&self, _hash: &BlockHash) -> Vec<Address>;

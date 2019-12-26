@@ -433,6 +433,10 @@ impl CurrentValidators {
     pub fn update(&mut self, validators: Vec<Validator>) {
         self.0 = validators;
     }
+
+    pub fn addresses(&self) -> Vec<Address> {
+        self.0.iter().rev().map(|v| public_to_address(&v.pubkey)).collect()
+    }
 }
 
 impl Deref for CurrentValidators {
@@ -479,6 +483,12 @@ impl Deref for PreviousValidators {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl From<PreviousValidators> for Vec<Validator> {
+    fn from(val: PreviousValidators) -> Self {
+        val.0
     }
 }
 
