@@ -153,9 +153,13 @@ impl ConsensusEngine for Tendermint {
         match term {
             0 => {}
             _ => {
-                let mut validators = stake::CurrentValidators::load_from_state(block.state())?;
-                validators.update(stake::NextValidators::load_from_state(block.state())?.clone());
-                validators.save_to_state(block.state_mut())?;
+                let mut previous_validators = stake::PreviousValidators::load_from_state(block.state())?;
+                previous_validators.update(stake::CurrentValidators::load_from_state(block.state())?.clone());
+                previous_validators.save_to_state(block.state_mut())?;
+
+                let mut current_validators = stake::CurrentValidators::load_from_state(block.state())?;
+                current_validators.update(stake::NextValidators::load_from_state(block.state())?.clone());
+                current_validators.save_to_state(block.state_mut())?;
             }
         }
 

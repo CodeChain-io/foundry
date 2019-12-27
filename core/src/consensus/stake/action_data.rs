@@ -449,6 +449,39 @@ impl From<CurrentValidators> for Vec<Validator> {
     }
 }
 
+#[derive(Debug)]
+pub struct PreviousValidators(Vec<Validator>);
+impl PreviousValidators {
+    pub fn load_from_state(state: &TopLevelState) -> StateResult<Self> {
+        let key = &*CURRENT_VALIDATORS_KEY;
+        let validators = state.action_data(&key)?.map(|data| decode_list(&data)).unwrap_or_default();
+
+        Ok(Self(validators))
+    }
+
+    pub fn save_to_state(&self, state: &mut TopLevelState) -> StateResult<()> {
+        let key = &*CURRENT_VALIDATORS_KEY;
+        if !self.is_empty() {
+            state.update_action_data(&key, encode_list(&self.0).to_vec())?;
+        } else {
+            state.remove_action_data(&key);
+        }
+        Ok(())
+    }
+
+    pub fn update(&mut self, validators: Vec<Validator>) {
+        self.0 = validators;
+    }
+}
+
+impl Deref for PreviousValidators {
+    type Target = Vec<Validator>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 #[derive(Default, Debug, PartialEq)]
 pub struct IntermediateRewards {
     current: BTreeMap<Address, u64>,

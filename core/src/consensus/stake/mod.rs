@@ -33,7 +33,7 @@ use parking_lot::RwLock;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, Rlp};
 
-pub use self::action_data::{Banned, CurrentValidators, NextValidators, Validator};
+pub use self::action_data::{Banned, CurrentValidators, NextValidators, PreviousValidators, Validator};
 use self::action_data::{Candidates, Delegation, IntermediateRewards, Jail, ReleaseResult, StakeAccount, Stakeholders};
 pub use self::actions::Action;
 pub use self::distribute::fee_distribute;
