@@ -18,9 +18,7 @@ codechain-network = { path = "../network" }
 codechain-state = { path = "../state" }
 codechain-sync = { path = "../sync" }
 codechain-types = { path = "../types" }
-codechain-vm = { path = "../vm" }
 kvdb = "0.1"
-kvdb-rocksdb = "0.1"
 lazy_static = "1.2"
 log = "0.4.6"
 parking_lot = "0.6.0"
@@ -33,7 +31,6 @@ rand = "0.6.1"
 rustc-hex = "1.0"
 rustc-serialize = "0.3"
 time = "0.1"
-tokio-core = "0.1.17"
 jsonrpc-core = { git = "https://github.com/paritytech/jsonrpc.git", tag = "v14.0.3" }
 jsonrpc-derive = { git = "https://github.com/paritytech/jsonrpc.git", tag = "v14.0.3" }
 jsonrpc-http-server = { git = "https://github.com/paritytech/jsonrpc.git", tag = "v14.0.3" }
