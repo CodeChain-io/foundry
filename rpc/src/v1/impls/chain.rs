@@ -334,7 +334,7 @@ where
     fn execute_transaction(&self, tx: UnsignedTransaction, sender: PlatformAddress) -> Result<Option<String>> {
         let sender_address = sender.try_address().map_err(errors::core)?;
         let action = Action::try_from(tx.action).map_err(errors::conversion)?;
-        if let Some(transaction) = action.asset_transaction() {
+        if let Some(transaction) = action.shard_transaction() {
             let result = self.client.execute_transaction(&transaction, sender_address);
             match result {
                 Ok(()) => Ok(None),

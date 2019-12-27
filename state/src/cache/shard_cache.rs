@@ -19,42 +19,49 @@ use std::cell::RefMut;
 use cmerkle::{Result as TrieResult, Trie, TrieMut};
 
 use super::WriteBack;
-use crate::{AssetScheme, AssetSchemeAddress, OwnedAsset, OwnedAssetAddress};
+use crate::{AssetScheme, AssetSchemeAddress, OwnedAsset, OwnedAssetAddress, ShardText, ShardTextAddress};
 
 pub struct ShardCache {
     asset_scheme: WriteBack<AssetScheme>,
     asset: WriteBack<OwnedAsset>,
+    text: WriteBack<ShardText>,
 }
 
 impl ShardCache {
     pub fn new(
         asset_schemes: impl Iterator<Item = (AssetSchemeAddress, AssetScheme)>,
         assets: impl Iterator<Item = (OwnedAssetAddress, OwnedAsset)>,
+        shard_texts: impl Iterator<Item = (ShardTextAddress, ShardText)>,
     ) -> Self {
         Self {
             asset_scheme: WriteBack::new_with_iter(asset_schemes),
             asset: WriteBack::new_with_iter(assets),
+            text: WriteBack::new_with_iter(shard_texts),
         }
     }
 
     pub fn checkpoint(&mut self) {
         self.asset_scheme.checkpoint();
         self.asset.checkpoint();
+        self.text.checkpoint();
     }
 
     pub fn discard_checkpoint(&mut self) {
         self.asset_scheme.discard_checkpoint();
         self.asset.discard_checkpoint();
+        self.text.discard_checkpoint();
     }
 
     pub fn revert_to_checkpoint(&mut self) {
         self.asset_scheme.revert_to_checkpoint();
         self.asset.revert_to_checkpoint();
+        self.text.revert_to_checkpoint();
     }
 
     pub fn commit(&mut self, trie: &mut dyn TrieMut) -> TrieResult<()> {
         self.asset_scheme.commit(trie)?;
         self.asset.commit(trie)?;
+        self.text.commit(trie)?;
         Ok(())
     }
 
@@ -87,12 +94,34 @@ impl ShardCache {
         self.asset.remove(address)
     }
 
+    pub fn create_shard_text<F>(&self, a: &ShardTextAddress, f: F) -> TrieResult<ShardText>
+    where
+        F: FnOnce() -> ShardText, {
+        self.text.create(a, f)
+    }
+
+    pub fn shard_text(&self, a: &ShardTextAddress, db: &dyn Trie) -> TrieResult<Option<ShardText>> {
+        self.text.get(a, db)
+    }
+
+    pub fn shard_text_mut(&self, a: &ShardTextAddress, db: &dyn Trie) -> TrieResult<RefMut<'_, ShardText>> {
+        self.text.get_mut(a, db)
+    }
+
+    pub fn remove_shard_text(&self, a: &ShardTextAddress) {
+        self.text.remove(a);
+    }
+
     pub fn cached_assets(&self) -> Vec<(usize, OwnedAssetAddress, Option<OwnedAsset>)> {
         self.asset.items()
     }
 
     pub fn cached_asset_schemes(&self) -> Vec<(usize, AssetSchemeAddress, Option<AssetScheme>)> {
         self.asset_scheme.items()
+    }
+
+    pub fn cached_shard_text(&self) -> Vec<(usize, ShardTextAddress, Option<ShardText>)> {
+        self.text.items()
     }
 }
 
@@ -101,12 +130,13 @@ impl Clone for ShardCache {
         Self {
             asset_scheme: self.asset_scheme.clone(),
             asset: self.asset.clone(),
+            text: self.text.clone(),
         }
     }
 }
 
 impl Default for ShardCache {
     fn default() -> Self {
-        Self::new(::std::iter::empty(), ::std::iter::empty())
+        Self::new(::std::iter::empty(), ::std::iter::empty(), ::std::iter::empty())
     }
 }

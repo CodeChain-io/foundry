@@ -538,6 +538,12 @@ impl MemPoolFees {
             Action::Remove {
                 ..
             } => self.min_remove_transaction_cost,
+            Action::ShardStore {
+                ..
+            } => {
+                // FIXME
+                0
+            }
         }
     }
 }

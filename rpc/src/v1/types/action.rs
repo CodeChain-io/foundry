@@ -238,6 +238,11 @@ pub enum ActionWithTracker {
         handler_id: Uint,
         bytes: Bytes,
     },
+    ShardStore {
+        network_id: NetworkId,
+        shard_id: ShardId,
+        content: String,
+    },
 }
 
 impl ActionWithTracker {
@@ -405,6 +410,15 @@ impl ActionWithTracker {
             } => ActionWithTracker::Custom {
                 handler_id: handler_id.into(),
                 bytes,
+            },
+            ActionType::ShardStore {
+                network_id,
+                shard_id,
+                content,
+            } => ActionWithTracker::ShardStore {
+                network_id,
+                shard_id,
+                content,
             },
         }
     }

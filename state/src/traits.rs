@@ -22,8 +22,8 @@ use cvm::ChainTimeInfo;
 use primitives::{Bytes, H160, H256};
 
 use crate::{
-    Account, ActionData, AssetScheme, CacheableItem, Metadata, OwnedAsset, RegularAccount, Shard, StateDB, StateResult,
-    Text,
+    Account, ActionData, AssetScheme, CacheableItem, Metadata, OwnedAsset, RegularAccount, Shard, ShardText, StateDB,
+    StateResult, Text,
 };
 
 
@@ -133,6 +133,8 @@ pub trait ShardStateView {
     fn asset_scheme(&self, asset_type: H160) -> TrieResult<Option<AssetScheme>>;
     /// Get the asset.
     fn asset(&self, tracker: Tracker, index: usize) -> TrieResult<Option<OwnedAsset>>;
+    /// Get shard text.
+    fn text(&self, tracker: Tracker) -> TrieResult<Option<ShardText>>;
 }
 
 pub trait ShardState {

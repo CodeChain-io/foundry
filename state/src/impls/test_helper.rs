@@ -683,4 +683,13 @@ macro_rules! check_shard_level_state {
 
         check_shard_level_state!($state, [$($x),*]);
     };
+    ($state:expr, [(text: ($tracker:expr) => { content: $content: expr}) $(,$x:tt)*]) => {
+        let stored_text = $state.text($tracker)
+            .expect(&format!("Cannot read Text from {}:{}", $state.shard_id(), $tracker))
+            .expect(&format!("Text for {}:{} not exist", $state.shard_id(), $tracker));
+
+        assert_eq!($content, stored_text.content());
+
+        check_shard_level_state!($state, [$($x), *])
+    };
 }
