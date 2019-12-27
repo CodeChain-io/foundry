@@ -216,6 +216,12 @@ impl CodeChainMachine {
             Action::Remove {
                 ..
             } => params.min_remove_transaction_cost(),
+            Action::ShardStore {
+                ..
+            } => {
+                // FIXME
+                0
+            }
         }
     }
 

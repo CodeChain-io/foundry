@@ -18,7 +18,7 @@ use std::collections::{HashMap, HashSet};
 
 use super::lru_cache::LruCache;
 use super::{ShardCache, TopCache};
-use crate::{Account, ActionData, AssetScheme, Metadata, OwnedAsset, RegularAccount, Shard, Text};
+use crate::{Account, ActionData, AssetScheme, Metadata, OwnedAsset, RegularAccount, Shard, ShardText, Text};
 
 use ctypes::ShardId;
 
@@ -32,6 +32,7 @@ pub struct GlobalCache {
 
     asset_scheme: LruCache<AssetScheme>,
     asset: LruCache<OwnedAsset>,
+    shard_text: LruCache<ShardText>,
 }
 
 impl GlobalCache {
@@ -43,6 +44,7 @@ impl GlobalCache {
         action_data: usize,
         asset_scheme: usize,
         asset: usize,
+        shard_text: usize,
     ) -> Self {
         Self {
             account: LruCache::new(account),
@@ -54,6 +56,7 @@ impl GlobalCache {
 
             asset_scheme: LruCache::new(asset_scheme),
             asset: LruCache::new(asset),
+            shard_text: LruCache::new(shard_text),
         }
     }
 
@@ -75,6 +78,10 @@ impl GlobalCache {
                 .filter(|(addr, _)| addr.shard_id() == shard_id)
                 .map(|(addr, item)| (*addr, item.clone())),
             self.asset.iter().filter(|(addr, _)| addr.shard_id() == shard_id).map(|(addr, item)| (*addr, item.clone())),
+            self.shard_text
+                .iter()
+                .filter(|(addr, _)| addr.shard_id() == shard_id)
+                .map(|(addr, item)| (*addr, item.clone())),
         )
     }
 
@@ -83,6 +90,7 @@ impl GlobalCache {
             .iter()
             .map(|(addr, _)| addr.shard_id())
             .chain(self.asset.iter().map(|(addr, _)| addr.shard_id()))
+            .chain(self.shard_text.iter().map(|(addr, _)| addr.shard_id()))
             .collect()
     }
 
@@ -149,6 +157,16 @@ impl GlobalCache {
                 None => self.asset.remove(&addr),
             };
         }
+
+        let mut cached_shard_texts: Vec<_> =
+            shard_caches.iter().flat_map(|(_, shard_cache)| shard_cache.cached_shard_text().into_iter()).collect();
+        cached_shard_texts.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
+        for (_, addr, item) in cached_shard_texts.into_iter() {
+            match item {
+                Some(item) => self.shard_text.insert(addr, item),
+                None => self.shard_text.remove(&addr),
+            };
+        }
     }
 
     pub fn clear(&mut self) {
@@ -160,6 +178,7 @@ impl GlobalCache {
         self.action_data.clear();
         self.asset_scheme.clear();
         self.asset.clear();
+        self.shard_text.clear();
     }
 }
 
@@ -173,7 +192,8 @@ impl Default for GlobalCache {
         const N_ACTION_DATA: usize = 10;
         const N_ASSET_SCHEME: usize = 100;
         const N_ASSET: usize = 1000;
-        Self::new(N_ACCOUNT, N_REGULAR_ACCOUNT, N_SHARD, N_TEXT, N_ACTION_DATA, N_ASSET_SCHEME, N_ASSET)
+        const N_SHARD_TEXT: usize = 1000;
+        Self::new(N_ACCOUNT, N_REGULAR_ACCOUNT, N_SHARD, N_TEXT, N_ACTION_DATA, N_ASSET_SCHEME, N_ASSET, N_SHARD_TEXT)
     }
 }
 
@@ -189,6 +209,7 @@ impl Clone for GlobalCache {
 
             asset_scheme: self.asset_scheme.clone(),
             asset: self.asset.clone(),
+            shard_text: self.shard_text.clone(),
         }
     }
 }

@@ -42,6 +42,7 @@ const CHANGE_ASSET_SCHEME: u8 = 0x15;
 // Derepcated
 //const DECOMPOSE_ASSET: u8 = 0x17;
 const INCREASE_ASSET_SUPPLY: u8 = 0x18;
+const SHARD_STORE: u8 = 0x19;
 
 const CUSTOM: u8 = 0xFF;
 
@@ -129,6 +130,11 @@ pub enum Action {
         hash: TxHash,
         signature: Signature,
     },
+    ShardStore {
+        network_id: NetworkId,
+        shard_id: ShardId,
+        content: String,
+    },
 }
 
 impl Action {
@@ -137,7 +143,7 @@ impl Action {
         Blake::blake(rlp)
     }
 
-    pub fn asset_transaction(&self) -> Option<ShardTransaction> {
+    pub fn shard_transaction(&self) -> Option<ShardTransaction> {
         match self {
             Action::MintAsset {
                 ..
@@ -159,7 +165,7 @@ impl Action {
     }
 
     pub fn tracker(&self) -> Option<Tracker> {
-        self.asset_transaction().map(|tx| tx.tracker())
+        self.shard_transaction().map(|tx| tx.tracker())
     }
 
     pub fn verify(&self) -> Result<(), SyntaxError> {
@@ -447,6 +453,15 @@ impl From<Action> for Option<ShardTransaction> {
                 burn,
                 receiver,
             }),
+            Action::ShardStore {
+                network_id,
+                shard_id,
+                content,
+            } => Some(ShardTransaction::ShardStore {
+                network_id,
+                shard_id,
+                content,
+            }),
             _ => None,
         }
     }
@@ -633,6 +648,17 @@ impl Encodable for Action {
                 s.append(&CUSTOM);
                 s.append(handler_id);
                 s.append(bytes);
+            }
+            Action::ShardStore {
+                shard_id,
+                content,
+                network_id,
+            } => {
+                s.begin_list(4);
+                s.append(&SHARD_STORE);
+                s.append(network_id);
+                s.append(shard_id);
+                s.append(content);
             }
         }
     }
@@ -854,6 +880,20 @@ impl Decodable for Action {
                 Ok(Action::Custom {
                     handler_id: rlp.val_at(1)?,
                     bytes: rlp.val_at(2)?,
+                })
+            }
+            SHARD_STORE => {
+                let item_count = rlp.item_count()?;
+                if item_count != 4 {
+                    return Err(DecoderError::RlpIncorrectListLen {
+                        got: item_count,
+                        expected: 4,
+                    })
+                }
+                Ok(Action::ShardStore {
+                    network_id: rlp.val_at(1)?,
+                    shard_id: rlp.val_at(2)?,
+                    content: rlp.val_at(3)?,
                 })
             }
             _ => Err(DecoderError::Custom("Unexpected action prefix")),

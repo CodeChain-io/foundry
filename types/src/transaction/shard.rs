@@ -69,6 +69,11 @@ pub enum ShardTransaction {
         tx_hash: TxHash,
         output: AssetWrapCCCOutput,
     },
+    ShardStore {
+        network_id: NetworkId,
+        shard_id: ShardId,
+        content: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -115,6 +120,10 @@ impl ShardTransaction {
             | ShardTransaction::WrapCCC {
                 network_id,
                 ..
+            }
+            | ShardTransaction::ShardStore {
+                network_id,
+                ..
             } => *network_id,
         }
     }
@@ -155,6 +164,10 @@ impl ShardTransaction {
                 shard_id,
                 ..
             } => vec![*shard_id],
+            ShardTransaction::ShardStore {
+                shard_id,
+                ..
+            } => vec![*shard_id],
         }
     }
 
@@ -177,6 +190,9 @@ impl ShardTransaction {
                 ..
             } => false,
             ShardTransaction::WrapCCC {
+                ..
+            } => index == 0,
+            ShardTransaction::ShardStore {
                 ..
             } => index == 0,
         }
@@ -206,6 +222,10 @@ impl ShardTransaction {
                 ..
             } => unreachable!("UnwrapCCC doesn't have a valid index"),
             ShardTransaction::WrapCCC {
+                shard_id,
+                ..
+            } => &id == shard_id,
+            ShardTransaction::ShardStore {
                 shard_id,
                 ..
             } => &id == shard_id,
@@ -337,6 +357,7 @@ const ASSET_SCHEME_CHANGE_ID: TransactionId = 0x15;
 /// Deprecated
 //const ASSET_DECOMPOSE_ID: TransactionId = 0x17;
 const ASSET_INCREASE_SUPPLY_ID: TransactionId = 0x18;
+const ASSET_SHARD_STORE_ID: TransactionId = 0x19;
 
 impl Decodable for ShardTransaction {
     fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
@@ -433,6 +454,20 @@ impl Decodable for ShardTransaction {
                     network_id: d.val_at(1)?,
                     burn: d.val_at(2)?,
                     receiver: d.val_at(3)?,
+                })
+            }
+            ASSET_SHARD_STORE_ID => {
+                let item_count = d.item_count()?;
+                if item_count != 4 {
+                    return Err(DecoderError::RlpIncorrectListLen {
+                        got: item_count,
+                        expected: 4,
+                    })
+                }
+                Ok(ShardTransaction::ShardStore {
+                    network_id: d.val_at(1)?,
+                    shard_id: d.val_at(2)?,
+                    content: d.val_at(3)?,
                 })
             }
             _ => Err(DecoderError::Custom("Unexpected transaction")),
@@ -539,6 +574,13 @@ impl Encodable for ShardTransaction {
                 ..
             } => {
                 unreachable!("No reason to get a RLP encoding of WrapCCC");
+            }
+            ShardTransaction::ShardStore {
+                network_id,
+                shard_id,
+                content,
+            } => {
+                s.begin_list(4).append(&ASSET_SHARD_STORE_ID).append(network_id).append(shard_id).append(content);
             }
         };
     }
@@ -962,5 +1004,15 @@ mod tests {
         }
 
         sum.iter().all(|(_, sum)| *sum == 0)
+    }
+
+    #[test]
+    fn encode_and_decode_shard_store_text() {
+        let tx = ShardTransaction::ShardStore {
+            network_id: Default::default(),
+            shard_id: 0,
+            content: "content".to_string(),
+        };
+        rlp_encode_and_decode_test!(tx);
     }
 }

@@ -49,6 +49,7 @@ pub use crate::item::account::Account;
 pub use crate::item::action_data::ActionData;
 pub use crate::item::asset::{Asset, OwnedAsset, OwnedAssetAddress};
 pub use crate::item::asset_scheme::{AssetScheme, AssetSchemeAddress};
+pub use crate::item::dummy_shard_text::{ShardText, ShardTextAddress};
 pub use crate::item::metadata::{Metadata, MetadataAddress};
 pub use crate::item::regular_account::{RegularAccount, RegularAccountAddress};
 pub use crate::item::shard::{Shard, ShardAddress};

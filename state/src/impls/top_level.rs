@@ -473,6 +473,15 @@ impl TopLevelState {
                 self.add_balance(receiver, *quantity)?;
                 return Ok(())
             }
+            Action::ShardStore {
+                ..
+            } => {
+                let transaction = Option::<ShardTransaction>::from(action.clone()).expect("It's a shard transaction");
+                debug_assert_eq!(network_id, transaction.network_id());
+
+                let approvers = vec![]; // WrapCCC doesn't have approvers
+                (transaction, approvers)
+            }
             Action::Pay {
                 receiver,
                 quantity,

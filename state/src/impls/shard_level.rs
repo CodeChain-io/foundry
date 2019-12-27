@@ -35,8 +35,10 @@ use primitives::{Bytes, H160, H256};
 use crate::cache::ShardCache;
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::traits::{ShardState, ShardStateView};
-use crate::{Asset, AssetScheme, AssetSchemeAddress, OwnedAsset, OwnedAssetAddress, StateDB, StateResult};
-
+use crate::{
+    Asset, AssetScheme, AssetSchemeAddress, OwnedAsset, OwnedAssetAddress, ShardText, ShardTextAddress, StateDB,
+    StateResult,
+};
 
 pub struct ShardLevelState<'db> {
     db: &'db mut RefCell<StateDB>,
@@ -204,6 +206,14 @@ impl<'db> ShardLevelState<'db> {
             } => {
                 assert_eq!(*shard_id, self.shard_id);
                 self.wrap_ccc(tx_hash, lock_script_hash, &parameters, *quantity)
+            }
+            ShardTransaction::ShardStore {
+                shard_id,
+                content,
+                ..
+            } => {
+                assert_eq!(*shard_id, self.shard_id);
+                self.store_text(transaction.tracker(), content.to_string())
             }
         }
     }
@@ -687,6 +697,11 @@ impl<'db> ShardLevelState<'db> {
         })
     }
 
+    fn store_text(&self, tracker: Tracker, content: String) -> StateResult<()> {
+        self.cache.create_shard_text(&ShardTextAddress::new(tracker, self.shard_id), || ShardText::new(&content))?;
+        Ok(())
+    }
+
     #[cfg(test)]
     fn shard_id(&self) -> ShardId {
         self.shard_id
@@ -704,6 +719,12 @@ impl<'db> ShardStateView for ShardLevelState<'db> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.cache.asset(&OwnedAssetAddress::new(tracker, index, self.shard_id), &trie)
+    }
+
+    fn text(&self, tracker: Tracker) -> Result<Option<ShardText>, TrieError> {
+        let db = self.db.borrow();
+        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
+        self.cache.shard_text(&ShardTextAddress::new(tracker, self.shard_id), &trie)
     }
 }
 
@@ -787,6 +808,12 @@ impl<'db> ShardStateView for ReadOnlyShardLevelState<'db> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.cache.asset(&OwnedAssetAddress::new(tracker, index, self.shard_id), &trie)
+    }
+
+    fn text(&self, tracker: Tracker) -> Result<Option<ShardText>, TrieError> {
+        let db = self.db.borrow();
+        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
+        self.cache.shard_text(&ShardTextAddress::new(tracker, self.shard_id), &trie)
     }
 }
 
@@ -1788,6 +1815,30 @@ mod tests {
             (scheme: (asset_type) => { metadata: "metadata".to_string(), supply: amount + new_supply, approver, registrar: registrar }),
             (asset: (mint_tracker, 0) => { asset_type: asset_type, quantity: amount }),
             (asset: (supply_tracker, 0) => { asset_type: asset_type, quantity: new_supply })
+        ]);
+    }
+
+    #[test]
+    fn store_shard_text() {
+        let sender = address();
+        let mut state_db = RefCell::new(get_temp_state_db());
+        let mut shard_cache = ShardCache::default();
+        let mut state = get_temp_shard_state(&mut state_db, SHARD_ID, &mut shard_cache);
+
+        let content = "stored text".to_string();
+
+        let store_shard_text = ShardTransaction::ShardStore {
+            network_id: "tc".into(),
+            shard_id: crate::impls::test_helper::SHARD_ID,
+            content: content.clone(),
+        };
+
+        let store_shard_text_tracker = store_shard_text.tracker();
+
+        assert_eq!(Ok(()), state.apply(&store_shard_text, &sender, &[sender], &[], &get_test_client(), 0, 0));
+
+        check_shard_level_state!(state, [
+            (text: (store_shard_text_tracker) => { content: &content })
         ]);
     }
 }
