@@ -17,6 +17,7 @@
 use std::fmt;
 use std::io::Error as StdIoError;
 
+use cdb::DatabaseError;
 use cio::IoError;
 use ckey::{Address, Error as KeyError};
 use cmerkle::TrieError;
@@ -25,11 +26,9 @@ use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockHash, BlockNumber};
 use primitives::{H256, U256};
-
-use util_error::UtilError;
+use rlp::DecoderError;
 
 use crate::account_provider::Error as AccountProviderError;
-use crate::client::Error as ClientError;
 use crate::consensus::EngineError;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -163,10 +162,6 @@ impl fmt::Display for BlockError {
 #[derive(Debug)]
 /// General error type which should be capable of representing all errors in codechain
 pub enum Error {
-    /// Client configuration error.
-    Client(ClientError),
-    /// Error concerning a utility.
-    Util(UtilError),
     /// Error concerning block processing.
     Block(BlockError),
     /// Error concerning block import.
@@ -184,13 +179,15 @@ pub enum Error {
     Runtime(RuntimeError),
     History(HistoryError),
     Syntax(SyntaxError),
+    /// Error concerning a database.
+    Database(DatabaseError),
+    Rlp(DecoderError),
+    Other(String),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::Client(err) => err.fmt(f),
-            Error::Util(err) => err.fmt(f),
             Error::Io(err) => err.fmt(f),
             Error::Block(err) => err.fmt(f),
             Error::Import(err) => err.fmt(f),
@@ -202,13 +199,10 @@ impl fmt::Display for Error {
             Error::Runtime(err) => err.fmt(f),
             Error::History(err) => err.fmt(f),
             Error::Syntax(err) => err.fmt(f),
+            Error::Database(err) => err.fmt(f),
+            Error::Rlp(err) => err.fmt(f),
+            Error::Other(s) => write!(f, "{}", s),
         }
-    }
-}
-
-impl From<ClientError> for Error {
-    fn from(err: ClientError) -> Error {
-        Error::Client(err)
     }
 }
 
@@ -248,18 +242,6 @@ impl From<KeyError> for Error {
     }
 }
 
-impl From<::rlp::DecoderError> for Error {
-    fn from(err: ::rlp::DecoderError) -> Error {
-        Error::Util(UtilError::from(err))
-    }
-}
-
-impl From<UtilError> for Error {
-    fn from(err: UtilError) -> Error {
-        Error::Util(err)
-    }
-}
-
 impl From<ImportError> for Error {
     fn from(err: ImportError) -> Error {
         Error::Import(err)
@@ -271,7 +253,7 @@ impl From<BlockImportError> for Error {
         match err {
             BlockImportError::Block(e) => Error::Block(e),
             BlockImportError::Import(e) => Error::Import(e),
-            BlockImportError::Other(s) => Error::Util(UtilError::from(s)),
+            BlockImportError::Other(s) => Error::Other(s),
         }
     }
 }
@@ -312,5 +294,17 @@ impl From<HistoryError> for Error {
 impl From<SyntaxError> for Error {
     fn from(err: SyntaxError) -> Self {
         Error::Syntax(err)
+    }
+}
+
+impl From<DatabaseError> for Error {
+    fn from(err: DatabaseError) -> Error {
+        Error::Database(err)
+    }
+}
+
+impl From<DecoderError> for Error {
+    fn from(err: DecoderError) -> Error {
+        Error::Rlp(err)
     }
 }
