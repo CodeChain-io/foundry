@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,6 @@ use crate::{
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
 use ckey::{public_to_address, recover, Address, NetworkId, Public, Signature};
-use cmerkle::{Result as TrieResult, TrieError, TrieFactory};
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{
     Action, AssetOutPoint, AssetTransferInput, AssetWrapCCCOutput, ShardTransaction, Transaction,
@@ -58,6 +57,7 @@ use ctypes::Tracker;
 use ctypes::{BlockNumber, CommonParams, ShardId, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::DBTransaction;
+use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 #[cfg(test)]
 use primitives::H160;
 use primitives::{Bytes, H256};

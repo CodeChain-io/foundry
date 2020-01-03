@@ -48,7 +48,6 @@ use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
 use ccrypto::BLAKE_NULL_RLP;
 use cdb;
 use ckey::{public_to_address, Address, Generator, KeyPair, NetworkId, PlatformAddress, Private, Public, Random};
-use cmerkle::skewed_merkle_root;
 use cnetwork::NodeId;
 use cstate::tests::helpers::empty_top_state;
 use cstate::{FindActionHandler, StateDB, TopLevelState};
@@ -59,6 +58,7 @@ use ctypes::{BlockHash, BlockNumber, CommonParams, Header as BlockHeader, Tracke
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
 use kvdb_memorydb;
+use merkle_trie::skewed_merkle_root;
 use parking_lot::RwLock;
 use primitives::{Bytes, H256, U256};
 use rlp::*;

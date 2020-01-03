@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,10 +19,10 @@ use crate::{
     StateResult,
 };
 use ckey::{public_to_address, Address, Public};
-use cmerkle::Result as TrieResult;
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, CommonParams, ShardId, Tracker, TxHash};
 use cvm::ChainTimeInfo;
+use merkle_trie::Result as TrieResult;
 use primitives::{Bytes, H160, H256};
 
 pub trait TopStateView {
