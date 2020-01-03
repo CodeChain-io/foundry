@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018, 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@ use crate::{
     Account, ActionData, Metadata, MetadataAddress, RegularAccount, RegularAccountAddress, Shard, ShardAddress,
 };
 use ckey::Address;
-use cmerkle::{Result as TrieResult, Trie, TrieMut};
+use merkle_trie::{Result as TrieResult, Trie, TrieMut};
 use primitives::H256;
 use std::cell::RefMut;
 

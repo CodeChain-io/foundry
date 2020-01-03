@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -23,9 +23,6 @@ use ccore::{
     ImportError, StateInfo, UnverifiedTransaction,
 };
 use cdb::AsHashDB;
-use cmerkle::snapshot::ChunkDecompressor;
-use cmerkle::snapshot::Restore as SnapshotRestore;
-use cmerkle::{skewed_merkle_root, Trie, TrieFactory};
 use cnetwork::{Api, EventSender, NetworkExtension, NodeId};
 use cstate::{FindActionHandler, TopLevelState, TopStateView};
 use ctimer::TimerToken;
@@ -33,6 +30,8 @@ use ctypes::header::{Header, Seal};
 use ctypes::transaction::Action;
 use ctypes::{BlockHash, BlockNumber, ShardId};
 use kvdb::DBTransaction;
+use merkle_trie::snapshot::{ChunkDecompressor, Restore as SnapshotRestore};
+use merkle_trie::{skewed_merkle_root, Trie, TrieFactory};
 use primitives::{H256, U256};
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
