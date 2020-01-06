@@ -14,13 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ccrypto::{blake256, BLAKE_NULL_RLP};
-use cdb::HashDB;
-use primitives::H256;
-
 use crate::nibbleslice::NibbleSlice;
 use crate::node::Node as RlpNode;
 use crate::{Trie, TrieError};
+use ccrypto::{blake256, BLAKE_NULL_RLP};
+use cdb::HashDB;
+use primitives::H256;
 /// A `Trie` implementation using a generic `HashDB` backing database.
 ///
 /// Use it as a `Trie` trait object. You can use `db()` to get the backing database object.

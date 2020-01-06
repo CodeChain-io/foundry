@@ -14,17 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
+use super::KeyDirectory;
+use crate::json::Uuid;
+use crate::{json, Error, SafeAccount};
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::{fs, io};
-
 use time;
-
-use super::KeyDirectory;
-use crate::json::Uuid;
-use crate::{json, Error, SafeAccount};
 
 const IGNORED_FILES: &[&str] = &["thumbs.db"];
 
@@ -161,7 +159,6 @@ where
             })
             .collect())
     }
-
 
     /// insert account with given filename. if the filename is a duplicate of any stored account and dedup is set to
     /// true, a random suffix is appended to the filename.

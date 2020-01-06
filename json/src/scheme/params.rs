@@ -14,9 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ckey::NetworkId;
-
 use crate::uint::Uint;
+use ckey::NetworkId;
 
 /// Scheme params.
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize, Clone)]
@@ -142,7 +141,6 @@ mod tests {
         assert_eq!(deserialized.max_candidate_metadata_size, None);
     }
 
-
     #[test]
     #[allow(clippy::cognitive_complexity)]
     fn params_deserialization_with_term_seconds() {
@@ -207,7 +205,6 @@ mod tests {
         assert_eq!(deserialized.min_deposit, None);
         assert_eq!(deserialized.max_candidate_metadata_size, None);
     }
-
 
     #[test]
     #[allow(clippy::cognitive_complexity)]

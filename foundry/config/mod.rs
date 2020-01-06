@@ -16,16 +16,15 @@
 
 mod chain_type;
 
-use std::fs;
-use std::str::{self, FromStr};
-use std::time::Duration;
-
 use ccore::{MemPoolFees, MinerOptions, TimeGapParams};
 use cidr::IpCidr;
 use ckey::PlatformAddress;
 use clap;
 use cnetwork::{FilterEntry, NetworkConfig, SocketAddr};
 use primitives::H256;
+use std::fs;
+use std::str::{self, FromStr};
+use std::time::Duration;
 use toml;
 
 pub use self::chain_type::ChainType;

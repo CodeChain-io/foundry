@@ -19,17 +19,15 @@ mod compress;
 mod error;
 mod ordered_heap;
 
-use std::cmp::Ordering;
-
-use ccrypto::BLAKE_NULL_RLP;
-use cdb::HashDB;
-use primitives::H256;
-
 use self::chunk::{Chunk, RecoveredChunk, UnresolvedChunk};
 pub use self::compress::{ChunkCompressor, ChunkDecompressor};
 pub use self::error::Error;
 use self::ordered_heap::OrderedHeap;
 use crate::nibbleslice::NibbleSlice;
+use ccrypto::BLAKE_NULL_RLP;
+use cdb::HashDB;
+use primitives::H256;
+use std::cmp::Ordering;
 
 const CHUNK_HEIGHT: usize = 3;
 const CHUNK_MAX_NODES: usize = 256; // 16 ^ (CHUNK_HEIGHT-1)
@@ -133,7 +131,6 @@ impl<'a> Iterator for Snapshot<'a> {
         }
     }
 }
-
 
 #[derive(Debug)]
 struct ChunkPathPrefix {

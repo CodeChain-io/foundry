@@ -19,12 +19,11 @@ mod incoming;
 mod message;
 mod outgoing;
 
+use ccrypto::aes::SymmetricCipherError;
+use rlp::DecoderError;
 use std::fmt;
 use std::io;
 use std::result;
-
-use ccrypto::aes::SymmetricCipherError;
-use rlp::DecoderError;
 
 pub use self::established::EstablishedConnection;
 pub use self::incoming::IncomingConnection;
@@ -33,7 +32,6 @@ pub use self::outgoing::OutgoingConnection;
 
 use super::super::stream::Error as StreamError;
 use super::stream::Error as P2pStreamError;
-
 
 #[derive(Debug)]
 pub enum Error {

@@ -16,7 +16,6 @@
 use std::cmp::*;
 use std::fmt;
 
-
 #[derive(Eq, Ord, Copy, Clone)]
 pub struct NibbleSlice<'a> {
     pub data: &'a [u8],
@@ -112,7 +111,6 @@ where
         }
         r
     }
-
 
     /// Encode only the leftmost `n` bytes of the nibble slice in prefixed hex notation,
     /// noting whether it `is_leaf`.

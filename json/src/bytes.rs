@@ -73,7 +73,6 @@ impl Deref for Bytes {
     }
 }
 
-
 impl FromStr for Bytes {
     type Err = FromHexError;
 

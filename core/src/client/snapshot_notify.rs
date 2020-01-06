@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::sync::mpsc::{sync_channel, Receiver, RecvError, SyncSender};
-use std::sync::{Arc, Weak};
-
 use ctypes::BlockHash;
 use parking_lot::RwLock;
+use std::sync::mpsc::{sync_channel, Receiver, RecvError, SyncSender};
+use std::sync::{Arc, Weak};
 
 pub fn create() -> (NotifySender, NotifyReceiverSource) {
     let (tx, rx) = sync_channel(1);

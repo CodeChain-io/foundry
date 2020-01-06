@@ -26,7 +26,6 @@ pub mod helpers {
     use primitives::H256;
     use rlp::Encodable;
 
-
     use crate::impls::TopLevelState;
     use crate::{FindActionHandler, Metadata, MetadataAddress, StateDB};
 
@@ -85,7 +84,6 @@ pub mod helpers {
             let mut t = TrieFactory::create(db.as_hashdb_mut(), &mut root);
             t.insert(&*MetadataAddress::new(), &Metadata::new(1).rlp_bytes()).unwrap();
         }
-
 
         TopLevelState::from_existing(db, root).expect("The empty trie root was initialized")
     }

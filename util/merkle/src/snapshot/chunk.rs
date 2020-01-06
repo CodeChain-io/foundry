@@ -14,17 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::collections::VecDeque;
-use std::convert::From;
-
-use ccrypto::BLAKE_NULL_RLP;
-use cdb::{DBValue, HashDB, MemoryDB};
-use primitives::H256;
-
 use super::error::{ChunkError, Error};
 use super::{DecodedPathSlice, PathSlice, CHUNK_HEIGHT};
 use crate::nibbleslice::NibbleSlice;
 use crate::{Node, TrieDBMut};
+use ccrypto::BLAKE_NULL_RLP;
+use cdb::{DBValue, HashDB, MemoryDB};
+use primitives::H256;
+use std::collections::VecDeque;
+use std::convert::From;
 
 #[derive(RlpEncodable, RlpDecodable, Eq, PartialEq)]
 pub struct TerminalNode {

@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use cidr::{Cidr, IpCidr};
 use std::collections::HashMap;
 use std::net::IpAddr;
-
-use cidr::{Cidr, IpCidr};
 
 #[derive(Default)]
 pub struct Filter {
@@ -94,7 +93,6 @@ pub fn is_filtered(target: &IpAddr, filter: &IpCidr) -> bool {
 
     filter.contains(target)
 }
-
 
 #[cfg(test)]
 mod tests_is_filtered {

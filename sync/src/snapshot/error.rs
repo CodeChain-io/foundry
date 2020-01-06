@@ -16,7 +16,6 @@
 
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::io::{Error as FileError, ErrorKind};
-
 use cdb::DatabaseError;
 use primitives::H256;
 

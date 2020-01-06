@@ -14,9 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::ops::BitXor;
-
 use ccrypto::Blake;
+use std::ops::BitXor;
 
 // skewed_merkle_root(base, vec![input0, input1, input2, input3])
 // will creates the tree as below

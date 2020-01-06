@@ -18,12 +18,11 @@
 //!
 //! This module should be used to generate trie root hash.
 
-use std::cmp;
-use std::collections::BTreeMap;
-
 use ccrypto::blake256;
 use primitives::H256;
 use rlp::RlpStream;
+use std::cmp;
+use std::collections::BTreeMap;
 
 fn shared_prefix_len<T: Eq>(first: &[T], second: &[T]) -> usize {
     let len = cmp::min(first.len(), second.len());
@@ -173,7 +172,6 @@ fn hash256aux<A: AsRef<[u8]>, B: AsRef<[u8]>>(input: &[(A, B)], pre_len: usize, 
 
     stream.append(&blake256(out));
 }
-
 
 #[cfg(test)]
 mod tests {

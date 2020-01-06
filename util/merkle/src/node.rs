@@ -14,11 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::nibbleslice::NibbleSlice;
 use primitives::H256;
 use rlp::*;
-
-use crate::nibbleslice::NibbleSlice;
-
 
 #[derive(Eq, PartialEq, Debug)]
 pub enum Node<'a> {

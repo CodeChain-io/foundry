@@ -25,15 +25,14 @@ extern crate rand;
 extern crate tempfile;
 extern crate test;
 
-use std::path::Path;
-use std::sync::Arc;
-
 use cdb::{new_journaldb, Algorithm, JournalDB};
 use cmerkle::{Trie, TrieFactory, TrieMut};
 use kvdb::DBTransaction;
 use primitives::H256;
 use rand::random;
 use rocksdb::{CompactionProfile, Database, DatabaseConfig};
+use std::path::Path;
+use std::sync::Arc;
 use tempfile::{tempdir, TempDir};
 use test::Bencher;
 

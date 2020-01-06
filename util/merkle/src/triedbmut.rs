@@ -13,16 +13,14 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use std::fmt;
-
-use ccrypto::{blake256, BLAKE_NULL_RLP};
-use cdb::{DBValue, HashDB};
-use primitives::H256;
-
 use crate::nibbleslice::NibbleSlice;
 use crate::node::Node as RlpNode;
 use crate::triedb::TrieDB;
 use crate::{Trie, TrieError, TrieMut};
+use ccrypto::{blake256, BLAKE_NULL_RLP};
+use cdb::{DBValue, HashDB};
+use primitives::H256;
+use std::fmt;
 
 fn empty_children() -> [Option<H256>; 16] {
     [None; 16]
@@ -446,7 +444,6 @@ impl<'a> TrieMut for TrieDBMut<'a> {
         Ok(old_val)
     }
 }
-
 
 #[cfg(test)]
 mod tests {

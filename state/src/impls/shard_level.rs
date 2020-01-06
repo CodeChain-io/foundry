@@ -14,10 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::cell::{RefCell, RefMut};
-use std::collections::HashSet;
-use std::iter::{once, FromIterator};
-
+use crate::cache::ShardCache;
+use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
+use crate::traits::{ShardState, ShardStateView};
+use crate::{
+    Asset, AssetScheme, AssetSchemeAddress, OwnedAsset, OwnedAssetAddress, ShardText, ShardTextAddress, StateDB,
+    StateResult,
+};
 use ccrypto::{Blake, BLAKE_NULL_RLP};
 use cdb::AsHashDB;
 use ckey::Address;
@@ -31,14 +34,9 @@ use ctypes::util::unexpected::Mismatch;
 use ctypes::{BlockNumber, ShardId, Tracker};
 use cvm::{decode, execute, ChainTimeInfo, ScriptResult, VMConfig};
 use primitives::{Bytes, H160, H256};
-
-use crate::cache::ShardCache;
-use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
-use crate::traits::{ShardState, ShardStateView};
-use crate::{
-    Asset, AssetScheme, AssetSchemeAddress, OwnedAsset, OwnedAssetAddress, ShardText, ShardTextAddress, StateDB,
-    StateResult,
-};
+use std::cell::{RefCell, RefMut};
+use std::collections::HashSet;
+use std::iter::{once, FromIterator};
 
 pub struct ShardLevelState<'db> {
     db: &'db mut RefCell<StateDB>,
@@ -1080,7 +1078,6 @@ mod tests {
 
         assert_eq!(Ok(()), state.apply(&mint, &sender, &[sender], &[], &get_test_client(), 0, 0));
 
-
         check_shard_level_state!(state, [
             (scheme: (asset_type) => { metadata: metadata, supply: amount, allowed_script_hashes: allowed_script_hashes}),
             (asset: (mint_tracker, 0) => { asset_type: asset_type, quantity: amount })
@@ -1202,7 +1199,6 @@ mod tests {
         ]);
     }
 
-
     #[test]
     fn registrar_can_transfer() {
         let sender = address();
@@ -1248,7 +1244,6 @@ mod tests {
             (asset: (transfer_tracker, 2) => { asset_type: asset_type, quantity: 15 })
         ]);
     }
-
 
     #[test]
     fn registrar_can_burn() {

@@ -14,12 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::cell::RefMut;
-
-use cmerkle::{Result as TrieResult, Trie, TrieMut};
-
 use super::WriteBack;
 use crate::{AssetScheme, AssetSchemeAddress, OwnedAsset, OwnedAssetAddress, ShardText, ShardTextAddress};
+use cmerkle::{Result as TrieResult, Trie, TrieMut};
+use std::cell::RefMut;
 
 pub struct ShardCache {
     asset_scheme: WriteBack<AssetScheme>,
@@ -88,7 +86,6 @@ impl ShardCache {
         F: FnOnce() -> OwnedAsset, {
         self.asset.create(a, f)
     }
-
 
     pub fn remove_asset(&self, address: &OwnedAssetAddress) {
         self.asset.remove(address)

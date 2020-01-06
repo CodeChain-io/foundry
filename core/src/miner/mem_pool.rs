@@ -14,17 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::collections::{BTreeSet, HashMap, HashSet};
-use std::ops::Range;
-use std::sync::Arc;
-
-use ckey::{public_to_address, Public};
-use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
-use ctypes::{BlockNumber, TxHash};
-use kvdb::{DBTransaction, KeyValueDB};
-use rlp;
-use table::Table;
-
 use super::backup;
 use super::mem_pool_types::{
     AccountDetails, CurrentQueue, FutureQueue, MemPoolFees, MemPoolInput, MemPoolItem, MemPoolStatus, PoolingInstant,
@@ -34,6 +23,15 @@ use super::TransactionImportResult;
 use crate::client::{AccountData, BlockChainTrait};
 use crate::transaction::{PendingSignedTransactions, SignedTransaction};
 use crate::Error as CoreError;
+use ckey::{public_to_address, Public};
+use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
+use ctypes::{BlockNumber, TxHash};
+use kvdb::{DBTransaction, KeyValueDB};
+use rlp;
+use std::collections::{BTreeSet, HashMap, HashSet};
+use std::ops::Range;
+use std::sync::Arc;
+use table::Table;
 
 const DEFAULT_POOLING_PERIOD: BlockNumber = 128;
 
@@ -574,7 +572,6 @@ impl MemPool {
                 self.move_queue(public, next_seq, new_next_seq, QueueTag::Current);
             }
 
-
             if new_next_seq <= first_seq {
                 self.next_seqs.remove(&public);
             } else {
@@ -966,7 +963,6 @@ impl MemPool {
         false
     }
 }
-
 
 #[cfg(test)]
 pub mod test {
