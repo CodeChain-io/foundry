@@ -26,6 +26,7 @@ extern crate codechain_timer as ctimer;
 extern crate log;
 #[macro_use]
 extern crate rlp_derive;
+extern crate kvdb;
 
 use crossbeam_channel;
 
@@ -43,6 +44,7 @@ pub mod control;
 mod p2p;
 pub mod session;
 
+pub use self::p2p::{Handler, ManagingPeerdb};
 pub use crate::addr::SocketAddr;
 pub use crate::config::Config as NetworkConfig;
 pub use crate::control::{Control as NetworkControl, Error as NetworkControlError};
