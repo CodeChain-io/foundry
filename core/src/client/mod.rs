@@ -28,9 +28,13 @@ pub use self::client::Client;
 pub use self::config::ClientConfig;
 pub use self::test_client::TestBlockChainClient;
 
-use std::ops::Range;
-use std::sync::Arc;
-
+use crate::block::{ClosedBlock, OpenBlock, SealedBlock};
+use crate::blockchain_info::BlockChainInfo;
+use crate::consensus::EngineError;
+use crate::encoded;
+use crate::error::{BlockImportError, Error as GenericError};
+use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction};
+use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress, Public};
 use cmerkle::Result as TrieResult;
@@ -41,14 +45,8 @@ use ctypes::{BlockHash, BlockNumber, CommonParams, Header, ShardId, Tracker, TxH
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
 use primitives::{Bytes, H160, H256, U256};
-
-use crate::block::{ClosedBlock, OpenBlock, SealedBlock};
-use crate::blockchain_info::BlockChainInfo;
-use crate::consensus::EngineError;
-use crate::encoded;
-use crate::error::{BlockImportError, Error as GenericError};
-use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction};
-use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
+use std::ops::Range;
+use std::sync::Arc;
 
 /// Provides various blockchain information, like block header, chain state etc.
 pub trait BlockChainTrait {
@@ -156,7 +154,6 @@ pub trait AccountData {
     }
 }
 
-
 /// State information to be used during client query
 pub enum StateOrBlock {
     /// State to be used, may be pending
@@ -236,7 +233,6 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
 
     /// Get block status by block header hash.
     fn block_status(&self, id: &BlockId) -> BlockStatus;
-
 
     /// Get block total score.
     fn block_total_score(&self, id: &BlockId) -> Option<U256>;

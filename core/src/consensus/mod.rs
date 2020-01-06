@@ -32,18 +32,6 @@ pub use self::tendermint::{
 pub use self::validator_set::validator_list::RoundRobinValidator;
 pub use self::validator_set::{DynamicValidator, ValidatorSet};
 
-use std::fmt;
-use std::sync::{Arc, Weak};
-
-use ckey::{Address, SchnorrSignature};
-use cnetwork::NetworkService;
-use cstate::ActionHandler;
-use ctypes::errors::SyntaxError;
-use ctypes::transaction::Action;
-use ctypes::util::unexpected::{Mismatch, OutOfBounds};
-use ctypes::{BlockHash, CommonParams, Header};
-use primitives::Bytes;
-
 use self::bit_set::BitSet;
 use crate::account_provider::AccountProvider;
 use crate::block::{ExecutedBlock, SealedBlock};
@@ -54,6 +42,16 @@ use crate::error::Error;
 use crate::transaction::UnverifiedTransaction;
 use crate::views::HeaderView;
 use crate::Client;
+use ckey::{Address, SchnorrSignature};
+use cnetwork::NetworkService;
+use cstate::ActionHandler;
+use ctypes::errors::SyntaxError;
+use ctypes::transaction::Action;
+use ctypes::util::unexpected::{Mismatch, OutOfBounds};
+use ctypes::{BlockHash, CommonParams, Header};
+use primitives::Bytes;
+use std::fmt;
+use std::sync::{Arc, Weak};
 
 pub enum Seal {
     Solo,

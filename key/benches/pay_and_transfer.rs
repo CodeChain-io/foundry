@@ -78,7 +78,6 @@ fn transfer_with_ecdsa(b: &mut Bencher) {
     });
 }
 
-
 #[bench]
 fn pay_with_schnorr(b: &mut Bencher) {
     // A transaction only has a signature.

@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::fmt::{Display, Formatter};
-use std::io::Error as IoError;
-
+use crate::TrieError;
 use primitives::H256;
 use rlp::DecoderError as RlpDecoderError;
-
-use crate::TrieError;
+use std::fmt::{Display, Formatter};
+use std::io::Error as IoError;
 
 #[derive(Debug)]
 pub enum Error {

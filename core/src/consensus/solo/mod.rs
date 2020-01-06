@@ -16,13 +16,6 @@
 
 mod params;
 
-use std::sync::{Arc, Weak};
-
-use ckey::Address;
-use cstate::{ActionHandler, HitHandler, TopStateView};
-use ctypes::{BlockHash, CommonParams, Header};
-use parking_lot::RwLock;
-
 use self::params::SoloParams;
 use super::stake;
 use super::{ConsensusEngine, Seal};
@@ -32,6 +25,11 @@ use crate::client::ConsensusClient;
 use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
+use ckey::Address;
+use cstate::{ActionHandler, HitHandler, TopStateView};
+use ctypes::{BlockHash, CommonParams, Header};
+use parking_lot::RwLock;
+use std::sync::{Arc, Weak};
 
 /// A consensus engine which does not provide any consensus mechanism.
 pub struct Solo {

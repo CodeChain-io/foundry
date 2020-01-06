@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-use std::fs;
-use std::path::PathBuf;
-use std::str::FromStr;
-use std::sync::Arc;
-use std::thread::{spawn, JoinHandle};
-
 use ccore::snapshot_notify::{NotifyReceiverSource, ReceiverCanceller};
 use ccore::{BlockChainClient, BlockChainTrait, BlockId, Client};
 use cdb::{AsHashDB, HashDB};
@@ -28,6 +21,11 @@ use cmerkle::snapshot::{ChunkCompressor, Error as SnapshotError, Snapshot};
 use cstate::{StateDB, TopLevelState, TopStateView};
 use ctypes::BlockHash;
 use primitives::H256;
+use std::fs;
+use std::path::PathBuf;
+use std::str::FromStr;
+use std::sync::Arc;
+use std::thread::{spawn, JoinHandle};
 
 pub struct Service {
     join_handle: Option<JoinHandle<()>>,

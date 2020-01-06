@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::io::{Cursor, Read, Write};
-
-use rlp::{Rlp, RlpStream};
-
 use super::chunk::{Chunk, RawChunk};
 use super::error::{ChunkError, Error};
 use super::CHUNK_MAX_NODES;
+use rlp::{Rlp, RlpStream};
+use std::io::{Cursor, Read, Write};
 
 pub struct ChunkDecompressor<R> {
     read: R,

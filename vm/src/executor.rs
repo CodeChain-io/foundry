@@ -19,9 +19,7 @@ use ckey::{verify, Public, Signature, SIGNATURE_LENGTH};
 use ctypes::transaction::{AssetTransferInput, HashingError, PartialHashing};
 use ctypes::util::tag::Tag;
 use ctypes::{BlockNumber, Tracker};
-
 use primitives::{H160, H256};
-
 
 use crate::instruction::{has_expensive_opcodes, is_valid_unlock_script, Instruction};
 
@@ -440,7 +438,6 @@ mod tests {
     fn read_1_0_0_0() {
         assert_eq!(Ok(0x0100_0000), read_u64(Item(vec![1, 0, 0, 0])));
     }
-
 
     #[test]
     fn read_1_0_0_0_0_0_0_0() {

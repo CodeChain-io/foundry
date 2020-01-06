@@ -14,20 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::collections::btree_map::BTreeMap;
-use std::collections::{HashMap, HashSet};
-use std::convert::TryFrom;
-use std::iter::Iterator;
-use std::sync::atomic::Ordering as AtomicOrdering;
-use std::sync::{Arc, Weak};
-
-use ckey::{public_to_address, Address};
-use cnetwork::NetworkService;
-use crossbeam_channel as crossbeam;
-use cstate::{ActionHandler, TopState, TopStateView};
-use ctypes::{BlockHash, CommonParams, Header};
-use num_rational::Ratio;
-
 use super::super::stake;
 use super::super::{ConsensusEngine, EngineError, Seal};
 use super::network::TendermintExtension;
@@ -46,7 +32,19 @@ use crate::encoded;
 use crate::error::Error;
 use crate::views::HeaderView;
 use crate::BlockId;
+use ckey::{public_to_address, Address};
+use cnetwork::NetworkService;
+use crossbeam_channel as crossbeam;
+use cstate::{ActionHandler, TopState, TopStateView};
+use ctypes::{BlockHash, CommonParams, Header};
+use num_rational::Ratio;
 use rlp::Encodable;
+use std::collections::btree_map::BTreeMap;
+use std::collections::{HashMap, HashSet};
+use std::convert::TryFrom;
+use std::iter::Iterator;
+use std::sync::atomic::Ordering as AtomicOrdering;
+use std::sync::{Arc, Weak};
 
 #[derive(Default)]
 struct WorkInfo {
@@ -327,7 +325,6 @@ impl ConsensusEngine for Tendermint {
         header.parent_hash()
     }
 
-
     fn can_change_canon_chain(
         &self,
         _new_header_hash: BlockHash,
@@ -346,11 +343,13 @@ impl ConsensusEngine for Tendermint {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
         let block_hash = match block_number {
             None => {
-                client.block_header(&BlockId::Latest).expect("latest block must exist").hash() // the latest block
+                client.block_header(&BlockId::Latest).expect("latest block must exist").hash()
+                // the latest block
             }
             Some(block_number) => {
                 assert_ne!(0, block_number);
-                client.block_header(&(block_number - 1).into()).ok_or(EngineError::CannotOpenBlock)?.hash() // the parent of the given block number
+                client.block_header(&(block_number - 1).into()).ok_or(EngineError::CannotOpenBlock)?.hash()
+                // the parent of the given block number
             }
         };
         Ok(Some(self.validators.next_addresses(&block_hash)))

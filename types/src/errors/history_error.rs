@@ -14,13 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-use std::fmt::{Display, Formatter, Result as FormatResult};
-
-use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
-
 use super::TaggedRlp;
 use crate::transaction::Timelock;
+use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+use std::fmt::{Display, Formatter, Result as FormatResult};
 
 #[derive(Debug, PartialEq, Clone, Eq, Serialize)]
 #[serde(tag = "type", content = "content")]

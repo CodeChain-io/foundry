@@ -21,10 +21,9 @@ use ckeystore::Error as KeystoreError;
 use cnetwork::control::Error as NetworkControlError;
 use cstate::StateError;
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
+use jsonrpc_core::{Error, ErrorCode, Value};
 use rlp::DecoderError;
 use rustc_serialize::hex::FromHexError as HexError;
-
-use jsonrpc_core::{Error, ErrorCode, Value};
 
 pub enum ConversionError {
     Key(KeyError),

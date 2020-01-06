@@ -14,19 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::fs;
-use std::str::FromStr;
-use std::sync::Arc;
-
-use ccore::{BlockChainClient, BlockId};
-use ctypes::BlockHash;
-use primitives::H256;
-
-use jsonrpc_core::Result;
-
 use super::super::errors;
 use super::super::traits::Snapshot;
 use super::super::types::BlockNumberAndHash;
+use ccore::{BlockChainClient, BlockId};
+use ctypes::BlockHash;
+use jsonrpc_core::Result;
+use primitives::H256;
+use std::fs;
+use std::str::FromStr;
+use std::sync::Arc;
 
 pub struct SnapshotClient<C>
 where

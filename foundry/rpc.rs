@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::io;
-
 use crate::config::Config;
 use crate::rpc_apis;
 use crpc::{
@@ -23,6 +21,7 @@ use crpc::{
 };
 use futures::future::Either;
 use serde_json;
+use std::io;
 
 #[derive(Debug, PartialEq)]
 pub struct RpcHttpConfig {

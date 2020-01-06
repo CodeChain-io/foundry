@@ -26,15 +26,13 @@ mod common;
 
 use ccrypto::{blake128, blake256_with_key};
 use ckey::{sign, KeyPair, NetworkId, Private};
+use common::TestClient;
 use ctypes::transaction::{AssetOutPoint, AssetTransferInput, ShardTransaction};
+use cvm::Instruction;
+use cvm::{execute, RuntimeError, ScriptResult, VMConfig};
 use primitives::H160;
 use rlp::Encodable;
 use secp256k1::key::{MINUS_ONE_KEY, ONE_KEY, TWO_KEY};
-
-use cvm::Instruction;
-use cvm::{execute, RuntimeError, ScriptResult, VMConfig};
-
-use common::TestClient;
 
 #[test]
 fn valid_multi_sig_0_of_2() {
@@ -461,7 +459,6 @@ fn invalid_multi_sig_1_of_2() {
         Ok(ScriptResult::Fail)
     );
 }
-
 
 #[test]
 fn invalid_multi_sig_2_of_2() {

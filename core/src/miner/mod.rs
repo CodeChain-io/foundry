@@ -20,14 +20,13 @@ mod mem_pool_types;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod miner;
 
-use std::ops::Range;
-
 use ckey::{Address, Password, PlatformAddress};
 use cstate::{FindActionHandler, TopStateView};
 use ctypes::transaction::IncompleteTransaction;
 use ctypes::{BlockHash, TxHash};
 use cvm::ChainTimeInfo;
 use primitives::Bytes;
+use std::ops::Range;
 
 pub use self::mem_pool_types::MemPoolFees;
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};

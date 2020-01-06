@@ -68,10 +68,9 @@ extern crate log;
 mod service;
 mod worker;
 
-use std::fmt;
-
 use mio::deprecated::{EventLoop, NotifyError};
 use mio::Token;
+use std::fmt;
 
 pub use worker::LOCAL_STACK_SIZE;
 

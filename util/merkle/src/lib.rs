@@ -22,11 +22,10 @@ extern crate rlp_derive;
 #[cfg(test)]
 extern crate trie_standardmap as standardmap;
 
-use std::fmt;
-
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{DBValue, HashDB};
 use primitives::H256;
+use std::fmt;
 
 mod nibbleslice;
 pub mod node;
