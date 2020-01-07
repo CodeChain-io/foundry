@@ -19,6 +19,8 @@ use ctypes::Header;
 use rlp::{DecoderError, Encodable, Rlp, RlpStream};
 use snap;
 
+use super::MessageID;
+
 #[derive(Debug, PartialEq)]
 pub enum ResponseMessage {
     Headers(Vec<Header>),
@@ -59,22 +61,22 @@ impl Encodable for ResponseMessage {
 }
 
 impl ResponseMessage {
-    pub fn message_id(&self) -> u8 {
+    pub fn message_id(&self) -> MessageID {
         match self {
             ResponseMessage::Headers {
                 ..
-            } => super::MESSAGE_ID_HEADERS,
-            ResponseMessage::Bodies(..) => super::MESSAGE_ID_BODIES,
+            } => MessageID::Headers,
+            ResponseMessage::Bodies(..) => MessageID::Bodies,
             ResponseMessage::StateChunk {
                 ..
-            } => super::MESSAGE_ID_STATE_CHUNK,
+            } => MessageID::StateChunk,
         }
     }
 
-    pub fn decode(id: u8, rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
+    pub fn decode(id: MessageID, rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let message = match id {
-            super::MESSAGE_ID_HEADERS => ResponseMessage::Headers(rlp.as_list()?),
-            super::MESSAGE_ID_BODIES => {
+            MessageID::Headers => ResponseMessage::Headers(rlp.as_list()?),
+            MessageID::Bodies => {
                 let item_count = rlp.item_count()?;
                 if item_count != 1 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -101,7 +103,7 @@ impl ResponseMessage {
                 }
                 ResponseMessage::Bodies(bodies)
             }
-            super::MESSAGE_ID_STATE_CHUNK => ResponseMessage::StateChunk(rlp.as_list()?),
+            MessageID::StateChunk => ResponseMessage::StateChunk(rlp.as_list()?),
             _ => return Err(DecoderError::Custom("Unknown message id detected")),
         };
 
@@ -118,9 +120,9 @@ mod tests {
     use ctypes::transaction::{Action, Transaction};
     use ctypes::Header;
 
-    use super::ResponseMessage;
+    use super::{MessageID, ResponseMessage};
 
-    pub fn decode_bytes(id: u8, bytes: &[u8]) -> ResponseMessage {
+    pub fn decode_bytes(id: MessageID, bytes: &[u8]) -> ResponseMessage {
         let rlp = Rlp::new(bytes);
         ResponseMessage::decode(id, &rlp).unwrap()
     }
