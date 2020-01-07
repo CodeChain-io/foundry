@@ -23,7 +23,7 @@ This will produce an executable in the `./target/release` directory.
 ### Building From Source
 
 #### Build Dependencies
-foundry requires Rust version 1.39.0 to build. Using [rustup](https://rustup.rs/ "rustup URL") is recommended.
+foundry requires Rust version 1.40.0 to build. Using [rustup](https://rustup.rs/ "rustup URL") is recommended.
 
 - For Linux Systems:
   - Ubuntu
