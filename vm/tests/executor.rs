@@ -26,8 +26,8 @@ use ccrypto::{BLAKE_EMPTY, BLAKE_NULL_RLP};
 use ckey::NetworkId;
 use common::TestClient;
 use ctypes::transaction::{AssetOutPoint, AssetTransferInput, ShardTransaction};
-use cvm::Instruction;
 use cvm::{execute, RuntimeError, ScriptResult, VMConfig};
+use cvm::{Instruction, TimelockType};
 use primitives::{H160, H256};
 
 #[test]
@@ -655,31 +655,12 @@ fn dummy_input() -> AssetTransferInput {
 }
 
 #[test]
-fn timelock_invalid_type() {
-    assert_eq!(
-        execute(
-            &[],
-            &[],
-            &[Instruction::Push(0), Instruction::ChkTimelock(5)],
-            &dummy_tx(),
-            VMConfig::default(),
-            &dummy_input(),
-            false,
-            &TestClient::default(),
-            0,
-            0
-        ),
-        Err(RuntimeError::InvalidTimelockType)
-    )
-}
-
-#[test]
 fn timelock_invalid_value() {
     assert_eq!(
         execute(
             &[],
             &[],
-            &[Instruction::PushB(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]), Instruction::ChkTimelock(1)],
+            &[Instruction::PushB(vec![0, 0, 0, 0, 0, 0, 0, 0, 0]), Instruction::ChkTimelock(TimelockType::Block)],
             &dummy_tx(),
             VMConfig::default(),
             &dummy_input(),
@@ -699,7 +680,7 @@ fn timelock_block_number_success() {
         execute(
             &[],
             &[],
-            &[Instruction::PushB(vec![10]), Instruction::ChkTimelock(1)],
+            &[Instruction::PushB(vec![10]), Instruction::ChkTimelock(TimelockType::Block)],
             &dummy_tx(),
             VMConfig::default(),
             &dummy_input(),
@@ -719,7 +700,7 @@ fn timelock_block_number_fail() {
         execute(
             &[],
             &[],
-            &[Instruction::PushB(vec![10]), Instruction::ChkTimelock(1)],
+            &[Instruction::PushB(vec![10]), Instruction::ChkTimelock(TimelockType::Block)],
             &dummy_tx(),
             VMConfig::default(),
             &dummy_input(),
@@ -740,7 +721,7 @@ fn timelock_block_timestamp_success() {
         execute(
             &[],
             &[],
-            &[Instruction::PushB(vec![0x00, 0x5B, 0xD0, 0x2B, 0xF2]), Instruction::ChkTimelock(3)],
+            &[Instruction::PushB(vec![0x00, 0x5B, 0xD0, 0x2B, 0xF2]), Instruction::ChkTimelock(TimelockType::Time)],
             &dummy_tx(),
             VMConfig::default(),
             &dummy_input(),
@@ -761,7 +742,7 @@ fn timelock_block_timestamp_fail() {
         execute(
             &[],
             &[],
-            &[Instruction::PushB(vec![0x00, 0x5B, 0xD0, 0x2B, 0xF2]), Instruction::ChkTimelock(3)],
+            &[Instruction::PushB(vec![0x00, 0x5B, 0xD0, 0x2B, 0xF2]), Instruction::ChkTimelock(TimelockType::Time)],
             &dummy_tx(),
             VMConfig::default(),
             &dummy_input(),
@@ -781,7 +762,7 @@ fn timelock_block_age_fail_due_to_none() {
         execute(
             &[],
             &[],
-            &[Instruction::PushB(vec![1]), Instruction::ChkTimelock(2)],
+            &[Instruction::PushB(vec![1]), Instruction::ChkTimelock(TimelockType::BlockAge)],
             &dummy_tx(),
             VMConfig::default(),
             &dummy_input(),
@@ -801,7 +782,7 @@ fn timelock_block_age_fail() {
         execute(
             &[],
             &[],
-            &[Instruction::PushB(vec![5]), Instruction::ChkTimelock(2)],
+            &[Instruction::PushB(vec![5]), Instruction::ChkTimelock(TimelockType::BlockAge)],
             &dummy_tx(),
             VMConfig::default(),
             &dummy_input(),
@@ -821,7 +802,7 @@ fn timelock_block_age_success() {
         execute(
             &[],
             &[],
-            &[Instruction::PushB(vec![5]), Instruction::ChkTimelock(2)],
+            &[Instruction::PushB(vec![5]), Instruction::ChkTimelock(TimelockType::BlockAge)],
             &dummy_tx(),
             VMConfig::default(),
             &dummy_input(),
@@ -841,7 +822,7 @@ fn timelock_time_age_fail_due_to_none() {
         execute(
             &[],
             &[],
-            &[Instruction::PushB(vec![0x27, 0x8D, 0x00]), Instruction::ChkTimelock(4)],
+            &[Instruction::PushB(vec![0x27, 0x8D, 0x00]), Instruction::ChkTimelock(TimelockType::TimeAge)],
             &dummy_tx(),
             VMConfig::default(),
             &dummy_input(),
@@ -862,7 +843,7 @@ fn timelock_time_age_fail() {
         execute(
             &[],
             &[],
-            &[Instruction::PushB(vec![0x27, 0x8D, 0x00]), Instruction::ChkTimelock(4)],
+            &[Instruction::PushB(vec![0x27, 0x8D, 0x00]), Instruction::ChkTimelock(TimelockType::TimeAge)],
             &dummy_tx(),
             VMConfig::default(),
             &dummy_input(),
@@ -882,7 +863,7 @@ fn timelock_time_age_success() {
         execute(
             &[],
             &[],
-            &[Instruction::PushB(vec![0x27, 0x8D, 0x00]), Instruction::ChkTimelock(4)],
+            &[Instruction::PushB(vec![0x27, 0x8D, 0x00]), Instruction::ChkTimelock(TimelockType::TimeAge)],
             &dummy_tx(),
             VMConfig::default(),
             &dummy_input(),
