@@ -348,25 +348,6 @@ macro_rules! wrap_ccc {
     };
 }
 
-macro_rules! store {
-    ($content:expr, $certifier:expr, $signature:expr) => {
-        $crate::ctypes::transaction::Action::Store {
-            content: $content,
-            certifier: $certifier,
-            signature: $signature,
-        }
-    };
-}
-
-macro_rules! remove {
-    ($hash:expr, $signature:expr) => {
-        $crate::ctypes::transaction::Action::Remove {
-            hash: $hash,
-            signature: $signature,
-        }
-    };
-}
-
 macro_rules! set_shard_owners {
     (shard_id: $shard_id:expr, $owners:expr) => {
         $crate::ctypes::transaction::Action::SetShardOwners {
@@ -539,17 +520,6 @@ macro_rules! check_top_level_state {
             .expect(&format!("Asset for {}:{}:{} not exist", $shard_id, $tx_hash, $index));
         assert_eq!(&$asset_type, asset.asset_type());
         assert_eq!($quantity, asset.quantity());
-
-        check_top_level_state!($state, [$($x),*]);
-    };
-    ($state:expr, [(text: $tx_hash:expr) $(,$x:tt)*]) => {
-        assert_eq!(Ok(None), $state.text($tx_hash));
-
-        check_top_level_state!($state, [$($x),*]);
-    };
-    ($state:expr, [(text: $tx_hash:expr => { content: $content:expr, certifier: $certifier:expr }) $(,$x:tt)*]) => {
-        let text = $crate::Text::new($content, $certifier);
-        assert_eq!(Ok(Some(text)), $state.text($tx_hash));
 
         check_top_level_state!($state, [$($x),*]);
     };

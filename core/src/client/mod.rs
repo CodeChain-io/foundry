@@ -39,7 +39,7 @@ use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress, Public};
 use cmerkle::Result as TrieResult;
 use cnetwork::NodeId;
-use cstate::{AssetScheme, FindActionHandler, OwnedAsset, StateResult, Text, TopLevelState, TopStateView};
+use cstate::{AssetScheme, FindActionHandler, OwnedAsset, StateResult, TopLevelState, TopStateView};
 use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
 use ctypes::{BlockHash, BlockNumber, CommonParams, Header, ShardId, Tracker, TxHash};
 use cvm::ChainTimeInfo;
@@ -309,11 +309,6 @@ pub trait AssetClient {
         shard_id: ShardId,
         block_id: BlockId,
     ) -> TrieResult<Option<bool>>;
-}
-
-/// Provides methods to texts
-pub trait TextClient {
-    fn get_text(&self, tx_hash: TxHash, id: BlockId) -> TrieResult<Option<Text>>;
 }
 
 pub trait ExecuteClient: ChainTimeInfo {

@@ -138,10 +138,6 @@ describe("solo - 1 node", function() {
             { actionType: 6, actionLength: 4 },
             { actionType: 7, actionLength: 5 }, // WrapCCC
             { actionType: 7, actionLength: 7 },
-            { actionType: 8, actionLength: 3 }, // Store
-            { actionType: 8, actionLength: 5 },
-            { actionType: 9, actionLength: 2 }, // Remove
-            { actionType: 9, actionLength: 4 },
             { actionType: 0x11, actionLength: 3 }, // UnwrapCCC
             { actionType: 0x11, actionLength: 5 },
             { actionType: 0x13, actionLength: 10 }, // MintAsset

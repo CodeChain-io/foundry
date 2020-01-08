@@ -42,11 +42,11 @@ use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopSta
 use crate::Asset;
 use crate::{
     Account, ActionData, FindActionHandler, Metadata, MetadataAddress, RegularAccount, RegularAccountAddress, Shard,
-    ShardAddress, ShardLevelState, StateDB, StateResult, Text,
+    ShardAddress, ShardLevelState, StateDB, StateResult,
 };
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
-use ckey::{public_to_address, recover, verify_address, Address, NetworkId, Public, Signature};
+use ckey::{public_to_address, recover, Address, NetworkId, Public, Signature};
 use cmerkle::{Result as TrieResult, TrieError, TrieFactory};
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{
@@ -135,12 +135,6 @@ impl TopStateView for TopLevelState {
             }
             None => Ok(None),
         }
-    }
-
-    fn text(&self, key: &H256) -> TrieResult<Option<Text>> {
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        Ok(self.top_cache.text(key, &trie)?.map(Into::into))
     }
 
     fn action_data(&self, key: &H256) -> TrieResult<Option<ActionData>> {
@@ -533,22 +527,6 @@ impl TopLevelState {
                 let approvers = vec![]; // WrapCCC doesn't have approvers
                 (transaction, approvers)
             }
-            Action::Store {
-                content,
-                certifier,
-                signature,
-            } => {
-                let text = Text::new(content, certifier);
-                self.store_text(signed_hash, text, signature)?;
-                return Ok(())
-            }
-            Action::Remove {
-                hash,
-                signature,
-            } => {
-                self.remove_text(hash, signature)?;
-                return Ok(())
-            }
             Action::Custom {
                 handler_id,
                 bytes,
@@ -664,18 +642,6 @@ impl TopLevelState {
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         let shard_address = ShardAddress::new(shard_id);
         self.top_cache.shard_mut(&shard_address, &trie)
-    }
-
-    fn get_text(&self, key: &TxHash) -> TrieResult<Option<Text>> {
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.top_cache.text(key, &trie)
-    }
-
-    fn get_text_mut(&self, key: &TxHash) -> TrieResult<RefMut<'_, Text>> {
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.top_cache.text_mut(key, &trie)
     }
 
     fn get_action_data_mut(&self, key: &H256) -> TrieResult<RefMut<'_, ActionData>> {
@@ -945,32 +911,6 @@ impl TopState for TopLevelState {
         }
         let mut shard = self.get_shard_mut(shard_id)?;
         shard.set_users(new_users);
-        Ok(())
-    }
-
-    fn store_text(&mut self, key: &TxHash, text: Text, sig: &Signature) -> StateResult<()> {
-        match verify_address(text.certifier(), sig, &text.content_hash()) {
-            Ok(false) => {
-                return Err(RuntimeError::TextVerificationFail("Certifier and signer are different".to_string()).into())
-            }
-            Err(err) => return Err(RuntimeError::TextVerificationFail(err.to_string()).into()),
-            _ => {}
-        }
-        let mut text_entry = self.get_text_mut(key)?;
-        *text_entry = text;
-        Ok(())
-    }
-
-    fn remove_text(&mut self, key: &TxHash, sig: &Signature) -> StateResult<()> {
-        let text = self.get_text(key)?.ok_or_else(|| RuntimeError::TextNotExist)?;
-        match verify_address(text.certifier(), sig, key) {
-            Ok(false) => {
-                return Err(RuntimeError::TextVerificationFail("Certifier and signer are different".to_string()).into())
-            }
-            Err(err) => return Err(RuntimeError::TextVerificationFail(err.to_string()).into()),
-            _ => {}
-        }
-        self.top_cache.remove_text(key);
         Ok(())
     }
 
@@ -1369,7 +1309,6 @@ mod tests_tx {
     use ckey::{sign, Generator, Private, Random};
     use ctypes::errors::RuntimeError;
     use primitives::H160;
-    use rlp::Encodable;
 
     use super::*;
     use crate::tests::helpers::{get_temp_state, get_test_client};
@@ -2185,115 +2124,6 @@ mod tests_tx {
             (asset: (transfer_tx_tracker, 0, 0) => { asset_type: asset_type, quantity: 10 }),
             (asset: (transfer_tx_tracker, 1, 0)),
             (asset: (transfer_tx_tracker, 2, 0) => { asset_type: asset_type, quantity: 15 })
-        ]);
-    }
-
-    #[test]
-    fn store_and_remove() {
-        let (sender, sender_public, sender_private) = address();
-        let shard_id = 0;
-
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 20),
-            (shard: shard_id => owners: [sender]),
-            (metadata: shards: 1)
-        ]);
-
-        let content = "CodeChain".to_string();
-        let content_hash = Blake::blake(content.rlp_bytes());
-        let signature = sign(&sender_private, &content_hash).unwrap();
-
-        let store_tx = transaction!(fee: 10, store!(content.clone(), sender, signature));
-        let dummy_signed_hash = TxHash::from(H256::random());
-
-        assert_eq!(Ok(()), state.apply(&store_tx, &dummy_signed_hash, &sender_public, &get_test_client(), 0, 0, 0));
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 10)),
-            (text: &dummy_signed_hash => { content: &content, certifier: &sender })
-        ]);
-
-        let signature = sign(&sender_private, &dummy_signed_hash).unwrap();
-        let remove_tx = transaction!(seq: 1, fee: 10, remove!(dummy_signed_hash, signature));
-
-        assert_eq!(
-            Ok(()),
-            state.apply(&remove_tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 2, balance: 0)),
-            (text: &dummy_signed_hash)
-        ]);
-    }
-
-    #[test]
-    fn store_with_wrong_signature() {
-        let (sender, sender_public, _) = address();
-        let shard_id = 0;
-
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 20),
-            (shard: shard_id => owners: [sender]),
-            (metadata: shards: 1)
-        ]);
-
-        let content = "CodeChain".to_string();
-        let content_hash = Blake::blake(content.rlp_bytes());
-        let signature = Signature::random();
-
-        let tx = transaction!(fee: 10, store!(content.clone(), sender, signature));
-
-        match state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0) {
-            Err(StateError::Runtime(RuntimeError::TextVerificationFail(_))) => {}
-            err => panic!("The transaction must fail with text verification failure, but {:?}", err),
-        }
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 20)),
-            (text: &tx.hash())
-        ]);
-
-        let signature = sign(Random.generate().unwrap().private(), &content_hash).unwrap();
-
-        let tx = transaction!(seq: 0, fee: 10, store!(content, sender, signature));
-
-        assert_eq!(
-            Err(RuntimeError::TextVerificationFail("Certifier and signer are different".to_string()).into()),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 20)),
-            (text: &tx.hash())
-        ]);
-    }
-
-    #[test]
-    fn remove_on_nothing() {
-        let (sender, sender_public, sender_private) = address();
-        let shard_id = 0;
-
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 20),
-            (shard: shard_id => owners: [sender]),
-            (metadata: shards: 1)
-        ]);
-
-        let hash = TxHash::from(H256::random());
-        let signature = sign(&sender_private, &hash).unwrap();
-        let remove_tx = transaction!(fee: 10, remove!(hash, signature));
-
-        assert_eq!(
-            Err(RuntimeError::TextNotExist.into()),
-            state.apply(&remove_tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 20))
         ]);
     }
 

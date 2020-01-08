@@ -27,8 +27,6 @@ enum Action {
     SetRegularKey { ..., },
     WrapCCC { ..., },
     UnwrapCCC { ..., },
-    Store { ..., },
-    Remove { ..., },
     Custom { ..., },
 }
 ```
@@ -210,29 +208,6 @@ UnwrapCCC {
     network_id: NetworkId,
     burn: AssetTransferInput,
     receiver: PlatformAddress,
-}
-```
-
-## Store
-
-This is a special kind of transaction that allows a user to upload text onto the blockchain.
-
-```rust
-Store {
-    content: String,
-    certifier: Address,
-    signature: Signature,
-}
-```
-
-## Remove
-
-It removes the content created by the `Store` transaction.
-
-```rust
-Remove {
-    hash: H256,
-    signature: Signature,
 }
 ```
 

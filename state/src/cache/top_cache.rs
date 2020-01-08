@@ -16,7 +16,7 @@
 
 use super::WriteBack;
 use crate::{
-    Account, ActionData, Metadata, MetadataAddress, RegularAccount, RegularAccountAddress, Shard, ShardAddress, Text,
+    Account, ActionData, Metadata, MetadataAddress, RegularAccount, RegularAccountAddress, Shard, ShardAddress,
 };
 use ckey::Address;
 use cmerkle::{Result as TrieResult, Trie, TrieMut};
@@ -28,7 +28,6 @@ pub struct TopCache {
     regular_account: WriteBack<RegularAccount>,
     metadata: WriteBack<Metadata>,
     shard: WriteBack<Shard>,
-    text: WriteBack<Text>,
     action_data: WriteBack<ActionData>,
 }
 
@@ -38,7 +37,6 @@ impl TopCache {
         regular_accounts: impl Iterator<Item = (RegularAccountAddress, RegularAccount)>,
         metadata: impl Iterator<Item = (MetadataAddress, Metadata)>,
         shards: impl Iterator<Item = (ShardAddress, Shard)>,
-        text: impl Iterator<Item = (H256, Text)>,
         action_data: impl Iterator<Item = (H256, ActionData)>,
     ) -> Self {
         Self {
@@ -46,7 +44,6 @@ impl TopCache {
             regular_account: WriteBack::new_with_iter(regular_accounts),
             metadata: WriteBack::new_with_iter(metadata),
             shard: WriteBack::new_with_iter(shards),
-            text: WriteBack::new_with_iter(text),
             action_data: WriteBack::new_with_iter(action_data),
         }
     }
@@ -56,7 +53,6 @@ impl TopCache {
         self.regular_account.checkpoint();
         self.metadata.checkpoint();
         self.shard.checkpoint();
-        self.text.checkpoint();
         self.action_data.checkpoint();
     }
 
@@ -65,7 +61,6 @@ impl TopCache {
         self.regular_account.discard_checkpoint();
         self.metadata.discard_checkpoint();
         self.shard.discard_checkpoint();
-        self.text.discard_checkpoint();
         self.action_data.discard_checkpoint();
     }
 
@@ -74,7 +69,6 @@ impl TopCache {
         self.regular_account.revert_to_checkpoint();
         self.metadata.revert_to_checkpoint();
         self.shard.revert_to_checkpoint();
-        self.text.revert_to_checkpoint();
         self.action_data.revert_to_checkpoint();
     }
 
@@ -83,7 +77,6 @@ impl TopCache {
         self.regular_account.commit(trie)?;
         self.metadata.commit(trie)?;
         self.shard.commit(trie)?;
-        self.text.commit(trie)?;
         self.action_data.commit(trie)?;
         Ok(())
     }
@@ -137,18 +130,6 @@ impl TopCache {
         self.shard.remove(address)
     }
 
-    pub fn text(&self, a: &H256, db: &dyn Trie) -> TrieResult<Option<Text>> {
-        self.text.get(a, db)
-    }
-
-    pub fn text_mut(&self, a: &H256, db: &dyn Trie) -> TrieResult<RefMut<'_, Text>> {
-        self.text.get_mut(a, db)
-    }
-
-    pub fn remove_text(&self, address: &H256) {
-        self.text.remove(address);
-    }
-
     pub fn action_data(&self, a: &H256, db: &dyn Trie) -> TrieResult<Option<ActionData>> {
         self.action_data.get(a, db)
     }
@@ -185,12 +166,6 @@ impl TopCache {
         items.into_iter().map(|(_, addr, item)| (addr, item)).collect()
     }
 
-    pub fn cached_texts(&self) -> Vec<(H256, Option<Text>)> {
-        let mut items = self.text.items();
-        items.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-        items.into_iter().map(|(_, addr, item)| (addr, item)).collect()
-    }
-
     pub fn cached_action_data(&self) -> Vec<(H256, Option<ActionData>)> {
         let mut items = self.action_data.items();
         items.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
@@ -205,7 +180,6 @@ impl Clone for TopCache {
             regular_account: self.regular_account.clone(),
             metadata: self.metadata.clone(),
             shard: self.shard.clone(),
-            text: self.text.clone(),
             action_data: self.action_data.clone(),
         }
     }

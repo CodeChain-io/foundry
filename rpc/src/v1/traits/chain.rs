@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::types::{AssetScheme, Block, BlockNumberAndHash, OwnedAsset, Text, Transaction, UnsignedTransaction};
+use super::super::types::{AssetScheme, Block, BlockNumberAndHash, OwnedAsset, Transaction, UnsignedTransaction};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress, Public};
@@ -60,10 +60,6 @@ pub trait Chain {
         shard_id: ShardId,
         block_number: Option<u64>,
     ) -> Result<Option<AssetScheme>>;
-
-    /// Gets text with given transaction hash.
-    #[rpc(name = "chain_getText")]
-    fn get_text(&self, transaction_hash: TxHash, block_number: Option<u64>) -> Result<Option<Text>>;
 
     /// Gets asset with given asset type.
     #[rpc(name = "chain_getAsset")]

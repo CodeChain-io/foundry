@@ -16,7 +16,7 @@
 
 use super::lru_cache::LruCache;
 use super::{ShardCache, TopCache};
-use crate::{Account, ActionData, AssetScheme, Metadata, OwnedAsset, RegularAccount, Shard, ShardText, Text};
+use crate::{Account, ActionData, AssetScheme, Metadata, OwnedAsset, RegularAccount, Shard, ShardText};
 use ctypes::ShardId;
 use std::collections::{HashMap, HashSet};
 
@@ -25,7 +25,6 @@ pub struct GlobalCache {
     regular_account: LruCache<RegularAccount>,
     metadata: LruCache<Metadata>,
     shard: LruCache<Shard>,
-    text: LruCache<Text>,
     action_data: LruCache<ActionData>,
 
     asset_scheme: LruCache<AssetScheme>,
@@ -38,7 +37,6 @@ impl GlobalCache {
         account: usize,
         regular_account: usize,
         shard: usize,
-        text: usize,
         action_data: usize,
         asset_scheme: usize,
         asset: usize,
@@ -49,7 +47,6 @@ impl GlobalCache {
             regular_account: LruCache::new(regular_account),
             metadata: LruCache::new(1),
             shard: LruCache::new(shard),
-            text: LruCache::new(text),
             action_data: LruCache::new(action_data),
 
             asset_scheme: LruCache::new(asset_scheme),
@@ -64,7 +61,6 @@ impl GlobalCache {
             self.regular_account.iter().map(|(addr, item)| (*addr, item.clone())),
             self.metadata.iter().map(|(addr, item)| (*addr, item.clone())),
             self.shard.iter().map(|(addr, item)| (*addr, item.clone())),
-            self.text.iter().map(|(addr, item)| (*addr, item.clone())),
             self.action_data.iter().map(|(addr, item)| (*addr, item.clone())),
         )
     }
@@ -123,12 +119,6 @@ impl GlobalCache {
                 None => self.shard.remove(&addr),
             };
         }
-        for (addr, item) in top_cache.cached_texts().into_iter() {
-            match item {
-                Some(item) => self.text.insert(addr, item),
-                None => self.text.remove(&addr),
-            };
-        }
         for (addr, item) in top_cache.cached_action_data().into_iter() {
             match item {
                 Some(item) => self.action_data.insert(addr, item),
@@ -172,7 +162,6 @@ impl GlobalCache {
         self.regular_account.clear();
         self.metadata.clear();
         self.shard.clear();
-        self.text.clear();
         self.action_data.clear();
         self.asset_scheme.clear();
         self.asset.clear();
@@ -186,12 +175,11 @@ impl Default for GlobalCache {
         const N_ACCOUNT: usize = 100;
         const N_REGULAR_ACCOUNT: usize = 100;
         const N_SHARD: usize = 100;
-        const N_TEXT: usize = 100;
         const N_ACTION_DATA: usize = 10;
         const N_ASSET_SCHEME: usize = 100;
         const N_ASSET: usize = 1000;
         const N_SHARD_TEXT: usize = 1000;
-        Self::new(N_ACCOUNT, N_REGULAR_ACCOUNT, N_SHARD, N_TEXT, N_ACTION_DATA, N_ASSET_SCHEME, N_ASSET, N_SHARD_TEXT)
+        Self::new(N_ACCOUNT, N_REGULAR_ACCOUNT, N_SHARD, N_ACTION_DATA, N_ASSET_SCHEME, N_ASSET, N_SHARD_TEXT)
     }
 }
 
@@ -202,7 +190,6 @@ impl Clone for GlobalCache {
             regular_account: self.regular_account.clone(),
             metadata: self.metadata.clone(),
             shard: self.shard.clone(),
-            text: self.text.clone(),
             action_data: self.action_data.clone(),
 
             asset_scheme: self.asset_scheme.clone(),

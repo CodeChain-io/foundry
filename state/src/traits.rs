@@ -16,9 +16,9 @@
 
 use crate::{
     Account, ActionData, AssetScheme, CacheableItem, Metadata, OwnedAsset, RegularAccount, Shard, ShardText, StateDB,
-    StateResult, Text,
+    StateResult,
 };
-use ckey::{public_to_address, Address, Public, Signature};
+use ckey::{public_to_address, Address, Public};
 use cmerkle::Result as TrieResult;
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, CommonParams, ShardId, Tracker, TxHash};
@@ -121,8 +121,6 @@ pub trait TopStateView {
         }
     }
 
-    fn text(&self, key: &H256) -> TrieResult<Option<Text>>;
-
     fn action_data(&self, key: &H256) -> TrieResult<Option<ActionData>>;
 }
 
@@ -173,9 +171,6 @@ pub trait TopState {
     fn set_shard_root(&mut self, shard_id: ShardId, new_root: H256) -> StateResult<()>;
     fn set_shard_owners(&mut self, shard_id: ShardId, new_owners: Vec<Address>) -> StateResult<()>;
     fn set_shard_users(&mut self, shard_id: ShardId, new_users: Vec<Address>) -> StateResult<()>;
-
-    fn store_text(&mut self, key: &TxHash, text: Text, sig: &Signature) -> StateResult<()>;
-    fn remove_text(&mut self, key: &TxHash, sig: &Signature) -> StateResult<()>;
 
     fn increase_term_id(&mut self, last_term_finished_block_num: u64) -> StateResult<()>;
 
