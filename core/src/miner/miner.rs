@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -294,6 +294,11 @@ impl Miner {
         }
 
         results
+    }
+
+    pub fn delete_all_pending_transactions(&self) {
+        let mut mem_pool = self.mem_pool.write();
+        mem_pool.remove_all();
     }
 
     fn calculate_timelock<C: BlockChainTrait>(&self, tx: &SignedTransaction, client: &C) -> Result<TxTimelock, Error> {

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -709,6 +709,10 @@ impl BlockChainClient for Client {
                 }
             }
         }
+    }
+
+    fn delete_all_pending_transactions(&self) {
+        self.importer.miner.delete_all_pending_transactions();
     }
 
     fn ready_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
