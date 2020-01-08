@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -535,6 +535,10 @@ impl BlockChainClient for TestBlockChainClient {
         // import right here
         let transactions = transactions.into_iter().filter_map(|bytes| Rlp::new(&bytes).as_val().ok()).collect();
         self.miner.import_external_transactions(self, transactions);
+    }
+
+    fn delete_all_pending_transactions(&self) {
+        self.miner.delete_all_pending_transactions();
     }
 
     fn ready_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
