@@ -67,7 +67,7 @@ pub use crate::client::snapshot_notify;
 pub use crate::client::{
     AccountData, AssetClient, BlockChainClient, BlockChainTrait, ChainNotify, Client, ClientConfig, DatabaseClient,
     EngineClient, EngineInfo, ExecuteClient, ImportBlock, MiningBlockChainClient, Shard, SnapshotClient, StateInfo,
-    TermInfo, TestBlockChainClient, TextClient,
+    TermInfo, TestBlockChainClient,
 };
 pub use crate::consensus::{EngineType, TimeGapParams};
 pub use crate::db::{COL_PEER, COL_STATE, NUM_COLUMNS};

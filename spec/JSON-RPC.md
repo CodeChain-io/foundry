@@ -131,21 +131,6 @@ A string that starts with "(NetworkID)c", and Bech32 string follows. For example
  - quantity: `U64`
  - payer: `PlatformAddress`
 
-### Store Action
-
- - type: "store"
- - networkId: `NetworkID`
- - content: `string`
- - certifier: `PlatformAddress`
- - signature: `Signature`
-
-### Remove Action
-
- - type: "remove"
- - networkId: `NetworkID`
- - hash: `H256` - transaction hash
- - signature: `Signature`
-
 ### Custom Action
 
  - type: "custom"
@@ -165,11 +150,6 @@ A string that starts with "(NetworkID)c", and Bech32 string follows. For example
  - assetType: `H160`
  - lockScriptHash: `H160`
  - parameters: `string[]`
-
-## Text
-
- - content: `string`
- - certifier: `PlatformAddress`
 
 ## Transactions
 
@@ -231,8 +211,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  - minSetShardUsersCost: `U64`
  - minWrapCccCost: `U64`
  - minCustomCost: `U64`
- - minStoreCost: `U64`
- - minRemoveCost: `U64`
  - minMintAssetCost: `U64`
  - minTransferAssetCost: `U64`
  - minChangeAssetSchemeCost: `U64`
@@ -297,7 +275,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_getAssetSchemeByTracker](#chain_getassetschemebytracker)
  * [chain_getAssetSchemeByType](#chain_getassetschemebytype)
  * [chain_getAsset](#chain_getasset)
- * [chain_getText](#chain_gettext)
  * [chain_isAssetSpent](#chain_isassetspent)
  * [chain_getSeq](#chain_getseq)
  * [chain_getBalance](#chain_getbalance)
@@ -959,38 +936,6 @@ Errors: `KVDB Error`, `Invalid Params`
 
 [Back to **List of methods**](#list-of-methods)
 
-## chain_getText
-Gets the text with given transaction hash.
-
-### Params
- 1. transaction hash - `H256` - Hash of signed transaction
- 2. block number: `number` | `null`
-
-### Returns
-`null` | `Text`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getText", "params": ["0xd04303364ed7658fa2fba39a72ef5f0bb1308a23b42fd565f5949fc9b68485e5", null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":{
-    "content": "CodeChain",
-    "certifier": "tccqy6r92677phvflf0g08wgevum33jsavvmcl53d7e",
-  },
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
 ## chain_isAssetSpent
 Checks whether an asset is spent or not.
 
@@ -1429,8 +1374,6 @@ Errors: `Invalid Params`
     "minSetShardUsersCost":10,
     "minWrapCccCost":10,
     "minCustomCost":10,
-    "minStoreCost":10,
-    "minRemoveCost":10,
     "minMintAssetCost":10,
     "minTransferAssetCost":10,
     "minChangeAssetSchemeCost":10,

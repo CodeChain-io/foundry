@@ -90,9 +90,6 @@ pub enum Error {
     /// Script hash does not match with provided lock script
     ScriptHashMismatch(Mismatch<H160>),
     ScriptNotAllowed(H160),
-    TextNotExist,
-    /// Remove Text error
-    TextVerificationFail(String),
     /// Tried to use master key even register key is registered
     CannotUseMasterKey,
     NonActiveAccount {
@@ -133,8 +130,9 @@ enum ErrorID {
     RegularKeyAlreadyInUseAsPlatform = 20,
     ScriptHashMismatch = 21,
     ScriptNotAllowed = 22,
-    TextNotExist = 23,
-    TextVerificationFail = 24,
+    /// Deprecated
+    // TEXT_NOT_EXIST: u8 = 23;
+    // TEXT_VERIFICATION_FAIL: u8 = 24;
     CannotUseMasterKey = 25,
     InvalidScript = 27,
     InvalidSeq = 28,
@@ -178,8 +176,6 @@ impl Decodable for ErrorID {
             24 => Ok(ErrorID::RegularKeyAlreadyInUseAsPlatform),
             25 => Ok(ErrorID::ScriptHashMismatch),
             27 => Ok(ErrorID::ScriptNotAllowed),
-            28 => Ok(ErrorID::TextNotExist),
-            29 => Ok(ErrorID::TextVerificationFail),
             30 => Ok(ErrorID::CannotUseMasterKey),
             31 => Ok(ErrorID::NonActiveAccount),
             32 => Ok(ErrorID::SignatureOfInvalid),
@@ -218,8 +214,6 @@ impl TaggedRlp for RlpHelper {
             ErrorID::RegularKeyAlreadyInUseAsPlatform => 1,
             ErrorID::ScriptHashMismatch => 2,
             ErrorID::ScriptNotAllowed => 2,
-            ErrorID::TextNotExist => 1,
-            ErrorID::TextVerificationFail => 2,
             ErrorID::CannotUseMasterKey => 1,
             ErrorID::NonActiveAccount => 3,
             ErrorID::SignatureOfInvalid => 2,
@@ -308,10 +302,6 @@ impl Encodable for Error {
                 RlpHelper::new_tagged_list(s, ErrorID::ScriptHashMismatch).append(mismatch)
             }
             Error::ScriptNotAllowed(hash) => RlpHelper::new_tagged_list(s, ErrorID::ScriptNotAllowed).append(hash),
-            Error::TextNotExist => RlpHelper::new_tagged_list(s, ErrorID::TextNotExist),
-            Error::TextVerificationFail(err) => {
-                RlpHelper::new_tagged_list(s, ErrorID::TextVerificationFail).append(err)
-            }
             Error::CannotUseMasterKey => RlpHelper::new_tagged_list(s, ErrorID::CannotUseMasterKey),
             Error::NonActiveAccount {
                 address,
@@ -391,8 +381,6 @@ impl Decodable for Error {
             ErrorID::RegularKeyAlreadyInUseAsPlatform => Error::RegularKeyAlreadyInUseAsPlatformAccount,
             ErrorID::ScriptHashMismatch => Error::ScriptHashMismatch(rlp.val_at(1)?),
             ErrorID::ScriptNotAllowed => Error::ScriptNotAllowed(rlp.val_at(1)?),
-            ErrorID::TextNotExist => Error::TextNotExist,
-            ErrorID::TextVerificationFail => Error::TextVerificationFail(rlp.val_at(1)?),
             ErrorID::CannotUseMasterKey => Error::CannotUseMasterKey,
             ErrorID::NonActiveAccount => Error::NonActiveAccount {
                 address: rlp.val_at(1)?,
@@ -469,8 +457,6 @@ impl Display for Error {
                 write!(f, "Expected script with hash {}, but got {}", mismatch.expected, mismatch.found)
             }
             Error::ScriptNotAllowed(hash) => write!(f, "Output lock script hash is not allowed : {}", hash),
-            Error::TextNotExist => write!(f, "The text does not exist"),
-            Error::TextVerificationFail(err) => write!(f, "Text verification has failed: {}", err),
             Error::CannotUseMasterKey => {
                 write!(f, "Cannot use the master key because a regular key is already registered")
             }

@@ -19,7 +19,7 @@ use super::{AssetMintOutput, AssetTransferInput, AssetTransferOutput};
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress, Public, Signature};
 use ctypes::transaction::{Action as ActionType, AssetMintOutput as AssetMintOutputType};
-use ctypes::{ShardId, Tracker, TxHash};
+use ctypes::{ShardId, Tracker};
 use primitives::{Bytes, H160};
 use rustc_serialize::hex::{FromHex, ToHex};
 use std::convert::TryFrom;
@@ -107,15 +107,6 @@ pub enum Action {
         parameters: Vec<String>,
         quantity: Uint,
         payer: PlatformAddress,
-    },
-    Store {
-        content: String,
-        certifier: PlatformAddress,
-        signature: Signature,
-    },
-    Remove {
-        hash: TxHash,
-        signature: Signature,
     },
     #[serde(rename_all = "camelCase")]
     Custom {
@@ -221,15 +212,6 @@ pub enum ActionWithTracker {
         parameters: Vec<String>,
         quantity: Uint,
         payer: PlatformAddress,
-    },
-    Store {
-        content: String,
-        certifier: PlatformAddress,
-        signature: Signature,
-    },
-    Remove {
-        hash: TxHash,
-        signature: Signature,
     },
     #[serde(rename_all = "camelCase")]
     Custom {
@@ -386,22 +368,6 @@ impl ActionWithTracker {
                     payer,
                 }
             }
-            ActionType::Store {
-                content,
-                certifier,
-                signature,
-            } => ActionWithTracker::Store {
-                content,
-                certifier: PlatformAddress::new_v1(network_id, certifier),
-                signature,
-            },
-            ActionType::Remove {
-                hash,
-                signature,
-            } => ActionWithTracker::Remove {
-                hash,
-                signature,
-            },
             ActionType::Custom {
                 handler_id,
                 bytes,
@@ -592,22 +558,6 @@ impl TryFrom<Action> for ActionType {
                     payer: payer.try_into_address()?,
                 }
             }
-            Action::Store {
-                content,
-                certifier,
-                signature,
-            } => ActionType::Store {
-                content,
-                certifier: certifier.try_into_address()?,
-                signature,
-            },
-            Action::Remove {
-                hash,
-                signature,
-            } => ActionType::Remove {
-                hash,
-                signature,
-            },
             Action::Custom {
                 handler_id,
                 bytes,

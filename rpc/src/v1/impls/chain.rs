@@ -16,10 +16,8 @@
 
 use super::super::errors;
 use super::super::traits::Chain;
-use super::super::types::{AssetScheme, Block, BlockNumberAndHash, OwnedAsset, Text, Transaction, UnsignedTransaction};
-use ccore::{
-    AccountData, AssetClient, BlockId, EngineInfo, ExecuteClient, MiningBlockChainClient, Shard, TermInfo, TextClient,
-};
+use super::super::types::{AssetScheme, Block, BlockNumberAndHash, OwnedAsset, Transaction, UnsignedTransaction};
+use ccore::{AccountData, AssetClient, BlockId, EngineInfo, ExecuteClient, MiningBlockChainClient, Shard, TermInfo};
 use ccrypto::Blake;
 use cjson::scheme::Params;
 use cjson::uint::Uint;
@@ -40,7 +38,7 @@ where
 
 impl<C> ChainClient<C>
 where
-    C: AssetClient + MiningBlockChainClient + Shard + AccountData + ExecuteClient + EngineInfo + TextClient,
+    C: AssetClient + MiningBlockChainClient + Shard + AccountData + ExecuteClient + EngineInfo,
 {
     pub fn new(client: Arc<C>) -> Self {
         ChainClient {
@@ -58,7 +56,6 @@ where
         + ExecuteClient
         + EngineInfo
         + FindActionHandler
-        + TextClient
         + TermInfo
         + 'static,
 {
@@ -118,18 +115,6 @@ where
         } else {
             Ok(None)
         }
-    }
-
-    fn get_text(&self, transaction_hash: TxHash, block_number: Option<u64>) -> Result<Option<Text>> {
-        if block_number == Some(0) {
-            return Ok(None)
-        }
-        let block_id = block_number.map(BlockId::from).unwrap_or(BlockId::Latest);
-        Ok(self
-            .client
-            .get_text(transaction_hash, block_id)
-            .map_err(errors::transaction_state)?
-            .map(|text| Text::from_core(text, self.client.network_id())))
     }
 
     fn get_asset(
