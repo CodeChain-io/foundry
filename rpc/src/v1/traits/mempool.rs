@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -33,6 +33,10 @@ pub trait Mempool {
     /// Gets a hint to find out why the transaction failed.
     #[rpc(name = "mempool_getErrorHint")]
     fn get_error_hint(&self, transaction_hash: TxHash) -> Result<Option<String>>;
+
+    /// Deletes all pending transactions in the mem pool, including future queue.
+    #[rpc(name = "mempool_deleteAllPendingTransactions")]
+    fn delete_all_pending_transactions(&self) -> Result<()>;
 
     /// Gets transactions in the current mem pool.
     #[rpc(name = "mempool_getPendingTransactions")]

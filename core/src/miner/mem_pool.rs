@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -373,6 +373,12 @@ impl MemPool {
                 Err(e) => Err(e),
             })
             .collect()
+    }
+
+    /// Clear both current and future.
+    pub fn remove_all(&mut self) {
+        self.current.clear();
+        self.future.clear();
     }
 
     /// Checks the current seq for all transactions' senders in the pool and removes the old transactions.
