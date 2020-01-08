@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -67,6 +67,11 @@ where
 
     fn get_error_hint(&self, transaction_hash: TxHash) -> Result<Option<String>> {
         Ok(self.client.error_hint(&transaction_hash))
+    }
+
+    fn delete_all_pending_transactions(&self) -> Result<()> {
+        self.client.delete_all_pending_transactions();
+        Ok(())
     }
 
     fn get_pending_transactions(&self, from: Option<u64>, to: Option<u64>) -> Result<PendingTransactions> {
