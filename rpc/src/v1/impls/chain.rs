@@ -16,29 +16,28 @@
 
 use super::super::errors;
 use super::super::traits::Chain;
-use super::super::types::{AssetScheme, Block, BlockNumberAndHash, OwnedAsset, Transaction, UnsignedTransaction};
-use ccore::{AccountData, AssetClient, BlockId, EngineInfo, ExecuteClient, MiningBlockChainClient, Shard, TermInfo};
-use ccrypto::Blake;
+use super::super::types::{Block, BlockNumberAndHash, Transaction, UnsignedTransaction};
+use ccore::{AccountData, BlockId, EngineInfo, ExecuteClient, MiningBlockChainClient, Shard, TermInfo};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{public_to_address, NetworkId, PlatformAddress, Public};
 use cstate::FindActionHandler;
-use ctypes::transaction::{Action, ShardTransaction as ShardTransactionType};
+use ctypes::transaction::Action;
 use ctypes::{BlockHash, BlockNumber, ShardId, Tracker, TxHash};
 use jsonrpc_core::Result;
-use primitives::{Bytes as BytesArray, H160, H256};
-use std::convert::{TryFrom, TryInto};
+use primitives::H256;
+use std::convert::TryFrom;
 use std::sync::Arc;
 
 pub struct ChainClient<C>
 where
-    C: AssetClient + MiningBlockChainClient + Shard + ExecuteClient + EngineInfo, {
+    C: MiningBlockChainClient + Shard + ExecuteClient + EngineInfo, {
     client: Arc<C>,
 }
 
 impl<C> ChainClient<C>
 where
-    C: AssetClient + MiningBlockChainClient + Shard + AccountData + ExecuteClient + EngineInfo,
+    C: MiningBlockChainClient + Shard + AccountData + ExecuteClient + EngineInfo,
 {
     pub fn new(client: Arc<C>) -> Self {
         ChainClient {
@@ -49,8 +48,7 @@ where
 
 impl<C> Chain for ChainClient<C>
 where
-    C: AssetClient
-        + MiningBlockChainClient
+    C: MiningBlockChainClient
         + Shard
         + AccountData
         + ExecuteClient
@@ -82,62 +80,6 @@ where
 
     fn get_transaction_by_tracker(&self, tracker: Tracker) -> Result<Option<Transaction>> {
         Ok(self.client.transaction_by_tracker(&tracker).map(From::from))
-    }
-
-    fn get_asset_scheme_by_tracker(
-        &self,
-        tracker: Tracker,
-        shard_id: ShardId,
-        block_number: Option<u64>,
-    ) -> Result<Option<AssetScheme>> {
-        let asset_type = Blake::blake(*tracker);
-        self.get_asset_scheme_by_type(asset_type, shard_id, block_number)
-    }
-
-    fn get_asset_scheme_by_type(
-        &self,
-        asset_type: H160,
-        shard_id: ShardId,
-        block_number: Option<u64>,
-    ) -> Result<Option<AssetScheme>> {
-        if block_number == Some(0) {
-            return Ok(None)
-        }
-        let parent_block_id = block_number.map(|n| (n - 1).into()).unwrap_or(BlockId::ParentOfLatest);
-        if let Some(common_params) = self.client.common_params(parent_block_id) {
-            let network_id = common_params.network_id();
-            let block_id = block_number.map(BlockId::from).unwrap_or(BlockId::Latest);
-            Ok(self
-                .client
-                .get_asset_scheme(asset_type, shard_id, block_id)
-                .map_err(errors::transaction_state)?
-                .map(|asset_scheme| AssetScheme::from_core(asset_scheme, network_id)))
-        } else {
-            Ok(None)
-        }
-    }
-
-    fn get_asset(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        block_number: Option<u64>,
-    ) -> Result<Option<OwnedAsset>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        let asset = self.client.get_asset(tracker, index, shard_id, block_id).map_err(errors::transaction_state)?;
-        Ok(asset.map(From::from))
-    }
-
-    fn is_asset_spent(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        block_number: Option<u64>,
-    ) -> Result<Option<bool>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        self.client.is_asset_spent(tracker, index, shard_id, block_id).map_err(errors::transaction_state)
     }
 
     fn get_seq(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<u64>> {
@@ -307,26 +249,7 @@ where
                 Err(err) => Ok(Some(err.to_string())),
             }
         } else {
-            Err(errors::asset_transaction_only())
-        }
-    }
-
-    fn execute_vm(
-        &self,
-        tx: UnsignedTransaction,
-        params: Vec<Vec<BytesArray>>,
-        indices: Vec<usize>,
-    ) -> Result<Vec<String>> {
-        let action = tx.action.try_into().map_err(errors::conversion)?;
-        if let Action::TransferAsset {
-            inputs,
-            ..
-        } = &action
-        {
-            let transaction = Option::<ShardTransactionType>::from(action.clone()).unwrap();
-            Ok(self.client.execute_vm(&transaction, inputs, &params, &indices).map_err(errors::core)?)
-        } else {
-            Err(errors::transfer_only())
+            Err(errors::shard_transaction_only())
         }
     }
 }

@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::types::{AssetScheme, Block, BlockNumberAndHash, OwnedAsset, Transaction, UnsignedTransaction};
+use super::super::types::{Block, BlockNumberAndHash, Transaction, UnsignedTransaction};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress, Public};
 use ctypes::{BlockHash, BlockNumber, ShardId, Tracker, TxHash};
 use jsonrpc_core::Result;
-use primitives::{Bytes as BytesArray, H160, H256};
+use primitives::H256;
 
 #[rpc(server)]
 pub trait Chain {
@@ -42,44 +42,6 @@ pub trait Chain {
     /// Gets transaction with given transaction tracker.
     #[rpc(name = "chain_getTransactionByTracker")]
     fn get_transaction_by_tracker(&self, tracker: Tracker) -> Result<Option<Transaction>>;
-
-    /// Gets asset scheme with given transaction tracker.
-    #[rpc(name = "chain_getAssetSchemeByTracker")]
-    fn get_asset_scheme_by_tracker(
-        &self,
-        tracker: Tracker,
-        shard_id: ShardId,
-        block_number: Option<u64>,
-    ) -> Result<Option<AssetScheme>>;
-
-    /// Gets asset scheme with given asset type.
-    #[rpc(name = "chain_getAssetSchemeByType")]
-    fn get_asset_scheme_by_type(
-        &self,
-        asset_type: H160,
-        shard_id: ShardId,
-        block_number: Option<u64>,
-    ) -> Result<Option<AssetScheme>>;
-
-    /// Gets asset with given asset type.
-    #[rpc(name = "chain_getAsset")]
-    fn get_asset(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        block_number: Option<u64>,
-    ) -> Result<Option<OwnedAsset>>;
-
-    /// Checks whether an asset is spent or not.
-    #[rpc(name = "chain_isAssetSpent")]
-    fn is_asset_spent(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        block_number: Option<u64>,
-    ) -> Result<Option<bool>>;
 
     /// Gets seq with given account.
     #[rpc(name = "chain_getSeq")]
@@ -176,13 +138,4 @@ pub trait Chain {
     /// Execute Transactions
     #[rpc(name = "chain_executeTransaction")]
     fn execute_transaction(&self, tx: UnsignedTransaction, sender: PlatformAddress) -> Result<Option<String>>;
-
-    /// Execute AssetTransfer transaction inputs in VM
-    #[rpc(name = "chain_executeVM")]
-    fn execute_vm(
-        &self,
-        tx: UnsignedTransaction,
-        params: Vec<Vec<BytesArray>>,
-        indices: Vec<usize>,
-    ) -> Result<Vec<String>>;
 }

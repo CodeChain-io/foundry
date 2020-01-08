@@ -19,7 +19,6 @@ use ccore::Error as CoreError;
 use ckey::Error as KeyError;
 use ckeystore::Error as KeystoreError;
 use cnetwork::control::Error as NetworkControlError;
-use cstate::StateError;
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use jsonrpc_core::{Error, ErrorCode, Value};
 use rlp::DecoderError;
@@ -46,7 +45,6 @@ mod codes {
     pub const HEX_ERROR: i64 = -32007;
     pub const RLP_ERROR: i64 = -32009;
     pub const CORE_ERROR: i64 = -32010;
-    pub const RUNTIME_ERROR: i64 = -32012;
     pub const NETWORK_DISABLED: i64 = -32014;
     pub const NETWORK_CANNOT_DISCONNECT_NOT_CONNECTED_ERROR: i64 = -32015;
     pub const ACCOUNT_PROVIDER_ERROR: i64 = -32016;
@@ -63,8 +61,7 @@ mod codes {
     pub const WRONG_PASSWORD: i64 = -32043;
     pub const NO_SUCH_ACCOUNT: i64 = -32044;
     pub const NOT_UNLOCKED: i64 = -32045;
-    pub const TRANSFER_ONLY_IN_EXECUTE_VM: i64 = -32046;
-    pub const ASSET_TRANSACTION_ONLY_IN_EXECUTE_TRANSACITON: i64 = -32047;
+    pub const SHARD_TRANSACTION_ONLY_IN_EXECUTE_TRANSACITON: i64 = -32047;
     pub const STATE_NOT_EXIST: i64 = -32048;
     pub const ACTION_DATA_HANDLER_NOT_FOUND: i64 = -32049;
     pub const UNKNOWN_ERROR: i64 = -32099;
@@ -88,23 +85,6 @@ pub fn conversion<T: Into<ConversionError>>(error: T) -> Error {
             message: error.to_string(),
             data: Some(Value::String(format!("{:?}", error))),
         },
-    }
-}
-
-pub fn transaction_state<T: Into<StateError>>(error: T) -> Error {
-    let error = error.into();
-    if let StateError::Runtime(e) = error {
-        Error {
-            code: ErrorCode::ServerError(codes::RUNTIME_ERROR),
-            message: format!("{}", e),
-            data: None,
-        }
-    } else {
-        Error {
-            code: ErrorCode::ServerError(codes::UNKNOWN_ERROR),
-            message: "Unknown error when sending transaction.".into(),
-            data: Some(Value::String(format!("{:?}", error))),
-        }
     }
 }
 
@@ -241,18 +221,10 @@ pub fn network_control(error: &NetworkControlError) -> Error {
     }
 }
 
-pub fn transfer_only() -> Error {
+pub fn shard_transaction_only() -> Error {
     Error {
-        code: ErrorCode::ServerError(codes::TRANSFER_ONLY_IN_EXECUTE_VM),
-        message: "chain_executeVM() only accepts AssetTransfer transactions.".into(),
-        data: None,
-    }
-}
-
-pub fn asset_transaction_only() -> Error {
-    Error {
-        code: ErrorCode::ServerError(codes::ASSET_TRANSACTION_ONLY_IN_EXECUTE_TRANSACITON),
-        message: "chain_executeTransaction() only accepts asset transactions.".into(),
+        code: ErrorCode::ServerError(codes::SHARD_TRANSACTION_ONLY_IN_EXECUTE_TRANSACITON),
+        message: "chain_executeTransaction() only accepts shard transactions.".into(),
         data: None,
     }
 }
