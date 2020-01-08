@@ -16,31 +16,26 @@
 
 use super::super::errors;
 use super::super::traits::Devel;
-use super::super::types::{TPSTestOption, TPSTestSetting};
+use super::super::types::TPSTestSetting;
 use ccore::{
     BlockId, DatabaseClient, EngineClient, EngineInfo, MinerService, MiningBlockChainClient, SignedTransaction,
     SnapshotClient, TermInfo, COL_STATE,
 };
-use ccrypto::Blake;
 use cjson::bytes::Bytes;
 use ckey::{Address, KeyPair, Private};
 use cnetwork::{unbounded_event_callback, EventSender, IntoSocketAddr};
 use csync::BlockSyncEvent;
-use ctypes::transaction::{
-    Action, AssetMintOutput, AssetOutPoint, AssetTransferInput, AssetTransferOutput, Transaction,
-};
-use ctypes::{BlockHash, Tracker, TxHash};
+use ctypes::transaction::{Action, Transaction};
+use ctypes::BlockHash;
 use jsonrpc_core::Result;
 use kvdb::KeyValueDB;
-use primitives::{H160, H256};
-use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use primitives::H256;
 use rlp::Rlp;
 use std::net::SocketAddr;
 use std::ops::Deref;
 use std::sync::Arc;
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use std::vec::Vec;
 use time::PreciseTime;
 
@@ -113,8 +108,6 @@ where
 
     fn test_tps(&self, setting: TPSTestSetting) -> Result<f64> {
         let common_params = self.client.common_params(BlockId::Latest).unwrap();
-        let mint_fee = common_params.min_asset_mint_cost();
-        let transfer_fee = common_params.min_asset_transfer_cost();
         let pay_fee = common_params.min_pay_transaction_cost();
         let network_id = common_params.network_id();
 
@@ -123,7 +116,6 @@ where
         let genesis_keypair = KeyPair::from_private(genesis_secret).map_err(errors::transaction_core)?;
 
         let base_seq = self.client.seq(&genesis_keypair.address(), BlockId::Latest).unwrap();
-        let lock_script_hash_empty_sig = H160::from("b042ad154a3359d276835c903587ebafefea22af");
 
         // Helper macros
         macro_rules! pay_tx {
@@ -143,94 +135,9 @@ where
             };
         }
 
-        macro_rules! mint_tx {
-            ($seq:expr, $supply:expr) => {
-                Transaction {
-                    seq: $seq,
-                    fee: mint_fee,
-                    network_id,
-                    action: Action::MintAsset {
-                        network_id,
-                        shard_id: 0,
-                        metadata: format!("{:?}", Instant::now()),
-                        approver: None,
-                        registrar: None,
-                        allowed_script_hashes: vec![],
-                        output: Box::new(AssetMintOutput {
-                            lock_script_hash: lock_script_hash_empty_sig,
-                            parameters: vec![],
-                            supply: $supply,
-                        }),
-                        approvals: vec![],
-                    },
-                }
-            };
-        }
-
-        macro_rules! transfer_tx {
-            ($seq:expr, $inputs:expr, $outputs:expr) => {
-                Transaction {
-                    seq: $seq,
-                    fee: transfer_fee,
-                    network_id,
-                    action: Action::TransferAsset {
-                        network_id,
-                        burns: vec![],
-                        inputs: $inputs,
-                        outputs: $outputs,
-                        metadata: "".to_string(),
-                        approvals: vec![],
-                        expiration: None,
-                    },
-                }
-            };
-        }
-
-        macro_rules! transfer_input {
-            ($tracker:expr, $index:expr, $asset_type:expr, $quantity:expr) => {
-                AssetTransferInput {
-                    prev_out: AssetOutPoint {
-                        tracker: $tracker,
-                        index: $index,
-                        asset_type: $asset_type,
-                        shard_id: 0,
-                        quantity: $quantity,
-                    },
-                    timelock: None,
-                    lock_script: vec![0x30, 0x01],
-                    unlock_script: vec![],
-                }
-            };
-        }
-
-        macro_rules! transfer_output {
-            ($asset_type:expr, $quantity:expr) => {
-                AssetTransferOutput {
-                    lock_script_hash: lock_script_hash_empty_sig,
-                    parameters: vec![],
-                    asset_type: $asset_type,
-                    shard_id: 0,
-                    quantity: $quantity,
-                }
-            };
-        }
-
         // Helper functions
         fn sign_tx(tx: Transaction, key_pair: &KeyPair) -> SignedTransaction {
             SignedTransaction::new_with_sign(tx, key_pair.private())
-        }
-
-        fn send_tx<C>(tx: Transaction, client: &C, key_pair: &KeyPair) -> Result<TxHash>
-        where
-            C: MiningBlockChainClient + EngineInfo + TermInfo, {
-            let signed = SignedTransaction::new_with_sign(tx, key_pair.private());
-            let hash = signed.hash();
-            client.queue_own_transaction(signed).map_err(errors::transaction_core)?;
-            Ok(hash)
-        }
-
-        fn asset_type(tx: &Transaction) -> H160 {
-            Blake::blake(*tx.tracker().unwrap())
         }
 
         fn tps(count: u64, start_time: PreciseTime, end_time: PreciseTime) -> f64 {
@@ -242,98 +149,14 @@ where
         if count == 0 {
             return Ok(0.0)
         }
-        let mut rng = SmallRng::seed_from_u64(setting.seed);
-        let transactions = match setting.option {
-            TPSTestOption::PayOnly => {
-                let mut transactions = Vec::with_capacity(count as usize);
-                for i in 0..count {
-                    let address = Address::random();
-                    let tx = sign_tx(pay_tx!(base_seq + i, address), &genesis_keypair);
-                    transactions.push(tx);
-                }
-                transactions
+        let transactions = {
+            let mut transactions = Vec::with_capacity(count as usize);
+            for i in 0..count {
+                let address = Address::random();
+                let tx = sign_tx(pay_tx!(base_seq + i, address), &genesis_keypair);
+                transactions.push(tx);
             }
-            TPSTestOption::TransferSingle => {
-                let mint_tx = mint_tx!(base_seq, 1);
-                let asset_type = asset_type(&mint_tx);
-                let mut previous_tracker = mint_tx.tracker().unwrap();
-                send_tx(mint_tx, &*self.client, &genesis_keypair)?;
-
-                let mut transactions = Vec::with_capacity(count as usize);
-                for i in 0..count {
-                    let transfer_tx = transfer_tx!(
-                        base_seq + i + 1,
-                        vec![transfer_input!(previous_tracker, 0, asset_type, 1)],
-                        vec![transfer_output!(asset_type, 1)]
-                    );
-                    previous_tracker = transfer_tx.tracker().unwrap();
-                    let tx = sign_tx(transfer_tx, &genesis_keypair);
-                    transactions.push(tx);
-                }
-                transactions
-            }
-            TPSTestOption::TransferMultiple => {
-                let number_of_in_out: usize = 10;
-                let mint_tx = mint_tx!(base_seq, number_of_in_out as u64);
-                let asset_type = asset_type(&mint_tx);
-                let mut previous_tracker = mint_tx.tracker().unwrap();
-                send_tx(mint_tx, &*self.client, &genesis_keypair)?;
-
-                fn create_inputs(
-                    tracker: Tracker,
-                    asset_type: H160,
-                    total_amount: u64,
-                    count: usize,
-                ) -> Vec<AssetTransferInput> {
-                    let mut inputs = Vec::new();
-                    let amount = total_amount / (count as u64);
-                    for i in 0..(count as usize) {
-                        let input = transfer_input!(tracker, i, asset_type, amount);
-                        inputs.push(input);
-                    }
-                    inputs
-                }
-
-                let mut transactions = Vec::with_capacity(count as usize);
-                for i in 0..count {
-                    let num_input = 1 + 9 * (i > 0) as usize;
-                    let inputs = create_inputs(previous_tracker, asset_type, number_of_in_out as u64, num_input);
-                    let outputs = vec![transfer_output!(asset_type, 1); number_of_in_out];
-
-                    let transfer_tx = transfer_tx!(base_seq + i + 1, inputs, outputs);
-                    previous_tracker = transfer_tx.tracker().unwrap();
-                    transactions.push(sign_tx(transfer_tx, &genesis_keypair));
-                }
-                transactions
-            }
-            TPSTestOption::PayOrTransfer => {
-                let mint_tx = mint_tx!(base_seq, 1);
-                let asset_type = asset_type(&mint_tx);
-                let mut previous_tracker = mint_tx.tracker().unwrap();
-                send_tx(mint_tx, &*self.client, &genesis_keypair)?;
-
-                let mut transactions = Vec::with_capacity(count as usize);
-                for i in 0..count {
-                    // 0. Payment
-                    let tx = if rng.gen::<bool>() {
-                        let address = Address::random();
-                        pay_tx!(base_seq + i + 1, address)
-                    }
-                    // 1. Transfer
-                    else {
-                        let transfer_tx = transfer_tx!(
-                            base_seq + i + 1,
-                            vec![transfer_input!(previous_tracker, 0, asset_type, 1)],
-                            vec![transfer_output!(asset_type, 1)]
-                        );
-                        previous_tracker = transfer_tx.tracker().unwrap();
-                        transfer_tx
-                    };
-                    let tx = sign_tx(tx, &genesis_keypair);
-                    transactions.push(tx);
-                }
-                transactions
-            }
+            transactions
         };
 
         let last_hash = transactions.last().unwrap().hash();
