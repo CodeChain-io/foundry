@@ -50,6 +50,7 @@ pub mod encoded;
 mod error;
 mod invoice;
 mod miner;
+mod peer_db;
 mod scheme;
 mod service;
 mod transaction;
@@ -69,9 +70,10 @@ pub use crate::client::{
     TermInfo, TestBlockChainClient, TextClient,
 };
 pub use crate::consensus::{EngineType, TimeGapParams};
-pub use crate::db::{COL_STATE, NUM_COLUMNS};
+pub use crate::db::{COL_PEER, COL_STATE, NUM_COLUMNS};
 pub use crate::error::{BlockImportError, Error, ImportError};
 pub use crate::miner::{MemPoolFees, Miner, MinerOptions, MinerService};
+pub use crate::peer_db::PeerDb;
 pub use crate::scheme::Scheme;
 pub use crate::service::ClientService;
 pub use crate::transaction::{
