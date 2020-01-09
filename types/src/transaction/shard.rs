@@ -346,22 +346,46 @@ impl PartialHashing for ShardTransaction {
     }
 }
 
-type TransactionId = u8;
-const ASSET_UNWRAP_CCC_ID: TransactionId = 0x11;
-const ASSET_MINT_ID: TransactionId = 0x13;
-const ASSET_TRANSFER_ID: TransactionId = 0x14;
-const ASSET_SCHEME_CHANGE_ID: TransactionId = 0x15;
-/// Deprecated
-//const ASSET_COMPOSE_ID: TransactionId = 0x16;
-/// Deprecated
-//const ASSET_DECOMPOSE_ID: TransactionId = 0x17;
-const ASSET_INCREASE_SUPPLY_ID: TransactionId = 0x18;
-const ASSET_SHARD_STORE_ID: TransactionId = 0x19;
+#[derive(Clone, Copy)]
+#[repr(u8)]
+enum AssetID {
+    UnwrapCCC = 0x11,
+    Mint = 0x13,
+    Transfer = 0x14,
+    SchemeChange = 0x15,
+    /// Deprecated
+    // COMPOSE_ID = 0x16,
+    /// Deprecated
+    // DECOMPOSE_ID = 0x17,
+    IncreaseSupply = 0x18,
+    ShardStore = 0x19,
+}
+
+impl Encodable for AssetID {
+    fn rlp_append(&self, s: &mut RlpStream) {
+        s.append_single_value(&(*self as u8));
+    }
+}
+
+impl Decodable for AssetID {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        let tag = rlp.as_val()?;
+        match tag {
+            0x11u8 => Ok(AssetID::UnwrapCCC),
+            0x13 => Ok(AssetID::Mint),
+            0x14 => Ok(AssetID::Transfer),
+            0x15 => Ok(AssetID::SchemeChange),
+            0x18 => Ok(AssetID::IncreaseSupply),
+            0x19 => Ok(AssetID::ShardStore),
+            _ => Err(DecoderError::Custom("Unexpected AssetID Value")),
+        }
+    }
+}
 
 impl Decodable for ShardTransaction {
     fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         match d.val_at(0)? {
-            ASSET_MINT_ID => {
+            AssetID::Mint => {
                 let item_count = d.item_count()?;
                 if item_count != 10 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -383,7 +407,7 @@ impl Decodable for ShardTransaction {
                     allowed_script_hashes: d.list_at(9)?,
                 })
             }
-            ASSET_TRANSFER_ID => {
+            AssetID::Transfer => {
                 let item_count = d.item_count()?;
                 if item_count != 6 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -402,7 +426,7 @@ impl Decodable for ShardTransaction {
                     outputs: d.list_at(4)?,
                 })
             }
-            ASSET_SCHEME_CHANGE_ID => {
+            AssetID::SchemeChange => {
                 let item_count = d.item_count()?;
                 if item_count != 9 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -421,7 +445,7 @@ impl Decodable for ShardTransaction {
                     allowed_script_hashes: d.list_at(8)?,
                 })
             }
-            ASSET_INCREASE_SUPPLY_ID => {
+            AssetID::IncreaseSupply => {
                 let item_count = d.item_count()?;
                 if item_count != 8 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -441,7 +465,7 @@ impl Decodable for ShardTransaction {
                     },
                 })
             }
-            ASSET_UNWRAP_CCC_ID => {
+            AssetID::UnwrapCCC => {
                 let item_count = d.item_count()?;
                 if item_count != 4 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -455,7 +479,7 @@ impl Decodable for ShardTransaction {
                     receiver: d.val_at(3)?,
                 })
             }
-            ASSET_SHARD_STORE_ID => {
+            AssetID::ShardStore => {
                 let item_count = d.item_count()?;
                 if item_count != 4 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -469,7 +493,6 @@ impl Decodable for ShardTransaction {
                     content: d.val_at(3)?,
                 })
             }
-            _ => Err(DecoderError::Custom("Unexpected transaction")),
         }
     }
 }
@@ -492,7 +515,7 @@ impl Encodable for ShardTransaction {
                 allowed_script_hashes,
             } => {
                 s.begin_list(10)
-                    .append(&ASSET_MINT_ID)
+                    .append(&AssetID::Mint)
                     .append(network_id)
                     .append(shard_id)
                     .append(metadata)
@@ -511,7 +534,7 @@ impl Encodable for ShardTransaction {
             } => {
                 let empty: Vec<AssetTransferOutput> = vec![];
                 s.begin_list(6)
-                    .append(&ASSET_TRANSFER_ID)
+                    .append(&AssetID::Transfer)
                     .append(network_id)
                     .append_list(burns)
                     .append_list(inputs)
@@ -530,7 +553,7 @@ impl Encodable for ShardTransaction {
                 allowed_script_hashes,
             } => {
                 s.begin_list(9)
-                    .append(&ASSET_SCHEME_CHANGE_ID)
+                    .append(&AssetID::SchemeChange)
                     .append(network_id)
                     .append(shard_id)
                     .append(asset_type)
@@ -553,7 +576,7 @@ impl Encodable for ShardTransaction {
                     },
             } => {
                 s.begin_list(8)
-                    .append(&ASSET_INCREASE_SUPPLY_ID)
+                    .append(&AssetID::IncreaseSupply)
                     .append(network_id)
                     .append(shard_id)
                     .append(asset_type)
@@ -567,7 +590,7 @@ impl Encodable for ShardTransaction {
                 burn,
                 receiver,
             } => {
-                s.begin_list(4).append(&ASSET_UNWRAP_CCC_ID).append(network_id).append(burn).append(receiver);
+                s.begin_list(4).append(&AssetID::UnwrapCCC).append(network_id).append(burn).append(receiver);
             }
             ShardTransaction::WrapCCC {
                 ..
@@ -579,7 +602,7 @@ impl Encodable for ShardTransaction {
                 shard_id,
                 content,
             } => {
-                s.begin_list(4).append(&ASSET_SHARD_STORE_ID).append(network_id).append(shard_id).append(content);
+                s.begin_list(4).append(&AssetID::ShardStore).append(network_id).append(shard_id).append(content);
             }
         };
     }
