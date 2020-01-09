@@ -22,22 +22,39 @@ use ckey::{recover, Address, NetworkId, Public, Signature};
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
-const PAY: u8 = 0x02;
-const SET_REGULAR_KEY: u8 = 0x03;
-const CREATE_SHARD: u8 = 0x04;
-const SET_SHARD_OWNERS: u8 = 0x05;
-const SET_SHARD_USERS: u8 = 0x06;
-// Deprecated
-//const STORE: u8 = 0x08;
-// Deprecated
-//const REMOVE: u8 = 0x09;
-// Derepcated
-//const COMPOSE_ASSET: u8 = 0x16;
-// Derepcated
-//const DECOMPOSE_ASSET: u8 = 0x17;
-const SHARD_STORE: u8 = 0x19;
+#[derive(Clone, Copy)]
+#[repr(u8)]
+enum ActionTag {
+    Pay = 0x02,
+    SetRegularKey = 0x03,
+    CreateShard = 0x04,
+    SetShardOwners = 0x05,
+    SetShardUsers = 0x06,
+    ShardStore = 0x19,
+    Custom = 0xFF,
+}
 
-const CUSTOM: u8 = 0xFF;
+impl Encodable for ActionTag {
+    fn rlp_append(&self, s: &mut RlpStream) {
+        (*self as u8).rlp_append(s)
+    }
+}
+
+impl Decodable for ActionTag {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        let tag = rlp.as_val()?;
+        match tag {
+            0x02u8 => Ok(Self::Pay),
+            0x03 => Ok(Self::SetRegularKey),
+            0x04 => Ok(Self::CreateShard),
+            0x05 => Ok(Self::SetShardOwners),
+            0x06 => Ok(Self::SetShardUsers),
+            0x19 => Ok(Self::ShardStore),
+            0xFF => Ok(Self::Custom),
+            _ => Err(DecoderError::Custom("Unexpected action prefix")),
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
@@ -158,7 +175,7 @@ impl Encodable for Action {
                 quantity,
             } => {
                 s.begin_list(3);
-                s.append(&PAY);
+                s.append(&ActionTag::Pay);
                 s.append(receiver);
                 s.append(quantity);
             }
@@ -166,14 +183,14 @@ impl Encodable for Action {
                 key,
             } => {
                 s.begin_list(2);
-                s.append(&SET_REGULAR_KEY);
+                s.append(&ActionTag::SetRegularKey);
                 s.append(key);
             }
             Action::CreateShard {
                 users,
             } => {
                 s.begin_list(2);
-                s.append(&CREATE_SHARD);
+                s.append(&ActionTag::CreateShard);
                 s.append_list(users);
             }
             Action::SetShardOwners {
@@ -181,7 +198,7 @@ impl Encodable for Action {
                 owners,
             } => {
                 s.begin_list(3);
-                s.append(&SET_SHARD_OWNERS);
+                s.append(&ActionTag::SetShardOwners);
                 s.append(shard_id);
                 s.append_list(owners);
             }
@@ -190,7 +207,7 @@ impl Encodable for Action {
                 users,
             } => {
                 s.begin_list(3);
-                s.append(&SET_SHARD_USERS);
+                s.append(&ActionTag::SetShardUsers);
                 s.append(shard_id);
                 s.append_list(users);
             }
@@ -199,7 +216,7 @@ impl Encodable for Action {
                 bytes,
             } => {
                 s.begin_list(3);
-                s.append(&CUSTOM);
+                s.append(&ActionTag::Custom);
                 s.append(handler_id);
                 s.append(bytes);
             }
@@ -209,7 +226,7 @@ impl Encodable for Action {
                 network_id,
             } => {
                 s.begin_list(4);
-                s.append(&SHARD_STORE);
+                s.append(&ActionTag::ShardStore);
                 s.append(network_id);
                 s.append(shard_id);
                 s.append(content);
@@ -221,7 +238,7 @@ impl Encodable for Action {
 impl Decodable for Action {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         match rlp.val_at(0)? {
-            PAY => {
+            ActionTag::Pay => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -234,7 +251,7 @@ impl Decodable for Action {
                     quantity: rlp.val_at(2)?,
                 })
             }
-            SET_REGULAR_KEY => {
+            ActionTag::SetRegularKey => {
                 let item_count = rlp.item_count()?;
                 if item_count != 2 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -246,7 +263,7 @@ impl Decodable for Action {
                     key: rlp.val_at(1)?,
                 })
             }
-            CREATE_SHARD => {
+            ActionTag::CreateShard => {
                 let item_count = rlp.item_count()?;
                 if item_count != 2 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -258,7 +275,7 @@ impl Decodable for Action {
                     users: rlp.list_at(1)?,
                 })
             }
-            SET_SHARD_OWNERS => {
+            ActionTag::SetShardOwners => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -271,7 +288,7 @@ impl Decodable for Action {
                     owners: rlp.list_at(2)?,
                 })
             }
-            SET_SHARD_USERS => {
+            ActionTag::SetShardUsers => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -284,7 +301,7 @@ impl Decodable for Action {
                     users: rlp.list_at(2)?,
                 })
             }
-            CUSTOM => {
+            ActionTag::Custom => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -297,7 +314,7 @@ impl Decodable for Action {
                     bytes: rlp.val_at(2)?,
                 })
             }
-            SHARD_STORE => {
+            ActionTag::ShardStore => {
                 let item_count = rlp.item_count()?;
                 if item_count != 4 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -311,7 +328,6 @@ impl Decodable for Action {
                     content: rlp.val_at(3)?,
                 })
             }
-            _ => Err(DecoderError::Custom("Unexpected action prefix")),
         }
     }
 }
