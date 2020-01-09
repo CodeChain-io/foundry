@@ -651,21 +651,21 @@ export default class CodeChain {
         return this.sdk.rpc.chain.sendSignedTransaction(tx);
     }
 
-    public async sendPayTx(options?: {
-        seq?: number;
+    public createPayTx(options: {
+        seq: number;
         recipient?: PlatformAddress | string;
         quantity?: number;
         secret?: any;
         fee?: number;
-    }): Promise<SignedTransaction> {
+    }): SignedTransaction {
         const {
-            seq = (await this.sdk.rpc.chain.getSeq(faucetAddress)) || 0,
+            seq,
             recipient = "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
             quantity = 0,
             secret = faucetSecret,
             fee = 10 + this.id
         } = options || {};
-        const tx = this.sdk.core
+        return this.sdk.core
             .createPayTransaction({
                 recipient,
                 quantity
@@ -675,6 +675,21 @@ export default class CodeChain {
                 fee,
                 seq
             });
+    }
+
+    public async sendPayTx(options?: {
+        seq?: number;
+        recipient?: PlatformAddress | string;
+        quantity?: number;
+        secret?: any;
+        fee?: number;
+    }): Promise<SignedTransaction> {
+        const { seq = (await this.sdk.rpc.chain.getSeq(faucetAddress)) || 0 } =
+            options || {};
+        const tx = this.createPayTx({
+            seq,
+            ...options
+        });
         await this.sdk.rpc.chain.sendSignedTransaction(tx);
         return tx;
     }
