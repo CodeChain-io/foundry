@@ -16,7 +16,7 @@
 
 use crate::errors::SyntaxError;
 use crate::transaction::{AssetMintOutput, AssetTransferInput, AssetTransferOutput, ShardTransaction};
-use crate::{CommonParams, ShardId, Tracker, TxHash};
+use crate::{CommonParams, ShardId, Tracker};
 use ccrypto::Blake;
 use ckey::{recover, Address, NetworkId, Public, Signature};
 use primitives::{Bytes, H160, H256};
@@ -29,8 +29,10 @@ const CREATE_SHARD: u8 = 0x04;
 const SET_SHARD_OWNERS: u8 = 0x05;
 const SET_SHARD_USERS: u8 = 0x06;
 const WRAP_CCC: u8 = 0x07;
-const STORE: u8 = 0x08;
-const REMOVE: u8 = 0x09;
+// Deprecated
+//const STORE: u8 = 0x08;
+// Deprecated
+//const REMOVE: u8 = 0x09;
 const UNWRAP_CCC: u8 = 0x11;
 const MINT_ASSET: u8 = 0x13;
 const TRANSFER_ASSET: u8 = 0x14;
@@ -118,15 +120,6 @@ pub enum Action {
     Custom {
         handler_id: u64,
         bytes: Bytes,
-    },
-    Store {
-        content: String,
-        certifier: Address,
-        signature: Signature,
-    },
-    Remove {
-        hash: TxHash,
-        signature: Signature,
     },
     ShardStore {
         network_id: NetworkId,
@@ -239,9 +232,6 @@ impl Action {
                     return Err(SyntaxError::ZeroQuantity)
                 }
             }
-            Action::Store {
-                ..
-            } => {}
             _ => {}
         }
         Ok(())
@@ -292,15 +282,6 @@ impl Action {
             Action::WrapCCC {
                 ..
             } => {}
-            Action::Store {
-                content,
-                ..
-            } => {
-                let max_text_size = common_params.max_text_content_size();
-                if content.len() > max_text_size {
-                    return Err(SyntaxError::TextContentTooBig)
-                }
-            }
             _ => {}
         }
         Ok(())
@@ -618,26 +599,6 @@ impl Encodable for Action {
                 s.append(quantity);
                 s.append(payer);
             }
-            Action::Store {
-                content,
-                certifier,
-                signature,
-            } => {
-                s.begin_list(4);
-                s.append(&STORE);
-                s.append(content);
-                s.append(certifier);
-                s.append(signature);
-            }
-            Action::Remove {
-                hash,
-                signature,
-            } => {
-                s.begin_list(3);
-                s.append(&REMOVE);
-                s.append(hash);
-                s.append(signature);
-            }
             Action::Custom {
                 handler_id,
                 bytes,
@@ -840,33 +801,6 @@ impl Decodable for Action {
                     payer: rlp.val_at(5)?,
                 })
             }
-            STORE => {
-                let item_count = rlp.item_count()?;
-                if item_count != 4 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 4,
-                    })
-                }
-                Ok(Action::Store {
-                    content: rlp.val_at(1)?,
-                    certifier: rlp.val_at(2)?,
-                    signature: rlp.val_at(3)?,
-                })
-            }
-            REMOVE => {
-                let item_count = rlp.item_count()?;
-                if item_count != 3 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 3,
-                    })
-                }
-                Ok(Action::Remove {
-                    hash: rlp.val_at(1)?,
-                    signature: rlp.val_at(2)?,
-                })
-            }
             CUSTOM => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
@@ -1060,23 +994,6 @@ mod tests {
         rlp_encode_and_decode_test!(Action::SetShardUsers {
             shard_id: 1,
             users: vec![Address::random(), Address::random()],
-        });
-    }
-
-    #[test]
-    fn encode_and_decode_store() {
-        rlp_encode_and_decode_test!(Action::Store {
-            content: "CodeChain".to_string(),
-            certifier: Address::random(),
-            signature: Signature::random(),
-        });
-    }
-
-    #[test]
-    fn encode_and_decode_remove() {
-        rlp_encode_and_decode_test!(Action::Remove {
-            hash: H256::random().into(),
-            signature: Signature::random(),
         });
     }
 

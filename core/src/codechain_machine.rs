@@ -209,12 +209,6 @@ impl CodeChainMachine {
             Action::Custom {
                 ..
             } => params.min_custom_transaction_cost(),
-            Action::Store {
-                ..
-            } => params.min_store_transaction_cost(),
-            Action::Remove {
-                ..
-            } => params.min_remove_transaction_cost(),
             Action::ShardStore {
                 ..
             } => {

@@ -18,7 +18,7 @@ use super::importer::Importer;
 use super::{
     AccountData, AssetClient, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify,
     ClientConfig, DatabaseClient, EngineClient, EngineInfo, ExecuteClient, ImportBlock, ImportResult,
-    MiningBlockChainClient, Shard, StateInfo, StateOrBlock, TextClient,
+    MiningBlockChainClient, Shard, StateInfo, StateOrBlock,
 };
 use crate::block::{ClosedBlock, IsBlock, OpenBlock, SealedBlock};
 use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, InvoiceProvider, TransactionAddress};
@@ -37,7 +37,7 @@ use ckey::{Address, NetworkId, PlatformAddress, Public};
 use cmerkle::Result as TrieResult;
 use cnetwork::NodeId;
 use cstate::{
-    ActionHandler, AssetScheme, FindActionHandler, OwnedAsset, StateDB, StateResult, Text, TopLevelState, TopStateView,
+    ActionHandler, AssetScheme, FindActionHandler, OwnedAsset, StateDB, StateResult, TopLevelState, TopStateView,
 };
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
@@ -398,16 +398,6 @@ impl AssetClient for Client {
 
         let state = Client::state_at(&self, block_id).unwrap();
         Ok(Some(state.asset(shard_id, tracker, index)?.is_none()))
-    }
-}
-
-impl TextClient for Client {
-    fn get_text(&self, tx_hash: TxHash, id: BlockId) -> TrieResult<Option<Text>> {
-        if let Some(state) = Client::state_at(&self, id) {
-            Ok(state.text(&tx_hash)?)
-        } else {
-            Ok(None)
-        }
     }
 }
 

@@ -530,12 +530,6 @@ impl MemPoolFees {
             Action::Custom {
                 ..
             } => self.min_custom_transaction_cost,
-            Action::Store {
-                ..
-            } => self.min_store_transaction_cost,
-            Action::Remove {
-                ..
-            } => self.min_remove_transaction_cost,
             Action::ShardStore {
                 ..
             } => {
