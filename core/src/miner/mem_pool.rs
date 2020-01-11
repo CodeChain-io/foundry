@@ -1590,8 +1590,6 @@ pub mod test {
             None,
             None,
             None,
-            None,
-            None,
         );
 
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
@@ -1634,8 +1632,6 @@ pub mod test {
         // Set the pay transaction minimum fee
         let fees = MemPoolFees::create_from_options(
             Some(150),
-            None,
-            None,
             None,
             None,
             None,

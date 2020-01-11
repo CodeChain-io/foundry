@@ -253,8 +253,6 @@ where
                 "setShardOwners" => Some(common_parameters.min_set_shard_owners_transaction_cost()),
                 "setShardUsers" => Some(common_parameters.min_set_shard_users_transaction_cost()),
                 "wrapCCC" => Some(common_parameters.min_wrap_ccc_transaction_cost()),
-                "store" => Some(common_parameters.min_store_transaction_cost()),
-                "remove" => Some(common_parameters.min_remove_transaction_cost()),
                 "custom" => Some(common_parameters.min_custom_transaction_cost()),
 
                 _ => None,
