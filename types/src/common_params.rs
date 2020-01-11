@@ -39,8 +39,6 @@ pub struct CommonParams {
     min_set_shard_users_transaction_cost: u64,
     min_wrap_ccc_transaction_cost: u64,
     min_custom_transaction_cost: u64,
-    min_store_transaction_cost: u64,
-    min_remove_transaction_cost: u64,
     min_asset_mint_cost: u64,
     min_asset_transfer_cost: u64,
     min_asset_scheme_change_cost: u64,
@@ -104,15 +102,6 @@ impl CommonParams {
     }
     pub fn min_custom_transaction_cost(&self) -> u64 {
         self.min_custom_transaction_cost
-    }
-    pub fn min_store_transaction_cost(&self) -> u64 {
-        self.min_store_transaction_cost
-    }
-    pub fn set_min_store_transaction_cost(&mut self, new_value: u64) {
-        self.min_store_transaction_cost = new_value;
-    }
-    pub fn min_remove_transaction_cost(&self) -> u64 {
-        self.min_remove_transaction_cost
     }
     pub fn min_asset_mint_cost(&self) -> u64 {
         self.min_asset_mint_cost
@@ -238,7 +227,7 @@ impl CommonParams {
     }
 }
 
-const DEFAULT_PARAMS_SIZE: usize = 23;
+const DEFAULT_PARAMS_SIZE: usize = 21;
 const NUMBER_OF_STAKE_PARAMS: usize = 9;
 const NUMBER_OF_ERA_PARAMS: usize = 1;
 const STAKE_PARAM_SIZE: usize = DEFAULT_PARAMS_SIZE + NUMBER_OF_STAKE_PARAMS;
@@ -269,8 +258,6 @@ impl From<Params> for CommonParams {
             min_set_shard_users_transaction_cost: p.min_set_shard_users_cost.into(),
             min_wrap_ccc_transaction_cost: p.min_wrap_ccc_cost.into(),
             min_custom_transaction_cost: p.min_custom_cost.into(),
-            min_store_transaction_cost: p.min_store_cost.into(),
-            min_remove_transaction_cost: p.min_remove_cost.into(),
             min_asset_mint_cost: p.min_mint_asset_cost.into(),
             min_asset_transfer_cost: p.min_transfer_asset_cost.into(),
             min_asset_scheme_change_cost: p.min_change_asset_scheme_cost.into(),
@@ -310,8 +297,6 @@ impl From<CommonParams> for Params {
             min_set_shard_users_cost: p.min_set_shard_users_transaction_cost().into(),
             min_wrap_ccc_cost: p.min_wrap_ccc_transaction_cost().into(),
             min_custom_cost: p.min_custom_transaction_cost().into(),
-            min_store_cost: p.min_store_transaction_cost().into(),
-            min_remove_cost: p.min_remove_transaction_cost().into(),
             min_mint_asset_cost: p.min_asset_mint_cost().into(),
             min_transfer_asset_cost: p.min_asset_transfer_cost().into(),
             min_change_asset_scheme_cost: p.min_asset_scheme_change_cost().into(),
@@ -357,8 +342,6 @@ impl Encodable for CommonParams {
             .append(&self.min_set_shard_users_transaction_cost)
             .append(&self.min_wrap_ccc_transaction_cost)
             .append(&self.min_custom_transaction_cost)
-            .append(&self.min_store_transaction_cost)
-            .append(&self.min_remove_transaction_cost)
             .append(&self.min_asset_mint_cost)
             .append(&self.min_asset_transfer_cost)
             .append(&self.min_asset_scheme_change_cost)
@@ -407,17 +390,15 @@ impl Decodable for CommonParams {
         let min_set_shard_users_transaction_cost = rlp.val_at(9)?;
         let min_wrap_ccc_transaction_cost = rlp.val_at(10)?;
         let min_custom_transaction_cost = rlp.val_at(11)?;
-        let min_store_transaction_cost = rlp.val_at(12)?;
-        let min_remove_transaction_cost = rlp.val_at(13)?;
-        let min_asset_mint_cost = rlp.val_at(14)?;
-        let min_asset_transfer_cost = rlp.val_at(15)?;
-        let min_asset_scheme_change_cost = rlp.val_at(16)?;
-        let min_asset_supply_increase_cost = rlp.val_at(17)?;
-        let min_asset_compose_cost = rlp.val_at(18)?;
-        let min_asset_decompose_cost = rlp.val_at(19)?;
-        let min_asset_unwrap_ccc_cost = rlp.val_at(20)?;
-        let max_body_size = rlp.val_at(21)?;
-        let snapshot_period = rlp.val_at(22)?;
+        let min_asset_mint_cost = rlp.val_at(12)?;
+        let min_asset_transfer_cost = rlp.val_at(13)?;
+        let min_asset_scheme_change_cost = rlp.val_at(14)?;
+        let min_asset_supply_increase_cost = rlp.val_at(15)?;
+        let min_asset_compose_cost = rlp.val_at(16)?;
+        let min_asset_decompose_cost = rlp.val_at(17)?;
+        let min_asset_unwrap_ccc_cost = rlp.val_at(18)?;
+        let max_body_size = rlp.val_at(19)?;
+        let snapshot_period = rlp.val_at(20)?;
 
         let (
             term_seconds,
@@ -431,6 +412,8 @@ impl Decodable for CommonParams {
             max_candidate_metadata_size,
         ) = if size >= STAKE_PARAM_SIZE {
             (
+                rlp.val_at(21)?,
+                rlp.val_at(22)?,
                 rlp.val_at(23)?,
                 rlp.val_at(24)?,
                 rlp.val_at(25)?,
@@ -438,15 +421,13 @@ impl Decodable for CommonParams {
                 rlp.val_at(27)?,
                 rlp.val_at(28)?,
                 rlp.val_at(29)?,
-                rlp.val_at(30)?,
-                rlp.val_at(31)?,
             )
         } else {
             Default::default()
         };
 
         let era = if size >= ERA_PARAM_SIZE {
-            rlp.val_at(32)?
+            rlp.val_at(30)?
         } else {
             Default::default()
         };
@@ -465,8 +446,6 @@ impl Decodable for CommonParams {
             min_set_shard_users_transaction_cost,
             min_wrap_ccc_transaction_cost,
             min_custom_transaction_cost,
-            min_store_transaction_cost,
-            min_remove_transaction_cost,
             min_asset_mint_cost,
             min_asset_transfer_cost,
             min_asset_scheme_change_cost,
@@ -587,15 +566,13 @@ mod tests {
             "minSetShardUsersCost" : 14,
             "minWrapCccCost" : 15,
             "minCustomCost" : 16,
-            "minStoreCost" : 17,
-            "minRemoveCost" : 18,
-            "minMintAssetCost" : 19,
-            "minTransferAssetCost" : 20,
-            "minChangeAssetSchemeCost" : 21,
-            "minComposeAssetCost" : 22,
-            "minDecomposeAssetCost" : 23,
-            "minUnwrapCccCost" : 24,
-            "minIncreaseAssetSupplyCost": 25,
+            "minMintAssetCost" : 17,
+            "minTransferAssetCost" : 18,
+            "minChangeAssetSchemeCost" : 19,
+            "minComposeAssetCost" : 20,
+            "minDecomposeAssetCost" : 21,
+            "minUnwrapCccCost" : 22,
+            "minIncreaseAssetSupplyCost": 23,
             "maxBodySize" : 4194304,
             "snapshotPeriod": 16384
         }"#;
@@ -614,15 +591,13 @@ mod tests {
         assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
         assert_eq!(deserialized.min_wrap_ccc_transaction_cost, 15);
         assert_eq!(deserialized.min_custom_transaction_cost, 16);
-        assert_eq!(deserialized.min_store_transaction_cost, 17);
-        assert_eq!(deserialized.min_remove_transaction_cost, 18);
-        assert_eq!(deserialized.min_asset_mint_cost, 19);
-        assert_eq!(deserialized.min_asset_transfer_cost, 20);
-        assert_eq!(deserialized.min_asset_scheme_change_cost, 21);
-        assert_eq!(deserialized.min_asset_compose_cost, 22);
-        assert_eq!(deserialized.min_asset_decompose_cost, 23);
-        assert_eq!(deserialized.min_asset_unwrap_ccc_cost, 24);
-        assert_eq!(deserialized.min_asset_supply_increase_cost, 25);
+        assert_eq!(deserialized.min_asset_mint_cost, 17);
+        assert_eq!(deserialized.min_asset_transfer_cost, 18);
+        assert_eq!(deserialized.min_asset_scheme_change_cost, 19);
+        assert_eq!(deserialized.min_asset_compose_cost, 20);
+        assert_eq!(deserialized.min_asset_decompose_cost, 21);
+        assert_eq!(deserialized.min_asset_unwrap_ccc_cost, 22);
+        assert_eq!(deserialized.min_asset_supply_increase_cost, 23);
         assert_eq!(deserialized.max_body_size, 4_194_304);
         assert_eq!(deserialized.snapshot_period, 16_384);
         assert_eq!(deserialized.term_seconds, 0);
@@ -655,15 +630,13 @@ mod tests {
             "minSetShardUsersCost" : 14,
             "minWrapCccCost" : 15,
             "minCustomCost" : 16,
-            "minStoreCost" : 17,
-            "minRemoveCost" : 18,
-            "minMintAssetCost" : 19,
-            "minTransferAssetCost" : 20,
-            "minChangeAssetSchemeCost" : 21,
-            "minComposeAssetCost" : 22,
-            "minDecomposeAssetCost" : 23,
-            "minUnwrapCccCost" : 24,
-            "minIncreaseAssetSupplyCost": 25,
+            "minMintAssetCost" : 17,
+            "minTransferAssetCost" : 18,
+            "minChangeAssetSchemeCost" : 19,
+            "minComposeAssetCost" : 20,
+            "minDecomposeAssetCost" : 21,
+            "minUnwrapCccCost" : 22,
+            "minIncreaseAssetSupplyCost": 23,
             "maxBodySize" : 4194304,
             "snapshotPeriod": 16384,
             "termSeconds": 3600
@@ -684,15 +657,13 @@ mod tests {
         assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
         assert_eq!(deserialized.min_wrap_ccc_transaction_cost, 15);
         assert_eq!(deserialized.min_custom_transaction_cost, 16);
-        assert_eq!(deserialized.min_store_transaction_cost, 17);
-        assert_eq!(deserialized.min_remove_transaction_cost, 18);
-        assert_eq!(deserialized.min_asset_mint_cost, 19);
-        assert_eq!(deserialized.min_asset_transfer_cost, 20);
-        assert_eq!(deserialized.min_asset_scheme_change_cost, 21);
-        assert_eq!(deserialized.min_asset_compose_cost, 22);
-        assert_eq!(deserialized.min_asset_decompose_cost, 23);
-        assert_eq!(deserialized.min_asset_unwrap_ccc_cost, 24);
-        assert_eq!(deserialized.min_asset_supply_increase_cost, 25);
+        assert_eq!(deserialized.min_asset_mint_cost, 17);
+        assert_eq!(deserialized.min_asset_transfer_cost, 18);
+        assert_eq!(deserialized.min_asset_scheme_change_cost, 19);
+        assert_eq!(deserialized.min_asset_compose_cost, 20);
+        assert_eq!(deserialized.min_asset_decompose_cost, 21);
+        assert_eq!(deserialized.min_asset_unwrap_ccc_cost, 22);
+        assert_eq!(deserialized.min_asset_supply_increase_cost, 23);
         assert_eq!(deserialized.max_body_size, 4_194_304);
         assert_eq!(deserialized.snapshot_period, 16_384);
         assert_eq!(deserialized.term_seconds, 3600);
@@ -740,26 +711,24 @@ mod tests {
             "minSetShardUsersCost" : 14,
             "minWrapCccCost" : 15,
             "minCustomCost" : 16,
-            "minStoreCost" : 17,
-            "minRemoveCost" : 18,
-            "minMintAssetCost" : 19,
-            "minTransferAssetCost" : 20,
-            "minChangeAssetSchemeCost" : 21,
-            "minComposeAssetCost" : 22,
-            "minDecomposeAssetCost" : 23,
-            "minUnwrapCccCost" : 24,
-            "minIncreaseAssetSupplyCost": 25,
+            "minMintAssetCost" : 17,
+            "minTransferAssetCost" : 18,
+            "minChangeAssetSchemeCost" : 19,
+            "minComposeAssetCost" : 20,
+            "minDecomposeAssetCost" : 21,
+            "minUnwrapCccCost" : 22,
+            "minIncreaseAssetSupplyCost": 23,
             "maxBodySize" : 4194304,
             "snapshotPeriod": 16384,
             "termSeconds": 3600,
-            "nominationExpiration": 26,
-            "custodyPeriod": 27,
-            "releasePeriod": 28,
-            "maxNumOfValidators": 29,
-            "minNumOfValidators": 30,
-            "delegationThreshold": 31,
-            "minDeposit": 32,
-            "maxCandidateMetadataSize": 33
+            "nominationExpiration": 24,
+            "custodyPeriod": 25,
+            "releasePeriod": 26,
+            "maxNumOfValidators": 27,
+            "minNumOfValidators": 28,
+            "delegationThreshold": 29,
+            "minDeposit": 30,
+            "maxCandidateMetadataSize": 31
         }"#;
         let params = serde_json::from_str::<Params>(s).unwrap();
         let deserialized = CommonParams::from(params.clone());
@@ -776,26 +745,24 @@ mod tests {
         assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
         assert_eq!(deserialized.min_wrap_ccc_transaction_cost, 15);
         assert_eq!(deserialized.min_custom_transaction_cost, 16);
-        assert_eq!(deserialized.min_store_transaction_cost, 17);
-        assert_eq!(deserialized.min_remove_transaction_cost, 18);
-        assert_eq!(deserialized.min_asset_mint_cost, 19);
-        assert_eq!(deserialized.min_asset_transfer_cost, 20);
-        assert_eq!(deserialized.min_asset_scheme_change_cost, 21);
-        assert_eq!(deserialized.min_asset_compose_cost, 22);
-        assert_eq!(deserialized.min_asset_decompose_cost, 23);
-        assert_eq!(deserialized.min_asset_unwrap_ccc_cost, 24);
-        assert_eq!(deserialized.min_asset_supply_increase_cost, 25);
+        assert_eq!(deserialized.min_asset_mint_cost, 17);
+        assert_eq!(deserialized.min_asset_transfer_cost, 18);
+        assert_eq!(deserialized.min_asset_scheme_change_cost, 19);
+        assert_eq!(deserialized.min_asset_compose_cost, 20);
+        assert_eq!(deserialized.min_asset_decompose_cost, 21);
+        assert_eq!(deserialized.min_asset_unwrap_ccc_cost, 22);
+        assert_eq!(deserialized.min_asset_supply_increase_cost, 23);
         assert_eq!(deserialized.max_body_size, 4_194_304);
         assert_eq!(deserialized.snapshot_period, 16_384);
         assert_eq!(deserialized.term_seconds, 3600);
-        assert_eq!(deserialized.nomination_expiration, 26);
-        assert_eq!(deserialized.custody_period, 27);
-        assert_eq!(deserialized.release_period, 28);
-        assert_eq!(deserialized.max_num_of_validators, 29);
-        assert_eq!(deserialized.min_num_of_validators, 30);
-        assert_eq!(deserialized.delegation_threshold, 31);
-        assert_eq!(deserialized.min_deposit, 32);
-        assert_eq!(deserialized.max_candidate_metadata_size, 33);
+        assert_eq!(deserialized.nomination_expiration, 24);
+        assert_eq!(deserialized.custody_period, 25);
+        assert_eq!(deserialized.release_period, 26);
+        assert_eq!(deserialized.max_num_of_validators, 27);
+        assert_eq!(deserialized.min_num_of_validators, 28);
+        assert_eq!(deserialized.delegation_threshold, 29);
+        assert_eq!(deserialized.min_deposit, 30);
+        assert_eq!(deserialized.max_candidate_metadata_size, 31);
         assert_eq!(deserialized.era, 0);
 
         assert_eq!(params, deserialized.into());
@@ -817,27 +784,25 @@ mod tests {
             "minSetShardUsersCost" : 14,
             "minWrapCccCost" : 15,
             "minCustomCost" : 16,
-            "minStoreCost" : 17,
-            "minRemoveCost" : 18,
-            "minMintAssetCost" : 19,
-            "minTransferAssetCost" : 20,
-            "minChangeAssetSchemeCost" : 21,
-            "minComposeAssetCost" : 22,
-            "minDecomposeAssetCost" : 23,
-            "minUnwrapCccCost" : 24,
-            "minIncreaseAssetSupplyCost": 25,
+            "minMintAssetCost" : 17,
+            "minTransferAssetCost" : 18,
+            "minChangeAssetSchemeCost" : 19,
+            "minComposeAssetCost" : 20,
+            "minDecomposeAssetCost" : 21,
+            "minUnwrapCccCost" : 22,
+            "minIncreaseAssetSupplyCost": 23,
             "maxBodySize" : 4194304,
             "snapshotPeriod": 16384,
             "termSeconds": 3600,
-            "nominationExpiration": 26,
-            "custodyPeriod": 27,
-            "releasePeriod": 28,
-            "maxNumOfValidators": 29,
-            "minNumOfValidators": 30,
-            "delegationThreshold": 31,
-            "minDeposit": 32,
-            "maxCandidateMetadataSize": 33,
-            "era": 34
+            "nominationExpiration": 24,
+            "custodyPeriod": 25,
+            "releasePeriod": 26,
+            "maxNumOfValidators": 27,
+            "minNumOfValidators": 28,
+            "delegationThreshold": 29,
+            "minDeposit": 30,
+            "maxCandidateMetadataSize": 31,
+            "era": 32
         }"#;
         let params = serde_json::from_str::<Params>(s).unwrap();
         let deserialized = CommonParams::from(params.clone());
@@ -854,27 +819,25 @@ mod tests {
         assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
         assert_eq!(deserialized.min_wrap_ccc_transaction_cost, 15);
         assert_eq!(deserialized.min_custom_transaction_cost, 16);
-        assert_eq!(deserialized.min_store_transaction_cost, 17);
-        assert_eq!(deserialized.min_remove_transaction_cost, 18);
-        assert_eq!(deserialized.min_asset_mint_cost, 19);
-        assert_eq!(deserialized.min_asset_transfer_cost, 20);
-        assert_eq!(deserialized.min_asset_scheme_change_cost, 21);
-        assert_eq!(deserialized.min_asset_compose_cost, 22);
-        assert_eq!(deserialized.min_asset_decompose_cost, 23);
-        assert_eq!(deserialized.min_asset_unwrap_ccc_cost, 24);
-        assert_eq!(deserialized.min_asset_supply_increase_cost, 25);
+        assert_eq!(deserialized.min_asset_mint_cost, 17);
+        assert_eq!(deserialized.min_asset_transfer_cost, 18);
+        assert_eq!(deserialized.min_asset_scheme_change_cost, 19);
+        assert_eq!(deserialized.min_asset_compose_cost, 20);
+        assert_eq!(deserialized.min_asset_decompose_cost, 21);
+        assert_eq!(deserialized.min_asset_unwrap_ccc_cost, 22);
+        assert_eq!(deserialized.min_asset_supply_increase_cost, 23);
         assert_eq!(deserialized.max_body_size, 4_194_304);
         assert_eq!(deserialized.snapshot_period, 16_384);
         assert_eq!(deserialized.term_seconds, 3600);
-        assert_eq!(deserialized.nomination_expiration, 26);
-        assert_eq!(deserialized.custody_period, 27);
-        assert_eq!(deserialized.release_period, 28);
-        assert_eq!(deserialized.max_num_of_validators, 29);
-        assert_eq!(deserialized.min_num_of_validators, 30);
-        assert_eq!(deserialized.delegation_threshold, 31);
-        assert_eq!(deserialized.min_deposit, 32);
-        assert_eq!(deserialized.max_candidate_metadata_size, 33);
-        assert_eq!(deserialized.era, 34);
+        assert_eq!(deserialized.nomination_expiration, 24);
+        assert_eq!(deserialized.custody_period, 25);
+        assert_eq!(deserialized.release_period, 26);
+        assert_eq!(deserialized.max_num_of_validators, 27);
+        assert_eq!(deserialized.min_num_of_validators, 28);
+        assert_eq!(deserialized.delegation_threshold, 29);
+        assert_eq!(deserialized.min_deposit, 30);
+        assert_eq!(deserialized.max_candidate_metadata_size, 31);
+        assert_eq!(deserialized.era, 32);
 
         assert_eq!(params, deserialized.into());
     }

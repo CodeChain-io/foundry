@@ -81,8 +81,6 @@ impl Config {
             self.mining.min_set_shard_users_transaction_cost,
             self.mining.min_wrap_ccc_transaction_cost,
             self.mining.min_custom_transaction_cost,
-            self.mining.min_store_transaction_cost,
-            self.mining.min_remove_transaction_cost,
             self.mining.min_asset_mint_cost,
             self.mining.min_asset_transfer_cost,
             self.mining.min_asset_scheme_change_cost,
@@ -238,8 +236,6 @@ pub struct Mining {
     pub min_set_shard_users_transaction_cost: Option<u64>,
     pub min_wrap_ccc_transaction_cost: Option<u64>,
     pub min_custom_transaction_cost: Option<u64>,
-    pub min_store_transaction_cost: Option<u64>,
-    pub min_remove_transaction_cost: Option<u64>,
     pub min_asset_mint_cost: Option<u64>,
     pub min_asset_transfer_cost: Option<u64>,
     pub min_asset_scheme_change_cost: Option<u64>,
@@ -435,12 +431,6 @@ impl Mining {
         }
         if other.min_custom_transaction_cost.is_some() {
             self.min_custom_transaction_cost = other.min_custom_transaction_cost;
-        }
-        if other.min_store_transaction_cost.is_some() {
-            self.min_store_transaction_cost = other.min_store_transaction_cost;
-        }
-        if other.min_remove_transaction_cost.is_some() {
-            self.min_remove_transaction_cost = other.min_remove_transaction_cost;
         }
         if other.min_asset_mint_cost.is_some() {
             self.min_asset_mint_cost = other.min_asset_mint_cost;
