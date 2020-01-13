@@ -70,8 +70,6 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minWrapCccCost
             10, // minCustomCost
-            10, // minStoreCost
-            10, // minRemoveCost
             10, // minMintAssetCost
             10, // minTransferAssetCost
             10, // minChangeAssetSchemeCost
@@ -130,8 +128,6 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minWrapCccCost
             10, // minCustomCost
-            10, // minStoreCost
-            10, // minRemoveCost
             10, // minMintAssetCost
             10, // minTransferAssetCost
             10, // minChangeAssetSchemeCost
@@ -188,8 +184,6 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minWrapCccCost
             10, // minCustomCost
-            10, // minStoreCost
-            10, // minRemoveCost
             10, // minMintAssetCost
             10, // minTransferAssetCost
             10, // minChangeAssetSchemeCost
@@ -254,8 +248,6 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minWrapCccCost
             10, // minCustomCost
-            10, // minStoreCost
-            10, // minRemoveCost
             10, // minMintAssetCost
             10, // minTransferAssetCost
             10, // minChangeAssetSchemeCost
@@ -279,8 +271,6 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minWrapCccCost
             10, // minCustomCost
-            10, // minStoreCost
-            10, // minRemoveCost
             10, // minMintAssetCost
             10, // minTransferAssetCost
             10, // minChangeAssetSchemeCost
@@ -376,8 +366,6 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minWrapCccCost
             10, // minCustomCost
-            10, // minStoreCost
-            10, // minRemoveCost
             10, // minMintAssetCost
             10, // minTransferAssetCost
             10, // minChangeAssetSchemeCost
@@ -401,8 +389,6 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minWrapCccCost
             10, // minCustomCost
-            10, // minStoreCost
-            10, // minRemoveCost
             10, // minMintAssetCost
             10, // minTransferAssetCost
             10, // minChangeAssetSchemeCost
@@ -498,8 +484,6 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minWrapCccCost
             10, // minCustomCost
-            10, // minStoreCost
-            10, // minRemoveCost
             10, // minMintAssetCost
             10, // minTransferAssetCost
             10, // minChangeAssetSchemeCost
@@ -568,8 +552,6 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minWrapCccCost
             10, // minCustomCost
-            10, // minStoreCost
-            10, // minRemoveCost
             10, // minMintAssetCost
             10, // minTransferAssetCost
             10, // minChangeAssetSchemeCost
@@ -618,8 +600,6 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minWrapCccCost
             10, // minCustomCost
-            10, // minStoreCost
-            10, // minRemoveCost
             10, // minMintAssetCost
             10, // minTransferAssetCost
             10, // minChangeAssetSchemeCost
@@ -703,8 +683,6 @@ describe("ChangeParams", function() {
                 10, // minSetShardUsersCost
                 10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minStoreCost
-                10, // minRemoveCost
                 10, // minMintAssetCost
                 10, // minTransferAssetCost
                 10, // minChangeAssetSchemeCost
@@ -770,8 +748,6 @@ describe("ChangeParams", function() {
                 10, // minSetShardUsersCost
                 10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minStoreCost
-                10, // minRemoveCost
                 10, // minMintAssetCost
                 10, // minTransferAssetCost
                 10, // minChangeAssetSchemeCost
@@ -833,8 +809,6 @@ describe("ChangeParams", function() {
                 10, // minSetShardUsersCost
                 10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minStoreCost
-                10, // minRemoveCost
                 10, // minMintAssetCost
                 10, // minTransferAssetCost
                 10, // minChangeAssetSchemeCost
@@ -896,8 +870,6 @@ describe("ChangeParams", function() {
                 10, // minSetShardUsersCost
                 10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minStoreCost
-                10, // minRemoveCost
                 10, // minMintAssetCost
                 10, // minTransferAssetCost
                 10, // minChangeAssetSchemeCost
@@ -959,8 +931,6 @@ describe("ChangeParams", function() {
                 10, // minSetShardUsersCost
                 10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minStoreCost
-                10, // minRemoveCost
                 10, // minMintAssetCost
                 10, // minTransferAssetCost
                 10, // minChangeAssetSchemeCost
@@ -1026,8 +996,6 @@ describe("ChangeParams", function() {
                 10, // minSetShardUsersCost
                 10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minStoreCost
-                10, // minRemoveCost
                 10, // minMintAssetCost
                 10, // minTransferAssetCost
                 10, // minChangeAssetSchemeCost
@@ -1089,8 +1057,6 @@ describe("ChangeParams", function() {
                 10, // minSetShardUsersCost
                 10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minStoreCost
-                10, // minRemoveCost
                 10, // minMintAssetCost
                 10, // minTransferAssetCost
                 10, // minChangeAssetSchemeCost
@@ -1152,8 +1118,6 @@ describe("ChangeParams", function() {
                 10, // minSetShardUsersCost
                 10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minStoreCost
-                10, // minRemoveCost
                 10, // minMintAssetCost
                 10, // minTransferAssetCost
                 10, // minChangeAssetSchemeCost
@@ -1215,8 +1179,6 @@ describe("ChangeParams", function() {
                 10, // minSetShardUsersCost
                 10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minStoreCost
-                10, // minRemoveCost
                 10, // minMintAssetCost
                 10, // minTransferAssetCost
                 10, // minChangeAssetSchemeCost
@@ -1278,8 +1240,6 @@ describe("ChangeParams", function() {
                 10, // minSetShardUsersCost
                 10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minStoreCost
-                10, // minRemoveCost
                 10, // minMintAssetCost
                 10, // minTransferAssetCost
                 10, // minChangeAssetSchemeCost
@@ -1345,8 +1305,6 @@ describe("ChangeParams", function() {
                 10, // minSetShardUsersCost
                 10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minStoreCost
-                10, // minRemoveCost
                 10, // minMintAssetCost
                 10, // minTransferAssetCost
                 10, // minChangeAssetSchemeCost

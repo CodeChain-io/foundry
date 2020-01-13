@@ -130,9 +130,6 @@ enum ErrorID {
     RegularKeyAlreadyInUseAsPlatform = 20,
     ScriptHashMismatch = 21,
     ScriptNotAllowed = 22,
-    /// Deprecated
-    // TEXT_NOT_EXIST: u8 = 23;
-    // TEXT_VERIFICATION_FAIL: u8 = 24;
     CannotUseMasterKey = 25,
     InvalidScript = 27,
     InvalidSeq = 28,
