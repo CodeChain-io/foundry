@@ -21,6 +21,7 @@ use crate::consensus::CodeChainEngine;
 use crate::error::{BlockError, Error};
 use crate::transaction::{SignedTransaction, UnverifiedTransaction};
 use crate::views::BlockView;
+use ccrypto::BLAKE_NULL_RLP;
 use cmerkle::skewed_merkle_root;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockNumber, CommonParams, Header};
@@ -44,9 +45,15 @@ pub fn verify_block_basic(header: &Header, bytes: &[u8]) -> Result<(), Error> {
 
     let body_rlp = Rlp::new(bytes).at(1)?;
 
-    for t in body_rlp.iter().map(|rlp| rlp.as_val::<UnverifiedTransaction>()) {
-        t?.verify_basic()?;
-    }
+    let raw_transactions = body_rlp
+        .iter()
+        .map(|rlp| {
+            let tx = rlp.as_val::<UnverifiedTransaction>()?;
+            tx.verify_basic()?;
+            Ok(rlp.as_raw().to_vec())
+        })
+        .collect::<Result<Vec<Bytes>, Error>>()?;
+    verify_transactions_root(raw_transactions, header.transactions_root())?;
     Ok(())
 }
 
@@ -133,16 +140,13 @@ pub fn verify_header_with_params(header: &Header, common_params: &CommonParams) 
 
 /// Verify block data against header: transactions root
 fn verify_transactions_root(
-    block: &[u8],
+    raw_transactions: impl IntoIterator<Item = Bytes>,
     transactions_root: &H256,
-    parent_transactions_root: H256,
 ) -> Result<(), Error> {
-    let block = Rlp::new(block);
-    let transaction = block.at(1)?;
-    let expected_root = skewed_merkle_root(parent_transactions_root, transaction.iter().map(|r| r.as_raw()));
-    if &expected_root != transactions_root {
+    let expected = skewed_merkle_root(BLAKE_NULL_RLP, raw_transactions);
+    if &expected != transactions_root {
         return Err(From::from(BlockError::InvalidTransactionsRoot(Mismatch {
-            expected: expected_root,
+            expected,
             found: *transactions_root,
         })))
     }
@@ -205,7 +209,6 @@ pub fn verify_block_family<C: BlockChainTrait>(
 
     // TODO: verify timestamp
     verify_parent(&header, &parent)?;
-    verify_transactions_root(block, header.transactions_root(), *parent.transactions_root())?;
     engine.verify_block_family(&header, &parent)?;
 
     let params = match do_full {

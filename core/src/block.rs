@@ -210,17 +210,12 @@ impl<'x> OpenBlock<'x> {
         self.block.header.set_score(*header.score());
         self.block.header.set_timestamp(header.timestamp());
         self.block.header.set_author(*header.author());
-        self.block.header.set_transactions_root(*header.transactions_root());
         self.block.header.set_extra_data(header.extra_data().clone());
         self.block.header.set_seal(header.seal().to_vec());
     }
 
     /// Turn this into a `ClosedBlock`.
-    pub fn close(
-        mut self,
-        parent_header: &Header,
-        term_common_params: Option<&CommonParams>,
-    ) -> Result<ClosedBlock, Error> {
+    pub fn close(mut self, term_common_params: Option<&CommonParams>) -> Result<ClosedBlock, Error> {
         let unclosed_state = self.block.state.clone();
 
         if let Err(e) = self.engine.on_close_block(&mut self.block, term_common_params) {
@@ -239,9 +234,8 @@ impl<'x> OpenBlock<'x> {
             warn!("Encountered error on state commit: {}", e);
             e
         })?;
-        let parent_transactions_root = parent_header.transactions_root();
         self.block.header.set_transactions_root(skewed_merkle_root(
-            *parent_transactions_root,
+            BLAKE_NULL_RLP,
             self.block.transactions.iter().map(Encodable::rlp_bytes),
         ));
         self.block.header.set_state_root(state_root);
@@ -253,11 +247,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Turn this into a `LockedBlock`.
-    pub fn close_and_lock(
-        mut self,
-        parent_header: &Header,
-        term_common_params: Option<&CommonParams>,
-    ) -> Result<LockedBlock, Error> {
+    pub fn close_and_lock(mut self, term_common_params: Option<&CommonParams>) -> Result<LockedBlock, Error> {
         if let Err(e) = self.engine.on_close_block(&mut self.block, term_common_params) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
@@ -274,16 +264,15 @@ impl<'x> OpenBlock<'x> {
             warn!("Encountered error on state commit: {}", e);
             e
         })?;
-        let parent_transactions_root = parent_header.transactions_root();
-        if self.block.header.transactions_root().is_zero() || self.block.header.transactions_root() == &BLAKE_NULL_RLP {
+        if self.block.header.transactions_root() == &BLAKE_NULL_RLP {
             self.block.header.set_transactions_root(skewed_merkle_root(
-                *parent_transactions_root,
+                BLAKE_NULL_RLP,
                 self.block.transactions.iter().map(Encodable::rlp_bytes),
             ));
         }
         debug_assert_eq!(
             self.block.header.transactions_root(),
-            &skewed_merkle_root(*parent_transactions_root, self.block.transactions.iter().map(Encodable::rlp_bytes),)
+            &skewed_merkle_root(BLAKE_NULL_RLP, self.block.transactions.iter().map(Encodable::rlp_bytes),)
         );
         self.block.header.set_state_root(state_root);
 
@@ -490,7 +479,7 @@ pub fn enact<C: ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo>(
     b.push_transactions(transactions, client, parent.number(), parent.timestamp())?;
 
     let term_common_params = client.term_common_params(BlockId::Hash(*header.parent_hash()));
-    b.close_and_lock(parent, term_common_params.as_ref())
+    b.close_and_lock(term_common_params.as_ref())
 }
 
 #[cfg(test)]
@@ -509,7 +498,7 @@ mod tests {
         let db = scheme.ensure_genesis_state(get_temp_state_db()).unwrap();
         let b = OpenBlock::try_new(&*scheme.engine, db, &genesis_header, Address::default(), vec![]).unwrap();
         let term_common_params = CommonParams::default_for_test();
-        let b = b.close_and_lock(&genesis_header, Some(&term_common_params)).unwrap();
+        let b = b.close_and_lock(Some(&term_common_params)).unwrap();
         let _ = b.seal(&*scheme.engine, vec![]);
     }
 }
