@@ -369,6 +369,8 @@ impl<K: Kind> VerificationQueue<K> {
                 match err {
                     // Don't mark future blocks as bad.
                     Error::Block(BlockError::TemporarilyInvalid(_)) => {}
+                    // Don't mark a block as bad when the block body is malformed.
+                    Error::Block(BlockError::InvalidTransactionsRoot(_)) => {}
                     _ => {
                         self.verification.bad.lock().insert(h);
                     }
