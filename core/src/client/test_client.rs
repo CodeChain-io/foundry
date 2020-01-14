@@ -45,6 +45,7 @@ use crate::miner::{Miner, MinerService, TransactionImportResult};
 use crate::scheme::Scheme;
 use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction};
 use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
+use ccrypto::BLAKE_NULL_RLP;
 use cdb;
 use ckey::{public_to_address, Address, Generator, KeyPair, NetworkId, PlatformAddress, Private, Public, Random};
 use cmerkle::skewed_merkle_root;
@@ -76,8 +77,6 @@ pub struct TestBlockChainClient {
     pub genesis_hash: BlockHash,
     /// Last block hash.
     pub last_hash: RwLock<BlockHash>,
-    /// Last transactions_root
-    pub last_transactions_root: RwLock<H256>,
     /// Extra data do set for each block
     pub extra_data: Bytes,
     /// Score.
@@ -136,7 +135,6 @@ impl TestBlockChainClient {
         let genesis_block = scheme.genesis_block();
         let genesis_header = scheme.genesis_header();
         let genesis_hash = genesis_header.hash();
-        let genesis_transactions_root = *genesis_header.transactions_root();
         let genesis_score = *genesis_header.score();
 
         let mut client = TestBlockChainClient {
@@ -145,7 +143,6 @@ impl TestBlockChainClient {
             genesis_hash,
             extra_data,
             last_hash: RwLock::new(genesis_hash),
-            last_transactions_root: RwLock::new(genesis_transactions_root),
             score: RwLock::new(genesis_score),
             balances: RwLock::new(HashMap::new()),
             seqs: RwLock::new(HashMap::new()),
@@ -225,10 +222,7 @@ impl TestBlockChainClient {
             let signed = SignedTransaction::new_with_sign(tx, keypair.private());
             transactions.push(signed);
         }
-        header.set_transactions_root(skewed_merkle_root(
-            *self.last_transactions_root.read(),
-            transactions.iter().map(Encodable::rlp_bytes),
-        ));
+        header.set_transactions_root(skewed_merkle_root(BLAKE_NULL_RLP, transactions.iter().map(Encodable::rlp_bytes)));
         let mut rlp = RlpStream::new_list(2);
         rlp.append(&header);
         rlp.append_list(&transactions);
@@ -479,8 +473,6 @@ impl ImportBlock for TestBlockChainClient {
                 *score += *header.score();
             }
             mem::replace(&mut *self.last_hash.write(), h);
-            // FIXME: The transactions root is not related to block hash.
-            mem::replace(&mut *self.last_transactions_root.write(), *h);
             self.blocks.write().insert(h, b);
             self.numbers.write().insert(number, h);
             let mut parent_hash = *header.parent_hash();
