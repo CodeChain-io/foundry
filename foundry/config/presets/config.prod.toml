@@ -6,6 +6,7 @@ chain = "mainnet"
 [mining]
 mem_pool_mem_limit = 512 # MB
 mem_pool_size = 524288
+self_nomination_enable =false
 mem_pool_fee_bump_shift = 3 # 12.5%
 allow_create_shard = false
 force_sealing = true
@@ -15,7 +16,7 @@ reseal_max_period = 120000
 no_reseal_timer = false
 allowed_past_gap = 30000
 allowed_future_gap = 5000
-
+i
 [network]
 disable = false
 interface = "0.0.0.0"

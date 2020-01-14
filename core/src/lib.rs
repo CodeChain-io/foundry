@@ -32,6 +32,7 @@ extern crate codechain_types as ctypes;
 extern crate codechain_vm as cvm;
 #[cfg(test)]
 extern crate rand_xorshift;
+extern crate rlp;
 #[macro_use]
 extern crate rlp_derive;
 #[macro_use]
@@ -64,16 +65,20 @@ mod tests;
 pub use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 pub use crate::block::Block;
 pub use crate::client::snapshot_notify;
+pub use crate::client::ConsensusClient;
 pub use crate::client::{
     AccountData, AssetClient, BlockChainClient, BlockChainTrait, ChainNotify, Client, ClientConfig, DatabaseClient,
     EngineClient, EngineInfo, ExecuteClient, ImportBlock, MiningBlockChainClient, Shard, SnapshotClient, StateInfo,
     TermInfo, TestBlockChainClient,
 };
+pub use crate::consensus::signer::EngineSigner;
+pub use crate::consensus::stake;
 pub use crate::consensus::{EngineType, TimeGapParams};
 pub use crate::db::{COL_PEER, COL_STATE, NUM_COLUMNS};
 pub use crate::error::{BlockImportError, Error, ImportError};
 pub use crate::miner::{MemPoolFees, Miner, MinerOptions, MinerService};
 pub use crate::peer_db::PeerDb;
+pub use crate::rlp::Encodable;
 pub use crate::scheme::Scheme;
 pub use crate::service::ClientService;
 pub use crate::transaction::{

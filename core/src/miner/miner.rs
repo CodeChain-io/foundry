@@ -586,6 +586,10 @@ impl MinerService for Miner {
         }
     }
 
+    fn get_author_address(&self) -> Address {
+        self.params.read().author
+    }
+
     fn set_extra_data(&self, extra_data: Bytes) {
         self.params.write().extra_data = extra_data;
     }

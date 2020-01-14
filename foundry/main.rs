@@ -33,6 +33,7 @@ extern crate codechain_timer as ctimer;
 
 use panic_hook;
 
+mod auto_self_nominate;
 mod config;
 mod constants;
 mod dummy_network_service;

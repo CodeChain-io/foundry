@@ -37,6 +37,7 @@ interface ValidatorConfig {
     signer: Signer;
     deposit?: U64Value;
     delegation?: U64Value;
+    autoSelfNominate?: boolean;
 }
 
 interface NodePropertyModifier<T> {
@@ -141,17 +142,28 @@ async function createNodes<T>(options: {
     const nodes: (CodeChain & T)[] = [];
     for (let i = 0; i < validators.length; i++) {
         const { signer: validator } = validators[i];
+        const argv = [
+            "--engine-signer",
+            validator.platformAddress.value,
+            "--password-path",
+            `test/tendermint.dynval/${validator.platformAddress.value}/password.json`,
+            "--force-sealing"
+        ];
+        if (validators[i].autoSelfNominate) {
+            argv.push(
+                "--enable-auto-self-nomination",
+                "--self-nomination-metadata",
+                "",
+                "--self-nomination-target-deposit",
+                "10",
+                "--self-nomination-interval",
+                "10"
+            );
+        }
         const modifier = modify(validator, i);
         const node = new CodeChain({
             chain,
-            argv: [
-                "--engine-signer",
-                validator.platformAddress.value,
-                "--password-path",
-                `test/tendermint.dynval/${validator.platformAddress.value}/password.json`,
-                "--force-sealing",
-                ...modifier.additionalArgv
-            ],
+            argv: [...argv, ...modifier.additionalArgv],
             additionalKeysPath: `tendermint.dynval/${validator.platformAddress.value}/keys`
         });
         nodes[i] = Object.assign(node, modifier.nodeAdditionalProperties);
