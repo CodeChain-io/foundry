@@ -17,7 +17,7 @@
 use crate::cache::ShardCache;
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::traits::{ShardState, ShardStateView};
-use crate::{Asset, AssetScheme, AssetSchemeAddress, ShardText, ShardTextAddress, StateDB, StateResult};
+use crate::{ShardText, ShardTextAddress, StateDB, StateResult};
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::AsHashDB;
 use ckey::Address;
@@ -25,7 +25,7 @@ use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, ShardId, Tracker};
 use cvm::ChainTimeInfo;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
-use primitives::{H160, H256};
+use primitives::H256;
 use std::cell::RefCell;
 
 pub struct ShardLevelState<'db> {
@@ -126,22 +126,6 @@ impl<'db> ShardLevelState<'db> {
                 ..
             } => panic!("To be removed"),
         }
-    }
-
-    pub fn create_asset_scheme(
-        &self,
-        shard_id: ShardId,
-        asset_type: H160,
-        metadata: String,
-        supply: u64,
-        approver: Option<Address>,
-        registrar: Option<Address>,
-        allowed_script_hashes: Vec<H160>,
-        pool: Vec<Asset>,
-    ) -> TrieResult<AssetScheme> {
-        self.cache.create_asset_scheme(&AssetSchemeAddress::new(asset_type, shard_id), || {
-            AssetScheme::new_with_pool(metadata, supply, approver, registrar, allowed_script_hashes, pool)
-        })
     }
 
     fn store_text(&self, tracker: Tracker, content: String) -> StateResult<()> {
