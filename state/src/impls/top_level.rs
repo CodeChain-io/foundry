@@ -48,9 +48,7 @@ use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
 use ckey::{public_to_address, recover, Address, NetworkId, Public, Signature};
 use ctypes::errors::RuntimeError;
-use ctypes::transaction::{
-    Action, AssetOutPoint, AssetTransferInput, AssetWrapCCCOutput, ShardTransaction, Transaction,
-};
+use ctypes::transaction::{Action, AssetWrapCCCOutput, ShardTransaction, Transaction};
 use ctypes::util::unexpected::Mismatch;
 #[cfg(test)]
 use ctypes::Tracker;
@@ -364,106 +362,6 @@ impl TopLevelState {
         _current_block_timestamp: u64,
     ) -> StateResult<()> {
         let (transaction, approvers) = match action {
-            Action::MintAsset {
-                approvals,
-                approver,
-                registrar,
-                ..
-            }
-            | Action::ChangeAssetScheme {
-                approvals,
-                approver,
-                registrar,
-                ..
-            } => {
-                if let Some(approver) = approver {
-                    if !is_active_account(self, approver)? {
-                        return Err(RuntimeError::NonActiveAccount {
-                            address: *approver,
-                            name: "approver of asset".to_string(),
-                        }
-                        .into())
-                    }
-                }
-                if let Some(registrar) = registrar {
-                    if !is_active_account(self, registrar)? {
-                        return Err(RuntimeError::NonActiveAccount {
-                            address: *registrar,
-                            name: "registrar of asset".to_string(),
-                        }
-                        .into())
-                    }
-                }
-                let transaction = Option::<ShardTransaction>::from(action.clone()).expect("It's a shard transaction");
-                let transaction_tracker = transaction.tracker();
-                let approvers = approvals_to_approvers(
-                    approvals,
-                    |public| self.public_to_owner_address(public),
-                    &transaction_tracker,
-                )?;
-                let shard_ids = transaction.related_shards();
-                assert_eq!(1, shard_ids.len());
-                (transaction, approvers)
-            }
-            Action::IncreaseAssetSupply {
-                approvals,
-                ..
-            } => {
-                let transaction = Option::<ShardTransaction>::from(action.clone()).expect("It's a shard transaction");
-                let transaction_tracker = transaction.tracker();
-                let approvers = approvals_to_approvers(
-                    approvals,
-                    |public| self.public_to_owner_address(public),
-                    &transaction_tracker,
-                )?;
-                let shard_ids = transaction.related_shards();
-                assert_eq!(1, shard_ids.len());
-                (transaction, approvers)
-            }
-            Action::TransferAsset {
-                approvals,
-                ..
-            } => {
-                let transaction = Option::<ShardTransaction>::from(action.clone()).expect("It's a shard transaction");
-                debug_assert_eq!(network_id, transaction.network_id());
-
-                let transaction_tracker = transaction.tracker();
-                let approvers = approvals_to_approvers(
-                    approvals,
-                    |public| self.public_to_owner_address(public),
-                    &transaction_tracker,
-                )?;
-                (transaction, approvers)
-            }
-            Action::UnwrapCCC {
-                burn:
-                    AssetTransferInput {
-                        prev_out:
-                            AssetOutPoint {
-                                quantity,
-                                ..
-                            },
-                        ..
-                    },
-                receiver,
-                ..
-            } => {
-                if self.regular_account_exists_and_not_null_by_address(receiver)? {
-                    return Err(RuntimeError::InvalidTransferDestination.into())
-                }
-                let transaction = Option::<ShardTransaction>::from(action.clone()).expect("It's an unwrap transaction");
-                debug_assert_eq!(network_id, transaction.network_id());
-                self.apply_shard_transaction(
-                    &transaction,
-                    fee_payer,
-                    &[],
-                    client,
-                    parent_block_number,
-                    parent_block_timestamp,
-                )?;
-                self.add_balance(receiver, *quantity)?;
-                return Ok(())
-            }
             Action::ShardStore {
                 ..
             } => {
@@ -535,6 +433,21 @@ impl TopLevelState {
                 handler.execute(bytes, self, fee_payer, signer_public)?;
                 return Ok(())
             }
+            Action::MintAsset {
+                ..
+            } => panic!("To be removed"),
+            Action::TransferAsset {
+                ..
+            } => panic!("To be removed"),
+            Action::ChangeAssetScheme {
+                ..
+            } => panic!("To be removed"),
+            Action::IncreaseAssetSupply {
+                ..
+            } => panic!("To be removed"),
+            Action::UnwrapCCC {
+                ..
+            } => panic!("To be removed"),
         };
         self.apply_shard_transaction(
             &transaction,

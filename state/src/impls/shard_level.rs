@@ -26,7 +26,7 @@ use cdb::AsHashDB;
 use ckey::Address;
 use ctypes::errors::{RuntimeError, UnlockFailureReason};
 use ctypes::transaction::{
-    AssetMintOutput, AssetOutPoint, AssetTransferInput, AssetTransferOutput, AssetWrapCCCOutput, PartialHashing,
+    AssetMintOutput, AssetOutPoint, AssetTransferInput, AssetTransferOutput, PartialHashing,
     ShardTransaction,
 };
 use ctypes::util::unexpected::Mismatch;
@@ -101,110 +101,14 @@ impl<'db> ShardLevelState<'db> {
     fn apply_internal<C: ChainTimeInfo>(
         &mut self,
         transaction: &ShardTransaction,
-        sender: &Address,
-        shard_users: &[Address],
-        approvers: &[Address],
-        client: &C,
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
+        _sender: &Address,
+        _shard_users: &[Address],
+        _approvers: &[Address],
+        _client: &C,
+        _parent_block_number: BlockNumber,
+        _parent_block_timestamp: u64,
     ) -> StateResult<()> {
         match transaction {
-            ShardTransaction::MintAsset {
-                metadata,
-                shard_id,
-                approver,
-                registrar,
-                allowed_script_hashes,
-                output,
-                ..
-            } => {
-                assert_eq!(*shard_id, self.shard_id);
-                self.mint_asset(
-                    transaction.tracker(),
-                    metadata,
-                    output,
-                    approver,
-                    approvers,
-                    registrar,
-                    allowed_script_hashes,
-                    sender,
-                    shard_users,
-                    Vec::new(),
-                )?;
-                Ok(())
-            }
-            ShardTransaction::TransferAsset {
-                burns,
-                inputs,
-                outputs,
-                ..
-            } => {
-                debug_assert!(outputs.len() <= 512);
-                self.transfer_asset(
-                    &transaction,
-                    sender,
-                    approvers,
-                    burns,
-                    inputs,
-                    outputs,
-                    client,
-                    parent_block_number,
-                    parent_block_timestamp,
-                )
-            }
-            ShardTransaction::ChangeAssetScheme {
-                shard_id,
-                asset_type,
-                seq,
-                metadata,
-                approver,
-                registrar,
-                allowed_script_hashes,
-                ..
-            } => {
-                assert_eq!(*shard_id, self.shard_id);
-                self.change_asset_scheme(
-                    sender,
-                    approvers,
-                    asset_type,
-                    *seq,
-                    metadata,
-                    approver,
-                    registrar,
-                    allowed_script_hashes,
-                )
-            }
-            ShardTransaction::IncreaseAssetSupply {
-                shard_id,
-                asset_type,
-                output,
-                seq,
-                ..
-            } => {
-                assert_eq!(*shard_id, self.shard_id);
-                self.increase_asset_supply(transaction.tracker(), *seq, sender, approvers, asset_type, output)
-            }
-            ShardTransaction::UnwrapCCC {
-                burn,
-                ..
-            } => {
-                assert_eq!(burn.prev_out.shard_id, self.shard_id);
-                self.unwrap_ccc(&transaction, sender, burn, client, parent_block_number, parent_block_timestamp)
-            }
-            ShardTransaction::WrapCCC {
-                tx_hash,
-                output:
-                    AssetWrapCCCOutput {
-                        lock_script_hash,
-                        quantity,
-                        parameters,
-                    },
-                shard_id,
-                ..
-            } => {
-                assert_eq!(*shard_id, self.shard_id);
-                self.wrap_ccc(tx_hash, lock_script_hash, &parameters, *quantity)
-            }
             ShardTransaction::ShardStore {
                 shard_id,
                 content,
@@ -213,6 +117,24 @@ impl<'db> ShardLevelState<'db> {
                 assert_eq!(*shard_id, self.shard_id);
                 self.store_text(transaction.tracker(), content.to_string())
             }
+            ShardTransaction::MintAsset {
+                ..
+            } => panic!("To be removed"),
+            ShardTransaction::TransferAsset {
+                ..
+            } => panic!("To be removed"),
+            ShardTransaction::ChangeAssetScheme {
+                ..
+            } => panic!("To be removed"),
+            ShardTransaction::IncreaseAssetSupply {
+                ..
+            } => panic!("To be removed"),
+            ShardTransaction::UnwrapCCC {
+                ..
+            } => panic!("To be removed"),
+            ShardTransaction::WrapCCC {
+                ..
+            } => panic!("To be removed"),
         }
     }
 

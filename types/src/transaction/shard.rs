@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -129,44 +129,28 @@ impl ShardTransaction {
 
     pub fn related_shards(&self) -> Vec<ShardId> {
         match self {
-            ShardTransaction::TransferAsset {
-                burns,
-                inputs,
-                ..
-            } => {
-                let mut shards: Vec<ShardId> = burns
-                    .iter()
-                    .map(|v| v.prev_out.shard_id)
-                    .chain(inputs.iter().map(|v| v.prev_out.shard_id))
-                    .collect();
-                shards.sort_unstable();
-                shards.dedup();
-                shards
-            }
-            ShardTransaction::MintAsset {
-                shard_id,
-                ..
-            } => vec![*shard_id],
-            ShardTransaction::IncreaseAssetSupply {
-                shard_id,
-                ..
-            } => vec![*shard_id],
-            ShardTransaction::ChangeAssetScheme {
-                shard_id,
-                ..
-            } => vec![*shard_id],
-            ShardTransaction::UnwrapCCC {
-                burn,
-                ..
-            } => vec![burn.prev_out.shard_id],
-            ShardTransaction::WrapCCC {
-                shard_id,
-                ..
-            } => vec![*shard_id],
             ShardTransaction::ShardStore {
                 shard_id,
                 ..
             } => vec![*shard_id],
+            ShardTransaction::MintAsset {
+                ..
+            } => panic!("To be removed"),
+            ShardTransaction::TransferAsset {
+                ..
+            } => panic!("To be removed"),
+            ShardTransaction::ChangeAssetScheme {
+                ..
+            } => panic!("To be removed"),
+            ShardTransaction::IncreaseAssetSupply {
+                ..
+            } => panic!("To be removed"),
+            ShardTransaction::UnwrapCCC {
+                ..
+            } => panic!("To be removed"),
+            ShardTransaction::WrapCCC {
+                ..
+            } => panic!("To be removed"),
         }
     }
 
