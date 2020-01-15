@@ -19,7 +19,7 @@ use crate::transaction::ShardTransaction;
 use crate::{CommonParams, ShardId, Tracker};
 use ccrypto::Blake;
 use ckey::{recover, Address, NetworkId, Public, Signature};
-use primitives::{Bytes, H160, H256};
+use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 const PAY: u8 = 0x02;
@@ -27,7 +27,6 @@ const SET_REGULAR_KEY: u8 = 0x03;
 const CREATE_SHARD: u8 = 0x04;
 const SET_SHARD_OWNERS: u8 = 0x05;
 const SET_SHARD_USERS: u8 = 0x06;
-const WRAP_CCC: u8 = 0x07;
 // Deprecated
 //const STORE: u8 = 0x08;
 // Deprecated
@@ -61,13 +60,6 @@ pub enum Action {
         shard_id: ShardId,
         users: Vec<Address>,
     },
-    WrapCCC {
-        shard_id: ShardId,
-        lock_script_hash: H160,
-        parameters: Vec<Bytes>,
-        quantity: u64,
-        payer: Address,
-    },
     Custom {
         handler_id: u64,
         bytes: Bytes,
@@ -99,17 +91,6 @@ impl Action {
     }
 
     pub fn verify(&self) -> Result<(), SyntaxError> {
-        match self {
-            Action::WrapCCC {
-                quantity,
-                ..
-            } => {
-                if *quantity == 0 {
-                    return Err(SyntaxError::ZeroQuantity)
-                }
-            }
-            _ => {}
-        }
         Ok(())
     }
 
@@ -121,25 +102,11 @@ impl Action {
             }
         }
 
-        match self {
-            Action::WrapCCC {
-                ..
-            } => {}
-            _ => {}
-        }
         Ok(())
     }
 
-    pub fn verify_with_signer_address(&self, signer: &Address) -> Result<(), SyntaxError> {
-        if let Action::WrapCCC {
-            payer,
-            ..
-        } = self
-        {
-            if payer != signer {
-                return Err(SyntaxError::InvalidSignerOfWrapCCC)
-            }
-        }
+    // FIXME: We don't use signer any more
+    pub fn verify_with_signer_address(&self, _signer: &Address) -> Result<(), SyntaxError> {
         if let Some(approvals) = self.approvals() {
             let tracker = self.tracker().unwrap();
 
@@ -226,21 +193,6 @@ impl Encodable for Action {
                 s.append(&SET_SHARD_USERS);
                 s.append(shard_id);
                 s.append_list(users);
-            }
-            Action::WrapCCC {
-                shard_id,
-                lock_script_hash,
-                parameters,
-                quantity,
-                payer,
-            } => {
-                s.begin_list(6);
-                s.append(&WRAP_CCC);
-                s.append(shard_id);
-                s.append(lock_script_hash);
-                s.append(parameters);
-                s.append(quantity);
-                s.append(payer);
             }
             Action::Custom {
                 handler_id,
@@ -332,22 +284,6 @@ impl Decodable for Action {
                     users: rlp.list_at(2)?,
                 })
             }
-            WRAP_CCC => {
-                let item_count = rlp.item_count()?;
-                if item_count != 6 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 6,
-                    })
-                }
-                Ok(Action::WrapCCC {
-                    shard_id: rlp.val_at(1)?,
-                    lock_script_hash: rlp.val_at(2)?,
-                    parameters: rlp.val_at(3)?,
-                    quantity: rlp.val_at(4)?,
-                    payer: rlp.val_at(5)?,
-                })
-            }
             CUSTOM => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
@@ -408,17 +344,5 @@ mod tests {
             shard_id: 1,
             users: vec![Address::random(), Address::random()],
         });
-    }
-
-    #[test]
-    fn verify_wrap_ccc_transaction_should_fail() {
-        let tx_zero_quantity = Action::WrapCCC {
-            shard_id: 0,
-            lock_script_hash: H160::random(),
-            parameters: vec![],
-            quantity: 0,
-            payer: Address::random(),
-        };
-        assert_eq!(tx_zero_quantity.verify(), Err(SyntaxError::ZeroQuantity));
     }
 }

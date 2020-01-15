@@ -101,9 +101,6 @@ impl CodeChainMachine {
             Action::SetShardUsers {
                 ..
             } => params.min_set_shard_users_transaction_cost(),
-            Action::WrapCCC {
-                ..
-            } => params.min_wrap_ccc_transaction_cost(),
             Action::Custom {
                 ..
             } => params.min_custom_transaction_cost(),

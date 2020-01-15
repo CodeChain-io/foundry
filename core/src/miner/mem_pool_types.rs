@@ -242,10 +242,6 @@ impl MemPoolItem {
                 quantity,
                 ..
             } => self.tx.fee + *quantity,
-            Action::WrapCCC {
-                quantity,
-                ..
-            } => self.tx.fee + *quantity,
             _ => self.tx.fee,
         }
     }
@@ -487,9 +483,6 @@ impl MemPoolFees {
             Action::SetShardUsers {
                 ..
             } => self.min_set_shard_users_transaction_cost,
-            Action::WrapCCC {
-                ..
-            } => self.min_wrap_ccc_transaction_cost,
             Action::Custom {
                 ..
             } => self.min_custom_transaction_cost,
