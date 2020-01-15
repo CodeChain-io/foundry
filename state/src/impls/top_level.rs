@@ -54,8 +54,6 @@ use ctypes::{BlockNumber, CommonParams, ShardId, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
-#[cfg(test)]
-use primitives::H160;
 use primitives::{Bytes, H256};
 use std::cell::{RefCell, RefMut};
 use std::collections::HashMap;
@@ -1138,7 +1136,6 @@ mod tests_state {
 mod tests_tx {
     use ckey::{Generator, Private, Random};
     use ctypes::errors::RuntimeError;
-    use primitives::H160;
 
     use super::*;
     use crate::tests::helpers::{get_temp_state, get_test_client};
@@ -1469,24 +1466,6 @@ mod tests_tx {
     }
 
     #[test]
-    fn get_asset_in_invalid_shard() {
-        let state = get_temp_state();
-
-        let shard_id = 3;
-        check_top_level_state!(state, [
-            (asset: (Tracker::from(H256::random()), 0, shard_id))
-        ]);
-    }
-
-    #[test]
-    fn get_asset_scheme_in_invalid_shard() {
-        let state = get_temp_state();
-
-        let shard_id = 3;
-        check_top_level_state!(state, [(scheme: (shard_id, H160::random()))]);
-    }
-
-    #[test]
     #[allow(clippy::cognitive_complexity)]
     fn apply_create_shard() {
         let mut state = get_temp_state();
@@ -1589,47 +1568,6 @@ mod tests_tx {
             (shard: 2 => owners: vec![sender], users: vec![shard_user]),
             (shard: 3 => owners: vec![sender], users: vec![]),
             (shard: 4)
-        ]);
-    }
-
-    #[test]
-    fn get_asset_in_invalid_shard2() {
-        let mut state = get_temp_state();
-        let (sender, sender_public, _) = address();
-        set_top_level_state!(state, [
-            (account: sender => balance: 20)
-        ]);
-
-        let tx = transaction!(fee: 5, Action::CreateShard { users: vec![] });
-        assert_eq!(Ok(()), state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0));
-
-        let invalid_shard_id = 3;
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 20 - 5)),
-            (shard: 0 => owners: vec![sender], users: vec![]),
-            (asset: (Tracker::from(H256::random()), 0, invalid_shard_id))
-        ]);
-    }
-
-    #[test]
-    fn get_asset_scheme_in_invalid_shard2() {
-        let mut state = get_temp_state();
-        let (sender, sender_public, _) = address();
-        let users = vec![Address::random(), Address::random()];
-        set_top_level_state!(state, [
-            (account: users[0] => seq: 1),
-            (account: users[1] => seq: 1),
-            (account: sender => balance: 20)
-        ]);
-
-        let tx = transaction!(fee: 5, Action::CreateShard { users: users.clone() });
-        assert_eq!(Ok(()), state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0));
-
-        let invalid_shard_id = 3;
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 20 - 5)),
-            (shard: 0 => owners: vec![sender], users: users),
-            (asset: (Tracker::from(H256::random()), 0, invalid_shard_id))
         ]);
     }
 
