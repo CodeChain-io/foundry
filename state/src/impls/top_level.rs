@@ -38,8 +38,6 @@
 use crate::cache::{ShardCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
-#[cfg(test)]
-use crate::Asset;
 use crate::{
     Account, ActionData, FindActionHandler, Metadata, MetadataAddress, RegularAccount, RegularAccountAddress, Shard,
     ShardAddress, ShardLevelState, StateDB, StateResult,
@@ -583,60 +581,6 @@ impl TopLevelState {
     fn set_number_of_shards(&mut self, number_of_shards: ShardId) -> TrieResult<()> {
         self.get_metadata_mut()?.set_number_of_shards(number_of_shards);
         Ok(())
-    }
-
-    #[cfg(test)]
-    fn create_asset_scheme(
-        &mut self,
-        shard_id: ShardId,
-        asset_type: H160,
-        metadata: String,
-        amount: u64,
-        approver: Option<Address>,
-        registrar: Option<Address>,
-        allowed_script_hashes: Vec<H160>,
-        pool: Vec<Asset>,
-    ) -> TrieResult<bool> {
-        match self.shard_root(shard_id)? {
-            Some(shard_root) => {
-                let mut shard_cache = self.shard_caches.entry(shard_id).or_default();
-                let state = ShardLevelState::from_existing(shard_id, &mut self.db, shard_root, &mut shard_cache)?;
-                state.create_asset_scheme(
-                    shard_id,
-                    asset_type,
-                    metadata,
-                    amount,
-                    approver,
-                    registrar,
-                    allowed_script_hashes,
-                    pool,
-                )?;
-                Ok(true)
-            }
-            None => Ok(false),
-        }
-    }
-
-    #[cfg(test)]
-    fn create_asset(
-        &mut self,
-        shard_id: ShardId,
-        tracker: Tracker,
-        index: usize,
-        asset_type: H160,
-        lock_script_hash: H160,
-        parameters: Vec<Bytes>,
-        amount: u64,
-    ) -> TrieResult<bool> {
-        match self.shard_root(shard_id)? {
-            Some(shard_root) => {
-                let mut shard_cache = self.shard_caches.entry(shard_id).or_default();
-                let state = ShardLevelState::from_existing(shard_id, &mut self.db, shard_root, &mut shard_cache)?;
-                state.create_asset(tracker, index, asset_type, lock_script_hash, parameters, amount)?;
-                Ok(true)
-            }
-            None => Ok(false),
-        }
     }
 }
 
