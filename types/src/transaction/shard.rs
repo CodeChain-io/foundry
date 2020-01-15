@@ -18,18 +18,13 @@ use super::{AssetTransferInput, HashingError, PartialHashing};
 use crate::util::tag::Tag;
 use crate::{ShardId, Tracker, TxHash};
 use ccrypto::blake256;
-use ckey::{Address, NetworkId};
+use ckey::NetworkId;
 use primitives::{Bytes, H160, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 /// Shard Transaction type.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ShardTransaction {
-    UnwrapCCC {
-        network_id: NetworkId,
-        burn: AssetTransferInput,
-        receiver: Address,
-    },
     WrapCCC {
         network_id: NetworkId,
         shard_id: ShardId,
@@ -64,11 +59,7 @@ impl ShardTransaction {
 
     pub fn network_id(&self) -> NetworkId {
         match self {
-            ShardTransaction::UnwrapCCC {
-                network_id,
-                ..
-            }
-            | ShardTransaction::WrapCCC {
+            ShardTransaction::WrapCCC {
                 network_id,
                 ..
             }
@@ -85,9 +76,6 @@ impl ShardTransaction {
                 shard_id,
                 ..
             } => vec![*shard_id],
-            ShardTransaction::UnwrapCCC {
-                ..
-            } => panic!("To be removed"),
             ShardTransaction::WrapCCC {
                 ..
             } => panic!("To be removed"),
@@ -96,9 +84,6 @@ impl ShardTransaction {
 
     fn is_valid_output_index(&self, index: usize) -> bool {
         match self {
-            ShardTransaction::UnwrapCCC {
-                ..
-            } => false,
             ShardTransaction::WrapCCC {
                 ..
             } => index == 0,
@@ -113,9 +98,6 @@ impl ShardTransaction {
             return false
         }
         match self {
-            ShardTransaction::UnwrapCCC {
-                ..
-            } => unreachable!("UnwrapCCC doesn't have a valid index"),
             ShardTransaction::WrapCCC {
                 shard_id,
                 ..
@@ -138,7 +120,6 @@ impl PartialHashing for ShardTransaction {
 #[derive(Clone, Copy)]
 #[repr(u8)]
 enum AssetID {
-    UnwrapCCC = 0x11,
     /// Deprecated
     // COMPOSE_ID = 0x16,
     /// Deprecated
@@ -156,8 +137,7 @@ impl Decodable for AssetID {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         let tag = rlp.as_val()?;
         match tag {
-            0x11u8 => Ok(AssetID::UnwrapCCC),
-            0x19 => Ok(AssetID::ShardStore),
+            0x19u8 => Ok(AssetID::ShardStore),
             _ => Err(DecoderError::Custom("Unexpected AssetID Value")),
         }
     }
@@ -166,20 +146,6 @@ impl Decodable for AssetID {
 impl Decodable for ShardTransaction {
     fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         match d.val_at(0)? {
-            AssetID::UnwrapCCC => {
-                let item_count = d.item_count()?;
-                if item_count != 4 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 4,
-                    })
-                }
-                Ok(ShardTransaction::UnwrapCCC {
-                    network_id: d.val_at(1)?,
-                    burn: d.val_at(2)?,
-                    receiver: d.val_at(3)?,
-                })
-            }
             AssetID::ShardStore => {
                 let item_count = d.item_count()?;
                 if item_count != 4 {
@@ -201,13 +167,6 @@ impl Decodable for ShardTransaction {
 impl Encodable for ShardTransaction {
     fn rlp_append(&self, s: &mut RlpStream) {
         match self {
-            ShardTransaction::UnwrapCCC {
-                network_id,
-                burn,
-                receiver,
-            } => {
-                s.begin_list(4).append(&AssetID::UnwrapCCC).append(network_id).append(burn).append(receiver);
-            }
             ShardTransaction::WrapCCC {
                 ..
             } => {
@@ -475,27 +434,6 @@ mod tests {
                 quantity: output_quantity,
             }]
         ));
-    }
-
-    #[test]
-    fn encode_and_decode_unwrapccc_transaction() {
-        let tx = ShardTransaction::UnwrapCCC {
-            network_id: NetworkId::default(),
-            burn: AssetTransferInput {
-                prev_out: AssetOutPoint {
-                    tracker: Default::default(),
-                    index: 0,
-                    asset_type: H160::zero(),
-                    shard_id: 0,
-                    quantity: 30,
-                },
-                timelock: None,
-                lock_script: vec![0x30, 0x01],
-                unlock_script: vec![],
-            },
-            receiver: Address::random(),
-        };
-        rlp_encode_and_decode_test!(tx);
     }
 
     // FIXME: Remove it and reuse the same function declared in action.rs

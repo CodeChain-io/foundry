@@ -419,9 +419,6 @@ impl TopLevelState {
                 handler.execute(bytes, self, fee_payer, signer_public)?;
                 return Ok(())
             }
-            Action::UnwrapCCC {
-                ..
-            } => panic!("To be removed"),
         };
         self.apply_shard_transaction(
             &transaction,

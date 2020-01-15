@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::errors::SyntaxError;
-use crate::transaction::{AssetTransferInput, ShardTransaction};
+use crate::transaction::ShardTransaction;
 use crate::{CommonParams, ShardId, Tracker};
 use ccrypto::Blake;
 use ckey::{recover, Address, NetworkId, Public, Signature};
@@ -32,7 +32,6 @@ const WRAP_CCC: u8 = 0x07;
 //const STORE: u8 = 0x08;
 // Deprecated
 //const REMOVE: u8 = 0x09;
-const UNWRAP_CCC: u8 = 0x11;
 // Derepcated
 //const COMPOSE_ASSET: u8 = 0x16;
 // Derepcated
@@ -43,11 +42,6 @@ const CUSTOM: u8 = 0xFF;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
-    UnwrapCCC {
-        network_id: NetworkId,
-        burn: AssetTransferInput,
-        receiver: Address,
-    },
     Pay {
         receiver: Address,
         /// Transferred quantity.
@@ -93,10 +87,7 @@ impl Action {
 
     pub fn shard_transaction(&self) -> Option<ShardTransaction> {
         match self {
-            Action::UnwrapCCC {
-                ..
-            }
-            | Action::ShardStore {
+            Action::ShardStore {
                 ..
             } => self.clone().into(),
             _ => None,
@@ -109,17 +100,6 @@ impl Action {
 
     pub fn verify(&self) -> Result<(), SyntaxError> {
         match self {
-            Action::UnwrapCCC {
-                burn,
-                ..
-            } => {
-                if burn.prev_out.quantity == 0 {
-                    return Err(SyntaxError::ZeroQuantity)
-                }
-                if !burn.prev_out.asset_type.is_zero() {
-                    return Err(SyntaxError::InvalidAssetType(burn.prev_out.asset_type))
-                }
-            }
             Action::WrapCCC {
                 quantity,
                 ..
@@ -142,9 +122,6 @@ impl Action {
         }
 
         match self {
-            Action::UnwrapCCC {
-                ..
-            } => {}
             Action::WrapCCC {
                 ..
             } => {}
@@ -180,11 +157,7 @@ impl Action {
 
     fn network_id(&self) -> Option<NetworkId> {
         match self {
-            Action::UnwrapCCC {
-                network_id,
-                ..
-            }
-            | Action::ShardStore {
+            Action::ShardStore {
                 network_id,
                 ..
             } => Some(*network_id),
@@ -196,15 +169,6 @@ impl Action {
 impl From<Action> for Option<ShardTransaction> {
     fn from(action: Action) -> Self {
         match action {
-            Action::UnwrapCCC {
-                network_id,
-                burn,
-                receiver,
-            } => Some(ShardTransaction::UnwrapCCC {
-                network_id,
-                burn,
-                receiver,
-            }),
             Action::ShardStore {
                 network_id,
                 shard_id,
@@ -222,13 +186,6 @@ impl From<Action> for Option<ShardTransaction> {
 impl Encodable for Action {
     fn rlp_append(&self, s: &mut RlpStream) {
         match self {
-            Action::UnwrapCCC {
-                network_id,
-                burn,
-                receiver,
-            } => {
-                s.begin_list(4).append(&UNWRAP_CCC).append(network_id).append(burn).append(receiver);
-            }
             Action::Pay {
                 receiver,
                 quantity,
@@ -312,20 +269,6 @@ impl Encodable for Action {
 impl Decodable for Action {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         match rlp.val_at(0)? {
-            UNWRAP_CCC => {
-                let item_count = rlp.item_count()?;
-                if item_count != 4 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 4,
-                    })
-                }
-                Ok(Action::UnwrapCCC {
-                    network_id: rlp.val_at(1)?,
-                    burn: rlp.val_at(2)?,
-                    receiver: rlp.val_at(3)?,
-                })
-            }
             PAY => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
@@ -442,7 +385,6 @@ mod tests {
     use rlp::rlp_encode_and_decode_test;
 
     use super::*;
-    use crate::transaction::AssetOutPoint;
 
     #[test]
     fn encode_and_decode_pay_action() {
@@ -466,46 +408,6 @@ mod tests {
             shard_id: 1,
             users: vec![Address::random(), Address::random()],
         });
-    }
-
-    #[test]
-    fn verify_unwrap_ccc_transaction_should_fail() {
-        let tx_zero_quantity = Action::UnwrapCCC {
-            network_id: NetworkId::default(),
-            burn: AssetTransferInput {
-                prev_out: AssetOutPoint {
-                    tracker: Default::default(),
-                    index: 0,
-                    asset_type: H160::zero(),
-                    shard_id: 0,
-                    quantity: 0,
-                },
-                timelock: None,
-                lock_script: vec![0x30, 0x01],
-                unlock_script: vec![],
-            },
-            receiver: Address::random(),
-        };
-        assert_eq!(tx_zero_quantity.verify(), Err(SyntaxError::ZeroQuantity));
-
-        let invalid_asset_type = H160::random();
-        let tx_invalid_asset_type = Action::UnwrapCCC {
-            network_id: NetworkId::default(),
-            burn: AssetTransferInput {
-                prev_out: AssetOutPoint {
-                    tracker: Default::default(),
-                    index: 0,
-                    asset_type: invalid_asset_type,
-                    shard_id: 0,
-                    quantity: 1,
-                },
-                timelock: None,
-                lock_script: vec![0x30, 0x01],
-                unlock_script: vec![],
-            },
-            receiver: Address::random(),
-        };
-        assert_eq!(tx_invalid_asset_type.verify(), Err(SyntaxError::InvalidAssetType(invalid_asset_type)));
     }
 
     #[test]

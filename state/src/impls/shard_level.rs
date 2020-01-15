@@ -107,9 +107,6 @@ impl<'db> ShardLevelState<'db> {
                 assert_eq!(*shard_id, self.shard_id);
                 self.store_text(transaction.tracker(), content.to_string())
             }
-            ShardTransaction::UnwrapCCC {
-                ..
-            } => panic!("To be removed"),
             ShardTransaction::WrapCCC {
                 ..
             } => panic!("To be removed"),
