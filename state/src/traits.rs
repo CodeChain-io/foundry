@@ -105,30 +105,10 @@ pub trait TopStateView {
         Ok(self.shard(shard_id)?.map(|shard| shard.users().to_vec()))
     }
 
-    /// Get the asset scheme.
-    fn asset_scheme(&self, shard_id: ShardId, asset_type: H160) -> TrieResult<Option<AssetScheme>> {
-        match self.shard_state(shard_id)? {
-            None => Ok(None),
-            Some(state) => state.asset_scheme(asset_type),
-        }
-    }
-
-    /// Get the asset.
-    fn asset(&self, shard_id: ShardId, tracker: Tracker, index: usize) -> TrieResult<Option<OwnedAsset>> {
-        match self.shard_state(shard_id)? {
-            None => Ok(None),
-            Some(state) => state.asset(tracker, index),
-        }
-    }
-
     fn action_data(&self, key: &H256) -> TrieResult<Option<ActionData>>;
 }
 
 pub trait ShardStateView {
-    /// Get the asset scheme.
-    fn asset_scheme(&self, asset_type: H160) -> TrieResult<Option<AssetScheme>>;
-    /// Get the asset.
-    fn asset(&self, tracker: Tracker, index: usize) -> TrieResult<Option<OwnedAsset>>;
     /// Get shard text.
     fn text(&self, tracker: Tracker) -> TrieResult<Option<ShardText>>;
 }
