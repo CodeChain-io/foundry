@@ -46,7 +46,7 @@ use crate::{
 };
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
-use ckey::{public_to_address, recover, Address, NetworkId, Public, Signature};
+use ckey::{public_to_address, Address, NetworkId, Public};
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, AssetWrapCCCOutput, ShardTransaction, Transaction};
 use ctypes::util::unexpected::Mismatch;
@@ -271,16 +271,6 @@ impl TopLevelState {
             }
         }
         result
-    }
-
-    // Change the public to an owner address if it is a regular key.
-    fn public_to_owner_address(&self, public: &Public) -> StateResult<Address> {
-        Ok(if self.regular_account_exists_and_not_null(public)? {
-            let regular_account = self.get_regular_account_mut(public)?;
-            public_to_address(&regular_account.owner_public())
-        } else {
-            public_to_address(public)
-        })
     }
 
     fn apply_internal<C: ChainTimeInfo + FindActionHandler>(
@@ -648,22 +638,6 @@ impl TopLevelState {
             None => Ok(false),
         }
     }
-}
-
-fn approvals_to_approvers<F>(
-    approvals: &[Signature],
-    public_to_owner_address: F,
-    tracker: &H256,
-) -> StateResult<Vec<Address>>
-where
-    F: Fn(&Public) -> StateResult<Address>, {
-    approvals
-        .iter()
-        .map(|signature| {
-            let public = recover(&signature, tracker).expect("An invalid approval is a syntax error");
-            public_to_owner_address(&public)
-        })
-        .collect()
 }
 
 // TODO: cloning for `State` shouldn't be possible in general; Remove this and use
