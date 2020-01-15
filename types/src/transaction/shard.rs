@@ -31,16 +31,6 @@ pub enum ShardTransaction {
         inputs: Vec<AssetTransferInput>,
         outputs: Vec<AssetTransferOutput>,
     },
-    ChangeAssetScheme {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        asset_type: H160,
-        seq: usize,
-        metadata: String,
-        approver: Option<Address>,
-        registrar: Option<Address>,
-        allowed_script_hashes: Vec<H160>,
-    },
     IncreaseAssetSupply {
         network_id: NetworkId,
         shard_id: ShardId,
@@ -95,10 +85,6 @@ impl ShardTransaction {
                 network_id,
                 ..
             }
-            | ShardTransaction::ChangeAssetScheme {
-                network_id,
-                ..
-            }
             | ShardTransaction::UnwrapCCC {
                 network_id,
                 ..
@@ -123,9 +109,6 @@ impl ShardTransaction {
             ShardTransaction::TransferAsset {
                 ..
             } => panic!("To be removed"),
-            ShardTransaction::ChangeAssetScheme {
-                ..
-            } => panic!("To be removed"),
             ShardTransaction::IncreaseAssetSupply {
                 ..
             } => panic!("To be removed"),
@@ -147,9 +130,6 @@ impl ShardTransaction {
             ShardTransaction::IncreaseAssetSupply {
                 ..
             } => index == 0,
-            ShardTransaction::ChangeAssetScheme {
-                ..
-            } => false,
             ShardTransaction::UnwrapCCC {
                 ..
             } => false,
@@ -175,9 +155,6 @@ impl ShardTransaction {
                 shard_id,
                 ..
             } => &id == shard_id,
-            ShardTransaction::ChangeAssetScheme {
-                ..
-            } => unreachable!("AssetSchemeChange doesn't have a valid index"),
             ShardTransaction::UnwrapCCC {
                 ..
             } => unreachable!("UnwrapCCC doesn't have a valid index"),
@@ -312,7 +289,6 @@ impl PartialHashing for ShardTransaction {
 enum AssetID {
     UnwrapCCC = 0x11,
     Transfer = 0x14,
-    SchemeChange = 0x15,
     /// Deprecated
     // COMPOSE_ID = 0x16,
     /// Deprecated
@@ -333,7 +309,6 @@ impl Decodable for AssetID {
         match tag {
             0x11u8 => Ok(AssetID::UnwrapCCC),
             0x14 => Ok(AssetID::Transfer),
-            0x15 => Ok(AssetID::SchemeChange),
             0x18 => Ok(AssetID::IncreaseSupply),
             0x19 => Ok(AssetID::ShardStore),
             _ => Err(DecoderError::Custom("Unexpected AssetID Value")),
@@ -361,25 +336,6 @@ impl Decodable for ShardTransaction {
                     burns: d.list_at(2)?,
                     inputs: d.list_at(3)?,
                     outputs: d.list_at(4)?,
-                })
-            }
-            AssetID::SchemeChange => {
-                let item_count = d.item_count()?;
-                if item_count != 9 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 9,
-                    })
-                }
-                Ok(ShardTransaction::ChangeAssetScheme {
-                    network_id: d.val_at(1)?,
-                    shard_id: d.val_at(2)?,
-                    asset_type: d.val_at(3)?,
-                    seq: d.val_at(4)?,
-                    metadata: d.val_at(5)?,
-                    approver: d.val_at(6)?,
-                    registrar: d.val_at(7)?,
-                    allowed_script_hashes: d.list_at(8)?,
                 })
             }
             AssetID::IncreaseSupply => {
@@ -452,27 +408,6 @@ impl Encodable for ShardTransaction {
                     .append_list(outputs)
                     // NOTE: The orders field removed.
                     .append_list(&empty);
-            }
-            ShardTransaction::ChangeAssetScheme {
-                network_id,
-                shard_id,
-                asset_type,
-                seq,
-                metadata,
-                approver,
-                registrar,
-                allowed_script_hashes,
-            } => {
-                s.begin_list(9)
-                    .append(&AssetID::SchemeChange)
-                    .append(network_id)
-                    .append(shard_id)
-                    .append(asset_type)
-                    .append(seq)
-                    .append(metadata)
-                    .append(approver)
-                    .append(registrar)
-                    .append_list(allowed_script_hashes);
             }
             ShardTransaction::IncreaseAssetSupply {
                 network_id,
