@@ -25,15 +25,6 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 /// Shard Transaction type.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ShardTransaction {
-    MintAsset {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        metadata: String,
-        approver: Option<Address>,
-        registrar: Option<Address>,
-        allowed_script_hashes: Vec<H160>,
-        output: AssetMintOutput,
-    },
     TransferAsset {
         network_id: NetworkId,
         burns: Vec<AssetTransferInput>,
@@ -100,10 +91,6 @@ impl ShardTransaction {
                 network_id,
                 ..
             }
-            | ShardTransaction::MintAsset {
-                network_id,
-                ..
-            }
             | ShardTransaction::IncreaseAssetSupply {
                 network_id,
                 ..
@@ -133,9 +120,6 @@ impl ShardTransaction {
                 shard_id,
                 ..
             } => vec![*shard_id],
-            ShardTransaction::MintAsset {
-                ..
-            } => panic!("To be removed"),
             ShardTransaction::TransferAsset {
                 ..
             } => panic!("To be removed"),
@@ -156,9 +140,6 @@ impl ShardTransaction {
 
     fn is_valid_output_index(&self, index: usize) -> bool {
         match self {
-            ShardTransaction::MintAsset {
-                ..
-            } => index == 0,
             ShardTransaction::TransferAsset {
                 outputs,
                 ..
@@ -186,10 +167,6 @@ impl ShardTransaction {
             return false
         }
         match self {
-            ShardTransaction::MintAsset {
-                shard_id,
-                ..
-            } => &id == shard_id,
             ShardTransaction::TransferAsset {
                 outputs,
                 ..
@@ -334,7 +311,6 @@ impl PartialHashing for ShardTransaction {
 #[repr(u8)]
 enum AssetID {
     UnwrapCCC = 0x11,
-    Mint = 0x13,
     Transfer = 0x14,
     SchemeChange = 0x15,
     /// Deprecated
@@ -356,7 +332,6 @@ impl Decodable for AssetID {
         let tag = rlp.as_val()?;
         match tag {
             0x11u8 => Ok(AssetID::UnwrapCCC),
-            0x13 => Ok(AssetID::Mint),
             0x14 => Ok(AssetID::Transfer),
             0x15 => Ok(AssetID::SchemeChange),
             0x18 => Ok(AssetID::IncreaseSupply),
@@ -369,28 +344,6 @@ impl Decodable for AssetID {
 impl Decodable for ShardTransaction {
     fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         match d.val_at(0)? {
-            AssetID::Mint => {
-                let item_count = d.item_count()?;
-                if item_count != 10 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 10,
-                    })
-                }
-                Ok(ShardTransaction::MintAsset {
-                    network_id: d.val_at(1)?,
-                    shard_id: d.val_at(2)?,
-                    metadata: d.val_at(3)?,
-                    output: AssetMintOutput {
-                        lock_script_hash: d.val_at(4)?,
-                        parameters: d.val_at(5)?,
-                        supply: d.val_at(6)?,
-                    },
-                    approver: d.val_at(7)?,
-                    registrar: d.val_at(8)?,
-                    allowed_script_hashes: d.list_at(9)?,
-                })
-            }
             AssetID::Transfer => {
                 let item_count = d.item_count()?;
                 if item_count != 6 {
@@ -484,32 +437,6 @@ impl Decodable for ShardTransaction {
 impl Encodable for ShardTransaction {
     fn rlp_append(&self, s: &mut RlpStream) {
         match self {
-            ShardTransaction::MintAsset {
-                network_id,
-                shard_id,
-                metadata,
-                output:
-                    AssetMintOutput {
-                        lock_script_hash,
-                        parameters,
-                        supply,
-                    },
-                approver,
-                registrar,
-                allowed_script_hashes,
-            } => {
-                s.begin_list(10)
-                    .append(&AssetID::Mint)
-                    .append(network_id)
-                    .append(shard_id)
-                    .append(metadata)
-                    .append(lock_script_hash)
-                    .append(parameters)
-                    .append(supply)
-                    .append(approver)
-                    .append(registrar)
-                    .append_list(allowed_script_hashes);
-            }
             ShardTransaction::TransferAsset {
                 network_id,
                 burns,
