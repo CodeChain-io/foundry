@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{AssetTransferInput, AssetTransferOutput, HashingError, PartialHashing};
+use super::{AssetTransferInput, HashingError, PartialHashing};
 use crate::util::tag::Tag;
 use crate::{ShardId, Tracker, TxHash};
-use ccrypto::{blake128, blake256, blake256_with_key};
+use ccrypto::blake256;
 use ckey::{Address, NetworkId};
 use primitives::{Bytes, H160, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -25,12 +25,6 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 /// Shard Transaction type.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ShardTransaction {
-    TransferAsset {
-        network_id: NetworkId,
-        burns: Vec<AssetTransferInput>,
-        inputs: Vec<AssetTransferInput>,
-        outputs: Vec<AssetTransferOutput>,
-    },
     UnwrapCCC {
         network_id: NetworkId,
         burn: AssetTransferInput,
@@ -70,11 +64,7 @@ impl ShardTransaction {
 
     pub fn network_id(&self) -> NetworkId {
         match self {
-            ShardTransaction::TransferAsset {
-                network_id,
-                ..
-            }
-            | ShardTransaction::UnwrapCCC {
+            ShardTransaction::UnwrapCCC {
                 network_id,
                 ..
             }
@@ -95,9 +85,6 @@ impl ShardTransaction {
                 shard_id,
                 ..
             } => vec![*shard_id],
-            ShardTransaction::TransferAsset {
-                ..
-            } => panic!("To be removed"),
             ShardTransaction::UnwrapCCC {
                 ..
             } => panic!("To be removed"),
@@ -109,10 +96,6 @@ impl ShardTransaction {
 
     fn is_valid_output_index(&self, index: usize) -> bool {
         match self {
-            ShardTransaction::TransferAsset {
-                outputs,
-                ..
-            } => index < outputs.len(),
             ShardTransaction::UnwrapCCC {
                 ..
             } => false,
@@ -130,10 +113,6 @@ impl ShardTransaction {
             return false
         }
         match self {
-            ShardTransaction::TransferAsset {
-                outputs,
-                ..
-            } => id == outputs[index].shard_id,
             ShardTransaction::UnwrapCCC {
                 ..
             } => unreachable!("UnwrapCCC doesn't have a valid index"),
@@ -149,117 +128,10 @@ impl ShardTransaction {
     }
 }
 
-fn apply_bitmask_to_output(
-    mut bitmask: Vec<u8>,
-    outputs: &[AssetTransferOutput],
-    mut result: Vec<AssetTransferOutput>,
-) -> Result<Vec<AssetTransferOutput>, HashingError> {
-    let mut index = 0;
-    let output_len = outputs.len();
-
-    while let Some(e) = bitmask.pop() {
-        let mut filter = e;
-        for i in 0..8 {
-            if (8 * index + i) == output_len as usize {
-                return Ok(result)
-            }
-
-            if (filter & 0x1) == 1 {
-                result.push(outputs[8 * index + i].clone());
-            }
-
-            filter >>= 1;
-        }
-        index += 1;
-    }
-    Ok(result)
-}
-
-fn apply_input_scheme(
-    inputs: &[AssetTransferInput],
-    is_sign_all: bool,
-    is_sign_single: bool,
-    cur: &AssetTransferInput,
-) -> Vec<AssetTransferInput> {
-    if is_sign_all {
-        return inputs
-            .iter()
-            .map(|input| AssetTransferInput {
-                prev_out: input.prev_out.clone(),
-                timelock: input.timelock,
-                lock_script: Vec::new(),
-                unlock_script: Vec::new(),
-            })
-            .collect()
-    }
-
-    if is_sign_single {
-        return vec![AssetTransferInput {
-            prev_out: cur.prev_out.clone(),
-            timelock: cur.timelock,
-            lock_script: Vec::new(),
-            unlock_script: Vec::new(),
-        }]
-    }
-
-    Vec::new()
-}
-
 impl PartialHashing for ShardTransaction {
-    fn hash_partially(&self, tag: Tag, cur: &AssetTransferInput, is_burn: bool) -> Result<H256, HashingError> {
-        match self {
-            ShardTransaction::TransferAsset {
-                network_id,
-                burns,
-                inputs,
-                outputs,
-            } => {
-                let new_burns = apply_input_scheme(burns, tag.sign_all_inputs, is_burn, cur);
-                let new_inputs = apply_input_scheme(inputs, tag.sign_all_inputs, !is_burn, cur);
-
-                let new_outputs = if tag.sign_all_outputs {
-                    outputs.clone()
-                } else {
-                    apply_bitmask_to_output(tag.filter.clone(), &outputs, Vec::new())?
-                };
-
-                Ok(blake256_with_key(
-                    &ShardTransaction::TransferAsset {
-                        network_id: *network_id,
-                        burns: new_burns,
-                        inputs: new_inputs,
-                        outputs: new_outputs,
-                    }
-                    .rlp_bytes(),
-                    &blake128(tag.get_tag()),
-                ))
-            }
-            ShardTransaction::UnwrapCCC {
-                network_id,
-                burn,
-                receiver,
-            } => {
-                if !tag.sign_all_inputs || !tag.sign_all_outputs {
-                    return Err(HashingError::InvalidFilter)
-                }
-
-                Ok(blake256_with_key(
-                    &ShardTransaction::UnwrapCCC {
-                        network_id: *network_id,
-                        burn: AssetTransferInput {
-                            prev_out: burn.prev_out.clone(),
-                            timelock: burn.timelock,
-                            lock_script: Vec::new(),
-                            unlock_script: Vec::new(),
-                        },
-                        receiver: *receiver,
-                    }
-                    .rlp_bytes(),
-                    &blake128(tag.get_tag()),
-                ))
-            }
-            _ => unreachable!(),
-        }
+    fn hash_partially(&self, _tag: Tag, _cur: &AssetTransferInput, _is_burn: bool) -> Result<H256, HashingError> {
+        // FIXME: delete this function
+        Ok(Default::default())
     }
 }
 
@@ -267,7 +139,6 @@ impl PartialHashing for ShardTransaction {
 #[repr(u8)]
 enum AssetID {
     UnwrapCCC = 0x11,
-    Transfer = 0x14,
     /// Deprecated
     // COMPOSE_ID = 0x16,
     /// Deprecated
@@ -286,7 +157,6 @@ impl Decodable for AssetID {
         let tag = rlp.as_val()?;
         match tag {
             0x11u8 => Ok(AssetID::UnwrapCCC),
-            0x14 => Ok(AssetID::Transfer),
             0x19 => Ok(AssetID::ShardStore),
             _ => Err(DecoderError::Custom("Unexpected AssetID Value")),
         }
@@ -296,25 +166,6 @@ impl Decodable for AssetID {
 impl Decodable for ShardTransaction {
     fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         match d.val_at(0)? {
-            AssetID::Transfer => {
-                let item_count = d.item_count()?;
-                if item_count != 6 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 6,
-                    })
-                }
-                let orders = d.list_at::<AssetTransferOutput>(5)?;
-                if !orders.is_empty() {
-                    return Err(DecoderError::Custom("orders must be an empty list"))
-                }
-                Ok(ShardTransaction::TransferAsset {
-                    network_id: d.val_at(1)?,
-                    burns: d.list_at(2)?,
-                    inputs: d.list_at(3)?,
-                    outputs: d.list_at(4)?,
-                })
-            }
             AssetID::UnwrapCCC => {
                 let item_count = d.item_count()?;
                 if item_count != 4 {
@@ -350,22 +201,6 @@ impl Decodable for ShardTransaction {
 impl Encodable for ShardTransaction {
     fn rlp_append(&self, s: &mut RlpStream) {
         match self {
-            ShardTransaction::TransferAsset {
-                network_id,
-                burns,
-                inputs,
-                outputs,
-            } => {
-                let empty: Vec<AssetTransferOutput> = vec![];
-                s.begin_list(6)
-                    .append(&AssetID::Transfer)
-                    .append(network_id)
-                    .append_list(burns)
-                    .append_list(inputs)
-                    .append_list(outputs)
-                    // NOTE: The orders field removed.
-                    .append_list(&empty);
-            }
             ShardTransaction::UnwrapCCC {
                 network_id,
                 burn,
@@ -395,7 +230,7 @@ mod tests {
 
     use rlp::rlp_encode_and_decode_test;
 
-    use super::super::AssetOutPoint;
+    use super::super::{AssetOutPoint, AssetTransferOutput};
     use super::*;
 
     #[test]
@@ -661,125 +496,6 @@ mod tests {
             receiver: Address::random(),
         };
         rlp_encode_and_decode_test!(tx);
-    }
-
-    #[test]
-    fn encode_and_decode_transfer_transaction_with_order() {
-        let tx = ShardTransaction::TransferAsset {
-            network_id: NetworkId::default(),
-            burns: vec![],
-            inputs: vec![AssetTransferInput {
-                prev_out: AssetOutPoint {
-                    tracker: H256::random().into(),
-                    index: 0,
-                    asset_type: H160::random(),
-                    shard_id: 0,
-                    quantity: 30,
-                },
-                timelock: None,
-                lock_script: vec![0x30, 0x01],
-                unlock_script: vec![],
-            }],
-            outputs: vec![AssetTransferOutput {
-                lock_script_hash: H160::random(),
-                parameters: vec![vec![1]],
-                asset_type: H160::random(),
-                shard_id: 0,
-                quantity: 30,
-            }],
-        };
-        rlp_encode_and_decode_test!(tx);
-    }
-
-    #[test]
-    fn apply_long_filter() {
-        let input = AssetTransferInput {
-            prev_out: AssetOutPoint {
-                tracker: Default::default(),
-                index: 0,
-                asset_type: H160::default(),
-                shard_id: 0,
-                quantity: 0,
-            },
-            timelock: None,
-            lock_script: Vec::new(),
-            unlock_script: Vec::new(),
-        };
-        let inputs: Vec<AssetTransferInput> = (0..100)
-            .map(|_| AssetTransferInput {
-                prev_out: AssetOutPoint {
-                    tracker: Default::default(),
-                    index: 0,
-                    asset_type: H160::default(),
-                    shard_id: 0,
-                    quantity: 0,
-                },
-                timelock: None,
-                lock_script: Vec::new(),
-                unlock_script: Vec::new(),
-            })
-            .collect();
-        let mut outputs: Vec<AssetTransferOutput> = (0..100)
-            .map(|_| AssetTransferOutput {
-                lock_script_hash: H160::default(),
-                parameters: Vec::new(),
-                asset_type: H160::default(),
-                shard_id: 0,
-                quantity: 0,
-            })
-            .collect();
-
-        let transaction = ShardTransaction::TransferAsset {
-            network_id: NetworkId::default(),
-            burns: Vec::new(),
-            inputs: inputs.clone(),
-            outputs: outputs.clone(),
-        };
-        let mut tag: Vec<u8> = vec![0b0000_1111 as u8];
-        for _i in 0..12 {
-            tag.push(0b1111_1111 as u8);
-        }
-        tag.push(0b0011_0101);
-        assert_eq!(
-            transaction.hash_partially(Tag::try_new(tag.clone()).unwrap(), &input, false),
-            Ok(blake256_with_key(&transaction.rlp_bytes(), &blake128(&tag)))
-        );
-
-        // Sign except for last element
-        outputs.pop();
-        let transaction_aux = ShardTransaction::TransferAsset {
-            network_id: NetworkId::default(),
-            burns: Vec::new(),
-            inputs: inputs.clone(),
-            outputs: outputs.clone(),
-        };
-        tag = vec![0b0000_0111 as u8];
-        for _i in 0..12 {
-            tag.push(0b1111_1111 as u8);
-        }
-        tag.push(0b0011_0101);
-        assert_eq!(
-            transaction.hash_partially(Tag::try_new(tag.clone()).unwrap(), &input, false),
-            Ok(blake256_with_key(&transaction_aux.rlp_bytes(), &blake128(&tag)))
-        );
-
-        // Sign except for last two elements
-        outputs.pop();
-        let transaction_aux = ShardTransaction::TransferAsset {
-            network_id: NetworkId::default(),
-            burns: Vec::new(),
-            inputs,
-            outputs,
-        };
-        tag = vec![0b0000_0011 as u8];
-        for _i in 0..12 {
-            tag.push(0b1111_1111 as u8);
-        }
-        tag.push(0b0011_0101);
-        assert_eq!(
-            transaction.hash_partially(Tag::try_new(tag.clone()).unwrap(), &input, false),
-            Ok(blake256_with_key(&transaction_aux.rlp_bytes(), &blake128(&tag)))
-        );
     }
 
     // FIXME: Remove it and reuse the same function declared in action.rs
