@@ -148,9 +148,6 @@ impl ActionWithTracker {
                 content,
                 tracker: tracker.unwrap(),
             },
-            ActionType::UnwrapCCC {
-                ..
-            } => unimplemented!("To be removed"),
             ActionType::WrapCCC {
                 ..
             } => unimplemented!("To be removed"),

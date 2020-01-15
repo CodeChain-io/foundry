@@ -472,9 +472,6 @@ impl MemPoolFees {
     }
     pub fn min_cost(&self, action: &Action) -> u64 {
         match action {
-            Action::UnwrapCCC {
-                ..
-            } => self.min_asset_unwrap_ccc_cost,
             Action::Pay {
                 ..
             } => self.min_pay_transaction_cost,

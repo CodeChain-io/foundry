@@ -86,9 +86,6 @@ impl CodeChainMachine {
 
     pub fn min_cost(params: &CommonParams, action: &Action) -> u64 {
         match action {
-            Action::UnwrapCCC {
-                ..
-            } => params.min_asset_unwrap_ccc_cost(),
             Action::Pay {
                 ..
             } => params.min_pay_transaction_cost(),
