@@ -422,9 +422,6 @@ impl TopLevelState {
             Action::TransferAsset {
                 ..
             } => panic!("To be removed"),
-            Action::ChangeAssetScheme {
-                ..
-            } => panic!("To be removed"),
             Action::IncreaseAssetSupply {
                 ..
             } => panic!("To be removed"),

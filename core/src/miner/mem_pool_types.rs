@@ -480,9 +480,6 @@ impl MemPoolFees {
             Action::TransferAsset {
                 ..
             } => self.min_asset_transfer_cost,
-            Action::ChangeAssetScheme {
-                ..
-            } => self.min_asset_scheme_change_cost,
             Action::IncreaseAssetSupply {
                 ..
             } => self.min_asset_supply_increase_cost,

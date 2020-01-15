@@ -35,7 +35,6 @@ const WRAP_CCC: u8 = 0x07;
 //const REMOVE: u8 = 0x09;
 const UNWRAP_CCC: u8 = 0x11;
 const TRANSFER_ASSET: u8 = 0x14;
-const CHANGE_ASSET_SCHEME: u8 = 0x15;
 // Derepcated
 //const COMPOSE_ASSET: u8 = 0x16;
 // Derepcated
@@ -55,17 +54,6 @@ pub enum Action {
         metadata: String,
         approvals: Vec<Signature>,
         expiration: Option<u64>,
-    },
-    ChangeAssetScheme {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        asset_type: H160,
-        seq: usize,
-        metadata: String,
-        approver: Option<Address>,
-        registrar: Option<Address>,
-        allowed_script_hashes: Vec<H160>,
-        approvals: Vec<Signature>,
     },
     IncreaseAssetSupply {
         network_id: NetworkId,
@@ -128,9 +116,6 @@ impl Action {
             Action::TransferAsset {
                 ..
             }
-            | Action::ChangeAssetScheme {
-                ..
-            }
             | Action::IncreaseAssetSupply {
                 ..
             }
@@ -172,14 +157,6 @@ impl Action {
 
                 if outputs.iter().any(|output| output.quantity == 0) {
                     return Err(SyntaxError::ZeroQuantity)
-                }
-            }
-            Action::ChangeAssetScheme {
-                asset_type,
-                ..
-            } => {
-                if asset_type.is_zero() {
-                    return Err(SyntaxError::CannotChangeWcccAssetScheme)
                 }
             }
             Action::IncreaseAssetSupply {
@@ -236,15 +213,6 @@ impl Action {
                     return Err(SyntaxError::MetadataTooBig)
                 }
             }
-            Action::ChangeAssetScheme {
-                metadata,
-                ..
-            } => {
-                let max_asset_scheme_metadata_size = common_params.max_asset_scheme_metadata_size();
-                if metadata.len() > max_asset_scheme_metadata_size {
-                    return Err(SyntaxError::MetadataTooBig)
-                }
-            }
             Action::IncreaseAssetSupply {
                 ..
             } => {}
@@ -285,10 +253,6 @@ impl Action {
                 approvals,
                 ..
             }
-            | Action::ChangeAssetScheme {
-                approvals,
-                ..
-            }
             | Action::IncreaseAssetSupply {
                 approvals,
                 ..
@@ -300,10 +264,6 @@ impl Action {
     fn network_id(&self) -> Option<NetworkId> {
         match self {
             Action::TransferAsset {
-                network_id,
-                ..
-            }
-            | Action::ChangeAssetScheme {
                 network_id,
                 ..
             }
@@ -338,26 +298,6 @@ impl From<Action> for Option<ShardTransaction> {
                 burns,
                 inputs,
                 outputs,
-            }),
-            Action::ChangeAssetScheme {
-                network_id,
-                shard_id,
-                asset_type,
-                seq,
-                metadata,
-                approver,
-                registrar,
-                allowed_script_hashes,
-                ..
-            } => Some(ShardTransaction::ChangeAssetScheme {
-                network_id,
-                shard_id,
-                asset_type,
-                seq,
-                metadata,
-                approver,
-                registrar,
-                allowed_script_hashes,
             }),
             Action::IncreaseAssetSupply {
                 network_id,
@@ -420,29 +360,6 @@ impl Encodable for Action {
                     .append(metadata)
                     .append_list(approvals)
                     .append(expiration);
-            }
-            Action::ChangeAssetScheme {
-                network_id,
-                shard_id,
-                asset_type,
-                seq,
-                metadata,
-                approver,
-                registrar,
-                allowed_script_hashes,
-                approvals,
-            } => {
-                s.begin_list(10)
-                    .append(&CHANGE_ASSET_SCHEME)
-                    .append(network_id)
-                    .append(shard_id)
-                    .append(asset_type)
-                    .append(seq)
-                    .append(metadata)
-                    .append(approver)
-                    .append(registrar)
-                    .append_list(allowed_script_hashes)
-                    .append_list(approvals);
             }
             Action::IncreaseAssetSupply {
                 network_id,
@@ -569,26 +486,6 @@ impl Decodable for Action {
                     metadata: rlp.val_at(6)?,
                     approvals: rlp.list_at(7)?,
                     expiration: rlp.val_at(8)?,
-                })
-            }
-            CHANGE_ASSET_SCHEME => {
-                let item_count = rlp.item_count()?;
-                if item_count != 10 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 10,
-                    })
-                }
-                Ok(Action::ChangeAssetScheme {
-                    network_id: rlp.val_at(1)?,
-                    shard_id: rlp.val_at(2)?,
-                    asset_type: rlp.val_at(3)?,
-                    seq: rlp.val_at(4)?,
-                    metadata: rlp.val_at(5)?,
-                    approver: rlp.val_at(6)?,
-                    registrar: rlp.val_at(7)?,
-                    allowed_script_hashes: rlp.list_at(8)?,
-                    approvals: rlp.list_at(9)?,
                 })
             }
             INCREASE_ASSET_SUPPLY => {
@@ -826,21 +723,6 @@ mod tests {
         rlp_encode_and_decode_test!(Action::SetShardUsers {
             shard_id: 1,
             users: vec![Address::random(), Address::random()],
-        });
-    }
-
-    #[test]
-    fn encode_and_decode_change_asset_scheme_action() {
-        rlp_encode_and_decode_test!(Action::ChangeAssetScheme {
-            network_id: "ab".into(),
-            shard_id: 1,
-            asset_type: H160::random(),
-            seq: 0,
-            metadata: "some asset scheme metadata".to_string(),
-            approver: Some(Address::random()),
-            registrar: Some(Address::random()),
-            allowed_script_hashes: vec![H160::random(), H160::random(), H160::random()],
-            approvals: vec![],
         });
     }
 
