@@ -46,7 +46,7 @@ use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
 use ckey::{public_to_address, Address, NetworkId, Public};
 use ctypes::errors::RuntimeError;
-use ctypes::transaction::{Action, AssetWrapCCCOutput, ShardTransaction, Transaction};
+use ctypes::transaction::{Action, ShardTransaction, Transaction};
 use ctypes::util::unexpected::Mismatch;
 #[cfg(test)]
 use ctypes::Tracker;
@@ -338,7 +338,7 @@ impl TopLevelState {
         &mut self,
         action: &Action,
         network_id: NetworkId,
-        tx_hash: TxHash,
+        _tx_hash: TxHash,
         signed_hash: &TxHash,
         fee_payer: &Address,
         signer_public: &Public,
@@ -389,27 +389,6 @@ impl TopLevelState {
             } => {
                 self.change_shard_users(*shard_id, users, fee_payer)?;
                 return Ok(())
-            }
-            Action::WrapCCC {
-                shard_id,
-                lock_script_hash,
-                parameters,
-                quantity,
-                ..
-            } => {
-                self.sub_balance(fee_payer, *quantity)?;
-                let transaction = ShardTransaction::WrapCCC {
-                    network_id,
-                    shard_id: *shard_id,
-                    tx_hash,
-                    output: AssetWrapCCCOutput {
-                        lock_script_hash: *lock_script_hash,
-                        parameters: parameters.clone(),
-                        quantity: *quantity,
-                    },
-                };
-                let approvers = vec![]; // WrapCCC doesn't have approvers
-                (transaction, approvers)
             }
             Action::Custom {
                 handler_id,
