@@ -1216,34 +1216,6 @@ pub mod test {
     }
 
     #[test]
-    fn transfer_transaction_does_not_increase_cost() {
-        let fee = 100;
-        let tx = Transaction {
-            seq: 0,
-            fee,
-            network_id: "tc".into(),
-            action: Action::TransferAsset {
-                network_id: "tc".into(),
-                burns: vec![],
-                inputs: vec![],
-                outputs: vec![],
-                metadata: "".into(),
-                approvals: vec![],
-                expiration: None,
-            },
-        };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
-        let keypair = Random.generate().unwrap();
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
-
-        assert_eq!(fee, item.cost());
-    }
-
-    #[test]
     fn pay_transaction_increases_cost() {
         let fee = 100;
         let quantity = 100_000;

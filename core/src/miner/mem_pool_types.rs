@@ -251,13 +251,8 @@ impl MemPoolItem {
     }
 
     pub fn expiration(&self) -> Option<u64> {
-        match &self.tx.action {
-            Action::TransferAsset {
-                expiration,
-                ..
-            } => *expiration,
-            _ => None,
-        }
+        // FIXME: please remove the expiration function
+        None
     }
 }
 
@@ -477,9 +472,6 @@ impl MemPoolFees {
     }
     pub fn min_cost(&self, action: &Action) -> u64 {
         match action {
-            Action::TransferAsset {
-                ..
-            } => self.min_asset_transfer_cost,
             Action::UnwrapCCC {
                 ..
             } => self.min_asset_unwrap_ccc_cost,
