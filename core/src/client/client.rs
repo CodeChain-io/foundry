@@ -16,9 +16,9 @@
 
 use super::importer::Importer;
 use super::{
-    AccountData, AssetClient, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify,
-    ClientConfig, DatabaseClient, EngineClient, EngineInfo, ExecuteClient, ImportBlock, ImportResult,
-    MiningBlockChainClient, Shard, StateInfo, StateOrBlock,
+    AccountData, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify, ClientConfig,
+    DatabaseClient, EngineClient, EngineInfo, ExecuteClient, ImportBlock, ImportResult, MiningBlockChainClient, Shard,
+    StateInfo, StateOrBlock,
 };
 use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock, SealedBlock};
 use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, InvoiceProvider, TransactionAddress};
@@ -35,18 +35,15 @@ use cdb::{new_journaldb, Algorithm, AsHashDB, DatabaseError};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress, Public};
 use cnetwork::NodeId;
-use cstate::{
-    ActionHandler, AssetScheme, FindActionHandler, OwnedAsset, StateDB, StateResult, TopLevelState, TopStateView,
-};
+use cstate::{ActionHandler, FindActionHandler, StateDB, StateResult, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
 use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
 use cvm::{decode, execute, ChainTimeInfo, ScriptResult, VMConfig};
 use kvdb::{DBTransaction, KeyValueDB};
-use merkle_trie::Result as TrieResult;
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use primitives::{Bytes, H160, H256, U256};
+use primitives::{Bytes, H256, U256};
 use rlp::Rlp;
 use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
@@ -324,70 +321,6 @@ impl TimeoutHandler for Client {
 impl DatabaseClient for Client {
     fn database(&self) -> Arc<dyn KeyValueDB> {
         Arc::clone(&self.db())
-    }
-}
-
-impl AssetClient for Client {
-    fn get_asset_scheme(&self, asset_type: H160, shard_id: ShardId, id: BlockId) -> TrieResult<Option<AssetScheme>> {
-        if let Some(state) = Client::state_at(&self, id) {
-            Ok(state.asset_scheme(shard_id, asset_type)?)
-        } else {
-            Ok(None)
-        }
-    }
-
-    fn get_asset(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        id: BlockId,
-    ) -> TrieResult<Option<OwnedAsset>> {
-        if let Some(state) = Client::state_at(&self, id) {
-            Ok(state.asset(shard_id, tracker, index)?)
-        } else {
-            Ok(None)
-        }
-    }
-
-    /// Checks whether an asset is spent or not.
-    ///
-    /// It returns None if such an asset never existed in the shard at the given block.
-    fn is_asset_spent(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        block_id: BlockId,
-    ) -> TrieResult<Option<bool>> {
-        let tx_address = match self.transaction_addresses(&tracker) {
-            Some(itx_address) => itx_address,
-            None => return Ok(None),
-        };
-
-        match self.block_number(&block_id) {
-            None => return Ok(None),
-            Some(block_number)
-                if block_number
-                    < self.block_number(&tx_address.block_hash.into()).expect("There is a successful transaction") =>
-            {
-                return Ok(None)
-            }
-            Some(_) => {}
-        }
-
-        let localized = self.transaction_by_tracker(&tracker).expect("There is a successful transaction");
-        let transaction = if let Some(tx) = Option::<ShardTransaction>::from(localized.action.clone()) {
-            tx
-        } else {
-            return Ok(None)
-        };
-        if !transaction.is_valid_shard_id_index(index, shard_id) {
-            return Ok(None)
-        }
-
-        let state = Client::state_at(&self, block_id).unwrap();
-        Ok(Some(state.asset(shard_id, tracker, index)?.is_none()))
     }
 }
 
