@@ -176,9 +176,6 @@ impl CodeChainMachine {
             Action::TransferAsset {
                 ..
             } => params.min_asset_transfer_cost(),
-            Action::IncreaseAssetSupply {
-                ..
-            } => params.min_asset_supply_increase_cost(),
             Action::UnwrapCCC {
                 ..
             } => params.min_asset_unwrap_ccc_cost(),

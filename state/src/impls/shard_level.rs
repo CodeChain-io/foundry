@@ -110,9 +110,6 @@ impl<'db> ShardLevelState<'db> {
             ShardTransaction::TransferAsset {
                 ..
             } => panic!("To be removed"),
-            ShardTransaction::IncreaseAssetSupply {
-                ..
-            } => panic!("To be removed"),
             ShardTransaction::UnwrapCCC {
                 ..
             } => panic!("To be removed"),

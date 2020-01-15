@@ -151,9 +151,6 @@ impl ActionWithTracker {
             ActionType::TransferAsset {
                 ..
             } => unimplemented!("To be removed"),
-            ActionType::IncreaseAssetSupply {
-                ..
-            } => unimplemented!("To be removed"),
             ActionType::UnwrapCCC {
                 ..
             } => unimplemented!("To be removed"),
