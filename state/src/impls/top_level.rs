@@ -1466,6 +1466,14 @@ mod tests_tx {
     }
 
     #[test]
+    fn get_shard_text_in_invalid_shard() {
+        let state = get_temp_state();
+
+        let shard_id = 3;
+        check_top_level_state!(state, [(shard_text: (shard_id, Tracker::from(H256::random())))]);
+    }
+
+    #[test]
     #[allow(clippy::cognitive_complexity)]
     fn apply_create_shard() {
         let mut state = get_temp_state();
@@ -1568,6 +1576,24 @@ mod tests_tx {
             (shard: 2 => owners: vec![sender], users: vec![shard_user]),
             (shard: 3 => owners: vec![sender], users: vec![]),
             (shard: 4)
+        ]);
+    }
+
+    #[test]
+    fn get_shard_text_in_invalid_shard2() {
+        let mut state = get_temp_state();
+        let (sender, sender_public, _) = address();
+        set_top_level_state!(state, [
+            (account: sender => balance: 20)
+        ]);
+        let tx = transaction!(fee: 5, Action::CreateShard { users: vec![] });
+        assert_eq!(Ok(()), state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0));
+
+        let invalid_shard_id = 3;
+        check_top_level_state!(state, [
+            (account: sender => (seq: 1, balance: 20 - 5)),
+            (shard: 0 => owners: vec![sender], users: vec![]),
+            (shard_text: (invalid_shard_id, Tracker::from(H256::random())))
         ]);
     }
 

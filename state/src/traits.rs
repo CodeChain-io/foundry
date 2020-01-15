@@ -103,6 +103,13 @@ pub trait TopStateView {
     }
 
     fn action_data(&self, key: &H256) -> TrieResult<Option<ActionData>>;
+
+    fn shard_text(&self, shard_id: ShardId, tracker: Tracker) -> TrieResult<Option<ShardText>> {
+        match self.shard_state(shard_id)? {
+            None => Ok(None),
+            Some(state) => state.text(tracker),
+        }
+    }
 }
 
 pub trait ShardStateView {

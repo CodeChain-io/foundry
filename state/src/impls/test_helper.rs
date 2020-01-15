@@ -167,6 +167,11 @@ macro_rules! check_top_level_state {
 
         check_top_level_state!($state, [$($x),*]);
     };
+    ($state:expr, [(shard_text: ($shard_id:expr, $tracker:expr)) $(,$x:tt)*]) => {
+        assert_eq!(Ok(None), $state.shard_text($shard_id, $tracker));
+
+        check_top_level_state!($state, [$($x), *]);
+    };
 }
 
 macro_rules! check_shard_level_state {
