@@ -17,10 +17,7 @@
 use crate::cache::ShardCache;
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::traits::{ShardState, ShardStateView};
-use crate::{
-    Asset, AssetScheme, AssetSchemeAddress, OwnedAsset, OwnedAssetAddress, ShardText, ShardTextAddress, StateDB,
-    StateResult,
-};
+use crate::{Asset, AssetScheme, AssetSchemeAddress, ShardText, ShardTextAddress, StateDB, StateResult};
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::AsHashDB;
 use ckey::Address;
@@ -28,7 +25,7 @@ use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, ShardId, Tracker};
 use cvm::ChainTimeInfo;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
-use primitives::{Bytes, H160, H256};
+use primitives::{H160, H256};
 use std::cell::RefCell;
 
 pub struct ShardLevelState<'db> {
@@ -144,20 +141,6 @@ impl<'db> ShardLevelState<'db> {
     ) -> TrieResult<AssetScheme> {
         self.cache.create_asset_scheme(&AssetSchemeAddress::new(asset_type, shard_id), || {
             AssetScheme::new_with_pool(metadata, supply, approver, registrar, allowed_script_hashes, pool)
-        })
-    }
-
-    pub fn create_asset(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        asset_type: H160,
-        lock_script_hash: H160,
-        parameters: Vec<Bytes>,
-        quantity: u64,
-    ) -> TrieResult<OwnedAsset> {
-        self.cache.create_asset(&OwnedAssetAddress::new(tracker, index, self.shard_id), || {
-            OwnedAsset::new(asset_type, lock_script_hash, parameters, quantity)
         })
     }
 
