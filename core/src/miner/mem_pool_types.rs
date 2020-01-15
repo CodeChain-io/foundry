@@ -477,9 +477,6 @@ impl MemPoolFees {
     }
     pub fn min_cost(&self, action: &Action) -> u64 {
         match action {
-            Action::MintAsset {
-                ..
-            } => self.min_asset_mint_cost,
             Action::TransferAsset {
                 ..
             } => self.min_asset_transfer_cost,
