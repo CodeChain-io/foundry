@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{AssetMintOutput, AssetTransferInput, AssetTransferOutput, HashingError, PartialHashing};
+use super::{AssetTransferInput, AssetTransferOutput, HashingError, PartialHashing};
 use crate::util::tag::Tag;
 use crate::{ShardId, Tracker, TxHash};
 use ccrypto::{blake128, blake256, blake256_with_key};
@@ -30,13 +30,6 @@ pub enum ShardTransaction {
         burns: Vec<AssetTransferInput>,
         inputs: Vec<AssetTransferInput>,
         outputs: Vec<AssetTransferOutput>,
-    },
-    IncreaseAssetSupply {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        asset_type: H160,
-        seq: usize,
-        output: AssetMintOutput,
     },
     UnwrapCCC {
         network_id: NetworkId,
@@ -81,10 +74,6 @@ impl ShardTransaction {
                 network_id,
                 ..
             }
-            | ShardTransaction::IncreaseAssetSupply {
-                network_id,
-                ..
-            }
             | ShardTransaction::UnwrapCCC {
                 network_id,
                 ..
@@ -109,9 +98,6 @@ impl ShardTransaction {
             ShardTransaction::TransferAsset {
                 ..
             } => panic!("To be removed"),
-            ShardTransaction::IncreaseAssetSupply {
-                ..
-            } => panic!("To be removed"),
             ShardTransaction::UnwrapCCC {
                 ..
             } => panic!("To be removed"),
@@ -127,9 +113,6 @@ impl ShardTransaction {
                 outputs,
                 ..
             } => index < outputs.len(),
-            ShardTransaction::IncreaseAssetSupply {
-                ..
-            } => index == 0,
             ShardTransaction::UnwrapCCC {
                 ..
             } => false,
@@ -151,10 +134,6 @@ impl ShardTransaction {
                 outputs,
                 ..
             } => id == outputs[index].shard_id,
-            ShardTransaction::IncreaseAssetSupply {
-                shard_id,
-                ..
-            } => &id == shard_id,
             ShardTransaction::UnwrapCCC {
                 ..
             } => unreachable!("UnwrapCCC doesn't have a valid index"),
@@ -293,7 +272,6 @@ enum AssetID {
     // COMPOSE_ID = 0x16,
     /// Deprecated
     // DECOMPOSE_ID = 0x17,
-    IncreaseSupply = 0x18,
     ShardStore = 0x19,
 }
 
@@ -309,7 +287,6 @@ impl Decodable for AssetID {
         match tag {
             0x11u8 => Ok(AssetID::UnwrapCCC),
             0x14 => Ok(AssetID::Transfer),
-            0x18 => Ok(AssetID::IncreaseSupply),
             0x19 => Ok(AssetID::ShardStore),
             _ => Err(DecoderError::Custom("Unexpected AssetID Value")),
         }
@@ -336,26 +313,6 @@ impl Decodable for ShardTransaction {
                     burns: d.list_at(2)?,
                     inputs: d.list_at(3)?,
                     outputs: d.list_at(4)?,
-                })
-            }
-            AssetID::IncreaseSupply => {
-                let item_count = d.item_count()?;
-                if item_count != 8 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 8,
-                    })
-                }
-                Ok(ShardTransaction::IncreaseAssetSupply {
-                    network_id: d.val_at(1)?,
-                    shard_id: d.val_at(2)?,
-                    asset_type: d.val_at(3)?,
-                    seq: d.val_at(4)?,
-                    output: AssetMintOutput {
-                        lock_script_hash: d.val_at(5)?,
-                        parameters: d.val_at(6)?,
-                        supply: d.val_at(7)?,
-                    },
                 })
             }
             AssetID::UnwrapCCC => {
@@ -408,28 +365,6 @@ impl Encodable for ShardTransaction {
                     .append_list(outputs)
                     // NOTE: The orders field removed.
                     .append_list(&empty);
-            }
-            ShardTransaction::IncreaseAssetSupply {
-                network_id,
-                shard_id,
-                asset_type,
-                seq,
-                output:
-                    AssetMintOutput {
-                        lock_script_hash,
-                        parameters,
-                        supply,
-                    },
-            } => {
-                s.begin_list(8)
-                    .append(&AssetID::IncreaseSupply)
-                    .append(network_id)
-                    .append(shard_id)
-                    .append(asset_type)
-                    .append(seq)
-                    .append(lock_script_hash)
-                    .append(parameters)
-                    .append(supply);
             }
             ShardTransaction::UnwrapCCC {
                 network_id,

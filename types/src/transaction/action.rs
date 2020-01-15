@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::errors::SyntaxError;
-use crate::transaction::{AssetMintOutput, AssetTransferInput, AssetTransferOutput, ShardTransaction};
+use crate::transaction::{AssetTransferInput, AssetTransferOutput, ShardTransaction};
 use crate::{CommonParams, ShardId, Tracker};
 use ccrypto::Blake;
 use ckey::{recover, Address, NetworkId, Public, Signature};
@@ -39,7 +39,6 @@ const TRANSFER_ASSET: u8 = 0x14;
 //const COMPOSE_ASSET: u8 = 0x16;
 // Derepcated
 //const DECOMPOSE_ASSET: u8 = 0x17;
-const INCREASE_ASSET_SUPPLY: u8 = 0x18;
 const SHARD_STORE: u8 = 0x19;
 
 const CUSTOM: u8 = 0xFF;
@@ -54,14 +53,6 @@ pub enum Action {
         metadata: String,
         approvals: Vec<Signature>,
         expiration: Option<u64>,
-    },
-    IncreaseAssetSupply {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        asset_type: H160,
-        seq: usize,
-        output: Box<AssetMintOutput>,
-        approvals: Vec<Signature>,
     },
     UnwrapCCC {
         network_id: NetworkId,
@@ -116,9 +107,6 @@ impl Action {
             Action::TransferAsset {
                 ..
             }
-            | Action::IncreaseAssetSupply {
-                ..
-            }
             | Action::UnwrapCCC {
                 ..
             }
@@ -157,18 +145,6 @@ impl Action {
 
                 if outputs.iter().any(|output| output.quantity == 0) {
                     return Err(SyntaxError::ZeroQuantity)
-                }
-            }
-            Action::IncreaseAssetSupply {
-                asset_type,
-                output,
-                ..
-            } => {
-                if output.supply == 0 {
-                    return Err(SyntaxError::ZeroQuantity)
-                }
-                if asset_type.is_zero() {
-                    return Err(SyntaxError::CannotChangeWcccAssetScheme)
                 }
             }
             Action::UnwrapCCC {
@@ -213,9 +189,6 @@ impl Action {
                     return Err(SyntaxError::MetadataTooBig)
                 }
             }
-            Action::IncreaseAssetSupply {
-                ..
-            } => {}
             Action::UnwrapCCC {
                 ..
             } => {}
@@ -252,10 +225,6 @@ impl Action {
             Action::TransferAsset {
                 approvals,
                 ..
-            }
-            | Action::IncreaseAssetSupply {
-                approvals,
-                ..
             } => Some(approvals),
             _ => None,
         }
@@ -264,10 +233,6 @@ impl Action {
     fn network_id(&self) -> Option<NetworkId> {
         match self {
             Action::TransferAsset {
-                network_id,
-                ..
-            }
-            | Action::IncreaseAssetSupply {
                 network_id,
                 ..
             }
@@ -298,20 +263,6 @@ impl From<Action> for Option<ShardTransaction> {
                 burns,
                 inputs,
                 outputs,
-            }),
-            Action::IncreaseAssetSupply {
-                network_id,
-                shard_id,
-                asset_type,
-                seq,
-                output,
-                ..
-            } => Some(ShardTransaction::IncreaseAssetSupply {
-                network_id,
-                shard_id,
-                asset_type,
-                seq,
-                output: *output,
             }),
             Action::UnwrapCCC {
                 network_id,
@@ -360,25 +311,6 @@ impl Encodable for Action {
                     .append(metadata)
                     .append_list(approvals)
                     .append(expiration);
-            }
-            Action::IncreaseAssetSupply {
-                network_id,
-                shard_id,
-                asset_type,
-                seq,
-                output,
-                approvals,
-            } => {
-                s.begin_list(9)
-                    .append(&INCREASE_ASSET_SUPPLY)
-                    .append(network_id)
-                    .append(shard_id)
-                    .append(asset_type)
-                    .append(seq)
-                    .append(&output.lock_script_hash)
-                    .append(&output.parameters)
-                    .append(&output.supply)
-                    .append_list(approvals);
             }
             Action::UnwrapCCC {
                 network_id,
@@ -486,27 +418,6 @@ impl Decodable for Action {
                     metadata: rlp.val_at(6)?,
                     approvals: rlp.list_at(7)?,
                     expiration: rlp.val_at(8)?,
-                })
-            }
-            INCREASE_ASSET_SUPPLY => {
-                let item_count = rlp.item_count()?;
-                if item_count != 9 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 9,
-                    })
-                }
-                Ok(Action::IncreaseAssetSupply {
-                    network_id: rlp.val_at(1)?,
-                    shard_id: rlp.val_at(2)?,
-                    asset_type: rlp.val_at(3)?,
-                    seq: rlp.val_at(4)?,
-                    output: Box::new(AssetMintOutput {
-                        lock_script_hash: rlp.val_at(5)?,
-                        parameters: rlp.val_at(6)?,
-                        supply: rlp.val_at(7)?,
-                    }),
-                    approvals: rlp.list_at(8)?,
                 })
             }
             UNWRAP_CCC => {
