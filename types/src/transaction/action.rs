@@ -34,7 +34,6 @@ const WRAP_CCC: u8 = 0x07;
 // Deprecated
 //const REMOVE: u8 = 0x09;
 const UNWRAP_CCC: u8 = 0x11;
-const MINT_ASSET: u8 = 0x13;
 const TRANSFER_ASSET: u8 = 0x14;
 const CHANGE_ASSET_SCHEME: u8 = 0x15;
 // Derepcated
@@ -48,16 +47,6 @@ const CUSTOM: u8 = 0xFF;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
-    MintAsset {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        metadata: String,
-        approver: Option<Address>,
-        registrar: Option<Address>,
-        allowed_script_hashes: Vec<H160>,
-        output: Box<AssetMintOutput>,
-        approvals: Vec<Signature>,
-    },
     TransferAsset {
         network_id: NetworkId,
         burns: Vec<AssetTransferInput>,
@@ -136,10 +125,7 @@ impl Action {
 
     pub fn shard_transaction(&self) -> Option<ShardTransaction> {
         match self {
-            Action::MintAsset {
-                ..
-            }
-            | Action::TransferAsset {
+            Action::TransferAsset {
                 ..
             }
             | Action::ChangeAssetScheme {
@@ -164,14 +150,6 @@ impl Action {
 
     pub fn verify(&self) -> Result<(), SyntaxError> {
         match self {
-            Action::MintAsset {
-                output,
-                ..
-            } => {
-                if output.supply == 0 {
-                    return Err(SyntaxError::ZeroQuantity)
-                }
-            }
             Action::TransferAsset {
                 burns,
                 inputs,
@@ -249,15 +227,6 @@ impl Action {
         }
 
         match self {
-            Action::MintAsset {
-                metadata,
-                ..
-            } => {
-                let max_asset_scheme_metadata_size = common_params.max_asset_scheme_metadata_size();
-                if metadata.len() > max_asset_scheme_metadata_size {
-                    return Err(SyntaxError::MetadataTooBig)
-                }
-            }
             Action::TransferAsset {
                 metadata,
                 ..
@@ -312,11 +281,7 @@ impl Action {
 
     fn approvals(&self) -> Option<&[Signature]> {
         match self {
-            Action::MintAsset {
-                approvals,
-                ..
-            }
-            | Action::TransferAsset {
+            Action::TransferAsset {
                 approvals,
                 ..
             }
@@ -334,11 +299,7 @@ impl Action {
 
     fn network_id(&self) -> Option<NetworkId> {
         match self {
-            Action::MintAsset {
-                network_id,
-                ..
-            }
-            | Action::TransferAsset {
+            Action::TransferAsset {
                 network_id,
                 ..
             }
@@ -366,24 +327,6 @@ impl Action {
 impl From<Action> for Option<ShardTransaction> {
     fn from(action: Action) -> Self {
         match action {
-            Action::MintAsset {
-                network_id,
-                shard_id,
-                metadata,
-                approver,
-                registrar,
-                allowed_script_hashes,
-                output,
-                ..
-            } => Some(ShardTransaction::MintAsset {
-                network_id,
-                shard_id,
-                metadata,
-                approver,
-                registrar,
-                allowed_script_hashes,
-                output: *output,
-            }),
             Action::TransferAsset {
                 network_id,
                 burns,
@@ -456,29 +399,6 @@ impl From<Action> for Option<ShardTransaction> {
 impl Encodable for Action {
     fn rlp_append(&self, s: &mut RlpStream) {
         match self {
-            Action::MintAsset {
-                network_id,
-                shard_id,
-                metadata,
-                approver,
-                registrar,
-                allowed_script_hashes,
-                output,
-                approvals,
-            } => {
-                s.begin_list(11)
-                    .append(&MINT_ASSET)
-                    .append(network_id)
-                    .append(shard_id)
-                    .append(metadata)
-                    .append(&output.lock_script_hash)
-                    .append(&output.parameters)
-                    .append(&output.supply)
-                    .append(approver)
-                    .append(registrar)
-                    .append_list(allowed_script_hashes)
-                    .append_list(approvals);
-            }
             Action::TransferAsset {
                 network_id,
                 burns,
@@ -633,29 +553,6 @@ impl Encodable for Action {
 impl Decodable for Action {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         match rlp.val_at(0)? {
-            MINT_ASSET => {
-                let item_count = rlp.item_count()?;
-                if item_count != 11 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 11,
-                    })
-                }
-                Ok(Action::MintAsset {
-                    network_id: rlp.val_at(1)?,
-                    shard_id: rlp.val_at(2)?,
-                    metadata: rlp.val_at(3)?,
-                    output: Box::new(AssetMintOutput {
-                        lock_script_hash: rlp.val_at(4)?,
-                        parameters: rlp.val_at(5)?,
-                        supply: rlp.val_at(6)?,
-                    }),
-                    approver: rlp.val_at(7)?,
-                    registrar: rlp.val_at(8)?,
-                    allowed_script_hashes: rlp.list_at(9)?,
-                    approvals: rlp.list_at(10)?,
-                })
-            }
             TRANSFER_ASSET => {
                 let item_count = rlp.item_count()?;
                 if item_count != 9 {
@@ -889,78 +786,6 @@ mod tests {
 
     use super::*;
     use crate::transaction::AssetOutPoint;
-
-    #[test]
-    fn encode_and_decode_mint_asset() {
-        rlp_encode_and_decode_test!(Action::MintAsset {
-            network_id: "tc".into(),
-            shard_id: 0xc,
-            metadata: "mint test".to_string(),
-            output: Box::new(AssetMintOutput {
-                lock_script_hash: H160::random(),
-                parameters: vec![],
-                supply: 10000,
-            }),
-            approver: None,
-            registrar: None,
-            allowed_script_hashes: vec![],
-            approvals: vec![Signature::random(), Signature::random(), Signature::random(), Signature::random()],
-        });
-    }
-
-    #[test]
-    fn encode_and_decode_mint_asset_with_parameters() {
-        rlp_encode_and_decode_test!(Action::MintAsset {
-            network_id: "tc".into(),
-            shard_id: 3,
-            metadata: "mint test".to_string(),
-            output: Box::new(AssetMintOutput {
-                lock_script_hash: H160::random(),
-                parameters: vec![vec![1, 2, 3], vec![4, 5, 6], vec![0, 7]],
-                supply: 10000,
-            }),
-            approver: None,
-            registrar: None,
-            allowed_script_hashes: vec![],
-            approvals: vec![Signature::random()],
-        });
-    }
-
-    #[test]
-    fn encode_and_decode_mint_with_single_quotation() {
-        rlp_encode_and_decode_test!(Action::MintAsset {
-            network_id: "tc".into(),
-            shard_id: 3,
-            metadata: "metadata has a single quotation(')".to_string(),
-            output: Box::new(AssetMintOutput {
-                lock_script_hash: H160::random(),
-                parameters: vec![vec![1, 2, 3], vec![4, 5, 6], vec![0, 7]],
-                supply: 10000,
-            }),
-            approver: None,
-            registrar: None,
-            allowed_script_hashes: vec![],
-            approvals: vec![Signature::random()],
-        });
-    }
-
-    #[test]
-    fn encode_and_decode_mint_with_apostrophe() {
-        rlp_encode_and_decode_test!(Action::MintAsset {
-            network_id: "tc".into(),
-            shard_id: 3,
-            metadata: "metadata has an apostrophe(’)".to_string(),
-            output: Box::new(AssetMintOutput {
-                lock_script_hash: H160::random(),
-                parameters: vec![vec![1, 2, 3], vec![4, 5, 6], vec![0, 7]],
-                supply: 10000,
-            }),
-            approver: None,
-            registrar: None,
-            allowed_script_hashes: vec![],
-            approvals: vec![Signature::random()],
-        });
-    }
 
     #[test]
     fn encode_and_decode_transfer_asset() {

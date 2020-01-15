@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -173,9 +173,6 @@ impl CodeChainMachine {
 
     pub fn min_cost(params: &CommonParams, action: &Action) -> u64 {
         match action {
-            Action::MintAsset {
-                ..
-            } => params.min_asset_mint_cost(),
             Action::TransferAsset {
                 ..
             } => params.min_asset_transfer_cost(),

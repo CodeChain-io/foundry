@@ -976,8 +976,7 @@ pub mod test {
 
     use crate::client::{AccountData, TestBlockChainClient};
     use ckey::{Generator, KeyPair, Random};
-    use ctypes::transaction::{Action, AssetMintOutput, Transaction};
-    use primitives::H160;
+    use ctypes::transaction::{Action, Transaction};
 
     use super::*;
     use rlp::rlp_encode_and_decode_test;
@@ -1217,41 +1216,6 @@ pub mod test {
     }
 
     #[test]
-    fn mint_transaction_does_not_increase_cost() {
-        let shard_id = 0xCCC;
-
-        let fee = 100;
-        let tx = Transaction {
-            seq: 0,
-            fee,
-            network_id: "tc".into(),
-            action: Action::MintAsset {
-                network_id: "tc".into(),
-                shard_id,
-                metadata: "Metadata".to_string(),
-                output: Box::new(AssetMintOutput {
-                    lock_script_hash: H160::zero(),
-                    parameters: vec![],
-                    supply: ::std::u64::MAX,
-                }),
-                approver: None,
-                registrar: None,
-                allowed_script_hashes: vec![],
-                approvals: vec![],
-            },
-        };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
-        let keypair = Random.generate().unwrap();
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
-
-        assert_eq!(fee, item.cost());
-    }
-
-    #[test]
     fn transfer_transaction_does_not_increase_cost() {
         let fee = 100;
         let tx = Transaction {
@@ -1305,44 +1269,6 @@ pub mod test {
     }
 
     #[test]
-    fn fee_per_byte_order_simple() {
-        let order1 = create_transaction_order(1_000_000_000, 100);
-        let order2 = create_transaction_order(1_500_000_000, 300);
-        assert!(
-            order1.fee_per_byte > order2.fee_per_byte,
-            "{} must be larger than {}",
-            order1.fee_per_byte,
-            order2.fee_per_byte
-        );
-        assert_eq!(Ordering::Greater, order1.cmp(&order2));
-    }
-
-    #[test]
-    fn fee_per_byte_order_sort() {
-        let factors: Vec<Vec<usize>> = vec![
-            vec![4, 9],   // 19607
-            vec![2, 9],   // 9803
-            vec![2, 6],   // 11494
-            vec![10, 10], // 46728
-            vec![2, 8],   // 10309
-        ];
-        let mut orders: Vec<TransactionOrder> = Vec::new();
-        for factor in factors {
-            let fee = 1_000_000 * (factor[0] as u64);
-            orders.push(create_transaction_order(fee, 10 * factor[1]));
-        }
-
-        let prev_orders = orders.clone();
-        orders.sort_unstable();
-        let sorted_orders = orders;
-        assert_eq!(prev_orders[1], sorted_orders[0]);
-        assert_eq!(prev_orders[4], sorted_orders[1]);
-        assert_eq!(prev_orders[2], sorted_orders[2]);
-        assert_eq!(prev_orders[0], sorted_orders[3]);
-        assert_eq!(prev_orders[3], sorted_orders[4]);
-    }
-
-    #[test]
     fn txorigin_encode_and_decode() {
         rlp_encode_and_decode_test!(TxOrigin::External);
     }
@@ -1381,19 +1307,9 @@ pub mod test {
             seq: 0,
             fee: 10,
             network_id: "tc".into(),
-            action: Action::MintAsset {
-                network_id: "tc".into(),
-                shard_id: 0,
-                metadata: String::from_utf8(vec![b'a'; 1]).unwrap(),
-                approver: None,
-                registrar: None,
-                allowed_script_hashes: vec![],
-                output: Box::new(AssetMintOutput {
-                    lock_script_hash: H160::zero(),
-                    parameters: vec![],
-                    supply: ::std::u64::MAX,
-                }),
-                approvals: vec![],
+            action: Action::Pay {
+                receiver: Default::default(),
+                quantity: 0,
             },
         };
         let timelock = TxTimelock {
@@ -1510,36 +1426,6 @@ pub mod test {
     fn create_mempool_input_with_pay(seq: u64, keypair: KeyPair, timelock: TxTimelock) -> MemPoolInput {
         let signed = create_signed_pay(seq, keypair);
         MemPoolInput::new(signed, TxOrigin::Local, timelock)
-    }
-
-    fn create_transaction_order(fee: u64, transaction_count: usize) -> TransactionOrder {
-        let keypair = Random.generate().unwrap();
-        let tx = Transaction {
-            seq: 0,
-            fee,
-            network_id: "tc".into(),
-            action: Action::MintAsset {
-                network_id: "tc".into(),
-                shard_id: 0,
-                metadata: String::from_utf8(vec![b'a'; transaction_count]).unwrap(),
-                approver: None,
-                registrar: None,
-                allowed_script_hashes: vec![],
-                output: Box::new(AssetMintOutput {
-                    lock_script_hash: H160::zero(),
-                    parameters: vec![],
-                    supply: ::std::u64::MAX,
-                }),
-                approvals: vec![],
-            },
-        };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
-        TransactionOrder::for_transaction(&item, 0)
     }
 
     fn abbreviated_mempool_add(
