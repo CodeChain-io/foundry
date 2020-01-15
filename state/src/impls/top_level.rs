@@ -419,9 +419,6 @@ impl TopLevelState {
                 handler.execute(bytes, self, fee_payer, signer_public)?;
                 return Ok(())
             }
-            Action::TransferAsset {
-                ..
-            } => panic!("To be removed"),
             Action::UnwrapCCC {
                 ..
             } => panic!("To be removed"),

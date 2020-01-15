@@ -32,7 +32,7 @@ use crate::types::{BlockId, TransactionId};
 use ckey::{public_to_address, Address, Password, PlatformAddress, Public};
 use cstate::{FindActionHandler, TopLevelState};
 use ctypes::errors::{HistoryError, RuntimeError};
-use ctypes::transaction::{Action, IncompleteTransaction, Timelock};
+use ctypes::transaction::{Action, IncompleteTransaction};
 use ctypes::{BlockHash, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
@@ -293,48 +293,15 @@ impl Miner {
         mem_pool.remove_all();
     }
 
-    fn calculate_timelock<C: BlockChainTrait>(&self, tx: &SignedTransaction, client: &C) -> Result<TxTimelock, Error> {
-        let mut max_block = None;
-        let mut max_timestamp = None;
-        if let Action::TransferAsset {
-            inputs,
-            ..
-        } = &tx.action
-        {
-            for input in inputs {
-                if let Some(timelock) = input.timelock {
-                    let (is_block_number, value) = match timelock {
-                        Timelock::Block(value) => (true, value),
-                        Timelock::BlockAge(value) => (
-                            true,
-                            client.transaction_block_number(&input.prev_out.tracker).ok_or_else(|| {
-                                Error::History(HistoryError::Timelocked {
-                                    timelock,
-                                    remaining_time: u64::max_value(),
-                                })
-                            })? + value,
-                        ),
-                        Timelock::Time(value) => (false, value),
-                        Timelock::TimeAge(value) => (
-                            false,
-                            client.transaction_block_timestamp(&input.prev_out.tracker).ok_or_else(|| {
-                                Error::History(HistoryError::Timelocked {
-                                    timelock,
-                                    remaining_time: u64::max_value(),
-                                })
-                            })? + value,
-                        ),
-                    };
-                    if is_block_number {
-                        if max_block.is_none() || max_block.expect("The previous guard ensures") < value {
-                            max_block = Some(value);
-                        }
-                    } else if max_timestamp.is_none() || max_timestamp.expect("The previous guard ensures") < value {
-                        max_timestamp = Some(value);
-                    }
-                }
-            }
-        };
+    // FIXME: please remove this function
+    fn calculate_timelock<C: BlockChainTrait>(
+        &self,
+        _tx: &SignedTransaction,
+        _client: &C,
+    ) -> Result<TxTimelock, Error> {
+        let max_block = None;
+        let max_timestamp = None;
+
         Ok(TxTimelock {
             block: max_block,
             timestamp: max_timestamp,

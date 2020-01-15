@@ -15,13 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::errors::SyntaxError;
-use crate::transaction::{AssetTransferInput, AssetTransferOutput, ShardTransaction};
+use crate::transaction::{AssetTransferInput, ShardTransaction};
 use crate::{CommonParams, ShardId, Tracker};
 use ccrypto::Blake;
 use ckey::{recover, Address, NetworkId, Public, Signature};
 use primitives::{Bytes, H160, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
-use std::collections::{HashMap, HashSet};
 
 const PAY: u8 = 0x02;
 const SET_REGULAR_KEY: u8 = 0x03;
@@ -34,7 +33,6 @@ const WRAP_CCC: u8 = 0x07;
 // Deprecated
 //const REMOVE: u8 = 0x09;
 const UNWRAP_CCC: u8 = 0x11;
-const TRANSFER_ASSET: u8 = 0x14;
 // Derepcated
 //const COMPOSE_ASSET: u8 = 0x16;
 // Derepcated
@@ -45,15 +43,6 @@ const CUSTOM: u8 = 0xFF;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
-    TransferAsset {
-        network_id: NetworkId,
-        burns: Vec<AssetTransferInput>,
-        inputs: Vec<AssetTransferInput>,
-        outputs: Vec<AssetTransferOutput>,
-        metadata: String,
-        approvals: Vec<Signature>,
-        expiration: Option<u64>,
-    },
     UnwrapCCC {
         network_id: NetworkId,
         burn: AssetTransferInput,
@@ -104,10 +93,7 @@ impl Action {
 
     pub fn shard_transaction(&self) -> Option<ShardTransaction> {
         match self {
-            Action::TransferAsset {
-                ..
-            }
-            | Action::UnwrapCCC {
+            Action::UnwrapCCC {
                 ..
             }
             | Action::ShardStore {
@@ -123,30 +109,6 @@ impl Action {
 
     pub fn verify(&self) -> Result<(), SyntaxError> {
         match self {
-            Action::TransferAsset {
-                burns,
-                inputs,
-                outputs,
-                ..
-            } => {
-                if outputs.len() > 512 {
-                    return Err(SyntaxError::TooManyOutputs(outputs.len()))
-                }
-                if !is_input_and_output_consistent(inputs, outputs) {
-                    return Err(SyntaxError::InconsistentTransactionInOut)
-                }
-                if burns.iter().any(|burn| burn.prev_out.quantity == 0) {
-                    return Err(SyntaxError::ZeroQuantity)
-                }
-                if inputs.iter().any(|input| input.prev_out.quantity == 0) {
-                    return Err(SyntaxError::ZeroQuantity)
-                }
-                check_duplication_in_prev_out(burns, inputs)?;
-
-                if outputs.iter().any(|output| output.quantity == 0) {
-                    return Err(SyntaxError::ZeroQuantity)
-                }
-            }
             Action::UnwrapCCC {
                 burn,
                 ..
@@ -180,15 +142,6 @@ impl Action {
         }
 
         match self {
-            Action::TransferAsset {
-                metadata,
-                ..
-            } => {
-                let max_transfer_metadata_size = common_params.max_transfer_metadata_size();
-                if metadata.len() > max_transfer_metadata_size {
-                    return Err(SyntaxError::MetadataTooBig)
-                }
-            }
             Action::UnwrapCCC {
                 ..
             } => {}
@@ -220,23 +173,14 @@ impl Action {
         Ok(())
     }
 
+    // FIXME: please remove this function
     fn approvals(&self) -> Option<&[Signature]> {
-        match self {
-            Action::TransferAsset {
-                approvals,
-                ..
-            } => Some(approvals),
-            _ => None,
-        }
+        None
     }
 
     fn network_id(&self) -> Option<NetworkId> {
         match self {
-            Action::TransferAsset {
-                network_id,
-                ..
-            }
-            | Action::UnwrapCCC {
+            Action::UnwrapCCC {
                 network_id,
                 ..
             }
@@ -252,18 +196,6 @@ impl Action {
 impl From<Action> for Option<ShardTransaction> {
     fn from(action: Action) -> Self {
         match action {
-            Action::TransferAsset {
-                network_id,
-                burns,
-                inputs,
-                outputs,
-                ..
-            } => Some(ShardTransaction::TransferAsset {
-                network_id,
-                burns,
-                inputs,
-                outputs,
-            }),
             Action::UnwrapCCC {
                 network_id,
                 burn,
@@ -290,28 +222,6 @@ impl From<Action> for Option<ShardTransaction> {
 impl Encodable for Action {
     fn rlp_append(&self, s: &mut RlpStream) {
         match self {
-            Action::TransferAsset {
-                network_id,
-                burns,
-                inputs,
-                outputs,
-                metadata,
-                approvals,
-                expiration,
-            } => {
-                let empty: Vec<AssetTransferOutput> = vec![];
-                s.begin_list(9)
-                    .append(&TRANSFER_ASSET)
-                    .append(network_id)
-                    .append_list(burns)
-                    .append_list(inputs)
-                    .append_list(outputs)
-                    // NOTE: The orders field removed.
-                    .append_list(&empty)
-                    .append(metadata)
-                    .append_list(approvals)
-                    .append(expiration);
-            }
             Action::UnwrapCCC {
                 network_id,
                 burn,
@@ -402,24 +312,6 @@ impl Encodable for Action {
 impl Decodable for Action {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         match rlp.val_at(0)? {
-            TRANSFER_ASSET => {
-                let item_count = rlp.item_count()?;
-                if item_count != 9 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 9,
-                    })
-                }
-                Ok(Action::TransferAsset {
-                    network_id: rlp.val_at(1)?,
-                    burns: rlp.list_at(2)?,
-                    inputs: rlp.list_at(3)?,
-                    outputs: rlp.list_at(4)?,
-                    metadata: rlp.val_at(6)?,
-                    approvals: rlp.list_at(7)?,
-                    expiration: rlp.val_at(8)?,
-                })
-            }
             UNWRAP_CCC => {
                 let item_count = rlp.item_count()?;
                 if item_count != 4 {
@@ -545,73 +437,12 @@ impl Decodable for Action {
     }
 }
 
-fn is_input_and_output_consistent(inputs: &[AssetTransferInput], outputs: &[AssetTransferOutput]) -> bool {
-    let mut sum: HashMap<(H160, ShardId), u128> = HashMap::new();
-
-    for input in inputs {
-        let shard_asset_type = (input.prev_out.asset_type, input.prev_out.shard_id);
-        let quantity = u128::from(input.prev_out.quantity);
-        *sum.entry(shard_asset_type).or_insert_with(Default::default) += quantity;
-    }
-    for output in outputs {
-        let shard_asset_type = (output.asset_type, output.shard_id);
-        let quantity = u128::from(output.quantity);
-        let current_quantity = if let Some(current_quantity) = sum.get(&shard_asset_type) {
-            if *current_quantity < quantity {
-                return false
-            }
-            *current_quantity
-        } else {
-            return false
-        };
-        let t = sum.insert(shard_asset_type, current_quantity - quantity);
-        debug_assert!(t.is_some());
-    }
-
-    sum.iter().all(|(_, sum)| *sum == 0)
-}
-
-fn check_duplication_in_prev_out(
-    burns: &[AssetTransferInput],
-    inputs: &[AssetTransferInput],
-) -> Result<(), SyntaxError> {
-    let mut prev_out_set = HashSet::new();
-    for input in inputs.iter().chain(burns) {
-        let prev_out = (input.prev_out.tracker, input.prev_out.index);
-        if !prev_out_set.insert(prev_out) {
-            return Err(SyntaxError::DuplicatedPreviousOutput {
-                tracker: input.prev_out.tracker,
-                index: input.prev_out.index,
-            })
-        }
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use rlp::rlp_encode_and_decode_test;
 
     use super::*;
     use crate::transaction::AssetOutPoint;
-
-    #[test]
-    fn encode_and_decode_transfer_asset() {
-        let burns = vec![];
-        let inputs = vec![];
-        let outputs = vec![];
-        let network_id = "tc".into();
-        let metadata = "".into();
-        rlp_encode_and_decode_test!(Action::TransferAsset {
-            network_id,
-            burns,
-            inputs,
-            outputs,
-            metadata,
-            approvals: vec![Signature::random(), Signature::random()],
-            expiration: Some(10),
-        });
-    }
 
     #[test]
     fn encode_and_decode_pay_action() {

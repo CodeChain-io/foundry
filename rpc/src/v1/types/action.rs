@@ -148,9 +148,6 @@ impl ActionWithTracker {
                 content,
                 tracker: tracker.unwrap(),
             },
-            ActionType::TransferAsset {
-                ..
-            } => unimplemented!("To be removed"),
             ActionType::UnwrapCCC {
                 ..
             } => unimplemented!("To be removed"),
