@@ -167,52 +167,6 @@ macro_rules! check_top_level_state {
 
         check_top_level_state!($state, [$($x),*]);
     };
-    ($state:expr, [(scheme: ($shard_id:expr, $asset_type:expr) => { supply: $supply:expr }) $(,$x:tt)*]) => {
-        let scheme = $state.asset_scheme($shard_id, $asset_type)
-            .expect(&format!("Cannot read AssetScheme from {}:{}", $shard_id, $asset_type))
-            .expect(&format!("AssetScheme for {}:{} not exist", $shard_id, $asset_type));
-        assert_eq!($supply, scheme.supply());
-
-        check_top_level_state!($state, [$($x),*]);
-    };
-    ($state:expr, [(scheme: ($shard_id:expr, $asset_type:expr) => { metadata: $metadata:expr, supply: $supply:expr }) $(,$x:tt)*]) => {
-        let scheme = $state.asset_scheme($shard_id, $asset_type)
-            .expect(&format!("Cannot read AssetScheme from {}:{}", $shard_id, $asset_type))
-            .expect(&format!("AssetScheme for {}:{} not exist", $shard_id, $asset_type));
-        assert_eq!(&$metadata, scheme.metadata());
-        assert_eq!($supply, scheme.supply());
-
-        check_top_level_state!($state, [$($x),*]);
-    };
-    ($state:expr, [(scheme: ($shard_id:expr, $asset_type:expr) => { metadata: $metadata:expr, supply: $supply:expr, approver: $approver:expr }) $(,$x:tt)*]) => {
-        let scheme = $state.asset_scheme($shard_id, $asset_type)
-            .expect(&format!("Cannot read AssetScheme from {}:{}", $shard_id, $asset_type))
-            .expect(&format!("AssetScheme for {}:{} not exist", $shard_id, $asset_type));
-        assert_eq!(&$metadata, scheme.metadata());
-        assert_eq!($supply, scheme.supply());
-        assert_eq!(Some(&$approver), scheme.approver().as_ref());
-
-        check_top_level_state!($state, [$($x),*]);
-    };
-    ($state:expr, [(scheme: ($shard_id:expr, $asset_type:expr)) $(,$x:tt)*]) => {
-        assert_eq!(Ok(None), $state.asset_scheme($shard_id, $asset_type));
-
-        check_top_level_state!($state, [$($x),*]);
-    };
-    ($state:expr, [(asset: ($tx_hash:expr, $index:expr, $shard_id:expr)) $(,$x:tt)*]) => {
-        assert_eq!(Ok(None), $state.asset($shard_id, $tx_hash, $index));
-
-        check_top_level_state!($state, [$($x),*]);
-    };
-    ($state:expr, [(asset: ($tx_hash:expr, $index:expr, $shard_id:expr) => { asset_type: $asset_type:expr, quantity: $quantity:expr }) $(,$x:tt)*]) => {
-        let asset = $state.asset($shard_id, $tx_hash, $index)
-            .expect(&format!("Cannot read Asset from {}:{}:{}", $shard_id, $tx_hash, $index))
-            .expect(&format!("Asset for {}:{}:{} not exist", $shard_id, $tx_hash, $index));
-        assert_eq!(&$asset_type, asset.asset_type());
-        assert_eq!($quantity, asset.quantity());
-
-        check_top_level_state!($state, [$($x),*]);
-    };
 }
 
 macro_rules! check_shard_level_state {
