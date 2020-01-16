@@ -158,7 +158,7 @@ impl MemPool {
                 .filter(|order| {
                     count += 1;
                     mem_usage += order.mem_usage;
-                    !order.origin.is_local_or_retracted() && (mem_usage > memory_limit || count > limit)
+                    !order.origin.is_local() && (mem_usage > memory_limit || count > limit)
                 })
                 .cloned()
                 .collect()
@@ -985,12 +985,7 @@ pub mod test {
     #[test]
     fn origin_ordering() {
         assert_eq!(TxOrigin::Local.cmp(&TxOrigin::External), Ordering::Less);
-        assert_eq!(TxOrigin::RetractedBlock.cmp(&TxOrigin::Local), Ordering::Less);
-        assert_eq!(TxOrigin::RetractedBlock.cmp(&TxOrigin::External), Ordering::Less);
-
         assert_eq!(TxOrigin::External.cmp(&TxOrigin::Local), Ordering::Greater);
-        assert_eq!(TxOrigin::Local.cmp(&TxOrigin::RetractedBlock), Ordering::Greater);
-        assert_eq!(TxOrigin::External.cmp(&TxOrigin::RetractedBlock), Ordering::Greater);
     }
 
     #[test]

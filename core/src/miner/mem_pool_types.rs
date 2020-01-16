@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -33,21 +33,17 @@ pub enum TxOrigin {
     Local,
     /// External transaction received from network
     External,
-    /// Transaction from retracted blocks
-    RetractedBlock,
 }
 
 type TxOriginType = u8;
 const LOCAL: TxOriginType = 0x01;
 const EXTERNAL: TxOriginType = 0x02;
-const RETRACTEDBLOCK: TxOriginType = 0x03;
 
 impl Encodable for TxOrigin {
     fn rlp_append(&self, s: &mut RlpStream) {
         match self {
             TxOrigin::Local => LOCAL.rlp_append(s),
             TxOrigin::External => EXTERNAL.rlp_append(s),
-            TxOrigin::RetractedBlock => RETRACTEDBLOCK.rlp_append(s),
         };
     }
 }
@@ -57,7 +53,6 @@ impl Decodable for TxOrigin {
         match d.as_val().expect("rlp decode Error") {
             LOCAL => Ok(TxOrigin::Local),
             EXTERNAL => Ok(TxOrigin::External),
-            RETRACTEDBLOCK => Ok(TxOrigin::RetractedBlock),
             _ => Err(DecoderError::Custom("Unexpected Txorigin type")),
         }
     }
@@ -76,8 +71,6 @@ impl Ord for TxOrigin {
         }
 
         match (*self, *other) {
-            (TxOrigin::RetractedBlock, _) => Ordering::Less,
-            (_, TxOrigin::RetractedBlock) => Ordering::Greater,
             (TxOrigin::Local, _) => Ordering::Less,
             _ => Ordering::Greater,
         }
@@ -87,10 +80,6 @@ impl Ord for TxOrigin {
 impl TxOrigin {
     pub fn is_local(self) -> bool {
         self == TxOrigin::Local
-    }
-
-    pub fn is_local_or_retracted(self) -> bool {
-        self == TxOrigin::Local || self == TxOrigin::RetractedBlock
     }
 
     pub fn is_external(self) -> bool {
@@ -329,7 +318,7 @@ impl CurrentQueue {
 
     pub fn insert(&mut self, order: TransactionOrder) {
         self.queue.insert(order);
-        if !order.origin.is_local_or_retracted() {
+        if !order.origin.is_local() {
             self.mem_usage += order.mem_usage;
             self.count += 1;
         }
@@ -338,7 +327,7 @@ impl CurrentQueue {
 
     pub fn remove(&mut self, order: &TransactionOrder) {
         assert!(self.queue.remove(order));
-        if !order.origin.is_local_or_retracted() {
+        if !order.origin.is_local() {
             self.mem_usage -= order.mem_usage;
             self.count -= 1;
         }
@@ -388,7 +377,7 @@ impl FutureQueue {
 
     pub fn insert(&mut self, order: TransactionOrder) {
         self.queue.insert(order);
-        if !order.origin.is_local_or_retracted() {
+        if !order.origin.is_local() {
             self.mem_usage += order.mem_usage;
             self.count += 1;
         }
@@ -396,7 +385,7 @@ impl FutureQueue {
 
     pub fn remove(&mut self, order: &TransactionOrder) {
         assert!(self.queue.remove(order));
-        if !order.origin.is_local_or_retracted() {
+        if !order.origin.is_local() {
             self.mem_usage -= order.mem_usage;
             self.count -= 1;
         }
