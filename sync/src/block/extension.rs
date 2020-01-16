@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -669,9 +669,8 @@ impl NetworkExtension<Event> for Extension {
             Event::NewHeaders {
                 imported,
                 enacted,
-                retracted,
             } => {
-                self.new_headers(imported, enacted, retracted);
+                self.new_headers(imported, enacted);
             }
             Event::NewBlocks {
                 imported,
@@ -688,7 +687,6 @@ pub enum Event {
     NewHeaders {
         imported: Vec<BlockHash>,
         enacted: Vec<BlockHash>,
-        retracted: Vec<BlockHash>,
     },
     NewBlocks {
         imported: Vec<BlockHash>,
@@ -697,7 +695,7 @@ pub enum Event {
 }
 
 impl Extension {
-    fn new_headers(&mut self, imported: Vec<BlockHash>, enacted: Vec<BlockHash>, retracted: Vec<BlockHash>) {
+    fn new_headers(&mut self, imported: Vec<BlockHash>, enacted: Vec<BlockHash>) {
         if let State::Full = self.state {
             for peer in self.header_downloaders.values_mut() {
                 peer.mark_as_imported(imported.clone());
@@ -723,7 +721,6 @@ impl Extension {
                 let is_empty = header.transactions_root() == parent.transactions_root();
                 self.body_downloader.add_target(&header.decode(), is_empty);
             }
-            self.body_downloader.remove_target(&retracted);
         }
     }
 
@@ -1192,7 +1189,6 @@ impl ChainNotify for BlockSyncSender {
         imported: Vec<BlockHash>,
         _invalid: Vec<BlockHash>,
         enacted: Vec<BlockHash>,
-        retracted: Vec<BlockHash>,
         _sealed: Vec<BlockHash>,
         _new_best_proposal: Option<BlockHash>,
     ) {
@@ -1200,7 +1196,6 @@ impl ChainNotify for BlockSyncSender {
             .send(Event::NewHeaders {
                 imported,
                 enacted,
-                retracted,
             })
             .unwrap();
     }
@@ -1210,7 +1205,6 @@ impl ChainNotify for BlockSyncSender {
         imported: Vec<BlockHash>,
         invalid: Vec<BlockHash>,
         _enacted: Vec<BlockHash>,
-        _retracted: Vec<BlockHash>,
         _sealed: Vec<BlockHash>,
     ) {
         self.0

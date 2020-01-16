@@ -38,7 +38,6 @@ impl ChainNotify for TendermintChainNotify {
         imported: Vec<BlockHash>,
         _invalid: Vec<BlockHash>,
         enacted: Vec<BlockHash>,
-        _retracted: Vec<BlockHash>,
         _sealed: Vec<BlockHash>,
     ) {
         self.inner

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,6 @@ pub trait ChainNotify: Send + Sync {
         _imported: Vec<BlockHash>,
         _invalid: Vec<BlockHash>,
         _enacted: Vec<BlockHash>,
-        _retracted: Vec<BlockHash>,
         _sealed: Vec<BlockHash>,
         _new_best_proposal: Option<BlockHash>,
     ) {
@@ -38,7 +37,6 @@ pub trait ChainNotify: Send + Sync {
         _imported: Vec<BlockHash>,
         _invalid: Vec<BlockHash>,
         _enacted: Vec<BlockHash>,
-        _retracted: Vec<BlockHash>,
         _sealed: Vec<BlockHash>,
     ) {
         // does nothing by default

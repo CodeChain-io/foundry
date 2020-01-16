@@ -150,18 +150,9 @@ impl Client {
         imported: &[BlockHash],
         invalid: &[BlockHash],
         enacted: &[BlockHash],
-        retracted: &[BlockHash],
         sealed: &[BlockHash],
     ) {
-        self.notify(|notify| {
-            notify.new_blocks(
-                imported.to_vec(),
-                invalid.to_vec(),
-                enacted.to_vec(),
-                retracted.to_vec(),
-                sealed.to_vec(),
-            )
-        });
+        self.notify(|notify| notify.new_blocks(imported.to_vec(), invalid.to_vec(), enacted.to_vec(), sealed.to_vec()));
     }
 
     pub fn new_headers(
@@ -169,7 +160,6 @@ impl Client {
         imported: &[BlockHash],
         invalid: &[BlockHash],
         enacted: &[BlockHash],
-        retracted: &[BlockHash],
         sealed: &[BlockHash],
         new_best_proposal: Option<BlockHash>,
     ) {
@@ -178,7 +168,6 @@ impl Client {
                 imported.to_vec(),
                 invalid.to_vec(),
                 enacted.to_vec(),
-                retracted.to_vec(),
                 sealed.to_vec(),
                 new_best_proposal,
             );
@@ -273,9 +262,9 @@ impl Client {
             return
         }
 
-        let (enacted, retracted) = self.importer.calculate_enacted_retracted(&[route]);
-        self.importer.miner.chain_new_blocks(self, &[], &[], &enacted, &retracted);
-        self.new_blocks(&[], &[], &enacted, &retracted, &[]);
+        let enacted = self.importer.extract_enacted(vec![route]);
+        self.importer.miner.chain_new_blocks(self, &[], &[], &enacted);
+        self.new_blocks(&[], &[], &enacted, &[]);
     }
 
     fn block_number_ref(&self, id: &BlockId) -> Option<BlockNumber> {
@@ -664,9 +653,9 @@ impl ImportBlock for Client {
             cinfo!(CLIENT, "Imported sealed block #{} ({})", number, h);
             route
         };
-        let (enacted, retracted) = self.importer.calculate_enacted_retracted(&[route]);
-        self.importer.miner.chain_new_blocks(self, &[h], &[], &enacted, &retracted);
-        self.new_blocks(&[h], &[], &enacted, &retracted, &[h]);
+        let enacted = self.importer.extract_enacted(vec![route]);
+        self.importer.miner.chain_new_blocks(self, &[h], &[], &enacted);
+        self.new_blocks(&[h], &[], &enacted, &[h]);
         self.db().flush().expect("DB flush failed.");
         Ok(h)
     }
