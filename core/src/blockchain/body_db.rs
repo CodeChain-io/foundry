@@ -36,10 +36,10 @@ pub struct BodyDB {
     // block cache
     body_cache: Mutex<LruCache<BlockHash, Bytes>>,
     address_by_hash_cache: RwLock<HashMap<TxHash, TransactionAddress>>,
-    pending_addresses_by_hash: RwLock<HashMap<TxHash, Option<TransactionAddress>>>,
+    pending_addresses_by_hash: RwLock<HashMap<TxHash, TransactionAddress>>,
 
     addresses_by_tracker_cache: Mutex<HashMap<Tracker, TransactionAddresses>>,
-    pending_addresses_by_tracker: Mutex<HashMap<Tracker, Option<TransactionAddresses>>>,
+    pending_addresses_by_tracker: Mutex<HashMap<Tracker, TransactionAddresses>>,
 
     db: Arc<dyn KeyValueDB>,
 }
@@ -90,13 +90,13 @@ impl BodyDB {
     pub fn update_best_block(&self, batch: &mut DBTransaction, best_block_changed: &BestBlockChanged) {
         let mut pending_addresses_by_hash = self.pending_addresses_by_hash.write();
         let mut pending_addresses_by_tracker = self.pending_addresses_by_tracker.lock();
-        batch.extend_with_option_cache(
+        batch.extend_with_cache(
             db::COL_EXTRA,
             &mut *pending_addresses_by_hash,
             self.new_transaction_address_entries(best_block_changed),
             CacheUpdatePolicy::Overwrite,
         );
-        batch.extend_with_option_cache(
+        batch.extend_with_cache(
             db::COL_EXTRA,
             &mut *pending_addresses_by_tracker,
             self.new_transaction_addresses_entries(best_block_changed),
@@ -113,33 +113,19 @@ impl BodyDB {
         let mut pending_addresses_by_tracker = self.pending_addresses_by_tracker.lock();
 
         let new_txs_by_hash = mem::replace(&mut *pending_addresses_by_hash, HashMap::new());
-        let (retracted_txs, enacted_txs) =
-            new_txs_by_hash.into_iter().partition::<HashMap<_, _>, _>(|&(_, ref value)| value.is_none());
 
-        address_by_hash_cache
-            .extend(enacted_txs.into_iter().map(|(k, v)| (k, v.expect("Transactions were partitioned; qed"))));
-
-        for hash in retracted_txs.keys() {
-            address_by_hash_cache.remove(hash);
-        }
+        address_by_hash_cache.extend(new_txs_by_hash.into_iter());
 
         let new_txs_by_tracker = mem::replace(&mut *pending_addresses_by_tracker, HashMap::new());
-        let (removed_transactions, added_transactions) =
-            new_txs_by_tracker.into_iter().partition::<HashMap<_, _>, _>(|&(_, ref value)| value.is_none());
 
-        addresses_by_tracker_cache
-            .extend(added_transactions.into_iter().map(|(k, v)| (k, v.expect("Transactions were partitioned; qed"))));
-
-        for hash in removed_transactions.keys() {
-            addresses_by_tracker_cache.remove(hash);
-        }
+        addresses_by_tracker_cache.extend(new_txs_by_tracker.into_iter());
     }
 
     /// This function returns modified transaction addresses.
     fn new_transaction_address_entries(
         &self,
         best_block_changed: &BestBlockChanged,
-    ) -> HashMap<TxHash, Option<TransactionAddress>> {
+    ) -> HashMap<TxHash, TransactionAddress> {
         let block = match best_block_changed.best_block() {
             Some(block) => block,
             None => return HashMap::new(),
@@ -157,7 +143,7 @@ impl BodyDB {
     fn new_transaction_addresses_entries(
         &self,
         best_block_changed: &BestBlockChanged,
-    ) -> HashMap<Tracker, Option<TransactionAddresses>> {
+    ) -> HashMap<Tracker, TransactionAddresses> {
         let block_hash = if let Some(best_block_hash) = best_block_changed.new_best_hash() {
             best_block_hash
         } else {
@@ -168,29 +154,18 @@ impl BodyDB {
             None => return HashMap::new(),
         };
 
-        let (removed, added): (
-            Box<dyn Iterator<Item = TrackerAndAddress>>,
-            Box<dyn Iterator<Item = TrackerAndAddress>>,
-        ) = match best_block_changed {
+        let added: Box<dyn Iterator<Item = TrackerAndAddress>> = match best_block_changed {
             BestBlockChanged::CanonChainAppended {
                 ..
-            } => (
-                Box::new(::std::iter::empty()),
-                Box::new(tracker_and_addresses_entries(block_hash, block.transactions())),
-            ),
+            } => Box::new(tracker_and_addresses_entries(block_hash, block.transactions())),
             BestBlockChanged::None => return Default::default(),
         };
 
         let mut added_addresses: HashMap<Tracker, TransactionAddresses> = Default::default();
-        let mut removed_addresses: HashMap<Tracker, TransactionAddresses> = Default::default();
         let mut trackers: HashSet<Tracker> = Default::default();
         for (tracker, address) in added {
             trackers.insert(tracker);
             *added_addresses.entry(tracker).or_insert_with(Default::default) += address;
-        }
-        for (tracker, address) in removed {
-            trackers.insert(tracker);
-            *removed_addresses.entry(tracker).or_insert_with(Default::default) += address;
         }
         let mut inserted_address: HashMap<Tracker, TransactionAddresses> = Default::default();
         for tracker in trackers.into_iter() {
@@ -198,11 +173,6 @@ impl BodyDB {
             inserted_address.insert(tracker, address);
         }
 
-        for (tracker, removed_address) in removed_addresses.into_iter() {
-            *inserted_address
-                .get_mut(&tracker)
-                .expect("inserted addresses are sum of added_addresses and removed_addresses") -= removed_address;
-        }
         for (tracker, added_address) in added_addresses.into_iter() {
             *inserted_address
                 .get_mut(&tracker)
@@ -210,15 +180,6 @@ impl BodyDB {
         }
 
         inserted_address
-            .into_iter()
-            .map(|(hash, address)| {
-                if address.is_empty() {
-                    (hash, None)
-                } else {
-                    (hash, Some(address))
-                }
-            })
-            .collect()
     }
 
     /// Create a block body from a block.
@@ -286,15 +247,12 @@ impl BodyProvider for BodyDB {
 fn tx_hash_and_address_entries(
     block_hash: BlockHash,
     tx_hashes: impl IntoIterator<Item = TxHash>,
-) -> impl Iterator<Item = (TxHash, Option<TransactionAddress>)> {
+) -> impl Iterator<Item = (TxHash, TransactionAddress)> {
     tx_hashes.into_iter().enumerate().map(move |(index, tx_hash)| {
-        (
-            tx_hash,
-            Some(TransactionAddress {
-                block_hash,
-                index,
-            }),
-        )
+        (tx_hash, TransactionAddress {
+            block_hash,
+            index,
+        })
     })
 }
 
