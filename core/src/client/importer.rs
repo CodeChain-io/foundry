@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -33,7 +33,8 @@ use kvdb::DBTransaction;
 use parking_lot::{Mutex, MutexGuard};
 use rlp::Encodable;
 use std::borrow::Borrow;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
+use std::iter::FromIterator;
 use std::sync::Arc;
 
 pub struct Importer {
@@ -134,9 +135,9 @@ impl Importer {
                 if !is_empty {
                     ctrace!(CLIENT, "Call new_blocks even though block verification queue is not empty");
                 }
-                let (enacted, retracted) = self.calculate_enacted_retracted(&import_results);
-                self.miner.chain_new_blocks(client, &imported_blocks, &invalid_blocks, &enacted, &retracted);
-                client.new_blocks(&imported_blocks, &invalid_blocks, &enacted, &retracted, &[]);
+                let enacted = self.extract_enacted(import_results);
+                self.miner.chain_new_blocks(client, &imported_blocks, &invalid_blocks, &enacted);
+                client.new_blocks(&imported_blocks, &invalid_blocks, &enacted, &[]);
             }
         }
 
@@ -144,30 +145,12 @@ impl Importer {
         imported
     }
 
-    pub fn calculate_enacted_retracted(&self, import_results: &[ImportRoute]) -> (Vec<BlockHash>, Vec<BlockHash>) {
-        fn map_to_vec(map: Vec<(BlockHash, bool)>) -> Vec<BlockHash> {
-            map.into_iter().map(|(k, _v)| k).collect()
-        }
-
-        // In ImportRoute we get all the blocks that have been enacted and retracted by single insert.
-        // Because we are doing multiple inserts some of the blocks that were enacted in import `k`
-        // could be retracted in import `k+1`. This is why to understand if after all inserts
-        // the block is enacted or retracted we iterate over all routes and at the end final state
-        // will be in the hashmap
-        let map = import_results.iter().fold(HashMap::new(), |mut map, route| {
-            for hash in &route.enacted {
-                map.insert(*hash, true);
-            }
-            for hash in &route.retracted {
-                map.insert(*hash, false);
-            }
-            map
+    pub fn extract_enacted(&self, import_results: Vec<ImportRoute>) -> Vec<BlockHash> {
+        let set = import_results.into_iter().fold(HashSet::new(), |mut set, route| {
+            set.extend(route.enacted);
+            set
         });
-
-        // Split to enacted retracted (using hashmap value)
-        let (enacted, retracted) = map.into_iter().partition(|&(_k, v)| v);
-        // And convert tuples to keys
-        (map_to_vec(enacted), map_to_vec(retracted))
+        Vec::from_iter(set)
     }
 
     // NOTE: the header of the block passed here is not necessarily sealed, as
@@ -336,7 +319,7 @@ impl Importer {
         }
 
         self.header_queue.mark_as_bad(&bad.drain().collect::<Vec<_>>());
-        let (enacted, retracted) = self.calculate_enacted_retracted(&routes);
+        let enacted = self.extract_enacted(routes);
 
         let new_best_proposal_header_hash = client.block_chain().best_proposal_header().hash();
         let best_proposal_header_changed = if prev_best_proposal_header_hash != new_best_proposal_header_hash {
@@ -349,7 +332,6 @@ impl Importer {
             &imported,
             &bad.iter().cloned().collect::<Vec<_>>(),
             &enacted,
-            &retracted,
             &[],
             best_proposal_header_changed,
         );
@@ -370,7 +352,7 @@ impl Importer {
             client.db().write_buffered(batch);
             chain.commit();
         }
-        client.new_headers(&[hash], &[], &[], &[], &[], None);
+        client.new_headers(&[hash], &[], &[], &[], None);
 
         client.db().flush().expect("DB flush failed.");
     }
@@ -388,8 +370,8 @@ impl Importer {
             client.db().write_buffered(batch);
             chain.commit();
         }
-        self.miner.chain_new_blocks(client, &[hash], &[], &[], &[]);
-        client.new_blocks(&[hash], &[], &[], &[], &[]);
+        self.miner.chain_new_blocks(client, &[hash], &[], &[]);
+        client.new_blocks(&[hash], &[], &[], &[]);
 
         client.db().flush().expect("DB flush failed.");
     }
