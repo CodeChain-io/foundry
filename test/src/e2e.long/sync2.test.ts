@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -58,27 +58,6 @@ describe("sync 2 nodes", function() {
                     await nodeB.sdk.rpc.chain.getTransaction(transaction.hash())
                 ).not.null;
             }).timeout(30_000);
-
-            describe("A-B diverged", function() {
-                beforeEach(async function() {
-                    await nodeA.sendPayTx();
-                    await nodeB.sendPayTx();
-                    expect(await nodeA.getBestBlockNumber()).to.equal(
-                        await nodeB.getBestBlockNumber()
-                    );
-                    expect(await nodeA.getBestBlockHash()).to.not.deep.equal(
-                        await nodeB.getBestBlockHash()
-                    );
-                });
-
-                it("It should be synced when nodeA becomes ahead", async function() {
-                    await nodeA.sendPayTx();
-                    await nodeB.waitBlockNumberSync(nodeA);
-                    expect(await nodeA.getBestBlockHash()).to.deep.equal(
-                        await nodeB.getBestBlockHash()
-                    );
-                }).timeout(10_000);
-            });
         });
 
         describe("nodeA becomes ahead", function() {
@@ -93,104 +72,6 @@ describe("sync 2 nodes", function() {
                     await nodeB.getBestBlockHash()
                 );
             }).timeout(10_000);
-        });
-
-        describe("A-B diverged", function() {
-            beforeEach(async function() {
-                await nodeA.sendPayTx();
-                await nodeB.sendPayTx();
-                expect(await nodeA.getBestBlockNumber()).to.equal(
-                    await nodeB.getBestBlockNumber()
-                );
-                expect(await nodeA.getBestBlockHash()).to.not.deep.equal(
-                    await nodeB.getBestBlockHash()
-                );
-            });
-
-            describe("nodeA becomes ahead", function() {
-                beforeEach(async function() {
-                    await nodeA.sendPayTx();
-                    expect(await nodeA.getBestBlockNumber()).to.equal(
-                        (await nodeB.getBestBlockNumber()) + 1
-                    );
-                });
-
-                it("It should be synced when A-B connected", async function() {
-                    await nodeA.connect(nodeB);
-                    await nodeB.waitBlockNumberSync(nodeA);
-                    expect(await nodeA.getBestBlockHash()).to.deep.equal(
-                        await nodeB.getBestBlockHash()
-                    );
-                }).timeout(30_000);
-            });
-        });
-
-        describe("A-B diverged with the same transaction", function() {
-            beforeEach(async function() {
-                const transactionA = await nodeA.sendPayTx({ fee: 10 });
-                await wait(1000);
-                const transactionB = await nodeB.sendPayTx({ fee: 10 });
-                expect(transactionA.unsigned).to.deep.equal(
-                    transactionB.unsigned
-                );
-                expect(await nodeA.getBestBlockNumber()).to.equal(
-                    await nodeB.getBestBlockNumber()
-                );
-                expect(await nodeA.getBestBlockHash()).to.not.deep.equal(
-                    await nodeB.getBestBlockHash()
-                );
-            });
-
-            describe("nodeA becomes ahead", function() {
-                beforeEach(async function() {
-                    await nodeA.sendPayTx();
-                    expect(await nodeA.getBestBlockNumber()).to.equal(
-                        (await nodeB.getBestBlockNumber()) + 1
-                    );
-                });
-
-                it("It should be synced when A-B connected", async function() {
-                    await nodeA.connect(nodeB);
-                    await nodeB.waitBlockNumberSync(nodeA);
-                    expect(await nodeA.getBestBlockHash()).to.deep.equal(
-                        await nodeB.getBestBlockHash()
-                    );
-                }).timeout(30_000);
-            });
-        });
-
-        describe("A-B diverged with the same transaction", function() {
-            describe("Both transaction success", function() {
-                beforeEach(async function() {
-                    const recipient = await nodeA.createP2PKHAddress();
-                    await nodeA.mintAsset({ supply: 10, recipient });
-                    await nodeB.mintAsset({ supply: 10, recipient });
-                    expect(await nodeA.getBestBlockNumber()).to.equal(
-                        await nodeB.getBestBlockNumber()
-                    );
-                    expect(await nodeA.getBestBlockHash()).to.not.deep.equal(
-                        await nodeB.getBestBlockHash()
-                    );
-                });
-
-                describe("nodeA becomes ahead", function() {
-                    beforeEach(async function() {
-                        this.timeout(60_000);
-                        await nodeA.sendPayTx();
-                        expect(await nodeA.getBestBlockNumber()).to.equal(
-                            (await nodeB.getBestBlockNumber()) + 1
-                        );
-                    });
-
-                    it("It should be synced when A-B connected", async function() {
-                        await nodeA.connect(nodeB);
-                        await nodeB.waitBlockNumberSync(nodeA);
-                        expect(await nodeA.getBestBlockHash()).to.deep.equal(
-                            await nodeB.getBestBlockHash()
-                        );
-                    }).timeout(30_000);
-                });
-            });
         });
     });
 
