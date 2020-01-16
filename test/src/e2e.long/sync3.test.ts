@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -67,39 +67,6 @@ describe("sync 3 nodes", function() {
                     );
                 }
             }).timeout(15_000 + 10_000 * NUM_NODES);
-
-            describe("All diverged by both end nodes", function() {
-                beforeEach(async function() {
-                    const nodeA = nodes[0];
-                    const nodeB = nodes[NUM_NODES - 1];
-                    await nodeA.sendPayTx();
-                    await nodeB.sendPayTx();
-                    expect(await nodeA.getBestBlockNumber()).to.equal(
-                        await nodeB.getBestBlockNumber()
-                    );
-                    expect(await nodeA.getBestBlockHash()).to.not.deep.equal(
-                        await nodeB.getBestBlockHash()
-                    );
-                });
-
-                it("Every node should be synced to one", async function() {
-                    const waits = [];
-                    for (let i = 1; i < NUM_NODES; i++) {
-                        waits.push(nodes[i].waitBlockNumberSync(nodes[0]));
-                    }
-                    await Promise.all(waits);
-                }).timeout(15_000 + 10_000 * NUM_NODES);
-
-                it("It should be synced when the first node becomes ahead", async function() {
-                    await nodes[0].sendPayTx();
-                    for (let i = 1; i < NUM_NODES; i++) {
-                        await nodes[i].waitBlockNumberSync(nodes[i - 1]);
-                        expect(await nodes[i].getBestBlockHash()).to.deep.equal(
-                            await nodes[0].getBestBlockHash()
-                        );
-                    }
-                }).timeout(15_000 + 10_000 * NUM_NODES);
-            });
         });
 
         describe("the first node becomes ahead", function() {
@@ -153,39 +120,6 @@ describe("sync 3 nodes", function() {
                 ).to.deep.equal(transaction.blockHash);
             }
         }).timeout(15_000 + 10_000 * NUM_NODES);
-
-        describe("All diverged by two nodes in the opposite", function() {
-            beforeEach(async function() {
-                const nodeA = nodes[0];
-                const nodeB = nodes[numHalf];
-                await nodeA.sendPayTx();
-                await nodeB.sendPayTx();
-                expect(await nodeA.getBestBlockNumber()).to.equal(
-                    await nodeB.getBestBlockNumber()
-                );
-                expect(await nodeA.getBestBlockHash()).to.not.deep.equal(
-                    await nodeB.getBestBlockHash()
-                );
-            });
-
-            it("Every node should be synced", async function() {
-                const waits = [];
-                for (let i = 1; i < NUM_NODES; i++) {
-                    waits.push(nodes[i].waitBlockNumberSync(nodes[0]));
-                }
-                await Promise.all(waits);
-            }).timeout(15_000 + 10_000 * NUM_NODES);
-
-            it("It should be synced when the first node becomes ahead", async function() {
-                await nodes[0].sendPayTx();
-                for (let i = 1; i < NUM_NODES; i++) {
-                    await nodes[i].waitBlockNumberSync(nodes[i - 1]);
-                    expect(await nodes[i].getBestBlockHash()).to.deep.equal(
-                        await nodes[0].getBestBlockHash()
-                    );
-                }
-            }).timeout(15_000 + 10_000 * NUM_NODES);
-        });
     }).timeout(NUM_NODES * 60_000);
 
     afterEach(async function() {
