@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -243,20 +243,6 @@ impl HeaderChain {
                 let best_header_view = HeaderView::new(best_header);
                 hashes.insert(best_header_view.number(), best_header_view.hash());
             }
-            BestHeaderChanged::BranchBecomingCanonChain {
-                tree_route,
-                best_header,
-            } => {
-                let ancestor_number = self.block_number(&tree_route.ancestor).expect("Ancestor always exist in DB");
-                let start_number = ancestor_number + 1;
-
-                for (index, hash) in tree_route.enacted.iter().enumerate() {
-                    hashes.insert(start_number + index as BlockNumber, *hash);
-                }
-
-                let best_header_view = HeaderView::new(best_header);
-                hashes.insert(best_header_view.number(), best_header_view.hash());
-            }
         }
 
         hashes
@@ -321,10 +307,15 @@ impl HeaderChain {
                 0 => BestHeaderChanged::CanonChainAppended {
                     best_header: new_best_header,
                 },
-                _ => BestHeaderChanged::BranchBecomingCanonChain {
-                    tree_route: route,
-                    best_header: new_best_header,
-                },
+                _ => {
+                    cerror!(
+                        HEADERCHAIN,
+                        "Older/Forked block header #{}({}) is inserted as a new block",
+                        new_header.number(),
+                        new_header.hash()
+                    );
+                    BestHeaderChanged::None
+                }
             }
         } else {
             BestHeaderChanged::None

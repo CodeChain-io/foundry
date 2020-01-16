@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -142,19 +142,6 @@ impl ImportRoute {
                 enacted: vec![],
                 omitted,
             },
-            BestBlockChanged::BranchBecomingCanonChain {
-                tree_route,
-                ..
-            } => {
-                let mut enacted = tree_route.enacted.clone();
-                enacted.push(best_block_changed.new_best_hash().unwrap());
-                let retracted = tree_route.retracted.clone();
-                ImportRoute {
-                    retracted,
-                    enacted,
-                    omitted,
-                }
-            }
         }
     }
 
@@ -180,19 +167,6 @@ impl ImportRoute {
                 enacted: vec![],
                 omitted,
             },
-            BestHeaderChanged::BranchBecomingCanonChain {
-                tree_route,
-                ..
-            } => {
-                let mut enacted = tree_route.enacted.clone();
-                enacted.push(best_header_changed.new_best_hash().unwrap());
-                let retracted = tree_route.retracted.clone();
-                ImportRoute {
-                    retracted,
-                    enacted,
-                    omitted,
-                }
-            }
         }
     }
 
