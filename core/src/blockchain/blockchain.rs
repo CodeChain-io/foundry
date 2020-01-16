@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -256,10 +256,15 @@ impl BlockChain {
                 0 => BestBlockChanged::CanonChainAppended {
                     best_block: new_best_block,
                 },
-                _ => BestBlockChanged::BranchBecomingCanonChain {
-                    tree_route: route,
-                    best_block: new_best_block,
-                },
+                _ => {
+                    cerror!(
+                        BLOCKCHAIN,
+                        "Older/Forked block header #{}({}) is inserted as a new block",
+                        new_header.number(),
+                        new_header.hash()
+                    );
+                    BestBlockChanged::None
+                }
             }
         } else {
             BestBlockChanged::None

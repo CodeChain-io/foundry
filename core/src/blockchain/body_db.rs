@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -140,11 +140,6 @@ impl BodyDB {
         &self,
         best_block_changed: &BestBlockChanged,
     ) -> HashMap<TxHash, Option<TransactionAddress>> {
-        let block_hash = if let Some(best_block_hash) = best_block_changed.new_best_hash() {
-            best_block_hash
-        } else {
-            return HashMap::new()
-        };
         let block = match best_block_changed.best_block() {
             Some(block) => block,
             None => return HashMap::new(),
@@ -155,27 +150,6 @@ impl BodyDB {
             BestBlockChanged::CanonChainAppended {
                 ..
             } => tx_hash_and_address_entries(best_block_changed.new_best_hash().unwrap(), tx_hashes).collect(),
-            BestBlockChanged::BranchBecomingCanonChain {
-                tree_route,
-                ..
-            } => {
-                let enacted = tree_route.enacted.iter().flat_map(|hash| {
-                    let body = self.block_body(hash).expect("Enacted block must be in database.");
-                    let enacted_tx_hashes = body.transaction_hashes();
-                    tx_hash_and_address_entries(*hash, enacted_tx_hashes)
-                });
-
-                let current_addresses = { tx_hash_and_address_entries(block_hash, tx_hashes) };
-
-                let retracted = tree_route.retracted.iter().flat_map(|hash| {
-                    let body = self.block_body(&hash).expect("Retracted block must be in database.");
-                    let retracted_tx_hashes = body.transaction_hashes().into_iter();
-                    retracted_tx_hashes.map(|hash| (hash, None))
-                });
-
-                // The order here is important! Don't remove transactions if it was part of enacted blocks as well.
-                retracted.chain(enacted).chain(current_addresses).collect()
-            }
             BestBlockChanged::None => HashMap::new(),
         }
     }
@@ -204,26 +178,6 @@ impl BodyDB {
                 Box::new(::std::iter::empty()),
                 Box::new(tracker_and_addresses_entries(block_hash, block.transactions())),
             ),
-            BestBlockChanged::BranchBecomingCanonChain {
-                ref tree_route,
-                ..
-            } => {
-                let enacted = tree_route
-                    .enacted
-                    .iter()
-                    .flat_map(|hash| {
-                        let body = self.block_body(hash).expect("Enacted block must be in database.");
-                        tracker_and_addresses_entries(*hash, body.transactions())
-                    })
-                    .chain(tracker_and_addresses_entries(block_hash, block.transactions()));
-
-                let retracted = tree_route.retracted.iter().flat_map(|hash| {
-                    let body = self.block_body(hash).expect("Retracted block must be in database.");
-                    tracker_and_addresses_entries(*hash, body.transactions())
-                });
-
-                (Box::new(retracted), Box::new(enacted))
-            }
             BestBlockChanged::None => return Default::default(),
         };
 
