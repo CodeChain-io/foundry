@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::{BlockChainTrait, Client, ClientConfig};
-use crate::block::{enact, IsBlock, LockedBlock};
+use crate::block::{enact, Block, IsBlock, LockedBlock};
 use crate::blockchain::{BodyProvider, HeaderProvider, ImportRoute};
 use crate::client::EngineInfo;
 use crate::consensus::CodeChainEngine;
@@ -27,7 +27,7 @@ use crate::verification::queue::{BlockQueue, HeaderQueue};
 use crate::verification::{self, PreverifiedBlock, Verifier};
 use crate::views::{BlockView, HeaderView};
 use cio::IoChannel;
-use ctypes::header::Header;
+use ctypes::header::{Header, Seal};
 use ctypes::BlockHash;
 use kvdb::DBTransaction;
 use parking_lot::{Mutex, MutexGuard};
@@ -359,19 +359,47 @@ impl Importer {
         imported.len()
     }
 
-    pub fn import_bootstrap_header<'a>(&'a self, header: &'a Header, client: &Client, _importer_lock: &MutexGuard<()>) {
+    pub fn import_trusted_header<'a>(&'a self, header: &'a Header, client: &Client, _importer_lock: &MutexGuard<()>) {
         let hash = header.hash();
-        ctrace!(CLIENT, "Importing bootstrap header {}-{:?}", header.number(), hash);
+        ctrace!(CLIENT, "Importing trusted header #{}-{:?}", header.number(), hash);
 
         {
             let chain = client.block_chain();
             let mut batch = DBTransaction::new();
-            chain.insert_bootstrap_header(&mut batch, &HeaderView::new(&header.rlp_bytes()));
+            chain.insert_floating_header(&mut batch, &HeaderView::new(&header.rlp_bytes()));
             client.db().write_buffered(batch);
             chain.commit();
         }
+        client.new_headers(&[hash], &[], &[], &[], &[], None);
 
-        client.new_headers(&[hash], &[], &[hash], &[], &[], Some(hash));
+        client.db().flush().expect("DB flush failed.");
+    }
+
+    pub fn import_trusted_block<'a>(&'a self, block: &'a Block, client: &Client, importer_lock: &MutexGuard<()>) {
+        let header = &block.header;
+        let hash = header.hash();
+        ctrace!(CLIENT, "Importing trusted block #{}-{:?}", header.number(), hash);
+
+        self.import_trusted_header(header, client, importer_lock);
+        {
+            let chain = client.block_chain();
+            let mut batch = DBTransaction::new();
+            chain.insert_floating_block(&mut batch, &block.rlp_bytes(&Seal::With));
+            client.db().write_buffered(batch);
+            chain.commit();
+        }
+        self.miner.chain_new_blocks(client, &[hash], &[], &[], &[]);
+        client.new_blocks(&[hash], &[], &[], &[], &[]);
+
+        client.db().flush().expect("DB flush failed.");
+    }
+
+    pub fn force_update_best_block(&self, hash: &BlockHash, client: &Client) {
+        let chain = client.block_chain();
+        let mut batch = DBTransaction::new();
+        chain.force_update_best_block(&mut batch, hash);
+        client.db().write_buffered(batch);
+        chain.commit();
 
         client.db().flush().expect("DB flush failed.");
     }

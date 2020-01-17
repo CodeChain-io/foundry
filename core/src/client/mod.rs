@@ -28,7 +28,7 @@ pub use self::client::Client;
 pub use self::config::ClientConfig;
 pub use self::test_client::TestBlockChainClient;
 
-use crate::block::{ClosedBlock, OpenBlock, SealedBlock};
+use crate::block::{Block, ClosedBlock, OpenBlock, SealedBlock};
 use crate::blockchain_info::BlockChainInfo;
 use crate::consensus::EngineError;
 use crate::encoded;
@@ -40,8 +40,9 @@ use ckey::{Address, NetworkId, PlatformAddress, Public};
 use cmerkle::Result as TrieResult;
 use cnetwork::NodeId;
 use cstate::{AssetScheme, FindActionHandler, OwnedAsset, StateResult, TopLevelState, TopStateView};
+use ctypes::header::Header;
 use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
-use ctypes::{BlockHash, BlockNumber, CommonParams, Header, ShardId, Tracker, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
 use primitives::{Bytes, H160, H256, U256};
@@ -193,9 +194,16 @@ pub trait ImportBlock {
     /// Import a header into the blockchain
     fn import_header(&self, bytes: Bytes) -> Result<BlockHash, BlockImportError>;
 
-    /// Import a trusted bootstrap header into the blockchain
-    /// Bootstrap headers don't execute any verifications
-    fn import_bootstrap_header(&self, bytes: &Header) -> Result<BlockHash, BlockImportError>;
+    /// Import a trusted header into the blockchain
+    /// Trusted header doesn't go through any verifications and doesn't update the best header
+    fn import_trusted_header(&self, header: &Header) -> Result<BlockHash, BlockImportError>;
+
+    /// Import a trusted block into the blockchain
+    /// Trusted block doesn't go through any verifications and doesn't update the best block
+    fn import_trusted_block(&self, block: &Block) -> Result<BlockHash, BlockImportError>;
+
+    /// Forcefully update the best block
+    fn force_update_best_block(&self, hash: &BlockHash);
 
     /// Import sealed block. Skips all verifications.
     fn import_sealed_block(&self, block: &SealedBlock) -> ImportResult;

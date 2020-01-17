@@ -30,7 +30,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::block::{ClosedBlock, OpenBlock, SealedBlock};
+use crate::block::{Block, ClosedBlock, OpenBlock, SealedBlock};
 use crate::blockchain_info::BlockChainInfo;
 use crate::client::{
     AccountData, BlockChainClient, BlockChainTrait, BlockProducer, BlockStatus, ConsensusClient, EngineInfo,
@@ -53,6 +53,7 @@ use cnetwork::NodeId;
 use cstate::tests::helpers::empty_top_state;
 use cstate::{FindActionHandler, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
+use ctypes::header::Header;
 use ctypes::transaction::{Action, Transaction};
 use ctypes::{BlockHash, BlockNumber, CommonParams, Header as BlockHeader, Tracker, TxHash};
 use cvm::ChainTimeInfo;
@@ -495,7 +496,15 @@ impl ImportBlock for TestBlockChainClient {
         unimplemented!()
     }
 
-    fn import_bootstrap_header(&self, _header: &BlockHeader) -> Result<BlockHash, BlockImportError> {
+    fn import_trusted_header(&self, _header: &Header) -> Result<BlockHash, BlockImportError> {
+        unimplemented!()
+    }
+
+    fn import_trusted_block(&self, _block: &Block) -> Result<BlockHash, BlockImportError> {
+        unimplemented!()
+    }
+
+    fn force_update_best_block(&self, _hash: &BlockHash) {
         unimplemented!()
     }
 
