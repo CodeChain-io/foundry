@@ -232,10 +232,8 @@ impl Extension {
         let mut body_downloader = BodyDownloader::default();
         for neighbors in hollow_headers.windows(2).rev() {
             let child = &neighbors[0];
-            let parent = &neighbors[1];
             cdebug!(SYNC, "Adding block #{} (hash: {}) for initial body download target", child.number(), child.hash());
-            let is_empty = child.transactions_root() == parent.transactions_root();
-            body_downloader.add_target(child, is_empty);
+            body_downloader.add_target(child);
         }
         cinfo!(SYNC, "Sync extension initialized");
         Extension {
@@ -715,12 +713,7 @@ impl Extension {
                 .filter(|header| self.client.block_body(&BlockId::Hash(header.hash())).is_none())
                 .collect(); // FIXME: No need to collect here if self is not borrowed.
             for header in headers {
-                let parent = self
-                    .client
-                    .block_header(&BlockId::Hash(header.parent_hash()))
-                    .expect("Enacted header must have parent");
-                let is_empty = header.transactions_root() == parent.transactions_root();
-                self.body_downloader.add_target(&header.decode(), is_empty);
+                self.body_downloader.add_target(&header.decode());
             }
             self.body_downloader.remove_target(&retracted);
         }

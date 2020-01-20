@@ -67,11 +67,11 @@ impl BodyDownloader {
         self.downloading.shrink_to_fit();
     }
 
-    pub fn add_target(&mut self, header: &Header, is_empty: bool) {
+    pub fn add_target(&mut self, header: &Header) {
         cdebug!(SYNC, "Add download target: {}", header.hash());
         self.targets.push(Target {
             hash: header.hash(),
-            is_empty,
+            is_empty: header.is_empty(),
         });
     }
 
