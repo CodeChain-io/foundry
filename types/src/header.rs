@@ -128,6 +128,11 @@ impl Header {
         &self.transactions_root
     }
 
+    /// Get whether the block has transactions.
+    pub fn is_empty(&self) -> bool {
+        self.transactions_root() == &BLAKE_NULL_RLP
+    }
+
     /// Get the score field of the header.
     pub fn score(&self) -> &U256 {
         &self.score
