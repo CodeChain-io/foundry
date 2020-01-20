@@ -19,7 +19,10 @@ use std::collections::hash_map;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 
-pub fn fee_distribute(total_min_fee: u64, stakes: &HashMap<Address, u64>) -> FeeDistributeIter<'_> {
+pub fn fee_distribute<S: ::std::hash::BuildHasher>(
+    total_min_fee: u64,
+    stakes: &HashMap<Address, u64, S>,
+) -> FeeDistributeIter<'_> {
     FeeDistributeIter {
         total_stakes: stakes.values().sum(),
         total_min_fee,
