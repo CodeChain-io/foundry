@@ -259,7 +259,6 @@ dependencies = [
  "codechain-key",
  "codechain-keystore",
  "codechain-logger",
- "codechain-merkle",
  "codechain-network",
  "codechain-state",
  "codechain-timer",
@@ -273,6 +272,7 @@ dependencies = [
  "linked-hash-map",
  "log 0.4.6",
  "lru-cache",
+ "merkle-trie",
  "num-rational",
  "parking_lot 0.6.4",
  "primitives",
@@ -288,7 +288,7 @@ dependencies = [
 [[package]]
 name = "codechain-crypto"
 version = "0.1.0"
-source = "git+https://github.com/CodeChain-io/rust-codechain-crypto.git#2857470de2f5480b7d61ff57fb652f9d9fc5585b"
+source = "git+https://github.com/CodeChain-io/rust-codechain-crypto.git#0e2cc259dbc0c50a67ad267d8d42ad940345bf29"
 dependencies = [
  "primitives",
  "quick-error",
@@ -299,7 +299,7 @@ dependencies = [
 [[package]]
 name = "codechain-db"
 version = "0.1.0"
-source = "git+https://github.com/CodeChain-io/rust-codechain-db.git#9948464d24f3432f70fcb12df97c81ec8eab7bfa"
+source = "git+https://github.com/CodeChain-io/rust-codechain-db.git#5fcee07368bf31a01bf4b2d29a09fca627c45bff"
 dependencies = [
  "codechain-crypto",
  "kvdb",
@@ -412,23 +412,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "codechain-merkle"
-version = "0.1.0"
-dependencies = [
- "codechain-crypto",
- "codechain-db",
- "kvdb",
- "kvdb-rocksdb",
- "primitives",
- "rand 0.6.1",
- "rlp",
- "rlp_derive",
- "snap",
- "tempfile",
- "trie-standardmap",
-]
-
-[[package]]
 name = "codechain-network"
 version = "0.1.0"
 dependencies = [
@@ -497,13 +480,13 @@ dependencies = [
  "codechain-db",
  "codechain-key",
  "codechain-logger",
- "codechain-merkle",
  "codechain-types",
  "codechain-vm",
  "kvdb",
  "kvdb-memorydb",
  "log 0.4.6",
  "lru-cache",
+ "merkle-trie",
  "parking_lot 0.6.4",
  "primitives",
  "rlp",
@@ -519,7 +502,6 @@ dependencies = [
  "codechain-db",
  "codechain-key",
  "codechain-logger",
- "codechain-merkle",
  "codechain-network",
  "codechain-state",
  "codechain-timer",
@@ -527,6 +509,7 @@ dependencies = [
  "kvdb",
  "kvdb-memorydb",
  "log 0.4.6",
+ "merkle-trie",
  "never-type",
  "parking_lot 0.6.4",
  "primitives",
@@ -931,7 +914,6 @@ dependencies = [
  "codechain-key",
  "codechain-keystore",
  "codechain-logger",
- "codechain-merkle",
  "codechain-network",
  "codechain-rpc",
  "codechain-state",
@@ -1533,6 +1515,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0f9dc261e2b62d7a622bf416ea3c5245cdd5d9a7fcc428c0d06804dfce1775b3"
 
 [[package]]
+name = "merkle-trie"
+version = "0.2.0"
+source = "git+https://github.com/CodeChain-io/rust-merkle-trie.git#a4400e98af6241f5da4798025d5b13e39e45b1a7"
+dependencies = [
+ "codechain-crypto",
+ "codechain-db",
+ "primitives",
+ "rand 0.6.1",
+ "rlp",
+ "rlp_derive",
+ "snap",
+]
+
+[[package]]
 name = "mime"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1983,7 +1979,7 @@ checksum = "e3cbf9f658cdb5000fcf6f362b8ea2ba154b9f146a61c7a20d647034c6b6561b"
 [[package]]
 name = "primitives"
 version = "0.4.0"
-source = "git+https://github.com/CodeChain-io/rust-codechain-primitives.git#9dbda1bcc2b8f68c00e6426754800fb806e8117a"
+source = "git+https://github.com/CodeChain-io/rust-codechain-primitives.git#eb8da500a77fa84e53750e8661a8603a78a2a7b3"
 dependencies = [
  "ethereum-types",
 ]
@@ -2139,7 +2135,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "771b009e3a508cb67e8823dda454aaa5368c7bc1c16829fb77d3e980440dd34a"
 dependencies = [
- "rand_core 0.3.0",
+ "rand_core 0.2.2",
  "rustc_version",
 ]
 
@@ -2183,7 +2179,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b40677c7be09ae76218dc623efbf7b18e34bced3f38883af07bb75630a21bc4"
 dependencies = [
- "rand_core 0.3.0",
+ "rand_core 0.2.2",
 ]
 
 [[package]]
@@ -2220,7 +2216,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "effa3fcaa47e18db002bdde6060944b6d2f9cfd8db471c30e873448ad9187be3"
 dependencies = [
- "rand_core 0.3.0",
+ "rand_core 0.2.2",
 ]
 
 [[package]]
@@ -2309,7 +2305,7 @@ dependencies = [
 [[package]]
 name = "rlp"
 version = "0.4.0"
-source = "git+https://github.com/CodeChain-io/rlp.git#339cc6aa02d91635199178e7c7be07b347054697"
+source = "git+https://github.com/CodeChain-io/rlp.git#64fdbc5758e05483f62fae99521520f566eaca9d"
 dependencies = [
  "primitives",
  "rustc-hex 1.0.0",
@@ -2327,7 +2323,7 @@ dependencies = [
 [[package]]
 name = "rlp_derive"
 version = "0.2.0"
-source = "git+https://github.com/CodeChain-io/rlp.git#339cc6aa02d91635199178e7c7be07b347054697"
+source = "git+https://github.com/CodeChain-io/rlp.git#64fdbc5758e05483f62fae99521520f566eaca9d"
 dependencies = [
  "proc-macro2 0.4.30",
  "quote 0.6.12",

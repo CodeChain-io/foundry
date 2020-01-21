@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018, 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,11 +18,11 @@ pub mod helpers {
     use std::sync::Arc;
 
     use cdb::AsHashDB;
-    use cmerkle::{TrieFactory, TrieMut};
     use ctypes::{BlockNumber, Tracker};
     use cvm::ChainTimeInfo;
     use kvdb::KeyValueDB;
     use kvdb_memorydb;
+    use merkle_trie::{TrieFactory, TrieMut};
     use primitives::H256;
     use rlp::Encodable;
 
