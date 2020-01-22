@@ -38,18 +38,6 @@ impl Default for EngineSigner {
 }
 
 impl EngineSigner {
-    /// Set up the signer to sign with given address and password.
-    pub fn set(&mut self, ap: Arc<AccountProvider>, address: Address) {
-        let public = {
-            let account = ap.get_unlocked_account(&address).expect("The address must be registered in AccountProvider");
-            account.public().expect("Cannot get public from account")
-        };
-        self.account_provider = ap;
-        self.signer = Some((address, public));
-        self.decrypted_account = None;
-        cinfo!(ENGINE, "Setting Engine signer to {}", address);
-    }
-
     // TODO: remove decrypted_account after some timeout
     pub fn set_to_keep_decrypted_account(&mut self, ap: Arc<AccountProvider>, address: Address) {
         let account =
@@ -101,10 +89,5 @@ impl EngineSigner {
     /// Check if the given address is the signing address.
     pub fn is_address(&self, a: &Address) -> bool {
         self.signer.map_or(false, |(address, _public)| *a == address)
-    }
-
-    /// Check if the signing address was set.
-    pub fn is_some(&self) -> bool {
-        self.signer.is_some()
     }
 }

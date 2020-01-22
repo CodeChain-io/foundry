@@ -45,7 +45,6 @@ const projectRoot = `${__dirname}/../../..`;
 export type SchemeFilepath = string;
 export type ChainType =
     | "solo"
-    | "simple_poa"
     | "tendermint"
     | "cuckoo"
     | "blake_pow"

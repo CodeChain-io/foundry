@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{NullEngine, SimplePoA, Solo, Tendermint};
+use super::{NullEngine, Solo, Tendermint};
 
 /// Engine deserialization.
 #[derive(Debug, PartialEq, Deserialize)]
@@ -23,7 +23,6 @@ pub enum Engine {
     /// Null engine.
     Null(NullEngine),
     Solo(Solo),
-    SimplePoA(SimplePoA),
     Tendermint(Box<Tendermint>),
 }
 
@@ -59,20 +58,6 @@ mod tests {
         let deserialized: Engine = serde_json::from_str(s).unwrap();
         match deserialized {
             Engine::Solo(_) => {} // solo is unit tested in its own file.
-            _ => panic!(),
-        };
-
-        let s = r#"{
-            "simplePoA": {
-                "params": {
-                    "durationLimit": "0x0d",
-                    "validators" : ["0x4f1541fc6bdec60bf0ac6380a8e3914a469fe6cd4fa817c890d5823cfdda83932f61dc083e1b6736dadeceb5afd3fcfbac915e5fa2c9c20acf1c30b080114d7f"]
-                }
-            }
-        }"#;
-        let deserialized: Engine = serde_json::from_str(s).unwrap();
-        match deserialized {
-            Engine::SimplePoA(_) => {} // simple poa is unit tested in its own file.
             _ => panic!(),
         };
 
