@@ -1,11 +1,11 @@
-foundry [![Build Status](https://travis-ci.com/CodeChain-io/foundry.svg?branch=master)](https://travis-ci.com/CodeChain-io/foundry) [![Gitter: CodeChain](https://img.shields.io/badge/gitter-codechain-4AB495.svg)](https://gitter.im/CodeChain-io/codechain) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+Foundry [![Build Status](https://travis-ci.com/CodeChain-io/foundry.svg?branch=master)](https://travis-ci.com/CodeChain-io/foundry) [![Gitter: CodeChain](https://img.shields.io/badge/gitter-codechain-4AB495.svg)](https://gitter.im/CodeChain-io/codechain) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 ==============
 
 Foundry is a programmable open source blockchain engine.
 
 ## Build
 
-Download foundry code
+Download Foundry code
 
 ```sh
 git clone git@github.com:CodeChain-io/foundry.git
@@ -23,7 +23,7 @@ This will produce an executable in the `./target/release` directory.
 ### Building From Source
 
 #### Build Dependencies
-foundry requires Rust version 1.40.0 to build. Using [rustup](https://rustup.rs/ "rustup URL") is recommended.
+Foundry requires Rust version 1.40.0 to build. Using [rustup](https://rustup.rs/ "rustup URL") is recommended.
 
 - For Linux Systems:
   - Ubuntu
@@ -46,10 +46,10 @@ foundry requires Rust version 1.40.0 to build. Using [rustup](https://rustup.rs/
 - For Windows Systems:
   - Currently not supported for Windows. If on a Windows system, please install [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10) to continue as Ubuntu.
 
-Please make sure that all of the binaries above are included in your `PATH`. These conditions must be fulfilled before building foundry from source.
+Please make sure that all of the binaries above are included in your `PATH`. These conditions must be fulfilled before building Foundry from source.
 
 
-Download foundry's source code and go into its directory.
+Download Foundry's source code and go into its directory.
 ```sh
 git clone git@github.com:CodeChain-io/foundry.git
 cd foundry
@@ -64,7 +64,7 @@ This will produce an executable in the ./target/release directory.
 
 ## Run
 
-To run foundry, just run
+To run Foundry, just run
 
 ```sh
 ./target/release/foundry -c solo
