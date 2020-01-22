@@ -19,7 +19,7 @@ use super::seal::Generic as GenericSeal;
 use super::Genesis;
 use crate::blockchain::HeaderProvider;
 use crate::codechain_machine::CodeChainMachine;
-use crate::consensus::{CodeChainEngine, NullEngine, SimplePoA, Solo, Tendermint};
+use crate::consensus::{CodeChainEngine, NullEngine, Solo, Tendermint};
 use crate::error::{Error, SchemeError};
 use ccrypto::{blake256, BLAKE_NULL_RLP};
 use cdb::{AsHashDB, HashDB};
@@ -100,7 +100,6 @@ impl Scheme {
         match engine_scheme {
             cjson::scheme::Engine::Null(null) => Arc::new(NullEngine::new(null.params.into(), machine)),
             cjson::scheme::Engine::Solo(solo) => Arc::new(Solo::new(solo.params.into(), machine)),
-            cjson::scheme::Engine::SimplePoA(simple_poa) => Arc::new(SimplePoA::new(simple_poa.params.into(), machine)),
             cjson::scheme::Engine::Tendermint(tendermint) => Tendermint::new(tendermint.params.into(), machine),
         }
     }
@@ -234,12 +233,6 @@ impl Scheme {
         load_bundled!("solo")
     }
 
-    /// Create a new Scheme with SimplePoA consensus which does internal sealing (not requiring
-    /// work).
-    pub fn new_test_simple_poa() -> Self {
-        load_bundled!("simple_poa")
-    }
-
     /// Create a new Scheme with Tendermint consensus which does internal sealing (not requiring
     /// work).
     pub fn new_test_tendermint() -> Self {
@@ -248,10 +241,6 @@ impl Scheme {
 
     pub fn new_mainnet() -> Self {
         load_bundled!("mainnet")
-    }
-
-    pub fn new_saluki() -> Self {
-        load_bundled!("saluki")
     }
 
     pub fn new_corgi() -> Self {

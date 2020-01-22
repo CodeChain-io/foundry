@@ -488,7 +488,7 @@ impl Mining {
         if matches.is_present("no-miner") {
             self.author = None;
             self.engine_signer = None;
-            println!("This option was deprecated. PBFT or PoA type engine with no author implicitly means no-miner.");
+            println!("This option was deprecated. PBFT type engine with no author implicitly means no-miner.");
         }
         if let Some(mem_pool_fee_bump_shift) = matches.value_of("mem-pool-fee-bump-shift") {
             self.mem_pool_fee_bump_shift =
