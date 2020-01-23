@@ -50,16 +50,12 @@ use std::time::{Duration, Instant};
 /// Configures the behaviour of the miner.
 #[derive(Debug, PartialEq)]
 pub struct MinerOptions {
-    /// Force the miner to reseal, even when nobody has asked for work.
-    pub force_sealing: bool,
     /// Reseal on receipt of new external transactions.
     pub reseal_on_external_transaction: bool,
     /// Reseal on receipt of new local transactions.
     pub reseal_on_own_transaction: bool,
     /// Minimum period between transaction-inspired reseals.
     pub reseal_min_period: Duration,
-    /// Maximum period between blocks (enables force sealing after that).
-    pub reseal_max_period: Duration,
     /// Disable the reseal timer
     pub no_reseal_timer: bool,
     /// Maximum size of the mem pool.
@@ -79,11 +75,9 @@ pub struct MinerOptions {
 impl Default for MinerOptions {
     fn default() -> Self {
         MinerOptions {
-            force_sealing: false,
             reseal_on_external_transaction: true,
             reseal_on_own_transaction: true,
             reseal_min_period: Duration::from_secs(2),
-            reseal_max_period: Duration::from_secs(120),
             no_reseal_timer: false,
             mem_pool_size: 8192,
             mem_pool_memory_limit: Some(2 * 1024 * 1024),
@@ -106,7 +100,6 @@ pub struct Miner {
     mem_pool: Arc<RwLock<MemPool>>,
     transaction_listener: RwLock<Vec<TransactionListener>>,
     next_allowed_reseal: Mutex<Instant>,
-    next_mandatory_reseal: RwLock<Instant>,
     params: RwLock<AuthoringParams>,
     engine: Arc<dyn CodeChainEngine>,
     options: MinerOptions,
@@ -151,7 +144,6 @@ impl Miner {
             mem_pool,
             transaction_listener: RwLock::new(vec![]),
             next_allowed_reseal: Mutex::new(Instant::now()),
-            next_mandatory_reseal: RwLock::new(Instant::now() + options.reseal_max_period),
             params: RwLock::new(AuthoringParams::default()),
             engine: scheme.engine.clone(),
             options,
@@ -349,8 +341,8 @@ impl Miner {
         })
     }
 
-    /// Prepares new block for sealing including top transactions from queue.
-    fn prepare_block<
+    /// Prepares new block for sealing including top transactions from queue and seal it.
+    fn prepare_and_seal_block<
         C: AccountData + BlockChainTrait + BlockProducer + ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo,
     >(
         &self,
@@ -383,14 +375,13 @@ impl Miner {
             let parent_hash = open_block.header().parent_hash();
             chain.block_header(&BlockId::Hash(*parent_hash)).expect("Parent header MUST exist")
         };
-        if self.engine_type().is_seal_first() {
-            assert!(self.engine.seals_internally(), "If a signer is not prepared, prepare_block should not be called");
-            let seal = self.engine.generate_seal(None, &parent_header.decode());
-            if let Some(seal_bytes) = seal.seal_fields() {
-                open_block.seal(self.engine.borrow(), seal_bytes).expect("Sealing always success");
-            } else {
-                return Ok(None)
-            }
+
+        assert!(self.engine.seals_internally(), "If a signer is not prepared, prepare_block should not be called");
+        let seal = self.engine.generate_seal(None, &parent_header.decode());
+        if let Some(seal_bytes) = seal.seal_fields() {
+            open_block.seal(self.engine.borrow(), seal_bytes).expect("Sealing always success");
+        } else {
+            return Ok(None)
         }
         self.engine.on_open_block(open_block.inner_mut())?;
 
@@ -487,45 +478,12 @@ impl Miner {
     }
 
     /// Attempts to perform internal sealing (one that does not require work) and handles the result depending on the type of Seal.
-    fn seal_and_import_block_internally<C>(&self, chain: &C, block: ClosedBlock) -> bool
+    fn import_block_internally<C>(&self, chain: &C, block: ClosedBlock) -> bool
     where
         C: BlockChainTrait + ImportBlock, {
-        if block.transactions().is_empty()
-            && !self.options.force_sealing
-            && Instant::now() <= *self.next_mandatory_reseal.read()
-        {
-            cdebug!(MINER, "seal_block_internally: no sealing.");
-            return false
-        }
-        ctrace!(MINER, "seal_block_internally: attempting internal seal.");
+        assert!(self.engine.seals_internally());
 
-        let parent_header = match chain.block_header(&(*block.header().parent_hash()).into()) {
-            Some(hdr) => hdr.decode(),
-            None => return false,
-        };
-
-        if !self.engine.seals_internally() {
-            ctrace!(MINER, "No seal is generated.");
-            return false
-        }
-
-        *self.next_mandatory_reseal.write() = Instant::now() + self.options.reseal_max_period;
-        let sealed = if self.engine_type().is_seal_first() {
-            block.lock().already_sealed()
-        } else {
-            let seal = self.engine.generate_seal(Some(block.block()), &parent_header).seal_fields();
-            if seal.is_none() {
-                ctrace!(MINER, "No seal is generated.");
-                return false
-            }
-            match block.lock().seal(&*self.engine, seal.unwrap()) {
-                Ok(sealed) => sealed,
-                Err(e) => {
-                    cwarn!(MINER, "ERROR: seal failed when given internally generated seal: {}", e);
-                    return false
-                }
-            }
-        };
+        let sealed = block.lock().already_sealed();
 
         if self.engine.is_proposal(sealed.header()) {
             self.engine.proposal_generated(&sealed);
@@ -644,7 +602,7 @@ impl MinerService for Miner {
             + TermInfo, {
         ctrace!(MINER, "update_sealing: preparing a block");
 
-        let block = match self.prepare_block(parent_block, chain) {
+        let block = match self.prepare_and_seal_block(parent_block, chain) {
             Ok(Some(block)) => {
                 if !allow_empty_block && block.block().transactions().is_empty() {
                     ctrace!(MINER, "update_sealing: block is empty, and allow_empty_block is false");
@@ -664,7 +622,7 @@ impl MinerService for Miner {
 
         if self.engine.seals_internally() {
             ctrace!(MINER, "update_sealing: engine indicates internal sealing");
-            if self.seal_and_import_block_internally(chain, block) {
+            if self.import_block_internally(chain, block) {
                 ctrace!(MINER, "update_sealing: imported internally sealed block");
             }
         } else {
