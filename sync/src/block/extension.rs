@@ -1038,7 +1038,7 @@ impl Extension {
     }
 
     fn on_body_response(&mut self, hashes: Vec<BlockHash>, bodies: Vec<Vec<UnverifiedTransaction>>) {
-        ctrace!(SYNC, "Received body response with lenth({}) {:?}", hashes.len(), hashes);
+        ctrace!(SYNC, "Received body response with length({}) {:?}", hashes.len(), hashes);
 
         match &self.state {
             State::SnapshotBody {
