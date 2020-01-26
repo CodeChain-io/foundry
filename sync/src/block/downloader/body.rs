@@ -19,15 +19,9 @@ use ccore::UnverifiedTransaction;
 use ctypes::{BlockHash, Header};
 use std::collections::{HashMap, HashSet};
 
-#[derive(Clone)]
-struct Target {
-    hash: BlockHash,
-    is_empty: bool,
-}
-
 #[derive(Default)]
 pub struct BodyDownloader {
-    targets: Vec<Target>,
+    targets: Vec<BlockHash>,
     downloading: HashSet<BlockHash>,
     downloaded: HashMap<BlockHash, Vec<UnverifiedTransaction>>,
 }
@@ -37,8 +31,8 @@ impl BodyDownloader {
         const MAX_BODY_REQEUST_LENGTH: usize = 128;
         let mut hashes = Vec::new();
         for t in &self.targets {
-            if !self.downloading.contains(&t.hash) && !self.downloaded.contains_key(&t.hash) {
-                hashes.push(t.hash);
+            if !self.downloading.contains(t) && !self.downloaded.contains_key(t) {
+                hashes.push(*t);
             }
             if hashes.len() >= MAX_BODY_REQEUST_LENGTH {
                 break
@@ -53,18 +47,8 @@ impl BodyDownloader {
     }
 
     pub fn import_bodies(&mut self, hashes: Vec<BlockHash>, bodies: Vec<Vec<UnverifiedTransaction>>) {
-        let empty_targets: HashSet<_> = self.targets.iter().filter(|t| t.is_empty).map(|t| t.hash).collect();
         for (hash, body) in hashes.into_iter().zip(bodies) {
             if self.downloading.remove(&hash) {
-                if body.is_empty() {
-                    if !empty_targets.contains(&hash) {
-                        cwarn!(SYNC, "Invalid body of {}. It should be not empty.", hash);
-                        continue
-                    }
-                } else if empty_targets.contains(&hash) {
-                    cwarn!(SYNC, "Invalid body of {}. It should be empty.", hash);
-                    continue
-                }
                 self.downloaded.insert(hash, body);
             }
         }
@@ -72,15 +56,12 @@ impl BodyDownloader {
     }
 
     pub fn get_target_hashes(&self) -> Vec<BlockHash> {
-        self.targets.iter().map(|t| t.hash).collect()
+        self.targets.iter().map(Clone::clone).collect()
     }
 
     pub fn add_target(&mut self, header: &Header) {
         cdebug!(SYNC, "Add download target: {}", header.hash());
-        self.targets.push(Target {
-            hash: header.hash(),
-            is_empty: header.is_empty(),
-        });
+        self.targets.push(header.hash());
     }
 
     pub fn remove_target(&mut self, targets: &[BlockHash]) {
@@ -89,7 +70,7 @@ impl BodyDownloader {
         }
         cdebug!(SYNC, "Remove download targets: {:?}", targets);
         for hash in targets {
-            if let Some(index) = self.targets.iter().position(|t| t.hash == *hash) {
+            if let Some(index) = self.targets.iter().position(|t| t == hash) {
                 self.targets.remove(index);
             }
             self.downloading.remove(hash);
@@ -111,8 +92,8 @@ impl BodyDownloader {
     pub fn drain(&mut self) -> Vec<(BlockHash, Vec<UnverifiedTransaction>)> {
         let mut result = Vec::new();
         for t in &self.targets {
-            if let Some(body) = self.downloaded.remove(&t.hash) {
-                result.push((t.hash, body));
+            if let Some(body) = self.downloaded.remove(t) {
+                result.push((*t, body));
             } else {
                 break
             }
@@ -123,23 +104,11 @@ impl BodyDownloader {
         result
     }
 
-    pub fn re_request(
-        &mut self,
-        hash: BlockHash,
-        is_empty: bool,
-        remains: Vec<(BlockHash, Vec<UnverifiedTransaction>)>,
-    ) {
-        let mut new_targets = vec![Target {
-            hash,
-            is_empty,
-        }];
+    pub fn re_request(&mut self, hash: BlockHash, remains: Vec<(BlockHash, Vec<UnverifiedTransaction>)>) {
+        let mut new_targets = vec![hash];
         new_targets.extend(remains.into_iter().map(|(hash, transactions)| {
-            let is_empty = transactions.is_empty();
             self.downloaded.insert(hash, transactions);
-            Target {
-                hash,
-                is_empty,
-            }
+            hash
         }));
         new_targets.append(&mut self.targets);
         self.targets = new_targets;

@@ -1051,7 +1051,7 @@ impl Extension {
                 skewed_merkle_root(BLAKE_NULL_RLP, transactions.iter().map(Encodable::rlp_bytes));
             if *header.transactions_root() != calculated_transactions_root {
                 cwarn!(SYNC, "Received corrupted body for ${}({}", header.number(), hash);
-                error_target = Some((hash, transactions.is_empty()));
+                error_target = Some(hash);
                 continue
             }
 
@@ -1075,8 +1075,8 @@ impl Extension {
                 _ => {}
             }
         }
-        if let Some((hash, is_empty)) = error_target {
-            self.body_downloader.re_request(hash, is_empty, remains);
+        if let Some(hash) = error_target {
+            self.body_downloader.re_request(hash, remains);
         }
     }
 
