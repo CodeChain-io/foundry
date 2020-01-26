@@ -499,6 +499,7 @@ name = "codechain-sync"
 version = "0.1.0"
 dependencies = [
  "codechain-core",
+ "codechain-crypto",
  "codechain-db",
  "codechain-key",
  "codechain-logger",

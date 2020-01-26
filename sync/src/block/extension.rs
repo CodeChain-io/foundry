@@ -24,6 +24,7 @@ use ccore::{
 };
 use cdb::AsHashDB;
 use cnetwork::{Api, EventSender, NetworkExtension, NodeId};
+use codechain_crypto::BLAKE_NULL_RLP;
 use cstate::{FindActionHandler, TopLevelState, TopStateView};
 use ctimer::TimerToken;
 use ctypes::header::{Header, Seal};
@@ -63,7 +64,6 @@ enum State {
     SnapshotHeader(BlockHash, u64),
     SnapshotBody {
         header: EncodedHeader,
-        prev_root: H256,
     },
     SnapshotTopChunk {
         block: BlockHash,
@@ -88,12 +88,8 @@ impl State {
             _ => return State::SnapshotHeader(hash, num),
         };
         if client.block_body(&hash.into()).is_none() {
-            let parent_hash = header.parent_hash();
-            let parent =
-                client.block_header(&parent_hash.into()).expect("Parent header of the snapshot header must exist");
             return State::SnapshotBody {
                 header,
-                prev_root: parent.transactions_root(),
             }
         }
 
@@ -134,12 +130,8 @@ impl State {
         match self {
             State::SnapshotHeader(hash, _) => {
                 let header = client.block_header(&(*hash).into()).expect("Snapshot header is imported");
-                let parent = client
-                    .block_header(&header.parent_hash().into())
-                    .expect("Parent of the snapshot header must be imported");
                 State::SnapshotBody {
                     header,
-                    prev_root: parent.transactions_root(),
                 }
             }
             State::SnapshotBody {
@@ -1035,13 +1027,12 @@ impl Extension {
     fn on_body_response(&mut self, hashes: Vec<BlockHash>, bodies: Vec<Vec<UnverifiedTransaction>>) {
         ctrace!(SYNC, "Received body response with lenth({}) {:?}", hashes.len(), hashes);
 
-        match self.state {
+        match &self.state {
             State::SnapshotBody {
-                ref header,
-                prev_root,
+                header,
             } => {
                 let body = bodies.first().expect("Body response in SnapshotBody state has only one body");
-                let new_root = skewed_merkle_root(prev_root, body.iter().map(Encodable::rlp_bytes));
+                let new_root = skewed_merkle_root(BLAKE_NULL_RLP, body.iter().map(Encodable::rlp_bytes));
                 if header.transactions_root() == new_root {
                     let block = Block {
                         header: header.decode(),
