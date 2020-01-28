@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::route::TreeRoute;
 use crate::views::{BlockView, HeaderView};
 use ctypes::BlockHash;
 use primitives::Bytes;
@@ -28,13 +27,6 @@ pub enum BestBlockChanged {
     },
     /// Nothing changed.
     None,
-    /// It's part of the fork which should become canon chain,
-    /// because its total score is higher than current
-    /// canon chain score.
-    BranchBecomingCanonChain {
-        best_block: Bytes,
-        tree_route: TreeRoute,
-    },
 }
 
 impl BestBlockChanged {
@@ -46,10 +38,6 @@ impl BestBlockChanged {
         let block = match self {
             BestBlockChanged::CanonChainAppended {
                 best_block,
-            } => best_block,
-            BestBlockChanged::BranchBecomingCanonChain {
-                best_block,
-                ..
             } => best_block,
             BestBlockChanged::None => return None,
         };
@@ -67,13 +55,6 @@ pub enum BestHeaderChanged {
     },
     /// Nothing changed.
     None,
-    /// It's part of the fork which should become canon chain,
-    /// because its total score is higher than current
-    /// canon chain score.
-    BranchBecomingCanonChain {
-        best_header: Vec<u8>,
-        tree_route: TreeRoute,
-    },
 }
 
 impl BestHeaderChanged {
@@ -85,10 +66,6 @@ impl BestHeaderChanged {
         let header = match self {
             BestHeaderChanged::CanonChainAppended {
                 best_header,
-            } => best_header,
-            BestHeaderChanged::BranchBecomingCanonChain {
-                best_header,
-                ..
             } => best_header,
             BestHeaderChanged::None => return None,
         };

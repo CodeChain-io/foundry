@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,9 +17,9 @@
 use ccore::snapshot_notify::{NotifyReceiverSource, ReceiverCanceller};
 use ccore::{BlockChainClient, BlockChainTrait, BlockId, Client};
 use cdb::{AsHashDB, HashDB};
-use cmerkle::snapshot::{ChunkCompressor, Error as SnapshotError, Snapshot};
 use cstate::{StateDB, TopLevelState, TopStateView};
 use ctypes::BlockHash;
+use merkle_trie::snapshot::{ChunkCompressor, Error as SnapshotError, Snapshot};
 use primitives::H256;
 use std::fs;
 use std::path::PathBuf;

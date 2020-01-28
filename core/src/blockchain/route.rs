@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -110,11 +110,9 @@ pub fn tree_route(db: &dyn HeaderProvider, from: BlockHash, to: BlockHash) -> Op
 /// Import route for newly inserted block.
 #[derive(Debug, PartialEq)]
 pub struct ImportRoute {
-    /// Blocks that were invalidated by new block.
-    pub retracted: Vec<BlockHash>,
     /// Blocks that were validated by new block.
     pub enacted: Vec<BlockHash>,
-    /// Blocks which are neither retracted nor enacted.
+    /// Blocks which are not enacted.
     pub omitted: Vec<BlockHash>,
 }
 
@@ -132,29 +130,14 @@ impl ImportRoute {
                 let mut enacted = Vec::new();
                 enacted.push(best_block_changed.new_best_hash().unwrap());
                 ImportRoute {
-                    retracted: vec![],
                     enacted,
                     omitted,
                 }
             }
             BestBlockChanged::None => ImportRoute {
-                retracted: vec![],
                 enacted: vec![],
                 omitted,
             },
-            BestBlockChanged::BranchBecomingCanonChain {
-                tree_route,
-                ..
-            } => {
-                let mut enacted = tree_route.enacted.clone();
-                enacted.push(best_block_changed.new_best_hash().unwrap());
-                let retracted = tree_route.retracted.clone();
-                ImportRoute {
-                    retracted,
-                    enacted,
-                    omitted,
-                }
-            }
         }
     }
 
@@ -170,41 +153,25 @@ impl ImportRoute {
             } => {
                 let enacted = vec![best_header_changed.new_best_hash().unwrap()];
                 ImportRoute {
-                    retracted: vec![],
                     enacted,
                     omitted,
                 }
             }
             BestHeaderChanged::None => ImportRoute {
-                retracted: vec![],
                 enacted: vec![],
                 omitted,
             },
-            BestHeaderChanged::BranchBecomingCanonChain {
-                tree_route,
-                ..
-            } => {
-                let mut enacted = tree_route.enacted.clone();
-                enacted.push(best_header_changed.new_best_hash().unwrap());
-                let retracted = tree_route.retracted.clone();
-                ImportRoute {
-                    retracted,
-                    enacted,
-                    omitted,
-                }
-            }
         }
     }
 
     pub fn none() -> Self {
         ImportRoute {
-            retracted: vec![],
             enacted: vec![],
             omitted: vec![],
         }
     }
 
     pub fn is_none(&self) -> bool {
-        self.retracted.is_empty() && self.enacted.is_empty() && self.omitted.is_empty()
+        self.enacted.is_empty() && self.omitted.is_empty()
     }
 }

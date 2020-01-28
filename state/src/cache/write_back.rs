@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::CacheableItem;
-use cmerkle::{self, Result as TrieResult, Trie, TrieMut};
+use merkle_trie::{Result as TrieResult, Trie, TrieMut};
 use std::cell::{RefCell, RefMut};
 use std::collections::hash_map::Entry as HashMapEntry;
 use std::collections::HashMap;
@@ -193,7 +193,7 @@ where
     /// Check caches for required data
     /// First searches for account in the local, then the shared cache.
     /// Populates local cache if nothing found.
-    pub fn get(&self, a: &Item::Address, db: &dyn Trie) -> cmerkle::Result<Option<Item>> {
+    pub fn get(&self, a: &Item::Address, db: &dyn Trie) -> TrieResult<Option<Item>> {
         // check local cache first
         if let Some(cached_item) = self.cache.borrow_mut().get_mut(a) {
             cached_item.touched = touched_count();
@@ -208,7 +208,7 @@ where
 
     /// Pull item `a` in our cache from the trie DB.
     /// If it doesn't exist, make item equal the evaluation of `default`.
-    pub fn get_mut(&self, a: &Item::Address, db: &dyn Trie) -> cmerkle::Result<RefMut<'_, Item>> {
+    pub fn get_mut(&self, a: &Item::Address, db: &dyn Trie) -> TrieResult<RefMut<'_, Item>> {
         let contains_key = self.cache.borrow().contains_key(a);
         if !contains_key {
             let maybe_item = db.get(a.as_ref())?.map(|bytes| ::rlp::decode::<Item>(&bytes).unwrap());
@@ -232,7 +232,7 @@ where
         }))
     }
 
-    pub fn create<F: FnOnce() -> Item>(&self, a: &Item::Address, f: F) -> cmerkle::Result<Item> {
+    pub fn create<F: FnOnce() -> Item>(&self, a: &Item::Address, f: F) -> TrieResult<Item> {
         if let Some(cached) = self.cache.borrow().get(a) {
             assert!(cached.item.is_none());
         }

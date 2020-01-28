@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -145,39 +145,6 @@ pub trait Writable {
                 for (key, value) in &values {
                     self.write(col, key, value);
                     cache.remove(key);
-                }
-            }
-        }
-    }
-
-    /// Writes and removes the values into the database and updates the cache.
-    fn extend_with_option_cache<K, T, R>(
-        &mut self,
-        col: Option<u32>,
-        cache: &mut dyn Cache<K, Option<T>>,
-        values: HashMap<K, Option<T>>,
-        policy: CacheUpdatePolicy,
-    ) where
-        K: Key<T, Target = R> + Hash + Eq,
-        T: rlp::Encodable,
-        R: Deref<Target = [u8]>, {
-        match policy {
-            CacheUpdatePolicy::Overwrite => {
-                for (key, value) in values {
-                    match value {
-                        Some(ref v) => self.write(col, &key, v),
-                        None => self.delete(col, &key),
-                    }
-                    cache.insert(key, value);
-                }
-            }
-            CacheUpdatePolicy::Remove => {
-                for (key, value) in values {
-                    match value {
-                        Some(v) => self.write(col, &key, &v),
-                        None => self.delete(col, &key),
-                    }
-                    cache.remove(&key);
                 }
             }
         }

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -23,9 +23,6 @@ use ccore::{
     ImportError, StateInfo, UnverifiedTransaction,
 };
 use cdb::AsHashDB;
-use cmerkle::snapshot::ChunkDecompressor;
-use cmerkle::snapshot::Restore as SnapshotRestore;
-use cmerkle::{skewed_merkle_root, Trie, TrieFactory};
 use cnetwork::{Api, EventSender, NetworkExtension, NodeId};
 use cstate::{FindActionHandler, TopLevelState, TopStateView};
 use ctimer::TimerToken;
@@ -33,6 +30,8 @@ use ctypes::header::{Header, Seal};
 use ctypes::transaction::Action;
 use ctypes::{BlockHash, BlockNumber, ShardId};
 use kvdb::DBTransaction;
+use merkle_trie::snapshot::{ChunkDecompressor, Restore as SnapshotRestore};
+use merkle_trie::{skewed_merkle_root, Trie, TrieFactory};
 use primitives::{H256, U256};
 use rand::prelude::SliceRandom;
 use rand::thread_rng;
@@ -233,10 +232,8 @@ impl Extension {
         let mut body_downloader = BodyDownloader::default();
         for neighbors in hollow_headers.windows(2).rev() {
             let child = &neighbors[0];
-            let parent = &neighbors[1];
             cdebug!(SYNC, "Adding block #{} (hash: {}) for initial body download target", child.number(), child.hash());
-            let is_empty = child.transactions_root() == parent.transactions_root();
-            body_downloader.add_target(child, is_empty);
+            body_downloader.add_target(child);
         }
         cinfo!(SYNC, "Sync extension initialized");
         Extension {
@@ -669,9 +666,8 @@ impl NetworkExtension<Event> for Extension {
             Event::NewHeaders {
                 imported,
                 enacted,
-                retracted,
             } => {
-                self.new_headers(imported, enacted, retracted);
+                self.new_headers(imported, enacted);
             }
             Event::NewBlocks {
                 imported,
@@ -688,7 +684,6 @@ pub enum Event {
     NewHeaders {
         imported: Vec<BlockHash>,
         enacted: Vec<BlockHash>,
-        retracted: Vec<BlockHash>,
     },
     NewBlocks {
         imported: Vec<BlockHash>,
@@ -697,7 +692,7 @@ pub enum Event {
 }
 
 impl Extension {
-    fn new_headers(&mut self, imported: Vec<BlockHash>, enacted: Vec<BlockHash>, retracted: Vec<BlockHash>) {
+    fn new_headers(&mut self, imported: Vec<BlockHash>, enacted: Vec<BlockHash>) {
         if let State::Full = self.state {
             for peer in self.header_downloaders.values_mut() {
                 peer.mark_as_imported(imported.clone());
@@ -716,14 +711,8 @@ impl Extension {
                 .filter(|header| self.client.block_body(&BlockId::Hash(header.hash())).is_none())
                 .collect(); // FIXME: No need to collect here if self is not borrowed.
             for header in headers {
-                let parent = self
-                    .client
-                    .block_header(&BlockId::Hash(header.parent_hash()))
-                    .expect("Enacted header must have parent");
-                let is_empty = header.transactions_root() == parent.transactions_root();
-                self.body_downloader.add_target(&header.decode(), is_empty);
+                self.body_downloader.add_target(&header.decode());
             }
-            self.body_downloader.remove_target(&retracted);
         }
     }
 
@@ -1192,7 +1181,6 @@ impl ChainNotify for BlockSyncSender {
         imported: Vec<BlockHash>,
         _invalid: Vec<BlockHash>,
         enacted: Vec<BlockHash>,
-        retracted: Vec<BlockHash>,
         _sealed: Vec<BlockHash>,
         _new_best_proposal: Option<BlockHash>,
     ) {
@@ -1200,7 +1188,6 @@ impl ChainNotify for BlockSyncSender {
             .send(Event::NewHeaders {
                 imported,
                 enacted,
-                retracted,
             })
             .unwrap();
     }
@@ -1210,7 +1197,6 @@ impl ChainNotify for BlockSyncSender {
         imported: Vec<BlockHash>,
         invalid: Vec<BlockHash>,
         _enacted: Vec<BlockHash>,
-        _retracted: Vec<BlockHash>,
         _sealed: Vec<BlockHash>,
     ) {
         self.0

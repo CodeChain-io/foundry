@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018, 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,6 @@
 
 extern crate codechain_core as ccore;
 extern crate codechain_db as cdb;
-extern crate codechain_merkle as cmerkle;
 #[macro_use]
 extern crate codechain_logger as clogger;
 extern crate codechain_network as cnetwork;

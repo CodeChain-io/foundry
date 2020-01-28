@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -66,14 +66,8 @@ pub trait MinerService: Send + Sync {
     fn set_transactions_limit(&self, limit: usize);
 
     /// Called when blocks are imported to chain, updates transactions queue.
-    fn chain_new_blocks<C>(
-        &self,
-        chain: &C,
-        imported: &[BlockHash],
-        invalid: &[BlockHash],
-        enacted: &[BlockHash],
-        retracted: &[BlockHash],
-    ) where
+    fn chain_new_blocks<C>(&self, chain: &C, imported: &[BlockHash], invalid: &[BlockHash], enacted: &[BlockHash])
+    where
         C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock;
 
     /// Get the type of consensus engine.

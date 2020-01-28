@@ -602,30 +602,11 @@ impl MinerService for Miner {
         self.mem_pool.write().set_limit(limit)
     }
 
-    fn chain_new_blocks<C>(
-        &self,
-        chain: &C,
-        _imported: &[BlockHash],
-        _invalid: &[BlockHash],
-        _enacted: &[BlockHash],
-        retracted: &[BlockHash],
-    ) where
+    fn chain_new_blocks<C>(&self, chain: &C, _imported: &[BlockHash], _invalid: &[BlockHash], _enacted: &[BlockHash])
+    where
         C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock, {
         ctrace!(MINER, "chain_new_blocks");
 
-        // Then import all transactions...
-        {
-            let mut mem_pool = self.mem_pool.write();
-            for hash in retracted {
-                let block = chain.block(&(*hash).into()).expect(
-                    "Client is sending message after commit to db and inserting to chain; the block is available; qed",
-                );
-                let transactions = block.transactions();
-                let _ = self.add_transactions_to_pool(chain, transactions, TxOrigin::RetractedBlock, &mut mem_pool);
-            }
-        }
-
-        // ...and at the end remove the old ones
         {
             let fetch_account = |p: &Public| {
                 let address = public_to_address(p);

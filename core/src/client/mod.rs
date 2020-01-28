@@ -37,7 +37,6 @@ use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, Signed
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress, Public};
-use cmerkle::Result as TrieResult;
 use cnetwork::NodeId;
 use cstate::{AssetScheme, FindActionHandler, OwnedAsset, StateResult, TopLevelState, TopStateView};
 use ctypes::header::Header;
@@ -45,6 +44,7 @@ use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
+use merkle_trie::Result as TrieResult;
 use primitives::{Bytes, H160, H256, U256};
 use std::ops::Range;
 use std::sync::Arc;

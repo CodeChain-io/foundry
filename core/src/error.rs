@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,11 +19,11 @@ use crate::consensus::EngineError;
 use cdb::DatabaseError;
 use cio::IoError;
 use ckey::{Address, Error as KeyError};
-use cmerkle::TrieError;
 use cstate::StateError;
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockHash, BlockNumber};
+use merkle_trie::TrieError;
 use primitives::{H256, U256};
 use rlp::DecoderError;
 use std::fmt;

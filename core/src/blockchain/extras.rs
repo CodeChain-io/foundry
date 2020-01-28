@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -127,10 +127,6 @@ impl TransactionAddresses {
         Self {
             addresses: vec![address],
         }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.addresses.is_empty()
     }
 }
 
