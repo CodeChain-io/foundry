@@ -23,7 +23,7 @@ use ccore::{
     ImportError, StateInfo, UnverifiedTransaction,
 };
 use cdb::AsHashDB;
-use cnetwork::{Api, EventSender, NetworkExtension, NodeId};
+use cnetwork::{Api, EventSender, IntoSocketAddr, NetworkExtension, NodeId};
 use codechain_crypto::BLAKE_NULL_RLP;
 use cstate::{FindActionHandler, TopLevelState, TopStateView};
 use ctimer::TimerToken;
@@ -41,6 +41,7 @@ use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::mem::discriminant;
+use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 use token_generator::TokenGenerator;
@@ -655,6 +656,16 @@ impl NetworkExtension<Event> for Extension {
                     channel.send(*peer).unwrap();
                 }
             }
+            Event::GetPeerBestBlockHashes(channel) => {
+                for (node_id, header_downloader) in self.header_downloaders.iter() {
+                    channel.send((SocketAddr::from(node_id.into_addr()), header_downloader.best_hash())).unwrap();
+                }
+            }
+            Event::GetTargetBlockHashes(channel) => {
+                for target in self.body_downloader.get_target_hashes() {
+                    channel.send(target).unwrap();
+                }
+            }
             Event::NewHeaders {
                 imported,
                 enacted,
@@ -673,6 +684,8 @@ impl NetworkExtension<Event> for Extension {
 
 pub enum Event {
     GetPeers(EventSender<NodeId>),
+    GetPeerBestBlockHashes(EventSender<(SocketAddr, BlockHash)>),
+    GetTargetBlockHashes(EventSender<BlockHash>),
     NewHeaders {
         imported: Vec<BlockHash>,
         enacted: Vec<BlockHash>,

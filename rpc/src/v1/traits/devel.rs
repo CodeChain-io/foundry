@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -37,6 +37,12 @@ pub trait Devel {
 
     #[rpc(name = "devel_getBlockSyncPeers")]
     fn get_block_sync_peers(&self) -> Result<Vec<SocketAddr>>;
+
+    #[rpc(name = "devel_getPeerBestBlockHashes")]
+    fn get_peer_best_block_hashes(&self) -> Result<Vec<(SocketAddr, BlockHash)>>;
+
+    #[rpc(name = "devel_getTargetBlockHashes")]
+    fn get_target_block_hashes(&self) -> Result<Vec<BlockHash>>;
 
     #[rpc(name = "devel_snapshot")]
     fn snapshot(&self, hash: BlockHash) -> Result<()>;
