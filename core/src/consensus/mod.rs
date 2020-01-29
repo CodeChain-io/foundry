@@ -17,14 +17,12 @@
 mod bit_set;
 mod null_engine;
 pub(crate) mod signer;
-mod simple_poa;
 mod solo;
 pub mod stake;
 mod tendermint;
 mod validator_set;
 
 pub use self::null_engine::NullEngine;
-pub use self::simple_poa::SimplePoA;
 pub use self::solo::Solo;
 pub use self::tendermint::{
     ConsensusMessage, Height, Step, Tendermint, TendermintParams, TimeGapParams, View, VoteOn, VoteStep,
@@ -55,7 +53,6 @@ use std::sync::{Arc, Weak};
 
 pub enum Seal {
     Solo,
-    SimplePoA(SchnorrSignature),
     Tendermint {
         prev_view: View,
         cur_view: View,
@@ -70,7 +67,6 @@ impl Seal {
         match self {
             Seal::None => None,
             Seal::Solo => Some(Vec::new()),
-            Seal::SimplePoA(signature) => Some(vec![::rlp::encode(signature)]),
             Seal::Tendermint {
                 prev_view,
                 cur_view,
@@ -89,7 +85,6 @@ impl Seal {
 /// Engine type.
 #[derive(Debug, PartialEq, Eq)]
 pub enum EngineType {
-    PoA,
     PBFT,
     Solo,
 }
@@ -97,7 +92,6 @@ pub enum EngineType {
 impl EngineType {
     pub fn need_signer_key(&self) -> bool {
         match self {
-            EngineType::PoA => true,
             EngineType::PBFT => true,
             EngineType::Solo => false,
         }
@@ -105,7 +99,6 @@ impl EngineType {
 
     pub fn ignore_reseal_min_period(&self) -> bool {
         match self {
-            EngineType::PoA => false,
             EngineType::PBFT => true,
             EngineType::Solo => false,
         }
@@ -113,17 +106,8 @@ impl EngineType {
 
     pub fn ignore_reseal_on_transaction(&self) -> bool {
         match self {
-            EngineType::PoA => false,
             EngineType::PBFT => true,
             EngineType::Solo => false,
-        }
-    }
-
-    pub fn is_seal_first(&self) -> bool {
-        match self {
-            EngineType::PoA => false,
-            EngineType::PBFT => true,
-            EngineType::Solo => true,
         }
     }
 }

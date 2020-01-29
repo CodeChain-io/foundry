@@ -76,7 +76,7 @@ pub struct Client {
 
     importer: Importer,
 
-    /// Timer for reseal_min_period/reseal_max_period on miner client
+    /// Timer for reseal_min_period on miner client
     reseal_timer: TimerApi,
 }
 

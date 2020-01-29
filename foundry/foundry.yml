@@ -6,7 +6,7 @@ args:
     - chain:
         short: c
         long: chain
-        help: Set the blockchain type out of solo, simple_poa, tendermint, corgi, mainnet or a path to chain scheme file.
+        help: Set the blockchain type out of solo, tendermint, corgi, mainnet or a path to chain scheme file.
         takes_value: true
         global: true
     - allowed-future-gap:

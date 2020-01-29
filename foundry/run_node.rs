@@ -121,7 +121,7 @@ fn new_miner(
     let miner = Miner::new(config.miner_options()?, scheme, Some(ap), db);
 
     match miner.engine_type() {
-        EngineType::PBFT | EngineType::PoA => match &config.mining.engine_signer {
+        EngineType::PBFT => match &config.mining.engine_signer {
             Some(ref engine_signer) => match miner.set_author((*engine_signer).into_address()) {
                 Err(AccountProviderError::NotUnlocked) => {
                     return Err(
@@ -133,7 +133,7 @@ fn new_miner(
                 _ => (),
             },
             None if config.mining.author.is_some() => {
-                return Err("PBFT or PoA type engine needs not an author but an engine signer for mining. Specify the engine signer using --engine-signer option."
+                return Err("PBFT type engine needs not an author but an engine signer for mining. Specify the engine signer using --engine-signer option."
                     .to_string())
             }
             None => (),

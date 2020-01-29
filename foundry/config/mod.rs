@@ -96,11 +96,9 @@ impl Config {
             },
             mem_pool_fee_bump_shift: self.mining.mem_pool_fee_bump_shift.unwrap(),
             allow_create_shard: self.mining.allow_create_shard.unwrap_or(false),
-            force_sealing: self.mining.force_sealing.unwrap(),
             reseal_on_own_transaction,
             reseal_on_external_transaction,
             reseal_min_period: Duration::from_millis(self.mining.reseal_min_period.unwrap()),
-            reseal_max_period: Duration::from_millis(self.mining.reseal_max_period.unwrap()),
             no_reseal_timer: self.mining.no_reseal_timer.unwrap(),
             mem_pool_fees,
         })
@@ -226,10 +224,8 @@ pub struct Mining {
     pub self_nomination_interval: Option<u64>,
     pub mem_pool_fee_bump_shift: Option<usize>,
     pub allow_create_shard: Option<bool>,
-    pub force_sealing: Option<bool>,
     pub reseal_on_txs: Option<String>,
     pub reseal_min_period: Option<u64>,
-    pub reseal_max_period: Option<u64>,
     pub no_reseal_timer: Option<bool>,
     pub allowed_past_gap: Option<u64>,
     pub allowed_future_gap: Option<u64>,
@@ -409,17 +405,11 @@ impl Mining {
         if other.allow_create_shard.is_some() {
             self.allow_create_shard = other.allow_create_shard;
         }
-        if other.force_sealing.is_some() {
-            self.force_sealing = other.force_sealing;
-        }
         if other.reseal_on_txs.is_some() {
             self.reseal_on_txs = other.reseal_on_txs.clone();
         }
         if other.reseal_min_period.is_some() {
             self.reseal_min_period = other.reseal_min_period;
-        }
-        if other.reseal_max_period.is_some() {
-            self.reseal_max_period = other.reseal_max_period;
         }
         if other.no_reseal_timer.is_some() {
             self.no_reseal_timer = other.no_reseal_timer;
@@ -488,7 +478,7 @@ impl Mining {
         if matches.is_present("no-miner") {
             self.author = None;
             self.engine_signer = None;
-            println!("This option was deprecated. PBFT or PoA type engine with no author implicitly means no-miner.");
+            println!("This option was deprecated. PBFT type engine with no author implicitly means no-miner.");
         }
         if let Some(mem_pool_fee_bump_shift) = matches.value_of("mem-pool-fee-bump-shift") {
             self.mem_pool_fee_bump_shift =
@@ -503,17 +493,11 @@ impl Mining {
         if matches.is_present("allow-create-shard") {
             self.allow_create_shard = Some(true)
         }
-        if matches.is_present("force-sealing") {
-            self.force_sealing = Some(true);
-        }
         if let Some(reseal_on_txs) = matches.value_of("reseal-on-txs") {
             self.reseal_on_txs = Some(reseal_on_txs.to_string());
         }
         if let Some(reseal_min_period) = matches.value_of("reseal-min-period") {
             self.reseal_min_period = Some(reseal_min_period.parse().map_err(|_| "Invalid period")?);
-        }
-        if let Some(reseal_max_period) = matches.value_of("reseal-max-period") {
-            self.reseal_max_period = Some(reseal_max_period.parse().map_err(|_| "Invalid period")?);
         }
         if matches.is_present("no-reseal-timer") {
             self.no_reseal_timer = Some(true);
