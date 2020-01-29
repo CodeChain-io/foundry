@@ -29,11 +29,14 @@ use parking_lot::RwLock;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, Rlp};
 use std::collections::btree_map::BTreeMap;
+use std::collections::hash_map::RandomState;
 use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 
-pub use self::action_data::{Banned, CurrentValidators, NextValidators, PreviousValidators, Validator};
-use self::action_data::{Candidates, Delegation, IntermediateRewards, Jail, ReleaseResult, StakeAccount, Stakeholders};
+pub use self::action_data::{
+    Banned, Candidates, CurrentValidators, Jail, NextValidators, PreviousValidators, Validator,
+};
+use self::action_data::{Delegation, IntermediateRewards, ReleaseResult, StakeAccount, Stakeholders};
 pub use self::actions::Action;
 pub use self::distribute::fee_distribute;
 use super::ValidatorSet;
@@ -330,7 +333,10 @@ pub fn drain_current_rewards(state: &mut TopLevelState) -> StateResult<BTreeMap<
     Ok(drained)
 }
 
-pub fn update_calculated_rewards(state: &mut TopLevelState, values: HashMap<Address, u64>) -> StateResult<()> {
+pub fn update_calculated_rewards(
+    state: &mut TopLevelState,
+    values: HashMap<Address, u64, RandomState>,
+) -> StateResult<()> {
     let mut rewards = IntermediateRewards::load_from_state(state)?;
     rewards.update_calculated(values.into_iter().collect());
     rewards.save_to_state(state)
