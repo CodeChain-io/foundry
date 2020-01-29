@@ -31,7 +31,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-const NEED_NOMINATION_UNDER_TERM_LEFT: u64 = 1;
+const NEED_NOMINATION_UNDER_TERM_LEFT: u64 = 3;
 #[derive(Clone)]
 struct SelfSigner {
     account_provider: Arc<AccountProvider>,
@@ -134,8 +134,13 @@ impl AutoSelfNomination {
         let candidate = Candidates::load_from_state(&state).unwrap();
         if candidate.get_candidate(&address).is_some() {
             let candidate_need_nomination = candidate.get_candidate(&address).unwrap();
-            if candidate_need_nomination.nomination_ends_at <= current_term + NEED_NOMINATION_UNDER_TERM_LEFT {
-                cdebug!(ENGINE, "No need self nominate");
+            if candidate_need_nomination.nomination_ends_at + NEED_NOMINATION_UNDER_TERM_LEFT <= current_term {
+                cdebug!(
+                    ENGINE,
+                    "No need self nominate. nomination_ends_at: {}, current_term: {}",
+                    candidate_need_nomination.nomination_ends_at,
+                    current_term
+                );
                 return
             }
             if candidate_need_nomination.deposit.lt(&targetdep) {
@@ -187,7 +192,9 @@ impl AutoSelfNomination {
         let signed = SignedTransaction::try_new(unverified).expect("secret is valid so it's recoverable");
 
         match client.queue_own_transaction(signed) {
-            Ok(_) => {}
+            Ok(_) => {
+                cinfo!(ENGINE, "Send self nominate transaction");
+            }
             Err(e) => {
                 cerror!(ENGINE, "Failed to queue self nominate transaction: {}", e);
             }
