@@ -157,7 +157,7 @@ async function createNodes<T>(options: {
                 "--self-nomination-target-deposit",
                 "10",
                 "--self-nomination-interval",
-                "10"
+                "1000"
             );
         }
         const modifier = modify(validator, i);
