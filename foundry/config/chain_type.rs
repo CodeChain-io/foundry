@@ -25,9 +25,7 @@ use std::{fmt, fs};
 pub enum ChainType {
     Mainnet,
     Solo,
-    SimplePoA,
     Tendermint,
-    Saluki,
     Corgi,
     Beagle,
     Custom(String),
@@ -46,9 +44,7 @@ impl FromStr for ChainType {
         let scheme = match s {
             "mainnet" => ChainType::Mainnet,
             "solo" => ChainType::Solo,
-            "simple_poa" => ChainType::SimplePoA,
             "tendermint" => ChainType::Tendermint,
-            "saluki" => ChainType::Saluki,
             "corgi" => ChainType::Corgi,
             "beagle" => ChainType::Beagle,
             other => ChainType::Custom(other.into()),
@@ -92,9 +88,7 @@ impl fmt::Display for ChainType {
         f.write_str(match self {
             ChainType::Mainnet => "mainnet",
             ChainType::Solo => "solo",
-            ChainType::SimplePoA => "simple_poa",
             ChainType::Tendermint => "tendermint",
-            ChainType::Saluki => "saluki",
             ChainType::Corgi => "corgi",
             ChainType::Beagle => "beagle",
             ChainType::Custom(custom) => custom,
@@ -107,9 +101,7 @@ impl ChainType {
         match self {
             ChainType::Mainnet => Ok(Scheme::new_mainnet()),
             ChainType::Solo => Ok(Scheme::new_test_solo()),
-            ChainType::SimplePoA => Ok(Scheme::new_test_simple_poa()),
             ChainType::Tendermint => Ok(Scheme::new_test_tendermint()),
-            ChainType::Saluki => Ok(Scheme::new_saluki()),
             ChainType::Corgi => Ok(Scheme::new_corgi()),
             ChainType::Beagle => Ok(Scheme::new_beagle()),
             ChainType::Custom(filename) => {
