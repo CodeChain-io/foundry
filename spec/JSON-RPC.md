@@ -348,7 +348,7 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [devel_startSealing](#devel_startsealing)
  * [devel_stopSealing](#devel_stopsealing)
  * [devel_getBlockSyncPeers](#devel_getblocksyncpeers)
- * [devel_getPeerBestBlockHashes](#devel_getpeerbestblockhases)
+ * [devel_getPeerBestBlockHashes](#devel_getpeerbestblockhashes)
  * [devel_getTargetBlockHashes](#devel_gettargetblockhashes)
 
 # Specification
