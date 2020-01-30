@@ -46,7 +46,11 @@ describe("Term change", function() {
             quantity: 100_000,
             recipient: aliceAddress
         });
-        expect(await node.sdk.rpc.chain.containsTransaction(tx.hash())).be.true;
+        expect(
+            await node.rpc.chain.containsTransaction({
+                transactionHash: `0x${tx.hash().toString()}`
+            })
+        ).be.true;
     });
 
     async function changeTermSeconds(metadataSeq: number, termSeconds: number) {
@@ -100,30 +104,36 @@ describe("Term change", function() {
                     })
                     .sign({
                         secret: faucetSecret,
-                        seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                        seq: (await node.rpc.chain.getSeq({
+                            address: faucetAddress.toString(),
+                            blockNumber: null
+                        }))!,
                         fee: 10
                     })
             );
-            expect(await node.sdk.rpc.chain.containsTransaction(hash)).be.true;
+            expect(
+                await node.rpc.chain.containsTransaction({
+                    transactionHash: `0x${hash.toString()}`
+                })
+            ).be.true;
         }
     }
 
     it("initial term metadata", async function() {
-        const params = await node.sdk.rpc.sendRpcRequest(
-            "chain_getTermMetadata",
-            [null]
-        );
+        const params = (await node.rpc.chain.getTermMetadata({
+            blockNumber: null
+        }))!;
         expect(params).to.be.deep.equals([0, 0]);
     });
 
     async function waitForTermPeriodChange(termSeconds: number) {
-        const lastBlockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
+        const lastBlockNumber = await node.rpc.chain.getBestBlockNumber();
         const lastBlock = (await node.sdk.rpc.chain.getBlock(lastBlockNumber))!;
 
         let previousTs = lastBlock.timestamp;
         for (let count = 0; count < 20; count++) {
-            await node.sdk.rpc.devel.startSealing();
-            const blockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
+            await node.rpc.devel!.startSealing();
+            const blockNumber = await node.rpc.chain.getBestBlockNumber();
             const block = (await node.sdk.rpc.chain.getBlock(blockNumber))!;
 
             const currentTs = block.timestamp;
@@ -145,18 +155,16 @@ describe("Term change", function() {
 
         const blockNumber1 = await waitForTermPeriodChange(TERM_SECONDS);
 
-        const params1 = await node.sdk.rpc.sendRpcRequest(
-            "chain_getTermMetadata",
-            [blockNumber1]
-        );
+        const params1 = (await node.rpc.chain.getTermMetadata({
+            blockNumber: blockNumber1
+        }))!;
         expect(params1).to.be.deep.equals([blockNumber1, 1]);
 
         const blockNumber2 = await waitForTermPeriodChange(TERM_SECONDS);
 
-        const params2 = await node.sdk.rpc.sendRpcRequest(
-            "chain_getTermMetadata",
-            [blockNumber2]
-        );
+        const params2 = (await node.rpc.chain.getTermMetadata({
+            blockNumber: blockNumber2
+        }))!;
         expect(params2).to.be.deep.equals([blockNumber2, 2]);
     }).timeout(10_000);
 

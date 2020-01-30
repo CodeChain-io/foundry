@@ -34,13 +34,22 @@ describe("network2 nodes", function() {
             this.timeout(60_000);
             // ensure disconnected
             if (
-                !(await nodeA.sdk.rpc.network.isConnected(address, nodeB.port))
+                !(await nodeA.rpc.net.isConnected({
+                    address: address.toString(),
+                    port: nodeB.port
+                }))
             ) {
                 return;
             }
-            await nodeA.sdk.rpc.network.disconnect(address, nodeB.port);
+            await nodeA.rpc.net.disconnect({
+                address: address.toString(),
+                port: nodeB.port
+            });
             while (
-                await nodeA.sdk.rpc.network.isConnected(address, nodeB.port)
+                await nodeA.rpc.net.isConnected({
+                    address: address.toString(),
+                    port: nodeB.port
+                })
             ) {
                 await wait(500);
             }
@@ -51,14 +60,17 @@ describe("network2 nodes", function() {
                 .be.null;
 
             while (
-                !(await nodeA.sdk.rpc.network.isConnected(address, nodeB.port))
+                !(await nodeA.rpc.net.isConnected({
+                    address: address.toString(),
+                    port: nodeB.port
+                }))
             ) {
                 await wait(500);
             }
         });
 
         it("getPeerCount", async function() {
-            expect(await nodeA.sdk.rpc.network.getPeerCount()).to.equal(0);
+            expect(await nodeA.rpc.net.getPeerCount()).to.equal(0);
         });
 
         it("getPeers", async function() {
@@ -70,36 +82,58 @@ describe("network2 nodes", function() {
         beforeEach(async function() {
             this.timeout(60_000);
             // ensure connected
-            if (await nodeA.sdk.rpc.network.isConnected(address, nodeB.port)) {
+            if (
+                await nodeA.rpc.net.isConnected({
+                    address: address.toString(),
+                    port: nodeB.port
+                })
+            ) {
                 return;
             }
-            await nodeA.sdk.rpc.network.connect(address, nodeB.port);
+            await nodeA.rpc.net.connect({
+                address: address.toString(),
+                port: nodeB.port
+            });
             while (
-                !(await nodeA.sdk.rpc.network.isConnected(address, nodeB.port))
+                !(await nodeA.rpc.net.isConnected({
+                    address: address.toString(),
+                    port: nodeB.port
+                }))
             ) {
                 await wait(500);
             }
         });
 
         it("isConnected", async function() {
-            expect(await nodeA.sdk.rpc.network.isConnected(address, nodeB.port))
-                .to.be.true;
+            expect(
+                await nodeA.rpc.net.isConnected({
+                    address: address.toString(),
+                    port: nodeB.port
+                })
+            ).to.be.true;
         });
 
         it("disconnect", async function() {
-            expect(await nodeA.sdk.rpc.network.disconnect(address, nodeB.port))
-                .to.be.null;
+            expect(
+                await nodeA.rpc.net.disconnect({
+                    address: address.toString(),
+                    port: nodeB.port
+                })
+            ).to.be.undefined;
 
             while (
-                await nodeA.sdk.rpc.network.isConnected(address, nodeB.port)
+                await nodeA.rpc.net.isConnected({
+                    address: address.toString(),
+                    port: nodeB.port
+                })
             ) {
                 await wait(500);
             }
         });
 
         it("getPeerCount", async function() {
-            expect(await nodeA.sdk.rpc.network.getPeerCount()).to.equal(1);
-            expect(await nodeB.sdk.rpc.network.getPeerCount()).to.equal(1);
+            expect(await nodeA.rpc.net.getPeerCount()).to.equal(1);
+            expect(await nodeB.rpc.net.getPeerCount()).to.equal(1);
         });
 
         it("getPeers", async function() {

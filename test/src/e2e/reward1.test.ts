@@ -32,43 +32,41 @@ describe("reward1", function() {
     });
 
     it("getBlockReward", async function() {
-        // FIXME: Add an API to SDK
-        const reward = await node.sdk.rpc.sendRpcRequest(
-            "engine_getBlockReward",
-            [10]
-        );
+        const reward = await node.rpc.engine.getBlockReward({
+            blockNumber: 10
+        });
         expect(reward).to.equal(50);
     });
 
     it("null if the block is not mined", async function() {
-        const bestBlockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
+        const bestBlockNumber = await node.rpc.chain.getBestBlockNumber();
         const nonMinedBlockNumber = bestBlockNumber + 10;
-        // FIXME: Add an API to SDK
-        const reward = await node.sdk.rpc.sendRpcRequest(
-            "chain_getMiningReward",
-            [nonMinedBlockNumber]
-        );
-        expect(reward).to.equal(null);
+        expect(
+            await node.rpc.chain.getMiningReward({
+                blockNumber: nonMinedBlockNumber
+            })
+        ).to.equal(null);
     });
 
     it("mining reward of the empty block is the same with the block reward", async function() {
-        await node.sdk.rpc.devel.startSealing();
-        const bestBlockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
+        await node.rpc.devel!.startSealing();
+        const bestBlockNumber = await node.rpc.chain.getBestBlockNumber();
         // FIXME: Add an API to SDK
-        const miningReward = await node.sdk.rpc.sendRpcRequest(
-            "chain_getMiningReward",
-            [bestBlockNumber]
-        );
-        const blockReward = await node.sdk.rpc.sendRpcRequest(
-            "engine_getBlockReward",
-            [bestBlockNumber]
-        );
+        const miningReward = await node.rpc.chain.getMiningReward({
+            blockNumber: bestBlockNumber
+        });
+        const blockReward = +(await node.rpc.engine.getBlockReward({
+            blockNumber: bestBlockNumber
+        }))!;
         expect(miningReward).to.equal(blockReward);
     });
 
     it("mining reward includes the block fee", async function() {
-        await node.sdk.rpc.devel.stopSealing();
-        const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+        await node.rpc.devel!.stopSealing();
+        const seq = (await node.rpc.chain.getSeq({
+            address: faucetAddress.toString(),
+            blockNumber: null
+        }))!;
         await node.sendPayTx({
             quantity: 10,
             fee: 123,
@@ -84,17 +82,15 @@ describe("reward1", function() {
             fee: 321,
             seq: seq + 2
         });
-        await node.sdk.rpc.devel.startSealing();
-        const bestBlockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
+        await node.rpc.devel!.startSealing();
+        const bestBlockNumber = await node.rpc.chain.getBestBlockNumber();
         // FIXME: Add an API to SDK
-        const miningReward = await node.sdk.rpc.sendRpcRequest(
-            "chain_getMiningReward",
-            [bestBlockNumber]
-        );
-        const blockReward = await node.sdk.rpc.sendRpcRequest(
-            "engine_getBlockReward",
-            [bestBlockNumber]
-        );
+        const miningReward = await node.rpc.chain.getMiningReward({
+            blockNumber: bestBlockNumber
+        });
+        const blockReward = +(await node.rpc.engine.getBlockReward({
+            blockNumber: bestBlockNumber
+        }))!;
         expect(miningReward).to.equal(blockReward + 123 + 456 + 321);
     });
 

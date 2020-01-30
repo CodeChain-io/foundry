@@ -29,9 +29,16 @@ describe("Pay", async function() {
 
     it("Allow zero pay", async function() {
         const pay = await node.sendPayTx({ quantity: 0 });
-        expect(await node.sdk.rpc.chain.containsTransaction(pay.hash())).be
-            .true;
-        expect(await node.sdk.rpc.chain.getTransaction(pay.hash())).not.null;
+        expect(
+            await node.rpc.chain.containsTransaction({
+                transactionHash: `0x${pay.hash().toString()}`
+            })
+        ).be.true;
+        expect(
+            await node.rpc.chain.getTransaction({
+                transactionHash: `0x${pay.hash().toString()}`
+            })
+        ).not.null;
     });
 
     it("Allow pay to itself", async function() {
@@ -39,9 +46,16 @@ describe("Pay", async function() {
             quantity: 100,
             recipient: faucetAddress
         });
-        expect(await node.sdk.rpc.chain.containsTransaction(pay.hash())).be
-            .true;
-        expect(await node.sdk.rpc.chain.getTransaction(pay.hash())).not.null;
+        expect(
+            await node.rpc.chain.containsTransaction({
+                transactionHash: `0x${pay.hash().toString()}`
+            })
+        ).be.true;
+        expect(
+            await node.rpc.chain.getTransaction({
+                transactionHash: `0x${pay.hash().toString()}`
+            })
+        ).not.null;
     });
 
     it("Cannot pay to regular key", async function() {
@@ -49,13 +63,23 @@ describe("Pay", async function() {
             quantity: 100000,
             recipient: aliceAddress
         });
-        expect(await node.sdk.rpc.chain.containsTransaction(charge.hash())).be
-            .true;
-        expect(await node.sdk.rpc.chain.getTransaction(charge.hash())).not.null;
+        expect(
+            await node.rpc.chain.containsTransaction({
+                transactionHash: `0x${charge.hash().toString()}`
+            })
+        ).be.true;
+        expect(
+            await node.rpc.chain.getTransaction({
+                transactionHash: `0x${charge.hash().toString()}`
+            })
+        ).not.null;
 
         const privKey = node.sdk.util.generatePrivateKey();
         const pubKey = node.sdk.util.getPublicFromPrivate(privKey);
-        const aliceSeq = await node.sdk.rpc.chain.getSeq(aliceAddress);
+        const aliceSeq = (await node.rpc.chain.getSeq({
+            address: aliceAddress.toString(),
+            blockNumber: null
+        }))!;
         await node.setRegularKey(pubKey, {
             seq: aliceSeq,
             secret: aliceSecret
@@ -64,10 +88,13 @@ describe("Pay", async function() {
             networkId: node.sdk.networkId
         });
 
-        const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+        const seq = (await node.rpc.chain.getSeq({
+            address: faucetAddress.toString(),
+            blockNumber: null
+        }))!;
         const blockNumber = await node.getBestBlockNumber();
 
-        await node.sdk.rpc.devel.stopSealing();
+        await node.rpc.devel!.stopSealing();
 
         const pay = await node.sendPayTx({ quantity: 0, seq });
         const fail = await node.sendPayTx({
@@ -76,16 +103,30 @@ describe("Pay", async function() {
             seq: seq + 1
         });
 
-        await node.sdk.rpc.devel.startSealing();
+        await node.rpc.devel!.startSealing();
         await node.waitBlockNumber(blockNumber + 1);
 
-        expect(await node.sdk.rpc.chain.containsTransaction(pay.hash())).be
-            .true;
-        expect(await node.sdk.rpc.chain.getTransaction(pay.hash())).not.null;
+        expect(
+            await node.rpc.chain.containsTransaction({
+                transactionHash: `0x${charge.hash().toString()}`
+            })
+        ).be.true;
+        expect(
+            await node.rpc.chain.getTransaction({
+                transactionHash: `0x${pay.hash().toString()}`
+            })
+        ).not.null;
 
-        expect(await node.sdk.rpc.chain.containsTransaction(fail.hash())).be
-            .false;
-        expect(await node.sdk.rpc.chain.getTransaction(fail.hash())).null;
+        expect(
+            await node.rpc.chain.containsTransaction({
+                transactionHash: `0x${fail.hash().toString()}`
+            })
+        ).be.false;
+        expect(
+            await node.rpc.chain.getTransaction({
+                transactionHash: `0x${fail.hash().toString()}`
+            })
+        ).null;
         expect(await node.sdk.rpc.chain.getErrorHint(fail.hash())).not.null;
     });
 

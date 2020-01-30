@@ -53,7 +53,11 @@ describe("ChangeParams", function() {
             quantity: 100_000,
             recipient: aliceAddress
         });
-        expect(await node.sdk.rpc.chain.containsTransaction(tx.hash())).be.true;
+        expect(
+            await node.rpc.chain.containsTransaction({
+                transactionHash: "0x".concat(tx.hash().toString())
+            })
+        ).be.true;
     });
 
     it("change", async function() {
@@ -98,15 +102,21 @@ describe("ChangeParams", function() {
                     })
                     .sign({
                         secret: faucetSecret,
-                        seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                        seq: (await node.rpc.chain.getSeq({
+                            address: faucetAddress.toString(),
+                            blockNumber: null
+                        }))!,
                         fee: 10
                     })
             );
-            expect(await node.sdk.rpc.chain.containsTransaction(hash)).be.true;
+            expect(
+                await node.rpc.chain.containsTransaction({
+                    transactionHash: "0x".concat(hash.toString())
+                })
+            ).be.true;
         }
 
         await expect(node.sendPayTx({ fee: 10 })).rejectedWith(/Too Low Fee/);
-
         const params = await node.sdk.rpc.sendRpcRequest(
             "chain_getCommonParams",
             [null]
@@ -154,7 +164,10 @@ describe("ChangeParams", function() {
             })
             .sign({
                 secret: faucetSecret,
-                seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                seq: (await node.rpc.chain.getSeq({
+                    address: faucetAddress.toString(),
+                    blockNumber: null
+                }))!,
                 fee: 10
             });
         await expect(node.sdk.rpc.chain.sendSignedTransaction(tx)).rejectedWith(
@@ -205,9 +218,12 @@ describe("ChangeParams", function() {
         changeParams.push(`0x${node.sdk.util.signEcdsa(message, carolSecret)}`);
 
         {
-            await node.sdk.rpc.devel.stopSealing();
-            const blockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
-            const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+            await node.rpc.devel!.stopSealing();
+            const blockNumber = await node.rpc.chain.getBestBlockNumber();
+            const seq = (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!;
             const changeHash = await node.sdk.rpc.chain.sendSignedTransaction(
                 node.sdk.core
                     .createCustomTransaction({
@@ -221,12 +237,18 @@ describe("ChangeParams", function() {
                     })
             );
             const pay = await node.sendPayTx({ seq: seq + 1, fee: 10 });
-            await node.sdk.rpc.devel.startSealing();
-            expect(await node.sdk.rpc.chain.containsTransaction(changeHash)).be
-                .true;
-            expect(await node.sdk.rpc.chain.containsTransaction(pay.hash())).be
-                .true;
-            expect(await node.sdk.rpc.chain.getBestBlockNumber()).equal(
+            await node.rpc.devel!.startSealing();
+            expect(
+                await node.rpc.chain.containsTransaction({
+                    transactionHash: "0x".concat(changeHash.toString())
+                })
+            ).be.true;
+            expect(
+                await node.rpc.chain.containsTransaction({
+                    transactionHash: "0x".concat(pay.hash().toString())
+                })
+            ).be.true;
+            expect(await node.rpc.chain.getBestBlockNumber()).equal(
                 blockNumber + 1
             );
         }
@@ -309,9 +331,12 @@ describe("ChangeParams", function() {
         );
 
         {
-            await node.sdk.rpc.devel.stopSealing();
-            const blockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
-            const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+            await node.rpc.devel!.stopSealing();
+            const blockNumber = await node.rpc.chain.getBestBlockNumber();
+            const seq = (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!;
             const changeHash1 = await node.sdk.rpc.chain.sendSignedTransaction(
                 node.sdk.core
                     .createCustomTransaction({
@@ -336,19 +361,28 @@ describe("ChangeParams", function() {
                         fee: 10
                     })
             );
-            await node.sdk.rpc.devel.startSealing();
-            expect(await node.sdk.rpc.chain.containsTransaction(changeHash1)).be
-                .true;
-            expect(await node.sdk.rpc.chain.containsTransaction(changeHash2)).be
-                .true;
-            expect(await node.sdk.rpc.chain.getBestBlockNumber()).equal(
+            await node.rpc.devel!.startSealing();
+            expect(
+                await node.rpc.chain.containsTransaction({
+                    transactionHash: "0x".concat(changeHash1.toString())
+                })
+            ).be.true;
+            expect(
+                await node.rpc.chain.containsTransaction({
+                    transactionHash: "0x".concat(changeHash2.toString())
+                })
+            ).be.true;
+            expect(await node.rpc.chain.getBestBlockNumber()).equal(
                 blockNumber + 1
             );
         }
 
         const pay = await node.sendPayTx({ fee: 5 });
-        expect(await node.sdk.rpc.chain.containsTransaction(pay.hash())).be
-            .true;
+        expect(
+            await node.rpc.chain.containsTransaction({
+                transactionHash: "0x".concat(pay.hash().toString())
+            })
+        ).be.true;
         await expect(node.sendPayTx({ fee: 4 })).rejectedWith(/Too Low Fee/);
     });
 
@@ -427,9 +461,12 @@ describe("ChangeParams", function() {
         );
 
         {
-            await node.sdk.rpc.devel.stopSealing();
+            await node.rpc.devel!.stopSealing();
             const blockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
-            const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+            const seq = (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!;
             const changeHash1 = await node.sdk.rpc.chain.sendSignedTransaction(
                 node.sdk.core
                     .createCustomTransaction({
@@ -454,19 +491,28 @@ describe("ChangeParams", function() {
                         fee: 10
                     })
             );
-            await node.sdk.rpc.devel.startSealing();
-            expect(await node.sdk.rpc.chain.containsTransaction(changeHash1)).be
-                .true;
-            expect(await node.sdk.rpc.chain.containsTransaction(changeHash2)).be
-                .true;
-            expect(await node.sdk.rpc.chain.getBestBlockNumber()).equal(
+            await node.rpc.devel!.startSealing();
+            expect(
+                await node.rpc.chain.containsTransaction({
+                    transactionHash: "0x".concat(changeHash1.toString())
+                })
+            ).be.true;
+            expect(
+                await node.rpc.chain.containsTransaction({
+                    transactionHash: "0x".concat(changeHash2.toString())
+                })
+            ).be.true;
+            expect(await node.rpc.chain.getBestBlockNumber()).equal(
                 blockNumber + 1
             );
         }
 
         const pay = await node.sendPayTx({ fee: 5 });
-        expect(await node.sdk.rpc.chain.containsTransaction(pay.hash())).be
-            .true;
+        expect(
+            await node.rpc.chain.containsTransaction({
+                transactionHash: "0x".concat(pay.hash().toString())
+            })
+        ).be.true;
         await expect(node.sendPayTx({ fee: 4 })).rejectedWith(/Too Low Fee/);
     });
 
@@ -512,11 +558,18 @@ describe("ChangeParams", function() {
                     })
                     .sign({
                         secret: faucetSecret,
-                        seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                        seq: (await node.rpc.chain.getSeq({
+                            address: faucetAddress.toString(),
+                            blockNumber: null
+                        }))!,
                         fee: 10
                     })
             );
-            expect(await node.sdk.rpc.chain.containsTransaction(hash)).be.true;
+            expect(
+                await node.rpc.chain.containsTransaction({
+                    transactionHash: "0x".concat(hash.toString())
+                })
+            ).be.true;
         }
 
         {
@@ -529,8 +582,10 @@ describe("ChangeParams", function() {
                     .sign({
                         secret: faucetSecret,
                         seq:
-                            (await node.sdk.rpc.chain.getSeq(faucetAddress)) +
-                            1,
+                            (await node.rpc.chain.getSeq({
+                                address: faucetAddress.toString(),
+                                blockNumber: null
+                            }))! + 1,
                         fee: 10
                     }),
                 { error: "Invalid transaction seq Expected 1, found 0" }
@@ -578,7 +633,11 @@ describe("ChangeParams", function() {
             })
             .sign({
                 secret: faucetSecret,
-                seq: (await node.sdk.rpc.chain.getSeq(faucetAddress)) + 1,
+                seq:
+                    (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))! + 1,
                 fee: 10
             });
         await node.sendSignedTransactionExpectedToFail(tx, {
@@ -632,7 +691,11 @@ describe("ChangeParams", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: (await node.sdk.rpc.chain.getSeq(faucetAddress)) + 1,
+                    seq:
+                        (await node.rpc.chain.getSeq({
+                            address: faucetAddress.toString(),
+                            blockNumber: null
+                        }))! + 1,
                     fee: 10
                 });
             await node.sendSignedTransactionExpectedToFail(tx, {
@@ -657,11 +720,18 @@ describe("ChangeParams", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
                     fee: 10
                 });
             const hash = await node.sdk.rpc.chain.sendSignedTransaction(tx);
-            expect(await node.sdk.rpc.chain.containsTransaction(hash)).be.true;
+            expect(
+                await node.rpc.chain.containsTransaction({
+                    transactionHash: "0x".concat(hash.toString())
+                })
+            ).be.true;
             expect(await node.sdk.rpc.chain.getTransaction(hash)).not.be.null;
         }
 
@@ -715,12 +785,18 @@ describe("ChangeParams", function() {
                         })
                         .sign({
                             secret: faucetSecret,
-                            seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                            seq: (await node.rpc.chain.getSeq({
+                                address: faucetAddress.toString(),
+                                blockNumber: null
+                            }))!,
                             fee: 10
                         })
                 );
-                expect(await node.sdk.rpc.chain.containsTransaction(hash)).be
-                    .true;
+                expect(
+                    await node.rpc.chain.containsTransaction({
+                        transactionHash: "0x".concat(hash.toString())
+                    })
+                ).be.true;
             }
 
             await expect(node.sendPayTx({ fee: 10 })).rejectedWith(
@@ -787,7 +863,10 @@ describe("ChangeParams", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
                     fee: 10
                 });
             await expect(
@@ -848,7 +927,10 @@ describe("ChangeParams", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
                     fee: 10
                 });
             await expect(
@@ -909,7 +991,10 @@ describe("ChangeParams", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
                     fee: 10
                 });
             await expect(
@@ -970,7 +1055,10 @@ describe("ChangeParams", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
                     fee: 10
                 });
             try {
@@ -1035,7 +1123,10 @@ describe("ChangeParams", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
                     fee: 10
                 });
             await expect(
@@ -1096,7 +1187,10 @@ describe("ChangeParams", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
                     fee: 10
                 });
             await expect(
@@ -1157,7 +1251,10 @@ describe("ChangeParams", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
                     fee: 10
                 });
             await expect(
@@ -1218,7 +1315,10 @@ describe("ChangeParams", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
                     fee: 10
                 });
             await expect(
@@ -1279,7 +1379,10 @@ describe("ChangeParams", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
                     fee: 10
                 });
             try {
@@ -1344,7 +1447,10 @@ describe("ChangeParams", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
                     fee: 10
                 });
             try {
@@ -1382,7 +1488,11 @@ async function sendStakeToken(params: {
         senderSecret,
         quantity
     } = params;
-    const { seq = await node.sdk.rpc.chain.getSeq(senderAddress) } = params;
+    const {
+        seq = (await node.rpc.chain.getSeq({
+            address: senderAddress.toString()
+        }))!
+    } = params;
 
     return node.sdk.rpc.chain.sendSignedTransaction(
         node.sdk.core

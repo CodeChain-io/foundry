@@ -26,13 +26,13 @@ describe("network1 node test", function() {
     });
 
     it(`default whitelist [], disabled`, async function() {
-        const { list, enabled } = await node.sdk.rpc.network.getWhitelist();
+        const { list, enabled } = await node.rpc.net.getWhitelist();
         expect(list).to.be.empty;
         expect(enabled).to.equal(false);
     });
 
     it("default blacklist [], disabled", async function() {
-        const { list, enabled } = await node.sdk.rpc.network.getBlacklist();
+        const { list, enabled } = await node.rpc.net.getBlacklist();
         expect(list).to.be.empty;
         expect(enabled).to.equal(false);
     });
@@ -40,56 +40,56 @@ describe("network1 node test", function() {
     it("addToWhiteList and removeFromWhitelist", async function() {
         const target = "2.2.2.2";
 
-        await node.sdk.rpc.network.addToWhitelist(
-            target,
-            "tag string for the target"
-        );
-        let { list } = await node.sdk.rpc.network.getWhitelist();
+        await node.rpc.net.addToWhitelist({
+            address: target,
+            tag: "tag string for the target"
+        });
+        let { list } = await node.rpc.net.getWhitelist();
         expect(list).to.deep.include([
             "2.2.2.2/32",
             "tag string for the target"
         ]);
 
         await node.sdk.rpc.network.removeFromWhitelist(target);
-        ({ list } = await node.sdk.rpc.network.getWhitelist());
+        ({ list } = await node.rpc.net.getWhitelist());
         expect(list).not.to.include(target);
     });
 
     it("addToBlacklist and removeFromBlacklist", async function() {
         const target = "1.1.1.1";
 
-        await node.sdk.rpc.network.addToBlacklist(
-            target,
-            "tag string for the target"
-        );
-        let { list } = await node.sdk.rpc.network.getBlacklist();
+        await node.rpc.net.addToBlacklist({
+            address: target,
+            tag: "tag string for the target"
+        });
+        let { list } = await node.rpc.net.getBlacklist();
         expect(list).to.deep.include([
             "1.1.1.1/32",
             "tag string for the target"
         ]);
 
-        await node.sdk.rpc.network.removeFromBlacklist(target);
-        ({ list } = await node.sdk.rpc.network.getBlacklist());
+        await node.rpc.net.removeFromBlacklist({ address: target });
+        ({ list } = await node.rpc.net.getBlacklist());
         expect(list).not.to.include(target);
     });
 
     it("enableWhitelist and disableWhitelist", async function() {
-        await node.sdk.rpc.network.enableWhitelist();
-        let { enabled } = await node.sdk.rpc.network.getWhitelist();
+        await node.rpc.net.enableWhitelist();
+        let { enabled } = await node.rpc.net.getWhitelist();
         expect(enabled).to.be.true;
 
-        await node.sdk.rpc.network.disableWhitelist();
-        ({ enabled } = await node.sdk.rpc.network.getWhitelist());
+        await node.rpc.net.disableWhitelist();
+        ({ enabled } = await node.rpc.net.getWhitelist());
         expect(enabled).to.be.false;
     });
 
     it("enableBlacklist and disableBlacklist", async function() {
-        await node.sdk.rpc.network.enableBlacklist();
-        let { enabled } = await node.sdk.rpc.network.getBlacklist();
+        await node.rpc.net.enableBlacklist();
+        let { enabled } = await node.rpc.net.getBlacklist();
         expect(enabled).to.be.true;
 
-        await node.sdk.rpc.network.disableBlacklist();
-        ({ enabled } = await node.sdk.rpc.network.getBlacklist());
+        await node.rpc.net.disableBlacklist();
+        ({ enabled } = await node.rpc.net.getBlacklist());
         expect(enabled).to.be.false;
     });
 

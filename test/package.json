@@ -50,6 +50,7 @@
     "codechain-sdk": "^2.0.0-alpha.2",
     "codechain-stakeholder-sdk": "https://github.com/majecty/codechain-stakeholder-sdk-js#v2.0.0-alpha.1",
     "elliptic": "^6.4.1",
+    "foundry-rpc": "git://github.com/CodeChain-io/foundry-rpc-js.git#alpha",
     "lodash": "^4.17.11",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
