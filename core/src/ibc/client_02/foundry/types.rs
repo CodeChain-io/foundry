@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@ use crate::encoded;
 use crate::ibc;
 use ckey::Public;
 use ibc::client_02 as client;
-use ibc::client_02::{type_path, Header as ClientHeader, Kind, KIND_CODECHAIN};
+use ibc::client_02::{type_path, Header as ClientHeader, Kind, KIND_FOUNDRY};
 use ibc::commitment_23 as commitment;
 use ibc::KVStore;
 use primitives::H256;
@@ -68,7 +68,7 @@ impl ConsensusState {
 
 impl client::ConsensusState for ConsensusState {
     fn kind(&self) -> u8 {
-        client::KIND_CODECHAIN
+        client::KIND_FOUNDRY
     }
 
     fn get_height(&self) -> u64 {
@@ -123,7 +123,7 @@ impl Header {
 
 impl client::Header for Header {
     fn kind(&self) -> u8 {
-        client::KIND_CODECHAIN
+        client::KIND_FOUNDRY
     }
     fn get_height(&self) -> u64 {
         self.raw.number()
@@ -157,7 +157,7 @@ impl State {
     }
 
     fn kind(&self) -> Kind {
-        KIND_CODECHAIN
+        KIND_FOUNDRY
     }
 
     fn set_type(&self, ctx: &mut dyn ibc::Context) {

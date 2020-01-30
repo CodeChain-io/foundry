@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ pub trait Header {
     fn encode(&self) -> &[u8];
 }
 
-pub const KIND_CODECHAIN: Kind = 0_u8;
+pub const KIND_FOUNDRY: Kind = 0_u8;
 
 pub trait State {
     fn get_consensus_state(&self, ctx: &mut dyn ibc::Context) -> Box<dyn ConsensusState>;
