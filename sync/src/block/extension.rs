@@ -40,6 +40,7 @@ use rlp::{Encodable, Rlp};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::iter::once;
 use std::mem::discriminant;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -797,22 +798,12 @@ impl Extension {
 
     fn create_headers_response(&self, start_number: BlockNumber, max_count: u64) -> ResponseMessage {
         let best_proposal_header = self.client.best_proposal_header();
-        let headers = (0..max_count)
-            .map(|number| {
-                let height = start_number + number;
-                let block_id = if best_proposal_header.number() == height {
-                    // If Engine != Tendermint
-                    //    Best block == Best proposal block
-                    //    We could get the best proposal block either by the block hash or the block number.
-                    // If Engine == Tendermint
-                    //    Best block = Best proposal block or its parent
-                    //    We should get the best proposal block only by the block hash.
-                    BlockId::Hash(best_proposal_header.hash())
-                } else {
-                    BlockId::Number(height)
-                };
-                self.client.block(&block_id)
-            })
+        // In Tendermint the best proposal header can only be fetched by the block hash
+        let headers = (start_number..start_number + max_count)
+            .take_while(|number| *number < best_proposal_header.number())
+            .map(BlockId::Number)
+            .chain(once(best_proposal_header.hash().into()))
+            .map(|block_id| self.client.block(&block_id))
             .take_while(Option::is_some)
             .map(|block| block.expect("take_while guarantees existance of item").header().decode())
             .collect();
@@ -1015,7 +1006,7 @@ impl Extension {
                         Err(BlockImportError::Import(ImportError::AlreadyQueued)) => queued.push(hash),
                         // FIXME: handle import errors
                         Err(err) => {
-                            cwarn!(SYNC, "Cannot import header({}): {:?}", header.hash(), err);
+                            cwarn!(SYNC, "Cannot import header({}): {:?}", hash, err);
                             break
                         }
                         _ => {}
