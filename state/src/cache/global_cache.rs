@@ -16,7 +16,7 @@
 
 use super::lru_cache::LruCache;
 use super::{ShardCache, TopCache};
-use crate::{Account, ActionData, Metadata, RegularAccount, Shard, ShardText};
+use crate::{Account, ActionData, IBCData, Metadata, RegularAccount, Shard, ShardText};
 use ctypes::ShardId;
 use std::collections::{HashMap, HashSet};
 
@@ -26,18 +26,27 @@ pub struct GlobalCache {
     metadata: LruCache<Metadata>,
     shard: LruCache<Shard>,
     action_data: LruCache<ActionData>,
+    ibc_data: LruCache<IBCData>,
 
     shard_text: LruCache<ShardText>,
 }
 
 impl GlobalCache {
-    pub fn new(account: usize, regular_account: usize, shard: usize, action_data: usize, shard_text: usize) -> Self {
+    pub fn new(
+        account: usize,
+        regular_account: usize,
+        shard: usize,
+        action_data: usize,
+        ibc_data: usize,
+        shard_text: usize,
+    ) -> Self {
         Self {
             account: LruCache::new(account),
             regular_account: LruCache::new(regular_account),
             metadata: LruCache::new(1),
             shard: LruCache::new(shard),
             action_data: LruCache::new(action_data),
+            ibc_data: LruCache::new(ibc_data),
 
             shard_text: LruCache::new(shard_text),
         }
@@ -50,6 +59,7 @@ impl GlobalCache {
             self.metadata.iter().map(|(addr, item)| (*addr, item.clone())),
             self.shard.iter().map(|(addr, item)| (*addr, item.clone())),
             self.action_data.iter().map(|(addr, item)| (*addr, item.clone())),
+            self.ibc_data.iter().map(|(addr, item)| (*addr, item.clone())),
         )
     }
 
@@ -103,6 +113,12 @@ impl GlobalCache {
                 None => self.action_data.remove(&addr),
             };
         }
+        for (addr, item) in top_cache.cached_ibc_data().into_iter() {
+            match item {
+                Some(item) => self.ibc_data.insert(addr, item),
+                None => self.ibc_data.remove(&addr),
+            };
+        }
 
         let mut cached_shard_texts: Vec<_> =
             shard_caches.iter().flat_map(|(_, shard_cache)| shard_cache.cached_shard_text().into_iter()).collect();
@@ -121,6 +137,7 @@ impl GlobalCache {
         self.metadata.clear();
         self.shard.clear();
         self.action_data.clear();
+        self.ibc_data.clear();
         self.shard_text.clear();
     }
 }
@@ -132,8 +149,9 @@ impl Default for GlobalCache {
         const N_REGULAR_ACCOUNT: usize = 100;
         const N_SHARD: usize = 100;
         const N_ACTION_DATA: usize = 10;
+        const N_IBC_DATA: usize = 100;
         const N_SHARD_TEXT: usize = 1000;
-        Self::new(N_ACCOUNT, N_REGULAR_ACCOUNT, N_SHARD, N_ACTION_DATA, N_SHARD_TEXT)
+        Self::new(N_ACCOUNT, N_REGULAR_ACCOUNT, N_SHARD, N_ACTION_DATA, N_IBC_DATA, N_SHARD_TEXT)
     }
 }
 
@@ -145,6 +163,7 @@ impl Clone for GlobalCache {
             metadata: self.metadata.clone(),
             shard: self.shard.clone(),
             action_data: self.action_data.clone(),
+            ibc_data: self.ibc_data.clone(),
 
             shard_text: self.shard_text.clone(),
         }

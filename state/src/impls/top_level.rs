@@ -37,10 +37,11 @@
 
 use crate::cache::{ShardCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
+use crate::error::Error;
 use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
 use crate::{
-    Account, ActionData, FindActionHandler, Metadata, MetadataAddress, RegularAccount, RegularAccountAddress, Shard,
-    ShardAddress, ShardLevelState, StateDB, StateResult,
+    Account, ActionData, FindActionHandler, IBCData, Metadata, MetadataAddress, RegularAccount, RegularAccountAddress,
+    Shard, ShardAddress, ShardLevelState, StateDB, StateResult,
 };
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
@@ -135,6 +136,12 @@ impl TopStateView for TopLevelState {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         Ok(self.top_cache.action_data(key, &trie)?.map(Into::into))
+    }
+
+    fn ibc_data(&self, key: &H256) -> Result<Option<IBCData>, TrieError> {
+        let db = self.db.borrow();
+        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
+        Ok(self.top_cache.ibc_data(key, &trie)?.map(Into::into))
     }
 }
 
@@ -513,6 +520,12 @@ impl TopLevelState {
         self.top_cache.action_data_mut(key, &trie)
     }
 
+    fn get_ibc_data_mut(&self, key: &H256) -> TrieResult<RefMut<'_, IBCData>> {
+        let db = self.db.borrow();
+        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
+        self.top_cache.ibc_data_mut(key, &trie)
+    }
+
     pub fn journal_under(&self, batch: &mut DBTransaction, now: u64) -> Result<u32, DatabaseError> {
         self.db.borrow_mut().journal_under(batch, now, self.root)
     }
@@ -721,6 +734,16 @@ impl TopState for TopLevelState {
 
     fn remove_action_data(&mut self, key: &H256) {
         self.top_cache.remove_action_data(key)
+    }
+
+    fn update_ibc_data(&mut self, key: &H256, data: Vec<u8>) -> Result<(), Error> {
+        let mut ibc_data = self.get_ibc_data_mut(key)?;
+        *ibc_data = data.into();
+        Ok(())
+    }
+
+    fn remove_ibc_data(&mut self, key: &H256) {
+        self.top_cache.remove_ibc_data(key)
     }
 
     fn update_params(&mut self, metadata_seq: u64, params: CommonParams) -> StateResult<()> {

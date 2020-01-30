@@ -20,6 +20,7 @@ mod address;
 pub mod account;
 pub mod action_data;
 pub mod dummy_shard_text;
+pub mod ibc_data;
 pub mod metadata;
 pub mod regular_account;
 pub mod shard;

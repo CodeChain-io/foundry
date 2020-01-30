@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{Account, ActionData, CacheableItem, Metadata, RegularAccount, Shard, ShardText, StateDB, StateResult};
+use crate::{
+    Account, ActionData, CacheableItem, IBCData, Metadata, RegularAccount, Shard, ShardText, StateDB, StateResult,
+};
 use ckey::{public_to_address, Address, Public};
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, CommonParams, ShardId, Tracker, TxHash};
@@ -110,6 +112,8 @@ pub trait TopStateView {
             Some(state) => state.text(tracker),
         }
     }
+
+    fn ibc_data(&self, key: &H256) -> TrieResult<Option<IBCData>>;
 }
 
 pub trait ShardStateView {
@@ -160,6 +164,9 @@ pub trait TopState {
 
     fn update_action_data(&mut self, key: &H256, data: Bytes) -> StateResult<()>;
     fn remove_action_data(&mut self, key: &H256);
+
+    fn update_ibc_data(&mut self, key: &H256, data: Bytes) -> StateResult<()>;
+    fn remove_ibc_data(&mut self, key: &H256);
 
     fn update_params(&mut self, metadata_seq: u64, params: CommonParams) -> StateResult<()>;
     fn update_term_params(&mut self) -> StateResult<()>;
