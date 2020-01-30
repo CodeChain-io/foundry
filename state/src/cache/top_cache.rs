@@ -16,7 +16,7 @@
 
 use super::WriteBack;
 use crate::{
-    Account, ActionData, Metadata, MetadataAddress, RegularAccount, RegularAccountAddress, Shard, ShardAddress,
+    Account, ActionData, IBCData, Metadata, MetadataAddress, RegularAccount, RegularAccountAddress, Shard, ShardAddress,
 };
 use ckey::Address;
 use merkle_trie::{Result as TrieResult, Trie, TrieMut};
@@ -29,6 +29,7 @@ pub struct TopCache {
     metadata: WriteBack<Metadata>,
     shard: WriteBack<Shard>,
     action_data: WriteBack<ActionData>,
+    ibc_data: WriteBack<IBCData>,
 }
 
 impl TopCache {
@@ -38,6 +39,7 @@ impl TopCache {
         metadata: impl Iterator<Item = (MetadataAddress, Metadata)>,
         shards: impl Iterator<Item = (ShardAddress, Shard)>,
         action_data: impl Iterator<Item = (H256, ActionData)>,
+        ibc_data: impl Iterator<Item = (H256, IBCData)>,
     ) -> Self {
         Self {
             account: WriteBack::new_with_iter(accounts),
@@ -45,6 +47,7 @@ impl TopCache {
             metadata: WriteBack::new_with_iter(metadata),
             shard: WriteBack::new_with_iter(shards),
             action_data: WriteBack::new_with_iter(action_data),
+            ibc_data: WriteBack::new_with_iter(ibc_data),
         }
     }
 
@@ -54,6 +57,7 @@ impl TopCache {
         self.metadata.checkpoint();
         self.shard.checkpoint();
         self.action_data.checkpoint();
+        self.ibc_data.checkpoint();
     }
 
     pub fn discard_checkpoint(&mut self) {
@@ -62,6 +66,7 @@ impl TopCache {
         self.metadata.discard_checkpoint();
         self.shard.discard_checkpoint();
         self.action_data.discard_checkpoint();
+        self.ibc_data.discard_checkpoint();
     }
 
     pub fn revert_to_checkpoint(&mut self) {
@@ -70,6 +75,7 @@ impl TopCache {
         self.metadata.revert_to_checkpoint();
         self.shard.revert_to_checkpoint();
         self.action_data.revert_to_checkpoint();
+        self.ibc_data.revert_to_checkpoint();
     }
 
     pub fn commit<'db>(&mut self, trie: &mut (dyn TrieMut + 'db)) -> TrieResult<()> {
@@ -78,6 +84,7 @@ impl TopCache {
         self.metadata.commit(trie)?;
         self.shard.commit(trie)?;
         self.action_data.commit(trie)?;
+        self.ibc_data.commit(trie)?;
         Ok(())
     }
 
@@ -142,6 +149,18 @@ impl TopCache {
         self.action_data.remove(address)
     }
 
+    pub fn ibc_data(&self, a: &H256, db: &dyn Trie) -> TrieResult<Option<IBCData>> {
+        self.ibc_data.get(a, db)
+    }
+
+    pub fn ibc_data_mut(&self, a: &H256, db: &dyn Trie) -> TrieResult<RefMut<'_, IBCData>> {
+        self.ibc_data.get_mut(a, db)
+    }
+
+    pub fn remove_ibc_data(&self, address: &H256) {
+        self.ibc_data.remove(address)
+    }
+
     pub fn cached_accounts(&self) -> Vec<(Address, Option<Account>)> {
         let mut items = self.account.items();
         items.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
@@ -171,6 +190,12 @@ impl TopCache {
         items.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
         items.into_iter().map(|(_, addr, item)| (addr, item)).collect()
     }
+
+    pub fn cached_ibc_data(&self) -> Vec<(H256, Option<IBCData>)> {
+        let mut items = self.ibc_data.items();
+        items.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
+        items.into_iter().map(|(_, addr, item)| (addr, item)).collect()
+    }
 }
 
 impl Clone for TopCache {
@@ -181,6 +206,7 @@ impl Clone for TopCache {
             metadata: self.metadata.clone(),
             shard: self.shard.clone(),
             action_data: self.action_data.clone(),
+            ibc_data: self.ibc_data.clone(),
         }
     }
 }
