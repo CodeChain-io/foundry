@@ -31,6 +31,7 @@ enum ActionTag {
     SetShardOwners = 0x05,
     SetShardUsers = 0x06,
     ShardStore = 0x19,
+    IBC = 0x20,
     Custom = 0xFF,
 }
 
@@ -85,6 +86,9 @@ pub enum Action {
         network_id: NetworkId,
         shard_id: ShardId,
         content: String,
+    },
+    IBC {
+        bytes: Bytes,
     },
 }
 
@@ -231,6 +235,13 @@ impl Encodable for Action {
                 s.append(shard_id);
                 s.append(content);
             }
+            Action::IBC {
+                bytes,
+            } => {
+                s.begin_list(2);
+                s.append(&ActionTag::IBC);
+                s.append(bytes);
+            }
         }
     }
 }
@@ -326,6 +337,18 @@ impl Decodable for Action {
                     network_id: rlp.val_at(1)?,
                     shard_id: rlp.val_at(2)?,
                     content: rlp.val_at(3)?,
+                })
+            }
+            ActionTag::IBC => {
+                let item_count = rlp.item_count()?;
+                if item_count != 2 {
+                    return Err(DecoderError::RlpIncorrectListLen {
+                        got: item_count,
+                        expected: 2,
+                    })
+                }
+                Ok(Action::IBC {
+                    bytes: rlp.val_at(1)?,
                 })
             }
         }

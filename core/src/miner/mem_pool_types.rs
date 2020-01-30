@@ -472,6 +472,12 @@ impl MemPoolMinFees {
                 // FIXME
                 0
             }
+            Action::IBC {
+                ..
+            } => {
+                // FIXME
+                0
+            }
         }
     }
 }
