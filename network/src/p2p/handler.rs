@@ -118,7 +118,7 @@ pub struct Handler {
 
     min_peers: usize,
     max_peers: usize,
-    peer_db: Arc<dyn (ManagingPeerdb)>,
+    peer_db: Box<dyn (ManagingPeerdb)>,
     rng: Mutex<OsRng>,
 }
 
@@ -133,7 +133,7 @@ impl Handler {
         bootstrap_addresses: Vec<SocketAddr>,
         min_peers: usize,
         max_peers: usize,
-        db: Arc<dyn ManagingPeerdb>,
+        peer_db: Box<dyn ManagingPeerdb>,
     ) -> ::std::result::Result<Self, String> {
         if MAX_INBOUND_CONNECTIONS + MAX_OUTBOUND_CONNECTIONS < max_peers {
             return Err(format!("Max peers must be less than {}", MAX_INBOUND_CONNECTIONS + MAX_OUTBOUND_CONNECTIONS))
@@ -172,7 +172,7 @@ impl Handler {
             bootstrap_addresses,
             min_peers,
             max_peers,
-            peer_db: db,
+            peer_db,
             rng: Mutex::new(OsRng::new().unwrap()),
         })
     }
