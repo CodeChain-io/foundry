@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,24 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub mod codechain;
+pub mod foundry;
 mod manager;
 mod types;
 
 pub use self::manager::Manager;
-pub use self::types::{ConsensusState, Header, Kind, State, KIND_CODECHAIN};
+pub use self::types::{ConsensusState, Header, Kind, State, KIND_FOUNDRY};
 use crate::ibc;
 
 fn new_state(id: &str, ctx: &mut dyn ibc::Context, client_type: Kind) -> Box<dyn State> {
-    if client_type == KIND_CODECHAIN {
-        Box::new(codechain::State::new(id, ctx))
+    if client_type == KIND_FOUNDRY {
+        Box::new(foundry::State::new(id, ctx))
     } else {
         panic!("Invalid client type");
     }
 }
 
 fn get_state(id: &str, ctx: &mut dyn ibc::Context) -> Result<Box<dyn State>, String> {
-    let s = codechain::State::find(id);
+    let s = foundry::State::find(id);
     if s.exists(ctx) {
         Ok(Box::new(s))
     } else {

@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@ use ctypes::errors::RuntimeError;
 use ctypes::errors::SyntaxError;
 use ctypes::{CommonParams, Header};
 use ibc::client_02 as ibc_client;
-use ibc::client_02::codechain as ibc_codechain;
+use ibc::client_02::foundry as ibc_foundry;
 use ibc::context as ibc_context;
 use parking_lot::RwLock;
 use rlp::{Decodable, Rlp};
@@ -105,11 +105,11 @@ fn create_client(
 ) -> StateResult<()> {
     let mut context = ibc_context::TopLevelContext::new(state);
     let client_manager = ibc_client::Manager::new();
-    if kind != ibc_client::KIND_CODECHAIN {
+    if kind != ibc_client::KIND_FOUNDRY {
         return Err(RuntimeError::IBC(format!("CreateClient has invalid type {}", kind)).into())
     }
     let rlp = rlp::Rlp::new(consensus_state);
-    let codechain_consensus_state: ibc_codechain::ConsensusState = match rlp.as_val() {
+    let foundry_consensus_state: ibc_foundry::ConsensusState = match rlp.as_val() {
         Ok(cs) => cs,
         Err(err) => {
             return Err(RuntimeError::IBC(format!("CreateClient failed to decode consensus state {}", err)).into())
@@ -117,7 +117,7 @@ fn create_client(
     };
 
     client_manager
-        .create(&mut context, id, &codechain_consensus_state)
+        .create(&mut context, id, &foundry_consensus_state)
         .map_err(|err| RuntimeError::IBC(format!("CreateClient: {:?}", err)))?;
     Ok(())
 }
