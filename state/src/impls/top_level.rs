@@ -405,6 +405,12 @@ impl TopLevelState {
                 handler.execute(bytes, self, fee_payer, signer_public)?;
                 return Ok(())
             }
+            Action::IBC {
+                ..
+            } => {
+                // FIXME: call ibc transactions
+                return Ok(())
+            }
         };
         self.apply_shard_transaction(
             &transaction,

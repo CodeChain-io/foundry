@@ -55,6 +55,9 @@ pub enum Action {
         shard_id: ShardId,
         content: String,
     },
+    IBC {
+        bytes: Bytes,
+    },
 }
 
 #[derive(Debug, Serialize)]
@@ -90,6 +93,9 @@ pub enum ActionWithTracker {
         shard_id: ShardId,
         content: String,
         tracker: Tracker,
+    },
+    IBC {
+        bytes: Bytes,
     },
 }
 
@@ -147,6 +153,11 @@ impl ActionWithTracker {
                 shard_id,
                 content,
                 tracker: tracker.unwrap(),
+            },
+            ActionType::IBC {
+                bytes,
+            } => ActionWithTracker::IBC {
+                bytes,
             },
         }
     }
@@ -211,6 +222,11 @@ impl TryFrom<Action> for ActionType {
                 network_id,
                 shard_id,
                 content,
+            },
+            Action::IBC {
+                bytes,
+            } => ActionType::IBC {
+                bytes,
             },
         })
     }

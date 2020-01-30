@@ -110,6 +110,12 @@ impl CodeChainMachine {
                 // FIXME
                 0
             }
+            Action::IBC {
+                ..
+            } => {
+                // FIXME
+                0
+            }
         }
     }
 
