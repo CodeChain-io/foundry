@@ -41,9 +41,7 @@ describe("Snapshot", async function() {
 
         const blockHash = (await node.sdk.rpc.chain.getTransaction(pay.hash()))!
             .blockHash!;
-        await node.sdk.rpc.sendRpcRequest("devel_snapshot", [
-            blockHash.toJSON()
-        ]);
+        await node.rpc.devel!.developSnapshot({ hash: blockHash.toJSON() })!;
         // Wait for 1 secs
         await new Promise(resolve => setTimeout(resolve, 1000));
 

@@ -28,10 +28,10 @@ describe("Sealing test", function() {
     });
 
     it("stopSealing then startSealing", async function() {
-        await node.sdk.rpc.devel.stopSealing();
+        await node.rpc.devel!.stopSealing();
         await node.sendPayTx();
         expect(await node.getBestBlockNumber()).to.equal(0);
-        await node.sdk.rpc.devel.startSealing();
+        await node.rpc.devel!.startSealing();
         expect(await node.getBestBlockNumber()).to.equal(1);
     });
 
@@ -52,18 +52,39 @@ describe("Future queue", function() {
     });
 
     it("all pending transactions must be mined", async function() {
-        const seq = (await node.sdk.rpc.chain.getSeq(faucetAddress)) || 0;
+        const seq = (await node.rpc.chain.getSeq({
+            address: faucetAddress.toString(),
+            blockNumber: null
+        }))!;
 
         await node.sendPayTx({ seq: seq + 3 });
-        expect(await node.sdk.rpc.chain.getSeq(faucetAddress)).to.equal(seq);
+        expect(
+            (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!
+        ).to.equal(seq);
         await node.sendPayTx({ seq: seq + 2 });
-        expect(await node.sdk.rpc.chain.getSeq(faucetAddress)).to.equal(seq);
+        expect(
+            (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!
+        ).to.equal(seq);
         await node.sendPayTx({ seq: seq + 1 });
-        expect(await node.sdk.rpc.chain.getSeq(faucetAddress)).to.equal(seq);
+        expect(
+            (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!
+        ).to.equal(seq);
         await node.sendPayTx({ seq: seq });
-        expect(await node.sdk.rpc.chain.getSeq(faucetAddress)).to.equal(
-            seq + 4
-        );
+        expect(
+            (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!
+        ).to.equal(seq + 4);
     });
 
     afterEach(async function() {
@@ -83,24 +104,23 @@ describe("Delete All Pending Transactions", function() {
     });
 
     it("all pending transactions should be deleted", async function() {
-        await node.sdk.rpc.devel.stopSealing();
+        await node.rpc.devel!.stopSealing();
 
-        const sq = (await node.sdk.rpc.chain.getSeq(faucetAddress)) || 0;
+        const sq = (await node.rpc.chain.getSeq({
+            address: faucetAddress.toString(),
+            blockNumber: null
+        }))!;
 
         await node.sendPayTx({ seq: sq + 0 }); // will be in the current queue
         await node.sendPayTx({ seq: sq + 3 }); // will be in the future queue
-
-        await node.sdk.rpc.sendRpcRequest(
-            "mempool_deleteAllPendingTransactions",
-            []
-        );
+        await node.rpc.mempool.deleteAllPendingTransactions();
 
         const {
             transactions: wholeTXs
-        } = await node.sdk.rpc.sendRpcRequest(
-            "mempool_getPendingTransactions",
-            [null, null]
-        );
+        } = await node.rpc.mempool.getPendingTransactions({
+            from: null,
+            to: null
+        });
 
         expect(wholeTXs.length).to.equal(0);
     });

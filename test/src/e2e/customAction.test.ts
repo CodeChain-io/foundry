@@ -32,6 +32,9 @@ const expect = chai.expect;
 
 const RLP = require("rlp");
 
+const hitcount = toHex(RLP.encode(["hit count"]));
+const closecount = toHex(RLP.encode(["close count"]));
+const nonexistingkey = toHex(RLP.encode(["non-existing-key"]));
 describe("customAction", function() {
     let node: CodeChain;
 
@@ -42,27 +45,32 @@ describe("customAction", function() {
 
     describe("customAction", function() {
         it("should get initial state", async function() {
-            const actionData = await node.sdk.rpc.engine.getCustomActionData(
-                hitActionHandlerId,
-                ["hit count"]
-            );
+            const actionData = await node.rpc.engine.getCustomActionData({
+                handlerId: hitActionHandlerId,
+                bytes: `0x${hitcount}`,
+                blockNumber: null
+            });
 
             expect(actionData).to.be.equal(toHex(RLP.encode(1)));
         });
 
         it("should alter state", async function() {
-            const previousHitData = (await node.sdk.rpc.engine.getCustomActionData(
-                hitActionHandlerId,
-                ["hit count"]
-            ))!;
+            const previousHitData = (await node.rpc.engine.getCustomActionData({
+                handlerId: hitActionHandlerId,
+                bytes: `0x${hitcount}`,
+                blockNumber: null
+            }))!;
             const previousHitCount = Buffer.from(
                 previousHitData,
                 "hex"
             ).readUInt8(0);
 
-            const previousBlockCloseData = (await node.sdk.rpc.engine.getCustomActionData(
-                hitActionHandlerId,
-                ["close count"]
+            const previousBlockCloseData = (await node.rpc.engine.getCustomActionData(
+                {
+                    handlerId: hitActionHandlerId,
+                    bytes: `0x${closecount}`,
+                    blockNumber: null
+                }
             ))!;
             const previousBlockCloseCount = Buffer.from(
                 previousBlockCloseData,
@@ -78,59 +86,75 @@ describe("customAction", function() {
                     })
                     .sign({
                         secret: faucetSecret,
-                        seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                        seq: (await node.rpc.chain.getSeq({
+                            address: faucetAddress.toString(),
+                            blockNumber: null
+                        }))!,
                         fee: 10
                     })
             );
 
-            expect(await node.sdk.rpc.chain.containsTransaction(hash)).be.true;
+            expect(
+                await node.rpc.chain.containsTransaction({
+                    transactionHash: `0x${hash.toString()}`
+                })
+            ).be.true;
             expect(await node.sdk.rpc.chain.getTransaction(hash)).not.null;
 
-            const hitData = await node.sdk.rpc.engine.getCustomActionData(
-                hitActionHandlerId,
-                ["hit count"]
-            );
+            const hitData = (await node.rpc.engine.getCustomActionData({
+                handlerId: hitActionHandlerId,
+                bytes: `0x${hitcount}`,
+                blockNumber: null
+            }))!;
 
             expect(hitData).to.be.equal(
                 toHex(RLP.encode(previousHitCount + increment))
             );
-            const closeData = await node.sdk.rpc.engine.getCustomActionData(
-                hitActionHandlerId,
-                ["close count"]
-            );
+            const closeData = (await node.rpc.engine.getCustomActionData({
+                handlerId: hitActionHandlerId,
+                bytes: `0x${closecount}`,
+                blockNumber: null
+            }))!;
             expect(closeData).to.be.equal(
                 toHex(RLP.encode(previousBlockCloseCount + 1))
             );
         });
 
         it("should return null", async function() {
-            const actionData = await node.sdk.rpc.engine.getCustomActionData(
-                hitActionHandlerId,
-                ["non-existing-key"]
-            );
+            const actionData = await node.rpc.engine.getCustomActionData({
+                handlerId: hitActionHandlerId,
+                bytes: `0x${nonexistingkey}`,
+                blockNumber: null
+            });
 
             expect(actionData).to.be.null;
         });
 
         it("should throw state not exist", async function() {
             try {
-                await node.sdk.rpc.engine.getCustomActionData(
-                    hitActionHandlerId,
-                    ["hit count"],
-                    99999
-                );
+                await node.rpc.engine.getCustomActionData({
+                    handlerId: hitActionHandlerId,
+                    bytes: `0x${hitcount}`,
+                    blockNumber: 99999
+                });
                 fail();
             } catch (e) {
-                expect(e).similarTo(ERROR.STATE_NOT_EXIST);
+                expect(e.toString()).include(ERROR.STATE_NOT_EXIST);
             }
         });
 
         it("should throw handler not found on getCustomActionData", async function() {
             try {
-                await node.sdk.rpc.engine.getCustomActionData(999999, []);
+                await node.rpc.engine.getCustomActionData({
+                    handlerId: 999999,
+                    bytes: `0x${toHex(RLP.encode([]))}`,
+                    blockNumber: null
+                });
                 fail();
             } catch (e) {
-                expect(e).similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
+                expect(e.toString()).include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
             }
         });
 
@@ -144,7 +168,10 @@ describe("customAction", function() {
                         })
                         .sign({
                             secret: faucetSecret,
-                            seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                            seq: (await node.rpc.chain.getSeq({
+                                address: faucetAddress.toString(),
+                                blockNumber: null
+                            }))!,
                             fee: 10
                         })
                 );
@@ -155,8 +182,11 @@ describe("customAction", function() {
         });
 
         it("should fail on handling error", async function() {
-            const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
-            const blockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
+            const seq = (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!;
+            const blockNumber = await node.rpc.chain.getBestBlockNumber();
 
             expect(
                 node.sdk.rpc.chain.sendSignedTransaction(

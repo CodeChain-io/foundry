@@ -17,6 +17,7 @@
 import { expect } from "chai";
 import "mocha";
 import CodeChain from "../helper/spawn";
+import { log } from "util";
 
 describe("solo - 1 node", function() {
     let node: CodeChain;
@@ -26,19 +27,17 @@ describe("solo - 1 node", function() {
     });
 
     it("ping", async function() {
-        expect(await node.sdk.rpc.node.ping()).to.equal("pong");
+        expect(await node.rpc.ping()).to.contain("pong");
     });
 
     it("getNodeVersion", async function() {
-        expect(await node.sdk.rpc.node.getNodeVersion()).to.match(
+        expect(await node.rpc.version()).to.match(
             /^[0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9.]*)?$/
         );
     });
 
     it("getCommitHash", async function() {
-        expect(await node.sdk.rpc.node.getCommitHash()).to.match(
-            /^[a-fA-F0-9]{40}$/
-        );
+        expect(await node.rpc.commitHash()).to.match(/^[a-fA-F0-9]{40}$/);
     });
 
     afterEach(function() {

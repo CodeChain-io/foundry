@@ -64,22 +64,32 @@ describe("Staking", function() {
             carolAddress,
             daveAddress
         ];
+        const stackholderaddress = `0x${toHex(
+            RLP.encode(["StakeholderAddresses"])
+        )}`;
         const amounts = await promiseExpect.shouldFulfill(
             "get customActionData",
             Promise.all(
                 validatorAddresses.map(addr =>
-                    node.sdk.rpc.engine.getCustomActionData(
-                        stakeActionHandlerId,
-                        ["Account", addr.accountId.toEncodeObject()]
-                    )
+                    node.rpc.engine.getCustomActionData({
+                        handlerId: stakeActionHandlerId,
+                        bytes: `0x${toHex(
+                            RLP.encode([
+                                "Account",
+                                addr.accountId.toEncodeObject()
+                            ])
+                        )}`
+                    })
                 )
             )
         );
         const stakeholders = await promiseExpect.shouldFulfill(
             "get customActionData",
-            node.sdk.rpc.engine.getCustomActionData(stakeActionHandlerId, [
-                "StakeholderAddresses"
-            ])
+            node.rpc.engine.getCustomActionData({
+                handlerId: stakeActionHandlerId,
+                bytes: stackholderaddress,
+                blockNumber: null
+            })
         );
         return { amounts, stakeholders };
     }
@@ -98,10 +108,15 @@ describe("Staking", function() {
             "get customActionData",
             Promise.all(
                 validatorAddresses.map(addr =>
-                    node.sdk.rpc.engine.getCustomActionData(
-                        stakeActionHandlerId,
-                        ["Delegation", addr.accountId.toEncodeObject()]
-                    )
+                    node.rpc.engine.getCustomActionData({
+                        handlerId: stakeActionHandlerId,
+                        bytes: `0x${toHex(
+                            RLP.encode([
+                                "Delegation",
+                                addr.accountId.toEncodeObject()
+                            ])
+                        )}`
+                    })
                 )
             )
         );
@@ -119,7 +134,9 @@ describe("Staking", function() {
         const { fee = 10 } = params;
         const seq =
             params.seq == null
-                ? await node.sdk.rpc.chain.getSeq(params.senderAddress)
+                ? (await node.rpc.chain.getSeq({
+                      address: params.senderAddress.toString()
+                  }))!
                 : params.seq;
 
         return promiseExpect.shouldFulfill(
@@ -156,7 +173,9 @@ describe("Staking", function() {
         const { fee = 10 } = params;
         const seq =
             params.seq == null
-                ? await node.sdk.rpc.chain.getSeq(params.senderAddress)
+                ? (await node.rpc.chain.getSeq({
+                      address: params.senderAddress.toString()
+                  }))!
                 : params.seq;
 
         return promiseExpect.shouldFulfill(
@@ -193,7 +212,9 @@ describe("Staking", function() {
         const { fee = 10 } = params;
         const seq =
             params.seq == null
-                ? await node.sdk.rpc.chain.getSeq(params.senderAddress)
+                ? (await node.rpc.chain.getSeq({
+                      address: params.senderAddress.toString()
+                  }))!
                 : params.seq;
 
         return promiseExpect.shouldFulfill(
@@ -230,7 +251,9 @@ describe("Staking", function() {
         const { fee = 10, deposit, metadata } = params;
         const seq =
             params.seq == null
-                ? await node.sdk.rpc.chain.getSeq(params.senderAddress)
+                ? (await node.rpc.chain.getSeq({
+                      address: params.senderAddress.toString()
+                  }))!
                 : params.seq;
 
         return promiseExpect.shouldFulfill(
@@ -261,7 +284,6 @@ describe("Staking", function() {
             toHex(RLP.encode(20000)),
             toHex(RLP.encode(10000))
         ]);
-
         expect(stakeholders).to.be.equal(
             toHex(
                 RLP.encode([
@@ -485,12 +507,14 @@ describe("Staking", function() {
             quantity: 100
         });
 
-        await node.sdk.rpc.devel.stopSealing();
+        await node.rpc.devel!.stopSealing();
         await node.sendPayTx({
             recipient: faucetAddress,
             secret: validator0Secret,
             quantity: 1,
-            seq: await node.sdk.rpc.chain.getSeq(validator0Address)
+            seq: (await node.rpc.chain.getSeq({
+                address: validator0Address.toString()
+            }))!
         });
         const hash = await revokeToken({
             senderAddress: aliceAddress,
@@ -498,7 +522,7 @@ describe("Staking", function() {
             delegateeAddress: validator0Address,
             quantity: 200
         });
-        await node.sdk.rpc.devel.startSealing();
+        await node.rpc.devel!.startSealing();
 
         expect(await node.sdk.rpc.chain.getErrorHint(hash)).not.to.be.null;
 
@@ -593,57 +617,64 @@ describe("Staking", function() {
         );
         const minCustomCost = require(chain).params.minCustomCost;
 
-        const oldAliceBalance = await node.sdk.rpc.chain.getBalance(
-            aliceAddress,
-            blockNumber - 1
-        );
-        const aliceBalance = await node.sdk.rpc.chain.getBalance(aliceAddress);
+        const oldAliceBalance = +(await node.rpc.chain.getBalance({
+            address: aliceAddress.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        // FIXME: Change Number to U64
+        const aliceBalance = +(await node.rpc.chain.getBalance({
+            address: aliceAddress.toString()
+        }))!;
         expect(aliceBalance).to.be.deep.equal(
-            oldAliceBalance
-                .minus(fee)
-                .plus(Math.floor((minCustomCost * 2) / 10))
+            oldAliceBalance - fee + Math.floor((minCustomCost * 2) / 10)
         );
 
-        const oldBobBalance = await node.sdk.rpc.chain.getBalance(
-            bobAddress,
-            blockNumber - 1
-        );
-        const bobBalance = await node.sdk.rpc.chain.getBalance(bobAddress);
+        const oldBobBalance = +(await node.rpc.chain.getBalance({
+            address: bobAddress.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const bobBalance = +(await node.rpc.chain.getBalance({
+            address: bobAddress.toString()
+        }))!;
         expect(bobBalance).to.be.deep.equal(
-            oldBobBalance.plus(Math.floor((minCustomCost * 3) / 10))
+            oldBobBalance + Math.floor((minCustomCost * 3) / 10)
         );
 
-        const oldCarolBalance = await node.sdk.rpc.chain.getBalance(
-            carolAddress,
-            blockNumber - 1
-        );
-        const carolBalance = await node.sdk.rpc.chain.getBalance(carolAddress);
+        const oldCarolBalance = +(await node.rpc.chain.getBalance({
+            address: carolAddress.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const carolBalance = +(await node.rpc.chain.getBalance({
+            address: carolAddress.toString()
+        }))!;
         expect(carolBalance).to.be.deep.equal(
-            oldCarolBalance.plus(Math.floor((minCustomCost * 2) / 10))
+            oldCarolBalance + Math.floor((minCustomCost * 2) / 10)
         );
 
-        const oldDaveBalance = await node.sdk.rpc.chain.getBalance(
-            daveAddress,
-            blockNumber - 1
-        );
-        const daveBalance = await node.sdk.rpc.chain.getBalance(daveAddress);
+        const oldDaveBalance = +(await node.rpc.chain.getBalance({
+            address: daveAddress.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const daveBalance = +(await node.rpc.chain.getBalance({
+            address: daveAddress.toString()
+        }))!;
         expect(daveBalance).to.be.deep.equal(
-            oldDaveBalance.plus(Math.floor((minCustomCost * 1) / 10))
+            oldDaveBalance + Math.floor((minCustomCost * 1) / 10)
         );
 
-        const oldValidator0Balance = await node.sdk.rpc.chain.getBalance(
-            validator0Address,
-            blockNumber - 1
-        );
-        const validator0Balance = await node.sdk.rpc.chain.getBalance(
-            validator0Address
-        );
+        const oldValidator0Balance = +(await node.rpc.chain.getBalance({
+            address: validator0Address.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const validator0Balance = +(await node.rpc.chain.getBalance({
+            address: validator0Address.toString()
+        }))!;
         expect(validator0Balance).to.be.deep.equal(
-            oldValidator0Balance
-                .plus(Math.floor((minCustomCost * 2) / 10))
-                .plus(fee)
-                .minus(minCustomCost)
-                .plus(blockReward)
+            oldValidator0Balance +
+                Math.floor((minCustomCost * 2) / 10) +
+                fee -
+                minCustomCost +
+                blockReward
         );
     });
 
@@ -702,65 +733,73 @@ describe("Staking", function() {
         );
         const minCustomCost = require(chain).params.minCustomCost as number;
 
-        const oldAliceBalance = await node.sdk.rpc.chain.getBalance(
-            aliceAddress,
-            blockNumber - 1
-        );
-        const aliceBalance = await node.sdk.rpc.chain.getBalance(aliceAddress);
+        const oldAliceBalance = +(await node.rpc.chain.getBalance({
+            address: aliceAddress.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const aliceBalance = +(await node.rpc.chain.getBalance({
+            address: aliceAddress.toString()
+        }))!;
         expect(aliceBalance).to.be.deep.equal(
-            oldAliceBalance.plus(Math.floor((minCustomCost * 2) / 10))
+            oldAliceBalance + Math.floor((minCustomCost * 2) / 10)
         );
 
-        const oldBobBalance = await node.sdk.rpc.chain.getBalance(
-            bobAddress,
-            blockNumber - 1
-        );
-        const bobBalance = await node.sdk.rpc.chain.getBalance(bobAddress);
+        const oldBobBalance = +(await node.rpc.chain.getBalance({
+            address: bobAddress.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const bobBalance = +(await node.rpc.chain.getBalance({
+            address: bobAddress.toString()
+        }))!;
         expect(bobBalance).to.be.deep.equal(
-            oldBobBalance.plus(Math.floor((minCustomCost * 3) / 10))
+            oldBobBalance + Math.floor((minCustomCost * 3) / 10)
         );
 
-        const oldCarolBalance = await node.sdk.rpc.chain.getBalance(
-            carolAddress,
-            blockNumber - 1
-        );
-        const carolBalance = await node.sdk.rpc.chain.getBalance(carolAddress);
+        const oldCarolBalance = +(await node.rpc.chain.getBalance({
+            address: carolAddress.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const carolBalance = +(await node.rpc.chain.getBalance({
+            address: carolAddress.toString()
+        }))!;
         expect(carolBalance).to.be.deep.equal(
-            oldCarolBalance.plus(Math.floor((minCustomCost * 2) / 10))
+            oldCarolBalance + Math.floor((minCustomCost * 2) / 10)
         );
 
-        const oldDaveBalance = await node.sdk.rpc.chain.getBalance(
-            daveAddress,
-            blockNumber - 1
-        );
-        const daveBalance = await node.sdk.rpc.chain.getBalance(daveAddress);
+        const oldDaveBalance = +(await node.rpc.chain.getBalance({
+            address: daveAddress.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const daveBalance = +(await node.rpc.chain.getBalance({
+            address: daveAddress.toString()
+        }))!;
         expect(daveBalance).to.be.deep.equal(
-            oldDaveBalance.plus(Math.floor((minCustomCost * 1) / 10))
+            oldDaveBalance + Math.floor((minCustomCost * 1) / 10)
         );
 
-        const oldValidator0Balance = await node.sdk.rpc.chain.getBalance(
-            validator0Address,
-            blockNumber - 1
-        );
-        const validator0Balance = await node.sdk.rpc.chain.getBalance(
-            validator0Address
-        );
+        const oldValidator0Balance = +(await node.rpc.chain.getBalance({
+            address: validator0Address.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const validator0Balance = +(await node.rpc.chain.getBalance({
+            address: validator0Address.toString()
+        }))!;
         expect(validator0Balance).to.be.deep.equal(
-            oldValidator0Balance
-                .plus(Math.floor((minCustomCost * 2) / 10))
-                .minus(fee)
-                .plus(fee)
-                .minus(minCustomCost)
-                .plus(blockReward)
+            oldValidator0Balance +
+                Math.floor((minCustomCost * 2) / 10) -
+                fee +
+                fee -
+                minCustomCost +
+                blockReward
         );
 
-        const oldValidator1Balance = await node.sdk.rpc.chain.getBalance(
-            validator1Address,
-            blockNumber - 1
-        );
-        const validator1Balance = await node.sdk.rpc.chain.getBalance(
-            validator1Address
-        );
+        const oldValidator1Balance = +(await node.rpc.chain.getBalance({
+            address: validator1Address.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const validator1Balance = +(await node.rpc.chain.getBalance({
+            address: validator1Address.toString()
+        }))!;
         expect(validator1Balance).to.be.deep.equal(oldValidator1Balance);
     });
 
@@ -829,58 +868,62 @@ describe("Staking", function() {
         );
         const minCustomCost = require(chain).params.minCustomCost as number;
 
-        const oldAliceBalance = await node.sdk.rpc.chain.getBalance(
-            aliceAddress,
-            blockNumber - 1
-        );
-        const aliceBalance = await node.sdk.rpc.chain.getBalance(aliceAddress);
+        const oldAliceBalance = +(await node.rpc.chain.getBalance({
+            address: aliceAddress.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const aliceBalance = +(await node.rpc.chain.getBalance({
+            address: aliceAddress.toString()
+        }))!;
         expect(aliceBalance).to.be.deep.equal(
-            oldAliceBalance.plus(Math.floor((minCustomCost * 1) / 10))
+            oldAliceBalance + Math.floor((minCustomCost * 1) / 10)
         );
 
-        const oldBobBalance = await node.sdk.rpc.chain.getBalance(
-            bobAddress,
-            blockNumber - 1
-        );
-        const bobBalance = await node.sdk.rpc.chain.getBalance(bobAddress);
+        const oldBobBalance = +(await node.rpc.chain.getBalance({
+            address: bobAddress.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const bobBalance = +(await node.rpc.chain.getBalance({
+            address: bobAddress.toString()
+        }))!;
         expect(bobBalance).to.be.deep.equal(
-            oldBobBalance.plus(Math.floor((minCustomCost * 3) / 10))
+            oldBobBalance + Math.floor((minCustomCost * 3) / 10)
         );
 
-        const oldFaucetBalance = await node.sdk.rpc.chain.getBalance(
-            faucetAddress,
-            blockNumber - 1
-        );
-        const faucetBalance = await node.sdk.rpc.chain.getBalance(
-            faucetAddress
-        );
+        const oldFaucetBalance = +(await node.rpc.chain.getBalance({
+            address: faucetAddress.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const faucetBalance = +(await node.rpc.chain.getBalance({
+            address: faucetAddress.toString()
+        }))!;
         expect(faucetBalance).to.be.deep.equal(oldFaucetBalance);
 
-        const oldValidator0Balance = await node.sdk.rpc.chain.getBalance(
-            validator0Address,
-            blockNumber - 1
-        );
-        const validator0Balance = await node.sdk.rpc.chain.getBalance(
-            validator0Address
-        );
+        const oldValidator0Balance = +(await node.rpc.chain.getBalance({
+            address: validator0Address.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const validator0Balance = +(await node.rpc.chain.getBalance({
+            address: validator0Address.toString()
+        }))!;
         expect(validator0Balance).to.be.deep.equal(
-            oldValidator0Balance
-                .plus(Math.floor((minCustomCost * 2) / 10))
-                .minus(fee)
-                .plus(fee)
-                .minus(minCustomCost)
-                .plus(blockReward)
+            oldValidator0Balance +
+                Math.floor((minCustomCost * 2) / 10) -
+                fee +
+                fee -
+                minCustomCost +
+                blockReward
         );
 
-        const oldValidator1Balance = await node.sdk.rpc.chain.getBalance(
-            validator1Address,
-            blockNumber - 1
-        );
-        const validator1Balance = await node.sdk.rpc.chain.getBalance(
-            validator1Address
-        );
+        const oldValidator1Balance = +(await node.rpc.chain.getBalance({
+            address: validator1Address.toString(),
+            blockNumber: blockNumber - 1
+        }))!;
+        const validator1Balance = +(await node.rpc.chain.getBalance({
+            address: validator1Address.toString()
+        }))!;
         expect(validator1Balance).to.be.deep.equal(
-            oldValidator1Balance.plus(Math.floor((minCustomCost * 1) / 10))
+            oldValidator1Balance + Math.floor((minCustomCost * 1) / 10)
         );
     });
 
@@ -889,7 +932,9 @@ describe("Staking", function() {
         const pubKey = node.sdk.util.getPublicFromPrivate(privKey);
 
         await node.setRegularKey(pubKey, {
-            seq: await node.sdk.rpc.chain.getSeq(validator0Address),
+            seq: (await node.rpc.chain.getSeq({
+                address: validator0Address.toString()
+            }))!,
             secret: validator0Secret
         });
 

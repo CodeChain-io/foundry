@@ -80,12 +80,15 @@ describe("solo - 1 node", function() {
     });
 
     it("Try to use the master key instead of the regular key", async function() {
-        const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
-        const blockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
-        await node.sdk.rpc.devel.stopSealing();
+        const seq = (await node.rpc.chain.getSeq({
+            address: faucetAddress.toString(),
+            blockNumber: null
+        }))!;
+        const blockNumber = await node.rpc.chain.getBestBlockNumber();
+        await node.rpc.devel!.stopSealing();
         const hash = await node.setRegularKey(pubKey, { seq });
         const tx = await node.sendPayTx({ seq: seq + 1 });
-        await node.sdk.rpc.devel.startSealing();
+        await node.rpc.devel!.startSealing();
         await node.waitBlockNumber(blockNumber + 1);
 
         expect(await node.sdk.rpc.chain.getErrorHint(hash)).be.null;
@@ -99,16 +102,19 @@ describe("solo - 1 node", function() {
             { networkId: "tc" }
         ).toString();
 
-        await node.sdk.rpc.devel.stopSealing();
-        const blockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
-        const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+        await node.rpc.devel!.stopSealing();
+        const blockNumber = await node.rpc.chain.getBestBlockNumber();
+        const seq = (await node.rpc.chain.getSeq({
+            address: faucetAddress.toString(),
+            blockNumber: null
+        }))!;
         const tx1 = await node.sendPayTx({
             quantity: 5,
             recipient: address,
             seq
         });
         const hash2 = await node.setRegularKey(pubKey, { seq: seq + 1 });
-        await node.sdk.rpc.devel.startSealing();
+        await node.rpc.devel!.startSealing();
         await node.waitBlockNumber(blockNumber + 1);
 
         const block = (await node.sdk.rpc.chain.getBlock(blockNumber + 1))!;
@@ -127,11 +133,14 @@ describe("solo - 1 node", function() {
         ).toString();
 
         await node.sendPayTx({ quantity: 100, recipient: address });
-        const seq = await node.sdk.rpc.chain.getSeq(address);
+        const seq = (await node.rpc.chain.getSeq({
+            address: address.toString(),
+            blockNumber: null
+        }))!;
 
         const blockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
 
-        await node.sdk.rpc.devel.stopSealing();
+        await node.rpc.devel!.stopSealing();
         const hash1 = await node.setRegularKey(pubKey, {
             seq,
             secret: newPrivKey
@@ -139,7 +148,7 @@ describe("solo - 1 node", function() {
         const hash2 = await node.setRegularKey(pubKey, {
             seq: seq + 1
         });
-        await node.sdk.rpc.devel.startSealing();
+        await node.rpc.devel!.startSealing();
 
         await node.waitBlockNumber(blockNumber);
 

@@ -26,6 +26,8 @@ import {
     invalidAddress
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
+const RLP = require("rlp");
+import { toHex } from "codechain-sdk/lib/utils";
 
 describe("chain", function() {
     const invalidH160 = H160.zero();
@@ -38,50 +40,46 @@ describe("chain", function() {
     });
 
     it("getNetworkId", async function() {
-        expect(await node.sdk.rpc.chain.getNetworkId()).to.equal("tc");
+        expect(await node.rpc.chain.getNetworkId()).to.equal("tc");
     });
 
     it("getBestBlockNumber", async function() {
-        expect(await node.sdk.rpc.chain.getBestBlockNumber()).to.be.a("number");
+        expect(await node.rpc.chain.getBestBlockNumber()).to.be.a("number");
     });
 
     it("getPossibleAuthors", async function() {
-        expect(
-            await node.sdk.rpc.sendRpcRequest("chain_getPossibleAuthors", [
-                null
-            ])
-        ).be.null;
+        expect(await node.rpc.chain.getPossibleAuthors({ blockNumber: null }))
+            .be.null;
     });
 
     it("getPossibleAuthors of the genesis block", async function() {
         expect(
-            await node.sdk.rpc.sendRpcRequest("chain_getPossibleAuthors", [0])
+            await node.rpc.chain.getPossibleAuthors({ blockNumber: 0 })
         ).deep.equal(["tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3"]);
     });
 
     it("getBestBlockId", async function() {
-        const value = await node.sdk.rpc.sendRpcRequest(
-            "chain_getBestBlockId",
-            []
-        );
-        expect(value.hash).to.be.a("string");
-        new H256(value.hash);
-        expect(value.number).to.be.a("number");
+        const value = await node.rpc.chain.getBestBlockNumber();
+        expect(value).to.be.a("number");
     });
 
     it("getBlockHash", async function() {
-        const bestBlockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
-        expect(await node.sdk.rpc.chain.getBlockHash(bestBlockNumber)).not.to.be
-            .null;
-        expect(await node.sdk.rpc.chain.getBlockHash(bestBlockNumber + 1)).to.be
-            .null;
+        const bestBlockNumber = await node.rpc.chain.getBestBlockNumber();
+        expect(
+            await node.rpc.chain.getBlockHash({ blockNumber: bestBlockNumber })
+        ).not.to.be.null;
+        expect(
+            await node.rpc.chain.getBlockHash({
+                blockNumber: bestBlockNumber + 1
+            })
+        ).to.be.null;
     });
 
     it("getBlockByHash", async function() {
-        const bestBlockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
-        const blockHash = await node.sdk.rpc.chain.getBlockHash(
-            bestBlockNumber
-        );
+        const bestBlockNumber = await node.rpc.chain.getBestBlockNumber();
+        const blockHash = await node.rpc.chain.getBlockHash({
+            blockNumber: bestBlockNumber
+        });
         expect(
             (await node.sdk.rpc.chain.getBlock(blockHash!))!.number
         ).to.equal(bestBlockNumber);
@@ -89,33 +87,62 @@ describe("chain", function() {
     });
 
     it("getSeq", async function() {
-        await node.sdk.rpc.chain.getSeq(faucetAddress);
-        expect(await node.sdk.rpc.chain.getSeq(invalidAddress)).to.equal(0);
+        await node.rpc.chain.getSeq({
+            address: faucetAddress.toString(),
+            blockNumber: null
+        });
+        expect(
+            await node.rpc.chain.getSeq({
+                address: invalidAddress,
+                blockNumber: null
+            })
+        ).to.equal(0);
         const bestBlockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
-        await node.sdk.rpc.chain.getSeq(faucetAddress, 0);
-        await node.sdk.rpc.chain.getSeq(faucetAddress, bestBlockNumber);
+        await node.rpc.chain.getSeq({
+            address: faucetAddress.toString(),
+            blockNumber: 0
+        });
+        await node.rpc.chain.getSeq({
+            address: faucetAddress.toString(),
+            blockNumber: bestBlockNumber
+        });
         await expect(
-            node.sdk.rpc.chain.getSeq(faucetAddress, bestBlockNumber + 1)
-        ).to.be.rejectedWith("chain_getSeq returns undefined");
+            node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: bestBlockNumber + 1
+            })
+        ).to.be.empty;
     });
 
     it("getBalance", async function() {
-        await node.sdk.rpc.chain.getBalance(faucetAddress);
+        await node.rpc.chain.getBalance({
+            address: faucetAddress.toString(),
+            blockNumber: null
+        });
         expect(
-            await node.sdk.rpc.chain.getBalance(invalidAddress)
-        ).to.deep.equal(new U64(0));
-        const bestBlockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
-        await node.sdk.rpc.chain.getBalance(faucetAddress, 0);
-        await node.sdk.rpc.chain.getBalance(faucetAddress, bestBlockNumber);
-        await node.sdk.rpc.chain.getBalance(faucetAddress, bestBlockNumber + 1);
+            await node.rpc.chain.getBalance({
+                address: invalidAddress.toString(),
+                blockNumber: null
+            })
+        ).to.deep.include(new U64(0));
+        const bestBlockNumber = await node.rpc.chain.getBestBlockNumber();
+        await node.rpc.chain.getBalance({
+            address: faucetAddress.toString(),
+            blockNumber: 0
+        });
+        await node.rpc.chain.getBalance({
+            address: faucetAddress.toString(),
+            blockNumber: bestBlockNumber
+        });
+        await node.rpc.chain.getBalance({
+            address: faucetAddress.toString(),
+            blockNumber: bestBlockNumber + 1
+        });
     });
 
     it("getGenesisAccounts", async function() {
         // FIXME: Add an API to SDK
-        const accounts = await node.sdk.rpc.sendRpcRequest(
-            "chain_getGenesisAccounts",
-            []
-        );
+        const accounts = await node.rpc.chain.getGenesisAccounts();
         const expected = [
             "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqyca3rwt",
             "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgfrhflv",
@@ -151,7 +178,10 @@ describe("chain", function() {
             recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
             quantity: 0
         });
-        const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+        const seq = (await node.rpc.chain.getSeq({
+            address: faucetAddress.toString(),
+            blockNumber: null
+        }))!;
         const hash = await node.sdk.rpc.chain.sendSignedTransaction(
             tx.sign({
                 secret: faucetSecret,
@@ -159,7 +189,11 @@ describe("chain", function() {
                 seq
             })
         );
-        expect(await node.sdk.rpc.chain.containsTransaction(hash)).be.true;
+        expect(
+            await node.rpc.chain.containsTransaction({
+                transactionHash: "0x".concat(hash.toString())
+            })
+        ).be.true;
         const signed = await node.sdk.rpc.chain.getTransaction(hash);
         expect(signed).not.null;
         expect(signed!.unsigned).to.deep.equal(tx);
@@ -170,7 +204,10 @@ describe("chain", function() {
             recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
             quantity: 0
         });
-        const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+        const seq = (await node.rpc.chain.getSeq({
+            address: faucetAddress.toString(),
+            blockNumber: null
+        }))!;
         const hash = await node.sdk.rpc.chain.sendSignedTransaction(
             tx.sign({
                 secret: faucetSecret,
@@ -218,7 +255,10 @@ describe("chain", function() {
             .sign({
                 secret,
                 fee: 10,
-                seq: await node.sdk.rpc.chain.getSeq(address)
+                seq: (await node.rpc.chain.getSeq({
+                    address: address.toString(),
+                    blockNumber: null
+                }))!
             });
         await node.sdk.rpc.chain.sendSignedTransaction(tx);
 
@@ -251,43 +291,38 @@ describe("chain", function() {
     });
 
     it("getNumberOfShards", async function() {
-        expect(
-            await node.sdk.rpc.sendRpcRequest("chain_getNumberOfShards", [null])
-        ).to.equal(1);
+        expect(await node.rpc.chain.getNumberOfShards()).to.equal(1);
 
         expect(
-            await node.sdk.rpc.sendRpcRequest("chain_getNumberOfShards", [0])
+            await node.rpc.chain.getNumberOfShards({ blockNumber: 0 })
         ).to.equal(1);
     });
 
     it("getShardRoot", async function() {
-        await node.sdk.rpc
-            .sendRpcRequest("chain_getShardRoot", [0, null])
-            .then(result => {
-                expect(result).not.to.be.null;
-                H256.ensure(result);
-            });
-
-        await node.sdk.rpc
-            .sendRpcRequest("chain_getShardRoot", [0, 0])
-            .then(result => {
-                expect(result).not.to.be.null;
-                H256.ensure(result);
-            });
-
-        await node.sdk.rpc
-            .sendRpcRequest("chain_getShardRoot", [10000, null])
-            .then(result => {
-                expect(result).to.be.null;
-            });
+        const result1 = (await node.rpc.chain.getShardRoot({
+            shardId: 0,
+            blockNumber: null
+        }))!;
+        expect(result1).not.to.be.null;
+        H256.ensure(result1);
+        const result2 = (await node.rpc.chain.getShardRoot({
+            shardId: 0,
+            blockNumber: 0
+        }))!;
+        expect(result2).not.to.be.null;
+        H256.ensure(result2);
+        expect(
+            await node.rpc.chain.getShardRoot({
+                shardId: 10000,
+                blockNumber: null
+            })
+        ).to.be.null;
     });
 
     it("getMiningReward", async function() {
-        await node.sdk.rpc
-            .sendRpcRequest("chain_getMiningReward", [0])
-            .then(result => {
-                expect(result).to.equal(0);
-            });
+        expect(
+            await node.rpc.chain.getMiningReward({ blockNumber: 0 })
+        ).to.equal(0);
     });
 
     afterEach(function() {

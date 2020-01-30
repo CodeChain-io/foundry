@@ -33,6 +33,7 @@ import { AssetTransaction } from "codechain-sdk/lib/core/Transaction";
 import { P2PKH } from "codechain-sdk/lib/key/P2PKH";
 import { P2PKHBurn } from "codechain-sdk/lib/key/P2PKHBurn";
 import * as stake from "codechain-stakeholder-sdk";
+import RPC from "foundry-rpc";
 import { createWriteStream, mkdtempSync, unlinkSync } from "fs";
 import * as mkdirp from "mkdirp";
 import { ncp } from "ncp";
@@ -76,6 +77,7 @@ export interface Signer {
 export default class CodeChain {
     private static idCounter = 0;
     private readonly _id: number;
+    private readonly _rpc: RPC;
     private readonly _sdk: SDK;
     private readonly _localKeyStorePath: string;
     private readonly _dbPath: string;
@@ -99,6 +101,13 @@ export default class CodeChain {
     public get sdk(): SDK {
         if (this.process.state === "running") {
             return this._sdk;
+        } else {
+            throw new ProcessStateError(this.id, this.process);
+        }
+    }
+    public get rpc(): RPC {
+        if (this.process.state === "running") {
+            return this._rpc;
         } else {
             throw new ProcessStateError(this.id, this.process);
         }
@@ -187,6 +196,9 @@ export default class CodeChain {
             this.id
         }.log`;
         this._logPath = `${projectRoot}/test/log/${this._logFile}`;
+        this._rpc = new RPC(`http://localhost:${this.rpcPort}`, {
+            devel: true
+        });
         this._sdk = new SDK({ server: `http://localhost:${this.rpcPort}` });
         this._chain = chain || "solo";
         this.argv = argv || [];
@@ -406,10 +418,12 @@ export default class CodeChain {
         if (!this.process) {
             return Promise.reject(Error("process isn't available"));
         }
-        await this.sdk.rpc.network.connect("127.0.0.1", peer.port);
+        await this.rpc.net.connect({ address: "127.0.0.1", port: peer.port });
         while (
-            (await this.sdk.rpc.network.isConnected("127.0.0.1", peer.port)) ===
-            false
+            !(await this.rpc.net.isConnected({
+                address: "127.0.0.1",
+                port: peer.port
+            }))
         ) {
             await wait(250);
         }
@@ -419,11 +433,14 @@ export default class CodeChain {
         if (!this.process) {
             return Promise.reject(Error("process isn't available"));
         }
-        return this.sdk.rpc.network.disconnect("127.0.0.1", peer.port);
+        return this.rpc.net.disconnect({
+            address: "127.0.0.1",
+            port: peer.port
+        });
     }
 
     public async waitPeers(n: number) {
-        while (n > (await this.sdk.rpc.network.getPeerCount())) {
+        while (n > (await this.rpc.net.getPeerCount())) {
             await wait(500);
         }
         return;
@@ -445,11 +462,15 @@ export default class CodeChain {
     }
 
     public async getBestBlockNumber() {
-        return this.sdk.rpc.chain.getBestBlockNumber();
+        return this.rpc.chain.getBestBlockNumber();
     }
 
     public async getBestBlockHash() {
-        return this.sdk.rpc.chain.getBlockHash(await this.getBestBlockNumber());
+        return new H256(
+            await this.rpc.chain.getBlockHash({
+                blockNumber: await this.getBestBlockNumber()
+            })
+        );
     }
 
     public async createP2PKHAddress() {
@@ -526,7 +547,10 @@ export default class CodeChain {
             })
             .sign({
                 secret: faucetSecret,
-                seq: await this.sdk.rpc.chain.getSeq(faucetAddress),
+                seq: (await this.rpc.chain.getSeq({
+                    address: faucetAddress.toString(),
+                    blockNumber: null
+                }))!,
                 fee: 10
             });
         return this.sdk.rpc.chain.sendSignedTransaction(tx);
@@ -544,7 +568,12 @@ export default class CodeChain {
             this.localKeyStorePath
         );
         const { account, fee = 10 } = params;
-        const { seq = await this.sdk.rpc.chain.getSeq(account) } = params;
+        const {
+            seq = (await this.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!
+        } = params;
         const signed = await this.sdk.key.signTransaction(tx, {
             keyStore,
             account,
@@ -563,7 +592,10 @@ export default class CodeChain {
         }
     ): Promise<H256> {
         const {
-            seq = (await this.sdk.rpc.chain.getSeq(faucetAddress)) || 0,
+            seq = (await this.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!,
             fee = 10,
             secret = faucetSecret
         } = options || {};
@@ -634,7 +666,10 @@ export default class CodeChain {
         }
     ): Promise<H256> {
         const {
-            seq = (await this.sdk.rpc.chain.getSeq(faucetAddress)) || 0,
+            seq = (await this.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: await this.getBestBlockNumber()
+            })) || 0,
             secret = faucetSecret
         } = options || {};
         const tx = this.sdk.core
@@ -683,8 +718,12 @@ export default class CodeChain {
         secret?: any;
         fee?: number;
     }): Promise<SignedTransaction> {
-        const { seq = (await this.sdk.rpc.chain.getSeq(faucetAddress)) || 0 } =
-            options || {};
+        const {
+            seq = (await this.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: await this.getBestBlockNumber()
+            })) || 0
+        } = options || {};
         const tx = this.createPayTx({
             seq,
             ...options
@@ -699,11 +738,13 @@ export default class CodeChain {
         tx: Transaction & AssetTransaction,
         options: { seq?: number } = {}
     ): Promise<H256> {
-        await this.sdk.rpc.devel.stopSealing();
+        await this.rpc.devel!.stopSealing();
 
         const seq =
             options.seq == null
-                ? await this.sdk.rpc.chain.getSeq(faucetAddress)
+                ? (await this.rpc.chain.getSeq({
+                      address: faucetAddress.toString()
+                  }))!
                 : options.seq;
 
         const blockNumber = await this.getBestBlockNumber();
@@ -717,19 +758,32 @@ export default class CodeChain {
             seq: seq + 1
         });
 
-        await this.sdk.rpc.devel.startSealing();
+        await this.rpc.devel!.startSealing();
         await this.waitBlockNumber(blockNumber + 1);
 
-        expect(await this.sdk.rpc.chain.containsTransaction(targetTxHash)).be
-            .false;
+        expect(
+            await this.rpc.chain.containsTransaction({
+                transactionHash: `0x${targetTxHash.toString()}`
+            })
+        ).be.false;
         expect(await this.sdk.rpc.chain.getErrorHint(targetTxHash)).not.null;
-        expect(await this.sdk.rpc.chain.getTransaction(targetTxHash)).be.null;
+        expect(
+            await this.rpc.chain.getTransaction({
+                transactionHash: `0x${targetTxHash.toString()}`
+            })
+        ).be.null;
 
-        expect(await this.sdk.rpc.chain.containsTransaction(signedDummyTxHash))
-            .be.true;
+        expect(
+            await this.rpc.chain.containsTransaction({
+                transactionHash: `0x${signedDummyTxHash.toString()}`
+            })
+        ).be.true;
         expect(await this.sdk.rpc.chain.getErrorHint(signedDummyTxHash)).null;
-        expect(await this.sdk.rpc.chain.getTransaction(signedDummyTxHash)).not
-            .be.null;
+        expect(
+            await this.rpc.chain.getTransaction({
+                transactionHash: `0x${signedDummyTxHash.toString()}`
+            })
+        ).not.be.null;
         return targetTxHash;
     }
 
@@ -740,7 +794,7 @@ export default class CodeChain {
         options: { account: string | PlatformAddress }
     ): Promise<H256> {
         const { account } = options;
-        await this.sdk.rpc.devel.stopSealing();
+        await this.rpc.devel!.stopSealing();
 
         const blockNumber = await this.getBestBlockNumber();
         const signedDummyTxHash = (
@@ -750,19 +804,32 @@ export default class CodeChain {
         ).hash();
         const targetTxHash = await this.sendTransaction(tx, { account });
 
-        await this.sdk.rpc.devel.startSealing();
+        await this.rpc.devel!.startSealing();
         await this.waitBlockNumber(blockNumber + 1);
 
-        expect(await this.sdk.rpc.chain.containsTransaction(targetTxHash)).be
-            .false;
+        expect(
+            await this.rpc.chain.containsTransaction({
+                transactionHash: `0x${targetTxHash.toString()}`
+            })
+        ).be.false;
         expect(await this.sdk.rpc.chain.getErrorHint(targetTxHash)).not.null;
-        expect(await this.sdk.rpc.chain.getTransaction(targetTxHash)).be.null;
+        expect(
+            await this.rpc.chain.getTransaction({
+                transactionHash: `0x${targetTxHash.toString()}`
+            })
+        ).be.null;
 
-        expect(await this.sdk.rpc.chain.containsTransaction(signedDummyTxHash))
-            .be.true;
+        expect(
+            await this.rpc.chain.containsTransaction({
+                transactionHash: `0x${signedDummyTxHash.toString()})`
+            })
+        ).be.true;
         expect(await this.sdk.rpc.chain.getErrorHint(signedDummyTxHash)).null;
-        expect(await this.sdk.rpc.chain.getTransaction(signedDummyTxHash)).not
-            .be.null;
+        expect(
+            await this.rpc.chain.getTransaction({
+                transactionHash: `0x${signedDummyTxHash.toString()}`
+            })
+        ).not.be.null;
 
         return targetTxHash;
     }
@@ -771,7 +838,7 @@ export default class CodeChain {
         tx: SignedTransaction | (() => Promise<H256>),
         options: { error?: string } = {}
     ): Promise<H256> {
-        await this.sdk.rpc.devel.stopSealing();
+        await this.rpc.devel!.stopSealing();
 
         const blockNumber = await this.getBestBlockNumber();
         const signedDummyTxHash = (
@@ -786,23 +853,36 @@ export default class CodeChain {
                 ? await this.sdk.rpc.chain.sendSignedTransaction(tx)
                 : await tx();
 
-        await this.sdk.rpc.devel.startSealing();
+        await this.rpc.devel!.startSealing();
         await this.waitBlockNumber(blockNumber + 1);
 
-        expect(await this.sdk.rpc.chain.containsTransaction(targetTxHash)).be
-            .false;
+        expect(
+            await this.rpc.chain.containsTransaction({
+                transactionHash: `0x${targetTxHash.toString()}`
+            })
+        ).be.false;
         const hint = await this.sdk.rpc.chain.getErrorHint(targetTxHash);
         expect(hint).not.null;
         if (options.error != null) {
             expect(hint).contains(options.error);
         }
-        expect(await this.sdk.rpc.chain.getTransaction(targetTxHash)).be.null;
+        expect(
+            await this.rpc.chain.getTransaction({
+                transactionHash: `0x${targetTxHash.toString()}`
+            })
+        ).be.null;
 
-        expect(await this.sdk.rpc.chain.containsTransaction(signedDummyTxHash))
-            .be.true;
+        expect(
+            await this.rpc.chain.containsTransaction({
+                transactionHash: `0x${signedDummyTxHash.toString()}`
+            })
+        ).be.true;
         expect(await this.sdk.rpc.chain.getErrorHint(signedDummyTxHash)).null;
-        expect(await this.sdk.rpc.chain.getTransaction(signedDummyTxHash)).not
-            .be.null;
+        expect(
+            await this.rpc.chain.getTransaction({
+                transactionHash: `0x${signedDummyTxHash.toString()}`
+            })
+        ).not.be.null;
 
         return targetTxHash;
     }
@@ -843,7 +923,11 @@ export default class CodeChain {
 
         const containsAll = async () => {
             const contains = await Promise.all(
-                hashes.map(hash => this.sdk.rpc.chain.containsTransaction(hash))
+                hashes.map(hash =>
+                    this.rpc.chain.containsTransaction({
+                        transactionHash: `0x${hash.toString()}`
+                    })
+                )
             );
             return contains.every(x => x);
         };

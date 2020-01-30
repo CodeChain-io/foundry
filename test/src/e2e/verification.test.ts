@@ -40,7 +40,10 @@ describe("solo - 1 node", function() {
     describe("Sending invalid transactions over the limits (general)", function() {
         let encoded: any[];
         beforeEach(async function() {
-            const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+            const seq = (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!;
             const tx = node.sdk.core
                 .createPayTransaction({
                     recipient,
@@ -178,7 +181,10 @@ describe("solo - 1 node", function() {
     describe("Sending invalid transactions over the limits (in action 2: Pay)", function() {
         let encoded: any[];
         beforeEach(async function() {
-            const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+            const seq = (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!;
             const signed = node.sdk.core
                 .createPayTransaction({
                     recipient,
@@ -232,7 +238,10 @@ describe("solo - 1 node", function() {
         beforeEach(async function() {
             const privKey = node.sdk.util.generatePrivateKey();
             const key = node.sdk.util.getPublicFromPrivate(privKey);
-            const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+            const seq = (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!;
             const signed = node.sdk.core
                 .createSetRegularKeyTransaction({
                     key
@@ -267,7 +276,10 @@ describe("solo - 1 node", function() {
     describe("Sending invalid transactions over the limits (in action 5: SetShardOwners)", function() {
         let encoded: any[];
         beforeEach(async function() {
-            const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+            const seq = (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!;
             const account = await node.createPlatformAddress();
             const signed = node.sdk.core
                 .createSetShardOwnersTransaction({
@@ -302,7 +314,10 @@ describe("solo - 1 node", function() {
     describe("Sending invalid transactions over the limits (in action 6: SetShardUsers)", function() {
         let encoded: any[];
         beforeEach(async function() {
-            const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+            const seq = (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!;
             const account = await node.createPlatformAddress();
             const signed = node.sdk.core
                 .createSetShardUsersTransaction({
@@ -336,7 +351,10 @@ describe("solo - 1 node", function() {
 
     [0, 9].forEach(function(fee) {
         it(`Sending invalid transactions (low fee): ${fee}`, async function() {
-            const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+            const seq = (await node.rpc.chain.getSeq({
+                address: faucetAddress.toString(),
+                blockNumber: null
+            }))!;
             const signed = node.sdk.core
                 .createPayTransaction({
                     recipient,
