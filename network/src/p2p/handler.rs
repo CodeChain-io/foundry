@@ -79,7 +79,7 @@ const RTT: Duration = Duration::from_secs(10); // T2
 const WAIT_SYNC: Duration = Duration::from_secs(30); // T3 >> T1 + RTT
 
 pub trait ManagingPeerdb: Send + Sync {
-    fn insert(&self, key: &SocketAddr);
+    fn insert(&self, key: SocketAddr);
     fn delete(&self, key: &SocketAddr);
 }
 
@@ -118,7 +118,7 @@ pub struct Handler {
 
     min_peers: usize,
     max_peers: usize,
-    peer_db: Arc<dyn (ManagingPeerdb)>,
+    peer_db: Box<dyn (ManagingPeerdb)>,
     rng: Mutex<OsRng>,
 }
 
@@ -133,7 +133,7 @@ impl Handler {
         bootstrap_addresses: Vec<SocketAddr>,
         min_peers: usize,
         max_peers: usize,
-        db: Arc<dyn ManagingPeerdb>,
+        peer_db: Box<dyn ManagingPeerdb>,
     ) -> ::std::result::Result<Self, String> {
         if MAX_INBOUND_CONNECTIONS + MAX_OUTBOUND_CONNECTIONS < max_peers {
             return Err(format!("Max peers must be less than {}", MAX_INBOUND_CONNECTIONS + MAX_OUTBOUND_CONNECTIONS))
@@ -172,7 +172,7 @@ impl Handler {
             bootstrap_addresses,
             min_peers,
             max_peers,
-            peer_db: db,
+            peer_db,
             rng: Mutex::new(OsRng::new().unwrap()),
         })
     }
@@ -498,7 +498,7 @@ impl IoHandler<Message> for Handler {
             } => {
                 let mut inbound_connections = self.inbound_connections.write();
                 let target = connection.peer_addr();
-                self.peer_db.insert(&target);
+                self.peer_db.insert(*target);
                 if let Some(token) = self.inbound_tokens.lock().gen() {
                     let remote_node_id = connection.peer_addr().into();
                     assert_eq!(
