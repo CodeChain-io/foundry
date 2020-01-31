@@ -138,6 +138,7 @@ impl HeaderDownloader {
 
     /// Imports headers and mark success
     /// Expects importing headers matches requested header
+    /// headers slice should be sorted in order of number
     pub fn import_headers(&mut self, headers: &[Header]) {
         let first_header = headers.first().expect("First header must exist");
         let first_header_hash = first_header.hash();

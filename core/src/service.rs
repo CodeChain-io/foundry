@@ -78,7 +78,6 @@ pub enum ClientIoMessage {
         allow_empty_block: bool,
     },
     /// Update the best block by the given hash
-    /// Only used in Tendermint
     UpdateBestAsCommitted(BlockHash),
 }
 
