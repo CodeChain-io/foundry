@@ -195,61 +195,6 @@ describe("chain", function() {
         ).equal(signer);
     });
 
-    it("getRegularKey, getRegularKeyOwner", async function() {
-        const key = node.sdk.util.getPublicFromPrivate(
-            node.sdk.util.generatePrivateKey()
-        );
-
-        const secret = node.sdk.util.generatePrivateKey();
-        const accountId = node.sdk.util.getAccountIdFromPrivate(secret);
-        const address = node.sdk.core.classes.PlatformAddress.fromAccountId(
-            accountId,
-            { networkId: "tc" }
-        );
-
-        await node.sendPayTx({ quantity: 10000, recipient: address });
-        expect(await node.sdk.rpc.chain.getRegularKey(address)).to.be.null;
-        expect(await node.sdk.rpc.chain.getRegularKeyOwner(key)).to.be.null;
-
-        const tx = node.sdk.core
-            .createSetRegularKeyTransaction({
-                key
-            })
-            .sign({
-                secret,
-                fee: 10,
-                seq: await node.sdk.rpc.chain.getSeq(address)
-            });
-        await node.sdk.rpc.chain.sendSignedTransaction(tx);
-
-        expect(await node.sdk.rpc.chain.getRegularKey(address)).to.deep.equal(
-            new H512(key)
-        );
-        expect(await node.sdk.rpc.chain.getRegularKeyOwner(key)).to.deep.equal(
-            address
-        );
-
-        const bestBlockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
-        expect(
-            await node.sdk.rpc.chain.getRegularKey(address, bestBlockNumber)
-        ).to.deep.equal(new H512(key));
-        expect(await node.sdk.rpc.chain.getRegularKey(address, 0)).to.be.null;
-        expect(
-            await node.sdk.rpc.chain.getRegularKey(address, bestBlockNumber + 1)
-        ).to.be.null;
-
-        expect(
-            await node.sdk.rpc.chain.getRegularKeyOwner(key, bestBlockNumber)
-        ).to.deep.equal(address);
-        expect(await node.sdk.rpc.chain.getRegularKeyOwner(key, 0)).to.be.null;
-        expect(
-            await node.sdk.rpc.chain.getRegularKeyOwner(
-                key,
-                bestBlockNumber + 1
-            )
-        ).to.be.null;
-    });
-
     it("getNumberOfShards", async function() {
         expect(
             await node.sdk.rpc.sendRpcRequest("chain_getNumberOfShards", [null])

@@ -29,7 +29,6 @@
     "maxTextContentSize": "0x0200",
     "networkID": "tc",
     "minPayCost" : 10,
-    "minSetRegularKeyCost" : 10,
     "minCreateShardCost" : 10,
     "minSetShardOwnersCost" : 10,
     "minSetShardUsersCost" : 10,

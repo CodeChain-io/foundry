@@ -33,7 +33,6 @@ pub struct CommonParams {
     network_id: NetworkId,
     /// Minimum transaction cost.
     min_pay_transaction_cost: u64,
-    min_set_regular_key_transaction_cost: u64,
     min_create_shard_transaction_cost: u64,
     min_set_shard_owners_transaction_cost: u64,
     min_set_shard_users_transaction_cost: u64,
@@ -84,9 +83,6 @@ impl CommonParams {
     }
     pub fn min_pay_transaction_cost(&self) -> u64 {
         self.min_pay_transaction_cost
-    }
-    pub fn min_set_regular_key_transaction_cost(&self) -> u64 {
-        self.min_set_regular_key_transaction_cost
     }
     pub fn min_create_shard_transaction_cost(&self) -> u64 {
         self.min_create_shard_transaction_cost
@@ -252,7 +248,6 @@ impl From<Params> for CommonParams {
             max_text_content_size: p.max_text_content_size.into(),
             network_id: p.network_id,
             min_pay_transaction_cost: p.min_pay_cost.into(),
-            min_set_regular_key_transaction_cost: p.min_set_regular_key_cost.into(),
             min_create_shard_transaction_cost: p.min_create_shard_cost.into(),
             min_set_shard_owners_transaction_cost: p.min_set_shard_owners_cost.into(),
             min_set_shard_users_transaction_cost: p.min_set_shard_users_cost.into(),
@@ -291,7 +286,6 @@ impl From<CommonParams> for Params {
             max_text_content_size: p.max_text_content_size().into(),
             network_id: p.network_id(),
             min_pay_cost: p.min_pay_transaction_cost().into(),
-            min_set_regular_key_cost: p.min_set_regular_key_transaction_cost().into(),
             min_create_shard_cost: p.min_create_shard_transaction_cost().into(),
             min_set_shard_owners_cost: p.min_set_shard_owners_transaction_cost().into(),
             min_set_shard_users_cost: p.min_set_shard_users_transaction_cost().into(),
@@ -336,7 +330,6 @@ impl Encodable for CommonParams {
             .append(&self.max_text_content_size)
             .append(&self.network_id)
             .append(&self.min_pay_transaction_cost)
-            .append(&self.min_set_regular_key_transaction_cost)
             .append(&self.min_create_shard_transaction_cost)
             .append(&self.min_set_shard_owners_transaction_cost)
             .append(&self.min_set_shard_users_transaction_cost)
@@ -384,7 +377,6 @@ impl Decodable for CommonParams {
         let max_text_content_size = rlp.val_at(3)?;
         let network_id = rlp.val_at(4)?;
         let min_pay_transaction_cost = rlp.val_at(5)?;
-        let min_set_regular_key_transaction_cost = rlp.val_at(6)?;
         let min_create_shard_transaction_cost = rlp.val_at(7)?;
         let min_set_shard_owners_transaction_cost = rlp.val_at(8)?;
         let min_set_shard_users_transaction_cost = rlp.val_at(9)?;
@@ -440,7 +432,6 @@ impl Decodable for CommonParams {
             max_text_content_size,
             network_id,
             min_pay_transaction_cost,
-            min_set_regular_key_transaction_cost,
             min_create_shard_transaction_cost,
             min_set_shard_owners_transaction_cost,
             min_set_shard_users_transaction_cost,
@@ -560,7 +551,6 @@ mod tests {
             "maxTextContentSize": "0x0200",
             "networkID" : "tc",
             "minPayCost" : 10,
-            "minSetRegularKeyCost" : 11,
             "minCreateShardCost" : 12,
             "minSetShardOwnersCost" : 13,
             "minSetShardUsersCost" : 14,
@@ -585,7 +575,6 @@ mod tests {
         assert_eq!(deserialized.max_text_content_size, 0x0200);
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_transaction_cost, 10);
-        assert_eq!(deserialized.min_set_regular_key_transaction_cost, 11);
         assert_eq!(deserialized.min_create_shard_transaction_cost, 12);
         assert_eq!(deserialized.min_set_shard_owners_transaction_cost, 13);
         assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
@@ -624,7 +613,6 @@ mod tests {
             "maxTextContentSize": "0x0200",
             "networkID" : "tc",
             "minPayCost" : 10,
-            "minSetRegularKeyCost" : 11,
             "minCreateShardCost" : 12,
             "minSetShardOwnersCost" : 13,
             "minSetShardUsersCost" : 14,
@@ -651,7 +639,6 @@ mod tests {
         assert_eq!(deserialized.max_text_content_size, 0x0200);
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_transaction_cost, 10);
-        assert_eq!(deserialized.min_set_regular_key_transaction_cost, 11);
         assert_eq!(deserialized.min_create_shard_transaction_cost, 12);
         assert_eq!(deserialized.min_set_shard_owners_transaction_cost, 13);
         assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
@@ -705,7 +692,6 @@ mod tests {
             "maxTextContentSize": "0x0200",
             "networkID" : "tc",
             "minPayCost" : 10,
-            "minSetRegularKeyCost" : 11,
             "minCreateShardCost" : 12,
             "minSetShardOwnersCost" : 13,
             "minSetShardUsersCost" : 14,
@@ -739,7 +725,6 @@ mod tests {
         assert_eq!(deserialized.max_text_content_size, 0x0200);
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_transaction_cost, 10);
-        assert_eq!(deserialized.min_set_regular_key_transaction_cost, 11);
         assert_eq!(deserialized.min_create_shard_transaction_cost, 12);
         assert_eq!(deserialized.min_set_shard_owners_transaction_cost, 13);
         assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
@@ -778,7 +763,6 @@ mod tests {
             "maxTextContentSize": "0x0200",
             "networkID" : "tc",
             "minPayCost" : 10,
-            "minSetRegularKeyCost" : 11,
             "minCreateShardCost" : 12,
             "minSetShardOwnersCost" : 13,
             "minSetShardUsersCost" : 14,
@@ -813,7 +797,6 @@ mod tests {
         assert_eq!(deserialized.max_text_content_size, 0x0200);
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_transaction_cost, 10);
-        assert_eq!(deserialized.min_set_regular_key_transaction_cost, 11);
         assert_eq!(deserialized.min_create_shard_transaction_cost, 12);
         assert_eq!(deserialized.min_set_shard_owners_transaction_cost, 13);
         assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);

@@ -16,7 +16,7 @@
 
 use super::WriteBack;
 use crate::{
-    Account, ActionData, Metadata, MetadataAddress, RegularAccount, RegularAccountAddress, Shard, ShardAddress,
+    Account, ActionData, Metadata, MetadataAddress, Shard, ShardAddress,
 };
 use ckey::Address;
 use merkle_trie::{Result as TrieResult, Trie, TrieMut};
@@ -25,7 +25,6 @@ use std::cell::RefMut;
 
 pub struct TopCache {
     account: WriteBack<Account>,
-    regular_account: WriteBack<RegularAccount>,
     metadata: WriteBack<Metadata>,
     shard: WriteBack<Shard>,
     action_data: WriteBack<ActionData>,
@@ -34,14 +33,12 @@ pub struct TopCache {
 impl TopCache {
     pub fn new(
         accounts: impl Iterator<Item = (Address, Account)>,
-        regular_accounts: impl Iterator<Item = (RegularAccountAddress, RegularAccount)>,
         metadata: impl Iterator<Item = (MetadataAddress, Metadata)>,
         shards: impl Iterator<Item = (ShardAddress, Shard)>,
         action_data: impl Iterator<Item = (H256, ActionData)>,
     ) -> Self {
         Self {
             account: WriteBack::new_with_iter(accounts),
-            regular_account: WriteBack::new_with_iter(regular_accounts),
             metadata: WriteBack::new_with_iter(metadata),
             shard: WriteBack::new_with_iter(shards),
             action_data: WriteBack::new_with_iter(action_data),
@@ -50,7 +47,6 @@ impl TopCache {
 
     pub fn checkpoint(&mut self) {
         self.account.checkpoint();
-        self.regular_account.checkpoint();
         self.metadata.checkpoint();
         self.shard.checkpoint();
         self.action_data.checkpoint();
@@ -58,7 +54,6 @@ impl TopCache {
 
     pub fn discard_checkpoint(&mut self) {
         self.account.discard_checkpoint();
-        self.regular_account.discard_checkpoint();
         self.metadata.discard_checkpoint();
         self.shard.discard_checkpoint();
         self.action_data.discard_checkpoint();
@@ -66,7 +61,6 @@ impl TopCache {
 
     pub fn revert_to_checkpoint(&mut self) {
         self.account.revert_to_checkpoint();
-        self.regular_account.revert_to_checkpoint();
         self.metadata.revert_to_checkpoint();
         self.shard.revert_to_checkpoint();
         self.action_data.revert_to_checkpoint();
@@ -74,7 +68,6 @@ impl TopCache {
 
     pub fn commit<'db>(&mut self, trie: &mut (dyn TrieMut + 'db)) -> TrieResult<()> {
         self.account.commit(trie)?;
-        self.regular_account.commit(trie)?;
         self.metadata.commit(trie)?;
         self.shard.commit(trie)?;
         self.action_data.commit(trie)?;
@@ -91,22 +84,6 @@ impl TopCache {
 
     pub fn remove_account(&self, address: &Address) {
         self.account.remove(address)
-    }
-
-    pub fn regular_account(&self, a: &RegularAccountAddress, db: &dyn Trie) -> TrieResult<Option<RegularAccount>> {
-        self.regular_account.get(a, db)
-    }
-
-    pub fn regular_account_mut(
-        &self,
-        a: &RegularAccountAddress,
-        db: &dyn Trie,
-    ) -> TrieResult<RefMut<'_, RegularAccount>> {
-        self.regular_account.get_mut(a, db)
-    }
-
-    pub fn remove_regular_account(&self, address: &RegularAccountAddress) {
-        self.regular_account.remove(address)
     }
 
     pub fn metadata(&self, a: &MetadataAddress, db: &dyn Trie) -> TrieResult<Option<Metadata>> {
@@ -148,12 +125,6 @@ impl TopCache {
         items.into_iter().map(|(_, addr, item)| (addr, item)).collect()
     }
 
-    pub fn cached_regular_accounts(&self) -> Vec<(RegularAccountAddress, Option<RegularAccount>)> {
-        let mut items = self.regular_account.items();
-        items.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-        items.into_iter().map(|(_, addr, item)| (addr, item)).collect()
-    }
-
     pub fn cached_metadata(&self) -> Vec<(MetadataAddress, Option<Metadata>)> {
         let mut items = self.metadata.items();
         items.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
@@ -177,7 +148,6 @@ impl Clone for TopCache {
     fn clone(&self) -> Self {
         Self {
             account: self.account.clone(),
-            regular_account: self.regular_account.clone(),
             metadata: self.metadata.clone(),
             shard: self.shard.clone(),
             action_data: self.action_data.clone(),

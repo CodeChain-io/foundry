@@ -33,7 +33,7 @@ use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, Signed
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::{new_journaldb, Algorithm, AsHashDB, DatabaseError};
 use cio::IoChannel;
-use ckey::{Address, NetworkId, PlatformAddress, Public};
+use ckey::{Address, NetworkId, PlatformAddress};
 use cnetwork::NodeId;
 use cstate::{
     ActionHandler, AssetScheme, FindActionHandler, OwnedAsset, StateDB, StateResult, TopLevelState, TopStateView,
@@ -811,16 +811,6 @@ impl AccountData for Client {
     fn balance(&self, address: &Address, state: StateOrBlock) -> Option<u64> {
         let state = self.state_info(state)?;
         state.balance(address).ok()
-    }
-
-    fn regular_key(&self, address: &Address, state: StateOrBlock) -> Option<Public> {
-        let state = self.state_info(state)?;
-        state.regular_key(address).ok()?
-    }
-
-    fn regular_key_owner(&self, address: &Address, state: StateOrBlock) -> Option<Address> {
-        let state = self.state_info(state)?;
-        state.regular_key_owner(address).ok()?
     }
 }
 

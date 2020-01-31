@@ -75,7 +75,6 @@ impl Config {
 
         let mem_pool_fees = MemPoolFees::create_from_options(
             self.mining.min_pay_transaction_cost,
-            self.mining.min_set_regular_key_transaction_cost,
             self.mining.min_create_shard_transaction_cost,
             self.mining.min_set_shard_owners_transaction_cost,
             self.mining.min_set_shard_users_transaction_cost,
@@ -230,7 +229,6 @@ pub struct Mining {
     pub allowed_past_gap: Option<u64>,
     pub allowed_future_gap: Option<u64>,
     pub min_pay_transaction_cost: Option<u64>,
-    pub min_set_regular_key_transaction_cost: Option<u64>,
     pub min_create_shard_transaction_cost: Option<u64>,
     pub min_set_shard_owners_transaction_cost: Option<u64>,
     pub min_set_shard_users_transaction_cost: Option<u64>,
@@ -416,9 +414,6 @@ impl Mining {
         }
         if other.min_pay_transaction_cost.is_some() {
             self.min_pay_transaction_cost = other.min_pay_transaction_cost;
-        }
-        if other.min_set_regular_key_transaction_cost.is_some() {
-            self.min_set_regular_key_transaction_cost = other.min_set_regular_key_transaction_cost;
         }
         if other.min_create_shard_transaction_cost.is_some() {
             self.min_create_shard_transaction_cost = other.min_create_shard_transaction_cost;

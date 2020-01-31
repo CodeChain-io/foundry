@@ -41,7 +41,7 @@ use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopSta
 #[cfg(test)]
 use crate::Asset;
 use crate::{
-    Account, ActionData, FindActionHandler, Metadata, MetadataAddress, RegularAccount, RegularAccountAddress, Shard,
+    Account, ActionData, FindActionHandler, Metadata, MetadataAddress, Shard,
     ShardAddress, ShardLevelState, StateDB, StateResult,
 };
 use ccrypto::BLAKE_NULL_RLP;
@@ -103,13 +103,6 @@ impl TopStateView for TopLevelState {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.top_cache.account(&a, &trie)
-    }
-
-    fn regular_account_by_address(&self, a: &Address) -> TrieResult<Option<RegularAccount>> {
-        let a = RegularAccountAddress::from_address(a);
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        Ok(self.top_cache.regular_account(&a, &trie)?)
     }
 
     fn metadata(&self) -> TrieResult<Option<Metadata>> {
@@ -275,16 +268,6 @@ impl TopLevelState {
         result
     }
 
-    // Change the public to an owner address if it is a regular key.
-    fn public_to_owner_address(&self, public: &Public) -> StateResult<Address> {
-        Ok(if self.regular_account_exists_and_not_null(public)? {
-            let regular_account = self.get_regular_account_mut(public)?;
-            public_to_address(&regular_account.owner_public())
-        } else {
-            public_to_address(public)
-        })
-    }
-
     fn apply_internal<C: ChainTimeInfo + FindActionHandler>(
         &mut self,
         tx: &Transaction,
@@ -295,20 +278,7 @@ impl TopLevelState {
         parent_block_timestamp: u64,
         current_block_timestamp: u64,
     ) -> StateResult<()> {
-        let fee_payer = if self.regular_account_exists_and_not_null(signer_public)? {
-            let regular_account = self.get_regular_account_mut(signer_public)?;
-            public_to_address(&regular_account.owner_public())
-        } else {
-            let address = public_to_address(signer_public);
-
-            if !tx.is_master_key_allowed() {
-                let account = self.get_account_mut(&address)?;
-                if account.regular_key().is_some() {
-                    return Err(RuntimeError::CannotUseMasterKey.into())
-                }
-            }
-            address
-        };
+        let fee_payer = public_to_address(signer_public);
         let seq = self.seq(&fee_payer)?;
 
         if tx.seq != seq {
@@ -398,7 +368,7 @@ impl TopLevelState {
                 let transaction_tracker = transaction.tracker();
                 let approvers = approvals_to_approvers(
                     approvals,
-                    |public| self.public_to_owner_address(public),
+                    |public| Ok(public_to_address(public)),
                     &transaction_tracker,
                 )?;
                 let shard_ids = transaction.related_shards();
@@ -413,7 +383,7 @@ impl TopLevelState {
                 let transaction_tracker = transaction.tracker();
                 let approvers = approvals_to_approvers(
                     approvals,
-                    |public| self.public_to_owner_address(public),
+                    |public| Ok(public_to_address(public)),
                     &transaction_tracker,
                 )?;
                 let shard_ids = transaction.related_shards();
@@ -430,7 +400,7 @@ impl TopLevelState {
                 let transaction_tracker = transaction.tracker();
                 let approvers = approvals_to_approvers(
                     approvals,
-                    |public| self.public_to_owner_address(public),
+                    |public| Ok(public_to_address(public)),
                     &transaction_tracker,
                 )?;
                 (transaction, approvers)
@@ -448,9 +418,6 @@ impl TopLevelState {
                 receiver,
                 ..
             } => {
-                if self.regular_account_exists_and_not_null_by_address(receiver)? {
-                    return Err(RuntimeError::InvalidTransferDestination.into())
-                }
                 let transaction = Option::<ShardTransaction>::from(action.clone()).expect("It's an unwrap transaction");
                 debug_assert_eq!(network_id, transaction.network_id());
                 self.apply_shard_transaction(
@@ -478,12 +445,6 @@ impl TopLevelState {
                 quantity,
             } => {
                 self.transfer_balance(fee_payer, receiver, *quantity)?;
-                return Ok(())
-            }
-            Action::SetRegularKey {
-                key,
-            } => {
-                self.set_regular_key(signer_public, key)?;
                 return Ok(())
             }
             Action::CreateShard {
@@ -616,18 +577,9 @@ impl TopLevelState {
     }
 
     fn get_account_mut(&self, a: &Address) -> TrieResult<RefMut<'_, Account>> {
-        debug_assert_eq!(Ok(false), self.regular_account_exists_and_not_null_by_address(a));
-
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.top_cache.account_mut(&a, &trie)
-    }
-
-    fn get_regular_account_mut(&self, public: &Public) -> TrieResult<RefMut<'_, RegularAccount>> {
-        let regular_account_address = RegularAccountAddress::new(public);
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.top_cache.regular_account_mut(&regular_account_address, &trie)
     }
 
     fn get_metadata_mut(&self) -> TrieResult<RefMut<'_, Metadata>> {
@@ -739,7 +691,7 @@ impl TopLevelState {
 
 fn approvals_to_approvers<F>(
     approvals: &[Signature],
-    public_to_owner_address: F,
+    public_to_address: F,
     tracker: &H256,
 ) -> StateResult<Vec<Address>>
 where
@@ -748,7 +700,7 @@ where
         .iter()
         .map(|signature| {
             let public = recover(&signature, tracker).expect("An invalid approval is a syntax error");
-            public_to_owner_address(&public)
+            public_to_address(&public)
         })
         .collect()
 }
@@ -770,10 +722,6 @@ impl Clone for TopLevelState {
 impl TopState for TopLevelState {
     fn kill_account(&mut self, account: &Address) {
         self.top_cache.remove_account(account);
-    }
-
-    fn kill_regular_account(&mut self, account: &Public) {
-        self.top_cache.remove_regular_account(&RegularAccountAddress::new(account));
     }
 
     fn add_balance(&mut self, a: &Address, incr: u64) -> TrieResult<()> {
@@ -803,9 +751,6 @@ impl TopState for TopLevelState {
     }
 
     fn transfer_balance(&mut self, from: &Address, to: &Address, by: u64) -> StateResult<()> {
-        if self.regular_account_exists_and_not_null_by_address(to)? {
-            return Err(RuntimeError::InvalidTransferDestination.into())
-        }
         self.sub_balance(from, by)?;
         self.add_balance(to, by)?;
         Ok(())
@@ -813,37 +758,6 @@ impl TopState for TopLevelState {
 
     fn inc_seq(&mut self, a: &Address) -> TrieResult<()> {
         self.get_account_mut(a)?.inc_seq();
-        Ok(())
-    }
-
-    fn set_regular_key(&mut self, signer_public: &Public, regular_key: &Public) -> StateResult<()> {
-        let (owner_public, owner_address) = if self.regular_account_exists_and_not_null(signer_public)? {
-            let regular_account = self.get_regular_account_mut(&signer_public)?;
-            let owner_public = regular_account.owner_public();
-            let owner_address = public_to_address(owner_public);
-            (*owner_public, owner_address)
-        } else {
-            (*signer_public, public_to_address(&signer_public))
-        };
-
-        if self.regular_account_exists_and_not_null(regular_key)? {
-            return Err(RuntimeError::RegularKeyAlreadyInUse.into())
-        }
-
-        let regular_address = public_to_address(regular_key);
-        if self.account_exists_and_not_null(&regular_address)? {
-            return Err(RuntimeError::RegularKeyAlreadyInUseAsPlatformAccount.into())
-        }
-
-        let prev_regular_key = self.get_account_mut(&owner_address)?.regular_key();
-
-        if let Some(prev_regular_key) = prev_regular_key {
-            self.kill_regular_account(&prev_regular_key);
-        }
-
-        let mut owner_account = self.get_account_mut(&owner_address)?;
-        owner_account.set_regular_key(regular_key);
-        self.get_regular_account_mut(&regular_key)?.set_owner_public(&owner_public);
         Ok(())
     }
 
@@ -1377,347 +1291,6 @@ mod tests_tx {
         check_top_level_state!(state, [
             (account: sender => (seq: 1, balance: 5)),
             (account: receiver => (seq: 0, balance: 10))
-        ]);
-    }
-
-    #[test]
-    fn apply_set_regular_key() {
-        let mut state = get_temp_state();
-        let key = 1u64.into();
-
-        let (sender, sender_public, _) = address();
-        set_top_level_state!(state, [(account: sender => balance: 5)]);
-
-        let tx = transaction!(fee: 5, set_regular_key!(key));
-        assert_eq!(Ok(()), state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0));
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 0, key: key))
-        ]);
-    }
-
-    #[test]
-    fn cannot_pay_to_regular_account() {
-        let mut state = get_temp_state();
-
-        let (sender, sender_public, _) = address();
-        let (master_account, master_public, _) = address();
-        let (regular_account, regular_public, _) = address();
-        set_top_level_state!(state, [
-            (account: sender => balance: 123),
-            (account: master_account => balance: 456),
-            (regular_key: master_public => regular_public)
-        ]);
-
-        let tx = transaction!(fee: 5, pay!(regular_account, 10));
-        assert_eq!(
-            Err(RuntimeError::InvalidTransferDestination.into()),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 123)),
-            (account: master_account => (seq: 0, balance: 456, key: regular_public))
-        ]);
-    }
-
-    #[test]
-    fn regular_account_cannot_get_unwrapped_ccc() {
-        let mut state = get_temp_state();
-
-        let (sender, sender_public, _) = address();
-        let (master_account, master_public, _) = address();
-        let (regular_account, regular_public, _) = address();
-        let type_of_wccc = H160::zero();
-        let tracker = H256::random().into();
-        let lock_script_hash = H160::from("0xb042ad154a3359d276835c903587ebafefea22af");
-        let shard_id = 0;
-        set_top_level_state!(state, [
-            (account: sender => balance: 123),
-            (account: master_account => balance: 456),
-            (regular_key: master_public => regular_public),
-            (shard: shard_id => owners: [sender]),
-            (metadata: shards: 1),
-            (asset: (shard_id, tracker, 0) => { asset_type: type_of_wccc, quantity: 30, lock_script_hash: lock_script_hash })
-        ]);
-
-        let unwrap_ccc_tx = unwrap_ccc!(
-            asset_transfer_input!(asset_out_point!(tracker, 0, type_of_wccc, 30), vec![0x01]),
-            regular_account
-        );
-        let tx = transaction!(seq: 0, fee: 11, unwrap_ccc_tx);
-        assert_eq!(
-            Err(RuntimeError::InvalidTransferDestination.into()),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 123)),
-            (account: master_account => (seq: 0, balance: 456, key: regular_public))
-        ]);
-    }
-
-    #[test]
-    fn use_owner_balance_when_signed_with_regular_key() {
-        let mut state = get_temp_state();
-
-        let (sender, sender_public, _) = address();
-        set_top_level_state!(state, [(account: sender => balance: 15)]);
-
-        let regular_keypair = Random.generate().unwrap();
-        let key = regular_keypair.public();
-        let tx = transaction!(fee: 5, set_regular_key!(*key));
-
-        assert_eq!(Ok(()), state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0));
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 10, key: *key))
-        ]);
-
-        let tx = transaction!(seq: 1, fee: 5, Action::CreateShard { users: vec![] });
-
-        assert_eq!(
-            Ok(()),
-            state.apply(&tx, &H256::random().into(), regular_keypair.public(), &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 2, balance: 15 - 5 - 5)),
-            (shard: 0 => owners: vec![sender], users: vec![])
-        ]);
-    }
-
-    #[test]
-    fn fail_when_two_accounts_used_the_same_regular_key() {
-        let mut state = get_temp_state();
-
-        let (sender, sender_public, _) = address();
-        let (sender2, sender_public2, _) = address();
-        set_top_level_state!(state, [
-            (account: sender => balance: 15),
-            (account: sender2 => balance: 15)
-        ]);
-
-        let regular_keypair = Random.generate().unwrap();
-        let key = regular_keypair.public();
-        let tx = transaction!(fee: 5, set_regular_key!(*key));
-
-        assert_eq!(Ok(()), state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0));
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 10, key: *key)),
-            (account: sender2 => (seq: 0, balance: 15, key))
-        ]);
-
-        let tx = transaction!(fee: 5, set_regular_key!(*key));
-        assert_eq!(
-            Err(RuntimeError::RegularKeyAlreadyInUse.into()),
-            state.apply(&tx, &H256::random().into(), &sender_public2, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 10, key: *key)),
-            (account: sender2 => (seq: 0, balance: 15, key))
-        ]);
-    }
-
-    #[test]
-    fn fail_when_regular_key_is_already_registered_as_owner_key() {
-        let mut state = get_temp_state();
-
-        let (sender, sender_public, _) = address();
-        let (sender2, sender_public2, _) = address();
-        set_top_level_state!(state, [
-            (account: sender => balance: 20),
-            (account: sender2 => balance: 20)
-        ]);
-
-        let tx = transaction! (fee: 5, set_regular_key!(sender_public2));
-        assert_eq!(
-            Err(RuntimeError::RegularKeyAlreadyInUseAsPlatformAccount.into()),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 20))
-        ]);
-    }
-
-    #[test]
-    fn change_regular_key() {
-        let mut state = get_temp_state();
-
-        let (sender, sender_public, _) = address();
-        let (_, regular_public, _) = address();
-        set_top_level_state!(state, [
-            (account: sender => balance: 20),
-            (regular_key: sender_public => regular_public)
-        ]);
-
-        assert_eq!(Ok(true), state.regular_account_exists_and_not_null(&regular_public));
-
-        let (_, regular_public2, _) = address();
-        let tx = transaction! (fee: 5, set_regular_key!(regular_public2));
-        assert_eq!(Ok(()), state.apply(&tx, &H256::random().into(), &regular_public, &get_test_client(), 0, 0, 0));
-
-        assert_eq!(Ok(false), state.regular_account_exists_and_not_null(&regular_public));
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 20 - 5, key: regular_public2))
-        ]);
-    }
-
-    #[test]
-    fn pass_approver_check_using_a_regular_key() {
-        let (sender, sender_public, _) = address();
-        let (_, regular_public, _) = address();
-
-        let shard_id = 0x0;
-        let mint_tracker = Tracker::from(H256::random());
-        let mut state = get_temp_state();
-
-        let metadata = "metadata".to_string();
-        let lock_script_hash = H160::from("0xb042ad154a3359d276835c903587ebafefea22af");
-        let amount = 30;
-        let asset_type = Blake::blake(*mint_tracker);
-
-        set_top_level_state!(state, [
-            (account: sender => balance: 25),
-            (shard: shard_id => owners: [sender]),
-            (metadata: shards: 1),
-            (regular_key: sender_public => regular_public),
-            (scheme: (shard_id, asset_type) => { supply: amount, metadata: metadata, approver: Some(sender) }),
-            (asset: (shard_id, mint_tracker, 0) => { asset_type: asset_type, quantity: amount, lock_script_hash: lock_script_hash })
-        ]);
-
-        let transfer = transfer_asset!(
-            inputs: asset_transfer_inputs![(asset_out_point!(mint_tracker, 0, asset_type, 30), vec![0x30, 0x01])],
-            asset_transfer_outputs![(lock_script_hash, vec![vec![1]], asset_type, 30)]
-        );
-        let transfer_tx = transaction!(seq: 0, fee: 11, transfer);
-
-        assert_eq!(
-            Ok(()),
-            state.apply(&transfer_tx, &H256::random().into(), &regular_public, &get_test_client(), 0, 0, 0)
-        );
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 25 - 11))
-        ]);
-    }
-
-    #[test]
-    fn pass_approver_check_using_a_regular_key_with_approval() {
-        let (sender, sender_public, _) = address();
-        let (_, regular_public, regular_private) = address();
-
-        let shard_id = 0x0;
-        let mint_tracker = Tracker::from(H256::random());
-        let mut state = get_temp_state();
-
-        let metadata = "metadata".to_string();
-        let lock_script_hash = H160::from("0xb042ad154a3359d276835c903587ebafefea22af");
-        let amount = 30;
-        let asset_type = Blake::blake(*mint_tracker);
-
-        set_top_level_state!(state, [
-            (account: sender => balance: 25),
-            (shard: shard_id => owners: [sender]),
-            (metadata: shards: 1),
-            (regular_key: sender_public => regular_public),
-            (scheme: (shard_id, asset_type) => { supply: amount, metadata: metadata, approver: Some(sender) }),
-            (asset: (shard_id, mint_tracker, 0) => { asset_type: asset_type, quantity: amount, lock_script_hash: lock_script_hash })
-        ]);
-
-        let transfer = transfer_asset!(
-            inputs: asset_transfer_inputs![(asset_out_point!(mint_tracker, 0, asset_type, 30), vec![0x30, 0x01])],
-            asset_transfer_outputs![(lock_script_hash, vec![vec![1]], asset_type, 30)]
-        );
-        let approval = sign(&regular_private, &transfer.tracker().unwrap()).unwrap();
-        let transfer = transfer_asset!(
-            inputs: asset_transfer_inputs![(asset_out_point!(mint_tracker, 0, asset_type, 30), vec![0x30, 0x01])],
-            asset_transfer_outputs![(lock_script_hash, vec![vec![1]], asset_type, 30)],
-            approvals: vec![approval]
-        );
-        let transfer_tx = transaction!(seq: 0, fee: 11, transfer);
-
-        assert_eq!(
-            Ok(()),
-            state.apply(&transfer_tx, &H256::random().into(), &regular_public, &get_test_client(), 0, 0, 0)
-        );
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 25 - 11))
-        ]);
-    }
-
-    #[test]
-    fn use_deleted_regular_key_as_owner_key() {
-        let (sender, sender_public, _) = address();
-        let (regular_address, regular_public, _) = address();
-        let (_, regular_public2, _) = address();
-
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 20),
-            (regular_key: sender_public => regular_public),
-            (regular_key: sender_public => regular_public2),
-            (account: regular_address => balance: 20)
-        ]);
-
-        assert_eq!(Ok(false), state.regular_account_exists_and_not_null(&regular_public));
-
-        let tx = transaction!(fee: 5, Action::CreateShard { users: vec![] });
-        assert_eq!(Ok(()), state.apply(&tx, &H256::random().into(), &regular_public, &get_test_client(), 0, 0, 0));
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 20)),
-            (account: regular_address => (seq: 1, balance: 20 - 5)),
-            (shard: 0 => owners: vec![regular_address], users: vec![])
-        ]);
-    }
-
-    #[test]
-    fn fail_when_someone_sends_some_ccc_to_an_address_which_used_as_a_regular_key() {
-        let (sender, sender_public, _) = address();
-        let (receiver, receiver_public, _) = address();
-        let (regular_address, regular_public, _) = address();
-
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 20),
-            (regular_key: receiver_public => regular_public)
-        ]);
-
-        let tx = transaction!(fee: 5, pay!(regular_address, 5));
-        assert_eq!(
-            Err(RuntimeError::InvalidTransferDestination.into()),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 20)),
-            (account: receiver => (seq: 0, balance: 0, key: regular_public))
-        ]);
-    }
-
-    #[test]
-    fn fail_when_tried_to_use_master_key_instead_of_regular_key() {
-        let (sender, sender_public, _) = address();
-        let (_, regular_public, _) = address();
-        let (receiver_address, ..) = address();
-
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 20),
-            (regular_key: sender_public => regular_public)
-        ]);
-
-        let tx = transaction!(fee: 5, pay!(receiver_address, 5));
-        assert_eq!(
-            Err(RuntimeError::CannotUseMasterKey.into()),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 20, key: regular_public)),
-            (account: receiver_address => (seq: 0, balance: 0))
         ]);
     }
 
@@ -2947,175 +2520,6 @@ mod tests_tx {
             (asset: (transfer_tracker, 1, shard4)),
             (asset: (mint_tracker3, 0, shard3) => { asset_type: asset_type3, quantity: 10 }),
             (asset: (mint_tracker4, 0, shard4) => { asset_type: asset_type4, quantity: 20 })
-        ]);
-    }
-
-    #[test]
-    fn cannot_create_a_shard_that_user_is_a_regular_account() {
-        let (sender, sender_public, _) = address();
-        let (regular_account, regular_public, _) = address();
-
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (metadata: shards: 0),
-            (account: sender => balance: 25),
-            (regular_key: sender_public => regular_public)
-        ]);
-
-        let tx = transaction!(fee: 10, Action::CreateShard { users: vec![regular_account] });
-
-        assert_eq!(
-            Err(RuntimeError::NonActiveAccount {
-                address: regular_account,
-                name: "shard user".to_string(),
-            }
-            .into()),
-            state.apply(&tx, &H256::random().into(), &regular_public, &get_test_client(), 0, 0, 0)
-        );
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 25))
-        ]);
-    }
-
-    #[test]
-    fn regular_account_cannot_be_shard_user() {
-        let (sender, sender_public, _) = address();
-        let (regular_account, regular_public, _) = address();
-
-        let shard_id = 0;
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 25),
-            (shard: shard_id => owners: [sender], users: []),
-            (metadata: shards: 1),
-            (regular_key: sender_public => regular_public)
-        ]);
-
-        let tx = transaction!(fee: 10, Action::SetShardUsers { users: vec![regular_account], shard_id });
-
-        assert_eq!(
-            Err(RuntimeError::NonActiveAccount {
-                address: regular_account,
-                name: "shard user".to_string(),
-            }
-            .into()),
-            state.apply(&tx, &H256::random().into(), &regular_public, &get_test_client(), 0, 0, 0)
-        );
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 25))
-        ]);
-    }
-
-    #[test]
-    fn regular_account_cannot_be_shard_owner() {
-        let (sender, sender_public, _) = address();
-        let (regular_account, regular_public, _) = address();
-
-        let shard_id = 0;
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 25),
-            (shard: shard_id => owners: [sender], users: []),
-            (metadata: shards: 1),
-            (regular_key: sender_public => regular_public)
-        ]);
-
-        let tx = transaction!(fee: 10, Action::SetShardOwners { owners: vec![regular_account, sender], shard_id });
-
-        assert_eq!(
-            Err(RuntimeError::NonActiveAccount {
-                address: regular_account,
-                name: "shard owner".to_string(),
-            }
-            .into()),
-            state.apply(&tx, &H256::random().into(), &regular_public, &get_test_client(), 0, 0, 0)
-        );
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 25))
-        ]);
-    }
-
-    #[test]
-    fn regular_account_cannot_be_approver() {
-        let (sender, sender_public, _) = address();
-        let (master_account, master_public, _) = address();
-        let (regular_account, regular_public, _) = address();
-
-        let shard_id = 0x0;
-
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 100),
-            (account: master_account => seq: 1),
-            (shard: shard_id => owners: [sender]),
-            (metadata: shards: 1),
-            (regular_key: master_public => regular_public)
-        ]);
-
-        let transaction = mint_asset!(
-            Box::new(asset_mint_output!(H160::random(), vec![], 30)),
-            "metadata".to_string(),
-            approver: regular_account
-        );
-        let transaction_tracker = transaction.tracker().unwrap();
-        let asset_type = Blake::blake(*transaction_tracker);
-        let tx = transaction!(fee: 11, transaction);
-
-        assert_eq!(
-            Err(RuntimeError::NonActiveAccount {
-                address: regular_account,
-                name: "approver of asset".to_string(),
-            }
-            .into()),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 100)),
-            (scheme: (shard_id, asset_type)),
-            (asset: (transaction_tracker, 0, shard_id))
-        ]);
-    }
-
-    #[test]
-    fn regular_account_cannot_be_registrar() {
-        let (sender, sender_public, _) = address();
-        let (master_account, master_public, _) = address();
-        let (regular_account, regular_public, _) = address();
-
-        let shard_id = 0x0;
-
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 100),
-            (account: master_account => seq: 1),
-            (shard: shard_id => owners: [sender]),
-            (metadata: shards: 1),
-            (regular_key: master_public => regular_public)
-        ]);
-
-        let transaction = mint_asset!(
-            Box::new(asset_mint_output!(H160::random(), vec![], 30)),
-            "metadata".to_string(),
-            registrar: regular_account
-        );
-        let transaction_tracker = transaction.tracker().unwrap();
-        let asset_type = Blake::blake(*transaction_tracker);
-        let tx = transaction!(fee: 11, transaction);
-
-        assert_eq!(
-            Err(RuntimeError::NonActiveAccount {
-                address: regular_account,
-                name: "registrar of asset".to_string(),
-            }
-            .into()),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 100)),
-            (scheme: (shard_id, asset_type)),
-            (asset: (transaction_tracker, 0, shard_id))
         ]);
     }
 }

@@ -17,7 +17,7 @@
 use super::super::types::{Block, BlockNumberAndHash, Transaction, UnsignedTransaction};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
-use ckey::{NetworkId, PlatformAddress, Public};
+use ckey::{NetworkId, PlatformAddress};
 use ctypes::{BlockHash, BlockNumber, ShardId, Tracker, TxHash};
 use jsonrpc_core::Result;
 use primitives::H256;
@@ -50,14 +50,6 @@ pub trait Chain {
     /// Gets balance with given account.
     #[rpc(name = "chain_getBalance")]
     fn get_balance(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<Uint>>;
-
-    /// Gets regular key with given account
-    #[rpc(name = "chain_getRegularKey")]
-    fn get_regular_key(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<Public>>;
-
-    /// Gets the owner of given regular key.
-    #[rpc(name = "chain_getRegularKeyOwner")]
-    fn get_regular_key_owner(&self, public: Public, block_number: Option<u64>) -> Result<Option<PlatformAddress>>;
 
     /// Gets the genesis accounts
     #[rpc(name = "chain_getGenesisAccounts")]

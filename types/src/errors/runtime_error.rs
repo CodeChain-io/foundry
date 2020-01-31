@@ -85,13 +85,10 @@ pub enum Error {
     InvalidTransferDestination,
     NewOwnersMustContainSender,
     NotApproved(Address),
-    RegularKeyAlreadyInUse,
-    RegularKeyAlreadyInUseAsPlatformAccount,
     /// Script hash does not match with provided lock script
     ScriptHashMismatch(Mismatch<H160>),
     ScriptNotAllowed(H160),
     /// Tried to use master key even register key is registered
-    CannotUseMasterKey,
     NonActiveAccount {
         address: Address,
         name: String,
@@ -126,11 +123,13 @@ enum ErrorID {
     InvalidTransferDestination = 16,
     NewOwnersMustContainSender = 17,
     NotApproved = 18,
-    RegularKeyAlreadyInUse = 19,
-    RegularKeyAlreadyInUseAsPlatform = 20,
+    /// Deprecated
+    // RegularKeyAlreadyInUse = 19,
+    // RegularKeyAlreadyInUseAsPlatform = 20,
     ScriptHashMismatch = 21,
     ScriptNotAllowed = 22,
-    CannotUseMasterKey = 25,
+    /// Deprecated
+    // CannotUseMasterKey = 25,
     InvalidScript = 27,
     InvalidSeq = 28,
     AssetSupplyOverflow = 29,
@@ -169,11 +168,8 @@ impl Decodable for ErrorID {
             20 => Ok(ErrorID::InvalidTransferDestination),
             21 => Ok(ErrorID::NewOwnersMustContainSender),
             22 => Ok(ErrorID::NotApproved),
-            23 => Ok(ErrorID::RegularKeyAlreadyInUse),
-            24 => Ok(ErrorID::RegularKeyAlreadyInUseAsPlatform),
             25 => Ok(ErrorID::ScriptHashMismatch),
             27 => Ok(ErrorID::ScriptNotAllowed),
-            30 => Ok(ErrorID::CannotUseMasterKey),
             31 => Ok(ErrorID::NonActiveAccount),
             32 => Ok(ErrorID::SignatureOfInvalid),
             33 => Ok(ErrorID::InsufficientStakes),
@@ -207,11 +203,8 @@ impl TaggedRlp for RlpHelper {
             ErrorID::InvalidTransferDestination => 1,
             ErrorID::NewOwnersMustContainSender => 1,
             ErrorID::NotApproved => 2,
-            ErrorID::RegularKeyAlreadyInUse => 1,
-            ErrorID::RegularKeyAlreadyInUseAsPlatform => 1,
             ErrorID::ScriptHashMismatch => 2,
             ErrorID::ScriptNotAllowed => 2,
-            ErrorID::CannotUseMasterKey => 1,
             ErrorID::NonActiveAccount => 3,
             ErrorID::SignatureOfInvalid => 2,
             ErrorID::InsufficientStakes => 3,
@@ -291,15 +284,10 @@ impl Encodable for Error {
             Error::InvalidTransferDestination => RlpHelper::new_tagged_list(s, ErrorID::InvalidTransferDestination),
             Error::NewOwnersMustContainSender => RlpHelper::new_tagged_list(s, ErrorID::NewOwnersMustContainSender),
             Error::NotApproved(address) => RlpHelper::new_tagged_list(s, ErrorID::NotApproved).append(address),
-            Error::RegularKeyAlreadyInUse => RlpHelper::new_tagged_list(s, ErrorID::RegularKeyAlreadyInUse),
-            Error::RegularKeyAlreadyInUseAsPlatformAccount => {
-                RlpHelper::new_tagged_list(s, ErrorID::RegularKeyAlreadyInUseAsPlatform)
-            }
             Error::ScriptHashMismatch(mismatch) => {
                 RlpHelper::new_tagged_list(s, ErrorID::ScriptHashMismatch).append(mismatch)
             }
             Error::ScriptNotAllowed(hash) => RlpHelper::new_tagged_list(s, ErrorID::ScriptNotAllowed).append(hash),
-            Error::CannotUseMasterKey => RlpHelper::new_tagged_list(s, ErrorID::CannotUseMasterKey),
             Error::NonActiveAccount {
                 address,
                 name,
@@ -374,11 +362,8 @@ impl Decodable for Error {
             ErrorID::InvalidTransferDestination => Error::InvalidTransferDestination,
             ErrorID::NewOwnersMustContainSender => Error::NewOwnersMustContainSender,
             ErrorID::NotApproved => Error::NotApproved(rlp.val_at(1)?),
-            ErrorID::RegularKeyAlreadyInUse => Error::RegularKeyAlreadyInUse,
-            ErrorID::RegularKeyAlreadyInUseAsPlatform => Error::RegularKeyAlreadyInUseAsPlatformAccount,
             ErrorID::ScriptHashMismatch => Error::ScriptHashMismatch(rlp.val_at(1)?),
             ErrorID::ScriptNotAllowed => Error::ScriptNotAllowed(rlp.val_at(1)?),
-            ErrorID::CannotUseMasterKey => Error::CannotUseMasterKey,
             ErrorID::NonActiveAccount => Error::NonActiveAccount {
                 address: rlp.val_at(1)?,
                 name: rlp.val_at(2)?,
@@ -446,17 +431,10 @@ impl Display for Error {
             Error::InvalidTransferDestination => write!(f, "Transfer receiver is not valid account"),
             Error::NewOwnersMustContainSender => write!(f, "New owners must contain the sender"),
             Error::NotApproved(address) => write!(f, "{} should approve it.", address),
-            Error::RegularKeyAlreadyInUse => write!(f, "The regular key is already registered to another account"),
-            Error::RegularKeyAlreadyInUseAsPlatformAccount => {
-                write!(f, "The regular key is already used as a platform account")
-            }
             Error::ScriptHashMismatch(mismatch) => {
                 write!(f, "Expected script with hash {}, but got {}", mismatch.expected, mismatch.found)
             }
             Error::ScriptNotAllowed(hash) => write!(f, "Output lock script hash is not allowed : {}", hash),
-            Error::CannotUseMasterKey => {
-                write!(f, "Cannot use the master key because a regular key is already registered")
-            }
             Error::NonActiveAccount {
                 name, address,
             } => {

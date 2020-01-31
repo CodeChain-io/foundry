@@ -191,9 +191,6 @@ impl CodeChainMachine {
             Action::Pay {
                 ..
             } => params.min_pay_transaction_cost(),
-            Action::SetRegularKey {
-                ..
-            } => params.min_set_regular_key_transaction_cost(),
             Action::CreateShard {
                 ..
             } => params.min_create_shard_transaction_cost(),

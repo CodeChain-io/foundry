@@ -40,7 +40,6 @@ use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
 use std::borrow::Borrow;
 use std::collections::HashSet;
-use std::iter::once;
 use std::iter::FromIterator;
 use std::ops::Range;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -256,10 +255,9 @@ impl Miner {
 
         let fetch_account = |p: &Public| -> AccountDetails {
             let address = public_to_address(p);
-            let a = client.latest_regular_key_owner(&address).unwrap_or(address);
             AccountDetails {
-                seq: client.latest_seq(&a),
-                balance: client.latest_balance(&a),
+                seq: client.latest_seq(&address),
+                balance: client.latest_balance(&address),
             }
         };
 
@@ -461,8 +459,7 @@ impl Miner {
 
         let fetch_seq = |p: &Public| {
             let address = public_to_address(p);
-            let a = chain.latest_regular_key_owner(&address).unwrap_or(address);
-            chain.latest_seq(&a)
+            chain.latest_seq(&address)
         };
 
         {
@@ -568,11 +565,10 @@ impl MinerService for Miner {
         {
             let fetch_account = |p: &Public| {
                 let address = public_to_address(p);
-                let a = chain.latest_regular_key_owner(&address).unwrap_or(address);
 
                 AccountDetails {
-                    seq: chain.latest_seq(&a),
-                    balance: chain.latest_balance(&a),
+                    seq: chain.latest_seq(&address),
+                    balance: chain.latest_balance(&address),
                 }
             };
             let current_block_number = chain.chain_info().best_block_number;
@@ -720,19 +716,14 @@ impl MinerService for Miner {
         let seq = match seq {
             Some(seq) => seq,
             None => {
-                let addresses: Vec<_> = {
-                    let owner_address = client.latest_regular_key_owner(&address);
-                    let regular_key_address = client.latest_regular_key(&address).map(|key| public_to_address(&key));
-                    once(address).chain(owner_address.into_iter()).chain(regular_key_address.into_iter()).collect()
-                };
-                get_next_seq(self.future_transactions(), &addresses)
+                get_next_seq(self.future_transactions(), &vec![address])
                     .map(|seq| {
                         cwarn!(RPC, "There are future transactions for {}", platform_address);
                         seq
                     })
                     .unwrap_or_else(|| {
                         const DEFAULT_RANGE: Range<u64> = 0..::std::u64::MAX;
-                        get_next_seq(self.ready_transactions(DEFAULT_RANGE).transactions, &addresses)
+                        get_next_seq(self.ready_transactions(DEFAULT_RANGE).transactions, &vec![address])
                             .map(|seq| {
                                 cdebug!(RPC, "There are ready transactions for {}", platform_address);
                                 seq
@@ -857,8 +848,9 @@ pub mod test {
                 seq: 30,
                 fee: 40,
                 network_id: "tc".into(),
-                action: Action::SetRegularKey {
-                    key: H512::random(),
+                action: Action::Pay {
+                    receiver: public_to_address(&(H512::random())),
+                    quantity: 100
                 },
             },
             &private,
@@ -871,8 +863,9 @@ pub mod test {
                 seq: 32,
                 fee: 40,
                 network_id: "tc".into(),
-                action: Action::SetRegularKey {
-                    key: H512::random(),
+                action: Action::Pay {
+                    receiver: public_to_address(&(H512::random())),
+                    quantity: 100
                 },
             },
             Signature::random(),

@@ -16,7 +16,7 @@
 
 use super::super::errors::ConversionError;
 use cjson::uint::Uint;
-use ckey::{NetworkId, PlatformAddress, Public};
+use ckey::{NetworkId, PlatformAddress};
 use ctypes::transaction::Action as ActionType;
 use ctypes::{ShardId, Tracker};
 use primitives::Bytes;
@@ -28,9 +28,6 @@ pub enum Action {
     Pay {
         receiver: PlatformAddress,
         quantity: Uint,
-    },
-    SetRegularKey {
-        key: Public,
     },
     CreateShard {
         users: Vec<PlatformAddress>,
@@ -63,9 +60,6 @@ pub enum ActionWithTracker {
     Pay {
         receiver: PlatformAddress,
         quantity: Uint,
-    },
-    SetRegularKey {
-        key: Public,
     },
     CreateShard {
         users: Vec<PlatformAddress>,
@@ -103,11 +97,6 @@ impl ActionWithTracker {
             } => ActionWithTracker::Pay {
                 receiver: PlatformAddress::new_v1(network_id, receiver),
                 quantity: quantity.into(),
-            },
-            ActionType::SetRegularKey {
-                key,
-            } => ActionWithTracker::SetRegularKey {
-                key,
             },
             ActionType::CreateShard {
                 users,
@@ -180,11 +169,6 @@ impl TryFrom<Action> for ActionType {
             } => ActionType::Pay {
                 receiver: receiver.try_into_address()?,
                 quantity: quantity.into(),
-            },
-            Action::SetRegularKey {
-                key,
-            } => ActionType::SetRegularKey {
-                key,
             },
             Action::CreateShard {
                 users,

@@ -17,7 +17,7 @@
 //! Single account in the system.
 
 use crate::CacheableItem;
-use ckey::{self, Public};
+use ckey::{self};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::fmt;
 
@@ -29,8 +29,6 @@ pub struct Account {
     balance: u64,
     // Seq of the account.
     seq: u64,
-    // Regular key of the account.
-    regular_key: Option<Public>,
 }
 
 impl Account {
@@ -38,15 +36,6 @@ impl Account {
         Account {
             balance,
             seq,
-            regular_key: None,
-        }
-    }
-
-    pub fn new_with_key(balance: u64, seq: u64, regular_key: Option<Public>) -> Self {
-        Self {
-            balance,
-            seq,
-            regular_key,
         }
     }
 
@@ -62,11 +51,6 @@ impl Account {
     /// return the seq associated with this account.
     pub fn seq(&self) -> u64 {
         self.seq
-    }
-
-    /// return the regular key associated with this account.
-    pub fn regular_key(&self) -> Option<Public> {
-        self.regular_key
     }
 
     /// Increment the seq of the account by one.
@@ -95,17 +79,6 @@ impl Account {
     pub fn set_seq(&mut self, x: u64) {
         self.seq = x;
     }
-
-    /// Set the regular key of the account.
-    /// Overwrite if the key already exists.
-    pub fn set_regular_key(&mut self, key: &Public) {
-        self.regular_key = Some(*key);
-    }
-
-    /// Remove the regular key of the account.
-    pub fn remove_regular_key(&mut self) {
-        self.regular_key = None;
-    }
 }
 
 impl Default for Account {
@@ -131,16 +104,15 @@ impl Encodable for Account {
         s.append(&PREFIX);
         s.append(&self.balance);
         s.append(&self.seq);
-        s.append(&self.regular_key);
     }
 }
 
 impl Decodable for Account {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
-        if item_count != 4 {
+        if item_count != 3 {
             return Err(DecoderError::RlpInvalidLength {
-                expected: 4,
+                expected: 3,
                 got: item_count,
             })
         }
@@ -153,7 +125,6 @@ impl Decodable for Account {
         Ok(Self {
             balance: rlp.val_at(1)?,
             seq: rlp.val_at(2)?,
-            regular_key: rlp.val_at(3)?,
         })
     }
 }
@@ -177,11 +148,9 @@ mod tests {
         assert_eq!(a.seq(), b.seq());
 
         let mut a = Account::new(69, 0);
-        a.set_regular_key(&Public::default());
         let b = ::rlp::decode::<Account>(&a.rlp_bytes()).unwrap();
         assert_eq!(a.balance(), b.balance());
         assert_eq!(a.seq(), b.seq());
-        assert_eq!(a.regular_key(), b.regular_key());
     }
 
     #[test]
@@ -190,7 +159,6 @@ mod tests {
         assert_eq!(a.rlp_bytes().to_hex(), "c4434580c0");
         assert_eq!(69, a.balance());
         assert_eq!(0, a.seq());
-        assert_eq!(a.regular_key(), None);
     }
 
     #[test]
@@ -223,11 +191,9 @@ mod tests {
         let mut a0 = Account::new(69, 0);
         let a = &mut a0;
         let mut b = Account::new(79, 1);
-        b.set_regular_key(&Public::default());
         *a = b;
         assert_eq!(79, a.balance());
         assert_eq!(1, a.seq());
-        assert_eq!(a.regular_key(), Some(Public::default()));
     }
 
     #[test]

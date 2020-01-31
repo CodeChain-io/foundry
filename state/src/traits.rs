@@ -15,10 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{
-    Account, ActionData, AssetScheme, CacheableItem, Metadata, OwnedAsset, RegularAccount, Shard, ShardText, StateDB,
+    Account, ActionData, AssetScheme, CacheableItem, Metadata, OwnedAsset, Shard, ShardText, StateDB,
     StateResult,
 };
-use ckey::{public_to_address, Address, Public};
+use ckey::Address;
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, CommonParams, ShardId, Tracker, TxHash};
 use cvm::ChainTimeInfo;
@@ -53,31 +53,6 @@ pub trait TopStateView {
 
     fn account_exists_and_has_seq(&self, a: &Address) -> TrieResult<bool> {
         Ok(self.account(a)?.map(|a| a.seq() != 0).unwrap_or(false))
-    }
-
-    fn regular_account_by_address(&self, a: &Address) -> TrieResult<Option<RegularAccount>>;
-
-    fn regular_account(&self, p: &Public) -> TrieResult<Option<RegularAccount>> {
-        self.regular_account_by_address(&public_to_address(p))
-    }
-
-    /// Get the regular key of account `a`.
-    fn regular_key(&self, a: &Address) -> TrieResult<Option<Public>> {
-        Ok(self.account(a)?.and_then(|account| account.regular_key()))
-    }
-
-    fn regular_key_owner(&self, address: &Address) -> TrieResult<Option<Address>> {
-        Ok(self
-            .regular_account_by_address(&address)?
-            .map(|regular_account| public_to_address(regular_account.owner_public())))
-    }
-
-    fn regular_account_exists_and_not_null(&self, p: &Public) -> TrieResult<bool> {
-        Ok(self.regular_account(p)?.map_or(false, |a| !a.is_null()))
-    }
-
-    fn regular_account_exists_and_not_null_by_address(&self, a: &Address) -> TrieResult<bool> {
-        Ok(self.regular_account_by_address(a)?.map_or(false, |a| !a.is_null()))
     }
 
     fn metadata(&self) -> TrieResult<Option<Metadata>>;
@@ -149,7 +124,6 @@ pub trait ShardState {
 pub trait TopState {
     /// Remove an existing account.
     fn kill_account(&mut self, account: &Address);
-    fn kill_regular_account(&mut self, account: &Public);
 
     /// Add `incr` to the balance of account `a`.
     fn add_balance(&mut self, a: &Address, incr: u64) -> TrieResult<()>;
@@ -160,9 +134,6 @@ pub trait TopState {
 
     /// Increment the seq of account `a` by 1.
     fn inc_seq(&mut self, a: &Address) -> TrieResult<()>;
-
-    /// Set the regular key of account `owner_public`
-    fn set_regular_key(&mut self, owner_public: &Public, key: &Public) -> StateResult<()>;
 
     fn create_shard(&mut self, fee_payer: &Address, tx_hash: TxHash, users: Vec<Address>) -> StateResult<()>;
     fn change_shard_owners(&mut self, shard_id: ShardId, owners: &[Address], sender: &Address) -> StateResult<()>;

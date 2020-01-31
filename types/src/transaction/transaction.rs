@@ -72,12 +72,4 @@ impl Transaction {
         };
         shard_tx.map(|t| t.tracker())
     }
-    pub fn is_master_key_allowed(&self) -> bool {
-        match self.action {
-            Action::SetRegularKey {
-                ..
-            } => true,
-            _ => false,
-        }
-    }
 }

@@ -307,23 +307,6 @@ mod tests {
     }
 
     #[test]
-    fn encode_and_decode_set_regular_key_transaction() {
-        rlp_encode_and_decode_test!(UnverifiedTransaction {
-            unsigned: Transaction {
-                seq: 30,
-                fee: 40,
-                network_id: "tc".into(),
-                action: Action::SetRegularKey {
-                    key: Public::random(),
-                },
-            },
-            sig: Signature::default(),
-            hash: H256::default().into(),
-        }
-        .compute_hash());
-    }
-
-    #[test]
     fn encode_and_decode_create_shard_transaction() {
         rlp_encode_and_decode_test!(UnverifiedTransaction {
             unsigned: Transaction {

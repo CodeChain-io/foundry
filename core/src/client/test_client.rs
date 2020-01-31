@@ -391,14 +391,6 @@ impl AccountData for TestBlockChainClient {
             _ => None,
         }
     }
-
-    fn regular_key(&self, _address: &Address, _state: StateOrBlock) -> Option<Public> {
-        None
-    }
-
-    fn regular_key_owner(&self, _address: &Address, _state: StateOrBlock) -> Option<Address> {
-        None
-    }
 }
 
 impl BlockChainTrait for TestBlockChainClient {

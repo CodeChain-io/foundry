@@ -123,8 +123,6 @@ describe("solo - 1 node", function() {
         [
             { actionType: 2, actionLength: 2 }, // Pay
             { actionType: 2, actionLength: 4 },
-            { actionType: 3, actionLength: 1 }, // SetRegularKey
-            { actionType: 3, actionLength: 3 },
             { actionType: 4, actionLength: 1 }, // CreateShard
             { actionType: 4, actionLength: 3 },
             { actionType: 5, actionLength: 2 }, // SetShardOwners
@@ -232,43 +230,6 @@ describe("solo - 1 node", function() {
                     expect.fail();
                 } catch (e) {
                     expect(e).is.similarTo(ERROR.INVALID_RLP_TOO_BIG);
-                }
-            });
-        });
-    });
-
-    describe("Sending invalid transactions over the limits (in action 3: SetRegularKey)", function() {
-        let encoded: any[];
-        beforeEach(async function() {
-            const privKey = node.sdk.util.generatePrivateKey();
-            const key = node.sdk.util.getPublicFromPrivate(privKey);
-            const seq = await node.sdk.rpc.chain.getSeq(faucetAddress);
-            const signed = node.sdk.core
-                .createSetRegularKeyTransaction({
-                    key
-                })
-                .sign({
-                    secret: faucetSecret,
-                    fee: 10,
-                    seq
-                });
-            encoded = signed.toEncodeObject();
-        });
-
-        ["0x01" + "0".repeat(128), "0x" + "f".repeat(126)].forEach(function(
-            key
-        ) {
-            it(`key: ${key}`, async function() {
-                encoded[3][1] = key;
-                try {
-                    await node.sendSignedTransactionWithRlpBytes(
-                        RLP.encode(encoded)
-                    );
-                    expect.fail();
-                } catch (e) {
-                    if (key.length < 130)
-                        expect(e).is.similarTo(ERROR.INVALID_RLP_TOO_SHORT);
-                    else expect(e).is.similarTo(ERROR.INVALID_RLP_TOO_BIG);
                 }
             });
         });

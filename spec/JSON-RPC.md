@@ -115,12 +115,6 @@ A string that starts with "(NetworkID)c", and Bech32 string follows. For example
  - receiver: `PlatformAddress`
  - quantity: `U64`
 
-### SetRegularKey Action
-
- - type: "setRegularKey"
- - networkId: `NetworkID`
- - key: `H512`
-
 ### WrapCCC Action
 
  - type: "wrapCCC"
@@ -205,7 +199,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  - maxTextContentSize: `U64`
  - networkID: `string`
  - minPayCost: `U64`
- - minSetRegularKeyCost: `U64`
  - minCreateShardCost: `U64`
  - minSetShardOwnersCost: `U64`
  - minSetShardUsersCost: `U64`
@@ -278,8 +271,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_isAssetSpent](#chain_isassetspent)
  * [chain_getSeq](#chain_getseq)
  * [chain_getBalance](#chain_getbalance)
- * [chain_getRegularKey](#chain_getregularkey)
- * [chain_getRegularKeyOwner](#chain_getregularkeyowner)
  * [chain_getGenesisAccounts](#chain_getgenesisaccounts)
  * [chain_getNumberOfShards](#chain_getnumberofshards)
  * [chain_getShardIdByHash](#chain_getshardidbyhash)
@@ -1030,68 +1021,6 @@ Errors: `KVDB Error`, `Invalid Params`, `Invalid NetworkId`
 
 [Back to **List of methods**](#list-of-methods)
 
-## chain_getRegularKey
-Gets the regular key of an account of the given address, at the state of the given blockNumber.
-
-### Params
- 1. address: `PlatformAddress`
- 2. block number: `number` | `null`
-
-### Returns
-`null` | `H512` - 512-bit public key. It returns null when the given address does not have a regular key.
-
-Errors: `KVDB Error`, `Invalid Params`, `Invalid NetworkId`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getRegularKey", "params": ["cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7", null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_getRegularKeyOwner
-Gets the owner of a regular key, at the state of the given blockNumber.
-
-### Params
- 1. public key: `H512`
- 2. block number: `number` | `null`
-
-### Returns
-`null` | `PlatformAddress` - It returns null when the given key has no owner.
-
-Errors: `KVDB Error`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getRegularKeyOwner", "params": ["0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000", null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":"cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7",
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
 ## chain_getGenesisAccounts
 Gets the platform account in the genesis block.
 
@@ -1369,7 +1298,6 @@ Errors: `Invalid Params`
     "maxTextContentSize":"0x0200",
     "networkID":"tc",
     "minPayCost":10,
-    "minSetRegularKeyCost":10,
     "minCreateShardCost":10,
     "minSetShardOwnersCost":10,
     "minSetShardUsersCost":10,
@@ -1401,7 +1329,7 @@ It returns null if the block number parameter is larger than the current best bl
 ### Returns
 `[number, number]` | `null`
 
-- The first item is the last block number that the term is closed. 
+- The first item is the last block number that the term is closed.
 - The second item is the current term id.
 
 Errors: `Invalid Params`
@@ -1811,7 +1739,7 @@ curl \
 Release accounts from the mempool's banned account list.
 
 ### Params
- 1. trusty_list: `PlatformAccount[]` 
+ 1. trusty_list: `PlatformAccount[]`
 
 ### Returns
 `null`
@@ -3090,7 +3018,7 @@ No parameters
 {
   "jsonrpc":"2.0",
   "result": [
-    ["1.2.3.4:3485", "0x56642f04d519ae3262c7ba6facf1c5b11450ebaeb7955337cfbc45420d573077"], 
+    ["1.2.3.4:3485", "0x56642f04d519ae3262c7ba6facf1c5b11450ebaeb7955337cfbc45420d573077"],
     ["1.2.3.5:3485", "0x7f7104b580f9418d444560009e5a92a4573d42d2c51cd0c6045afdc761826249"]
   ],
   "id":3

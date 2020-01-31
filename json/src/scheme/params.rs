@@ -35,7 +35,6 @@ pub struct Params {
 
     /// Minimum transaction cost.
     pub min_pay_cost: Uint,
-    pub min_set_regular_key_cost: Uint,
     pub min_create_shard_cost: Uint,
     pub min_set_shard_owners_cost: Uint,
     pub min_set_shard_users_cost: Uint,
@@ -85,7 +84,6 @@ mod tests {
             "maxTextContentSize": "0x0200",
             "networkID" : "tc",
             "minPayCost" : 10,
-            "minSetRegularKeyCost" : 11,
             "minCreateShardCost" : 12,
             "minSetShardOwnersCost" : 13,
             "minSetShardUsersCost" : 14,
@@ -109,7 +107,6 @@ mod tests {
         assert_eq!(deserialized.max_text_content_size, 0x0200.into());
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_cost, 10.into());
-        assert_eq!(deserialized.min_set_regular_key_cost, 11.into());
         assert_eq!(deserialized.min_create_shard_cost, 12.into());
         assert_eq!(deserialized.min_set_shard_owners_cost, 13.into());
         assert_eq!(deserialized.min_set_shard_users_cost, 14.into());
@@ -145,7 +142,6 @@ mod tests {
             "maxTextContentSize": "0x0200",
             "networkID" : "tc",
             "minPayCost" : 10,
-            "minSetRegularKeyCost" : 11,
             "minCreateShardCost" : 12,
             "minSetShardOwnersCost" : 13,
             "minSetShardUsersCost" : 14,
@@ -170,7 +166,6 @@ mod tests {
         assert_eq!(deserialized.max_text_content_size, 0x0200.into());
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_cost, 10.into());
-        assert_eq!(deserialized.min_set_regular_key_cost, 11.into());
         assert_eq!(deserialized.min_create_shard_cost, 12.into());
         assert_eq!(deserialized.min_set_shard_owners_cost, 13.into());
         assert_eq!(deserialized.min_set_shard_users_cost, 14.into());
@@ -206,7 +201,6 @@ mod tests {
             "maxTextContentSize": "0x0200",
             "networkID" : "tc",
             "minPayCost" : 10,
-            "minSetRegularKeyCost" : 11,
             "minCreateShardCost" : 12,
             "minSetShardOwnersCost" : 13,
             "minSetShardUsersCost" : 14,
@@ -239,7 +233,6 @@ mod tests {
         assert_eq!(deserialized.max_text_content_size, 0x0200.into());
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_cost, 10.into());
-        assert_eq!(deserialized.min_set_regular_key_cost, 11.into());
         assert_eq!(deserialized.min_create_shard_cost, 12.into());
         assert_eq!(deserialized.min_set_shard_owners_cost, 13.into());
         assert_eq!(deserialized.min_set_shard_users_cost, 14.into());
@@ -275,7 +268,6 @@ mod tests {
             "maxTextContentSize": "0x0200",
             "networkID" : "tc",
             "minPayCost" : 10,
-            "minSetRegularKeyCost" : 11,
             "minCreateShardCost" : 12,
             "minSetShardOwnersCost" : 13,
             "minSetShardUsersCost" : 14,
@@ -309,7 +301,6 @@ mod tests {
         assert_eq!(deserialized.max_text_content_size, 0x0200.into());
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_cost, 10.into());
-        assert_eq!(deserialized.min_set_regular_key_cost, 11.into());
         assert_eq!(deserialized.min_create_shard_cost, 12.into());
         assert_eq!(deserialized.min_set_shard_owners_cost, 13.into());
         assert_eq!(deserialized.min_set_shard_users_cost, 14.into());

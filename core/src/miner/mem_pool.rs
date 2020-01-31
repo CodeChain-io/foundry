@@ -428,10 +428,9 @@ impl MemPool {
     pub fn recover_from_db<C: AccountData + BlockChainTrait>(&mut self, client: &C) {
         let fetch_account = |p: &Public| -> AccountDetails {
             let address = public_to_address(p);
-            let a = client.latest_regular_key_owner(&address).unwrap_or(address);
             AccountDetails {
-                seq: client.latest_seq(&a),
-                balance: client.latest_balance(&a),
+                seq: client.latest_seq(&address),
+                balance: client.latest_balance(&address),
             }
         };
         let by_hash = backup::recover_to_data(self.db.as_ref());
@@ -1420,10 +1419,9 @@ pub mod test {
 
         let fetch_account = |p: &Public| -> AccountDetails {
             let address = public_to_address(p);
-            let a = test_client.latest_regular_key_owner(&address).unwrap_or(address);
             AccountDetails {
-                seq: test_client.latest_seq(&a),
-                balance: test_client.latest_balance(&a),
+                seq: test_client.latest_seq(&address),
+                balance: test_client.latest_balance(&address),
             }
         };
         let no_timelock = TxTimelock {
@@ -1550,10 +1548,9 @@ pub mod test {
     ) -> Vec<Result<TransactionImportResult, Error>> {
         let fetch_account = |p: &Public| -> AccountDetails {
             let address = public_to_address(p);
-            let a = test_client.latest_regular_key_owner(&address).unwrap_or(address);
             AccountDetails {
-                seq: test_client.latest_seq(&a),
-                balance: test_client.latest_balance(&a),
+                seq: test_client.latest_seq(&address),
+                balance: test_client.latest_balance(&address),
             }
         };
         let no_timelock = TxTimelock {
@@ -1574,7 +1571,6 @@ pub mod test {
         // Set the pay transaction minimum fee
         let fees = MemPoolFees::create_from_options(
             Some(150),
-            None,
             None,
             None,
             None,
@@ -1637,7 +1633,6 @@ pub mod test {
             None,
             None,
             None,
-            None,
         );
 
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
@@ -1688,10 +1683,9 @@ pub mod test {
 
         let fetch_account = |p: &Public| -> AccountDetails {
             let address = public_to_address(p);
-            let a = test_client.latest_regular_key_owner(&address).unwrap_or(address);
             AccountDetails {
-                seq: test_client.latest_seq(&a),
-                balance: test_client.latest_balance(&a),
+                seq: test_client.latest_seq(&address),
+                balance: test_client.latest_balance(&address),
             }
         };
         let keypair = Random.generate().unwrap();
@@ -1732,8 +1726,7 @@ pub mod test {
         let best_block_timestamp = test_client.chain_info().best_block_timestamp;
         let fetch_seq = |p: &Public| -> u64 {
             let address = public_to_address(p);
-            let a = test_client.latest_regular_key_owner(&address).unwrap_or(address);
-            test_client.latest_seq(&a)
+            test_client.latest_seq(&address)
         };
         mem_pool.remove(&[create_signed_pay(1, keypair).hash()], &fetch_seq, best_block_number, best_block_timestamp);
 

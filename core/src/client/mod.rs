@@ -36,7 +36,7 @@ use crate::error::{BlockImportError, Error as GenericError};
 use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction};
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::DatabaseError;
-use ckey::{Address, NetworkId, PlatformAddress, Public};
+use ckey::{Address, NetworkId, PlatformAddress};
 use cnetwork::NodeId;
 use cstate::{AssetScheme, FindActionHandler, OwnedAsset, StateResult, TopLevelState, TopStateView};
 use ctypes::header::Header;
@@ -142,16 +142,6 @@ pub trait AccountData {
             "balance will return Some if given BlockId::Latest. balance was given BlockId::Latest \
              Therefore balance has returned Some; qed",
         )
-    }
-
-    fn regular_key(&self, address: &Address, state: StateOrBlock) -> Option<Public>;
-    fn latest_regular_key(&self, address: &Address) -> Option<Public> {
-        self.regular_key(address, BlockId::Latest.into())
-    }
-
-    fn regular_key_owner(&self, address: &Address, state: StateOrBlock) -> Option<Address>;
-    fn latest_regular_key_owner(&self, address: &Address) -> Option<Address> {
-        self.regular_key_owner(address, BlockId::Latest.into())
     }
 }
 

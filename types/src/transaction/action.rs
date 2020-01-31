@@ -18,13 +18,12 @@ use crate::errors::SyntaxError;
 use crate::transaction::{AssetMintOutput, AssetTransferInput, AssetTransferOutput, ShardTransaction};
 use crate::{CommonParams, ShardId, Tracker};
 use ccrypto::Blake;
-use ckey::{recover, Address, NetworkId, Public, Signature};
+use ckey::{recover, Address, NetworkId, Signature};
 use primitives::{Bytes, H160, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::collections::{HashMap, HashSet};
 
 const PAY: u8 = 0x02;
-const SET_REGULAR_KEY: u8 = 0x03;
 const CREATE_SHARD: u8 = 0x04;
 const SET_SHARD_OWNERS: u8 = 0x05;
 const SET_SHARD_USERS: u8 = 0x06;
@@ -95,9 +94,6 @@ pub enum Action {
         receiver: Address,
         /// Transferred quantity.
         quantity: u64,
-    },
-    SetRegularKey {
-        key: Public,
     },
     CreateShard {
         users: Vec<Address>,
@@ -552,13 +548,6 @@ impl Encodable for Action {
                 s.append(receiver);
                 s.append(quantity);
             }
-            Action::SetRegularKey {
-                key,
-            } => {
-                s.begin_list(2);
-                s.append(&SET_REGULAR_KEY);
-                s.append(key);
-            }
             Action::CreateShard {
                 users,
             } => {
@@ -733,18 +722,6 @@ impl Decodable for Action {
                 Ok(Action::Pay {
                     receiver: rlp.val_at(1)?,
                     quantity: rlp.val_at(2)?,
-                })
-            }
-            SET_REGULAR_KEY => {
-                let item_count = rlp.item_count()?;
-                if item_count != 2 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 2,
-                    })
-                }
-                Ok(Action::SetRegularKey {
-                    key: rlp.val_at(1)?,
                 })
             }
             CREATE_SHARD => {

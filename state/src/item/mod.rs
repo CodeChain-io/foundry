@@ -23,13 +23,11 @@ pub mod asset;
 pub mod asset_scheme;
 pub mod dummy_shard_text;
 pub mod metadata;
-pub mod regular_account;
 pub mod shard;
 
 const OWNED_ASSET_PREFIX: u8 = b'A';
 const ADDRESS_PREFIX: u8 = b'C';
 const SHARD_PREFIX: u8 = b'H';
 const METADATA_PREFIX: u8 = b'M';
-const REGULAR_ACCOUNT_PREFIX: u8 = b'R';
 const ASSET_SCHEME_PREFIX: u8 = b'S';
 const SHARD_TEXT_PREFIX: u8 = b'X';

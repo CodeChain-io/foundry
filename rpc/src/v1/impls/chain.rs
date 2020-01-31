@@ -20,7 +20,7 @@ use super::super::types::{Block, BlockNumberAndHash, Transaction, UnsignedTransa
 use ccore::{AccountData, BlockId, EngineInfo, ExecuteClient, MiningBlockChainClient, Shard, TermInfo};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
-use ckey::{public_to_address, NetworkId, PlatformAddress, Public};
+use ckey::{public_to_address, NetworkId, PlatformAddress};
 use cstate::FindActionHandler;
 use ctypes::transaction::Action;
 use ctypes::{BlockHash, BlockNumber, ShardId, Tracker, TxHash};
@@ -92,20 +92,6 @@ where
         let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
         let address = aaddress.try_address().map_err(errors::core)?;
         Ok(self.client.balance(address, block_id.into()).map(Into::into))
-    }
-
-    fn get_regular_key(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<Public>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        let address = address.try_address().map_err(errors::core)?;
-        Ok(self.client.regular_key(address, block_id.into()))
-    }
-
-    fn get_regular_key_owner(&self, public: Public, block_number: Option<u64>) -> Result<Option<PlatformAddress>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        Ok(self.client.regular_key_owner(&public_to_address(&public), block_id.into()).and_then(|address| {
-            let network_id = self.client.network_id();
-            Some(PlatformAddress::new_v1(network_id, address))
-        }))
     }
 
     fn get_genesis_accounts(&self) -> Result<Vec<PlatformAddress>> {
@@ -190,7 +176,6 @@ where
                 "increaseAssetSupply" => Some(common_parameters.min_asset_supply_increase_cost()),
                 "unwrapCCC" => Some(common_parameters.min_asset_unwrap_ccc_cost()),
                 "pay" => Some(common_parameters.min_pay_transaction_cost()),
-                "setRegularKey" => Some(common_parameters.min_set_regular_key_transaction_cost()),
                 "createShard" => Some(common_parameters.min_create_shard_transaction_cost()),
                 "setShardOwners" => Some(common_parameters.min_set_shard_owners_transaction_cost()),
                 "setShardUsers" => Some(common_parameters.min_set_shard_users_transaction_cost()),
