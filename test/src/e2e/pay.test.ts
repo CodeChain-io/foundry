@@ -16,7 +16,6 @@
 
 import { expect } from "chai";
 import "mocha";
-import { PlatformAddress } from "codechain-primitives/lib";
 import { aliceAddress, aliceSecret, faucetAddress } from "../helper/constants";
 import CodeChain from "../helper/spawn";
 
@@ -56,78 +55,6 @@ describe("Pay", async function() {
                 transactionHash: `0x${pay.hash().toString()}`
             })
         ).not.null;
-    });
-
-    it("Cannot pay to regular key", async function() {
-        const charge = await node.sendPayTx({
-            quantity: 100000,
-            recipient: aliceAddress
-        });
-        expect(
-            await node.rpc.chain.containsTransaction({
-                transactionHash: `0x${charge.hash().toString()}`
-            })
-        ).be.true;
-        expect(
-            await node.rpc.chain.getTransaction({
-                transactionHash: `0x${charge.hash().toString()}`
-            })
-        ).not.null;
-
-        const privKey = node.sdk.util.generatePrivateKey();
-        const pubKey = node.sdk.util.getPublicFromPrivate(privKey);
-        const aliceSeq = (await node.rpc.chain.getSeq({
-            address: aliceAddress.toString(),
-            blockNumber: null
-        }))!;
-        await node.setRegularKey(pubKey, {
-            seq: aliceSeq,
-            secret: aliceSecret
-        });
-        const addressOfRegularKey = PlatformAddress.fromPublic(pubKey, {
-            networkId: node.sdk.networkId
-        });
-
-        const seq = (await node.rpc.chain.getSeq({
-            address: faucetAddress.toString(),
-            blockNumber: null
-        }))!;
-        const blockNumber = await node.getBestBlockNumber();
-
-        await node.rpc.devel!.stopSealing();
-
-        const pay = await node.sendPayTx({ quantity: 0, seq });
-        const fail = await node.sendPayTx({
-            quantity: 100000,
-            recipient: addressOfRegularKey,
-            seq: seq + 1
-        });
-
-        await node.rpc.devel!.startSealing();
-        await node.waitBlockNumber(blockNumber + 1);
-
-        expect(
-            await node.rpc.chain.containsTransaction({
-                transactionHash: `0x${charge.hash().toString()}`
-            })
-        ).be.true;
-        expect(
-            await node.rpc.chain.getTransaction({
-                transactionHash: `0x${pay.hash().toString()}`
-            })
-        ).not.null;
-
-        expect(
-            await node.rpc.chain.containsTransaction({
-                transactionHash: `0x${fail.hash().toString()}`
-            })
-        ).be.false;
-        expect(
-            await node.rpc.chain.getTransaction({
-                transactionHash: `0x${fail.hash().toString()}`
-            })
-        ).null;
-        expect(await node.sdk.rpc.chain.getErrorHint(fail.hash())).not.null;
     });
 
     afterEach(function() {

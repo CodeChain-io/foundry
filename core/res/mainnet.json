@@ -65,7 +65,6 @@
     "maxTextContentSize": "0x0200",
     "networkID": "cc",
     "minPayCost" : 100,
-    "minSetRegularKeyCost" : 10000,
     "minCreateShardCost" : 1000000,
     "minSetShardOwnersCost" : 100000,
     "minSetShardUsersCost" : 10000,

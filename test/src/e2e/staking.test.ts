@@ -927,27 +927,6 @@ describe("Staking", function() {
         );
     });
 
-    it("Shouldn't accept regular key to self nominate", async function() {
-        const privKey = node.sdk.util.generatePrivateKey();
-        const pubKey = node.sdk.util.getPublicFromPrivate(privKey);
-
-        await node.setRegularKey(pubKey, {
-            seq: (await node.rpc.chain.getSeq({
-                address: validator0Address.toString()
-            }))!,
-            secret: validator0Secret
-        });
-
-        await node.sendSignedTransactionExpectedToFail(() =>
-            selfNominate({
-                senderAddress: validator0Address,
-                senderSecret: privKey,
-                deposit: 0,
-                metadata: null
-            })
-        );
-    });
-
     afterEach(async function() {
         if (this.currentTest!.state === "failed") {
             node.keepLogs();

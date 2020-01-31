@@ -21,7 +21,6 @@ pub mod account;
 pub mod action_data;
 pub mod dummy_shard_text;
 pub mod metadata;
-pub mod regular_account;
 pub mod shard;
 
 #[derive(Clone, Copy)]
@@ -30,6 +29,5 @@ enum Prefix {
     Account = b'C',
     Shard = b'H',
     Metadata = b'M',
-    RegularAccount = b'R',
     ShardText = b'X',
 }

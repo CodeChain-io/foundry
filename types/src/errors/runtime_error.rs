@@ -37,10 +37,6 @@ pub enum Error {
     InvalidShardId(ShardId),
     InvalidTransferDestination,
     NewOwnersMustContainSender,
-    RegularKeyAlreadyInUse,
-    RegularKeyAlreadyInUseAsPlatformAccount,
-    /// Tried to use master key even register key is registered
-    CannotUseMasterKey,
     InvalidSeq(Mismatch<u64>),
     NonActiveAccount {
         address: Address,
@@ -63,15 +59,12 @@ enum ErrorID {
     InvalidShardID = 3,
     InvalidTransferDestination = 4,
     NewOwnersMustContainSender = 5,
-    RegularKeyAlreadyInUse = 6,
-    RegularKeyAlreadyInUseAsPlatform = 7,
-    CannotUseMasterKey = 8,
-    InvalidSeq = 9,
-    NonActiveAccount = 10,
-    FailedToHandleCustomAction = 11,
-    SignatureOfInvalid = 12,
-    InsufficientStakes = 13,
-    InvalidValidatorIndex = 14,
+    InvalidSeq = 6,
+    NonActiveAccount = 7,
+    FailedToHandleCustomAction = 8,
+    SignatureOfInvalid = 9,
+    InsufficientStakes = 10,
+    InvalidValidatorIndex = 11,
 }
 
 impl Encodable for ErrorID {
@@ -89,15 +82,12 @@ impl Decodable for ErrorID {
             3 => Ok(ErrorID::InvalidShardID),
             4 => Ok(ErrorID::InvalidTransferDestination),
             5 => Ok(ErrorID::NewOwnersMustContainSender),
-            6 => Ok(ErrorID::RegularKeyAlreadyInUse),
-            7 => Ok(ErrorID::RegularKeyAlreadyInUseAsPlatform),
-            8 => Ok(ErrorID::CannotUseMasterKey),
-            9 => Ok(ErrorID::InvalidSeq),
-            10 => Ok(ErrorID::NonActiveAccount),
-            11 => Ok(ErrorID::FailedToHandleCustomAction),
-            12 => Ok(ErrorID::SignatureOfInvalid),
-            13 => Ok(ErrorID::InsufficientStakes),
-            14 => Ok(ErrorID::InvalidValidatorIndex),
+            6 => Ok(ErrorID::InvalidSeq),
+            7 => Ok(ErrorID::NonActiveAccount),
+            8 => Ok(ErrorID::FailedToHandleCustomAction),
+            9 => Ok(ErrorID::SignatureOfInvalid),
+            10 => Ok(ErrorID::InsufficientStakes),
+            11 => Ok(ErrorID::InvalidValidatorIndex),
             _ => Err(DecoderError::Custom("Unexpected ActionTag Value")),
         }
     }
@@ -116,9 +106,6 @@ impl TaggedRlp for RlpHelper {
             ErrorID::InvalidShardID => 2,
             ErrorID::InvalidTransferDestination => 1,
             ErrorID::NewOwnersMustContainSender => 1,
-            ErrorID::RegularKeyAlreadyInUse => 1,
-            ErrorID::RegularKeyAlreadyInUseAsPlatform => 1,
-            ErrorID::CannotUseMasterKey => 1,
             ErrorID::NonActiveAccount => 3,
             ErrorID::SignatureOfInvalid => 2,
             ErrorID::InsufficientStakes => 3,
@@ -145,11 +132,6 @@ impl Encodable for Error {
             Error::InvalidShardId(shard_id) => RlpHelper::new_tagged_list(s, ErrorID::InvalidShardID).append(shard_id),
             Error::InvalidTransferDestination => RlpHelper::new_tagged_list(s, ErrorID::InvalidTransferDestination),
             Error::NewOwnersMustContainSender => RlpHelper::new_tagged_list(s, ErrorID::NewOwnersMustContainSender),
-            Error::RegularKeyAlreadyInUse => RlpHelper::new_tagged_list(s, ErrorID::RegularKeyAlreadyInUse),
-            Error::RegularKeyAlreadyInUseAsPlatformAccount => {
-                RlpHelper::new_tagged_list(s, ErrorID::RegularKeyAlreadyInUseAsPlatform)
-            }
-            Error::CannotUseMasterKey => RlpHelper::new_tagged_list(s, ErrorID::CannotUseMasterKey),
             Error::NonActiveAccount {
                 address,
                 name,
@@ -184,9 +166,6 @@ impl Decodable for Error {
             ErrorID::InvalidShardID => Error::InvalidShardId(rlp.val_at(1)?),
             ErrorID::InvalidTransferDestination => Error::InvalidTransferDestination,
             ErrorID::NewOwnersMustContainSender => Error::NewOwnersMustContainSender,
-            ErrorID::RegularKeyAlreadyInUse => Error::RegularKeyAlreadyInUse,
-            ErrorID::RegularKeyAlreadyInUseAsPlatform => Error::RegularKeyAlreadyInUseAsPlatformAccount,
-            ErrorID::CannotUseMasterKey => Error::CannotUseMasterKey,
             ErrorID::NonActiveAccount => Error::NonActiveAccount {
                 address: rlp.val_at(1)?,
                 name: rlp.val_at(2)?,
@@ -220,13 +199,6 @@ impl Display for Error {
             Error::InvalidShardId(shard_id) => write!(f, "{} is an invalid shard id", shard_id),
             Error::InvalidTransferDestination => write!(f, "Transfer receiver is not valid account"),
             Error::NewOwnersMustContainSender => write!(f, "New owners must contain the sender"),
-            Error::RegularKeyAlreadyInUse => write!(f, "The regular key is already registered to another account"),
-            Error::RegularKeyAlreadyInUseAsPlatformAccount => {
-                write!(f, "The regular key is already used as a platform account")
-            }
-            Error::CannotUseMasterKey => {
-                write!(f, "Cannot use the master key because a regular key is already registered")
-            }
             Error::NonActiveAccount {
                 name,
                 address,

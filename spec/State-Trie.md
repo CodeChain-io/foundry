@@ -6,7 +6,6 @@ CodeChain has three kinds of states. The states are `Account`, `AssetScheme` and
 struct Account {
     balance: U256,
     seq: U256,
-    regular_key: Option<Public>
 }
 ```
 

@@ -264,7 +264,7 @@ impl From<LocalizedTransaction> for Transaction {
 
 #[cfg(test)]
 mod tests {
-    use ckey::{Address, Public, Signature};
+    use ckey::{Address, Signature};
     use ctypes::transaction::Action;
     use primitives::H256;
     use rlp::rlp_encode_and_decode_test;
@@ -298,23 +298,6 @@ mod tests {
                 action: Action::Pay {
                     receiver: Address::random(),
                     quantity: 300,
-                },
-            },
-            sig: Signature::default(),
-            hash: H256::default().into(),
-        }
-        .compute_hash());
-    }
-
-    #[test]
-    fn encode_and_decode_set_regular_key_transaction() {
-        rlp_encode_and_decode_test!(UnverifiedTransaction {
-            unsigned: Transaction {
-                seq: 30,
-                fee: 40,
-                network_id: "tc".into(),
-                action: Action::SetRegularKey {
-                    key: Public::random(),
                 },
             },
             sig: Signature::default(),
