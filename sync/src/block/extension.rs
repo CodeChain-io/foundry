@@ -745,7 +745,6 @@ impl Extension {
         match self.header_downloaders.entry(*from) {
             Entry::Occupied(mut peer) => {
                 if !peer.get_mut().update(seq, best_hash) {
-                    // FIXME: It should be an error level if the consensus is PoW.
                     cdebug!(SYNC, "Peer #{} status updated but score is less than before", from);
                     return
                 }
