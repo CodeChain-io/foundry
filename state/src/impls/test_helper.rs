@@ -30,14 +30,6 @@ macro_rules! pay {
     };
 }
 
-macro_rules! set_regular_key {
-    ($key:expr) => {
-        $crate::ctypes::transaction::Action::SetRegularKey {
-            key: $key,
-        }
-    };
-}
-
 macro_rules! set_shard_owners {
     (shard_id: $shard_id:expr, $owners:expr) => {
         $crate::ctypes::transaction::Action::SetShardOwners {
@@ -78,11 +70,6 @@ macro_rules! transaction {
 
 macro_rules! set_top_level_state {
     ($state: expr, []) => {
-    };
-    ($state:expr, [(regular_key: $signer:expr => $key:expr) $(,$x:tt)*]) => {
-        assert_eq!(Ok(()), $state.set_regular_key(&$signer, &$key));
-
-        set_top_level_state!($state, [$($x),*]);
     };
     ($state:expr, [(account: $addr:expr => balance: $quantity:expr) $(,$x:tt)*]) => {
         assert_eq!(Ok(()), $state.set_balance(&$addr, $quantity));
@@ -137,14 +124,6 @@ macro_rules! check_top_level_state {
         assert_eq!(Ok($balance), $state.balance(&$addr));
 
         check_top_level_state!($state, [$($x),*]);
-    };
-    ($state:expr, [(account: $addr:expr => (seq: $seq:expr, balance: $balance:expr, key: $key:expr)) $(,$x:tt)*]) => {
-        assert_eq!(Ok(Some($key)), $state.regular_key(&$addr));
-        check_top_level_state!($state, [(account: $addr => (seq: $seq, balance: $balance)) $(,$x)*]);
-    };
-    ($state:expr, [(account: $addr:expr => (seq: $seq:expr, balance: $balance:expr, key)) $(,$x:tt)*]) => {
-        assert_eq!(Ok(None), $state.regular_key(&$addr));
-        check_top_level_state!($state, [(account: $addr => (seq: $seq, balance: $balance)) $(,$x)*]);
     };
     ($state:expr, [(account: $addr:expr) $(,$x:tt)*]) => {
         check_top_level_state!($state, [(account: $addr => (seq: 0, balance: 0)) $(,$x)*]);

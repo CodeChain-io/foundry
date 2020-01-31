@@ -80,7 +80,6 @@ mod tests {
                 "maxTextContentSize": "0x0200",
                 "networkID" : "tc",
                 "minPayCost" : 10,
-                "minSetRegularKeyCost" : 11,
                 "minCreateShardCost" : 12,
                 "minSetShardOwnersCost" : 13,
                 "minSetShardUsersCost" : 14,

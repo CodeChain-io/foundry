@@ -61,7 +61,6 @@ describe("Term change", function() {
             0x0200, // maxTextContentSize
             "tc", // networkID
             10, // minPayCost
-            10, // minSetRegularKeyCost
             10, // minCreateShardCost
             10, // minSetShardOwnersCost
             10, // minSetShardUsersCost

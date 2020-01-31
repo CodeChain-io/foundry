@@ -24,7 +24,6 @@ enum Action {
     ChangeAssetScheme { ..., },
     IncreaseAssetSupply { ..., },
     Pay { ..., },
-    SetRegularKey { ..., },
     WrapCCC { ..., },
     UnwrapCCC { ..., },
     Custom { ..., },
@@ -170,17 +169,6 @@ IncreaseAssetSupply {
 Pay {
     receiver: Address,
     quantity: u64,
-}
-```
-
-## SetRegularKey
-
-`SetRegularKey` sets the regular `key` of the payer.
-It overwrites the existing one if a key already exists.
-
-```rust
-SetRegularKey {
-    key: Public,
 }
 ```
 
