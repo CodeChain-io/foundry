@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -148,24 +148,6 @@ impl ActionWithTracker {
                 content,
                 tracker: tracker.unwrap(),
             },
-            ActionType::MintAsset {
-                ..
-            } => unimplemented!("To be removed"),
-            ActionType::TransferAsset {
-                ..
-            } => unimplemented!("To be removed"),
-            ActionType::ChangeAssetScheme {
-                ..
-            } => unimplemented!("To be removed"),
-            ActionType::IncreaseAssetSupply {
-                ..
-            } => unimplemented!("To be removed"),
-            ActionType::UnwrapCCC {
-                ..
-            } => unimplemented!("To be removed"),
-            ActionType::WrapCCC {
-                ..
-            } => unimplemented!("To be removed"),
         }
     }
 }

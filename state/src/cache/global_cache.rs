@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
 
 use super::lru_cache::LruCache;
 use super::{ShardCache, TopCache};
-use crate::{Account, ActionData, AssetScheme, Metadata, OwnedAsset, RegularAccount, Shard, ShardText};
+use crate::{Account, ActionData, Metadata, RegularAccount, Shard, ShardText};
 use ctypes::ShardId;
 use std::collections::{HashMap, HashSet};
 
@@ -27,21 +27,11 @@ pub struct GlobalCache {
     shard: LruCache<Shard>,
     action_data: LruCache<ActionData>,
 
-    asset_scheme: LruCache<AssetScheme>,
-    asset: LruCache<OwnedAsset>,
     shard_text: LruCache<ShardText>,
 }
 
 impl GlobalCache {
-    pub fn new(
-        account: usize,
-        regular_account: usize,
-        shard: usize,
-        action_data: usize,
-        asset_scheme: usize,
-        asset: usize,
-        shard_text: usize,
-    ) -> Self {
+    pub fn new(account: usize, regular_account: usize, shard: usize, action_data: usize, shard_text: usize) -> Self {
         Self {
             account: LruCache::new(account),
             regular_account: LruCache::new(regular_account),
@@ -49,8 +39,6 @@ impl GlobalCache {
             shard: LruCache::new(shard),
             action_data: LruCache::new(action_data),
 
-            asset_scheme: LruCache::new(asset_scheme),
-            asset: LruCache::new(asset),
             shard_text: LruCache::new(shard_text),
         }
     }
@@ -67,11 +55,6 @@ impl GlobalCache {
 
     fn shard_cache(&self, shard_id: ShardId) -> ShardCache {
         ShardCache::new(
-            self.asset_scheme
-                .iter()
-                .filter(|(addr, _)| addr.shard_id() == shard_id)
-                .map(|(addr, item)| (*addr, item.clone())),
-            self.asset.iter().filter(|(addr, _)| addr.shard_id() == shard_id).map(|(addr, item)| (*addr, item.clone())),
             self.shard_text
                 .iter()
                 .filter(|(addr, _)| addr.shard_id() == shard_id)
@@ -80,12 +63,7 @@ impl GlobalCache {
     }
 
     fn shard_ids(&self) -> HashSet<ShardId> {
-        self.asset_scheme
-            .iter()
-            .map(|(addr, _)| addr.shard_id())
-            .chain(self.asset.iter().map(|(addr, _)| addr.shard_id()))
-            .chain(self.shard_text.iter().map(|(addr, _)| addr.shard_id()))
-            .collect()
+        self.shard_text.iter().map(|(addr, _)| addr.shard_id()).collect()
     }
 
     pub fn shard_caches(&self) -> HashMap<ShardId, ShardCache> {
@@ -126,26 +104,6 @@ impl GlobalCache {
             };
         }
 
-        let mut cached_asset_schemes: Vec<_> =
-            shard_caches.iter().flat_map(|(_, shard_cache)| shard_cache.cached_asset_schemes().into_iter()).collect();
-        cached_asset_schemes.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-        for (_, addr, item) in cached_asset_schemes.into_iter() {
-            match item {
-                Some(item) => self.asset_scheme.insert(addr, item),
-                None => self.asset_scheme.remove(&addr),
-            };
-        }
-
-        let mut cached_assets: Vec<_> =
-            shard_caches.iter().flat_map(|(_, shard_cache)| shard_cache.cached_assets().into_iter()).collect();
-        cached_assets.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-        for (_, addr, item) in cached_assets.into_iter() {
-            match item {
-                Some(item) => self.asset.insert(addr, item),
-                None => self.asset.remove(&addr),
-            };
-        }
-
         let mut cached_shard_texts: Vec<_> =
             shard_caches.iter().flat_map(|(_, shard_cache)| shard_cache.cached_shard_text().into_iter()).collect();
         cached_shard_texts.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
@@ -163,8 +121,6 @@ impl GlobalCache {
         self.metadata.clear();
         self.shard.clear();
         self.action_data.clear();
-        self.asset_scheme.clear();
-        self.asset.clear();
         self.shard_text.clear();
     }
 }
@@ -176,10 +132,8 @@ impl Default for GlobalCache {
         const N_REGULAR_ACCOUNT: usize = 100;
         const N_SHARD: usize = 100;
         const N_ACTION_DATA: usize = 10;
-        const N_ASSET_SCHEME: usize = 100;
-        const N_ASSET: usize = 1000;
         const N_SHARD_TEXT: usize = 1000;
-        Self::new(N_ACCOUNT, N_REGULAR_ACCOUNT, N_SHARD, N_ACTION_DATA, N_ASSET_SCHEME, N_ASSET, N_SHARD_TEXT)
+        Self::new(N_ACCOUNT, N_REGULAR_ACCOUNT, N_SHARD, N_ACTION_DATA, N_SHARD_TEXT)
     }
 }
 
@@ -192,8 +146,6 @@ impl Clone for GlobalCache {
             shard: self.shard.clone(),
             action_data: self.action_data.clone(),
 
-            asset_scheme: self.asset_scheme.clone(),
-            asset: self.asset.clone(),
             shard_text: self.shard_text.clone(),
         }
     }
