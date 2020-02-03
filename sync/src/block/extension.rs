@@ -1037,8 +1037,51 @@ impl Extension {
         }
     }
 
+    fn import_blocks(&mut self, blocks: Vec<(BlockHash, Vec<UnverifiedTransaction>)>) {
+        let mut remains = Vec::new();
+        let mut error_target = None;
+        for (hash, transactions) in blocks {
+            if error_target.is_some() {
+                remains.push((hash, transactions));
+                continue
+            }
+            let header =
+                self.client.block_header(&BlockId::Hash(hash)).expect("Downloaded body's header must exist").decode();
+            let calculated_transactions_root =
+                skewed_merkle_root(BLAKE_NULL_RLP, transactions.iter().map(Encodable::rlp_bytes));
+            if *header.transactions_root() != calculated_transactions_root {
+                cwarn!(SYNC, "Received corrupted body for ${}({}", header.number(), hash);
+                error_target = Some((hash, transactions.is_empty()));
+                continue
+            }
+
+            let block = Block {
+                header,
+                transactions,
+            };
+            cdebug!(SYNC, "Body download completed for #{}({})", block.header.number(), hash);
+            match self.client.import_block(block.rlp_bytes(&Seal::With)) {
+                Err(BlockImportError::Import(ImportError::AlreadyInChain)) => {
+                    cwarn!(SYNC, "Downloaded already existing block({})", hash)
+                }
+                Err(BlockImportError::Import(ImportError::AlreadyQueued)) => {
+                    cwarn!(SYNC, "Downloaded already queued in the verification queue({})", hash)
+                }
+                Err(err) => {
+                    // FIXME: handle import errors
+                    cwarn!(SYNC, "Cannot import block({}): {:?}", hash, err);
+                    break
+                }
+                _ => {}
+            }
+        }
+        if let Some((hash, is_empty)) = error_target {
+            self.body_downloader.re_request(hash, is_empty, remains);
+        }
+    }
+
     fn on_body_response(&mut self, hashes: Vec<BlockHash>, bodies: Vec<Vec<UnverifiedTransaction>>) {
-        ctrace!(SYNC, "Received body response with lenth({}) {:?}", hashes.len(), hashes);
+        ctrace!(SYNC, "Received body response with length({}) {:?}", hashes.len(), hashes);
 
         match &self.state {
             State::SnapshotBody {
@@ -1064,36 +1107,9 @@ impl Extension {
                 }
             }
             State::Full => {
-                {
-                    self.body_downloader.import_bodies(hashes, bodies);
-                    let completed = self.body_downloader.drain();
-                    for (hash, transactions) in completed {
-                        let header = self
-                            .client
-                            .block_header(&BlockId::Hash(hash))
-                            .expect("Downloaded body's header must exist")
-                            .decode();
-                        let block = Block {
-                            header,
-                            transactions,
-                        };
-                        cdebug!(SYNC, "Body download completed for #{}({})", block.header.number(), hash);
-                        match self.client.import_block(block.rlp_bytes(&Seal::With)) {
-                            Err(BlockImportError::Import(ImportError::AlreadyInChain)) => {
-                                cwarn!(SYNC, "Downloaded already existing block({})", hash)
-                            }
-                            Err(BlockImportError::Import(ImportError::AlreadyQueued)) => {
-                                cwarn!(SYNC, "Downloaded already queued in the verification queue({})", hash)
-                            }
-                            Err(err) => {
-                                // FIXME: handle import errors
-                                cwarn!(SYNC, "Cannot import block({}): {:?}", hash, err);
-                                break
-                            }
-                            _ => {}
-                        }
-                    }
-                }
+                self.body_downloader.import_bodies(hashes, bodies);
+                let completed = self.body_downloader.drain();
+                self.import_blocks(completed);
 
                 let mut peer_ids: Vec<_> = self.header_downloaders.keys().cloned().collect();
                 peer_ids.shuffle(&mut thread_rng());
