@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::mem_pool::{Error as MemPoolError, MemPool};
-pub use super::mem_pool_types::MemPoolFees;
+pub use super::mem_pool_types::MemPoolMinFees;
 use super::mem_pool_types::{MemPoolInput, TxOrigin, TxTimelock};
 use super::{fetch_account_creator, MinerService, MinerStatus, TransactionImportResult};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
@@ -69,7 +69,7 @@ pub struct MinerOptions {
     pub mem_pool_fee_bump_shift: usize,
     pub allow_create_shard: bool,
     /// Minimum fees configured by the machine.
-    pub mem_pool_fees: MemPoolFees,
+    pub mem_pool_min_fees: MemPoolMinFees,
 }
 
 impl Default for MinerOptions {
@@ -83,7 +83,7 @@ impl Default for MinerOptions {
             mem_pool_memory_limit: Some(2 * 1024 * 1024),
             mem_pool_fee_bump_shift: 3,
             allow_create_shard: false,
-            mem_pool_fees: Default::default(),
+            mem_pool_min_fees: Default::default(),
         }
     }
 }
@@ -137,7 +137,7 @@ impl Miner {
             mem_limit,
             options.mem_pool_fee_bump_shift,
             db,
-            options.mem_pool_fees,
+            options.mem_pool_min_fees,
         )));
 
         Self {
