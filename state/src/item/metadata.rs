@@ -131,7 +131,7 @@ impl CacheableItem for Metadata {
     }
 }
 
-const PREFIX: u8 = super::METADATA_PREFIX;
+const PREFIX: u8 = super::Prefix::Metadata as u8;
 
 const INITIAL_LEN: usize = 4;
 const TERM_LEN: usize = INITIAL_LEN + 2;

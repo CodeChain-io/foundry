@@ -24,8 +24,12 @@ pub mod metadata;
 pub mod regular_account;
 pub mod shard;
 
-const ADDRESS_PREFIX: u8 = b'C';
-const SHARD_PREFIX: u8 = b'H';
-const METADATA_PREFIX: u8 = b'M';
-const REGULAR_ACCOUNT_PREFIX: u8 = b'R';
-const SHARD_TEXT_PREFIX: u8 = b'X';
+#[derive(Clone, Copy)]
+#[repr(u8)]
+enum Prefix {
+    Account = b'C',
+    Shard = b'H',
+    Metadata = b'M',
+    RegularAccount = b'R',
+    ShardText = b'X',
+}
