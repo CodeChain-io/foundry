@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 use crate::client::ConsensusClient;
 use crate::consensus::{ConsensusMessage, ValidatorSet};
 use ccrypto::Blake;
-use ckey::{recover, Address, Signature};
+use ckey::{verify, Address, Ed25519Public as Public, Signature};
 use ctypes::errors::SyntaxError;
 use ctypes::CommonParams;
 use primitives::{Bytes, H256};
@@ -58,6 +58,22 @@ impl Decodable for ActionTag {
     }
 }
 
+#[derive(Debug, PartialEq, RlpEncodable, RlpDecodable)]
+pub struct Approval {
+    signature: Signature,
+    signer_public: Public,
+}
+
+impl Approval {
+    pub fn signature(&self) -> &Signature {
+        &self.signature
+    }
+
+    pub fn signer_public(&self) -> &Public {
+        &self.signer_public
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum Action {
     TransferCCS {
@@ -84,7 +100,7 @@ pub enum Action {
     ChangeParams {
         metadata_seq: u64,
         params: Box<CommonParams>,
-        signatures: Vec<Signature>,
+        approvals: Vec<Approval>,
     },
     // TODO: ConsensusMessage is tied to the Tendermint
     ReportDoubleVote {
@@ -127,20 +143,24 @@ impl Action {
             Action::ChangeParams {
                 metadata_seq,
                 params,
-                signatures,
+                approvals,
             } => {
                 params.verify_change(current_params).map_err(SyntaxError::InvalidCustomAction)?;
                 let action = Action::ChangeParams {
                     metadata_seq: *metadata_seq,
                     params: params.clone(),
-                    signatures: vec![],
+                    approvals: vec![],
                 };
                 let encoded_action = H256::blake(rlp::encode(&action));
-                for signature in signatures {
-                    // XXX: Signature recovery is an expensive job. Should we do it twice?
-                    recover(&signature, &encoded_action).map_err(|err| {
-                        SyntaxError::InvalidCustomAction(format!("Cannot decode the signature: {}", err))
-                    })?;
+                for approval in approvals {
+                    if !verify(approval.signature(), &encoded_action, approval.signer_public()) {
+                        return Err(SyntaxError::InvalidCustomAction(format!(
+                            "Cannot decode the signature {:?} with public {:?} and the message {:?}",
+                            approval.signature(),
+                            approval.signer_public(),
+                            &encoded_action,
+                        )))
+                    }
                 }
             }
             Action::ReportDoubleVote {
@@ -191,8 +211,8 @@ impl Action {
                     })?
                     .hash();
                 let signer = validators.get(&parent_hash, signer_idx1);
-                if message1.verify(&signer) != Ok(true) || message2.verify(&signer) != Ok(true) {
-                    return Err(SyntaxError::InvalidCustomAction(String::from("Schnorr signature verification fails")))
+                if !message1.verify(&signer) || !message2.verify(&signer) {
+                    return Err(SyntaxError::InvalidCustomAction(String::from("Ed25519 signature verification fails")))
                 }
             }
         }
@@ -241,14 +261,14 @@ impl Encodable for Action {
             Action::ChangeParams {
                 metadata_seq,
                 params,
-                signatures,
+                approvals,
             } => {
-                s.begin_list(3 + signatures.len())
+                s.begin_list(3 + approvals.len())
                     .append(&ActionTag::ChangeParams)
                     .append(metadata_seq)
                     .append(&**params);
-                for signature in signatures {
-                    s.append(signature);
+                for approval in approvals {
+                    s.append(approval);
                 }
             }
             Action::ReportDoubleVote {
@@ -344,11 +364,11 @@ impl Decodable for Action {
                 }
                 let metadata_seq = rlp.val_at(1)?;
                 let params = Box::new(rlp.val_at(2)?);
-                let signatures = (3..item_count).map(|i| rlp.val_at(i)).collect::<Result<_, _>>()?;
+                let approvals = (3..item_count).map(|i| rlp.val_at(i)).collect::<Result<_, _>>()?;
                 Ok(Action::ChangeParams {
                     metadata_seq,
                     params,
-                    signatures,
+                    approvals,
                 })
             }
             ActionTag::ReportDoubleVote => {
@@ -375,7 +395,7 @@ mod tests {
     use super::*;
     use crate::client::TestBlockChainClient;
     use crate::consensus::{ConsensusMessage, DynamicValidator, Step, VoteOn, VoteStep};
-    use ckey::sign_schnorr;
+    use ckey::sign;
     use ctypes::BlockHash;
     use rlp::rlp_encode_and_decode_test;
 
@@ -384,7 +404,7 @@ mod tests {
         let action = Action::ChangeParams {
             metadata_seq: 3,
             params: CommonParams::default_for_test().into(),
-            signatures: vec![],
+            approvals: vec![],
         };
         assert_eq!(
             Err(DecoderError::RlpIncorrectListLen {
@@ -400,7 +420,16 @@ mod tests {
         rlp_encode_and_decode_test!(Action::ChangeParams {
             metadata_seq: 3,
             params: CommonParams::default_for_test().into(),
-            signatures: vec![Signature::random(), Signature::random()],
+            approvals: vec![
+                Approval {
+                    signature: Signature::random(),
+                    signer_public: Public::random(),
+                },
+                Approval {
+                    signature: Signature::random(),
+                    signer_public: Public::random(),
+                }
+            ],
         });
     }
 
@@ -440,7 +469,7 @@ mod tests {
         let reversed_idx = client.get_validators().len() - 1 - signer_index;
         let pubkey = *client.get_validators().get(reversed_idx).unwrap().pubkey();
         let privkey = *client.validator_keys.read().get(&pubkey).unwrap();
-        let signature = sign_schnorr(&privkey, &twisted.hash()).unwrap();
+        let signature = sign(&privkey, &twisted.hash()).unwrap();
 
         ConsensusMessage {
             signature,
@@ -635,7 +664,7 @@ mod tests {
             &vote_step_twister,
             &|v| v,
         );
-        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("Schnorr signature verification fails")));
+        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("Ed25519 signature verification fails")));
         assert_eq!(result, expected_err);
     }
 
@@ -668,7 +697,7 @@ mod tests {
             &|v| v,
             &block_hash_twister,
         );
-        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("Schnorr signature verification fails")));
+        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("Ed25519 signature verification fails")));
         assert_eq!(result, expected_err);
     }
 }

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 use super::super::BitSet;
 use super::message::VoteStep;
 use crate::block::{IsBlock, SealedBlock};
-use ckey::SchnorrSignature;
+use ckey::Signature;
 use ctypes::BlockHash;
 use primitives::Bytes;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -250,14 +250,14 @@ impl<'a> TendermintSealView<'a> {
         )
     }
 
-    pub fn signatures(&self) -> Result<Vec<(usize, SchnorrSignature)>, DecoderError> {
+    pub fn signatures(&self) -> Result<Vec<(usize, Signature)>, DecoderError> {
         let precommits = self.precommits();
         let bitset = self.bitset()?;
         debug_assert_eq!(bitset.count(), precommits.item_count()?);
 
         let bitset_iter = bitset.true_index_iter();
 
-        let signatures = precommits.iter().map(|rlp| rlp.as_val::<SchnorrSignature>());
+        let signatures = precommits.iter().map(|rlp| rlp.as_val::<Signature>());
         bitset_iter
             .zip(signatures)
             .map(|(index, signature)| signature.map(|signature| (index, signature)))
@@ -299,13 +299,13 @@ impl TwoThirdsMajority {
 
 #[derive(Debug, PartialEq)]
 pub enum Proposal {
-    ProposalReceived(BlockHash, Bytes, SchnorrSignature),
+    ProposalReceived(BlockHash, Bytes, Signature),
     ProposalImported(BlockHash),
     None,
 }
 
 impl Proposal {
-    pub fn new_received(hash: BlockHash, block: Bytes, signature: SchnorrSignature) -> Self {
+    pub fn new_received(hash: BlockHash, block: Bytes, signature: Signature) -> Self {
         Proposal::ProposalReceived(hash, block, signature)
     }
 

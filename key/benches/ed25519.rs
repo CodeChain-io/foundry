@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,34 +19,34 @@
 extern crate codechain_key as ckey;
 extern crate test;
 
-use ckey::{recover_schnorr, sign_schnorr, verify_schnorr, Generator, Message, Random};
+use ckey::{sign, verify, Ed25519KeyPair, Generator, KeyPairTrait, Message, Random};
 use test::Bencher;
 
 #[bench]
-fn schnorr_sign(b: &mut Bencher) {
+fn ec25519_sign(b: &mut Bencher) {
     b.iter(|| {
-        let key_pair = Random.generate().unwrap();
+        let key_pair: Ed25519KeyPair = Random.generate().unwrap();
         let message = Message::random();
-        let _signature = sign_schnorr(key_pair.private(), &message).unwrap();
-    });
+        let _signature = sign(&message, key_pair.private());
+    })
 }
 
 #[bench]
-fn schnorr_sign_and_verify(b: &mut Bencher) {
+fn ed25519_sign_and_verify(b: &mut Bencher) {
     b.iter(|| {
-        let key_pair = Random.generate().unwrap();
+        let key_pair: Ed25519KeyPair = Random.generate().unwrap();
         let message = Message::random();
-        let signature = sign_schnorr(key_pair.private(), &message).unwrap();
-        assert_eq!(Ok(true), verify_schnorr(key_pair.public(), &signature, &message));
-    });
+        let signature = sign(&message, key_pair.private());
+        assert!(verify(&signature, &message, key_pair.public()));
+    })
 }
 
 #[bench]
-fn schnorr_sign_and_recover(b: &mut Bencher) {
+fn ed25519_sign_and_recover(b: &mut Bencher) {
     b.iter(|| {
-        let key_pair = Random.generate().unwrap();
+        let key_pair: Ed25519KeyPair = Random.generate().unwrap();
         let message = Message::random();
-        let signature = sign_schnorr(key_pair.private(), &message).unwrap();
-        assert_eq!(Ok(*key_pair.public()), recover_schnorr(&signature, &message));
+        let signature = sign(&message, key_pair.private());
+        assert!(verify(&signature, &message, key_pair.public()));
     });
 }

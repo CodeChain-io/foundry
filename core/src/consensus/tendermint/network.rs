@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@ use super::{
     ENGINE_TIMEOUT_TOKEN_NONCE_BASE,
 };
 use crate::consensus::EngineError;
-use ckey::SchnorrSignature;
+use ckey::Signature;
 use cnetwork::{Api, NetworkExtension, NodeId};
 use crossbeam_channel as crossbeam;
 use ctimer::TimerToken;
@@ -132,7 +132,7 @@ impl TendermintExtension {
         }
     }
 
-    fn broadcast_proposal_block(&self, signature: SchnorrSignature, view: View, message: Bytes) {
+    fn broadcast_proposal_block(&self, signature: Signature, view: View, message: Bytes) {
         let message = Arc::new(
             TendermintMessage::ProposalBlock {
                 signature,
@@ -483,7 +483,7 @@ pub enum Event {
         view: View,
     },
     BroadcastProposalBlock {
-        signature: SchnorrSignature,
+        signature: Signature,
         view: View,
         message: Bytes,
     },

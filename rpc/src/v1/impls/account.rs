@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::errors::{self, account_provider};
+use super::super::errors::{self, account_provider, core};
 use super::super::traits::Account;
 use super::super::types::{SendTransactionResult, UnsignedTransaction};
 use ccore::{AccountData, AccountProvider, EngineInfo, MinerService, MiningBlockChainClient, TermInfo};
-use ckey::{Password, PlatformAddress, Signature};
+use ckey::{secret_to_private, Password, PlatformAddress, Signature};
 use ctypes::transaction::IncompleteTransaction;
 use jsonrpc_core::Result;
 use lazy_static::lazy_static;
@@ -72,7 +72,7 @@ where
 
     fn create_account_from_secret(&self, secret: H256, passphrase: Option<Password>) -> Result<PlatformAddress> {
         self.account_provider
-            .insert_account(secret.into(), &passphrase.unwrap_or_default())
+            .insert_account(secret_to_private(secret).map_err(core)?, &passphrase.unwrap_or_default())
             .map(|address| PlatformAddress::new_v1(self.client.network_id(), address))
             .map_err(account_provider)
     }

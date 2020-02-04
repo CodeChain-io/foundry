@@ -18,7 +18,7 @@
 use crate::account::{Aes128Ctr, Cipher, Kdf, Pbkdf2, Prf};
 use crate::random::Random;
 use crate::{json, Error};
-use ckey::{public_to_address, Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Password, Secret};
+use ckey::{public_to_address, Address, Ed25519Private as Private, Password, Secret};
 use smallvec::SmallVec;
 use std::num::NonZeroU32;
 use std::str;
@@ -116,14 +116,16 @@ impl Crypto {
         if self.ciphertext.len() > 32 {
             return Err(Error::InvalidSecret)
         }
-
         let secret = self.do_decrypt(password, 32)?;
-        Ok(*Private::from_slice(&secret))
+        Ok(Secret::from_slice(&secret))
     }
 
     pub fn address(&self, password: &Password) -> Result<Address, Error> {
         let private = self.secret(password)?;
-        Ok(public_to_address(KeyPair::from_private(private.into())?.public()))
+        match Private::from_slice(&private) {
+            Some(private) => Ok(public_to_address(&private.public_key())),
+            None => Err(ckey::Error::InvalidSecret.into()),
+        }
     }
 
     /// Try to decrypt and return result as is
@@ -167,22 +169,26 @@ impl Crypto {
 
 #[cfg(test)]
 mod tests {
-    use super::{Crypto, Error};
+    use super::{Crypto, Error, Secret};
     use ckey::{Generator, Random};
 
     #[test]
     fn crypto_with_secret_create() {
         let keypair = Random.generate().unwrap();
         let private_key = keypair.private();
-        let crypto = Crypto::with_secret(keypair.private(), &"this is sparta".into(), 10240).unwrap();
+        let crypto =
+            Crypto::with_secret(&Secret::from_slice(keypair.private().as_ref()), &"this is sparta".into(), 10240)
+                .unwrap();
         let secret = crypto.secret(&"this is sparta".into()).unwrap();
-        assert_eq!(**private_key, secret);
+        assert_eq!(Secret::from_slice(private_key.as_ref()), secret);
     }
 
     #[test]
     fn crypto_with_secret_invalid_password() {
         let keypair = Random.generate().unwrap();
-        let crypto = Crypto::with_secret(keypair.private(), &"this is sparta".into(), 10240).unwrap();
+        let crypto =
+            Crypto::with_secret(&Secret::from_slice(&keypair.private().as_ref()), &"this is sparta".into(), 10240)
+                .unwrap();
         assert_matches!(crypto.secret(&"this is sparta!".into()), Err(Error::InvalidPassword))
     }
 

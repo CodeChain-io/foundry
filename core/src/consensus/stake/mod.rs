@@ -19,14 +19,13 @@ mod actions;
 mod distribute;
 
 use crate::client::ConsensusClient;
-use ccrypto::Blake;
-use ckey::{public_to_address, recover, Address, Ed25519Public as Public, Signature};
+use ckey::{public_to_address, Address, Ed25519Public as Public};
 use cstate::{ActionHandler, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::{RuntimeError, SyntaxError};
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{CommonParams, Header};
 use parking_lot::RwLock;
-use primitives::{Bytes, H256};
+use primitives::Bytes;
 use rlp::{Decodable, Rlp};
 use std::collections::btree_map::BTreeMap;
 use std::collections::hash_map::RandomState;
@@ -37,7 +36,7 @@ pub use self::action_data::{
     Banned, Candidates, CurrentValidators, Jail, NextValidators, PreviousValidators, Validator,
 };
 use self::action_data::{Delegation, IntermediateRewards, ReleaseResult, StakeAccount, Stakeholders};
-pub use self::actions::Action;
+pub use self::actions::{Action, Approval};
 pub use self::distribute::fee_distribute;
 use super::ValidatorSet;
 
@@ -128,8 +127,8 @@ impl ActionHandler for Stake {
             Action::ChangeParams {
                 metadata_seq,
                 params,
-                signatures,
-            } => change_params(state, metadata_seq, *params, &signatures),
+                approvals,
+            } => change_params(state, metadata_seq, *params, &approvals),
             Action::ReportDoubleVote {
                 message1,
                 ..
@@ -351,23 +350,16 @@ fn change_params(
     state: &mut TopLevelState,
     metadata_seq: u64,
     params: CommonParams,
-    signatures: &[Signature],
+    approvals: &[Approval],
 ) -> StateResult<()> {
     // Update state first because the signature validation is more expensive.
     state.update_params(metadata_seq, params)?;
 
-    let action = Action::ChangeParams {
-        metadata_seq,
-        params: params.into(),
-        signatures: vec![],
-    };
-    let encoded_action = H256::blake(rlp::encode(&action));
     let stakes = get_stakes(state)?;
-    let signed_stakes = signatures.iter().try_fold(0, |sum, signature| {
-        let public = recover(signature, &encoded_action).unwrap_or_else(|err| {
-            unreachable!("The transaction with an invalid signature cannot pass the verification: {}", err);
-        });
-        let address = public_to_address(&public);
+    // Approvals are verified
+    let signed_stakes = approvals.iter().try_fold(0, |sum, approval| {
+        let public = approval.signer_public();
+        let address = public_to_address(public);
         stakes.get(&address).map(|stake| sum + stake).ok_or_else(|| RuntimeError::SignatureOfInvalidAccount(address))
     })?;
     let total_stakes: u64 = stakes.values().sum();

@@ -51,7 +51,7 @@ impl SelfSigner {
         }
     }
 
-    pub fn sign_ecdsa(&self, hash: H256) -> Result<Signature, AccountProviderError> {
+    pub fn sign_ed25519(&self, hash: H256) -> Result<Signature, AccountProviderError> {
         let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
         let result = match &self.decrypted_account {
             Some(account) => account.sign(&hash)?,
@@ -65,6 +65,11 @@ impl SelfSigner {
 
     pub fn address(&self) -> Option<&Address> {
         self.signer.as_ref().map(|(address, _)| address)
+    }
+
+    /// Public Key of signer.
+    pub fn public(&self) -> Option<&Public> {
+        self.signer.as_ref().map(|(_address, public)| public)
     }
 }
 
@@ -181,14 +186,15 @@ impl AutoSelfNomination {
             },
         };
 
-        let signature = match signer.sign_ecdsa(*tx.hash()) {
+        let signature = match signer.sign_ed25519(*tx.hash()) {
             Ok(signature) => signature,
             Err(e) => {
                 cerror!(ENGINE, "Could not sign the message:{}", e);
                 return
             }
         };
-        let unverified = UnverifiedTransaction::new(tx, signature);
+        let signer_public = *signer.public().expect("Signer must be initialized");
+        let unverified = UnverifiedTransaction::new(tx, signature, signer_public);
         let signed = SignedTransaction::try_new(unverified).expect("secret is valid so it's recoverable");
 
         match client.queue_own_transaction(signed) {

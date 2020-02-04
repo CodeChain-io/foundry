@@ -17,7 +17,9 @@
 mod keypair;
 mod private;
 mod public;
+mod signature;
 
 pub use keypair::{public_to_address, KeyPair};
 pub use private::Private;
 pub use public::Public;
+pub use signature::{sign, verify, Ed25519Signature as Signature, SIGNATUREBYTES as SIGNATURE_LENGTH};

@@ -30,7 +30,8 @@ mod x25519;
 
 pub use crate::address::Address;
 pub use crate::ed25519::{
-    public_to_address, KeyPair as Ed25519KeyPair, Private as Ed25519Private, Public as Ed25519Public,
+    public_to_address, sign, verify, KeyPair as Ed25519KeyPair, Private as Ed25519Private, Public as Ed25519Public,
+    Signature, SIGNATURE_LENGTH,
 };
 pub use crate::error::Error;
 pub use crate::keypair::KeyPair as KeyPairTrait;

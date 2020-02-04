@@ -114,7 +114,7 @@ mod tests {
     use rlp::{Encodable, Rlp};
 
     use ccore::UnverifiedTransaction;
-    use ckey::{Address, Signature};
+    use ckey::{Address, Public, Signature};
     use ctypes::transaction::{Action, Transaction};
     use ctypes::Header;
 
@@ -151,6 +151,7 @@ mod tests {
                 network_id: "tc".into(),
             },
             Signature::default(),
+            Public::random(),
         );
 
         let message = ResponseMessage::Bodies(vec![vec![tx]]);

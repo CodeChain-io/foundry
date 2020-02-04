@@ -39,7 +39,7 @@ use crate::transaction::{SignedTransaction, UnverifiedTransaction};
 use crate::types::BlockStatus;
 use crate::views::BlockView;
 use crate::BlockId;
-use ckey::{public_to_address, verify_schnorr, Address, SchnorrSignature};
+use ckey::{public_to_address, verify, Address, Signature};
 use cnetwork::{EventSender, NodeId};
 use crossbeam_channel as crossbeam;
 use ctypes::transaction::{Action, Transaction};
@@ -136,7 +136,7 @@ pub enum Event {
     },
     Restore(crossbeam::Sender<()>),
     ProposalBlock {
-        signature: SchnorrSignature,
+        signature: Signature,
         view: View,
         message: Bytes,
         result: crossbeam::Sender<Option<Arc<dyn ConsensusClient>>>,
@@ -464,7 +464,7 @@ impl Worker {
         self.validators.next_block_proposer(prev_block_hash, view)
     }
 
-    fn first_proposal_at(&self, height: Height, view: View) -> Option<(SchnorrSignature, usize, Bytes)> {
+    fn first_proposal_at(&self, height: Height, view: View) -> Option<(Signature, usize, Bytes)> {
         let vote_step = VoteStep {
             height,
             view,
@@ -1232,7 +1232,7 @@ impl Worker {
                 Some(p) => p,
                 None => self.validators.get(&grand_parent_hash, bitset_index),
             };
-            if !verify_schnorr(&public, &signature, &precommit_vote_on.hash())? {
+            if !verify(&signature, &precommit_vote_on.hash(), &public) {
                 let address = public_to_address(&public);
                 return Err(EngineError::BlockNotAuthorized(address.to_owned()).into())
             }
@@ -1401,7 +1401,7 @@ impl Worker {
 
             let sender_public = self.validators.get(&prev_block_hash, signer_index);
 
-            if !message.verify(&sender_public).map_err(fmt_err)? {
+            if !message.verify(&sender_public) {
                 return Err(EngineError::MessageWithInvalidSignature {
                     height: prev_height,
                     signer_index,
@@ -1466,14 +1466,15 @@ impl Worker {
                 bytes: double.to_action().rlp_bytes(),
             },
         };
-        let signature = match self.signer.sign_ecdsa(*tx.hash()) {
+        let signature = match self.signer.sign_ed25519(*tx.hash()) {
             Ok(signature) => signature,
             Err(e) => {
                 cerror!(ENGINE, "Found double vote, but could not sign the message: {}", e);
                 return
             }
         };
-        let unverified = UnverifiedTransaction::new(tx, signature);
+        let signer_public = *self.signer.public().expect("Signer must be initialized");
+        let unverified = UnverifiedTransaction::new(tx, signature, signer_public);
         let signed = SignedTransaction::try_new(unverified).expect("secret is valid so it's recoverable");
 
         match self.client().queue_own_transaction(signed) {
@@ -1589,7 +1590,7 @@ impl Worker {
         &self,
         header: &Header,
         proposed_view: View,
-        signature: SchnorrSignature,
+        signature: Signature,
     ) -> Option<ConsensusMessage> {
         let prev_proposer_idx = self.block_proposer_idx(*header.parent_hash())?;
         let signer_index =
@@ -1695,13 +1696,7 @@ impl Worker {
         }
     }
 
-    fn send_proposal_block(
-        &self,
-        signature: SchnorrSignature,
-        view: View,
-        message: Bytes,
-        result: crossbeam::Sender<Bytes>,
-    ) {
+    fn send_proposal_block(&self, signature: Signature, view: View, message: Bytes, result: crossbeam::Sender<Bytes>) {
         let message = TendermintMessage::ProposalBlock {
             signature,
             message,
@@ -1757,7 +1752,7 @@ impl Worker {
 
     fn on_proposal_message(
         &mut self,
-        signature: SchnorrSignature,
+        signature: Signature,
         proposed_view: View,
         bytes: Bytes,
     ) -> Option<Arc<dyn ConsensusClient>> {
@@ -1805,16 +1800,9 @@ impl Worker {
             }
 
             let signer_public = self.validators.get(&parent_hash, message.signer_index);
-            match message.verify(&signer_public) {
-                Ok(false) => {
-                    cwarn!(ENGINE, "Proposal verification failed: signer is different");
-                    return None
-                }
-                Err(err) => {
-                    cwarn!(ENGINE, "Proposal verification failed: {:?}", err);
-                    return None
-                }
-                _ => {}
+            if !message.verify(&signer_public) {
+                cwarn!(ENGINE, "Proposal verification failed: signer is different");
+                return None
             }
 
             if self.votes.is_old_or_known(&message) {
@@ -2151,29 +2139,15 @@ impl Worker {
 
             let sender_public = self.validators.get(&prev_block_hash, signer_index);
 
-            match vote.verify(&sender_public) {
-                Err(err) => {
-                    cwarn!(
-                        ENGINE,
-                        "Invalid commit message-{} received: invalid signature signer_index: {} address: {} internal error: {:?}",
-                        commit_height,
-                        signer_index,
-                        public_to_address(&sender_public),
-                        err
-                    );
-                    return None
-                }
-                Ok(false) => {
-                    cwarn!(
-                        ENGINE,
-                        "Invalid commit message-{} received: invalid signature signer_index: {} address: {}",
-                        commit_height,
-                        signer_index,
-                        public_to_address(&sender_public)
-                    );
-                    return None
-                }
-                Ok(true) => {}
+            if !vote.verify(&sender_public) {
+                cwarn!(
+                    ENGINE,
+                    "Invalid commit message-{} received: invalid signature signer_index: {} address: {}",
+                    commit_height,
+                    signer_index,
+                    public_to_address(&sender_public)
+                );
+                return None
             }
             vote_bitset.set(signer_index);
         }

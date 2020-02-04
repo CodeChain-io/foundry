@@ -16,7 +16,7 @@
 
 use crate::error::Error;
 use ccrypto::blake256;
-use ckey::{public_to_address, recover, sign, Ed25519Private as Private, Ed25519Public as Public, Signature};
+use ckey::{sign, Ed25519Private as Private, Ed25519Public as Public, Signature};
 use ctypes::errors::SyntaxError;
 use ctypes::transaction::Transaction;
 use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
@@ -30,6 +30,8 @@ pub struct UnverifiedTransaction {
     unsigned: Transaction,
     /// Signature.
     sig: Signature,
+    /// Signer's public key
+    signer_public: Public,
     /// Hash of the transaction
     hash: TxHash,
 }
@@ -51,9 +53,9 @@ impl From<UnverifiedTransaction> for Transaction {
 impl rlp::Decodable for UnverifiedTransaction {
     fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = d.item_count()?;
-        if item_count != 5 {
+        if item_count != 6 {
             return Err(DecoderError::RlpIncorrectListLen {
-                expected: 5,
+                expected: 6,
                 got: item_count,
             })
         }
@@ -66,6 +68,7 @@ impl rlp::Decodable for UnverifiedTransaction {
                 action: d.val_at(3)?,
             },
             sig: d.val_at(4)?,
+            signer_public: d.val_at(5)?,
             hash,
         })
     }
@@ -78,10 +81,11 @@ impl rlp::Encodable for UnverifiedTransaction {
 }
 
 impl UnverifiedTransaction {
-    pub fn new(unsigned: Transaction, sig: Signature) -> Self {
+    pub fn new(unsigned: Transaction, sig: Signature, signer_public: Public) -> Self {
         UnverifiedTransaction {
             unsigned,
             sig,
+            signer_public,
             hash: Default::default(),
         }
         .compute_hash()
@@ -96,12 +100,13 @@ impl UnverifiedTransaction {
 
     /// Append object with a signature into RLP stream
     fn rlp_append_sealed_transaction(&self, s: &mut RlpStream) {
-        s.begin_list(5);
+        s.begin_list(6);
         s.append(&self.seq);
         s.append(&self.fee);
         s.append(&self.network_id);
         s.append(&self.action);
         s.append(&self.sig);
+        s.append(&self.signer_public);
     }
 
     /// Get the hash of this header (blake256 of the RLP).
@@ -114,18 +119,8 @@ impl UnverifiedTransaction {
         self.sig
     }
 
-    /// Recovers the public key of the signature.
-    pub fn recover_public(&self) -> Result<Public, ckey::Error> {
-        Ok(recover(&self.signature(), &self.unsigned.hash())?)
-    }
-
-    /// Checks whether the signature has a low 's' value.
-    pub fn check_low_s(&self) -> Result<(), ckey::Error> {
-        if !self.signature().is_low_s() {
-            Err(ckey::Error::InvalidSignature)
-        } else {
-            Ok(())
-        }
+    pub fn signer_public(&self) -> Public {
+        self.signer_public
     }
 
     /// Verify basic signature params. Does not attempt signer recovery.
@@ -167,13 +162,11 @@ impl rlp::Encodable for SignedTransaction {
 impl rlp::Decodable for SignedTransaction {
     fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         let unverified_transaction: UnverifiedTransaction = UnverifiedTransaction::decode(d)?;
-        match unverified_transaction.recover_public() {
-            Ok(key) => Ok(SignedTransaction {
-                tx: unverified_transaction,
-                signer_public: key,
-            }),
-            Err(_) => Err(DecoderError::Custom("signer public key recover failed")),
-        }
+        let signer_public = unverified_transaction.signer_public();
+        Ok(SignedTransaction {
+            tx: unverified_transaction,
+            signer_public,
+        })
     }
 }
 
@@ -193,9 +186,7 @@ impl From<SignedTransaction> for UnverifiedTransaction {
 impl SignedTransaction {
     /// Try to verify transaction and recover public.
     pub fn try_new(tx: UnverifiedTransaction) -> Result<Self, Error> {
-        let signer_public = tx.recover_public()?;
-        let signer = public_to_address(&signer_public);
-        tx.action.verify_with_signer_address(&signer)?;
+        let signer_public = tx.signer_public();
         Ok(SignedTransaction {
             tx,
             signer_public,
@@ -204,8 +195,9 @@ impl SignedTransaction {
 
     /// Signs the transaction as coming from `signer`.
     pub fn new_with_sign(tx: Transaction, private: &Private) -> SignedTransaction {
-        let sig = sign(&private, &tx.hash()).expect("data is valid and context has signing capabilities; qed");
-        SignedTransaction::try_new(UnverifiedTransaction::new(tx, sig)).expect("secret is valid so it's recoverable")
+        let sig = sign(&tx.hash(), private);
+        SignedTransaction::try_new(UnverifiedTransaction::new(tx, sig, private.public_key()))
+            .expect("secret is valid so it's recoverable")
     }
 
     /// Returns a public key of the signer.
@@ -241,8 +233,7 @@ impl LocalizedTransaction {
         if let Some(public) = self.cached_signer_public {
             return public
         }
-        let public = self.recover_public()
-            .expect("LocalizedTransaction is always constructed from transaction from blockchain; Blockchain only stores verified transactions; qed");
+        let public = self.signed.signer_public();
         self.cached_signer_public = Some(public);
         public
     }
@@ -284,6 +275,7 @@ mod tests {
             },
             sig: Signature::default(),
             hash: H256::default().into(),
+            signer_public: Public::random(),
         }
         .compute_hash());
     }
@@ -302,6 +294,7 @@ mod tests {
             },
             sig: Signature::default(),
             hash: H256::default().into(),
+            signer_public: Public::random(),
         }
         .compute_hash());
     }
@@ -319,6 +312,7 @@ mod tests {
             },
             sig: Signature::default(),
             hash: H256::default().into(),
+            signer_public: Public::random(),
         }
         .compute_hash());
     }
