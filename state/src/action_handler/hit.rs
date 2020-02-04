@@ -16,7 +16,7 @@
 
 use super::{ActionDataKeyBuilder, ActionHandler};
 use crate::{StateResult, TopLevelState, TopState, TopStateView};
-use ckey::{Address, Public};
+use ckey::{Address, Ed25519Public as Public};
 use ctypes::errors::SyntaxError;
 use ctypes::{CommonParams, Header};
 use primitives::H256;

@@ -20,7 +20,7 @@ mod mem_pool_types;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod miner;
 
-use ckey::{public_to_address, Address, Password, PlatformAddress, Public};
+use ckey::{public_to_address, Address, Ed25519Public as Public, Password, PlatformAddress};
 use cstate::{FindActionHandler, TopStateView};
 use ctypes::transaction::IncompleteTransaction;
 use ctypes::{BlockHash, TxHash};

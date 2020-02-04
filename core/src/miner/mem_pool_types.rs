@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::transaction::SignedTransaction;
-use ckey::Public;
+use ckey::Ed25519Public as Public;
 use ctypes::transaction::Action;
 use ctypes::{BlockNumber, TxHash};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};

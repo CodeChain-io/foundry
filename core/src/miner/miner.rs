@@ -29,7 +29,7 @@ use crate::error::Error;
 use crate::scheme::Scheme;
 use crate::transaction::{PendingSignedTransactions, SignedTransaction, UnverifiedTransaction};
 use crate::types::{BlockId, TransactionId};
-use ckey::{public_to_address, Address, Password, PlatformAddress, Public};
+use ckey::{public_to_address, Address, Ed25519Public as Public, Password, PlatformAddress};
 use cstate::{FindActionHandler, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::transaction::{Action, IncompleteTransaction};
@@ -748,7 +748,7 @@ fn get_next_seq(transactions: impl IntoIterator<Item = SignedTransaction>, addre
 #[cfg(test)]
 pub mod test {
     use cio::IoService;
-    use ckey::{Private, Signature};
+    use ckey::{Ed25519Private as Private, Signature};
     use ctimer::TimerLoop;
     use ctypes::transaction::Transaction;
     use primitives::{H256, H512};

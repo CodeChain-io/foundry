@@ -16,7 +16,10 @@
 
 use crate::config::ChainType;
 use ckey::hex::ToHex;
-use ckey::{public_to_address, Address, KeyPair, NetworkId, PlatformAddress, Private, Public};
+use ckey::{
+    public_to_address, Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public,
+    NetworkId, PlatformAddress,
+};
 use clap::ArgMatches;
 use primitives::remove_0x_prefix;
 use std::io::stdin;

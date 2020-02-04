@@ -19,7 +19,7 @@ use crate::client::ConsensusClient;
 use crate::consensus::bit_set::BitSet;
 use crate::consensus::stake::{CurrentValidators, NextValidators, PreviousValidators, Validator};
 use crate::consensus::EngineError;
-use ckey::{public_to_address, Address, Public};
+use ckey::{public_to_address, Address, Ed25519Public as Public};
 use ctypes::util::unexpected::OutOfBounds;
 use ctypes::BlockHash;
 use parking_lot::RwLock;
@@ -301,7 +301,7 @@ mod tests {
     use std::str::FromStr;
     use std::sync::Arc;
 
-    use ckey::Public;
+    use ckey::Ed25519Public as Public;
 
     use super::super::ValidatorSet;
     use super::DynamicValidator;

@@ -44,7 +44,7 @@ use crate::{
 };
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
-use ckey::{public_to_address, Address, NetworkId, Public};
+use ckey::{public_to_address, Address, Ed25519Public as Public, NetworkId};
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, ShardTransaction, Transaction};
 use ctypes::util::unexpected::Mismatch;
@@ -1021,7 +1021,7 @@ mod tests_state {
 
 #[cfg(test)]
 mod tests_tx {
-    use ckey::{Generator, Private, Random};
+    use ckey::{Ed25519Private as Private, Generator, Random};
     use ctypes::errors::RuntimeError;
 
     use super::*;

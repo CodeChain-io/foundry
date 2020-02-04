@@ -46,7 +46,10 @@ use crate::scheme::Scheme;
 use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction};
 use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
 use ccrypto::BLAKE_NULL_RLP;
-use ckey::{public_to_address, Address, Generator, KeyPair, NetworkId, PlatformAddress, Private, Public, Random};
+use ckey::{
+    public_to_address, Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public,
+    Generator, KeyPairTrait, NetworkId, PlatformAddress, Random,
+};
 use cnetwork::NodeId;
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{FindActionHandler, StateDB, TopLevelState};
@@ -201,7 +204,7 @@ impl TestBlockChainClient {
         }
         let mut transactions = Vec::with_capacity(transaction_length);
         for _ in 0..transaction_length {
-            let keypair = Random.generate().unwrap();
+            let keypair: KeyPair = Random.generate().unwrap();
             // Update seqs value
             self.seqs.write().insert(keypair.address(), 0);
             let tx = Transaction {

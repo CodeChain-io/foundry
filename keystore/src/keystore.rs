@@ -21,7 +21,7 @@ use crate::json::{self, OpaqueKeyFile, Uuid};
 use crate::random::Random;
 use crate::{Error, SecretStore, SimpleSecretStore};
 use ccrypto::KEY_ITERATIONS;
-use ckey::{Address, KeyPair, Password, Secret};
+use ckey::{Address, Ed25519KeyPair as KeyPair, KeyPairTrait, Password, Secret};
 use parking_lot::{Mutex, RwLock};
 use std::collections::BTreeMap;
 use std::mem;
@@ -59,7 +59,7 @@ impl KeyStore {
 
 impl SimpleSecretStore for KeyStore {
     fn insert_account(&self, secret: Secret, password: &Password) -> Result<Address, Error> {
-        let keypair = KeyPair::from_private(secret.into()).map_err(|_| Error::CreationFailed)?;
+        let keypair = KeyPair::from_private(secret.into());
         if self.has_account(&keypair.address())? {
             Err(Error::AlreadyExists)
         } else {
@@ -108,7 +108,7 @@ impl SecretStore for KeyStore {
         }
 
         let secret = safe_account.crypto.secret(password).map_err(|_| Error::InvalidPassword)?;
-        safe_account.address = KeyPair::from_private(secret.into())?.address();
+        safe_account.address = KeyPair::from_private(secret.into()).address();
         self.store.import(safe_account)
     }
 
@@ -332,7 +332,7 @@ impl KeyMultiStore {
 
 impl SimpleSecretStore for KeyMultiStore {
     fn insert_account(&self, secret: Secret, password: &Password) -> Result<Address, Error> {
-        let keypair = KeyPair::from_private(secret.into()).map_err(|_| Error::CreationFailed)?;
+        let keypair = KeyPair::from_private(secret.into());
         let id: [u8; 16] = Random::random();
         let account = SafeAccount::create(&keypair, id, password, self.iterations, "{}".to_string())?;
         self.import(account)

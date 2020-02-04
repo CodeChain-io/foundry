@@ -19,7 +19,7 @@ use crate::session::Session;
 use crate::stream::Stream;
 use crate::SocketAddr;
 use cio::IoManager;
-use ckey::Public;
+use ckey::X25519Public as Public;
 use mio::deprecated::EventLoop;
 use mio::unix::UnixReady;
 use mio::{PollOpt, Ready, Token};

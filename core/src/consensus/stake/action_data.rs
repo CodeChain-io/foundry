@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::CUSTOM_ACTION_HANDLER_ID;
-use ckey::{public_to_address, Address, Public};
+use ckey::{public_to_address, Address, Ed25519Public as Public};
 use cstate::{ActionData, ActionDataKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::RuntimeError;
 use ctypes::{CompactValidatorEntry, CompactValidatorSet};

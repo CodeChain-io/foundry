@@ -14,16 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub trait KeyPair {
-    type Private;
-    type Public;
+use super::public::Public;
+use sodiumoxide::crypto::scalarmult::{scalarmult_base, Scalar};
 
-    /// Create a pair from secret key
-    fn from_private(private: Self::Private) -> Self;
+#[derive(Debug, Clone, PartialEq)]
+// The inner type Scalar clears its memory when it is dropped
+pub struct Private(pub(crate) Scalar);
 
-    fn from_keypair(private: Self::Private, public: Self::Public) -> Self;
+impl Private {
+    pub fn from_slice(slice: &[u8]) -> Option<Self> {
+        Scalar::from_slice(slice).map(Self)
+    }
 
-    fn private(&self) -> &Self::Private;
+    pub fn public_key(&self) -> Public {
+        let Private(scalar) = self;
+        scalarmult_base(scalar).into()
+    }
+}
 
-    fn public(&self) -> &Self::Public;
+impl AsRef<[u8]> for Private {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
+    }
+}
+
+impl From<Scalar> for Private {
+    fn from(k: Scalar) -> Self {
+        Private(k)
+    }
 }

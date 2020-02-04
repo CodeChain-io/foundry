@@ -18,7 +18,7 @@
 use crate::account::{Aes128Ctr, Cipher, Kdf, Pbkdf2, Prf};
 use crate::random::Random;
 use crate::{json, Error};
-use ckey::{public_to_address, Address, KeyPair, Password, Private, Secret};
+use ckey::{public_to_address, Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Password, Secret};
 use smallvec::SmallVec;
 use std::num::NonZeroU32;
 use std::str;

@@ -17,7 +17,7 @@
 use crate::config::ChainType;
 use crate::constants::DEFAULT_KEYS_PATH;
 use ccore::AccountProvider;
-use ckey::{NetworkId, Password, PlatformAddress, Private};
+use ckey::{Ed25519Private as Private, NetworkId, Password, PlatformAddress};
 use ckeystore::accounts_dir::RootDiskDirectory;
 use ckeystore::KeyStore;
 use clap::ArgMatches;

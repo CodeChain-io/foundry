@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 use crate::addr::SocketAddr;
 use crate::filters::FilterEntry;
 use cidr::IpCidr;
-use ckey::Public;
+use ckey::X25519Public as Public;
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::result::Result;
