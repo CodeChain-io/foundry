@@ -19,9 +19,10 @@ extern crate codechain_keystore as ckeystore;
 
 mod util;
 
-use ckey::{verify_address, Ed25519KeyPair as KeyPair, Generator, Random, Secret};
+use ckey::{verify, Ed25519KeyPair as KeyPair, Generator, Random, Secret};
 use ckeystore::accounts_dir::RootDiskDirectory;
 use ckeystore::{KeyStore, SimpleSecretStore};
+use primitives::H256;
 use util::TransientDir;
 
 #[test]
@@ -39,7 +40,7 @@ fn secret_store_open_not_existing() {
 
 fn random_secret() -> Secret {
     let keypair = Random.generate().unwrap();
-    **keypair.private()
+    Secret::from_slice(keypair.private().as_ref())
 }
 
 #[test]
@@ -115,27 +116,26 @@ fn secret_store_load_pat_files() {
 
 #[test]
 fn decrypting_files_with_short_ciphertext() {
-    // 0x77a477c745390977a72f44437ac1dac19b705571
+    // 0x0e8d3d2a8c5ad882331c94249806bdc2867ca186
     let kp1 =
-        KeyPair::from_private("00fa7b3db73dc7dfdf8c5fbdb796d741e4488628c41fc4febd9160a866ba0f35".parse().unwrap())
+        KeyPair::from_private("f52e5b0b80c5e7b6fcd64869dd5f4dc84763395b05620209fcc11e7436f0ac05800a29dbeab141ada7923517e945bf4594917473809547bc0bb2e47cd39ac94b".parse().unwrap())
             .unwrap();
-    // 0x8267cb8df20e1dc57fef31322e16bddd83d4cc3d
+    // 0x1c593662f2812124a3ab842faf20acfbf9217eb7
     let kp2 =
-        KeyPair::from_private("000081c29e8142bb6a81bef5a92bda7a8328a5c85bb2f9542e76f9b0f94fc018".parse().unwrap())
+        KeyPair::from_private("44795b6f434fde613af66cb01fe14ecf51f0f610b7db38ce3b369e15a49016709f3f180b63b95559a95735385e35cd973c3d4e9f81bbf0faa61cf6159841feb5".parse().unwrap())
             .unwrap();
     let dir = RootDiskDirectory::at(ciphertext_path());
     let store = KeyStore::open(Box::new(dir)).unwrap();
     let accounts = store.accounts().unwrap();
     assert_eq!(accounts, vec![
-        "0x77a477c745390977a72f44437ac1dac19b705571".into(),
-        "0x8267cb8df20e1dc57fef31322e16bddd83d4cc3d".into()
+        "0x0e8d3d2a8c5ad882331c94249806bdc2867ca186".into(),
+        "0x1c593662f2812124a3ab842faf20acfbf9217eb7".into()
     ]);
 
-    let message = Default::default();
+    let message = H256::random();
 
     let s1 = store.decrypt_account(&accounts[0], &"password".into()).unwrap().sign(&message).unwrap();
     let s2 = store.decrypt_account(&accounts[1], &"password".into()).unwrap().sign(&message).unwrap();
-    assert!(verify_address(&accounts[0], &s1, &message).unwrap());
-    assert!(verify_address(&kp1.address(), &s1, &message).unwrap());
-    assert!(verify_address(&kp2.address(), &s2, &message).unwrap());
+    assert!(verify(&s1, &message, kp1.public()));
+    assert!(verify(&s2, &message, kp2.public()));
 }

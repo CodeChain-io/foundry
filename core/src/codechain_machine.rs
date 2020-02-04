@@ -62,7 +62,6 @@ impl CodeChainMachine {
 
     /// Verify a particular transaction's seal is valid.
     pub fn verify_transaction_seal(p: UnverifiedTransaction, _header: &Header) -> Result<SignedTransaction, Error> {
-        p.check_low_s()?;
         Ok(SignedTransaction::try_new(p)?)
     }
 

@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -46,12 +46,12 @@ fn convert(
     match (from, to) {
         ("private", "private") => {
             let private = get_private(input)?;
-            Ok(private.to_hex())
+            Ok(private.as_ref().to_hex())
         }
         ("private", "public") => {
             let private = get_private(input)?;
             let public = private_to_public(private)?;
-            Ok(public.to_hex())
+            Ok(public.as_ref().to_hex())
         }
         ("private", "address") => {
             let private = get_private(input)?;
@@ -70,7 +70,7 @@ fn convert(
         }
         ("public", "public") => {
             let public = get_public(input)?;
-            Ok(public.to_hex())
+            Ok(public.as_ref().to_hex())
         }
         ("public", "address") => {
             let public = get_public(input)?;
@@ -143,10 +143,10 @@ fn get_network_id(matches: &ArgMatches<'_>) -> Result<NetworkId, String> {
 mod tests {
     use super::*;
 
-    const PRIVATE_KEY: &str = "fcab1293c1510ef5646763b27f1f70b828e255e1f462dad12fc978a31ba72fbc";
-    const PUBLIC_KEY: &str = "0339c7db9ad207a418f1790cb286b17ccf7f5c5ac0d6bf00942c7d010d731c798d7d97ac3cbc1e59e0a10dcae27e0e2f182fa2371589a28c1d49e7161f9ce4bf";
-    const ADDRESS: &str = "cfa56ed5085af735a45bcec6d2474c45597a2ab1";
-    const ACCOUNT_ID: &str = "tccq8862mk4ppd0wddyt08vd5j8f3z4j732kyhdnfj9";
+    const PRIVATE_KEY: &str = "c5240ff5244a3bcd705998600cd40b1b6033c44337294da04c8a7545e1b87fedc8e8c897db2cb53dae2ed6114542057c1a164603f41ee6036d273303c9bad650";
+    const PUBLIC_KEY: &str = "c8e8c897db2cb53dae2ed6114542057c1a164603f41ee6036d273303c9bad650";
+    const ADDRESS: &str = "a6f4cb03c82244c6678de539e4a66c35a2e7ab78";
+    const ACCOUNT_ID: &str = "tccqxn0fjcreq3yf3n83hjnne9xds669eat0qhh2fwv";
 
     fn get_test_network_id() -> Result<NetworkId, String> {
         Ok(NetworkId::from("tc"))

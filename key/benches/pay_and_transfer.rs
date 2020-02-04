@@ -21,36 +21,35 @@ extern crate codechain_key as ckey;
 extern crate test;
 
 use ccrypto::Blake;
-use ckey::{recover, recover_schnorr, sign, sign_schnorr, verify, verify_schnorr, Generator, Message, Random};
-use primitives::H160;
+use ckey::{sign, verify, Ed25519KeyPair, Generator, KeyPairTrait, Message, Random};
+use primitives::{H160, H256};
 use test::Bencher;
 
 #[bench]
-fn pay_with_ecdsa(b: &mut Bencher) {
+fn pay_with_ed25519(b: &mut Bencher) {
     // A transaction only has a signature.
-    let key_pair = Random.generate().unwrap();
+    let key_pair: Ed25519KeyPair = Random.generate().unwrap();
     let transaction = Message::random();
-    let transaction_hash = Blake::blake(transaction);
-    let signature = sign(key_pair.private(), &transaction_hash).unwrap();
+    let transaction_hash: H256 = Blake::blake(transaction);
+    let signature = sign(&transaction_hash, key_pair.private());
     b.iter(|| {
-        let transaction_hash = Blake::blake(transaction);
-        let result = recover(&signature, &transaction_hash);
-        assert_eq!(Ok(*key_pair.public()), result);
+        let transaction_hash: H256 = Blake::blake(transaction);
+        assert!(verify(&signature, &transaction_hash, key_pair.public()));
     });
 }
 
 #[bench]
-fn transfer_with_ecdsa(b: &mut Bencher) {
+fn transfer_with_ed25519(b: &mut Bencher) {
     // Assuming 2-input transfer transaction.
-    let key_pair_0 = Random.generate().unwrap();
-    let key_pair_1 = Random.generate().unwrap();
-    let key_pair_2 = Random.generate().unwrap();
+    let key_pair_0: Ed25519KeyPair = Random.generate().unwrap();
+    let key_pair_1: Ed25519KeyPair = Random.generate().unwrap();
+    let key_pair_2: Ed25519KeyPair = Random.generate().unwrap();
 
     let transaction = Message::random();
-    let transaction_hash = Blake::blake(transaction);
-    let signature_tx = sign(key_pair_0.private(), &transaction_hash).unwrap();
-    let signature_1 = sign(key_pair_1.private(), &transaction_hash).unwrap();
-    let signature_2 = sign(key_pair_2.private(), &transaction_hash).unwrap();
+    let transaction_hash: H256 = Blake::blake(transaction);
+    let signature_tx = sign(&transaction_hash, key_pair_0.private());
+    let signature_1 = sign(&transaction_hash, key_pair_1.private());
+    let signature_2 = sign(&transaction_hash, key_pair_2.private());
 
     let lock_script_1 = Message::random();
     let lock_script_hash_1: H160 = Blake::blake(lock_script_1);
@@ -59,72 +58,19 @@ fn transfer_with_ecdsa(b: &mut Bencher) {
 
     b.iter(|| {
         // Transaction verification
-        let transaction_hash = Blake::blake(transaction);
-        let result = recover(&signature_tx, &transaction_hash);
-        assert_eq!(Ok(*key_pair_0.public()), result);
+        let transaction_hash: H256 = Blake::blake(transaction);
+        assert!(verify(&signature_tx, &transaction_hash, key_pair_0.public()));
 
         // Input 1 verification
         // Lock script hash check
         assert_eq!(lock_script_hash_1, Blake::blake(lock_script_1));
         // Unfortunately, hash again because of partial hashing
-        let transaction_hash_1 = Blake::blake(transaction);
-        assert_eq!(Ok(true), verify(key_pair_1.public(), &signature_1, &transaction_hash_1));
+        let transaction_hash_1: H256 = Blake::blake(transaction);
+        assert!(verify(&signature_1, &transaction_hash_1, key_pair_1.public()));
 
         // Input 2 verification
         assert_eq!(lock_script_hash_2, Blake::blake(lock_script_2));
-        let transaction_hash_2 = Blake::blake(transaction);
-        assert_eq!(Ok(true), verify(key_pair_2.public(), &signature_2, &transaction_hash_2));
-    });
-}
-
-#[bench]
-fn pay_with_schnorr(b: &mut Bencher) {
-    // A transaction only has a signature.
-    let key_pair = Random.generate().unwrap();
-    let transaction = Message::random();
-    let transaction_hash = Blake::blake(transaction);
-    let signature = sign_schnorr(key_pair.private(), &transaction_hash).unwrap();
-    b.iter(|| {
-        let transaction_hash = Blake::blake(transaction);
-        let result = recover_schnorr(&signature, &transaction_hash);
-        assert_eq!(Ok(*key_pair.public()), result);
-    });
-}
-
-#[bench]
-fn transfer_with_schnorr(b: &mut Bencher) {
-    // Assuming 2-input transfer transaction.
-    let key_pair_0 = Random.generate().unwrap();
-    let key_pair_1 = Random.generate().unwrap();
-    let key_pair_2 = Random.generate().unwrap();
-
-    let transaction = Message::random();
-    let transaction_hash = Blake::blake(transaction);
-    let signature_tx = sign_schnorr(key_pair_0.private(), &transaction_hash).unwrap();
-    let signature_1 = sign_schnorr(key_pair_1.private(), &transaction_hash).unwrap();
-    let signature_2 = sign_schnorr(key_pair_2.private(), &transaction_hash).unwrap();
-
-    let lock_script_1 = Message::random();
-    let lock_script_hash_1: H160 = Blake::blake(lock_script_1);
-    let lock_script_2 = Message::random();
-    let lock_script_hash_2: H160 = Blake::blake(lock_script_2);
-
-    b.iter(|| {
-        // Transaction verification
-        let transaction_hash = Blake::blake(transaction);
-        let result = recover_schnorr(&signature_tx, &transaction_hash);
-        assert_eq!(Ok(*key_pair_0.public()), result);
-
-        // Input 1 verification
-        // Lock script hash check
-        assert_eq!(lock_script_hash_1, Blake::blake(lock_script_1));
-        // Unfortunately, hash again because of partial hashing
-        let transaction_hash_1 = Blake::blake(transaction);
-        assert_eq!(Ok(true), verify_schnorr(key_pair_1.public(), &signature_1, &transaction_hash_1));
-
-        // Input 2 verification
-        assert_eq!(lock_script_hash_2, Blake::blake(lock_script_2));
-        let transaction_hash_2 = Blake::blake(transaction);
-        assert_eq!(Ok(true), verify_schnorr(key_pair_2.public(), &signature_2, &transaction_hash_2));
+        let transaction_hash_2: H256 = Blake::blake(transaction);
+        assert!(verify(&signature_2, &transaction_hash_2, key_pair_2.public()));
     });
 }

@@ -18,7 +18,7 @@
 use super::crypto::Crypto;
 use crate::account::Version;
 use crate::{json, DecryptedAccount, Error};
-use ckey::{Address, Ed25519KeyPair as KeyPair, KeyPairTrait, Password};
+use ckey::{Address, Ed25519KeyPair as KeyPair, KeyPairTrait, Password, Secret};
 
 /// Account representation.
 #[derive(Debug, PartialEq, Clone)]
@@ -61,7 +61,7 @@ impl SafeAccount {
         Ok(SafeAccount {
             id,
             version: Version::V3,
-            crypto: Crypto::with_secret(keypair.private(), password, iterations)?,
+            crypto: Crypto::with_secret(&Secret::from_slice(keypair.private().as_ref()), password, iterations)?,
             address: keypair.address(),
             filename: None,
             meta,
@@ -150,7 +150,7 @@ mod tests {
         let account =
             SafeAccount::create(&keypair, [0u8; 16], password, 10240, "{\"name\":\"Test\"}".to_string()).unwrap();
         let signature = account.decrypt(password).unwrap().sign(&message).unwrap();
-        assert!(verify(keypair.public(), &signature, &message).unwrap());
+        assert!(verify(&signature, &message, keypair.public()));
     }
 
     #[test]

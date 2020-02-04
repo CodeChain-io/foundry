@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -66,7 +66,7 @@ mod tests {
     use rlp::rlp_encode_and_decode_test;
 
     use ccore::UnverifiedTransaction;
-    use ckey::{Address, Signature};
+    use ckey::{Address, Public, Signature};
     use ctypes::transaction::{Action, Transaction};
 
     use super::Message;
@@ -88,6 +88,7 @@ mod tests {
                 network_id: "tc".into(),
             },
             Signature::default(),
+            Public::random(),
         );
 
         rlp_encode_and_decode_test!(Message::Transactions(vec![tx]));

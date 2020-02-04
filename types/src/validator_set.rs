@@ -85,7 +85,6 @@ impl Decodable for CompactValidatorSet {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ccrypto::blake512;
     use rand::{rngs::StdRng, Rng};
     use rlp::rlp_encode_and_decode_test;
 
@@ -101,10 +100,10 @@ mod tests {
             let n = rng.gen::<u8>();
 
             for _ in 0..n {
-                vset.push(CompactValidatorEntry {
-                    public_key: blake512(format!("{}", rng.gen::<u64>())),
+                vset.0.push(CompactValidatorEntry {
+                    public_key: Public::random(),
                     delegation: rng.gen::<u64>(),
-                });
+                })
             }
             rlp_encode_and_decode_test!(vset);
         }

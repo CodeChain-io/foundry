@@ -186,7 +186,7 @@ impl Miner {
             .map(|tx| {
                 let hash = tx.hash();
                 // FIXME: Refactoring is needed. recover_public is calling in verify_transaction_unordered.
-                let signer_public = tx.recover_public()?;
+                let signer_public = tx.signer_public();
                 let signer_address = public_to_address(&signer_public);
                 if default_origin.is_local() {
                     self.immune_users.write().insert(signer_address);
@@ -653,8 +653,10 @@ impl MinerService for Miner {
         };
         let tx = tx.complete(seq);
         let tx_hash = tx.hash();
-        let sig = account_provider.get_account(&address, passphrase.as_ref())?.sign(&tx_hash)?;
-        let unverified = UnverifiedTransaction::new(tx, sig);
+        let account = account_provider.get_account(&address, passphrase.as_ref())?;
+        let sig = account.sign(&tx_hash)?;
+        let signer_public = account.public()?;
+        let unverified = UnverifiedTransaction::new(tx, sig, signer_public);
         let signed = SignedTransaction::try_new(unverified)?;
         let hash = signed.hash();
         self.import_own_transaction(client, signed)?;
@@ -751,7 +753,6 @@ pub mod test {
     use ckey::{Ed25519Private as Private, Signature};
     use ctimer::TimerLoop;
     use ctypes::transaction::Transaction;
-    use primitives::{H256, H512};
 
     use super::super::super::client::ClientConfig;
     use super::super::super::service::ClientIoMessage;
@@ -769,14 +770,14 @@ pub mod test {
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db.clone(), Default::default());
         let client = generate_test_client(db, Arc::clone(&miner), &scheme).unwrap();
 
-        let private: Private = H256::random().into();
+        let private = Private::random();
         let transaction1: UnverifiedTransaction = SignedTransaction::new_with_sign(
             Transaction {
                 seq: 30,
                 fee: 40,
                 network_id: "tc".into(),
                 action: Action::Pay {
-                    receiver: public_to_address(&(H512::random())),
+                    receiver: public_to_address(&Public::random()),
                     quantity: 100,
                 },
             },
@@ -791,11 +792,12 @@ pub mod test {
                 fee: 40,
                 network_id: "tc".into(),
                 action: Action::Pay {
-                    receiver: public_to_address(&(H512::random())),
+                    receiver: public_to_address(&Public::random()),
                     quantity: 100,
                 },
             },
             Signature::random(),
+            Public::random(),
         );
 
         let transactions = vec![transaction1.clone(), transaction2, transaction1];

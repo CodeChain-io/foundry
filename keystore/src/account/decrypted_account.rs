@@ -1,4 +1,4 @@
-// Copyright 2019. Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,10 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ckey::{
-    sign, sign_schnorr, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public,
-    Error as KeyError, Message, SchnorrSignature, Secret, Signature,
-};
+use ckey::{sign, Ed25519Private as Private, Ed25519Public as Public, Error as KeyError, Message, Secret, Signature};
 
 /// An opaque wrapper for secret.
 #[derive(Clone)]
@@ -34,17 +31,18 @@ impl DecryptedAccount {
 
     /// Sign a message.
     pub fn sign(&self, message: &Message) -> Result<Signature, KeyError> {
-        sign(&Private::from(self.secret), message)
-    }
-
-    /// Sign a message with Schnorr scheme.
-    pub fn sign_schnorr(&self, message: &Message) -> Result<SchnorrSignature, KeyError> {
-        sign_schnorr(&Private::from(self.secret), message)
+        match Private::from_slice(&self.secret) {
+            Some(private) => Ok(sign(&message, &private)),
+            None => Err(KeyError::InvalidSecret),
+        }
     }
 
     /// Derive public key.
     pub fn public(&self) -> Result<Public, KeyError> {
-        Ok(*KeyPair::from_private(Private::from(self.secret))?.public())
+        match Private::from_slice(&self.secret) {
+            Some(private) => Ok(private.public_key()),
+            None => Err(KeyError::InvalidSecret),
+        }
     }
 }
 

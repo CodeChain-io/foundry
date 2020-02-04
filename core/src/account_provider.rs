@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -106,7 +106,7 @@ impl AccountProvider {
     }
 
     pub fn new_account_and_public(&self, password: &Password) -> Result<(Address, Public), Error> {
-        let acc: KeyPair = Random.generate().expect("secp context has generation capabilities; qed");
+        let acc: KeyPair = Random.generate().expect("ed25519 context has generation capabilities; qed");
         self.insert_account_internal(&acc, password)
     }
 
@@ -116,10 +116,10 @@ impl AccountProvider {
     }
 
     fn insert_account_internal(&self, acc: &KeyPair, password: &Password) -> Result<(Address, Public), Error> {
-        let private = *acc.private();
+        let private = acc.private();
         let public = *acc.public();
         let address = public_to_address(&public);
-        self.keystore.insert_account(*private, password)?;
+        self.keystore.insert_account((*private).as_ref().into(), password)?;
         Ok((address, public))
     }
 

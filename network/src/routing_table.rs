@@ -348,7 +348,7 @@ impl RoutingTable {
             } => {
                 if *remote_public != received_remote_public {
                     return Err(format!(
-                        "Unexpected remote public received. expected: {}, got: {}",
+                        "Unexpected remote public received. expected: {:?}, got: {:?}",
                         remote_public, received_remote_public
                     ))
                 }
@@ -375,7 +375,7 @@ impl RoutingTable {
             } => {
                 if *remote_public != received_remote_public {
                     return Err(format!(
-                        "Unexpected remote public received. expected: {}, got: {}",
+                        "Unexpected remote public received. expected: {:?}, got: {:?}",
                         remote_public, received_remote_public
                     ))
                 }
@@ -402,7 +402,7 @@ impl RoutingTable {
             State::Candidate(local_key_pair) => {
                 if received_local_public != *local_key_pair.public() {
                     return Err(format!(
-                        "Unexpected local public received. expected: {}, got: {}",
+                        "Unexpected local public received. expected: {:?}, got: {:?}",
                         local_key_pair.public(),
                         received_local_public
                     ))
@@ -430,14 +430,14 @@ impl RoutingTable {
             } => {
                 if received_local_public != *local_key_pair.public() {
                     return Err(format!(
-                        "Unexpected local public received. expected: {}, got: {}",
+                        "Unexpected local public received. expected: {:?}, got: {:?}",
                         local_key_pair.public(),
                         received_local_public
                     ))
                 }
                 if *remote_public != received_remote_public {
                     return Err(format!(
-                        "Unexpected remote public received. expected: {}, got: {}",
+                        "Unexpected remote public received. expected: {:?}, got: {:?}",
                         remote_public, received_remote_public
                     ))
                 }
@@ -460,7 +460,7 @@ impl RoutingTable {
             State::Establishing1(local_key_pair) => {
                 if received_local_public != *local_key_pair.public() {
                     return Err(format!(
-                        "Unexpected local public received. expected: {}, got: {}",
+                        "Unexpected local public received. expected: {:?}, got: {:?}",
                         local_key_pair.public(),
                         received_local_public
                     ))
@@ -474,14 +474,14 @@ impl RoutingTable {
             } => {
                 if received_local_public != *local_key_pair.public() {
                     return Err(format!(
-                        "Unexpected local public received. expected: {}, got: {}",
+                        "Unexpected local public received. expected: {:?}, got: {:?}",
                         local_key_pair.public(),
                         received_local_public
                     ))
                 }
                 if *remote_public != received_remote_public {
                     return Err(format!(
-                        "Unexpected remote public received. expected: {}, got: {}",
+                        "Unexpected remote public received. expected: {:?}, got: {:?}",
                         remote_public, received_remote_public
                     ))
                 }
@@ -524,7 +524,7 @@ impl RoutingTable {
             } => {
                 if remote_public != *reserved_remote_public {
                     return Err(format!(
-                        "Ack with an unexepected remote key. expected: {}, got: {}",
+                        "Ack with an unexepected remote key. expected: {:?}, got: {:?}",
                         reserved_remote_public, remote_public
                     ))
                 }

@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
-use ckey::{Address, Ed25519Public as Public, SchnorrSignature, Signature};
+use ckey::{Address, Ed25519Public as Public, Signature};
 use ckeystore::DecryptedAccount;
 use primitives::H256;
 use std::sync::Arc;
@@ -51,20 +51,20 @@ impl EngineSigner {
     }
 
     /// Sign a consensus message hash.
-    pub fn sign(&self, hash: H256) -> Result<SchnorrSignature, AccountProviderError> {
+    pub fn sign(&self, hash: H256) -> Result<Signature, AccountProviderError> {
         let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
         let result = match &self.decrypted_account {
-            Some(account) => account.sign_schnorr(&hash)?,
+            Some(account) => account.sign(&hash)?,
             None => {
                 let account = self.account_provider.get_unlocked_account(&address)?;
-                account.sign_schnorr(&hash)?
+                account.sign(&hash)?
             }
         };
         Ok(result)
     }
 
-    /// Sign a message hash with ECDSA.
-    pub fn sign_ecdsa(&self, hash: H256) -> Result<Signature, AccountProviderError> {
+    /// Sign a message hash with Ed25519.
+    pub fn sign_ed25519(&self, hash: H256) -> Result<Signature, AccountProviderError> {
         let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
         let result = match &self.decrypted_account {
             Some(account) => account.sign(&hash)?,

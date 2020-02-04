@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -61,6 +61,8 @@ pub enum RuntimeError {
     InvalidFilter,
     InvalidSigCount,
     InvalidTimelockType,
+    InvalidSig,
+    InvalidPubkey,
 }
 
 impl From<HashingError> for RuntimeError {
@@ -246,13 +248,16 @@ where
                 stack.remove(*index as usize)?;
             }
             Instruction::ChkSig => {
-                let pubkey = Public::from_slice(stack.pop()?.assert_len(64)?.as_ref());
+                let pubkey =
+                    Public::from_slice(stack.pop()?.assert_len(64)?.as_ref()).ok_or(RuntimeError::InvalidPubkey)?;
                 let tag = Tag::try_new(stack.pop()?.as_ref().to_vec())?;
                 let tx_hash = tx.hash_partially(tag, cur, burn)?;
-                let signature = Signature::from(stack.pop()?.assert_len(SIGNATURE_LENGTH)?.as_ref());
-                let result = match verify(&pubkey, &signature, &tx_hash) {
-                    Ok(true) => 1,
-                    _ => 0,
+                let signature = Signature::from_slice(stack.pop()?.assert_len(SIGNATURE_LENGTH)?.as_ref())
+                    .ok_or(RuntimeError::InvalidSig)?;
+                let result = if verify(&signature, &tx_hash, &pubkey) {
+                    1
+                } else {
+                    0
                 };
                 stack.push(Item(vec![result]))?;
             }
@@ -262,7 +267,9 @@ where
 
                 let mut pubkey: Vec<Public> = Vec::with_capacity(n);
                 for _ in 0..n {
-                    pubkey.push(Public::from_slice(stack.pop()?.assert_len(64)?.as_ref()));
+                    pubkey.push(
+                        Public::from_slice(stack.pop()?.assert_len(64)?.as_ref()).ok_or(RuntimeError::InvalidPubkey)?,
+                    );
                 }
 
                 // Get m signature. If signatures are more than pubkeys, return error.
@@ -273,7 +280,10 @@ where
 
                 let mut signatures: Vec<Signature> = Vec::with_capacity(m);
                 for _ in 0..m {
-                    signatures.push(Signature::from(stack.pop()?.assert_len(SIGNATURE_LENGTH)?.as_ref()));
+                    signatures.push(
+                        Signature::from_slice(stack.pop()?.assert_len(SIGNATURE_LENGTH)?.as_ref())
+                            .ok_or(RuntimeError::InvalidSig)?,
+                    );
                 }
 
                 let tag = Tag::try_new(stack.pop()?.as_ref().to_vec())?;
@@ -361,7 +371,7 @@ fn check_multi_sig(tx_hash: &H256, mut pubkey: Vec<Public>, mut signatures: Vec<
                 None => return false,
                 Some(public) => public,
             };
-            if verify(&public, &sig, &tx_hash) == Ok(true) {
+            if verify(&sig, &tx_hash, &public) {
                 break
             }
         }
@@ -467,8 +477,8 @@ mod tests_check_multi_sig {
         let pubkey2 = *key_pair2.public();
         let pubkey3 = *key_pair3.public();
         let message = H256::random();
-        let signature1 = sign(key_pair1.private(), &message).unwrap();
-        let signature2 = sign(key_pair2.private(), &message).unwrap();
+        let signature1 = sign(&message, key_pair1.private());
+        let signature2 = sign(&message, key_pair2.private());
 
         assert!(check_multi_sig(&message, vec![pubkey1, pubkey2, pubkey3], vec![signature1, signature2]));
     }
@@ -482,8 +492,8 @@ mod tests_check_multi_sig {
         let pubkey2 = *key_pair2.public();
         let pubkey3 = *key_pair3.public();
         let message = H256::random();
-        let signature1 = sign(key_pair1.private(), &message).unwrap();
-        let signature3 = sign(key_pair3.private(), &message).unwrap();
+        let signature1 = sign(&message, key_pair1.private());
+        let signature3 = sign(&message, key_pair3.private());
 
         assert!(check_multi_sig(&message, vec![pubkey1, pubkey2, pubkey3], vec![signature1, signature3]));
     }
@@ -497,8 +507,8 @@ mod tests_check_multi_sig {
         let pubkey2 = *key_pair2.public();
         let pubkey3 = *key_pair3.public();
         let message = H256::random();
-        let signature2 = sign(key_pair2.private(), &message).unwrap();
-        let signature3 = sign(key_pair3.private(), &message).unwrap();
+        let signature2 = sign(&message, key_pair2.private());
+        let signature3 = sign(&message, key_pair3.private());
 
         assert!(check_multi_sig(&message, vec![pubkey1, pubkey2, pubkey3], vec![signature2, signature3]));
     }
@@ -510,8 +520,8 @@ mod tests_check_multi_sig {
         let pubkey1 = *key_pair1.public();
         let pubkey2 = *key_pair2.public();
         let message = H256::random();
-        let signature1 = sign(key_pair1.private(), &message).unwrap();
-        let signature2 = sign(key_pair2.private(), &message).unwrap();
+        let signature1 = sign(&message, key_pair1.private());
+        let signature2 = sign(&message, key_pair2.private());
 
         assert!(!check_multi_sig(&message, vec![pubkey2, pubkey1], vec![signature1, signature2]));
     }

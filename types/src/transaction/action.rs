@@ -18,7 +18,7 @@ use crate::errors::SyntaxError;
 use crate::transaction::ShardTransaction;
 use crate::{CommonParams, ShardId, Tracker};
 use ccrypto::Blake;
-use ckey::{recover, Address, NetworkId, Signature};
+use ckey::{Address, NetworkId};
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -115,23 +115,6 @@ impl Action {
         }
 
         Ok(())
-    }
-
-    // FIXME: We don't use signer any more
-    pub fn verify_with_signer_address(&self, _signer: &Address) -> Result<(), SyntaxError> {
-        if let Some(approvals) = self.approvals() {
-            let tracker = self.tracker().unwrap();
-
-            for approval in approvals {
-                recover(approval, &tracker).map_err(|err| SyntaxError::InvalidApproval(err.to_string()))?;
-            }
-        }
-        Ok(())
-    }
-
-    // FIXME: please remove this function
-    fn approvals(&self) -> Option<&[Signature]> {
-        None
     }
 
     fn network_id(&self) -> Option<NetworkId> {

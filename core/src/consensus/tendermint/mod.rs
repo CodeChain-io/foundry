@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -132,8 +132,7 @@ const SEAL_FIELDS: usize = 4;
 
 #[cfg(test)]
 mod tests {
-    use ccrypto::blake256;
-    use ckey::Address;
+    use ckey::{Address, Private};
     use ctypes::Header;
 
     use super::super::BitSet;
@@ -160,7 +159,7 @@ mod tests {
     }
 
     fn insert_and_unlock(tap: &Arc<AccountProvider>, acc: &str) -> Address {
-        let addr = tap.insert_account(blake256(acc).into(), &acc.into()).unwrap();
+        let addr = tap.insert_account(Private::random(), &acc.into()).unwrap();
         tap.unlock_account_permanently(addr, acc.into()).unwrap();
         addr
     }
@@ -212,7 +211,7 @@ mod tests {
             step: VoteStep::new(3, 0, Step::Precommit),
             block_hash: Some(*header.parent_hash()),
         };
-        let signature2 = tap.get_account(&proposer, None).unwrap().sign_schnorr(&vote_on.hash()).unwrap();
+        let signature2 = tap.get_account(&proposer, None).unwrap().sign(&vote_on.hash()).unwrap();
 
         let seal = Seal::Tendermint {
             prev_view: 0,
@@ -251,7 +250,7 @@ mod tests {
             step: VoteStep::new(1, 0, Step::Precommit),
             block_hash: Some(*header.parent_hash()),
         };
-        let signature2 = tap.get_account(&proposer, None).unwrap().sign_schnorr(&vote_info.hash()).unwrap();
+        let signature2 = tap.get_account(&proposer, None).unwrap().sign(&vote_info.hash()).unwrap();
 
         let seal = Seal::Tendermint {
             prev_view: 0,
@@ -270,9 +269,9 @@ mod tests {
         }
 
         let voter = validator3;
-        let signature3 = tap.get_account(&voter, None).unwrap().sign_schnorr(&vote_info.hash()).unwrap();
+        let signature3 = tap.get_account(&voter, None).unwrap().sign(&vote_info.hash()).unwrap();
         let voter = validator0;
-        let signature0 = tap.get_account(&voter, None).unwrap().sign_schnorr(&vote_info.hash()).unwrap();
+        let signature0 = tap.get_account(&voter, None).unwrap().sign(&vote_info.hash()).unwrap();
 
         let seal = Seal::Tendermint {
             prev_view: 0,
@@ -287,7 +286,7 @@ mod tests {
         assert!(engine.verify_block_external(&header).is_ok());
 
         let bad_voter = insert_and_unlock(&tap, "101");
-        let bad_signature = tap.get_account(&bad_voter, None).unwrap().sign_schnorr(&vote_info.hash()).unwrap();
+        let bad_signature = tap.get_account(&bad_voter, None).unwrap().sign(&vote_info.hash()).unwrap();
 
         let seal = Seal::Tendermint {
             prev_view: 0,

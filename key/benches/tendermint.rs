@@ -20,7 +20,7 @@ extern crate codechain_crypto as ccrypto;
 extern crate codechain_key as ckey;
 extern crate test;
 
-use ckey::{sign_schnorr, verify_schnorr, Generator, Message, Random};
+use ckey::{sign, verify, Ed25519KeyPair, Generator, KeyPairTrait, Message, Random};
 use test::Bencher;
 
 #[bench]
@@ -28,7 +28,7 @@ fn tendermint_max_step_time(b: &mut Bencher) {
     // Based on prevote/precommit state.
     let num_validators = 30;
 
-    let key_pair_self = Random.generate().unwrap();
+    let key_pair_self: Ed25519KeyPair = Random.generate().unwrap();
     let message_self = Message::random();
     let mut key_pairs = vec![];
     let mut messages = vec![];
@@ -36,9 +36,9 @@ fn tendermint_max_step_time(b: &mut Bencher) {
     let mut i = 0;
 
     while i < num_validators - 1 {
-        let key_pair = Random.generate().unwrap();
+        let key_pair: Ed25519KeyPair = Random.generate().unwrap();
         let message = Message::random();
-        let signature = sign_schnorr(key_pair.private(), &message).unwrap();
+        let signature = sign(&message, key_pair.private());
 
         key_pairs.push(key_pair);
         messages.push(message);
@@ -47,11 +47,11 @@ fn tendermint_max_step_time(b: &mut Bencher) {
         i += 1;
     }
     b.iter(|| {
-        sign_schnorr(key_pair_self.private(), &message_self).unwrap();
+        sign(&message_self, key_pair_self.private());
 
         let mut i = 0;
         while i < num_validators - 1 {
-            assert_eq!(Ok(true), verify_schnorr(key_pairs[i].public(), &signatures[i], &messages[i]));
+            assert!(verify(&signatures[i], &messages[i], key_pairs[i].public()));
             i += 1;
         }
     });
