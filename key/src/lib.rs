@@ -16,12 +16,9 @@
 
 extern crate codechain_crypto as crypto;
 #[macro_use]
-extern crate lazy_static;
-#[macro_use]
 extern crate serde_derive;
 
 mod address;
-mod ecdsa;
 mod ed25519;
 mod error;
 mod keypair;
@@ -29,14 +26,9 @@ mod network;
 mod password;
 mod platform_address;
 mod random;
-mod schnorr;
 mod x25519;
 
 pub use crate::address::Address;
-pub use crate::ecdsa::{
-    recover_ecdsa as recover, sign_ecdsa as sign, verify_ecdsa as verify, verify_ecdsa_address as verify_address,
-    ECDSASignature as Signature, ECDSA_SIGNATURE_LENGTH as SIGNATURE_LENGTH,
-};
 pub use crate::ed25519::{
     public_to_address, KeyPair as Ed25519KeyPair, Private as Ed25519Private, Public as Ed25519Public,
 };
@@ -46,9 +38,6 @@ pub use crate::network::NetworkId;
 pub use crate::password::Password;
 pub use crate::platform_address::PlatformAddress;
 pub use crate::random::Random;
-pub use crate::schnorr::{
-    recover_schnorr, sign_schnorr, verify_schnorr, verify_schnorr_address, SchnorrSignature, SCHNORR_SIGNATURE_LENGTH,
-};
 pub use crate::x25519::{exchange, KeyPair as X25519KeyPair, Private as X25519Private, Public as X25519Public};
 use primitives::H256;
 pub use rustc_serialize::hex;
