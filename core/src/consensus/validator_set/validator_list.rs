@@ -19,7 +19,7 @@ use super::ValidatorSet;
 use crate::client::ConsensusClient;
 use crate::consensus::EngineError;
 use crate::types::BlockId;
-use ckey::{public_to_address, Address, Public};
+use ckey::{public_to_address, Address, Ed25519Public as Public};
 use ctypes::util::unexpected::OutOfBounds;
 use ctypes::BlockHash;
 use parking_lot::RwLock;
@@ -120,7 +120,7 @@ impl ValidatorSet for RoundRobinValidator {
 mod tests {
     use std::str::FromStr;
 
-    use ckey::Public;
+    use ckey::Ed25519Public as Public;
 
     use super::super::ValidatorSet;
     use super::RoundRobinValidator;

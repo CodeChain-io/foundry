@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::uint::Uint;
-use ckey::{PlatformAddress, Public};
+use ckey::{Ed25519Public as Public, PlatformAddress};
 use std::collections::HashMap;
 
 /// Tendermint params deserialization.
@@ -57,7 +57,7 @@ pub struct Tendermint {
 #[cfg(test)]
 mod tests {
     use super::Tendermint;
-    use ckey::Public;
+    use ckey::Ed25519Public as Public;
     use std::str::FromStr;
 
     #[test]

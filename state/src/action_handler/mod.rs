@@ -19,7 +19,7 @@ mod hit;
 use super::TopStateView;
 use crate::{StateResult, TopLevelState};
 use ccrypto::blake256;
-use ckey::{Address, Public};
+use ckey::{Address, Ed25519Public as Public};
 use ctypes::errors::SyntaxError;
 use ctypes::{CommonParams, Header};
 use primitives::H256;

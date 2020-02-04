@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use cidr::IpCidr;
-use ckey::Public;
+use ckey::X25519Public as Public;
 use cnetwork::{FilterEntry, NetworkControl, NetworkControlError, SocketAddr};
 use std::collections::HashMap;
 use std::net::IpAddr;

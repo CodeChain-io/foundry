@@ -20,7 +20,7 @@ mod distribute;
 
 use crate::client::ConsensusClient;
 use ccrypto::Blake;
-use ckey::{public_to_address, recover, Address, Public, Signature};
+use ckey::{public_to_address, recover, Address, Ed25519Public as Public, Signature};
 use cstate::{ActionHandler, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::{RuntimeError, SyntaxError};
 use ctypes::util::unexpected::Mismatch;

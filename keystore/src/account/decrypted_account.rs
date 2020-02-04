@@ -15,7 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use ckey::{
-    sign, sign_schnorr, Error as KeyError, KeyPair, Message, Private, Public, SchnorrSignature, Secret, Signature,
+    sign, sign_schnorr, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public,
+    Error as KeyError, Message, SchnorrSignature, Secret, Signature,
 };
 
 /// An opaque wrapper for secret.

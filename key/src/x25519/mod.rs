@@ -14,16 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub trait KeyPair {
-    type Private;
-    type Public;
+mod exchange;
+mod keypair;
+mod private;
+mod public;
 
-    /// Create a pair from secret key
-    fn from_private(private: Self::Private) -> Self;
-
-    fn from_keypair(private: Self::Private, public: Self::Public) -> Self;
-
-    fn private(&self) -> &Self::Private;
-
-    fn public(&self) -> &Self::Public;
-}
+pub use exchange::exchange;
+pub use keypair::KeyPair;
+pub use private::Private;
+pub use public::Public;

@@ -18,7 +18,7 @@ use self::test::{black_box, Bencher};
 use super::mem_pool::MemPool;
 use super::mem_pool_types::{AccountDetails, MemPoolInput, PoolingInstant, TxOrigin};
 use crate::transaction::SignedTransaction;
-use ckey::{Generator, KeyPair, Public, Random};
+use ckey::{Ed25519KeyPair as KeyPair, Ed25519Public as Public, Generator, Random};
 use ctypes::transaction::{Action, Transaction};
 use rand::prelude::SliceRandom;
 use rand::thread_rng;

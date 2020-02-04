@@ -17,7 +17,7 @@
 use super::super::BitSet;
 use super::{Height, Step, View};
 use ccrypto::blake256;
-use ckey::{verify_schnorr, Error as KeyError, Public, SchnorrSignature};
+use ckey::{verify_schnorr, Ed25519Public as Public, SchnorrSignature};
 use ctypes::BlockHash;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};

@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,28 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{Error, Private, Public, Secret, SECP256K1};
-use secp256k1::{ecdh, key};
-use std::result;
+use crate::{Error, Secret, X25519Private, X25519Public};
+use sodiumoxide::crypto::scalarmult::scalarmult;
 
-pub fn exchange(public: &Public, private: &Private) -> result::Result<Secret, Error> {
-    let public = {
-        let mut public_buffer = [4u8; 65];
-        (&mut public_buffer[1..65]).copy_from_slice(&public[0..64]);
-        public_buffer
-    };
+pub fn exchange(other_public: &X25519Public, my_private: &X25519Private) -> Result<Secret, Error> {
+    let X25519Private(scalar) = my_private;
+    let X25519Public(group_element) = other_public;
 
-    let public = key::PublicKey::from_slice(&SECP256K1, &public)?;
-    let private = key::SecretKey::from_slice(&SECP256K1, &private)?;
-    let shared = ecdh::SharedSecret::new_raw(&SECP256K1, &public, &private);
-
-    Ok(Secret::from(&shared[0..32]))
+    let shared_secret = scalarmult(scalar, group_element).map_err(|_| Error::InvalidSecret)?;
+    Ok(Secret::from_slice(shared_secret.as_ref()))
 }
 
 #[cfg(test)]
 mod tests {
+    use super::super::keypair::KeyPair;
     use super::exchange;
-    use crate::{Generator, KeyPair, Random};
+    use crate::{Generator, KeyPair as KeyPairTrait, Random};
 
     #[test]
     fn exchange_makes_same_private_key() {
@@ -49,8 +43,8 @@ mod tests {
         };
         assert_ne!(k1, k2);
 
-        let s1 = exchange(&k2.public(), &k1.private()).unwrap();
-        let s2 = exchange(&k1.public(), &k2.private()).unwrap();
+        let s1 = exchange(k2.public(), k1.private()).unwrap();
+        let s2 = exchange(k1.public(), k2.private()).unwrap();
         assert_eq!(s1, s2);
     }
 }

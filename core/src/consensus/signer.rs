@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
-use ckey::{Address, Public, SchnorrSignature, Signature};
+use ckey::{Address, Ed25519Public as Public, SchnorrSignature, Signature};
 use ckeystore::DecryptedAccount;
 use primitives::H256;
 use std::sync::Arc;

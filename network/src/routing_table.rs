@@ -18,7 +18,7 @@ use crate::session::{Nonce, Session};
 use crate::SocketAddr;
 use ccrypto::aes;
 use ccrypto::error::SymmError;
-use ckey::{exchange, Generator, KeyPair, Public, Random, Secret};
+use ckey::{exchange, Generator, KeyPairTrait, Random, Secret, X25519KeyPair as KeyPair, X25519Public as Public};
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
 use rand::rngs::OsRng;

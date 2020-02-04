@@ -16,7 +16,7 @@
 
 use crate::error::Error;
 use ccrypto::blake256;
-use ckey::{public_to_address, recover, sign, Private, Public, Signature};
+use ckey::{public_to_address, recover, sign, Ed25519Private as Private, Ed25519Public as Public, Signature};
 use ctypes::errors::SyntaxError;
 use ctypes::transaction::Transaction;
 use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};

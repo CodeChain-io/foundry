@@ -24,7 +24,7 @@ use crate::client::{AccountData, BlockChainTrait};
 use crate::miner::fetch_account_creator;
 use crate::transaction::{PendingSignedTransactions, SignedTransaction};
 use crate::Error as CoreError;
-use ckey::{public_to_address, Public};
+use ckey::{public_to_address, Ed25519Public as Public};
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use ctypes::{BlockNumber, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
@@ -979,7 +979,7 @@ pub mod test {
     use std::cmp::Ordering;
 
     use crate::client::{AccountData, TestBlockChainClient};
-    use ckey::{Generator, KeyPair, Random};
+    use ckey::{Ed25519KeyPair as KeyPair, Generator, Random};
     use ctypes::transaction::{Action, Transaction};
 
     use super::*;

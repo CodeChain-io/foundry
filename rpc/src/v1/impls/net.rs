@@ -18,7 +18,7 @@ use super::super::errors;
 use super::super::traits::Net;
 use super::super::types::FilterStatus;
 use cidr::IpCidr;
-use ckey::Public;
+use ckey::X25519Public as Public;
 use cnetwork::{NetworkControl, SocketAddr};
 use jsonrpc_core::Result;
 use std::collections::HashMap;

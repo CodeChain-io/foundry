@@ -22,43 +22,43 @@ extern crate serde_derive;
 
 mod address;
 mod ecdsa;
+mod ed25519;
 mod error;
-mod exchange;
 mod keypair;
 mod network;
 mod password;
 mod platform_address;
-mod private;
 mod random;
 mod schnorr;
+mod x25519;
 
 pub use crate::address::Address;
 pub use crate::ecdsa::{
     recover_ecdsa as recover, sign_ecdsa as sign, verify_ecdsa as verify, verify_ecdsa_address as verify_address,
     ECDSASignature as Signature, ECDSA_SIGNATURE_LENGTH as SIGNATURE_LENGTH,
 };
+pub use crate::ed25519::{
+    public_to_address, KeyPair as Ed25519KeyPair, Private as Ed25519Private, Public as Ed25519Public,
+};
 pub use crate::error::Error;
-pub use crate::exchange::exchange;
-pub use crate::keypair::{public_to_address, KeyPair};
+pub use crate::keypair::KeyPair as KeyPairTrait;
 pub use crate::network::NetworkId;
 pub use crate::password::Password;
 pub use crate::platform_address::PlatformAddress;
-pub use crate::private::Private;
 pub use crate::random::Random;
 pub use crate::schnorr::{
     recover_schnorr, sign_schnorr, verify_schnorr, verify_schnorr_address, SchnorrSignature, SCHNORR_SIGNATURE_LENGTH,
 };
-use primitives::{H256, H512};
+pub use crate::x25519::{exchange, KeyPair as X25519KeyPair, Private as X25519Private, Public as X25519Public};
+use primitives::H256;
 pub use rustc_serialize::hex;
 
 /// 32 bytes long signable message
 pub type Message = H256;
-
 pub type Secret = H256;
-pub type Public = H512;
 
-lazy_static! {
-    pub static ref SECP256K1: secp256k1::Secp256k1 = Default::default();
+pub fn secret_to_private(secret: Secret) -> Result<Ed25519Private, Error> {
+    Ed25519Private::from_slice(&secret).ok_or(Error::InvalidSecret)
 }
 
 /// Uninstantiatable error type for infallible generators.
@@ -66,9 +66,9 @@ lazy_static! {
 pub enum Void {}
 
 /// Generates new keypair.
-pub trait Generator {
+pub trait Generator<KP: KeyPairTrait> {
     type Error;
 
     /// Should be called to generate new keypair.
-    fn generate(&mut self) -> Result<KeyPair, Self::Error>;
+    fn generate(&mut self) -> Result<KP, Self::Error>;
 }

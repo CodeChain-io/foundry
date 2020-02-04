@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use ccrypto::{blake256, keccak256, ripemd160, sha256, Blake};
-use ckey::{verify, Public, Signature, SIGNATURE_LENGTH};
+use ckey::{verify, Ed25519Public as Public, Signature, SIGNATURE_LENGTH};
 use ctypes::transaction::{AssetTransferInput, HashingError, PartialHashing};
 use ctypes::util::tag::Tag;
 use ctypes::{BlockNumber, Tracker};

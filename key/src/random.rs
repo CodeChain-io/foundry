@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{Generator, KeyPair, SECP256K1};
+use crate::{Ed25519KeyPair, Generator, KeyPairTrait, X25519KeyPair, X25519Private, X25519Public};
 use never_type::Never;
 use rand::rngs::OsRng;
 #[cfg(test)]
 use rand::SeedableRng;
 use rand_xorshift::XorShiftRng;
+use sodiumoxide::crypto::kx::gen_keypair as gen_x25519;
+use sodiumoxide::crypto::sign::gen_keypair as gen_ed25519;
 #[cfg(test)]
 use std::cell::RefCell;
 #[cfg(test)]
@@ -37,11 +39,12 @@ thread_local! {
     };
 }
 
-impl Generator for Random {
+impl Generator<Ed25519KeyPair> for Random {
     type Error = ::std::io::Error;
 
+    //FIXME: there is no distinction between the two generate functions
     #[cfg(not(test))]
-    fn generate(&mut self) -> Result<KeyPair, Self::Error> {
+    fn generate(&mut self) -> Result<Ed25519KeyPair, Self::Error> {
         let mut rng = OsRng::new()?;
         match rng.generate() {
             Ok(pair) => Ok(pair),
@@ -50,7 +53,7 @@ impl Generator for Random {
     }
 
     #[cfg(test)]
-    fn generate(&mut self) -> Result<KeyPair, Self::Error> {
+    fn generate(&mut self) -> Result<Ed25519KeyPair, Self::Error> {
         RNG.with(|rng| {
             match rng.borrow_mut().generate() {
                 Ok(pair) => Ok(pair),
@@ -60,22 +63,66 @@ impl Generator for Random {
     }
 }
 
-impl Generator for OsRng {
+impl Generator<Ed25519KeyPair> for OsRng {
     type Error = Never;
 
-    fn generate(&mut self) -> Result<KeyPair, Self::Error> {
-        let (sec, publ) = SECP256K1.generate_keypair(self).expect("context always created with full capabilities; qed");
-
-        Ok(KeyPair::from_keypair(sec, publ))
+    fn generate(&mut self) -> Result<Ed25519KeyPair, Self::Error> {
+        let (publ, sec) = gen_ed25519();
+        Ok(Ed25519KeyPair::from_keypair(sec.into(), publ.into()))
     }
 }
 
-impl Generator for XorShiftRng {
+impl Generator<Ed25519KeyPair> for XorShiftRng {
     type Error = Never;
 
-    fn generate(&mut self) -> Result<KeyPair, <Self as Generator>::Error> {
-        let (sec, publ) = SECP256K1.generate_keypair(self).expect("context always created with full capabilities; qed");
+    fn generate(&mut self) -> Result<Ed25519KeyPair, Self::Error> {
+        let (publ, sec) = gen_ed25519();
+        Ok(Ed25519KeyPair::from_keypair(sec.into(), publ.into()))
+    }
+}
 
-        Ok(KeyPair::from_keypair(sec, publ))
+impl Generator<X25519KeyPair> for Random {
+    type Error = ::std::io::Error;
+
+    //FIXME: there is no distinction between the two generate functions
+    #[cfg(not(test))]
+    fn generate(&mut self) -> Result<X25519KeyPair, Self::Error> {
+        let mut rng = OsRng::new()?;
+        match rng.generate() {
+            Ok(pair) => Ok(pair),
+            Err(never) => match never {}, // LLVM unreachable
+        }
+    }
+
+    #[cfg(test)]
+    fn generate(&mut self) -> Result<X25519KeyPair, Self::Error> {
+        RNG.with(|rng| {
+            match rng.borrow_mut().generate() {
+                Ok(pair) => Ok(pair),
+                Err(never) => match never {}, // LLVM unreachable
+            }
+        })
+    }
+}
+
+impl Generator<X25519KeyPair> for OsRng {
+    type Error = Never;
+
+    fn generate(&mut self) -> Result<X25519KeyPair, Self::Error> {
+        let (publ, sec) = gen_x25519();
+        let publ = X25519Public::from_slice(publ.as_ref()).expect("two types are equivalent");
+        let sec = X25519Private::from_slice(sec.as_ref()).expect("two types are equivalent");
+        Ok(X25519KeyPair::from_keypair(sec, publ))
+    }
+}
+
+impl Generator<X25519KeyPair> for XorShiftRng {
+    type Error = Never;
+
+    fn generate(&mut self) -> Result<X25519KeyPair, Self::Error> {
+        let (publ, sec) = gen_x25519();
+        let publ = X25519Public::from_slice(publ.as_ref()).expect("two types are equivalent");
+        let sec = X25519Private::from_slice(sec.as_ref()).expect("two types are equivalent");
+        Ok(X25519KeyPair::from_keypair(sec, publ))
     }
 }

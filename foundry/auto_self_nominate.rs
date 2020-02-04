@@ -22,7 +22,7 @@ use ccore::{
     UnverifiedTransaction,
 };
 use ckey::PlatformAddress;
-use ckey::{Address, Public, Signature};
+use ckey::{Address, Ed25519Public as Public, Signature};
 use ckeystore::DecryptedAccount;
 use clap::ArgMatches;
 use ctypes::transaction::{Action, Transaction};

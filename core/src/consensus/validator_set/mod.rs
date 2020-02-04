@@ -18,7 +18,7 @@ use self::validator_list::RoundRobinValidator;
 use super::BitSet;
 use crate::client::ConsensusClient;
 use crate::consensus::EngineError;
-use ckey::{Address, Public};
+use ckey::{Address, Ed25519Public as Public};
 use ctypes::BlockHash;
 use std::sync::Weak;
 

@@ -21,7 +21,7 @@ use crate::routing_table::RoutingTable;
 use crate::{p2p, Api, ManagingPeerdb, NetworkExtension, SocketAddr};
 use cidr::IpCidr;
 use cio::{IoError, IoService};
-use ckey::{NetworkId, Public};
+use ckey::{NetworkId, X25519Public as Public};
 use crossbeam_channel::Sender;
 use ctimer::TimerLoop;
 use std::collections::HashMap;

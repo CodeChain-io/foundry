@@ -22,7 +22,7 @@ use ccore::{
     SnapshotClient, TermInfo, COL_STATE,
 };
 use cjson::bytes::Bytes;
-use ckey::{Address, KeyPair, Private};
+use ckey::{Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private};
 use cnetwork::{unbounded_event_callback, EventSender, IntoSocketAddr};
 use csync::BlockSyncEvent;
 use ctypes::transaction::{Action, Transaction};

@@ -19,7 +19,7 @@ extern crate codechain_keystore as ckeystore;
 
 mod util;
 
-use ckey::{verify_address, Generator, KeyPair, Random, Secret};
+use ckey::{verify_address, Ed25519KeyPair as KeyPair, Generator, Random, Secret};
 use ckeystore::accounts_dir::RootDiskDirectory;
 use ckeystore::{KeyStore, SimpleSecretStore};
 use util::TransientDir;

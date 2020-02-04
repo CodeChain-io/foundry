@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ckey::{public_to_address, Address, Error as KeyError, Generator, KeyPair, Password, Private, Public, Random};
+use ckey::{
+    public_to_address, Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public,
+    Error as KeyError, Generator, Password, Random,
+};
 use ckeystore::accounts_dir::MemoryDirectory;
 use ckeystore::{DecryptedAccount, Error as KeystoreError, KeyStore, SecretStore, SimpleSecretStore};
 use parking_lot::RwLock;
@@ -103,7 +106,7 @@ impl AccountProvider {
     }
 
     pub fn new_account_and_public(&self, password: &Password) -> Result<(Address, Public), Error> {
-        let acc = Random.generate().expect("secp context has generation capabilities; qed");
+        let acc: KeyPair = Random.generate().expect("secp context has generation capabilities; qed");
         self.insert_account_internal(&acc, password)
     }
 
