@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@ use super::CUSTOM_ACTION_HANDLER_ID;
 use ckey::{public_to_address, Address, Public};
 use cstate::{ActionData, ActionDataKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::RuntimeError;
+use ctypes::CompactValidatorSet;
 use primitives::{Bytes, H256};
 use rlp::{decode_list, encode_list, Decodable, Encodable, Rlp, RlpStream};
 use std::cmp::Ordering;
@@ -285,6 +286,10 @@ impl NextValidators {
         let validators = state.action_data(&key)?.map(|data| decode_list(&data)).unwrap_or_default();
 
         Ok(Self(validators))
+    }
+
+    pub fn create_compact_validator_set(&self) -> CompactValidatorSet {
+        CompactValidatorSet(self.0.iter().map(|x| (*x.pubkey(), x.delegation())).collect())
     }
 
     pub fn elect(state: &TopLevelState) -> StateResult<Self> {

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -92,6 +92,11 @@ impl Header {
     /// Returns the transaction trie root.
     pub fn transactions_root(&self) -> H256 {
         self.view().transactions_root()
+    }
+
+    /// Returns the transaction trie root.
+    pub fn next_validator_set_hash(&self) -> H256 {
+        self.view().next_validator_set_hash()
     }
 
     /// Score of this block

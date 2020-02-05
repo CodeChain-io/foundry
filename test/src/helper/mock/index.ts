@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -416,6 +416,9 @@ export class Mock {
         const stateRoot = new H256(
             "09f943122bfbb85adda8209ba72514374f71826fd874e08855b64bc95498cb02"
         );
+        const nextValidatorSetHash = new H256(
+            "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
+        );
         const score = new U256(131072);
         const seal: any[] = [];
         const header = new Header(
@@ -426,6 +429,7 @@ export class Mock {
             extraData,
             transactionsRoot,
             stateRoot,
+            nextValidatorSetHash,
             score,
             seal
         );
@@ -445,6 +449,9 @@ export class Mock {
         const stateRoot = new H256(
             "09f943122bfbb85adda8209ba72514374f71826fd874e08855b64bc95498cb02"
         );
+        const nextValidatorSetHash = new H256(
+            "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
+        );
         const score = new U256(999999999999999);
         const seal: any[] = [];
         const header = new Header(
@@ -455,6 +462,7 @@ export class Mock {
             extraData,
             transactionsRoot,
             stateRoot,
+            nextValidatorSetHash,
             score,
             seal
         );
@@ -474,6 +482,9 @@ export class Mock {
         const stateRoot = new H256(
             "09f943122bfbb85adda8209ba72514374f71826fd874e08855b64bc95498cb02"
         );
+        const nextValidatorSetHash = new H256(
+            "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
+        );
         const score = new U256(999999999999999);
         const seal: any[] = [];
         const header = new Header(
@@ -484,6 +495,7 @@ export class Mock {
             extraData,
             transactionsRoot,
             stateRoot,
+            nextValidatorSetHash,
             score,
             seal
         );
@@ -588,7 +600,7 @@ export class Mock {
             const block: any = RLP.decode(message.message);
             const oldOn: Parameters<typeof digest>[0] = {
                 step: {
-                    height: readUIntRLP(block[0][5]),
+                    height: readUIntRLP(block[0][6]),
                     view: message.view,
                     step: TendermintStep.Propose
                 },
@@ -597,9 +609,9 @@ export class Mock {
             const recovered = recoverSchnorr(digest(oldOn), signature);
             if (recovered === pub) {
                 const newHeader = [
-                    ...block[0].slice(0, 6),
-                    new U64(readUIntRLP(block[0][6]) + 1).toEncodeObject(), // timestamp
-                    ...block[0].slice(7)
+                    ...block[0].slice(0, 7),
+                    new U64(readUIntRLP(block[0][7]) + 1).toEncodeObject(), // timestamp
+                    ...block[0].slice(8)
                 ];
                 const newDigest = digest({
                     ...oldOn,

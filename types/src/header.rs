@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -32,6 +32,7 @@ pub enum Seal {
 }
 
 /// A block header.
+/// Note : you must modify /core/src/views/header.rs too when you modify this.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Header {
     /// Parent hash.
@@ -50,6 +51,8 @@ pub struct Header {
     transactions_root: H256,
     /// State root.
     state_root: H256,
+    /// Next validator set hash.
+    next_validator_set_hash: H256,
 
     /// Block score.
     score: U256,
@@ -74,6 +77,7 @@ impl Default for Header {
 
             transactions_root: BLAKE_NULL_RLP,
             state_root: BLAKE_NULL_RLP,
+            next_validator_set_hash: BLAKE_NULL_RLP,
 
             score: U256::default(),
             seal: vec![],
@@ -83,7 +87,7 @@ impl Default for Header {
     }
 }
 
-const SIZE_WITHOUT_SEAL: usize = 8;
+const SIZE_WITHOUT_SEAL: usize = 9;
 
 impl Header {
     /// Create a new, default-valued, header.
@@ -127,6 +131,12 @@ impl Header {
     pub fn transactions_root(&self) -> &H256 {
         &self.transactions_root
     }
+
+    /// Get the validator set root field of the header.
+    pub fn next_validator_set_hash(&self) -> &H256 {
+        &self.next_validator_set_hash
+    }
+
 
     /// Get whether the block has transactions.
     pub fn is_empty(&self) -> bool {
@@ -190,6 +200,11 @@ impl Header {
         self.transactions_root = a;
         self.note_dirty()
     }
+    /// Set the validator set root field of the header.
+    pub fn set_next_validator_set_hash(&mut self, a: H256) {
+        self.next_validator_set_hash = a;
+        self.note_dirty()
+    }
     /// Set the score field of the header.
     pub fn set_score(&mut self, a: U256) {
         self.score = a;
@@ -240,6 +255,7 @@ impl Header {
         s.append(&self.author);
         s.append(&self.state_root);
         s.append(&self.transactions_root);
+        s.append(&self.next_validator_set_hash);
         s.append(&self.score);
         s.append(&self.number);
         s.append(&self.timestamp);
@@ -288,10 +304,11 @@ impl Decodable for Header {
             author: r.val_at(1)?,
             state_root: r.val_at(2)?,
             transactions_root: r.val_at(3)?,
-            score: r.val_at(4)?,
-            number: r.val_at(5)?,
-            timestamp: cmp::min(r.val_at::<U256>(6)?, u64::max_value().into()).as_u64(),
-            extra_data: r.val_at(7)?,
+            next_validator_set_hash: r.val_at(4)?,
+            score: r.val_at(5)?,
+            number: r.val_at(6)?,
+            timestamp: cmp::min(r.val_at::<U256>(7)?, u64::max_value().into()).as_u64(),
+            extra_data: r.val_at(8)?,
             seal: vec![],
             hash: RefCell::new(Some(blake256(r.as_raw()))),
             bare_hash: RefCell::new(None),
