@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -32,6 +32,7 @@ pub struct Block {
 
     transactions_root: H256,
     state_root: H256,
+    next_validator_set_hash: H256,
 
     score: U256,
     seal: Vec<Vec<u8>>,
@@ -62,6 +63,7 @@ impl Block {
 
             transactions_root: *block.header.transactions_root(),
             state_root: *block.header.state_root(),
+            next_validator_set_hash: *block.header.next_validator_set_hash(),
 
             score: *block.header.score(),
             seal: block.header.seal().to_vec(),

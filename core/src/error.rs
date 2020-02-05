@@ -84,6 +84,8 @@ pub enum BlockError {
     InvalidStateRoot(Mismatch<H256>),
     /// Transactions root header field is invalid.
     InvalidTransactionsRoot(Mismatch<H256>),
+    /// Next validator set hash header field is invalid.
+    InvalidNextValidatorSetHash(Mismatch<H256>),
     /// Score is out of range; this can be used as an looser error prior to getting a definitive
     /// value for score. This error needs only provide bounds of which it is out.
     ScoreOutOfBounds(OutOfBounds<U256>),
@@ -139,6 +141,7 @@ impl fmt::Display for BlockError {
             InvalidSealArity(mis) => format!("Block seal in incorrect format: {}", mis),
             InvalidStateRoot(mis) => format!("Invalid state root in header: {}", mis),
             InvalidTransactionsRoot(mis) => format!("Invalid transactions root in header: {}", mis),
+            InvalidNextValidatorSetHash(mis) => format!("Invalid next validator set hash in header: {}", mis),
             ScoreOutOfBounds(oob) => format!("Invalid block score: {}", oob),
             InvalidScore(oob) => format!("Invalid block score: {}", oob),
             InvalidProofOfWork => "Invalid proof of work.".into(),

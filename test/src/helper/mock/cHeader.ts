@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -28,11 +28,13 @@ export class Header {
         const author = new H160(decodedmsg[1].toString("hex"));
         const stateRoot = new H256(decodedmsg[2].toString("hex"));
         const transactionsRoot = new H256(decodedmsg[3].toString("hex"));
-        const score = decodedmsg[4];
-        const number = new U256(parseInt(decodedmsg[5].toString("hex"), 16));
-        const timestamp = new U256(parseInt(decodedmsg[6].toString("hex"), 16));
-        const extraData = decodedmsg[7];
+        const nextValidatorSetHash = new H256(decodedmsg[4].toString("hex"));
+        const score = decodedmsg[5];
+        const number = new U256(parseInt(decodedmsg[6].toString("hex"), 16));
+        const timestamp = new U256(parseInt(decodedmsg[7].toString("hex"), 16));
+        const extraData = decodedmsg[8];
 
+        // Be careful of the order! Three roots have same types, so mistake on the order will not be catched by typechecker.
         const header = new Header(
             parentHash,
             timestamp,
@@ -41,11 +43,12 @@ export class Header {
             extraData,
             transactionsRoot,
             stateRoot,
+            nextValidatorSetHash,
             score,
             []
         );
 
-        for (let i = 8; i < decodedmsg.getLength(); i++) {
+        for (let i = 9; i < decodedmsg.getLength(); i++) {
             header.seal.push(decodedmsg[i]);
         }
 
@@ -58,6 +61,7 @@ export class Header {
     private extraData: Buffer;
     private transactionsRoot: H256;
     private stateRoot: H256;
+    private nextValidatorSetHash: H256;
     private score: U256;
     private seal: number[][];
     private hash: null | H256;
@@ -71,6 +75,7 @@ export class Header {
         extraData: Buffer,
         transactionsRoot: H256,
         stateRoot: H256,
+        nextValidatorSetHash: H256,
         score: U256,
         seal: number[][],
         hash?: H256,
@@ -83,6 +88,7 @@ export class Header {
         this.extraData = extraData;
         this.transactionsRoot = transactionsRoot;
         this.stateRoot = stateRoot;
+        this.nextValidatorSetHash = nextValidatorSetHash;
         this.score = score;
         this.seal = seal;
         this.hash = hash == null ? this.hashing() : hash;
@@ -117,6 +123,10 @@ export class Header {
         this.stateRoot = root;
     }
 
+    public setNextValidatorSetHash(root: H256) {
+        this.nextValidatorSetHash = root;
+    }
+
     public setScore(score: U256) {
         this.score = score;
     }
@@ -148,6 +158,7 @@ export class Header {
             Buffer.alloc(0),
             BLAKE_NULL_RLP,
             BLAKE_NULL_RLP,
+            BLAKE_NULL_RLP,
             new U256(
                 "0000000000000000000000000000000000000000000000000000000000000000"
             ),
@@ -161,6 +172,7 @@ export class Header {
             this.author.toEncodeObject(),
             this.stateRoot.toEncodeObject(),
             this.transactionsRoot.toEncodeObject(),
+            this.nextValidatorSetHash.toEncodeObject(),
             this.score.toEncodeObject(),
             this.number.toEncodeObject(),
             this.timestamp.toEncodeObject(),
