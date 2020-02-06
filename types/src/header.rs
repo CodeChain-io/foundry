@@ -46,10 +46,10 @@ pub struct Header {
     /// Block extra data.
     extra_data: Bytes,
 
-    /// Transactions root.
-    transactions_root: H256,
     /// State root.
     state_root: H256,
+    /// Transactions root.
+    transactions_root: H256,
 
     /// Block score.
     score: U256,
@@ -72,8 +72,8 @@ impl Default for Header {
             author: Default::default(),
             extra_data: vec![],
 
-            transactions_root: BLAKE_NULL_RLP,
             state_root: BLAKE_NULL_RLP,
+            transactions_root: BLAKE_NULL_RLP,
 
             score: U256::default(),
             seal: vec![],

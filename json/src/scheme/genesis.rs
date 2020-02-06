@@ -34,10 +34,10 @@ pub struct Genesis {
     pub timestamp: Option<Uint>,
     /// Parent hash, defaults to 0.
     pub parent_hash: Option<H256>,
-    /// Transactions root.
-    pub transactions_root: Option<H256>,
     /// State root.
     pub state_root: Option<H256>,
+    /// Transactions root.
+    pub transactions_root: Option<H256>,
     /// Extra data.
     pub extra_data: Option<Bytes>,
 }
@@ -88,8 +88,8 @@ mod tests {
             author: Some(PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3").unwrap()),
             timestamp: Some(0x07.into()),
             parent_hash: Some(H256(Core256::from("0x9000000000000000000000000000000000000000000000000000000000000000"))),
-            transactions_root: None,
             state_root: Some(H256(Core256::from("0xd7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544"))),
+            transactions_root: None,
             extra_data: Some(Bytes::from_str("0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa").unwrap()),
         });
     }

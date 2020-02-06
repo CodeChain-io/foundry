@@ -30,8 +30,8 @@ pub struct Block {
 
     extra_data: Vec<u8>,
 
-    transactions_root: H256,
     state_root: H256,
+    transactions_root: H256,
 
     score: U256,
     seal: Vec<Vec<u8>>,
@@ -60,8 +60,8 @@ impl Block {
 
             extra_data: block.header.extra_data().clone(),
 
-            transactions_root: *block.header.transactions_root(),
             state_root: *block.header.state_root(),
+            transactions_root: *block.header.transactions_root(),
 
             score: *block.header.score(),
             seal: block.header.seal().to_vec(),

@@ -100,8 +100,8 @@ describe("Test onChain block communication", async function() {
 
         VALID_PARENT = block1.parentHash;
         VALID_AUTHOR = block1.author.accountId;
-        VALID_TRANSACTIONS_ROOT = block1.transactionsRoot;
         VALID_STATEROOT = block1.stateRoot;
+        VALID_TRANSACTIONS_ROOT = block1.transactionsRoot;
 
         nodeA = new CodeChain();
         await nodeA.start();

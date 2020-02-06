@@ -39,8 +39,8 @@ export class Header {
             number,
             author,
             extraData,
-            transactionsRoot,
             stateRoot,
+            transactionsRoot,
             score,
             []
         );
@@ -56,8 +56,8 @@ export class Header {
     private number: U256;
     private author: H160;
     private extraData: Buffer;
-    private transactionsRoot: H256;
     private stateRoot: H256;
+    private transactionsRoot: H256;
     private score: U256;
     private seal: number[][];
     private hash: null | H256;
@@ -81,8 +81,8 @@ export class Header {
         this.number = number;
         this.author = author;
         this.extraData = extraData;
-        this.transactionsRoot = transactionsRoot;
         this.stateRoot = stateRoot;
+        this.transactionsRoot = transactionsRoot;
         this.score = score;
         this.seal = seal;
         this.hash = hash == null ? this.hashing() : hash;
@@ -109,12 +109,12 @@ export class Header {
         this.extraData = extraData;
     }
 
-    public setTransactionsRoot(root: H256) {
-        this.transactionsRoot = root;
-    }
-
     public setStateRoot(root: H256) {
         this.stateRoot = root;
+    }
+
+    public setTransactionsRoot(root: H256) {
+        this.transactionsRoot = root;
     }
 
     public setScore(score: U256) {
