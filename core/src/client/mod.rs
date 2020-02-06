@@ -33,19 +33,19 @@ use crate::blockchain_info::BlockChainInfo;
 use crate::consensus::EngineError;
 use crate::encoded;
 use crate::error::{BlockImportError, Error as GenericError};
+use crate::miner::MemPoolMinFees;
 use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction};
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress, Public};
 use cnetwork::NodeId;
-use cstate::{AssetScheme, FindActionHandler, OwnedAsset, StateResult, TopLevelState, TopStateView};
+use cstate::{FindActionHandler, StateResult, TopLevelState, TopStateView};
 use ctypes::header::Header;
 use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
-use merkle_trie::Result as TrieResult;
-use primitives::{Bytes, H160, H256, U256};
+use primitives::{Bytes, H256, U256};
 use std::ops::Range;
 use std::sync::Arc;
 
@@ -291,32 +291,13 @@ pub trait MiningBlockChainClient: BlockChainClient + BlockProducer + FindActionH
 
     /// Append designated users to the immune user list.
     fn register_immune_users(&self, immune_user_vec: Vec<Address>);
+
+    fn mem_pool_min_fees(&self) -> MemPoolMinFees;
 }
 
 /// Provides methods to access database.
 pub trait DatabaseClient {
     fn database(&self) -> Arc<dyn KeyValueDB>;
-}
-
-/// Provides methods to access asset
-pub trait AssetClient {
-    fn get_asset_scheme(&self, asset_type: H160, shard_id: ShardId, id: BlockId) -> TrieResult<Option<AssetScheme>>;
-
-    fn get_asset(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        id: BlockId,
-    ) -> TrieResult<Option<OwnedAsset>>;
-
-    fn is_asset_spent(
-        &self,
-        tracker: Tracker,
-        index: usize,
-        shard_id: ShardId,
-        block_id: BlockId,
-    ) -> TrieResult<Option<bool>>;
 }
 
 pub trait ExecuteClient: ChainTimeInfo {

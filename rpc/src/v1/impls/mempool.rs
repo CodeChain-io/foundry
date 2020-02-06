@@ -16,7 +16,7 @@
 
 use super::super::errors;
 use super::super::traits::Mempool;
-use super::super::types::PendingTransactions;
+use super::super::types::{MemPoolMinFees, PendingTransactions};
 use ccore::{BlockChainClient, EngineInfo, MiningBlockChainClient, SignedTransaction};
 use cjson::bytes::Bytes;
 use ckey::{Address, PlatformAddress};
@@ -113,5 +113,9 @@ where
 
         self.client.register_immune_users(immune_user_vec);
         Ok(())
+    }
+
+    fn get_machine_minimum_fees(&self) -> Result<MemPoolMinFees> {
+        Ok(MemPoolMinFees::from(self.client.mem_pool_min_fees()))
     }
 }

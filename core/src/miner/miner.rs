@@ -15,9 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::mem_pool::{Error as MemPoolError, MemPool};
-pub use super::mem_pool_types::MemPoolFees;
-use super::mem_pool_types::{AccountDetails, MemPoolInput, TxOrigin, TxTimelock};
-use super::{MinerService, MinerStatus, TransactionImportResult};
+pub use super::mem_pool_types::MemPoolMinFees;
+use super::mem_pool_types::{MemPoolInput, TxOrigin, TxTimelock};
+use super::{fetch_account_creator, MinerService, MinerStatus, TransactionImportResult};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::block::{ClosedBlock, IsBlock};
 use crate::client::{
@@ -32,7 +32,7 @@ use crate::types::{BlockId, TransactionId};
 use ckey::{public_to_address, Address, Password, PlatformAddress, Public};
 use cstate::{FindActionHandler, TopLevelState};
 use ctypes::errors::{HistoryError, RuntimeError};
-use ctypes::transaction::{Action, IncompleteTransaction, Timelock};
+use ctypes::transaction::{Action, IncompleteTransaction};
 use ctypes::{BlockHash, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
@@ -69,7 +69,7 @@ pub struct MinerOptions {
     pub mem_pool_fee_bump_shift: usize,
     pub allow_create_shard: bool,
     /// Minimum fees configured by the machine.
-    pub mem_pool_fees: MemPoolFees,
+    pub mem_pool_min_fees: MemPoolMinFees,
 }
 
 impl Default for MinerOptions {
@@ -83,7 +83,7 @@ impl Default for MinerOptions {
             mem_pool_memory_limit: Some(2 * 1024 * 1024),
             mem_pool_fee_bump_shift: 3,
             allow_create_shard: false,
-            mem_pool_fees: Default::default(),
+            mem_pool_min_fees: Default::default(),
         }
     }
 }
@@ -137,7 +137,7 @@ impl Miner {
             mem_limit,
             options.mem_pool_fee_bump_shift,
             db,
-            options.mem_pool_fees,
+            options.mem_pool_min_fees,
         )));
 
         Self {
@@ -254,14 +254,7 @@ impl Miner {
             })
             .collect();
 
-        let fetch_account = |p: &Public| -> AccountDetails {
-            let address = public_to_address(p);
-            let a = client.latest_regular_key_owner(&address).unwrap_or(address);
-            AccountDetails {
-                seq: client.latest_seq(&a),
-                balance: client.latest_balance(&a),
-            }
-        };
+        let fetch_account = fetch_account_creator(client);
 
         let insertion_results = mem_pool.add(to_insert, current_block_number, current_timestamp, &fetch_account);
 
@@ -293,48 +286,15 @@ impl Miner {
         mem_pool.remove_all();
     }
 
-    fn calculate_timelock<C: BlockChainTrait>(&self, tx: &SignedTransaction, client: &C) -> Result<TxTimelock, Error> {
-        let mut max_block = None;
-        let mut max_timestamp = None;
-        if let Action::TransferAsset {
-            inputs,
-            ..
-        } = &tx.action
-        {
-            for input in inputs {
-                if let Some(timelock) = input.timelock {
-                    let (is_block_number, value) = match timelock {
-                        Timelock::Block(value) => (true, value),
-                        Timelock::BlockAge(value) => (
-                            true,
-                            client.transaction_block_number(&input.prev_out.tracker).ok_or_else(|| {
-                                Error::History(HistoryError::Timelocked {
-                                    timelock,
-                                    remaining_time: u64::max_value(),
-                                })
-                            })? + value,
-                        ),
-                        Timelock::Time(value) => (false, value),
-                        Timelock::TimeAge(value) => (
-                            false,
-                            client.transaction_block_timestamp(&input.prev_out.tracker).ok_or_else(|| {
-                                Error::History(HistoryError::Timelocked {
-                                    timelock,
-                                    remaining_time: u64::max_value(),
-                                })
-                            })? + value,
-                        ),
-                    };
-                    if is_block_number {
-                        if max_block.is_none() || max_block.expect("The previous guard ensures") < value {
-                            max_block = Some(value);
-                        }
-                    } else if max_timestamp.is_none() || max_timestamp.expect("The previous guard ensures") < value {
-                        max_timestamp = Some(value);
-                    }
-                }
-            }
-        };
+    // FIXME: please remove this function
+    fn calculate_timelock<C: BlockChainTrait>(
+        &self,
+        _tx: &SignedTransaction,
+        _client: &C,
+    ) -> Result<TxTimelock, Error> {
+        let max_block = None;
+        let max_timestamp = None;
+
         Ok(TxTimelock {
             block: max_block,
             timestamp: max_timestamp,
@@ -566,15 +526,7 @@ impl MinerService for Miner {
         ctrace!(MINER, "chain_new_blocks");
 
         {
-            let fetch_account = |p: &Public| {
-                let address = public_to_address(p);
-                let a = chain.latest_regular_key_owner(&address).unwrap_or(address);
-
-                AccountDetails {
-                    seq: chain.latest_seq(&a),
-                    balance: chain.latest_balance(&a),
-                }
-            };
+            let fetch_account = fetch_account_creator(chain);
             let current_block_number = chain.chain_info().best_block_number;
             let current_timestamp = chain.chain_info().best_block_timestamp;
             let mut mem_pool = self.mem_pool.write();

@@ -53,13 +53,17 @@ impl BodyDownloader {
     }
 
     pub fn import_bodies(&mut self, hashes: Vec<BlockHash>, bodies: Vec<Vec<UnverifiedTransaction>>) {
+        let empty_targets: HashSet<_> = self.targets.iter().filter(|t| t.is_empty).map(|t| t.hash).collect();
         for (hash, body) in hashes.into_iter().zip(bodies) {
             if self.downloading.remove(&hash) {
                 if body.is_empty() {
-                    let target = self.targets.iter().find(|t| t.hash == hash).expect("Downloading target must exist");
-                    if !target.is_empty {
+                    if !empty_targets.contains(&hash) {
+                        cwarn!(SYNC, "Invalid body of {}. It should be not empty.", hash);
                         continue
                     }
+                } else if empty_targets.contains(&hash) {
+                    cwarn!(SYNC, "Invalid body of {}. It should be empty.", hash);
+                    continue
                 }
                 self.downloaded.insert(hash, body);
             }
@@ -117,5 +121,27 @@ impl BodyDownloader {
         self.targets.drain(0..result.len());
         self.targets.shrink_to_fit();
         result
+    }
+
+    pub fn re_request(
+        &mut self,
+        hash: BlockHash,
+        is_empty: bool,
+        remains: Vec<(BlockHash, Vec<UnverifiedTransaction>)>,
+    ) {
+        let mut new_targets = vec![Target {
+            hash,
+            is_empty,
+        }];
+        new_targets.extend(remains.into_iter().map(|(hash, transactions)| {
+            let is_empty = transactions.is_empty();
+            self.downloaded.insert(hash, transactions);
+            Target {
+                hash,
+                is_empty,
+            }
+        }));
+        new_targets.append(&mut self.targets);
+        self.targets = new_targets;
     }
 }

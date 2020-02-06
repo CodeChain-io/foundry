@@ -242,22 +242,13 @@ impl MemPoolItem {
                 quantity,
                 ..
             } => self.tx.fee + *quantity,
-            Action::WrapCCC {
-                quantity,
-                ..
-            } => self.tx.fee + *quantity,
             _ => self.tx.fee,
         }
     }
 
     pub fn expiration(&self) -> Option<u64> {
-        match &self.tx.action {
-            Action::TransferAsset {
-                expiration,
-                ..
-            } => *expiration,
-            _ => None,
-        }
+        // FIXME: please remove the expiration function
+        None
     }
 }
 
@@ -429,22 +420,22 @@ pub struct AccountDetails {
 
 #[derive(Default, Clone, Copy, Debug, PartialEq)]
 /// Minimum fee thresholds defined not by network but by Mempool
-pub struct MemPoolFees {
-    min_pay_transaction_cost: u64,
-    min_set_regular_key_transaction_cost: u64,
-    min_create_shard_transaction_cost: u64,
-    min_set_shard_owners_transaction_cost: u64,
-    min_set_shard_users_transaction_cost: u64,
-    min_wrap_ccc_transaction_cost: u64,
-    min_custom_transaction_cost: u64,
-    min_asset_mint_cost: u64,
-    min_asset_transfer_cost: u64,
-    min_asset_scheme_change_cost: u64,
-    min_asset_supply_increase_cost: u64,
-    min_asset_unwrap_ccc_cost: u64,
+pub struct MemPoolMinFees {
+    pub min_pay_transaction_cost: u64,
+    pub min_set_regular_key_transaction_cost: u64,
+    pub min_create_shard_transaction_cost: u64,
+    pub min_set_shard_owners_transaction_cost: u64,
+    pub min_set_shard_users_transaction_cost: u64,
+    pub min_wrap_ccc_transaction_cost: u64,
+    pub min_custom_transaction_cost: u64,
+    pub min_asset_mint_cost: u64,
+    pub min_asset_transfer_cost: u64,
+    pub min_asset_scheme_change_cost: u64,
+    pub min_asset_supply_increase_cost: u64,
+    pub min_asset_unwrap_ccc_cost: u64,
 }
 
-impl MemPoolFees {
+impl MemPoolMinFees {
     #[allow(clippy::too_many_arguments)]
     pub fn create_from_options(
         min_pay_cost_option: Option<u64>,
@@ -460,7 +451,7 @@ impl MemPoolFees {
         min_asset_supply_increase_cost_option: Option<u64>,
         min_asset_unwrap_ccc_cost_option: Option<u64>,
     ) -> Self {
-        MemPoolFees {
+        MemPoolMinFees {
             min_pay_transaction_cost: min_pay_cost_option.unwrap_or_default(),
             min_set_regular_key_transaction_cost: min_set_regular_key_cost_option.unwrap_or_default(),
             min_create_shard_transaction_cost: min_create_shard_cost_option.unwrap_or_default(),
@@ -477,21 +468,6 @@ impl MemPoolFees {
     }
     pub fn min_cost(&self, action: &Action) -> u64 {
         match action {
-            Action::MintAsset {
-                ..
-            } => self.min_asset_mint_cost,
-            Action::TransferAsset {
-                ..
-            } => self.min_asset_transfer_cost,
-            Action::ChangeAssetScheme {
-                ..
-            } => self.min_asset_scheme_change_cost,
-            Action::IncreaseAssetSupply {
-                ..
-            } => self.min_asset_supply_increase_cost,
-            Action::UnwrapCCC {
-                ..
-            } => self.min_asset_unwrap_ccc_cost,
             Action::Pay {
                 ..
             } => self.min_pay_transaction_cost,
@@ -507,9 +483,6 @@ impl MemPoolFees {
             Action::SetShardUsers {
                 ..
             } => self.min_set_shard_users_transaction_cost,
-            Action::WrapCCC {
-                ..
-            } => self.min_wrap_ccc_transaction_cost,
             Action::Custom {
                 ..
             } => self.min_custom_transaction_cost,

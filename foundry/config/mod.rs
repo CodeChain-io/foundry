@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
 
 mod chain_type;
 
-use ccore::{MemPoolFees, MinerOptions, TimeGapParams};
+use ccore::{MemPoolMinFees, MinerOptions, TimeGapParams};
 use cidr::IpCidr;
 use ckey::PlatformAddress;
 use clap;
@@ -73,7 +73,7 @@ impl Config {
                 None => unreachable!(),
             };
 
-        let mem_pool_fees = MemPoolFees::create_from_options(
+        let mem_pool_min_fees = MemPoolMinFees::create_from_options(
             self.mining.min_pay_transaction_cost,
             self.mining.min_set_regular_key_transaction_cost,
             self.mining.min_create_shard_transaction_cost,
@@ -100,7 +100,7 @@ impl Config {
             reseal_on_external_transaction,
             reseal_min_period: Duration::from_millis(self.mining.reseal_min_period.unwrap()),
             no_reseal_timer: self.mining.no_reseal_timer.unwrap(),
-            mem_pool_fees,
+            mem_pool_min_fees,
         })
     }
 

@@ -46,7 +46,7 @@ impl ShardText {
     }
 }
 
-const PREFIX: u8 = super::SHARD_TEXT_PREFIX;
+const PREFIX: u8 = super::Prefix::ShardText as u8;
 
 #[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct ShardTextAddress(H256);

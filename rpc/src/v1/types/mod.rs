@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,6 +16,7 @@
 
 mod action;
 mod block;
+mod mem_pool;
 mod transaction;
 mod unsigned_transaction;
 mod work;
@@ -23,6 +24,7 @@ mod work;
 pub use self::action::{Action, ActionWithTracker};
 pub use self::block::Block;
 pub use self::block::BlockNumberAndHash;
+pub use self::mem_pool::MemPoolMinFees;
 pub use self::transaction::{PendingTransactions, Transaction};
 pub use self::unsigned_transaction::UnsignedTransaction;
 pub use self::work::Work;

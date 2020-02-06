@@ -16,11 +16,12 @@
 
 use super::backup;
 use super::mem_pool_types::{
-    AccountDetails, CurrentQueue, FutureQueue, MemPoolFees, MemPoolInput, MemPoolItem, MemPoolStatus, PoolingInstant,
-    QueueTag, TransactionOrder, TransactionOrderWithTag, TxOrigin, TxTimelock,
+    AccountDetails, CurrentQueue, FutureQueue, MemPoolInput, MemPoolItem, MemPoolMinFees, MemPoolStatus,
+    PoolingInstant, QueueTag, TransactionOrder, TransactionOrderWithTag, TxOrigin, TxTimelock,
 };
 use super::TransactionImportResult;
 use crate::client::{AccountData, BlockChainTrait};
+use crate::miner::fetch_account_creator;
 use crate::transaction::{PendingSignedTransactions, SignedTransaction};
 use crate::Error as CoreError;
 use ckey::{public_to_address, Public};
@@ -72,7 +73,7 @@ impl From<SyntaxError> for Error {
 
 pub struct MemPool {
     /// Fee threshold for transactions that can be imported to this pool
-    minimum_fees: MemPoolFees,
+    minimum_fees: MemPoolMinFees,
     /// A value which is used to check whether a new transaciton can replace a transaction in the memory pool with the same signer and seq.
     /// If the fee of the new transaction is `new_fee` and the fee of the transaction in the memory pool is `old_fee`,
     /// then `new_fee > old_fee + old_fee >> mem_pool_fee_bump_shift` should be satisfied to replace.
@@ -117,7 +118,7 @@ impl MemPool {
         memory_limit: usize,
         fee_bump_shift: usize,
         db: Arc<dyn KeyValueDB>,
-        minimum_fees: MemPoolFees,
+        minimum_fees: MemPoolMinFees,
     ) -> Self {
         MemPool {
             minimum_fees,
@@ -426,14 +427,7 @@ impl MemPool {
 
     // Recover MemPool state from db stored data
     pub fn recover_from_db<C: AccountData + BlockChainTrait>(&mut self, client: &C) {
-        let fetch_account = |p: &Public| -> AccountDetails {
-            let address = public_to_address(p);
-            let a = client.latest_regular_key_owner(&address).unwrap_or(address);
-            AccountDetails {
-                seq: client.latest_seq(&a),
-                balance: client.latest_balance(&a),
-            }
-        };
+        let fetch_account = fetch_account_creator(client);
         let by_hash = backup::recover_to_data(self.db.as_ref());
 
         let recover_block_number = client.chain_info().best_block_number;
@@ -976,8 +970,7 @@ pub mod test {
 
     use crate::client::{AccountData, TestBlockChainClient};
     use ckey::{Generator, KeyPair, Random};
-    use ctypes::transaction::{Action, AssetMintOutput, Transaction};
-    use primitives::H160;
+    use ctypes::transaction::{Action, Transaction};
 
     use super::*;
     use rlp::rlp_encode_and_decode_test;
@@ -1217,69 +1210,6 @@ pub mod test {
     }
 
     #[test]
-    fn mint_transaction_does_not_increase_cost() {
-        let shard_id = 0xCCC;
-
-        let fee = 100;
-        let tx = Transaction {
-            seq: 0,
-            fee,
-            network_id: "tc".into(),
-            action: Action::MintAsset {
-                network_id: "tc".into(),
-                shard_id,
-                metadata: "Metadata".to_string(),
-                output: Box::new(AssetMintOutput {
-                    lock_script_hash: H160::zero(),
-                    parameters: vec![],
-                    supply: ::std::u64::MAX,
-                }),
-                approver: None,
-                registrar: None,
-                allowed_script_hashes: vec![],
-                approvals: vec![],
-            },
-        };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
-        let keypair = Random.generate().unwrap();
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
-
-        assert_eq!(fee, item.cost());
-    }
-
-    #[test]
-    fn transfer_transaction_does_not_increase_cost() {
-        let fee = 100;
-        let tx = Transaction {
-            seq: 0,
-            fee,
-            network_id: "tc".into(),
-            action: Action::TransferAsset {
-                network_id: "tc".into(),
-                burns: vec![],
-                inputs: vec![],
-                outputs: vec![],
-                metadata: "".into(),
-                approvals: vec![],
-                expiration: None,
-            },
-        };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
-        let keypair = Random.generate().unwrap();
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
-
-        assert_eq!(fee, item.cost());
-    }
-
-    #[test]
     fn pay_transaction_increases_cost() {
         let fee = 100;
         let quantity = 100_000;
@@ -1302,44 +1232,6 @@ pub mod test {
         let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
 
         assert_eq!(fee + quantity, item.cost());
-    }
-
-    #[test]
-    fn fee_per_byte_order_simple() {
-        let order1 = create_transaction_order(1_000_000_000, 100);
-        let order2 = create_transaction_order(1_500_000_000, 300);
-        assert!(
-            order1.fee_per_byte > order2.fee_per_byte,
-            "{} must be larger than {}",
-            order1.fee_per_byte,
-            order2.fee_per_byte
-        );
-        assert_eq!(Ordering::Greater, order1.cmp(&order2));
-    }
-
-    #[test]
-    fn fee_per_byte_order_sort() {
-        let factors: Vec<Vec<usize>> = vec![
-            vec![4, 9],   // 19607
-            vec![2, 9],   // 9803
-            vec![2, 6],   // 11494
-            vec![10, 10], // 46728
-            vec![2, 8],   // 10309
-        ];
-        let mut orders: Vec<TransactionOrder> = Vec::new();
-        for factor in factors {
-            let fee = 1_000_000 * (factor[0] as u64);
-            orders.push(create_transaction_order(fee, 10 * factor[1]));
-        }
-
-        let prev_orders = orders.clone();
-        orders.sort_unstable();
-        let sorted_orders = orders;
-        assert_eq!(prev_orders[1], sorted_orders[0]);
-        assert_eq!(prev_orders[4], sorted_orders[1]);
-        assert_eq!(prev_orders[2], sorted_orders[2]);
-        assert_eq!(prev_orders[0], sorted_orders[3]);
-        assert_eq!(prev_orders[3], sorted_orders[4]);
     }
 
     #[test]
@@ -1381,19 +1273,9 @@ pub mod test {
             seq: 0,
             fee: 10,
             network_id: "tc".into(),
-            action: Action::MintAsset {
-                network_id: "tc".into(),
-                shard_id: 0,
-                metadata: String::from_utf8(vec![b'a'; 1]).unwrap(),
-                approver: None,
-                registrar: None,
-                allowed_script_hashes: vec![],
-                output: Box::new(AssetMintOutput {
-                    lock_script_hash: H160::zero(),
-                    parameters: vec![],
-                    supply: ::std::u64::MAX,
-                }),
-                approvals: vec![],
+            action: Action::Pay {
+                receiver: Default::default(),
+                quantity: 0,
             },
         };
         let timelock = TxTimelock {
@@ -1418,14 +1300,7 @@ pub mod test {
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db.clone(), Default::default());
 
-        let fetch_account = |p: &Public| -> AccountDetails {
-            let address = public_to_address(p);
-            let a = test_client.latest_regular_key_owner(&address).unwrap_or(address);
-            AccountDetails {
-                seq: test_client.latest_seq(&a),
-                balance: test_client.latest_balance(&a),
-            }
-        };
+        let fetch_account = fetch_account_creator(&test_client);
         let no_timelock = TxTimelock {
             block: None,
             timestamp: None,
@@ -1512,50 +1387,13 @@ pub mod test {
         MemPoolInput::new(signed, TxOrigin::Local, timelock)
     }
 
-    fn create_transaction_order(fee: u64, transaction_count: usize) -> TransactionOrder {
-        let keypair = Random.generate().unwrap();
-        let tx = Transaction {
-            seq: 0,
-            fee,
-            network_id: "tc".into(),
-            action: Action::MintAsset {
-                network_id: "tc".into(),
-                shard_id: 0,
-                metadata: String::from_utf8(vec![b'a'; transaction_count]).unwrap(),
-                approver: None,
-                registrar: None,
-                allowed_script_hashes: vec![],
-                output: Box::new(AssetMintOutput {
-                    lock_script_hash: H160::zero(),
-                    parameters: vec![],
-                    supply: ::std::u64::MAX,
-                }),
-                approvals: vec![],
-            },
-        };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
-        TransactionOrder::for_transaction(&item, 0)
-    }
-
     fn abbreviated_mempool_add(
         test_client: &TestBlockChainClient,
         mem_pool: &mut MemPool,
         txs: Vec<SignedTransaction>,
         origin: TxOrigin,
     ) -> Vec<Result<TransactionImportResult, Error>> {
-        let fetch_account = |p: &Public| -> AccountDetails {
-            let address = public_to_address(p);
-            let a = test_client.latest_regular_key_owner(&address).unwrap_or(address);
-            AccountDetails {
-                seq: test_client.latest_seq(&a),
-                balance: test_client.latest_balance(&a),
-            }
-        };
+        let fetch_account = fetch_account_creator(test_client);
         let no_timelock = TxTimelock {
             block: None,
             timestamp: None,
@@ -1572,7 +1410,7 @@ pub mod test {
         let test_client = TestBlockChainClient::new();
 
         // Set the pay transaction minimum fee
-        let fees = MemPoolFees::create_from_options(
+        let fees = MemPoolMinFees::create_from_options(
             Some(150),
             None,
             None,
@@ -1625,7 +1463,7 @@ pub mod test {
     fn external_transactions_whose_fees_are_under_the_mem_pool_min_fee_are_rejected() {
         let test_client = TestBlockChainClient::new();
         // Set the pay transaction minimum fee
-        let fees = MemPoolFees::create_from_options(
+        let fees = MemPoolMinFees::create_from_options(
             Some(150),
             None,
             None,
@@ -1686,14 +1524,7 @@ pub mod test {
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db, Default::default());
 
-        let fetch_account = |p: &Public| -> AccountDetails {
-            let address = public_to_address(p);
-            let a = test_client.latest_regular_key_owner(&address).unwrap_or(address);
-            AccountDetails {
-                seq: test_client.latest_seq(&a),
-                balance: test_client.latest_balance(&a),
-            }
-        };
+        let fetch_account = fetch_account_creator(&test_client);
         let keypair = Random.generate().unwrap();
         let address = public_to_address(keypair.public());
         println!("! {}", address);

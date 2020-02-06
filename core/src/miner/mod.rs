@@ -20,7 +20,7 @@ mod mem_pool_types;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod miner;
 
-use ckey::{Address, Password, PlatformAddress};
+use ckey::{public_to_address, Address, Password, PlatformAddress, Public};
 use cstate::{FindActionHandler, TopStateView};
 use ctypes::transaction::IncompleteTransaction;
 use ctypes::{BlockHash, TxHash};
@@ -28,7 +28,8 @@ use cvm::ChainTimeInfo;
 use primitives::Bytes;
 use std::ops::Range;
 
-pub use self::mem_pool_types::MemPoolFees;
+use self::mem_pool_types::AccountDetails;
+pub use self::mem_pool_types::MemPoolMinFees;
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::client::{
@@ -93,7 +94,7 @@ pub trait MinerService: Send + Sync {
     ) -> Vec<Result<TransactionImportResult, Error>>;
 
     /// Imports own (node owner) transaction to mem pool.
-    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo + TermInfo>(
+    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo>(
         &self,
         chain: &C,
         tx: SignedTransaction,
@@ -161,3 +162,14 @@ pub enum TransactionImportResult {
 
 #[cfg(all(feature = "nightly", test))]
 mod mem_pool_benches;
+
+fn fetch_account_creator<'c>(client: &'c dyn AccountData) -> impl Fn(&Public) -> AccountDetails + 'c {
+    move |public: &Public| {
+        let address = public_to_address(public);
+        let a = client.latest_regular_key_owner(&address).unwrap_or(address);
+        AccountDetails {
+            seq: client.latest_seq(&a),
+            balance: client.latest_balance(&a),
+        }
+    }
+}

@@ -131,18 +131,8 @@ describe("solo - 1 node", function() {
             { actionType: 5, actionLength: 4 },
             { actionType: 6, actionLength: 2 }, // SetShardUsers
             { actionType: 6, actionLength: 4 },
-            { actionType: 7, actionLength: 5 }, // WrapCCC
-            { actionType: 7, actionLength: 7 },
-            { actionType: 0x11, actionLength: 3 }, // UnwrapCCC
-            { actionType: 0x11, actionLength: 5 },
-            { actionType: 0x13, actionLength: 10 }, // MintAsset
-            { actionType: 0x13, actionLength: 12 },
-            { actionType: 0x14, actionLength: 8 }, // TransferAsset
-            { actionType: 0x14, actionLength: 10 },
-            { actionType: 0x15, actionLength: 9 }, // ChangeAssetScheme
-            { actionType: 0x15, actionLength: 11 },
-            { actionType: 0x18, actionLength: 8 }, // IncreaseAssetSupply
-            { actionType: 0x18, actionLength: 10 }
+            { actionType: 0x19, actionLength: 3 }, // ShardStore
+            { actionType: 0x19, actionLength: 5 }
         ].forEach(function(params: {
             actionType: number;
             actionLength: number;
