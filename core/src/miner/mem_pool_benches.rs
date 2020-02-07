@@ -18,7 +18,7 @@ extern crate test;
 
 use self::test::{black_box, Bencher};
 use super::mem_pool::MemPool;
-use super::mem_pool_types::{AccountDetails, MemPoolInput, PoolingInstant, TxOrigin, TxTimelock};
+use super::mem_pool_types::{AccountDetails, MemPoolInput, PoolingInstant, TxOrigin};
 use crate::transaction::SignedTransaction;
 use ckey::{Generator, KeyPair, Public, Random};
 use ctypes::transaction::{Action, Transaction};
@@ -38,13 +38,9 @@ fn create_input(keypair: &KeyPair, seq: u64, block: Option<PoolingInstant>, time
             quantity: 100,
         },
     };
-    let timelock = TxTimelock {
-        block,
-        timestamp,
-    };
     let signed = SignedTransaction::new_with_sign(tx, keypair.private());
 
-    MemPoolInput::new(signed, TxOrigin::Local, timelock)
+    MemPoolInput::new(signed, TxOrigin::Local)
 }
 
 #[bench]

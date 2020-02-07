@@ -17,7 +17,7 @@
 use super::backup;
 use super::mem_pool_types::{
     AccountDetails, CurrentQueue, FutureQueue, MemPoolInput, MemPoolItem, MemPoolMinFees, MemPoolStatus,
-    PoolingInstant, QueueTag, TransactionOrder, TransactionOrderWithTag, TxOrigin, TxTimelock,
+    PoolingInstant, QueueTag, TransactionOrder, TransactionOrderWithTag, TxOrigin,
 };
 use super::TransactionImportResult;
 use crate::client::{AccountData, BlockChainTrait};
@@ -248,7 +248,6 @@ impl MemPool {
             let signer_public = tx.signer_public();
             let seq = tx.seq;
             let hash = tx.hash();
-            let timelock = input.timelock;
 
             let origin = if input.origin.is_local() && !self.is_local_account.contains(&signer_public) {
                 self.is_local_account.insert(signer_public);
@@ -268,7 +267,7 @@ impl MemPool {
 
             let id = self.next_transaction_id;
             self.next_transaction_id += 1;
-            let item = MemPoolItem::new(tx, origin, inserted_block_number, inserted_timestamp, id, timelock);
+            let item = MemPoolItem::new(tx, origin, inserted_block_number, inserted_timestamp, id);
             let order = TransactionOrder::for_transaction(&item, client_account.seq);
             let order_with_tag = TransactionOrderWithTag::new(order, QueueTag::New);
 
@@ -304,22 +303,16 @@ impl MemPool {
             let mut first_seq = *self.first_seqs.get(&public).unwrap_or(&0);
             let next_seq = self.next_seqs.get(&public).cloned().unwrap_or(current_seq);
 
-            let new_next_seq = if current_seq < first_seq
+            let target_seq = if current_seq < first_seq
                 || inserted_block_number < self.last_block_number
                 || inserted_timestamp < self.last_timestamp
                 || next_seq < current_seq
             {
-                self.check_transactions(public, current_seq, inserted_block_number, inserted_timestamp)
+                current_seq
             } else {
-                to_insert
-                    .get(&public)
-                    .and_then(|v| {
-                        self.check_new_transactions(public, v, next_seq, inserted_block_number, inserted_timestamp)
-                    })
-                    .unwrap_or_else(|| {
-                        self.check_transactions(public, next_seq, inserted_block_number, inserted_timestamp)
-                    })
+                next_seq
             };
+            let new_next_seq = self.next_seq_of_queued(public, target_seq);
 
             let is_this_account_local = new_local_accounts.contains(&public);
             // Need to update transactions because of height/origin change
@@ -461,15 +454,7 @@ impl MemPool {
 
         for public in keys {
             let current_seq = fetch_account(&public).seq;
-
-            let next_seq = to_insert
-                .get(&public)
-                .and_then(|v| {
-                    self.check_new_transactions(public, v, current_seq, recover_block_number, recover_timestamp)
-                })
-                .unwrap_or_else(|| {
-                    self.check_transactions(public, current_seq, recover_block_number, recover_timestamp)
-                });
+            let next_seq = self.next_seq_of_queued(public, current_seq);
 
             self.first_seqs.insert(public, current_seq);
             if next_seq > current_seq {
@@ -552,11 +537,11 @@ impl MemPool {
                 || current_timestamp < self.last_timestamp
                 || next_seq < current_seq
             {
-                self.check_transactions(public, current_seq, current_block_number, current_timestamp)
+                self.next_seq_of_queued(public, current_seq)
             } else if let Some(seq) = removed.get(&public) {
                 *seq
             } else {
-                self.check_transactions(public, next_seq, current_block_number, current_timestamp)
+                self.next_seq_of_queued(public, next_seq)
             };
 
             // Need to update the height
@@ -593,63 +578,14 @@ impl MemPool {
         self.db.write(batch).expect("Low level database error. Some issue with disk?");
     }
 
-    /// Checks the timelock of transactions starting from `start_seq`.
     /// Returns the next seq of the last transaction which can be in the current queue
-    fn check_transactions(
-        &self,
-        public: Public,
-        mut start_seq: u64,
-        current_block_number: PoolingInstant,
-        current_timestamp: u64,
-    ) -> u64 {
+    fn next_seq_of_queued(&self, public: Public, start_seq: u64) -> u64 {
         let row = self
             .by_signer_public
             .row(&public)
             .expect("This function should be called after checking from `self.by_signer_public.keys()`");
 
-        while let Some(order_with_tag) = row.get(&start_seq) {
-            let order = order_with_tag.order;
-            if Self::should_wait_timelock(&order.timelock, current_block_number, current_timestamp) {
-                break
-            }
-            start_seq += 1;
-        }
-
-        start_seq
-    }
-
-    /// Checks the timelock of transactions with the given seqs.
-    /// If there are transactions which should wait timelock, returns the smallest seq by Some(seq).
-    /// If there's no transaction which should wait timelock, returns None.
-    fn check_new_transactions(
-        &self,
-        public: Public,
-        seqs: &[u64],
-        next_seq: u64,
-        current_block_number: PoolingInstant,
-        current_timestamp: u64,
-    ) -> Option<u64> {
-        let row = self
-            .by_signer_public
-            .row(&public)
-            .expect("This function should be called after checking from `self.by_signer_public.keys()`");
-
-        let mut result = None;
-
-        for seq in seqs {
-            if *seq >= next_seq {
-                continue
-            }
-            let order_with_tag = row.get(&seq).expect("Must exist");
-            let order = order_with_tag.order;
-            if Self::should_wait_timelock(&order.timelock, current_block_number, current_timestamp)
-                && (result.is_none() || (result.is_some() && result.unwrap() > *seq))
-            {
-                result = Some(*seq)
-            }
-        }
-
-        result
+        (start_seq..).find(|s| row.get(s).is_none()).expect("Open ended range does not end")
     }
 
     /// Moves the transactions which of seq is in [start_seq, end_seq -1],
@@ -947,21 +883,6 @@ impl MemPool {
     pub fn is_local_transaction(&self, tx_hash: TxHash) -> Option<bool> {
         self.by_hash.get(&tx_hash).map(|found_item| found_item.origin.is_local())
     }
-
-    /// Checks the given timelock with the current time/timestamp.
-    fn should_wait_timelock(timelock: &TxTimelock, best_block_number: BlockNumber, best_block_timestamp: u64) -> bool {
-        if let Some(block_number) = timelock.block {
-            if block_number > best_block_number {
-                return true
-            }
-        }
-        if let Some(timestamp) = timelock.timestamp {
-            if timestamp > best_block_timestamp {
-                return true
-            }
-        }
-        false
-    }
 }
 
 #[cfg(test)]
@@ -982,234 +903,6 @@ pub mod test {
     }
 
     #[test]
-    fn timelock_ordering() {
-        assert_eq!(
-            TxTimelock {
-                block: None,
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: None
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: None,
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: None,
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-
-        // Block is the prior condition.
-        assert_eq!(
-            TxTimelock {
-                block: Some(9),
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: None
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(9),
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(9),
-                timestamp: Some(100)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: None
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(9),
-                timestamp: Some(99)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(9),
-                timestamp: Some(101)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(11),
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: None
-            }),
-            Ordering::Greater
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(11),
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Greater
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(11),
-                timestamp: Some(100)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: None
-            }),
-            Ordering::Greater
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(11),
-                timestamp: Some(99)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Greater
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(11),
-                timestamp: Some(101)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Greater
-        );
-
-        // Compare timestamp if blocks are equal.
-        assert_eq!(
-            TxTimelock {
-                block: Some(10),
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(10),
-                timestamp: Some(99)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Equal
-        );
-        assert_eq!(
-            TxTimelock {
-                block: Some(10),
-                timestamp: Some(101)
-            }
-            .cmp(&TxTimelock {
-                block: Some(10),
-                timestamp: Some(100)
-            }),
-            Ordering::Greater
-        );
-        assert_eq!(
-            TxTimelock {
-                block: None,
-                timestamp: None
-            }
-            .cmp(&TxTimelock {
-                block: None,
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: None,
-                timestamp: Some(99)
-            }
-            .cmp(&TxTimelock {
-                block: None,
-                timestamp: Some(100)
-            }),
-            Ordering::Less
-        );
-        assert_eq!(
-            TxTimelock {
-                block: None,
-                timestamp: Some(100)
-            }
-            .cmp(&TxTimelock {
-                block: None,
-                timestamp: Some(100)
-            }),
-            Ordering::Equal
-        );
-        assert_eq!(
-            TxTimelock {
-                block: None,
-                timestamp: Some(101)
-            }
-            .cmp(&TxTimelock {
-                block: None,
-                timestamp: Some(100)
-            }),
-            Ordering::Greater
-        );
-    }
-
-    #[test]
     fn pay_transaction_increases_cost() {
         let fee = 100;
         let quantity = 100_000;
@@ -1224,12 +917,8 @@ pub mod test {
                 quantity,
             },
         };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
         let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
+        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0);
 
         assert_eq!(fee + quantity, item.cost());
     }
@@ -1237,15 +926,6 @@ pub mod test {
     #[test]
     fn txorigin_encode_and_decode() {
         rlp_encode_and_decode_test!(TxOrigin::External);
-    }
-
-    #[test]
-    fn txtimelock_encode_and_decode() {
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
-        rlp_encode_and_decode_test!(timelock);
     }
 
     #[test]
@@ -1278,12 +958,8 @@ pub mod test {
                 quantity: 0,
             },
         };
-        let timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
         let signed = SignedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0, timelock);
+        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0);
 
         rlp_encode_and_decode_test!(item);
     }
@@ -1301,42 +977,35 @@ pub mod test {
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db.clone(), Default::default());
 
         let fetch_account = fetch_account_creator(&test_client);
-        let no_timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
 
         let inserted_block_number = 1;
         let inserted_timestamp = 100;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
 
-        inputs.push(create_mempool_input_with_pay(1u64, keypair, no_timelock));
-        inputs.push(create_mempool_input_with_pay(3u64, keypair, TxTimelock {
-            block: Some(10),
-            timestamp: None,
-        }));
-        inputs.push(create_mempool_input_with_pay(5u64, keypair, no_timelock));
+        inputs.push(create_mempool_input_with_pay(1u64, keypair));
+        inputs.push(create_mempool_input_with_pay(3u64, keypair));
+        inputs.push(create_mempool_input_with_pay(5u64, keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
         let inserted_block_number = 11;
         let inserted_timestamp = 200;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
-        inputs.push(create_mempool_input_with_pay(2u64, keypair, no_timelock));
-        inputs.push(create_mempool_input_with_pay(4u64, keypair, no_timelock));
+        inputs.push(create_mempool_input_with_pay(2u64, keypair));
+        inputs.push(create_mempool_input_with_pay(4u64, keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
         let inserted_block_number = 20;
         let inserted_timestamp = 300;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
-        inputs.push(create_mempool_input_with_pay(6u64, keypair, no_timelock));
-        inputs.push(create_mempool_input_with_pay(8u64, keypair, no_timelock));
-        inputs.push(create_mempool_input_with_pay(10u64, keypair, no_timelock));
+        inputs.push(create_mempool_input_with_pay(6u64, keypair));
+        inputs.push(create_mempool_input_with_pay(8u64, keypair));
+        inputs.push(create_mempool_input_with_pay(10u64, keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
         let inserted_block_number = 21;
         let inserted_timestamp = 400;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
-        inputs.push(create_mempool_input_with_pay(7u64, keypair, no_timelock));
+        inputs.push(create_mempool_input_with_pay(7u64, keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
         let mut mem_pool_recovered = MemPool::with_limits(8192, usize::max_value(), 3, db, Default::default());
@@ -1382,9 +1051,9 @@ pub mod test {
         SignedTransaction::new_with_sign(tx, keypair.private())
     }
 
-    fn create_mempool_input_with_pay(seq: u64, keypair: KeyPair, timelock: TxTimelock) -> MemPoolInput {
+    fn create_mempool_input_with_pay(seq: u64, keypair: KeyPair) -> MemPoolInput {
         let signed = create_signed_pay(seq, keypair);
-        MemPoolInput::new(signed, TxOrigin::Local, timelock)
+        MemPoolInput::new(signed, TxOrigin::Local)
     }
 
     fn abbreviated_mempool_add(
@@ -1394,14 +1063,10 @@ pub mod test {
         origin: TxOrigin,
     ) -> Vec<Result<TransactionImportResult, Error>> {
         let fetch_account = fetch_account_creator(test_client);
-        let no_timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
 
         let inserted_block_number = 1;
         let inserted_timestamp = 100;
-        let inputs: Vec<MemPoolInput> = txs.into_iter().map(|tx| MemPoolInput::new(tx, origin, no_timelock)).collect();
+        let inputs: Vec<MemPoolInput> = txs.into_iter().map(|tx| MemPoolInput::new(tx, origin)).collect();
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account)
     }
 
@@ -1530,17 +1195,13 @@ pub mod test {
         println!("! {}", address);
         test_client.set_balance(address, 1_000_000_000_000);
         assert_eq!(1_000_000_000_000, test_client.latest_balance(&address));
-        let no_timelock = TxTimelock {
-            block: None,
-            timestamp: None,
-        };
 
         let inserted_block_number = 1;
         let inserted_timestamp = 100;
         let inputs = vec![
-            create_mempool_input_with_pay(0, keypair, no_timelock),
-            create_mempool_input_with_pay(1, keypair, no_timelock),
-            create_mempool_input_with_pay(2, keypair, no_timelock),
+            create_mempool_input_with_pay(0, keypair),
+            create_mempool_input_with_pay(1, keypair),
+            create_mempool_input_with_pay(2, keypair),
         ];
         let result = mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
         assert_eq!(
