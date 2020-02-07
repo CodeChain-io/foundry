@@ -1,0 +1,13 @@
+[package]
+name = "module-macros"
+version = "0.1.0"
+authors = ["CodeChain Team <hi@codechain.io>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0.2"
+syn = "1.0.15"
+proc-macro2 = "1.0.8"
