@@ -105,9 +105,9 @@ dependencies = [
 
 [[package]]
 name = "autocfg"
-version = "0.1.4"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e49efa51329a5fd37e7c79db4621af617cd4e3e5bc224939808d076077077bf"
+checksum = "1d49d90015b3c36167a20fe2810c5cd875ad504b39cff3d4eae7977e6b7c1cb2"
 
 [[package]]
 name = "backtrace"
@@ -687,6 +687,10 @@ dependencies = [
  "time",
  "url 1.7.2",
 ]
+
+[[package]]
+name = "coordinator"
+version = "0.1.0"
 
 [[package]]
 name = "core-foundation"
