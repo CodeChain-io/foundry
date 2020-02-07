@@ -27,6 +27,7 @@ cnetwork = { package = "codechain-network", path = "network" }
 crpc = { package = "codechain-rpc", path = "rpc" }
 csync = { package = "codechain-sync", path = "sync" }
 ctimer = { package = "codechain-timer", path = "util/timer" }
+cmodule = { package = "codechain-module", path = "module" }
 ctrlc = { git = "https://github.com/paritytech/rust-ctrlc.git" }
 fdlimit = "0.1"
 finally-block = "0.1"
@@ -69,4 +70,7 @@ members = [
     "rpc",
     "sync",
     "types",
+    "module",
+    "module-macros",
+    "coordinator"
 ]
