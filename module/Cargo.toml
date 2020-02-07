@@ -1,0 +1,12 @@
+[package]
+name = "codechain-module"
+version = "0.1.0"
+authors = ["CodeChain Team <hi@codechain.io>"]
+edition = "2018"
+
+[dependencies]
+primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
+thiserror = "1.0.11"
+linkme = "0.1.6"
+crossbeam-channel = "0.4.0"
+once_cell = "1.3.1"
