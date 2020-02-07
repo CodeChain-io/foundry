@@ -29,6 +29,7 @@ cinformer = {package = "codechain-informer", path = "informer"}
 crpc = { package = "codechain-rpc", path = "rpc" }
 csync = { package = "codechain-sync", path = "sync" }
 ctimer = { package = "codechain-timer", path = "util/timer" }
+cmodule = { package = "codechain-module", path = "module" }
 ctrlc = { git = "https://github.com/paritytech/rust-ctrlc.git" }
 crossbeam-channel = "0.3"
 fdlimit = "0.1"
@@ -77,5 +78,7 @@ members = [
     "types",
     "coordinator",
     "basic_module/account",
-    "basic_module/staking"
+    "basic_module/staking",
+    "module",
+    "module-macros"
 ]
