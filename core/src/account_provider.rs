@@ -267,7 +267,7 @@ mod tests {
     fn unlock_account_temp() {
         let kp = Random.generate().unwrap();
         let ap = AccountProvider::transient_provider();
-        assert!(ap.insert_account(*kp.private(), &"test".into()).is_ok());
+        assert!(ap.insert_account(kp.private().clone(), &"test".into()).is_ok());
         assert!(ap.unlock_account_temporarily(kp.address(), "test1".into()).is_err());
         assert!(ap.unlock_account_temporarily(kp.address(), "test".into()).is_ok());
         assert!(ap.get_account(&kp.address(), None).is_ok());
@@ -278,7 +278,7 @@ mod tests {
     fn unlock_account_perm() {
         let kp = Random.generate().unwrap();
         let ap = AccountProvider::transient_provider();
-        assert!(ap.insert_account(*kp.private(), &"test".into()).is_ok());
+        assert!(ap.insert_account(kp.private().clone(), &"test".into()).is_ok());
         assert!(ap.unlock_account_permanently(kp.address(), "test1".into()).is_err());
         assert!(ap.unlock_account_permanently(kp.address(), "test".into()).is_ok());
         assert!(ap.get_account(&kp.address(), None).is_ok());
