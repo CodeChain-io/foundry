@@ -1021,23 +1021,23 @@ mod tests_state {
 
 #[cfg(test)]
 mod tests_tx {
-    use ckey::{Ed25519Private as Private, Generator, Random};
+    use ckey::{Generator, Random};
     use ctypes::errors::RuntimeError;
 
     use super::*;
     use crate::tests::helpers::{get_temp_state, get_test_client};
     use crate::StateError;
 
-    fn address() -> (Address, Public, Private) {
+    fn address() -> (Address, Public) {
         let keypair = Random.generate().unwrap();
-        (keypair.address(), *keypair.public(), *keypair.private())
+        (keypair.address(), *keypair.public())
     }
 
     #[test]
     fn apply_error_for_invalid_seq() {
         let mut state = get_temp_state();
 
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
         set_top_level_state!(state, [(account: sender => balance: 20)]);
 
         let tx = transaction!(seq: 2, fee: 5, pay!(address().0, 10));
@@ -1058,7 +1058,7 @@ mod tests_tx {
     fn apply_error_for_not_enough_cash() {
         let mut state = get_temp_state();
 
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
         set_top_level_state!(state, [(account: sender => balance: 4)]);
 
         let tx = transaction!(fee: 5, pay!(address().0, 10));
@@ -1081,7 +1081,7 @@ mod tests_tx {
     fn apply_pay() {
         let mut state = get_temp_state();
 
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
         set_top_level_state!(state, [(account: sender => balance: 20)]);
 
         let receiver = 1u64.into();
@@ -1097,7 +1097,7 @@ mod tests_tx {
     #[test]
     fn apply_error_for_action_failure() {
         let mut state = get_temp_state();
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
         set_top_level_state!(state, [
             (account: sender => balance: 20)
         ]);
@@ -1141,7 +1141,7 @@ mod tests_tx {
     #[allow(clippy::cognitive_complexity)]
     fn apply_create_shard() {
         let mut state = get_temp_state();
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
         let users = vec![Address::random(), Address::random(), Address::random()];
         set_top_level_state!(state, [
             (account: users[0] => seq: 1),
@@ -1189,7 +1189,7 @@ mod tests_tx {
     #[allow(clippy::cognitive_complexity)]
     fn apply_create_shard_when_there_are_default_shards() {
         let mut state = get_temp_state();
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
         let shard_owner0 = address().0;
         let shard_owner1 = address().0;
         let shard_user = Address::random();
@@ -1246,7 +1246,7 @@ mod tests_tx {
     #[test]
     fn get_shard_text_in_invalid_shard2() {
         let mut state = get_temp_state();
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
         set_top_level_state!(state, [
             (account: sender => balance: 20)
         ]);
@@ -1263,7 +1263,7 @@ mod tests_tx {
 
     #[test]
     fn set_shard_owners() {
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
 
         let shard_id = 0;
 
@@ -1288,7 +1288,7 @@ mod tests_tx {
 
     #[test]
     fn new_owners_must_contain_sender() {
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
 
         let shard_id = 0;
 
@@ -1320,7 +1320,7 @@ mod tests_tx {
         let shard_id = 0;
 
         let mut state = get_temp_state();
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
         set_top_level_state!(state, [
             (account: sender => balance: 100),
             (account: original_owner => seq: 1),
@@ -1344,7 +1344,7 @@ mod tests_tx {
 
     #[test]
     fn set_shard_owners_fail_on_invalid_shard_id() {
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
         let shard_id = 0;
 
         let mut state = get_temp_state();
@@ -1373,7 +1373,7 @@ mod tests_tx {
     #[test]
     fn user_cannot_set_owners() {
         let (original_owner, ..) = address();
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
         let shard_id = 0;
 
         let mut state = get_temp_state();
@@ -1400,7 +1400,7 @@ mod tests_tx {
 
     #[test]
     fn set_shard_users() {
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
         let old_users = vec![Address::random(), Address::random(), Address::random()];
         let shard_id = 0;
 
@@ -1427,7 +1427,7 @@ mod tests_tx {
 
     #[test]
     fn user_cannot_set_shard_users() {
-        let (sender, sender_public, _) = address();
+        let (sender, sender_public) = address();
         let owners = vec![Address::random(), Address::random(), Address::random()];
         let old_users = vec![Address::random(), Address::random(), Address::random(), sender];
         let shard_id = 0;

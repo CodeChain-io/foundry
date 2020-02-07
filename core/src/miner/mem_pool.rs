@@ -1071,30 +1071,30 @@ pub mod test {
         let inserted_timestamp = 100;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
 
-        inputs.push(create_mempool_input_with_pay(1u64, keypair));
-        inputs.push(create_mempool_input_with_pay(3u64, keypair));
-        inputs.push(create_mempool_input_with_pay(5u64, keypair));
+        inputs.push(create_mempool_input_with_pay(1u64, &keypair));
+        inputs.push(create_mempool_input_with_pay(3u64, &keypair));
+        inputs.push(create_mempool_input_with_pay(5u64, &keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
         let inserted_block_number = 11;
         let inserted_timestamp = 200;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
-        inputs.push(create_mempool_input_with_pay(2u64, keypair));
-        inputs.push(create_mempool_input_with_pay(4u64, keypair));
+        inputs.push(create_mempool_input_with_pay(2u64, &keypair));
+        inputs.push(create_mempool_input_with_pay(4u64, &keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
         let inserted_block_number = 20;
         let inserted_timestamp = 300;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
-        inputs.push(create_mempool_input_with_pay(6u64, keypair));
-        inputs.push(create_mempool_input_with_pay(8u64, keypair));
-        inputs.push(create_mempool_input_with_pay(10u64, keypair));
+        inputs.push(create_mempool_input_with_pay(6u64, &keypair));
+        inputs.push(create_mempool_input_with_pay(8u64, &keypair));
+        inputs.push(create_mempool_input_with_pay(10u64, &keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
         let inserted_block_number = 21;
         let inserted_timestamp = 400;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
-        inputs.push(create_mempool_input_with_pay(7u64, keypair));
+        inputs.push(create_mempool_input_with_pay(7u64, &keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
         let mut mem_pool_recovered = MemPool::with_limits(8192, usize::max_value(), 3, db, Default::default());
@@ -1112,7 +1112,7 @@ pub mod test {
         assert_eq!(mem_pool_recovered.future, mem_pool.future);
     }
 
-    fn create_signed_pay(seq: u64, keypair: KeyPair) -> SignedTransaction {
+    fn create_signed_pay(seq: u64, keypair: &KeyPair) -> SignedTransaction {
         let receiver = 1u64.into();
         let tx = Transaction {
             seq,
@@ -1126,7 +1126,7 @@ pub mod test {
         SignedTransaction::new_with_sign(tx, keypair.private())
     }
 
-    fn create_signed_pay_with_fee(seq: u64, fee: u64, keypair: KeyPair) -> SignedTransaction {
+    fn create_signed_pay_with_fee(seq: u64, fee: u64, keypair: &KeyPair) -> SignedTransaction {
         let receiver = 1u64.into();
         let tx = Transaction {
             seq,
@@ -1140,8 +1140,8 @@ pub mod test {
         SignedTransaction::new_with_sign(tx, keypair.private())
     }
 
-    fn create_mempool_input_with_pay(seq: u64, keypair: KeyPair) -> MemPoolInput {
-        let signed = create_signed_pay(seq, keypair);
+    fn create_mempool_input_with_pay(seq: u64, keypair: &KeyPair) -> MemPoolInput {
+        let signed = create_signed_pay(seq, &keypair);
         MemPoolInput::new(signed, TxOrigin::Local)
     }
 
@@ -1175,9 +1175,9 @@ pub mod test {
         test_client.set_balance(address, 1_000_000_000_000);
 
         let txs = vec![
-            create_signed_pay_with_fee(0, 200, keypair),
-            create_signed_pay_with_fee(1, 140, keypair),
-            create_signed_pay_with_fee(2, 160, keypair),
+            create_signed_pay_with_fee(0, 200, &keypair),
+            create_signed_pay_with_fee(1, 140, &keypair),
+            create_signed_pay_with_fee(2, 160, &keypair),
         ];
         let result = abbreviated_mempool_add(&test_client, &mut mem_pool, txs, TxOrigin::Local);
         assert_eq!(
@@ -1191,9 +1191,9 @@ pub mod test {
 
         assert_eq!(
             vec![
-                create_signed_pay_with_fee(0, 200, keypair),
-                create_signed_pay_with_fee(1, 140, keypair),
-                create_signed_pay_with_fee(2, 160, keypair)
+                create_signed_pay_with_fee(0, 200, &keypair),
+                create_signed_pay_with_fee(1, 140, &keypair),
+                create_signed_pay_with_fee(2, 160, &keypair)
             ],
             mem_pool.top_transactions(std::usize::MAX, None, 0..std::u64::MAX).transactions
         );
@@ -1216,10 +1216,10 @@ pub mod test {
         test_client.set_balance(address, 1_000_000_000_000);
 
         let txs = vec![
-            create_signed_pay_with_fee(0, 200, keypair),
-            create_signed_pay_with_fee(1, 140, keypair),
-            create_signed_pay_with_fee(1, 160, keypair),
-            create_signed_pay_with_fee(2, 149, keypair),
+            create_signed_pay_with_fee(0, 200, &keypair),
+            create_signed_pay_with_fee(1, 140, &keypair),
+            create_signed_pay_with_fee(1, 160, &keypair),
+            create_signed_pay_with_fee(2, 149, &keypair),
         ];
         let result = abbreviated_mempool_add(&test_client, &mut mem_pool, txs, TxOrigin::External);
         assert_eq!(
@@ -1239,7 +1239,7 @@ pub mod test {
         );
 
         assert_eq!(
-            vec![create_signed_pay_with_fee(0, 200, keypair), create_signed_pay_with_fee(1, 160, keypair)],
+            vec![create_signed_pay_with_fee(0, 200, &keypair), create_signed_pay_with_fee(1, 160, &keypair)],
             mem_pool.top_transactions(std::usize::MAX, None, 0..std::u64::MAX).transactions
         );
 
@@ -1264,9 +1264,9 @@ pub mod test {
         let inserted_block_number = 1;
         let inserted_timestamp = 100;
         let inputs = vec![
-            create_mempool_input_with_pay(0, keypair),
-            create_mempool_input_with_pay(1, keypair),
-            create_mempool_input_with_pay(2, keypair),
+            create_mempool_input_with_pay(0, &keypair),
+            create_mempool_input_with_pay(1, &keypair),
+            create_mempool_input_with_pay(2, &keypair),
         ];
         let result = mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
         assert_eq!(
@@ -1279,7 +1279,7 @@ pub mod test {
         );
 
         assert_eq!(
-            vec![create_signed_pay(0, keypair), create_signed_pay(1, keypair), create_signed_pay(2, keypair),],
+            vec![create_signed_pay(0, &keypair), create_signed_pay(1, &keypair), create_signed_pay(2, &keypair),],
             mem_pool.top_transactions(std::usize::MAX, None, 0..std::u64::MAX).transactions
         );
 
@@ -1291,13 +1291,13 @@ pub mod test {
             let address = public_to_address(p);
             test_client.latest_seq(&address)
         };
-        mem_pool.remove(&[create_signed_pay(1, keypair).hash()], &fetch_seq, best_block_number, best_block_timestamp);
+        mem_pool.remove(&[create_signed_pay(1, &keypair).hash()], &fetch_seq, best_block_number, best_block_timestamp);
 
         assert_eq!(
-            vec![create_signed_pay(0, keypair),],
+            vec![create_signed_pay(0, &keypair),],
             mem_pool.top_transactions(std::usize::MAX, None, 0..std::u64::MAX).transactions
         );
 
-        assert_eq!(vec![create_signed_pay(2, keypair),], mem_pool.future_transactions());
+        assert_eq!(vec![create_signed_pay(2, &keypair),], mem_pool.future_transactions());
     }
 }

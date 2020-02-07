@@ -279,7 +279,7 @@ impl TestBlockChainClient {
 
     /// Inserts a transaction to miners mem pool.
     pub fn insert_transaction_to_pool(&self) -> TxHash {
-        let keypair = Random.generate().unwrap();
+        let keypair: KeyPair = Random.generate().unwrap();
         let tx = Transaction {
             seq: 0,
             fee: 10,
@@ -308,10 +308,10 @@ impl TestBlockChainClient {
     pub fn set_random_validators(&mut self, count: usize) {
         let mut pubkeys: Vec<Public> = vec![];
         for _ in 0..count {
-            let random_priv_key = Private::from(H256::random());
-            let key_pair = KeyPair::from_private(random_priv_key).unwrap();
-            self.validator_keys.write().insert(*key_pair.public(), *key_pair.private());
-            pubkeys.push(*key_pair.public());
+            let private = Private::random();
+            let public = private.public_key();
+            self.validator_keys.write().insert(public, private);
+            pubkeys.push(public);
         }
         let fixed_validators: NextValidators = NextValidators::from_vector_to_test(
             pubkeys.into_iter().map(|pubkey| Validator::new_for_test(0, 0, pubkey)).collect(),

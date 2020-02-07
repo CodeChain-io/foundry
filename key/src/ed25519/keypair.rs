@@ -75,4 +75,8 @@ impl KeyPair {
     pub fn address(&self) -> Address {
         public_to_address(&self.public)
     }
+
+    pub fn get_private(self) -> Private {
+        self.private
+    }
 }

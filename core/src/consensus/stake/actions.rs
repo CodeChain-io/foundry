@@ -468,8 +468,9 @@ mod tests {
         };
         let reversed_idx = client.get_validators().len() - 1 - signer_index;
         let pubkey = *client.get_validators().get(reversed_idx).unwrap().pubkey();
-        let privkey = *client.validator_keys.read().get(&pubkey).unwrap();
-        let signature = sign(&privkey, &twisted.hash()).unwrap();
+        let validator_keys = client.validator_keys.read();
+        let privkey = validator_keys.get(&pubkey).unwrap();
+        let signature = sign(&twisted.hash(), privkey);
 
         ConsensusMessage {
             signature,
