@@ -31,7 +31,7 @@ use crate::transaction::{PendingSignedTransactions, SignedTransaction, Unverifie
 use crate::types::{BlockId, TransactionId};
 use ckey::{public_to_address, Address, Password, PlatformAddress, Public};
 use cstate::{FindActionHandler, TopLevelState};
-use ctypes::errors::{HistoryError, RuntimeError};
+use ctypes::errors::HistoryError;
 use ctypes::transaction::{Action, IncompleteTransaction};
 use ctypes::{BlockHash, TxHash};
 use cvm::ChainTimeInfo;
@@ -335,7 +335,6 @@ impl Miner {
         let tx_total = transactions.len();
         let mut invalid_tx_users = HashSet::new();
 
-        let immune_users = self.immune_users.read();
         for tx in transactions {
             let signer_public = tx.signer_public();
             let signer_address = public_to_address(&signer_public);
@@ -365,21 +364,6 @@ impl Miner {
                 // already have transaction - ignore
                 Err(Error::History(HistoryError::TransactionAlreadyImported)) => {}
                 Err(e) => {
-                    match e {
-                        Error::Runtime(RuntimeError::AssetSupplyOverflow)
-                        | Error::Runtime(RuntimeError::InvalidScript) => {
-                            if !self
-                                .mem_pool
-                                .read()
-                                .is_local_transaction(hash)
-                                .expect("The tx is clearly fetched from the mempool")
-                                && !immune_users.contains(&signer_address)
-                            {
-                                self.malicious_users.write().insert(signer_address);
-                            }
-                        }
-                        _ => {}
-                    }
                     invalid_tx_users.insert(signer_public);
                     invalid_transactions.push(hash);
                     cinfo!(

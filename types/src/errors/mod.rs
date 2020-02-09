@@ -21,7 +21,7 @@ mod runtime_error;
 mod syntax_error;
 
 pub use self::history_error::Error as HistoryError;
-pub use self::runtime_error::{Error as RuntimeError, UnlockFailureReason};
+pub use self::runtime_error::Error as RuntimeError;
 pub use self::syntax_error::Error as SyntaxError;
 
 trait TaggedRlp {
