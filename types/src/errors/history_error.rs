@@ -35,10 +35,10 @@ pub enum Error {
 #[derive(Clone, Copy)]
 #[repr(u8)]
 enum ErrorID {
-    LimitReached = 2,
-    Old = 3,
-    TooCheapToReplace = 6,
-    TxAlreadyImported = 7,
+    LimitReached = 1,
+    Old = 2,
+    TooCheapToReplace = 3,
+    TxAlreadyImported = 4,
 }
 
 impl Encodable for ErrorID {
@@ -51,10 +51,10 @@ impl Decodable for ErrorID {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         let tag = rlp.as_val()?;
         match tag {
-            2u8 => Ok(ErrorID::LimitReached),
-            3 => Ok(ErrorID::Old),
-            6 => Ok(ErrorID::TooCheapToReplace),
-            7 => Ok(ErrorID::TxAlreadyImported),
+            1u8 => Ok(ErrorID::LimitReached),
+            2 => Ok(ErrorID::Old),
+            3 => Ok(ErrorID::TooCheapToReplace),
+            4 => Ok(ErrorID::TxAlreadyImported),
             _ => Err(DecoderError::Custom("Unexpected ErrorID Value")),
         }
     }

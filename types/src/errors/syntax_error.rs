@@ -44,14 +44,14 @@ pub enum Error {
 #[derive(Clone, Copy)]
 #[repr(u8)]
 enum ErrorID {
-    EmptyShardOwners = 4,
-    InsufficientFee = 7,
-    InvalidNetworkID = 11,
-    InvalidApproval = 21,
-    MetadataTooBig = 22,
-    TextContentTooBig = 24,
-    TxIsTooBig = 27,
-    InvalidCustomAction = 32,
+    EmptyShardOwners = 1,
+    InsufficientFee = 2,
+    InvalidNetworkID = 3,
+    InvalidApproval = 4,
+    MetadataTooBig = 5,
+    TextContentTooBig = 6,
+    TxIsTooBig = 7,
+    InvalidCustomAction = 8,
 }
 
 impl Encodable for ErrorID {
@@ -64,14 +64,14 @@ impl Decodable for ErrorID {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         let tag = rlp.as_val()?;
         match tag {
-            4u8 => Ok(ErrorID::EmptyShardOwners),
-            7 => Ok(ErrorID::InsufficientFee),
-            11 => Ok(ErrorID::InvalidNetworkID),
-            21 => Ok(ErrorID::InvalidApproval),
-            22 => Ok(ErrorID::MetadataTooBig),
-            24 => Ok(ErrorID::TextContentTooBig),
-            27 => Ok(ErrorID::TxIsTooBig),
-            32 => Ok(ErrorID::InvalidCustomAction),
+            1u8 => Ok(ErrorID::EmptyShardOwners),
+            2 => Ok(ErrorID::InsufficientFee),
+            3 => Ok(ErrorID::InvalidNetworkID),
+            4 => Ok(ErrorID::InvalidApproval),
+            5 => Ok(ErrorID::MetadataTooBig),
+            6 => Ok(ErrorID::TextContentTooBig),
+            7 => Ok(ErrorID::TxIsTooBig),
+            8 => Ok(ErrorID::InvalidCustomAction),
             _ => Err(DecoderError::Custom("Unexpected ErrorID Value")),
         }
     }
