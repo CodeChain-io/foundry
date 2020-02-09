@@ -24,7 +24,6 @@ use std::fmt::{Display, Formatter, Result as FormatResult};
 #[derive(Debug, PartialEq, Clone, Eq, Serialize)]
 #[serde(tag = "type", content = "content")]
 pub enum Error {
-    FailedToHandleCustomAction(String),
     /// Sender doesn't have enough funds to pay for this Transaction
     InsufficientBalance {
         address: Address,
@@ -35,7 +34,6 @@ pub enum Error {
     },
     InsufficientPermission,
     /// Returned when transaction seq does not match state seq
-    InvalidSeq(Mismatch<u64>),
     InvalidShardId(ShardId),
     InvalidTransferDestination,
     NewOwnersMustContainSender,
@@ -43,10 +41,12 @@ pub enum Error {
     RegularKeyAlreadyInUseAsPlatformAccount,
     /// Tried to use master key even register key is registered
     CannotUseMasterKey,
+    InvalidSeq(Mismatch<u64>),
     NonActiveAccount {
         address: Address,
         name: String,
     },
+    FailedToHandleCustomAction(String),
     SignatureOfInvalidAccount(Address),
     InsufficientStakes(Mismatch<u64>),
     InvalidValidatorIndex {
@@ -58,20 +58,20 @@ pub enum Error {
 #[derive(Clone, Copy)]
 #[repr(u8)]
 enum ErrorID {
-    InsufficientBalance = 8,
-    InsufficientPermission = 9,
-    InvalidShardID = 15,
-    InvalidTransferDestination = 16,
-    NewOwnersMustContainSender = 17,
-    RegularKeyAlreadyInUse = 19,
-    RegularKeyAlreadyInUseAsPlatform = 20,
-    CannotUseMasterKey = 25,
-    InvalidSeq = 28,
-    NonActiveAccount = 30,
-    FailedToHandleCustomAction = 31,
-    SignatureOfInvalid = 32,
-    InsufficientStakes = 33,
-    InvalidValidatorIndex = 34,
+    InsufficientBalance = 1,
+    InsufficientPermission = 2,
+    InvalidShardID = 3,
+    InvalidTransferDestination = 4,
+    NewOwnersMustContainSender = 5,
+    RegularKeyAlreadyInUse = 6,
+    RegularKeyAlreadyInUseAsPlatform = 7,
+    CannotUseMasterKey = 8,
+    InvalidSeq = 9,
+    NonActiveAccount = 10,
+    FailedToHandleCustomAction = 11,
+    SignatureOfInvalid = 12,
+    InsufficientStakes = 13,
+    InvalidValidatorIndex = 14,
 }
 
 impl Encodable for ErrorID {
@@ -84,20 +84,20 @@ impl Decodable for ErrorID {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         let tag = rlp.as_val()?;
         match tag {
-            8u8 => Ok(ErrorID::FailedToHandleCustomAction),
-            10 => Ok(ErrorID::InsufficientBalance),
-            11 => Ok(ErrorID::InsufficientPermission),
-            18 => Ok(ErrorID::InvalidSeq),
-            19 => Ok(ErrorID::InvalidShardID),
-            20 => Ok(ErrorID::InvalidTransferDestination),
-            21 => Ok(ErrorID::NewOwnersMustContainSender),
-            23 => Ok(ErrorID::RegularKeyAlreadyInUse),
-            24 => Ok(ErrorID::RegularKeyAlreadyInUseAsPlatform),
-            30 => Ok(ErrorID::CannotUseMasterKey),
-            31 => Ok(ErrorID::NonActiveAccount),
-            32 => Ok(ErrorID::SignatureOfInvalid),
-            33 => Ok(ErrorID::InsufficientStakes),
-            34 => Ok(ErrorID::InvalidValidatorIndex),
+            1u8 => Ok(ErrorID::InsufficientBalance),
+            2 => Ok(ErrorID::InsufficientPermission),
+            3 => Ok(ErrorID::InvalidShardID),
+            4 => Ok(ErrorID::InvalidTransferDestination),
+            5 => Ok(ErrorID::NewOwnersMustContainSender),
+            6 => Ok(ErrorID::RegularKeyAlreadyInUse),
+            7 => Ok(ErrorID::RegularKeyAlreadyInUseAsPlatform),
+            8 => Ok(ErrorID::CannotUseMasterKey),
+            9 => Ok(ErrorID::InvalidSeq),
+            10 => Ok(ErrorID::NonActiveAccount),
+            11 => Ok(ErrorID::FailedToHandleCustomAction),
+            12 => Ok(ErrorID::SignatureOfInvalid),
+            13 => Ok(ErrorID::InsufficientStakes),
+            14 => Ok(ErrorID::InvalidValidatorIndex),
             _ => Err(DecoderError::Custom("Unexpected ActionTag Value")),
         }
     }
