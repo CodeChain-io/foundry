@@ -1,7 +1,7 @@
-name: codechain
+name: foundry
 version_short: "v"
 author: CodeChain Team <hi@codechain.io>
-about: CodeChian client
+about: Foundry client
 args:
     - chain:
         short: c
