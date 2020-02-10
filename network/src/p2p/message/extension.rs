@@ -123,7 +123,7 @@ impl Decodable for Message {
         let item_count = rlp.item_count()?;
         if item_count != 3 {
             return Err(DecoderError::RlpInvalidLength {
-                expected: 5,
+                expected: 3,
                 got: item_count,
             })
         }
