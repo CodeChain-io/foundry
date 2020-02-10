@@ -17,10 +17,24 @@
 extern crate codechain_crypto as crypto;
 #[macro_use]
 extern crate lazy_static;
+extern crate bech32;
+extern crate bls_sigs_ref;
+extern crate never_type;
+extern crate pairing_plus;
+extern crate parking_lot;
+extern crate primitives;
+extern crate rand;
+extern crate rand_xorshift;
+extern crate rlp;
+extern crate rustc_hex;
+extern crate rustc_serialize;
+extern crate secp256k1;
+extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 
 mod address;
+mod bls;
 mod ecdsa;
 mod error;
 mod exchange;
@@ -33,6 +47,9 @@ mod random;
 mod schnorr;
 
 pub use crate::address::Address;
+pub use crate::bls::{
+    aggregate_signatures_bls, sign_bls, verify_aggregated_bls, verify_bls, BlsPrivate, BlsPublic, BlsSignature, BlsKeyPair
+};
 pub use crate::ecdsa::{
     recover_ecdsa as recover, sign_ecdsa as sign, verify_ecdsa as verify, verify_ecdsa_address as verify_address,
     ECDSASignature as Signature, ECDSA_SIGNATURE_LENGTH as SIGNATURE_LENGTH,
