@@ -324,3 +324,5 @@ pub trait StateInfo {
 pub trait SnapshotClient {
     fn notify_snapshot(&self, id: BlockId);
 }
+
+pub trait IBCClient {}

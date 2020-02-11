@@ -27,7 +27,7 @@ pub mod helpers {
     use rlp::Encodable;
 
     use crate::impls::TopLevelState;
-    use crate::{FindActionHandler, Metadata, MetadataAddress, StateDB};
+    use crate::{FindActionHandler, IBCTransactionExecutor, Metadata, MetadataAddress, StateDB};
 
     pub struct TestClient {}
 
@@ -42,6 +42,8 @@ pub mod helpers {
     }
 
     impl FindActionHandler for TestClient {}
+
+    impl IBCTransactionExecutor for TestClient {}
 
     pub fn get_memory_db() -> Arc<dyn KeyValueDB> {
         Arc::new(kvdb_memorydb::create(1))

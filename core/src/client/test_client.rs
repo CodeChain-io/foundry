@@ -50,7 +50,7 @@ use cdb;
 use ckey::{public_to_address, Address, Generator, KeyPair, NetworkId, PlatformAddress, Private, Public, Random};
 use cnetwork::NodeId;
 use cstate::tests::helpers::empty_top_state;
-use cstate::{FindActionHandler, StateDB, TopLevelState};
+use cstate::{FindActionHandler, IBCTransactionExecutor, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::header::Header;
 use ctypes::transaction::{Action, Transaction};
@@ -691,3 +691,5 @@ impl StateInfo for TestBlockChainClient {
         Some(top_state)
     }
 }
+
+impl IBCTransactionExecutor for TestBlockChainClient {}

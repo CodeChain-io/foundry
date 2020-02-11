@@ -22,7 +22,7 @@ use crate::transaction::{SignedTransaction, UnverifiedTransaction};
 use crate::BlockId;
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Address;
-use cstate::{FindActionHandler, StateDB, StateError, StateWithCache, TopLevelState};
+use cstate::{FindActionHandler, IBCTransactionExecutor, StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
@@ -149,7 +149,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Push a transaction into the block.
-    pub fn push_transaction<C: ChainTimeInfo + FindActionHandler>(
+    pub fn push_transaction<C: ChainTimeInfo + FindActionHandler + IBCTransactionExecutor>(
         &mut self,
         tx: SignedTransaction,
         h: Option<TxHash>,
@@ -192,7 +192,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Push transactions onto the block.
-    pub fn push_transactions<C: ChainTimeInfo + FindActionHandler>(
+    pub fn push_transactions<C: ChainTimeInfo + FindActionHandler + IBCTransactionExecutor>(
         &mut self,
         transactions: &[SignedTransaction],
         client: &C,
@@ -455,7 +455,7 @@ impl IsBlock for SealedBlock {
 }
 
 /// Enact the block given by block header, transactions and uncles
-pub fn enact<C: ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo>(
+pub fn enact<C: ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo + IBCTransactionExecutor>(
     header: &Header,
     transactions: &[SignedTransaction],
     engine: &dyn CodeChainEngine,

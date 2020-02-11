@@ -24,6 +24,7 @@ use ccore::{
 use cjson::bytes::Bytes;
 use ckey::{Address, KeyPair, Private};
 use cnetwork::{unbounded_event_callback, EventSender, IntoSocketAddr};
+use cstate::IBCTransactionExecutor;
 use csync::BlockSyncEvent;
 use ctypes::transaction::{Action, Transaction};
 use ctypes::BlockHash;
@@ -63,7 +64,14 @@ where
 
 impl<C, M> Devel for DevelClient<C, M>
 where
-    C: DatabaseClient + EngineInfo + EngineClient + MiningBlockChainClient + TermInfo + SnapshotClient + 'static,
+    C: DatabaseClient
+        + EngineInfo
+        + EngineClient
+        + MiningBlockChainClient
+        + TermInfo
+        + SnapshotClient
+        + IBCTransactionExecutor
+        + 'static,
     M: MinerService + 'static,
 {
     fn get_state_trie_keys(&self, offset: usize, limit: usize) -> Result<Vec<H256>> {

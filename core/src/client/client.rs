@@ -36,7 +36,9 @@ use cdb::{new_journaldb, Algorithm, AsHashDB, DatabaseError};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress, Public};
 use cnetwork::NodeId;
-use cstate::{ActionHandler, FindActionHandler, StateDB, StateResult, TopLevelState, TopStateView};
+use cstate::{
+    ActionHandler, FindActionHandler, IBCTransactionExecutor, StateDB, StateResult, TopLevelState, TopStateView,
+};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
 use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
@@ -854,5 +856,17 @@ impl SnapshotClient for Client {
         if let Some(header) = self.block_header(&id) {
             self.engine.send_snapshot_notify(header.hash())
         }
+    }
+}
+
+impl IBCTransactionExecutor for Client {
+    fn execute(
+        &self,
+        _bytes: &[u8],
+        _state: &mut TopLevelState,
+        _fee_payer: &Address,
+        _sender_pubkey: &Public,
+    ) -> StateResult<()> {
+        unimplemented!()
     }
 }

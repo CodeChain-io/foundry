@@ -30,7 +30,7 @@ use crate::scheme::Scheme;
 use crate::transaction::{PendingSignedTransactions, SignedTransaction, UnverifiedTransaction};
 use crate::types::{BlockId, TransactionId};
 use ckey::{public_to_address, Address, Password, PlatformAddress, Public};
-use cstate::{FindActionHandler, TopLevelState};
+use cstate::{FindActionHandler, IBCTransactionExecutor, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::transaction::{Action, IncompleteTransaction};
 use ctypes::{BlockHash, TxHash};
@@ -287,7 +287,14 @@ impl Miner {
 
     /// Prepares new block for sealing including top transactions from queue and seal it.
     fn prepare_and_seal_block<
-        C: AccountData + BlockChainTrait + BlockProducer + ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo,
+        C: AccountData
+            + BlockChainTrait
+            + BlockProducer
+            + ChainTimeInfo
+            + EngineInfo
+            + FindActionHandler
+            + TermInfo
+            + IBCTransactionExecutor,
     >(
         &self,
         parent_block_id: BlockId,
@@ -519,7 +526,8 @@ impl MinerService for Miner {
             + ImportBlock
             + ChainTimeInfo
             + FindActionHandler
-            + TermInfo, {
+            + TermInfo
+            + IBCTransactionExecutor, {
         ctrace!(MINER, "update_sealing: preparing a block");
 
         let block = match self.prepare_and_seal_block(parent_block, chain) {
@@ -557,7 +565,7 @@ impl MinerService for Miner {
         }
     }
 
-    fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
+    fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo + IBCTransactionExecutor>(
         &self,
         client: &C,
         transactions: Vec<UnverifiedTransaction>,
@@ -582,7 +590,7 @@ impl MinerService for Miner {
         results
     }
 
-    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo>(
+    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo + IBCTransactionExecutor>(
         &self,
         chain: &C,
         tx: SignedTransaction,
@@ -627,7 +635,9 @@ impl MinerService for Miner {
         imported
     }
 
-    fn import_incomplete_transaction<C: MiningBlockChainClient + AccountData + EngineInfo + TermInfo>(
+    fn import_incomplete_transaction<
+        C: MiningBlockChainClient + AccountData + EngineInfo + TermInfo + IBCTransactionExecutor,
+    >(
         &self,
         client: &C,
         account_provider: &AccountProvider,
@@ -687,7 +697,7 @@ impl MinerService for Miner {
         self.mem_pool.read().future_transactions()
     }
 
-    fn start_sealing<C: MiningBlockChainClient + EngineInfo + TermInfo>(&self, client: &C) {
+    fn start_sealing<C: MiningBlockChainClient + EngineInfo + TermInfo + IBCTransactionExecutor>(&self, client: &C) {
         cdebug!(MINER, "Start sealing");
         self.sealing_enabled.store(true, Ordering::Relaxed);
         // ------------------------------------------------------------------
