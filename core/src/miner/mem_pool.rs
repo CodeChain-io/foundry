@@ -878,11 +878,6 @@ impl MemPool {
             .map(|t| t.tx.clone())
             .collect()
     }
-
-    /// Returns Some(true) if the given transaction is local and None for not found.
-    pub fn is_local_transaction(&self, tx_hash: TxHash) -> Option<bool> {
-        self.by_hash.get(&tx_hash).map(|found_item| found_item.origin.is_local())
-    }
 }
 
 #[cfg(test)]

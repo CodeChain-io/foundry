@@ -1,4 +1,4 @@
-// Copyright 2019. Kodebox, Inc.
+// Copyright 2019-2020. Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::TaggedRlp;
-use crate::transaction::Timelock;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 
@@ -26,30 +25,20 @@ pub enum Error {
     LimitReached,
     /// Transaction is not valid anymore (state already has higher seq)
     Old,
-    Timelocked {
-        timelock: Timelock,
-        remaining_time: u64,
-    },
     /// Transction has too low fee
     /// (there is already a transaction with the same sender-seq but higher gas price)
     TooCheapToReplace,
     /// Transaction is already imported to the queue
     TransactionAlreadyImported,
-    TransferExpired {
-        expiration: u64,
-        timestamp: u64,
-    },
 }
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
 enum ErrorID {
-    LimitReached = 2,
-    Old = 3,
-    Timelocked = 5,
-    TooCheapToReplace = 6,
-    TxAlreadyImported = 7,
-    TransferExpired = 8,
+    LimitReached = 1,
+    Old = 2,
+    TooCheapToReplace = 3,
+    TxAlreadyImported = 4,
 }
 
 impl Encodable for ErrorID {
@@ -62,12 +51,10 @@ impl Decodable for ErrorID {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         let tag = rlp.as_val()?;
         match tag {
-            2u8 => Ok(ErrorID::LimitReached),
-            3 => Ok(ErrorID::Old),
-            5 => Ok(ErrorID::Timelocked),
-            6 => Ok(ErrorID::TooCheapToReplace),
-            7 => Ok(ErrorID::TxAlreadyImported),
-            8 => Ok(ErrorID::TransferExpired),
+            1u8 => Ok(ErrorID::LimitReached),
+            2 => Ok(ErrorID::Old),
+            3 => Ok(ErrorID::TooCheapToReplace),
+            4 => Ok(ErrorID::TxAlreadyImported),
             _ => Err(DecoderError::Custom("Unexpected ErrorID Value")),
         }
     }
@@ -81,10 +68,8 @@ impl TaggedRlp for RlpHelper {
         Ok(match tag {
             ErrorID::LimitReached => 1,
             ErrorID::Old => 1,
-            ErrorID::Timelocked => 3,
             ErrorID::TooCheapToReplace => 1,
             ErrorID::TxAlreadyImported => 1,
-            ErrorID::TransferExpired => 3,
         })
     }
 }
@@ -94,16 +79,8 @@ impl Encodable for Error {
         match self {
             Error::LimitReached => RlpHelper::new_tagged_list(s, ErrorID::LimitReached),
             Error::Old => RlpHelper::new_tagged_list(s, ErrorID::Old),
-            Error::Timelocked {
-                timelock,
-                remaining_time,
-            } => RlpHelper::new_tagged_list(s, ErrorID::Timelocked).append(timelock).append(remaining_time),
             Error::TooCheapToReplace => RlpHelper::new_tagged_list(s, ErrorID::TooCheapToReplace),
             Error::TransactionAlreadyImported => RlpHelper::new_tagged_list(s, ErrorID::TxAlreadyImported),
-            Error::TransferExpired {
-                expiration,
-                timestamp,
-            } => RlpHelper::new_tagged_list(s, ErrorID::TransferExpired).append(expiration).append(timestamp),
         };
     }
 }
@@ -114,16 +91,8 @@ impl Decodable for Error {
         let error = match tag {
             ErrorID::LimitReached => Error::LimitReached,
             ErrorID::Old => Error::Old,
-            ErrorID::Timelocked => Error::Timelocked {
-                timelock: rlp.val_at(1)?,
-                remaining_time: rlp.val_at(2)?,
-            },
             ErrorID::TooCheapToReplace => Error::TooCheapToReplace,
             ErrorID::TxAlreadyImported => Error::TransactionAlreadyImported,
-            ErrorID::TransferExpired => Error::TransferExpired {
-                expiration: rlp.val_at(1)?,
-                timestamp: rlp.val_at(2)?,
-            },
         };
         RlpHelper::check_size(rlp, tag)?;
         Ok(error)
@@ -135,24 +104,8 @@ impl Display for Error {
         match self {
             Error::LimitReached => write!(f, "Transaction limit reached"),
             Error::Old => write!(f, "No longer valid"),
-            Error::Timelocked {
-                timelock,
-                remaining_time,
-            } => write!(
-                f,
-                "The transaction cannot be executed because of the timelock({:?}). The remaining time is {}",
-                timelock, remaining_time
-            ),
             Error::TooCheapToReplace => write!(f, "Fee too low to replace"),
             Error::TransactionAlreadyImported => write!(f, "The transaction is already imported"),
-            Error::TransferExpired {
-                expiration,
-                timestamp,
-            } => write!(
-                f,
-                "The TransferAsset transaction is expired. Expiration: {}, Block timestamp: {}",
-                expiration, timestamp
-            ),
         }
     }
 }
