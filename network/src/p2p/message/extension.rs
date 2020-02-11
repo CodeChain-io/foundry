@@ -144,7 +144,7 @@ impl Decodable for Message {
 
 #[cfg(test)]
 mod tests {
-    use ckey::Secret;
+    use ckey::SharedSecret;
     use rand::rngs::OsRng;
     use rand::Rng;
     use rlp::rlp_encode_and_decode_test;
@@ -156,7 +156,7 @@ mod tests {
     fn encrypted_with_unencrypted_data_function_internally_encrypts() {
         let extension_name = "encrypt".to_string();
         let unencrypted_data = b"this data must be encrypted";
-        let shared_secret = Secret::random();
+        let shared_secret = SharedSecret::random();
 
         let mut rng = OsRng::new().expect("Cannot generate random number");
         let nonce: Nonce = rng.gen();

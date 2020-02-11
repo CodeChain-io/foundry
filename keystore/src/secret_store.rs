@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -32,13 +32,13 @@
 
 use crate::json::{OpaqueKeyFile, Uuid};
 use crate::{DecryptedAccount, Error};
-use ckey::{Address, Password, Secret};
+use ckey::{Address, Ed25519Private as Private, Password};
 use std::path::PathBuf;
 
 /// Simple Secret Store API
 pub trait SimpleSecretStore: Send + Sync {
     /// Inserts new accounts to the store with given password.
-    fn insert_account(&self, secret: Secret, password: &Password) -> Result<Address, Error>;
+    fn insert_account(&self, secret: Private, password: &Password) -> Result<Address, Error>;
     /// Returns all accounts in this secret store.
     fn accounts(&self) -> Result<Vec<Address>, Error>;
     /// Check existance of account

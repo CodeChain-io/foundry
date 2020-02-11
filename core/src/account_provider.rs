@@ -107,19 +107,17 @@ impl AccountProvider {
 
     pub fn new_account_and_public(&self, password: &Password) -> Result<(Address, Public), Error> {
         let acc: KeyPair = Random.generate().expect("ed25519 context has generation capabilities; qed");
-        self.insert_account_internal(&acc, password)
+        self.insert_account_internal(acc.get_private(), password)
     }
 
     pub fn insert_account(&self, private: Private, password: &Password) -> Result<Address, Error> {
-        let acc = KeyPair::from_private(private)?;
-        self.insert_account_internal(&acc, password).map(|(addr, _)| addr)
+        self.insert_account_internal(private, password).map(|(addr, _)| addr)
     }
 
-    fn insert_account_internal(&self, acc: &KeyPair, password: &Password) -> Result<(Address, Public), Error> {
-        let private = acc.private();
-        let public = *acc.public();
+    fn insert_account_internal(&self, private: Private, password: &Password) -> Result<(Address, Public), Error> {
+        let public = private.public_key();
         let address = public_to_address(&public);
-        self.keystore.insert_account((*private).as_ref().into(), password)?;
+        self.keystore.insert_account(private, password)?;
         Ok((address, public))
     }
 
