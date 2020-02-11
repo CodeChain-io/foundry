@@ -64,12 +64,12 @@ mod tests {
     fn tendermint_deserialization() {
         let s = r#"{
             "params": {
-                "validators": ["0x2a8a69439f2396c9a328289fdc3905d9736da9e14eb1a282cfd2c036cc21a17a5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08"]
+                "validators": ["0x6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375"]
             }
         }"#;
 
         let deserialized: Tendermint = serde_json::from_str(s).unwrap();
-        let vs = vec![Public::from_str("2a8a69439f2396c9a328289fdc3905d9736da9e14eb1a282cfd2c036cc21a17a5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08").unwrap()];
+        let vs = vec![Public::from_str("6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375").unwrap()];
         assert_eq!(deserialized.params.validators, vs);
     }
 }

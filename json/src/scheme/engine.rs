@@ -63,7 +63,7 @@ mod tests {
         let s = r#"{
             "tendermint": {
                 "params": {
-                    "validators": ["0x1ac8248deb29a58c4bdbfce031fb22c7ba3bcc9384bf6de058a1c8bef5a17422cf8ca26666a5505684db7364eabeed6fc678b02658ae7c1848a4ae6e50244cf2"]
+                    "validators": ["0x6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375"]
                 }
             }
         }"#;

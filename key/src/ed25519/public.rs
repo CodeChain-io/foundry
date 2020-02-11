@@ -16,10 +16,11 @@
 
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sodiumoxide::crypto::sign::{gen_keypair, PublicKey, PUBLICKEYBYTES};
 use std::str::FromStr;
 
-#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct Public(pub(crate) PublicKey);
 
 impl Public {
@@ -84,6 +85,24 @@ impl Decodable for Public {
                 got: length,
             })
         }
+    }
+}
+
+impl Serialize for Public {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer, {
+        let h256_pubkey = H256::from_slice(self.as_ref());
+        h256_pubkey.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Public {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>, {
+        let h256_pubkey = H256::deserialize(deserializer)?;
+        Ok(Self::from_slice(&h256_pubkey).expect("Bytes length was verified"))
     }
 }
 
