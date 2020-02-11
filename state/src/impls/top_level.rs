@@ -40,8 +40,8 @@ use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::error::Error;
 use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
 use crate::{
-    Account, ActionData, FindActionHandler, IBCData, Metadata, MetadataAddress, RegularAccount, RegularAccountAddress,
-    Shard, ShardAddress, ShardLevelState, StateDB, StateResult,
+    Account, ActionData, FindActionHandler, IBCData, IBCTransactionExecutor, Metadata, MetadataAddress, RegularAccount,
+    RegularAccountAddress, Shard, ShardAddress, ShardLevelState, StateDB, StateResult,
 };
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
@@ -245,7 +245,7 @@ impl TopLevelState {
 
     /// Execute a given tranasction, charging tranasction fee.
     /// This will change the state accordingly.
-    pub fn apply<C: ChainTimeInfo + FindActionHandler>(
+    pub fn apply<C: ChainTimeInfo + FindActionHandler + IBCTransactionExecutor>(
         &mut self,
         tx: &Transaction,
         signed_hash: &TxHash,
@@ -276,7 +276,7 @@ impl TopLevelState {
         result
     }
 
-    fn apply_internal<C: ChainTimeInfo + FindActionHandler>(
+    fn apply_internal<C: ChainTimeInfo + FindActionHandler + IBCTransactionExecutor>(
         &mut self,
         tx: &Transaction,
         signed_hash: &TxHash,
@@ -341,7 +341,7 @@ impl TopLevelState {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn apply_action<C: ChainTimeInfo + FindActionHandler>(
+    fn apply_action<C: ChainTimeInfo + FindActionHandler + IBCTransactionExecutor>(
         &mut self,
         action: &Action,
         network_id: NetworkId,
@@ -406,9 +406,9 @@ impl TopLevelState {
                 return Ok(())
             }
             Action::IBC {
-                ..
+                bytes,
             } => {
-                // FIXME: call ibc transactions
+                IBCTransactionExecutor::execute(client, bytes, self, fee_payer, signer_public)?;
                 return Ok(())
             }
         };

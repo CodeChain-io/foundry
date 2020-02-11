@@ -33,6 +33,7 @@ mod cache;
 mod checkpoint;
 mod db;
 mod error;
+mod ibc;
 mod impls;
 mod item;
 mod traits;
@@ -43,6 +44,7 @@ pub use crate::action_handler::{ActionDataKeyBuilder, ActionHandler, FindActionH
 pub use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 pub use crate::db::StateDB;
 pub use crate::error::Error as StateError;
+pub use crate::ibc::IBCTransactionExecutor;
 pub use crate::impls::{ShardLevelState, TopLevelState};
 pub use crate::item::account::Account;
 pub use crate::item::action_data::ActionData;
