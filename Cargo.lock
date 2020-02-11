@@ -437,7 +437,6 @@ dependencies = [
  "rlp",
  "rustc-hex 1.0.0",
  "rustc-serialize",
- "secp256k1",
  "serde",
  "serde_derive",
  "serde_json",
@@ -629,7 +628,6 @@ dependencies = [
  "codechain-types",
  "primitives",
  "rlp",
- "secp256k1",
 ]
 
 [[package]]
@@ -2582,17 +2580,6 @@ dependencies = [
  "hmac",
  "pbkdf2",
  "sha2",
-]
-
-[[package]]
-name = "secp256k1"
-version = "0.6.0"
-source = "git+https://github.com/CodeChain-io/rust-secp256k1.git#7da4cfd232735b59060f9ce23b50e6c5632a5ae0"
-dependencies = [
- "arrayvec",
- "cc",
- "cfg-if",
- "rand 0.6.1",
 ]
 
 [[package]]

@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,6 @@
 
 use crate::NetworkId;
 use bech32::Error as Bech32Error;
-use secp256k1::Error as SecpError;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
@@ -67,17 +66,6 @@ impl fmt::Display for Error {
         };
 
         msg.fmt(f)
-    }
-}
-
-impl From<SecpError> for Error {
-    fn from(e: SecpError) -> Self {
-        match e {
-            SecpError::InvalidPublicKey => Error::InvalidPublic,
-            SecpError::InvalidSecretKey => Error::InvalidSecret,
-            SecpError::InvalidMessage => Error::InvalidMessage,
-            _ => Error::InvalidSignature,
-        }
     }
 }
 
