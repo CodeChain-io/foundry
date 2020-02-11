@@ -45,11 +45,7 @@ pub use rustc_serialize::hex;
 
 /// 32 bytes long signable message
 pub type Message = H256;
-pub type Secret = H256;
-
-pub fn secret_to_private(secret: Secret) -> Result<Ed25519Private, Error> {
-    Ed25519Private::from_slice(&secret).ok_or(Error::InvalidSecret)
-}
+pub type SharedSecret = H256;
 
 /// Uninstantiatable error type for infallible generators.
 #[derive(Debug)]

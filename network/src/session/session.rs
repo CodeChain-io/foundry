@@ -18,21 +18,21 @@ use super::Nonce;
 use ccrypto::aes;
 use ccrypto::error::SymmError;
 use ccrypto::Blake;
-use ckey::Secret;
+use ckey::SharedSecret;
 use primitives::H256;
 
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialOrd, PartialEq)]
 pub struct Session {
-    secret: Secret,
+    secret: SharedSecret,
     nonce: Nonce,
 }
 
 impl Session {
-    pub fn new_with_zero_nonce(secret: Secret) -> Self {
+    pub fn new_with_zero_nonce(secret: SharedSecret) -> Self {
         Self::new(secret, 0)
     }
 
-    pub fn new(secret: Secret, nonce: Nonce) -> Self {
+    pub fn new(secret: SharedSecret, nonce: Nonce) -> Self {
         Session {
             secret,
             nonce,
@@ -43,7 +43,7 @@ impl Session {
         self.nonce() == nonce
     }
 
-    pub fn secret(&self) -> &Secret {
+    pub fn secret(&self) -> &SharedSecret {
         &self.secret
     }
 
@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn encrypt_and_decrypt_short_data() {
-        let secret = Secret::random();
+        let secret = SharedSecret::random();
         let nonce = 1000;
         let session = Session::new(secret, nonce);
 
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn encrypt_and_decrypt_short_data_in_different_session_with_same_secret() {
-        let secret = Secret::random();
+        let secret = SharedSecret::random();
         let nonce = 1000;
         let session1 = Session::new(secret, nonce);
         let session2 = Session::new(secret, nonce);
@@ -101,7 +101,7 @@ mod tests {
 
     #[test]
     fn encrypt_with_different_nonce() {
-        let secret = Secret::random();
+        let secret = SharedSecret::random();
         let nonce1 = 1000;
         let nonce2 = 1001;
 
@@ -117,8 +117,8 @@ mod tests {
 
     #[test]
     fn encrypt_with_different_secret() {
-        let secret1 = Secret::random();
-        let secret2 = Secret::random();
+        let secret1 = SharedSecret::random();
+        let secret2 = SharedSecret::random();
         debug_assert_ne!(secret1, secret2);
         let nonce = 1000;
 

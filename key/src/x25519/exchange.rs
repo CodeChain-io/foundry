@@ -14,15 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{Error, Secret, X25519Private, X25519Public};
+use crate::{Error, SharedSecret, X25519Private, X25519Public};
 use sodiumoxide::crypto::scalarmult::scalarmult;
 
-pub fn exchange(other_public: &X25519Public, my_private: &X25519Private) -> Result<Secret, Error> {
+pub fn exchange(other_public: &X25519Public, my_private: &X25519Private) -> Result<SharedSecret, Error> {
     let X25519Private(scalar) = my_private;
     let X25519Public(group_element) = other_public;
 
     let shared_secret = scalarmult(scalar, group_element).map_err(|_| Error::InvalidSecret)?;
-    Ok(Secret::from_slice(shared_secret.as_ref()))
+    Ok(SharedSecret::from_slice(shared_secret.as_ref()))
 }
 
 #[cfg(test)]

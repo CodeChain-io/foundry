@@ -18,7 +18,7 @@
 use crate::account::{Aes128Ctr, Cipher, Kdf, Pbkdf2, Prf};
 use crate::random::Random;
 use crate::{json, Error};
-use ckey::{public_to_address, Address, Ed25519Private as Private, Password, Secret};
+use ckey::{public_to_address, Address, Ed25519Private as Private, Password};
 use smallvec::SmallVec;
 use std::num::NonZeroU32;
 use std::str;
@@ -68,8 +68,8 @@ impl str::FromStr for Crypto {
 
 impl Crypto {
     /// Encrypt account secret
-    pub fn with_secret(secret: &Secret, password: &Password, iterations: u32) -> Result<Self, ccrypto::Error> {
-        Crypto::with_plain(&secret.0, password, iterations)
+    pub fn with_secret(secret: &Private, password: &Password, iterations: u32) -> Result<Self, ccrypto::Error> {
+        Crypto::with_plain(secret.as_ref(), password, iterations)
     }
 
     /// Encrypt custom plain data
@@ -86,7 +86,7 @@ impl Crypto {
             // preallocated (on-stack in case of `Secret`) buffer to hold cipher
             // length = length(plain) as we are using CTR-approach
             let plain_len = plain.len();
-            let mut ciphertext: SmallVec<[u8; 32]> = SmallVec::from_vec(vec![0; plain_len]);
+            let mut ciphertext: SmallVec<[u8; 64]> = SmallVec::from_vec(vec![0; plain_len]);
 
             // aes-128-ctr with initial vector of iv
             ccrypto::aes::encrypt_128_ctr(&derived_left_bits, &iv, plain, &mut *ciphertext)?;
@@ -112,20 +112,20 @@ impl Crypto {
     }
 
     /// Try to decrypt and convert result to account secret
-    pub fn secret(&self, password: &Password) -> Result<Secret, Error> {
-        if self.ciphertext.len() > 32 {
+    pub fn secret(&self, password: &Password) -> Result<Private, Error> {
+        if self.ciphertext.len() > 64 {
             return Err(Error::InvalidSecret)
         }
-        let secret = self.do_decrypt(password, 32)?;
-        Ok(Secret::from_slice(&secret))
+        let secret = self.do_decrypt(password, 64)?;
+        match Private::from_slice(&secret) {
+            Some(private) => Ok(private),
+            None => Err(Error::InvalidSecret),
+        }
     }
 
     pub fn address(&self, password: &Password) -> Result<Address, Error> {
         let private = self.secret(password)?;
-        match Private::from_slice(&private) {
-            Some(private) => Ok(public_to_address(&private.public_key())),
-            None => Err(ckey::Error::InvalidSecret.into()),
-        }
+        Ok(public_to_address(&private.public_key()))
     }
 
     /// Try to decrypt and return result as is
@@ -169,26 +169,22 @@ impl Crypto {
 
 #[cfg(test)]
 mod tests {
-    use super::{Crypto, Error, Secret};
+    use super::{Crypto, Error};
     use ckey::{Generator, Random};
 
     #[test]
     fn crypto_with_secret_create() {
         let keypair = Random.generate().unwrap();
         let private_key = keypair.private();
-        let crypto =
-            Crypto::with_secret(&Secret::from_slice(keypair.private().as_ref()), &"this is sparta".into(), 10240)
-                .unwrap();
+        let crypto = Crypto::with_secret(keypair.private(), &"this is sparta".into(), 10240).unwrap();
         let secret = crypto.secret(&"this is sparta".into()).unwrap();
-        assert_eq!(Secret::from_slice(private_key.as_ref()), secret);
+        assert_eq!(private_key, &secret);
     }
 
     #[test]
     fn crypto_with_secret_invalid_password() {
         let keypair = Random.generate().unwrap();
-        let crypto =
-            Crypto::with_secret(&Secret::from_slice(&keypair.private().as_ref()), &"this is sparta".into(), 10240)
-                .unwrap();
+        let crypto = Crypto::with_secret(keypair.private(), &"this is sparta".into(), 10240).unwrap();
         assert_matches!(crypto.secret(&"this is sparta!".into()), Err(Error::InvalidPassword))
     }
 

@@ -14,16 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ckey::{sign, Ed25519Private as Private, Ed25519Public as Public, Error as KeyError, Message, Secret, Signature};
+use ckey::{sign, Ed25519Private as Private, Ed25519Public as Public, Error as KeyError, Message, Signature};
 
-/// An opaque wrapper for secret.
+/// An opaque wrapper for secret. The inner data of Private implements Drop trait to clear memory.
 #[derive(Clone)]
 pub struct DecryptedAccount {
-    secret: Secret,
+    secret: Private,
 }
 
 impl DecryptedAccount {
-    pub fn new(secret: Secret) -> DecryptedAccount {
+    pub fn new(secret: Private) -> DecryptedAccount {
         DecryptedAccount {
             secret,
         }
@@ -31,23 +31,11 @@ impl DecryptedAccount {
 
     /// Sign a message.
     pub fn sign(&self, message: &Message) -> Result<Signature, KeyError> {
-        match Private::from_slice(&self.secret) {
-            Some(private) => Ok(sign(&message, &private)),
-            None => Err(KeyError::InvalidSecret),
-        }
+        Ok(sign(&message, &self.secret))
     }
 
     /// Derive public key.
     pub fn public(&self) -> Result<Public, KeyError> {
-        match Private::from_slice(&self.secret) {
-            Some(private) => Ok(private.public_key()),
-            None => Err(KeyError::InvalidSecret),
-        }
-    }
-}
-
-impl Drop for DecryptedAccount {
-    fn drop(&mut self) {
-        self.secret = Secret::default();
+        Ok(self.secret.public_key())
     }
 }

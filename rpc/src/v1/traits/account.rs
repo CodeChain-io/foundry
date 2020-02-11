@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 use super::super::types::{SendTransactionResult, UnsignedTransaction};
 use ckey::{Password, PlatformAddress, Signature};
 use jsonrpc_core::Result;
-use primitives::H256;
+use primitives::{H256, H512};
 
 #[rpc(server)]
 pub trait Account {
@@ -31,7 +31,7 @@ pub trait Account {
 
     /// Imports a private key
     #[rpc(name = "account_importRaw")]
-    fn create_account_from_secret(&self, secret: H256, passphrase: Option<Password>) -> Result<PlatformAddress>;
+    fn create_account_from_secret(&self, secret: H512, passphrase: Option<Password>) -> Result<PlatformAddress>;
 
     /// Unlocks the specified account for use.
     #[rpc(name = "account_unlock")]

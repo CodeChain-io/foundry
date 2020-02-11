@@ -19,7 +19,7 @@ extern crate codechain_keystore as ckeystore;
 
 mod util;
 
-use ckey::{verify, Ed25519KeyPair as KeyPair, Generator, Random, Secret};
+use ckey::{verify, Ed25519KeyPair as KeyPair, Ed25519Private as Private};
 use ckeystore::accounts_dir::RootDiskDirectory;
 use ckeystore::{KeyStore, SimpleSecretStore};
 use primitives::H256;
@@ -38,9 +38,8 @@ fn secret_store_open_not_existing() {
     let _ = KeyStore::open(Box::new(dir)).unwrap();
 }
 
-fn random_secret() -> Secret {
-    let keypair = Random.generate().unwrap();
-    Secret::from_slice(keypair.private().as_ref())
+fn random_secret() -> Private {
+    Private::random()
 }
 
 #[test]

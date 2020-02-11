@@ -21,7 +21,7 @@ use crate::json::{self, OpaqueKeyFile, Uuid};
 use crate::random::Random;
 use crate::{Error, SecretStore, SimpleSecretStore};
 use ccrypto::KEY_ITERATIONS;
-use ckey::{secret_to_private, Address, Ed25519KeyPair as KeyPair, KeyPairTrait, Password, Secret};
+use ckey::{Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, KeyPairTrait, Password};
 use parking_lot::{Mutex, RwLock};
 use std::collections::BTreeMap;
 use std::mem;
@@ -58,8 +58,8 @@ impl KeyStore {
 }
 
 impl SimpleSecretStore for KeyStore {
-    fn insert_account(&self, secret: Secret, password: &Password) -> Result<Address, Error> {
-        let keypair = KeyPair::from_private(secret_to_private(secret)?);
+    fn insert_account(&self, secret: Private, password: &Password) -> Result<Address, Error> {
+        let keypair = KeyPair::from_private(secret.clone());
         if self.has_account(&keypair.address())? {
             Err(Error::AlreadyExists)
         } else {
@@ -108,7 +108,7 @@ impl SecretStore for KeyStore {
         }
 
         let secret = safe_account.crypto.secret(password).map_err(|_| Error::InvalidPassword)?;
-        safe_account.address = KeyPair::from_private(secret_to_private(secret)?).address();
+        safe_account.address = KeyPair::from_private(secret).address();
         self.store.import(safe_account)
     }
 
@@ -331,8 +331,8 @@ impl KeyMultiStore {
 }
 
 impl SimpleSecretStore for KeyMultiStore {
-    fn insert_account(&self, secret: Secret, password: &Password) -> Result<Address, Error> {
-        let keypair = KeyPair::from_private(secret_to_private(secret)?);
+    fn insert_account(&self, secret: Private, password: &Password) -> Result<Address, Error> {
+        let keypair = KeyPair::from_private(secret);
         let id: [u8; 16] = Random::random();
         let account = SafeAccount::create(&keypair, id, password, self.iterations, "{}".to_string())?;
         self.import(account)
@@ -396,7 +396,7 @@ impl SimpleSecretStore for KeyMultiStore {
 
 struct VerifiedAccount {
     account: SafeAccount,
-    secret: Secret,
+    secret: Private,
 }
 
 #[cfg(test)]
@@ -426,10 +426,11 @@ mod tests {
 
         // when
         let private_key = keypair.private();
-        let address = store.insert_account(Secret::from_slice(private_key.as_ref()), &"test".into()).unwrap();
+        let keypair_address = keypair.address();
+        let address = store.insert_account(private_key.clone(), &"test".into()).unwrap();
 
         // then
-        assert_eq!(address, keypair.address());
+        assert_eq!(address, keypair_address);
         assert_eq!(Some(true), store.has_account(&address).ok(), "Should contain account.");
         assert_eq!(store.accounts().unwrap().len(), 1, "Should have one account.");
     }
@@ -439,8 +440,7 @@ mod tests {
         // given
         let store = store();
         let keypair = keypair();
-        let private_key = keypair.private();
-        let address = store.insert_account(Secret::from_slice(private_key.as_ref()), &"test".into()).unwrap();
+        let address = store.insert_account(keypair.private().clone(), &"test".into()).unwrap();
         assert_eq!(&store.meta(&address).unwrap(), "{}");
 
         // when
@@ -456,8 +456,7 @@ mod tests {
         // given
         let store = store();
         let keypair = keypair();
-        let private_key = keypair.private();
-        let address = store.insert_account(Secret::from_slice(private_key.as_ref()), &"test".into()).unwrap();
+        let address = store.insert_account(keypair.private().clone(), &"test".into()).unwrap();
 
         // when
         store.remove_account(&address).unwrap();
@@ -471,8 +470,7 @@ mod tests {
         // given
         let store = store();
         let keypair = keypair();
-        let private_key = keypair.private();
-        let address = store.insert_account(Secret::from_slice(private_key.as_ref()), &"test".into()).unwrap();
+        let address = store.insert_account(keypair.private().clone(), &"test".into()).unwrap();
 
         // when
         let res1 = store.test_password(&address, &"x".into()).unwrap();
@@ -488,8 +486,8 @@ mod tests {
         let store = multi_store();
         let keypair = keypair();
         let private_key = keypair.private();
-        let address = store.insert_account(Secret::from_slice(private_key.as_ref()), &"test".into()).unwrap();
-        let address2 = store.insert_account(Secret::from_slice(private_key.as_ref()), &"xyz".into()).unwrap();
+        let address = store.insert_account(private_key.clone(), &"test".into()).unwrap();
+        let address2 = store.insert_account(private_key.clone(), &"xyz".into()).unwrap();
         assert_eq!(address, address2);
 
         // when
@@ -504,8 +502,7 @@ mod tests {
         let store = store();
         let multi_store = multi_store();
         let keypair = keypair();
-        let private_key = keypair.private();
-        let address = store.insert_account(Secret::from_slice(private_key.as_ref()), &"test".into()).unwrap();
+        let address = store.insert_account(keypair.private().clone(), &"test".into()).unwrap();
         assert_eq!(multi_store.accounts().unwrap().len(), 0);
 
         // when
@@ -528,8 +525,7 @@ mod tests {
         // given
         let store = store();
         let keypair = keypair();
-        let private_key = keypair.private();
-        let address = store.insert_account(Secret::from_slice(private_key.as_ref()), &"test".into()).unwrap();
+        let address = store.insert_account(keypair.private().clone(), &"test".into()).unwrap();
 
         // when
         let exported = store.export_account(&address, &"test".into());

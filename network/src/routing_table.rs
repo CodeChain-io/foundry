@@ -18,7 +18,7 @@ use crate::session::{Nonce, Session};
 use crate::SocketAddr;
 use ccrypto::aes;
 use ccrypto::error::SymmError;
-use ckey::{exchange, Generator, KeyPairTrait, Random, Secret, X25519KeyPair as KeyPair, X25519Public as Public};
+use ckey::{exchange, Generator, KeyPairTrait, Random, SharedSecret, X25519KeyPair as KeyPair, X25519Public as Public};
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
 use rand::rngs::OsRng;
@@ -47,13 +47,13 @@ enum State {
     Establishing2 {
         local_key_pair: KeyPair,
         remote_public: Public,
-        shared_secret: Secret,
+        shared_secret: SharedSecret,
         secret_origin: SecretOrigin,
     },
     Established {
         local_key_pair: KeyPair,
         remote_public: Public,
-        shared_secret: Secret,
+        shared_secret: SharedSecret,
         secret_origin: SecretOrigin,
         nonce: Nonce,
     },
@@ -626,7 +626,7 @@ impl RoutingTable {
     }
 }
 
-fn decrypt_nonce(encrypted_bytes: &[u8], shared_secret: &Secret) -> Result<Nonce, String> {
+fn decrypt_nonce(encrypted_bytes: &[u8], shared_secret: &SharedSecret) -> Result<Nonce, String> {
     let iv = 0; // FIXME: Use proper iv
     let unecrypted =
         aes::decrypt(encrypted_bytes, shared_secret, &iv).map_err(|e| format!("Cannot decrypt nonce: {:?}", e))?;
@@ -642,7 +642,7 @@ fn decrypt_nonce(encrypted_bytes: &[u8], shared_secret: &Secret) -> Result<Nonce
     Ok(Nonce::from_be_bytes(nonce_bytes))
 }
 
-fn encrypt_nonce(nonce: Nonce, shared_secret: &Secret) -> Result<Bytes, SymmError> {
+fn encrypt_nonce(nonce: Nonce, shared_secret: &SharedSecret) -> Result<Bytes, SymmError> {
     let iv = 0; // FIXME: Use proper iv
     Ok(aes::encrypt(&nonce.to_be_bytes(), shared_secret, &iv)?)
 }
@@ -651,7 +651,7 @@ fn encrypt_nonce(nonce: Nonce, shared_secret: &Secret) -> Result<Bytes, SymmErro
 mod tests {
     use super::*;
 
-    fn encrypt_and_decrypt(secret: Secret, nonce: Nonce) {
+    fn encrypt_and_decrypt(secret: SharedSecret, nonce: Nonce) {
         assert_eq!(
             nonce,
             decrypt_nonce(&encrypt_nonce(nonce, &secret).unwrap(), &secret).unwrap(),
@@ -663,21 +663,21 @@ mod tests {
 
     #[test]
     fn encrypt_and_decrypt_0() {
-        let secret = Secret::random();
+        let secret = SharedSecret::random();
         let nonce = 0;
         encrypt_and_decrypt(secret, nonce);
     }
 
     #[test]
     fn encrypt_and_decrypt_u64_max() {
-        let secret = Secret::random();
+        let secret = SharedSecret::random();
         let nonce = ::std::u64::MAX.into();
         encrypt_and_decrypt(secret, nonce);
     }
 
     #[test]
     fn encrypt_and_decrypt_u128_max() {
-        let secret = Secret::random();
+        let secret = SharedSecret::random();
         let nonce = ::std::u128::MAX;
         encrypt_and_decrypt(secret, nonce);
     }
