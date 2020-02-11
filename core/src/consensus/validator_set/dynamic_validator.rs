@@ -309,8 +309,8 @@ mod tests {
 
     #[test]
     fn validator_set() {
-        let a1 = Public::from_str("34959b60d54703e9dfe36afb1e9950a4abe34d666cbb64c92969013bc9cc74063f9e4680d9d48c4597ee623bd4b507a1b2f43a9c5766a06463f85b73a94c51d1").unwrap();
-        let a2 = Public::from_str("8c5a25bfafceea03073e2775cfb233a46648a088c12a1ca18a5865534887ccf60e1670be65b5f8e29643f463fdf84b1cbadd6027e71d8d04496570cb6b04885d").unwrap();
+        let a1 = Public::from_str("6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375").unwrap();
+        let a2 = Public::from_str("e3c20d46302d0ce9db2c48619486db2f7f65726e438bcbaaf548ff2671d93c9e").unwrap();
         let set = DynamicValidator::new(vec![a1, a2]);
         let test_client: Arc<dyn ConsensusClient> = Arc::new({
             let mut client = TestBlockChainClient::new();
