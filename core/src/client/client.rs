@@ -483,7 +483,7 @@ impl ConsensusClient for Client {}
 impl BlockChainTrait for Client {
     fn chain_info(&self) -> BlockChainInfo {
         let mut chain_info = self.block_chain().chain_info();
-        chain_info.pending_total_score = chain_info.best_score + self.importer.block_queue.total_score();
+        chain_info.pending_total_score = chain_info.best_score;
         chain_info
     }
 
