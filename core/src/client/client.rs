@@ -26,6 +26,7 @@ use crate::client::{ConsensusClient, SnapshotClient, TermInfo};
 use crate::consensus::{CodeChainEngine, EngineError};
 use crate::encoded;
 use crate::error::{BlockImportError, Error, ImportError, SchemeError};
+use crate::ibc;
 use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
 use crate::service::ClientIoMessage;
@@ -862,11 +863,11 @@ impl SnapshotClient for Client {
 impl IBCTransactionExecutor for Client {
     fn execute(
         &self,
-        _bytes: &[u8],
-        _state: &mut TopLevelState,
-        _fee_payer: &Address,
-        _sender_pubkey: &Public,
+        bytes: &[u8],
+        state: &mut TopLevelState,
+        fee_payer: &Address,
+        sender_pubkey: &Public,
     ) -> StateResult<()> {
-        unimplemented!()
+        ibc::execute_transaction(bytes, state, fee_payer, sender_pubkey)
     }
 }
