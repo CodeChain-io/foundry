@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod actions;
+mod datagrams;
 
-use self::actions::Action;
+use self::datagrams::Datagram;
 use crate::ibc;
 use ckey::{Address, Public};
 use cstate::{StateResult, TopLevelState};
@@ -32,14 +32,14 @@ pub fn execute(
     fee_payer: &Address,
     _sender_public: &Public,
 ) -> StateResult<()> {
-    let action = Action::decode(&Rlp::new(bytes)).expect("Verification passed");
-    match action {
-        Action::CreateClient {
+    let datagram = Datagram::decode(&Rlp::new(bytes)).expect("Verification passed");
+    match datagram {
+        Datagram::CreateClient {
             id,
             kind,
             consensus_state,
         } => create_client(state, fee_payer, &id, kind, &consensus_state),
-        Action::UpdateClient {
+        Datagram::UpdateClient {
             id,
             header,
         } => update_client(state, &id, &header),
