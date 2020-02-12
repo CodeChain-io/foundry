@@ -78,12 +78,6 @@ impl CodeChainMachine {
         Ok(())
     }
 
-    /// Populate a header's fields based on its parent's header.
-    /// Usually implements the chain scoring rule based on weight.
-    pub fn populate_from_parent(&self, header: &mut Header, parent: &Header) {
-        header.set_score(*parent.score());
-    }
-
     pub fn min_cost(params: &CommonParams, action: &Action) -> u64 {
         match action {
             Action::Pay {

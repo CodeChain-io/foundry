@@ -65,7 +65,7 @@ impl Block {
             state_root: *block.header.state_root(),
             next_validator_set_hash: *block.header.next_validator_set_hash(),
 
-            score: *block.header.score(),
+            score: U256::default(),
             seal: block.header.seal().to_vec(),
 
             hash: block.header.hash(),

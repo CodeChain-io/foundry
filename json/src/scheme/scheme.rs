@@ -105,7 +105,6 @@ mod tests {
                         ]
                     }
                 },
-                "score": "0x20000",
                 "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3",
                 "timestamp": "0x00",
                 "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"

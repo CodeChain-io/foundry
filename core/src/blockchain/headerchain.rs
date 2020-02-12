@@ -72,7 +72,7 @@ impl HeaderChain {
 
                 let details = BlockDetails {
                     number: genesis.number(),
-                    total_score: genesis.score(),
+                    view: genesis.view(),
                     parent: genesis.parent_hash(),
                 };
 
@@ -134,7 +134,7 @@ impl HeaderChain {
         let mut new_details = HashMap::new();
         new_details.insert(hash, BlockDetails {
             number: header.number(),
-            total_score: 0.into(),
+            view: header.view(),
             parent: header.parent_hash(),
         });
 
@@ -252,12 +252,11 @@ impl HeaderChain {
     /// Uses the given parent details or attempts to load them from the database.
     fn new_detail_entries(&self, header: &HeaderView<'_>) -> HashMap<BlockHash, BlockDetails> {
         let parent_hash = header.parent_hash();
-        let parent_details = self.block_details(&parent_hash).expect("Invalid parent hash");
 
         // create current block details.
         let details = BlockDetails {
             number: header.number(),
-            total_score: parent_details.total_score + header.score(),
+            view: header.view(),
             parent: parent_hash,
         };
 
@@ -267,14 +266,22 @@ impl HeaderChain {
         block_details
     }
 
+    /// Compare the number and the view of current block with these of best block
+    fn is_new_header_eligible_to_be_best(&self, new_header: &HeaderView<'_>) -> bool {
+        let best_proposal_block_hash = self.best_header_hash();
+        let best_proposal_block_detail =
+            self.block_details(&best_proposal_block_hash).expect("Best proposal block always exists");
+
+        (new_header.number(), best_proposal_block_detail.view) > (best_proposal_block_detail.number, new_header.view())
+    }
+
     /// Calculate how best block is changed
     fn best_header_changed(&self, new_header: &HeaderView<'_>, engine: &dyn CodeChainEngine) -> BestHeaderChanged {
         let parent_hash_of_new_header = new_header.parent_hash();
         let parent_details_of_new_header = self.block_details(&parent_hash_of_new_header).expect("Invalid parent hash");
         let grandparent_hash_of_new_header = parent_details_of_new_header.parent;
         let prev_best_hash = self.best_header_hash();
-        let is_new_best = parent_details_of_new_header.total_score + new_header.score()
-            > self.best_proposal_header_detail().total_score
+        let is_new_best = self.is_new_header_eligible_to_be_best(new_header)
             && engine.can_change_canon_chain(parent_hash_of_new_header, grandparent_hash_of_new_header, prev_best_hash);
 
         if is_new_best {
@@ -363,10 +370,6 @@ impl HeaderChain {
 
     pub fn best_proposal_header(&self) -> encoded::Header {
         self.block_header_data(&self.best_proposal_header_hash()).expect("Highest header always exists")
-    }
-
-    pub fn best_proposal_header_detail(&self) -> BlockDetails {
-        self.block_details(&self.best_proposal_header_hash()).expect("Best Proposal header always exists")
     }
 }
 
