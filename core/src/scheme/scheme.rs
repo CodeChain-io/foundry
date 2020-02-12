@@ -30,7 +30,7 @@ use ctypes::errors::SyntaxError;
 use ctypes::{BlockHash, CommonParams, Header, ShardId};
 use merkle_trie::{TrieFactory, TrieMut};
 use parking_lot::RwLock;
-use primitives::{Bytes, H256, U256};
+use primitives::{Bytes, H256};
 use rlp::{Encodable, Rlp, RlpStream};
 use std::io::Read;
 use std::sync::Arc;
@@ -52,8 +52,6 @@ pub struct Scheme {
     pub parent_hash: BlockHash,
     /// The genesis block's author field.
     pub author: Address,
-    /// The genesis block's score field.
-    pub score: U256,
     /// The genesis block's timestamp field.
     pub timestamp: u64,
     /// Transactions root of the genesis block. Should be BLAKE_NULL_RLP.
@@ -267,7 +265,6 @@ impl Scheme {
         header.set_extra_data(blake256(&self.genesis_params().rlp_bytes()).to_vec());
         header.set_state_root(self.state_root());
         header.set_next_validator_set_hash(BLAKE_NULL_RLP /* This will be calculated from state after https://github.com/CodeChain-io/foundry/issues/142*/);
-        header.set_score(self.score);
         header.set_seal({
             let r = Rlp::new(&self.seal_rlp);
             r.iter().map(|f| f.as_raw().to_vec()).collect()
@@ -308,7 +305,6 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
         parent_hash: g.parent_hash,
         transactions_root: g.transactions_root,
         author: g.author,
-        score: g.score,
         timestamp: g.timestamp,
         extra_data: g.extra_data,
         seal_rlp,

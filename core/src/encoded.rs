@@ -29,7 +29,7 @@ use crate::views;
 use ccrypto::blake256;
 use ckey::Address;
 use ctypes::{BlockHash, BlockNumber, Header as FullHeader, TxHash};
-use primitives::{H256, U256};
+use primitives::H256;
 use rlp::Rlp;
 
 /// Owning header view.
@@ -97,11 +97,6 @@ impl Header {
     /// Returns the transaction trie root.
     pub fn next_validator_set_hash(&self) -> H256 {
         self.view().next_validator_set_hash()
-    }
-
-    /// Score of this block
-    pub fn score(&self) -> U256 {
-        self.view().score()
     }
 
     /// Number of this block.
@@ -256,11 +251,6 @@ impl Block {
     /// Returns the transaction trie root.
     pub fn transactions_root(&self) -> H256 {
         self.header_view().transactions_root()
-    }
-
-    /// Score of this block
-    pub fn score(&self) -> U256 {
-        self.header_view().score()
     }
 
     /// Number of this block.

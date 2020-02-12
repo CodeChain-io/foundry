@@ -17,7 +17,7 @@
 use crate::db::Key;
 use crate::types::TransactionId;
 use ctypes::{BlockHash, BlockNumber, Tracker, TxHash};
-use primitives::{H256, H264, U256};
+use primitives::{H256, H264};
 use std::ops::{Add, AddAssign, Deref, Sub, SubAssign};
 
 /// Represents index of extra data in database
@@ -93,10 +93,10 @@ impl Key<TransactionAddresses> for Tracker {
 /// Familial details concerning a block
 #[derive(Debug, Clone, RlpEncodable, RlpDecodable)]
 pub struct BlockDetails {
+    /// Block view
+    pub view: u64,
     /// Block number
     pub number: BlockNumber,
-    /// Total score of the block and all its parents
-    pub total_score: U256,
     /// Parent block hash
     pub parent: BlockHash,
 }
