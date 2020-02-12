@@ -16,11 +16,11 @@
 
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
-const ACTION_CREATE_CLIENT: u8 = 1;
-const ACTION_UPDATE_CLIENT: u8 = 2;
+const DATAGRAM_CREATE_CLIENT: u8 = 1;
+const DATAGRAM_UPDATE_CLIENT: u8 = 2;
 
 #[derive(Debug, PartialEq)]
-pub enum Action {
+pub enum Datagram {
     CreateClient {
         id: String,
         kind: u8,
@@ -32,31 +32,31 @@ pub enum Action {
     },
 }
 
-impl Encodable for Action {
+impl Encodable for Datagram {
     fn rlp_append(&self, s: &mut RlpStream) {
         match self {
-            Action::CreateClient {
+            Datagram::CreateClient {
                 id,
                 kind,
                 consensus_state,
             } => {
-                s.begin_list(4).append(&ACTION_CREATE_CLIENT).append(id).append(kind).append(consensus_state);
+                s.begin_list(4).append(&DATAGRAM_CREATE_CLIENT).append(id).append(kind).append(consensus_state);
             }
-            Action::UpdateClient {
+            Datagram::UpdateClient {
                 id,
                 header,
             } => {
-                s.begin_list(3).append(&ACTION_UPDATE_CLIENT).append(id).append(header);
+                s.begin_list(3).append(&DATAGRAM_UPDATE_CLIENT).append(id).append(header);
             }
         };
     }
 }
 
-impl Decodable for Action {
+impl Decodable for Datagram {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         let tag = rlp.val_at(0)?;
         match tag {
-            ACTION_CREATE_CLIENT => {
+            DATAGRAM_CREATE_CLIENT => {
                 let item_count = rlp.item_count()?;
                 if item_count != 4 {
                     return Err(DecoderError::RlpInvalidLength {
@@ -64,13 +64,13 @@ impl Decodable for Action {
                         got: item_count,
                     })
                 }
-                Ok(Action::CreateClient {
+                Ok(Datagram::CreateClient {
                     id: rlp.val_at(1)?,
                     kind: rlp.val_at(2)?,
                     consensus_state: rlp.val_at(3)?,
                 })
             }
-            ACTION_UPDATE_CLIENT => {
+            DATAGRAM_UPDATE_CLIENT => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
                     return Err(DecoderError::RlpInvalidLength {
@@ -78,12 +78,12 @@ impl Decodable for Action {
                         got: item_count,
                     })
                 }
-                Ok(Action::UpdateClient {
+                Ok(Datagram::UpdateClient {
                     id: rlp.val_at(1)?,
                     header: rlp.val_at(2)?,
                 })
             }
-            _ => Err(DecoderError::Custom("Unexpected IBC Action Type")),
+            _ => Err(DecoderError::Custom("Unexpected IBC Datagram Type")),
         }
     }
 }
