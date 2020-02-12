@@ -16,8 +16,29 @@
 
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
-const DATAGRAM_CREATE_CLIENT: u8 = 1;
-const DATAGRAM_UPDATE_CLIENT: u8 = 2;
+#[repr(u8)]
+#[derive(Clone, Copy)]
+enum DatagramTag {
+    CreateClient = 1,
+    UpdateClient = 2,
+}
+
+impl Encodable for DatagramTag {
+    fn rlp_append(&self, s: &mut RlpStream) {
+        s.append_single_value(&(*self as u8));
+    }
+}
+
+impl Decodable for DatagramTag {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        let byte: u8 = rlp.as_val()?;
+        match byte {
+            1 => Ok(DatagramTag::CreateClient),
+            2 => Ok(DatagramTag::UpdateClient),
+            _ => Err(DecoderError::Custom("Unexpected DatagramTag Value")),
+        }
+    }
+}
 
 #[derive(Debug, PartialEq)]
 pub enum Datagram {
@@ -40,13 +61,13 @@ impl Encodable for Datagram {
                 kind,
                 consensus_state,
             } => {
-                s.begin_list(4).append(&DATAGRAM_CREATE_CLIENT).append(id).append(kind).append(consensus_state);
+                s.begin_list(4).append(&DatagramTag::CreateClient).append(id).append(kind).append(consensus_state);
             }
             Datagram::UpdateClient {
                 id,
                 header,
             } => {
-                s.begin_list(3).append(&DATAGRAM_UPDATE_CLIENT).append(id).append(header);
+                s.begin_list(3).append(&DatagramTag::UpdateClient).append(id).append(header);
             }
         };
     }
@@ -56,7 +77,7 @@ impl Decodable for Datagram {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         let tag = rlp.val_at(0)?;
         match tag {
-            DATAGRAM_CREATE_CLIENT => {
+            DatagramTag::CreateClient => {
                 let item_count = rlp.item_count()?;
                 if item_count != 4 {
                     return Err(DecoderError::RlpInvalidLength {
@@ -70,7 +91,7 @@ impl Decodable for Datagram {
                     consensus_state: rlp.val_at(3)?,
                 })
             }
-            DATAGRAM_UPDATE_CLIENT => {
+            DatagramTag::UpdateClient => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
                     return Err(DecoderError::RlpInvalidLength {
@@ -83,7 +104,6 @@ impl Decodable for Datagram {
                     header: rlp.val_at(2)?,
                 })
             }
-            _ => Err(DecoderError::Custom("Unexpected IBC Datagram Type")),
         }
     }
 }
