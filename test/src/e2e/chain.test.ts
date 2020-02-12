@@ -158,7 +158,7 @@ describe("chain", function() {
             "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqungah99",
             "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqc2ul2h",
             "tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u",
-            "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd"
+            "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg"
         ];
         expect(accounts.length).to.equal(expected.length);
         expect(accounts).to.include.members(expected);
@@ -235,12 +235,7 @@ describe("chain", function() {
         const signed = (await node.rpc.chain.getTransaction({
             transactionHash: hash
         }))!;
-        const publicKey = new H512(
-            node.testFramework.util.recoverEcdsa(
-                tx.unsignedHash().toString(),
-                signed.sig
-            )
-        );
+        const publicKey = sig.getSignerPublic();
         expect(signed).not.null;
         expect(signed.sig).to.equal(`0x${sig.signature()}`);
         expect(+signed.fee).to.equal(Number(tx.fee()!.toString()));

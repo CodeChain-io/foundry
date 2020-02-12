@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H512 } from "codechain-primitives/lib";
+import { H256 } from "foundry-primitives/lib";
 import "mocha";
 import * as stake from "../../stakeholder";
 
@@ -69,7 +69,7 @@ describe("Nomination", function() {
 
             expect(
                 beforeCandidates.map(candidate => candidate.pubkey.toString())
-            ).to.includes(H512.ensure(alice.publicKey).toString());
+            ).to.includes(H256.ensure(alice.publicKey).toString());
 
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 4,

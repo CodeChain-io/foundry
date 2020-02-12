@@ -17,104 +17,100 @@
 import { SDK } from "../sdk";
 
 export const faucetSecret =
-    "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
-export const faucetAccountId = SDK.util.getAccountIdFromPrivate(faucetSecret); // 6fe64ffa3a46c074226457c90ccb32dc06ccced1
+    "9af28f6fd6a1170dbee2cb8c34abab0408e6d811d212cdcde23f72473eb0d97ad7a6d266837c1c591383b90d835068b9ed58dd3bcebd6e285911f58e40ce413c";
+export const faucetAccountId = SDK.util.getAccountIdFromPrivate(faucetSecret); // 837cfc9c54fd1cd83970e0493d54d3a579aba06c
 export const faucetAddress = SDK.Core.classes.PlatformAddress.fromAccountId(
     faucetAccountId,
     { networkId: "tc" }
-); // tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd
+); // tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg
 
 export const aliceSecret =
-    "4aa026c5fecb70923a1ee2bb10bbfadb63d228f39c39fe1da2b1dee63364aff1";
-export const alicePublic = SDK.util.getPublicFromPrivate(aliceSecret);
-// 2a8a69439f2396c9a328289fdc3905d9736da9e14eb1a282cfd2c036cc21a17a5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08
-export const aliceAccountId = SDK.util.getAccountIdFromPrivate(aliceSecret); // 40c1f3a9da4acca257b7de3e7276705edaff074a
+    "65cc9daeecc3bf26befc6b4c8fba3f10d910dbe2e086669fa62eb812cb4254175f6fcadd723f3c94970101d91b4043f953b8f939e14b75843b2f189bb5264f55";
+export const alicePublic = SDK.util.getPublicFromPrivate(aliceSecret); // 5f6fcadd723f3c94970101d91b4043f953b8f939e14b75843b2f189bb5264f55
+export const aliceAccountId = SDK.util.getAccountIdFromPrivate(aliceSecret); // 9e6233bfedbf4286178d5df0dde6fa69857e3d8c
 export const aliceAddress = SDK.Core.classes.PlatformAddress.fromAccountId(
     aliceAccountId,
     { networkId: "tc" }
-); // tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5
+); // tccqx0xyvalakl59psh34wlph0xlf5c2l3a3syrjauu
 
 export const bobSecret =
-    "91580d24073185b91904514c23663b1180090cbeefc24b3d2e2ab1ba229e2620";
-export const bobPublic = SDK.util.getPublicFromPrivate(bobSecret);
-// 545ebdc0b8fb2d0be77a27d843945950db6dbddc60477c0cf001751a797df8a41fc51fe5b76e371c8875ad1d0585a60af2eef2b5d631f7bfba86e7988c25088d
-export const bobAccountId = SDK.util.getAccountIdFromPrivate(bobSecret); // e1361974625cbbcbbe178e77b510d44d59c9ca9d
+    "26aa96a941e9764513155c80170b876ff62cd4ea790bbada5839c39f1e2542b53ab23fad7c9a4f1f54dbf44ff9294d2b5ab42d15f161e406048d5abf7e5dad94";
+export const bobPublic = SDK.util.getPublicFromPrivate(bobSecret); // 3ab23fad7c9a4f1f54dbf44ff9294d2b5ab42d15f161e406048d5abf7e5dad94
+export const bobAccountId = SDK.util.getAccountIdFromPrivate(bobSecret); // f4d43c354a92fd49601b7916b3acdd0324f71d19
 export const bobAddress = SDK.Core.classes.PlatformAddress.fromAccountId(
     bobAccountId,
     { networkId: "tc" }
-); // tccq8snvxt5vfwthja7z7880dgs63x4njw2n5e5zm4h
+); // tccq86dg0p4f2f06jtqrdu3dvavm5pjfacarypp0ka3
 
 export const carolSecret =
-    "40716f4fe0ad552d60dbfc8a0984482ac7191d1d9411c418fe1d15c93694ad47";
-export const carolPublic = SDK.util.getPublicFromPrivate(carolSecret);
-// aa9c8ece2f2716f92609a6b7148a0673a242351a0b3171115d9fb3e5a5f880dff8bc38706fcf4c905eb6642c4c2662340d196fed444e787678c8d07ea0f62684
-export const carolAccountId = SDK.util.getAccountIdFromPrivate(carolSecret); // 72ead359812d6337d95ab2f43beeeead6429354a
+    "f65ea73ec07bd1ca9a1c12945bdbc885f5cf3143227804c6b0a591f4ea5887b2e83c0184ed9acc66868a7be2fbe901eecfe7c054450bbb8d24328e0116ea5e0c";
+export const carolPublic = SDK.util.getPublicFromPrivate(carolSecret); // e83c0184ed9acc66868a7be2fbe901eecfe7c054450bbb8d24328e0116ea5e0c
+export const carolAccountId = SDK.util.getAccountIdFromPrivate(carolSecret); // 1b58af0a024128ba3a8db4738d010ac73741f83a
 export const carolAddress = SDK.Core.classes.PlatformAddress.fromAccountId(
     carolAccountId,
     { networkId: "tc" }
-); // tccq9ew456esykkxd7et2e0gwlwa6kkg2f4fg4q3t2m
+); // tccqyd43tc2qfqj3w363k688rgpptrnws0c8gyuqv6k
 
 export const daveSecret =
-    "922fcf44a30d5ae71c5be6aeb60e629e818d6030ba4c79168c20c594af5390d0";
-export const davePublic = SDK.util.getPublicFromPrivate(daveSecret);
-// aa9c8ece2f2716f92609a6b7148a0673a242351a0b3171115d9fb3e5a5f880dff8bc38706fcf4c905eb6642c4c2662340d196fed444e787678c8d07ea0f62684
-export const daveAccountId = SDK.util.getAccountIdFromPrivate(davePublic); // c552b4b42b339c8a76eac21fa54369f85380b315
+    "d1798178ca055593a4618f2ed313f5568221a9e574e850a8a464025a3fb720aa200c2fe942fdbe9143323ed264d0e39e7b321ca33c78bfa78a92576e00dc9ebd";
+export const davePublic = SDK.util.getPublicFromPrivate(daveSecret); // 200c2fe942fdbe9143323ed264d0e39e7b321ca33c78bfa78a92576e00dc9ebd
+export const daveAccountId = SDK.util.getAccountIdFromPrivate(daveSecret); // bba2ebc1e83cefc53fac0e83fa788202b06c4e57
 export const daveAddress = SDK.Core.classes.PlatformAddress.fromAccountId(
     daveAccountId,
     { networkId: "tc" }
-); // tccq8z49d959veeeznkatpplf2rd8u98q9nz5zfqlpz
+); // tccqxa6967paq7wl3fl4s8g87ncsgptqmzw2u22kph0
 
 export const invalidSecret =
-    "0000000000000000000000000000000000000000000000000000000000000000";
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
 export const invalidAddress = "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3";
 
 export const validator0Secret =
-    "b05b7c1e9747330e97676a95f55d3e469794dfa2aaa3c958d2d3eb334da9fb55";
+    "4ca2cbc987cd76b393f11124fe7145fdc680e311a1ed9dee060e7c3fbeb8943e0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0";
 export const validator0Public = SDK.util.getPublicFromPrivate(validator0Secret);
-// 4f1541fc6bdec60bf0ac6380a8e3914a469fe6cd4fa817c890d5823cfdda83932f61dc083e1b6736dadeceb5afd3fcfbac915e5fa2c9c20acf1c30b080114d7f
+// 0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0
 export const validator0AccountId = SDK.util.getAccountIdFromPrivate(
     validator0Secret
-); // 6a8e5ec34cdb3cde78ebf4dfd8d84f00f437fddb
+); // c525e13e6abdfa52e85df8dddccf4784dd35c51a
 export const validator0Address = SDK.Core.classes.PlatformAddress.fromAccountId(
     validator0AccountId,
     { networkId: "tc" }
-); // tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f
+); // tccq8zjtcf7d27l55hgthudmhx0g7zd6dw9rg9c77t5
 
 export const validator1Secret =
-    "79d26d5788ca5f5ae87e8dd0f057124c2cfda11136aeb140f1d9ac3648d5b703";
+    "ff85044d118b635f23e93c5280648e6b3607781aa770aea4d44a9a3d5703867d0473f782c3aec053c37fe2bccefa9298dcf8ae3dc2262ae540a14a580ff773e6";
 export const validator1Public = SDK.util.getPublicFromPrivate(validator1Secret);
-// 1ac8248deb29a58c4bdbfce031fb22c7ba3bcc9384bf6de058a1c8bef5a17422cf8ca26666a5505684db7364eabeed6fc678b02658ae7c1848a4ae6e50244cf2
+// 0473f782c3aec053c37fe2bccefa9298dcf8ae3dc2262ae540a14a580ff773e6
 export const validator1AccountId = SDK.util.getAccountIdFromPrivate(
     validator1Secret
-); // c25b8e91fccd3b8b137b5faa7f86f656252ba2ee
+); // 7ba918657a5e2494b0cb7167ca76ff215826a4c9
 export const validator1Address = SDK.Core.classes.PlatformAddress.fromAccountId(
     validator1AccountId,
     { networkId: "tc" }
-); // tccq8p9hr53lnxnhzcn0d065lux7etz22azaca786tt
+); // tccq9a6jxr90f0zf99sedck0jnklus4sf4yey0wrn0l
 
 export const validator2Secret =
-    "83352d249f5fe8d85b792dd26d70050b2f7fab02be9ea33e52c83a2be73a2700";
+    "0fecf401905fe5a6bd9d9e67bbccaff7711d2a060b3b0019550285d62f4995d02502d5e6210679a19e45f3c0f93257e7a327baaf5f403f5ca1ab2685a9e1724e";
 export const validator2Public = SDK.util.getPublicFromPrivate(validator2Secret);
-// db3a858d2bafd2cb5382fcf366b847a86b58b42ce1fc29fec0cb0315af881a2ad495045adbdbc86ef7a777b541c4e62a0747f25ff6068a5ec3a052c690c4ff8a
+// 2502d5e6210679a19e45f3c0f93257e7a327baaf5f403f5ca1ab2685a9e1724e
 export const validator2AccountId = SDK.util.getAccountIdFromPrivate(
     validator2Secret
-); // d32d7cd32af1703400c9624ea3ba488d7a0e6d17
+); // 569bedac9b90f1eb6c0e8112976948ceeae9bb24
 export const validator2Address = SDK.Core.classes.PlatformAddress.fromAccountId(
     validator2AccountId,
     { networkId: "tc" }
-); // tccq8fj6lxn9tchqdqqe93yaga6fzxh5rndzu8k2gdw
+); // tccq9tfhmdvnwg0r6mvp6q399mffr8w46dmys2ft4tr
 
 export const validator3Secret =
-    "0afa81c02fba3671ec9578f3be040e0186b445e9dc37d8bf4a866c8636841836";
+    "16f9ae3249d1499f6a5da3493574f27dab800fd0998634be8c010e21505f97aee909f311fd115ee412edcfcde88cc507370101f7635a67b9cb45390f1ccb4b5e";
 export const validator3Public = SDK.util.getPublicFromPrivate(validator3Secret);
-// 42829b18de338aa3abf5e6d80cd511121bf9d34be9a135bbace32a3226479e7f3bb6af76c11dcc724a1666a22910d756b075d54d8fdd97be11efd7a0ac3bb222
+// e909f311fd115ee412edcfcde88cc507370101f7635a67b9cb45390f1ccb4b5e
 export const validator3AccountId = SDK.util.getAccountIdFromPrivate(
     validator3Secret
-); // 49acbedaea4afa1c00adea94856536fab532d927
+); // f19d7a4a60f4596f334e4123847d59210557c7bc
 export const validator3Address = SDK.Core.classes.PlatformAddress.fromAccountId(
     validator3AccountId,
     { networkId: "tc" }
-); // tccq9y6e0k6af9058qq4h4ffpt9xmat2vkeyue23j8y
+); // tccq8ce67j2vr69jmenfeqj8pratyss2478hswel8gr
 
 export const hitActionHandlerId = 1;
 export const stakeActionHandlerId = 2;

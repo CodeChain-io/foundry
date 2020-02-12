@@ -248,7 +248,13 @@ export function fromJSONToTransaction(result: any): Transaction {
  * @returns A SignedTransaction.
  */
 export function fromJSONToSignedTransaction(data: SignedTransactionJSON) {
-    const { sig, blockNumber, blockHash, transactionIndex } = data;
+    const {
+        sig,
+        signerPublic,
+        blockNumber,
+        blockHash,
+        transactionIndex
+    } = data;
     if (typeof sig !== "string") {
         throw Error("Unexpected type of sig");
     }
@@ -256,11 +262,16 @@ export function fromJSONToSignedTransaction(data: SignedTransactionJSON) {
         return new SignedTransaction(
             fromJSONToTransaction(data),
             sig,
+            signerPublic,
             blockNumber,
             new H256(blockHash),
             transactionIndex
         );
     } else {
-        return new SignedTransaction(fromJSONToTransaction(data), sig);
+        return new SignedTransaction(
+            fromJSONToTransaction(data),
+            sig,
+            signerPublic
+        );
     }
 }

@@ -23,7 +23,7 @@ import * as stake from "../../stakeholder";
 import { validators } from "../../../tendermint.dynval/constants";
 import { PromiseExpect } from "../../helper/promise";
 import { setTermTestTimeout, withNodes } from "../setup";
-import { H256 } from "codechain-primitives/lib";
+import { H256 } from "foundry-primitives/lib";
 
 chai.use(chaiAsPromised);
 

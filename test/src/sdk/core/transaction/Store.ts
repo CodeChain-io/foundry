@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 
-import { blake256, getPublicFromPrivate, signEcdsa } from "../../utils";
+import { blake256, getPublicFromPrivate, signEd25519 } from "../../utils";
 import { H256, PlatformAddress } from "../classes";
 import { Text } from "../Text";
 import { Transaction } from "../Transaction";
@@ -40,7 +40,7 @@ export class Store extends Transaction {
                 getPublicFromPrivate(secret.value),
                 { networkId }
             );
-            this.signature = signEcdsa(
+            this.signature = signEd25519(
                 blake256(RLP.encode(content)),
                 secret.value
             );

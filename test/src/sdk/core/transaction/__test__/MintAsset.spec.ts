@@ -1,4 +1,4 @@
-import { H160, U64 } from "codechain-primitives";
+import { H160, U64 } from "foundry-primitives";
 import { SignedTransaction } from "../../SignedTransaction";
 import { AssetMintOutput } from "../AssetMintOutput";
 import { MintAsset } from "../MintAsset";

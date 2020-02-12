@@ -30,7 +30,7 @@ describe("MemPoolMinFees", async function() {
     let valNode1WithMinPayFee150: CodeChain;
     let valNode2WithMinPayFee200: CodeChain;
     let valNode3: CodeChain;
-    const nonValAddress = "tccq83wm6sjyklkd4utk6hjmewsaccgvzk5sck8cs2y";
+    const nonValAddress = "tccq9td7gtgjhu08ud9hs7uml0pj4lt36mdwyft72tl";
     let nonValNode: CodeChain;
 
     beforeEach(async function() {
@@ -131,7 +131,7 @@ describe("MemPoolMinFees", async function() {
                 `test/custom.minfee/${nonValAddress}/password.json`,
                 "--force-sealing"
             ],
-            additionalKeysPath: `tendermint.dynval/${nonValAddress}/keys`
+            additionalKeysPath: `custom.minfee/${nonValAddress}/keys`
         });
         await nonValNode.start();
         await nonValNode.connect(valNode1WithMinPayFee150);

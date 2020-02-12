@@ -15,15 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 import {
     blake256,
+    Ed25519Signature,
     getPublicFromPrivate,
     H160,
     H256,
-    recoverSchnorr,
-    SchnorrSignature,
-    signSchnorr,
+    signEd25519,
     U256,
-    U64
-} from "codechain-primitives";
+    U64,
+    verifyEd25519
+} from "foundry-primitives";
 import * as RLP from "rlp";
 import { SignedTransaction } from "../../sdk/core/SignedTransaction";
 import { readUIntRLP } from "../rlp";
@@ -525,13 +525,14 @@ export class Mock {
                     );
 
                 // Find message signed by `priv`
+                // Ed25519 does not support public key recovery, so finding the message by
+                // signer index is desirable. However brute-forcing verifyEd25519 seems more
+                // handy and efficient.
                 const original = message.messages.find(m => {
-                    const signature: SchnorrSignature = {
-                        r: m.signature.slice(0, 64),
-                        s: m.signature.slice(64)
-                    };
-                    const recovered = recoverSchnorr(digest(m.on), signature);
-                    return recovered === pub && m.on.step.step === step;
+                    return (
+                        verifyEd25519(digest(m.on), m.signature, pub) &&
+                        m.on.step.step === step
+                    );
                 });
                 if (original != null) {
                     const newOn: ConsensusMessage["messages"][number]["on"] = {
@@ -539,14 +540,14 @@ export class Mock {
                         blockHash: H256.zero()
                     };
                     const newDigest = digest(newOn);
-                    const signature = signSchnorr(newDigest, priv);
+                    const signature = signEd25519(newDigest, priv);
                     this.sendTendermintMessage(
                         new TendermintMessage({
                             type: "consensusmessage",
                             messages: [
                                 {
                                     on: newOn,
-                                    signature: signature.r + signature.s,
+                                    signature,
                                     signerIndex: original.signerIndex
                                 }
                             ]
@@ -592,10 +593,7 @@ export class Mock {
                     ])
                 );
 
-            const signature: SchnorrSignature = {
-                r: message.signature.slice(0, 64),
-                s: message.signature.slice(64)
-            };
+            const signature: Ed25519Signature = message.signature;
 
             const block: any = RLP.decode(message.message);
             const oldOn: Parameters<typeof digest>[0] = {
@@ -606,8 +604,7 @@ export class Mock {
                 },
                 blockHash: new H256(blake256(RLP.encode(block[0])))
             };
-            const recovered = recoverSchnorr(digest(oldOn), signature);
-            if (recovered === pub) {
+            if (verifyEd25519(digest(oldOn), signature, pub)) {
                 const newHeader = [
                     ...block[0].slice(0, 7),
                     new U64(readUIntRLP(block[0][7]) + 1).toEncodeObject(), // timestamp
@@ -617,14 +614,14 @@ export class Mock {
                     ...oldOn,
                     blockHash: new H256(blake256(RLP.encode(newHeader)))
                 });
-                const newSignature = signSchnorr(newDigest, priv);
+                const newSignature = signEd25519(newDigest, priv);
 
                 this.sendTendermintMessage(
                     new TendermintMessage({
                         type: "proposalblock",
                         view: message.view,
                         message: RLP.encode([newHeader, block[1]]),
-                        signature: newSignature.r + newSignature.s
+                        signature: newSignature
                     })
                 );
             }

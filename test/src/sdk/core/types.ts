@@ -3,7 +3,7 @@ import {
     H160Value,
     U64,
     U64Value
-} from "codechain-primitives";
+} from "foundry-primitives";
 import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
 
 export type NetworkId = string;

@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H160, H256, PlatformAddress, U256 } from "codechain-primitives/lib";
+import { H160, H256, PlatformAddress, U256 } from "foundry-primitives/lib";
 import "mocha";
 import { Mock } from "../helper/mock";
 import { Header } from "../helper/mock/cHeader";

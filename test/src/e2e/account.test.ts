@@ -104,7 +104,7 @@ describe("account", function() {
             });
 
             it("Ok", async function() {
-                const calculatedSignature = node.testFramework.util.signEcdsa(
+                const calculatedSignature = node.testFramework.util.signEd25519(
                     message,
                     secret
                 );

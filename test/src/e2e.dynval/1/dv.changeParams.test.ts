@@ -21,7 +21,7 @@ import RPC from "foundry-rpc";
 import "mocha";
 import * as stake from "../../stakeholder";
 
-import { H256 } from "codechain-primitives/lib";
+import { H256 } from "foundry-primitives/lib";
 import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
 import { PromiseExpect } from "../../helper/promise";

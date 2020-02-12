@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { H512, U128 } from "codechain-primitives";
+import { H512, U128 } from "foundry-primitives";
 import "mocha";
 import * as Message from "../message";
 

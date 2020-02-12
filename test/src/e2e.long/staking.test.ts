@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { PlatformAddress } from "codechain-primitives/lib";
+import { PlatformAddress } from "foundry-primitives/lib";
 import "mocha";
 import {
     aliceAddress,
@@ -356,11 +356,13 @@ describe("Staking", function() {
 
         expect(stakeholders).to.be.equal(
             toHex(
-                RLP.encode([
-                    aliceAddress.accountId.toEncodeObject(),
-                    faucetAddress.accountId.toEncodeObject(),
-                    bobAddress.accountId.toEncodeObject()
-                ])
+                RLP.encode(
+                    [
+                        faucetAddress.accountId.toEncodeObject(),
+                        aliceAddress.accountId.toEncodeObject(),
+                        bobAddress.accountId.toEncodeObject()
+                    ].sort()
+                )
             )
         );
     });

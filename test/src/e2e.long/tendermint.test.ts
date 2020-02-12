@@ -63,10 +63,10 @@ describe("Tendermint ", function() {
     describe("getPossibleAuthors", function() {
         it("latest", async function() {
             const validators = [
-                "tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f",
-                "tccq8p9hr53lnxnhzcn0d065lux7etz22azaca786tt",
-                "tccq8fj6lxn9tchqdqqe93yaga6fzxh5rndzu8k2gdw",
-                "tccq9y6e0k6af9058qq4h4ffpt9xmat2vkeyue23j8y"
+                "tccq8zjtcf7d27l55hgthudmhx0g7zd6dw9rg9c77t5",
+                "tccq9a6jxr90f0zf99sedck0jnklus4sf4yey0wrn0l",
+                "tccq9tfhmdvnwg0r6mvp6q399mffr8w46dmys2ft4tr",
+                "tccq8ce67j2vr69jmenfeqj8pratyss2478hswel8gr"
             ];
             expect(
                 await nodes[0].rpc.chain.getPossibleAuthors({
@@ -91,7 +91,7 @@ describe("Tendermint ", function() {
         });
 
         it("genesis", async function() {
-            const validators = ["tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f"];
+            const validators = ["tccq8zjtcf7d27l55hgthudmhx0g7zd6dw9rg9c77t5"];
             expect(
                 await nodes[0].rpc.chain.getPossibleAuthors({ blockNumber: 0 })
             ).deep.equal(validators);

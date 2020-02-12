@@ -1,4 +1,4 @@
-import { H160, PlatformAddress, U64 } from "codechain-primitives";
+import { H160, PlatformAddress, U64 } from "foundry-primitives";
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";
 import { Asset } from "../Asset";

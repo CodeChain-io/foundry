@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 
-import { U64Value } from "codechain-primitives/lib";
+import { U64Value } from "foundry-primitives/lib";
 import {
     blake128,
     blake256,

@@ -1,4 +1,4 @@
-import { U64 } from "codechain-primitives";
+import { U64 } from "foundry-primitives";
 
 import { AssetScheme } from "../AssetScheme";
 

@@ -14,7 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { blake256, H256, U64Value } from "codechain-primitives/lib";
+import {
+    blake256,
+    getPublicFromPrivate,
+    H256,
+    U64Value
+} from "foundry-primitives/lib";
 import RPC from "foundry-rpc";
 import { Context, Suite } from "mocha";
 import {
@@ -456,11 +461,9 @@ export async function changeParams(
         ...string[]
     ] = [0xff, metadataSeq, encodeParams(params)];
     const message = blake256(RLP.encode(changeParamsActionRlp).toString("hex"));
-    changeParamsActionRlp.push(
-        `0x${SDK.util.signEcdsa(message, faucetSecret)}`
-    );
-    changeParamsActionRlp.push(`0x${SDK.util.signEcdsa(message, aliceSecret)}`);
-    changeParamsActionRlp.push(`0x${SDK.util.signEcdsa(message, bobSecret)}`);
+    changeParamsActionRlp.push(approvalEncoded(node, message, faucetSecret));
+    changeParamsActionRlp.push(approvalEncoded(node, message, aliceSecret));
+    changeParamsActionRlp.push(approvalEncoded(node, message, bobSecret));
 
     return new H256(
         await node.rpc.mempool.sendSignedTransaction({
@@ -551,3 +554,14 @@ export async function termThatIncludeTransaction(
         );
     }
 }
+
+const approvalEncoded = (
+    node: CodeChain,
+    message: string,
+    secret: string
+): any => {
+    return [
+        `0x${node.testFramework.util.signEd25519(message, secret)}`,
+        H256.ensure(getPublicFromPrivate(secret)).toEncodeObject()
+    ];
+};

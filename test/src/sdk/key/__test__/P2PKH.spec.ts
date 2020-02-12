@@ -1,4 +1,4 @@
-import { H160 } from "codechain-primitives";
+import { H160 } from "foundry-primitives";
 
 import { blake160 } from "../../utils";
 

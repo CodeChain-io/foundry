@@ -42,7 +42,7 @@ describe("account unlock", function() {
 
         for (let i = 0; i < unlockTestSize; i++) {
             const message = makeRandomH256();
-            const calculatedSignature = node.testFramework.util.signEcdsa(
+            const calculatedSignature = node.testFramework.util.signEd25519(
                 message,
                 secret
             );

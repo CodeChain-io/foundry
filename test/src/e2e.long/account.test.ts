@@ -176,7 +176,7 @@ describe("account", function() {
                             } = accountListWithSecret[randomIdx];
                             const message = makeRandomH256();
 
-                            const calculatedSignature = node.testFramework.util.signEcdsa(
+                            const calculatedSignature = node.testFramework.util.signEd25519(
                                 message,
                                 secret!
                             );

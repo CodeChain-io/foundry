@@ -5,7 +5,7 @@
       "params": {
         "hit": {},
         "genesisStakes": {
-          "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd": 70000,
+          "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg": 70000,
           "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": 20000,
           "tccq8snvxt5vfwthja7z7880dgs63x4njw2n5e5zm4h": 10000
         }
@@ -52,7 +52,7 @@
     "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqungah99": { "balance": "1000000" },
     "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqc2ul2h": { "balance": "1000000" },
     "tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u": { "balance": "1000000" },
-    "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd": { "balance": "10000000000000000000", "seq": "0" }
+    "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg": { "balance": "10000000000000000000", "seq": "0" }
   },
   "shards": {
     "0": {

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -13,9 +13,17 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-import { H256, H512, U128, U256 } from "codechain-primitives";
-import { createDecipheriv } from "crypto";
-import { ec } from "elliptic";
+import { createDecipheriv, createHash } from "crypto";
+import {
+    exchange,
+    generatePrivateKey,
+    H256,
+    toArray,
+    U128,
+    U256,
+    x25519GetPublicFromPrivate,
+    X25519Private
+} from "foundry-primitives";
 import { Socket } from "net";
 import { BlockSyncMessage } from "./blockSyncMessage";
 import {
@@ -30,7 +38,19 @@ import {
 import { TendermintMessage } from "./tendermintMessage";
 import { TransactionSyncMessage } from "./transactionSyncMessage";
 
-const EC = new ec("secp256k1");
+// Note: This function is needed becasue the pure javascript ed25519 and curve25519
+// implementation in "tweetnacl" does not support x25519 key generation for key exchanges.
+const ed25519SkToCurve25519 = (skStr: string): X25519Private => {
+    const sk = toArray(skStr);
+    const seed = sk.slice(0, 32);
+    const seedHash = createHash("sha512")
+        .update(seed)
+        .digest();
+    seedHash[0] &= 248;
+    seedHash[31] &= 127;
+    seedHash[31] |= 64;
+    return seedHash.slice(0, 32).toString("hex");
+};
 
 export class P2pLayer {
     private readonly ip: string;
@@ -47,7 +67,7 @@ export class P2pLayer {
     private recentBodyNonce: U256;
     private log: boolean;
     private readonly networkId: string;
-    private readonly localKey: ec.KeyPair;
+    private readonly localKey: X25519Private;
     private sharedSecret?: string;
     private nonce?: U128;
 
@@ -65,7 +85,7 @@ export class P2pLayer {
         this.recentBodyNonce = new U256(0);
         this.log = false;
         this.networkId = networkId;
-        this.localKey = EC.genKeyPair();
+        this.localKey = ed25519SkToCurve25519(generatePrivateKey());
     }
 
     public enableLog() {
@@ -234,22 +254,14 @@ export class P2pLayer {
                         console.log("Got ACK_ID message");
                     }
                     const ack = msg as Ack;
-                    const recipientPubKey = EC.keyFromPublic(
-                        "04".concat(
-                            ack.recipientPubKey.toEncodeObject().slice(2)
-                        ),
-                        "hex"
-                    ).getPublic();
-                    this.sharedSecret = this.localKey
-                        .derive(recipientPubKey)
-                        .toString(16)
-                        .padStart(64, "0");
+                    const recipientPubKey = ack.recipientPubKey.toString();
+                    this.sharedSecret = exchange(
+                        recipientPubKey,
+                        this.localKey
+                    );
 
                     const ALGORITHM = "AES-256-CBC";
-                    const key = Buffer.from(
-                        new H256(this.sharedSecret!).toEncodeObject().slice(2),
-                        "hex"
-                    );
+                    const key = Buffer.from(this.sharedSecret!, "hex");
                     const ivd = Buffer.from(
                         "00000000000000000000000000000000",
                         "hex"
@@ -378,11 +390,8 @@ export class P2pLayer {
                     console.log("Send SYNC_ID Message");
                 }
                 const { localKey, port, networkId } = this;
-                const localPubKey: string = localKey
-                    .getPublic()
-                    .encode("hex", false)
-                    .slice(2, 130) as any; // TODO: remove any
-                const msg = new Sync1(new H512(localPubKey), networkId, port);
+                const localPubKey = x25519GetPublicFromPrivate(localKey);
+                const msg = new Sync1(new H256(localPubKey), networkId, port);
                 await this.writeData(msg.rlpBytes());
                 break;
             }

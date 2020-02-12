@@ -26,13 +26,21 @@ import {
     validator0Address
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
-import { blake256 } from "../sdk/utils";
+import { H256 } from "foundry-primitives";
+import { blake256, getPublicFromPrivate } from "../sdk/utils";
 
 const RLP = require("rlp");
 
 describe("Term change", function() {
     const chain = `${__dirname}/../scheme/solo-block-reward-50.json`;
     let node: CodeChain;
+
+    const approvalEncoded = (message: string, secret: string): any => {
+        return [
+            `0x${node.testFramework.util.signEd25519(message, secret)}`,
+            H256.ensure(getPublicFromPrivate(secret)).toEncodeObject()
+        ];
+    };
 
     beforeEach(async function() {
         node = new CodeChain({
@@ -81,12 +89,8 @@ describe("Term change", function() {
             newParams
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-        );
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-        );
+        changeParams.push(approvalEncoded(message, aliceSecret));
+        changeParams.push(approvalEncoded(message, carolSecret));
 
         {
             const hash = await node.rpc.mempool.sendSignedTransaction({

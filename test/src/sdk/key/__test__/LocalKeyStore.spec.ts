@@ -1,8 +1,7 @@
 import {
     getAccountIdFromPublic,
     getPublicFromPrivate,
-    recoverEcdsa,
-    verifyEcdsa
+    verifyEd25519
 } from "../../utils";
 import { LocalKeyStore } from "../LocalKeyStore";
 
@@ -56,6 +55,5 @@ test("sign", async () => {
         key,
         message
     });
-    expect(verifyEcdsa(message, signature, publicKey)).toBe(true);
-    expect(recoverEcdsa(message, signature)).toEqual(publicKey);
+    expect(verifyEd25519(message, signature, publicKey)).toBe(true);
 });

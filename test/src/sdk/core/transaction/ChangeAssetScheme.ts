@@ -1,4 +1,4 @@
-import { H160, H256 } from "codechain-primitives";
+import { H160, H256 } from "foundry-primitives";
 import { blake256 } from "../../utils";
 import { PlatformAddress } from "../classes";
 import { Transaction } from "../Transaction";

@@ -1,9 +1,9 @@
-export { H128, H128Value } from "codechain-primitives";
-export { H160, H160Value } from "codechain-primitives";
-export { H256, H256Value } from "codechain-primitives";
-export { H512, H512Value } from "codechain-primitives";
-export { U64, U64Value } from "codechain-primitives";
-export { U256, U256Value } from "codechain-primitives";
+export { H128, H128Value } from "foundry-primitives";
+export { H160, H160Value } from "foundry-primitives";
+export { H256, H256Value } from "foundry-primitives";
+export { H512, H512Value } from "foundry-primitives";
+export { U64, U64Value } from "foundry-primitives";
+export { U256, U256Value } from "foundry-primitives";
 
 export { Block } from "./Block";
 export { Transaction } from "./Transaction";
@@ -38,4 +38,4 @@ export {
     PlatformAddressValue,
     AssetAddress,
     AssetAddressValue
-} from "codechain-primitives";
+} from "foundry-primitives";

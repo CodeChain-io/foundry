@@ -1,7 +1,7 @@
 // FIXME: The SDK doesn't export PlatformAddressValue and U64Value.
-// In the import statement below uses "codechain-primitives" which is installed by the SDK.
+// In the import statement below uses "foundry-primitives" which is installed by the SDK.
 // We should use the SDK's PlatformAddressValue when the SDK is updated.
-import { PlatformAddressValue, U64Value } from "codechain-primitives/lib";
+import { PlatformAddressValue, U64Value } from "foundry-primitives/lib";
 import * as RLP from "rlp";
 import { SDK } from "../sdk";
 import { PlatformAddress, U64 } from "../sdk/core/classes";

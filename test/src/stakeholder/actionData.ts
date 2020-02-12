@@ -1,15 +1,15 @@
 // FIXME: The SDK doesn't export PlatformAddressValue.
-// In the import statement below uses "codechain-primitives" which is installed by the SDK.
+// In the import statement below uses "foundry-primitives" which is installed by the SDK.
 // We should use the SDK's PlatformAddressValue when the SDK is updated.
-import { PlatformAddressValue } from "codechain-primitives";
+import { PlatformAddressValue } from "foundry-primitives";
 import RPC from "foundry-rpc";
 import { SDK } from "../sdk";
 import { H512, PlatformAddress, U64 } from "../sdk/core/classes";
 
-import { toHex } from "codechain-primitives/lib";
+import { toHex } from "foundry-primitives/lib";
 import { HANDLER_ID } from "./index";
 import {
-    decodeH512,
+    decodeH256,
     decodePlatformAddress,
     decodeU64,
     isArrayOf
@@ -128,7 +128,7 @@ export async function getCandidates(
         );
     }
     return decoded.map(([pubkey, deposit, nominationEndsAt, metadata]) => ({
-        pubkey: decodeH512(pubkey),
+        pubkey: decodeH256(pubkey),
         deposit: decodeU64(deposit),
         nominationEndsAt: decodeU64(nominationEndsAt),
         metadata
@@ -279,6 +279,6 @@ export async function getValidators(
         weight: decodeU64(weight),
         delegation: decodeU64(delegation),
         deposit: decodeU64(deposit),
-        pubkey: decodeH512(pubkey)
+        pubkey: decodeH256(pubkey)
     }));
 }

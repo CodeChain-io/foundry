@@ -1,4 +1,4 @@
-import { PlatformAddress } from "codechain-primitives";
+import { PlatformAddress } from "foundry-primitives";
 
 export interface TextJSON {
     content: string;

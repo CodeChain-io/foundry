@@ -17,7 +17,7 @@
 import { fail } from "assert";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { toHex } from "codechain-primitives/lib";
+import { toHex } from "foundry-primitives/lib";
 import "mocha";
 import {
     faucetAddress,

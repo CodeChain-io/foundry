@@ -1,4 +1,4 @@
-import { PlatformAddress } from "codechain-primitives/lib";
+import { PlatformAddress } from "foundry-primitives/lib";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
