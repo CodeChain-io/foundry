@@ -14,10 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use super::kv_store;
-use crate::ibc::custom_action_handler::CUSTOM_ACTION_HANDLER_ID;
 use crate::ibc::KVStore;
-use cstate::{ActionDataKeyBuilder, TopLevelState, TopState, TopStateView};
+use ccrypto::blake256;
+use cstate::{TopLevelState, TopState, TopStateView};
 use primitives::H256;
+use rlp::RlpStream;
 
 pub trait Context {
     fn get_kv_store(&mut self) -> &mut dyn kv_store::KVStore;
@@ -49,8 +50,10 @@ struct TopLevelKVStore<'a> {
 
 impl<'a> TopLevelKVStore<'a> {
     fn key(path: &str) -> H256 {
-        let key_builder = ActionDataKeyBuilder::new(CUSTOM_ACTION_HANDLER_ID, 1);
-        key_builder.append(&path.as_bytes()).into_key()
+        let mut rlp = RlpStream::new_list(2);
+        rlp.append(&"IBCData");
+        rlp.append(&path);
+        blake256(rlp.drain())
     }
 }
 

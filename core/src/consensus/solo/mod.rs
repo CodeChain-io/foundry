@@ -25,7 +25,6 @@ use crate::client::ConsensusClient;
 use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
-use crate::ibc;
 use ckey::Address;
 use cstate::{ActionHandler, HitHandler, TopStateView};
 use ctypes::{BlockHash, CommonParams, Header};
@@ -49,7 +48,6 @@ impl Solo {
             action_handlers.push(Arc::new(HitHandler::new()));
         }
         action_handlers.push(Arc::new(stake::Stake::new(params.genesis_stakes.clone())));
-        action_handlers.push(Arc::new(ibc::custom_action_handler::IBC::new()));
 
         Solo {
             client: Default::default(),
