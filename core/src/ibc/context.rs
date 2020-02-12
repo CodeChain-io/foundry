@@ -60,16 +60,16 @@ impl<'a> TopLevelKVStore<'a> {
 impl<'a> kv_store::KVStore for TopLevelKVStore<'a> {
     fn get(&self, path: &str) -> Vec<u8> {
         let key = TopLevelKVStore::key(path);
-        self.state.action_data(&key).expect("Get key").expect("Data empty").into()
+        self.state.ibc_data(&key).expect("Get key").expect("Data empty").into()
     }
 
     fn has(&self, path: &str) -> bool {
         let key = TopLevelKVStore::key(path);
-        self.state.action_data(&key).expect("Get key").is_some()
+        self.state.ibc_data(&key).expect("Get key").is_some()
     }
 
     fn set(&mut self, path: &str, value: &[u8]) {
         let key = TopLevelKVStore::key(path);
-        self.state.update_action_data(&key, value.to_vec()).expect("Set in IBC KVStore")
+        self.state.update_ibc_data(&key, value.to_vec()).expect("Set in IBC KVStore")
     }
 }
