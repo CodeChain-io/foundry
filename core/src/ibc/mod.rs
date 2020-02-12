@@ -19,9 +19,6 @@ pub mod client_02;
 #[allow(unused_variables)]
 mod commitment_23;
 pub mod context;
-#[allow(dead_code)]
-#[allow(unused_variables)]
-pub mod custom_action_handler;
 mod kv_store;
 mod transaction_handler;
 
