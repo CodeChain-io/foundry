@@ -24,3 +24,5 @@ pub fn path(id: &str) -> String {
 pub fn client_connections_path(client_id: &str) -> String {
     format!("clients/{}/connections", client_id)
 }
+
+pub use manager::Manager;
