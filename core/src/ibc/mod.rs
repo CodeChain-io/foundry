@@ -23,7 +23,9 @@ pub mod context;
 #[allow(unused_variables)]
 pub mod custom_action_handler;
 mod kv_store;
+mod transaction_handler;
 
 pub use self::client_02 as client;
 pub use self::context::Context;
 pub use self::kv_store::KVStore;
+pub use transaction_handler::execute as execute_transaction;
