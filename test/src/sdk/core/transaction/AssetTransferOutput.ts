@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { AssetAddress, H160, U64 } from "codechain-primitives";
+import { AssetAddress, H160, U64 } from "foundry-primitives";
 
 import { P2PKH } from "../../key/P2PKH";
 import { P2PKHBurn } from "../../key/P2PKHBurn";

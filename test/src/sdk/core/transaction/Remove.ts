@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 
-import { signEcdsa } from "../../utils";
+import { signEd25519 } from "../../utils";
 import { H256 } from "../classes";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
@@ -31,7 +31,7 @@ export class Remove extends Transaction {
         if ("secret" in params) {
             const { hash, secret } = params;
             this._hash = hash;
-            this.signature = signEcdsa(hash.value, secret.value);
+            this.signature = signEd25519(hash.value, secret.value);
         } else {
             let signature = params.signature;
             if (signature.startsWith("0x")) {

@@ -1,4 +1,4 @@
-import { PlatformAddress } from "codechain-primitives/lib";
+import { PlatformAddress } from "foundry-primitives/lib";
 import {
     blake128,
     blake256,

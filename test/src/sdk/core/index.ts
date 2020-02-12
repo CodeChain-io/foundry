@@ -13,7 +13,7 @@ import {
     U256,
     U64,
     U64Value
-} from "codechain-primitives";
+} from "foundry-primitives";
 
 import { Asset } from "./Asset";
 import { AssetScheme } from "./AssetScheme";
@@ -1254,7 +1254,7 @@ function checkUnlockScript(unlockScript: Buffer) {
 }
 
 function checkSignature(signature: string) {
-    // ECDSA Signature
+    // Ed25519 Signature
     if (
         typeof signature !== "string" ||
         !/^(0x)?[0-9a-fA-F]{130}$/.test(signature)

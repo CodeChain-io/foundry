@@ -1,4 +1,4 @@
-import { U64 } from "codechain-primitives";
+import { U64 } from "foundry-primitives";
 
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";

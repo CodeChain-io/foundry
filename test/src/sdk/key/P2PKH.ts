@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { AssetAddress, H160, H256 } from "codechain-primitives";
+import { AssetAddress, H160, H256 } from "foundry-primitives";
 
 import { Script } from "../core/Script";
 import { NetworkId } from "../core/types";

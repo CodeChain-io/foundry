@@ -158,9 +158,9 @@ describe("solo - 1 node", function() {
 
         [
             "0x00",
-            "0x1" + "0".repeat(127),
-            "0x1" + "0".repeat(130),
-            "0x" + "f".repeat(131)
+            "0x1" + "0".repeat(125),
+            "0x1" + "0".repeat(128),
+            "0x" + "f".repeat(129)
         ].forEach(function(sig) {
             it(`signature: ${sig}`, async function() {
                 encoded[4] = sig;
@@ -170,7 +170,7 @@ describe("solo - 1 node", function() {
                     );
                     expect.fail();
                 } catch (e) {
-                    if (sig.length < 132)
+                    if (sig.length < 130)
                         expect(e.toString()).is.include(
                             ERROR.INVALID_RLP_TOO_SHORT
                         );

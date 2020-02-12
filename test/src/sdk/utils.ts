@@ -9,12 +9,11 @@ import {
     getAccountIdFromPrivate as _getAccountIdFromPrivate,
     getAccountIdFromPublic as _getAccountIdFromPublic,
     getPublicFromPrivate as _getPublicFromPrivate,
-    recoverEcdsa as _recoverEcdsa,
     ripemd160 as _ripemd160,
-    signEcdsa as _signEcdsa,
+    signEd25519 as _signEd25519,
     toHex as _toHex,
-    verifyEcdsa as _verifyEcdsa
-} from "codechain-primitives";
+    verifyEd25519 as _verifyEd25519
+} from "foundry-primitives";
 import * as _ from "lodash";
 
 /**
@@ -165,50 +164,37 @@ const encodeSignatureTagOutput = (output: number[]) => {
     return bytes.reverse();
 };
 
-export type EcdsaSignature = string;
+export type Ed25519Signature = string;
 
 /**
  * Gets signature for message from private key.
  * @param message arbitrary length string
  * @param priv 32 byte hexstring of private key
- * @returns 65 byte hexstring of ECDSA signature
+ * @returns 65 byte hexstring of Ed25519 signature
  */
-export const signEcdsa = (message: string, priv: string): EcdsaSignature => {
-    return _signEcdsa(message, priv);
+export const signEd25519 = (
+    message: string,
+    priv: string
+): Ed25519Signature => {
+    return _signEd25519(message, priv);
 };
 
 /**
- * Checks if the signature from signEcdsa is correct.
+ * Checks if the signature from signEd25519 is correct.
  * @param message arbitrary length string
- * @param signature 65 byte hexstring of ECDSA signature
+ * @param signature 65 byte hexstring of Ed25519 signature
  * @param pub 64 byte hexstring of public key
  * @returns if signature is valid, true. Else false.
  */
-export const verifyEcdsa = (
+export const verifyEd25519 = (
     message: string,
-    signature: EcdsaSignature,
+    signature: Ed25519Signature,
     pub: string
 ): boolean => {
     if (signature.startsWith("0x")) {
         signature = signature.substr(2);
     }
-    return _verifyEcdsa(message, signature, pub);
-};
-
-/**
- * Gets public key from the message and signature.
- * @param message arbitrary length string
- * @param signature 65 byte hexstring of ECDSA signature
- * @returns 64 byte hexstring public key
- */
-export const recoverEcdsa = (
-    message: string,
-    signature: EcdsaSignature
-): string => {
-    if (signature.startsWith("0x")) {
-        signature = signature.substr(2);
-    }
-    return _recoverEcdsa(message, signature);
+    return _verifyEd25519(message, signature, pub);
 };
 
 /**

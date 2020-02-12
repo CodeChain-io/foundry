@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import { H256, H512, U128 } from "codechain-primitives";
+import { H256, U128 } from "foundry-primitives";
 import { blake256WithKey } from "../../sdk/utils";
 
 const RLP = require("rlp");
@@ -52,18 +52,18 @@ export class Sync1 {
             );
         }
 
-        const initiatorPubKey = new H512(decoded[1].toString("hex"));
+        const initiatorPubKey = new H256(decoded[1].toString("hex"));
         const networkId = decoded[2].toString();
         const initiatorPort = decoded[3].readUIntBE(0, 2);
 
         return new Sync1(initiatorPubKey, networkId, initiatorPort);
     }
     private readonly initiatorPort: number;
-    private readonly initiatorPubKey: H512;
+    private readonly initiatorPubKey: H256;
     private readonly networkId: string;
 
     constructor(
-        initiatorPubKey: H512,
+        initiatorPubKey: H256,
         networkId: string,
         initiatorPort: number
     ) {
@@ -103,8 +103,8 @@ export class Sync2 {
             );
         }
 
-        const initiatorPubKey = new H512(decoded[1].toString("hex"));
-        const recipientPubKey = new H512(decoded[2].toString("hex"));
+        const initiatorPubKey = new H256(decoded[1].toString("hex"));
+        const recipientPubKey = new H256(decoded[2].toString("hex"));
         const networkId = decoded[3].toString();
         const initiatorPort = decoded[4].readUIntBE(0, 2);
 
@@ -116,13 +116,13 @@ export class Sync2 {
         );
     }
     private readonly initiatorPort: number;
-    private readonly initiatorPubKey: H512;
+    private readonly initiatorPubKey: H256;
     private readonly networkId: string;
-    private readonly recipientPubKey: H512;
+    private readonly recipientPubKey: H256;
 
     constructor(
-        initiatorPubKey: H512,
-        recipientPubKey: H512,
+        initiatorPubKey: H256,
+        recipientPubKey: H256,
         networkId: string,
         initiatorPort: number
     ) {
@@ -169,15 +169,15 @@ export class Ack {
             );
         }
 
-        const recipientPubKey = new H512(decoded[1].toString("hex"));
+        const recipientPubKey = new H256(decoded[1].toString("hex"));
         const encryptedNonce = decoded[2];
 
         return new Ack(recipientPubKey, encryptedNonce);
     }
     public readonly encryptedNonce: Buffer;
-    public readonly recipientPubKey: H512;
+    public readonly recipientPubKey: H256;
 
-    constructor(recipientPubKey: H512, encryptedNonce: Buffer) {
+    constructor(recipientPubKey: H256, encryptedNonce: Buffer) {
         this.recipientPubKey = recipientPubKey;
         this.encryptedNonce = encryptedNonce;
     }

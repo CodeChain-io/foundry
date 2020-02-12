@@ -5,10 +5,10 @@
             "params": {
                 "blockReward": "0x32",
                 "genesisStakes": {
-                    "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": 40000,
-                    "tccq8snvxt5vfwthja7z7880dgs63x4njw2n5e5zm4h": 30000,
-                    "tccq9ew456esykkxd7et2e0gwlwa6kkg2f4fg4q3t2m": 20000,
-                    "tccq8z49d959veeeznkatpplf2rd8u98q9nz5zfqlpz": 10000
+                    "tccqx0xyvalakl59psh34wlph0xlf5c2l3a3syrjauu": 40000,
+                    "tccq86dg0p4f2f06jtqrdu3dvavm5pjfacarypp0ka3": 30000,
+                    "tccqyd43tc2qfqj3w363k688rgpptrnws0c8gyuqv6k": 20000,
+                    "tccqxa6967paq7wl3fl4s8g87ncsgptqmzw2u22kph0": 10000
                 }
             }
         }
@@ -44,7 +44,7 @@
         "extraData": "0x"
     },
     "accounts": {
-        "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd": {
+        "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg": {
             "balance": "18000000000000000000",
             "seq": "0"
         }

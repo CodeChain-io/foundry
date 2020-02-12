@@ -11,10 +11,9 @@ import {
     generatePrivateKey,
     getAccountIdFromPrivate,
     getPublicFromPrivate,
-    recoverEcdsa,
     ripemd160,
-    signEcdsa,
-    verifyEcdsa
+    signEd25519,
+    verifyEd25519
 } from "./utils";
 
 class SDK {
@@ -28,9 +27,8 @@ class SDK {
         blake256,
         blake256WithKey,
         ripemd160,
-        signEcdsa,
-        verifyEcdsa,
-        recoverEcdsa,
+        signEd25519,
+        verifyEd25519,
         generatePrivateKey,
         getAccountIdFromPrivate,
         getPublicFromPrivate

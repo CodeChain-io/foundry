@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { U256 } from "codechain-primitives";
+import { U256 } from "foundry-primitives";
 import "mocha";
 import * as BlockSyncMessage from "../blockSyncMessage";
 

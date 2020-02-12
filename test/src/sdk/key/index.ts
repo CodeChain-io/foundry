@@ -4,7 +4,7 @@ import {
     PlatformAddress,
     PlatformAddressValue,
     U64Value
-} from "codechain-primitives";
+} from "foundry-primitives";
 
 import {
     AssetTransferInput,
@@ -252,12 +252,22 @@ export class Key {
         tx.setFee(fee);
         tx.setSeq(seq);
         const accountId = PlatformAddress.ensure(account).getAccountId();
+        const signerPublic = await keyStore.platform.getPublicKey({
+            key: accountId.value,
+            passphrase
+        });
+        if (signerPublic === null) {
+            throw Error(
+                `The account ${accountId.value} is not found in the Keystore`
+            );
+        }
+
         const sig = await keyStore.platform.sign({
             key: accountId.value,
             message: tx.unsignedHash().value,
             passphrase
         });
-        return new SignedTransaction(tx, sig);
+        return new SignedTransaction(tx, sig, signerPublic);
     }
 
     /**

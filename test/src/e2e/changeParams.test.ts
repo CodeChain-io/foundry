@@ -17,7 +17,7 @@
 import * as chai from "chai";
 import { expect } from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { H256, PlatformAddress, U64 } from "codechain-primitives/lib";
+import { H256, PlatformAddress } from "foundry-primitives";
 import "mocha";
 import {
     aliceAddress,
@@ -31,7 +31,7 @@ import {
     validator0Address
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
-import { blake256 } from "../sdk/utils";
+import { blake256, getPublicFromPrivate } from "../sdk/utils";
 import { ERROR } from "../helper/error";
 
 const RLP = require("rlp");
@@ -41,6 +41,13 @@ chai.use(chaiAsPromised);
 describe("ChangeParams", function() {
     const chain = `${__dirname}/../scheme/solo-block-reward-50.json`;
     let node: CodeChain;
+
+    const approvalEncoded = (message: string, secret: string): any => {
+        return [
+            `0x${node.testFramework.util.signEd25519(message, secret)}`,
+            H256.ensure(getPublicFromPrivate(secret)).toEncodeObject()
+        ];
+    };
 
     beforeEach(async function() {
         node = new CodeChain({
@@ -89,12 +96,8 @@ describe("ChangeParams", function() {
             newParams
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-        );
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-        );
+        changeParams.push(approvalEncoded(message, aliceSecret));
+        changeParams.push(approvalEncoded(message, carolSecret));
 
         {
             const tx = node.testFramework.core
@@ -159,12 +162,8 @@ describe("ChangeParams", function() {
             newParams
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-        );
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-        );
+        changeParams.push(approvalEncoded(message, aliceSecret));
+        changeParams.push(approvalEncoded(message, carolSecret));
 
         const tx = node.testFramework.core
             .createCustomTransaction({
@@ -225,15 +224,9 @@ describe("ChangeParams", function() {
             newParams
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-        );
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, bobSecret)}`
-        );
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-        );
+        changeParams.push(approvalEncoded(message, aliceSecret));
+        changeParams.push(approvalEncoded(message, bobSecret));
+        changeParams.push(approvalEncoded(message, carolSecret));
 
         {
             await node.rpc.devel!.stopSealing();
@@ -334,25 +327,13 @@ describe("ChangeParams", function() {
             newParams2
         ];
         const message1 = blake256(RLP.encode(changeParams1).toString("hex"));
-        changeParams1.push(
-            `0x${node.testFramework.util.signEcdsa(message1, aliceSecret)}`
-        );
-        changeParams1.push(
-            `0x${node.testFramework.util.signEcdsa(message1, bobSecret)}`
-        );
-        changeParams1.push(
-            `0x${node.testFramework.util.signEcdsa(message1, carolSecret)}`
-        );
+        changeParams1.push(approvalEncoded(message1, aliceSecret));
+        changeParams1.push(approvalEncoded(message1, bobSecret));
+        changeParams1.push(approvalEncoded(message1, carolSecret));
         const message2 = blake256(RLP.encode(changeParams2).toString("hex"));
-        changeParams2.push(
-            `0x${node.testFramework.util.signEcdsa(message2, aliceSecret)}`
-        );
-        changeParams2.push(
-            `0x${node.testFramework.util.signEcdsa(message2, bobSecret)}`
-        );
-        changeParams2.push(
-            `0x${node.testFramework.util.signEcdsa(message2, carolSecret)}`
-        );
+        changeParams2.push(approvalEncoded(message2, aliceSecret));
+        changeParams2.push(approvalEncoded(message2, bobSecret));
+        changeParams2.push(approvalEncoded(message2, carolSecret));
 
         {
             await node.rpc.devel!.stopSealing();
@@ -474,25 +455,13 @@ describe("ChangeParams", function() {
             newParams2
         ];
         const message1 = blake256(RLP.encode(changeParams1).toString("hex"));
-        changeParams1.push(
-            `0x${node.testFramework.util.signEcdsa(message1, aliceSecret)}`
-        );
-        changeParams1.push(
-            `0x${node.testFramework.util.signEcdsa(message1, bobSecret)}`
-        );
-        changeParams1.push(
-            `0x${node.testFramework.util.signEcdsa(message1, carolSecret)}`
-        );
+        changeParams1.push(approvalEncoded(message1, aliceSecret));
+        changeParams1.push(approvalEncoded(message1, bobSecret));
+        changeParams1.push(approvalEncoded(message1, carolSecret));
         const message2 = blake256(RLP.encode(changeParams2).toString("hex"));
-        changeParams2.push(
-            `0x${node.testFramework.util.signEcdsa(message2, aliceSecret)}`
-        );
-        changeParams2.push(
-            `0x${node.testFramework.util.signEcdsa(message2, bobSecret)}`
-        );
-        changeParams2.push(
-            `0x${node.testFramework.util.signEcdsa(message2, carolSecret)}`
-        );
+        changeParams2.push(approvalEncoded(message2, aliceSecret));
+        changeParams2.push(approvalEncoded(message2, bobSecret));
+        changeParams2.push(approvalEncoded(message2, carolSecret));
 
         {
             await node.rpc.devel!.stopSealing();
@@ -588,12 +557,8 @@ describe("ChangeParams", function() {
             newParams
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-        );
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-        );
+        changeParams.push(approvalEncoded(message, aliceSecret));
+        changeParams.push(approvalEncoded(message, carolSecret));
 
         {
             const tx = node.testFramework.core
@@ -669,12 +634,8 @@ describe("ChangeParams", function() {
             newParams
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, bobSecret)}`
-        );
-        changeParams.push(
-            `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-        );
+        changeParams.push(approvalEncoded(message, bobSecret));
+        changeParams.push(approvalEncoded(message, carolSecret));
 
         const tx = node.testFramework.core
             .createCustomTransaction({
@@ -725,12 +686,8 @@ describe("ChangeParams", function() {
         ];
         {
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, bobSecret)}`
-            );
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-            );
+            changeParams.push(approvalEncoded(message, bobSecret));
+            changeParams.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
                 .createCustomTransaction({
@@ -824,12 +781,8 @@ describe("ChangeParams", function() {
                 newParams
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-            );
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-            );
+            changeParams.push(approvalEncoded(message, aliceSecret));
+            changeParams.push(approvalEncoded(message, carolSecret));
 
             {
                 const tx = node.testFramework.core
@@ -897,12 +850,8 @@ describe("ChangeParams", function() {
                 newParams
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-            );
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-            );
+            changeParams.push(approvalEncoded(message, aliceSecret));
+            changeParams.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
                 .createCustomTransaction({
@@ -958,12 +907,8 @@ describe("ChangeParams", function() {
                 newParams
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-            );
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-            );
+            changeParams.push(approvalEncoded(message, aliceSecret));
+            changeParams.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
                 .createCustomTransaction({
@@ -1019,12 +964,8 @@ describe("ChangeParams", function() {
                 newParams
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-            );
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-            );
+            changeParams.push(approvalEncoded(message, aliceSecret));
+            changeParams.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
                 .createCustomTransaction({
@@ -1080,12 +1021,8 @@ describe("ChangeParams", function() {
                 newParams
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-            );
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-            );
+            changeParams.push(approvalEncoded(message, aliceSecret));
+            changeParams.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
                 .createCustomTransaction({
@@ -1141,12 +1078,8 @@ describe("ChangeParams", function() {
                 newParams
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-            );
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-            );
+            changeParams.push(approvalEncoded(message, aliceSecret));
+            changeParams.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
                 .createCustomTransaction({
@@ -1202,12 +1135,8 @@ describe("ChangeParams", function() {
                 newParams
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-            );
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-            );
+            changeParams.push(approvalEncoded(message, aliceSecret));
+            changeParams.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
                 .createCustomTransaction({
@@ -1263,12 +1192,8 @@ describe("ChangeParams", function() {
                 newParams
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-            );
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-            );
+            changeParams.push(approvalEncoded(message, aliceSecret));
+            changeParams.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
                 .createCustomTransaction({
@@ -1324,12 +1249,8 @@ describe("ChangeParams", function() {
                 newParams
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-            );
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-            );
+            changeParams.push(approvalEncoded(message, aliceSecret));
+            changeParams.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
                 .createCustomTransaction({
@@ -1385,12 +1306,8 @@ describe("ChangeParams", function() {
                 newParams
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-            );
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-            );
+            changeParams.push(approvalEncoded(message, aliceSecret));
+            changeParams.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
                 .createCustomTransaction({

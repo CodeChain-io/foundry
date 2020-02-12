@@ -18,16 +18,26 @@ import { SDK } from "../src/sdk";
 import { Signer } from "../src/helper/spawn";
 
 const privateKeys = [
-  "aa42ea65225bbd39dd0fdb80b855c936d256f33cfcf3ead9146e43c476334cd5", // tccqy0mn5x8y3shes2ncmsjna94nuffrt9msqz27ez6
-  "a9c427f7bebac9cf70e517c861e8ce7b6176de592b86a8294488dce6c2e5c13e", // tccq8g96vn3tagkf4hrdzgf6l9nqded4l5j7c5qulst
-  "e62853a91b5e444d6e00d9259fbef17da1e631ff36e02e46c746a497c4ea6db0", // tccq83wm6sjyklkd4utk6hjmewsaccgvzk5sck8cs2y
-  "63ce52a2b18214d442ba633ba449e72230488ea7820a543b05a72aca6d2d28ac", // tccq9e7k4nm2m3kxls3vqyxh9aast0ufys4ss4mk8lg
-  "8b558081ed35cb9ba1ba7d2c6204252b4c86955da3ea52805f16771a0059a9e4", // tccq80vewuacz704whqpcr9e5kjfmtlmpr5xggw66ty
-  "bebd1eb30d5f08b26d04d317a240eafb18511d83088fb949db3e8b194a578985", // tccqy5qjlvnv4jplzpkhvxe7pvdv2spmczfvyr7e0yk
-  "ac8bba4801210dc01137366e1a321b1e052fb2561cde927584361d6da6eb7549", // tccq9jj73ft3s4taqksv7fxy0qkhy978c9cqydsxy5y
-  "e672ee34dd9eff2b62d29f3e4a41400682338fcd5a5007a08781a16063e2486d", // tccq8ad6wxwhsk4aryazef5nawgw98zu6xpe5njs609
-  "c8a9b84235155e79934741a3227b77fa70f4571e173c4fdc597e6a51e7c03c81", // tccqx8ltnh22s5a0xdfxf8j9zsg0c6ult03gvc6hcxy
-  "01153af55ce89f8ee107d5a0e103f73f6354810142e33ea60753288d57833b4a" // tccq8en43nfkkpjxn534gccpqejzhmx75lx2sxkyj6u
+  "df7fc69a4dee82b9efa6d48d45dc1b541c54eb61e3af5acf577f07cdb706aa1d9871a148fbc474f82ad1c93140b9a24b7c2e8944158816bab6f828c5f4502461",
+   // tccqy3559prpzths7q2prztzn4kh3suj97ecs356ygc
+  "be173d1f8b1f76b8ae0d15bd6c4beeb664ef12655310dd04c36945dc86b075a1dc7d598adaea461bf3c85ae727ae9d653d315f07099a200d5fbef49b3ffd5d25",
+  // tccq9lseysjk6eg803u7pzxm3j7h5kc36l5gylnkrp4
+  "e24f42d28d82a13b2031397df561cf1066b3eeaa959fa2a4de763e657efb3926bc7729f91c57f575c9555db790a979ef8143ea29488f3b5e498e3c2c00b1d391",
+  // tccq9qlkwmawatnqqaztcd6tx2cmjqkc52ytcja6ze0
+  "2c93f98e02993a3a527685e7d84fef83ccf1d9100cc9d4ac43f82d833bc07a0ee370aadce8856a5f7424840183631b99a24caab7d0a50f7ca8e0a3c91f81b167",
+  // tccqxf2t9kampkacx34u44032f83agua8hqyvtgn8kq
+  "0cb0cc8f61268961ba7a2c702db66c9a8970fe5ce0b3d87a564895519df33c4611cb585bcd00ae47e410474987d4d8129de1305d48d5886be62b4ff50f284af3",
+  // tccq9td7gtgjhu08ud9hs7uml0pj4lt36mdwyft72tl
+  "16d7a9c195796975aa384a156a14150a9d3752d2a9cd290610d12a215d928f1c6ce16180aa209d0349f8eb6702cf5d061e8185ef6ea4728d86ee2b20a850640d",
+  // tccq9wgeyu6znfhae09ldpld45ejjggtmdsuvqx5698
+  "da4a1559b7ab680d1ae5bc322b0c1ce56bff4c0d811a3f03b24c8b41a71a692bc0943a2a2635835e9eac7a095ec65805190c0dfeaddaad20f01cbf0f290457d2",
+  // tccqylhu0h3k3qqvtl5ptzr0x699pkp2repxy95n94r
+  "ad36796cdf5d9dc9ddfa0baed6c427719f3cb9c86a1e14befe9ca4878e175d17fba867347b420780ebc65db9659122d22d290dff9d69e64cabe62cde482a28e5",
+  // tccqxl28vw6282q9zxkuxs75hshett5ls05cy064xt2
+  "ff3541f2714fc90c10712eb76f1ae06645570d18aae4ed8427b7d5eab1b1cddc1a6b1c4b3849818d860c79bb07a748268fe86baec88ac071d9dc592c21ba5abf",
+  // tccqyyfspgkyq77cyxc6kk09azvvsg9hpyhrcv2j6as
+  "579d2f2d337b0d9421db3e8dc8505c9de8408968036727eb29e873389a153aecb3d43f08b7e2131dc7ad1b929d74c3b2d78585e6f65ea286d8c7b8e2c1123b16"
+  // tccq958tj6lzl6ymtfcdzrx2cth33jvtddqlypq54ed
 ];
 
 export const validators: Signer[] = privateKeys.map(privateKey => {

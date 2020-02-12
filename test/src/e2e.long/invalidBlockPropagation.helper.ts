@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H160, H256, PlatformAddress, U256 } from "codechain-primitives";
+import { H160, H256, PlatformAddress, U256 } from "foundry-primitives";
 import { Block } from "foundry-rpc/build/src/chain";
 import "mocha";
 import Test = Mocha.Test;

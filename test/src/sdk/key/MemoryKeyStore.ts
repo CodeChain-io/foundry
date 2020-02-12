@@ -1,4 +1,4 @@
-import { H160 } from "codechain-primitives";
+import { H160 } from "foundry-primitives";
 import * as _ from "lodash";
 
 import {
@@ -6,7 +6,7 @@ import {
     generatePrivateKey,
     getAccountIdFromPublic,
     getPublicFromPrivate,
-    signEcdsa
+    signEd25519
 } from "../utils";
 import { KeyManagementAPI, KeyStore } from "./KeyStore";
 
@@ -80,7 +80,7 @@ class KeyManager implements KeyManagementAPI {
         if (passphrase !== this.passphraseMap[key]) {
             return Promise.reject("The passphrase does not match");
         }
-        return Promise.resolve(signEcdsa(message, this.privateKeyMap[key]));
+        return Promise.resolve(signEd25519(message, this.privateKeyMap[key]));
     }
 }
 

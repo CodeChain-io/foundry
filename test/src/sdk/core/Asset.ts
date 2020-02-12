@@ -5,7 +5,7 @@ import {
     H160,
     H256,
     U64
-} from "codechain-primitives";
+} from "foundry-primitives";
 
 import { AssetOutPoint } from "./transaction/AssetOutPoint";
 import { AssetTransferInput, Timelock } from "./transaction/AssetTransferInput";

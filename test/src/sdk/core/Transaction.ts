@@ -1,6 +1,6 @@
-import { H256, H256Value, U64, U64Value } from "codechain-primitives";
+import { H256, H512, H512Value, U64, U64Value } from "foundry-primitives";
 
-import { blake256, signEcdsa } from "../utils";
+import { blake256, getPublicFromPrivate, signEd25519 } from "../utils";
 import { SignedTransaction } from "./SignedTransaction";
 import { ChangeAssetSchemeActionJSON } from "./transaction/ChangeAssetScheme";
 import { CreateShardActionJSON } from "./transaction/CreateShard";
@@ -109,7 +109,7 @@ export abstract class Transaction {
     }
 
     public sign(params: {
-        secret: H256Value;
+        secret: H512Value;
         seq: number;
         fee: U64Value;
     }): SignedTransaction {
@@ -124,7 +124,8 @@ export abstract class Transaction {
         this._fee = U64.ensure(fee);
         return new SignedTransaction(
             this,
-            signEcdsa(this.unsignedHash().value, H256.ensure(secret).value)
+            signEd25519(this.unsignedHash().value, H512.ensure(secret).value),
+            getPublicFromPrivate(secret.toString())
         );
     }
 

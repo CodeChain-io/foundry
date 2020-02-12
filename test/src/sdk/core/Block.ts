@@ -1,4 +1,4 @@
-import { H256, PlatformAddress, U256 } from "codechain-primitives";
+import { H256, PlatformAddress, U256 } from "foundry-primitives";
 
 import { SignedTransaction, SignedTransactionJSON } from "./SignedTransaction";
 import { fromJSONToSignedTransaction } from "./transaction/json";

@@ -29,7 +29,7 @@ import { faucetAddress, faucetSecret } from "../../helper/constants";
 import { PromiseExpect } from "../../helper/promise";
 import CodeChain, { Signer } from "../../helper/spawn";
 import { setTermTestTimeout, withNodes } from "../setup";
-import { H256 } from "codechain-primitives/lib";
+import { H256 } from "foundry-primitives/lib";
 
 chai.use(chaiAsPromised);
 

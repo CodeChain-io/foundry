@@ -20,9 +20,9 @@ import {
     H256,
     H512,
     PlatformAddress,
-    signSchnorr,
+    signEd25519,
     U64
-} from "codechain-primitives/lib";
+} from "foundry-primitives/lib";
 import RPC from "foundry-rpc";
 import "mocha";
 import * as RLP from "rlp";
@@ -73,17 +73,16 @@ function encodableMessage(data: MessageData): RLP.Input {
     const encodableVoteOn = [encodableVoteStep, encodableBlockHash];
 
     const rlpVoteOn = RLP.encode(encodableVoteOn);
-    const messageForSchnorr = blake256(rlpVoteOn);
-    const schnorrSignature = signSchnorr(messageForSchnorr, privKey);
-    // pad because signSchnorr function does not guarantee the length of r and s to be 64.
-    const encodableSchnorrSignature = new H512(
-        schnorrSignature.r.padStart(64, "0") +
-            schnorrSignature.s.padStart(64, "0")
+    const messageForEd25519 = blake256(rlpVoteOn);
+    const ed25519Signature = signEd25519(messageForEd25519, privKey);
+    // pad because signEd25519 function does not guarantee the length of r and s to be 64.
+    const encodableEd25519Signature = new H512(
+        ed25519Signature.padStart("0", 64)
     ).toEncodeObject();
 
     return [
         encodableVoteOn,
-        encodableSchnorrSignature,
+        encodableEd25519Signature,
         U64.ensure(signerIdx).toEncodeObject()
     ];
 }

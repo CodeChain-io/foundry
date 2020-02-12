@@ -1,4 +1,4 @@
-import { H160, H256, U64 } from "codechain-primitives";
+import { H160, H256, U64 } from "foundry-primitives";
 
 export interface AssetOutPointJSON {
     tracker: string;

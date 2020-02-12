@@ -1,7 +1,7 @@
-import { H160, H256, H512, PlatformAddress } from "codechain-primitives";
+import { H160, H256, H512, PlatformAddress } from "foundry-primitives";
 import * as _ from "lodash";
 
-import { blake160, blake256, recoverEcdsa } from "../utils";
+import { blake160, blake256 } from "../utils";
 
 import { Asset } from "./Asset";
 import { Transaction, TransactionJSON } from "./Transaction";
@@ -14,6 +14,7 @@ export interface SignedTransactionJSON extends TransactionJSON {
     blockHash: string | null;
     transactionIndex: number | null;
     sig: string;
+    signerPublic: string;
     hash: string;
 }
 
@@ -33,6 +34,7 @@ export interface SignedTransactionJSON extends TransactionJSON {
  */
 export class SignedTransaction {
     public unsigned: Transaction;
+    public signerPublic: string;
     public blockNumber: number | null;
     public blockHash: H256 | null;
     public transactionIndex: number | null;
@@ -40,7 +42,8 @@ export class SignedTransaction {
 
     /**
      * @param unsigned A Transaction.
-     * @param signature An ECDSA signature which is a 65 byte hexadecimal string.
+     * @param signature An Ed25519 signature which is a 64 byte hexadecimal string.
+     * @param signerPublic An Ed25519 public key which is a 32 byte hexadecimal string.
      * @param blockNumber The block number of the block that contains the tx.
      * @param blockHash The hash of the block that contains the tx.
      * @param transactionIndex The index(location) of the tx within the block.
@@ -48,6 +51,7 @@ export class SignedTransaction {
     constructor(
         unsigned: Transaction,
         signature: string,
+        signerPublic: string,
         blockNumber?: number,
         blockHash?: H256,
         transactionIndex?: number
@@ -56,6 +60,7 @@ export class SignedTransaction {
         this._signature = signature.startsWith("0x")
             ? signature.substr(2)
             : signature;
+        this.signerPublic = signerPublic;
         this.blockNumber = blockNumber === undefined ? null : blockNumber;
         this.blockHash = blockHash || null;
         this.transactionIndex =
@@ -73,9 +78,10 @@ export class SignedTransaction {
      * Convert to an object for RLP encoding.
      */
     public toEncodeObject(): any[] {
-        const { unsigned, _signature } = this;
+        const { unsigned, _signature, signerPublic } = this;
         const result = unsigned.toEncodeObject();
         result.push(`0x${_signature}`);
+        result.push(`${H256.ensure(signerPublic).toEncodeObject()}`);
         return result;
     }
 
@@ -105,12 +111,7 @@ export class SignedTransaction {
      * @deprecated
      */
     public getSignerAccountId(): H160 {
-        const { _signature, unsigned } = this;
-        const publicKey = recoverEcdsa(
-            unsigned.unsignedHash().value,
-            _signature
-        );
-        return new H160(blake160(publicKey));
+        return new H160(blake160(this.signerPublic));
     }
 
     /**
@@ -126,11 +127,8 @@ export class SignedTransaction {
      * Get the public key of a tx's signer.
      * @returns A public key.
      */
-    public getSignerPublic(): H512 {
-        const { _signature, unsigned } = this;
-        return new H512(
-            recoverEcdsa(unsigned.unsignedHash().value, _signature)
-        );
+    public getSignerPublic(): H256 {
+        return new H256(this.signerPublic);
     }
 
     /**
@@ -143,7 +141,8 @@ export class SignedTransaction {
             blockHash,
             transactionIndex,
             unsigned,
-            _signature
+            _signature,
+            signerPublic
         } = this;
         const json = {
             ...unsigned.toJSON(),
@@ -151,6 +150,7 @@ export class SignedTransaction {
             blockHash: blockHash === null ? null : blockHash.toJSON(),
             transactionIndex,
             sig: `0x${_signature}`,
+            signerPublic: `0x${signerPublic}`,
             hash: this.hash().toJSON()
         };
         return json;

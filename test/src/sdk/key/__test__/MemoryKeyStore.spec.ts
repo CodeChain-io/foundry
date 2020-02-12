@@ -1,8 +1,7 @@
 import {
     getAccountIdFromPublic,
     getPublicFromPrivate,
-    recoverEcdsa,
-    verifyEcdsa
+    verifyEd25519
 } from "../../utils";
 import { MemoryKeyStore } from "../MemoryKeyStore";
 
@@ -46,13 +45,12 @@ test("exportRawKey", async () => {
 test("sign", async () => {
     const store = new MemoryKeyStore();
     const key = await store.asset.createKey();
-    const publicKey = await store.asset.getPublicKey({ key });
+    const publicKey = (await store.asset.getPublicKey({ key }))!;
     const message =
         "00000000c0dec6a100000000c0dec6a100000000c0dec6a100000000c0dec6a1";
     const signature = await store.asset.sign({
         key,
         message
     });
-    expect(verifyEcdsa(message, signature, publicKey)).toBe(true);
-    expect(recoverEcdsa(message, signature)).toEqual(publicKey);
+    expect(verifyEd25519(message, signature, publicKey)).toBe(true);
 });

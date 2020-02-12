@@ -1,4 +1,4 @@
-import { H256, PlatformAddress, U64 } from "codechain-primitives";
+import { H256, PlatformAddress, U64 } from "foundry-primitives";
 
 import { getAccountIdFromPrivate } from "../../utils";
 import { Pay } from "../classes";

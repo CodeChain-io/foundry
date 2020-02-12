@@ -4,7 +4,7 @@ import {
     H160,
     PlatformAddress,
     U64
-} from "codechain-primitives";
+} from "foundry-primitives";
 
 import { AssetMintOutput } from "./transaction/AssetMintOutput";
 import { MintAsset } from "./transaction/MintAsset";
