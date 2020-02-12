@@ -1193,18 +1193,6 @@ impl Worker {
             .into())
         }
 
-        let height = header.number();
-        let author_view = TendermintSealView::new(header.seal()).author_view().unwrap();
-        let score = calculate_score(height, author_view);
-
-        if *header.score() != score {
-            return Err(BlockError::InvalidScore(Mismatch {
-                expected: score,
-                found: *header.score(),
-            })
-            .into())
-        }
-
         Ok(())
     }
 
