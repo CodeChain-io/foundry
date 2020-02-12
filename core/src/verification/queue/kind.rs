@@ -14,16 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ctypes::BlockHash;
-use primitives::U256;
-use rlp::*;
-
 pub use self::blocks::Blocks;
 pub use self::headers::Headers;
-
 use crate::consensus::CodeChainEngine;
 use crate::error::Error;
 use crate::service::ClientIoMessage;
+use ctypes::BlockHash;
+use rlp::*;
 
 /// Something which can produce a hash and a parent hash.
 pub trait BlockLike {
@@ -32,9 +29,6 @@ pub trait BlockLike {
 
     /// Get the hash of this item's parent.
     fn parent_hash(&self) -> BlockHash;
-
-    /// Get the score of this item.
-    fn score(&self) -> U256;
 }
 
 /// Memory usage in the verification queue
@@ -86,7 +80,6 @@ pub trait Kind: 'static + Sized + Send + Sync {
 /// Verification for headers.
 pub mod headers {
     use ctypes::{BlockHash, Header};
-    use primitives::U256;
 
     use super::super::super::verification::verify_header_basic;
     use super::{BlockLike, Kind};
@@ -102,10 +95,6 @@ pub mod headers {
 
         fn parent_hash(&self) -> BlockHash {
             *self.parent_hash()
-        }
-
-        fn score(&self) -> U256 {
-            *self.score()
         }
     }
 
@@ -149,7 +138,7 @@ pub mod headers {
 /// The blocks verification module.
 pub mod blocks {
     use ctypes::{BlockHash, Header};
-    use primitives::{Bytes, U256};
+    use primitives::Bytes;
 
     use super::super::super::verification::{
         verify_block_basic, verify_block_seal, verify_header_with_engine, PreverifiedBlock,
@@ -233,10 +222,6 @@ pub mod blocks {
         fn parent_hash(&self) -> BlockHash {
             *self.header.parent_hash()
         }
-
-        fn score(&self) -> U256 {
-            *self.header.score()
-        }
     }
 
     impl BlockLike for PreverifiedBlock {
@@ -246,10 +231,6 @@ pub mod blocks {
 
         fn parent_hash(&self) -> BlockHash {
             *self.header.parent_hash()
-        }
-
-        fn score(&self) -> U256 {
-            *self.header.score()
         }
     }
 

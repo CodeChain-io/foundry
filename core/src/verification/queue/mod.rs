@@ -24,9 +24,8 @@ use crate::types::{BlockStatus as Status, VerificationQueueInfo as QueueInfo};
 use cio::IoChannel;
 use ctypes::BlockHash;
 use parking_lot::{Mutex, RwLock};
-use primitives::U256;
 use std::cmp;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashSet, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering as AtomicOrdering};
 use std::sync::{Arc, Condvar as SCondvar, Mutex as SMutex};
 use std::thread::{self, JoinHandle};
@@ -64,10 +63,9 @@ impl Default for Config {
 pub struct VerificationQueue<K: Kind> {
     engine: Arc<dyn CodeChainEngine>,
     verification: Arc<Verification<K>>,
-    processing: RwLock<HashMap<BlockHash, U256>>, // hash to score
+    processing: RwLock<HashSet<BlockHash>>, // hash to block number
     deleting: Arc<AtomicBool>,
     ready_signal: Arc<QueueSignal>,
-    total_score: RwLock<U256>,
     #[allow(dead_code)]
     empty: Arc<SCondvar>,
     more_to_verify: Arc<SCondvar>,
@@ -178,10 +176,9 @@ impl<K: Kind> VerificationQueue<K> {
         Self {
             engine,
             verification,
-            processing: RwLock::new(HashMap::new()),
+            processing: RwLock::new(HashSet::new()),
             deleting,
             ready_signal,
-            total_score: RwLock::new(0.into()),
             empty,
             more_to_verify,
             verifier_handles,
@@ -324,7 +321,7 @@ impl<K: Kind> VerificationQueue<K> {
 
     /// Check if the item is currently in the queue
     pub fn status(&self, hash: &BlockHash) -> Status {
-        if self.processing.read().contains_key(hash) {
+        if self.processing.read().contains(hash) {
             return Status::Queued
         }
         if self.verification.bad.lock().contains(hash) {
@@ -337,7 +334,7 @@ impl<K: Kind> VerificationQueue<K> {
     pub fn import(&self, input: K::Input) -> Result<BlockHash, Error> {
         let h = input.hash();
         {
-            if self.processing.read().contains_key(&h) {
+            if self.processing.read().contains(&h) {
                 return Err(ImportError::AlreadyQueued.into())
             }
 
@@ -355,11 +352,7 @@ impl<K: Kind> VerificationQueue<K> {
             Ok(item) => {
                 self.verification.sizes.unverified.fetch_add(item.mem_usage(), AtomicOrdering::SeqCst);
 
-                self.processing.write().insert(h, item.score());
-                {
-                    let mut ts = self.total_score.write();
-                    *ts += item.score();
-                }
+                self.processing.write().insert(h);
 
                 self.verification.unverified.lock().push_back(item);
                 self.more_to_verify.notify_all();
@@ -404,10 +397,7 @@ impl<K: Kind> VerificationQueue<K> {
         }
         let mut processing = self.processing.write();
         for hash in hashes {
-            if let Some(score) = processing.remove(hash) {
-                let mut td = self.total_score.write();
-                *td -= score;
-            }
+            processing.remove(hash);
         }
         processing.shrink_to_fit();
         processing.is_empty()
@@ -426,10 +416,7 @@ impl<K: Kind> VerificationQueue<K> {
         bad.reserve(hashes.len());
         for hash in hashes {
             bad.insert(*hash);
-            if let Some(score) = processing.remove(hash) {
-                let mut td = self.total_score.write();
-                *td -= score;
-            }
+            processing.remove(hash);
         }
 
         let mut new_verified = VecDeque::new();
@@ -438,10 +425,6 @@ impl<K: Kind> VerificationQueue<K> {
             if bad.contains(&output.parent_hash()) {
                 removed_size += output.mem_usage();
                 bad.insert(output.hash());
-                if let Some(score) = processing.remove(&output.hash()) {
-                    let mut td = self.total_score.write();
-                    *td -= score;
-                }
             } else {
                 new_verified.push_back(output);
             }
@@ -481,11 +464,6 @@ impl<K: Kind> VerificationQueue<K> {
             max_mem_use: self.max_mem_use,
             mem_used: unverified_bytes + verifying_bytes + verified_bytes,
         }
-    }
-
-    /// Get the total score of all the blocks in the queue.
-    pub fn total_score(&self) -> U256 {
-        *self.total_score.read()
     }
 }
 
