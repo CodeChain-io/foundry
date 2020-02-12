@@ -21,6 +21,7 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 enum DatagramTag {
     CreateClient = 1,
     UpdateClient = 2,
+    ConnOpenInit = 3,
 }
 
 impl Encodable for DatagramTag {
@@ -35,6 +36,7 @@ impl Decodable for DatagramTag {
         match byte {
             1 => Ok(DatagramTag::CreateClient),
             2 => Ok(DatagramTag::UpdateClient),
+            3 => Ok(DatagramTag::ConnOpenInit),
             _ => Err(DecoderError::Custom("Unexpected DatagramTag Value")),
         }
     }
@@ -50,6 +52,13 @@ pub enum Datagram {
     UpdateClient {
         id: String,
         header: Vec<u8>,
+    },
+    ConnOpenInit {
+        identifier: String,
+        desired_counterparty_connection_identifier: String,
+        counterparty_prefix: String,
+        client_identifier: String,
+        counterparty_client_identifier: String,
     },
 }
 
@@ -68,6 +77,21 @@ impl Encodable for Datagram {
                 header,
             } => {
                 s.begin_list(3).append(&DatagramTag::UpdateClient).append(id).append(header);
+            }
+            Datagram::ConnOpenInit {
+                identifier,
+                desired_counterparty_connection_identifier,
+                counterparty_prefix,
+                client_identifier,
+                counterparty_client_identifier,
+            } => {
+                s.begin_list(6);
+                s.append(&DatagramTag::ConnOpenInit)
+                    .append(identifier)
+                    .append(desired_counterparty_connection_identifier)
+                    .append(counterparty_prefix)
+                    .append(client_identifier)
+                    .append(counterparty_client_identifier);
             }
         };
     }
@@ -102,6 +126,22 @@ impl Decodable for Datagram {
                 Ok(Datagram::UpdateClient {
                     id: rlp.val_at(1)?,
                     header: rlp.val_at(2)?,
+                })
+            }
+            DatagramTag::ConnOpenInit => {
+                let item_count = rlp.item_count()?;
+                if item_count != 6 {
+                    return Err(DecoderError::RlpInvalidLength {
+                        expected: 6,
+                        got: item_count,
+                    })
+                }
+                Ok(Datagram::ConnOpenInit {
+                    identifier: rlp.val_at(1)?,
+                    desired_counterparty_connection_identifier: rlp.val_at(2)?,
+                    counterparty_prefix: rlp.val_at(3)?,
+                    client_identifier: rlp.val_at(4)?,
+                    counterparty_client_identifier: rlp.val_at(5)?,
                 })
             }
         }

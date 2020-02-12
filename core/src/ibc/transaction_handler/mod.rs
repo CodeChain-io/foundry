@@ -23,6 +23,7 @@ use cstate::{StateResult, TopLevelState};
 use ctypes::errors::RuntimeError;
 use ibc::client_02 as ibc_client;
 use ibc::client_02::foundry as ibc_foundry;
+use ibc::connection_03 as ibc_connection;
 use ibc::context as ibc_context;
 use rlp::{Decodable, Rlp};
 
@@ -43,6 +44,26 @@ pub fn execute(
             id,
             header,
         } => update_client(state, &id, &header),
+        Datagram::ConnOpenInit {
+            identifier,
+            desired_counterparty_connection_identifier,
+            counterparty_prefix,
+            client_identifier,
+            counterparty_client_identifier,
+        } => {
+            let mut context = ibc_context::TopLevelContext::new(state);
+            let connection_manager = ibc_connection::Manager::new();
+            connection_manager
+                .handle_open_init(
+                    &mut context,
+                    identifier,
+                    desired_counterparty_connection_identifier,
+                    counterparty_prefix,
+                    client_identifier,
+                    counterparty_client_identifier,
+                )
+                .map_err(|err| RuntimeError::IBC(format!("ConnOpenInit: {}", err)).into())
+        }
     }
 }
 
