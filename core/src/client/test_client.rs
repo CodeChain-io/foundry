@@ -60,7 +60,7 @@ use kvdb::KeyValueDB;
 use kvdb_memorydb;
 use merkle_trie::skewed_merkle_root;
 use parking_lot::RwLock;
-use primitives::{Bytes, H256, U256};
+use primitives::{Bytes, H256};
 use rlp::*;
 use std::collections::HashMap;
 use std::mem;
@@ -80,8 +80,6 @@ pub struct TestBlockChainClient {
     pub last_hash: RwLock<BlockHash>,
     /// Extra data do set for each block
     pub extra_data: Bytes,
-    /// Score.
-    pub score: RwLock<U256>,
     /// Balances.
     pub balances: RwLock<HashMap<Address, u64>>,
     /// Seqs.
@@ -136,7 +134,6 @@ impl TestBlockChainClient {
         let genesis_block = scheme.genesis_block();
         let genesis_header = scheme.genesis_header();
         let genesis_hash = genesis_header.hash();
-        let genesis_score = *genesis_header.score();
 
         let mut client = TestBlockChainClient {
             blocks: RwLock::new(HashMap::new()),
@@ -144,7 +141,6 @@ impl TestBlockChainClient {
             genesis_hash,
             extra_data,
             last_hash: RwLock::new(genesis_hash),
-            score: RwLock::new(genesis_score),
             balances: RwLock::new(HashMap::new()),
             seqs: RwLock::new(HashMap::new()),
             storage: RwLock::new(HashMap::new()),
@@ -199,7 +195,6 @@ impl TestBlockChainClient {
     /// Add a block to test client with designated author.
     pub fn add_block_with_author(&self, author: Option<Address>, n: usize, transaction_length: usize) -> BlockHash {
         let mut header = BlockHeader::new();
-        header.set_score(From::from(n));
         header.set_parent_hash(*self.last_hash.read());
         header.set_number(n as BlockNumber);
         header.set_extra_data(self.extra_data.clone());
@@ -401,9 +396,6 @@ impl BlockChainTrait for TestBlockChainClient {
     fn chain_info(&self) -> BlockChainInfo {
         let number = self.blocks.read().len() as BlockNumber - 1;
         BlockChainInfo {
-            best_score: *self.score.read(),
-            best_proposal_score: *self.score.read(),
-            pending_total_score: *self.score.read(),
             genesis_hash: self.genesis_hash,
             best_block_hash: *self.last_hash.read(),
             best_proposal_block_hash: *self.last_hash.read(),
@@ -465,10 +457,6 @@ impl ImportBlock for TestBlockChainClient {
         }
         let len = self.numbers.read().len();
         if number == len {
-            {
-                let mut score = self.score.write();
-                *score += *header.score();
-            }
             mem::replace(&mut *self.last_hash.write(), h);
             self.blocks.write().insert(h, b);
             self.numbers.write().insert(number, h);
@@ -572,10 +560,6 @@ impl BlockChainClient for TestBlockChainClient {
             BlockId::ParentOfLatest => BlockStatus::InChain,
             _ => BlockStatus::Unknown,
         }
-    }
-
-    fn block_total_score(&self, _id: &BlockId) -> Option<U256> {
-        Some(U256::zero())
     }
 
     fn block_hash(&self, id: &BlockId) -> Option<BlockHash> {

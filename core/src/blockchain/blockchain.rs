@@ -326,13 +326,7 @@ impl BlockChain {
         let best_block_detail = self.block_details(&best_block_hash).expect("Best block always exists");
         let best_block_header = self.block_header_data(&best_block_hash).expect("Best block always exists");
 
-        let best_proposal_block_detail =
-            self.block_details(&best_proposal_block_hash).expect("Best proposal block always exists");
-
         BlockChainInfo {
-            best_score: best_block_detail.total_score,
-            best_proposal_score: best_proposal_block_detail.total_score,
-            pending_total_score: best_block_detail.total_score,
             genesis_hash: self.genesis_hash(),
             best_block_hash: best_block_header.hash(),
             best_proposal_block_hash,
