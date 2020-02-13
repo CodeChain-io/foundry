@@ -89,7 +89,7 @@ jobs:
         on:
           branch: docker-build
 notifications:
-  webhooks: https://webhooks.gitter.im/e/71bb03cf9abce5b02c43
+  webhooks: https://webhooks.gitter.im/e/6647de76f627820c898a
 cache:
   timeout: 1000
   cargo: true
