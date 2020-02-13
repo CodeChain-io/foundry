@@ -1,4 +1,4 @@
-Foundry [![Build Status](https://travis-ci.com/CodeChain-io/foundry.svg?branch=master)](https://travis-ci.com/CodeChain-io/foundry) [![Gitter: CodeChain](https://img.shields.io/badge/gitter-codechain-4AB495.svg)](https://gitter.im/CodeChain-io/codechain) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+Foundry [![Build Status](https://travis-ci.com/CodeChain-io/foundry.svg?branch=master)](https://travis-ci.com/CodeChain-io/foundry) [![Gitter: Foundry](https://badges.gitter.im/CodeChain-io/foundry.svg)](https://gitter.im/CodeChain-io/foundry?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 ==============
 
 Foundry is a programmable open source blockchain engine.
