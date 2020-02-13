@@ -23,6 +23,6 @@ tempdir = "0.3"
 
 [dev-dependencies]
 matches = "0.1"
-primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
+primitives = { git = "https://github.com/Byeongjee/rust-codechain-primitives.git", branch = "master"  }
 
 [lib]

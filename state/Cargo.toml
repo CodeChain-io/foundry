@@ -17,7 +17,7 @@ log = "0.4.6"
 lru-cache = "0.1.1"
 merkle-trie = { git = "https://github.com/CodeChain-io/rust-merkle-trie.git", version = "0.4" }
 parking_lot = "0.6.0"
-primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
-rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
+primitives = { git = "https://github.com/Byeongjee/rust-codechain-primitives.git", branch = "master"  }
+rlp = { git = "https://github.com/Byeongjee/rlp.git", branch = "master" }
 rlp_derive = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.2" }
 rustc-hex = "1.0"

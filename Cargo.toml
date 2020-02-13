@@ -39,7 +39,7 @@ env_logger = "0.5.3"
 never-type = "0.1.0"
 panic_hook = { path = "util/panic_hook" }
 parking_lot = "0.6.0"
-primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
+primitives = { git = "https://github.com/Byeongjee/rust-codechain-primitives.git", branch = "master"  }
 rpassword = "2.0.0"
 rustc-serialize = "0.3"
 serde = "1.0"
