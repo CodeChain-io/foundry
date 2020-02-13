@@ -21,8 +21,8 @@ kvdb = "0.1"
 lazy_static = "1.2"
 log = "0.4.6"
 parking_lot = "0.6.0"
-primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
-rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
+primitives = { git = "https://github.com/Byeongjee/rust-codechain-primitives.git", branch = "master"  }
+rlp = { git = "https://github.com/Byeongjee/rlp.git", branch = "master" }
 serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"

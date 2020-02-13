@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 ckey = { package = "codechain-key", path = "../key" }
-primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
+primitives = { git = "https://github.com/Byeongjee/rust-codechain-primitives.git", branch = "master"  }
 rustc-hex = "1.0"
 serde = "1.0"
 serde_json = "1.0"
