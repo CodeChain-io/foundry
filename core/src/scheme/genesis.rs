@@ -37,6 +37,8 @@ pub struct Genesis {
     pub transactions_root: H256,
     /// State root.
     pub state_root: Option<H256>,
+    /// Next validator set hash.
+    pub next_validator_set_hash: Option<H256>,
     /// The genesis block's extra data field.
     pub extra_data: Bytes,
 }
@@ -51,6 +53,7 @@ impl From<cjson::scheme::Genesis> for Genesis {
             parent_hash: g.parent_hash.map_or_else(H256::zero, Into::into).into(),
             transactions_root: g.transactions_root.map_or_else(|| BLAKE_NULL_RLP, Into::into),
             state_root: g.state_root.map(Into::into),
+            next_validator_set_hash: g.next_validator_set_hash.map(Into::into),
             extra_data: g.extra_data.map_or_else(Vec::new, Into::into),
         }
     }

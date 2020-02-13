@@ -613,6 +613,7 @@ dependencies = [
  "codechain-json",
  "codechain-key",
  "primitives",
+ "rand 0.6.1",
  "rlp",
  "rlp_derive",
  "serde",
