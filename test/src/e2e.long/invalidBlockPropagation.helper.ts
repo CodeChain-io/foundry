@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -56,6 +56,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         Buffer.from(block0.extraData),
         block0.transactionsRoot,
         block0.stateRoot,
+        block0.nextValidatorSetHash,
         block0.score,
         block0.seal
     );
@@ -67,6 +68,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         Buffer.from(block1.extraData),
         block1.transactionsRoot,
         block1.stateRoot,
+        block1.nextValidatorSetHash,
         new U256(2222222222222),
         block1.seal
     );
@@ -78,6 +80,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         Buffer.from(block2.extraData),
         block2.transactionsRoot,
         block2.stateRoot,
+        block2.nextValidatorSetHash,
         new U256(33333333333333),
         block2.seal
     );
@@ -113,6 +116,7 @@ async function testBody(
         textraData?: Buffer;
         ttransactionRoot?: H256;
         tstateRoot?: H256;
+        tnextValidatorSetHash?: H256;
         tscore?: U256;
         tseal?: number[][];
     }
@@ -125,6 +129,7 @@ async function testBody(
         tauthor,
         ttransactionRoot,
         tstateRoot,
+        tnextValidatorSetHash,
         tseal
     } = params;
 
@@ -139,6 +144,7 @@ async function testBody(
         Buffer.from(block1.extraData),
         block1.transactionsRoot,
         block1.stateRoot,
+        block1.nextValidatorSetHash,
         new U256(2222222222222),
         block1.seal
     );
@@ -160,6 +166,9 @@ async function testBody(
     }
     if (tstateRoot != null) {
         header.setStateRoot(tstateRoot);
+    }
+    if (tnextValidatorSetHash != null) {
+        header.setNextValidatorSetHash(tnextValidatorSetHash);
     }
     if (tscore != null) {
         header.setScore(tscore);

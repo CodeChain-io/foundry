@@ -266,6 +266,7 @@ impl Scheme {
         header.set_transactions_root(self.transactions_root);
         header.set_extra_data(blake256(&self.genesis_params().rlp_bytes()).to_vec());
         header.set_state_root(self.state_root());
+        header.set_next_validator_set_hash(BLAKE_NULL_RLP /* This will be calculated from state after https://github.com/CodeChain-io/foundry/issues/142*/);
         header.set_score(self.score);
         header.set_seal({
             let r = Rlp::new(&self.seal_rlp);
