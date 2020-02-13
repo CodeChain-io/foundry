@@ -265,5 +265,11 @@ pub fn verify_block_final(expected: &Header, got: &Header) -> Result<(), Error> 
             found: *got.state_root(),
         })))
     }
+    if expected.next_validator_set_hash() != got.next_validator_set_hash() {
+        return Err(From::from(BlockError::InvalidNextValidatorSetHash(Mismatch {
+            expected: *expected.next_validator_set_hash(),
+            found: *got.next_validator_set_hash(),
+        })))
+    }
     Ok(())
 }

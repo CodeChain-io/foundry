@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -28,6 +28,7 @@ mod block_hash;
 mod common_params;
 mod tracker;
 mod tx_hash;
+mod validator_set;
 
 pub mod errors;
 pub mod header;
@@ -42,3 +43,4 @@ pub use common_params::CommonParams;
 pub use header::Header;
 pub use tracker::Tracker;
 pub use tx_hash::TxHash;
+pub use validator_set::CompactValidatorSet;

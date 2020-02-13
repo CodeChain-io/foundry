@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -72,6 +72,7 @@ describe("Test onChain block communication", async function() {
             Buffer.from(genesisBlock.extraData),
             genesisBlock.transactionsRoot,
             genesisBlock.stateRoot,
+            genesisBlock.nextValidatorSetHash,
             genesisBlock.score,
             genesisBlock.seal
         );
@@ -83,6 +84,7 @@ describe("Test onChain block communication", async function() {
             Buffer.from(block1.extraData),
             block1.transactionsRoot,
             block1.stateRoot,
+            block1.nextValidatorSetHash,
             new U256(2222222222222),
             block1.seal
         );
@@ -94,6 +96,7 @@ describe("Test onChain block communication", async function() {
             Buffer.from(block2.extraData),
             block2.transactionsRoot,
             block2.stateRoot,
+            block2.nextValidatorSetHash,
             new U256(33333333333333),
             block2.seal
         );
