@@ -16,6 +16,7 @@
 
 use crate::{StateResult, TopLevelState};
 use ckey::{Address, Public};
+use ctypes::BlockNumber;
 
 pub trait IBCTransactionExecutor {
     fn execute(
@@ -24,6 +25,7 @@ pub trait IBCTransactionExecutor {
         _state: &mut TopLevelState,
         _fee_payer: &Address,
         _sender_pubkey: &Public,
+        _current_block_number: BlockNumber,
     ) -> StateResult<()> {
         Ok(())
     }

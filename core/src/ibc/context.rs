@@ -22,18 +22,21 @@ use rlp::RlpStream;
 
 pub trait Context {
     fn get_kv_store(&mut self) -> &mut dyn kv_store::KVStore;
+    fn get_current_height(&self) -> u64;
 }
 
 pub struct TopLevelContext<'a> {
     kv_store: TopLevelKVStore<'a>,
+    current_height: u64,
 }
 
 impl<'a> TopLevelContext<'a> {
-    pub fn new(state: &'a mut TopLevelState) -> Self {
+    pub fn new(state: &'a mut TopLevelState, current_height: u64) -> Self {
         TopLevelContext {
             kv_store: TopLevelKVStore {
                 state,
             },
+            current_height,
         }
     }
 }
@@ -41,6 +44,10 @@ impl<'a> TopLevelContext<'a> {
 impl<'a> Context for TopLevelContext<'a> {
     fn get_kv_store(&mut self) -> &mut dyn KVStore {
         &mut self.kv_store
+    }
+
+    fn get_current_height(&self) -> u64 {
+        self.current_height
     }
 }
 

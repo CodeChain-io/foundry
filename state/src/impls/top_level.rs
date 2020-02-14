@@ -408,7 +408,14 @@ impl TopLevelState {
             Action::IBC {
                 bytes,
             } => {
-                IBCTransactionExecutor::execute(client, bytes, self, fee_payer, signer_public)?;
+                IBCTransactionExecutor::execute(
+                    client,
+                    bytes,
+                    self,
+                    fee_payer,
+                    signer_public,
+                    parent_block_number + 1,
+                )?;
                 return Ok(())
             }
         };

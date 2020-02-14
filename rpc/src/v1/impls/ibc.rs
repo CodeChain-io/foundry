@@ -56,7 +56,7 @@ where
             Some(block_number) => block_number,
         };
 
-        let mut context = ibc::context::TopLevelContext::new(&mut state);
+        let mut context = ibc::context::TopLevelContext::new(&mut state, block_number);
         let client_manager = ibc::client::Manager::new();
         let client_state =
             client_manager.query(&mut context, &client_id).map_err(|_| errors::ibc_client_not_exist())?;
@@ -96,7 +96,7 @@ where
             Some(block_number) => block_number,
         };
 
-        let mut context = ibc::context::TopLevelContext::new(&mut state);
+        let mut context = ibc::context::TopLevelContext::new(&mut state, block_number);
         let client_manager = ibc::client::Manager::new();
         let client_state =
             client_manager.query(&mut context, &client_id).map_err(|_| errors::ibc_client_not_exist())?;
