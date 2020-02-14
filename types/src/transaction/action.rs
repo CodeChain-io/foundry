@@ -18,7 +18,7 @@ use crate::errors::SyntaxError;
 use crate::transaction::ShardTransaction;
 use crate::{CommonParams, ShardId, Tracker};
 use ccrypto::Blake;
-use ckey::{recover, Address, NetworkId, Public, Signature};
+use ckey::{recover, Address, NetworkId, Signature};
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -26,7 +26,6 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 #[repr(u8)]
 enum ActionTag {
     Pay = 0x02,
-    SetRegularKey = 0x03,
     CreateShard = 0x04,
     SetShardOwners = 0x05,
     SetShardUsers = 0x06,
@@ -45,7 +44,6 @@ impl Decodable for ActionTag {
         let tag = rlp.as_val()?;
         match tag {
             0x02u8 => Ok(Self::Pay),
-            0x03 => Ok(Self::SetRegularKey),
             0x04 => Ok(Self::CreateShard),
             0x05 => Ok(Self::SetShardOwners),
             0x06 => Ok(Self::SetShardUsers),
@@ -62,9 +60,6 @@ pub enum Action {
         receiver: Address,
         /// Transferred quantity.
         quantity: u64,
-    },
-    SetRegularKey {
-        key: Public,
     },
     CreateShard {
         users: Vec<Address>,
@@ -179,13 +174,6 @@ impl Encodable for Action {
                 s.append(receiver);
                 s.append(quantity);
             }
-            Action::SetRegularKey {
-                key,
-            } => {
-                s.begin_list(2);
-                s.append(&ActionTag::SetRegularKey);
-                s.append(key);
-            }
             Action::CreateShard {
                 users,
             } => {
@@ -249,18 +237,6 @@ impl Decodable for Action {
                 Ok(Action::Pay {
                     receiver: rlp.val_at(1)?,
                     quantity: rlp.val_at(2)?,
-                })
-            }
-            ActionTag::SetRegularKey => {
-                let item_count = rlp.item_count()?;
-                if item_count != 2 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 2,
-                    })
-                }
-                Ok(Action::SetRegularKey {
-                    key: rlp.val_at(1)?,
                 })
             }
             ActionTag::CreateShard => {

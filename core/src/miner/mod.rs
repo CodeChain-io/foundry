@@ -166,10 +166,9 @@ mod mem_pool_benches;
 fn fetch_account_creator<'c>(client: &'c dyn AccountData) -> impl Fn(&Public) -> AccountDetails + 'c {
     move |public: &Public| {
         let address = public_to_address(public);
-        let a = client.latest_regular_key_owner(&address).unwrap_or(address);
         AccountDetails {
-            seq: client.latest_seq(&a),
-            balance: client.latest_balance(&a),
+            seq: client.latest_seq(&address),
+            balance: client.latest_balance(&address),
         }
     }
 }

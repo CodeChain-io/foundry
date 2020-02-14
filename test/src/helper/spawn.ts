@@ -658,33 +658,6 @@ export default class CodeChain {
         await this.sdk.key.signTransactionBurn(tx, index, { keyStore });
     }
 
-    public async setRegularKey(
-        key: any,
-        options?: {
-            seq?: number;
-            secret?: any;
-        }
-    ): Promise<H256> {
-        const {
-            seq = (await this.rpc.chain.getSeq({
-                address: faucetAddress.toString(),
-                blockNumber: await this.getBestBlockNumber()
-            })) || 0,
-            secret = faucetSecret
-        } = options || {};
-        const tx = this.sdk.core
-            .createSetRegularKeyTransaction({
-                key
-            })
-            .sign({
-                secret,
-                fee: 10,
-                seq
-            });
-
-        return this.sdk.rpc.chain.sendSignedTransaction(tx);
-    }
-
     public createPayTx(options: {
         seq: number;
         recipient?: PlatformAddress | string;

@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use cjson;
-use ckey::Public;
 use cstate::Account;
 use rlp::{Encodable, RlpStream};
 use std::fmt;
@@ -28,13 +27,11 @@ pub struct PodAccount {
     pub balance: u64,
     /// The seq of the account.
     pub seq: u64,
-    /// Regular key of the account.
-    pub regular_key: Option<Public>,
 }
 
 impl<'a> From<&'a PodAccount> for Account {
     fn from(pod: &'a PodAccount) -> Self {
-        Account::new_with_key(pod.balance, pod.seq, pod.regular_key)
+        Account::new(pod.balance, pod.seq)
     }
 }
 
@@ -50,7 +47,6 @@ impl From<cjson::scheme::Account> for PodAccount {
         PodAccount {
             balance: a.balance.map_or(0, Into::into),
             seq: a.seq.map_or(0, Into::into),
-            regular_key: None,
         }
     }
 }

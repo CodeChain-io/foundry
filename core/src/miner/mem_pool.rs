@@ -1070,20 +1070,8 @@ pub mod test {
         let test_client = TestBlockChainClient::new();
 
         // Set the pay transaction minimum fee
-        let fees = MemPoolMinFees::create_from_options(
-            Some(150),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-        );
+        let fees =
+            MemPoolMinFees::create_from_options(Some(150), None, None, None, None, None, None, None, None, None, None);
 
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db, fees);
@@ -1123,20 +1111,8 @@ pub mod test {
     fn external_transactions_whose_fees_are_under_the_mem_pool_min_fee_are_rejected() {
         let test_client = TestBlockChainClient::new();
         // Set the pay transaction minimum fee
-        let fees = MemPoolMinFees::create_from_options(
-            Some(150),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-        );
+        let fees =
+            MemPoolMinFees::create_from_options(Some(150), None, None, None, None, None, None, None, None, None, None);
 
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db, fees);
@@ -1219,8 +1195,7 @@ pub mod test {
         let best_block_timestamp = test_client.chain_info().best_block_timestamp;
         let fetch_seq = |p: &Public| -> u64 {
             let address = public_to_address(p);
-            let a = test_client.latest_regular_key_owner(&address).unwrap_or(address);
-            test_client.latest_seq(&a)
+            test_client.latest_seq(&address)
         };
         mem_pool.remove(&[create_signed_pay(1, keypair).hash()], &fetch_seq, best_block_number, best_block_timestamp);
 
