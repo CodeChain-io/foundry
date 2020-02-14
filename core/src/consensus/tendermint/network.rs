@@ -24,7 +24,7 @@ use super::{
     ENGINE_TIMEOUT_TOKEN_NONCE_BASE,
 };
 use crate::consensus::EngineError;
-use ckey::SchnorrSignature;
+use ckey::BlsSignature;
 use cnetwork::{Api, NetworkExtension, NodeId};
 use crossbeam_channel as crossbeam;
 use ctimer::TimerToken;
@@ -132,7 +132,7 @@ impl TendermintExtension {
         }
     }
 
-    fn broadcast_proposal_block(&self, signature: SchnorrSignature, view: View, message: Bytes) {
+    fn broadcast_proposal_block(&self, signature: BlsSignature, view: View, message: Bytes) {
         let message = Arc::new(
             TendermintMessage::ProposalBlock {
                 signature,
@@ -483,7 +483,7 @@ pub enum Event {
         view: View,
     },
     BroadcastProposalBlock {
-        signature: SchnorrSignature,
+        signature: BlsSignature,
         view: View,
         message: Bytes,
     },
