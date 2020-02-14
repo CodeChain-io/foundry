@@ -32,6 +32,7 @@ pub fn execute(
     state: &mut TopLevelState,
     fee_payer: &Address,
     _sender_public: &Public,
+    current_block_number: u64,
 ) -> StateResult<()> {
     let datagram = Datagram::decode(&Rlp::new(bytes)).expect("Verification passed");
     match datagram {
@@ -39,11 +40,11 @@ pub fn execute(
             id,
             kind,
             consensus_state,
-        } => create_client(state, fee_payer, &id, kind, &consensus_state),
+        } => create_client(state, fee_payer, &id, kind, &consensus_state, current_block_number),
         Datagram::UpdateClient {
             id,
             header,
-        } => update_client(state, &id, &header),
+        } => update_client(state, &id, &header, current_block_number),
         Datagram::ConnOpenInit {
             identifier,
             desired_counterparty_connection_identifier,
@@ -51,7 +52,7 @@ pub fn execute(
             client_identifier,
             counterparty_client_identifier,
         } => {
-            let mut context = ibc_context::TopLevelContext::new(state);
+            let mut context = ibc_context::TopLevelContext::new(state, current_block_number);
             let connection_manager = ibc_connection::Manager::new();
             connection_manager
                 .handle_open_init(
@@ -74,8 +75,9 @@ fn create_client(
     id: &str,
     kind: ibc_client::Kind,
     consensus_state: &[u8],
+    current_block_number: u64,
 ) -> StateResult<()> {
-    let mut context = ibc_context::TopLevelContext::new(state);
+    let mut context = ibc_context::TopLevelContext::new(state, current_block_number);
     let client_manager = ibc_client::Manager::new();
     if kind != ibc_client::KIND_FOUNDRY {
         return Err(RuntimeError::IBC(format!("CreateClient has invalid type {}", kind)).into())
@@ -94,8 +96,8 @@ fn create_client(
     Ok(())
 }
 
-fn update_client(state: &mut TopLevelState, id: &str, header: &[u8]) -> StateResult<()> {
-    let mut context = ibc_context::TopLevelContext::new(state);
+fn update_client(state: &mut TopLevelState, id: &str, header: &[u8], current_block_number: u64) -> StateResult<()> {
+    let mut context = ibc_context::TopLevelContext::new(state, current_block_number);
     let client_manager = ibc_client::Manager::new();
     let client_state = client_manager.query(&mut context, id).map_err(RuntimeError::IBC)?;
 

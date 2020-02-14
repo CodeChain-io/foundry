@@ -867,7 +867,8 @@ impl IBCTransactionExecutor for Client {
         state: &mut TopLevelState,
         fee_payer: &Address,
         sender_pubkey: &Public,
+        current_block_number: BlockNumber,
     ) -> StateResult<()> {
-        ibc::execute_transaction(bytes, state, fee_payer, sender_pubkey)
+        ibc::execute_transaction(bytes, state, fee_payer, sender_pubkey, current_block_number)
     }
 }
