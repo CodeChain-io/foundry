@@ -27,19 +27,12 @@ describe("engine", function() {
 
     it("getCoinbase", async function() {
         // TODO: Coinbase is not defined in solo mode, so it always returns null. Need to test in other modes.
-        expect(
-            await node.sdk.rpc.sendRpcRequest("engine_getCoinbase", [])
-        ).to.be.a("null");
+        expect(await node.rpc.engine.getCoinbase()).to.be.a("null");
     });
 
     it("getRecommendedConfirmation", async function() {
         // TODO: The rcommended confirmation of solo is always 1. Need to test in other modes.
-        expect(
-            await node.sdk.rpc.sendRpcRequest(
-                "engine_getRecommendedConfirmation",
-                []
-            )
-        ).to.equal(1);
+        expect(await node.rpc.engine.getRecommendedConfirmation()).to.equal(1);
     });
 
     afterEach(function() {

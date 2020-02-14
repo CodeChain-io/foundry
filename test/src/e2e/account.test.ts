@@ -29,13 +29,14 @@ describe("account", function() {
         });
 
         it("getList", async function() {
-            expect(await node.sdk.rpc.account.getList()).not.to.be.null;
+            expect(await node.rpc.account.getList()).not.to.be.null;
         });
 
         it("create", async function() {
-            expect(await node.sdk.rpc.account.create()).not.to.be.null;
-            expect(await node.sdk.rpc.account.create("my-password")).not.to.be
-                .null;
+            expect(await node.rpc.account.create({ passphrase: "my-password" }))
+                .not.to.be.null;
+            expect(await node.rpc.account.create({ passphrase: "my-password" }))
+                .not.to.be.null;
         });
 
         describe("importRaw", function() {
@@ -53,26 +54,38 @@ describe("account", function() {
                     { networkId: "tc" }
                 );
                 expect(
-                    await node.sdk.rpc.account.importRaw(randomSecret)
+                    await node.rpc.account.importRaw({
+                        secret: "0x".concat(randomSecret),
+                        passphrase: ""
+                    })
                 ).to.equal(address.toString());
             });
 
             it("KeyError", async function() {
                 try {
-                    await node.sdk.rpc.account.importRaw(invalidSecret);
+                    await node.rpc.account.importRaw({
+                        secret: "0x".concat(invalidSecret),
+                        passphrase: ""
+                    });
                     expect.fail();
                 } catch (e) {
-                    expect(e).is.similarTo(ERROR.KEY_ERROR);
+                    expect(e.toString()).is.include(ERROR.KEY_ERROR);
                 }
             });
 
             it("AlreadyExists", async function() {
                 try {
-                    await node.sdk.rpc.account.importRaw(randomSecret);
-                    await node.sdk.rpc.account.importRaw(randomSecret);
+                    await node.rpc.account.importRaw({
+                        secret: "0x".concat(randomSecret),
+                        passphrase: null
+                    });
+                    await node.rpc.account.importRaw({
+                        secret: "0x".concat(randomSecret),
+                        passphrase: null
+                    });
                     expect.fail();
                 } catch (e) {
-                    expect(e).is.similarTo(ERROR.ALREADY_EXISTS);
+                    expect(e.toString()).is.include(ERROR.ALREADY_EXISTS);
                 }
             });
         });
@@ -84,10 +97,10 @@ describe("account", function() {
             let secret: string;
             beforeEach(async function() {
                 secret = node.sdk.util.generatePrivateKey();
-                address = await node.sdk.rpc.account.importRaw(
-                    secret,
-                    "my-password"
-                );
+                address = await node.rpc.account.importRaw({
+                    secret: "0x".concat(secret),
+                    passphrase: "my-password"
+                });
             });
 
             it("Ok", async function() {
@@ -95,37 +108,37 @@ describe("account", function() {
                     message,
                     secret
                 );
-                const signature = await node.sdk.rpc.account.sign(
-                    message,
-                    address,
-                    "my-password"
-                );
+                const signature = await node.rpc.account.sign({
+                    message: `0x${message}`,
+                    account: address,
+                    passphrase: "my-password"
+                });
                 expect(signature).to.equal(`0x${calculatedSignature}`);
             });
 
             it("WrongPassword", async function() {
                 try {
-                    await node.sdk.rpc.account.sign(
-                        message,
-                        address,
-                        "wrong-password"
-                    );
+                    await node.rpc.account.sign({
+                        message: `0x${message}`,
+                        account: address,
+                        passphrase: "wrong-password"
+                    });
                     expect.fail();
                 } catch (e) {
-                    expect(e).is.similarTo(ERROR.WRONG_PASSWORD);
+                    expect(e.toString()).is.include(ERROR.WRONG_PASSWORD);
                 }
             });
 
             it("NoSuchAccount", async function() {
                 try {
-                    await node.sdk.rpc.account.sign(
-                        message,
-                        invalidAddress,
-                        "my-password"
-                    );
+                    await node.rpc.account.sign({
+                        message: `0x${message}`,
+                        account: invalidAddress,
+                        passphrase: "my-password"
+                    });
                     expect.fail();
                 } catch (e) {
-                    expect(e).is.similarTo(ERROR.NO_SUCH_ACCOUNT);
+                    expect(e.toString()).is.include(ERROR.NO_SUCH_ACCOUNT);
                 }
             });
         });
@@ -133,30 +146,47 @@ describe("account", function() {
         describe("unlock", function() {
             let address: string;
             beforeEach(async function() {
-                address = await node.sdk.rpc.account.create("123");
+                address = await node.rpc.account.create({ passphrase: "123" });
             });
 
             it("Ok", async function() {
-                await node.sdk.rpc.account.unlock(address, "123");
-                await node.sdk.rpc.account.unlock(address, "123", 0);
-                await node.sdk.rpc.account.unlock(address, "123", 300);
+                await node.rpc.account.unlock({
+                    account: address,
+                    passphrase: "123"
+                });
+                await node.rpc.account.unlock({
+                    account: address,
+                    passphrase: "123",
+                    duration: 0
+                });
+                await node.rpc.account.unlock({
+                    account: address,
+                    passphrase: "123",
+                    duration: 300
+                });
             });
 
             it("WrongPassword", async function() {
                 try {
-                    await node.sdk.rpc.account.unlock(address, "456");
+                    await node.rpc.account.unlock({
+                        account: address,
+                        passphrase: "456"
+                    });
                     expect.fail();
                 } catch (e) {
-                    expect(e).is.similarTo(ERROR.WRONG_PASSWORD);
+                    expect(e.toString()).is.include(ERROR.WRONG_PASSWORD);
                 }
             });
 
             it("NoSuchAccount", async function() {
                 try {
-                    await node.sdk.rpc.account.unlock(invalidAddress, "456");
+                    await node.rpc.account.unlock({
+                        account: invalidAddress.toString(),
+                        passphrase: "456"
+                    });
                     expect.fail();
                 } catch (e) {
-                    expect(e).is.similarTo(ERROR.NO_SUCH_ACCOUNT);
+                    expect(e.toString()).is.include(ERROR.NO_SUCH_ACCOUNT);
                 }
             });
         });
@@ -164,38 +194,40 @@ describe("account", function() {
         describe("changePassword", function() {
             let address: string;
             beforeEach(async function() {
-                address = await node.sdk.rpc.account.create("123");
+                address = await node.rpc.account.create({ passphrase: "123" });
             });
 
             it("Ok", async function() {
-                await node.sdk.rpc.sendRpcRequest("account_changePassword", [
-                    address,
-                    "123",
-                    "456"
-                ]);
+                await node.rpc.account.changePassword({
+                    account: address,
+                    oldPassphrase: "123",
+                    newPassphrase: "456"
+                });
             });
 
             it("WrongPassword", async function() {
                 try {
-                    await node.sdk.rpc.sendRpcRequest(
-                        "account_changePassword",
-                        [address, "456", "123"]
-                    );
+                    await node.rpc.account.changePassword({
+                        account: address,
+                        oldPassphrase: "456",
+                        newPassphrase: "123"
+                    });
                     expect.fail();
                 } catch (e) {
-                    expect(e).is.similarTo(ERROR.WRONG_PASSWORD);
+                    expect(e.toString()).is.include(ERROR.WRONG_PASSWORD);
                 }
             });
 
             it("NoSuchAccount", async function() {
                 try {
-                    await node.sdk.rpc.sendRpcRequest(
-                        "account_changePassword",
-                        [invalidAddress, "123", "345"]
-                    );
+                    await node.rpc.account.changePassword({
+                        account: invalidAddress,
+                        oldPassphrase: "123",
+                        newPassphrase: "345"
+                    });
                     expect.fail();
                 } catch (e) {
-                    expect(e).is.similarTo(ERROR.NO_SUCH_ACCOUNT);
+                    expect(e.toString()).is.include(ERROR.NO_SUCH_ACCOUNT);
                 }
             });
         });
