@@ -54,6 +54,7 @@ use ctypes::Tracker;
 use ctypes::{BlockNumber, CommonParams, ShardId, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::DBTransaction;
+use merkle_trie::proof::{CryptoProof, CryptoProofUnit, CryptoStructure};
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use primitives::{Bytes, H256};
 use std::cell::{RefCell, RefMut};
@@ -142,6 +143,12 @@ impl TopStateView for TopLevelState {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         Ok(self.top_cache.ibc_data(key, &trie)?.map(Into::into))
+    }
+
+    fn ibc_data_proof(&self, key: &H256) -> TrieResult<(CryptoProofUnit, CryptoProof)> {
+        let db = self.db.borrow();
+        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
+        trie.make_proof(key)
     }
 }
 
