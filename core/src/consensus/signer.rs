@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
-use ckey::{Address, Public, SchnorrSignature, Signature};
+use ckey::{Address, BlsSignature, Public, Signature};
 use ckeystore::DecryptedAccount;
 use primitives::H256;
 use std::sync::Arc;
@@ -51,13 +51,13 @@ impl EngineSigner {
     }
 
     /// Sign a consensus message hash.
-    pub fn sign(&self, hash: H256) -> Result<SchnorrSignature, AccountProviderError> {
+    pub fn sign(&self, hash: H256) -> Result<BlsSignature, AccountProviderError> {
         let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
         let result = match &self.decrypted_account {
-            Some(account) => account.sign_schnorr(&hash)?,
+            Some(account) => account.sign_bls(&hash),
             None => {
                 let account = self.account_provider.get_unlocked_account(&address)?;
-                account.sign_schnorr(&hash)?
+                account.sign_bls(&hash)
             }
         };
         Ok(result)

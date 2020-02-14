@@ -299,13 +299,13 @@ impl TwoThirdsMajority {
 
 #[derive(Debug, PartialEq)]
 pub enum Proposal {
-    ProposalReceived(BlockHash, Bytes, SchnorrSignature),
+    ProposalReceived(BlockHash, Bytes, BlsSignature),
     ProposalImported(BlockHash),
     None,
 }
 
 impl Proposal {
-    pub fn new_received(hash: BlockHash, block: Bytes, signature: SchnorrSignature) -> Self {
+    pub fn new_received(hash: BlockHash, block: Bytes, signature: BlsSignature) -> Self {
         Proposal::ProposalReceived(hash, block, signature)
     }
 

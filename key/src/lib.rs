@@ -88,4 +88,5 @@ pub trait Generator {
 
     /// Should be called to generate new keypair.
     fn generate(&mut self) -> Result<KeyPair, Self::Error>;
+    fn generate_bls(&mut self) -> Result<BlsKeyPair, Self::Error>;
 }

@@ -17,7 +17,7 @@
 use super::stake::Action;
 use super::{ConsensusMessage, VoteStep};
 use crate::consensus::BitSet;
-use ckey::SchnorrSignature;
+use ckey::BlsSignature;
 use ctypes::BlockHash;
 use rlp::{Encodable, RlpStream};
 use std::collections::{BTreeMap, HashMap};
@@ -32,7 +32,7 @@ pub struct VoteCollector {
 #[derive(Debug, Default)]
 struct StepCollector {
     voted: HashMap<usize, ConsensusMessage>,
-    block_votes: HashMap<Option<BlockHash>, BTreeMap<usize, SchnorrSignature>>,
+    block_votes: HashMap<Option<BlockHash>, BTreeMap<usize, BlsSignature>>,
     messages: Vec<ConsensusMessage>,
 }
 
@@ -156,7 +156,7 @@ impl VoteCollector {
         &self,
         round: &VoteStep,
         block_hash: &BlockHash,
-    ) -> (Vec<SchnorrSignature>, Vec<usize>) {
+    ) -> (Vec<BlsSignature>, Vec<usize>) {
         self.votes
             .get(round)
             .and_then(|c| c.block_votes.get(&Some(*block_hash)))
@@ -168,7 +168,7 @@ impl VoteCollector {
     }
 
     /// Returns the first signature and the index of its signer for a given round and hash if exists.
-    pub fn round_signature(&self, round: &VoteStep, block_hash: &BlockHash) -> Option<SchnorrSignature> {
+    pub fn round_signature(&self, round: &VoteStep, block_hash: &BlockHash) -> Option<BlsSignature> {
         self.votes
             .get(round)
             .and_then(|c| c.block_votes.get(&Some(*block_hash)))

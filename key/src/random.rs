@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{Generator, KeyPair, SECP256K1};
+use crate::{rand::RngCore, BlsKeyPair, Generator, KeyPair, SECP256K1};
 use never_type::Never;
 use rand::rngs::OsRng;
 #[cfg(test)]
@@ -58,6 +58,25 @@ impl Generator for Random {
             }
         })
     }
+
+    #[cfg(not(test))]
+    fn generate_bls(&mut self) -> Result<BlsKeyPair, Self::Error> {
+        let mut rng = OsRng::new()?;
+        match rng.generate_bls() {
+            Ok(pair) => Ok(pair),
+            Err(never) => match never {}, // LLVM unreachable
+        }
+    }
+
+    #[cfg(test)]
+    fn generate_bls(&mut self) -> Result<BlsKeyPair, Self::Error> {
+        RNG.with(|rng| {
+            match rng.borrow_mut().generate_bls() {
+                Ok(pair) => Ok(pair),
+                Err(never) => match never {}, // LLVM unreachable
+            }
+        })
+    }
 }
 
 impl Generator for OsRng {
@@ -68,6 +87,12 @@ impl Generator for OsRng {
 
         Ok(KeyPair::from_keypair(sec, publ))
     }
+
+    fn generate_bls(&mut self) -> Result<BlsKeyPair, Self::Error> {
+        let mut secret: [u8; 48] = [0; 48];
+        self.fill_bytes(&mut secret);
+        Ok(BlsKeyPair::from_secret(&secret[..]))
+    }
 }
 
 impl Generator for XorShiftRng {
@@ -77,5 +102,11 @@ impl Generator for XorShiftRng {
         let (sec, publ) = SECP256K1.generate_keypair(self).expect("context always created with full capabilities; qed");
 
         Ok(KeyPair::from_keypair(sec, publ))
+    }
+
+    fn generate_bls(&mut self) -> Result<BlsKeyPair, <Self as Generator>::Error> {
+        let mut secret: [u8; 48] = [0; 48];
+        self.fill_bytes(&mut secret);
+        Ok(BlsKeyPair::from_secret(&secret[..]))
     }
 }
