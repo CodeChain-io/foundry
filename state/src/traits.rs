@@ -21,6 +21,7 @@ use ckey::{public_to_address, Address, Public};
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, CommonParams, ShardId, Tracker, TxHash};
 use cvm::ChainTimeInfo;
+use merkle_trie::proof::{CryptoProof, CryptoProofUnit};
 use merkle_trie::Result as TrieResult;
 use primitives::{Bytes, H256};
 
@@ -114,6 +115,7 @@ pub trait TopStateView {
     }
 
     fn ibc_data(&self, key: &H256) -> TrieResult<Option<IBCData>>;
+    fn ibc_data_proof(&self, key: &H256) -> TrieResult<(CryptoProofUnit, CryptoProof)>;
 }
 
 pub trait ShardStateView {

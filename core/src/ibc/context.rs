@@ -17,6 +17,8 @@ use super::kv_store;
 use crate::ibc::KVStore;
 use ccrypto::blake256;
 use cstate::{TopLevelState, TopState, TopStateView};
+use kv_store::Path;
+use merkle_trie::proof::{CryptoProof, CryptoProofUnit};
 use primitives::H256;
 use rlp::RlpStream;
 
@@ -78,5 +80,19 @@ impl<'a> kv_store::KVStore for TopLevelKVStore<'a> {
     fn set(&mut self, path: &str, value: &[u8]) {
         let key = TopLevelKVStore::key(path);
         self.state.update_ibc_data(&key, value.to_vec()).expect("Set in IBC KVStore")
+    }
+
+    fn delete(&mut self, path: Path) {
+        let key = TopLevelKVStore::key(path);
+        self.state.remove_ibc_data(&key);
+    }
+
+    fn root(&self) -> H256 {
+        self.state.root()
+    }
+
+    fn make_proof(&self, path: Path) -> (CryptoProofUnit, CryptoProof) {
+        let key = TopLevelKVStore::key(path);
+        self.state.ibc_data_proof(&key).unwrap()
     }
 }

@@ -1634,7 +1634,7 @@ checksum = "0f9dc261e2b62d7a622bf416ea3c5245cdd5d9a7fcc428c0d06804dfce1775b3"
 [[package]]
 name = "merkle-trie"
 version = "0.4.0"
-source = "git+https://github.com/CodeChain-io/rust-merkle-trie.git#36e127767bc7c000f1c76fea60d086019b3f51ec"
+source = "git+https://github.com/CodeChain-io/rust-merkle-trie.git#c2a84172e9c212bee1a29ae2e056d3ea988115ce"
 dependencies = [
  "codechain-crypto",
  "codechain-db",
