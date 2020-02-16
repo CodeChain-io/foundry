@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::stake;
+use super::super::stake::{self, NextValidators};
 use super::super::{ConsensusEngine, EngineError, Seal};
 use super::network::TendermintExtension;
 pub use super::params::{TendermintParams, TimeoutParams};
@@ -33,8 +33,9 @@ use crate::BlockId;
 use ckey::{public_to_address, Address};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::{ActionHandler, TopState, TopStateView};
+use cstate::{ActionHandler, StateDB, StateResult, StateWithCache, TopLevelState, TopState, TopStateView};
 use ctypes::{BlockHash, Header};
+use primitives::H256;
 use std::collections::HashSet;
 use std::iter::Iterator;
 use std::sync::atomic::Ordering as AtomicOrdering;
@@ -117,21 +118,14 @@ impl ConsensusEngine for Tendermint {
 
     /// Block transformation functions, before the transactions.
     fn on_open_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
-        let metadata = block.state().metadata()?.expect("Metadata must exist");
-        let term = metadata.current_term_id();
+        let mut previous_validators = stake::PreviousValidators::load_from_state(block.state())?;
+        previous_validators.update(stake::CurrentValidators::load_from_state(block.state())?.clone());
+        previous_validators.save_to_state(block.state_mut())?;
 
-        match term {
-            0 => {}
-            _ => {
-                let mut previous_validators = stake::PreviousValidators::load_from_state(block.state())?;
-                previous_validators.update(stake::CurrentValidators::load_from_state(block.state())?.clone());
-                previous_validators.save_to_state(block.state_mut())?;
+        let mut current_validators = stake::CurrentValidators::load_from_state(block.state())?;
+        current_validators.update(stake::NextValidators::load_from_state(block.state())?.clone());
+        current_validators.save_to_state(block.state_mut())?;
 
-                let mut current_validators = stake::CurrentValidators::load_from_state(block.state())?;
-                current_validators.update(stake::NextValidators::load_from_state(block.state())?.clone());
-                current_validators.save_to_state(block.state_mut())?;
-            }
-        }
         Ok(())
     }
 
@@ -144,16 +138,11 @@ impl ConsensusEngine for Tendermint {
         let block_number = block.header().number();
 
         let metadata = block.state().metadata()?.expect("Metadata must exist");
+
+        let author = *block.header().author();
+        stake::update_validator_weights(block.state_mut(), &author)?;
+
         let term = metadata.current_term_id();
-
-        match term {
-            0 => {}
-            _ => {
-                let author = *block.header().author();
-                stake::update_validator_weights(block.state_mut(), &author)?;
-            }
-        }
-
         let term_seconds = match term {
             0 => parent_common_params.term_seconds(),
             _ => {
@@ -179,7 +168,11 @@ impl ConsensusEngine for Tendermint {
 
         stake::on_term_close(block.state_mut(), block_number, &inactive_validators)?;
 
-        block.state_mut().update_term_params()?;
+        let state = block.state_mut();
+        let validators = NextValidators::elect(&state)?;
+        validators.save_to_state(state)?;
+
+        state.update_term_params()?;
         Ok(())
     }
 
@@ -260,22 +253,33 @@ impl ConsensusEngine for Tendermint {
 
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
-        let block_hash = match block_number {
+        let header = match block_number {
             None => {
-                client.block_header(&BlockId::Latest).expect("latest block must exist").hash()
+                client.block_header(&BlockId::Latest).expect("latest block must exist")
                 // the latest block
             }
             Some(block_number) => {
                 assert_ne!(0, block_number);
-                client.block_header(&(block_number - 1).into()).ok_or(EngineError::CannotOpenBlock)?.hash()
+                client.block_header(&(block_number - 1).into()).ok_or(EngineError::CannotOpenBlock)?
                 // the parent of the given block number
             }
         };
+        let block_hash = header.hash();
         Ok(Some(self.validators.next_addresses(&block_hash)))
+    }
+
+    fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
+        let mut state = TopLevelState::from_existing(db, root)?;
+        NextValidators::elect(&state)?.save_to_state(&mut state)?;
+        Ok(state.commit_and_into_db()?)
     }
 }
 
 pub(super) fn is_term_changed(header: &Header, parent: &Header, term_seconds: u64) -> bool {
+    // Because the genesis block has a fixed generation time, the first block should not change the term.
+    if header.number() == 1 {
+        return false
+    }
     if term_seconds == 0 {
         return false
     }

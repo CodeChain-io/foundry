@@ -14,19 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::validator_set::DynamicValidator;
 use super::types::View;
 use super::Step;
 use ckey::{Address, Ed25519Public as Public};
 use primitives::Bytes;
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::time::Duration;
 
 /// `Tendermint` params.
 pub struct TendermintParams {
-    /// List of validators.
-    pub validators: Arc<DynamicValidator>,
     /// Timeout durations for different steps.
     pub timeouts: TimeoutParams,
     /// Tokens distributed at genesis.
@@ -46,10 +42,10 @@ pub struct Deposit {
 impl From<cjson::scheme::TendermintParams> for TendermintParams {
     fn from(p: cjson::scheme::TendermintParams) -> Self {
         let dt = TimeoutParams::default();
-        let genesis_stakes_params = p.genesis_stakes.unwrap_or_default();
         let genesis_stakes =
-            genesis_stakes_params.iter().map(|(pa, stake_account)| (pa.into_address(), stake_account.stake)).collect();
-        let genesis_delegations = genesis_stakes_params
+            p.genesis_stakes.iter().map(|(pa, stake_account)| (pa.into_address(), stake_account.stake)).collect();
+        let genesis_delegations = p
+            .genesis_stakes
             .into_iter()
             .map(|(pa, stake_account)| {
                 (
@@ -64,7 +60,6 @@ impl From<cjson::scheme::TendermintParams> for TendermintParams {
             })
             .collect();
         TendermintParams {
-            validators: Arc::new(DynamicValidator::new(p.validators)),
             timeouts: TimeoutParams {
                 propose: p.timeout_propose.map_or(dt.propose, to_duration),
                 propose_delta: p.timeout_propose_delta.map_or(dt.propose_delta, to_duration),
@@ -77,7 +72,6 @@ impl From<cjson::scheme::TendermintParams> for TendermintParams {
             genesis_stakes,
             genesis_candidates: p
                 .genesis_candidates
-                .unwrap_or_default()
                 .into_iter()
                 .map(|(pubkey, deposit)| {
                     (pubkey.into_address(), Deposit {

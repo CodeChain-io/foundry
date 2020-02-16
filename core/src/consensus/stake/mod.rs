@@ -439,9 +439,6 @@ pub fn on_term_close(
 
     jail(state, inactive_validators, custody_until, kick_at)?;
 
-    let validators = NextValidators::elect(state)?;
-    validators.save_to_state(state)?;
-
     state.increase_term_id(last_term_finished_block_num)?;
     Ok(())
 }
