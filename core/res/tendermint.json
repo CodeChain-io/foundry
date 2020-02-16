@@ -3,12 +3,6 @@
   "engine": {
     "tendermint": {
       "params": {
-        "validators": [
-          "0x5f6fcadd723f3c94970101d91b4043f953b8f939e14b75843b2f189bb5264f55",
-          "0x3ab23fad7c9a4f1f54dbf44ff9294d2b5ab42d15f161e406048d5abf7e5dad94",
-          "0xe83c0184ed9acc66868a7be2fbe901eecfe7c054450bbb8d24328e0116ea5e0c",
-          "0x200c2fe942fdbe9143323ed264d0e39e7b321ca33c78bfa78a92576e00dc9ebd"
-        ],
         "timeoutPropose": 10000,
         "timeoutProposeDelta": 5000,
         "timeoutPrevote": 10000,

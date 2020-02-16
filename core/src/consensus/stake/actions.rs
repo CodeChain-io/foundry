@@ -491,8 +491,7 @@ mod tests {
         let mut test_client = TestBlockChainClient::default();
         test_client.add_blocks(10, 1);
         test_client.set_random_validators(10);
-        let validator_set =
-            DynamicValidator::new(test_client.get_validators().iter().map(|val| *val.pubkey()).collect());
+        let validator_set = DynamicValidator::default();
 
         let consensus_message1 =
             create_consensus_message(message_info1, &test_client, vote_step_twister, block_hash_twister);

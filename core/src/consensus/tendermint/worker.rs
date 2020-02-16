@@ -406,22 +406,6 @@ impl Worker {
             .hash()
     }
 
-    /// Get the index of the proposer of a block to check the new proposer is valid.
-    fn block_proposer_idx(&self, block_hash: BlockHash) -> Option<usize> {
-        self.client().block_header(&BlockId::Hash(block_hash)).map(|header| {
-            let proposer = header.author();
-            let parent = if header.number() == 0 {
-                // Genesis block's parent is not exist
-                // FIXME: The DynamicValidator should handle the Genesis block correctly.
-                block_hash
-            } else {
-                header.parent_hash()
-            };
-
-            self.validators.get_index_by_address(&parent, &proposer).expect("The proposer must be in the validator set")
-        })
-    }
-
     /// Get previous block header of given height
     fn prev_block_header_of_height(&self, height: Height) -> Option<encoded::Header> {
         let prev_height = (height - 1) as u64;
@@ -461,7 +445,7 @@ impl Worker {
     }
 
     /// Find the designated for the given view.
-    fn view_proposer(&self, prev_block_hash: &BlockHash, view: View) -> Option<Address> {
+    fn view_proposer(&self, prev_block_hash: &BlockHash, view: View) -> Address {
         self.validators.next_block_proposer(prev_block_hash, view)
     }
 
@@ -521,16 +505,8 @@ impl Worker {
     }
 
     /// Check if address is a proposer for given view.
-    fn check_view_proposer(
-        &self,
-        parent: &BlockHash,
-        height: Height,
-        view: View,
-        address: &Address,
-    ) -> Result<(), EngineError> {
-        let proposer = self.view_proposer(parent, view).ok_or_else(|| EngineError::PrevBlockNotExist {
-            height: height as u64,
-        })?;
+    fn check_view_proposer(&self, parent: &BlockHash, view: View, address: &Address) -> Result<(), EngineError> {
+        let proposer = self.view_proposer(parent, view);
         if proposer == *address {
             Ok(())
         } else {
@@ -543,7 +519,8 @@ impl Worker {
 
     /// Check if current signer is the current proposer.
     fn is_signer_proposer(&self, bh: &BlockHash) -> bool {
-        self.view_proposer(bh, self.view).map_or(false, |proposer| self.signer.is_address(&proposer))
+        let proposer = self.view_proposer(bh, self.view);
+        self.signer.is_address(&proposer)
     }
 
     fn is_step(&self, message: &ConsensusMessage) -> bool {
@@ -1188,14 +1165,13 @@ impl Worker {
     }
 
     fn verify_block_external(&self, header: &Header) -> Result<(), Error> {
-        let height = header.number() as usize;
         let author_view = TendermintSealView::new(header.seal()).author_view()?;
-        ctrace!(ENGINE, "Verify external at {}-{}, {:?}", height, author_view, header);
+        ctrace!(ENGINE, "Verify external at {}-{}, {:?}", header.number(), author_view, header);
         let proposer = header.author();
         if !self.is_authority(header.parent_hash(), proposer) {
             return Err(EngineError::BlockNotAuthorized(*proposer).into())
         }
-        self.check_view_proposer(header.parent_hash(), header.number(), author_view, &proposer)?;
+        self.check_view_proposer(header.parent_hash(), author_view, &proposer)?;
         let seal_view = TendermintSealView::new(header.seal());
         let bitset_count = seal_view.bitset()?.count();
         let precommits_count = seal_view.precommits().item_count()?;
@@ -1226,13 +1202,8 @@ impl Worker {
 
         let mut voted_validators = BitSet::new();
         let parent_hash = header.parent_hash();
-        let grand_parent_hash =
-            self.client().block_header(&(*parent_hash).into()).expect("The parent block must exist").parent_hash();
         for (bitset_index, signature) in seal_view.signatures()? {
-            let public = match self.validators.get_current(header.parent_hash(), bitset_index) {
-                Some(p) => p,
-                None => self.validators.get(&grand_parent_hash, bitset_index),
-            };
+            let public = self.validators.get_current(header.parent_hash(), bitset_index);
             if !verify(&signature, &precommit_vote_on.hash(), &public) {
                 let address = public_to_address(&public);
                 return Err(EngineError::BlockNotAuthorized(address.to_owned()).into())
@@ -1565,8 +1536,7 @@ impl Worker {
         assert_eq!(header.number(), self.height);
 
         let parent_hash = header.parent_hash();
-        let prev_proposer_idx = self.block_proposer_idx(*parent_hash).expect("Prev block must exists");
-        let signer_index = self.validators.proposer_index(*parent_hash, prev_proposer_idx, self.view as usize);
+        let signer_index = self.validators.proposer_index(*parent_hash, self.view as usize);
 
         let on = VoteOn {
             step: VoteStep::new(self.height, self.view, Step::Propose),
@@ -1593,9 +1563,7 @@ impl Worker {
         proposed_view: View,
         signature: Signature,
     ) -> Option<ConsensusMessage> {
-        let prev_proposer_idx = self.block_proposer_idx(*header.parent_hash())?;
-        let signer_index =
-            self.validators.proposer_index(*header.parent_hash(), prev_proposer_idx, proposed_view as usize);
+        let signer_index = self.validators.proposer_index(*header.parent_hash(), proposed_view as usize);
 
         let on = VoteOn {
             step: VoteStep::new(header.number(), proposed_view, Step::Propose),

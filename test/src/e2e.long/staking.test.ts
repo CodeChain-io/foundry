@@ -19,6 +19,7 @@ import { Address } from "foundry-primitives/lib";
 import "mocha";
 import {
     aliceAddress,
+    aliceSecret,
     bobAddress,
     faucetAddress,
     faucetSecret,
@@ -345,7 +346,7 @@ describe("Staking", function() {
     it("should have proper initial stake tokens", async function() {
         const { amounts, stakeholders } = await getAllStakingInfo();
         expect(amounts).to.be.deep.equal([
-            toHex(RLP.encode(70000)),
+            toHex(RLP.encode(70000 - 104 - 103 - 102 - 101)),
             null,
             null,
             null,
@@ -384,8 +385,8 @@ describe("Staking", function() {
 
         const { amounts, stakeholders } = await getAllStakingInfo();
         expect(amounts).to.be.deep.equal([
-            toHex(RLP.encode(70000 - 100)),
-            toHex(RLP.encode(100)),
+            toHex(RLP.encode(70000 - 104 - 103 - 102 - 101 - 100)),
+            toHex(RLP.encode(0 + 100)),
             null,
             null,
             null,
@@ -407,11 +408,26 @@ describe("Staking", function() {
     }).timeout(60_000);
 
     it("doesn't leave zero balance account after transfer", async function() {
+        const pay = `0x${(
+            await nodes[0].sendPayTx({
+                recipient: aliceAddress,
+                quantity: 100000
+            })
+        ).hash()}`;
+        while (
+            !(await nodes[0].rpc.chain.containsTransaction({
+                transactionHash: pay
+            }))
+        ) {
+            await wait(500);
+        }
+
+        const quantity = 20000;
         const hash = await sendStakeToken({
-            senderAddress: faucetAddress,
-            senderSecret: faucetSecret,
+            senderAddress: aliceAddress,
+            senderSecret: aliceSecret,
             receiverAddress: validator0Address,
-            quantity: 70000
+            quantity
         });
         while (
             !(await nodes[0].rpc.chain.containsTransaction({
@@ -423,19 +439,19 @@ describe("Staking", function() {
 
         const { amounts, stakeholders } = await getAllStakingInfo();
         expect(amounts).to.be.deep.equal([
+            toHex(RLP.encode(70000 - 104 - 103 - 102 - 101)),
+            toHex(RLP.encode(quantity)),
             null,
-            toHex(RLP.encode(70000)),
             null,
             null,
             null,
-            toHex(RLP.encode(20000)),
             toHex(RLP.encode(10000))
         ]);
         expect(stakeholders).to.be.equal(
             toHex(
                 RLP.encode(
                     [
-                        aliceAddress.accountId.toEncodeObject(),
+                        faucetAddress.accountId.toEncodeObject(),
                         validator0Address.accountId.toEncodeObject(),
                         bobAddress.accountId.toEncodeObject()
                     ].sort()
@@ -445,13 +461,6 @@ describe("Staking", function() {
     }).timeout(60_000);
 
     it("can delegate tokens", async function() {
-        await selfNominate({
-            senderAddress: validator0Address,
-            senderSecret: validator0Secret,
-            deposit: 0,
-            metadata: null
-        });
-
         const hash = await delegateToken({
             senderAddress: faucetAddress,
             senderSecret: faucetSecret,
@@ -468,7 +477,7 @@ describe("Staking", function() {
 
         const { amounts } = await getAllStakingInfo();
         expect(amounts).to.be.deep.equal([
-            toHex(RLP.encode(70000 - 100)),
+            toHex(RLP.encode(70000 - 104 - 103 - 102 - 101 - 100)),
             null,
             null,
             null,
@@ -480,9 +489,17 @@ describe("Staking", function() {
         const delegations = await getAllDelegation();
         expect(delegations).to.be.deep.equal([
             toHex(
-                RLP.encode([
-                    [validator0Address.accountId.toEncodeObject(), 100]
-                ])
+                RLP.encode(
+                    [
+                        [
+                            validator0Address.accountId.toEncodeObject(),
+                            104 + 100
+                        ],
+                        [validator1Address.accountId.toEncodeObject(), 103],
+                        [validator2Address.accountId.toEncodeObject(), 102],
+                        [validator3Address.accountId.toEncodeObject(), 101]
+                    ].sort()
+                )
             ),
             null,
             null,
@@ -494,18 +511,12 @@ describe("Staking", function() {
     });
 
     it("doesn't leave zero balanced account after delegate", async function() {
-        await selfNominate({
-            senderAddress: validator0Address,
-            senderSecret: validator0Secret,
-            deposit: 0,
-            metadata: null
-        });
-
+        const quantity = 70000 - 104 - 103 - 102 - 101;
         const hash = await delegateToken({
             senderAddress: faucetAddress,
             senderSecret: faucetSecret,
             receiverAddress: validator0Address,
-            quantity: 70000
+            quantity
         });
         while (
             !(await nodes[0].rpc.chain.containsTransaction({
@@ -529,9 +540,17 @@ describe("Staking", function() {
         const delegations = await getAllDelegation();
         expect(delegations).to.be.deep.equal([
             toHex(
-                RLP.encode([
-                    [validator0Address.accountId.toEncodeObject(), 70000]
-                ])
+                RLP.encode(
+                    [
+                        [
+                            validator0Address.accountId.toEncodeObject(),
+                            104 + quantity
+                        ],
+                        [validator1Address.accountId.toEncodeObject(), 103],
+                        [validator2Address.accountId.toEncodeObject(), 102],
+                        [validator3Address.accountId.toEncodeObject(), 101]
+                    ].sort()
+                )
             ),
             null,
             null,
@@ -603,27 +622,6 @@ describe("Staking", function() {
     });
 
     it("can revoke tokens", async function() {
-        await selfNominate({
-            senderAddress: validator0Address,
-            senderSecret: validator0Secret,
-            deposit: 0,
-            metadata: null
-        });
-
-        const delegateHash = await delegateToken({
-            senderAddress: faucetAddress,
-            senderSecret: faucetSecret,
-            receiverAddress: validator0Address,
-            quantity: 100
-        });
-        while (
-            !(await nodes[0].rpc.chain.containsTransaction({
-                transactionHash: `${delegateHash}`
-            }))
-        ) {
-            await wait(500);
-        }
-
         const hash = await revokeToken({
             senderAddress: faucetAddress,
             senderSecret: faucetSecret,
@@ -641,7 +639,7 @@ describe("Staking", function() {
 
         const { amounts } = await getAllStakingInfo();
         expect(amounts).to.be.deep.equal([
-            toHex(RLP.encode(70000 - 100 + 50)),
+            toHex(RLP.encode(70000 - 104 - 103 - 102 - 101 + 50)),
             null,
             null,
             null,
@@ -653,7 +651,17 @@ describe("Staking", function() {
         const delegations = await getAllDelegation();
         expect(delegations).to.be.deep.equal([
             toHex(
-                RLP.encode([[validator0Address.accountId.toEncodeObject(), 50]])
+                RLP.encode(
+                    [
+                        [
+                            validator0Address.accountId.toEncodeObject(),
+                            104 - 50
+                        ],
+                        [validator1Address.accountId.toEncodeObject(), 103],
+                        [validator2Address.accountId.toEncodeObject(), 102],
+                        [validator3Address.accountId.toEncodeObject(), 101]
+                    ].sort()
+                )
             ),
             null,
             null,
@@ -665,40 +673,20 @@ describe("Staking", function() {
     });
 
     it("cannot revoke more than delegated", async function() {
-        await selfNominate({
-            senderAddress: validator0Address,
-            senderSecret: validator0Secret,
-            deposit: 0,
-            metadata: null
-        });
-
-        const delegateHash = await delegateToken({
-            senderAddress: faucetAddress,
-            senderSecret: faucetSecret,
-            receiverAddress: validator0Address,
-            quantity: 100
-        });
-        while (
-            !(await nodes[0].rpc.chain.containsTransaction({
-                transactionHash: `${delegateHash}`
-            }))
-        ) {
-            await wait(500);
-        }
-
-        const blockNumber = await nodes[0].getBestBlockNumber();
         const seq = (await nodes[0].rpc.chain.getSeq({
             address: faucetAddress.toString()
         }))!;
-        const pay = await nodes[0].sendPayTx({
-            recipient: faucetAddress,
-            secret: faucetSecret,
-            quantity: 1,
-            fee: 20,
-            seq
-        });
 
-        // revoke
+        const pay = `0x${(
+            await nodes[0].sendPayTx({
+                recipient: faucetAddress,
+                secret: faucetSecret,
+                quantity: 1,
+                seq
+            })
+        )
+            .hash()
+            .toString()}`;
         const hash = await revokeToken({
             senderAddress: faucetAddress,
             senderSecret: faucetSecret,
@@ -706,15 +694,16 @@ describe("Staking", function() {
             quantity: 200,
             seq: seq + 1
         });
+        const blockNumber = await nodes[0].getBestBlockNumber();
         await nodes[0].waitBlockNumber(blockNumber + 1);
-
         while (
             !(await nodes[0].rpc.chain.containsTransaction({
-                transactionHash: `0x${pay.hash().toString()}`
+                transactionHash: pay
             }))
         ) {
             await wait(500);
         }
+
         const err0 = await nodes[0].rpc.mempool.getErrorHint({
             transactionHash: `${hash}`
         });
@@ -731,7 +720,7 @@ describe("Staking", function() {
 
         const { amounts } = await getAllStakingInfo();
         expect(amounts).to.be.deep.equal([
-            toHex(RLP.encode(70000 - 100)),
+            toHex(RLP.encode(70000 - 104 - 103 - 102 - 101)),
             null,
             null,
             null,
@@ -743,9 +732,14 @@ describe("Staking", function() {
         const delegations = await getAllDelegation();
         expect(delegations).to.be.deep.equal([
             toHex(
-                RLP.encode([
-                    [validator0Address.accountId.toEncodeObject(), 100]
-                ])
+                RLP.encode(
+                    [
+                        [validator0Address.accountId.toEncodeObject(), 104],
+                        [validator1Address.accountId.toEncodeObject(), 103],
+                        [validator2Address.accountId.toEncodeObject(), 102],
+                        [validator3Address.accountId.toEncodeObject(), 101]
+                    ].sort()
+                )
             ),
             null,
             null,
@@ -757,32 +751,11 @@ describe("Staking", function() {
     });
 
     it("revoking all should clear delegation", async function() {
-        await selfNominate({
-            senderAddress: validator0Address,
-            senderSecret: validator0Secret,
-            deposit: 0,
-            metadata: null
-        });
-
-        const delegateHash = await delegateToken({
-            senderAddress: faucetAddress,
-            senderSecret: faucetSecret,
-            receiverAddress: validator0Address,
-            quantity: 100
-        });
-        while (
-            !(await nodes[0].rpc.chain.containsTransaction({
-                transactionHash: `${delegateHash}`
-            }))
-        ) {
-            await wait(500);
-        }
-
         const hash = await revokeToken({
             senderAddress: faucetAddress,
             senderSecret: faucetSecret,
             delegateeAddress: validator0Address,
-            quantity: 100
+            quantity: 104
         });
 
         while (
@@ -795,7 +768,7 @@ describe("Staking", function() {
 
         const { amounts } = await getAllStakingInfo();
         expect(amounts).to.be.deep.equal([
-            toHex(RLP.encode(70000)),
+            toHex(RLP.encode(70000 - 104 - 103 - 102 - 101 + 104)),
             null,
             null,
             null,
@@ -806,7 +779,15 @@ describe("Staking", function() {
 
         const delegations = await getAllDelegation();
         expect(delegations).to.be.deep.equal([
-            null,
+            toHex(
+                RLP.encode(
+                    [
+                        [validator1Address.accountId.toEncodeObject(), 103],
+                        [validator2Address.accountId.toEncodeObject(), 102],
+                        [validator3Address.accountId.toEncodeObject(), 101]
+                    ].sort()
+                )
+            ),
             null,
             null,
             null,
@@ -817,7 +798,7 @@ describe("Staking", function() {
     });
 
     it("get fee in proportion to holding stakes", async function() {
-        // faucet: 70000, alice: 20000, bob: 10000
+        // faucet: 70000, alice: 20000, bob: 10000, validator0: 110, validator1: 110, validator2: 110, validator3: 110
         const fee = 1000;
         const hash = await sendStakeToken({
             senderAddress: faucetAddress,
@@ -833,7 +814,7 @@ describe("Staking", function() {
         ) {
             await wait(500);
         }
-        // faucet: 20000, alice: 20000, bob: 10000, val0: 50000,
+        // faucet: 20000, alice: 20000, bob: 10000, validator0: 50110, validator1: 110, validator2: 110, validator3: 110
 
         const blockNumber = await nodes[0].getBestBlockNumber();
         const minCustomCost = Scheme.params.minCustomCost;
@@ -876,6 +857,7 @@ describe("Staking", function() {
             address: validator0Address.toString()
         }))!;
         if (author === validator0Address.value) {
+            // rewards are distributed at the end of term
             expect(validator0Balance).to.be.deep.equal(oldValidator0Balance);
         } else {
             expect(validator0Balance).to.be.deep.equal(oldValidator0Balance);
@@ -883,22 +865,16 @@ describe("Staking", function() {
                 address: author.toString(),
                 blockNumber: blockNumber - 1
             }))!;
-            const authorBalance = +(await nodes[0].rpc.chain.getBalance({
+            const authorBalance = (await nodes[0].rpc.chain.getBalance({
                 address: author.toString()
             }))!;
-            expect(authorBalance).to.be.deep.equal(oldAuthorBalance);
+
+            // rewards are distributed at the end of term
+            expect(Number(authorBalance)).to.be.deep.equal(oldAuthorBalance);
         }
     });
 
     it("get fee even if it delegated stakes to other", async function() {
-        await selfNominate({
-            senderAddress: validator1Address,
-            senderSecret: validator1Secret,
-            deposit: 0,
-            metadata: null
-        });
-
-        // faucet: 70000, alice: 20000, bob: 10000
         const hash1 = await sendStakeToken({
             senderAddress: faucetAddress,
             senderSecret: faucetSecret,
@@ -930,7 +906,7 @@ describe("Staking", function() {
             await wait(500);
         }
 
-        // faucet: 20000, alice: 20000, bob: 10000, val0: 50000
+        // faucet: 20000, alice: 20000, bob: 10000, val0: 50110, val1: 110, val2: 110, val3: 110
         const hash2 = await delegateToken({
             senderAddress: validator0Address,
             senderSecret: validator0Secret,
@@ -946,7 +922,7 @@ describe("Staking", function() {
         ) {
             await wait(500);
         }
-        // faucet: 20000, alice: 20000, bob: 10000, val0: 0 (delegated 50000 to val1), val1: 0
+        // faucet: 20000, alice: 20000, bob: 10000, val0: 110 (delegated 50000 to val1), val1: 110, val2: 110, val3: 110
 
         const blockNumber = await nodes[0].getBestBlockNumber();
         const minCustomCost = Scheme.params.minCustomCost;
@@ -1033,7 +1009,7 @@ describe("Staking", function() {
             metadata: null
         });
 
-        // faucet: 70000, alice: 20000, bob: 10000
+        // faucet: 70000, alice: 20000, bob: 10000, val0: 110, val1: 110, val2: 110, val3: 110
         const hash1 = await sendStakeToken({
             senderAddress: faucetAddress,
             senderSecret: faucetSecret,
@@ -1049,7 +1025,7 @@ describe("Staking", function() {
             await wait(500);
         }
 
-        // faucet: 40000, alice: 20000, bob: 10000, val0: 30000
+        // faucet: 40000, alice: 20000, bob: 10000, val0: 30110, val1: 110, val2: 110, val3: 110
         const hash2 = await sendStakeToken({
             senderAddress: faucetAddress,
             senderSecret: faucetSecret,
@@ -1081,7 +1057,7 @@ describe("Staking", function() {
             await wait(500);
         }
 
-        // faucet: 10000, alice: 20000, bob: 10000, val0: 30000, val1: 30000
+        // faucet: 10000, alice: 20000, bob: 10000, val0: 30110, val1: 30110, val2: 110, val3: 110
         const hash3 = await delegateToken({
             senderAddress: validator0Address,
             senderSecret: validator0Secret,
@@ -1097,7 +1073,7 @@ describe("Staking", function() {
         ) {
             await wait(500);
         }
-        // faucet: 20000, alice: 20000, bob: 10000, val0: 0 (delegated 30000 to val1), val1: 30000
+        // faucet: 10000, alice: 20000, bob: 10000, val0: 110 (delegated 30000 to val1), val1: 30110, val2: 110, val3: 110
 
         const blockNumber = await nodes[0].getBestBlockNumber();
         const minCustomCost = Scheme.params.minCustomCost;
