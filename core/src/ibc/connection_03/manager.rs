@@ -118,6 +118,45 @@ impl<'a> Manager<'a> {
         Ok(())
     }
 
+    pub fn handle_open_ack(
+        &mut self,
+        identifier: Identifier,
+        proof_try: Vec<u8>,
+        proof_consensus: Vec<u8>,
+        proof_height: u64,
+        consensus_height: u64,
+    ) -> Result<(), String> {
+        let current_height = self.ctx.get_current_height();
+        if consensus_height > current_height {
+            return Err(format!(
+                "Consensus height {} is greater than current height {}",
+                consensus_height, current_height
+            ))
+        }
+        let mut connection = self
+            .query(&identifier)
+            .ok_or_else(|| format!("Cannot find connection with the identifier: {}", identifier))?;
+
+        if connection.state != ConnectionState::INIT && connection.state != ConnectionState::TRYOPEN {
+            return Err(format!("Invalid connection state expected INIT or TRYOPEN but found {:?}", connection.state))
+        }
+        let expected_connection = ConnectionEnd {
+            state: ConnectionState::TRYOPEN,
+            counterparty_connection_identifier: identifier.clone(),
+            counterparty_prefix: get_commiment_prefix(),
+            client_identifier: connection.counterparty_client_identifier.clone(),
+            counterparty_client_identifier: connection.client_identifier.clone(),
+        };
+        self.verify_connection_state(&connection, proof_height, proof_try, identifier.clone(), &expected_connection);
+
+        connection.state = ConnectionState::OPEN;
+        let kv_store = self.ctx.get_kv_store_mut();
+        let path = connection_path(&identifier);
+        kv_store.set(&path, &connection.rlp_bytes());
+
+        Ok(())
+    }
+
     fn query(&mut self, identifier: &str) -> Option<ConnectionEnd> {
         let kv_store = self.ctx.get_kv_store();
 

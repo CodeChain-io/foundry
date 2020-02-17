@@ -23,6 +23,7 @@ enum DatagramTag {
     UpdateClient = 2,
     ConnOpenInit = 3,
     ConnOpenTry = 4,
+    ConnOpenAck = 5,
 }
 
 impl Encodable for DatagramTag {
@@ -39,6 +40,7 @@ impl Decodable for DatagramTag {
             2 => Ok(DatagramTag::UpdateClient),
             3 => Ok(DatagramTag::ConnOpenInit),
             4 => Ok(DatagramTag::ConnOpenTry),
+            5 => Ok(DatagramTag::ConnOpenAck),
             _ => Err(DecoderError::Custom("Unexpected DatagramTag Value")),
         }
     }
@@ -70,6 +72,13 @@ pub enum Datagram {
         counterparty_client_identifier: String,
         client_identifier: String,
         proof_init: Vec<u8>,
+        proof_consensus: Vec<u8>,
+        proof_height: u64,
+        consensus_height: u64,
+    },
+    ConnOpenAck {
+        identifier: String,
+        proof_try: Vec<u8>,
         proof_consensus: Vec<u8>,
         proof_height: u64,
         consensus_height: u64,
@@ -132,6 +141,21 @@ impl Encodable for Datagram {
                     .append(counterparty_client_identifier)
                     .append(client_identifier)
                     .append(proof_init)
+                    .append(proof_consensus)
+                    .append(proof_height)
+                    .append(consensus_height);
+            }
+            Datagram::ConnOpenAck {
+                identifier,
+                proof_try,
+                proof_consensus,
+                proof_height,
+                consensus_height,
+            } => {
+                s.begin_list(6);
+                s.append(&DatagramTag::ConnOpenAck)
+                    .append(identifier)
+                    .append(proof_try)
                     .append(proof_consensus)
                     .append(proof_height)
                     .append(consensus_height);
@@ -206,6 +230,22 @@ impl Decodable for Datagram {
                     proof_consensus: rlp.val_at(7)?,
                     proof_height: rlp.val_at(8)?,
                     consensus_height: rlp.val_at(9)?,
+                })
+            }
+            DatagramTag::ConnOpenAck => {
+                let item_count = rlp.item_count()?;
+                if item_count != 6 {
+                    return Err(DecoderError::RlpInvalidLength {
+                        expected: 6,
+                        got: item_count,
+                    })
+                }
+                Ok(Datagram::ConnOpenAck {
+                    identifier: rlp.val_at(1)?,
+                    proof_try: rlp.val_at(2)?,
+                    proof_consensus: rlp.val_at(3)?,
+                    proof_height: rlp.val_at(4)?,
+                    consensus_height: rlp.val_at(5)?,
                 })
             }
         }

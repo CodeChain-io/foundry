@@ -96,6 +96,18 @@ pub fn execute(
                 )
                 .map_err(|err| RuntimeError::IBC(format!("ConnOpenTry: {}", err)).into())
         }
+        Datagram::ConnOpenAck {
+            identifier,
+            proof_try,
+            proof_consensus,
+            proof_height,
+            consensus_height,
+        } => {
+            let mut connection_manager = ibc_connection::Manager::new(&mut context);
+            connection_manager
+                .handle_open_ack(identifier, proof_try, proof_consensus, proof_height, consensus_height)
+                .map_err(|err| RuntimeError::IBC(format!("ConnOpenAck: {}", err)).into())
+        }
     }
 }
 
