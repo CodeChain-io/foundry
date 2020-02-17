@@ -78,7 +78,6 @@ pub fn execute(
             proof_height,
             consensus_height,
         } => {
-            let mut context = ibc_context::TopLevelContext::new(state, current_block_number);
             let mut connection_manager = ibc_connection::Manager::new(&mut context);
 
             let proof_init_dec: CommitmentProof = rlp::Rlp::new(&proof_init)
