@@ -19,30 +19,28 @@ use super::types::{ConsensusState, State};
 use crate::ibc;
 use ibc::client_02::get_state;
 
-#[derive(Default)]
-pub struct Manager {}
+pub struct Manager<'a> {
+    ctx: &'a mut dyn ibc::Context,
+}
 
-impl Manager {
-    pub fn new() -> Self {
-        Manager {}
+impl<'a> Manager<'a> {
+    pub fn new(ctx: &'a mut dyn ibc::Context) -> Self {
+        Manager {
+            ctx,
+        }
     }
 
-    pub fn create(
-        &self,
-        ctx: &mut dyn ibc::Context,
-        id: &str,
-        cs: &dyn ConsensusState,
-    ) -> Result<Box<dyn State>, String> {
-        let state = new_state(id, ctx, cs.kind());
-        if state.exists(ctx) {
+    pub fn create(&mut self, id: &str, cs: &dyn ConsensusState) -> Result<Box<dyn State>, String> {
+        let state = new_state(id, self.ctx, cs.kind());
+        if state.exists(self.ctx) {
             return Err("Create client on already existing id".to_owned())
         }
-        state.set_root(ctx, cs.get_height(), cs.get_root());
-        state.set_consensus_state(ctx, cs);
+        state.set_root(self.ctx, cs.get_height(), cs.get_root());
+        state.set_consensus_state(self.ctx, cs);
         Ok(state)
     }
 
-    pub fn query(&self, ctx: &mut dyn ibc::Context, id: &str) -> Result<Box<dyn State>, String> {
-        get_state(id, ctx)
+    pub fn query(&mut self, id: &str) -> Result<Box<dyn State>, String> {
+        get_state(id, self.ctx)
     }
 }
