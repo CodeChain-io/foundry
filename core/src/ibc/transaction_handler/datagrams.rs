@@ -22,6 +22,7 @@ enum DatagramTag {
     CreateClient = 1,
     UpdateClient = 2,
     ConnOpenInit = 3,
+    ConnOpenTry = 4,
 }
 
 impl Encodable for DatagramTag {
@@ -37,6 +38,7 @@ impl Decodable for DatagramTag {
             1 => Ok(DatagramTag::CreateClient),
             2 => Ok(DatagramTag::UpdateClient),
             3 => Ok(DatagramTag::ConnOpenInit),
+            4 => Ok(DatagramTag::ConnOpenTry),
             _ => Err(DecoderError::Custom("Unexpected DatagramTag Value")),
         }
     }
@@ -59,6 +61,17 @@ pub enum Datagram {
         counterparty_prefix: String,
         client_identifier: String,
         counterparty_client_identifier: String,
+    },
+    ConnOpenTry {
+        desired_identifier: String,
+        counterparty_connection_identifier: String,
+        counterparty_prefix: String,
+        counterparty_client_identifier: String,
+        client_identifier: String,
+        proof_init: String,
+        proof_consensus: String,
+        proof_height: u64,
+        consensus_height: u64,
     },
 }
 
@@ -92,6 +105,29 @@ impl Encodable for Datagram {
                     .append(counterparty_prefix)
                     .append(client_identifier)
                     .append(counterparty_client_identifier);
+            }
+            Datagram::ConnOpenTry {
+                desired_identifier,
+                counterparty_connection_identifier,
+                counterparty_prefix,
+                counterparty_client_identifier,
+                client_identifier,
+                proof_init,
+                proof_consensus,
+                proof_height,
+                consensus_height,
+            } => {
+                s.begin_list(10);
+                s.append(&DatagramTag::ConnOpenTry)
+                    .append(desired_identifier)
+                    .append(counterparty_connection_identifier)
+                    .append(counterparty_prefix)
+                    .append(counterparty_client_identifier)
+                    .append(client_identifier)
+                    .append(proof_init)
+                    .append(proof_consensus)
+                    .append(proof_height)
+                    .append(consensus_height);
             }
         };
     }
@@ -142,6 +178,26 @@ impl Decodable for Datagram {
                     counterparty_prefix: rlp.val_at(3)?,
                     client_identifier: rlp.val_at(4)?,
                     counterparty_client_identifier: rlp.val_at(5)?,
+                })
+            }
+            DatagramTag::ConnOpenTry => {
+                let item_count = rlp.item_count()?;
+                if item_count != 10 {
+                    return Err(DecoderError::RlpInvalidLength {
+                        expected: 10,
+                        got: item_count,
+                    })
+                }
+                Ok(Datagram::ConnOpenTry {
+                    desired_identifier: rlp.val_at(1)?,
+                    counterparty_connection_identifier: rlp.val_at(2)?,
+                    counterparty_prefix: rlp.val_at(3)?,
+                    counterparty_client_identifier: rlp.val_at(4)?,
+                    client_identifier: rlp.val_at(5)?,
+                    proof_init: rlp.val_at(6)?,
+                    proof_consensus: rlp.val_at(7)?,
+                    proof_height: rlp.val_at(8)?,
+                    consensus_height: rlp.val_at(9)?,
                 })
             }
         }
