@@ -22,11 +22,12 @@ use ccore::{
     UnverifiedTransaction,
 };
 use ckey::PlatformAddress;
-use ckey::{Address, Public, Signature};
+use ckey::{Address, BlsPublic, BlsSignature, Public, Signature};
 use ckeystore::DecryptedAccount;
 use clap::ArgMatches;
 use ctypes::transaction::{Action, Transaction};
 use primitives::{Bytes, H256};
+use std::ops::Deref;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -65,6 +66,24 @@ impl SelfSigner {
 
     pub fn address(&self) -> Option<&Address> {
         self.signer.as_ref().map(|(address, _)| address)
+    }
+
+    pub fn bls_public(&self) -> Result<BlsPublic, AccountProviderError> {
+        let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
+        match &self.decrypted_account {
+            Some(account) => Ok(account.bls_public()),
+            None => Ok(self.account_provider.get_unlocked_account(&address)?.deref().bls_public()),
+        }
+    }
+    // concatenate BLS public key and address, and then sign on it
+    // this proof of posession is required to prevent rogue key attacks
+    // concatenation with address is required to prevent replay attacks
+    pub fn pop_signature(&self) -> Result<BlsSignature, AccountProviderError> {
+        let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
+        match &self.decrypted_account {
+            Some(account) => Ok(account.pop_signature(&address)),
+            None => Ok(self.account_provider.get_unlocked_account(&address)?.deref().pop_signature(&address)),
+        }
     }
 }
 
@@ -160,15 +179,34 @@ impl AutoSelfNomination {
         metadata: Bytes,
     ) {
         let network_id = client.network_id();
-        let seq = match signer.address() {
-            Some(address) => client.latest_seq(address),
+        let address = match signer.address() {
+            Some(address) => address,
             None => {
                 cwarn!(ENGINE, "Signer was not assigned");
                 return
             }
         };
+
+        let seq = client.latest_seq(address);
+
+        let public = match signer.bls_public() {
+            Ok(public) => public,
+            Err(_) => {
+                cerror!(ENGINE, "");
+                return
+            }
+        };
+        let signature = match signer.pop_signature() {
+            Ok(signature) => signature,
+            Err(_) => {
+                cerror!(ENGINE, "");
+                return
+            }
+        };
         let selfnominate = SelfNominate {
             deposit,
+            public: Box::new(public),
+            signature: Box::new(signature),
             metadata,
         };
         let tx = Transaction {

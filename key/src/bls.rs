@@ -158,9 +158,11 @@ impl BlsPublic {
         BlsPublic(G2::random(&mut rng))
     }
 
-    // Need to sign on BlsPublic for proof of posession
-    pub fn hash(&self) -> Message {
-        blake256(self.compressed().as_ref())
+    // Need to sign on BLSPublic for proof of posession
+    pub fn hash_with_value<B: AsRef<[u8]>>(&self, value: B) -> Message {
+        let mut data = self.compressed().as_ref().to_vec();
+        data.extend(value.as_ref());
+        blake256(data)
     }
 
     fn compressed(&self) -> G2Compressed {
