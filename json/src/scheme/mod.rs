@@ -15,8 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 mod account;
-mod blake_pow;
-mod cuckoo;
 mod engine;
 mod genesis;
 mod null_engine;
@@ -30,8 +28,6 @@ mod state;
 mod tendermint;
 
 pub use self::account::Account;
-pub use self::blake_pow::{BlakePoW, BlakePoWParams};
-pub use self::cuckoo::{Cuckoo, CuckooParams};
 pub use self::engine::Engine;
 pub use self::genesis::Genesis;
 pub use self::null_engine::{NullEngine, NullEngineParams};
