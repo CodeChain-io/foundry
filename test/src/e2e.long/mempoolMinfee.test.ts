@@ -105,17 +105,20 @@ describe("MemPoolMinFees", async function() {
         await valNode3.waitBlockNumber(2);
 
         expect(
-            await valNode1WithMinPayFee150.sdk.rpc.chain.containsTransaction(
-                tx.hash()
-            )
+            await valNode1WithMinPayFee150.rpc.chain.containsTransaction({
+                transactionHash: `0x${tx.hash().toString()}`
+            })
         ).to.be.true;
         expect(
-            await valNode2WithMinPayFee200.sdk.rpc.chain.containsTransaction(
-                tx.hash()
-            )
+            await valNode2WithMinPayFee200.rpc.chain.containsTransaction({
+                transactionHash: `0x${tx.hash().toString()}`
+            })
         ).to.be.true;
-        expect(await valNode3.sdk.rpc.chain.containsTransaction(tx.hash())).to
-            .be.true;
+        expect(
+            await valNode3.rpc.chain.containsTransaction({
+                transactionHash: `0x${tx.hash().toString()}`
+            })
+        ).to.be.true;
     });
 
     it("Connected validators should reject a transaction with a fee lower than the nodes' mem pool minimum fees", async function() {
@@ -160,16 +163,16 @@ describe("MemPoolMinFees", async function() {
         await Promise.all(nodeArray.map(node => node.waitBlockNumber(4)));
         const expectedTrues = await Promise.all(
             nodeArray.map(node =>
-                node.sdk.rpc.chain.containsTransaction(
-                    txShouldBeAccepted.hash()
-                )
+                node.rpc.chain.containsTransaction({
+                    transactionHash: `0x${txShouldBeAccepted.hash().toString()}`
+                })
             )
         );
         const expectedFalses = await Promise.all(
             nodeArray.map(node =>
-                node.sdk.rpc.chain.containsTransaction(
-                    txShouldBeRejected.hash()
-                )
+                node.rpc.chain.containsTransaction({
+                    transactionHash: `0x${txShouldBeRejected.hash().toString()}`
+                })
             )
         );
 

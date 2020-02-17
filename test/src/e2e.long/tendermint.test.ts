@@ -68,80 +68,64 @@ describe("Tendermint ", function() {
                 "tccq9y6e0k6af9058qq4h4ffpt9xmat2vkeyue23j8y"
             ];
             expect(
-                await nodes[0].sdk.rpc.sendRpcRequest(
-                    "chain_getPossibleAuthors",
-                    [null]
-                )
+                await nodes[0].rpc.chain.getPossibleAuthors({
+                    blockNumber: null
+                })
             ).deep.equal(validators);
             expect(
-                await nodes[1].sdk.rpc.sendRpcRequest(
-                    "chain_getPossibleAuthors",
-                    [null]
-                )
+                await nodes[1].rpc.chain.getPossibleAuthors({
+                    blockNumber: null
+                })
             ).deep.equal(validators);
             expect(
-                await nodes[2].sdk.rpc.sendRpcRequest(
-                    "chain_getPossibleAuthors",
-                    [null]
-                )
+                await nodes[2].rpc.chain.getPossibleAuthors({
+                    blockNumber: null
+                })
             ).deep.equal(validators);
             expect(
-                await nodes[3].sdk.rpc.sendRpcRequest(
-                    "chain_getPossibleAuthors",
-                    [null]
-                )
+                await nodes[3].rpc.chain.getPossibleAuthors({
+                    blockNumber: null
+                })
             ).deep.equal(validators);
         });
 
         it("genesis", async function() {
             const validators = ["tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f"];
             expect(
-                await nodes[0].sdk.rpc.sendRpcRequest(
-                    "chain_getPossibleAuthors",
-                    [0]
-                )
+                await nodes[0].rpc.chain.getPossibleAuthors({ blockNumber: 0 })
             ).deep.equal(validators);
             expect(
-                await nodes[1].sdk.rpc.sendRpcRequest(
-                    "chain_getPossibleAuthors",
-                    [0]
-                )
+                await nodes[1].rpc.chain.getPossibleAuthors({ blockNumber: 0 })
             ).deep.equal(validators);
             expect(
-                await nodes[2].sdk.rpc.sendRpcRequest(
-                    "chain_getPossibleAuthors",
-                    [0]
-                )
+                await nodes[2].rpc.chain.getPossibleAuthors({ blockNumber: 0 })
             ).deep.equal(validators);
             expect(
-                await nodes[3].sdk.rpc.sendRpcRequest(
-                    "chain_getPossibleAuthors",
-                    [0]
-                )
+                await nodes[3].rpc.chain.getPossibleAuthors({ blockNumber: 0 })
             ).deep.equal(validators);
         });
 
         it("larger than the current block", async function() {
             const currentBlock = await nodes[0].getBestBlockNumber();
             expect(
-                nodes[0].sdk.rpc.sendRpcRequest("chain_getPossibleAuthors", [
-                    currentBlock + 10
-                ])
+                nodes[0].rpc.chain.getPossibleAuthors({
+                    blockNumber: currentBlock + 10
+                })
             ).be.rejectedWith("Engine");
             expect(
-                nodes[1].sdk.rpc.sendRpcRequest("chain_getPossibleAuthors", [
-                    currentBlock + 100
-                ])
+                nodes[1].rpc.chain.getPossibleAuthors({
+                    blockNumber: currentBlock + 100
+                })
             ).be.rejectedWith("Engine");
             expect(
-                nodes[2].sdk.rpc.sendRpcRequest("chain_getPossibleAuthors", [
-                    currentBlock + 1000
-                ])
+                nodes[2].rpc.chain.getPossibleAuthors({
+                    blockNumber: currentBlock + 1000
+                })
             ).be.rejectedWith("Engine");
             expect(
-                nodes[3].sdk.rpc.sendRpcRequest("chain_getPossibleAuthors", [
-                    currentBlock + 10000
-                ])
+                nodes[3].rpc.chain.getPossibleAuthors({
+                    blockNumber: currentBlock + 10000
+                })
             ).be.rejectedWith("Engine");
         });
     });

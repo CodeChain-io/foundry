@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { U64 } from "codechain-sdk/lib/core/classes";
 import "mocha";
 import { aliceAddress, aliceSecret, bobAddress } from "../helper/constants";
 import CodeChain from "../helper/spawn";
@@ -38,17 +37,21 @@ describe("reward2", function() {
     });
 
     it("alice creates an empty block", async function() {
-        await nodeA.sdk.rpc.devel.startSealing();
+        await nodeA.rpc.devel!.startSealing();
         expect(
-            await nodeA.sdk.rpc.chain.getBalance(aliceAddress)
-        ).to.deep.equal(new U64(50));
+            +(await nodeA.rpc.chain.getBalance({
+                address: aliceAddress.toString()
+            }))!
+        ).to.deep.equal(50);
 
         await nodeB.connect(nodeA);
         await nodeB.waitBlockNumberSync(nodeA);
 
         expect(
-            await nodeB.sdk.rpc.chain.getBalance(aliceAddress)
-        ).to.deep.equal(new U64(50));
+            +(await nodeB.rpc.chain.getBalance({
+                address: aliceAddress.toString()
+            }))!
+        ).to.deep.equal(50);
     }).timeout(30_000);
 
     afterEach(async function() {

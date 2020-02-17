@@ -91,14 +91,14 @@ describe("Test onChain transaction communication", function() {
             fee: 10,
             seq: 0
         });
-        await sdk.rpc.devel.stopSealing();
+        await nodeA.rpc.devel!.stopSealing();
         await mock.sendEncodedTransaction([signed.toEncodeObject()]);
 
         while (
-            (await sdk.rpc.chain.getPendingTransactions()).transactions
+            (await nodeA.rpc.mempool.getPendingTransactions()).transactions
                 .length !== 1
         ) {}
-        const transactions = await sdk.rpc.chain.getPendingTransactions();
+        const transactions = await nodeA.rpc.mempool.getPendingTransactions();
         expect(transactions.transactions.length).to.equal(1);
 
         await mock.end();
@@ -130,14 +130,14 @@ describe("Test onChain transaction communication", function() {
                     fee: tfee,
                     seq: tseq
                 });
-                await sdk.rpc.devel.stopSealing();
+                await nodeA.rpc.devel!.stopSealing();
 
                 const data = signedTransaction.toEncodeObject();
                 data[2] = tnetworkId;
                 data[4] = tsig;
 
                 await mock.sendEncodedTransaction([data]);
-                const txs = await sdk.rpc.chain.getPendingTransactions();
+                const txs = await nodeA.rpc.mempool.getPendingTransactions();
                 expect(txs.transactions.length).to.equal(0);
 
                 await mock.end();
