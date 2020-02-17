@@ -133,19 +133,18 @@ const SEAL_FIELDS: usize = 4;
 #[cfg(test)]
 mod tests {
     use ccrypto::blake256;
-    use ckey::Address;
+    use ckey::{aggregate_signatures_bls, Address};
     use ctypes::Header;
 
     use super::super::BitSet;
     use super::message::VoteStep;
+    use super::*;
     use crate::account_provider::AccountProvider;
     use crate::client::TestBlockChainClient;
     use crate::consensus::{EngineError, Seal};
     use crate::error::BlockError;
     use crate::error::Error;
     use crate::scheme::Scheme;
-
-    use super::*;
 
     /// Accounts inserted with "0" and "1" are validators. First proposer is "0".
     fn setup() -> (Scheme, Arc<AccountProvider>, Arc<TestBlockChainClient>) {
@@ -212,12 +211,12 @@ mod tests {
             step: VoteStep::new(3, 0, Step::Precommit),
             block_hash: Some(*header.parent_hash()),
         };
-        let signature2 = tap.get_account(&proposer, None).unwrap().sign_schnorr(&vote_on.hash()).unwrap();
+        let signature2 = tap.get_account(&proposer, None).unwrap().sign_bls(&vote_on.hash());
 
         let seal = Seal::Tendermint {
             prev_view: 0,
             cur_view: 0,
-            precommits: vec![signature2],
+            precommit_signature: Box::new(signature2),
             precommit_bitset: BitSet::new_with_indices(&[2]),
         }
         .seal_fields()
@@ -251,12 +250,12 @@ mod tests {
             step: VoteStep::new(1, 0, Step::Precommit),
             block_hash: Some(*header.parent_hash()),
         };
-        let signature2 = tap.get_account(&proposer, None).unwrap().sign_schnorr(&vote_info.hash()).unwrap();
+        let signature2 = tap.get_account(&proposer, None).unwrap().sign_bls(&vote_info.hash());
 
         let seal = Seal::Tendermint {
             prev_view: 0,
             cur_view: 0,
-            precommits: vec![signature2],
+            precommit_signature: Box::new(signature2),
             precommit_bitset: BitSet::new_with_indices(&[2]),
         }
         .seal_fields()
@@ -270,14 +269,16 @@ mod tests {
         }
 
         let voter = validator3;
-        let signature3 = tap.get_account(&voter, None).unwrap().sign_schnorr(&vote_info.hash()).unwrap();
+        let signature3 = tap.get_account(&voter, None).unwrap().sign_bls(&vote_info.hash());
         let voter = validator0;
-        let signature0 = tap.get_account(&voter, None).unwrap().sign_schnorr(&vote_info.hash()).unwrap();
+        let signature0 = tap.get_account(&voter, None).unwrap().sign_bls(&vote_info.hash());
+
+        let aggregated_signature = aggregate_signatures_bls(&[signature0, signature2, signature3]);
 
         let seal = Seal::Tendermint {
             prev_view: 0,
             cur_view: 0,
-            precommits: vec![signature0, signature2, signature3],
+            precommit_signature: Box::new(aggregated_signature),
             precommit_bitset: BitSet::new_with_indices(&[0, 2, 3]),
         }
         .seal_fields()
@@ -287,12 +288,14 @@ mod tests {
         assert!(engine.verify_block_external(&header).is_ok());
 
         let bad_voter = insert_and_unlock(&tap, "101");
-        let bad_signature = tap.get_account(&bad_voter, None).unwrap().sign_schnorr(&vote_info.hash()).unwrap();
+        let bad_signature = tap.get_account(&bad_voter, None).unwrap().sign_bls(&vote_info.hash());
+
+        let aggregated_signature = aggregate_signatures_bls(&[signature0, signature2, bad_signature]);
 
         let seal = Seal::Tendermint {
             prev_view: 0,
             cur_view: 0,
-            precommits: vec![signature0, signature2, bad_signature],
+            precommit_signature: Box::new(aggregated_signature),
             precommit_bitset: BitSet::new_with_indices(&[0, 2, 3]),
         }
         .seal_fields()
@@ -301,7 +304,7 @@ mod tests {
 
         // Two good and one bad signature.
         match engine.verify_block_external(&header) {
-            Err(Error::Engine(EngineError::BlockNotAuthorized(_))) => {}
+            Err(Error::Engine(EngineError::PrecommitSignatureNotAuthorized)) => {}
             _ => panic!(),
         };
         engine.stop();

@@ -28,7 +28,6 @@ extern crate rand_xorshift;
 extern crate rlp;
 extern crate rustc_hex;
 extern crate rustc_serialize;
-extern crate secp256k1;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -44,11 +43,11 @@ mod password;
 mod platform_address;
 mod private;
 mod random;
-mod schnorr;
 
 pub use crate::address::Address;
 pub use crate::bls::{
-    aggregate_signatures_bls, sign_bls, verify_aggregated_bls, verify_bls, BlsPrivate, BlsPublic, BlsSignature, BlsKeyPair
+    aggregate_signatures_bls, sign_bls, verify_aggregated_bls, verify_bls, BlsKeyPair, BlsPrivate, BlsPublic,
+    BlsSignature,
 };
 pub use crate::ecdsa::{
     recover_ecdsa as recover, sign_ecdsa as sign, verify_ecdsa as verify, verify_ecdsa_address as verify_address,
@@ -62,9 +61,6 @@ pub use crate::password::Password;
 pub use crate::platform_address::PlatformAddress;
 pub use crate::private::Private;
 pub use crate::random::Random;
-pub use crate::schnorr::{
-    recover_schnorr, sign_schnorr, verify_schnorr, verify_schnorr_address, SchnorrSignature, SCHNORR_SIGNATURE_LENGTH,
-};
 use primitives::{H256, H512};
 pub use rustc_serialize::hex;
 

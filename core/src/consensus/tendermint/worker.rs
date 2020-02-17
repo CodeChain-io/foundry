@@ -970,29 +970,12 @@ impl Worker {
         }
 
         let height = proposal.number() as Height;
-        let seal_view = TendermintSealView::new(proposal.seal());
-        let parent_block_finalized_view = seal_view.parent_block_finalized_view().expect("The proposal is verified");
-        let on = VoteOn {
-            step: VoteStep::new(height - 1, parent_block_finalized_view, Step::Precommit),
-            block_hash: Some(*proposal.parent_hash()),
-        };
-        for (index, signature) in seal_view.signatures().expect("The proposal is verified") {
-            let message = ConsensusMessage {
-                signature,
-                signer_index: index,
-                on: on.clone(),
-            };
-            if !self.votes.is_old_or_known(&message) {
-                if let Err(double_vote) = self.votes.collect(message) {
-                    cerror!(ENGINE, "Double vote found on_commit_message: {:?}", double_vote);
-                }
-            }
-        }
+        //TODO: need a double vote detection algorithm here
 
         // Since the votes needs at least one vote to check the old votes,
         // we should remove old votes after inserting current votes.
         self.votes.throw_out_old(&VoteStep {
-            height: proposal.number() - 1,
+            height: proposal.number().saturating_sub(2),
             view: 0,
             step: Step::Propose,
         });
@@ -1126,11 +1109,14 @@ impl Worker {
             .votes
             .round_signatures_and_indices(&VoteStep::new(height - 1, *last_block_view, Step::Precommit), &parent_hash);
         ctrace!(ENGINE, "Collected seal: {:?}({:?})", precommits, precommit_indices);
+
+        let precommit_signature = aggregate_signatures_bls(&precommits);
         let precommit_bitset = BitSet::new_with_indices(&precommit_indices);
+
         Seal::Tendermint {
             prev_view: *last_block_view,
             cur_view: view,
-            precommits,
+            precommit_signature: Box::new(precommit_signature),
             precommit_bitset,
         }
     }
@@ -1214,30 +1200,10 @@ impl Worker {
         ctrace!(ENGINE, "Verify external at {}-{}, {:?}", height, author_view, header);
         let proposer = header.author();
         if !self.is_authority(header.parent_hash(), proposer) {
-            return Err(EngineError::BlockNotAuthorized(*proposer).into())
+            return Err(EngineError::BlockAuthorNotAuthorized(*proposer).into())
         }
         self.check_view_proposer(header.parent_hash(), header.number(), author_view, &proposer)?;
         let seal_view = TendermintSealView::new(header.seal());
-        let bitset_count = seal_view.bitset()?.count();
-        let precommits_count = seal_view.precommits().item_count()?;
-
-        if bitset_count < precommits_count {
-            cwarn!(
-                ENGINE,
-                "verify_block_external: The header({})'s bitset count is less than the precommits count",
-                header.hash()
-            );
-            return Err(BlockError::InvalidSeal.into())
-        }
-
-        if bitset_count > precommits_count {
-            cwarn!(
-                ENGINE,
-                "verify_block_external: The header({})'s bitset count is greater than the precommits count",
-                header.hash()
-            );
-            return Err(BlockError::InvalidSeal.into())
-        }
 
         let parent_block_finalized_view = TendermintSealView::new(header.seal()).parent_block_finalized_view()?;
         let precommit_vote_on = VoteOn {
@@ -1245,28 +1211,29 @@ impl Worker {
             block_hash: Some(*header.parent_hash()),
         };
 
-        let mut voted_validators = BitSet::new();
         let parent_hash = header.parent_hash();
         let grand_parent_hash =
             self.client().block_header(&(*parent_hash).into()).expect("The parent block must exist").parent_hash();
-        for (bitset_index, signature) in seal_view.signatures()? {
-            let public = match self.validators.get_current(header.parent_hash(), bitset_index) {
+
+        let precommit_signature = seal_view.precommit_signature()?;
+        let precommit_bitset = seal_view.bitset()?;
+        let voted_validator_publics: Vec<_> = precommit_bitset
+            .true_index_iter()
+            .map(|bitset_idx| match self.validators.get_current(parent_hash, bitset_idx) {
                 Some(p) => p,
-                None => self.validators.get(&grand_parent_hash, bitset_index),
-            };
-            if !verify_schnorr(&public, &signature, &precommit_vote_on.hash())? {
-                let address = public_to_address(&public);
-                return Err(EngineError::BlockNotAuthorized(address.to_owned()).into())
-            }
-            assert!(!voted_validators.is_set(bitset_index), "Double vote");
-            voted_validators.set(bitset_index);
+                None => self.validators.get_public(&grand_parent_hash, bitset_idx),
+            })
+            .collect();
+
+        if !verify_aggregated_bls(&voted_validator_publics, &precommit_signature, &precommit_vote_on.hash())? {
+            return Err(EngineError::PrecommitSignatureNotAuthorized.into())
         }
 
         // Genesisblock does not have signatures
         if header.number() == 1 {
             return Ok(())
         }
-        self.validators.check_enough_votes_with_current(&parent_hash, &voted_validators)?;
+        self.validators.check_enough_votes_with_current(&parent_hash, &precommit_bitset)?;
         Ok(())
     }
 
@@ -2024,52 +1991,44 @@ impl Worker {
     }
 
     fn on_request_commit_message(&self, height: Height, result: crossbeam::Sender<Bytes>) {
-        if height >= self.height {
-            return
-        }
+        if height == self.height - 1 {
+            let block = self.client().block(&height.into()).expect("Parent block should exist");
+            let block_hash = block.hash();
+            let finalized_view = self.finalized_view_of_previous_block;
 
-        match height.cmp(&(self.height - 1)) {
-            Ordering::Equal => {
-                let block = self.client().block(&height.into()).expect("Parent block should exist");
-                let block_hash = block.hash();
-                let finalized_view = self.finalized_view_of_previous_block;
+            let votes = self
+                .votes
+                .get_all_votes_in_round(&VoteStep {
+                    height,
+                    view: finalized_view,
+                    step: Step::Precommit,
+                })
+                .into_iter()
+                .filter(|vote| vote.on.block_hash == Some(block_hash))
+                .collect();
 
-                let votes = self
-                    .votes
-                    .get_all_votes_in_round(&VoteStep {
-                        height,
-                        view: finalized_view,
-                        step: Step::Precommit,
-                    })
-                    .into_iter()
-                    .filter(|vote| vote.on.block_hash == Some(block_hash))
-                    .collect();
+            self.send_commit(block, votes, &result);
+        } else if height >= self.height - 2 {
+            let block = self.client().block(&height.into()).expect("Parent block should exist");
+            let block_hash = block.hash();
+            let child_block = self.client().block(&(height + 1).into()).expect("Parent block should exist");
+            let child_block_header_seal = child_block.header().seal();
+            let child_block_seal_view = TendermintSealView::new(&child_block_header_seal);
+            let parent_block_finalized_view =
+                child_block_seal_view.parent_block_finalized_view().expect("Verified block");
 
-                self.send_commit(block, votes, &result);
-            }
-            Ordering::Less => {
-                let block = self.client().block(&height.into()).expect("Parent block should exist");
-                let child_block = self.client().block(&(height + 1).into()).expect("Parent block should exist");
-                let child_block_header_seal = child_block.header().seal();
-                let child_block_seal_view = TendermintSealView::new(&child_block_header_seal);
-                let parent_block_finalized_view =
-                    child_block_seal_view.parent_block_finalized_view().expect("Verified block");
-                let on = VoteOn {
-                    step: VoteStep::new(height, parent_block_finalized_view, Step::Precommit),
-                    block_hash: Some(block.hash()),
-                };
-                let mut votes = Vec::new();
-                for (index, signature) in child_block_seal_view.signatures().expect("The block is verified") {
-                    let message = ConsensusMessage {
-                        signature,
-                        signer_index: index,
-                        on: on.clone(),
-                    };
-                    votes.push(message);
-                }
-                self.send_commit(block, votes, &result);
-            }
-            Ordering::Greater => {}
+            let votes = self
+                .votes
+                .get_all_votes_in_round(&VoteStep {
+                    height,
+                    view: parent_block_finalized_view,
+                    step: Step::Precommit,
+                })
+                .into_iter()
+                .filter(|vote| vote.on.block_hash == Some(block_hash))
+                .collect();
+
+            self.send_commit(block, votes, &result);
         }
     }
 
