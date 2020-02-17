@@ -53,10 +53,9 @@ pub fn execute(
             client_identifier,
             counterparty_client_identifier,
         } => {
-            let connection_manager = ibc_connection::Manager::new();
+            let mut connection_manager = ibc_connection::Manager::new(&mut context);
             connection_manager
                 .handle_open_init(
-                    &mut context,
                     identifier,
                     desired_counterparty_connection_identifier,
                     counterparty_prefix,
@@ -77,10 +76,9 @@ pub fn execute(
             consensus_height,
         } => {
             let mut context = ibc_context::TopLevelContext::new(state, current_block_number);
-            let connection_manager = ibc_connection::Manager::new();
+            let mut connection_manager = ibc_connection::Manager::new(&mut context);
             connection_manager
                 .handle_open_try(
-                    &mut context,
                     desired_identifier,
                     counterparty_connection_identifier,
                     counterparty_prefix,
@@ -103,7 +101,7 @@ fn create_client(
     kind: ibc_client::Kind,
     consensus_state: &[u8],
 ) -> StateResult<()> {
-    let client_manager = ibc_client::Manager::new();
+    let mut client_manager = ibc_client::Manager::new(ctx);
     if kind != ibc_client::KIND_FOUNDRY {
         return Err(RuntimeError::IBC(format!("CreateClient has invalid type {}", kind)).into())
     }
@@ -116,14 +114,14 @@ fn create_client(
     };
 
     client_manager
-        .create(ctx, id, &foundry_consensus_state)
+        .create(id, &foundry_consensus_state)
         .map_err(|err| RuntimeError::IBC(format!("CreateClient: {:?}", err)))?;
     Ok(())
 }
 
 fn update_client(ctx: &mut dyn ibc::Context, id: &str, header: &[u8]) -> StateResult<()> {
-    let client_manager = ibc_client::Manager::new();
-    let client_state = client_manager.query(ctx, id).map_err(RuntimeError::IBC)?;
+    let mut client_manager = ibc_client::Manager::new(ctx);
+    let client_state = client_manager.query(id).map_err(RuntimeError::IBC)?;
 
     client_state.update(ctx, header).map_err(RuntimeError::IBC)?;
 

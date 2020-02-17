@@ -57,9 +57,8 @@ where
         };
 
         let mut context = ibc::context::TopLevelContext::new(&mut state, block_number);
-        let client_manager = ibc::client::Manager::new();
-        let client_state =
-            client_manager.query(&mut context, &client_id).map_err(|_| errors::ibc_client_not_exist())?;
+        let mut client_manager = ibc::client::Manager::new(&mut context);
+        let client_state = client_manager.query(&client_id).map_err(|_| errors::ibc_client_not_exist())?;
 
         let consensus_state = client_state.get_consensus_state(&mut context);
 
@@ -97,9 +96,8 @@ where
         };
 
         let mut context = ibc::context::TopLevelContext::new(&mut state, block_number);
-        let client_manager = ibc::client::Manager::new();
-        let client_state =
-            client_manager.query(&mut context, &client_id).map_err(|_| errors::ibc_client_not_exist())?;
+        let mut client_manager = ibc::client::Manager::new(&mut context);
+        let client_state = client_manager.query(&client_id).map_err(|_| errors::ibc_client_not_exist())?;
 
         let root =
             client_state.get_root(&mut context, other_block_number).map_err(|_| errors::ibc_client_root_not_exist())?;

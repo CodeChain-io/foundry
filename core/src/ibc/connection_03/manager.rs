@@ -21,29 +21,31 @@ use crate::ibc::connection_03::client_connections_path;
 use crate::ibc::connection_03::types::{ConnectionEnd, ConnectionIdentifiersInClient, ConnectionState};
 use rlp::{Encodable, Rlp};
 
-#[derive(Default)]
-pub struct Manager {}
+pub struct Manager<'a> {
+    ctx: &'a mut dyn ibc::Context,
+}
 
 // FIXME: this will be changed after implementing Vector commitment
 fn get_commiment_prefix() -> String {
     "".to_owned()
 }
 
-impl Manager {
-    pub fn new() -> Self {
-        Manager {}
+impl<'a> Manager<'a> {
+    pub fn new(ctx: &'a mut dyn ibc::Context) -> Self {
+        Manager {
+            ctx,
+        }
     }
 
     pub fn handle_open_init(
-        &self,
-        ctx: &mut dyn ibc::Context,
+        &mut self,
         identifier: Identifier,
         desired_counterparty_connection_identifier: Identifier,
         counterparty_prefix: CommitmentPrefix,
         client_identifier: Identifier,
         counterparty_client_identifier: Identifier,
     ) -> Result<(), String> {
-        let kv_store = ctx.get_kv_store();
+        let kv_store = self.ctx.get_kv_store();
         if kv_store.has(&connection_path(&identifier)) {
             return Err("Connection exist".to_owned())
         }
@@ -56,15 +58,14 @@ impl Manager {
             counterparty_client_identifier,
         };
         kv_store.set(&connection_path(&identifier), &connection.rlp_bytes());
-        self.add_connection_to_client(ctx, client_identifier, identifier)?;
+        self.add_connection_to_client(client_identifier, identifier)?;
         Ok(())
     }
 
     // We all following ICS spec.
     #[allow(clippy::too_many_arguments)]
     pub fn handle_open_try(
-        &self,
-        ctx: &mut dyn ibc::Context,
+        &mut self,
         desired_identifier: Identifier,
         counterparty_connection_identifier: Identifier,
         counterparty_prefix: CommitmentPrefix,
@@ -75,7 +76,7 @@ impl Manager {
         proof_height: u64,
         consensus_height: u64,
     ) -> Result<(), String> {
-        let current_height = ctx.get_current_height();
+        let current_height = self.ctx.get_current_height();
         if consensus_height > current_height {
             return Err(format!(
                 "Consensus height {} is greater than current height {}",
@@ -98,9 +99,9 @@ impl Manager {
             counterparty_client_identifier: counterparty_client_identifier.clone(),
         };
 
-        self.verify_connection_state(ctx, &connection, proof_height, proof_init, desired_identifier.clone(), &expected);
+        self.verify_connection_state(&connection, proof_height, proof_init, desired_identifier.clone(), &expected);
 
-        if let Some(previous_connection_end) = self.query(ctx, &desired_identifier) {
+        if let Some(previous_connection_end) = self.query(&desired_identifier) {
             let expected_init = ConnectionEnd {
                 state: ConnectionState::INIT,
                 counterparty_connection_identifier,
@@ -116,13 +117,13 @@ impl Manager {
             }
         }
 
-        let kv_store = ctx.get_kv_store();
+        let kv_store = self.ctx.get_kv_store();
         kv_store.set(&connection_path(&desired_identifier), &connection.rlp_bytes());
         Ok(())
     }
 
-    fn query(&self, ctx: &mut dyn ibc::Context, identifier: &str) -> Option<ConnectionEnd> {
-        let kv_store = ctx.get_kv_store();
+    fn query(&mut self, identifier: &str) -> Option<ConnectionEnd> {
+        let kv_store = self.ctx.get_kv_store();
 
         let path = connection_path(&identifier);
         if kv_store.has(&path) {
@@ -135,8 +136,7 @@ impl Manager {
     }
 
     fn verify_connection_state(
-        &self,
-        ctx: &mut dyn ibc::Context,
+        &mut self,
         connection: &ConnectionEnd,
         proof_height: u64,
         proof: CommitmentProof,
@@ -160,12 +160,11 @@ impl Manager {
     }
 
     fn add_connection_to_client(
-        &self,
-        ctx: &mut dyn ibc::Context,
+        &mut self,
         client_identifier: Identifier,
         connection_identifier: Identifier,
     ) -> Result<(), String> {
-        let kv_store = ctx.get_kv_store();
+        let kv_store = self.ctx.get_kv_store();
         if kv_store.has(&connection_path(&connection_identifier)) {
             return Err("Connection exist".to_owned())
         }
