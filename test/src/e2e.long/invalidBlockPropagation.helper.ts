@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H160, H256, U256 } from "codechain-primitives";
-import { Block } from "codechain-sdk/lib/core/Block";
+import { H160, H256, PlatformAddress, U256 } from "codechain-primitives";
+import { Block } from "foundry-rpc/build/src/chain";
 import "mocha";
 import Test = Mocha.Test;
 import { Mock } from "../helper/mock/";
@@ -29,58 +29,61 @@ async function setup(): Promise<[Header, Block, Header]> {
     });
     await temporaryNode.start();
 
-    const sdk = temporaryNode.sdk;
+    const rpc = temporaryNode.rpc;
 
-    await sdk.rpc.devel.startSealing();
-    await sdk.rpc.devel.startSealing();
+    await rpc.devel!.startSealing();
+    await rpc.devel!.startSealing();
 
-    const block0 = await sdk.rpc.chain.getBlock(0);
+    const block0 = await rpc.chain.getBlockByNumber({ blockNumber: 0 });
     if (block0 == null) {
         throw Error("Cannot get the genesis block");
     }
-    const block1 = await sdk.rpc.chain.getBlock(1);
+    const block1 = await rpc.chain.getBlockByNumber({ blockNumber: 1 });
     if (block1 == null) {
         throw Error("Cannot get the first block");
     }
-    const block2 = await sdk.rpc.chain.getBlock(2);
+    const block2 = await rpc.chain.getBlockByNumber({ blockNumber: 2 });
     if (block2 == null) {
         throw Error("Cannot get the second block");
     }
 
     await temporaryNode.clean();
+    const authorPaddress = PlatformAddress.fromString(block0.author);
     const header0 = new Header(
-        block0.parentHash,
+        new H256(block0.parentHash),
         new U256(block0.timestamp),
         new U256(block0.number),
-        block0.author.accountId,
+        authorPaddress.accountId,
         Buffer.from(block0.extraData),
-        block0.transactionsRoot,
-        block0.stateRoot,
-        block0.nextValidatorSetHash,
-        block0.score,
+        new H256(block0.transactionsRoot),
+        new H256(block0.nextValidatorSetHash),
+        new H256(block0.stateRoot),
+        new U256(`${block0.score}`),
         block0.seal
     );
+    const author1 = PlatformAddress.fromString(block1.author);
     const header1 = new Header(
         header0.hashing(),
         new U256(block1.timestamp),
         new U256(block1.number),
-        block1.author.accountId,
+        author1.accountId,
         Buffer.from(block1.extraData),
-        block1.transactionsRoot,
-        block1.stateRoot,
-        block1.nextValidatorSetHash,
+        new H256(block1.transactionsRoot),
+        new H256(block1.nextValidatorSetHash),
+        new H256(block1.stateRoot),
         new U256(2222222222222),
         block1.seal
     );
+    const author3 = PlatformAddress.fromString(block0.author);
     const header2 = new Header(
         header1.hashing(),
         new U256(block2.timestamp),
         new U256(block2.number),
-        block2.author.accountId,
+        author3.accountId,
         Buffer.from(block2.extraData),
-        block2.transactionsRoot,
-        block2.stateRoot,
-        block2.nextValidatorSetHash,
+        new H256(block2.transactionsRoot),
+        new H256(block2.nextValidatorSetHash),
+        new H256(block2.stateRoot),
         new U256(33333333333333),
         block2.seal
     );
@@ -136,15 +139,16 @@ async function testBody(
     const bestHash = header2.hashing();
     const bestScore = header2.getScore();
 
+    const author4 = PlatformAddress.fromString(block1.author);
     const header = new Header(
         header0.hashing(),
         new U256(block1.timestamp),
         new U256(block1.number),
-        block1.author.accountId,
+        author4.accountId,
         Buffer.from(block1.extraData),
-        block1.transactionsRoot,
-        block1.stateRoot,
-        block1.nextValidatorSetHash,
+        new H256(block1.transactionsRoot),
+        new H256(block1.nextValidatorSetHash),
+        new H256(block1.stateRoot),
         new U256(2222222222222),
         block1.seal
     );

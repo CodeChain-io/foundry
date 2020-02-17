@@ -38,7 +38,7 @@ describe("account unlock", function() {
             { networkId: "tc" }
         );
         const passphrase = makeRandomPassphrase();
-        await node.sdk.rpc.account.importRaw(secret, passphrase);
+        await node.rpc.account.importRaw({ secret: `0x${secret}`, passphrase });
 
         for (let i = 0; i < unlockTestSize; i++) {
             const message = makeRandomH256();
@@ -46,14 +46,19 @@ describe("account unlock", function() {
                 message,
                 secret
             );
-            await node.sdk.rpc.account.unlock(address, passphrase, 1);
+            await node.rpc.account.unlock({
+                account: address.toString(),
+                passphrase,
+                duration: 1
+            });
 
             for (let j = 0; j <= 2; j++) {
                 try {
-                    const signature = await node.sdk.rpc.account.sign(
-                        message,
-                        address
-                    );
+                    const signature = await node.rpc.account.sign({
+                        message: `0x${message}`,
+                        account: address.toString(),
+                        passphrase: null
+                    });
                     expect(signature).to.equal(`0x${calculatedSignature}`);
                 } catch (e) {
                     expect.fail(e);
@@ -63,10 +68,14 @@ describe("account unlock", function() {
             await wait(1000 - 100 * 3);
 
             try {
-                await node.sdk.rpc.account.sign(message, address);
+                await node.rpc.account.sign({
+                    message: `0x${message}`,
+                    account: address.toString(),
+                    passphrase: null
+                });
                 expect.fail();
             } catch (e) {
-                expect(e).similarTo(ERROR.NOT_UNLOCKED);
+                expect(e.toString()).include(ERROR.NOT_UNLOCKED);
             }
         }
     }).timeout(2000 * unlockTestSize + 5000);

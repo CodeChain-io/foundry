@@ -32,16 +32,16 @@ describe("account", function() {
         });
 
         it(`Scenario #1: getList & create ${testSize} accounts`, async function() {
-            let list = await node.sdk.rpc.account.getList();
+            let list = await node.rpc.account.getList();
             expect(list.length).to.equal(0);
 
             const accountList = [];
             for (let i = 0; i < testSize; i++) {
                 const passphrase = makeRandomPassphrase();
-                const address = await node.sdk.rpc.account.create(passphrase);
+                const address = await node.rpc.account.create({ passphrase });
                 accountList.push({ address, passphrase });
 
-                list = await node.sdk.rpc.account.getList();
+                list = await node.rpc.account.getList();
                 expect(list.length).to.equal(i + 1);
                 for (let j = 0; j <= i; j++) {
                     expect(list).to.include(accountList[i].address);
@@ -62,10 +62,10 @@ describe("account", function() {
                 const randomPassphrase = makeRandomPassphrase();
 
                 expect(
-                    await node.sdk.rpc.account.importRaw(
-                        randomSecret,
-                        randomPassphrase
-                    )
+                    await node.rpc.account.importRaw({
+                        secret: `0x${randomSecret}`,
+                        passphrase: randomPassphrase
+                    })
                 ).to.equal(address.toString());
             }
         }).timeout(500 * testSize + 5000);
@@ -101,9 +101,9 @@ describe("account", function() {
                     case Action.Create:
                         {
                             const passphrase = makeRandomPassphrase();
-                            const address = await node.sdk.rpc.account.create(
+                            const address = await node.rpc.account.create({
                                 passphrase
-                            );
+                            });
                             accountList.push({ address, passphrase });
                         }
                         break;
@@ -119,10 +119,10 @@ describe("account", function() {
                             ).toString();
                             const passphrase = makeRandomPassphrase();
                             expect(
-                                await node.sdk.rpc.account.importRaw(
-                                    secret,
+                                await node.rpc.account.importRaw({
+                                    secret: `0x${secret}`,
                                     passphrase
-                                )
+                                })
                             ).to.equal(address);
                             accountList.push({
                                 address,
@@ -133,7 +133,7 @@ describe("account", function() {
                         break;
                     case Action.GetList:
                         {
-                            const list = await node.sdk.rpc.account.getList();
+                            const list = await node.rpc.account.getList();
                             expect(list.length).to.equal(accountList.length);
                             accountList.forEach(value => {
                                 expect(list).to.include(value.address);
@@ -148,11 +148,12 @@ describe("account", function() {
                             const { address, passphrase } = accountList[
                                 randomIdx
                             ];
-                            await node.sdk.rpc.account.unlock(
-                                address,
-                                passphrase,
-                                0
-                            );
+                            await node.rpc.account.unlock({
+                                account: address.toString(),
+                                passphrase:
+                                    passphrase == null ? "" : passphrase,
+                                duration: 0
+                            });
                             accountList[randomIdx].passphrase = undefined;
                         }
                         break;
@@ -179,11 +180,11 @@ describe("account", function() {
                                 message,
                                 secret!
                             );
-                            const signature = await node.sdk.rpc.account.sign(
-                                message,
-                                address,
-                                passphrase
-                            );
+                            const signature = await node.rpc.account.sign({
+                                message: `0x${message}`,
+                                account: address,
+                                passphrase: passphrase!
+                            });
                             expect(signature).to.equal(
                                 `0x${calculatedSignature}`
                             );
@@ -202,10 +203,11 @@ describe("account", function() {
                             }
 
                             const nextPassphrase = makeRandomPassphrase();
-                            await node.sdk.rpc.sendRpcRequest(
-                                "account_changePassword",
-                                [address, passphrase, nextPassphrase]
-                            );
+                            await node.rpc.account.changePassword({
+                                account: address,
+                                oldPassphrase: passphrase,
+                                newPassphrase: nextPassphrase
+                            });
                             accountList[randomIdx].passphrase = nextPassphrase;
                         }
                         break;

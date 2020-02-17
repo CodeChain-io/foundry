@@ -63,21 +63,11 @@ describe("discovery5 nodes", function() {
             nodes[4].waitPeers(numOfNodes - 1)
         ]);
 
-        expect(await nodes[0].sdk.rpc.network.getPeerCount()).to.equal(
-            numOfNodes - 1
-        );
-        expect(await nodes[1].sdk.rpc.network.getPeerCount()).to.equal(
-            numOfNodes - 1
-        );
-        expect(await nodes[2].sdk.rpc.network.getPeerCount()).to.equal(
-            numOfNodes - 1
-        );
-        expect(await nodes[3].sdk.rpc.network.getPeerCount()).to.equal(
-            numOfNodes - 1
-        );
-        expect(await nodes[4].sdk.rpc.network.getPeerCount()).to.equal(
-            numOfNodes - 1
-        );
+        expect(await nodes[0].rpc.net.getPeerCount()).to.equal(numOfNodes - 1);
+        expect(await nodes[1].rpc.net.getPeerCount()).to.equal(numOfNodes - 1);
+        expect(await nodes[2].rpc.net.getPeerCount()).to.equal(numOfNodes - 1);
+        expect(await nodes[3].rpc.net.getPeerCount()).to.equal(numOfNodes - 1);
+        expect(await nodes[4].rpc.net.getPeerCount()).to.equal(numOfNodes - 1);
     }).timeout(50_000);
 
     afterEach(async function() {
