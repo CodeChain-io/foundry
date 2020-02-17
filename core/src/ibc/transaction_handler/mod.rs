@@ -30,21 +30,22 @@ use rlp::{Decodable, Rlp};
 pub fn execute(
     bytes: &[u8],
     state: &mut TopLevelState,
-    fee_payer: &Address,
+    _fee_payer: &Address,
     _sender_public: &Public,
     current_block_number: u64,
 ) -> StateResult<()> {
+    let mut context = ibc_context::TopLevelContext::new(state, current_block_number);
     let datagram = Datagram::decode(&Rlp::new(bytes)).expect("Verification passed");
     match datagram {
         Datagram::CreateClient {
             id,
             kind,
             consensus_state,
-        } => create_client(state, fee_payer, &id, kind, &consensus_state, current_block_number),
+        } => create_client(&mut context, &id, kind, &consensus_state),
         Datagram::UpdateClient {
             id,
             header,
-        } => update_client(state, &id, &header, current_block_number),
+        } => update_client(&mut context, &id, &header),
         Datagram::ConnOpenInit {
             identifier,
             desired_counterparty_connection_identifier,
@@ -52,7 +53,6 @@ pub fn execute(
             client_identifier,
             counterparty_client_identifier,
         } => {
-            let mut context = ibc_context::TopLevelContext::new(state, current_block_number);
             let connection_manager = ibc_connection::Manager::new();
             connection_manager
                 .handle_open_init(
@@ -98,14 +98,11 @@ pub fn execute(
 
 
 fn create_client(
-    state: &mut TopLevelState,
-    _fee_payer: &Address,
+    ctx: &mut dyn ibc::Context,
     id: &str,
     kind: ibc_client::Kind,
     consensus_state: &[u8],
-    current_block_number: u64,
 ) -> StateResult<()> {
-    let mut context = ibc_context::TopLevelContext::new(state, current_block_number);
     let client_manager = ibc_client::Manager::new();
     if kind != ibc_client::KIND_FOUNDRY {
         return Err(RuntimeError::IBC(format!("CreateClient has invalid type {}", kind)).into())
@@ -119,17 +116,16 @@ fn create_client(
     };
 
     client_manager
-        .create(&mut context, id, &foundry_consensus_state)
+        .create(ctx, id, &foundry_consensus_state)
         .map_err(|err| RuntimeError::IBC(format!("CreateClient: {:?}", err)))?;
     Ok(())
 }
 
-fn update_client(state: &mut TopLevelState, id: &str, header: &[u8], current_block_number: u64) -> StateResult<()> {
-    let mut context = ibc_context::TopLevelContext::new(state, current_block_number);
+fn update_client(ctx: &mut dyn ibc::Context, id: &str, header: &[u8]) -> StateResult<()> {
     let client_manager = ibc_client::Manager::new();
-    let client_state = client_manager.query(&mut context, id).map_err(RuntimeError::IBC)?;
+    let client_state = client_manager.query(ctx, id).map_err(RuntimeError::IBC)?;
 
-    client_state.update(&mut context, header).map_err(RuntimeError::IBC)?;
+    client_state.update(ctx, header).map_err(RuntimeError::IBC)?;
 
     Ok(())
 }
