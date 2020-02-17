@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use ccrypto::blake256;
-use ckey::Public;
+use ckey::BlsPublic;
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 // It will be hashed in the header.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CompactValidatorSet(pub Vec<(Public, u64)>);
+pub struct CompactValidatorSet(pub Vec<(BlsPublic, u64)>);
 
 impl CompactValidatorSet {
     pub fn hash(&self) -> H256 {
@@ -59,7 +59,7 @@ impl Decodable for CompactValidatorSet {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ccrypto::blake512;
+    use ckey::BlsPublic;
     use rand::{rngs::StdRng, Rng};
     use rlp::rlp_encode_and_decode_test;
 
@@ -77,7 +77,8 @@ mod tests {
             let n = rng.gen::<u8>();
 
             for _ in 0..n {
-                vset.0.push((blake512(format!("{}", rng.gen::<u64>())), rng.gen::<u64>()));
+                // TODO: replace random() into random(rng)
+                vset.0.push((BlsPublic::random(), rng.gen::<u64>()));
             }
             rlp_encode_and_decode_test!(vset);
         }

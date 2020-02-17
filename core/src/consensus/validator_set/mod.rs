@@ -18,7 +18,7 @@ use self::validator_list::RoundRobinValidator;
 use super::BitSet;
 use crate::client::ConsensusClient;
 use crate::consensus::EngineError;
-use ckey::{Address, Public};
+use ckey::{Address, BlsPublic};
 use ctypes::BlockHash;
 use std::sync::Weak;
 
@@ -31,16 +31,19 @@ pub use self::dynamic_validator::DynamicValidator;
 pub trait ValidatorSet: Send + Sync {
     /// Checks if a given public key is a validator,
     /// using underlying, default call mechanism.
-    fn contains(&self, parent: &BlockHash, public: &Public) -> bool;
+    fn contains_public(&self, parent: &BlockHash, public: &BlsPublic) -> bool;
 
     /// Checks if a given address is a validator.
     fn contains_address(&self, parent: &BlockHash, address: &Address) -> bool;
 
     /// Draws a validator from index modulo number of validators.
-    fn get(&self, parent: &BlockHash, index: usize) -> Public;
+    fn get_public(&self, parent: &BlockHash, index: usize) -> BlsPublic;
+
+    // Draws a validator address from index modulo number of validators.
+    fn get_address(&self, parent: &BlockHash, index: usize) -> Address;
 
     /// Draws a validator from nonce modulo number of validators.
-    fn get_index(&self, parent: &BlockHash, public: &Public) -> Option<usize>;
+    fn get_index(&self, parent: &BlockHash, public: &BlsPublic) -> Option<usize>;
 
     /// Draws a validator index from validator address.
     fn get_index_by_address(&self, parent: &BlockHash, address: &Address) -> Option<usize>;

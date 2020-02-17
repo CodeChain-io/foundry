@@ -46,7 +46,10 @@ use crate::scheme::Scheme;
 use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction};
 use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
 use ccrypto::BLAKE_NULL_RLP;
-use ckey::{public_to_address, Address, Generator, KeyPair, NetworkId, PlatformAddress, Private, Public, Random};
+use ckey::{
+    public_to_address, Address, BlsKeyPair, BlsPrivate, BlsPublic, Generator, KeyPair, NetworkId, PlatformAddress,
+    Private, Public, Random,
+};
 use cnetwork::NodeId;
 use cstate::tests::helpers::empty_top_state;
 use cstate::{FindActionHandler, StateDB, TopLevelState};
@@ -99,7 +102,7 @@ pub struct TestBlockChainClient {
     /// Term ID
     pub term_id: Option<u64>,
     /// Fixed validator keys
-    pub validator_keys: RwLock<HashMap<Public, Private>>,
+    pub validator_keys: RwLock<HashMap<BlsPublic, BlsPrivate>>,
     /// Fixed validators
     pub validators: NextValidators,
 }
@@ -308,15 +311,16 @@ impl TestBlockChainClient {
 
     /// Set validators which can be brought from state.
     pub fn set_random_validators(&mut self, count: usize) {
-        let mut pubkeys: Vec<Public> = vec![];
+        let mut validators: Vec<(Address, BlsPublic)> = vec![];
         for _ in 0..count {
-            let random_priv_key = Private::from(H256::random());
-            let key_pair = KeyPair::from_private(random_priv_key).unwrap();
-            self.validator_keys.write().insert(*key_pair.public(), *key_pair.private());
-            pubkeys.push(*key_pair.public());
+            let random_secret = H256::random();
+            let bls_key_pair = BlsKeyPair::from_secret(random_secret);
+            let address = KeyPair::from_private(Private::from(random_secret)).unwrap().address();
+            self.validator_keys.write().insert(*bls_key_pair.public(), *bls_key_pair.private());
+            validators.push((address, *bls_key_pair.public()));
         }
         let fixed_validators: NextValidators = NextValidators::from_vector_to_test(
-            pubkeys.into_iter().map(|pubkey| Validator::new_for_test(0, 0, pubkey)).collect(),
+            validators.into_iter().map(|validator| Validator::new_for_test(0, 0, validator.1, validator.0)).collect(),
         );
 
         self.validators = fixed_validators;
