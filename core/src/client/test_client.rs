@@ -48,7 +48,7 @@ use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::{
     public_to_address, Address, BlsKeyPair, BlsPrivate, BlsPublic, Generator, KeyPair, NetworkId, PlatformAddress,
-    Private, Public, Random,
+    Private, Random,
 };
 use cnetwork::NodeId;
 use cstate::tests::helpers::empty_top_state;
