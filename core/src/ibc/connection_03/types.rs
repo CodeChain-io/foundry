@@ -45,6 +45,8 @@ impl rlp::Decodable for ConnectionState {
 
 // FIXME: current commitment_23::Prefix is too generic.
 pub type CommitmentPrefix = String;
+// FIXME: This type will be replaced after commitment code changed.
+pub type CommitmentProof = String;
 pub type Identifier = String;
 
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]

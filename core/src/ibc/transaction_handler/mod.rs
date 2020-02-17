@@ -65,6 +65,34 @@ pub fn execute(
                 )
                 .map_err(|err| RuntimeError::IBC(format!("ConnOpenInit: {}", err)).into())
         }
+        Datagram::ConnOpenTry {
+            desired_identifier,
+            counterparty_connection_identifier,
+            counterparty_prefix,
+            counterparty_client_identifier,
+            client_identifier,
+            proof_init,
+            proof_consensus,
+            proof_height,
+            consensus_height,
+        } => {
+            let mut context = ibc_context::TopLevelContext::new(state, current_block_number);
+            let connection_manager = ibc_connection::Manager::new();
+            connection_manager
+                .handle_open_try(
+                    &mut context,
+                    desired_identifier,
+                    counterparty_connection_identifier,
+                    counterparty_prefix,
+                    counterparty_client_identifier,
+                    client_identifier,
+                    proof_init,
+                    proof_consensus,
+                    proof_height,
+                    consensus_height,
+                )
+                .map_err(|err| RuntimeError::IBC(format!("ConnOpenTry: {}", err)).into())
+        }
     }
 }
 
