@@ -76,11 +76,6 @@ impl EngineSigner {
         Ok(result)
     }
 
-    /// Public Key of signer.
-    pub fn public(&self) -> Option<&Public> {
-        self.signer.as_ref().map(|(_address, public)| public)
-    }
-
     /// Address of signer.
     pub fn address(&self) -> Option<&Address> {
         self.signer.as_ref().map(|(address, _)| address)

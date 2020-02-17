@@ -32,7 +32,7 @@ use crate::encoded;
 use crate::error::Error;
 use crate::views::HeaderView;
 use crate::BlockId;
-use ckey::{public_to_address, Address};
+use ckey::Address;
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{ActionHandler, TopState, TopStateView};
@@ -247,7 +247,7 @@ impl ConsensusEngine for Tendermint {
                 let start_of_the_current_term = metadata.last_term_finished_block_num() + 1;
                 let validators = stake::NextValidators::load_from_state(block.state())?
                     .into_iter()
-                    .map(|val| public_to_address(val.pubkey()))
+                    .map(|val| *val.address())
                     .collect();
                 inactive_validators(&*client, start_of_the_current_term, block.header(), validators)
             }

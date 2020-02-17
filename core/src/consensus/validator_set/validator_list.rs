@@ -19,52 +19,54 @@ use super::ValidatorSet;
 use crate::client::ConsensusClient;
 use crate::consensus::EngineError;
 use crate::types::BlockId;
-use ckey::{public_to_address, Address, Public};
+use ckey::{Address, BlsPublic};
 use ctypes::util::unexpected::OutOfBounds;
 use ctypes::BlockHash;
 use parking_lot::RwLock;
-use std::collections::HashSet;
 use std::sync::{Arc, Weak};
 
 /// Validator set containing a known set of public keys.
 pub struct RoundRobinValidator {
-    validators: Vec<Public>,
-    addresses: HashSet<Address>,
+    validators: Vec<(Address, BlsPublic)>,
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
 }
 
 impl RoundRobinValidator {
-    pub fn new(validators: Vec<Public>) -> Self {
-        let addresses = validators.iter().map(public_to_address).collect();
+    pub fn new(validators: Vec<(Address, BlsPublic)>) -> Self {
         RoundRobinValidator {
             validators,
-            addresses,
             client: Default::default(),
         }
     }
 }
 
 impl ValidatorSet for RoundRobinValidator {
-    fn contains(&self, _bh: &BlockHash, public: &Public) -> bool {
-        self.validators.contains(public)
+    fn contains_public(&self, _bh: &BlockHash, public: &BlsPublic) -> bool {
+        self.validators.iter().any(|(_a, p)| p == public)
     }
 
     fn contains_address(&self, _bh: &BlockHash, address: &Address) -> bool {
-        self.addresses.contains(address)
+        self.validators.iter().any(|(a, _p)| a == address)
     }
 
-    fn get(&self, _bh: &BlockHash, index: usize) -> Public {
+    fn get_public(&self, _bh: &BlockHash, index: usize) -> BlsPublic {
         let validator_n = self.validators.len();
         assert_ne!(0, validator_n, "Cannot operate with an empty validator set.");
-        *self.validators.get(index % validator_n).expect("There are validator_n authorities; taking number modulo validator_n gives number in validator_n range; qed")
+        (*self.validators.get(index % validator_n).expect("There are validator_n authorities; taking number modulo validator_n gives number in validator_n range; qed")).1
     }
 
-    fn get_index(&self, _bh: &BlockHash, public: &Public) -> Option<usize> {
-        self.validators.iter().position(|v| v == public)
+    fn get_address(&self, _bh: &BlockHash, index: usize) -> Address {
+        let validator_n = self.validators.len();
+        assert_ne!(0, validator_n, "Cannot operate with an empty validator set.");
+        (*self.validators.get(index % validator_n).expect("There are validator_n authorities; taking number modulo validator_n gives number in validator_n range; qed")).0
+    }
+
+    fn get_index(&self, _bh: &BlockHash, public: &BlsPublic) -> Option<usize> {
+        self.validators.iter().position(|(_a, p)| p == public)
     }
 
     fn get_index_by_address(&self, _bh: &BlockHash, address: &Address) -> Option<usize> {
-        self.validators.iter().position(|v| public_to_address(v) == *address)
+        self.validators.iter().position(|(a, _p)| a == address)
     }
 
     fn next_block_proposer(&self, parent: &BlockHash, view: u64) -> Option<Address> {
@@ -76,7 +78,7 @@ impl ValidatorSet for RoundRobinValidator {
                 self.get_index_by_address(&grand_parent, &proposer).expect("The proposer must be in the validator set");
             let proposer_index = prev_proposer_idx + 1 + view as usize;
             ctrace!(ENGINE, "Proposer index: {}", proposer_index);
-            public_to_address(&self.get(&parent, proposer_index))
+            self.get_address(&parent, proposer_index)
         })
     }
 
@@ -104,35 +106,33 @@ impl ValidatorSet for RoundRobinValidator {
     }
 
     fn previous_addresses(&self, _hash: &BlockHash) -> Vec<Address> {
-        self.validators.iter().map(public_to_address).collect()
+        self.validators.iter().map(|(a, _p)| *a).collect()
     }
 
     fn current_addresses(&self, _hash: &BlockHash) -> Vec<Address> {
-        self.validators.iter().map(public_to_address).collect()
+        self.validators.iter().map(|(a, _p)| *a).collect()
     }
 
     fn next_addresses(&self, _hash: &BlockHash) -> Vec<Address> {
-        self.validators.iter().map(public_to_address).collect()
+        self.validators.iter().map(|(a, _p)| *a).collect()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use ckey::Public;
-
     use super::super::ValidatorSet;
-    use super::RoundRobinValidator;
+    use super::{Address, BlsPublic, RoundRobinValidator};
 
     #[test]
     fn validator_set() {
-        let a1 = Public::from_str("34959b60d54703e9dfe36afb1e9950a4abe34d666cbb64c92969013bc9cc74063f9e4680d9d48c4597ee623bd4b507a1b2f43a9c5766a06463f85b73a94c51d1").unwrap();
-        let a2 = Public::from_str("8c5a25bfafceea03073e2775cfb233a46648a088c12a1ca18a5865534887ccf60e1670be65b5f8e29643f463fdf84b1cbadd6027e71d8d04496570cb6b04885d").unwrap();
-        let set = RoundRobinValidator::new(vec![a1, a2]);
-        assert!(set.contains(&Default::default(), &a1));
-        assert_eq!(set.get(&Default::default(), 0), a1);
-        assert_eq!(set.get(&Default::default(), 1), a2);
-        assert_eq!(set.get(&Default::default(), 2), a1);
+        let a1 = Address::random();
+        let p1 = BlsPublic::random();
+        let a2 = Address::random();
+        let p2 = BlsPublic::random();
+        let set = RoundRobinValidator::new(vec![(a1, p1), (a2, p2)]);
+        assert!(set.contains_public(&Default::default(), &p1));
+        assert_eq!(set.get_public(&Default::default(), 0), p1);
+        assert_eq!(set.get_public(&Default::default(), 1), p2);
+        assert_eq!(set.get_public(&Default::default(), 2), p1);
     }
 }

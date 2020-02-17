@@ -1425,20 +1425,19 @@ impl Worker {
                 })
             }
 
-            let sender_public = self.validators.get(&prev_block_hash, signer_index);
+            let sender_public = self.validators.get_public(&prev_block_hash, signer_index);
+            let sender_address = self.validators.get_address(&prev_block_hash, signer_index);
 
             if !message.verify(&sender_public).map_err(fmt_err)? {
                 return Err(EngineError::MessageWithInvalidSignature {
                     height: prev_height,
                     signer_index,
-                    address: public_to_address(&sender_public),
+                    address: sender_address,
                 })
             }
 
-            let sender = public_to_address(&sender_public);
-
             if message.on.step > self.vote_step() {
-                ctrace!(ENGINE, "Ignore future message {:?} from {}.", message, sender);
+                ctrace!(ENGINE, "Ignore future message {:?} from {}.", message, sender_address);
                 return Ok(())
             }
 
@@ -1465,9 +1464,9 @@ impl Worker {
             if let Err(double) = self.votes.collect(message.clone()) {
                 cerror!(ENGINE, "Double vote found {:?}", double);
                 self.report_double_vote(&double);
-                return Err(EngineError::DoubleVote(sender))
+                return Err(EngineError::DoubleVote(sender_address))
             }
-            ctrace!(ENGINE, "Handling a valid {:?} from {}.", message, sender);
+            ctrace!(ENGINE, "Handling a valid {:?} from {}.", message, sender_address);
             self.handle_valid_message(&message, is_restoring);
         }
         Ok(())
@@ -1636,7 +1635,7 @@ impl Worker {
     fn signer_index(&self) -> Option<usize> {
         let parent = self.prev_block_hash();
         // FIXME: More effecient way to find index
-        self.signer.public().and_then(|public| self.validators.get_index(&parent, public))
+        self.signer.address().and_then(|address| self.validators.get_index_by_address(&parent, address))
     }
 
     fn new_blocks(&mut self, imported: Vec<BlockHash>, enacted: Vec<BlockHash>) {
@@ -1830,7 +1829,7 @@ impl Worker {
                 return None
             }
 
-            let signer_public = self.validators.get(&parent_hash, message.signer_index);
+            let signer_public = self.validators.get_public(&parent_hash, message.signer_index);
             match message.verify(&signer_public) {
                 Ok(false) => {
                     cwarn!(ENGINE, "Proposal verification failed: signer is different");
@@ -2174,8 +2173,8 @@ impl Worker {
                 );
                 return None
             }
-
-            let sender_public = self.validators.get(&prev_block_hash, signer_index);
+            let sender_public = self.validators.get_public(&prev_block_hash, signer_index);
+            let sender_address = self.validators.get_address(&prev_block_hash, signer_index);
 
             match vote.verify(&sender_public) {
                 Err(err) => {
@@ -2184,7 +2183,7 @@ impl Worker {
                         "Invalid commit message-{} received: invalid signature signer_index: {} address: {} internal error: {:?}",
                         commit_height,
                         signer_index,
-                        public_to_address(&sender_public),
+                        sender_address,
                         err
                     );
                     return None
@@ -2195,7 +2194,7 @@ impl Worker {
                         "Invalid commit message-{} received: invalid signature signer_index: {} address: {}",
                         commit_height,
                         signer_index,
-                        public_to_address(&sender_public)
+                        sender_address,
                     );
                     return None
                 }

@@ -19,7 +19,7 @@ use crate::client::ConsensusClient;
 use crate::consensus::bit_set::BitSet;
 use crate::consensus::stake::{CurrentValidators, NextValidators, PreviousValidators, Validator};
 use crate::consensus::EngineError;
-use ckey::{public_to_address, Address, Public};
+use ckey::{Address, BlsPublic};
 use ctypes::util::unexpected::OutOfBounds;
 use ctypes::BlockHash;
 use parking_lot::RwLock;
@@ -32,7 +32,7 @@ pub struct DynamicValidator {
 }
 
 impl DynamicValidator {
-    pub fn new(initial_validators: Vec<Public>) -> Self {
+    pub fn new(initial_validators: Vec<(Address, BlsPublic)>) -> Self {
         DynamicValidator {
             initial_list: RoundRobinValidator::new(initial_validators),
             client: Default::default(),
@@ -108,16 +108,24 @@ impl DynamicValidator {
         }
     }
 
-    fn validators_pubkey(&self, hash: BlockHash) -> Option<Vec<Public>> {
+    fn validators_pubkey(&self, hash: BlockHash) -> Option<Vec<BlsPublic>> {
         self.next_validators(hash).map(|validators| validators.into_iter().map(|val| *val.pubkey()).collect())
     }
 
-    fn current_validators_pubkey(&self, hash: BlockHash) -> Option<Vec<Public>> {
+    fn current_validators_pubkey(&self, hash: BlockHash) -> Option<Vec<BlsPublic>> {
         self.current_validators(hash).map(|validators| validators.into_iter().map(|val| *val.pubkey()).collect())
     }
 
-    fn previous_validators_pubkey(&self, hash: BlockHash) -> Option<Vec<Public>> {
-        self.previous_validators(hash).map(|validators| validators.into_iter().map(|val| *val.pubkey()).collect())
+    fn validators_address(&self, hash: BlockHash) -> Option<Vec<Address>> {
+        self.next_validators(hash).map(|validators| validators.into_iter().map(|val| *val.address()).collect())
+    }
+
+    fn current_validators_address(&self, hash: BlockHash) -> Option<Vec<Address>> {
+        self.current_validators(hash).map(|validators| validators.into_iter().map(|val| *val.address()).collect())
+    }
+
+    fn previous_validators_address(&self, hash: BlockHash) -> Option<Vec<Address>> {
+        self.previous_validators(hash).map(|validators| validators.into_iter().map(|val| *val.address()).collect())
     }
 
     pub fn proposer_index(&self, parent: BlockHash, prev_proposer_index: usize, proposed_view: usize) -> usize {
@@ -130,7 +138,7 @@ impl DynamicValidator {
         }
     }
 
-    pub fn get_current(&self, hash: &BlockHash, index: usize) -> Option<Public> {
+    pub fn get_current(&self, hash: &BlockHash, index: usize) -> Option<BlsPublic> {
         let validators = self.current_validators_pubkey(*hash)?;
         let n_validators = validators.len();
         Some(*validators.get(index % n_validators).unwrap())
@@ -170,32 +178,41 @@ impl DynamicValidator {
 }
 
 impl ValidatorSet for DynamicValidator {
-    fn contains(&self, parent: &BlockHash, public: &Public) -> bool {
+    fn contains_public(&self, parent: &BlockHash, public: &BlsPublic) -> bool {
         if let Some(validators) = self.validators_pubkey(*parent) {
             validators.into_iter().any(|pubkey| pubkey == *public)
         } else {
-            self.initial_list.contains(parent, public)
+            self.initial_list.contains_public(parent, public)
         }
     }
 
     fn contains_address(&self, parent: &BlockHash, address: &Address) -> bool {
-        if let Some(validators) = self.validators_pubkey(*parent) {
-            validators.into_iter().any(|pubkey| public_to_address(&pubkey) == *address)
+        if let Some(validators) = self.validators_address(*parent) {
+            validators.into_iter().any(|addr| addr == *address)
         } else {
             self.initial_list.contains_address(parent, address)
         }
     }
 
-    fn get(&self, parent: &BlockHash, index: usize) -> Public {
+    fn get_public(&self, parent: &BlockHash, index: usize) -> BlsPublic {
         if let Some(validators) = self.validators_pubkey(*parent) {
             let n_validators = validators.len();
             *validators.get(index % n_validators).unwrap()
         } else {
-            self.initial_list.get(parent, index)
+            self.initial_list.get_public(parent, index)
         }
     }
 
-    fn get_index(&self, parent: &BlockHash, public: &Public) -> Option<usize> {
+    fn get_address(&self, parent: &BlockHash, index: usize) -> Address {
+        if let Some(validators) = self.validators_address(*parent) {
+            let n_validators = validators.len();
+            *validators.get(index % n_validators).unwrap()
+        } else {
+            self.initial_list.get_address(parent, index)
+        }
+    }
+
+    fn get_index(&self, parent: &BlockHash, public: &BlsPublic) -> Option<usize> {
         if let Some(validators) = self.validators_pubkey(*parent) {
             validators.into_iter().enumerate().find(|(_index, pubkey)| pubkey == public).map(|(index, _)| index)
         } else {
@@ -204,22 +221,18 @@ impl ValidatorSet for DynamicValidator {
     }
 
     fn get_index_by_address(&self, parent: &BlockHash, address: &Address) -> Option<usize> {
-        if let Some(validators) = self.validators_pubkey(*parent) {
-            validators
-                .into_iter()
-                .enumerate()
-                .find(|(_index, pubkey)| public_to_address(pubkey) == *address)
-                .map(|(index, _)| index)
+        if let Some(validators) = self.validators_address(*parent) {
+            validators.into_iter().enumerate().find(|(_index, addr)| addr == address).map(|(index, _)| index)
         } else {
             self.initial_list.get_index_by_address(parent, address)
         }
     }
 
     fn next_block_proposer(&self, parent: &BlockHash, view: u64) -> Option<Address> {
-        if let Some(validators) = self.validators_pubkey(*parent) {
+        if let Some(validators) = self.validators_address(*parent) {
             let n_validators = validators.len();
             let index = view as usize % n_validators;
-            Some(public_to_address(validators.get(index).unwrap()))
+            Some(*validators.get(index).unwrap())
         } else {
             self.initial_list.next_block_proposer(parent, view)
         }
@@ -272,24 +285,24 @@ impl ValidatorSet for DynamicValidator {
     }
 
     fn previous_addresses(&self, hash: &BlockHash) -> Vec<Address> {
-        if let Some(validators) = self.previous_validators_pubkey(*hash) {
-            validators.iter().map(public_to_address).collect()
+        if let Some(validators) = self.previous_validators_address(*hash) {
+            validators
         } else {
             self.initial_list.previous_addresses(hash)
         }
     }
 
     fn current_addresses(&self, hash: &BlockHash) -> Vec<Address> {
-        if let Some(validators) = self.current_validators_pubkey(*hash) {
-            validators.iter().map(public_to_address).collect()
+        if let Some(validators) = self.current_validators_address(*hash) {
+            validators
         } else {
             self.initial_list.next_addresses(hash)
         }
     }
 
     fn next_addresses(&self, hash: &BlockHash) -> Vec<Address> {
-        if let Some(validators) = self.validators_pubkey(*hash) {
-            validators.iter().map(public_to_address).collect()
+        if let Some(validators) = self.validators_address(*hash) {
+            validators
         } else {
             self.initial_list.next_addresses(hash)
         }
@@ -298,10 +311,9 @@ impl ValidatorSet for DynamicValidator {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
     use std::sync::Arc;
 
-    use ckey::Public;
+    use ckey::{Address, BlsPublic};
 
     use super::super::ValidatorSet;
     use super::DynamicValidator;
@@ -309,18 +321,23 @@ mod tests {
 
     #[test]
     fn validator_set() {
-        let a1 = Public::from_str("34959b60d54703e9dfe36afb1e9950a4abe34d666cbb64c92969013bc9cc74063f9e4680d9d48c4597ee623bd4b507a1b2f43a9c5766a06463f85b73a94c51d1").unwrap();
-        let a2 = Public::from_str("8c5a25bfafceea03073e2775cfb233a46648a088c12a1ca18a5865534887ccf60e1670be65b5f8e29643f463fdf84b1cbadd6027e71d8d04496570cb6b04885d").unwrap();
-        let set = DynamicValidator::new(vec![a1, a2]);
+        let a1 = Address::random();
+        let p1 = BlsPublic::random();
+        let v1 = (a1, p1);
+        let a2 = Address::random();
+        let p2 = BlsPublic::random();
+        let v2 = (a2, p2);
+
+        let set = DynamicValidator::new(vec![v1, v2]);
         let test_client: Arc<dyn ConsensusClient> = Arc::new({
             let mut client = TestBlockChainClient::new();
             client.term_id = Some(1);
             client
         });
         set.register_client(Arc::downgrade(&test_client));
-        assert!(set.contains(&Default::default(), &a1));
-        assert_eq!(set.get(&Default::default(), 0), a1);
-        assert_eq!(set.get(&Default::default(), 1), a2);
-        assert_eq!(set.get(&Default::default(), 2), a1);
+        assert!(set.contains_address(&Default::default(), &a1));
+        assert_eq!(set.get_public(&Default::default(), 0), p1);
+        assert_eq!(set.get_public(&Default::default(), 1), p2);
+        assert_eq!(set.get_public(&Default::default(), 2), p1);
     }
 }
