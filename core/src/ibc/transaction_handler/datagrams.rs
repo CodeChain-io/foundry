@@ -24,6 +24,7 @@ enum DatagramTag {
     ConnOpenInit = 3,
     ConnOpenTry = 4,
     ConnOpenAck = 5,
+    ConnOpenConfirm = 6,
 }
 
 impl Encodable for DatagramTag {
@@ -41,6 +42,7 @@ impl Decodable for DatagramTag {
             3 => Ok(DatagramTag::ConnOpenInit),
             4 => Ok(DatagramTag::ConnOpenTry),
             5 => Ok(DatagramTag::ConnOpenAck),
+            6 => Ok(DatagramTag::ConnOpenConfirm),
             _ => Err(DecoderError::Custom("Unexpected DatagramTag Value")),
         }
     }
@@ -82,6 +84,11 @@ pub enum Datagram {
         proof_consensus: Vec<u8>,
         proof_height: u64,
         consensus_height: u64,
+    },
+    ConnOpenConfirm {
+        identifier: String,
+        proof_ack: Vec<u8>,
+        proof_height: u64,
     },
 }
 
@@ -159,6 +166,14 @@ impl Encodable for Datagram {
                     .append(proof_consensus)
                     .append(proof_height)
                     .append(consensus_height);
+            }
+            Datagram::ConnOpenConfirm {
+                identifier,
+                proof_ack,
+                proof_height,
+            } => {
+                s.begin_list(4);
+                s.append(&DatagramTag::ConnOpenConfirm).append(identifier).append(proof_ack).append(proof_height);
             }
         };
     }
@@ -248,6 +263,20 @@ impl Decodable for Datagram {
                     consensus_height: rlp.val_at(5)?,
                 })
             }
+            DatagramTag::ConnOpenConfirm => {
+                let item_count = rlp.item_count()?;
+                if item_count != 4 {
+                    return Err(DecoderError::RlpInvalidLength {
+                        expected: 4,
+                        got: item_count,
+                    })
+                }
+                Ok(Datagram::ConnOpenConfirm {
+                    identifier: rlp.val_at(1)?,
+                    proof_ack: rlp.val_at(2)?,
+                    proof_height: rlp.val_at(3)?,
+                })
+            }
         }
     }
 }
@@ -295,5 +324,15 @@ mod tests {
             consensus_height: 2,
         };
         rlp_encode_and_decode_test!(conn_open_ack);
+    }
+
+    #[test]
+    fn conn_open_confirm() {
+        let conn_open_confirm = Datagram::ConnOpenConfirm {
+            identifier: "identifier".to_owned(),
+            proof_ack: b"proof_ack".to_vec(),
+            proof_height: 1,
+        };
+        rlp_encode_and_decode_test!(conn_open_confirm);
     }
 }
