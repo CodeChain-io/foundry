@@ -23,11 +23,11 @@ import {
     signSchnorr,
     U64
 } from "codechain-primitives/lib";
-import { SDK } from "codechain-sdk";
-import { Custom } from "codechain-sdk/lib/core/transaction/Custom";
-import * as stake from "codechain-stakeholder-sdk";
 import "mocha";
 import * as RLP from "rlp";
+import { SDK } from "../sdk/src";
+import { Custom } from "../sdk/src/core/transaction/Custom";
+import * as stake from "../stakeholder/src";
 
 import { validators as originalValidators } from "../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../helper/constants";
