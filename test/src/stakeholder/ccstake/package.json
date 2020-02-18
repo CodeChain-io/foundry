@@ -1,0 +1,50 @@
+{
+  "name": "codechain-stakeholder-cli",
+  "version": "2.0.0",
+  "description": "A CLI for CodeChain stakeholders",
+  "author": "CodeChain Team <hi@codechain.io>",
+  "license": "ISC",
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "yarn lint",
+    "lint": "tslint -p . && prettier 'src/**/*.{ts,js,json}' -l",
+    "fmt": "tslint -p . --fix && prettier 'src/**/*.{ts,js,json}' --write",
+    "prepublishOnly": "yarn build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeChain-io/codechain-stakeholder-sdk-js.git"
+  },
+  "homepage": "https://github.com/CodeChain-io/codechain-stakeholder-sdk-js#readme",
+  "bugs": {
+    "url": "https://github.com/CodeChain-io/codechain-stakeholder-sdk-js/issues"
+  },
+  "files": [
+    "build"
+  ],
+  "bin": {
+    "ccstake": "build/index.js"
+  },
+  "keywords": [
+    "CodeChain"
+  ],
+  "dependencies": {
+    "cli-table3": "^0.5.1",
+    "codechain-sdk": "^2.0.0",
+    "codechain-stakeholder-sdk": "^2.0.0",
+    "prompts": "^2.2.1",
+    "rlp": "^2.2.2",
+    "strip-ansi": "^5.2.0",
+    "yargs": "^13.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^11.9.4",
+    "@types/prompts": "^2.0.1",
+    "@types/yargs": "^13.0.0",
+    "prettier": "^1.16.4",
+    "tslint": "^5.12.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.3.3"
+  },
+  "peerDependencies": {}
+}
