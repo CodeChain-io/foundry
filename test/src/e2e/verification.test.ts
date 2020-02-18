@@ -43,7 +43,7 @@ describe("solo - 1 node", function() {
                 address: faucetAddress.toString(),
                 blockNumber: null
             }))!;
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createPayTransaction({
                     recipient,
                     quantity: 0
@@ -182,7 +182,7 @@ describe("solo - 1 node", function() {
                 address: faucetAddress.toString(),
                 blockNumber: null
             }))!;
-            const signed = node.sdk.core
+            const signed = node.testFramework.core
                 .createPayTransaction({
                     recipient,
                     quantity: 0
@@ -238,7 +238,7 @@ describe("solo - 1 node", function() {
                 blockNumber: null
             }))!;
             const account = await node.createPlatformAddress();
-            const signed = node.sdk.core
+            const signed = node.testFramework.core
                 .createSetShardOwnersTransaction({
                     shardId: 0,
                     owners: [account]
@@ -276,7 +276,7 @@ describe("solo - 1 node", function() {
                 blockNumber: null
             }))!;
             const account = await node.createPlatformAddress();
-            const signed = node.sdk.core
+            const signed = node.testFramework.core
                 .createSetShardUsersTransaction({
                     shardId: 0,
                     users: [account]
@@ -312,7 +312,7 @@ describe("solo - 1 node", function() {
                 address: faucetAddress.toString(),
                 blockNumber: null
             }))!;
-            const signed = node.sdk.core
+            const signed = node.testFramework.core
                 .createPayTransaction({
                     recipient,
                     quantity: 0
@@ -323,7 +323,9 @@ describe("solo - 1 node", function() {
                     seq
                 });
             try {
-                await node.sdk.rpc.chain.sendSignedTransaction(signed);
+                await node.testFramework.rpc.chain.sendSignedTransaction(
+                    signed
+                );
                 expect.fail();
             } catch (e) {
                 expect(e).is.similarTo(ERROR.TOO_LOW_FEE);

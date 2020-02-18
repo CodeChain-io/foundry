@@ -50,7 +50,7 @@ describe("network1 node test", function() {
             "tag string for the target"
         ]);
 
-        await node.sdk.rpc.network.removeFromWhitelist(target);
+        await node.testFramework.rpc.network.removeFromWhitelist(target);
         ({ list } = await node.rpc.net.getWhitelist());
         expect(list).not.to.include(target);
     });

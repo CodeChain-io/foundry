@@ -228,13 +228,13 @@ describe("Reward = 50, 1 miner", function() {
             Number(Math.floor((10 * 1) / 10) /* share */)
         );
 
-        const tx = await node.sdk.core
+        const tx = await node.testFramework.core
             .createPayTransaction({
                 recipient: faucetAddress,
                 quantity: 20
             })
             .sign({ secret: aliceSecret, seq: 0, fee: 10 });
-        await node.sdk.rpc.chain.sendSignedTransaction(tx);
+        await node.testFramework.rpc.chain.sendSignedTransaction(tx);
 
         expect(
             +(await node.rpc.chain.getBalance({

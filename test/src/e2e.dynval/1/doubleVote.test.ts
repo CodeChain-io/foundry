@@ -45,7 +45,11 @@ describe("Double vote detection", function() {
 
     beforeEach(async function() {
         const aliceNode = nodes[0];
-        mock = new Mock("0.0.0.0", aliceNode.port, aliceNode.sdk.networkId);
+        mock = new Mock(
+            "0.0.0.0",
+            aliceNode.port,
+            aliceNode.testFramework.networkId
+        );
     });
 
     it("Should report if double proposal is detected", async function() {
@@ -64,7 +68,7 @@ describe("Double vote detection", function() {
             target: 2,
             termPeriods: 0.5
         });
-        const banned = await stake.getBanned(aliceNode.sdk);
+        const banned = await stake.getBanned(aliceNode.testFramework);
         expect(banned.map(b => b.toString())).to.include(
             betty.platformAddress.toString()
         );
@@ -86,7 +90,7 @@ describe("Double vote detection", function() {
             target: 2,
             termPeriods: 0.5
         });
-        const banned = await stake.getBanned(aliceNode.sdk);
+        const banned = await stake.getBanned(aliceNode.testFramework);
         expect(banned.map(b => b.toString())).to.include(
             betty.platformAddress.toString()
         );
@@ -108,7 +112,7 @@ describe("Double vote detection", function() {
             target: 2,
             termPeriods: 0.5
         });
-        const banned = await stake.getBanned(aliceNode.sdk);
+        const banned = await stake.getBanned(aliceNode.testFramework);
         expect(banned.map(b => b.toString())).to.include(
             betty.platformAddress.toString()
         );

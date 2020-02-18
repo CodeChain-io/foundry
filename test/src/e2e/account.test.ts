@@ -42,14 +42,14 @@ describe("account", function() {
         describe("importRaw", function() {
             let randomSecret: string;
             beforeEach(function() {
-                randomSecret = node.sdk.util.generatePrivateKey();
+                randomSecret = node.testFramework.util.generatePrivateKey();
             });
 
             it("Ok", async function() {
-                const account = node.sdk.util.getAccountIdFromPrivate(
+                const account = node.testFramework.util.getAccountIdFromPrivate(
                     randomSecret
                 );
-                const address = node.sdk.core.classes.PlatformAddress.fromAccountId(
+                const address = node.testFramework.core.classes.PlatformAddress.fromAccountId(
                     account,
                     { networkId: "tc" }
                 );
@@ -96,7 +96,7 @@ describe("account", function() {
             let address: string;
             let secret: string;
             beforeEach(async function() {
-                secret = node.sdk.util.generatePrivateKey();
+                secret = node.testFramework.util.generatePrivateKey();
                 address = await node.rpc.account.importRaw({
                     secret: "0x".concat(secret),
                     passphrase: "my-password"
@@ -104,7 +104,7 @@ describe("account", function() {
             });
 
             it("Ok", async function() {
-                const calculatedSignature = node.sdk.util.signEcdsa(
+                const calculatedSignature = node.testFramework.util.signEcdsa(
                     message,
                     secret
                 );

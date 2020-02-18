@@ -34,7 +34,7 @@ describe("syncEmptyBlock", function() {
         });
 
         it("nodeA creates an empty block", async function() {
-            await nodeA.sdk.rpc.devel.startSealing();
+            await nodeA.testFramework.rpc.devel.startSealing();
             expect(await nodeA.getBestBlockNumber()).to.equal(1);
             await nodeA.waitBlockNumberSync(nodeB);
             expect(await nodeB.getBestBlockNumber()).to.equal(1);
@@ -45,9 +45,9 @@ describe("syncEmptyBlock", function() {
 
         it("nodeA creates 3 empty blocks", async function() {
             await Promise.all([
-                nodeA.sdk.rpc.devel.startSealing(),
-                nodeA.sdk.rpc.devel.startSealing(),
-                nodeA.sdk.rpc.devel.startSealing()
+                nodeA.testFramework.rpc.devel.startSealing(),
+                nodeA.testFramework.rpc.devel.startSealing(),
+                nodeA.testFramework.rpc.devel.startSealing()
             ]);
 
             expect(await nodeA.getBestBlockNumber()).to.equal(3);

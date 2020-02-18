@@ -74,7 +74,7 @@ describe("Change commonParams that affects validator set", function() {
 
             await checkingNode.waitForTx(changeTxHash);
 
-            const faucetSeq = await checkingNode.sdk.rpc.chain.getSeq(
+            const faucetSeq = await checkingNode.testFramework.rpc.chain.getSeq(
                 faucetAddress
             );
 
@@ -83,7 +83,7 @@ describe("Change commonParams that affects validator set", function() {
             const revokeTxs = revoked.map((signer, idx) =>
                 stake
                     .createRevokeTransaction(
-                        checkingNode.sdk,
+                        checkingNode.testFramework,
                         signer.platformAddress,
                         4_999
                     )
@@ -96,7 +96,9 @@ describe("Change commonParams that affects validator set", function() {
 
             const revokeTxHashes = await Promise.all(
                 revokeTxs.map(tx =>
-                    checkingNode.sdk.rpc.chain.sendSignedTransaction(tx)
+                    checkingNode.testFramework.rpc.chain.sendSignedTransaction(
+                        tx
+                    )
                 )
             );
             await checkingNode.waitForTx(revokeTxHashes);
@@ -109,7 +111,11 @@ describe("Change commonParams that affects validator set", function() {
                 ...revoked.slice(0, 2),
                 ...untouched
             ].map(signer => signer.platformAddress.toString());
-            await checkValidators(checkingNode.sdk, 2, expectedValidators);
+            await checkValidators(
+                checkingNode.testFramework,
+                2,
+                expectedValidators
+            );
         });
     });
 
@@ -122,7 +128,7 @@ describe("Change commonParams that affects validator set", function() {
             const checkingNode = nodes[0];
 
             await checkValidators(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 1,
                 validators
                     .slice(0, 5)
@@ -140,7 +146,7 @@ describe("Change commonParams that affects validator set", function() {
                 termPeriods: 1
             });
             await checkValidators(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 2,
                 validators
                     .slice(0, 3)
@@ -158,7 +164,7 @@ describe("Change commonParams that affects validator set", function() {
                 termPeriods: 1
             });
             await checkValidators(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 3,
                 validators
                     .slice(0, 4)
@@ -197,7 +203,9 @@ describe("Change commonParams that doesn't affects validator set", function() {
             this.slow((initialTermSeconds + newTermSeconds) * 1000 * margin);
             this.timeout((initialTermSeconds + newTermSeconds) * 1000 * 2);
 
-            const term1Metadata = (await stake.getTermMetadata(nodes[0].sdk))!;
+            const term1Metadata = (await stake.getTermMetadata(
+                nodes[0].testFramework
+            ))!;
             {
                 expect(term1Metadata.currentTermId).to.be.equal(1);
             }
@@ -210,21 +218,25 @@ describe("Change commonParams that doesn't affects validator set", function() {
 
             await nodes[0].waitForTermChange(2, initialTermSeconds * margin);
 
-            const term2Metadata = (await stake.getTermMetadata(nodes[0].sdk))!;
+            const term2Metadata = (await stake.getTermMetadata(
+                nodes[0].testFramework
+            ))!;
             {
                 expect(term2Metadata.currentTermId).to.be.equal(2);
             }
 
             await nodes[0].waitForTermChange(3, newTermSeconds * margin);
 
-            const term3Metadata = (await stake.getTermMetadata(nodes[0].sdk))!;
+            const term3Metadata = (await stake.getTermMetadata(
+                nodes[0].testFramework
+            ))!;
             {
                 expect(term2Metadata.currentTermId).to.be.equal(2);
             }
 
             const [ts1, ts2, ts3] = await Promise.all(
                 [term1Metadata, term2Metadata, term3Metadata].map(m =>
-                    nodes[0].sdk.rpc.chain
+                    nodes[0].testFramework.rpc.chain
                         .getBlock(m.lastTermFinishedBlockNumber)
                         .then(block => block!.timestamp)
                 )
@@ -257,18 +269,20 @@ describe("Change commonParams that doesn't affects validator set", function() {
 
             await checkingNode.waitForTx(changeTxHash);
 
-            const tx = checkingNode.sdk.core
+            const tx = checkingNode.testFramework.core
                 .createPayTransaction({
                     recipient: validators[0].platformAddress,
                     quantity: 100
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await checkingNode.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: await checkingNode.testFramework.rpc.chain.getSeq(
+                        faucetAddress
+                    ),
                     fee: 10
                 });
             await expect(
-                checkingNode.sdk.rpc.chain.sendSignedTransaction(tx)
+                checkingNode.testFramework.rpc.chain.sendSignedTransaction(tx)
             ).rejectedWith(/Too Low Fee/);
         });
     });
@@ -276,7 +290,7 @@ describe("Change commonParams that doesn't affects validator set", function() {
     describe("Change the maximum size of candidate metadata", async function() {
         function nominationWithMetadata(size: number) {
             return stake.createSelfNominateTransaction(
-                nodes[0].sdk,
+                nodes[0].testFramework,
                 1,
                 " ".repeat(size)
             );
@@ -294,10 +308,10 @@ describe("Change commonParams that doesn't affects validator set", function() {
             });
             await checkingNode.waitForTx(changeTxHash);
             const normalNomination = nominationWithMetadata(129);
-            const seq = await checkingNode.sdk.rpc.chain.getSeq(
+            const seq = await checkingNode.testFramework.rpc.chain.getSeq(
                 alice.platformAddress
             );
-            const normalHash = await checkingNode.sdk.rpc.chain.sendSignedTransaction(
+            const normalHash = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
                 normalNomination.sign({
                     secret: alice.privateKey,
                     seq,
@@ -309,7 +323,7 @@ describe("Change commonParams that doesn't affects validator set", function() {
             const largeNomination = nominationWithMetadata(257);
 
             await expect(
-                checkingNode.sdk.rpc.chain.sendSignedTransaction(
+                checkingNode.testFramework.rpc.chain.sendSignedTransaction(
                     largeNomination.sign({
                         secret: alice.privateKey,
                         seq: seq + 1,
@@ -331,10 +345,10 @@ describe("Change commonParams that doesn't affects validator set", function() {
             });
             await checkingNode.waitForTx(changeTxHash);
             const normalNomination = nominationWithMetadata(63);
-            const seq = await checkingNode.sdk.rpc.chain.getSeq(
+            const seq = await checkingNode.testFramework.rpc.chain.getSeq(
                 alice.platformAddress
             );
-            const normalHash = await checkingNode.sdk.rpc.chain.sendSignedTransaction(
+            const normalHash = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
                 normalNomination.sign({
                     secret: alice.privateKey,
                     seq,
@@ -345,7 +359,7 @@ describe("Change commonParams that doesn't affects validator set", function() {
 
             const largeNomination = nominationWithMetadata(127);
             await expect(
-                checkingNode.sdk.rpc.chain.sendSignedTransaction(
+                checkingNode.testFramework.rpc.chain.sendSignedTransaction(
                     largeNomination.sign({
                         secret: alice.privateKey,
                         seq: seq + 1,

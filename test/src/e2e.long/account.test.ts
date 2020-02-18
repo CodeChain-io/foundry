@@ -51,11 +51,11 @@ describe("account", function() {
 
         it(`Scenario #2: importRaw ${testSize} accounts`, async function() {
             for (let i = 0; i < testSize; i++) {
-                const randomSecret = node.sdk.util.generatePrivateKey();
-                const account = node.sdk.util.getAccountIdFromPrivate(
+                const randomSecret = node.testFramework.util.generatePrivateKey();
+                const account = node.testFramework.util.getAccountIdFromPrivate(
                     randomSecret
                 );
-                const address = node.sdk.core.classes.PlatformAddress.fromAccountId(
+                const address = node.testFramework.core.classes.PlatformAddress.fromAccountId(
                     account,
                     { networkId: "tc" }
                 );
@@ -109,11 +109,11 @@ describe("account", function() {
                         break;
                     case Action.ImportRaw:
                         {
-                            const secret = node.sdk.util.generatePrivateKey();
-                            const account = node.sdk.util.getAccountIdFromPrivate(
+                            const secret = node.testFramework.util.generatePrivateKey();
+                            const account = node.testFramework.util.getAccountIdFromPrivate(
                                 secret
                             );
-                            const address = node.sdk.core.classes.PlatformAddress.fromAccountId(
+                            const address = node.testFramework.core.classes.PlatformAddress.fromAccountId(
                                 account,
                                 { networkId: "tc" }
                             ).toString();
@@ -176,7 +176,7 @@ describe("account", function() {
                             } = accountListWithSecret[randomIdx];
                             const message = makeRandomH256();
 
-                            const calculatedSignature = node.sdk.util.signEcdsa(
+                            const calculatedSignature = node.testFramework.util.signEcdsa(
                                 message,
                                 secret!
                             );

@@ -80,9 +80,10 @@ describe("chain", function() {
             blockNumber: bestBlockNumber
         });
         expect(
-            (await node.sdk.rpc.chain.getBlock(blockHash!))!.number
+            (await node.testFramework.rpc.chain.getBlock(blockHash!))!.number
         ).to.equal(bestBlockNumber);
-        expect(await node.sdk.rpc.chain.getBlock(invalidH256)).to.be.null;
+        expect(await node.testFramework.rpc.chain.getBlock(invalidH256)).to.be
+            .null;
     });
 
     it("getSeq", async function() {
@@ -96,7 +97,7 @@ describe("chain", function() {
                 blockNumber: null
             })
         ).to.equal(0);
-        const bestBlockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
+        const bestBlockNumber = await node.testFramework.rpc.chain.getBestBlockNumber();
         await node.rpc.chain.getSeq({
             address: faucetAddress.toString(),
             blockNumber: 0
@@ -160,7 +161,7 @@ describe("chain", function() {
 
     it("getBlockReward", async function() {
         // FIXME: Add an API to SDK
-        const reward = await node.sdk.rpc.sendRpcRequest(
+        const reward = await node.testFramework.rpc.sendRpcRequest(
             "engine_getBlockReward",
             [10]
         );
@@ -168,12 +169,12 @@ describe("chain", function() {
     });
 
     it("getPendingTransactions", async function() {
-        const pending = await node.sdk.rpc.chain.getPendingTransactions();
+        const pending = await node.testFramework.rpc.chain.getPendingTransactions();
         expect(pending.transactions.length).to.equal(0);
     });
 
     it("sendPayTx, getTransaction", async function() {
-        const tx = node.sdk.core.createPayTransaction({
+        const tx = node.testFramework.core.createPayTransaction({
             recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
             quantity: 0
         });
@@ -181,7 +182,7 @@ describe("chain", function() {
             address: faucetAddress.toString(),
             blockNumber: null
         }))!;
-        const hash = await node.sdk.rpc.chain.sendSignedTransaction(
+        const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
             tx.sign({
                 secret: faucetSecret,
                 fee: 10,
@@ -193,13 +194,13 @@ describe("chain", function() {
                 transactionHash: "0x".concat(hash.toString())
             })
         ).be.true;
-        const signed = await node.sdk.rpc.chain.getTransaction(hash);
+        const signed = await node.testFramework.rpc.chain.getTransaction(hash);
         expect(signed).not.null;
         expect(signed!.unsigned).to.deep.equal(tx);
     });
 
     it("sendPayTx, getTransactionSigner", async function() {
-        const tx = node.sdk.core.createPayTransaction({
+        const tx = node.testFramework.core.createPayTransaction({
             recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
             quantity: 0
         });
@@ -207,24 +208,25 @@ describe("chain", function() {
             address: faucetAddress.toString(),
             blockNumber: null
         }))!;
-        const hash = await node.sdk.rpc.chain.sendSignedTransaction(
+        const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
             tx.sign({
                 secret: faucetSecret,
                 fee: 10,
                 seq
             })
         );
-        expect(await node.sdk.rpc.chain.containsTransaction(hash)).be.true;
-        const signer = await node.sdk.rpc.sendRpcRequest(
+        expect(await node.testFramework.rpc.chain.containsTransaction(hash)).be
+            .true;
+        const signer = await node.testFramework.rpc.sendRpcRequest(
             "chain_getTransactionSigner",
             [hash]
         );
         expect(signer).equal(faucetAddress.toString());
-        const signed = await node.sdk.rpc.chain.getTransaction(hash);
+        const signed = await node.testFramework.rpc.chain.getTransaction(hash);
         expect(signed).not.null;
         expect(signed!.unsigned).to.deep.equal(tx);
         expect(
-            node.sdk.core.classes.PlatformAddress.fromPublic(
+            node.testFramework.core.classes.PlatformAddress.fromPublic(
                 signed!.getSignerPublic(),
                 { networkId: "tc" }
             ).toString()

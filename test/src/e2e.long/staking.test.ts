@@ -196,7 +196,7 @@ describe("Staking", function() {
                   }))!
                 : params.seq;
 
-        const tx = nodes[0].sdk.core
+        const tx = nodes[0].testFramework.core
             .createCustomTransaction({
                 handlerId: stakeActionHandlerId,
                 bytes: Buffer.from(
@@ -235,7 +235,7 @@ describe("Staking", function() {
                   }))!
                 : params.seq;
 
-        const tx = nodes[0].sdk.core
+        const tx = nodes[0].testFramework.core
             .createCustomTransaction({
                 handlerId: stakeActionHandlerId,
                 bytes: Buffer.from(
@@ -274,7 +274,7 @@ describe("Staking", function() {
                   }))!
                 : params.seq;
 
-        const tx = nodes[0].sdk.core
+        const tx = nodes[0].testFramework.core
             .createCustomTransaction({
                 handlerId: stakeActionHandlerId,
                 bytes: Buffer.from(
@@ -314,7 +314,7 @@ describe("Staking", function() {
                   }))!
                 : params.seq;
 
-        const tx = nodes[0].sdk.core
+        const tx = nodes[0].testFramework.core
             .createCustomTransaction({
                 handlerId: stakeActionHandlerId,
                 bytes: Buffer.from(RLP.encode([4, deposit, metadata]))

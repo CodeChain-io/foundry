@@ -57,7 +57,10 @@ describe("Dynamic Validator N -> N", function() {
         });
 
         beforeEach(async function() {
-            await expectPossibleAuthors(nodes[0].sdk, initialValidators);
+            await expectPossibleAuthors(
+                nodes[0].testFramework,
+                initialValidators
+            );
         });
 
         it("should keep possible authors after a term change", async function() {
@@ -69,9 +72,9 @@ describe("Dynamic Validator N -> N", function() {
                 target: 2,
                 termPeriods: 1
             });
-            const blockNumber = await nodes[0].sdk.rpc.chain.getBestBlockNumber();
+            const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                nodes[0].sdk,
+                nodes[0].testFramework,
                 blockNumber
             );
             expect(termMetadata).not.to.be.null;
@@ -81,7 +84,7 @@ describe("Dynamic Validator N -> N", function() {
             );
 
             await expectPossibleAuthors(
-                nodes[0].sdk,
+                nodes[0].testFramework,
                 initialValidators,
                 blockNumber
             );
@@ -108,7 +111,10 @@ describe("Dynamic Validator N -> N", function() {
         const alice = validators[3];
 
         beforeEach(async function() {
-            await expectPossibleAuthors(nodes[0].sdk, initialValidators);
+            await expectPossibleAuthors(
+                nodes[0].testFramework,
+                initialValidators
+            );
         });
 
         it("should keep possible authors after a term change", async function() {
@@ -116,16 +122,18 @@ describe("Dynamic Validator N -> N", function() {
                 terms: 1
             });
 
-            const insufficientDelegationTx = await nodes[0].sdk.rpc.chain.sendSignedTransaction(
+            const insufficientDelegationTx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
                 stake
                     .createDelegateCCSTransaction(
-                        nodes[0].sdk,
+                        nodes[0].testFramework,
                         alice.platformAddress,
                         50
                     )
                     .sign({
                         secret: faucetSecret,
-                        seq: await nodes[0].sdk.rpc.chain.getSeq(faucetAddress),
+                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
+                            faucetAddress
+                        ),
                         fee: 10
                     })
             );
@@ -135,9 +143,9 @@ describe("Dynamic Validator N -> N", function() {
                 target: 2,
                 termPeriods: 1
             });
-            const blockNumber = await nodes[0].sdk.rpc.chain.getBestBlockNumber();
+            const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                nodes[0].sdk,
+                nodes[0].testFramework,
                 blockNumber
             );
             expect(termMetadata).not.to.be.null;
@@ -146,7 +154,7 @@ describe("Dynamic Validator N -> N", function() {
                 blockNumber
             );
             await expectPossibleAuthors(
-                nodes[0].sdk,
+                nodes[0].testFramework,
                 initialValidators,
                 blockNumber
             );
@@ -173,7 +181,10 @@ describe("Dynamic Validator N -> N", function() {
         const alice = validators[3];
 
         beforeEach(async function() {
-            await expectPossibleAuthors(nodes[0].sdk, initialValidators);
+            await expectPossibleAuthors(
+                nodes[0].testFramework,
+                initialValidators
+            );
         });
 
         it("should keep possible authors after a term change", async function() {
@@ -181,16 +192,18 @@ describe("Dynamic Validator N -> N", function() {
                 terms: 1
             });
 
-            const insufficientDelegationTx = await nodes[0].sdk.rpc.chain.sendSignedTransaction(
+            const insufficientDelegationTx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
                 stake
                     .createDelegateCCSTransaction(
-                        nodes[0].sdk,
+                        nodes[0].testFramework,
                         alice.platformAddress,
                         50
                     )
                     .sign({
                         secret: faucetSecret,
-                        seq: await nodes[0].sdk.rpc.chain.getSeq(faucetAddress),
+                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
+                            faucetAddress
+                        ),
                         fee: 10
                     })
             );
@@ -200,9 +213,9 @@ describe("Dynamic Validator N -> N", function() {
                 target: 2,
                 termPeriods: 1
             });
-            const blockNumber = await nodes[0].sdk.rpc.chain.getBestBlockNumber();
+            const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                nodes[0].sdk,
+                nodes[0].testFramework,
                 blockNumber
             );
             expect(termMetadata).not.to.be.null;
@@ -211,7 +224,7 @@ describe("Dynamic Validator N -> N", function() {
                 blockNumber
             );
             await expectPossibleAuthors(
-                nodes[0].sdk,
+                nodes[0].testFramework,
                 initialValidators,
                 blockNumber
             );
@@ -238,7 +251,10 @@ describe("Dynamic Validator N -> N", function() {
         const alice = validators[2];
 
         beforeEach(async function() {
-            await expectPossibleAuthors(nodes[0].sdk, initialValidators);
+            await expectPossibleAuthors(
+                nodes[0].testFramework,
+                initialValidators
+            );
         });
 
         it("should keep possible authors after a term change", async function() {
@@ -246,16 +262,18 @@ describe("Dynamic Validator N -> N", function() {
                 terms: 1
             });
 
-            const insufficientDelegationTx = await nodes[0].sdk.rpc.chain.sendSignedTransaction(
+            const insufficientDelegationTx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
                 stake
                     .createRevokeTransaction(
-                        nodes[0].sdk,
+                        nodes[0].testFramework,
                         alice.platformAddress,
                         50
                     )
                     .sign({
                         secret: faucetSecret,
-                        seq: await nodes[0].sdk.rpc.chain.getSeq(faucetAddress),
+                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
+                            faucetAddress
+                        ),
                         fee: 10
                     })
             );
@@ -265,9 +283,9 @@ describe("Dynamic Validator N -> N", function() {
                 target: 2,
                 termPeriods: 1
             });
-            const blockNumber = await nodes[0].sdk.rpc.chain.getBestBlockNumber();
+            const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                nodes[0].sdk,
+                nodes[0].testFramework,
                 blockNumber
             );
             expect(termMetadata).not.to.be.null;
@@ -276,7 +294,7 @@ describe("Dynamic Validator N -> N", function() {
                 blockNumber
             );
             await expectPossibleAuthors(
-                nodes[0].sdk,
+                nodes[0].testFramework,
                 initialValidators,
                 blockNumber
             );
@@ -303,7 +321,10 @@ describe("Dynamic Validator N -> N", function() {
         const alice = validators[2];
 
         beforeEach(async function() {
-            await expectPossibleAuthors(nodes[0].sdk, initialValidators);
+            await expectPossibleAuthors(
+                nodes[0].testFramework,
+                initialValidators
+            );
         });
 
         it("should keep possible authors after a term change", async function() {
@@ -311,16 +332,18 @@ describe("Dynamic Validator N -> N", function() {
                 terms: 1
             });
 
-            const insufficientDelegationTx = await nodes[0].sdk.rpc.chain.sendSignedTransaction(
+            const insufficientDelegationTx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
                 stake
                     .createRevokeTransaction(
-                        nodes[0].sdk,
+                        nodes[0].testFramework,
                         alice.platformAddress,
                         50
                     )
                     .sign({
                         secret: faucetSecret,
-                        seq: await nodes[0].sdk.rpc.chain.getSeq(faucetAddress),
+                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
+                            faucetAddress
+                        ),
                         fee: 10
                     })
             );
@@ -330,9 +353,9 @@ describe("Dynamic Validator N -> N", function() {
                 target: 2,
                 termPeriods: 1
             });
-            const blockNumber = await nodes[0].sdk.rpc.chain.getBestBlockNumber();
+            const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                nodes[0].sdk,
+                nodes[0].testFramework,
                 blockNumber
             );
             expect(termMetadata).not.to.be.null;
@@ -341,7 +364,7 @@ describe("Dynamic Validator N -> N", function() {
                 blockNumber
             );
             await expectPossibleAuthors(
-                nodes[0].sdk,
+                nodes[0].testFramework,
                 initialValidators,
                 blockNumber
             );
@@ -369,7 +392,10 @@ describe("Dynamic Validator N -> N", function() {
         const alice = validators[3];
 
         beforeEach(async function() {
-            await expectPossibleAuthors(nodes[0].sdk, initialValidators);
+            await expectPossibleAuthors(
+                nodes[0].testFramework,
+                initialValidators
+            );
         });
 
         [
@@ -402,16 +428,16 @@ describe("Dynamic Validator N -> N", function() {
                         terms: 1
                     });
                     const aliceNode = findNode(nodes, alice);
-                    const nominationTx = await aliceNode.sdk.rpc.chain.sendSignedTransaction(
+                    const nominationTx = await aliceNode.testFramework.rpc.chain.sendSignedTransaction(
                         stake
                             .createSelfNominateTransaction(
-                                aliceNode.sdk,
+                                aliceNode.testFramework,
                                 deposit,
                                 ""
                             )
                             .sign({
                                 secret: alice.privateKey,
-                                seq: await aliceNode.sdk.rpc.chain.getSeq(
+                                seq: await aliceNode.testFramework.rpc.chain.getSeq(
                                     alice.platformAddress
                                 ),
                                 fee: 10
@@ -420,16 +446,16 @@ describe("Dynamic Validator N -> N", function() {
                     await nodes[0].waitForTx(nominationTx);
 
                     if (delegation > 0) {
-                        const tx = await nodes[0].sdk.rpc.chain.sendSignedTransaction(
+                        const tx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
                             stake
                                 .createDelegateCCSTransaction(
-                                    nodes[0].sdk,
+                                    nodes[0].testFramework,
                                     alice.platformAddress,
                                     delegation
                                 )
                                 .sign({
                                     secret: faucetSecret,
-                                    seq: await nodes[0].sdk.rpc.chain.getSeq(
+                                    seq: await nodes[0].testFramework.rpc.chain.getSeq(
                                         faucetAddress
                                     ),
                                     fee: 10
@@ -442,9 +468,9 @@ describe("Dynamic Validator N -> N", function() {
                         target: 2,
                         termPeriods: 1
                     });
-                    const blockNumber = await nodes[0].sdk.rpc.chain.getBestBlockNumber();
+                    const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
                     const termMetadata = await stake.getTermMetadata(
-                        nodes[0].sdk,
+                        nodes[0].testFramework,
                         blockNumber
                     );
                     expect(termMetadata).not.to.be.null;
@@ -453,7 +479,7 @@ describe("Dynamic Validator N -> N", function() {
                         blockNumber
                     );
                     await expectPossibleAuthors(
-                        nodes[0].sdk,
+                        nodes[0].testFramework,
                         initialValidators,
                         blockNumber
                     );

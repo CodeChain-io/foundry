@@ -78,7 +78,7 @@ export default class CodeChain {
     private static idCounter = 0;
     private readonly _id: number;
     private readonly _rpc: RPC;
-    private readonly _sdk: SDK;
+    private readonly _testFramework: SDK;
     private readonly _localKeyStorePath: string;
     private readonly _dbPath: string;
     private readonly _ipcPath: string;
@@ -98,9 +98,9 @@ export default class CodeChain {
     public get id(): number {
         return this._id;
     }
-    public get sdk(): SDK {
+    public get testFramework(): SDK {
         if (this.process.state === "running") {
-            return this._sdk;
+            return this._testFramework;
         } else {
             throw new ProcessStateError(this.id, this.process);
         }
@@ -199,7 +199,9 @@ export default class CodeChain {
         this._rpc = new RPC(`http://localhost:${this.rpcPort}`, {
             devel: true
         });
-        this._sdk = new SDK({ server: `http://localhost:${this.rpcPort}` });
+        this._testFramework = new SDK({
+            server: `http://localhost:${this.rpcPort}`
+        });
         this._chain = chain || "solo";
         this.argv = argv || [];
         this.env = env || {};
@@ -474,10 +476,10 @@ export default class CodeChain {
     }
 
     public async createP2PKHAddress() {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
+        const keyStore = await this.testFramework.key.createLocalKeyStore(
             this.localKeyStorePath
         );
-        const p2pkh = this.sdk.key.createP2PKH({ keyStore });
+        const p2pkh = this.testFramework.key.createP2PKH({ keyStore });
         return p2pkh.createAddress();
     }
 
@@ -485,10 +487,10 @@ export default class CodeChain {
         txInput: AssetTransferInput,
         txhash: H256
     ) {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
+        const keyStore = await this.testFramework.key.createLocalKeyStore(
             this.localKeyStorePath
         );
-        const p2pkhBurn = this.sdk.key.createP2PKHBurn({ keyStore });
+        const p2pkhBurn = this.testFramework.key.createP2PKHBurn({ keyStore });
         if (txInput.prevOut.parameters === undefined) {
             throw Error(`prevOut.parameters is undefined`);
         }
@@ -505,10 +507,10 @@ export default class CodeChain {
         txInput: AssetTransferInput,
         txhash: H256
     ) {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
+        const keyStore = await this.testFramework.key.createLocalKeyStore(
             this.localKeyStorePath
         );
-        const p2pkh = this.sdk.key.createP2PKH({ keyStore });
+        const p2pkh = this.testFramework.key.createP2PKH({ keyStore });
         if (txInput.prevOut.parameters === undefined) {
             throw Error(`prevOut.parameters is undefined`);
         }
@@ -522,25 +524,25 @@ export default class CodeChain {
     }
 
     public async createP2PKHBurnAddress() {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
+        const keyStore = await this.testFramework.key.createLocalKeyStore(
             this.localKeyStorePath
         );
-        const p2pkhBurn = this.sdk.key.createP2PKHBurn({ keyStore });
+        const p2pkhBurn = this.testFramework.key.createP2PKHBurn({ keyStore });
         return p2pkhBurn.createAddress();
     }
 
     public async createPlatformAddress() {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
+        const keyStore = await this.testFramework.key.createLocalKeyStore(
             this.localKeyStorePath
         );
-        return this.sdk.key.createPlatformAddress({ keyStore });
+        return this.testFramework.key.createPlatformAddress({ keyStore });
     }
 
     public async pay(
         recipient: string | PlatformAddress,
         quantity: U64 | string | number
     ): Promise<H256> {
-        const tx = this.sdk.core
+        const tx = this.testFramework.core
             .createPayTransaction({
                 recipient,
                 quantity
@@ -553,7 +555,7 @@ export default class CodeChain {
                 }))!,
                 fee: 10
             });
-        return this.sdk.rpc.chain.sendSignedTransaction(tx);
+        return this.testFramework.rpc.chain.sendSignedTransaction(tx);
     }
 
     public async sendTransaction(
@@ -564,7 +566,7 @@ export default class CodeChain {
             seq?: number;
         }
     ) {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
+        const keyStore = await this.testFramework.key.createLocalKeyStore(
             this.localKeyStorePath
         );
         const { account, fee = 10 } = params;
@@ -574,13 +576,13 @@ export default class CodeChain {
                 blockNumber: null
             }))!
         } = params;
-        const signed = await this.sdk.key.signTransaction(tx, {
+        const signed = await this.testFramework.key.signTransaction(tx, {
             keyStore,
             account,
             fee,
             seq
         });
-        return this.sdk.rpc.chain.sendSignedTransaction(signed);
+        return this.testFramework.rpc.chain.sendSignedTransaction(signed);
     }
 
     public async sendAssetTransaction(
@@ -604,7 +606,7 @@ export default class CodeChain {
             fee: fee + this.id,
             seq
         });
-        return this.sdk.rpc.chain.sendSignedTransaction(signed);
+        return this.testFramework.rpc.chain.sendSignedTransaction(signed);
     }
 
     public async mintAsset(params: {
@@ -625,7 +627,7 @@ export default class CodeChain {
             registrar,
             awaitMint = true
         } = params;
-        const tx = this.sdk.core.createMintAssetTransaction({
+        const tx = this.testFramework.core.createMintAssetTransaction({
             scheme: {
                 shardId: 0,
                 metadata,
@@ -642,20 +644,24 @@ export default class CodeChain {
     }
 
     public async signTransactionInput(tx: TransferAsset, index: number) {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
+        const keyStore = await this.testFramework.key.createLocalKeyStore(
             this.localKeyStorePath
         );
-        await this.sdk.key.signTransactionInput(tx, index, { keyStore });
+        await this.testFramework.key.signTransactionInput(tx, index, {
+            keyStore
+        });
     }
 
     public async signTransactionBurn(
         tx: TransferAsset | UnwrapCCC,
         index: number
     ) {
-        const keyStore = await this.sdk.key.createLocalKeyStore(
+        const keyStore = await this.testFramework.key.createLocalKeyStore(
             this.localKeyStorePath
         );
-        await this.sdk.key.signTransactionBurn(tx, index, { keyStore });
+        await this.testFramework.key.signTransactionBurn(tx, index, {
+            keyStore
+        });
     }
 
     public createPayTx(options: {
@@ -672,7 +678,7 @@ export default class CodeChain {
             secret = faucetSecret,
             fee = 10 + this.id
         } = options || {};
-        return this.sdk.core
+        return this.testFramework.core
             .createPayTransaction({
                 recipient,
                 quantity
@@ -701,7 +707,7 @@ export default class CodeChain {
             seq,
             ...options
         });
-        await this.sdk.rpc.chain.sendSignedTransaction(tx);
+        await this.testFramework.rpc.chain.sendSignedTransaction(tx);
         return tx;
     }
 
@@ -739,7 +745,8 @@ export default class CodeChain {
                 transactionHash: `0x${targetTxHash.toString()}`
             })
         ).be.false;
-        expect(await this.sdk.rpc.chain.getErrorHint(targetTxHash)).not.null;
+        expect(await this.testFramework.rpc.chain.getErrorHint(targetTxHash))
+            .not.null;
         expect(
             await this.rpc.chain.getTransaction({
                 transactionHash: `0x${targetTxHash.toString()}`
@@ -751,7 +758,9 @@ export default class CodeChain {
                 transactionHash: `0x${signedDummyTxHash.toString()}`
             })
         ).be.true;
-        expect(await this.sdk.rpc.chain.getErrorHint(signedDummyTxHash)).null;
+        expect(
+            await this.testFramework.rpc.chain.getErrorHint(signedDummyTxHash)
+        ).null;
         expect(
             await this.rpc.chain.getTransaction({
                 transactionHash: `0x${signedDummyTxHash.toString()}`
@@ -785,7 +794,8 @@ export default class CodeChain {
                 transactionHash: `0x${targetTxHash.toString()}`
             })
         ).be.false;
-        expect(await this.sdk.rpc.chain.getErrorHint(targetTxHash)).not.null;
+        expect(await this.testFramework.rpc.chain.getErrorHint(targetTxHash))
+            .not.null;
         expect(
             await this.rpc.chain.getTransaction({
                 transactionHash: `0x${targetTxHash.toString()}`
@@ -797,7 +807,9 @@ export default class CodeChain {
                 transactionHash: `0x${signedDummyTxHash.toString()})`
             })
         ).be.true;
-        expect(await this.sdk.rpc.chain.getErrorHint(signedDummyTxHash)).null;
+        expect(
+            await this.testFramework.rpc.chain.getErrorHint(signedDummyTxHash)
+        ).null;
         expect(
             await this.rpc.chain.getTransaction({
                 transactionHash: `0x${signedDummyTxHash.toString()}`
@@ -823,7 +835,7 @@ export default class CodeChain {
 
         const targetTxHash =
             tx instanceof SignedTransaction
-                ? await this.sdk.rpc.chain.sendSignedTransaction(tx)
+                ? await this.testFramework.rpc.chain.sendSignedTransaction(tx)
                 : await tx();
 
         await this.rpc.devel!.startSealing();
@@ -834,7 +846,9 @@ export default class CodeChain {
                 transactionHash: `0x${targetTxHash.toString()}`
             })
         ).be.false;
-        const hint = await this.sdk.rpc.chain.getErrorHint(targetTxHash);
+        const hint = await this.testFramework.rpc.chain.getErrorHint(
+            targetTxHash
+        );
         expect(hint).not.null;
         if (options.error != null) {
             expect(hint).contains(options.error);
@@ -850,7 +864,9 @@ export default class CodeChain {
                 transactionHash: `0x${signedDummyTxHash.toString()}`
             })
         ).be.true;
-        expect(await this.sdk.rpc.chain.getErrorHint(signedDummyTxHash)).null;
+        expect(
+            await this.testFramework.rpc.chain.getErrorHint(signedDummyTxHash)
+        ).null;
         expect(
             await this.rpc.chain.getTransaction({
                 transactionHash: `0x${signedDummyTxHash.toString()}`
@@ -867,7 +883,7 @@ export default class CodeChain {
                     byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)
                 )
                 .join("");
-            this.sdk.rpc
+            this.testFramework.rpc
                 .sendRpcRequest("mempool_sendSignedTransaction", [`0x${bytes}`])
                 .then(result => {
                     try {
@@ -906,7 +922,9 @@ export default class CodeChain {
         };
         const checkNoError = async () => {
             const errorHints = await Promise.all(
-                hashes.map(hash => this.sdk.rpc.chain.getErrorHint(hash))
+                hashes.map(hash =>
+                    this.testFramework.rpc.chain.getErrorHint(hash)
+                )
             );
             for (const errorHint of errorHints) {
                 if (errorHint !== null && errorHint !== "") {
@@ -930,7 +948,9 @@ export default class CodeChain {
     public async waitForTermChange(target: number, timeout?: number) {
         const start = Date.now();
         while (true) {
-            const termMetadata = (await stake.getTermMetadata(this.sdk))!;
+            const termMetadata = (await stake.getTermMetadata(
+                this.testFramework
+            ))!;
             if (termMetadata.currentTermId >= target) {
                 return termMetadata;
             }

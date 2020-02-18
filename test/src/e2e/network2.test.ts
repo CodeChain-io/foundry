@@ -56,8 +56,12 @@ describe("network2 nodes", function() {
         });
 
         it("connect", async function() {
-            expect(await nodeA.sdk.rpc.network.connect(address, nodeB.port)).to
-                .be.null;
+            expect(
+                await nodeA.testFramework.rpc.network.connect(
+                    address,
+                    nodeB.port
+                )
+            ).to.be.null;
 
             while (
                 !(await nodeA.rpc.net.isConnected({
@@ -74,7 +78,8 @@ describe("network2 nodes", function() {
         });
 
         it("getPeers", async function() {
-            expect(await nodeA.sdk.rpc.network.getPeers()).to.be.empty;
+            expect(await nodeA.testFramework.rpc.network.getPeers()).to.be
+                .empty;
         });
     });
 
@@ -137,12 +142,12 @@ describe("network2 nodes", function() {
         });
 
         it("getPeers", async function() {
-            expect(await nodeA.sdk.rpc.network.getPeers()).to.deep.equal([
-                `${address}:${nodeB.port}`
-            ]);
-            expect(await nodeB.sdk.rpc.network.getPeers()).to.deep.equal([
-                `${address}:${nodeA.port}`
-            ]);
+            expect(
+                await nodeA.testFramework.rpc.network.getPeers()
+            ).to.deep.equal([`${address}:${nodeB.port}`]);
+            expect(
+                await nodeB.testFramework.rpc.network.getPeers()
+            ).to.deep.equal([`${address}:${nodeA.port}`]);
         });
     });
 

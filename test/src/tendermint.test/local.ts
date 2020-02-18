@@ -69,16 +69,20 @@ import CodeChain from "../helper/spawn";
 
     const transactions = [];
     const numTransactions = parseInt(process.env.TEST_NUM_TXS || "10000", 10);
-    const baseSeq = await nodes[0].sdk.rpc.chain.getSeq(faucetAddress);
+    const baseSeq = await nodes[0].testFramework.rpc.chain.getSeq(
+        faucetAddress
+    );
 
     for (let i = 0; i < numTransactions; i++) {
         const value = makeRandomH256();
-        const accountId = nodes[0].sdk.util.getAccountIdFromPrivate(value);
-        const recipient = nodes[0].sdk.core.classes.PlatformAddress.fromAccountId(
+        const accountId = nodes[0].testFramework.util.getAccountIdFromPrivate(
+            value
+        );
+        const recipient = nodes[0].testFramework.core.classes.PlatformAddress.fromAccountId(
             accountId,
             { networkId: "tc" }
         );
-        const transaction = nodes[0].sdk.core
+        const transaction = nodes[0].testFramework.core
             .createPayTransaction({
                 recipient,
                 quantity: 1
@@ -92,19 +96,23 @@ import CodeChain from "../helper/spawn";
     }
 
     for (let i = numTransactions - 1; i > 0; i--) {
-        await nodes[0].sdk.rpc.chain.sendSignedTransaction(transactions[i]);
+        await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
+            transactions[i]
+        );
     }
     const startTime = new Date();
     console.log(`Start at: ${startTime}`);
-    await nodes[0].sdk.rpc.chain.sendSignedTransaction(transactions[0]);
+    await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
+        transactions[0]
+    );
 
     while (true) {
         let flag = true;
         for (let i = 0; i < 4; i++) {
             const hash = transactions[numTransactions - 1].hash();
-            const result = await nodes[i].sdk.rpc.chain.containsTransaction(
-                hash
-            );
+            const result = await nodes[
+                i
+            ].testFramework.rpc.chain.containsTransaction(hash);
 
             console.log(`Node ${i} result: ${result}`);
             if (!result) {
