@@ -17,7 +17,6 @@
 import { expect } from "chai";
 import "mocha";
 import CodeChain from "../helper/spawn";
-import { log } from "util";
 
 describe("solo - 1 node", function() {
     let node: CodeChain;

@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { blake256 } from "codechain-sdk/lib/utils";
 import "mocha";
 import {
     aliceAddress,
@@ -27,6 +26,7 @@ import {
     validator0Address
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
+import { blake256 } from "../sdk/src/utils";
 
 const RLP = require("rlp");
 

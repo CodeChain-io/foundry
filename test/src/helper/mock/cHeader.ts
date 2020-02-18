@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 import { H160, H256, U256 } from "codechain-primitives";
-import { blake256 } from "codechain-sdk/lib/utils";
+import { blake256 } from "../../sdk/src/utils";
 
 const RLP = require("rlp");
 const BLAKE_NULL_RLP: H256 = new H256(

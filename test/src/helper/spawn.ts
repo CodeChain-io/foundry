@@ -16,7 +16,12 @@
 
 import { expect } from "chai";
 import { ChildProcess, spawn } from "child_process";
-import { SDK } from "codechain-sdk";
+import RPC from "foundry-rpc";
+import { createWriteStream, mkdtempSync, unlinkSync } from "fs";
+import * as mkdirp from "mkdirp";
+import { ncp } from "ncp";
+import { createInterface as createReadline, ReadLine } from "readline";
+import { SDK } from "../sdk/src";
 import {
     Asset,
     AssetAddress,
@@ -28,16 +33,11 @@ import {
     TransferAsset,
     U64,
     UnwrapCCC
-} from "codechain-sdk/lib/core/classes";
-import { AssetTransaction } from "codechain-sdk/lib/core/Transaction";
-import { P2PKH } from "codechain-sdk/lib/key/P2PKH";
-import { P2PKHBurn } from "codechain-sdk/lib/key/P2PKHBurn";
-import * as stake from "codechain-stakeholder-sdk";
-import RPC from "foundry-rpc";
-import { createWriteStream, mkdtempSync, unlinkSync } from "fs";
-import * as mkdirp from "mkdirp";
-import { ncp } from "ncp";
-import { createInterface as createReadline, ReadLine } from "readline";
+} from "../sdk/src/core/classes";
+import { AssetTransaction } from "../sdk/src/core/Transaction";
+import { P2PKH } from "../sdk/src/key/P2PKH";
+import { P2PKHBurn } from "../sdk/src/key/P2PKHBurn";
+import * as stake from "../stakeholder/src";
 import { faucetAddress, faucetSecret } from "./constants";
 import { wait } from "./promise";
 

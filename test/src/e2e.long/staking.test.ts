@@ -16,7 +16,6 @@
 
 import { expect } from "chai";
 import { PlatformAddress } from "codechain-primitives/lib";
-import { toHex } from "codechain-sdk/lib/utils";
 import "mocha";
 import {
     aliceAddress,
@@ -33,6 +32,7 @@ import {
 } from "../helper/constants";
 import { PromiseExpect, wait } from "../helper/promise";
 import CodeChain from "../helper/spawn";
+import { toHex } from "../sdk/src/utils";
 
 const RLP = require("rlp");
 

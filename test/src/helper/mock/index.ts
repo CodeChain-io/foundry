@@ -24,8 +24,8 @@ import {
     U256,
     U64
 } from "codechain-primitives";
-import { SignedTransaction } from "codechain-sdk/lib/core/SignedTransaction";
 import * as RLP from "rlp";
+import { SignedTransaction } from "../../sdk/src/core/SignedTransaction";
 import { readUIntRLP } from "../rlp";
 import {
     BlockSyncMessage,
