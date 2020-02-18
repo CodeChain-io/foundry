@@ -251,3 +251,49 @@ impl Decodable for Datagram {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rlp::{self, rlp_encode_and_decode_test};
+
+    #[test]
+    fn conn_open_init() {
+        let conn_open_init = Datagram::ConnOpenInit {
+            identifier: "identifier".to_owned(),
+            desired_counterparty_connection_identifier: "desired_counterparty_connection_identifier".to_owned(),
+            counterparty_prefix: "counterparty_prefix".to_owned(),
+            client_identifier: "client_identifier".to_owned(),
+            counterparty_client_identifier: "counterparty_client_identifier".to_owned(),
+        };
+        rlp_encode_and_decode_test!(conn_open_init);
+    }
+
+    #[test]
+    fn conn_open_try() {
+        let conn_open_try = Datagram::ConnOpenTry {
+            desired_identifier: "desired_identifier".to_owned(),
+            counterparty_connection_identifier: "counterparty_connection_identifier".to_owned(),
+            counterparty_prefix: "counterparty_prefix".to_owned(),
+            counterparty_client_identifier: "counterparty_client_identifier".to_owned(),
+            client_identifier: "client_identifier".to_owned(),
+            proof_init: b"proof_init".to_vec(),
+            proof_consensus: b"proof_consensus".to_vec(),
+            proof_height: 1,
+            consensus_height: 2,
+        };
+        rlp_encode_and_decode_test!(conn_open_try);
+    }
+
+    #[test]
+    fn conn_open_ack() {
+        let conn_open_ack = Datagram::ConnOpenAck {
+            identifier: "identifier".to_owned(),
+            proof_try: b"proof_try".to_vec(),
+            proof_consensus: b"proof_consensus".to_vec(),
+            proof_height: 1,
+            consensus_height: 2,
+        };
+        rlp_encode_and_decode_test!(conn_open_ack);
+    }
+}
