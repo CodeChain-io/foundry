@@ -18,7 +18,6 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 chai.use(chaiAsPromised);
 const expect = chai.expect;
-import { H160, H256, H512, U64 } from "codechain-sdk/lib/core/classes";
 import "mocha";
 import {
     faucetAddress,
@@ -26,8 +25,8 @@ import {
     invalidAddress
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
+import { H160, H256, U64 } from "../sdk/src/core/classes";
 const RLP = require("rlp");
-import { toHex } from "codechain-sdk/lib/utils";
 
 describe("chain", function() {
     const invalidH160 = H160.zero();

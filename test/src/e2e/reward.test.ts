@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { U64 } from "codechain-sdk/lib/core/classes";
 import "mocha";
 import {
     aliceAddress,

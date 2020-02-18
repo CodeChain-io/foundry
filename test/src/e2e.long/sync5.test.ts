@@ -15,9 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H256 } from "codechain-sdk/lib/core/classes";
 import "mocha";
 import CodeChain from "../helper/spawn";
+import { H256 } from "../sdk/src/core/classes";
 
 describe("sync 5 nodes", function() {
     const NUM_NODES = 5;

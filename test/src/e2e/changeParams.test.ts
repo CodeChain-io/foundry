@@ -18,7 +18,6 @@ import * as chai from "chai";
 import { expect } from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { H256, PlatformAddress, U64 } from "codechain-primitives/lib";
-import { blake256 } from "codechain-sdk/lib/utils";
 import "mocha";
 import {
     aliceAddress,
@@ -32,6 +31,7 @@ import {
     validator0Address
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
+import { blake256 } from "../sdk/src/utils";
 
 const RLP = require("rlp");
 

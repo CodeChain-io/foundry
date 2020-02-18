@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { PlatformAddress } from "codechain-primitives";
 import "mocha";
 import {
     aliceAddress,
