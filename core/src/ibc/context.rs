@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -13,11 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use super::kv_store;
-use crate::ibc::KVStore;
+use super::kv_store::{KVStore, Path};
 use ccrypto::blake256;
 use cstate::{TopLevelState, TopState, TopStateView};
-use kv_store::Path;
 use merkle_trie::proof::{CryptoProof, CryptoProofUnit};
 use primitives::H256;
 use rlp::RlpStream;
@@ -71,18 +69,18 @@ impl<'a> TopLevelKVStore<'a> {
     }
 }
 
-impl<'a> kv_store::KVStore for TopLevelKVStore<'a> {
-    fn get(&self, path: &str) -> Vec<u8> {
+impl<'a> KVStore for TopLevelKVStore<'a> {
+    fn get(&self, path: Path) -> Vec<u8> {
         let key = TopLevelKVStore::key(path);
         self.state.ibc_data(&key).expect("Get key").expect("Data empty").into()
     }
 
-    fn has(&self, path: &str) -> bool {
+    fn has(&self, path: Path) -> bool {
         let key = TopLevelKVStore::key(path);
         self.state.ibc_data(&key).expect("Get key").is_some()
     }
 
-    fn set(&mut self, path: &str, value: &[u8]) {
+    fn set(&mut self, path: Path, value: &[u8]) {
         let key = TopLevelKVStore::key(path);
         self.state.update_ibc_data(&key, value.to_vec()).expect("Set in IBC KVStore")
     }
