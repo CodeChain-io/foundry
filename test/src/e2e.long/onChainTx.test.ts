@@ -79,7 +79,7 @@ describe("Test onChain transaction communication", function() {
         const mock = new Mock("0.0.0.0", nodeA.port, "tc");
         await mock.establish();
 
-        const sdk = nodeA.sdk;
+        const sdk = nodeA.testFramework;
 
         const ACCOUNT_SECRET = process.env.ACCOUNT_SECRET || faucetSecret;
         const tx = sdk.core.createPayTransaction({
@@ -117,7 +117,7 @@ describe("Test onChain transaction communication", function() {
                 const mock = new Mock("0.0.0.0", nodeA.port, "tc");
                 await mock.establish();
 
-                const sdk = nodeA.sdk;
+                const sdk = nodeA.testFramework;
 
                 const ACCOUNT_SECRET =
                     process.env.ACCOUNT_SECRET || faucetSecret;

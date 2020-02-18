@@ -31,9 +31,9 @@ describe("account unlock", function() {
     });
 
     it(`unlock 1 second ${unlockTestSize} times and check working well with sign`, async function() {
-        const secret = node.sdk.util.generatePrivateKey();
-        const account = node.sdk.util.getAccountIdFromPrivate(secret);
-        const address = node.sdk.core.classes.PlatformAddress.fromAccountId(
+        const secret = node.testFramework.util.generatePrivateKey();
+        const account = node.testFramework.util.getAccountIdFromPrivate(secret);
+        const address = node.testFramework.core.classes.PlatformAddress.fromAccountId(
             account,
             { networkId: "tc" }
         );
@@ -42,7 +42,7 @@ describe("account unlock", function() {
 
         for (let i = 0; i < unlockTestSize; i++) {
             const message = makeRandomH256();
-            const calculatedSignature = node.sdk.util.signEcdsa(
+            const calculatedSignature = node.testFramework.util.signEcdsa(
                 message,
                 secret
             );

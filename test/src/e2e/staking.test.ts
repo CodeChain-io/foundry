@@ -141,8 +141,8 @@ describe("Staking", function() {
 
         return promiseExpect.shouldFulfill(
             "sendSignTransaction",
-            node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: Buffer.from(
@@ -180,8 +180,8 @@ describe("Staking", function() {
 
         return promiseExpect.shouldFulfill(
             "sendSignTransaction",
-            node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: Buffer.from(
@@ -219,8 +219,8 @@ describe("Staking", function() {
 
         return promiseExpect.shouldFulfill(
             "sendSignTransaction",
-            node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: Buffer.from(
@@ -258,8 +258,8 @@ describe("Staking", function() {
 
         return promiseExpect.shouldFulfill(
             "sendSignTransaction",
-            node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: Buffer.from(RLP.encode([4, deposit, metadata]))
@@ -524,7 +524,8 @@ describe("Staking", function() {
         });
         await node.rpc.devel!.startSealing();
 
-        expect(await node.sdk.rpc.chain.getErrorHint(hash)).not.to.be.null;
+        expect(await node.testFramework.rpc.chain.getErrorHint(hash)).not.to.be
+            .null;
 
         const { amounts } = await getAllStakingInfo();
         expect(amounts).to.be.deep.equal([

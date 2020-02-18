@@ -122,12 +122,18 @@ describe("Snapshot for Tendermint with Dynamic Validator", function() {
                 termPeriods: 2
             });
 
-            await freshValidatorCheck(nodes[0].sdk);
+            await freshValidatorCheck(nodes[0].testFramework);
 
-            expect(await node.sdk.rpc.chain.getBlock(snapshotBlock.number - 1))
-                .to.be.null;
-            expect(await node.sdk.rpc.chain.getBlock(snapshotBlock.number)).not
-                .to.be.null;
+            expect(
+                await node.testFramework.rpc.chain.getBlock(
+                    snapshotBlock.number - 1
+                )
+            ).to.be.null;
+            expect(
+                await node.testFramework.rpc.chain.getBlock(
+                    snapshotBlock.number
+                )
+            ).not.to.be.null;
             // Check that the freshNodeValidator is still a validator & make sure it doesn't have a block/header before termMetadata1.
         } catch (e) {
             node.keepLogs();
@@ -163,12 +169,12 @@ async function getSnapshotBlock(
 ) {
     const blockNumber = termMetadata.lastTermFinishedBlockNumber + 1;
     await node.waitBlockNumber(blockNumber);
-    return (await node.sdk.rpc.chain.getBlock(blockNumber))!;
+    return (await node.testFramework.rpc.chain.getBlock(blockNumber))!;
 }
 
 async function makeItValidator(node: CodeChain, freshNodeValidator: Signer) {
-    const faucetSeq = await node.sdk.rpc.chain.getSeq(faucetAddress);
-    const payTx = node.sdk.core
+    const faucetSeq = await node.testFramework.rpc.chain.getSeq(faucetAddress);
+    const payTx = node.testFramework.core
         .createPayTransaction({
             recipient: freshNodeValidator.platformAddress,
             quantity: 200000000
@@ -178,22 +184,24 @@ async function makeItValidator(node: CodeChain, freshNodeValidator: Signer) {
             seq: faucetSeq,
             fee: 10
         });
-    await node.waitForTx(await node.sdk.rpc.chain.sendSignedTransaction(payTx));
+    await node.waitForTx(
+        await node.testFramework.rpc.chain.sendSignedTransaction(payTx)
+    );
     const selfNominateTx = stake
-        .createSelfNominateTransaction(node.sdk, 10000000, "")
+        .createSelfNominateTransaction(node.testFramework, 10000000, "")
         .sign({
             secret: freshNodeValidator.privateKey,
-            seq: await node.sdk.rpc.chain.getSeq(
+            seq: await node.testFramework.rpc.chain.getSeq(
                 freshNodeValidator.platformAddress
             ),
             fee: 10
         });
     await node.waitForTx(
-        await node.sdk.rpc.chain.sendSignedTransaction(selfNominateTx)
+        await node.testFramework.rpc.chain.sendSignedTransaction(selfNominateTx)
     );
     const delegateTx = stake
         .createDelegateCCSTransaction(
-            node.sdk,
+            node.testFramework,
             freshNodeValidator.platformAddress,
             10000
         )
@@ -203,6 +211,6 @@ async function makeItValidator(node: CodeChain, freshNodeValidator: Signer) {
             fee: 10
         });
     await node.waitForTx(
-        await node.sdk.rpc.chain.sendSignedTransaction(delegateTx)
+        await node.testFramework.rpc.chain.sendSignedTransaction(delegateTx)
     );
 }

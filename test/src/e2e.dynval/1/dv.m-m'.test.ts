@@ -103,7 +103,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
         });
 
         beforeEach(async function() {
-            await expectAllValidatorsArePossibleAuthors(nodes[0].sdk);
+            await expectAllValidatorsArePossibleAuthors(nodes[0].testFramework);
         });
 
         it("Bob should be a validator when doing nothing", async function() {
@@ -118,14 +118,14 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
             });
 
             expect(
-                (await stake.getJailed(nodes[0].sdk)).map(x =>
+                (await stake.getJailed(nodes[0].testFramework)).map(x =>
                     x.address.toString()
                 )
             ).contains(
                 validators[alice].platformAddress.toString(),
                 "Alice should be jailed for doing nothing"
             );
-            await expectAliceIsReplacedBy(nodes[0].sdk, "Bob", bob);
+            await expectAliceIsReplacedBy(nodes[0].testFramework, "Bob", bob);
         });
 
         it("Charlie should be a validator when gets enough delegation", async function() {
@@ -133,22 +133,27 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 terms: 1
             });
 
-            const delegateToCharlie = await nodes[0].sdk.rpc.chain.sendSignedTransaction(
+            const delegateToCharlie = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
                 stake
                     .createDelegateCCSTransaction(
-                        nodes[0].sdk,
+                        nodes[0].testFramework,
                         validators[charlie].platformAddress,
                         charlieDelegationToCatchBob
                     )
                     .sign({
                         secret: faucetSecret,
-                        seq: await nodes[0].sdk.rpc.chain.getSeq(faucetAddress),
+                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
+                            faucetAddress
+                        ),
                         fee: 10
                     })
             );
             await nodes[0].waitForTx(delegateToCharlie);
             await expect(
-                termThatIncludeTransaction(nodes[0].sdk, delegateToCharlie)
+                termThatIncludeTransaction(
+                    nodes[0].testFramework,
+                    delegateToCharlie
+                )
             ).eventually.equal(1);
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 2,
@@ -156,14 +161,18 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
             });
 
             expect(
-                (await stake.getJailed(nodes[0].sdk)).map(x =>
+                (await stake.getJailed(nodes[0].testFramework)).map(x =>
                     x.address.toString()
                 )
             ).contains(
                 validators[alice].platformAddress.toString(),
                 "Alice should be jailed for doing nothing"
             );
-            await expectAliceIsReplacedBy(nodes[0].sdk, "Charlie", charlie);
+            await expectAliceIsReplacedBy(
+                nodes[0].testFramework,
+                "Charlie",
+                charlie
+            );
         });
 
         it("Dave should be a validator when deposit enough", async function() {
@@ -173,16 +182,16 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
 
             const depositDave = await nodes[
                 dave
-            ].sdk.rpc.chain.sendSignedTransaction(
+            ].testFramework.rpc.chain.sendSignedTransaction(
                 stake
                     .createSelfNominateTransaction(
-                        nodes[dave].sdk,
+                        nodes[dave].testFramework,
                         daveDepositToCatchBob,
                         ""
                     )
                     .sign({
                         secret: validators[dave].privateKey,
-                        seq: await nodes[dave].sdk.rpc.chain.getSeq(
+                        seq: await nodes[dave].testFramework.rpc.chain.getSeq(
                             validators[dave].platformAddress
                         ),
                         fee: 10
@@ -195,14 +204,14 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
             });
 
             expect(
-                (await stake.getJailed(nodes[0].sdk)).map(x =>
+                (await stake.getJailed(nodes[0].testFramework)).map(x =>
                     x.address.toString()
                 )
             ).contains(
                 validators[alice].platformAddress.toString(),
                 "Alice should be jailed for doing nothing"
             );
-            await expectAliceIsReplacedBy(nodes[0].sdk, "Dave", dave);
+            await expectAliceIsReplacedBy(nodes[0].testFramework, "Dave", dave);
         });
     });
 
@@ -212,18 +221,20 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
         beforeEach(async function() {
             this.timeout(5000);
 
-            await expectAllValidatorsArePossibleAuthors(nodes[0].sdk);
+            await expectAllValidatorsArePossibleAuthors(nodes[0].testFramework);
 
-            const revokeTx = await nodes[0].sdk.rpc.chain.sendSignedTransaction(
+            const revokeTx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
                 stake
                     .createRevokeTransaction(
-                        nodes[0].sdk,
+                        nodes[0].testFramework,
                         validators[alice].platformAddress,
                         aliceRevokeToBeLowerThanBob
                     )
                     .sign({
                         secret: faucetSecret,
-                        seq: await nodes[0].sdk.rpc.chain.getSeq(faucetAddress),
+                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
+                            faucetAddress
+                        ),
                         fee: 10
                     })
             );
@@ -240,7 +251,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 target: 2,
                 termPeriods: 1
             });
-            await expectAliceIsReplacedBy(nodes[0].sdk, "Bob", bob);
+            await expectAliceIsReplacedBy(nodes[0].testFramework, "Bob", bob);
         });
 
         it("Charlie should be a validator when gets enough delegation", async function() {
@@ -248,16 +259,18 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 terms: 1
             });
 
-            const delegateToCharlie = await nodes[0].sdk.rpc.chain.sendSignedTransaction(
+            const delegateToCharlie = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
                 stake
                     .createDelegateCCSTransaction(
-                        nodes[0].sdk,
+                        nodes[0].testFramework,
                         validators[charlie].platformAddress,
                         charlieDelegationToCatchBob
                     )
                     .sign({
                         secret: faucetSecret,
-                        seq: await nodes[0].sdk.rpc.chain.getSeq(faucetAddress),
+                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
+                            faucetAddress
+                        ),
                         fee: 10
                     })
             );
@@ -267,7 +280,11 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 target: 2,
                 termPeriods: 1
             });
-            await expectAliceIsReplacedBy(nodes[0].sdk, "Charlie", charlie);
+            await expectAliceIsReplacedBy(
+                nodes[0].testFramework,
+                "Charlie",
+                charlie
+            );
         });
 
         it("Dave should be a validator when deposit enough", async function() {
@@ -277,16 +294,16 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
 
             const depositDave = await nodes[
                 dave
-            ].sdk.rpc.chain.sendSignedTransaction(
+            ].testFramework.rpc.chain.sendSignedTransaction(
                 stake
                     .createSelfNominateTransaction(
-                        nodes[dave].sdk,
+                        nodes[dave].testFramework,
                         daveDepositToCatchBob,
                         ""
                     )
                     .sign({
                         secret: validators[dave].privateKey,
-                        seq: await nodes[dave].sdk.rpc.chain.getSeq(
+                        seq: await nodes[dave].testFramework.rpc.chain.getSeq(
                             validators[dave].platformAddress
                         ),
                         fee: 10
@@ -298,7 +315,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 target: 2,
                 termPeriods: 1
             });
-            await expectAliceIsReplacedBy(nodes[0].sdk, "Dave", dave);
+            await expectAliceIsReplacedBy(nodes[0].testFramework, "Dave", dave);
         });
     });
 
@@ -306,7 +323,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
         const { nodes } = withNodes(this, nodeParams);
 
         beforeEach(async function() {
-            await expectAllValidatorsArePossibleAuthors(nodes[0].sdk);
+            await expectAllValidatorsArePossibleAuthors(nodes[0].testFramework);
         });
 
         it("Charlie should be a validator when gets enough delegation", async function() {
@@ -314,16 +331,18 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 terms: 1
             });
 
-            const delegateToCharlie = await nodes[0].sdk.rpc.chain.sendSignedTransaction(
+            const delegateToCharlie = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
                 stake
                     .createDelegateCCSTransaction(
-                        nodes[0].sdk,
+                        nodes[0].testFramework,
                         validators[charlie].platformAddress,
                         charlieDelegationToCatchAlice
                     )
                     .sign({
                         secret: faucetSecret,
-                        seq: await nodes[0].sdk.rpc.chain.getSeq(faucetAddress),
+                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
+                            faucetAddress
+                        ),
                         fee: 10
                     })
             );
@@ -333,7 +352,11 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 target: 2,
                 termPeriods: 1
             });
-            await expectAliceIsReplacedBy(nodes[0].sdk, "Charlie", charlie);
+            await expectAliceIsReplacedBy(
+                nodes[0].testFramework,
+                "Charlie",
+                charlie
+            );
         });
 
         it("Dave should be a validator when deposit enough", async function() {
@@ -343,16 +366,16 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
 
             const depositDave = await nodes[
                 dave
-            ].sdk.rpc.chain.sendSignedTransaction(
+            ].testFramework.rpc.chain.sendSignedTransaction(
                 stake
                     .createSelfNominateTransaction(
-                        nodes[dave].sdk,
+                        nodes[dave].testFramework,
                         daveDepositToCatchAlice,
                         ""
                     )
                     .sign({
                         secret: validators[dave].privateKey,
-                        seq: await nodes[dave].sdk.rpc.chain.getSeq(
+                        seq: await nodes[dave].testFramework.rpc.chain.getSeq(
                             validators[dave].platformAddress
                         ),
                         fee: 10
@@ -364,7 +387,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 target: 2,
                 termPeriods: 1
             });
-            await expectAliceIsReplacedBy(nodes[0].sdk, "Dave", dave);
+            await expectAliceIsReplacedBy(nodes[0].testFramework, "Dave", dave);
         });
     });
 
