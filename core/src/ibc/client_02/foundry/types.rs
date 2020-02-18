@@ -161,7 +161,7 @@ impl State {
     }
 
     fn set_type(&self, ctx: &mut dyn ibc::Context) {
-        let kv_store = ctx.get_kv_store();
+        let kv_store = ctx.get_kv_store_mut();
         let path = type_path(self.id());
         KVStore::set(kv_store, &path, &[self.kind()]);
     }
@@ -177,7 +177,7 @@ impl client::State for State {
     }
 
     fn set_consensus_state(&self, ctx: &mut dyn ibc::Context, cs: &dyn client::ConsensusState) {
-        let kv_store = ctx.get_kv_store();
+        let kv_store = ctx.get_kv_store_mut();
         let data = cs.encode();
         let path = client::consensus_state_path(self.id());
         KVStore::set(kv_store, &path, &data);
@@ -193,7 +193,7 @@ impl client::State for State {
     }
 
     fn set_root(&self, ctx: &mut dyn ibc::Context, block_height: u64, root: &dyn commitment::Root) {
-        let kv_store = ctx.get_kv_store();
+        let kv_store = ctx.get_kv_store_mut();
         let path = client::root_path(self.id(), block_height);
         KVStore::set(kv_store, &path, &root.encode());
     }
