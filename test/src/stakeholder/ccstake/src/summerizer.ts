@@ -1,0 +1,122 @@
+import { PlatformAddressValue } from "codechain-primitives/lib";
+import { SDK } from "codechain-sdk";
+import { PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
+import {
+    Delegation,
+    getCCSHolders,
+    getDelegations,
+    getUndelegatedCCS
+} from "codechain-stakeholder-sdk";
+
+interface DelegationFrom {
+    delegator: PlatformAddress;
+    quantity: U64;
+}
+
+class QuantitySummerizableArray<T extends { quantity: U64 }> {
+    public values: T[] = [];
+
+    private _sum?: U64 | null = null;
+    public get sum() {
+        if (this._sum == null) {
+            this._sum = sumU64(this.values.map(x => x.quantity));
+        }
+        return this._sum;
+    }
+}
+
+export class AccountSummary {
+    get balance() {
+        return this.undelegated.plus(this.delegationsTo.sum);
+    }
+    public undelegated = new U64(0);
+    public delegationsTo = new QuantitySummerizableArray<Delegation>();
+    public delegationsFrom = new QuantitySummerizableArray<DelegationFrom>();
+}
+
+export interface Summary {
+    totalCCS: U64;
+    accounts: PlatformAddress[];
+    get(account: PlatformAddressValue): AccountSummary;
+    delegations(
+        delegator: PlatformAddressValue,
+        delegatee: PlatformAddressValue
+    ): U64;
+}
+
+export async function summarize(
+    sdk: SDK,
+    blockNumber: number
+): Promise<Summary> {
+    const ccsHolders = await getCCSHolders(sdk, blockNumber);
+    const allUndelegateds = await Promise.all(
+        ccsHolders.map(ccsHolder =>
+            getUndelegatedCCS(sdk, ccsHolder, blockNumber)
+        )
+    );
+    const allDelegations = await Promise.all(
+        ccsHolders.map(ccsHolder => getDelegations(sdk, ccsHolder, blockNumber))
+    );
+
+    const aggregate: { [address: string]: AccountSummary } = {};
+
+    for (let i = 0; i < ccsHolders.length; i++) {
+        const delegator = ccsHolders[i];
+        const delegations = allDelegations[i];
+
+        const delegatorSummary =
+            aggregate[delegator.value] || new AccountSummary();
+        delegatorSummary.undelegated = allUndelegateds[i];
+        delegatorSummary.delegationsTo.values = delegations;
+        aggregate[delegator.value] = delegatorSummary;
+
+        for (const { delegatee, quantity } of delegations) {
+            const delegateeSummary =
+                aggregate[delegatee.value] || new AccountSummary();
+            delegateeSummary.delegationsFrom.values.push({
+                delegator,
+                quantity
+            });
+            aggregate[delegatee.value] = delegateeSummary;
+        }
+    }
+    const accounts = Object.keys(aggregate).map(PlatformAddress.ensure);
+    const summary: Summary = {
+        totalCCS: getTotalCCS(allUndelegateds, allDelegations),
+        accounts,
+        get(accountValue: PlatformAddressValue) {
+            const account = PlatformAddress.ensure(accountValue).toString();
+            if (!aggregate[account]) {
+                aggregate[account] = new AccountSummary();
+            }
+            return aggregate[account];
+        },
+        delegations(
+            delegatorValue: PlatformAddressValue,
+            delegateeValue: PlatformAddressValue
+        ) {
+            const delegator = PlatformAddress.ensure(delegatorValue);
+            const delegatee = PlatformAddress.ensure(delegateeValue);
+            const delegations = this.get(delegator).delegationsTo.values.filter(
+                x => x.delegatee.toString() === delegatee.toString()
+            );
+            return sumU64(delegations.map(x => x.quantity));
+        }
+    };
+    return summary;
+}
+
+function getTotalCCS(balances: U64[], allDelegations: Delegation[][]) {
+    const totalBalance = sumU64(balances);
+    let totalDelegations = new U64(0);
+    for (const delegations of allDelegations) {
+        totalDelegations = totalDelegations.plus(
+            sumU64(delegations.map(x => x.quantity))
+        );
+    }
+    return totalBalance.plus(totalDelegations);
+}
+
+export function sumU64(values: U64[]): U64 {
+    return values.reduce((a, b) => a.plus(b), new U64(0));
+}
