@@ -145,7 +145,7 @@ impl ActionHandler for Stake {
                     client.block_header(&(message1.height() - 1).into()).expect("Parent header verified").hash();
                 let malicious_user_public = validator_set.get(&parent_hash, message1.signer_index());
 
-                ban(state, sender_public, public_to_address(&malicious_user_public))
+                ban(state, sender_address, public_to_address(&malicious_user_public))
             }
         }
     }
@@ -478,7 +478,7 @@ pub fn jail(state: &mut TopLevelState, addresses: &[Address], custody_until: u64
     Ok(())
 }
 
-pub fn ban(state: &mut TopLevelState, informant: &Public, criminal: Address) -> StateResult<()> {
+pub fn ban(state: &mut TopLevelState, informant: &Address, criminal: Address) -> StateResult<()> {
     let mut banned = Banned::load_from_state(state)?;
     if banned.is_banned(&criminal) {
         return Err(RuntimeError::FailedToHandleCustomAction("Account is already banned".to_string()).into())
@@ -495,7 +495,7 @@ pub fn ban(state: &mut TopLevelState, informant: &Public, criminal: Address) -> 
         _ => 0,
     };
     // confiscate criminal's deposit and give the same deposit amount to the informant.
-    state.add_balance(&public_to_address(informant), deposit)?;
+    state.add_balance(informant, deposit)?;
 
     jailed.remove(&criminal);
     banned.add(criminal);
@@ -1117,6 +1117,7 @@ mod tests {
         let informant_pubkey = Public::random();
         let criminal_pubkey = Public::random();
         let delegator_pubkey = Public::random();
+        let informant = public_to_address(&informant_pubkey);
         let criminal = public_to_address(&criminal_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
         let prev_delegatee_pubkey = Public::random();
@@ -1148,7 +1149,7 @@ mod tests {
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 2);
 
-        assert_eq!(Ok(()), ban(&mut state, &informant_pubkey, criminal));
+        assert_eq!(Ok(()), ban(&mut state, &informant, criminal));
 
         let banned = Banned::load_from_state(&state).unwrap();
         assert!(banned.is_banned(&criminal));
@@ -1698,6 +1699,7 @@ mod tests {
         let informant_pubkey = Public::random();
         let criminal_pubkey = Public::random();
         let delegator_pubkey = Public::random();
+        let informant = public_to_address(&informant_pubkey);
         let criminal = public_to_address(&criminal_pubkey);
         let delegator = public_to_address(&delegator_pubkey);
 
@@ -1719,7 +1721,7 @@ mod tests {
         };
         stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
 
-        assert_eq!(Ok(()), ban(&mut state, &informant_pubkey, criminal));
+        assert_eq!(Ok(()), ban(&mut state, &informant, criminal));
 
         let banned = Banned::load_from_state(&state).unwrap();
         assert!(banned.is_banned(&criminal));
@@ -1740,6 +1742,7 @@ mod tests {
     fn ban_should_remove_prisoner_from_jail() {
         let informant_pubkey = Public::random();
         let criminal_pubkey = Public::random();
+        let informant = public_to_address(&informant_pubkey);
         let criminal = public_to_address(&criminal_pubkey);
 
         let mut state = helpers::get_temp_state();
@@ -1753,7 +1756,7 @@ mod tests {
         let released_at = 20;
         jail(&mut state, &[criminal], custody_until, released_at).unwrap();
 
-        assert_eq!(Ok(()), ban(&mut state, &informant_pubkey, criminal));
+        assert_eq!(Ok(()), ban(&mut state, &informant, criminal));
 
         let jail = Jail::load_from_state(&state).unwrap();
         assert_eq!(jail.get_prisoner(&criminal), None, "Should be removed from the jail");
