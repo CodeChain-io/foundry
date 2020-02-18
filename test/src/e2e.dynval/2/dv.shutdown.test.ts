@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import * as stake from "codechain-stakeholder-sdk";
 import "mocha";
+import * as stake from "../../stakeholder/src";
 
 import { validators } from "../../../tendermint.dynval/constants";
 import { PromiseExpect } from "../../helper/promise";

@@ -2,8 +2,8 @@
 // In the import statement below uses "codechain-primitives" which is installed by the SDK.
 // We should use the SDK's PlatformAddressValue when the SDK is updated.
 import { PlatformAddressValue } from "codechain-primitives";
-import { SDK } from "codechain-sdk";
-import { H512, PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
+import { SDK } from "../../sdk/src";
+import { H512, PlatformAddress, U64 } from "../../sdk/src/core/classes";
 
 import { HANDLER_ID } from "./index";
 import {

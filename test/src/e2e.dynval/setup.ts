@@ -15,8 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { blake256, H256, U64Value } from "codechain-primitives/lib";
-import { SDK } from "codechain-sdk";
-import * as stake from "codechain-stakeholder-sdk";
 import { Context, Suite } from "mocha";
 import {
     aliceSecret,
@@ -30,6 +28,8 @@ import {
 } from "../helper/constants";
 import { PromiseExpect, wait } from "../helper/promise";
 import CodeChain, { Signer } from "../helper/spawn";
+import { SDK } from "../sdk/src";
+import * as stake from "../stakeholder/src";
 
 const RLP = require("rlp");
 

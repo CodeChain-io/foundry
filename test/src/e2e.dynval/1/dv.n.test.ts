@@ -15,9 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { SDK } from "codechain-sdk";
-import * as stake from "codechain-stakeholder-sdk";
 import "mocha";
+import { SDK } from "../../sdk/src";
+import * as stake from "../../stakeholder/src";
 
 import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";

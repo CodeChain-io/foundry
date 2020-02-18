@@ -17,11 +17,11 @@
 import * as chai from "chai";
 import { expect } from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { SDK } from "codechain-sdk";
-import * as stake from "codechain-stakeholder-sdk";
 import * as fs from "fs";
 import "mocha";
 import * as path from "path";
+import { SDK } from "../../sdk/src";
+import * as stake from "../../stakeholder/src";
 
 import mkdirp = require("mkdirp");
 import { validators } from "../../../tendermint.dynval/constants";
