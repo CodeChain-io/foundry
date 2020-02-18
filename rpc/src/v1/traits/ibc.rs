@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,28 +14,5 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::types::IBCQueryResult;
-use jsonrpc_core::Result;
-
-
 #[rpc(server)]
-pub trait IBC {
-    #[rpc(name = "ibc_query_client_consensus_state")]
-    fn query_client_consensus_state(
-        &self,
-        client_id: String,
-        block_number: Option<u64>,
-    ) -> Result<Option<IBCQueryResult>>;
-
-    #[rpc(name = "ibc_query_header")]
-    fn query_header(&self, block_number: Option<u64>) -> Result<Option<String>>;
-
-    /// Gets the other chain's root saved in the light client
-    #[rpc(name = "ibc_query_client_root")]
-    fn query_client_root(
-        &self,
-        client_id: String,
-        other_block_number: u64,
-        this_block_number: Option<u64>,
-    ) -> Result<Option<IBCQueryResult>>;
-}
+pub trait IBC {}

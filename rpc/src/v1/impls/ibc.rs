@@ -14,15 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::errors;
 use super::super::traits::IBC;
-use super::super::types::IBCQueryResult;
-use ccore::ibc;
-use ccore::{BlockChainClient, BlockId, StateInfo};
-use jsonrpc_core::Result;
-use rustc_serialize::hex::ToHex;
+use ccore::{BlockChainClient, StateInfo};
 use std::sync::Arc;
 
+#[allow(dead_code)]
 pub struct IBCClient<C>
 where
     C: StateInfo + BlockChainClient, {
@@ -40,74 +36,4 @@ where
     }
 }
 
-impl<C> IBC for IBCClient<C>
-where
-    C: StateInfo + 'static + Send + Sync + BlockChainClient,
-{
-    fn query_client_consensus_state(
-        &self,
-        client_id: String,
-        block_number: Option<u64>,
-    ) -> Result<Option<IBCQueryResult>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        let mut state = self.client.state_at(block_id).ok_or_else(errors::state_not_exist)?;
-        let block_number = match self.client.block_number(&block_id) {
-            None => return Ok(None),
-            Some(block_number) => block_number,
-        };
-
-        let mut context = ibc::context::TopLevelContext::new(&mut state, block_number);
-        let mut client_manager = ibc::client::Manager::new(&mut context);
-        let client_state = client_manager.query(&client_id).map_err(|_| errors::ibc_client_not_exist())?;
-
-        let consensus_state = client_state.get_consensus_state(&mut context);
-
-        let rlp_encoded_consensus_state = consensus_state.encode();
-
-        Ok(Some(IBCQueryResult {
-            block_number,
-            raw: rlp_encoded_consensus_state.to_hex(),
-            // FIXME
-            proof: "".to_string(),
-        }))
-    }
-
-    fn query_header(&self, block_number: Option<u64>) -> Result<Option<String>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        let header = match self.client.block_header(&block_id) {
-            None => return Ok(None),
-            Some(header) => header,
-        };
-
-        Ok(Some(header.into_inner().to_hex()))
-    }
-
-    fn query_client_root(
-        &self,
-        client_id: String,
-        other_block_number: u64,
-        this_block_number: Option<u64>,
-    ) -> Result<Option<IBCQueryResult>> {
-        let block_id = this_block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        let mut state = self.client.state_at(block_id).ok_or_else(errors::state_not_exist)?;
-        let block_number = match self.client.block_number(&block_id) {
-            None => return Ok(None),
-            Some(block_number) => block_number,
-        };
-
-        let mut context = ibc::context::TopLevelContext::new(&mut state, block_number);
-        let mut client_manager = ibc::client::Manager::new(&mut context);
-        let client_state = client_manager.query(&client_id).map_err(|_| errors::ibc_client_not_exist())?;
-
-        let root =
-            client_state.get_root(&mut context, other_block_number).map_err(|_| errors::ibc_client_root_not_exist())?;
-        let rlp_encoded_root = root.encode();
-
-        Ok(Some(IBCQueryResult {
-            block_number,
-            raw: rlp_encoded_root.to_hex(),
-            // FIXME
-            proof: "".to_string(),
-        }))
-    }
-}
+impl<C> IBC for IBCClient<C> where C: StateInfo + 'static + Send + Sync + BlockChainClient {}
