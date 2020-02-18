@@ -45,7 +45,7 @@ impl<'a> Manager<'a> {
         client_identifier: Identifier,
         counterparty_client_identifier: Identifier,
     ) -> Result<(), String> {
-        let kv_store = self.ctx.get_kv_store();
+        let kv_store = self.ctx.get_kv_store_mut();
         if kv_store.has(&connection_path(&identifier)) {
             return Err("Connection exist".to_owned())
         }
@@ -117,7 +117,7 @@ impl<'a> Manager<'a> {
             }
         }
 
-        let kv_store = self.ctx.get_kv_store();
+        let kv_store = self.ctx.get_kv_store_mut();
         kv_store.set(&connection_path(&desired_identifier), &connection.rlp_bytes());
         Ok(())
     }
@@ -164,7 +164,7 @@ impl<'a> Manager<'a> {
         client_identifier: Identifier,
         connection_identifier: Identifier,
     ) -> Result<(), String> {
-        let kv_store = self.ctx.get_kv_store();
+        let kv_store = self.ctx.get_kv_store_mut();
         if kv_store.has(&connection_path(&connection_identifier)) {
             return Err("Connection exist".to_owned())
         }

@@ -23,8 +23,9 @@ use primitives::H256;
 use rlp::RlpStream;
 
 pub trait Context {
-    fn get_kv_store(&mut self) -> &mut dyn kv_store::KVStore;
     fn get_current_height(&self) -> u64;
+    fn get_kv_store_mut(&mut self) -> &mut dyn KVStore;
+    fn get_kv_store(&self) -> &dyn KVStore;
 }
 
 pub struct TopLevelContext<'a> {
@@ -44,12 +45,16 @@ impl<'a> TopLevelContext<'a> {
 }
 
 impl<'a> Context for TopLevelContext<'a> {
-    fn get_kv_store(&mut self) -> &mut dyn KVStore {
+    fn get_kv_store_mut(&mut self) -> &mut dyn KVStore {
         &mut self.kv_store
     }
 
     fn get_current_height(&self) -> u64 {
         self.current_height
+    }
+
+    fn get_kv_store(&self) -> &dyn KVStore {
+        &self.kv_store
     }
 }
 
