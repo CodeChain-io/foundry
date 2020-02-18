@@ -166,6 +166,39 @@ impl<'a> Manager<'a> {
         Ok(())
     }
 
+    pub fn handle_open_confirm(
+        &mut self,
+        identifier: Identifier,
+        proof_ack: Vec<u8>,
+        proof_height: u64,
+    ) -> Result<(), String> {
+        let mut connection = self
+            .query(&identifier)
+            .ok_or_else(|| format!("Cannot find connection with the identifier: {}", identifier))?;
+        if connection.state != ConnectionState::TRYOPEN {
+            return Err(format!("Invalid connection state expected TRYOPEN but found {:?}", connection.state))
+        }
+
+        let expected = ConnectionEnd {
+            state: ConnectionState::OPEN,
+            counterparty_connection_identifier: identifier.clone(),
+            counterparty_prefix: get_commiment_prefix(),
+            client_identifier: connection.counterparty_client_identifier.clone(),
+            counterparty_client_identifier: connection.client_identifier.clone(),
+        };
+
+        if !self.verify_connection_state(&connection, proof_height, proof_ack, identifier.clone(), &expected) {
+            return Err(format!("Counterparty chain's connection state verification fail. expected: {:?}", expected))
+        }
+
+        connection.state = ConnectionState::OPEN;
+        let kv_store = self.ctx.get_kv_store_mut();
+        let path = connection_path(&identifier);
+        kv_store.set(&path, &connection.rlp_bytes());
+
+        Ok(())
+    }
+
     fn query(&mut self, identifier: &str) -> Option<ConnectionEnd> {
         let kv_store = self.ctx.get_kv_store();
 
