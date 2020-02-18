@@ -275,12 +275,7 @@ impl HeaderChain {
         let prev_best_hash = self.best_header_hash();
         let is_new_best = parent_details_of_new_header.total_score + new_header.score()
             > self.best_proposal_header_detail().total_score
-            && engine.can_change_canon_chain(
-                new_header.hash(),
-                parent_hash_of_new_header,
-                grandparent_hash_of_new_header,
-                prev_best_hash,
-            );
+            && engine.can_change_canon_chain(parent_hash_of_new_header, grandparent_hash_of_new_header, prev_best_hash);
 
         if is_new_best {
             ctrace!(

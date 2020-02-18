@@ -327,7 +327,6 @@ impl ConsensusEngine for Tendermint {
 
     fn can_change_canon_chain(
         &self,
-        _new_header_hash: BlockHash,
         parent_hash_of_new_header: BlockHash,
         grandparent_hash_of_new_header: BlockHash,
         prev_best_hash: BlockHash,

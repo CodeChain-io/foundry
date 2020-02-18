@@ -219,12 +219,7 @@ impl BlockChain {
         let prev_best_hash = self.best_block_hash();
 
         if parent_details_of_new_block.total_score + new_header.score() > self.best_proposal_block_detail().total_score
-            && engine.can_change_canon_chain(
-                new_header.hash(),
-                parent_hash_of_new_block,
-                grandparent_hash_of_new_block,
-                prev_best_hash,
-            )
+            && engine.can_change_canon_chain(parent_hash_of_new_block, grandparent_hash_of_new_block, prev_best_hash)
         {
             cinfo!(
                 BLOCKCHAIN,

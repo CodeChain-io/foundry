@@ -60,10 +60,12 @@ impl HeaderDownloader {
         }
     }
 
+    #[inline]
     pub fn update_pivot(&mut self, hash: BlockHash) {
         self.pivot = hash;
     }
 
+    #[inline]
     pub fn best_hash(&self) -> BlockHash {
         self.best_hash
     }
@@ -84,6 +86,7 @@ impl HeaderDownloader {
         }
     }
 
+    #[inline]
     fn is_valid(&self) -> bool {
         self.trial < MAX_RETRY
     }
@@ -110,6 +113,7 @@ impl HeaderDownloader {
         self.is_valid() && (can_request || self.is_expired())
     }
 
+    #[inline]
     pub fn is_caught_up(&self) -> bool {
         self.pivot == self.best_hash
     }
@@ -134,6 +138,7 @@ impl HeaderDownloader {
 
     /// Imports headers and mark success
     /// Expects importing headers matches requested header
+    /// headers slice should be sorted in order of number
     pub fn import_headers(&mut self, headers: &[Header]) {
         let first_header = headers.first().expect("First header must exist");
         let first_header_hash = first_header.hash();
