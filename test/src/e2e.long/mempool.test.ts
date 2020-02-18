@@ -29,7 +29,7 @@ describe("Memory pool size test", function() {
             argv: ["--mem-pool-size", sizeLimit.toString()]
         });
         await nodeA.start();
-        await nodeA.sdk.rpc.devel.stopSealing();
+        await nodeA.rpc.devel!.stopSealing();
     });
 
     it("To self", async function() {
@@ -38,7 +38,7 @@ describe("Memory pool size test", function() {
             sending.push(nodeA.sendPayTx({ seq }));
         }
         await Promise.all(sending);
-        const pendingTransactions = await nodeA.sdk.rpc.chain.getPendingTransactions();
+        const pendingTransactions = await nodeA.rpc.mempool.getPendingTransactions();
         expect(pendingTransactions.transactions.length).to.equal(sizeLimit * 2);
     }).timeout(10_000);
 
@@ -55,7 +55,7 @@ describe("Memory pool size test", function() {
                 ]
             });
             await nodeB.start();
-            await nodeB.sdk.rpc.devel.stopSealing();
+            await nodeB.rpc.devel!.stopSealing();
         });
 
         it("More than limit", async function() {
@@ -66,13 +66,13 @@ describe("Memory pool size test", function() {
             }
 
             while (
-                (await nodeB.sdk.rpc.chain.getPendingTransactions())
-                    .transactions.length < sizeLimit
+                (await nodeB.rpc.mempool.getPendingTransactions()).transactions
+                    .length < sizeLimit
             ) {
                 await wait(500);
             }
 
-            const pendingTransactions = await nodeB.sdk.rpc.chain.getPendingTransactions();
+            const pendingTransactions = await nodeB.rpc.mempool.getPendingTransactions();
             expect(pendingTransactions.transactions.length).to.equal(sizeLimit);
         }).timeout(60_000);
 
@@ -87,51 +87,53 @@ describe("Memory pool size test", function() {
             }
 
             while (
-                (await nodeB.sdk.rpc.chain.getPendingTransactions())
-                    .transactions.length < sizeLimit
+                (await nodeB.rpc.mempool.getPendingTransactions()).transactions
+                    .length < sizeLimit
             ) {
                 await wait(500);
             }
 
-            const pendingTransactions = await nodeB.sdk.rpc.chain.getPendingTransactions();
+            const pendingTransactions = await nodeB.rpc.mempool.getPendingTransactions();
             const pendingTransactionHashes = pendingTransactions.transactions.map(
-                (tx: SignedTransaction) => tx.hash().value
+                (tx: any) => tx.hash
             );
             const rejectedTransactions = sent.filter(
-                tx => !pendingTransactionHashes.includes(tx.hash().value)
+                tx => !pendingTransactionHashes.includes(`0x${tx.hash().value}`)
             );
 
-            await nodeB.sdk.rpc.devel.startSealing();
+            await nodeB.rpc.devel!.startSealing();
 
             while (
-                (await nodeB.sdk.rpc.chain.getPendingTransactions())
-                    .transactions.length > 0
+                (await nodeB.rpc.mempool.getPendingTransactions()).transactions
+                    .length > 0
             ) {
                 await wait(500);
             }
 
-            await nodeB.sdk.rpc.devel.stopSealing();
+            await nodeB.rpc.devel!.stopSealing();
 
             await Promise.all(
                 rejectedTransactions.map((tx: SignedTransaction) =>
-                    nodeB.sdk.rpc.chain
-                        .sendSignedTransaction(tx)
+                    nodeB.rpc.mempool
+                        .sendSignedTransaction({
+                            tx: `0x${tx.rlpBytes().toString("hex")}`
+                        })
                         .then(txhash =>
-                            expect(txhash.value).to.eq(tx.hash().value)
+                            expect(txhash).to.eq(`0x${tx.hash().value}`)
                         )
                 )
             );
 
-            const pendingTransactionsAfterResend = await nodeB.sdk.rpc.chain.getPendingTransactions();
+            const pendingTransactionsAfterResend = await nodeB.rpc.mempool.getPendingTransactions();
             const pendingTransactionHashesAfterResend = pendingTransactionsAfterResend.transactions.map(
-                (tx: SignedTransaction) => tx.hash().value
+                (tx: any) => tx.hash
             );
 
             rejectedTransactions.forEach(
                 tx =>
                     expect(
                         pendingTransactionHashesAfterResend.includes(
-                            tx.hash().value
+                            `0x${tx.hash().value}`
                         )
                     ).to.true
             );
@@ -160,7 +162,7 @@ describe.skip("Memory pool memory limit test", function() {
             argv: ["--mem-pool-mem-limit", memoryLimit.toString()]
         });
         await nodeA.start();
-        await nodeA.sdk.rpc.devel.stopSealing();
+        await nodeA.rpc.devel!.stopSealing();
     });
 
     it("To self", async function() {
@@ -170,14 +172,17 @@ describe.skip("Memory pool memory limit test", function() {
         for (let i = 0; i < bigEnough; i++) {
             const tx = nodeA.createPayTx({ seq: i });
             remainSize -= tx.rlpBytes().byteLength;
-            txs.push(nodeA.sdk.rpc.chain.sendSignedTransaction(tx));
+            const trans = tx.rlpBytes().toString("hex");
+            txs.push(
+                nodeA.rpc.mempool.sendSignedTransaction({ tx: `0x${trans}` })
+            );
 
             if (remainSize < 0) {
                 break;
             }
         }
         await Promise.all(txs);
-        const pendingTransactions = await nodeA.sdk.rpc.chain.getPendingTransactions();
+        const pendingTransactions = await nodeA.rpc.mempool.getPendingTransactions();
         expect(pendingTransactions.transactions.length).to.equal(txs.length);
     }).timeout(50_000);
 
@@ -191,15 +196,15 @@ describe.skip("Memory pool memory limit test", function() {
                 argv: ["--mem-pool-mem-limit", memoryLimit.toString()]
             });
             await nodeB.start();
-            await nodeB.sdk.rpc.devel.stopSealing();
+            await nodeB.rpc.devel!.stopSealing();
 
             await nodeA.connect(nodeB);
         });
 
         it("More than limit", async function() {
             const [aBlockNumber, bBlockNumber] = await Promise.all([
-                nodeA.sdk.rpc.chain.getBestBlockNumber(),
-                nodeB.sdk.rpc.chain.getBestBlockNumber()
+                nodeA.rpc.chain.getBestBlockNumber(),
+                nodeB.rpc.chain.getBestBlockNumber()
             ]);
             expect(aBlockNumber).to.equal(bBlockNumber);
             let remainSize = memoryLimit * 1024 * 1024;
@@ -208,7 +213,12 @@ describe.skip("Memory pool memory limit test", function() {
             for (let i = 0; i < bigEnough; i++) {
                 const tx = nodeA.createPayTx({ seq: i });
                 remainSize -= tx.rlpBytes().byteLength;
-                txs.push(nodeA.sdk.rpc.chain.sendSignedTransaction(tx));
+                const trans = tx.rlpBytes().toString("hex");
+                txs.push(
+                    nodeA.rpc.mempool.sendSignedTransaction({
+                        tx: `0x${trans}`
+                    })
+                );
 
                 if (remainSize < 0) {
                     break;
@@ -217,14 +227,14 @@ describe.skip("Memory pool memory limit test", function() {
             await Promise.all(txs);
             await wait(3_000);
 
-            const pendingTransactions = await nodeB.sdk.rpc.chain.getPendingTransactions();
+            const pendingTransactions = await nodeB.rpc.mempool.getPendingTransactions();
             expect(pendingTransactions.transactions.length).to.equal(
                 txs.length - 1
             );
-            expect(await nodeA.sdk.rpc.chain.getBestBlockNumber()).to.equal(
+            expect(await nodeA.rpc.chain.getBestBlockNumber()).to.equal(
                 aBlockNumber
             );
-            expect(await nodeB.sdk.rpc.chain.getBestBlockNumber()).to.equal(
+            expect(await nodeB.rpc.chain.getBestBlockNumber()).to.equal(
                 bBlockNumber
             );
         }).timeout(60_000);

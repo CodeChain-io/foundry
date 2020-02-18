@@ -39,23 +39,27 @@ describe("sync 2 nodes", function() {
 
             it("It should be synced when nodeA created a block", async function() {
                 while (
-                    !(await nodeA.sdk.rpc.network.isConnected(
-                        "127.0.0.1",
-                        nodeB.port
-                    ))
+                    !(await nodeA.rpc.net.isConnected({
+                        address: "127.0.0.1",
+                        port: nodeB.port
+                    }))
                 ) {
                     await wait(500);
                 }
 
-                const blockNumber = await nodeA.sdk.rpc.chain.getBestBlockNumber();
+                const blockNumber = await nodeA.rpc.chain.getBestBlockNumber();
                 const transaction = await nodeA.sendPayTx();
                 await nodeA.waitBlockNumber(blockNumber + 1);
                 await nodeB.waitBlockNumberSync(nodeA);
                 expect(
-                    await nodeA.sdk.rpc.chain.getTransaction(transaction.hash())
+                    await nodeA.rpc.chain.getTransaction({
+                        transactionHash: `0x${transaction.hash()}`
+                    })
                 ).not.null;
                 expect(
-                    await nodeB.sdk.rpc.chain.getTransaction(transaction.hash())
+                    await nodeB.rpc.chain.getTransaction({
+                        transactionHash: `0x${transaction.hash()}`
+                    })
                 ).not.null;
             }).timeout(30_000);
         });
@@ -89,8 +93,8 @@ describe("sync 2 nodes", function() {
             await nodeA.connect(nodeB);
 
             await Promise.all([
-                nodeA.sdk.rpc.devel.stopSealing(),
-                nodeB.sdk.rpc.devel.stopSealing()
+                nodeA.rpc.devel!.stopSealing(),
+                nodeB.rpc.devel!.stopSealing()
             ]);
         });
 
@@ -100,14 +104,14 @@ describe("sync 2 nodes", function() {
                     seq
                 });
                 expect(
-                    (await nodeA.sdk.rpc.chain.getPendingTransactions())
+                    (await nodeA.rpc.mempool.getPendingTransactions())
                         .transactions.length
                 ).to.equal(seq + 1);
             }
             await wait(2000);
             expect(
-                (await nodeB.sdk.rpc.chain.getPendingTransactions())
-                    .transactions.length
+                (await nodeB.rpc.mempool.getPendingTransactions()).transactions
+                    .length
             ).to.equal(0);
         }).timeout(500 * testSize + 4000);
     });

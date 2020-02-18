@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H160, H256, U256 } from "codechain-primitives/lib";
+import { H160, H256, PlatformAddress, U256 } from "codechain-primitives/lib";
 import "mocha";
 import { Mock } from "../helper/mock";
 import { Header } from "../helper/mock/cHeader";
@@ -45,66 +45,73 @@ describe("Test onChain block communication", async function() {
         });
         await node.start();
 
-        const sdk = node.sdk;
+        const rpc = node.rpc;
 
-        await sdk.rpc.devel.startSealing();
-        await sdk.rpc.devel.startSealing();
+        await rpc.devel!.startSealing();
+        await rpc.devel!.startSealing();
 
-        const genesisBlock = await sdk.rpc.chain.getBlock(0);
+        const genesisBlock = await rpc.chain.getBlockByNumber({
+            blockNumber: 0
+        });
         if (genesisBlock == null) {
             throw Error("Cannot get the genesis block");
         }
-        const block1 = await sdk.rpc.chain.getBlock(1);
+        const block1 = await rpc.chain.getBlockByNumber({ blockNumber: 1 });
         if (block1 == null) {
             throw Error("Cannot get the first block");
         }
-        const block2 = await sdk.rpc.chain.getBlock(2);
+        const block2 = await rpc.chain.getBlockByNumber({ blockNumber: 2 });
         if (block2 == null) {
             throw Error("Cannot get the second block");
         }
 
         await node.clean();
+        const author1PlatformAddr = PlatformAddress.fromString(
+            genesisBlock.author
+        );
         soloGenesisBlock = new Header(
-            genesisBlock.parentHash,
+            new H256(genesisBlock.parentHash),
             new U256(genesisBlock.timestamp),
             new U256(genesisBlock.number),
-            genesisBlock.author.accountId,
+            author1PlatformAddr.accountId,
             Buffer.from(genesisBlock.extraData),
-            genesisBlock.transactionsRoot,
-            genesisBlock.stateRoot,
-            genesisBlock.nextValidatorSetHash,
-            genesisBlock.score,
+            new H256(genesisBlock.transactionsRoot),
+            new H256(genesisBlock.stateRoot),
+            new H256(genesisBlock.nextValidatorSetHash),
+            new U256(`${genesisBlock.score}`),
             genesisBlock.seal
         );
+        const author2PlatformAddr = PlatformAddress.fromString(block1.author);
         soloBlock1 = new Header(
             soloGenesisBlock.hashing(),
             new U256(block1.timestamp),
             new U256(block1.number),
-            block1.author.accountId,
+            author2PlatformAddr.accountId,
             Buffer.from(block1.extraData),
-            block1.transactionsRoot,
-            block1.stateRoot,
-            block1.nextValidatorSetHash,
+            new H256(block1.transactionsRoot),
+            new H256(block1.stateRoot),
+            new H256(block1.nextValidatorSetHash),
             new U256(2222222222222),
             block1.seal
         );
+        const author3PlatformAddr = PlatformAddress.fromString(block2.author);
         soloBlock2 = new Header(
             soloBlock1.hashing(),
             new U256(block2.timestamp),
             new U256(block2.number),
-            block2.author.accountId,
+            author3PlatformAddr.accountId,
             Buffer.from(block2.extraData),
-            block2.transactionsRoot,
-            block2.stateRoot,
-            block2.nextValidatorSetHash,
+            new H256(block2.transactionsRoot),
+            new H256(block2.stateRoot),
+            new H256(block2.nextValidatorSetHash),
             new U256(33333333333333),
             block2.seal
         );
 
-        VALID_PARENT = block1.parentHash;
-        VALID_AUTHOR = block1.author.accountId;
-        VALID_TRANSACTIONS_ROOT = block1.transactionsRoot;
-        VALID_STATEROOT = block1.stateRoot;
+        VALID_PARENT = new H256(block1.parentHash);
+        VALID_AUTHOR = author2PlatformAddr.accountId;
+        VALID_TRANSACTIONS_ROOT = new H256(block1.transactionsRoot);
+        VALID_STATEROOT = new H256(block1.stateRoot);
 
         nodeA = new CodeChain();
         await nodeA.start();
@@ -114,7 +121,7 @@ describe("Test onChain block communication", async function() {
 
     it("OnChain valid block propagation test", async function() {
         // mock.setLog();
-        const sdk = nodeA.sdk;
+        const rpc = nodeA.rpc;
 
         // Genesis block
         const header = soloGenesisBlock;
@@ -138,12 +145,12 @@ describe("Test onChain block communication", async function() {
 
         await mock.waitStatusMessage();
 
-        const block1 = await sdk.rpc.chain.getBlock(1);
-        const block2 = await sdk.rpc.chain.getBlock(2);
+        const block1 = await rpc.chain.getBlockByNumber({ blockNumber: 1 });
+        const block2 = await rpc.chain.getBlockByNumber({ blockNumber: 2 });
 
         expect(block1).not.to.be.null;
         expect(block2).not.to.be.null;
-    }).timeout(10_000);
+    }).timeout(50_000);
 
     afterEach(async function() {
         if (this.currentTest!.state === "failed") {
