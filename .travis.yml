@@ -23,9 +23,6 @@ jobs:
         - cargo fetch --verbose
         - cargo build
         - cd test && yarn
-        - cd src/sdk/ && yarn
-        - cd ../stakeholder/ && yarn
-        - cd ../..
       script:
         - yarn start-short
         - yarn start-long
@@ -44,9 +41,6 @@ jobs:
         - cargo fetch --verbose
         - cargo build
         - cd test && yarn
-        - cd src/sdk/ && yarn
-        - cd ../stakeholder/ && yarn
-        - cd ../..
       script:
         - yarn start-short
         - yarn start-long
@@ -64,9 +58,6 @@ jobs:
       before_script:
         - cargo build --verbose
         - cd test && yarn
-        - cd src/sdk/ && yarn
-        - cd ../stakeholder/ && yarn
-        - cd ../..
       script:
         - yarn start-dyn-val-1
       after_failure:
@@ -83,9 +74,6 @@ jobs:
       before_script:
         - cargo build --verbose
         - cd test && yarn
-        - cd src/sdk/ && yarn
-        - cd ../stakeholder/ && yarn
-        - cd ../..
       script:
         - yarn start-dyn-val-2
       after_failure:
