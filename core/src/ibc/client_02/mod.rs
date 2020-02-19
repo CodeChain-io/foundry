@@ -14,43 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub mod foundry;
+pub mod client;
 mod manager;
-mod types;
-
+pub mod types;
 pub use self::manager::Manager;
-pub use self::types::{ConsensusState, Header, Kind, State, KIND_FOUNDRY};
-use crate::ibc;
+pub use self::types::{ConsensusState, Header, Kind, KIND_FOUNDRY};
 
-fn new_state(id: &str, ctx: &mut dyn ibc::Context, client_type: Kind) -> Box<dyn State> {
-    if client_type == KIND_FOUNDRY {
-        Box::new(foundry::State::new(id, ctx))
-    } else {
-        panic!("Invalid client type");
-    }
-}
-
-fn get_state(id: &str, ctx: &mut dyn ibc::Context) -> Result<Box<dyn State>, String> {
-    let s = foundry::State::find(id);
-    if s.exists(ctx) {
-        Ok(Box::new(s))
-    } else {
-        Err("client not exists".to_owned())
-    }
-}
-
-pub fn path(id: &str) -> String {
+pub fn path_client_state(id: &str) -> String {
     format!("clients/{}", id)
 }
 
-pub fn consensus_state_path(id: &str) -> String {
-    format!("{}/consensusState", path(id))
-}
-
-pub fn root_path(id: &str, block_number: u64) -> String {
-    format!("{}/roots/{}", path(id), block_number)
-}
-
-pub fn type_path(id: &str) -> String {
-    format!("{}/type", path(id))
+pub fn path_consensus_state(id: &str, block_number: ctypes::BlockNumber) -> String {
+    format!("{}/consensusState/{}", path_client_state(id), block_number)
 }

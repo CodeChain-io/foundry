@@ -15,19 +15,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::path as connection_path;
-use super::types::{CommitmentPrefix, CommitmentProof, Identifier};
+use super::types::Identifier;
 use crate::ibc;
+use crate::ibc::commitment_23::types::{get_commiment_prefix, CommitmentPrefix, CommitmentProof};
 use crate::ibc::connection_03::client_connections_path;
 use crate::ibc::connection_03::types::{ConnectionEnd, ConnectionIdentifiersInClient, ConnectionState};
 use rlp::{Encodable, Rlp};
 
 pub struct Manager<'a> {
     ctx: &'a mut dyn ibc::Context,
-}
-
-// FIXME: this will be changed after implementing Vector commitment
-fn get_commiment_prefix() -> String {
-    "".to_owned()
 }
 
 impl<'a> Manager<'a> {
