@@ -18,7 +18,7 @@ use super::CUSTOM_ACTION_HANDLER_ID;
 use ckey::{public_to_address, Address, Public};
 use cstate::{ActionData, ActionDataKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::RuntimeError;
-use ctypes::CompactValidatorSet;
+use ctypes::{CompactValidatorEntry, CompactValidatorSet};
 use primitives::{Bytes, H256};
 use rlp::{decode_list, encode_list, Decodable, Encodable, Rlp, RlpStream};
 use std::cmp::Ordering;
@@ -289,7 +289,15 @@ impl NextValidators {
     }
 
     pub fn create_compact_validator_set(&self) -> CompactValidatorSet {
-        CompactValidatorSet(self.0.iter().map(|x| (*x.pubkey(), x.delegation())).collect())
+        CompactValidatorSet::new(
+            self.0
+                .iter()
+                .map(|x| CompactValidatorEntry {
+                    public_key: *x.pubkey(),
+                    delegation: x.delegation(),
+                })
+                .collect(),
+        )
     }
 
     pub fn elect(state: &TopLevelState) -> StateResult<Self> {
