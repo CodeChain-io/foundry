@@ -1,10 +1,10 @@
+import { SDK } from "../../sdk/src";
 import {
     H256,
     H512,
     PlatformAddress,
     U64
-} from "codechain-sdk/lib/core/classes";
-import { SDK } from "../../sdk/src";
+} from "../../sdk/src/core/classes";
 
 export function isArrayOf<T>(
     list: any,
