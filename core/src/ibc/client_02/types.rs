@@ -14,33 +14,62 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::consensus::light_client::{ClientState as ChainClientState, UpdateHeader};
 use crate::ibc;
 use ibc::commitment_23 as commitment;
+use primitives::H256;
+use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 pub type Kind = u8;
 
-pub trait ConsensusState {
-    fn kind(&self) -> Kind;
-    fn get_height(&self) -> u64;
-    fn get_root(&self) -> &dyn commitment::Root;
-    fn check_validity_and_update_state(&mut self, header: &[u8]) -> Result<(), String>;
-    fn check_misbehaviour_and_update_state(&mut self) -> bool;
-    fn encode(&self) -> Vec<u8>;
+// It exists for every blocks, and will be cumulatively stored in the state.
+#[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
+pub struct ConsensusState {
+    // This is not used untill we add a misbehavior predicate
+    pub validator_set_hash: H256,
+    pub state_root: commitment::CommitmentRoot,
 }
 
-pub trait Header {
-    fn kind(&self) -> Kind;
-    fn get_height(&self) -> u64;
-    fn encode(&self) -> &[u8];
+// It represents set of data that is required to update the client, as ICS said.
+// But be careful since the name 'Header' is confusing.
+#[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
+pub struct Header {
+    pub header_proposal: UpdateHeader,
+    // This is not used in verification, but part of header. (will be stored in ConsensusState)
+    pub state_root: commitment::CommitmentRoot,
+}
+
+// Note: We don't store validator set directly but only hash,
+// and then receive the actual set every updates. This is for reducing state storage.
+#[derive(PartialEq, Debug)]
+pub struct ClientState {
+    pub raw: ChainClientState,
+}
+
+impl Encodable for ClientState {
+    fn rlp_append(&self, s: &mut RlpStream) {
+        s.begin_list(2);
+        s.append(&self.raw.number);
+        s.append(&self.raw.next_validator_set_hash);
+    }
+}
+
+impl Decodable for ClientState {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
+        let item_count = rlp.item_count()?;
+        if item_count != 2 {
+            return Err(DecoderError::RlpInvalidLength {
+                got: item_count,
+                expected: 2,
+            })
+        }
+        Ok(Self {
+            raw: ChainClientState {
+                number: rlp.val_at(0)?,
+                next_validator_set_hash: rlp.val_at(1)?,
+            },
+        })
+    }
 }
 
 pub const KIND_FOUNDRY: Kind = 0_u8;
-
-pub trait State {
-    fn get_consensus_state(&self, ctx: &mut dyn ibc::Context) -> Box<dyn ConsensusState>;
-    fn set_consensus_state(&self, ctx: &mut dyn ibc::Context, cs: &dyn ConsensusState);
-    fn get_root(&self, ctx: &mut dyn ibc::Context, block_height: u64) -> Result<Box<dyn commitment::Root>, String>;
-    fn set_root(&self, ctx: &mut dyn ibc::Context, block_height: u64, root: &dyn commitment::Root);
-    fn exists(&self, ctx: &mut dyn ibc::Context) -> bool;
-    fn update(&self, ctx: &mut dyn ibc::Context, header: &[u8]) -> Result<(), String>;
-}

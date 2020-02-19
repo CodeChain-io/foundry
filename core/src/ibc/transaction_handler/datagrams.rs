@@ -50,6 +50,7 @@ pub enum Datagram {
         id: String,
         kind: u8,
         consensus_state: Vec<u8>,
+        data: Vec<u8>,
     },
     UpdateClient {
         id: String,
@@ -68,8 +69,8 @@ pub enum Datagram {
         counterparty_prefix: String,
         counterparty_client_identifier: String,
         client_identifier: String,
-        proof_init: String,
-        proof_consensus: String,
+        proof_init: Vec<u8>,
+        proof_consensus: Vec<u8>,
         proof_height: u64,
         consensus_height: u64,
     },
@@ -82,8 +83,14 @@ impl Encodable for Datagram {
                 id,
                 kind,
                 consensus_state,
+                data,
             } => {
-                s.begin_list(4).append(&DatagramTag::CreateClient).append(id).append(kind).append(consensus_state);
+                s.begin_list(5)
+                    .append(&DatagramTag::CreateClient)
+                    .append(id)
+                    .append(kind)
+                    .append(consensus_state)
+                    .append(data);
             }
             Datagram::UpdateClient {
                 id,
@@ -149,6 +156,7 @@ impl Decodable for Datagram {
                     id: rlp.val_at(1)?,
                     kind: rlp.val_at(2)?,
                     consensus_state: rlp.val_at(3)?,
+                    data: rlp.val_at(4)?,
                 })
             }
             DatagramTag::UpdateClient => {

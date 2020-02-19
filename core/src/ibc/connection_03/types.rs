@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::ibc::commitment_23::types::CommitmentPrefix;
 use rlp;
 use rlp::{DecoderError, Rlp, RlpStream};
 
@@ -43,10 +44,6 @@ impl rlp::Decodable for ConnectionState {
     }
 }
 
-// FIXME: current commitment_23::Prefix is too generic.
-pub type CommitmentPrefix = String;
-// FIXME: This type will be replaced after commitment code changed.
-pub type CommitmentProof = String;
 pub type Identifier = String;
 
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
@@ -84,7 +81,9 @@ mod tests {
         let connection_end = ConnectionEnd {
             state: ConnectionState::INIT,
             counterparty_connection_identifier: "counterparty_connection_identifier".to_owned(),
-            counterparty_prefix: "counterparty_prefix".to_owned(),
+            counterparty_prefix: CommitmentPrefix {
+                raw: "counterparty_prefix".to_owned(),
+            },
             client_identifier: "client_identifier".to_owned(),
             counterparty_client_identifier: "counterparty_client_identifier".to_owned(),
         };

@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,19 +14,98 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub trait Root {
-    fn commitment_kind(&self) -> &'static str;
-    fn encode(&self) -> Vec<u8>;
+use crate::ibc;
+use ibc::kv_store::KVStore;
+use merkle_trie::proof::{verify, CryptoProof, CryptoProofUnit};
+use primitives::{Bytes, H256};
+use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+
+pub struct CommitmentState<'a> {
+    pub kv_store: &'a dyn KVStore,
 }
 
-pub trait Prefix {
-    fn commitment_kind(&self) -> &'static str;
-    fn encode(&self) -> Vec<u8>;
+#[derive(RlpEncodable, RlpDecodable, Clone, PartialEq, Debug)]
+pub struct CommitmentRoot {
+    pub raw: H256,
 }
 
-pub trait Proof {
-    fn commitment_kind(&self) -> &'static str;
-    fn get_key(&self) -> &[u8];
-    fn verify(root: impl Root, prefix: impl Prefix, bytes: &[u8]) -> Result<(), String>;
-    fn encode(&self) -> Vec<u8>;
+#[derive(RlpEncodable, RlpDecodable, Clone, PartialEq, Debug)]
+pub struct CommitmentPath {
+    pub raw: String,
+}
+
+#[derive(RlpEncodable, RlpDecodable, Clone, PartialEq, Debug)]
+pub struct CommitmentPrefix {
+    pub raw: String,
+}
+
+#[derive(Debug)]
+pub struct CommitmentProof {
+    pub raw: CryptoProof,
+}
+
+// TODO: Instead just make CryptoProof RlpEn/Decodable in rust-merkle-trie
+impl Encodable for CommitmentProof {
+    fn rlp_append(&self, s: &mut RlpStream) {
+        s.append_single_value(&(self.raw).0);
+    }
+}
+impl Decodable for CommitmentProof {
+    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
+        let result: Vec<Bytes> = rlp.as_val()?;
+        Ok(Self {
+            raw: CryptoProof(result),
+        })
+    }
+}
+
+pub fn get_commiment_prefix() -> CommitmentPrefix {
+    CommitmentPrefix {
+        raw: "".to_owned(),
+    }
+}
+
+pub fn calculate_root(commitment_state: &CommitmentState) -> CommitmentRoot {
+    CommitmentRoot {
+        raw: commitment_state.kv_store.root(),
+    }
+}
+
+// You must be aware of whether there is a value for a given key before you call create_*_proof().
+pub fn create_membership_proof(
+    commitment_state: &CommitmentState,
+    path: &CommitmentPath,
+    value: &[u8],
+) -> CommitmentProof {
+    let (proof_unit, proof) = commitment_state.kv_store.make_proof(&path.raw);
+    assert!(proof_unit.value.is_some());
+    CommitmentProof {
+        raw: proof,
+    }
+}
+
+pub fn create_non_membership_proof(commitment_state: &CommitmentState, path: &CommitmentPath) -> CommitmentProof {
+    let (proof_unit, proof) = commitment_state.kv_store.make_proof(&path.raw);
+    assert!(proof_unit.value.is_none());
+    CommitmentProof {
+        raw: proof,
+    }
+}
+
+pub fn verify_membership(root: &CommitmentRoot, proof: &CommitmentProof, path: CommitmentPath, value: Bytes) -> bool {
+    let unit = CryptoProofUnit {
+        root: root.raw,
+        key: path.raw.into_bytes(),
+        value: Some(value),
+    };
+    verify(&proof.raw, &unit)
+}
+
+pub fn verify_non_membership(root: &CommitmentRoot, proof: &CommitmentProof, path: CommitmentPath) -> bool {
+    let unit = CryptoProofUnit {
+        root: root.raw,
+        key: path.raw.into_bytes(),
+        value: None,
+    };
+    verify(&proof.raw, &unit)
 }

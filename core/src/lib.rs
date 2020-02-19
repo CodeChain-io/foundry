@@ -43,7 +43,7 @@ mod blockchain;
 mod blockchain_info;
 mod client;
 mod codechain_machine;
-mod consensus;
+pub mod consensus;
 mod db;
 mod db_version;
 pub mod encoded;

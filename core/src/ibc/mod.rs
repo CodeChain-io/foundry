@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 pub mod client_02;
 #[allow(dead_code)]
 #[allow(unused_variables)]
-mod commitment_23;
+pub mod commitment_23;
 #[allow(dead_code)]
 #[allow(unused_variables)]
 mod connection_03;

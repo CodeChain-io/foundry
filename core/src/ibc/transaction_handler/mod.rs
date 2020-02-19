@@ -18,11 +18,11 @@ mod datagrams;
 
 use self::datagrams::Datagram;
 use crate::ibc;
+use crate::ibc::commitment_23::types::{CommitmentPrefix, CommitmentProof};
 use ckey::{Address, Public};
 use cstate::{StateResult, TopLevelState};
 use ctypes::errors::RuntimeError;
 use ibc::client_02 as ibc_client;
-use ibc::client_02::foundry as ibc_foundry;
 use ibc::connection_03 as ibc_connection;
 use ibc::context as ibc_context;
 use rlp::{Decodable, Rlp};
@@ -41,7 +41,8 @@ pub fn execute(
             id,
             kind,
             consensus_state,
-        } => create_client(&mut context, &id, kind, &consensus_state),
+            data,
+        } => create_client(&mut context, &id, kind, &consensus_state, &data),
         Datagram::UpdateClient {
             id,
             header,
@@ -58,7 +59,9 @@ pub fn execute(
                 .handle_open_init(
                     identifier,
                     desired_counterparty_connection_identifier,
-                    counterparty_prefix,
+                    CommitmentPrefix {
+                        raw: counterparty_prefix,
+                    },
                     client_identifier,
                     counterparty_client_identifier,
                 )
@@ -77,15 +80,25 @@ pub fn execute(
         } => {
             let mut context = ibc_context::TopLevelContext::new(state, current_block_number);
             let mut connection_manager = ibc_connection::Manager::new(&mut context);
+
+            let proof_init_dec: CommitmentProof = rlp::Rlp::new(&proof_init)
+                .as_val()
+                .map_err(|err| RuntimeError::IBC(format!("ConnOpenTry failed to decode proof_init {}", err)))?;
+            let proof_consensus_dec: CommitmentProof = rlp::Rlp::new(&proof_consensus)
+                .as_val()
+                .map_err(|err| RuntimeError::IBC(format!("ConnOpenTry failed to decode consensus_init {}", err)))?;
+
             connection_manager
                 .handle_open_try(
                     desired_identifier,
                     counterparty_connection_identifier,
-                    counterparty_prefix,
+                    CommitmentPrefix {
+                        raw: counterparty_prefix,
+                    },
                     counterparty_client_identifier,
                     client_identifier,
-                    proof_init,
-                    proof_consensus,
+                    proof_init_dec,
+                    proof_consensus_dec,
                     proof_height,
                     consensus_height,
                 )
@@ -94,36 +107,38 @@ pub fn execute(
     }
 }
 
-
 fn create_client(
     ctx: &mut dyn ibc::Context,
     id: &str,
     kind: ibc_client::Kind,
     consensus_state: &[u8],
+    data: &[u8],
 ) -> StateResult<()> {
     let mut client_manager = ibc_client::Manager::new(ctx);
     if kind != ibc_client::KIND_FOUNDRY {
         return Err(RuntimeError::IBC(format!("CreateClient has invalid type {}", kind)).into())
     }
-    let rlp = rlp::Rlp::new(consensus_state);
-    let foundry_consensus_state: ibc_foundry::ConsensusState = match rlp.as_val() {
-        Ok(cs) => cs,
-        Err(err) => {
-            return Err(RuntimeError::IBC(format!("CreateClient failed to decode consensus state {}", err)).into())
-        }
-    };
+    let consensus_state: ibc_client::ConsensusState = rlp::Rlp::new(consensus_state)
+        .as_val()
+        .map_err(|err| RuntimeError::IBC(format!("CreateClient failed to decode consensus state {}", err)))?;
+
+    let others_header: ctypes::Header = rlp::Rlp::new(data)
+        .as_val()
+        .map_err(|err| RuntimeError::IBC(format!("CreateClient failed to decode other's header {}", err)))?;
 
     client_manager
-        .create(id, &foundry_consensus_state)
+        .create(id, &consensus_state, &others_header)
         .map_err(|err| RuntimeError::IBC(format!("CreateClient: {:?}", err)))?;
     Ok(())
 }
 
 fn update_client(ctx: &mut dyn ibc::Context, id: &str, header: &[u8]) -> StateResult<()> {
     let mut client_manager = ibc_client::Manager::new(ctx);
-    let client_state = client_manager.query(id).map_err(RuntimeError::IBC)?;
 
-    client_state.update(ctx, header).map_err(RuntimeError::IBC)?;
+    let header_dec: ibc_client::Header = rlp::Rlp::new(header)
+        .as_val()
+        .map_err(|err| RuntimeError::IBC(format!("UpdateClient failed to decode header {}", err)))?;
 
+    client_manager.update(id, &header_dec).map_err(|err| RuntimeError::IBC(format!("UpdateClient: {:?}", err)))?;
     Ok(())
 }
