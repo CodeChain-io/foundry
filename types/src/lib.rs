@@ -43,4 +43,5 @@ pub use common_params::CommonParams;
 pub use header::Header;
 pub use tracker::Tracker;
 pub use tx_hash::TxHash;
+pub use validator_set::CompactValidatorEntry;
 pub use validator_set::CompactValidatorSet;
