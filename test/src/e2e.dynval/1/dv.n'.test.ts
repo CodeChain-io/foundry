@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
+import RPC from "foundry-rpc";
 import "mocha";
-import { SDK } from "../../sdk/src";
 import * as stake from "../../stakeholder/src";
 
 import { validators } from "../../../tendermint.dynval/constants";
@@ -28,12 +28,12 @@ describe("Dynamic Validator N -> N'", function() {
     const promiseExpect = new PromiseExpect();
 
     async function expectPossibleAuthors(
-        sdk: SDK,
+        rpc: RPC,
         expected: typeof validators,
         blockNumber?: number
     ) {
         const authors = (await stake.getPossibleAuthors(
-            sdk,
+            rpc,
             blockNumber
         ))!.map(author => author.toString());
         expect(authors)
@@ -71,7 +71,7 @@ describe("Dynamic Validator N -> N'", function() {
             });
 
             const rpcNode = nodes[0];
-            await expectPossibleAuthors(rpcNode.testFramework, [
+            await expectPossibleAuthors(rpcNode.rpc, [
                 ...validators.slice(0, 3),
                 alice
             ]);
@@ -98,7 +98,7 @@ describe("Dynamic Validator N -> N'", function() {
                 termPeriods: 1
             });
 
-            await expectPossibleAuthors(rpcNode.testFramework, [
+            await expectPossibleAuthors(rpcNode.rpc, [
                 ...validators.slice(0, 3),
                 betty
             ]);
@@ -133,7 +133,7 @@ describe("Dynamic Validator N -> N'", function() {
             });
             const rpcNode = nodes[0];
 
-            await expectPossibleAuthors(rpcNode.testFramework, [
+            await expectPossibleAuthors(rpcNode.rpc, [
                 ...validators.slice(0, 3),
                 alice
             ]);
@@ -162,7 +162,7 @@ describe("Dynamic Validator N -> N'", function() {
                 termPeriods: 1
             });
 
-            await expectPossibleAuthors(rpcNode.testFramework, [
+            await expectPossibleAuthors(rpcNode.rpc, [
                 ...validators.slice(0, 3),
                 betty
             ]);
@@ -193,7 +193,7 @@ describe("Dynamic Validator N -> N'", function() {
             });
             const rpcNode = nodes[0];
 
-            await expectPossibleAuthors(rpcNode.testFramework, [
+            await expectPossibleAuthors(rpcNode.rpc, [
                 ...validators.slice(0, 3),
                 alice
             ]);
@@ -233,7 +233,7 @@ describe("Dynamic Validator N -> N'", function() {
                 termPeriods: 1
             });
 
-            await expectPossibleAuthors(rpcNode.testFramework, [
+            await expectPossibleAuthors(rpcNode.rpc, [
                 ...validators.slice(0, 3),
                 betty
             ]);
@@ -264,7 +264,7 @@ describe("Dynamic Validator N -> N'", function() {
             });
             const rpcNode = nodes[0];
 
-            await expectPossibleAuthors(rpcNode.testFramework, [
+            await expectPossibleAuthors(rpcNode.rpc, [
                 ...validators.slice(0, 3),
                 alice
             ]);
@@ -311,7 +311,7 @@ describe("Dynamic Validator N -> N'", function() {
                 termPeriods: 1
             });
 
-            await expectPossibleAuthors(rpcNode.testFramework, [
+            await expectPossibleAuthors(rpcNode.rpc, [
                 ...validators.slice(0, 3),
                 betty
             ]);

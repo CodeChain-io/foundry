@@ -948,9 +948,7 @@ export default class CodeChain {
     public async waitForTermChange(target: number, timeout?: number) {
         const start = Date.now();
         while (true) {
-            const termMetadata = (await stake.getTermMetadata(
-                this.testFramework
-            ))!;
+            const termMetadata = (await stake.getTermMetadata(this.rpc))!;
             if (termMetadata.currentTermId >= target) {
                 return termMetadata;
             }
