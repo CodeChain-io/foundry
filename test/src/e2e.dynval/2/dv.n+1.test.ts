@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
+import RPC from "foundry-rpc";
 import "mocha";
-import { SDK } from "../../sdk/src";
 import * as stake from "../../stakeholder/src";
 
 import { validators } from "../../../tendermint.dynval/constants";
@@ -30,13 +30,13 @@ describe("Dynamic Validator N -> N+1", function() {
     const initialValidators = validators.slice(0, 3);
     const betty = validators[3];
 
-    async function beforeInsertionCheck(sdk: SDK) {
-        const blockNumber = await sdk.rpc.chain.getBestBlockNumber();
-        const termMedata = await stake.getTermMetadata(sdk, blockNumber);
+    async function beforeInsertionCheck(rpc: RPC) {
+        const blockNumber = await rpc.chain.getBestBlockNumber();
+        const termMedata = await stake.getTermMetadata(rpc, blockNumber);
         const currentTermInitialBlockNumber =
             termMedata!.lastTermFinishedBlockNumber + 1;
         const validatorsBefore = (await stake.getPossibleAuthors(
-            sdk,
+            rpc,
             currentTermInitialBlockNumber
         ))!.map(platformAddr => platformAddr.toString());
 
@@ -50,13 +50,13 @@ describe("Dynamic Validator N -> N+1", function() {
             );
     }
 
-    async function bettyInsertionCheck(sdk: SDK) {
-        const blockNumber = await sdk.rpc.chain.getBestBlockNumber();
-        const termMedata = await stake.getTermMetadata(sdk, blockNumber);
+    async function bettyInsertionCheck(rpc: RPC) {
+        const blockNumber = await rpc.chain.getBestBlockNumber();
+        const termMedata = await stake.getTermMetadata(rpc, blockNumber);
         const currentTermInitialBlockNumber =
             termMedata!.lastTermFinishedBlockNumber + 1;
         const validatorsAfter = (await stake.getPossibleAuthors(
-            sdk,
+            rpc,
             currentTermInitialBlockNumber
         ))!.map(platformAddr => platformAddr.toString());
 
@@ -89,7 +89,7 @@ describe("Dynamic Validator N -> N+1", function() {
             });
 
             const checkingNode = nodes[0];
-            await beforeInsertionCheck(checkingNode.testFramework);
+            await beforeInsertionCheck(checkingNode.rpc);
             const bettyNode = findNode(nodes, betty);
             const nominateTx = stake
                 .createSelfNominateTransaction(
@@ -129,7 +129,7 @@ describe("Dynamic Validator N -> N+1", function() {
                 target: 2,
                 termPeriods: 1
             });
-            await bettyInsertionCheck(checkingNode.testFramework);
+            await bettyInsertionCheck(checkingNode.rpc);
         });
     });
 
@@ -152,7 +152,7 @@ describe("Dynamic Validator N -> N+1", function() {
             });
 
             const checkingNode = nodes[0];
-            await beforeInsertionCheck(checkingNode.testFramework);
+            await beforeInsertionCheck(checkingNode.rpc);
             const nominateTx = stake
                 .createSelfNominateTransaction(
                     checkingNode.testFramework,
@@ -175,7 +175,7 @@ describe("Dynamic Validator N -> N+1", function() {
                 target: 2,
                 termPeriods: 1
             });
-            await bettyInsertionCheck(checkingNode.testFramework);
+            await bettyInsertionCheck(checkingNode.rpc);
         });
     });
 
@@ -198,7 +198,7 @@ describe("Dynamic Validator N -> N+1", function() {
             });
 
             const checkingNode = nodes[0];
-            await beforeInsertionCheck(checkingNode.testFramework);
+            await beforeInsertionCheck(checkingNode.rpc);
             const faucetSeq = await checkingNode.testFramework.rpc.chain.getSeq(
                 faucetAddress
             );
@@ -222,7 +222,7 @@ describe("Dynamic Validator N -> N+1", function() {
                 target: 2,
                 termPeriods: 1
             });
-            await bettyInsertionCheck(checkingNode.testFramework);
+            await bettyInsertionCheck(checkingNode.rpc);
         });
     });
 

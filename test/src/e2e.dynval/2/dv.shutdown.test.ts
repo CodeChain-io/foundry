@@ -70,7 +70,7 @@ describe("Shutdown test", function() {
 
         beforeEach(async function() {
             const possibleAuthors = (await stake.getPossibleAuthors(
-                nodes[0].testFramework
+                nodes[0].rpc
             ))!;
             expect(
                 possibleAuthors.map(x => x.toString()),
@@ -85,14 +85,14 @@ describe("Shutdown test", function() {
             termSeconds: number
         ): Promise<void> {
             const node = getObserver().node;
-            const sdk = node.testFramework;
+            const rpc = node.rpc;
 
             const lastTermFinishedBlockNumber = (await stake.getTermMetadata(
-                sdk
+                rpc
             ))!.lastTermFinishedBlockNumber;
-            const lastTermFinishedTS = (await sdk.rpc.chain.getBlock(
-                lastTermFinishedBlockNumber
-            ))!.timestamp;
+            const lastTermFinishedTS = (await rpc.chain.getBlockByNumber({
+                blockNumber: lastTermFinishedBlockNumber
+            }))!.timestamp;
             const nextTermExpectedTS =
                 Math.floor(lastTermFinishedTS / termSeconds) * termSeconds +
                 termSeconds;
@@ -131,7 +131,7 @@ describe("Shutdown test", function() {
                     "Should have stopped nodes in time, otherwise it is flaky test"
                 );
                 const termMetadata = await stake.getTermMetadata(
-                    getObserver().node.testFramework
+                    getObserver().node.rpc
                 );
                 expect(termMetadata).is.not.null;
                 expect(termMetadata!.currentTermId).is.equals(
@@ -139,7 +139,7 @@ describe("Shutdown test", function() {
                     "Term should haven't be closed yet"
                 );
                 const possibleAuthors = (await stake.getPossibleAuthors(
-                    getObserver().node.testFramework
+                    getObserver().node.rpc
                 ))!;
                 expect(
                     possibleAuthors.map(x => x.toString()),
@@ -157,13 +157,14 @@ describe("Shutdown test", function() {
             // Wait for it should close the term
             await getObserver().node.waitBlockNumber(lastBlockNumberOfTerm + 1);
             const termMetadata = await stake.getTermMetadata(
-                getObserver().node.testFramework,
+                getObserver().node.rpc,
                 lastBlockNumberOfTerm + 1
             );
             expect(termMetadata).is.not.null;
             expect(termMetadata!.currentTermId).is.equals(2);
             {
                 const jailed = await stake.getJailed(
+                    getObserver().node.rpc,
                     getObserver().node.testFramework
                 );
                 expect(
@@ -173,7 +174,7 @@ describe("Shutdown test", function() {
                     "All Betas should be jailed (might be some alphas)"
                 );
                 const possibleAuthors = (await stake.getPossibleAuthors(
-                    getObserver().node.testFramework
+                    getObserver().node.rpc
                 ))!;
                 expect(getAlphas().addrs).to.include.members(
                     possibleAuthors.map(x => x.toString()),
@@ -222,7 +223,7 @@ describe("Shutdown test", function() {
             const blockNumberAtStop = await getObserver().node.getBestBlockNumber();
             {
                 const termMetadata = await stake.getTermMetadata(
-                    getObserver().node.testFramework
+                    getObserver().node.rpc
                 );
                 expect(termMetadata).is.not.null;
                 expect(termMetadata!.currentTermId).is.equals(1);
@@ -231,7 +232,7 @@ describe("Shutdown test", function() {
                     "Should have stopped nodes in time, otherwise it is flaky test"
                 );
                 const possibleAuthors = (await stake.getPossibleAuthors(
-                    getObserver().node.testFramework
+                    getObserver().node.rpc
                 ))!;
                 expect(
                     possibleAuthors.map(x => x.toString()),
@@ -248,7 +249,7 @@ describe("Shutdown test", function() {
             await getObserver().node.waitBlockNumber(blockNumberAtStop + 1);
             {
                 const termMetadata = await stake.getTermMetadata(
-                    getObserver().node.testFramework,
+                    getObserver().node.rpc,
                     blockNumberAtStop + 1
                 );
                 expect(termMetadata).is.not.null;
@@ -265,6 +266,7 @@ describe("Shutdown test", function() {
                 );
 
                 const jailed = await stake.getJailed(
+                    getObserver().node.rpc,
                     getObserver().node.testFramework
                 );
                 expect(
@@ -278,7 +280,7 @@ describe("Shutdown test", function() {
                         )
                     );
                 const possibleAuthors = (await stake.getPossibleAuthors(
-                    getObserver().node.testFramework
+                    getObserver().node.rpc
                 ))!;
                 expect(
                     possibleAuthors.map(x => x.toString())

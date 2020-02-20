@@ -23,6 +23,7 @@ import {
     signSchnorr,
     U64
 } from "codechain-primitives/lib";
+import RPC from "foundry-rpc";
 import "mocha";
 import * as RLP from "rlp";
 import { SDK } from "../sdk/src";
@@ -113,12 +114,12 @@ const allDynValidators = originalValidators.slice(0, 4);
 const [alice, ...otherDynValidators] = allDynValidators;
 
 async function expectPossibleAuthors(
-    sdk: SDK,
+    rpc: RPC,
     expected: Signer[],
     blockNumber?: number
 ) {
     const authors = (await stake.getPossibleAuthors(
-        sdk,
+        rpc,
         blockNumber
     ))!.map(author => author.toString());
     expect(authors)
@@ -129,13 +130,13 @@ async function expectPossibleAuthors(
 }
 
 // FIXME: neeeds to use common refactored function when gets banned state accounts
-async function ensureAliceIsBanned(sdk: SDK, blockNumber: number) {
+async function ensureAliceIsBanned(rpc: RPC, sdk: SDK, blockNumber: number) {
     const bannedAfter = (
-        await stake.getBanned(sdk, blockNumber)
+        await stake.getBanned(rpc, sdk, blockNumber)
     ).map(platformAddr => platformAddr.toString());
     expect(bannedAfter).to.includes(alice.platformAddress.toString());
     const delegteesAfter = (
-        await stake.getDelegations(sdk, faucetAddress, blockNumber)
+        await stake.getDelegations(rpc, sdk, faucetAddress, blockNumber)
     ).map(delegation => delegation.delegatee.toString());
     expect(delegteesAfter).not.to.includes(alice.platformAddress.toString());
 }
@@ -144,10 +145,10 @@ describe("Report Double Vote", function() {
     const promiseExpect = new PromiseExpect();
 
     async function getAliceIndex(
-        sdk: SDK,
+        rpc: RPC,
         blockNumber: number
     ): Promise<number> {
-        return (await stake.getPossibleAuthors(sdk, blockNumber))!
+        return (await stake.getPossibleAuthors(rpc, blockNumber))!
             .map(platfromAddr => platfromAddr.toString())
             .indexOf(alice.platformAddress.toString());
     }
@@ -182,21 +183,18 @@ describe("Report Double Vote", function() {
             const checkingNode = nodes[1];
             const blockNumber = await checkingNode.testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                checkingNode.testFramework,
+                checkingNode.rpc,
                 blockNumber
             );
             const currentTermInitialBlockNumber =
                 termMetadata!.lastTermFinishedBlockNumber + 1;
             expect(termMetadata!.currentTermId).to.be.equals(1);
-            await expectPossibleAuthors(
-                checkingNode.testFramework,
-                allDynValidators
-            );
+            await expectPossibleAuthors(checkingNode.rpc, allDynValidators);
             await checkingNode.waitBlockNumber(
                 currentTermInitialBlockNumber + 1
             );
             const aliceIdx = await getAliceIndex(
-                checkingNode.testFramework,
+                checkingNode.rpc,
                 currentTermInitialBlockNumber
             );
 
@@ -235,6 +233,7 @@ describe("Report Double Vote", function() {
                 reportTxHash
             );
             await ensureAliceIsBanned(
+                checkingNode.rpc,
                 checkingNode.testFramework,
                 blockNumberAfterReport
             );
@@ -255,19 +254,24 @@ describe("Report Double Vote", function() {
             }
         });
 
-        async function ensureAliceIsJailed(sdk: SDK, bestBlockNumber: number) {
+        async function ensureAliceIsJailed(
+            rpc: RPC,
+            sdk: SDK,
+            bestBlockNumber: number
+        ) {
             const jailedBefore = (
-                await stake.getJailed(sdk, bestBlockNumber)
+                await stake.getJailed(rpc, sdk, bestBlockNumber)
             ).map(prisoner => prisoner.address.toString());
             expect(jailedBefore).to.includes(alice.platformAddress.toString());
         }
 
         async function ensureAliceIsReleased(
+            rpc: RPC,
             sdk: SDK,
             bestBlockNumber: number
         ) {
             const jailedAfter = (
-                await stake.getJailed(sdk, bestBlockNumber)
+                await stake.getJailed(rpc, sdk, bestBlockNumber)
             ).map(prisoner => prisoner.address.toString());
             expect(jailedAfter).not.to.includes(
                 alice.platformAddress.toString()
@@ -286,22 +290,20 @@ describe("Report Double Vote", function() {
             });
             const blockNumber = await checkingNode.testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = (await stake.getTermMetadata(
-                checkingNode.testFramework,
+                checkingNode.rpc,
                 blockNumber
             ))!;
             expect(termMetadata!.currentTermId).to.be.equals(2);
 
-            await expectPossibleAuthors(
-                checkingNode.testFramework,
-                otherDynValidators
-            );
+            await expectPossibleAuthors(checkingNode.rpc, otherDynValidators);
             await ensureAliceIsJailed(
+                checkingNode.rpc,
                 checkingNode.testFramework,
                 termMetadata.lastTermFinishedBlockNumber
             );
 
             const aliceIdxInPrevTerm = await getAliceIndex(
-                checkingNode.testFramework,
+                checkingNode.rpc,
                 termMetadata.lastTermFinishedBlockNumber
             );
 
@@ -340,10 +342,12 @@ describe("Report Double Vote", function() {
                 reportTxHash
             );
             await ensureAliceIsBanned(
+                checkingNode.rpc,
                 checkingNode.testFramework,
                 blockNumberAfterReport
             );
             await ensureAliceIsReleased(
+                checkingNode.rpc,
                 checkingNode.testFramework,
                 blockNumberAfterReport
             );
@@ -363,9 +367,13 @@ describe("Report Double Vote", function() {
             }
         });
 
-        async function ensureAliceIsACandidate(sdk: SDK, blockNumber?: number) {
+        async function ensureAliceIsACandidate(
+            rpc: RPC,
+            sdk: SDK,
+            blockNumber?: number
+        ) {
             const candidatesBefore = (
-                await stake.getCandidates(sdk, blockNumber)
+                await stake.getCandidates(rpc, blockNumber)
             ).map(candidate =>
                 PlatformAddress.fromPublic(candidate.pubkey, {
                     networkId: "tc"
@@ -377,11 +385,11 @@ describe("Report Double Vote", function() {
         }
 
         async function ensureAliceIsNotACandidate(
-            sdk: SDK,
+            rpc: RPC,
             blockNumber?: number
         ) {
             const candidatesAfter = (
-                await stake.getCandidates(sdk, blockNumber)
+                await stake.getCandidates(rpc, blockNumber)
             ).map(candidate =>
                 PlatformAddress.fromPublic(candidate.pubkey, {
                     networkId: "tc"
@@ -400,7 +408,7 @@ describe("Report Double Vote", function() {
             const checkingNode = nodes[1];
             const blockNumber = await checkingNode.testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                checkingNode.testFramework,
+                checkingNode.rpc,
                 blockNumber
             );
             const currentTermInitialBlockNumber =
@@ -410,7 +418,7 @@ describe("Report Double Vote", function() {
             );
 
             const aliceIdx = await getAliceIndex(
-                checkingNode.testFramework,
+                checkingNode.rpc,
                 currentTermInitialBlockNumber
             );
 
@@ -435,11 +443,11 @@ describe("Report Double Vote", function() {
                 target: 2,
                 termPeriods: 1
             });
-            await expectPossibleAuthors(
-                checkingNode.testFramework,
-                otherDynValidators
+            await expectPossibleAuthors(checkingNode.rpc, otherDynValidators);
+            await ensureAliceIsACandidate(
+                checkingNode.rpc,
+                checkingNode.testFramework
             );
-            await ensureAliceIsACandidate(checkingNode.testFramework);
 
             const [message1, message2] = createDoubleVoteMessages(
                 {
@@ -476,11 +484,12 @@ describe("Report Double Vote", function() {
                 reportTxHash
             );
             await ensureAliceIsBanned(
+                checkingNode.rpc,
                 checkingNode.testFramework,
                 blockNumberAfterReport
             );
             await ensureAliceIsNotACandidate(
-                checkingNode.testFramework,
+                checkingNode.rpc,
                 blockNumberAfterReport
             );
         });
