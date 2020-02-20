@@ -159,8 +159,7 @@ describe("Report Double Vote", function() {
     ): Promise<number> {
         await checkingNode.waitForTx(reportTxHash);
         const blockNumberAfterReport =
-            (await checkingNode.testFramework.rpc.chain.getBestBlockNumber()) +
-            1;
+            (await checkingNode.rpc.chain.getBestBlockNumber()) + 1;
         await checkingNode.waitBlockNumber(blockNumberAfterReport);
         return blockNumberAfterReport;
     }
@@ -181,7 +180,7 @@ describe("Report Double Vote", function() {
             this.timeout(secsPerblock * 14 * 1000);
 
             const checkingNode = nodes[1];
-            const blockNumber = await checkingNode.testFramework.rpc.chain.getBestBlockNumber();
+            const blockNumber = await checkingNode.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
                 checkingNode.rpc,
                 blockNumber
@@ -219,18 +218,23 @@ describe("Report Double Vote", function() {
                 message1,
                 message2
             );
-            const reportTxHash = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                reportTx.sign({
-                    secret: faucetSecret,
-                    seq: await checkingNode.testFramework.rpc.chain.getSeq(
-                        faucetAddress
-                    ),
-                    fee: 10
-                })
+            const reportTxHash = await checkingNode.rpc.mempool.sendSignedTransaction(
+                {
+                    tx: reportTx
+                        .sign({
+                            secret: faucetSecret,
+                            seq: (await checkingNode.rpc.chain.getSeq({
+                                address: faucetAddress.toString()
+                            }))!,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                }
             );
             const blockNumberAfterReport = await waitUntilAliceGetBanned(
                 checkingNode,
-                reportTxHash
+                new H256(reportTxHash)
             );
             await ensureAliceIsBanned(
                 checkingNode.rpc,
@@ -288,7 +292,7 @@ describe("Report Double Vote", function() {
                 target: 2,
                 termPeriods: 1
             });
-            const blockNumber = await checkingNode.testFramework.rpc.chain.getBestBlockNumber();
+            const blockNumber = await checkingNode.rpc.chain.getBestBlockNumber();
             const termMetadata = (await stake.getTermMetadata(
                 checkingNode.rpc,
                 blockNumber
@@ -328,18 +332,23 @@ describe("Report Double Vote", function() {
                 message1,
                 message2
             );
-            const reportTxHash = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                reportTx.sign({
-                    secret: faucetSecret,
-                    seq: await checkingNode.testFramework.rpc.chain.getSeq(
-                        faucetAddress
-                    ),
-                    fee: 10
-                })
+            const reportTxHash = await checkingNode.rpc.mempool.sendSignedTransaction(
+                {
+                    tx: reportTx
+                        .sign({
+                            secret: faucetSecret,
+                            seq: (await checkingNode.rpc.chain.getSeq({
+                                address: faucetAddress.toString()
+                            }))!,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                }
             );
             const blockNumberAfterReport = await waitUntilAliceGetBanned(
                 checkingNode,
-                reportTxHash
+                new H256(reportTxHash)
             );
             await ensureAliceIsBanned(
                 checkingNode.rpc,
@@ -406,7 +415,7 @@ describe("Report Double Vote", function() {
             });
 
             const checkingNode = nodes[1];
-            const blockNumber = await checkingNode.testFramework.rpc.chain.getBestBlockNumber();
+            const blockNumber = await checkingNode.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
                 checkingNode.rpc,
                 blockNumber
@@ -430,15 +439,15 @@ describe("Report Double Vote", function() {
                 )
                 .sign({
                     secret: faucetSecret,
-                    seq: await checkingNode.testFramework.rpc.chain.getSeq(
-                        faucetAddress
-                    ),
+                    seq: (await checkingNode.rpc.chain.getSeq({
+                        address: faucetAddress.toString()
+                    }))!,
                     fee: 10
                 });
-            const revokeTxHash = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                revoketx
+            const revokeTxHash = await checkingNode.rpc.mempool.sendSignedTransaction(
+                { tx: revoketx.rlpBytes().toString("hex") }
             );
-            await checkingNode.waitForTx(revokeTxHash);
+            await checkingNode.waitForTx(new H256(revokeTxHash));
             await termWaiter.waitNodeUntilTerm(checkingNode, {
                 target: 2,
                 termPeriods: 1
@@ -470,18 +479,23 @@ describe("Report Double Vote", function() {
                 message1,
                 message2
             );
-            const reportTxHash = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                reportTx.sign({
-                    secret: faucetSecret,
-                    seq: await checkingNode.testFramework.rpc.chain.getSeq(
-                        faucetAddress
-                    ),
-                    fee: 10
-                })
+            const reportTxHash = await checkingNode.rpc.mempool.sendSignedTransaction(
+                {
+                    tx: reportTx
+                        .sign({
+                            secret: faucetSecret,
+                            seq: (await checkingNode.rpc.chain.getSeq({
+                                address: faucetAddress.toString()
+                            }))!,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                }
             );
             const blockNumberAfterReport = await waitUntilAliceGetBanned(
                 checkingNode,
-                reportTxHash
+                new H256(reportTxHash)
             );
             await ensureAliceIsBanned(
                 checkingNode.rpc,

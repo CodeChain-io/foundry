@@ -58,6 +58,7 @@ describe("Nomination", function() {
 
             const aliceNode = findNode(nodes, alice);
             const selfNominationHash = await selfNominate(
+                aliceNode.rpc,
                 aliceNode.testFramework,
                 alice,
                 10
