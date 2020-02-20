@@ -95,7 +95,9 @@ impl<'a> Manager<'a> {
             counterparty_client_identifier: counterparty_client_identifier.clone(),
         };
 
-        self.verify_connection_state(&connection, proof_height, proof_init, desired_identifier.clone(), &expected);
+        if !self.verify_connection_state(&connection, proof_height, proof_init, desired_identifier.clone(), &expected) {
+            return Err(format!("Counterparty chain's connection state verification fail. expected: {:?}", expected))
+        }
 
         if let Some(previous_connection_end) = self.query(&desired_identifier) {
             let expected_init = ConnectionEnd {
@@ -147,7 +149,14 @@ impl<'a> Manager<'a> {
             client_identifier: connection.counterparty_client_identifier.clone(),
             counterparty_client_identifier: connection.client_identifier.clone(),
         };
-        self.verify_connection_state(&connection, proof_height, proof_try, identifier.clone(), &expected_connection);
+
+        if !self.verify_connection_state(&connection, proof_height, proof_try, identifier.clone(), &expected_connection)
+        {
+            return Err(format!(
+                "Counterparty chain's connection state verification fail. expected: {:?}",
+                expected_connection
+            ))
+        }
 
         connection.state = ConnectionState::OPEN;
         let kv_store = self.ctx.get_kv_store_mut();
