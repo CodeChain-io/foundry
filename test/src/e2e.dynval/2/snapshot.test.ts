@@ -17,10 +17,10 @@
 import * as chai from "chai";
 import { expect } from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import RPC from "foundry-rpc";
 import * as fs from "fs";
 import "mocha";
 import * as path from "path";
-import { SDK } from "../../sdk/src";
 import * as stake from "../../stakeholder/src";
 
 import mkdirp = require("mkdirp");
@@ -122,7 +122,7 @@ describe("Snapshot for Tendermint with Dynamic Validator", function() {
                 termPeriods: 2
             });
 
-            await freshValidatorCheck(nodes[0].testFramework);
+            await freshValidatorCheck(nodes[0].rpc);
 
             expect(
                 await node.testFramework.rpc.chain.getBlock(
@@ -147,13 +147,13 @@ describe("Snapshot for Tendermint with Dynamic Validator", function() {
         promiseExpect.checkFulfilled();
     });
 
-    async function freshValidatorCheck(sdk: SDK) {
-        const blockNumber = await sdk.rpc.chain.getBestBlockNumber();
-        const termMedata = await stake.getTermMetadata(sdk, blockNumber);
+    async function freshValidatorCheck(rpc: RPC) {
+        const blockNumber = await rpc.chain.getBestBlockNumber();
+        const termMedata = await stake.getTermMetadata(rpc, blockNumber);
         const currentTermInitialBlockNumber =
             termMedata!.lastTermFinishedBlockNumber + 1;
         const validatorsAfter = (await stake.getPossibleAuthors(
-            sdk,
+            rpc,
             currentTermInitialBlockNumber
         ))!.map(platformAddr => platformAddr.toString());
 

@@ -69,9 +69,7 @@ describe("Auto Self Nomination", function() {
             );
             await aliceNode.waitForTx(selfNominationHash);
             // bob will send self-nomination transaction automatically.
-            const beforeCandidates = await stake.getCandidates(
-                nodes[0].testFramework
-            );
+            const beforeCandidates = await stake.getCandidates(nodes[0].rpc);
 
             expect(
                 beforeCandidates.map(candidate => candidate.pubkey.toString())
@@ -91,10 +89,10 @@ describe("Auto Self Nomination", function() {
                 candidates,
                 jailed
             ] = await Promise.all([
-                stake.getValidators(nodes[0].testFramework),
-                stake.getBanned(nodes[0].testFramework),
-                stake.getCandidates(nodes[0].testFramework),
-                stake.getJailed(nodes[0].testFramework)
+                stake.getValidators(nodes[0].rpc, nodes[0].testFramework),
+                stake.getBanned(nodes[0].rpc, nodes[0].testFramework),
+                stake.getCandidates(nodes[0].rpc),
+                stake.getJailed(nodes[0].rpc, nodes[0].testFramework)
             ]);
 
             expect(

@@ -49,21 +49,27 @@ describe("Jail state transition test", function() {
     async function isValidator(
         entity: typeof validators[number]
     ): Promise<boolean> {
-        const activated = await stake.getValidators(nodes[0].testFramework);
+        const activated = await stake.getValidators(
+            nodes[0].rpc,
+            nodes[0].testFramework
+        );
         return activated.some(v => v.pubkey.toString() === entity.publicKey);
     }
 
     async function isCandidate(
         entity: typeof validators[number]
     ): Promise<boolean> {
-        const candidates = await stake.getCandidates(nodes[0].testFramework);
+        const candidates = await stake.getCandidates(nodes[0].rpc);
         return candidates.some(c => c.pubkey.toString() === entity.publicKey);
     }
 
     async function isBanned(
         entity: typeof validators[number]
     ): Promise<boolean> {
-        const banned = await stake.getBanned(nodes[0].testFramework);
+        const banned = await stake.getBanned(
+            nodes[0].rpc,
+            nodes[0].testFramework
+        );
         return banned.some(
             b => b.getAccountId().toString() === entity.accountId
         );
@@ -72,7 +78,10 @@ describe("Jail state transition test", function() {
     async function isPrisoner(
         entity: typeof validators[number]
     ): Promise<boolean> {
-        const prisoners = await stake.getJailed(nodes[0].testFramework);
+        const prisoners = await stake.getJailed(
+            nodes[0].rpc,
+            nodes[0].testFramework
+        );
         return prisoners.some(
             p => p.address.toString() === entity.platformAddress.toString()
         );
