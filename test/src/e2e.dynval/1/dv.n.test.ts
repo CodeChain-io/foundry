@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
+import RPC from "foundry-rpc";
 import "mocha";
-import { SDK } from "../../sdk/src";
 import * as stake from "../../stakeholder/src";
 
 import { validators } from "../../../tendermint.dynval/constants";
@@ -28,12 +28,12 @@ describe("Dynamic Validator N -> N", function() {
     const promiseExpect = new PromiseExpect();
 
     async function expectPossibleAuthors(
-        sdk: SDK,
+        rpc: RPC,
         expectedValidators: typeof validators,
         blockNumber?: number
     ) {
         const possibleAuthors = (await stake.getPossibleAuthors(
-            sdk,
+            rpc,
             blockNumber
         ))!;
         expect(possibleAuthors).to.have.lengthOf(expectedValidators.length);
@@ -57,10 +57,7 @@ describe("Dynamic Validator N -> N", function() {
         });
 
         beforeEach(async function() {
-            await expectPossibleAuthors(
-                nodes[0].testFramework,
-                initialValidators
-            );
+            await expectPossibleAuthors(nodes[0].rpc, initialValidators);
         });
 
         it("should keep possible authors after a term change", async function() {
@@ -74,7 +71,7 @@ describe("Dynamic Validator N -> N", function() {
             });
             const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                nodes[0].testFramework,
+                nodes[0].rpc,
                 blockNumber
             );
             expect(termMetadata).not.to.be.null;
@@ -84,7 +81,7 @@ describe("Dynamic Validator N -> N", function() {
             );
 
             await expectPossibleAuthors(
-                nodes[0].testFramework,
+                nodes[0].rpc,
                 initialValidators,
                 blockNumber
             );
@@ -111,10 +108,7 @@ describe("Dynamic Validator N -> N", function() {
         const alice = validators[3];
 
         beforeEach(async function() {
-            await expectPossibleAuthors(
-                nodes[0].testFramework,
-                initialValidators
-            );
+            await expectPossibleAuthors(nodes[0].rpc, initialValidators);
         });
 
         it("should keep possible authors after a term change", async function() {
@@ -145,7 +139,7 @@ describe("Dynamic Validator N -> N", function() {
             });
             const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                nodes[0].testFramework,
+                nodes[0].rpc,
                 blockNumber
             );
             expect(termMetadata).not.to.be.null;
@@ -154,7 +148,7 @@ describe("Dynamic Validator N -> N", function() {
                 blockNumber
             );
             await expectPossibleAuthors(
-                nodes[0].testFramework,
+                nodes[0].rpc,
                 initialValidators,
                 blockNumber
             );
@@ -181,10 +175,7 @@ describe("Dynamic Validator N -> N", function() {
         const alice = validators[3];
 
         beforeEach(async function() {
-            await expectPossibleAuthors(
-                nodes[0].testFramework,
-                initialValidators
-            );
+            await expectPossibleAuthors(nodes[0].rpc, initialValidators);
         });
 
         it("should keep possible authors after a term change", async function() {
@@ -215,7 +206,7 @@ describe("Dynamic Validator N -> N", function() {
             });
             const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                nodes[0].testFramework,
+                nodes[0].rpc,
                 blockNumber
             );
             expect(termMetadata).not.to.be.null;
@@ -224,7 +215,7 @@ describe("Dynamic Validator N -> N", function() {
                 blockNumber
             );
             await expectPossibleAuthors(
-                nodes[0].testFramework,
+                nodes[0].rpc,
                 initialValidators,
                 blockNumber
             );
@@ -251,10 +242,7 @@ describe("Dynamic Validator N -> N", function() {
         const alice = validators[2];
 
         beforeEach(async function() {
-            await expectPossibleAuthors(
-                nodes[0].testFramework,
-                initialValidators
-            );
+            await expectPossibleAuthors(nodes[0].rpc, initialValidators);
         });
 
         it("should keep possible authors after a term change", async function() {
@@ -285,7 +273,7 @@ describe("Dynamic Validator N -> N", function() {
             });
             const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                nodes[0].testFramework,
+                nodes[0].rpc,
                 blockNumber
             );
             expect(termMetadata).not.to.be.null;
@@ -294,7 +282,7 @@ describe("Dynamic Validator N -> N", function() {
                 blockNumber
             );
             await expectPossibleAuthors(
-                nodes[0].testFramework,
+                nodes[0].rpc,
                 initialValidators,
                 blockNumber
             );
@@ -321,10 +309,7 @@ describe("Dynamic Validator N -> N", function() {
         const alice = validators[2];
 
         beforeEach(async function() {
-            await expectPossibleAuthors(
-                nodes[0].testFramework,
-                initialValidators
-            );
+            await expectPossibleAuthors(nodes[0].rpc, initialValidators);
         });
 
         it("should keep possible authors after a term change", async function() {
@@ -355,7 +340,7 @@ describe("Dynamic Validator N -> N", function() {
             });
             const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                nodes[0].testFramework,
+                nodes[0].rpc,
                 blockNumber
             );
             expect(termMetadata).not.to.be.null;
@@ -364,7 +349,7 @@ describe("Dynamic Validator N -> N", function() {
                 blockNumber
             );
             await expectPossibleAuthors(
-                nodes[0].testFramework,
+                nodes[0].rpc,
                 initialValidators,
                 blockNumber
             );
@@ -392,10 +377,7 @@ describe("Dynamic Validator N -> N", function() {
         const alice = validators[3];
 
         beforeEach(async function() {
-            await expectPossibleAuthors(
-                nodes[0].testFramework,
-                initialValidators
-            );
+            await expectPossibleAuthors(nodes[0].rpc, initialValidators);
         });
 
         [
@@ -470,7 +452,7 @@ describe("Dynamic Validator N -> N", function() {
                     });
                     const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
                     const termMetadata = await stake.getTermMetadata(
-                        nodes[0].testFramework,
+                        nodes[0].rpc,
                         blockNumber
                     );
                     expect(termMetadata).not.to.be.null;
@@ -479,7 +461,7 @@ describe("Dynamic Validator N -> N", function() {
                         blockNumber
                     );
                     await expectPossibleAuthors(
-                        nodes[0].testFramework,
+                        nodes[0].rpc,
                         initialValidators,
                         blockNumber
                     );

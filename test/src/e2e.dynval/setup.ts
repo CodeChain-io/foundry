@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { blake256, H256, U64Value } from "codechain-primitives/lib";
+import RPC from "foundry-rpc";
 import { Context, Suite } from "mocha";
 import {
     aliceSecret,
@@ -523,12 +524,14 @@ export function setTermTestTimeout(
 }
 
 export async function termThatIncludeTransaction(
-    sdk: SDK,
+    rpc: RPC,
     txHash: H256
 ): Promise<number> {
-    const transaction = await sdk.rpc.chain.getTransaction(txHash);
+    const transaction = await rpc.chain.getTransaction({
+        transactionHash: `0x${txHash.toString()}`
+    });
     const minedBlock = transaction!.blockNumber!;
-    const termMetadata = await stake.getTermMetadata(sdk, minedBlock);
+    const termMetadata = await stake.getTermMetadata(rpc, minedBlock);
 
     if (minedBlock > termMetadata!.lastTermFinishedBlockNumber) {
         return termMetadata!.currentTermId;

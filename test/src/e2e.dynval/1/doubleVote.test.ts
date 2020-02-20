@@ -68,7 +68,10 @@ describe("Double vote detection", function() {
             target: 2,
             termPeriods: 0.5
         });
-        const banned = await stake.getBanned(aliceNode.testFramework);
+        const banned = await stake.getBanned(
+            aliceNode.rpc,
+            aliceNode.testFramework
+        );
         expect(banned.map(b => b.toString())).to.include(
             betty.platformAddress.toString()
         );
@@ -90,7 +93,10 @@ describe("Double vote detection", function() {
             target: 2,
             termPeriods: 0.5
         });
-        const banned = await stake.getBanned(aliceNode.testFramework);
+        const banned = await stake.getBanned(
+            aliceNode.rpc,
+            aliceNode.testFramework
+        );
         expect(banned.map(b => b.toString())).to.include(
             betty.platformAddress.toString()
         );
@@ -112,7 +118,10 @@ describe("Double vote detection", function() {
             target: 2,
             termPeriods: 0.5
         });
-        const banned = await stake.getBanned(aliceNode.testFramework);
+        const banned = await stake.getBanned(
+            aliceNode.rpc,
+            aliceNode.testFramework
+        );
         expect(banned.map(b => b.toString())).to.include(
             betty.platformAddress.toString()
         );

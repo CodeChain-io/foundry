@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
+import RPC from "foundry-rpc";
 import "mocha";
-import { SDK } from "../../sdk/src";
 import * as stake from "../../stakeholder/src";
 
 import { validators as originalValidators } from "../../../tendermint.dynval/constants";
@@ -30,13 +30,13 @@ const [alice, ...otherDynValidators] = allDynValidators;
 describe("Dynamic Validator N -> N-1", function() {
     const promiseExpect = new PromiseExpect();
 
-    async function aliceContainedCheck(sdk: SDK) {
-        const blockNumber = await sdk.rpc.chain.getBestBlockNumber();
-        const termMedata = await stake.getTermMetadata(sdk, blockNumber);
+    async function aliceContainedCheck(rpc: RPC) {
+        const blockNumber = await rpc.chain.getBestBlockNumber();
+        const termMedata = await stake.getTermMetadata(rpc, blockNumber);
         const currentTermInitialBlockNumber =
             termMedata!.lastTermFinishedBlockNumber + 1;
         const validatorsBefore = (await stake.getPossibleAuthors(
-            sdk,
+            rpc,
             currentTermInitialBlockNumber
         ))!.map(platformAddr => platformAddr.toString());
 
@@ -48,13 +48,13 @@ describe("Dynamic Validator N -> N-1", function() {
         );
     }
 
-    async function aliceDropOutCheck(sdk: SDK) {
-        const blockNumber = await sdk.rpc.chain.getBestBlockNumber();
-        const termMedata = await stake.getTermMetadata(sdk, blockNumber);
+    async function aliceDropOutCheck(rpc: RPC) {
+        const blockNumber = await rpc.chain.getBestBlockNumber();
+        const termMedata = await stake.getTermMetadata(rpc, blockNumber);
         const currentTermInitialBlockNumber =
             termMedata!.lastTermFinishedBlockNumber + 1;
         const validatorsAfter = (await stake.getPossibleAuthors(
-            sdk,
+            rpc,
             currentTermInitialBlockNumber
         ))!.map(platformAddr => platformAddr.toString());
 
@@ -89,14 +89,14 @@ describe("Dynamic Validator N -> N-1", function() {
             });
 
             const checkingNode = nodes[1];
-            await aliceContainedCheck(checkingNode.testFramework);
+            await aliceContainedCheck(checkingNode.rpc);
 
             await termWaiter.waitNodeUntilTerm(checkingNode, {
                 target: 2,
                 termPeriods: 1
             });
 
-            await aliceDropOutCheck(checkingNode.testFramework);
+            await aliceDropOutCheck(checkingNode.rpc);
         });
     });
 
@@ -115,7 +115,7 @@ describe("Dynamic Validator N -> N-1", function() {
                 terms: 1
             });
             const checkingNode = nodes[1];
-            await aliceContainedCheck(checkingNode.testFramework);
+            await aliceContainedCheck(checkingNode.rpc);
 
             const faucetSeq = await checkingNode.testFramework.rpc.chain.getSeq(
                 faucetAddress
@@ -141,7 +141,7 @@ describe("Dynamic Validator N -> N-1", function() {
                 target: 2,
                 termPeriods: 1
             });
-            await aliceDropOutCheck(checkingNode.testFramework);
+            await aliceDropOutCheck(checkingNode.rpc);
         });
 
         it("Revoke delegation deposits to make it be under threshold", async function() {
@@ -149,7 +149,7 @@ describe("Dynamic Validator N -> N-1", function() {
                 terms: 1
             });
             const checkingNode = nodes[1];
-            await aliceContainedCheck(checkingNode.testFramework);
+            await aliceContainedCheck(checkingNode.rpc);
 
             const faucetSeq = await checkingNode.testFramework.rpc.chain.getSeq(
                 faucetAddress
@@ -175,7 +175,7 @@ describe("Dynamic Validator N -> N-1", function() {
                 target: 2,
                 termPeriods: 1
             });
-            await aliceDropOutCheck(checkingNode.testFramework);
+            await aliceDropOutCheck(checkingNode.rpc);
         });
     });
 

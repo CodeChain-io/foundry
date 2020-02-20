@@ -15,8 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
+import * as chai from "chai";
+import * as chaiAsPromised from "chai-as-promised";
+import RPC from "foundry-rpc";
 import "mocha";
-import { SDK } from "../../sdk/src";
+chai.use(chaiAsPromised);
 import * as stake from "../../stakeholder/src";
 
 import { validators } from "../../../tendermint.dynval/constants";
@@ -61,8 +64,8 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
     const charlieDelegationToCatchAlice = 4000;
     const daveDepositToCatchAlice = 100000;
 
-    async function expectAllValidatorsArePossibleAuthors(sdk: SDK) {
-        const possibleAuthors = (await stake.getPossibleAuthors(sdk))!;
+    async function expectAllValidatorsArePossibleAuthors(rpc: RPC) {
+        const possibleAuthors = (await stake.getPossibleAuthors(rpc))!;
         expect(possibleAuthors).to.have.lengthOf(maxNumOfValidators);
         expect(possibleAuthors.map(x => x.toString())).to.includes.members(
             validators
@@ -72,11 +75,11 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
     }
 
     async function expectAliceIsReplacedBy(
-        sdk: SDK,
+        rpc: RPC,
         name: string,
         index: number
     ) {
-        const possibleAuthors = await stake.getPossibleAuthors(sdk);
+        const possibleAuthors = await stake.getPossibleAuthors(rpc);
         expect(possibleAuthors).not.to.be.null;
         expect(possibleAuthors!).to.have.lengthOf(maxNumOfValidators);
         const authorAddresses = possibleAuthors!.map(x => x.toString());
@@ -103,7 +106,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
         });
 
         beforeEach(async function() {
-            await expectAllValidatorsArePossibleAuthors(nodes[0].testFramework);
+            await expectAllValidatorsArePossibleAuthors(nodes[0].rpc);
         });
 
         it("Bob should be a validator when doing nothing", async function() {
@@ -118,14 +121,14 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
             });
 
             expect(
-                (await stake.getJailed(nodes[0].testFramework)).map(x =>
-                    x.address.toString()
-                )
+                (
+                    await stake.getJailed(nodes[0].rpc, nodes[0].testFramework)
+                ).map(x => x.address.toString())
             ).contains(
                 validators[alice].platformAddress.toString(),
                 "Alice should be jailed for doing nothing"
             );
-            await expectAliceIsReplacedBy(nodes[0].testFramework, "Bob", bob);
+            await expectAliceIsReplacedBy(nodes[0].rpc, "Bob", bob);
         });
 
         it("Charlie should be a validator when gets enough delegation", async function() {
@@ -150,29 +153,22 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
             );
             await nodes[0].waitForTx(delegateToCharlie);
             await expect(
-                termThatIncludeTransaction(
-                    nodes[0].testFramework,
-                    delegateToCharlie
-                )
-            ).eventually.equal(1);
+                termThatIncludeTransaction(nodes[0].rpc, delegateToCharlie)
+            ).to.eventually.equal(1);
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 2,
                 termPeriods: 1
             });
 
             expect(
-                (await stake.getJailed(nodes[0].testFramework)).map(x =>
-                    x.address.toString()
-                )
+                (
+                    await stake.getJailed(nodes[0].rpc, nodes[0].testFramework)
+                ).map(x => x.address.toString())
             ).contains(
                 validators[alice].platformAddress.toString(),
                 "Alice should be jailed for doing nothing"
             );
-            await expectAliceIsReplacedBy(
-                nodes[0].testFramework,
-                "Charlie",
-                charlie
-            );
+            await expectAliceIsReplacedBy(nodes[0].rpc, "Charlie", charlie);
         });
 
         it("Dave should be a validator when deposit enough", async function() {
@@ -204,14 +200,14 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
             });
 
             expect(
-                (await stake.getJailed(nodes[0].testFramework)).map(x =>
-                    x.address.toString()
-                )
+                (
+                    await stake.getJailed(nodes[0].rpc, nodes[0].testFramework)
+                ).map(x => x.address.toString())
             ).contains(
                 validators[alice].platformAddress.toString(),
                 "Alice should be jailed for doing nothing"
             );
-            await expectAliceIsReplacedBy(nodes[0].testFramework, "Dave", dave);
+            await expectAliceIsReplacedBy(nodes[0].rpc, "Dave", dave);
         });
     });
 
@@ -221,7 +217,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
         beforeEach(async function() {
             this.timeout(5000);
 
-            await expectAllValidatorsArePossibleAuthors(nodes[0].testFramework);
+            await expectAllValidatorsArePossibleAuthors(nodes[0].rpc);
 
             const revokeTx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
                 stake
@@ -251,7 +247,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 target: 2,
                 termPeriods: 1
             });
-            await expectAliceIsReplacedBy(nodes[0].testFramework, "Bob", bob);
+            await expectAliceIsReplacedBy(nodes[0].rpc, "Bob", bob);
         });
 
         it("Charlie should be a validator when gets enough delegation", async function() {
@@ -280,11 +276,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 target: 2,
                 termPeriods: 1
             });
-            await expectAliceIsReplacedBy(
-                nodes[0].testFramework,
-                "Charlie",
-                charlie
-            );
+            await expectAliceIsReplacedBy(nodes[0].rpc, "Charlie", charlie);
         });
 
         it("Dave should be a validator when deposit enough", async function() {
@@ -315,7 +307,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 target: 2,
                 termPeriods: 1
             });
-            await expectAliceIsReplacedBy(nodes[0].testFramework, "Dave", dave);
+            await expectAliceIsReplacedBy(nodes[0].rpc, "Dave", dave);
         });
     });
 
@@ -323,7 +315,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
         const { nodes } = withNodes(this, nodeParams);
 
         beforeEach(async function() {
-            await expectAllValidatorsArePossibleAuthors(nodes[0].testFramework);
+            await expectAllValidatorsArePossibleAuthors(nodes[0].rpc);
         });
 
         it("Charlie should be a validator when gets enough delegation", async function() {
@@ -352,11 +344,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 target: 2,
                 termPeriods: 1
             });
-            await expectAliceIsReplacedBy(
-                nodes[0].testFramework,
-                "Charlie",
-                charlie
-            );
+            await expectAliceIsReplacedBy(nodes[0].rpc, "Charlie", charlie);
         });
 
         it("Dave should be a validator when deposit enough", async function() {
@@ -387,7 +375,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 target: 2,
                 termPeriods: 1
             });
-            await expectAliceIsReplacedBy(nodes[0].testFramework, "Dave", dave);
+            await expectAliceIsReplacedBy(nodes[0].rpc, "Dave", dave);
         });
     });
 

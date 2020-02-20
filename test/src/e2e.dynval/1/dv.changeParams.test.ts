@@ -17,8 +17,8 @@
 import * as chai from "chai";
 import { expect } from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import RPC from "foundry-rpc";
 import "mocha";
-import { SDK } from "../../sdk/src";
 import * as stake from "../../stakeholder/src";
 
 import { validators } from "../../../tendermint.dynval/constants";
@@ -43,13 +43,13 @@ describe("Change commonParams that affects validator set", function() {
         }))
     });
 
-    async function checkValidators(sdk: SDK, term: number, target: string[]) {
-        const blockNumber = await sdk.rpc.chain.getBestBlockNumber();
-        const termMetadata = (await stake.getTermMetadata(sdk, blockNumber))!;
+    async function checkValidators(rpc: RPC, term: number, target: string[]) {
+        const blockNumber = await rpc.chain.getBestBlockNumber();
+        const termMetadata = (await stake.getTermMetadata(rpc, blockNumber))!;
         const currentTermInitialBlockNumber =
             termMetadata.lastTermFinishedBlockNumber + 1;
         const validatorsAfter = (await stake.getPossibleAuthors(
-            sdk,
+            rpc,
             currentTermInitialBlockNumber
         ))!.map(platformAddr => platformAddr.toString());
 
@@ -111,11 +111,7 @@ describe("Change commonParams that affects validator set", function() {
                 ...revoked.slice(0, 2),
                 ...untouched
             ].map(signer => signer.platformAddress.toString());
-            await checkValidators(
-                checkingNode.testFramework,
-                2,
-                expectedValidators
-            );
+            await checkValidators(checkingNode.rpc, 2, expectedValidators);
         });
     });
 
@@ -128,7 +124,7 @@ describe("Change commonParams that affects validator set", function() {
             const checkingNode = nodes[0];
 
             await checkValidators(
-                checkingNode.testFramework,
+                checkingNode.rpc,
                 1,
                 validators
                     .slice(0, 5)
@@ -146,7 +142,7 @@ describe("Change commonParams that affects validator set", function() {
                 termPeriods: 1
             });
             await checkValidators(
-                checkingNode.testFramework,
+                checkingNode.rpc,
                 2,
                 validators
                     .slice(0, 3)
@@ -164,7 +160,7 @@ describe("Change commonParams that affects validator set", function() {
                 termPeriods: 1
             });
             await checkValidators(
-                checkingNode.testFramework,
+                checkingNode.rpc,
                 3,
                 validators
                     .slice(0, 4)
@@ -203,9 +199,7 @@ describe("Change commonParams that doesn't affects validator set", function() {
             this.slow((initialTermSeconds + newTermSeconds) * 1000 * margin);
             this.timeout((initialTermSeconds + newTermSeconds) * 1000 * 2);
 
-            const term1Metadata = (await stake.getTermMetadata(
-                nodes[0].testFramework
-            ))!;
+            const term1Metadata = (await stake.getTermMetadata(nodes[0].rpc))!;
             {
                 expect(term1Metadata.currentTermId).to.be.equal(1);
             }
@@ -218,18 +212,14 @@ describe("Change commonParams that doesn't affects validator set", function() {
 
             await nodes[0].waitForTermChange(2, initialTermSeconds * margin);
 
-            const term2Metadata = (await stake.getTermMetadata(
-                nodes[0].testFramework
-            ))!;
+            const term2Metadata = (await stake.getTermMetadata(nodes[0].rpc))!;
             {
                 expect(term2Metadata.currentTermId).to.be.equal(2);
             }
 
             await nodes[0].waitForTermChange(3, newTermSeconds * margin);
 
-            const term3Metadata = (await stake.getTermMetadata(
-                nodes[0].testFramework
-            ))!;
+            const term3Metadata = (await stake.getTermMetadata(nodes[0].rpc))!;
             {
                 expect(term2Metadata.currentTermId).to.be.equal(2);
             }
