@@ -23,6 +23,7 @@ import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
 import { PromiseExpect } from "../../helper/promise";
 import { findNode, setTermTestTimeout, withNodes } from "../setup";
+import { H256 } from "codechain-primitives/lib";
 
 describe("Dynamic Validator N -> N+1", function() {
     const promiseExpect = new PromiseExpect();
@@ -99,13 +100,13 @@ describe("Dynamic Validator N -> N+1", function() {
                 )
                 .sign({
                     secret: betty.privateKey,
-                    seq: await bettyNode.testFramework.rpc.chain.getSeq(
-                        betty.platformAddress
-                    ),
+                    seq: (await bettyNode.rpc.chain.getSeq({
+                        address: betty.platformAddress.toString()
+                    }))!,
                     fee: 10
                 });
-            const nominateTxHash = bettyNode.testFramework.rpc.chain.sendSignedTransaction(
-                nominateTx
+            const nominateTxHash = await bettyNode.rpc.mempool.sendSignedTransaction(
+                { tx: nominateTx.rlpBytes().toString("hex") }
             );
             const delegateTx = stake
                 .createDelegateCCSTransaction(
@@ -115,15 +116,18 @@ describe("Dynamic Validator N -> N+1", function() {
                 )
                 .sign({
                     secret: faucetSecret,
-                    seq: await bettyNode.testFramework.rpc.chain.getSeq(
-                        faucetAddress
-                    ),
+                    seq: (await bettyNode.rpc.chain.getSeq({
+                        address: faucetAddress.toString()
+                    }))!,
                     fee: 10
                 });
-            const delegateTxHash = bettyNode.testFramework.rpc.chain.sendSignedTransaction(
-                delegateTx
+            const delegateTxHash = await bettyNode.rpc.mempool.sendSignedTransaction(
+                { tx: delegateTx.rlpBytes().toString("hex") }
             );
-            await checkingNode.waitForTx([nominateTxHash, delegateTxHash]);
+            await checkingNode.waitForTx([
+                new H256(nominateTxHash),
+                new H256(delegateTxHash)
+            ]);
 
             await termWaiter.waitNodeUntilTerm(checkingNode, {
                 target: 2,
@@ -161,15 +165,15 @@ describe("Dynamic Validator N -> N+1", function() {
                 )
                 .sign({
                     secret: betty.privateKey,
-                    seq: await checkingNode.testFramework.rpc.chain.getSeq(
-                        betty.platformAddress
-                    ),
+                    seq: (await checkingNode.rpc.chain.getSeq({
+                        address: betty.platformAddress.toString()
+                    }))!,
                     fee: 10
                 });
-            const nominateTxHash = checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                nominateTx
+            const nominateTxHash = await checkingNode.rpc.mempool.sendSignedTransaction(
+                { tx: nominateTx.rlpBytes().toString("hex") }
             );
-            await checkingNode.waitForTx(nominateTxHash);
+            await checkingNode.waitForTx(new H256(nominateTxHash));
 
             await termWaiter.waitNodeUntilTerm(checkingNode, {
                 target: 2,
@@ -199,9 +203,9 @@ describe("Dynamic Validator N -> N+1", function() {
 
             const checkingNode = nodes[0];
             await beforeInsertionCheck(checkingNode.rpc);
-            const faucetSeq = await checkingNode.testFramework.rpc.chain.getSeq(
-                faucetAddress
-            );
+            const faucetSeq = (await checkingNode.rpc.chain.getSeq({
+                address: faucetAddress.toString()
+            }))!;
             const delegateTx = stake
                 .createDelegateCCSTransaction(
                     checkingNode.testFramework,
@@ -213,10 +217,10 @@ describe("Dynamic Validator N -> N+1", function() {
                     seq: faucetSeq,
                     fee: 10
                 });
-            const delegateTxHash = checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                delegateTx
+            const delegateTxHash = await checkingNode.rpc.mempool.sendSignedTransaction(
+                { tx: delegateTx.rlpBytes().toString("hex") }
             );
-            await checkingNode.waitForTx(delegateTxHash);
+            await checkingNode.waitForTx(new H256(delegateTxHash));
 
             await termWaiter.waitNodeUntilTerm(checkingNode, {
                 target: 2,

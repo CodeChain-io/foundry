@@ -101,9 +101,9 @@ describe("Shutdown test", function() {
             let lastBlockNumber: number;
             while (true) {
                 lastBlockNumber = await node.getBestBlockNumber();
-                const block = (await node.testFramework.rpc.chain.getBlock(
-                    lastBlockNumber
-                ))!;
+                const block = (await node.rpc.chain.getBlockByNumber({
+                    blockNumber: lastBlockNumber
+                }))!;
                 if (block.timestamp >= targetTS) {
                     return;
                 }
@@ -257,8 +257,8 @@ describe("Shutdown test", function() {
                     2,
                     "Term should be changed"
                 );
-                const block = (await getObserver().node.testFramework.rpc.chain.getBlock(
-                    blockNumberAtStop + 1
+                const block = (await getObserver().node.rpc.chain.getBlockByNumber(
+                    { blockNumber: blockNumberAtStop + 1 }
                 ))!;
                 expect(getValidators().addrs).to.include(
                     block.author.toString(),

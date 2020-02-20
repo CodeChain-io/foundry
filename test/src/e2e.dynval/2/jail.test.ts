@@ -23,6 +23,7 @@ import * as stake from "../../stakeholder/src";
 import { validators } from "../../../tendermint.dynval/constants";
 import { PromiseExpect } from "../../helper/promise";
 import { setTermTestTimeout, withNodes } from "../setup";
+import { H256 } from "codechain-primitives/lib";
 
 chai.use(chaiAsPromised);
 
@@ -135,16 +136,19 @@ describe("Jail state transition test", function() {
             10_000_000,
             ""
         );
-        const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
-            nomination.sign({
-                secret: alice.privateKey,
-                seq: await node.testFramework.rpc.chain.getSeq(
-                    alice.platformAddress
-                ),
-                fee: 10
-            })
-        );
-        await node.waitForTx(hash);
+        const hash = await node.rpc.mempool.sendSignedTransaction({
+            tx: nomination
+                .sign({
+                    secret: alice.privateKey,
+                    seq: (await node.rpc.chain.getSeq({
+                        address: alice.platformAddress.toString()
+                    }))!,
+                    fee: 10
+                })
+                .rlpBytes()
+                .toString("hex")
+        });
+        await node.waitForTx(new H256(hash));
 
         await termWaiter.waitNodeUntilTerm(node, { target: 5, termPeriods: 1 });
         expect(await isCandidate(alice)).to.be.true;
@@ -161,16 +165,19 @@ describe("Jail state transition test", function() {
             10_000_000,
             ""
         );
-        const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
-            nomination.sign({
-                secret: alice.privateKey,
-                seq: await node.testFramework.rpc.chain.getSeq(
-                    alice.platformAddress
-                ),
-                fee: 10
-            })
-        );
-        await expect(node.waitForTx(hash)).rejectedWith(
+        const hash = await node.rpc.mempool.sendSignedTransaction({
+            tx: nomination
+                .sign({
+                    secret: alice.privateKey,
+                    seq: (await node.rpc.chain.getSeq({
+                        address: alice.platformAddress.toString()
+                    }))!,
+                    fee: 10
+                })
+                .rlpBytes()
+                .toString("hex")
+        });
+        await expect(node.waitForTx(new H256(hash))).rejectedWith(
             "Account is still in custody"
         );
         await termWaiter.waitNodeUntilTerm(node, { target: 3, termPeriods: 1 });
