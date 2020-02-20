@@ -23,6 +23,7 @@ import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
 import { PromiseExpect } from "../../helper/promise";
 import { findNode, setTermTestTimeout, withNodes } from "../setup";
+import { H256 } from "codechain-primitives/lib";
 
 describe("Dynamic Validator N -> N", function() {
     const promiseExpect = new PromiseExpect();
@@ -69,7 +70,7 @@ describe("Dynamic Validator N -> N", function() {
                 target: 2,
                 termPeriods: 1
             });
-            const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
+            const blockNumber = await nodes[0].rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
                 nodes[0].rpc,
                 blockNumber
@@ -116,28 +117,32 @@ describe("Dynamic Validator N -> N", function() {
                 terms: 1
             });
 
-            const insufficientDelegationTx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
-                stake
-                    .createDelegateCCSTransaction(
-                        nodes[0].testFramework,
-                        alice.platformAddress,
-                        50
-                    )
-                    .sign({
-                        secret: faucetSecret,
-                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
-                            faucetAddress
-                        ),
-                        fee: 10
-                    })
+            const insufficientDelegationTx = await nodes[0].rpc.mempool.sendSignedTransaction(
+                {
+                    tx: stake
+                        .createDelegateCCSTransaction(
+                            nodes[0].testFramework,
+                            alice.platformAddress,
+                            50
+                        )
+                        .sign({
+                            secret: faucetSecret,
+                            seq: (await nodes[0].rpc.chain.getSeq({
+                                address: faucetAddress.toString()
+                            }))!,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                }
             );
-            await nodes[0].waitForTx(insufficientDelegationTx);
+            await nodes[0].waitForTx(new H256(insufficientDelegationTx));
 
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 2,
                 termPeriods: 1
             });
-            const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
+            const blockNumber = await nodes[0].rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
                 nodes[0].rpc,
                 blockNumber
@@ -183,28 +188,32 @@ describe("Dynamic Validator N -> N", function() {
                 terms: 1
             });
 
-            const insufficientDelegationTx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
-                stake
-                    .createDelegateCCSTransaction(
-                        nodes[0].testFramework,
-                        alice.platformAddress,
-                        50
-                    )
-                    .sign({
-                        secret: faucetSecret,
-                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
-                            faucetAddress
-                        ),
-                        fee: 10
-                    })
+            const insufficientDelegationTx = await nodes[0].rpc.mempool.sendSignedTransaction(
+                {
+                    tx: stake
+                        .createDelegateCCSTransaction(
+                            nodes[0].testFramework,
+                            alice.platformAddress,
+                            50
+                        )
+                        .sign({
+                            secret: faucetSecret,
+                            seq: (await nodes[0].rpc.chain.getSeq({
+                                address: faucetAddress.toString()
+                            }))!,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                }
             );
-            await nodes[0].waitForTx(insufficientDelegationTx);
+            await nodes[0].waitForTx(new H256(insufficientDelegationTx));
 
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 2,
                 termPeriods: 1
             });
-            const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
+            const blockNumber = await nodes[0].rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
                 nodes[0].rpc,
                 blockNumber
@@ -250,28 +259,32 @@ describe("Dynamic Validator N -> N", function() {
                 terms: 1
             });
 
-            const insufficientDelegationTx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
-                stake
-                    .createRevokeTransaction(
-                        nodes[0].testFramework,
-                        alice.platformAddress,
-                        50
-                    )
-                    .sign({
-                        secret: faucetSecret,
-                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
-                            faucetAddress
-                        ),
-                        fee: 10
-                    })
+            const insufficientDelegationTx = await nodes[0].rpc.mempool.sendSignedTransaction(
+                {
+                    tx: stake
+                        .createRevokeTransaction(
+                            nodes[0].testFramework,
+                            alice.platformAddress,
+                            50
+                        )
+                        .sign({
+                            secret: faucetSecret,
+                            seq: (await nodes[0].rpc.chain.getSeq({
+                                address: faucetAddress.toString()
+                            }))!,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                }
             );
-            await nodes[0].waitForTx(insufficientDelegationTx);
+            await nodes[0].waitForTx(new H256(insufficientDelegationTx));
 
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 2,
                 termPeriods: 1
             });
-            const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
+            const blockNumber = await nodes[0].rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
                 nodes[0].rpc,
                 blockNumber
@@ -317,28 +330,32 @@ describe("Dynamic Validator N -> N", function() {
                 terms: 1
             });
 
-            const insufficientDelegationTx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
-                stake
-                    .createRevokeTransaction(
-                        nodes[0].testFramework,
-                        alice.platformAddress,
-                        50
-                    )
-                    .sign({
-                        secret: faucetSecret,
-                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
-                            faucetAddress
-                        ),
-                        fee: 10
-                    })
+            const insufficientDelegationTx = await nodes[0].rpc.mempool.sendSignedTransaction(
+                {
+                    tx: stake
+                        .createRevokeTransaction(
+                            nodes[0].testFramework,
+                            alice.platformAddress,
+                            50
+                        )
+                        .sign({
+                            secret: faucetSecret,
+                            seq: (await nodes[0].rpc.chain.getSeq({
+                                address: faucetAddress.toString()
+                            }))!,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                }
             );
-            await nodes[0].waitForTx(insufficientDelegationTx);
+            await nodes[0].waitForTx(new H256(insufficientDelegationTx));
 
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 2,
                 termPeriods: 1
             });
-            const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
+            const blockNumber = await nodes[0].rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
                 nodes[0].rpc,
                 blockNumber
@@ -410,47 +427,55 @@ describe("Dynamic Validator N -> N", function() {
                         terms: 1
                     });
                     const aliceNode = findNode(nodes, alice);
-                    const nominationTx = await aliceNode.testFramework.rpc.chain.sendSignedTransaction(
-                        stake
-                            .createSelfNominateTransaction(
-                                aliceNode.testFramework,
-                                deposit,
-                                ""
-                            )
-                            .sign({
-                                secret: alice.privateKey,
-                                seq: await aliceNode.testFramework.rpc.chain.getSeq(
-                                    alice.platformAddress
-                                ),
-                                fee: 10
-                            })
-                    );
-                    await nodes[0].waitForTx(nominationTx);
-
-                    if (delegation > 0) {
-                        const tx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
-                            stake
-                                .createDelegateCCSTransaction(
-                                    nodes[0].testFramework,
-                                    alice.platformAddress,
-                                    delegation
+                    const nominationTx = await aliceNode.rpc.mempool.sendSignedTransaction(
+                        {
+                            tx: stake
+                                .createSelfNominateTransaction(
+                                    aliceNode.testFramework,
+                                    deposit,
+                                    ""
                                 )
                                 .sign({
-                                    secret: faucetSecret,
-                                    seq: await nodes[0].testFramework.rpc.chain.getSeq(
-                                        faucetAddress
-                                    ),
+                                    secret: alice.privateKey,
+                                    seq: (await aliceNode.rpc.chain.getSeq({
+                                        address: alice.platformAddress.toString()
+                                    }))!,
                                     fee: 10
                                 })
+                                .rlpBytes()
+                                .toString("hex")
+                        }
+                    );
+                    await nodes[0].waitForTx(new H256(nominationTx));
+
+                    if (delegation > 0) {
+                        const tx = await nodes[0].rpc.mempool.sendSignedTransaction(
+                            {
+                                tx: stake
+                                    .createDelegateCCSTransaction(
+                                        nodes[0].testFramework,
+                                        alice.platformAddress,
+                                        delegation
+                                    )
+                                    .sign({
+                                        secret: faucetSecret,
+                                        seq: (await nodes[0].rpc.chain.getSeq({
+                                            address: faucetAddress.toString()
+                                        }))!,
+                                        fee: 10
+                                    })
+                                    .rlpBytes()
+                                    .toString("hex")
+                            }
                         );
-                        await nodes[0].waitForTx(tx);
+                        await nodes[0].waitForTx(new H256(tx));
                     }
 
                     await termWaiter.waitNodeUntilTerm(nodes[0], {
                         target: 2,
                         termPeriods: 1
                     });
-                    const blockNumber = await nodes[0].testFramework.rpc.chain.getBestBlockNumber();
+                    const blockNumber = await nodes[0].rpc.chain.getBestBlockNumber();
                     const termMetadata = await stake.getTermMetadata(
                         nodes[0].rpc,
                         blockNumber

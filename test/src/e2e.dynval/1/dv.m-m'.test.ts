@@ -22,6 +22,7 @@ import "mocha";
 chai.use(chaiAsPromised);
 import * as stake from "../../stakeholder/src";
 
+import { H256 } from "codechain-primitives/lib";
 import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
 import { PromiseExpect } from "../../helper/promise";
@@ -136,24 +137,29 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 terms: 1
             });
 
-            const delegateToCharlie = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
-                stake
-                    .createDelegateCCSTransaction(
-                        nodes[0].testFramework,
-                        validators[charlie].platformAddress,
-                        charlieDelegationToCatchBob
-                    )
-                    .sign({
-                        secret: faucetSecret,
-                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
-                            faucetAddress
-                        ),
-                        fee: 10
-                    })
+            const delegateToCharlie = await nodes[0].rpc.mempool.sendSignedTransaction(
+                {
+                    tx: stake
+                        .createDelegateCCSTransaction(
+                            nodes[0].testFramework,
+                            validators[charlie].platformAddress,
+                            charlieDelegationToCatchBob
+                        )
+                        .sign({
+                            secret: faucetSecret,
+                            seq: (await nodes[0].rpc.chain.getSeq({
+                                address: faucetAddress.toString()
+                            }))!,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                }
             );
-            await nodes[0].waitForTx(delegateToCharlie);
+            const delegateToCharlieH256 = new H256(delegateToCharlie);
+            await nodes[0].waitForTx(delegateToCharlieH256);
             await expect(
-                termThatIncludeTransaction(nodes[0].rpc, delegateToCharlie)
+                termThatIncludeTransaction(nodes[0].rpc, delegateToCharlieH256)
             ).to.eventually.equal(1);
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 2,
@@ -178,8 +184,8 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
 
             const depositDave = await nodes[
                 dave
-            ].testFramework.rpc.chain.sendSignedTransaction(
-                stake
+            ].rpc.mempool.sendSignedTransaction({
+                tx: stake
                     .createSelfNominateTransaction(
                         nodes[dave].testFramework,
                         daveDepositToCatchBob,
@@ -187,13 +193,15 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     )
                     .sign({
                         secret: validators[dave].privateKey,
-                        seq: await nodes[dave].testFramework.rpc.chain.getSeq(
-                            validators[dave].platformAddress
-                        ),
+                        seq: (await nodes[dave].rpc.chain.getSeq({
+                            address: validators[dave].platformAddress.toString()
+                        }))!,
                         fee: 10
                     })
-            );
-            await nodes[0].waitForTx(depositDave);
+                    .rlpBytes()
+                    .toString("hex")
+            });
+            await nodes[0].waitForTx(new H256(depositDave));
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 2,
                 termPeriods: 1
@@ -219,8 +227,8 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
 
             await expectAllValidatorsArePossibleAuthors(nodes[0].rpc);
 
-            const revokeTx = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
-                stake
+            const revokeTx = await nodes[0].rpc.mempool.sendSignedTransaction({
+                tx: stake
                     .createRevokeTransaction(
                         nodes[0].testFramework,
                         validators[alice].platformAddress,
@@ -228,13 +236,15 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     )
                     .sign({
                         secret: faucetSecret,
-                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
-                            faucetAddress
-                        ),
+                        seq: (await nodes[0].rpc.chain.getSeq({
+                            address: faucetAddress.toString()
+                        }))!,
                         fee: 10
                     })
-            );
-            await nodes[0].waitForTx(revokeTx);
+                    .rlpBytes()
+                    .toString("hex")
+            });
+            await nodes[0].waitForTx(new H256(revokeTx));
         });
 
         it("Bob should be a validator when doing nothing", async function() {
@@ -255,22 +265,26 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 terms: 1
             });
 
-            const delegateToCharlie = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
-                stake
-                    .createDelegateCCSTransaction(
-                        nodes[0].testFramework,
-                        validators[charlie].platformAddress,
-                        charlieDelegationToCatchBob
-                    )
-                    .sign({
-                        secret: faucetSecret,
-                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
-                            faucetAddress
-                        ),
-                        fee: 10
-                    })
+            const delegateToCharlie = await nodes[0].rpc.mempool.sendSignedTransaction(
+                {
+                    tx: stake
+                        .createDelegateCCSTransaction(
+                            nodes[0].testFramework,
+                            validators[charlie].platformAddress,
+                            charlieDelegationToCatchBob
+                        )
+                        .sign({
+                            secret: faucetSecret,
+                            seq: (await nodes[0].rpc.chain.getSeq({
+                                address: faucetAddress.toString()
+                            }))!,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                }
             );
-            await nodes[0].waitForTx(delegateToCharlie);
+            await nodes[0].waitForTx(new H256(delegateToCharlie));
 
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 2,
@@ -286,8 +300,8 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
 
             const depositDave = await nodes[
                 dave
-            ].testFramework.rpc.chain.sendSignedTransaction(
-                stake
+            ].rpc.mempool.sendSignedTransaction({
+                tx: stake
                     .createSelfNominateTransaction(
                         nodes[dave].testFramework,
                         daveDepositToCatchBob,
@@ -295,13 +309,15 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     )
                     .sign({
                         secret: validators[dave].privateKey,
-                        seq: await nodes[dave].testFramework.rpc.chain.getSeq(
-                            validators[dave].platformAddress
-                        ),
+                        seq: (await nodes[dave].rpc.chain.getSeq({
+                            address: validators[dave].platformAddress.toString()
+                        }))!,
                         fee: 10
                     })
-            );
-            await nodes[0].waitForTx(depositDave);
+                    .rlpBytes()
+                    .toString("hex")
+            });
+            await nodes[0].waitForTx(new H256(depositDave));
 
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 2,
@@ -323,22 +339,26 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 terms: 1
             });
 
-            const delegateToCharlie = await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
-                stake
-                    .createDelegateCCSTransaction(
-                        nodes[0].testFramework,
-                        validators[charlie].platformAddress,
-                        charlieDelegationToCatchAlice
-                    )
-                    .sign({
-                        secret: faucetSecret,
-                        seq: await nodes[0].testFramework.rpc.chain.getSeq(
-                            faucetAddress
-                        ),
-                        fee: 10
-                    })
+            const delegateToCharlie = await nodes[0].rpc.mempool.sendSignedTransaction(
+                {
+                    tx: stake
+                        .createDelegateCCSTransaction(
+                            nodes[0].testFramework,
+                            validators[charlie].platformAddress,
+                            charlieDelegationToCatchAlice
+                        )
+                        .sign({
+                            secret: faucetSecret,
+                            seq: (await nodes[0].rpc.chain.getSeq({
+                                address: faucetAddress.toString()
+                            }))!,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                }
             );
-            await nodes[0].waitForTx(delegateToCharlie);
+            await nodes[0].waitForTx(new H256(delegateToCharlie));
 
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 2,
@@ -354,8 +374,8 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
 
             const depositDave = await nodes[
                 dave
-            ].testFramework.rpc.chain.sendSignedTransaction(
-                stake
+            ].rpc.mempool.sendSignedTransaction({
+                tx: stake
                     .createSelfNominateTransaction(
                         nodes[dave].testFramework,
                         daveDepositToCatchAlice,
@@ -363,13 +383,15 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     )
                     .sign({
                         secret: validators[dave].privateKey,
-                        seq: await nodes[dave].testFramework.rpc.chain.getSeq(
-                            validators[dave].platformAddress
-                        ),
+                        seq: (await nodes[dave].rpc.chain.getSeq({
+                            address: validators[dave].platformAddress.toString()
+                        }))!,
                         fee: 10
                     })
-            );
-            await nodes[0].waitForTx(depositDave);
+                    .rlpBytes()
+                    .toString("hex")
+            });
+            await nodes[0].waitForTx(new H256(depositDave));
 
             await termWaiter.waitNodeUntilTerm(nodes[0], {
                 target: 2,

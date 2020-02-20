@@ -19,6 +19,7 @@ import RPC from "foundry-rpc";
 import "mocha";
 import * as stake from "../../stakeholder/src";
 
+import { H256 } from "codechain-primitives/lib";
 import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
 import { PromiseExpect } from "../../helper/promise";
@@ -84,13 +85,17 @@ describe("Dynamic Validator N -> N'", function() {
                 )
                 .sign({
                     secret: faucetSecret,
-                    seq: await rpcNode.testFramework.rpc.chain.getSeq(
-                        faucetAddress
-                    ),
+                    seq: (await rpcNode.rpc.chain.getSeq({
+                        address: faucetAddress.toString()
+                    }))!,
                     fee: 10
                 });
             await rpcNode.waitForTx(
-                rpcNode.testFramework.rpc.chain.sendSignedTransaction(tx)
+                new H256(
+                    await rpcNode.rpc.mempool.sendSignedTransaction({
+                        tx: tx.rlpBytes().toString("hex")
+                    })
+                )
             );
 
             await termWaiter.waitNodeUntilTerm(rpcNode, {
@@ -147,14 +152,18 @@ describe("Dynamic Validator N -> N'", function() {
                 )
                 .sign({
                     secret: betty.privateKey,
-                    seq: await bettyNode.testFramework.rpc.chain.getSeq(
-                        betty.platformAddress
-                    ),
+                    seq: (await bettyNode.rpc.chain.getSeq({
+                        address: betty.platformAddress.toString()
+                    }))!,
                     fee: 10
                 });
 
             bettyNode.waitForTx(
-                bettyNode.testFramework.rpc.chain.sendSignedTransaction(tx)
+                new H256(
+                    await bettyNode.rpc.mempool.sendSignedTransaction({
+                        tx: tx.rlpBytes().toString("hex")
+                    })
+                )
             );
 
             await termWaiter.waitNodeUntilTerm(rpcNode, {
@@ -198,9 +207,9 @@ describe("Dynamic Validator N -> N'", function() {
                 alice
             ]);
 
-            const seq = await rpcNode.testFramework.rpc.chain.getSeq(
-                faucetAddress
-            );
+            const seq = (await rpcNode.rpc.chain.getSeq({
+                address: faucetAddress.toString()
+            }))!;
             const tx = stake
                 .createDelegateCCSTransaction(
                     rpcNode.testFramework,
@@ -224,8 +233,16 @@ describe("Dynamic Validator N -> N'", function() {
                     fee: 10
                 });
             await rpcNode.waitForTx([
-                rpcNode.testFramework.rpc.chain.sendSignedTransaction(tx),
-                rpcNode.testFramework.rpc.chain.sendSignedTransaction(tx2)
+                new H256(
+                    await rpcNode.rpc.mempool.sendSignedTransaction({
+                        tx: tx.rlpBytes().toString("hex")
+                    })
+                ),
+                new H256(
+                    await rpcNode.rpc.mempool.sendSignedTransaction({
+                        tx: tx2.rlpBytes().toString("hex")
+                    })
+                )
             ]);
 
             await termWaiter.waitNodeUntilTerm(rpcNode, {
@@ -278,9 +295,9 @@ describe("Dynamic Validator N -> N'", function() {
                 )
                 .sign({
                     secret: betty.privateKey,
-                    seq: await bettyNode.testFramework.rpc.chain.getSeq(
-                        betty.platformAddress
-                    ),
+                    seq: (await bettyNode.rpc.chain.getSeq({
+                        address: betty.platformAddress.toString()
+                    }))!,
                     fee: 10
                 });
 
@@ -292,17 +309,25 @@ describe("Dynamic Validator N -> N'", function() {
                 )
                 .sign({
                     secret: faucetSecret,
-                    seq: await rpcNode.testFramework.rpc.chain.getSeq(
-                        faucetAddress
-                    ),
+                    seq: (await rpcNode.rpc.chain.getSeq({
+                        address: faucetAddress.toString()
+                    }))!,
                     fee: 10
                 });
             await Promise.all([
                 bettyNode.waitForTx(
-                    bettyNode.testFramework.rpc.chain.sendSignedTransaction(tx)
+                    new H256(
+                        await bettyNode.rpc.mempool.sendSignedTransaction({
+                            tx: tx.rlpBytes().toString("hex")
+                        })
+                    )
                 ),
                 rpcNode.waitForTx(
-                    rpcNode.testFramework.rpc.chain.sendSignedTransaction(tx2)
+                    new H256(
+                        await rpcNode.rpc.mempool.sendSignedTransaction({
+                            tx: tx2.rlpBytes().toString("hex")
+                        })
+                    )
                 )
             ]);
 

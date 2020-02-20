@@ -19,6 +19,7 @@ import RPC from "foundry-rpc";
 import "mocha";
 import * as stake from "../../stakeholder/src";
 
+import { H256 } from "codechain-primitives/lib";
 import { validators as originalValidators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
 import { PromiseExpect } from "../../helper/promise";
@@ -117,9 +118,9 @@ describe("Dynamic Validator N -> N-1", function() {
             const checkingNode = nodes[1];
             await aliceContainedCheck(checkingNode.rpc);
 
-            const faucetSeq = await checkingNode.testFramework.rpc.chain.getSeq(
-                faucetAddress
-            );
+            const faucetSeq = (await checkingNode.rpc.chain.getSeq({
+                address: faucetAddress.toString()
+            }))!;
             // Revoke all the delegation deposits
             const tx = stake
                 .createRevokeTransaction(
@@ -132,10 +133,12 @@ describe("Dynamic Validator N -> N-1", function() {
                     seq: faucetSeq,
                     fee: 10
                 });
-            const revokeTx = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                tx
+            const revokeTx = await checkingNode.rpc.mempool.sendSignedTransaction(
+                {
+                    tx: tx.rlpBytes().toString("hex")
+                }
             );
-            await checkingNode.waitForTx(revokeTx);
+            await checkingNode.waitForTx(new H256(revokeTx));
 
             await termWaiter.waitNodeUntilTerm(checkingNode, {
                 target: 2,
@@ -151,9 +154,9 @@ describe("Dynamic Validator N -> N-1", function() {
             const checkingNode = nodes[1];
             await aliceContainedCheck(checkingNode.rpc);
 
-            const faucetSeq = await checkingNode.testFramework.rpc.chain.getSeq(
-                faucetAddress
-            );
+            const faucetSeq = (await checkingNode.rpc.chain.getSeq({
+                address: faucetAddress.toString()
+            }))!;
             // make remaining deposits under threshold.
             const tx = stake
                 .createRevokeTransaction(
@@ -166,10 +169,12 @@ describe("Dynamic Validator N -> N-1", function() {
                     seq: faucetSeq,
                     fee: 10
                 });
-            const revokeTx = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                tx
+            const revokeTx = await checkingNode.rpc.mempool.sendSignedTransaction(
+                {
+                    tx: tx.rlpBytes().toString("hex")
+                }
             );
-            await checkingNode.waitForTx(revokeTx);
+            await checkingNode.waitForTx(new H256(revokeTx));
 
             await termWaiter.waitNodeUntilTerm(checkingNode, {
                 target: 2,

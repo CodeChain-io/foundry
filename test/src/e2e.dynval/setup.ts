@@ -179,9 +179,9 @@ async function createNodes<T>(options: {
         await fullyConnect(initialNodes.concat(nodes), promiseExpect);
 
         // Give CCC to deposit
-        const faucetSeq = await initialNodes[0].testFramework.rpc.chain.getSeq(
-            faucetAddress
-        );
+        const faucetSeq = (await initialNodes[0].rpc.chain.getSeq({
+            address: faucetAddress.toString()
+        }))!;
         const payTxs: (H256 | Promise<H256>)[] = [];
         for (let i = 0; i < validators.length; i++) {
             const { signer: validator } = validators[i];
@@ -196,8 +196,10 @@ async function createNodes<T>(options: {
                     fee: 10
                 });
             payTxs.push(
-                await initialNodes[0].testFramework.rpc.chain.sendSignedTransaction(
-                    tx
+                new H256(
+                    await initialNodes[0].rpc.mempool.sendSignedTransaction({
+                        tx: tx.rlpBytes().toString("hex")
+                    })
                 )
             );
         }
@@ -221,20 +223,24 @@ async function createNodes<T>(options: {
                 )
                 .sign({
                     secret: validator.privateKey,
-                    seq: await nodes[i].testFramework.rpc.chain.getSeq(
-                        validator.platformAddress
-                    ),
+                    seq: (await nodes[i].rpc.chain.getSeq({
+                        address: validator.platformAddress.toString()
+                    }))!,
                     fee: 10
                 });
             stakeTxs.push(
-                await nodes[i].testFramework.rpc.chain.sendSignedTransaction(tx)
+                new H256(
+                    await nodes[i].rpc.mempool.sendSignedTransaction({
+                        tx: tx.rlpBytes().toString("hex")
+                    })
+                )
             );
         }
 
         // Delegate CCS to become validators
-        const faucetSeq2 = await initialNodes[0].testFramework.rpc.chain.getSeq(
-            faucetAddress
-        );
+        const faucetSeq2 = (await initialNodes[0].rpc.chain.getSeq({
+            address: faucetAddress.toString()
+        }))!;
         const delegateTxs = [];
         for (let i = 0; i < validators.length; i++) {
             const { signer: validator, deposit, delegation = 0 } = validators[
@@ -264,8 +270,10 @@ async function createNodes<T>(options: {
                     fee: 10
                 });
             delegateTxs.push(
-                await initialNodes[0].testFramework.rpc.chain.sendSignedTransaction(
-                    tx
+                new H256(
+                    await initialNodes[0].rpc.mempool.sendSignedTransaction({
+                        tx: tx.rlpBytes().toString("hex")
+                    })
                 )
             );
         }
@@ -312,20 +320,28 @@ async function createNodes<T>(options: {
 }
 
 export async function selfNominate(
+    rpc: RPC,
     sdk: SDK,
     validator: ValidatorConfig["signer"],
     deposit: number
 ): Promise<H256> {
     const tx = stake.createSelfNominateTransaction(sdk, deposit, "").sign({
         secret: validator.privateKey,
-        seq: await sdk.rpc.chain.getSeq(validator.platformAddress),
+        seq: (await rpc.chain.getSeq({
+            address: validator.platformAddress.toString()
+        }))!,
         fee: 10
     });
 
-    return await sdk.rpc.chain.sendSignedTransaction(tx);
+    return new H256(
+        await rpc.mempool.sendSignedTransaction({
+            tx: tx.rlpBytes().toString("hex")
+        })
+    );
 }
 
 export async function receiveDelegation(
+    rpc: RPC,
     sdk: SDK,
     validator: ValidatorConfig["signer"],
     delegation: number
@@ -338,10 +354,16 @@ export async function receiveDelegation(
         )
         .sign({
             secret: faucetSecret,
-            seq: await sdk.rpc.chain.getSeq(faucetAddress),
+            seq: (await rpc.chain.getSeq({
+                address: faucetAddress.toString()
+            }))!,
             fee: 10
         });
-    return await sdk.rpc.chain.sendSignedTransaction(tx);
+    return new H256(
+        await rpc.mempool.sendSignedTransaction({
+            tx: tx.rlpBytes().toString("hex")
+        })
+    );
 }
 
 export async function fullyConnect(
@@ -460,17 +482,23 @@ export async function changeParams(
     changeParamsActionRlp.push(`0x${SDK.util.signEcdsa(message, aliceSecret)}`);
     changeParamsActionRlp.push(`0x${SDK.util.signEcdsa(message, bobSecret)}`);
 
-    return await node.testFramework.rpc.chain.sendSignedTransaction(
-        node.testFramework.core
-            .createCustomTransaction({
-                handlerId: stakeActionHandlerId,
-                bytes: RLP.encode(changeParamsActionRlp)
-            })
-            .sign({
-                secret: faucetSecret,
-                seq: await node.testFramework.rpc.chain.getSeq(faucetAddress),
-                fee: 10
-            })
+    return new H256(
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
+                .createCustomTransaction({
+                    handlerId: stakeActionHandlerId,
+                    bytes: RLP.encode(changeParamsActionRlp)
+                })
+                .sign({
+                    secret: faucetSecret,
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString()
+                    }))!,
+                    fee: 10
+                })
+                .rlpBytes()
+                .toString("hex")
+        })
     );
 }
 

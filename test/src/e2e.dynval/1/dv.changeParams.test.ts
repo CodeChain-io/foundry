@@ -21,10 +21,12 @@ import RPC from "foundry-rpc";
 import "mocha";
 import * as stake from "../../stakeholder/src";
 
+import { H256 } from "codechain-primitives/lib";
 import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
 import { PromiseExpect } from "../../helper/promise";
 import { changeParams, setTermTestTimeout, withNodes } from "../setup";
+import { ERROR } from "../../helper/error";
 
 chai.use(chaiAsPromised);
 
@@ -74,9 +76,9 @@ describe("Change commonParams that affects validator set", function() {
 
             await checkingNode.waitForTx(changeTxHash);
 
-            const faucetSeq = await checkingNode.testFramework.rpc.chain.getSeq(
-                faucetAddress
-            );
+            const faucetSeq = (await checkingNode.rpc.chain.getSeq({
+                address: faucetAddress.toString()
+            }))!;
 
             const revoked = validators.slice(0, 3);
             const untouched = validators.slice(3, 5);
@@ -96,12 +98,12 @@ describe("Change commonParams that affects validator set", function() {
 
             const revokeTxHashes = await Promise.all(
                 revokeTxs.map(tx =>
-                    checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                        tx
-                    )
+                    checkingNode.rpc.mempool.sendSignedTransaction({
+                        tx: `${tx.rlpBytes().toString("hex")}`
+                    })
                 )
             );
-            await checkingNode.waitForTx(revokeTxHashes);
+            await checkingNode.waitForTx(new H256(revokeTxHashes[0]));
             await termWaiter.waitNodeUntilTerm(checkingNode, {
                 target: 2,
                 termPeriods: 1
@@ -226,8 +228,10 @@ describe("Change commonParams that doesn't affects validator set", function() {
 
             const [ts1, ts2, ts3] = await Promise.all(
                 [term1Metadata, term2Metadata, term3Metadata].map(m =>
-                    nodes[0].testFramework.rpc.chain
-                        .getBlock(m.lastTermFinishedBlockNumber)
+                    nodes[0].rpc.chain
+                        .getBlockByNumber({
+                            blockNumber: m.lastTermFinishedBlockNumber
+                        })
                         .then(block => block!.timestamp)
                 )
             );
@@ -266,14 +270,19 @@ describe("Change commonParams that doesn't affects validator set", function() {
                 })
                 .sign({
                     secret: faucetSecret,
-                    seq: await checkingNode.testFramework.rpc.chain.getSeq(
-                        faucetAddress
-                    ),
+                    seq: (await checkingNode.rpc.chain.getSeq({
+                        address: faucetAddress.toString()
+                    }))!,
                     fee: 10
                 });
-            await expect(
-                checkingNode.testFramework.rpc.chain.sendSignedTransaction(tx)
-            ).rejectedWith(/Too Low Fee/);
+            try {
+                await checkingNode.rpc.mempool.sendSignedTransaction({
+                    tx: tx.rlpBytes().toString("hex")
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(ERROR.TOO_LOW_FEE);
+            }
         });
     });
 
@@ -298,29 +307,41 @@ describe("Change commonParams that doesn't affects validator set", function() {
             });
             await checkingNode.waitForTx(changeTxHash);
             const normalNomination = nominationWithMetadata(129);
-            const seq = await checkingNode.testFramework.rpc.chain.getSeq(
-                alice.platformAddress
+            const seq = (await checkingNode.rpc.chain.getSeq({
+                address: alice.platformAddress.toString()
+            }))!;
+            const normalHash = await checkingNode.rpc.mempool.sendSignedTransaction(
+                {
+                    tx: normalNomination
+                        .sign({
+                            secret: alice.privateKey,
+                            seq,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                }
             );
-            const normalHash = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                normalNomination.sign({
-                    secret: alice.privateKey,
-                    seq,
-                    fee: 10
-                })
-            );
-            await checkingNode.waitForTx(normalHash);
+            await checkingNode.waitForTx(new H256(normalHash));
 
             const largeNomination = nominationWithMetadata(257);
-
-            await expect(
-                checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                    largeNomination.sign({
-                        secret: alice.privateKey,
-                        seq: seq + 1,
-                        fee: 10
-                    })
-                )
-            ).rejectedWith(/Too long/);
+            try {
+                await checkingNode.rpc.mempool.sendSignedTransaction({
+                    tx: largeNomination
+                        .sign({
+                            secret: alice.privateKey,
+                            seq: seq + 1,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
+            }
         });
 
         it("Should apply smaller metadata limit after decrement", async function() {
@@ -335,28 +356,41 @@ describe("Change commonParams that doesn't affects validator set", function() {
             });
             await checkingNode.waitForTx(changeTxHash);
             const normalNomination = nominationWithMetadata(63);
-            const seq = await checkingNode.testFramework.rpc.chain.getSeq(
-                alice.platformAddress
+            const seq = (await checkingNode.rpc.chain.getSeq({
+                address: alice.platformAddress.toString()
+            }))!;
+            const normalHash = await checkingNode.rpc.mempool.sendSignedTransaction(
+                {
+                    tx: normalNomination
+                        .sign({
+                            secret: alice.privateKey,
+                            seq,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                }
             );
-            const normalHash = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                normalNomination.sign({
-                    secret: alice.privateKey,
-                    seq,
-                    fee: 10
-                })
-            );
-            await checkingNode.waitForTx(normalHash);
+            await checkingNode.waitForTx(new H256(normalHash));
 
             const largeNomination = nominationWithMetadata(127);
-            await expect(
-                checkingNode.testFramework.rpc.chain.sendSignedTransaction(
-                    largeNomination.sign({
-                        secret: alice.privateKey,
-                        seq: seq + 1,
-                        fee: 10
-                    })
-                )
-            ).rejectedWith(/Too long/);
+            try {
+                await checkingNode.rpc.mempool.sendSignedTransaction({
+                    tx: largeNomination
+                        .sign({
+                            secret: alice.privateKey,
+                            seq: seq + 1,
+                            fee: 10
+                        })
+                        .rlpBytes()
+                        .toString("hex")
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
+            }
         });
     });
 
