@@ -2,9 +2,11 @@
 // In the import statement below uses "codechain-primitives" which is installed by the SDK.
 // We should use the SDK's PlatformAddressValue when the SDK is updated.
 import { PlatformAddressValue } from "codechain-primitives";
+import RPC from "foundry-rpc";
 import { SDK } from "../../sdk/src";
 import { H512, PlatformAddress, U64 } from "../../sdk/src/core/classes";
 
+import {toHex} from "codechain-primitives/lib";
 import { HANDLER_ID } from "./index";
 import {
     decodeH512,
@@ -16,19 +18,19 @@ import {
 const RLP = require("rlp");
 
 export async function getUndelegatedCCS(
-    sdk: SDK,
+    rpc: RPC,
     address: PlatformAddressValue,
     blockNumber?: number
 ): Promise<U64> {
-    const data = await sdk.rpc.engine.getCustomActionData(
-        HANDLER_ID,
-        [
+    const data = await rpc.engine.getCustomActionData(
+        { handlerId: HANDLER_ID,
+        bytes: `0x${toHex(RLP.encode([
             "Account",
             PlatformAddress.ensure(address)
                 .getAccountId()
                 .toEncodeObject()
-        ],
-        blockNumber
+        ]))}`,
+        blockNumber }
     );
     if (data == null) {
         return new U64(0);
@@ -37,13 +39,14 @@ export async function getUndelegatedCCS(
 }
 
 export async function getCCSHolders(
+    rpc: RPC,
     sdk: SDK,
     blockNumber?: number
 ): Promise<PlatformAddress[]> {
-    const data = await sdk.rpc.engine.getCustomActionData(
-        HANDLER_ID,
-        ["StakeholderAddresses"],
-        blockNumber
+    const data = await rpc.engine.getCustomActionData(
+        { handlerId: HANDLER_ID,
+        bytes : `0x${toHex(RLP.encode(["StakeholderAddresses"]))}`,
+        blockNumber }
     );
     if (data == null) {
         throw Error("Expected non-null value, but got a null");
@@ -62,14 +65,15 @@ export interface Delegation {
     quantity: U64;
 }
 export async function getDelegations(
+    rpc: RPC,
     sdk: SDK,
     delegator: PlatformAddress,
     blockNumber?: number
 ): Promise<Delegation[]> {
-    const data = await sdk.rpc.engine.getCustomActionData(
-        HANDLER_ID,
-        ["Delegation", delegator.accountId.toEncodeObject()],
-        blockNumber
+    const data = await rpc.engine.getCustomActionData(
+        {handlerId: HANDLER_ID,
+        bytes : `0x${toHex(RLP.encode(["Delegation", delegator.accountId.toEncodeObject()]))}`,
+        blockNumber}
     );
     if (data == null) {
         return [];
@@ -99,13 +103,13 @@ export interface Candidate {
 }
 
 export async function getCandidates(
-    sdk: SDK,
+    rpc: RPC,
     blockNumber?: number
 ): Promise<Candidate[]> {
-    const data = await sdk.rpc.engine.getCustomActionData(
-        HANDLER_ID,
-        ["Candidates"],
-        blockNumber
+    const data = await rpc.engine.getCustomActionData(
+        {handlerId: HANDLER_ID,
+            bytes : `0x${toHex(RLP.encode( ["Candidates"]))}`,
+        blockNumber}
     );
     if (data == null) {
         return [];
@@ -135,13 +139,14 @@ export interface Prisoner {
 }
 
 export async function getJailed(
+    rpc: RPC,
     sdk: SDK,
     blockNumber?: number
 ): Promise<Prisoner[]> {
-    const data = await sdk.rpc.engine.getCustomActionData(
-        HANDLER_ID,
-        ["Jail"],
-        blockNumber
+    const data = await rpc.engine.getCustomActionData({
+        handlerId: HANDLER_ID,
+        bytes : `0x${toHex(RLP.encode( ["Jail"]))}`,
+        blockNumber}
     );
     if (data == null) {
         return [];
@@ -163,13 +168,14 @@ export async function getJailed(
 }
 
 export async function getBanned(
+    rpc: RPC,
     sdk: SDK,
     blockNumber?: number
 ): Promise<PlatformAddress[]> {
-    const data = await sdk.rpc.engine.getCustomActionData(
-        HANDLER_ID,
-        ["Banned"],
-        blockNumber
+    const data = await rpc.engine.getCustomActionData(
+        {handlerId:  HANDLER_ID,
+            bytes : `0x${toHex(RLP.encode( ["Banned"]))}`,
+        blockNumber}
     );
     if (data == null) {
         return [];
@@ -194,13 +200,14 @@ export interface IntermediateReward {
 }
 
 export async function getIntermediateRewards(
+    rpc: RPC,
     sdk: SDK,
     blockNumber?: number
 ): Promise<IntermediateRewards> {
-    const data = await sdk.rpc.engine.getCustomActionData(
-        HANDLER_ID,
-        ["IntermediateRewards"],
-        blockNumber
+    const data = await rpc.engine.getCustomActionData(
+        { handlerId: HANDLER_ID,
+            bytes : `0x${toHex(RLP.encode(["IntermediateRewards"]))}`,
+        blockNumber }
     );
     if (data == null) {
         return {
@@ -243,13 +250,14 @@ export interface Validator {
 }
 
 export async function getValidators(
+    rpc: RPC,
     sdk: SDK,
     blockNumber?: number
 ): Promise<Validator[]> {
-    const data = await sdk.rpc.engine.getCustomActionData(
-        HANDLER_ID,
-        ["Validators"],
-        blockNumber
+    const data = await rpc.engine.getCustomActionData(
+        {handlerId: HANDLER_ID,
+            bytes : `0x${toHex(RLP.encode(["Validators"]))}`,
+        blockNumber}
     );
     if (data == null) {
         return [];

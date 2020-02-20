@@ -1,3 +1,4 @@
+import RPC from "foundry-rpc";
 import { SDK } from "../../sdk/src";
 import { PlatformAddress } from "../../sdk/src/core/classes";
 
@@ -7,12 +8,10 @@ export interface TermMetadata {
 }
 
 export async function getTermMetadata(
-    sdk: SDK,
+    rpc: RPC,
     blockNumber?: number
 ): Promise<TermMetadata | null> {
-    const result = await sdk.rpc.sendRpcRequest("chain_getTermMetadata", [
-        blockNumber
-    ]);
+    const result = await rpc.chain.getTermMetadata({blockNumber})
     if (result === null) {
         return null;
     }
@@ -31,12 +30,10 @@ export async function getTermMetadata(
 }
 
 export async function getPossibleAuthors(
-    sdk: SDK,
+    rpc: RPC,
     blockNumber?: number
 ): Promise<PlatformAddress[] | null> {
-    const result = await sdk.rpc.sendRpcRequest("chain_getPossibleAuthors", [
-        blockNumber
-    ]);
+    const result = await rpc.chain.getPossibleAuthors({blockNumber});
     if (result === null) {
         return null;
     }
