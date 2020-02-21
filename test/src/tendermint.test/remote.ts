@@ -29,16 +29,18 @@ import CodeChain from "../helper/spawn";
     });
 
     const transactions = [];
-    const baseSeq = await node.sdk.rpc.chain.getSeq(faucetAddress);
+    const baseSeq = await node.testFramework.rpc.chain.getSeq(faucetAddress);
 
     for (let i = 0; i < numTransactions; i++) {
         const value = makeRandomH256();
-        const accountId = node.sdk.util.getAccountIdFromPrivate(value);
-        const recipient = node.sdk.core.classes.PlatformAddress.fromAccountId(
+        const accountId = node.testFramework.util.getAccountIdFromPrivate(
+            value
+        );
+        const recipient = node.testFramework.core.classes.PlatformAddress.fromAccountId(
             accountId,
             { networkId: "tc" }
         );
-        const transaciton = node.sdk.core
+        const transaciton = node.testFramework.core
             .createPayTransaction({
                 recipient,
                 quantity: 1
@@ -52,15 +54,19 @@ import CodeChain from "../helper/spawn";
     }
 
     for (let i = numTransactions - 1; i > 0; i--) {
-        await node.sdk.rpc.chain.sendSignedTransaction(transactions[i]);
+        await node.testFramework.rpc.chain.sendSignedTransaction(
+            transactions[i]
+        );
     }
     const startTime = new Date();
     console.log(`Start at: ${startTime}`);
-    await node.sdk.rpc.chain.sendSignedTransaction(transactions[0]);
+    await node.testFramework.rpc.chain.sendSignedTransaction(transactions[0]);
 
     while (true) {
         const hash = transactions[numTransactions - 1].hash();
-        const result = await node.sdk.rpc.chain.containsTransaction(hash);
+        const result = await node.testFramework.rpc.chain.containsTransaction(
+            hash
+        );
         console.log(`Node result: ${result}`);
         if (result) {
             break;

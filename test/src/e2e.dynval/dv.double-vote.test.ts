@@ -23,11 +23,11 @@ import {
     signSchnorr,
     U64
 } from "codechain-primitives/lib";
-import { SDK } from "codechain-sdk";
-import { Custom } from "codechain-sdk/lib/core/transaction/Custom";
-import * as stake from "codechain-stakeholder-sdk";
 import "mocha";
 import * as RLP from "rlp";
+import { SDK } from "../sdk/src";
+import { Custom } from "../sdk/src/core/transaction/Custom";
+import * as stake from "../stakeholder/src";
 
 import { validators as originalValidators } from "../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../helper/constants";
@@ -158,7 +158,8 @@ describe("Report Double Vote", function() {
     ): Promise<number> {
         await checkingNode.waitForTx(reportTxHash);
         const blockNumberAfterReport =
-            (await checkingNode.sdk.rpc.chain.getBestBlockNumber()) + 1;
+            (await checkingNode.testFramework.rpc.chain.getBestBlockNumber()) +
+            1;
         await checkingNode.waitBlockNumber(blockNumberAfterReport);
         return blockNumberAfterReport;
     }
@@ -179,20 +180,23 @@ describe("Report Double Vote", function() {
             this.timeout(secsPerblock * 14 * 1000);
 
             const checkingNode = nodes[1];
-            const blockNumber = await checkingNode.sdk.rpc.chain.getBestBlockNumber();
+            const blockNumber = await checkingNode.testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 blockNumber
             );
             const currentTermInitialBlockNumber =
                 termMetadata!.lastTermFinishedBlockNumber + 1;
             expect(termMetadata!.currentTermId).to.be.equals(1);
-            await expectPossibleAuthors(checkingNode.sdk, allDynValidators);
+            await expectPossibleAuthors(
+                checkingNode.testFramework,
+                allDynValidators
+            );
             await checkingNode.waitBlockNumber(
                 currentTermInitialBlockNumber + 1
             );
             const aliceIdx = await getAliceIndex(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 currentTermInitialBlockNumber
             );
 
@@ -213,14 +217,16 @@ describe("Report Double Vote", function() {
             );
 
             const reportTx = createReportDoubleVoteTransaction(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 message1,
                 message2
             );
-            const reportTxHash = await checkingNode.sdk.rpc.chain.sendSignedTransaction(
+            const reportTxHash = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
                 reportTx.sign({
                     secret: faucetSecret,
-                    seq: await checkingNode.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: await checkingNode.testFramework.rpc.chain.getSeq(
+                        faucetAddress
+                    ),
                     fee: 10
                 })
             );
@@ -228,7 +234,10 @@ describe("Report Double Vote", function() {
                 checkingNode,
                 reportTxHash
             );
-            await ensureAliceIsBanned(checkingNode.sdk, blockNumberAfterReport);
+            await ensureAliceIsBanned(
+                checkingNode.testFramework,
+                blockNumberAfterReport
+            );
         });
     });
 
@@ -275,21 +284,24 @@ describe("Report Double Vote", function() {
                 target: 2,
                 termPeriods: 1
             });
-            const blockNumber = await checkingNode.sdk.rpc.chain.getBestBlockNumber();
+            const blockNumber = await checkingNode.testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = (await stake.getTermMetadata(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 blockNumber
             ))!;
             expect(termMetadata!.currentTermId).to.be.equals(2);
 
-            await expectPossibleAuthors(checkingNode.sdk, otherDynValidators);
+            await expectPossibleAuthors(
+                checkingNode.testFramework,
+                otherDynValidators
+            );
             await ensureAliceIsJailed(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 termMetadata.lastTermFinishedBlockNumber
             );
 
             const aliceIdxInPrevTerm = await getAliceIndex(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 termMetadata.lastTermFinishedBlockNumber
             );
 
@@ -310,14 +322,16 @@ describe("Report Double Vote", function() {
             );
 
             const reportTx = createReportDoubleVoteTransaction(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 message1,
                 message2
             );
-            const reportTxHash = await checkingNode.sdk.rpc.chain.sendSignedTransaction(
+            const reportTxHash = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
                 reportTx.sign({
                     secret: faucetSecret,
-                    seq: await checkingNode.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: await checkingNode.testFramework.rpc.chain.getSeq(
+                        faucetAddress
+                    ),
                     fee: 10
                 })
             );
@@ -325,9 +339,12 @@ describe("Report Double Vote", function() {
                 checkingNode,
                 reportTxHash
             );
-            await ensureAliceIsBanned(checkingNode.sdk, blockNumberAfterReport);
+            await ensureAliceIsBanned(
+                checkingNode.testFramework,
+                blockNumberAfterReport
+            );
             await ensureAliceIsReleased(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 blockNumberAfterReport
             );
         });
@@ -381,9 +398,9 @@ describe("Report Double Vote", function() {
             });
 
             const checkingNode = nodes[1];
-            const blockNumber = await checkingNode.sdk.rpc.chain.getBestBlockNumber();
+            const blockNumber = await checkingNode.testFramework.rpc.chain.getBestBlockNumber();
             const termMetadata = await stake.getTermMetadata(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 blockNumber
             );
             const currentTermInitialBlockNumber =
@@ -393,22 +410,24 @@ describe("Report Double Vote", function() {
             );
 
             const aliceIdx = await getAliceIndex(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 currentTermInitialBlockNumber
             );
 
             const revoketx = stake
                 .createRevokeTransaction(
-                    checkingNode.sdk,
+                    checkingNode.testFramework,
                     alice.platformAddress,
                     4_500
                 )
                 .sign({
                     secret: faucetSecret,
-                    seq: await checkingNode.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: await checkingNode.testFramework.rpc.chain.getSeq(
+                        faucetAddress
+                    ),
                     fee: 10
                 });
-            const revokeTxHash = await checkingNode.sdk.rpc.chain.sendSignedTransaction(
+            const revokeTxHash = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
                 revoketx
             );
             await checkingNode.waitForTx(revokeTxHash);
@@ -416,8 +435,11 @@ describe("Report Double Vote", function() {
                 target: 2,
                 termPeriods: 1
             });
-            await expectPossibleAuthors(checkingNode.sdk, otherDynValidators);
-            await ensureAliceIsACandidate(checkingNode.sdk);
+            await expectPossibleAuthors(
+                checkingNode.testFramework,
+                otherDynValidators
+            );
+            await ensureAliceIsACandidate(checkingNode.testFramework);
 
             const [message1, message2] = createDoubleVoteMessages(
                 {
@@ -436,14 +458,16 @@ describe("Report Double Vote", function() {
             );
 
             const reportTx = createReportDoubleVoteTransaction(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 message1,
                 message2
             );
-            const reportTxHash = await checkingNode.sdk.rpc.chain.sendSignedTransaction(
+            const reportTxHash = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
                 reportTx.sign({
                     secret: faucetSecret,
-                    seq: await checkingNode.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: await checkingNode.testFramework.rpc.chain.getSeq(
+                        faucetAddress
+                    ),
                     fee: 10
                 })
             );
@@ -451,9 +475,12 @@ describe("Report Double Vote", function() {
                 checkingNode,
                 reportTxHash
             );
-            await ensureAliceIsBanned(checkingNode.sdk, blockNumberAfterReport);
+            await ensureAliceIsBanned(
+                checkingNode.testFramework,
+                blockNumberAfterReport
+            );
             await ensureAliceIsNotACandidate(
-                checkingNode.sdk,
+                checkingNode.testFramework,
                 blockNumberAfterReport
             );
         });

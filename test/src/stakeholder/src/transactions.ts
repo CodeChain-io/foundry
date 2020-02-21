@@ -2,10 +2,10 @@
 // In the import statement below uses "codechain-primitives" which is installed by the SDK.
 // We should use the SDK's PlatformAddressValue when the SDK is updated.
 import { PlatformAddressValue, U64Value } from "codechain-primitives/lib";
-import { SDK } from "codechain-sdk";
-import { PlatformAddress, U64 } from "codechain-sdk/lib/core/classes";
-import { Custom } from "codechain-sdk/lib/core/transaction/Custom";
 import * as RLP from "rlp";
+import { SDK } from "../../sdk/src";
+import { PlatformAddress, U64 } from "../../sdk/src/core/classes";
+import { Custom } from "../../sdk/src/core/transaction/Custom";
 
 import ReportDoubleVote from "./actions/reportDoubleVote";
 import { HANDLER_ID } from "./index";

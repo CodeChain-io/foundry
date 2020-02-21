@@ -15,9 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { SDK } from "codechain-sdk";
-import * as stake from "codechain-stakeholder-sdk";
 import "mocha";
+import { SDK } from "../../sdk/src";
+import * as stake from "../../stakeholder/src";
 
 import { validators as originalValidators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
@@ -89,14 +89,14 @@ describe("Dynamic Validator N -> N-1", function() {
             });
 
             const checkingNode = nodes[1];
-            await aliceContainedCheck(checkingNode.sdk);
+            await aliceContainedCheck(checkingNode.testFramework);
 
             await termWaiter.waitNodeUntilTerm(checkingNode, {
                 target: 2,
                 termPeriods: 1
             });
 
-            await aliceDropOutCheck(checkingNode.sdk);
+            await aliceDropOutCheck(checkingNode.testFramework);
         });
     });
 
@@ -115,15 +115,15 @@ describe("Dynamic Validator N -> N-1", function() {
                 terms: 1
             });
             const checkingNode = nodes[1];
-            await aliceContainedCheck(checkingNode.sdk);
+            await aliceContainedCheck(checkingNode.testFramework);
 
-            const faucetSeq = await checkingNode.sdk.rpc.chain.getSeq(
+            const faucetSeq = await checkingNode.testFramework.rpc.chain.getSeq(
                 faucetAddress
             );
             // Revoke all the delegation deposits
             const tx = stake
                 .createRevokeTransaction(
-                    checkingNode.sdk,
+                    checkingNode.testFramework,
                     alice.platformAddress,
                     5_000
                 )
@@ -132,7 +132,7 @@ describe("Dynamic Validator N -> N-1", function() {
                     seq: faucetSeq,
                     fee: 10
                 });
-            const revokeTx = await checkingNode.sdk.rpc.chain.sendSignedTransaction(
+            const revokeTx = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
                 tx
             );
             await checkingNode.waitForTx(revokeTx);
@@ -141,7 +141,7 @@ describe("Dynamic Validator N -> N-1", function() {
                 target: 2,
                 termPeriods: 1
             });
-            await aliceDropOutCheck(checkingNode.sdk);
+            await aliceDropOutCheck(checkingNode.testFramework);
         });
 
         it("Revoke delegation deposits to make it be under threshold", async function() {
@@ -149,15 +149,15 @@ describe("Dynamic Validator N -> N-1", function() {
                 terms: 1
             });
             const checkingNode = nodes[1];
-            await aliceContainedCheck(checkingNode.sdk);
+            await aliceContainedCheck(checkingNode.testFramework);
 
-            const faucetSeq = await checkingNode.sdk.rpc.chain.getSeq(
+            const faucetSeq = await checkingNode.testFramework.rpc.chain.getSeq(
                 faucetAddress
             );
             // make remaining deposits under threshold.
             const tx = stake
                 .createRevokeTransaction(
-                    checkingNode.sdk,
+                    checkingNode.testFramework,
                     alice.platformAddress,
                     4_500
                 )
@@ -166,7 +166,7 @@ describe("Dynamic Validator N -> N-1", function() {
                     seq: faucetSeq,
                     fee: 10
                 });
-            const revokeTx = await checkingNode.sdk.rpc.chain.sendSignedTransaction(
+            const revokeTx = await checkingNode.testFramework.rpc.chain.sendSignedTransaction(
                 tx
             );
             await checkingNode.waitForTx(revokeTx);
@@ -175,7 +175,7 @@ describe("Dynamic Validator N -> N-1", function() {
                 target: 2,
                 termPeriods: 1
             });
-            await aliceDropOutCheck(checkingNode.sdk);
+            await aliceDropOutCheck(checkingNode.testFramework);
         });
     });
 

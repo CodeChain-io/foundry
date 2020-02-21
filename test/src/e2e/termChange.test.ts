@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { blake256 } from "codechain-sdk/lib/utils";
 import "mocha";
 import {
     aliceAddress,
@@ -27,6 +26,7 @@ import {
     validator0Address
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
+import { blake256 } from "../sdk/src/utils";
 
 const RLP = require("rlp");
 
@@ -91,12 +91,16 @@ describe("Term change", function() {
             newParams
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, aliceSecret)}`);
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, carolSecret)}`);
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
+        );
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
+        );
 
         {
-            const hash = await node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: RLP.encode(changeParams)
@@ -127,13 +131,17 @@ describe("Term change", function() {
 
     async function waitForTermPeriodChange(termSeconds: number) {
         const lastBlockNumber = await node.rpc.chain.getBestBlockNumber();
-        const lastBlock = (await node.sdk.rpc.chain.getBlock(lastBlockNumber))!;
+        const lastBlock = (await node.testFramework.rpc.chain.getBlock(
+            lastBlockNumber
+        ))!;
 
         let previousTs = lastBlock.timestamp;
         for (let count = 0; count < 20; count++) {
             await node.rpc.devel!.startSealing();
             const blockNumber = await node.rpc.chain.getBestBlockNumber();
-            const block = (await node.sdk.rpc.chain.getBlock(blockNumber))!;
+            const block = (await node.testFramework.rpc.chain.getBlock(
+                blockNumber
+            ))!;
 
             const currentTs = block.timestamp;
             const previousTermPeriod = Math.floor(previousTs / termSeconds);

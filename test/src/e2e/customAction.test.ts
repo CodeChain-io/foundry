@@ -78,8 +78,8 @@ describe("customAction", function() {
             ).readUInt8(0);
 
             const increment = 11;
-            const hash = await node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: hitActionHandlerId,
                         bytes: RLP.encode([increment])
@@ -99,7 +99,8 @@ describe("customAction", function() {
                     transactionHash: `0x${hash.toString()}`
                 })
             ).be.true;
-            expect(await node.sdk.rpc.chain.getTransaction(hash)).not.null;
+            expect(await node.testFramework.rpc.chain.getTransaction(hash)).not
+                .null;
 
             const hitData = (await node.rpc.engine.getCustomActionData({
                 handlerId: hitActionHandlerId,
@@ -160,8 +161,8 @@ describe("customAction", function() {
 
         it("should throw handler not found on sendCustomTransaction", async function() {
             try {
-                await node.sdk.rpc.chain.sendSignedTransaction(
-                    node.sdk.core
+                await node.testFramework.rpc.chain.sendSignedTransaction(
+                    node.testFramework.core
                         .createCustomTransaction({
                             handlerId: 99999,
                             bytes: RLP.encode([11])
@@ -189,8 +190,8 @@ describe("customAction", function() {
             const blockNumber = await node.rpc.chain.getBestBlockNumber();
 
             expect(
-                node.sdk.rpc.chain.sendSignedTransaction(
-                    node.sdk.core
+                node.testFramework.rpc.chain.sendSignedTransaction(
+                    node.testFramework.core
                         .createCustomTransaction({
                             handlerId: hitActionHandlerId,
                             bytes: RLP.encode([

@@ -16,7 +16,6 @@
 
 import { expect } from "chai";
 import { H256, PlatformAddress } from "codechain-primitives/lib";
-import { toHex } from "codechain-sdk/lib/utils";
 import "mocha";
 import {
     aliceAddress,
@@ -33,6 +32,7 @@ import {
 } from "../helper/constants";
 import { PromiseExpect } from "../helper/promise";
 import CodeChain from "../helper/spawn";
+import { toHex } from "../sdk/src/utils";
 
 const RLP = require("rlp");
 
@@ -141,8 +141,8 @@ describe("Staking", function() {
 
         return promiseExpect.shouldFulfill(
             "sendSignTransaction",
-            node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: Buffer.from(
@@ -180,8 +180,8 @@ describe("Staking", function() {
 
         return promiseExpect.shouldFulfill(
             "sendSignTransaction",
-            node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: Buffer.from(
@@ -219,8 +219,8 @@ describe("Staking", function() {
 
         return promiseExpect.shouldFulfill(
             "sendSignTransaction",
-            node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: Buffer.from(
@@ -258,8 +258,8 @@ describe("Staking", function() {
 
         return promiseExpect.shouldFulfill(
             "sendSignTransaction",
-            node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: Buffer.from(RLP.encode([4, deposit, metadata]))
@@ -524,7 +524,8 @@ describe("Staking", function() {
         });
         await node.rpc.devel!.startSealing();
 
-        expect(await node.sdk.rpc.chain.getErrorHint(hash)).not.to.be.null;
+        expect(await node.testFramework.rpc.chain.getErrorHint(hash)).not.to.be
+            .null;
 
         const { amounts } = await getAllStakingInfo();
         expect(amounts).to.be.deep.equal([

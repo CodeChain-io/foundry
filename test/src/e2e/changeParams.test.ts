@@ -18,7 +18,6 @@ import * as chai from "chai";
 import { expect } from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { H256, PlatformAddress, U64 } from "codechain-primitives/lib";
-import { blake256 } from "codechain-sdk/lib/utils";
 import "mocha";
 import {
     aliceAddress,
@@ -32,6 +31,7 @@ import {
     validator0Address
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
+import { blake256 } from "../sdk/src/utils";
 
 const RLP = require("rlp");
 
@@ -89,12 +89,16 @@ describe("ChangeParams", function() {
             newParams
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, aliceSecret)}`);
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, carolSecret)}`);
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
+        );
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
+        );
 
         {
-            const hash = await node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: RLP.encode(changeParams)
@@ -116,7 +120,7 @@ describe("ChangeParams", function() {
         }
 
         await expect(node.sendPayTx({ fee: 10 })).rejectedWith(/Too Low Fee/);
-        const params = await node.sdk.rpc.sendRpcRequest(
+        const params = await node.testFramework.rpc.sendRpcRequest(
             "chain_getCommonParams",
             [null]
         );
@@ -152,10 +156,14 @@ describe("ChangeParams", function() {
             newParams
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, aliceSecret)}`);
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, carolSecret)}`);
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
+        );
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
+        );
 
-        const tx = node.sdk.core
+        const tx = node.testFramework.core
             .createCustomTransaction({
                 handlerId: stakeActionHandlerId,
                 bytes: RLP.encode(changeParams)
@@ -168,13 +176,13 @@ describe("ChangeParams", function() {
                 }))!,
                 fee: 10
             });
-        await expect(node.sdk.rpc.chain.sendSignedTransaction(tx)).rejectedWith(
-            /network id/
-        );
+        await expect(
+            node.testFramework.rpc.chain.sendSignedTransaction(tx)
+        ).rejectedWith(/network id/);
     });
 
     it("should keep default common params value", async function() {
-        const params = await node.sdk.rpc.sendRpcRequest(
+        const params = await node.testFramework.rpc.sendRpcRequest(
             "chain_getCommonParams",
             [null]
         );
@@ -210,9 +218,15 @@ describe("ChangeParams", function() {
             newParams
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, aliceSecret)}`);
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, bobSecret)}`);
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, carolSecret)}`);
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
+        );
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, bobSecret)}`
+        );
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
+        );
 
         {
             await node.rpc.devel!.stopSealing();
@@ -221,8 +235,8 @@ describe("ChangeParams", function() {
                 address: faucetAddress.toString(),
                 blockNumber: null
             }))!;
-            const changeHash = await node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            const changeHash = await node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: RLP.encode(changeParams)
@@ -310,19 +324,23 @@ describe("ChangeParams", function() {
         ];
         const message1 = blake256(RLP.encode(changeParams1).toString("hex"));
         changeParams1.push(
-            `0x${node.sdk.util.signEcdsa(message1, aliceSecret)}`
+            `0x${node.testFramework.util.signEcdsa(message1, aliceSecret)}`
         );
-        changeParams1.push(`0x${node.sdk.util.signEcdsa(message1, bobSecret)}`);
         changeParams1.push(
-            `0x${node.sdk.util.signEcdsa(message1, carolSecret)}`
+            `0x${node.testFramework.util.signEcdsa(message1, bobSecret)}`
+        );
+        changeParams1.push(
+            `0x${node.testFramework.util.signEcdsa(message1, carolSecret)}`
         );
         const message2 = blake256(RLP.encode(changeParams2).toString("hex"));
         changeParams2.push(
-            `0x${node.sdk.util.signEcdsa(message2, aliceSecret)}`
+            `0x${node.testFramework.util.signEcdsa(message2, aliceSecret)}`
         );
-        changeParams2.push(`0x${node.sdk.util.signEcdsa(message2, bobSecret)}`);
         changeParams2.push(
-            `0x${node.sdk.util.signEcdsa(message2, carolSecret)}`
+            `0x${node.testFramework.util.signEcdsa(message2, bobSecret)}`
+        );
+        changeParams2.push(
+            `0x${node.testFramework.util.signEcdsa(message2, carolSecret)}`
         );
 
         {
@@ -332,8 +350,8 @@ describe("ChangeParams", function() {
                 address: faucetAddress.toString(),
                 blockNumber: null
             }))!;
-            const changeHash1 = await node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            const changeHash1 = await node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: RLP.encode(changeParams1)
@@ -344,8 +362,8 @@ describe("ChangeParams", function() {
                         fee: 10
                     })
             );
-            const changeHash2 = await node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            const changeHash2 = await node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: RLP.encode(changeParams2)
@@ -438,30 +456,34 @@ describe("ChangeParams", function() {
         ];
         const message1 = blake256(RLP.encode(changeParams1).toString("hex"));
         changeParams1.push(
-            `0x${node.sdk.util.signEcdsa(message1, aliceSecret)}`
+            `0x${node.testFramework.util.signEcdsa(message1, aliceSecret)}`
         );
-        changeParams1.push(`0x${node.sdk.util.signEcdsa(message1, bobSecret)}`);
         changeParams1.push(
-            `0x${node.sdk.util.signEcdsa(message1, carolSecret)}`
+            `0x${node.testFramework.util.signEcdsa(message1, bobSecret)}`
+        );
+        changeParams1.push(
+            `0x${node.testFramework.util.signEcdsa(message1, carolSecret)}`
         );
         const message2 = blake256(RLP.encode(changeParams2).toString("hex"));
         changeParams2.push(
-            `0x${node.sdk.util.signEcdsa(message2, aliceSecret)}`
+            `0x${node.testFramework.util.signEcdsa(message2, aliceSecret)}`
         );
-        changeParams2.push(`0x${node.sdk.util.signEcdsa(message2, bobSecret)}`);
         changeParams2.push(
-            `0x${node.sdk.util.signEcdsa(message2, carolSecret)}`
+            `0x${node.testFramework.util.signEcdsa(message2, bobSecret)}`
+        );
+        changeParams2.push(
+            `0x${node.testFramework.util.signEcdsa(message2, carolSecret)}`
         );
 
         {
             await node.rpc.devel!.stopSealing();
-            const blockNumber = await node.sdk.rpc.chain.getBestBlockNumber();
+            const blockNumber = await node.testFramework.rpc.chain.getBestBlockNumber();
             const seq = (await node.rpc.chain.getSeq({
                 address: faucetAddress.toString(),
                 blockNumber: null
             }))!;
-            const changeHash1 = await node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            const changeHash1 = await node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: RLP.encode(changeParams1)
@@ -472,8 +494,8 @@ describe("ChangeParams", function() {
                         fee: 10
                     })
             );
-            const changeHash2 = await node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            const changeHash2 = await node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: RLP.encode(changeParams2)
@@ -538,12 +560,16 @@ describe("ChangeParams", function() {
             newParams
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, aliceSecret)}`);
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, carolSecret)}`);
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
+        );
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
+        );
 
         {
-            const hash = await node.sdk.rpc.chain.sendSignedTransaction(
-                node.sdk.core
+            const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: RLP.encode(changeParams)
@@ -566,7 +592,7 @@ describe("ChangeParams", function() {
 
         {
             await node.sendSignedTransactionExpectedToFail(
-                node.sdk.core
+                node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: RLP.encode(changeParams)
@@ -614,10 +640,14 @@ describe("ChangeParams", function() {
             newParams
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, bobSecret)}`);
-        changeParams.push(`0x${node.sdk.util.signEcdsa(message, carolSecret)}`);
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, bobSecret)}`
+        );
+        changeParams.push(
+            `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
+        );
 
-        const tx = node.sdk.core
+        const tx = node.testFramework.core
             .createCustomTransaction({
                 handlerId: stakeActionHandlerId,
                 bytes: RLP.encode(changeParams)
@@ -668,13 +698,13 @@ describe("ChangeParams", function() {
         {
             const message = blake256(RLP.encode(changeParams).toString("hex"));
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, bobSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, bobSecret)}`
             );
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, carolSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
             );
 
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createCustomTransaction({
                     handlerId: stakeActionHandlerId,
                     bytes: RLP.encode(changeParams)
@@ -703,7 +733,7 @@ describe("ChangeParams", function() {
         });
 
         {
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createCustomTransaction({
                     handlerId: stakeActionHandlerId,
                     bytes: RLP.encode(changeParams)
@@ -716,13 +746,16 @@ describe("ChangeParams", function() {
                     }))!,
                     fee: 10
                 });
-            const hash = await node.sdk.rpc.chain.sendSignedTransaction(tx);
+            const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
+                tx
+            );
             expect(
                 await node.rpc.chain.containsTransaction({
                     transactionHash: "0x".concat(hash.toString())
                 })
             ).be.true;
-            expect(await node.sdk.rpc.chain.getTransaction(hash)).not.be.null;
+            expect(await node.testFramework.rpc.chain.getTransaction(hash)).not
+                .be.null;
         }
 
         await expect(node.sendPayTx({ fee: 10 })).rejectedWith(/Too Low Fee/);
@@ -759,15 +792,15 @@ describe("ChangeParams", function() {
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, aliceSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
             );
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, carolSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
             );
 
             {
-                const hash = await node.sdk.rpc.chain.sendSignedTransaction(
-                    node.sdk.core
+                const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
+                    node.testFramework.core
                         .createCustomTransaction({
                             handlerId: stakeActionHandlerId,
                             bytes: RLP.encode(changeParams)
@@ -792,7 +825,7 @@ describe("ChangeParams", function() {
                 /Too Low Fee/
             );
 
-            const params = await node.sdk.rpc.sendRpcRequest(
+            const params = await node.testFramework.rpc.sendRpcRequest(
                 "chain_getCommonParams",
                 [null]
             );
@@ -838,13 +871,13 @@ describe("ChangeParams", function() {
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, aliceSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
             );
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, carolSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
             );
 
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createCustomTransaction({
                     handlerId: stakeActionHandlerId,
                     bytes: RLP.encode(changeParams)
@@ -858,7 +891,7 @@ describe("ChangeParams", function() {
                     fee: 10
                 });
             await expect(
-                node.sdk.rpc.chain.sendSignedTransaction(tx)
+                node.testFramework.rpc.chain.sendSignedTransaction(tx)
             ).rejectedWith(/nomination expiration/);
         });
 
@@ -901,13 +934,13 @@ describe("ChangeParams", function() {
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, aliceSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
             );
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, carolSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
             );
 
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createCustomTransaction({
                     handlerId: stakeActionHandlerId,
                     bytes: RLP.encode(changeParams)
@@ -921,7 +954,7 @@ describe("ChangeParams", function() {
                     fee: 10
                 });
             await expect(
-                node.sdk.rpc.chain.sendSignedTransaction(tx)
+                node.testFramework.rpc.chain.sendSignedTransaction(tx)
             ).rejectedWith(/custody period/);
         });
 
@@ -964,13 +997,13 @@ describe("ChangeParams", function() {
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, aliceSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
             );
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, carolSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
             );
 
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createCustomTransaction({
                     handlerId: stakeActionHandlerId,
                     bytes: RLP.encode(changeParams)
@@ -984,7 +1017,7 @@ describe("ChangeParams", function() {
                     fee: 10
                 });
             await expect(
-                node.sdk.rpc.chain.sendSignedTransaction(tx)
+                node.testFramework.rpc.chain.sendSignedTransaction(tx)
             ).rejectedWith(/release period/);
         });
 
@@ -1027,13 +1060,13 @@ describe("ChangeParams", function() {
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, aliceSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
             );
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, carolSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
             );
 
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createCustomTransaction({
                     handlerId: stakeActionHandlerId,
                     bytes: RLP.encode(changeParams)
@@ -1047,7 +1080,7 @@ describe("ChangeParams", function() {
                     fee: 10
                 });
             try {
-                await node.sdk.rpc.chain.sendSignedTransaction(tx);
+                await node.testFramework.rpc.chain.sendSignedTransaction(tx);
                 expect.fail("The transaction must fail");
             } catch (err) {
                 expect(err.message).contains("release period");
@@ -1094,13 +1127,13 @@ describe("ChangeParams", function() {
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, aliceSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
             );
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, carolSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
             );
 
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createCustomTransaction({
                     handlerId: stakeActionHandlerId,
                     bytes: RLP.encode(changeParams)
@@ -1114,7 +1147,7 @@ describe("ChangeParams", function() {
                     fee: 10
                 });
             await expect(
-                node.sdk.rpc.chain.sendSignedTransaction(tx)
+                node.testFramework.rpc.chain.sendSignedTransaction(tx)
             ).rejectedWith(/minimum deposit/);
         });
 
@@ -1157,13 +1190,13 @@ describe("ChangeParams", function() {
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, aliceSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
             );
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, carolSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
             );
 
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createCustomTransaction({
                     handlerId: stakeActionHandlerId,
                     bytes: RLP.encode(changeParams)
@@ -1177,7 +1210,7 @@ describe("ChangeParams", function() {
                     fee: 10
                 });
             await expect(
-                node.sdk.rpc.chain.sendSignedTransaction(tx)
+                node.testFramework.rpc.chain.sendSignedTransaction(tx)
             ).rejectedWith(/delegation threshold/);
         });
 
@@ -1220,13 +1253,13 @@ describe("ChangeParams", function() {
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, aliceSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
             );
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, carolSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
             );
 
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createCustomTransaction({
                     handlerId: stakeActionHandlerId,
                     bytes: RLP.encode(changeParams)
@@ -1240,7 +1273,7 @@ describe("ChangeParams", function() {
                     fee: 10
                 });
             await expect(
-                node.sdk.rpc.chain.sendSignedTransaction(tx)
+                node.testFramework.rpc.chain.sendSignedTransaction(tx)
             ).rejectedWith(/minimum number of validators/);
         });
 
@@ -1283,13 +1316,13 @@ describe("ChangeParams", function() {
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, aliceSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
             );
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, carolSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
             );
 
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createCustomTransaction({
                     handlerId: stakeActionHandlerId,
                     bytes: RLP.encode(changeParams)
@@ -1303,7 +1336,7 @@ describe("ChangeParams", function() {
                     fee: 10
                 });
             await expect(
-                node.sdk.rpc.chain.sendSignedTransaction(tx)
+                node.testFramework.rpc.chain.sendSignedTransaction(tx)
             ).rejectedWith(/maximum number of validators/);
         });
 
@@ -1346,13 +1379,13 @@ describe("ChangeParams", function() {
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, aliceSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
             );
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, carolSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
             );
 
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createCustomTransaction({
                     handlerId: stakeActionHandlerId,
                     bytes: RLP.encode(changeParams)
@@ -1366,7 +1399,7 @@ describe("ChangeParams", function() {
                     fee: 10
                 });
             try {
-                await node.sdk.rpc.chain.sendSignedTransaction(tx);
+                await node.testFramework.rpc.chain.sendSignedTransaction(tx);
                 expect.fail("The transaction must fail");
             } catch (err) {
                 expect(err.message).contains("maximum number of validators");
@@ -1413,13 +1446,13 @@ describe("ChangeParams", function() {
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, aliceSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
             );
             changeParams.push(
-                `0x${node.sdk.util.signEcdsa(message, carolSecret)}`
+                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
             );
 
-            const tx = node.sdk.core
+            const tx = node.testFramework.core
                 .createCustomTransaction({
                     handlerId: stakeActionHandlerId,
                     bytes: RLP.encode(changeParams)
@@ -1433,7 +1466,7 @@ describe("ChangeParams", function() {
                     fee: 10
                 });
             try {
-                await node.sdk.rpc.chain.sendSignedTransaction(tx);
+                await node.testFramework.rpc.chain.sendSignedTransaction(tx);
                 expect.fail("The transaction must fail");
             } catch (err) {
                 expect(err.message).contains("candidate metadata size");
@@ -1473,8 +1506,8 @@ async function sendStakeToken(params: {
         }))!
     } = params;
 
-    return node.sdk.rpc.chain.sendSignedTransaction(
-        node.sdk.core
+    return node.testFramework.rpc.chain.sendSignedTransaction(
+        node.testFramework.core
             .createCustomTransaction({
                 handlerId: stakeActionHandlerId,
                 bytes: Buffer.from(

@@ -16,8 +16,8 @@
 
 import { expect } from "chai";
 import { H512 } from "codechain-primitives/lib";
-import * as stake from "codechain-stakeholder-sdk";
 import "mocha";
+import * as stake from "../../stakeholder/src";
 
 import { validators } from "../../../tendermint.dynval/constants";
 import { PromiseExpect } from "../../helper/promise";
@@ -58,13 +58,15 @@ describe("Nomination", function() {
 
             const aliceNode = findNode(nodes, alice);
             const selfNominationHash = await selfNominate(
-                aliceNode.sdk,
+                aliceNode.testFramework,
                 alice,
                 10
             );
             await aliceNode.waitForTx(selfNominationHash);
 
-            const beforeCandidates = await stake.getCandidates(nodes[0].sdk);
+            const beforeCandidates = await stake.getCandidates(
+                nodes[0].testFramework
+            );
 
             expect(
                 beforeCandidates.map(candidate => candidate.pubkey.toString())
@@ -81,10 +83,10 @@ describe("Nomination", function() {
                 candidates,
                 jailed
             ] = await Promise.all([
-                stake.getValidators(nodes[0].sdk),
-                stake.getBanned(nodes[0].sdk),
-                stake.getCandidates(nodes[0].sdk),
-                stake.getJailed(nodes[0].sdk)
+                stake.getValidators(nodes[0].testFramework),
+                stake.getBanned(nodes[0].testFramework),
+                stake.getCandidates(nodes[0].testFramework),
+                stake.getJailed(nodes[0].testFramework)
             ]);
 
             expect(

@@ -15,8 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { blake256, H256, U64Value } from "codechain-primitives/lib";
-import { SDK } from "codechain-sdk";
-import * as stake from "codechain-stakeholder-sdk";
 import { Context, Suite } from "mocha";
 import {
     aliceSecret,
@@ -30,6 +28,8 @@ import {
 } from "../helper/constants";
 import { PromiseExpect, wait } from "../helper/promise";
 import CodeChain, { Signer } from "../helper/spawn";
+import { SDK } from "../sdk/src";
+import * as stake from "../stakeholder/src";
 
 const RLP = require("rlp");
 
@@ -178,13 +178,13 @@ async function createNodes<T>(options: {
         await fullyConnect(initialNodes.concat(nodes), promiseExpect);
 
         // Give CCC to deposit
-        const faucetSeq = await initialNodes[0].sdk.rpc.chain.getSeq(
+        const faucetSeq = await initialNodes[0].testFramework.rpc.chain.getSeq(
             faucetAddress
         );
         const payTxs: (H256 | Promise<H256>)[] = [];
         for (let i = 0; i < validators.length; i++) {
             const { signer: validator } = validators[i];
-            const tx = initialNodes[0].sdk.core
+            const tx = initialNodes[0].testFramework.core
                 .createPayTransaction({
                     recipient: validator.platformAddress,
                     quantity: 100_000_000
@@ -195,7 +195,9 @@ async function createNodes<T>(options: {
                     fee: 10
                 });
             payTxs.push(
-                await initialNodes[0].sdk.rpc.chain.sendSignedTransaction(tx)
+                await initialNodes[0].testFramework.rpc.chain.sendSignedTransaction(
+                    tx
+                )
             );
         }
 
@@ -211,21 +213,25 @@ async function createNodes<T>(options: {
                 continue;
             }
             const tx = stake
-                .createSelfNominateTransaction(nodes[i].sdk, deposit, "")
+                .createSelfNominateTransaction(
+                    nodes[i].testFramework,
+                    deposit,
+                    ""
+                )
                 .sign({
                     secret: validator.privateKey,
-                    seq: await nodes[i].sdk.rpc.chain.getSeq(
+                    seq: await nodes[i].testFramework.rpc.chain.getSeq(
                         validator.platformAddress
                     ),
                     fee: 10
                 });
             stakeTxs.push(
-                await nodes[i].sdk.rpc.chain.sendSignedTransaction(tx)
+                await nodes[i].testFramework.rpc.chain.sendSignedTransaction(tx)
             );
         }
 
         // Delegate CCS to become validators
-        const faucetSeq2 = await initialNodes[0].sdk.rpc.chain.getSeq(
+        const faucetSeq2 = await initialNodes[0].testFramework.rpc.chain.getSeq(
             faucetAddress
         );
         const delegateTxs = [];
@@ -247,7 +253,7 @@ async function createNodes<T>(options: {
             }
             const tx = stake
                 .createDelegateCCSTransaction(
-                    initialNodes[0].sdk,
+                    initialNodes[0].testFramework,
                     validator.platformAddress,
                     delegation
                 )
@@ -257,7 +263,9 @@ async function createNodes<T>(options: {
                     fee: 10
                 });
             delegateTxs.push(
-                await initialNodes[0].sdk.rpc.chain.sendSignedTransaction(tx)
+                await initialNodes[0].testFramework.rpc.chain.sendSignedTransaction(
+                    tx
+                )
             );
         }
 
@@ -451,15 +459,15 @@ export async function changeParams(
     changeParamsActionRlp.push(`0x${SDK.util.signEcdsa(message, aliceSecret)}`);
     changeParamsActionRlp.push(`0x${SDK.util.signEcdsa(message, bobSecret)}`);
 
-    return await node.sdk.rpc.chain.sendSignedTransaction(
-        node.sdk.core
+    return await node.testFramework.rpc.chain.sendSignedTransaction(
+        node.testFramework.core
             .createCustomTransaction({
                 handlerId: stakeActionHandlerId,
                 bytes: RLP.encode(changeParamsActionRlp)
             })
             .sign({
                 secret: faucetSecret,
-                seq: await node.sdk.rpc.chain.getSeq(faucetAddress),
+                seq: await node.testFramework.rpc.chain.getSeq(faucetAddress),
                 fee: 10
             })
     );

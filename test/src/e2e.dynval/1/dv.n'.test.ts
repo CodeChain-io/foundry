@@ -15,9 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { SDK } from "codechain-sdk";
-import * as stake from "codechain-stakeholder-sdk";
 import "mocha";
+import { SDK } from "../../sdk/src";
+import * as stake from "../../stakeholder/src";
 
 import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
@@ -71,24 +71,26 @@ describe("Dynamic Validator N -> N'", function() {
             });
 
             const rpcNode = nodes[0];
-            await expectPossibleAuthors(rpcNode.sdk, [
+            await expectPossibleAuthors(rpcNode.testFramework, [
                 ...validators.slice(0, 3),
                 alice
             ]);
 
             const tx = stake
                 .createDelegateCCSTransaction(
-                    rpcNode.sdk,
+                    rpcNode.testFramework,
                     betty.platformAddress,
                     5_000
                 )
                 .sign({
                     secret: faucetSecret,
-                    seq: await rpcNode.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: await rpcNode.testFramework.rpc.chain.getSeq(
+                        faucetAddress
+                    ),
                     fee: 10
                 });
             await rpcNode.waitForTx(
-                rpcNode.sdk.rpc.chain.sendSignedTransaction(tx)
+                rpcNode.testFramework.rpc.chain.sendSignedTransaction(tx)
             );
 
             await termWaiter.waitNodeUntilTerm(rpcNode, {
@@ -96,7 +98,7 @@ describe("Dynamic Validator N -> N'", function() {
                 termPeriods: 1
             });
 
-            await expectPossibleAuthors(rpcNode.sdk, [
+            await expectPossibleAuthors(rpcNode.testFramework, [
                 ...validators.slice(0, 3),
                 betty
             ]);
@@ -131,24 +133,28 @@ describe("Dynamic Validator N -> N'", function() {
             });
             const rpcNode = nodes[0];
 
-            await expectPossibleAuthors(rpcNode.sdk, [
+            await expectPossibleAuthors(rpcNode.testFramework, [
                 ...validators.slice(0, 3),
                 alice
             ]);
 
             const bettyNode = findNode(nodes, betty);
             const tx = stake
-                .createSelfNominateTransaction(bettyNode.sdk, 100000, "")
+                .createSelfNominateTransaction(
+                    bettyNode.testFramework,
+                    100000,
+                    ""
+                )
                 .sign({
                     secret: betty.privateKey,
-                    seq: await bettyNode.sdk.rpc.chain.getSeq(
+                    seq: await bettyNode.testFramework.rpc.chain.getSeq(
                         betty.platformAddress
                     ),
                     fee: 10
                 });
 
             bettyNode.waitForTx(
-                bettyNode.sdk.rpc.chain.sendSignedTransaction(tx)
+                bettyNode.testFramework.rpc.chain.sendSignedTransaction(tx)
             );
 
             await termWaiter.waitNodeUntilTerm(rpcNode, {
@@ -156,7 +162,7 @@ describe("Dynamic Validator N -> N'", function() {
                 termPeriods: 1
             });
 
-            await expectPossibleAuthors(rpcNode.sdk, [
+            await expectPossibleAuthors(rpcNode.testFramework, [
                 ...validators.slice(0, 3),
                 betty
             ]);
@@ -187,15 +193,17 @@ describe("Dynamic Validator N -> N'", function() {
             });
             const rpcNode = nodes[0];
 
-            await expectPossibleAuthors(rpcNode.sdk, [
+            await expectPossibleAuthors(rpcNode.testFramework, [
                 ...validators.slice(0, 3),
                 alice
             ]);
 
-            const seq = await rpcNode.sdk.rpc.chain.getSeq(faucetAddress);
+            const seq = await rpcNode.testFramework.rpc.chain.getSeq(
+                faucetAddress
+            );
             const tx = stake
                 .createDelegateCCSTransaction(
-                    rpcNode.sdk,
+                    rpcNode.testFramework,
                     betty.platformAddress,
                     5_000
                 )
@@ -206,7 +214,7 @@ describe("Dynamic Validator N -> N'", function() {
                 });
             const tx2 = stake
                 .createRevokeTransaction(
-                    rpcNode.sdk,
+                    rpcNode.testFramework,
                     alice.platformAddress,
                     4999
                 )
@@ -216,8 +224,8 @@ describe("Dynamic Validator N -> N'", function() {
                     fee: 10
                 });
             await rpcNode.waitForTx([
-                rpcNode.sdk.rpc.chain.sendSignedTransaction(tx),
-                rpcNode.sdk.rpc.chain.sendSignedTransaction(tx2)
+                rpcNode.testFramework.rpc.chain.sendSignedTransaction(tx),
+                rpcNode.testFramework.rpc.chain.sendSignedTransaction(tx2)
             ]);
 
             await termWaiter.waitNodeUntilTerm(rpcNode, {
@@ -225,7 +233,7 @@ describe("Dynamic Validator N -> N'", function() {
                 termPeriods: 1
             });
 
-            await expectPossibleAuthors(rpcNode.sdk, [
+            await expectPossibleAuthors(rpcNode.testFramework, [
                 ...validators.slice(0, 3),
                 betty
             ]);
@@ -256,17 +264,21 @@ describe("Dynamic Validator N -> N'", function() {
             });
             const rpcNode = nodes[0];
 
-            await expectPossibleAuthors(rpcNode.sdk, [
+            await expectPossibleAuthors(rpcNode.testFramework, [
                 ...validators.slice(0, 3),
                 alice
             ]);
 
             const bettyNode = findNode(nodes, betty);
             const tx = stake
-                .createSelfNominateTransaction(bettyNode.sdk, 100000, "")
+                .createSelfNominateTransaction(
+                    bettyNode.testFramework,
+                    100000,
+                    ""
+                )
                 .sign({
                     secret: betty.privateKey,
-                    seq: await bettyNode.sdk.rpc.chain.getSeq(
+                    seq: await bettyNode.testFramework.rpc.chain.getSeq(
                         betty.platformAddress
                     ),
                     fee: 10
@@ -274,21 +286,23 @@ describe("Dynamic Validator N -> N'", function() {
 
             const tx2 = stake
                 .createRevokeTransaction(
-                    rpcNode.sdk,
+                    rpcNode.testFramework,
                     alice.platformAddress,
                     4999
                 )
                 .sign({
                     secret: faucetSecret,
-                    seq: await rpcNode.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: await rpcNode.testFramework.rpc.chain.getSeq(
+                        faucetAddress
+                    ),
                     fee: 10
                 });
             await Promise.all([
                 bettyNode.waitForTx(
-                    bettyNode.sdk.rpc.chain.sendSignedTransaction(tx)
+                    bettyNode.testFramework.rpc.chain.sendSignedTransaction(tx)
                 ),
                 rpcNode.waitForTx(
-                    rpcNode.sdk.rpc.chain.sendSignedTransaction(tx2)
+                    rpcNode.testFramework.rpc.chain.sendSignedTransaction(tx2)
                 )
             ]);
 
@@ -297,7 +311,7 @@ describe("Dynamic Validator N -> N'", function() {
                 termPeriods: 1
             });
 
-            await expectPossibleAuthors(rpcNode.sdk, [
+            await expectPossibleAuthors(rpcNode.testFramework, [
                 ...validators.slice(0, 3),
                 betty
             ]);

@@ -235,7 +235,7 @@ impl TopLevelState {
         &mut self,
         tx: &Transaction,
         signed_hash: &TxHash,
-        signer_public: &Public,
+        sender_public: &Public,
         client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
@@ -245,7 +245,7 @@ impl TopLevelState {
         let result = self.apply_internal(
             tx,
             signed_hash,
-            signer_public,
+            sender_public,
             client,
             parent_block_number,
             parent_block_timestamp,
@@ -266,14 +266,14 @@ impl TopLevelState {
         &mut self,
         tx: &Transaction,
         signed_hash: &TxHash,
-        signer_public: &Public,
+        sender_public: &Public,
         client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
         current_block_timestamp: u64,
     ) -> StateResult<()> {
-        let fee_payer = public_to_address(signer_public);
-        let seq = self.seq(&fee_payer)?;
+        let sender_address = public_to_address(sender_public);
+        let seq = self.seq(&sender_address)?;
 
         if tx.seq != seq {
             return Err(RuntimeError::InvalidSeq(Mismatch {
@@ -285,8 +285,8 @@ impl TopLevelState {
 
         let fee = tx.fee;
 
-        self.inc_seq(&fee_payer)?;
-        self.sub_balance(&fee_payer, fee)?;
+        self.inc_seq(&sender_address)?;
+        self.sub_balance(&sender_address, fee)?;
 
         // The failed transaction also must pay the fee and increase seq.
         self.create_checkpoint(ACTION_CHECKPOINT);
@@ -295,8 +295,8 @@ impl TopLevelState {
             tx.network_id,
             tx.hash(),
             signed_hash,
-            &fee_payer,
-            signer_public,
+            &sender_address,
+            sender_public,
             client,
             parent_block_number,
             parent_block_timestamp,
@@ -320,8 +320,8 @@ impl TopLevelState {
         network_id: NetworkId,
         _tx_hash: TxHash,
         signed_hash: &TxHash,
-        fee_payer: &Address,
-        signer_public: &Public,
+        sender_address: &Address,
+        sender_public: &Public,
         client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
@@ -341,27 +341,27 @@ impl TopLevelState {
                 receiver,
                 quantity,
             } => {
-                self.transfer_balance(fee_payer, receiver, *quantity)?;
+                self.transfer_balance(sender_address, receiver, *quantity)?;
                 return Ok(())
             }
             Action::CreateShard {
                 users,
             } => {
-                self.create_shard(fee_payer, *signed_hash, users.clone())?;
+                self.create_shard(sender_address, *signed_hash, users.clone())?;
                 return Ok(())
             }
             Action::SetShardOwners {
                 shard_id,
                 owners,
             } => {
-                self.change_shard_owners(*shard_id, owners, fee_payer)?;
+                self.change_shard_owners(*shard_id, owners, sender_address)?;
                 return Ok(())
             }
             Action::SetShardUsers {
                 shard_id,
                 users,
             } => {
-                self.change_shard_users(*shard_id, users, fee_payer)?;
+                self.change_shard_users(*shard_id, users, sender_address)?;
                 return Ok(())
             }
             Action::Custom {
@@ -369,13 +369,13 @@ impl TopLevelState {
                 bytes,
             } => {
                 let handler = client.find_action_handler_for(*handler_id).expect("Unknown custom parsel applied!");
-                handler.execute(bytes, self, fee_payer, signer_public)?;
+                handler.execute(bytes, self, sender_address, sender_public)?;
                 return Ok(())
             }
         };
         self.apply_shard_transaction(
             &transaction,
-            fee_payer,
+            sender_address,
             &approvers,
             client,
             parent_block_number,

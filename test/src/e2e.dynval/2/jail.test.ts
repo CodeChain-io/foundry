@@ -17,8 +17,8 @@
 import * as chai from "chai";
 import { expect } from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import * as stake from "codechain-stakeholder-sdk";
 import "mocha";
+import * as stake from "../../stakeholder/src";
 
 import { validators } from "../../../tendermint.dynval/constants";
 import { PromiseExpect } from "../../helper/promise";
@@ -49,21 +49,21 @@ describe("Jail state transition test", function() {
     async function isValidator(
         entity: typeof validators[number]
     ): Promise<boolean> {
-        const activated = await stake.getValidators(nodes[0].sdk);
+        const activated = await stake.getValidators(nodes[0].testFramework);
         return activated.some(v => v.pubkey.toString() === entity.publicKey);
     }
 
     async function isCandidate(
         entity: typeof validators[number]
     ): Promise<boolean> {
-        const candidates = await stake.getCandidates(nodes[0].sdk);
+        const candidates = await stake.getCandidates(nodes[0].testFramework);
         return candidates.some(c => c.pubkey.toString() === entity.publicKey);
     }
 
     async function isBanned(
         entity: typeof validators[number]
     ): Promise<boolean> {
-        const banned = await stake.getBanned(nodes[0].sdk);
+        const banned = await stake.getBanned(nodes[0].testFramework);
         return banned.some(
             b => b.getAccountId().toString() === entity.accountId
         );
@@ -72,7 +72,7 @@ describe("Jail state transition test", function() {
     async function isPrisoner(
         entity: typeof validators[number]
     ): Promise<boolean> {
-        const prisoners = await stake.getJailed(nodes[0].sdk);
+        const prisoners = await stake.getJailed(nodes[0].testFramework);
         return prisoners.some(
             p => p.address.toString() === entity.platformAddress.toString()
         );
@@ -122,14 +122,16 @@ describe("Jail state transition test", function() {
         await termWaiter.waitNodeUntilTerm(node, { target: 4, termPeriods: 2 });
 
         const nomination = await stake.createSelfNominateTransaction(
-            node.sdk,
+            node.testFramework,
             10_000_000,
             ""
         );
-        const hash = await node.sdk.rpc.chain.sendSignedTransaction(
+        const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
             nomination.sign({
                 secret: alice.privateKey,
-                seq: await node.sdk.rpc.chain.getSeq(alice.platformAddress),
+                seq: await node.testFramework.rpc.chain.getSeq(
+                    alice.platformAddress
+                ),
                 fee: 10
             })
         );
@@ -146,14 +148,16 @@ describe("Jail state transition test", function() {
 
         const node = nodes[0];
         const nomination = await stake.createSelfNominateTransaction(
-            node.sdk,
+            node.testFramework,
             10_000_000,
             ""
         );
-        const hash = await node.sdk.rpc.chain.sendSignedTransaction(
+        const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
             nomination.sign({
                 secret: alice.privateKey,
-                seq: await node.sdk.rpc.chain.getSeq(alice.platformAddress),
+                seq: await node.testFramework.rpc.chain.getSeq(
+                    alice.platformAddress
+                ),
                 fee: 10
             })
         );

@@ -17,23 +17,46 @@ use ccrypto::blake256;
 use ckey::Public;
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+use std::ops::{Deref, DerefMut};
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CompactValidatorEntry {
+    pub public_key: Public,
+    pub delegation: u64,
+}
 
 // It will be hashed in the header.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CompactValidatorSet(pub Vec<(Public, u64)>);
-
+pub struct CompactValidatorSet(Vec<CompactValidatorEntry>);
 impl CompactValidatorSet {
+    pub fn new(x: Vec<CompactValidatorEntry>) -> Self {
+        Self(x)
+    }
+
     pub fn hash(&self) -> H256 {
         blake256(self.rlp_bytes())
+    }
+}
+
+impl Deref for CompactValidatorSet {
+    type Target = Vec<CompactValidatorEntry>;
+    fn deref(&self) -> &Vec<CompactValidatorEntry> {
+        &self.0
+    }
+}
+
+impl DerefMut for CompactValidatorSet {
+    fn deref_mut(&mut self) -> &mut Vec<CompactValidatorEntry> {
+        &mut self.0
     }
 }
 
 impl Encodable for CompactValidatorSet {
     fn rlp_append(&self, s: &mut RlpStream) {
         s.begin_list(self.0.len() * 2);
-        for (k, d) in self.0.iter() {
-            s.append(k);
-            s.append(d);
+        for validator in self.0.iter() {
+            s.append(&validator.public_key);
+            s.append(&validator.delegation);
         }
     }
 }
@@ -50,9 +73,12 @@ impl Decodable for CompactValidatorSet {
         let mut vec = Vec::with_capacity(item_count / 2);
         // TODO: Optimzie the below code
         for i in 0..(item_count / 2) {
-            vec.push((rlp.val_at(i * 2)?, rlp.val_at(i * 2 + 1)?));
+            vec.push(CompactValidatorEntry {
+                public_key: rlp.val_at(i * 2)?,
+                delegation: rlp.val_at(i * 2 + 1)?,
+            });
         }
-        Ok(Self(vec))
+        Ok(Self::new(vec))
     }
 }
 
@@ -71,13 +97,14 @@ mod tests {
         let mut rng: StdRng = rand::SeedableRng::from_seed(seed);
 
         for _ in 0..iteration {
-            let mut vset = CompactValidatorSet {
-                0: Vec::new(),
-            };
+            let mut vset = CompactValidatorSet::new(Vec::new());
             let n = rng.gen::<u8>();
 
             for _ in 0..n {
-                vset.0.push((blake512(format!("{}", rng.gen::<u64>())), rng.gen::<u64>()));
+                vset.push(CompactValidatorEntry {
+                    public_key: blake512(format!("{}", rng.gen::<u64>())),
+                    delegation: rng.gen::<u64>(),
+                });
             }
             rlp_encode_and_decode_test!(vset);
         }

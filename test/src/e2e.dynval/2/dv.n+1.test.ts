@@ -15,9 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { SDK } from "codechain-sdk";
-import * as stake from "codechain-stakeholder-sdk";
 import "mocha";
+import { SDK } from "../../sdk/src";
+import * as stake from "../../stakeholder/src";
 
 import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
@@ -89,32 +89,38 @@ describe("Dynamic Validator N -> N+1", function() {
             });
 
             const checkingNode = nodes[0];
-            await beforeInsertionCheck(checkingNode.sdk);
+            await beforeInsertionCheck(checkingNode.testFramework);
             const bettyNode = findNode(nodes, betty);
             const nominateTx = stake
-                .createSelfNominateTransaction(bettyNode.sdk, 11_000_000, "")
+                .createSelfNominateTransaction(
+                    bettyNode.testFramework,
+                    11_000_000,
+                    ""
+                )
                 .sign({
                     secret: betty.privateKey,
-                    seq: await bettyNode.sdk.rpc.chain.getSeq(
+                    seq: await bettyNode.testFramework.rpc.chain.getSeq(
                         betty.platformAddress
                     ),
                     fee: 10
                 });
-            const nominateTxHash = bettyNode.sdk.rpc.chain.sendSignedTransaction(
+            const nominateTxHash = bettyNode.testFramework.rpc.chain.sendSignedTransaction(
                 nominateTx
             );
             const delegateTx = stake
                 .createDelegateCCSTransaction(
-                    bettyNode.sdk,
+                    bettyNode.testFramework,
                     betty.platformAddress,
                     5_000
                 )
                 .sign({
                     secret: faucetSecret,
-                    seq: await bettyNode.sdk.rpc.chain.getSeq(faucetAddress),
+                    seq: await bettyNode.testFramework.rpc.chain.getSeq(
+                        faucetAddress
+                    ),
                     fee: 10
                 });
-            const delegateTxHash = bettyNode.sdk.rpc.chain.sendSignedTransaction(
+            const delegateTxHash = bettyNode.testFramework.rpc.chain.sendSignedTransaction(
                 delegateTx
             );
             await checkingNode.waitForTx([nominateTxHash, delegateTxHash]);
@@ -123,7 +129,7 @@ describe("Dynamic Validator N -> N+1", function() {
                 target: 2,
                 termPeriods: 1
             });
-            await bettyInsertionCheck(checkingNode.sdk);
+            await bettyInsertionCheck(checkingNode.testFramework);
         });
     });
 
@@ -146,17 +152,21 @@ describe("Dynamic Validator N -> N+1", function() {
             });
 
             const checkingNode = nodes[0];
-            await beforeInsertionCheck(checkingNode.sdk);
+            await beforeInsertionCheck(checkingNode.testFramework);
             const nominateTx = stake
-                .createSelfNominateTransaction(checkingNode.sdk, 10_000, "")
+                .createSelfNominateTransaction(
+                    checkingNode.testFramework,
+                    10_000,
+                    ""
+                )
                 .sign({
                     secret: betty.privateKey,
-                    seq: await checkingNode.sdk.rpc.chain.getSeq(
+                    seq: await checkingNode.testFramework.rpc.chain.getSeq(
                         betty.platformAddress
                     ),
                     fee: 10
                 });
-            const nominateTxHash = checkingNode.sdk.rpc.chain.sendSignedTransaction(
+            const nominateTxHash = checkingNode.testFramework.rpc.chain.sendSignedTransaction(
                 nominateTx
             );
             await checkingNode.waitForTx(nominateTxHash);
@@ -165,7 +175,7 @@ describe("Dynamic Validator N -> N+1", function() {
                 target: 2,
                 termPeriods: 1
             });
-            await bettyInsertionCheck(checkingNode.sdk);
+            await bettyInsertionCheck(checkingNode.testFramework);
         });
     });
 
@@ -188,13 +198,13 @@ describe("Dynamic Validator N -> N+1", function() {
             });
 
             const checkingNode = nodes[0];
-            await beforeInsertionCheck(checkingNode.sdk);
-            const faucetSeq = await checkingNode.sdk.rpc.chain.getSeq(
+            await beforeInsertionCheck(checkingNode.testFramework);
+            const faucetSeq = await checkingNode.testFramework.rpc.chain.getSeq(
                 faucetAddress
             );
             const delegateTx = stake
                 .createDelegateCCSTransaction(
-                    checkingNode.sdk,
+                    checkingNode.testFramework,
                     betty.platformAddress,
                     2
                 )
@@ -203,7 +213,7 @@ describe("Dynamic Validator N -> N+1", function() {
                     seq: faucetSeq,
                     fee: 10
                 });
-            const delegateTxHash = checkingNode.sdk.rpc.chain.sendSignedTransaction(
+            const delegateTxHash = checkingNode.testFramework.rpc.chain.sendSignedTransaction(
                 delegateTx
             );
             await checkingNode.waitForTx(delegateTxHash);
@@ -212,7 +222,7 @@ describe("Dynamic Validator N -> N+1", function() {
                 target: 2,
                 termPeriods: 1
             });
-            await bettyInsertionCheck(checkingNode.sdk);
+            await bettyInsertionCheck(checkingNode.testFramework);
         });
     });
 

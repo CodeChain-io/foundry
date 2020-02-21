@@ -975,6 +975,7 @@ impl Worker {
             if !self.votes.is_old_or_known(&message) {
                 if let Err(double_vote) = self.votes.collect(message) {
                     cerror!(ENGINE, "Double vote found on_commit_message: {:?}", double_vote);
+                    self.report_double_vote(&double_vote);
                 }
             }
         }
@@ -1435,9 +1436,9 @@ impl Worker {
                 self.votes_received.set(vote_index);
             }
 
-            if let Err(double) = self.votes.collect(message.clone()) {
-                cerror!(ENGINE, "Double vote found {:?}", double);
-                self.report_double_vote(&double);
+            if let Err(double_vote) = self.votes.collect(message.clone()) {
+                cerror!(ENGINE, "Double vote found {:?}", double_vote);
+                self.report_double_vote(&double_vote);
                 return Err(EngineError::DoubleVote(sender))
             }
             ctrace!(ENGINE, "Handling a valid {:?} from {}.", message, sender);
@@ -1846,9 +1847,9 @@ impl Worker {
                 );
             }
 
-            if let Err(double) = self.votes.collect(message) {
-                cerror!(ENGINE, "Double Vote found {:?}", double);
-                self.report_double_vote(&double);
+            if let Err(double_vote) = self.votes.collect(message) {
+                cerror!(ENGINE, "Double Vote found {:?}", double_vote);
+                self.report_double_vote(&double_vote);
                 return None
             }
         }
@@ -2187,6 +2188,7 @@ impl Worker {
             if !self.votes.is_old_or_known(&vote) {
                 if let Err(double_vote) = self.votes.collect(vote) {
                     cerror!(ENGINE, "Double vote found on_commit_message: {:?}", double_vote);
+                    self.report_double_vote(&double_vote);
                 }
             }
         }
