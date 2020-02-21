@@ -44,7 +44,7 @@ use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
 use cvm::{decode, execute, ChainTimeInfo, ScriptResult, VMConfig};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use primitives::{Bytes, H256, U256};
+use primitives::{Bytes, H256};
 use rlp::Rlp;
 use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
@@ -482,9 +482,7 @@ impl ConsensusClient for Client {}
 
 impl BlockChainTrait for Client {
     fn chain_info(&self) -> BlockChainInfo {
-        let mut chain_info = self.block_chain().chain_info();
-        chain_info.pending_total_score = chain_info.best_score + self.importer.block_queue.total_score();
-        chain_info
+        self.block_chain().chain_info()
     }
 
     fn genesis_accounts(&self) -> Vec<PlatformAddress> {
@@ -671,12 +669,6 @@ impl BlockChainClient for Client {
             Some(hash) => self.importer.block_queue.status(&hash),
             None => BlockStatus::Unknown,
         }
-    }
-
-    fn block_total_score(&self, id: &BlockId) -> Option<U256> {
-        let chain = self.block_chain();
-
-        Self::block_hash(&chain, id).and_then(|hash| chain.block_details(&hash)).map(|d| d.total_score)
     }
 
     fn block_hash(&self, id: &BlockId) -> Option<BlockHash> {

@@ -112,4 +112,14 @@ impl<'a> HeaderView<'a> {
         let seal = self.seal();
         seal.into_iter().map(|s| rlp::Rlp::new(&s).data().map(|x| x.to_vec())).collect()
     }
+
+    /// Get view in the seal field of the header.
+    pub fn view(&self) -> u64 {
+        let seal = self.seal();
+        if let Some(rlp_view) = seal.get(1) {
+            Rlp::new(rlp_view.as_slice()).as_val().unwrap()
+        } else {
+            0
+        }
+    }
 }

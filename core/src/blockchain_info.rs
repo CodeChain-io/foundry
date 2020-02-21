@@ -15,17 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use ctypes::{BlockHash, BlockNumber};
-use primitives::U256;
 
 /// Information about the blockchain gathered together.
 #[derive(Clone, Debug)]
 pub struct BlockChainInfo {
-    /// Score of the canonical chain.
-    pub best_score: U256,
-    /// The best score from proposal blocks.
-    pub best_proposal_score: U256,
-    /// Block queue score.
-    pub pending_total_score: U256,
     /// Genesis block hash.
     pub genesis_hash: BlockHash,
     /// Best blockchain block hash.

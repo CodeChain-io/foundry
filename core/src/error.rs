@@ -24,7 +24,7 @@ use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockHash, BlockNumber};
 use merkle_trie::TrieError;
-use primitives::{H256, U256};
+use primitives::H256;
 use rlp::DecoderError;
 use std::fmt;
 use std::io::Error as StdIoError;
@@ -86,12 +86,6 @@ pub enum BlockError {
     InvalidTransactionsRoot(Mismatch<H256>),
     /// Next validator set hash header field is invalid.
     InvalidNextValidatorSetHash(Mismatch<H256>),
-    /// Score is out of range; this can be used as an looser error prior to getting a definitive
-    /// value for score. This error needs only provide bounds of which it is out.
-    ScoreOutOfBounds(OutOfBounds<U256>),
-    /// Score header field is invalid; this is a strong error used after getting a definitive
-    /// value for difficulty (which is provided).
-    InvalidScore(Mismatch<U256>),
     /// Proof-of-work aspect of seal is invalid.
     InvalidProofOfWork,
     /// Some low-level aspect of the seal is incorrect.
@@ -142,8 +136,6 @@ impl fmt::Display for BlockError {
             InvalidStateRoot(mis) => format!("Invalid state root in header: {}", mis),
             InvalidTransactionsRoot(mis) => format!("Invalid transactions root in header: {}", mis),
             InvalidNextValidatorSetHash(mis) => format!("Invalid next validator set hash in header: {}", mis),
-            ScoreOutOfBounds(oob) => format!("Invalid block score: {}", oob),
-            InvalidScore(oob) => format!("Invalid block score: {}", oob),
             InvalidProofOfWork => "Invalid proof of work.".into(),
             InvalidSeal => "Block has invalid seal.".into(),
             InvalidTimestamp(oob) => format!("Invalid timestamp in header: {}", oob),

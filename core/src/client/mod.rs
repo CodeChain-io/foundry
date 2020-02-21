@@ -45,7 +45,7 @@ use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
-use primitives::{Bytes, H256, U256};
+use primitives::{Bytes, H256};
 use std::ops::Range;
 use std::sync::Arc;
 
@@ -234,9 +234,6 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
 
     /// Get block status by block header hash.
     fn block_status(&self, id: &BlockId) -> BlockStatus;
-
-    /// Get block total score.
-    fn block_total_score(&self, id: &BlockId) -> Option<U256>;
 
     /// Get block hash.
     fn block_hash(&self, id: &BlockId) -> Option<BlockHash>;

@@ -18,7 +18,7 @@ use crate::scheme::Scheme;
 use crate::transaction::SignedTransaction;
 use cstate::StateDB;
 use ctypes::{BlockHash, Header};
-use primitives::{Bytes, U256};
+use primitives::Bytes;
 use rlp::{self, RlpStream};
 
 pub fn create_test_block(header: &Header) -> Bytes {
@@ -48,7 +48,6 @@ pub fn get_good_dummy_block() -> Bytes {
 pub fn get_good_dummy_block_hash() -> (BlockHash, Bytes) {
     let mut block_header = Header::new();
     let test_scheme = Scheme::new_test();
-    block_header.set_score(U256::from(0x20000));
     block_header.set_timestamp(40);
     block_header.set_number(1);
     block_header.set_parent_hash(test_scheme.genesis_header().hash());

@@ -121,18 +121,6 @@ impl ConsensusEngine for Tendermint {
         receiver.recv().unwrap()
     }
 
-    fn populate_from_parent(&self, header: &mut Header, _parent: &Header) {
-        let (result, receiver) = crossbeam::bounded(1);
-        self.inner
-            .send(worker::Event::CalculateScore {
-                block_number: header.number(),
-                result,
-            })
-            .unwrap();
-        let score = receiver.recv().unwrap();
-        header.set_score(score);
-    }
-
     /// Equivalent to a timeout: to be used for tests.
     fn on_timeout(&self, token: usize) {
         self.inner.send(worker::Event::OnTimeout(token)).unwrap();

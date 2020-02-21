@@ -45,7 +45,7 @@ use crossbeam_channel as crossbeam;
 use ctypes::transaction::{Action, Transaction};
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{BlockHash, BlockNumber, Header};
-use primitives::{u256_from_u128, Bytes, U256};
+use primitives::Bytes;
 use rlp::{Encodable, Rlp};
 use std::cell::Cell;
 use std::cmp::Ordering;
@@ -119,10 +119,6 @@ pub enum Event {
     VerifyBlockExternal {
         header: Box<Header>,
         result: crossbeam::Sender<Result<(), Error>>,
-    },
-    CalculateScore {
-        block_number: Height,
-        result: crossbeam::Sender<U256>,
     },
     OnTimeout(usize),
     HandleMessages {
@@ -303,12 +299,6 @@ impl Worker {
                             }
                             Ok(Event::VerifyBlockExternal{header, result, }) => {
                                 result.send(inner.verify_block_external(&*header)).unwrap();
-                            }
-                            Ok(Event::CalculateScore {
-                                block_number,
-                                result,
-                            }) => {
-                                result.send(inner.calculate_score(block_number)).unwrap();
                             }
                             Ok(Event::OnTimeout(token)) => {
                                 inner.on_timeout(token);
@@ -1193,19 +1183,6 @@ impl Worker {
             })
             .into())
         }
-
-        let height = header.number();
-        let author_view = TendermintSealView::new(header.seal()).author_view().unwrap();
-        let score = calculate_score(height, author_view);
-
-        if *header.score() != score {
-            return Err(BlockError::InvalidScore(Mismatch {
-                expected: score,
-                found: *header.score(),
-            })
-            .into())
-        }
-
         Ok(())
     }
 
@@ -1269,10 +1246,6 @@ impl Worker {
         }
         self.validators.check_enough_votes_with_current(&parent_hash, &voted_validators)?;
         Ok(())
-    }
-
-    fn calculate_score(&self, block_number: Height) -> U256 {
-        calculate_score(block_number, self.view)
     }
 
     fn on_timeout(&mut self, token: usize) {
@@ -2243,11 +2216,6 @@ impl Worker {
             Some(c)
         }
     }
-}
-
-fn calculate_score(height: Height, view: View) -> U256 {
-    let height = U256::from(height);
-    u256_from_u128(std::u128::MAX) * height - view
 }
 
 /// Sets internal trigger on deref_mut (taking mutable reference to internal value)

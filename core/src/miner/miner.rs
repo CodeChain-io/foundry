@@ -212,6 +212,7 @@ impl Miner {
                 }
                 if !self.is_allowed_transaction(&tx.action) {
                     cdebug!(MINER, "Rejected transaction {:?}: {:?} is not allowed transaction", hash, tx.action);
+                    return Err(Error::Other("Not allowed transaction".to_string()))
                 }
                 let immune_users = self.immune_users.read();
                 let tx = tx

@@ -143,7 +143,6 @@ impl<'x> OpenBlock<'x> {
         r.block.header.set_extra_data(extra_data);
         r.block.header.note_dirty();
 
-        engine.machine().populate_from_parent(&mut r.block.header, parent);
         engine.populate_from_parent(&mut r.block.header, parent);
 
         Ok(r)
@@ -208,7 +207,6 @@ impl<'x> OpenBlock<'x> {
 
     /// Populate self from a header.
     fn populate_from(&mut self, header: &Header) {
-        self.block.header.set_score(*header.score());
         self.block.header.set_timestamp(header.timestamp());
         self.block.header.set_author(*header.author());
         self.block.header.set_extra_data(header.extra_data().clone());

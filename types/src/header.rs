@@ -143,14 +143,21 @@ impl Header {
         self.transactions_root() == &BLAKE_NULL_RLP
     }
 
-    /// Get the score field of the header.
-    pub fn score(&self) -> &U256 {
-        &self.score
-    }
     /// Get the seal field of the header.
     pub fn seal(&self) -> &[Bytes] {
         &self.seal
     }
+
+    /// Get view in the seal field of the header.
+    pub fn view(&self) -> u64 {
+        let seal = self.seal();
+        if let Some(rlp_view) = seal.get(1) {
+            Rlp::new(rlp_view.as_slice()).as_val().unwrap()
+        } else {
+            0
+        }
+    }
+
 
     /// Set the number field of the header.
     pub fn set_parent_hash(&mut self, a: BlockHash) {
