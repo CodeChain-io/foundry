@@ -69,9 +69,9 @@ import CodeChain from "../helper/spawn";
 
     const transactions = [];
     const numTransactions = parseInt(process.env.TEST_NUM_TXS || "10000", 10);
-    const baseSeq = await nodes[0].testFramework.rpc.chain.getSeq(
-        faucetAddress
-    );
+    const baseSeq = (await nodes[0].rpc.chain.getSeq({
+        address: faucetAddress.toString()
+    }))!;
 
     for (let i = 0; i < numTransactions; i++) {
         const value = makeRandomH256();
@@ -96,23 +96,23 @@ import CodeChain from "../helper/spawn";
     }
 
     for (let i = numTransactions - 1; i > 0; i--) {
-        await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
-            transactions[i]
-        );
+        await nodes[0].rpc.mempool.sendSignedTransaction({
+            tx: transactions[i].rlpBytes().toString("hex")
+        });
     }
     const startTime = new Date();
     console.log(`Start at: ${startTime}`);
-    await nodes[0].testFramework.rpc.chain.sendSignedTransaction(
-        transactions[0]
-    );
+    await nodes[0].rpc.mempool.sendSignedTransaction({
+        tx: transactions[0].rlpBytes().toString("hex")
+    });
 
     while (true) {
         let flag = true;
         for (let i = 0; i < 4; i++) {
             const hash = transactions[numTransactions - 1].hash();
-            const result = await nodes[
-                i
-            ].testFramework.rpc.chain.containsTransaction(hash);
+            const result = await nodes[i].rpc.chain.containsTransaction({
+                transactionHash: `0x${hash.toString()}`
+            });
 
             console.log(`Node ${i} result: ${result}`);
             if (!result) {
