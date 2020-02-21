@@ -16,10 +16,11 @@
 
 use super::path as connection_path;
 use crate::ibc;
-use crate::ibc::commitment_23::types::{get_commiment_prefix, CommitmentPrefix, CommitmentProof};
+use crate::ibc::commitment_23::types::{get_commiment_prefix, CommitmentPrefix};
 use crate::ibc::connection_03::client_connections_path;
 use crate::ibc::connection_03::types::{ConnectionEnd, ConnectionIdentifiersInClient, ConnectionState};
 use crate::ibc::{Identifier, IdentifierSlice};
+use ibc::client_02::Manager as ClientManager;
 use primitives::Bytes;
 use rlp::{Encodable, Rlp};
 
@@ -96,9 +97,14 @@ impl<'a> Manager<'a> {
             counterparty_client_identifier: counterparty_client_identifier.clone(),
         };
 
-        if !self.verify_connection_state(&connection, proof_height, proof_init, desired_identifier.clone(), &expected) {
-            return Err(format!("Counterparty chain's connection state verification fail. expected: {:?}", expected))
-        }
+        let client_manager = ClientManager::new(self.ctx);
+        client_manager.verify_connection_state(
+            &counterparty_client_identifier,
+            proof_height,
+            proof_init,
+            &desired_identifier,
+            &expected,
+        )?;
 
         if let Some(previous_connection_end) = self.query(&desired_identifier) {
             let expected_init = ConnectionEnd {
@@ -143,7 +149,7 @@ impl<'a> Manager<'a> {
         if connection.state != ConnectionState::INIT && connection.state != ConnectionState::TRYOPEN {
             return Err(format!("Invalid connection state expected INIT or TRYOPEN but found {:?}", connection.state))
         }
-        let expected_connection = ConnectionEnd {
+        let expected = ConnectionEnd {
             state: ConnectionState::TRYOPEN,
             counterparty_connection_identifier: identifier.clone(),
             counterparty_prefix: get_commiment_prefix(),
@@ -151,13 +157,14 @@ impl<'a> Manager<'a> {
             counterparty_client_identifier: connection.client_identifier.clone(),
         };
 
-        if !self.verify_connection_state(&connection, proof_height, proof_try, identifier.clone(), &expected_connection)
-        {
-            return Err(format!(
-                "Counterparty chain's connection state verification fail. expected: {:?}",
-                expected_connection
-            ))
-        }
+        let client_manager = ClientManager::new(self.ctx);
+        client_manager.verify_connection_state(
+            &connection.client_identifier,
+            proof_height,
+            proof_try,
+            &identifier,
+            &expected,
+        )?;
 
         connection.state = ConnectionState::OPEN;
         let kv_store = self.ctx.get_kv_store_mut();
@@ -188,9 +195,14 @@ impl<'a> Manager<'a> {
             counterparty_client_identifier: connection.client_identifier.clone(),
         };
 
-        if !self.verify_connection_state(&connection, proof_height, proof_ack, identifier.clone(), &expected) {
-            return Err(format!("Counterparty chain's connection state verification fail. expected: {:?}", expected))
-        }
+        let client_manager = ClientManager::new(self.ctx);
+        client_manager.verify_connection_state(
+            &connection.client_identifier,
+            proof_height,
+            proof_ack,
+            &identifier,
+            &expected,
+        )?;
 
         connection.state = ConnectionState::OPEN;
         let kv_store = self.ctx.get_kv_store_mut();
@@ -211,36 +223,6 @@ impl<'a> Manager<'a> {
         }
 
         None
-    }
-
-    fn verify_connection_state(
-        &mut self,
-        connection: &ConnectionEnd,
-        proof_height: u64,
-        proof: Bytes,
-        connection_identifier: Identifier,
-        connection_end: &ConnectionEnd,
-    ) -> bool {
-        let proof_dec: CommitmentProof = if let Ok(proof) = rlp::decode(&proof) {
-            proof
-        } else {
-            return false
-        };
-
-        // check values in the connection_end
-        let path = format!("connections/{}", connection_identifier);
-        self.client_verify_membership(proof_height, proof_dec, path, &rlp::encode(connection_end))
-    }
-
-    fn client_verify_membership(
-        &self,
-        _height: u64,
-        _commitment_proof: CommitmentProof,
-        _path: String,
-        _value: &[u8],
-    ) -> bool {
-        // FIXME
-        true
     }
 
     fn add_connection_to_client(
