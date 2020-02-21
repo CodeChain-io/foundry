@@ -1,4 +1,4 @@
-// Copyright 2019-2020 Kodebox, Inc.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,24 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub mod channel_04;
-pub mod client_02;
-#[allow(dead_code)]
-#[allow(unused_variables)]
-pub mod commitment_23;
-#[allow(dead_code)]
-#[allow(unused_variables)]
-pub mod connection_03;
-pub mod context;
-mod kv_store;
-pub mod querier;
-mod transaction_handler;
+use crate::ibc;
+use crate::ibc::Identifier;
 
-pub use self::client_02 as client;
-pub use self::context::Context;
-pub use self::kv_store::KVStore;
-pub use transaction_handler::execute as execute_transaction;
+pub struct Manager<'a> {
+    ctx: &'a mut dyn ibc::Context,
+}
 
-/// Widely used in IBC. In most case it will be part of a state DB path.
-pub type Identifier = String;
-pub type IdentifierSlice<'a> = &'a str;
+/// Temporary dummy functions for port05
+fn port05_generate() -> Identifier {
+    "".to_owned()
+}
+
+#[allow(unused_variables, dead_code)]
+fn port05_authenticate(key: Identifier) -> bool {
+    true
+}
+
+/// For all functions, there are some difference from the spec.
+/// 1. They take only single Identifier as connection, since we won't consider the `hop`.
+/// 2. They take no ports : All ports will be considered as DEFAULT_PORT.
+impl<'a> Manager<'a> {
+    pub fn new(ctx: &'a mut dyn ibc::Context) -> Self {
+        Manager {
+            ctx,
+        }
+    }
+}
