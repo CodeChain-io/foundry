@@ -43,11 +43,13 @@ describe.skip("CreateShard", function() {
             blockNumber: null
         }))!;
 
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({ recipient: aliceAddress, quantity: 1 })
                 .sign({ secret: faucetSecret, seq, fee: 10 })
-        );
+                .rlpBytes()
+                .toString("hex")
+        });
 
         const tx = node.testFramework.core
             .createCreateShardTransaction({ users: [aliceAddress] })
@@ -59,7 +61,9 @@ describe.skip("CreateShard", function() {
                 blockNumber: null
             })
         ).to.be.null;
-        await node.testFramework.rpc.chain.sendSignedTransaction(tx);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: tx.rlpBytes().toString("hex")
+        });
         expect(
             await node.rpc.chain.containsTransaction({
                 transactionHash: `0x${tx.hash().toString()}`
@@ -106,21 +110,27 @@ describe.skip("CreateShard", function() {
             address: faucetAddress.toString(),
             blockNumber: null
         }))!;
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({ recipient: aliceAddress, quantity: 1 })
                 .sign({ secret: faucetSecret, seq, fee: 10 })
-        );
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+                .rlpBytes()
+                .toString("hex")
+        });
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({ recipient: bobAddress, quantity: 1 })
                 .sign({ secret: faucetSecret, seq: seq + 1, fee: 10 })
-        );
+                .rlpBytes()
+                .toString("hex")
+        });
 
         const tx = node.testFramework.core
             .createCreateShardTransaction({ users: [aliceAddress] })
             .sign({ secret: faucetSecret, seq: seq + 2, fee: 10 });
-        await node.testFramework.rpc.chain.sendSignedTransaction(tx);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: tx.rlpBytes().toString("hex")
+        });
         const shardId = (await node.rpc.chain.getShardIdByHash({
             transactionHash: `0x${tx.hash().toString()}`,
             blockNumber: null
@@ -129,7 +139,9 @@ describe.skip("CreateShard", function() {
         const setShardUsers = node.testFramework.core
             .createSetShardUsersTransaction({ shardId, users })
             .sign({ secret: faucetSecret, seq: seq + 3, fee: 10 });
-        await node.testFramework.rpc.chain.sendSignedTransaction(setShardUsers);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: setShardUsers.rlpBytes().toString("hex")
+        });
         const shardUsers = (await node.rpc.chain.getShardIdByHash({
             transactionHash: `0x${tx.hash().toString()}`,
             blockNumber: null
@@ -142,20 +154,26 @@ describe.skip("CreateShard", function() {
             address: faucetAddress.toString(),
             blockNumber: null
         }))!;
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({ recipient: aliceAddress, quantity: 1 })
                 .sign({ secret: faucetSecret, seq, fee: 10 })
-        );
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+                .rlpBytes()
+                .toString("hex")
+        });
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({ recipient: bobAddress, quantity: 1 })
                 .sign({ secret: faucetSecret, seq: seq + 1, fee: 10 })
-        );
+                .rlpBytes()
+                .toString("hex")
+        });
         const tx = node.testFramework.core
             .createCreateShardTransaction({ users: [aliceAddress, bobAddress] })
             .sign({ secret: faucetSecret, seq: seq + 2, fee: 10 });
-        await node.testFramework.rpc.chain.sendSignedTransaction(tx);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: tx.rlpBytes().toString("hex")
+        });
 
         const shardId = (await node.rpc.chain.getShardIdByHash({
             transactionHash: `0x${tx.hash().toString()}`,
@@ -165,9 +183,9 @@ describe.skip("CreateShard", function() {
         const setShardOwners = node.testFramework.core
             .createSetShardOwnersTransaction({ shardId, owners })
             .sign({ secret: faucetSecret, seq: seq + 3, fee: 10 });
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            setShardOwners
-        );
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: setShardOwners.rlpBytes().toString("hex")
+        });
         const shardOwners = await node.rpc.chain.getShardOwners({ shardId })!;
         expect(shardOwners).to.deep.equal(owners.map(owner => owner.value));
     });
@@ -177,16 +195,20 @@ describe.skip("CreateShard", function() {
             address: faucetAddress.toString(),
             blockNumber: null
         }))!;
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({ recipient: aliceAddress, quantity: 1 })
                 .sign({ secret: faucetSecret, seq, fee: 10 })
-        );
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+                .rlpBytes()
+                .toString("hex")
+        });
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({ recipient: bobAddress, quantity: 1 })
                 .sign({ secret: faucetSecret, seq: seq + 1, fee: 10 })
-        );
+                .rlpBytes()
+                .toString("hex")
+        });
         const tx1 = node.testFramework.core
             .createCreateShardTransaction({ users: [aliceAddress, bobAddress] })
             .sign({ secret: faucetSecret, seq: seq + 2, fee: 10 });
@@ -196,7 +218,9 @@ describe.skip("CreateShard", function() {
                 blockNumber: null
             })
         ).to.be.null;
-        await node.testFramework.rpc.chain.sendSignedTransaction(tx1);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: tx1.rlpBytes().toString("hex")
+        });
         expect(
             await node.rpc.chain.containsTransaction({
                 transactionHash: `0x${tx1.hash().toString()}`
@@ -223,7 +247,9 @@ describe.skip("CreateShard", function() {
                 blockNumber: null
             })
         ).to.be.null;
-        await node.testFramework.rpc.chain.sendSignedTransaction(tx2);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: tx2.rlpBytes().toString("hex")
+        });
         expect(
             await node.rpc.chain.containsTransaction({
                 transactionHash: `0x${tx2.hash().toString()}`
@@ -247,32 +273,40 @@ describe.skip("CreateShard", function() {
             address: faucetAddress.toString(),
             blockNumber: null
         }))!;
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({ recipient: aliceAddress, quantity: 1 })
                 .sign({ secret: faucetSecret, seq: faucetSeq, fee: 10 })
-        );
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+                .rlpBytes()
+                .toString("hex")
+        });
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({ recipient: bobAddress, quantity: 1 })
                 .sign({ secret: faucetSecret, seq: faucetSeq + 1, fee: 10 })
-        );
+                .rlpBytes()
+                .toString("hex")
+        });
         const createShard = node.testFramework.core
             .createCreateShardTransaction({ users: [aliceAddress] })
             .sign({ secret: faucetSecret, seq: faucetSeq + 2, fee: 10 });
-        await node.testFramework.rpc.chain.sendSignedTransaction(createShard);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: createShard.rlpBytes().toString("hex")
+        });
         const shardId = (await node.rpc.chain.getShardIdByHash({
             transactionHash: `0x${createShard.hash().toString()}`,
             blockNumber: null
         }))!;
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({
                     recipient: bobAddress,
                     quantity: 100
                 })
                 .sign({ secret: faucetSecret, seq: faucetSeq + 3, fee: 10 })
-        );
+                .rlpBytes()
+                .toString("hex")
+        });
 
         const bobSeq: number = (await node.rpc.chain.getSeq({
             address: bobAddress.toString(),
@@ -297,14 +331,18 @@ describe.skip("CreateShard", function() {
 
         await node.rpc.devel!.stopSealing();
         const blockNumber = await node.rpc.chain.getBestBlockNumber();
-        await node.testFramework.rpc.chain.sendSignedTransaction(pay);
-        await node.testFramework.rpc.chain.sendSignedTransaction(mint);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: pay.rlpBytes().toString("hex")
+        });
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: mint.rlpBytes().toString("hex")
+        });
         await node.rpc.devel!.startSealing();
         await node.waitBlockNumber(blockNumber + 1);
 
-        const hint = await node.testFramework.rpc.chain.getErrorHint(
-            mint.hash()
-        );
+        const hint = await node.rpc.mempool.getErrorHint({
+            transactionHash: mint.hash().toString()
+        });
         expect(hint).includes("permission");
     });
 
@@ -316,19 +354,23 @@ describe.skip("CreateShard", function() {
         const createShard = node.testFramework.core
             .createCreateShardTransaction({ users: [aliceAddress] })
             .sign({ secret: faucetSecret, seq: faucetSeq, fee: 10 });
-        await node.testFramework.rpc.chain.sendSignedTransaction(createShard);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: createShard.rlpBytes().toString("hex")
+        });
         const shardId = (await node.rpc.chain.getShardIdByHash({
             transactionHash: `0x${createShard.hash().toString()}`,
             blockNumber: null
         }))!;
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({
                     recipient: aliceAddress,
                     quantity: 100
                 })
                 .sign({ secret: faucetSecret, seq: faucetSeq + 1, fee: 10 })
-        );
+                .rlpBytes()
+                .toString("hex")
+        });
 
         const aliceSeq: number = (await node.rpc.chain.getSeq({
             address: aliceAddress.toString(),
@@ -344,7 +386,9 @@ describe.skip("CreateShard", function() {
                 recipient: await node.createP2PKHAddress()
             })
             .sign({ secret: aliceSecret, seq: aliceSeq, fee: 10 });
-        await node.testFramework.rpc.chain.sendSignedTransaction(mint);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: mint.rlpBytes().toString("hex")
+        });
 
         expect(
             await node.rpc.chain.containsTransaction({
@@ -356,9 +400,9 @@ describe.skip("CreateShard", function() {
                 transactionHash: `0x${mint.hash().toString()}`
             })
         ).not.null;
-        const hint = await node.testFramework.rpc.chain.getErrorHint(
-            mint.hash()
-        );
+        const hint = await node.rpc.mempool.getErrorHint({
+            transactionHash: mint.hash().toString()
+        });
         expect(hint).to.be.null;
     });
 
@@ -370,19 +414,23 @@ describe.skip("CreateShard", function() {
         const createShard = node.testFramework.core
             .createCreateShardTransaction({ users: [aliceAddress] })
             .sign({ secret: faucetSecret, seq: faucetSeq, fee: 10 });
-        await node.testFramework.rpc.chain.sendSignedTransaction(createShard);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: createShard.rlpBytes().toString("hex")
+        });
         const shardId = (await node.rpc.chain.getShardIdByHash({
             transactionHash: `0x${createShard.hash().toString()}`,
             blockNumber: null
         }))!;
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({
                     recipient: bobAddress,
                     quantity: 100
                 })
                 .sign({ secret: faucetSecret, seq: faucetSeq + 1, fee: 10 })
-        );
+                .rlpBytes()
+                .toString("hex")
+        });
 
         const bobSeq: number = (await node.rpc.chain.getSeq({
             address: bobAddress.toString(),
@@ -405,8 +453,8 @@ describe.skip("CreateShard", function() {
 
         const blockNumber = await node.rpc.chain.getBestBlockNumber();
         await node.rpc.devel!.stopSealing();
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({
                     recipient: aliceAddress,
                     quantity: 1
@@ -416,25 +464,31 @@ describe.skip("CreateShard", function() {
                     seq: bobSeq,
                     fee: 10
                 })
-        );
-        await node.testFramework.rpc.chain.sendSignedTransaction(signedMint1);
+                .rlpBytes()
+                .toString("hex")
+        });
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: signedMint1.rlpBytes().toString("hex")
+        });
         await node.rpc.devel!.startSealing();
         await node.waitBlockNumber(blockNumber + 1);
         expect(
-            await node.testFramework.rpc.chain.getTransactionResultsByTracker(
-                mint1.tracker()
-            )
+            await node.rpc.mempool.getTransactionResultsByTracker({
+                tracker: mint1.tracker().toString()
+            })
         ).deep.equal([false]);
-        const hint = await node.testFramework.rpc.chain.getErrorHint(
-            signedMint1.hash()
-        );
+        const hint = await node.rpc.mempool.getErrorHint({
+            transactionHash: signedMint1.hash().toString()
+        });
         expect(hint).includes("permission");
 
         const newUsers = [aliceAddress, bobAddress];
         const setShardUsers = node.testFramework.core
             .createSetShardUsersTransaction({ shardId, users: newUsers })
             .sign({ secret: faucetSecret, seq: faucetSeq + 2, fee: 10 });
-        await node.testFramework.rpc.chain.sendSignedTransaction(setShardUsers);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: setShardUsers.rlpBytes().toString("hex")
+        });
         const shardUsers = (await node.rpc.chain.getShardUsers({ shardId }))!;
         expect(shardUsers).to.deep.equal(newUsers.map(user => user.value));
 
@@ -452,7 +506,9 @@ describe.skip("CreateShard", function() {
             seq: bobSeq + 1,
             fee: 20
         });
-        await node.testFramework.rpc.chain.sendSignedTransaction(signedMint2);
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: signedMint2.rlpBytes().toString("hex")
+        });
 
         expect(
             await node.rpc.chain.containsTransaction({
@@ -465,12 +521,14 @@ describe.skip("CreateShard", function() {
             })
         ).not.null;
         expect(
-            await node.testFramework.rpc.chain.getTransactionResultsByTracker(
-                mint2.tracker()
-            )
+            await node.rpc.mempool.getTransactionResultsByTracker({
+                tracker: mint2.tracker().toString()
+            })
         ).deep.equal([false, true]);
         expect(
-            await node.testFramework.rpc.chain.getErrorHint(signedMint2.hash())
+            await node.rpc.mempool.getErrorHint({
+                transactionHash: signedMint2.hash().toString()
+            })
         ).to.be.null;
     });
 
@@ -492,11 +550,13 @@ describe.skip("Cannot create shard without allow-create-shard flag", function() 
             blockNumber: null
         }))!;
 
-        await node.testFramework.rpc.chain.sendSignedTransaction(
-            node.testFramework.core
+        await node.rpc.mempool.sendSignedTransaction({
+            tx: node.testFramework.core
                 .createPayTransaction({ recipient: aliceAddress, quantity: 1 })
                 .sign({ secret: faucetSecret, seq, fee: 10 })
-        );
+                .rlpBytes()
+                .toString("hex")
+        });
 
         const tx = node.testFramework.core
             .createCreateShardTransaction({ users: [aliceAddress] })
@@ -507,13 +567,21 @@ describe.skip("Cannot create shard without allow-create-shard flag", function() 
                 blockNumber: null
             })
         ).be.null;
-        expect(node.testFramework.rpc.chain.sendSignedTransaction(tx)).be
-            .rejected;
         expect(
-            await node.testFramework.rpc.chain.containsTransaction(tx.hash())
+            node.rpc.mempool.sendSignedTransaction({
+                tx: tx.rlpBytes().toString("hex")
+            })
+        ).be.rejected;
+        expect(
+            await node.rpc.chain.containsTransaction({
+                transactionHash: `0x${tx.hash().toString()}`
+            })
         ).be.false;
-        expect(await node.testFramework.rpc.chain.getTransaction(tx.hash())).be
-            .null;
+        expect(
+            await node.rpc.chain.getTransaction({
+                transactionHash: `0x${tx.hash().toString()}`
+            })
+        ).be.null;
         const afterShardId = await node.rpc.chain.getShardIdByHash({
             transactionHash: `0x${tx.hash().toString()}`,
             blockNumber: null

@@ -555,7 +555,11 @@ export default class CodeChain {
                 }))!,
                 fee: 10
             });
-        return this.testFramework.rpc.chain.sendSignedTransaction(tx);
+        return new H256(
+            await this.rpc.mempool.sendSignedTransaction({
+                tx: tx.rlpBytes().toString("hex")
+            })
+        );
     }
 
     public async sendTransaction(
@@ -582,7 +586,11 @@ export default class CodeChain {
             fee,
             seq
         });
-        return this.testFramework.rpc.chain.sendSignedTransaction(signed);
+        return new H256(
+            await this.rpc.mempool.sendSignedTransaction({
+                tx: signed.rlpBytes().toString("hex")
+            })
+        );
     }
 
     public async sendAssetTransaction(
@@ -606,7 +614,11 @@ export default class CodeChain {
             fee: fee + this.id,
             seq
         });
-        return this.testFramework.rpc.chain.sendSignedTransaction(signed);
+        return new H256(
+            await this.rpc.mempool.sendSignedTransaction({
+                tx: signed.rlpBytes().toString("hex")
+            })
+        );
     }
 
     public async mintAsset(params: {
@@ -707,7 +719,9 @@ export default class CodeChain {
             seq,
             ...options
         });
-        await this.testFramework.rpc.chain.sendSignedTransaction(tx);
+        await this.rpc.mempool.sendSignedTransaction({
+            tx: tx.rlpBytes().toString("hex")
+        });
         return tx;
     }
 
@@ -745,8 +759,11 @@ export default class CodeChain {
                 transactionHash: `0x${targetTxHash.toString()}`
             })
         ).be.false;
-        expect(await this.testFramework.rpc.chain.getErrorHint(targetTxHash))
-            .not.null;
+        expect(
+            await this.rpc.mempool.getErrorHint({
+                transactionHash: targetTxHash.toString()
+            })
+        ).not.null;
         expect(
             await this.rpc.chain.getTransaction({
                 transactionHash: `0x${targetTxHash.toString()}`
@@ -759,7 +776,9 @@ export default class CodeChain {
             })
         ).be.true;
         expect(
-            await this.testFramework.rpc.chain.getErrorHint(signedDummyTxHash)
+            await this.rpc.mempool.getErrorHint({
+                transactionHash: signedDummyTxHash.toString()
+            })
         ).null;
         expect(
             await this.rpc.chain.getTransaction({
@@ -794,8 +813,11 @@ export default class CodeChain {
                 transactionHash: `0x${targetTxHash.toString()}`
             })
         ).be.false;
-        expect(await this.testFramework.rpc.chain.getErrorHint(targetTxHash))
-            .not.null;
+        expect(
+            await this.rpc.mempool.getErrorHint({
+                transactionHash: targetTxHash.toString()
+            })
+        ).not.null;
         expect(
             await this.rpc.chain.getTransaction({
                 transactionHash: `0x${targetTxHash.toString()}`
@@ -808,7 +830,9 @@ export default class CodeChain {
             })
         ).be.true;
         expect(
-            await this.testFramework.rpc.chain.getErrorHint(signedDummyTxHash)
+            await this.rpc.mempool.getErrorHint({
+                transactionHash: signedDummyTxHash.toString()
+            })
         ).null;
         expect(
             await this.rpc.chain.getTransaction({
@@ -835,7 +859,9 @@ export default class CodeChain {
 
         const targetTxHash =
             tx instanceof SignedTransaction
-                ? await this.testFramework.rpc.chain.sendSignedTransaction(tx)
+                ? await this.rpc.mempool.sendSignedTransaction({
+                      tx: tx.rlpBytes().toString("hex")
+                  })
                 : await tx();
 
         await this.rpc.devel!.startSealing();
@@ -843,19 +869,19 @@ export default class CodeChain {
 
         expect(
             await this.rpc.chain.containsTransaction({
-                transactionHash: `0x${targetTxHash.toString()}`
+                transactionHash: `${targetTxHash.toString()}`
             })
         ).be.false;
-        const hint = await this.testFramework.rpc.chain.getErrorHint(
-            targetTxHash
-        );
+        const hint = await this.rpc.mempool.getErrorHint({
+            transactionHash: targetTxHash.toString()
+        });
         expect(hint).not.null;
         if (options.error != null) {
             expect(hint).contains(options.error);
         }
         expect(
             await this.rpc.chain.getTransaction({
-                transactionHash: `0x${targetTxHash.toString()}`
+                transactionHash: `${targetTxHash.toString()}`
             })
         ).be.null;
 
@@ -865,7 +891,9 @@ export default class CodeChain {
             })
         ).be.true;
         expect(
-            await this.testFramework.rpc.chain.getErrorHint(signedDummyTxHash)
+            await this.rpc.mempool.getErrorHint({
+                transactionHash: `0x${signedDummyTxHash.toString()}`
+            })
         ).null;
         expect(
             await this.rpc.chain.getTransaction({
@@ -873,31 +901,20 @@ export default class CodeChain {
             })
         ).not.be.null;
 
-        return targetTxHash;
+        return new H256(targetTxHash.toString());
     }
 
-    public sendSignedTransactionWithRlpBytes(rlpBytes: Buffer): Promise<H256> {
-        return new Promise((resolve, reject) => {
-            const bytes = Array.from(rlpBytes)
-                .map(byte =>
-                    byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)
-                )
-                .join("");
-            this.testFramework.rpc
-                .sendRpcRequest("mempool_sendSignedTransaction", [`0x${bytes}`])
-                .then(result => {
-                    try {
-                        resolve(new H256(result));
-                    } catch (e) {
-                        reject(
-                            Error(
-                                `Expected sendSignedTransaction() to return a value of H256, but an error occurred: ${e.toString()}`
-                            )
-                        );
-                    }
-                })
-                .catch(reject);
-        });
+    public async sendSignedTransactionWithRlpBytes(
+        rlpBytes: Buffer
+    ): Promise<H256> {
+        const bytes = Array.from(rlpBytes)
+            .map(byte =>
+                byte < 0x10 ? `0${byte.toString(16)}` : byte.toString(16)
+            )
+            .join("");
+        return new H256(
+            await this.rpc.mempool.sendSignedTransaction({ tx: `0x${bytes}` })
+        );
     }
 
     public async waitForTx(
@@ -923,7 +940,9 @@ export default class CodeChain {
         const checkNoError = async () => {
             const errorHints = await Promise.all(
                 hashes.map(hash =>
-                    this.testFramework.rpc.chain.getErrorHint(hash)
+                    this.rpc.mempool.getErrorHint({
+                        transactionHash: `0x${hash.toString()}`
+                    })
                 )
             );
             for (const errorHint of errorHints) {

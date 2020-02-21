@@ -162,7 +162,7 @@ describe("Reward = 50, 1 miner", function() {
     });
 
     it("Mining a block with a transaction that pays the author", async function() {
-        await node.pay(aliceAddress, 100);
+        await node.pay(aliceAddress.toString(), 100);
         expect(
             +(await node.rpc.chain.getBalance({
                 address: faucetAddress.toString()
@@ -234,7 +234,8 @@ describe("Reward = 50, 1 miner", function() {
                 quantity: 20
             })
             .sign({ secret: aliceSecret, seq: 0, fee: 10 });
-        await node.testFramework.rpc.chain.sendSignedTransaction(tx);
+        const trans = tx.rlpBytes().toString("hex");
+        await node.rpc.mempool.sendSignedTransaction({ tx: `0x${trans}` });
 
         expect(
             +(await node.rpc.chain.getBalance({

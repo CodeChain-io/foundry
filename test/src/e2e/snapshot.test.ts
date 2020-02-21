@@ -39,18 +39,18 @@ describe("Snapshot", async function() {
             recipient: aliceAddress
         });
 
-        const blockHash = (await node.testFramework.rpc.chain.getTransaction(
-            pay.hash()
-        ))!.blockHash!;
-        await node.rpc.devel!.developSnapshot({ hash: blockHash.toJSON() })!;
+        const blockHash = (await node.rpc.chain.getTransaction({
+            transactionHash: `0x${pay.hash().toString()}`
+        }))!.blockHash!;
+        await node.rpc.devel!.developSnapshot({ hash: blockHash })!;
         // Wait for 1 secs
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        const stateRoot = (await node.testFramework.rpc.chain.getBlock(
+        const stateRoot = (await node.rpc.chain.getBlockByHash({
             blockHash
-        ))!.stateRoot;
+        }))!.stateRoot;
         expect(
-            path.join(SNAPSHOT_PATH, blockHash.toString(), stateRoot.toString())
+            path.join(SNAPSHOT_PATH, blockHash.substr(2), stateRoot.substr(2))
         ).to.satisfies(fs.existsSync);
     });
 

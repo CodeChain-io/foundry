@@ -32,6 +32,7 @@ import {
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
 import { blake256 } from "../sdk/src/utils";
+import { ERROR } from "../helper/error";
 
 const RLP = require("rlp");
 
@@ -97,34 +98,38 @@ describe("ChangeParams", function() {
         );
 
         {
-            const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
-                    .createCustomTransaction({
-                        handlerId: stakeActionHandlerId,
-                        bytes: RLP.encode(changeParams)
-                    })
-                    .sign({
-                        secret: faucetSecret,
-                        seq: (await node.rpc.chain.getSeq({
-                            address: faucetAddress.toString(),
-                            blockNumber: null
-                        }))!,
-                        fee: 10
-                    })
-            );
+            const tx = node.testFramework.core
+                .createCustomTransaction({
+                    handlerId: stakeActionHandlerId,
+                    bytes: RLP.encode(changeParams)
+                })
+                .sign({
+                    secret: faucetSecret,
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
+                    fee: 10
+                });
+            const trans = tx.rlpBytes().toString("hex");
+            const hash = await node.rpc.mempool.sendSignedTransaction({
+                tx: trans
+            });
             expect(
                 await node.rpc.chain.containsTransaction({
-                    transactionHash: "0x".concat(hash.toString())
+                    transactionHash: hash
                 })
             ).be.true;
         }
-
-        await expect(node.sendPayTx({ fee: 10 })).rejectedWith(/Too Low Fee/);
-        const params = await node.testFramework.rpc.sendRpcRequest(
-            "chain_getCommonParams",
-            [null]
-        );
-        expect(U64.ensure(params.minPayCost)).to.be.deep.equal(new U64(11));
+        try {
+            await expect(node.sendPayTx({ fee: 10 }));
+        } catch (e) {
+            expect(e.toString()).is.include(
+                ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+            );
+        }
+        const params = await node.rpc.chain.getCommonParams({});
+        expect(+params!.minPayCost!).to.be.deep.equal(11);
     });
 
     it("cannot change the network id", async function() {
@@ -176,17 +181,22 @@ describe("ChangeParams", function() {
                 }))!,
                 fee: 10
             });
-        await expect(
-            node.testFramework.rpc.chain.sendSignedTransaction(tx)
-        ).rejectedWith(/network id/);
+        const trans = tx.rlpBytes().toString("hex");
+        try {
+            await node.rpc.mempool.sendSignedTransaction({ tx: `0x${trans}` });
+            expect.fail();
+        } catch (e) {
+            expect(e.toString()).is.include(
+                ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+            );
+        }
     });
 
     it("should keep default common params value", async function() {
-        const params = await node.testFramework.rpc.sendRpcRequest(
-            "chain_getCommonParams",
-            [null]
-        );
-        expect(U64.ensure(params.minPayCost)).to.be.deep.equal(new U64(10));
+        const params = await node.rpc.chain.getCommonParams({
+            blockNumber: null
+        });
+        expect(+params!.minPayCost!).to.be.deep.equal(10);
     });
 
     it("the parameter is applied from the next block", async function() {
@@ -235,23 +245,25 @@ describe("ChangeParams", function() {
                 address: faucetAddress.toString(),
                 blockNumber: null
             }))!;
-            const changeHash = await node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
-                    .createCustomTransaction({
-                        handlerId: stakeActionHandlerId,
-                        bytes: RLP.encode(changeParams)
-                    })
-                    .sign({
-                        secret: faucetSecret,
-                        seq,
-                        fee: 10
-                    })
-            );
+            const tx = node.testFramework.core
+                .createCustomTransaction({
+                    handlerId: stakeActionHandlerId,
+                    bytes: RLP.encode(changeParams)
+                })
+                .sign({
+                    secret: faucetSecret,
+                    seq,
+                    fee: 10
+                });
+            const trans = tx.rlpBytes().toString("hex");
+            const changeHash = await node.rpc.mempool.sendSignedTransaction({
+                tx: `0x${trans}`
+            });
             const pay = await node.sendPayTx({ seq: seq + 1, fee: 10 });
             await node.rpc.devel!.startSealing();
             expect(
                 await node.rpc.chain.containsTransaction({
-                    transactionHash: "0x".concat(changeHash.toString())
+                    transactionHash: changeHash
                 })
             ).be.true;
             expect(
@@ -263,8 +275,12 @@ describe("ChangeParams", function() {
                 blockNumber + 1
             );
         }
-
-        await expect(node.sendPayTx({ fee: 10 })).rejectedWith(/Too Low Fee/);
+        try {
+            await node.sendPayTx({ fee: 10 });
+            expect.fail();
+        } catch (e) {
+            expect(e.toString()).is.include(ERROR.TOO_LOW_FEE);
+        }
     });
 
     it("the parameter changed twice in the same block", async function() {
@@ -350,39 +366,44 @@ describe("ChangeParams", function() {
                 address: faucetAddress.toString(),
                 blockNumber: null
             }))!;
-            const changeHash1 = await node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
-                    .createCustomTransaction({
-                        handlerId: stakeActionHandlerId,
-                        bytes: RLP.encode(changeParams1)
-                    })
-                    .sign({
-                        secret: faucetSecret,
-                        seq,
-                        fee: 10
-                    })
-            );
-            const changeHash2 = await node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
-                    .createCustomTransaction({
-                        handlerId: stakeActionHandlerId,
-                        bytes: RLP.encode(changeParams2)
-                    })
-                    .sign({
-                        secret: faucetSecret,
-                        seq: seq + 1,
-                        fee: 10
-                    })
-            );
+
+            const tx = node.testFramework.core
+                .createCustomTransaction({
+                    handlerId: stakeActionHandlerId,
+                    bytes: RLP.encode(changeParams1)
+                })
+                .sign({
+                    secret: faucetSecret,
+                    seq,
+                    fee: 10
+                });
+            const trans = tx.rlpBytes().toString("hex");
+            const changeHash1 = await node.rpc.mempool.sendSignedTransaction({
+                tx: `0x${trans}`
+            });
+            const tx2 = node.testFramework.core
+                .createCustomTransaction({
+                    handlerId: stakeActionHandlerId,
+                    bytes: RLP.encode(changeParams2)
+                })
+                .sign({
+                    secret: faucetSecret,
+                    seq: seq + 1,
+                    fee: 10
+                });
+            const trans2 = tx2.rlpBytes().toString("hex");
+            const changeHash2 = await node.rpc.mempool.sendSignedTransaction({
+                tx: `0x${trans2}`
+            });
             await node.rpc.devel!.startSealing();
             expect(
                 await node.rpc.chain.containsTransaction({
-                    transactionHash: "0x".concat(changeHash1.toString())
+                    transactionHash: changeHash1
                 })
             ).be.true;
             expect(
                 await node.rpc.chain.containsTransaction({
-                    transactionHash: "0x".concat(changeHash2.toString())
+                    transactionHash: changeHash2
                 })
             ).be.true;
             expect(await node.rpc.chain.getBestBlockNumber()).equal(
@@ -393,10 +414,15 @@ describe("ChangeParams", function() {
         const pay = await node.sendPayTx({ fee: 5 });
         expect(
             await node.rpc.chain.containsTransaction({
-                transactionHash: "0x".concat(pay.hash().toString())
+                transactionHash: `0x${pay.hash().toString()}`
             })
         ).be.true;
-        await expect(node.sendPayTx({ fee: 4 })).rejectedWith(/Too Low Fee/);
+        try {
+            await node.sendPayTx({ fee: 4 });
+            expect.fail();
+        } catch (e) {
+            expect(e.toString()).is.include(ERROR.TOO_LOW_FEE);
+        }
     });
 
     it("cannot reuse the same signature", async function() {
@@ -477,44 +503,49 @@ describe("ChangeParams", function() {
 
         {
             await node.rpc.devel!.stopSealing();
-            const blockNumber = await node.testFramework.rpc.chain.getBestBlockNumber();
+            const blockNumber = await node.rpc.chain.getBestBlockNumber();
             const seq = (await node.rpc.chain.getSeq({
                 address: faucetAddress.toString(),
                 blockNumber: null
             }))!;
-            const changeHash1 = await node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
-                    .createCustomTransaction({
-                        handlerId: stakeActionHandlerId,
-                        bytes: RLP.encode(changeParams1)
-                    })
-                    .sign({
-                        secret: faucetSecret,
-                        seq,
-                        fee: 10
-                    })
-            );
-            const changeHash2 = await node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
-                    .createCustomTransaction({
-                        handlerId: stakeActionHandlerId,
-                        bytes: RLP.encode(changeParams2)
-                    })
-                    .sign({
-                        secret: faucetSecret,
-                        seq: seq + 1,
-                        fee: 10
-                    })
-            );
+            const tx1 = node.testFramework.core
+                .createCustomTransaction({
+                    handlerId: stakeActionHandlerId,
+                    bytes: RLP.encode(changeParams1)
+                })
+                .sign({
+                    secret: faucetSecret,
+                    seq,
+                    fee: 10
+                });
+
+            const trans1 = tx1.rlpBytes().toString("hex");
+            const changeHash1 = await node.rpc.mempool.sendSignedTransaction({
+                tx: `0x${trans1}`
+            });
+            const tx2 = node.testFramework.core
+                .createCustomTransaction({
+                    handlerId: stakeActionHandlerId,
+                    bytes: RLP.encode(changeParams2)
+                })
+                .sign({
+                    secret: faucetSecret,
+                    seq: seq + 1,
+                    fee: 10
+                });
+            const trans2 = tx2.rlpBytes().toString("hex");
+            const changeHash2 = await node.rpc.mempool.sendSignedTransaction({
+                tx: `0x${trans2}`
+            });
             await node.rpc.devel!.startSealing();
             expect(
                 await node.rpc.chain.containsTransaction({
-                    transactionHash: "0x".concat(changeHash1.toString())
+                    transactionHash: changeHash1
                 })
             ).be.true;
             expect(
                 await node.rpc.chain.containsTransaction({
-                    transactionHash: "0x".concat(changeHash2.toString())
+                    transactionHash: changeHash2
                 })
             ).be.true;
             expect(await node.rpc.chain.getBestBlockNumber()).equal(
@@ -528,7 +559,12 @@ describe("ChangeParams", function() {
                 transactionHash: "0x".concat(pay.hash().toString())
             })
         ).be.true;
-        await expect(node.sendPayTx({ fee: 4 })).rejectedWith(/Too Low Fee/);
+        try {
+            await node.sendPayTx({ fee: 4 });
+            expect.fail();
+        } catch (e) {
+            expect(e.toString()).is.include(ERROR.TOO_LOW_FEE);
+        }
     });
 
     it("cannot change params with insufficient stakes", async function() {
@@ -568,46 +604,48 @@ describe("ChangeParams", function() {
         );
 
         {
-            const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
-                    .createCustomTransaction({
-                        handlerId: stakeActionHandlerId,
-                        bytes: RLP.encode(changeParams)
-                    })
-                    .sign({
-                        secret: faucetSecret,
-                        seq: (await node.rpc.chain.getSeq({
-                            address: faucetAddress.toString(),
-                            blockNumber: null
-                        }))!,
-                        fee: 10
-                    })
-            );
+            const tx = node.testFramework.core
+                .createCustomTransaction({
+                    handlerId: stakeActionHandlerId,
+                    bytes: RLP.encode(changeParams)
+                })
+                .sign({
+                    secret: faucetSecret,
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
+                    fee: 10
+                });
+            const trans = tx.rlpBytes().toString("hex");
+            const hash = await node.rpc.mempool.sendSignedTransaction({
+                tx: `${trans}`
+            });
             expect(
                 await node.rpc.chain.containsTransaction({
-                    transactionHash: "0x".concat(hash.toString())
+                    transactionHash: hash
                 })
             ).be.true;
         }
 
         {
-            await node.sendSignedTransactionExpectedToFail(
-                node.testFramework.core
-                    .createCustomTransaction({
-                        handlerId: stakeActionHandlerId,
-                        bytes: RLP.encode(changeParams)
-                    })
-                    .sign({
-                        secret: faucetSecret,
-                        seq:
-                            (await node.rpc.chain.getSeq({
-                                address: faucetAddress.toString(),
-                                blockNumber: null
-                            }))! + 1,
-                        fee: 10
-                    }),
-                { error: "Invalid transaction seq Expected 1, found 0" }
-            );
+            const tx2 = node.testFramework.core
+                .createCustomTransaction({
+                    handlerId: stakeActionHandlerId,
+                    bytes: RLP.encode(changeParams)
+                })
+                .sign({
+                    secret: faucetSecret,
+                    seq:
+                        (await node.rpc.chain.getSeq({
+                            address: faucetAddress.toString(),
+                            blockNumber: null
+                        }))! + 1,
+                    fee: 10
+                });
+            await node.sendSignedTransactionExpectedToFail(tx2, {
+                error: "Invalid transaction seq Expected 1, found 0"
+            });
         }
     });
 
@@ -746,19 +784,25 @@ describe("ChangeParams", function() {
                     }))!,
                     fee: 10
                 });
-            const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
-                tx
-            );
+            const trans = tx.rlpBytes().toString("hex");
+            const hash = await node.rpc.mempool.sendSignedTransaction({
+                tx: `0x${trans}`
+            });
             expect(
                 await node.rpc.chain.containsTransaction({
-                    transactionHash: "0x".concat(hash.toString())
+                    transactionHash: hash
                 })
             ).be.true;
-            expect(await node.testFramework.rpc.chain.getTransaction(hash)).not
-                .be.null;
+            expect(
+                await node.rpc.chain.getTransaction({ transactionHash: hash })
+            ).not.be.null;
         }
-
-        await expect(node.sendPayTx({ fee: 10 })).rejectedWith(/Too Low Fee/);
+        try {
+            await node.sendPayTx({ fee: 10 });
+            expect.fail();
+        } catch (e) {
+            expect(e.toString()).is.include(ERROR.TOO_LOW_FEE);
+        }
     });
 
     describe("with stake parameters", async function() {
@@ -799,37 +843,41 @@ describe("ChangeParams", function() {
             );
 
             {
-                const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
-                    node.testFramework.core
-                        .createCustomTransaction({
-                            handlerId: stakeActionHandlerId,
-                            bytes: RLP.encode(changeParams)
-                        })
-                        .sign({
-                            secret: faucetSecret,
-                            seq: (await node.rpc.chain.getSeq({
-                                address: faucetAddress.toString(),
-                                blockNumber: null
-                            }))!,
-                            fee: 10
-                        })
-                );
+                const tx = node.testFramework.core
+                    .createCustomTransaction({
+                        handlerId: stakeActionHandlerId,
+                        bytes: RLP.encode(changeParams)
+                    })
+                    .sign({
+                        secret: faucetSecret,
+                        seq: (await node.rpc.chain.getSeq({
+                            address: faucetAddress.toString(),
+                            blockNumber: null
+                        }))!,
+                        fee: 10
+                    });
+                const trans = tx.rlpBytes().toString("hex");
+                const hash = await node.rpc.mempool.sendSignedTransaction({
+                    tx: `0x${trans}`
+                });
                 expect(
                     await node.rpc.chain.containsTransaction({
-                        transactionHash: "0x".concat(hash.toString())
+                        transactionHash: hash
                     })
                 ).be.true;
             }
 
-            await expect(node.sendPayTx({ fee: 10 })).rejectedWith(
-                /Too Low Fee/
-            );
+            try {
+                await node.sendPayTx({ fee: 10 });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(ERROR.TOO_LOW_FEE);
+            }
 
-            const params = await node.testFramework.rpc.sendRpcRequest(
-                "chain_getCommonParams",
-                [null]
-            );
-            expect(U64.ensure(params.minPayCost)).to.be.deep.equal(new U64(11));
+            const params = await node.rpc.chain.getCommonParams({
+                blockNumber: null
+            });
+            expect(+params!.minPayCost!).to.be.deep.equal(11);
         });
 
         it("nomination expiration cannot be zero", async function() {
@@ -890,9 +938,17 @@ describe("ChangeParams", function() {
                     }))!,
                     fee: 10
                 });
-            await expect(
-                node.testFramework.rpc.chain.sendSignedTransaction(tx)
-            ).rejectedWith(/nomination expiration/);
+            const trans = tx.rlpBytes().toString("hex");
+            try {
+                await node.rpc.mempool.sendSignedTransaction({
+                    tx: `0x${trans}`
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
+            }
         });
 
         it("custody period cannot be zero", async function() {
@@ -953,9 +1009,17 @@ describe("ChangeParams", function() {
                     }))!,
                     fee: 10
                 });
-            await expect(
-                node.testFramework.rpc.chain.sendSignedTransaction(tx)
-            ).rejectedWith(/custody period/);
+            const trans = tx.rlpBytes().toString("hex");
+            try {
+                await node.rpc.mempool.sendSignedTransaction({
+                    tx: `0x${trans}`
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
+            }
         });
 
         it("release period cannot be zero", async function() {
@@ -1016,9 +1080,17 @@ describe("ChangeParams", function() {
                     }))!,
                     fee: 10
                 });
-            await expect(
-                node.testFramework.rpc.chain.sendSignedTransaction(tx)
-            ).rejectedWith(/release period/);
+            const trans = tx.rlpBytes().toString("hex");
+            try {
+                await node.rpc.mempool.sendSignedTransaction({
+                    tx: `0x${trans}`
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
+            }
         });
 
         it("A release period cannot be equal to a custody period", async function() {
@@ -1079,12 +1151,16 @@ describe("ChangeParams", function() {
                     }))!,
                     fee: 10
                 });
+            const trans = tx.rlpBytes().toString("hex");
             try {
-                await node.testFramework.rpc.chain.sendSignedTransaction(tx);
-                expect.fail("The transaction must fail");
-            } catch (err) {
-                expect(err.message).contains("release period");
-                expect(err.message).contains("custody period");
+                await node.rpc.mempool.sendSignedTransaction({
+                    tx: `0x${trans}`
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
             }
         });
 
@@ -1146,9 +1222,17 @@ describe("ChangeParams", function() {
                     }))!,
                     fee: 10
                 });
-            await expect(
-                node.testFramework.rpc.chain.sendSignedTransaction(tx)
-            ).rejectedWith(/minimum deposit/);
+            const trans = tx.rlpBytes().toString("hex");
+            try {
+                await node.rpc.mempool.sendSignedTransaction({
+                    tx: `0x${trans}`
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
+            }
         });
 
         it("delegation threshold cannot be zero", async function() {
@@ -1209,9 +1293,17 @@ describe("ChangeParams", function() {
                     }))!,
                     fee: 10
                 });
-            await expect(
-                node.testFramework.rpc.chain.sendSignedTransaction(tx)
-            ).rejectedWith(/delegation threshold/);
+            const trans = tx.rlpBytes().toString("hex");
+            try {
+                await node.rpc.mempool.sendSignedTransaction({
+                    tx: `0x${trans}`
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
+            }
         });
 
         it("min number of validators cannot be zero", async function() {
@@ -1272,9 +1364,17 @@ describe("ChangeParams", function() {
                     }))!,
                     fee: 10
                 });
-            await expect(
-                node.testFramework.rpc.chain.sendSignedTransaction(tx)
-            ).rejectedWith(/minimum number of validators/);
+            const trans = tx.rlpBytes().toString("hex");
+            try {
+                await node.rpc.mempool.sendSignedTransaction({
+                    tx: `0x${trans}`
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
+            }
         });
 
         it("max number of validators cannot be zero", async function() {
@@ -1335,9 +1435,17 @@ describe("ChangeParams", function() {
                     }))!,
                     fee: 10
                 });
-            await expect(
-                node.testFramework.rpc.chain.sendSignedTransaction(tx)
-            ).rejectedWith(/maximum number of validators/);
+            const trans = tx.rlpBytes().toString("hex");
+            try {
+                await node.rpc.mempool.sendSignedTransaction({
+                    tx: `0x${trans}`
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
+            }
         });
 
         it("The maximum number of candidates cannot be equal to the minimum number of candidates", async function() {
@@ -1398,12 +1506,16 @@ describe("ChangeParams", function() {
                     }))!,
                     fee: 10
                 });
+            const trans = tx.rlpBytes().toString("hex");
             try {
-                await node.testFramework.rpc.chain.sendSignedTransaction(tx);
-                expect.fail("The transaction must fail");
-            } catch (err) {
-                expect(err.message).contains("maximum number of validators");
-                expect(err.message).contains("minimum number of validators");
+                await node.rpc.mempool.sendSignedTransaction({
+                    tx: `0x${trans}`
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
             }
         });
 
@@ -1465,12 +1577,16 @@ describe("ChangeParams", function() {
                     }))!,
                     fee: 10
                 });
+            const trans = tx.rlpBytes().toString("hex");
             try {
-                await node.testFramework.rpc.chain.sendSignedTransaction(tx);
-                expect.fail("The transaction must fail");
-            } catch (err) {
-                expect(err.message).contains("candidate metadata size");
-                expect(err.message).contains("text limit");
+                await node.rpc.mempool.sendSignedTransaction({
+                    tx: `0x${trans}`
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
             }
         });
     });
@@ -1505,23 +1621,24 @@ async function sendStakeToken(params: {
             address: senderAddress.toString()
         }))!
     } = params;
-
-    return node.testFramework.rpc.chain.sendSignedTransaction(
-        node.testFramework.core
-            .createCustomTransaction({
-                handlerId: stakeActionHandlerId,
-                bytes: Buffer.from(
-                    RLP.encode([
-                        1,
-                        receiverAddress.accountId.toEncodeObject(),
-                        quantity
-                    ])
-                )
-            })
-            .sign({
-                secret: senderSecret,
-                seq,
-                fee
-            })
+    const tx = node.testFramework.core
+        .createCustomTransaction({
+            handlerId: stakeActionHandlerId,
+            bytes: Buffer.from(
+                RLP.encode([
+                    1,
+                    receiverAddress.accountId.toEncodeObject(),
+                    quantity
+                ])
+            )
+        })
+        .sign({
+            secret: senderSecret,
+            seq,
+            fee
+        });
+    const trans = tx.rlpBytes().toString("hex");
+    return new H256(
+        await node.rpc.mempool.sendSignedTransaction({ tx: `0x${trans}` })
     );
 }

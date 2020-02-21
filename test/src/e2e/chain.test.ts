@@ -25,7 +25,8 @@ import {
     invalidAddress
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
-import { H160, H256, U64 } from "../sdk/src/core/classes";
+import { PlatformAddress } from "../sdk/src/core/classes";
+import { H160, H256, H512, U64 } from "../sdk/src/core/classes";
 const RLP = require("rlp");
 
 describe("chain", function() {
@@ -80,10 +81,14 @@ describe("chain", function() {
             blockNumber: bestBlockNumber
         });
         expect(
-            (await node.testFramework.rpc.chain.getBlock(blockHash!))!.number
+            (await node.rpc.chain.getBlockByHash({ blockHash: blockHash! }))!
+                .number
         ).to.equal(bestBlockNumber);
-        expect(await node.testFramework.rpc.chain.getBlock(invalidH256)).to.be
-            .null;
+        expect(
+            await node.rpc.chain.getBlockByHash({
+                blockHash: `0x${invalidH256.toString()}`
+            })
+        ).to.be.null;
     });
 
     it("getSeq", async function() {
@@ -97,7 +102,7 @@ describe("chain", function() {
                 blockNumber: null
             })
         ).to.equal(0);
-        const bestBlockNumber = await node.testFramework.rpc.chain.getBestBlockNumber();
+        const bestBlockNumber = await node.rpc.chain.getBestBlockNumber();
         await node.rpc.chain.getSeq({
             address: faucetAddress.toString(),
             blockNumber: 0
@@ -160,16 +165,14 @@ describe("chain", function() {
     });
 
     it("getBlockReward", async function() {
-        // FIXME: Add an API to SDK
-        const reward = await node.testFramework.rpc.sendRpcRequest(
-            "engine_getBlockReward",
-            [10]
-        );
+        const reward = (await node.rpc.engine.getBlockReward({
+            blockNumber: 10
+        }))!;
         expect(reward).to.equal(0);
     });
 
     it("getPendingTransactions", async function() {
-        const pending = await node.testFramework.rpc.chain.getPendingTransactions();
+        const pending = await node.rpc.mempool.getPendingTransactions();
         expect(pending.transactions.length).to.equal(0);
     });
 
@@ -182,21 +185,26 @@ describe("chain", function() {
             address: faucetAddress.toString(),
             blockNumber: null
         }))!;
-        const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
-            tx.sign({
-                secret: faucetSecret,
-                fee: 10,
-                seq
-            })
-        );
+        const sig = tx.sign({
+            secret: faucetSecret,
+            fee: 10,
+            seq
+        });
+        const bytes = sig.rlpBytes().toString("hex");
+        const hash = await node.rpc.mempool.sendSignedTransaction({
+            tx: `0x${bytes}`
+        });
         expect(
             await node.rpc.chain.containsTransaction({
-                transactionHash: "0x".concat(hash.toString())
+                transactionHash: hash
             })
         ).be.true;
-        const signed = await node.testFramework.rpc.chain.getTransaction(hash);
-        expect(signed).not.null;
-        expect(signed!.unsigned).to.deep.equal(tx);
+        const thetx = (await node.rpc.chain.getTransaction({
+            transactionHash: hash
+        }))!;
+        expect(thetx).not.null;
+        expect(thetx.sig).to.equal(`0x${sig.signature()}`);
+        expect(+thetx.fee).to.equal(Number(tx.fee()!.toString()));
     });
 
     it("sendPayTx, getTransactionSigner", async function() {
@@ -208,26 +216,37 @@ describe("chain", function() {
             address: faucetAddress.toString(),
             blockNumber: null
         }))!;
-        const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
-            tx.sign({
-                secret: faucetSecret,
-                fee: 10,
-                seq
-            })
-        );
-        expect(await node.testFramework.rpc.chain.containsTransaction(hash)).be
-            .true;
-        const signer = await node.testFramework.rpc.sendRpcRequest(
-            "chain_getTransactionSigner",
-            [hash]
-        );
+        const sig = tx.sign({
+            secret: faucetSecret,
+            fee: 10,
+            seq
+        });
+        const bytes = sig.rlpBytes().toString("hex");
+        const hash = await node.rpc.mempool.sendSignedTransaction({
+            tx: `0x${bytes}`
+        });
+        expect(
+            await node.rpc.chain.containsTransaction({ transactionHash: hash })
+        ).be.true;
+        const signer = await node.rpc.chain.getTransactionSigner({
+            transactionHash: hash
+        });
         expect(signer).equal(faucetAddress.toString());
-        const signed = await node.testFramework.rpc.chain.getTransaction(hash);
+        const signed = (await node.rpc.chain.getTransaction({
+            transactionHash: hash
+        }))!;
+        const publicKey = new H512(
+            node.testFramework.util.recoverEcdsa(
+                tx.unsignedHash().toString(),
+                signed.sig
+            )
+        );
         expect(signed).not.null;
-        expect(signed!.unsigned).to.deep.equal(tx);
+        expect(signed.sig).to.equal(`0x${sig.signature()}`);
+        expect(+signed.fee).to.equal(Number(tx.fee()!.toString()));
         expect(
             node.testFramework.core.classes.PlatformAddress.fromPublic(
-                signed!.getSignerPublic(),
+                publicKey,
                 { networkId: "tc" }
             ).toString()
         ).equal(signer);
