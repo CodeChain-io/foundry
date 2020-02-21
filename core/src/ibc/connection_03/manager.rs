@@ -67,8 +67,8 @@ impl<'a> Manager<'a> {
         counterparty_prefix: CommitmentPrefix,
         counterparty_client_identifier: Identifier,
         client_identifier: Identifier,
-        proof_init: CommitmentProof,
-        proof_consensus: CommitmentProof,
+        proof_init: Vec<u8>,
+        proof_consensus: Vec<u8>,
         proof_height: u64,
         consensus_height: u64,
     ) -> Result<(), String> {
@@ -135,13 +135,19 @@ impl<'a> Manager<'a> {
         &mut self,
         connection: &ConnectionEnd,
         proof_height: u64,
-        proof: CommitmentProof,
+        proof: Vec<u8>,
         connection_identifier: Identifier,
         connection_end: &ConnectionEnd,
     ) -> bool {
+        let proof_dec: CommitmentProof = if let Ok(proof) = rlp::decode(&proof) {
+            proof
+        } else {
+            return false
+        };
+
         // check values in the connection_end
         let path = format!("connections/{}", connection_identifier);
-        self.client_verify_membership(proof_height, proof, path, &rlp::encode(connection_end))
+        self.client_verify_membership(proof_height, proof_dec, path, &rlp::encode(connection_end))
     }
 
     fn client_verify_membership(
