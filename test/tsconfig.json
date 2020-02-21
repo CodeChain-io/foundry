@@ -9,5 +9,5 @@
     "strict": true
   },
   "include": ["./src/**/*"],
-  "exclude": ["./src/**/*.test.ts", "./src/sdk/*" , "./src/stakeholder/*"]
+  "exclude": ["./src/**/*.test.ts"]
 }
