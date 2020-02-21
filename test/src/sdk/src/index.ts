@@ -1,7 +1,6 @@
 import { Core } from "./core";
 import { NetworkId } from "./core/types";
 import { Key, KeyStoreType } from "./key";
-import { Rpc } from "./rpc";
 import {
     blake128,
     blake128WithKey,
@@ -19,7 +18,6 @@ import {
 } from "./utils";
 
 class SDK {
-    public static Rpc = Rpc;
     public static Core = Core;
     public static Key = Key;
     public static util = {
@@ -39,7 +37,6 @@ class SDK {
     };
 
     public static SDK = SDK;
-    public rpc: Rpc;
     public core: Core;
     public key: Key;
     public util = SDK.util;
@@ -51,25 +48,14 @@ class SDK {
      * @param params.networkId The network id of CodeChain. The default value is "tc" (testnet)
      */
     constructor(params: {
-        server: string;
         keyStoreType?: KeyStoreType;
         networkId?: NetworkId;
-        options?: {
-            transactionSigner?: string;
-            fallbackServers?: string[];
-        };
     }) {
         const {
-            server,
             keyStoreType = "local",
             networkId = "tc",
-            options
         } = params;
 
-        this.rpc = new Rpc({
-            server,
-            options
-        });
         this.core = new Core({ networkId });
         this.key = new Key({
             networkId,

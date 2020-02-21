@@ -199,9 +199,7 @@ export default class CodeChain {
         this._rpc = new RPC(`http://localhost:${this.rpcPort}`, {
             devel: true
         });
-        this._testFramework = new SDK({
-            server: `http://localhost:${this.rpcPort}`
-        });
+        this._testFramework = new SDK({});
         this._chain = chain || "solo";
         this.argv = argv || [];
         this.env = env || {};
