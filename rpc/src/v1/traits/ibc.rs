@@ -14,5 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use super::super::types::IBCQuery;
+use super::super::types::{ClientState, ConsensusState};
+use jsonrpc_core::Result;
+use primitives::Bytes;
+
 #[rpc(server)]
-pub trait IBC {}
+pub trait IBC {
+    /// Gets client state
+    #[rpc(name = "ibc_query_client_state")]
+    fn query_client_state(&self, client_id: String, block_number: Option<u64>)
+        -> Result<Option<IBCQuery<ClientState>>>;
+
+    /// Gets consensus state on arbitrary number
+    #[rpc(name = "ibc_query_consensus_state")]
+    fn query_consensus_state(
+        &self,
+        client_id: String,
+        counterparty_block_number: u64,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQuery<ConsensusState>>>;
+
+    /// Compose an ICS header that updates Foundry light client (not me, but being in some counterparty chain)
+    /// from block_number-1 to block_number. It will stay opaque until it gets finally delieverd to Foundry light client.
+    #[rpc(name = "ibc_compose_header")]
+    fn compose_header(&self, block_number: u64) -> Result<Option<Bytes>>;
+}
