@@ -143,7 +143,8 @@ export class Order {
                   }
                 | {
                       recipientFrom: AssetAddress;
-                  }) &
+                  }
+            ) &
             (
                 | {
                       lockScriptHashFee: H160;
@@ -151,7 +152,8 @@ export class Order {
                   }
                 | {
                       recipientFee: AssetAddress;
-                  })
+                  }
+            )
     ) {
         if ("recipientFrom" in data) {
             const { lockScriptHash, parameters } = decomposeRecipient(

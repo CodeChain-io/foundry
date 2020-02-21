@@ -11,7 +11,7 @@ export async function getTermMetadata(
     rpc: RPC,
     blockNumber?: number
 ): Promise<TermMetadata | null> {
-    const result = await rpc.chain.getTermMetadata({blockNumber})
+    const result = await rpc.chain.getTermMetadata({ blockNumber });
     if (result === null) {
         return null;
     }
@@ -33,7 +33,7 @@ export async function getPossibleAuthors(
     rpc: RPC,
     blockNumber?: number
 ): Promise<PlatformAddress[] | null> {
-    const result = await rpc.chain.getPossibleAuthors({blockNumber});
+    const result = await rpc.chain.getPossibleAuthors({ blockNumber });
     if (result === null) {
         return null;
     }

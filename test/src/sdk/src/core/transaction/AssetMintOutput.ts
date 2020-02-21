@@ -67,9 +67,7 @@ export class AssetMintOutput {
                     break;
                 default:
                     throw Error(
-                        `Unexpected type of AssetAddress: ${type}, ${
-                            data.recipient
-                        }`
+                        `Unexpected type of AssetAddress: ${type}, ${data.recipient}`
                     );
             }
         } else {

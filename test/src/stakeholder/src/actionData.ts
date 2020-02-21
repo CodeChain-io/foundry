@@ -6,7 +6,7 @@ import RPC from "foundry-rpc";
 import { SDK } from "../../sdk/src";
 import { H512, PlatformAddress, U64 } from "../../sdk/src/core/classes";
 
-import {toHex} from "codechain-primitives/lib";
+import { toHex } from "codechain-primitives/lib";
 import { HANDLER_ID } from "./index";
 import {
     decodeH512,
@@ -22,16 +22,18 @@ export async function getUndelegatedCCS(
     address: PlatformAddressValue,
     blockNumber?: number
 ): Promise<U64> {
-    const data = await rpc.engine.getCustomActionData(
-        { handlerId: HANDLER_ID,
-        bytes: `0x${toHex(RLP.encode([
-            "Account",
-            PlatformAddress.ensure(address)
-                .getAccountId()
-                .toEncodeObject()
-        ]))}`,
-        blockNumber }
-    );
+    const data = await rpc.engine.getCustomActionData({
+        handlerId: HANDLER_ID,
+        bytes: `0x${toHex(
+            RLP.encode([
+                "Account",
+                PlatformAddress.ensure(address)
+                    .getAccountId()
+                    .toEncodeObject()
+            ])
+        )}`,
+        blockNumber
+    });
     if (data == null) {
         return new U64(0);
     }
@@ -43,11 +45,11 @@ export async function getCCSHolders(
     sdk: SDK,
     blockNumber?: number
 ): Promise<PlatformAddress[]> {
-    const data = await rpc.engine.getCustomActionData(
-        { handlerId: HANDLER_ID,
-        bytes : `0x${toHex(RLP.encode(["StakeholderAddresses"]))}`,
-        blockNumber }
-    );
+    const data = await rpc.engine.getCustomActionData({
+        handlerId: HANDLER_ID,
+        bytes: `0x${toHex(RLP.encode(["StakeholderAddresses"]))}`,
+        blockNumber
+    });
     if (data == null) {
         throw Error("Expected non-null value, but got a null");
     }
@@ -70,11 +72,13 @@ export async function getDelegations(
     delegator: PlatformAddress,
     blockNumber?: number
 ): Promise<Delegation[]> {
-    const data = await rpc.engine.getCustomActionData(
-        {handlerId: HANDLER_ID,
-        bytes : `0x${toHex(RLP.encode(["Delegation", delegator.accountId.toEncodeObject()]))}`,
-        blockNumber}
-    );
+    const data = await rpc.engine.getCustomActionData({
+        handlerId: HANDLER_ID,
+        bytes: `0x${toHex(
+            RLP.encode(["Delegation", delegator.accountId.toEncodeObject()])
+        )}`,
+        blockNumber
+    });
     if (data == null) {
         return [];
     }
@@ -106,11 +110,11 @@ export async function getCandidates(
     rpc: RPC,
     blockNumber?: number
 ): Promise<Candidate[]> {
-    const data = await rpc.engine.getCustomActionData(
-        {handlerId: HANDLER_ID,
-            bytes : `0x${toHex(RLP.encode( ["Candidates"]))}`,
-        blockNumber}
-    );
+    const data = await rpc.engine.getCustomActionData({
+        handlerId: HANDLER_ID,
+        bytes: `0x${toHex(RLP.encode(["Candidates"]))}`,
+        blockNumber
+    });
     if (data == null) {
         return [];
     }
@@ -145,9 +149,9 @@ export async function getJailed(
 ): Promise<Prisoner[]> {
     const data = await rpc.engine.getCustomActionData({
         handlerId: HANDLER_ID,
-        bytes : `0x${toHex(RLP.encode( ["Jail"]))}`,
-        blockNumber}
-    );
+        bytes: `0x${toHex(RLP.encode(["Jail"]))}`,
+        blockNumber
+    });
     if (data == null) {
         return [];
     }
@@ -172,11 +176,11 @@ export async function getBanned(
     sdk: SDK,
     blockNumber?: number
 ): Promise<PlatformAddress[]> {
-    const data = await rpc.engine.getCustomActionData(
-        {handlerId:  HANDLER_ID,
-            bytes : `0x${toHex(RLP.encode( ["Banned"]))}`,
-        blockNumber}
-    );
+    const data = await rpc.engine.getCustomActionData({
+        handlerId: HANDLER_ID,
+        bytes: `0x${toHex(RLP.encode(["Banned"]))}`,
+        blockNumber
+    });
     if (data == null) {
         return [];
     }
@@ -204,11 +208,11 @@ export async function getIntermediateRewards(
     sdk: SDK,
     blockNumber?: number
 ): Promise<IntermediateRewards> {
-    const data = await rpc.engine.getCustomActionData(
-        { handlerId: HANDLER_ID,
-            bytes : `0x${toHex(RLP.encode(["IntermediateRewards"]))}`,
-        blockNumber }
-    );
+    const data = await rpc.engine.getCustomActionData({
+        handlerId: HANDLER_ID,
+        bytes: `0x${toHex(RLP.encode(["IntermediateRewards"]))}`,
+        blockNumber
+    });
     if (data == null) {
         return {
             previous: [],
@@ -254,11 +258,11 @@ export async function getValidators(
     sdk: SDK,
     blockNumber?: number
 ): Promise<Validator[]> {
-    const data = await rpc.engine.getCustomActionData(
-        {handlerId: HANDLER_ID,
-            bytes : `0x${toHex(RLP.encode(["Validators"]))}`,
-        blockNumber}
-    );
+    const data = await rpc.engine.getCustomActionData({
+        handlerId: HANDLER_ID,
+        bytes: `0x${toHex(RLP.encode(["Validators"]))}`,
+        blockNumber
+    });
     if (data == null) {
         return [];
     }

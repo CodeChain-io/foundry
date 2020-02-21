@@ -419,7 +419,8 @@ export class Core {
               }
             | {
                   recipientFrom: AssetAddressValue;
-              }) &
+              }
+        ) &
             (
                 | {
                       lockScriptHashFee: H160Value;
@@ -428,7 +429,8 @@ export class Core {
                 | {
                       recipientFee: AssetAddressValue;
                   }
-                | {})
+                | {}
+            )
     ): Order {
         const {
             assetTypeFrom,
@@ -886,7 +888,8 @@ export class Core {
             | {
                   lockScriptHash: H256Value;
                   parameters: Buffer[];
-              })
+              }
+        )
     ): AssetTransferOutput {
         const { assetType, shardId } = params;
         const quantity = U64.ensure(params.quantity);

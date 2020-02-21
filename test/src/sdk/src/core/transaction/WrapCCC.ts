@@ -62,9 +62,7 @@ export class WrapCCC extends Transaction implements AssetTransaction {
                     break;
                 default:
                     throw Error(
-                        `Unexpected type of AssetAddress: ${type}, ${
-                            data.recipient
-                        }`
+                        `Unexpected type of AssetAddress: ${type}, ${data.recipient}`
                     );
             }
         } else {
