@@ -37,18 +37,16 @@ impl<'a> Manager<'a> {
         }
     }
 
-    pub fn create(
-        &mut self,
-        id: IdentifierSlice,
-        _consensus_state: &ConsensusState,
-        // note that this header should be opposite chain's one.
-        header: &ctypes::Header,
-    ) -> Result<(), String> {
-        let kv_store = self.ctx.get_kv_store_mut();
+    pub fn create(&mut self, id: IdentifierSlice, _consensus_state: Bytes, header: Bytes) -> Result<(), String> {
+        // NOTE: create() takes counterparty chain's header and decode it by itself.
+        let header_dec: crate::ctypes::Header =
+            rlp::decode(&header).map_err(|_| "Failed to decode counterparty chain's header")?;
 
         let client = ClientState {
-            raw: ChainClientState::new(header),
+            raw: ChainClientState::new(&header_dec),
         };
+
+        let kv_store = self.ctx.get_kv_store_mut();
         if kv_store.has(&path_client_state(id)) {
             return Err("Client exists".to_owned())
         }
@@ -56,10 +54,11 @@ impl<'a> Manager<'a> {
         Ok(())
     }
 
-    pub fn update(&mut self, id: IdentifierSlice, header: &Header) -> Result<(), String> {
+    pub fn update(&mut self, id: IdentifierSlice, header: Bytes) -> Result<(), String> {
+        let header_dec: Header = rlp::decode(&header).map_err(|_| "Failed to decode IBC header")?;
         let client_state = self.query(id)?;
         let (new_client_state, new_consensus_state) =
-            super::client::check_validity_and_update_state(&client_state, header)?;
+            super::client::check_validity_and_update_state(&client_state, &header_dec)?;
 
         let kv_store = self.ctx.get_kv_store_mut();
         kv_store.set(&path_client_state(id), &new_client_state.rlp_bytes());
