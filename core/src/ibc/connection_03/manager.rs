@@ -15,11 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::path as connection_path;
-use super::types::Identifier;
 use crate::ibc;
 use crate::ibc::commitment_23::types::{get_commiment_prefix, CommitmentPrefix, CommitmentProof};
 use crate::ibc::connection_03::client_connections_path;
 use crate::ibc::connection_03::types::{ConnectionEnd, ConnectionIdentifiersInClient, ConnectionState};
+use crate::ibc::{Identifier, IdentifierSlice};
 use primitives::Bytes;
 use rlp::{Encodable, Rlp};
 
@@ -200,7 +200,7 @@ impl<'a> Manager<'a> {
         Ok(())
     }
 
-    fn query(&mut self, identifier: &str) -> Option<ConnectionEnd> {
+    fn query(&mut self, identifier: IdentifierSlice) -> Option<ConnectionEnd> {
         let kv_store = self.ctx.get_kv_store();
 
         let path = connection_path(&identifier);

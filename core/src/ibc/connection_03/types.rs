@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::ibc::commitment_23::types::CommitmentPrefix;
+use crate::ibc::Identifier;
 use rlp;
 use rlp::{DecoderError, Rlp, RlpStream};
 
@@ -43,8 +44,6 @@ impl rlp::Decodable for ConnectionState {
         }
     }
 }
-
-pub type Identifier = String;
 
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct ConnectionEnd {
