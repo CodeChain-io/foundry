@@ -221,6 +221,12 @@ impl<'a> Manager<'a> {
         Some(connection_end)
     }
 
+    fn query_client_connections(&self, identifier: &str) -> ConnectionIdentifiersInClient {
+        let kv_store = self.ctx.get_kv_store();
+        let path = client_connections_path(identifier);
+        kv_store.get(&path).map(|bytes| rlp::decode(&bytes).expect("data from DB")).unwrap_or_default()
+    }
+
     fn add_connection_to_client(
         &mut self,
         client_identifier: Identifier,
