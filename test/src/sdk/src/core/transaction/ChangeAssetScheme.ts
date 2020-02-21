@@ -61,7 +61,7 @@ export class ChangeAssetScheme extends Transaction {
         return "changeAssetScheme";
     }
 
-    protected actionToEncodeObject(): (any)[] {
+    protected actionToEncodeObject(): any[] {
         const encoded = this._transaction.toEncodeObject();
         encoded.push(this.approvals);
         return encoded;

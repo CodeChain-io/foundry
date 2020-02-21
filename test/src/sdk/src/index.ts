@@ -51,10 +51,7 @@ class SDK {
         keyStoreType?: KeyStoreType;
         networkId?: NetworkId;
     }) {
-        const {
-            keyStoreType = "local",
-            networkId = "tc",
-        } = params;
+        const { keyStoreType = "local", networkId = "tc" } = params;
 
         this.core = new Core({ networkId });
         this.key = new Key({
