@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use primitives::Bytes;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 #[repr(u8)]
@@ -53,12 +54,12 @@ pub enum Datagram {
     CreateClient {
         id: String,
         kind: u8,
-        consensus_state: Vec<u8>,
-        data: Vec<u8>,
+        consensus_state: Bytes,
+        data: Bytes,
     },
     UpdateClient {
         id: String,
-        header: Vec<u8>,
+        header: Bytes,
     },
     ConnOpenInit {
         identifier: String,
@@ -73,21 +74,21 @@ pub enum Datagram {
         counterparty_prefix: String,
         counterparty_client_identifier: String,
         client_identifier: String,
-        proof_init: Vec<u8>,
-        proof_consensus: Vec<u8>,
+        proof_init: Bytes,
+        proof_consensus: Bytes,
         proof_height: u64,
         consensus_height: u64,
     },
     ConnOpenAck {
         identifier: String,
-        proof_try: Vec<u8>,
-        proof_consensus: Vec<u8>,
+        proof_try: Bytes,
+        proof_consensus: Bytes,
         proof_height: u64,
         consensus_height: u64,
     },
     ConnOpenConfirm {
         identifier: String,
-        proof_ack: Vec<u8>,
+        proof_ack: Bytes,
         proof_height: u64,
     },
 }

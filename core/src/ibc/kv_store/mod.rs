@@ -15,13 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use merkle_trie::proof::{CryptoProof, CryptoProofUnit};
-use primitives::H256;
+use primitives::{Bytes, H256};
 
 pub type Path<'a> = &'a str;
 
 // An abstraction of state db that will be provided as a environment for the ICS handler.
 pub trait KVStore {
-    fn get(&self, path: Path) -> Vec<u8>;
+    fn get(&self, path: Path) -> Bytes;
     fn has(&self, path: Path) -> bool;
     fn set(&mut self, path: Path, value: &[u8]);
     fn delete(&mut self, path: Path);

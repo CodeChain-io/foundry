@@ -20,6 +20,7 @@ use crate::ibc;
 use crate::ibc::commitment_23::types::{get_commiment_prefix, CommitmentPrefix, CommitmentProof};
 use crate::ibc::connection_03::client_connections_path;
 use crate::ibc::connection_03::types::{ConnectionEnd, ConnectionIdentifiersInClient, ConnectionState};
+use primitives::Bytes;
 use rlp::{Encodable, Rlp};
 
 pub struct Manager<'a> {
@@ -67,8 +68,8 @@ impl<'a> Manager<'a> {
         counterparty_prefix: CommitmentPrefix,
         counterparty_client_identifier: Identifier,
         client_identifier: Identifier,
-        proof_init: Vec<u8>,
-        proof_consensus: Vec<u8>,
+        proof_init: Bytes,
+        proof_consensus: Bytes,
         proof_height: u64,
         consensus_height: u64,
     ) -> Result<(), String> {
@@ -123,8 +124,8 @@ impl<'a> Manager<'a> {
     pub fn handle_open_ack(
         &mut self,
         identifier: Identifier,
-        proof_try: Vec<u8>,
-        proof_consensus: Vec<u8>,
+        proof_try: Bytes,
+        proof_consensus: Bytes,
         proof_height: u64,
         consensus_height: u64,
     ) -> Result<(), String> {
@@ -169,7 +170,7 @@ impl<'a> Manager<'a> {
     pub fn handle_open_confirm(
         &mut self,
         identifier: Identifier,
-        proof_ack: Vec<u8>,
+        proof_ack: Bytes,
         proof_height: u64,
     ) -> Result<(), String> {
         let mut connection = self
@@ -216,7 +217,7 @@ impl<'a> Manager<'a> {
         &mut self,
         connection: &ConnectionEnd,
         proof_height: u64,
-        proof: Vec<u8>,
+        proof: Bytes,
         connection_identifier: Identifier,
         connection_end: &ConnectionEnd,
     ) -> bool {
