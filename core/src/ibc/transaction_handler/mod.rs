@@ -18,7 +18,7 @@ mod datagrams;
 
 use self::datagrams::Datagram;
 use crate::ibc;
-use crate::ibc::commitment_23::types::{CommitmentPrefix, CommitmentProof};
+use crate::ibc::commitment_23::types::CommitmentPrefix;
 use ckey::{Address, Public};
 use cstate::{StateResult, TopLevelState};
 use ctypes::errors::RuntimeError;
@@ -80,13 +80,6 @@ pub fn execute(
         } => {
             let mut connection_manager = ibc_connection::Manager::new(&mut context);
 
-            let proof_init_dec: CommitmentProof = rlp::Rlp::new(&proof_init)
-                .as_val()
-                .map_err(|err| RuntimeError::IBC(format!("ConnOpenTry failed to decode proof_init {}", err)))?;
-            let proof_consensus_dec: CommitmentProof = rlp::Rlp::new(&proof_consensus)
-                .as_val()
-                .map_err(|err| RuntimeError::IBC(format!("ConnOpenTry failed to decode consensus_init {}", err)))?;
-
             connection_manager
                 .handle_open_try(
                     desired_identifier,
@@ -96,8 +89,8 @@ pub fn execute(
                     },
                     counterparty_client_identifier,
                     client_identifier,
-                    proof_init_dec,
-                    proof_consensus_dec,
+                    proof_init,
+                    proof_consensus,
                     proof_height,
                     consensus_height,
                 )
