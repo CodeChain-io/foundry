@@ -20,6 +20,7 @@ use crate::consensus::light_client::ClientState as ChainClientState;
 use crate::ctypes;
 use crate::ibc;
 use crate::rlp::Encodable;
+use ibc::IdentifierSlice;
 
 pub struct Manager<'a> {
     ctx: &'a mut dyn ibc::Context,
@@ -34,7 +35,7 @@ impl<'a> Manager<'a> {
 
     pub fn create(
         &mut self,
-        id: &str,
+        id: IdentifierSlice,
         _consensus_state: &ConsensusState,
         // note that this header should be opposite chain's one.
         header: &ctypes::Header,
@@ -51,7 +52,7 @@ impl<'a> Manager<'a> {
         Ok(())
     }
 
-    pub fn update(&mut self, id: &str, header: &Header) -> Result<(), String> {
+    pub fn update(&mut self, id: IdentifierSlice, header: &Header) -> Result<(), String> {
         let client_state = self.query(id)?;
         let (new_client_state, new_consensus_state) =
             super::client::check_validity_and_update_state(&client_state, header)?;
@@ -63,7 +64,7 @@ impl<'a> Manager<'a> {
         Ok(())
     }
 
-    pub fn query(&self, id: &str) -> Result<ClientState, String> {
+    pub fn query(&self, id: IdentifierSlice) -> Result<ClientState, String> {
         let kv_store = self.ctx.get_kv_store();
         if !kv_store.has(&path_client_state(id)) {
             return Err("Client doesn't exist".to_owned())
@@ -72,7 +73,11 @@ impl<'a> Manager<'a> {
         Ok(rlp::decode(&data).expect("Illformed client state stored in DB"))
     }
 
-    pub fn query_consensus_state(&self, id: &str, num: ctypes::BlockNumber) -> Result<ConsensusState, String> {
+    pub fn query_consensus_state(
+        &self,
+        id: IdentifierSlice,
+        num: ctypes::BlockNumber,
+    ) -> Result<ConsensusState, String> {
         let kv_store = self.ctx.get_kv_store();
         if !kv_store.has(&path_consensus_state(id, num)) {
             return Err("Consensus state doesn't exist".to_owned())

@@ -29,3 +29,7 @@ pub use self::client_02 as client;
 pub use self::context::Context;
 pub use self::kv_store::KVStore;
 pub use transaction_handler::execute as execute_transaction;
+
+/// Widely used in IBC. In most case it will be part of a state DB path.
+pub type Identifier = String;
+pub type IdentifierSlice<'a> = &'a str;
