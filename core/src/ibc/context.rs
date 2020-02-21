@@ -17,7 +17,7 @@ use super::kv_store::{KVStore, Path};
 use ccrypto::blake256;
 use cstate::{TopLevelState, TopState, TopStateView};
 use merkle_trie::proof::{CryptoProof, CryptoProofUnit};
-use primitives::H256;
+use primitives::{Bytes, H256};
 use rlp::RlpStream;
 
 pub trait Context {
@@ -70,7 +70,7 @@ impl<'a> TopLevelKVStore<'a> {
 }
 
 impl<'a> KVStore for TopLevelKVStore<'a> {
-    fn get(&self, path: Path) -> Vec<u8> {
+    fn get(&self, path: Path) -> Bytes {
         let key = TopLevelKVStore::key(path);
         self.state.ibc_data(&key).expect("Get key").expect("Data empty").into()
     }
