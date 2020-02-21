@@ -18,6 +18,7 @@ pub mod client;
 mod commitment_23;
 mod manager;
 pub mod types;
+
 pub use self::manager::Manager;
 pub use self::types::{ConsensusState, Header, Kind, KIND_FOUNDRY};
 
