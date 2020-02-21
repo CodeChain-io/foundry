@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub mod client;
+mod commitment_23;
 mod manager;
 pub mod types;
 pub use self::manager::Manager;

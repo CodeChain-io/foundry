@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 mod manager;
-mod types;
+pub mod types;
 
 pub fn path(id: &str) -> String {
     format!("connections/{}", id)

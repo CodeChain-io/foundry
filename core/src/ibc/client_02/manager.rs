@@ -14,13 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use self::commitment_23::{verify_membership, CommitmentPathCounter, CommitmentProofCounter};
 use super::types::{ClientState, ConsensusState, Header};
 use super::*;
 use crate::consensus::light_client::ClientState as ChainClientState;
-use crate::ctypes;
+use crate::ctypes::BlockNumber;
 use crate::ibc;
+use crate::ibc::connection_03::types::ConnectionEnd;
+use crate::ibc::IdentifierSlice;
 use crate::rlp::Encodable;
-use ibc::IdentifierSlice;
+use primitives::Bytes;
+use rlp;
 
 pub struct Manager<'a> {
     ctx: &'a mut dyn ibc::Context,
@@ -84,5 +88,43 @@ impl<'a> Manager<'a> {
         }
         let data = kv_store.get(&path_consensus_state(id, num));
         Ok(rlp::decode(&data).expect("Illformed consensus state stored in DB"))
+    }
+
+    /* -------- Various verifiers -------- */
+    /// There are some difference from original ICS specification for these verifiers
+    /// 1. They don't take a prefix as an argument: each function should decide it by itself.
+    /// 2. They run on `Manager`, which has a state DB context.
+    /// 3. They don't take a ClientState: each function retrieves it by itself.
+    /// 4. They all take `id`, which indicates the counterparty chain.
+
+    pub fn verify_connection_state(
+        &self,
+        id: IdentifierSlice,
+        proof_height: BlockNumber,
+        proof: Bytes,
+        connection_identifier: IdentifierSlice,
+        connection_end: &ConnectionEnd,
+    ) -> Result<(), String> {
+        let path = format!("connections/{}", connection_identifier);
+        let client_state = self.query(&id)?;
+        if client_state.raw.number < proof_height {
+            return Err("Invalid proof height".to_owned())
+        }
+        let consensus_state = self.query_consensus_state(&id, proof_height)?;
+        let proof_dec: CommitmentProofCounter = rlp::decode(&proof).map_err(|_| "Illformed proof")?;
+        let value_dec = rlp::encode(connection_end);
+
+        if verify_membership(
+            &consensus_state.state_root,
+            &proof_dec,
+            CommitmentPathCounter {
+                raw: path,
+            },
+            value_dec,
+        ) {
+            Ok(())
+        } else {
+            Err("Invalid proof".to_owned())
+        }
     }
 }
