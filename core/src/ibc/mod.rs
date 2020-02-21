@@ -20,7 +20,7 @@ pub mod client_02;
 pub mod commitment_23;
 #[allow(dead_code)]
 #[allow(unused_variables)]
-mod connection_03;
+pub mod connection_03;
 pub mod context;
 mod kv_store;
 mod transaction_handler;

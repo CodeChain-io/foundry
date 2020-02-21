@@ -16,7 +16,7 @@
 
 use crate::ibc;
 use ibc::kv_store::KVStore;
-use merkle_trie::proof::{verify, CryptoProof, CryptoProofUnit};
+use merkle_trie::proof::CryptoProof;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -90,22 +90,4 @@ pub fn create_non_membership_proof(commitment_state: &CommitmentState, path: &Co
     CommitmentProof {
         raw: proof,
     }
-}
-
-pub fn verify_membership(root: &CommitmentRoot, proof: &CommitmentProof, path: CommitmentPath, value: Bytes) -> bool {
-    let unit = CryptoProofUnit {
-        root: root.raw,
-        key: path.raw.into_bytes(),
-        value: Some(value),
-    };
-    verify(&proof.raw, &unit)
-}
-
-pub fn verify_non_membership(root: &CommitmentRoot, proof: &CommitmentProof, path: CommitmentPath) -> bool {
-    let unit = CryptoProofUnit {
-        root: root.raw,
-        key: path.raw.into_bytes(),
-        value: None,
-    };
-    verify(&proof.raw, &unit)
 }
