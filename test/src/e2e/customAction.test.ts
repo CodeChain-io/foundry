@@ -78,29 +78,31 @@ describe("customAction", function() {
             ).readUInt8(0);
 
             const increment = 11;
-            const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
-                    .createCustomTransaction({
-                        handlerId: hitActionHandlerId,
-                        bytes: RLP.encode([increment])
-                    })
-                    .sign({
-                        secret: faucetSecret,
-                        seq: (await node.rpc.chain.getSeq({
-                            address: faucetAddress.toString(),
-                            blockNumber: null
-                        }))!,
-                        fee: 10
-                    })
-            );
-
+            const tx = node.testFramework.core
+                .createCustomTransaction({
+                    handlerId: hitActionHandlerId,
+                    bytes: RLP.encode([increment])
+                })
+                .sign({
+                    secret: faucetSecret,
+                    seq: (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!,
+                    fee: 10
+                });
+            const trans = tx.rlpBytes().toString("hex");
+            const hash = await node.rpc.mempool.sendSignedTransaction({
+                tx: `0x${trans}`
+            });
             expect(
                 await node.rpc.chain.containsTransaction({
-                    transactionHash: `0x${hash.toString()}`
+                    transactionHash: hash
                 })
             ).be.true;
-            expect(await node.testFramework.rpc.chain.getTransaction(hash)).not
-                .null;
+            expect(
+                await node.rpc.chain.getTransaction({ transactionHash: hash })
+            ).not.null;
 
             const hitData = (await node.rpc.engine.getCustomActionData({
                 handlerId: hitActionHandlerId,
@@ -161,24 +163,28 @@ describe("customAction", function() {
 
         it("should throw handler not found on sendCustomTransaction", async function() {
             try {
-                await node.testFramework.rpc.chain.sendSignedTransaction(
-                    node.testFramework.core
-                        .createCustomTransaction({
-                            handlerId: 99999,
-                            bytes: RLP.encode([11])
-                        })
-                        .sign({
-                            secret: faucetSecret,
-                            seq: (await node.rpc.chain.getSeq({
-                                address: faucetAddress.toString(),
-                                blockNumber: null
-                            }))!,
-                            fee: 10
-                        })
-                );
+                const tx = node.testFramework.core
+                    .createCustomTransaction({
+                        handlerId: 99999,
+                        bytes: RLP.encode([11])
+                    })
+                    .sign({
+                        secret: faucetSecret,
+                        seq: (await node.rpc.chain.getSeq({
+                            address: faucetAddress.toString(),
+                            blockNumber: null
+                        }))!,
+                        fee: 10
+                    });
+                const trans = tx.rlpBytes().toString("hex");
+                await node.rpc.mempool.sendSignedTransaction({
+                    tx: `0x${trans}`
+                });
                 fail();
             } catch (e) {
-                expect(e).similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
+                expect(e.toString()).include(
+                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
+                );
             }
         });
 
@@ -188,26 +194,19 @@ describe("customAction", function() {
                 blockNumber: null
             }))!;
             const blockNumber = await node.rpc.chain.getBestBlockNumber();
-
-            expect(
-                node.testFramework.rpc.chain.sendSignedTransaction(
-                    node.testFramework.core
-                        .createCustomTransaction({
-                            handlerId: hitActionHandlerId,
-                            bytes: RLP.encode([
-                                "wrong",
-                                "format",
-                                "of",
-                                "message"
-                            ])
-                        })
-                        .sign({
-                            secret: faucetSecret,
-                            seq: seq + 1,
-                            fee: 10
-                        })
-                )
-            ).be.rejected;
+            const tx = node.testFramework.core
+                .createCustomTransaction({
+                    handlerId: hitActionHandlerId,
+                    bytes: RLP.encode(["wrong", "format", "of", "message"])
+                })
+                .sign({
+                    secret: faucetSecret,
+                    seq: seq + 1,
+                    fee: 10
+                });
+            const trans = tx.rlpBytes().toString("hex");
+            expect(node.rpc.mempool.sendSignedTransaction({ tx: `0x${trans}` }))
+                .be.rejected;
         });
     });
 

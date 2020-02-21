@@ -51,7 +51,6 @@ describe("reward1", function() {
     it("mining reward of the empty block is the same with the block reward", async function() {
         await node.rpc.devel!.startSealing();
         const bestBlockNumber = await node.rpc.chain.getBestBlockNumber();
-        // FIXME: Add an API to SDK
         const miningReward = await node.rpc.chain.getMiningReward({
             blockNumber: bestBlockNumber
         });
@@ -84,7 +83,6 @@ describe("reward1", function() {
         });
         await node.rpc.devel!.startSealing();
         const bestBlockNumber = await node.rpc.chain.getBestBlockNumber();
-        // FIXME: Add an API to SDK
         const miningReward = await node.rpc.chain.getMiningReward({
             blockNumber: bestBlockNumber
         });

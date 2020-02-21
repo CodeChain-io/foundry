@@ -99,8 +99,8 @@ describe("Term change", function() {
         );
 
         {
-            const hash = await node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
+            const hash = await node.rpc.mempool.sendSignedTransaction({
+                tx: node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: RLP.encode(changeParams)
@@ -113,10 +113,12 @@ describe("Term change", function() {
                         }))!,
                         fee: 10
                     })
-            );
+                    .rlpBytes()
+                    .toString("hex")
+            });
             expect(
                 await node.rpc.chain.containsTransaction({
-                    transactionHash: `0x${hash.toString()}`
+                    transactionHash: `${hash.toString()}`
                 })
             ).be.true;
         }
@@ -131,17 +133,17 @@ describe("Term change", function() {
 
     async function waitForTermPeriodChange(termSeconds: number) {
         const lastBlockNumber = await node.rpc.chain.getBestBlockNumber();
-        const lastBlock = (await node.testFramework.rpc.chain.getBlock(
-            lastBlockNumber
-        ))!;
+        const lastBlock = (await node.rpc.chain.getBlockByNumber({
+            blockNumber: lastBlockNumber
+        }))!;
 
         let previousTs = lastBlock.timestamp;
         for (let count = 0; count < 20; count++) {
             await node.rpc.devel!.startSealing();
             const blockNumber = await node.rpc.chain.getBestBlockNumber();
-            const block = (await node.testFramework.rpc.chain.getBlock(
+            const block = (await node.rpc.chain.getBlockByNumber({
                 blockNumber
-            ))!;
+            }))!;
 
             const currentTs = block.timestamp;
             const previousTermPeriod = Math.floor(previousTs / termSeconds);

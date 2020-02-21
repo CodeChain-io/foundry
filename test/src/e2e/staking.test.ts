@@ -139,10 +139,10 @@ describe("Staking", function() {
                   }))!
                 : params.seq;
 
-        return promiseExpect.shouldFulfill(
+        const hashInString = await promiseExpect.shouldFulfill(
             "sendSignTransaction",
-            node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
+            node.rpc.mempool.sendSignedTransaction({
+                tx: node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: Buffer.from(
@@ -158,8 +158,11 @@ describe("Staking", function() {
                         seq,
                         fee
                     })
-            )
+                    .rlpBytes()
+                    .toString("hex")
+            })
         );
+        return new H256(hashInString);
     }
 
     async function delegateToken(params: {
@@ -178,10 +181,10 @@ describe("Staking", function() {
                   }))!
                 : params.seq;
 
-        return promiseExpect.shouldFulfill(
+        const hashInString = await promiseExpect.shouldFulfill(
             "sendSignTransaction",
-            node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
+            node.rpc.mempool.sendSignedTransaction({
+                tx: node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: Buffer.from(
@@ -197,8 +200,11 @@ describe("Staking", function() {
                         seq,
                         fee
                     })
-            )
+                    .rlpBytes()
+                    .toString("hex")
+            })
         );
+        return new H256(hashInString);
     }
 
     async function revokeToken(params: {
@@ -217,10 +223,10 @@ describe("Staking", function() {
                   }))!
                 : params.seq;
 
-        return promiseExpect.shouldFulfill(
+        const hashInString = await promiseExpect.shouldFulfill(
             "sendSignTransaction",
-            node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
+            node.rpc.mempool.sendSignedTransaction({
+                tx: node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: Buffer.from(
@@ -236,8 +242,11 @@ describe("Staking", function() {
                         seq,
                         fee
                     })
-            )
+                    .rlpBytes()
+                    .toString("hex")
+            })
         );
+        return new H256(hashInString);
     }
 
     async function selfNominate(params: {
@@ -256,10 +265,10 @@ describe("Staking", function() {
                   }))!
                 : params.seq;
 
-        return promiseExpect.shouldFulfill(
+        const hashInString = await promiseExpect.shouldFulfill(
             "sendSignTransaction",
-            node.testFramework.rpc.chain.sendSignedTransaction(
-                node.testFramework.core
+            node.rpc.mempool.sendSignedTransaction({
+                tx: node.testFramework.core
                     .createCustomTransaction({
                         handlerId: stakeActionHandlerId,
                         bytes: Buffer.from(RLP.encode([4, deposit, metadata]))
@@ -269,8 +278,11 @@ describe("Staking", function() {
                         seq,
                         fee
                     })
-            )
+                    .rlpBytes()
+                    .toString("hex")
+            })
         );
+        return new H256(hashInString);
     }
 
     it("should have proper initial stake tokens", async function() {
@@ -524,8 +536,11 @@ describe("Staking", function() {
         });
         await node.rpc.devel!.startSealing();
 
-        expect(await node.testFramework.rpc.chain.getErrorHint(hash)).not.to.be
-            .null;
+        expect(
+            await node.rpc.mempool.getErrorHint({
+                transactionHash: `0x${hash.toString()}`
+            })
+        ).not.to.be.null;
 
         const { amounts } = await getAllStakingInfo();
         expect(amounts).to.be.deep.equal([
