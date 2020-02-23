@@ -18,7 +18,6 @@ use crate::transaction::SignedTransaction;
 use ckey::Public;
 use ctypes::transaction::Action;
 use ctypes::{BlockNumber, TxHash};
-use rlp;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};

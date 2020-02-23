@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018, 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -21,9 +21,8 @@ use ckey::{NetworkId, Password, PlatformAddress, Private};
 use ckeystore::accounts_dir::RootDiskDirectory;
 use ckeystore::KeyStore;
 use clap::ArgMatches;
-use clogger::{self, LoggerConfig};
+use clogger::LoggerConfig;
 use primitives::remove_0x_prefix;
-use rpassword;
 use std::fs;
 use std::str::FromStr;
 

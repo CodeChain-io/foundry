@@ -15,20 +15,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub mod helpers {
-    use std::sync::Arc;
-
+    use crate::impls::TopLevelState;
+    use crate::{FindActionHandler, Metadata, MetadataAddress, StateDB};
     use cdb::AsHashDB;
     use ctypes::{BlockNumber, Tracker};
     use cvm::ChainTimeInfo;
     use kvdb::KeyValueDB;
-    use kvdb_memorydb;
     use merkle_trie::{TrieFactory, TrieMut};
     use primitives::H256;
     use rlp::Encodable;
-
-    use crate::impls::TopLevelState;
-    use crate::{FindActionHandler, Metadata, MetadataAddress, StateDB};
-
+    use std::sync::Arc;
     pub struct TestClient {}
 
     impl ChainTimeInfo for TestClient {

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::{Accounts, Engine, Genesis, Params, Shards};
-use serde_json;
 use serde_json::Error;
 use std::io::Read;
 
@@ -52,7 +51,6 @@ impl Scheme {
 #[cfg(test)]
 mod tests {
     use super::Scheme;
-    use serde_json;
 
     #[test]
     fn spec_deserialization() {

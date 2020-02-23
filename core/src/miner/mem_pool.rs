@@ -28,7 +28,6 @@ use ckey::{public_to_address, Public};
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use ctypes::{BlockNumber, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
-use rlp;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ops::Range;
 use std::sync::Arc;

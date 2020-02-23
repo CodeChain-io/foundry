@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -32,8 +32,6 @@ pub struct NullEngine {
 
 #[cfg(test)]
 mod tests {
-    use serde_json;
-
     use super::*;
 
     #[test]
