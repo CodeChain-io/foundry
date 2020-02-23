@@ -1,4 +1,5 @@
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of Parity.
 
 // Parity is free software: you can redistribute it and/or modify
@@ -400,8 +401,6 @@ struct VerifiedAccount {
 
 #[cfg(test)]
 mod tests {
-    extern crate tempdir;
-
     use ckey::{Generator, Random};
 
     use super::*;

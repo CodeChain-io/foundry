@@ -15,21 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #[macro_use]
-extern crate clap;
-#[macro_use]
 extern crate log;
 #[macro_use]
 extern crate serde_derive;
-extern crate codechain_core as ccore;
-extern crate codechain_discovery as cdiscovery;
-extern crate codechain_key as ckey;
-extern crate codechain_keystore as ckeystore;
 #[macro_use]
 extern crate codechain_logger as clogger;
-extern crate codechain_network as cnetwork;
-extern crate codechain_rpc as crpc;
-extern crate codechain_sync as csync;
-extern crate codechain_timer as ctimer;
 
 mod auto_self_nominate;
 mod config;
@@ -44,6 +34,7 @@ mod subcommand;
 use crate::run_node::run_node;
 use crate::subcommand::run_subcommand;
 use app_dirs::AppInfo;
+use clap::load_yaml;
 
 pub const APP_INFO: AppInfo = AppInfo {
     name: "foundry",

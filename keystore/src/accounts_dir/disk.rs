@@ -276,8 +276,6 @@ fn account_filename(account: &SafeAccount) -> String {
 
 #[cfg(test)]
 mod test {
-    extern crate tempdir;
-
     use super::*;
     use ckey::{Generator, Random};
     use std::env;
