@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018, 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,13 +19,13 @@ mod logger;
 mod macros;
 mod structured_logger;
 
-use log;
+pub use email::EmailAlarm;
+use lazy_static::lazy_static;
+pub use log::Level;
 use log::SetLoggerError;
-
 pub use logger::Config as LoggerConfig;
 use logger::Logger;
-
-pub use log::Level;
+use structured_logger::StructuredLogger;
 
 pub fn init(config: &LoggerConfig, email_alarm: Option<EmailAlarm>) -> Result<(), SetLoggerError> {
     let logger = Logger::new(config, email_alarm);
@@ -33,11 +33,6 @@ pub fn init(config: &LoggerConfig, email_alarm: Option<EmailAlarm>) -> Result<()
     log::set_boxed_logger(Box::new(logger))
 }
 
-use lazy_static::lazy_static;
-use structured_logger::StructuredLogger;
-
 lazy_static! {
     pub static ref SLOGGER: StructuredLogger = StructuredLogger::create();
 }
-
-pub use email::EmailAlarm;

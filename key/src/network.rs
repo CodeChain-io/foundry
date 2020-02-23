@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018, 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -95,8 +95,6 @@ impl<'a> Deserialize<'a> for NetworkId {
 
 #[cfg(test)]
 mod tests {
-    use serde_json;
-
     use super::*;
 
     #[test]

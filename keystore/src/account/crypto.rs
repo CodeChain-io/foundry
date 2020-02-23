@@ -1,4 +1,5 @@
 // Copyright 2015, 2016, 2017 Parity Technologies (UK) Ltd.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of Parity.
 
 // Parity is free software: you can redistribute it and/or modify
@@ -17,7 +18,6 @@
 use crate::account::{Aes128Ctr, Cipher, Kdf, Pbkdf2, Prf};
 use crate::random::Random;
 use crate::{json, Error};
-use ccrypto;
 use ckey::{public_to_address, Address, KeyPair, Password, Private, Secret};
 use smallvec::SmallVec;
 use std::num::NonZeroU32;

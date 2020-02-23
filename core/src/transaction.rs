@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,11 +16,11 @@
 
 use crate::error::Error;
 use ccrypto::blake256;
-use ckey::{self, public_to_address, recover, sign, Private, Public, Signature};
+use ckey::{public_to_address, recover, sign, Private, Public, Signature};
 use ctypes::errors::SyntaxError;
 use ctypes::transaction::Transaction;
 use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
-use rlp::{self, DecoderError, Encodable, Rlp, RlpStream};
+use rlp::{DecoderError, Encodable, Rlp, RlpStream};
 use std::ops::Deref;
 
 /// Signed transaction information without verified signature.

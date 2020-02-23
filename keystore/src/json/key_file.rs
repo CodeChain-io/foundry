@@ -1,4 +1,5 @@
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of Parity.
 
 // Parity is free software: you can redistribute it and/or modify
@@ -16,7 +17,6 @@
 
 use super::{Crypto, Uuid, Version, H160};
 use serde::{Serialize, Serializer};
-use serde_json;
 use std::io::{Read, Write};
 
 /// Public opaque type representing serializable `KeyFile`.
@@ -69,11 +69,8 @@ impl KeyFile {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use serde_json;
-
     use crate::json::{Aes128Ctr, Cipher, Crypto, Kdf, KeyFile, Scrypt, Uuid, Version};
+    use std::str::FromStr;
 
     #[test]
     fn basic_keyfile() {

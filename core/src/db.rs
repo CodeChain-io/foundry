@@ -16,7 +16,6 @@
 
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::RwLock;
-use rlp;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::ops::Deref;

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,6 @@ use ckey::{verify_schnorr, Error as KeyError, Public, SchnorrSignature};
 use ctypes::BlockHash;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
-use snap;
 use std::cmp;
 
 /// Complete step of the consensus process.
@@ -380,10 +379,9 @@ impl ConsensusMessage {
 
 #[cfg(test)]
 mod tests {
-    use rlp::{self, rlp_encode_and_decode_test};
-
     use super::super::Step;
     use super::*;
+    use rlp::rlp_encode_and_decode_test;
 
     #[test]
     fn step_ordering() {

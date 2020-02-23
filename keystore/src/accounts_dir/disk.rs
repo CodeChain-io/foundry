@@ -1,4 +1,5 @@
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of Parity.
 
 // Parity is free software: you can redistribute it and/or modify
@@ -22,7 +23,6 @@ use std::ffi::OsStr;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::{fs, io};
-use time;
 
 const IGNORED_FILES: &[&str] = &["thumbs.db"];
 
@@ -278,12 +278,10 @@ fn account_filename(account: &SafeAccount) -> String {
 mod test {
     extern crate tempdir;
 
-    use std::{env, fs};
-
-    use ckey::{Generator, Random};
-
-    use self::tempdir::TempDir;
     use super::*;
+    use ckey::{Generator, Random};
+    use std::env;
+    use tempdir::TempDir;
 
     #[test]
     fn create_new_account() {

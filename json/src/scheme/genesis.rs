@@ -46,17 +46,13 @@ pub struct Genesis {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use ckey::PlatformAddress;
-
-    use primitives::{H256 as Core256, H520 as Core520};
-    use serde_json;
-
     use super::super::{Seal, TendermintSeal};
     use super::Genesis;
     use crate::bytes::Bytes;
     use crate::hash::{H256, H520};
+    use ckey::PlatformAddress;
+    use primitives::{H256 as Core256, H520 as Core520};
+    use std::str::FromStr;
 
     #[test]
     fn genesis_deserialization() {
