@@ -6,7 +6,6 @@ edition = "2018"
 
 [dependencies]
 codechain-crypto = { git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
-codechain-key = { path = "../key" }
 codechain-logger = { path = "../util/logger" }
 codechain-network = { path = "../network" }
 codechain-timer = { path = "../util/timer" }
