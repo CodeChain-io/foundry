@@ -19,13 +19,11 @@ mod chain_type;
 use ccore::{MemPoolMinFees, MinerOptions, TimeGapParams};
 use cidr::IpCidr;
 use ckey::PlatformAddress;
-use clap;
 use cnetwork::{FilterEntry, NetworkConfig, SocketAddr};
 use primitives::H256;
 use std::fs;
 use std::str::{self, FromStr};
 use std::time::Duration;
-use toml;
 
 pub use self::chain_type::ChainType;
 use crate::rpc::{RpcHttpConfig, RpcIpcConfig, RpcWsConfig};

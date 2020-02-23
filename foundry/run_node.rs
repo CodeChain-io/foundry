@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -31,7 +31,7 @@ use ckey::{Address, NetworkId, PlatformAddress};
 use ckeystore::accounts_dir::RootDiskDirectory;
 use ckeystore::KeyStore;
 use clap::ArgMatches;
-use clogger::{self, EmailAlarm, LoggerConfig};
+use clogger::{EmailAlarm, LoggerConfig};
 use cnetwork::{Filters, ManagingPeerdb, NetworkConfig, NetworkControl, NetworkService, RoutingTable, SocketAddr};
 use csync::snapshot::Service as SnapshotService;
 use csync::{BlockSyncExtension, BlockSyncSender, TransactionSyncExtension};

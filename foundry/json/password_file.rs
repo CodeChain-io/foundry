@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::password_entry::PasswordEntry;
-use serde_json;
 use std::io::Read;
 
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -35,8 +34,6 @@ impl PasswordFile {
 
 #[cfg(test)]
 mod tests {
-    use serde_json;
-
     use super::super::password_entry::PasswordEntry;
     use super::PasswordFile;
 

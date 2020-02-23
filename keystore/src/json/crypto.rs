@@ -1,4 +1,5 @@
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of Parity.
 
 // Parity is free software: you can redistribute it and/or modify
@@ -19,7 +20,6 @@ use cjson::bytes::Bytes;
 use serde::de::{Error, MapAccess, Visitor};
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde_json;
 use std::{fmt, str};
 
 pub type CipherText = Bytes;

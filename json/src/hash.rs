@@ -1,4 +1,5 @@
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of Parity.
 
 // Parity is free software: you can redistribute it and/or modify
@@ -99,9 +100,6 @@ impl_hash!(H520, Hash520);
 
 #[cfg(test)]
 mod test {
-    use primitives;
-    use serde_json;
-
     use super::H256;
 
     #[test]
