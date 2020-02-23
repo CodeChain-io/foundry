@@ -5,18 +5,18 @@ authors = ["CodeChain Team <hi@codechain.io>"]
 edition = "2018"
 
 [dependencies]
-codechain-crypto = { git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
-codechain-db = { git = "https://github.com/CodeChain-io/rust-codechain-db.git", version = "0.2" }
-codechain-io = { path = "../util/io" }
-codechain-json = { path = "../json" }
-codechain-key = { path = "../key" }
-codechain-keystore = { path="../keystore" }
+ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
+cdb = { package = "codechain-db", git = "https://github.com/CodeChain-io/rust-codechain-db.git", version = "0.2" }
+cio = { package = "codechain-io", path = "../util/io" }
+cjson = { package = "codechain-json", path = "../json" }
+ckey = { package = "codechain-key", path = "../key" }
+ckeystore = { package = "codechain-keystore", path="../keystore" }
 codechain-logger = { path = "../util/logger" }
-codechain-network = { path = "../network" }
-codechain-state = { path = "../state" }
-codechain-timer = { path = "../util/timer" }
-codechain-types = { path = "../types" }
-codechain-vm = { path = "../vm" }
+cnetwork = { package = "codechain-network", path = "../network" }
+cstate = { package = "codechain-state", path = "../state" }
+ctimer = { package = "codechain-timer", path = "../util/timer" }
+ctypes = { package = "codechain-types", path = "../types" }
+cvm = { package = "codechain-vm", path = "../vm" }
 crossbeam-channel = "0.3"
 hyper = { git = "https://github.com/paritytech/hyper", default-features = false }
 kvdb = "0.1"

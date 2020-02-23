@@ -24,9 +24,6 @@ extern crate codechain_state as cstate;
 extern crate codechain_sync as csync;
 extern crate codechain_types as ctypes;
 #[macro_use]
-extern crate lazy_static;
-extern crate log;
-#[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate jsonrpc_derive;

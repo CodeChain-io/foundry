@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,11 +18,8 @@
 
 #[macro_use]
 extern crate log;
-extern crate codechain_crypto as ccrypto;
 #[macro_use]
 extern crate codechain_logger as clogger;
-extern crate codechain_network as cnetwork;
-extern crate codechain_timer as ctimer;
 
 mod config;
 mod extension;

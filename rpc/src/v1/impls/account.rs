@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -21,6 +21,7 @@ use ccore::{AccountData, AccountProvider, EngineInfo, MinerService, MiningBlockC
 use ckey::{Password, PlatformAddress, Signature};
 use ctypes::transaction::IncompleteTransaction;
 use jsonrpc_core::Result;
+use lazy_static::lazy_static;
 use parking_lot::Mutex;
 use primitives::H256;
 use std::convert::TryInto;

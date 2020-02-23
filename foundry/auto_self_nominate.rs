@@ -25,7 +25,7 @@ use ckey::PlatformAddress;
 use ckey::{Address, Public, Signature};
 use ckeystore::DecryptedAccount;
 use clap::ArgMatches;
-use codechain_types::transaction::{Action, Transaction};
+use ctypes::transaction::{Action, Transaction};
 use primitives::{Bytes, H256};
 use std::sync::Arc;
 use std::thread;
