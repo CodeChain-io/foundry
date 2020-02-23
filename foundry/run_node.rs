@@ -86,7 +86,7 @@ fn discovery_start(
         bucket_size: cfg.discovery_bucket_size.unwrap(),
         t_refresh: cfg.discovery_refresh.unwrap(),
     };
-    let use_kademlia = match cfg.discovery_type.as_ref().map(String::as_str) {
+    let use_kademlia = match cfg.discovery_type.as_deref() {
         Some("unstructured") => false,
         Some("kademlia") => true,
         Some(discovery_type) => return Err(format!("Unknown discovery {}", discovery_type)),

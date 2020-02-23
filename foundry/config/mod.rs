@@ -56,20 +56,19 @@ impl Config {
     }
 
     pub fn miner_options(&self) -> Result<MinerOptions, String> {
-        let (reseal_on_own_transaction, reseal_on_external_transaction) =
-            match self.mining.reseal_on_txs.as_ref().map(String::as_str) {
-                Some("all") => (true, true),
-                Some("own") => (true, false),
-                Some("ext") => (false, true),
-                Some("none") => (false, false),
-                Some(x) => {
-                    return Err(format!(
-                        "{} isn't a valid value for reseal-on-txs. Possible values are all, own, ext, none",
-                        x
-                    ))
-                }
-                None => unreachable!(),
-            };
+        let (reseal_on_own_transaction, reseal_on_external_transaction) = match self.mining.reseal_on_txs.as_deref() {
+            Some("all") => (true, true),
+            Some("own") => (true, false),
+            Some("ext") => (false, true),
+            Some("none") => (false, false),
+            Some(x) => {
+                return Err(format!(
+                    "{} isn't a valid value for reseal-on-txs. Possible values are all, own, ext, none",
+                    x
+                ))
+            }
+            None => unreachable!(),
+        };
 
         let mem_pool_min_fees = MemPoolMinFees::create_from_options(
             self.mining.min_pay_transaction_cost,

@@ -1,4 +1,5 @@
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of Parity.
 
 // Parity is free software: you can redistribute it and/or modify
@@ -101,7 +102,7 @@ impl Worker {
                 if deleting.load(AtomicOrdering::Acquire) {
                     return
                 }
-                let _ = wait.wait(lock);
+                drop(wait.wait(lock));
             }
 
             while !deleting.load(AtomicOrdering::Acquire) {
@@ -149,9 +150,11 @@ impl Worker {
 impl Drop for Worker {
     fn drop(&mut self) {
         ctrace!(SHUTDOWN, "[IoWorker] Closing...");
-        let _ = self.wait_mutex.lock().expect("Poisoned work_loop mutex");
-        self.deleting.store(true, AtomicOrdering::Release);
-        self.wait.notify_all();
+        {
+            let _lock = self.wait_mutex.lock().expect("Poisoned work_loop mutex");
+            self.deleting.store(true, AtomicOrdering::Release);
+            self.wait.notify_all();
+        }
         if let Some(thread) = self.thread.take() {
             thread.join().ok();
         }
