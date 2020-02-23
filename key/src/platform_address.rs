@@ -16,6 +16,7 @@
 
 use crate::{Address, Error, NetworkId};
 use bech32::Bech32;
+use lazy_static::lazy_static;
 use parking_lot::Mutex;
 use primitives::H160;
 use serde::de::{Error as SerdeError, Visitor};
