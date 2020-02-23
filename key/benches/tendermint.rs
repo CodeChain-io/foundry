@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,6 @@
 
 extern crate codechain_crypto as ccrypto;
 extern crate codechain_key as ckey;
-extern crate primitives;
 extern crate test;
 
 use ckey::{sign_schnorr, verify_schnorr, Generator, Message, Random};

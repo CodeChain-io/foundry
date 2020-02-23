@@ -17,17 +17,17 @@ edition = "2018"
 [dependencies]
 app_dirs = "^1.2.1"
 clap = { version = "2", features = ["yaml"] }
-codechain-core = { path = "core" }
-codechain-discovery = { path = "discovery" }
-codechain-logger = { path = "util/logger" }
-codechain-key = { path = "key" }
-codechain-keystore = { path = "keystore" }
-codechain-network = { path = "network" }
-codechain-rpc = { path = "rpc" }
-codechain-sync = { path = "sync" }
-codechain-timer = { path = "util/timer" }
-codechain-types = { path = "types" }
 codechain-vm = { path = "vm" }
+ccore = { package = "codechain-core", path = "core" }
+cdiscovery = { package = "codechain-discovery", path = "discovery" }
+codechain-logger = { path = "util/logger" }
+ckey = { package = "codechain-key", path = "key" }
+ctypes = { package = "codechain-types", path = "types" }
+ckeystore = { package = "codechain-keystore", path = "keystore" }
+cnetwork = { package = "codechain-network", path = "network" }
+crpc = { package = "codechain-rpc", path = "rpc" }
+csync = { package = "codechain-sync", path = "sync" }
+ctimer = { package = "codechain-timer", path = "util/timer" }
 ctrlc = { git = "https://github.com/paritytech/rust-ctrlc.git" }
 fdlimit = "0.1"
 finally-block = "0.1"
