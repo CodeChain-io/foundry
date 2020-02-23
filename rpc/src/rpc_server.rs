@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018, 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // TODO: panic handler
-use jsonrpc_core;
-use jsonrpc_http_server::{self, Host, Server as HttpServer, ServerBuilder as HttpServerBuilder};
+use jsonrpc_http_server::{Host, Server as HttpServer, ServerBuilder as HttpServerBuilder};
 use jsonrpc_ipc_server::{Server as IpcServer, ServerBuilder as IpcServerBuilder};
 use jsonrpc_ws_server::{Error as WsError, Server as WsServer, ServerBuilder as WsServerBuilder};
 use std::default::Default;

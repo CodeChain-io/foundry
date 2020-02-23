@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -56,12 +56,9 @@ pub struct Tendermint {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use ckey::Public;
-    use serde_json;
-
     use super::Tendermint;
+    use ckey::Public;
+    use std::str::FromStr;
 
     #[test]
     fn tendermint_deserialization() {

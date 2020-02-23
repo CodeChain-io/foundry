@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -41,12 +41,10 @@ pub enum Seal {
 
 #[cfg(test)]
 mod tests {
-    use primitives::H520 as Core520;
-    use serde_json;
-
     use super::{Seal, TendermintSeal};
     use crate::bytes::Bytes;
     use crate::hash::H520;
+    use primitives::H520 as Core520;
 
     #[test]
     fn seal_deserialization() {

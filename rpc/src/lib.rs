@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -31,22 +31,15 @@ extern crate serde_derive;
 #[macro_use]
 extern crate jsonrpc_derive;
 
-use cidr;
-pub use jsonrpc_core;
-use jsonrpc_http_server;
-
 pub mod rpc_server;
 pub mod v1;
 
-pub use rustc_serialize::hex;
-
+pub use jsonrpc_core;
 pub use jsonrpc_core::{Compatibility, Error, MetaIoHandler, Middleware, Params, Value};
-
 pub use jsonrpc_http_server::Server as HttpServer;
-pub use rpc_server::start_http;
-
 pub use jsonrpc_ipc_server::Server as IpcServer;
-pub use rpc_server::start_ipc;
-
 pub use jsonrpc_ws_server::{Error as WsError, Server as WsServer};
+pub use rpc_server::start_http;
+pub use rpc_server::start_ipc;
 pub use rpc_server::start_ws;
+pub use rustc_serialize::hex;

@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018, 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,13 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{email::EmailAlarm, structured_logger, SLOGGER};
-use atty;
 use colored::Colorize;
 use env_logger::filter::{Builder as FilterBuilder, Filter};
 use log::{Level, LevelFilter, Log, Metadata, Record};
 use std::env;
 use std::thread;
-use time;
 
 pub struct Config {
     pub instance_id: usize,

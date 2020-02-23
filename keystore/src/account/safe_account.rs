@@ -1,4 +1,5 @@
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of Parity.
 
 // Parity is free software: you can redistribute it and/or modify
@@ -17,7 +18,6 @@
 use super::crypto::Crypto;
 use crate::account::Version;
 use crate::{json, DecryptedAccount, Error};
-use ccrypto;
 use ckey::{Address, KeyPair, Password};
 
 /// Account representation.

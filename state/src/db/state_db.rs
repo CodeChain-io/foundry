@@ -35,7 +35,6 @@ use crate::impls::TopLevelState;
 use cdb::{new_journaldb, Algorithm, AsHashDB, DatabaseError, HashDB, JournalDB};
 use ctypes::ShardId;
 use kvdb::DBTransaction;
-use kvdb_memorydb;
 use primitives::H256;
 use std::collections::HashMap;
 use std::sync::Arc;

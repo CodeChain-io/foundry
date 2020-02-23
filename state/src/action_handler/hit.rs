@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,7 @@ use ckey::{Address, Public};
 use ctypes::errors::SyntaxError;
 use ctypes::{CommonParams, Header};
 use primitives::H256;
-use rlp::{self, Decodable, Encodable, Rlp};
+use rlp::{Decodable, Encodable, Rlp};
 
 const CUSTOM_ACTION_HANDLER_ID: u64 = 1;
 

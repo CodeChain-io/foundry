@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@ use crate::transaction::SignedTransaction;
 use cstate::StateDB;
 use ctypes::{BlockHash, Header};
 use primitives::Bytes;
-use rlp::{self, RlpStream};
+use rlp::RlpStream;
 
 pub fn create_test_block(header: &Header) -> Bytes {
     let mut rlp = RlpStream::new_list(2);
