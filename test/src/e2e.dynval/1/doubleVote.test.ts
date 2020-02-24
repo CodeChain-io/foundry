@@ -16,7 +16,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import * as stake from "../../stakeholder/src";
+import * as stake from "../../stakeholder";
 
 import { validators } from "../../../tendermint.dynval/constants";
 import { Mock } from "../../helper/mock";

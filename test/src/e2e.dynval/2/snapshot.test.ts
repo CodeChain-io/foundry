@@ -21,7 +21,7 @@ import RPC from "foundry-rpc";
 import * as fs from "fs";
 import "mocha";
 import * as path from "path";
-import * as stake from "../../stakeholder/src";
+import * as stake from "../../stakeholder";
 
 import mkdirp = require("mkdirp");
 import { validators } from "../../../tendermint.dynval/constants";

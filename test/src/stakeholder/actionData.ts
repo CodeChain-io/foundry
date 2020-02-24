@@ -3,8 +3,8 @@
 // We should use the SDK's PlatformAddressValue when the SDK is updated.
 import { PlatformAddressValue } from "codechain-primitives";
 import RPC from "foundry-rpc";
-import { SDK } from "../../sdk/src";
-import { H512, PlatformAddress, U64 } from "../../sdk/src/core/classes";
+import { SDK } from "../sdk/src";
+import { H512, PlatformAddress, U64 } from "../sdk/src/core/classes";
 
 import { toHex } from "codechain-primitives/lib";
 import { HANDLER_ID } from "./index";

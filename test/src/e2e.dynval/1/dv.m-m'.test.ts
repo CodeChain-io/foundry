@@ -20,7 +20,7 @@ import * as chaiAsPromised from "chai-as-promised";
 import RPC from "foundry-rpc";
 import "mocha";
 chai.use(chaiAsPromised);
-import * as stake from "../../stakeholder/src";
+import * as stake from "../../stakeholder";
 
 import { H256 } from "codechain-primitives/lib";
 import { validators } from "../../../tendermint.dynval/constants";

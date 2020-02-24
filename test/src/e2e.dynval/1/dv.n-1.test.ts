@@ -17,7 +17,7 @@
 import { expect } from "chai";
 import RPC from "foundry-rpc";
 import "mocha";
-import * as stake from "../../stakeholder/src";
+import * as stake from "../../stakeholder";
 
 import { H256 } from "codechain-primitives/lib";
 import { validators as originalValidators } from "../../../tendermint.dynval/constants";

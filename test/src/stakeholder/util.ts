@@ -1,5 +1,5 @@
-import { SDK } from "../../sdk/src";
-import { H256, H512, PlatformAddress, U64 } from "../../sdk/src/core/classes";
+import { SDK } from "../sdk/src";
+import { H256, H512, PlatformAddress, U64 } from "../sdk/src/core/classes";
 
 export function isArrayOf<T>(
     list: any,

@@ -17,7 +17,7 @@
 import { expect } from "chai";
 import { H512 } from "codechain-primitives/lib";
 import "mocha";
-import * as stake from "../../stakeholder/src";
+import * as stake from "../../stakeholder";
 
 import { validators } from "../../../tendermint.dynval/constants";
 import { PromiseExpect } from "../../helper/promise";

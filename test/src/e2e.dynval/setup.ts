@@ -30,7 +30,7 @@ import {
 import { PromiseExpect, wait } from "../helper/promise";
 import CodeChain, { Signer } from "../helper/spawn";
 import { SDK } from "../sdk/src";
-import * as stake from "../stakeholder/src";
+import * as stake from "../stakeholder";
 
 const RLP = require("rlp");
 
