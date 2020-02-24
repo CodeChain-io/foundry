@@ -137,7 +137,6 @@ impl Header {
         &self.next_validator_set_hash
     }
 
-
     /// Get whether the block has transactions.
     pub fn is_empty(&self) -> bool {
         self.transactions_root() == &BLAKE_NULL_RLP
@@ -157,7 +156,6 @@ impl Header {
             0
         }
     }
-
 
     /// Set the number field of the header.
     pub fn set_parent_hash(&mut self, a: BlockHash) {
