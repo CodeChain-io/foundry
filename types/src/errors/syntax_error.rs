@@ -77,7 +77,6 @@ impl Decodable for ErrorID {
     }
 }
 
-
 struct RlpHelper;
 impl TaggedRlp for RlpHelper {
     type Tag = ErrorID;
