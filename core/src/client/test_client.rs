@@ -536,6 +536,10 @@ impl BlockChainClient for TestBlockChainClient {
         self.miner.count_pending_transactions(range)
     }
 
+    fn future_included_count_pending_transactions(&self, range: Range<u64>) -> usize {
+        self.miner.future_included_count_pending_transactions(range)
+    }
+
     fn is_pending_queue_empty(&self) -> bool {
         self.miner.status().transactions_in_pending_queue == 0
     }
