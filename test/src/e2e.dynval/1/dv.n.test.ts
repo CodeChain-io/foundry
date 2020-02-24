@@ -17,7 +17,7 @@
 import { expect } from "chai";
 import RPC from "foundry-rpc";
 import "mocha";
-import * as stake from "../../stakeholder/src";
+import * as stake from "../../stakeholder";
 
 import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";

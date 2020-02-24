@@ -1,4 +1,4 @@
-import { H256, H512, U64 } from "../../sdk/src/core/classes";
+import { H256, H512, U64 } from "../sdk/src/core/classes";
 
 import { decodeH256, decodeH512, decodeU64, decodeUInt } from "./util";
 

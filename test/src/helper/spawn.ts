@@ -37,7 +37,7 @@ import {
 import { AssetTransaction } from "../sdk/src/core/Transaction";
 import { P2PKH } from "../sdk/src/key/P2PKH";
 import { P2PKHBurn } from "../sdk/src/key/P2PKHBurn";
-import * as stake from "../stakeholder/src";
+import * as stake from "../stakeholder";
 import { faucetAddress, faucetSecret } from "./constants";
 import { wait } from "./promise";
 
