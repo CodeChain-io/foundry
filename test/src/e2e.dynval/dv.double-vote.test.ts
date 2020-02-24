@@ -26,8 +26,8 @@ import {
 import RPC from "foundry-rpc";
 import "mocha";
 import * as RLP from "rlp";
-import { SDK } from "../sdk/src";
-import { Custom } from "../sdk/src/core/transaction/Custom";
+import { SDK } from "../sdk";
+import { Custom } from "../sdk/core/transaction/Custom";
 import * as stake from "../stakeholder";
 
 import { validators as originalValidators } from "../../tendermint.dynval/constants";

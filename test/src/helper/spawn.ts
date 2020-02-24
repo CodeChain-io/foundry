@@ -21,7 +21,7 @@ import { createWriteStream, mkdtempSync, unlinkSync } from "fs";
 import * as mkdirp from "mkdirp";
 import { ncp } from "ncp";
 import { createInterface as createReadline, ReadLine } from "readline";
-import { SDK } from "../sdk/src";
+import { SDK } from "../sdk";
 import {
     Asset,
     AssetAddress,
@@ -33,10 +33,10 @@ import {
     TransferAsset,
     U64,
     UnwrapCCC
-} from "../sdk/src/core/classes";
-import { AssetTransaction } from "../sdk/src/core/Transaction";
-import { P2PKH } from "../sdk/src/key/P2PKH";
-import { P2PKHBurn } from "../sdk/src/key/P2PKHBurn";
+} from "../sdk/core/classes";
+import { AssetTransaction } from "../sdk/core/Transaction";
+import { P2PKH } from "../sdk/key/P2PKH";
+import { P2PKHBurn } from "../sdk/key/P2PKHBurn";
 import * as stake from "../stakeholder";
 import { faucetAddress, faucetSecret } from "./constants";
 import { wait } from "./promise";

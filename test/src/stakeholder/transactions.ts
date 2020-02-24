@@ -3,9 +3,9 @@
 // We should use the SDK's PlatformAddressValue when the SDK is updated.
 import { PlatformAddressValue, U64Value } from "codechain-primitives/lib";
 import * as RLP from "rlp";
-import { SDK } from "../sdk/src";
-import { PlatformAddress, U64 } from "../sdk/src/core/classes";
-import { Custom } from "../sdk/src/core/transaction/Custom";
+import { SDK } from "../sdk";
+import { PlatformAddress, U64 } from "../sdk/core/classes";
+import { Custom } from "../sdk/core/transaction/Custom";
 
 import ReportDoubleVote from "./actions/reportDoubleVote";
 import { HANDLER_ID } from "./index";

@@ -17,7 +17,7 @@
 import { expect } from "chai";
 import "mocha";
 import CodeChain from "../helper/spawn";
-import { H256 } from "../sdk/src/core/classes";
+import { H256 } from "../sdk/core/classes";
 
 describe("sync 5 nodes", function() {
     const NUM_NODES = 5;

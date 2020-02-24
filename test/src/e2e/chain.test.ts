@@ -25,8 +25,8 @@ import {
     invalidAddress
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
-import { PlatformAddress } from "../sdk/src/core/classes";
-import { H160, H256, H512, U64 } from "../sdk/src/core/classes";
+import { PlatformAddress } from "../sdk/core/classes";
+import { H160, H256, H512, U64 } from "../sdk/core/classes";
 const RLP = require("rlp");
 
 describe("chain", function() {

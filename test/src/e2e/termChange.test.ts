@@ -26,7 +26,7 @@ import {
     validator0Address
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
-import { blake256 } from "../sdk/src/utils";
+import { blake256 } from "../sdk/utils";
 
 const RLP = require("rlp");
 
