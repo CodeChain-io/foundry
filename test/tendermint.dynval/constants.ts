@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { SDK } from "../../test/src/sdk/src";
+import { SDK } from "../src/sdk";
 import { Signer } from "../src/helper/spawn";
 
 const privateKeys = [

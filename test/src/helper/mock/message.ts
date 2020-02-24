@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import { H256, H512, U128 } from "codechain-primitives";
-import { blake256WithKey } from "../../sdk/src/utils";
+import { blake256WithKey } from "../../sdk/utils";
 
 const RLP = require("rlp");
 

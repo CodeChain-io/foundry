@@ -29,7 +29,7 @@ import {
 } from "../helper/constants";
 import { PromiseExpect, wait } from "../helper/promise";
 import CodeChain, { Signer } from "../helper/spawn";
-import { SDK } from "../sdk/src";
+import { SDK } from "../sdk";
 import * as stake from "../stakeholder";
 
 const RLP = require("rlp");

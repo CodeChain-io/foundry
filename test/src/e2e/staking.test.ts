@@ -32,7 +32,7 @@ import {
 } from "../helper/constants";
 import { PromiseExpect } from "../helper/promise";
 import CodeChain from "../helper/spawn";
-import { toHex } from "../sdk/src/utils";
+import { toHex } from "../sdk/utils";
 
 const RLP = require("rlp");
 

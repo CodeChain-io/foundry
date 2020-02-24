@@ -18,7 +18,7 @@ import { expect } from "chai";
 import "mocha";
 import { wait } from "../helper/promise";
 import CodeChain from "../helper/spawn";
-import { SignedTransaction } from "../sdk/src/core/classes";
+import { SignedTransaction } from "../sdk/core/classes";
 
 describe("Memory pool size test", function() {
     let nodeA: CodeChain;

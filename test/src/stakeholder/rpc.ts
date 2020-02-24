@@ -1,6 +1,6 @@
 import RPC from "foundry-rpc";
-import { SDK } from "../sdk/src";
-import { PlatformAddress } from "../sdk/src/core/classes";
+import { SDK } from "../sdk";
+import { PlatformAddress } from "../sdk/core/classes";
 
 export interface TermMetadata {
     lastTermFinishedBlockNumber: number;
