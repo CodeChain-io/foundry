@@ -18,6 +18,7 @@ import { expect } from "chai";
 import "mocha";
 import { faucetAddress } from "../helper/constants";
 import CodeChain from "../helper/spawn";
+import { Transaction } from "foundry-rpc";
 
 describe("Sealing test", function() {
     let node: CodeChain;
@@ -85,6 +86,36 @@ describe("Future queue", function() {
                 blockNumber: null
             }))!
         ).to.equal(seq + 4);
+    });
+
+    afterEach(async function() {
+        if (this.currentTest!.state === "failed") {
+            node.keepLogs();
+        }
+        await node.clean();
+    });
+});
+
+describe("Get Pending Transaction", function() {
+    let node: CodeChain;
+
+    beforeEach(async function() {
+        node = new CodeChain();
+        await node.start();
+    });
+
+    it("all transactions in both queues should be included", async function() {
+        await node.rpc.devel!.stopSealing();
+
+        const sq = (await node.rpc.chain.getSeq({
+            address: faucetAddress.toString()
+        }))!;
+        const tx = await node.sendPayTx({ seq: sq + 3 });
+        const wholeTxs = await node.rpc.mempool.getPendingTransactions({
+            futureIncluded: true
+        });
+        const trans = wholeTxs.transactions[0] as Transaction;
+        expect(trans.sig).to.equal(tx.toJSON().sig);
     });
 
     afterEach(async function() {

@@ -74,8 +74,17 @@ where
         Ok(())
     }
 
-    fn get_pending_transactions(&self, from: Option<u64>, to: Option<u64>) -> Result<PendingTransactions> {
-        Ok(self.client.ready_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)).into())
+    fn get_pending_transactions(
+        &self,
+        from: Option<u64>,
+        to: Option<u64>,
+        future_included: bool,
+    ) -> Result<PendingTransactions> {
+        if future_included {
+            Ok(self.client.future_pending_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)).into())
+        } else {
+            Ok(self.client.ready_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)).into())
+        }
     }
 
     fn get_pending_transactions_count(&self, from: Option<u64>, to: Option<u64>) -> Result<usize> {
