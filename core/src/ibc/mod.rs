@@ -23,6 +23,7 @@ pub mod commitment_23;
 pub mod connection_03;
 pub mod context;
 mod kv_store;
+pub mod querier;
 mod transaction_handler;
 
 pub use self::client_02 as client;
