@@ -126,6 +126,36 @@ describe("Get Pending Transaction", function() {
     });
 });
 
+describe("Count pending transactions", function() {
+    let node: CodeChain;
+
+    beforeEach(async function() {
+        node = new CodeChain();
+        await node.start();
+    });
+
+    it("Counting transactions included future transactions", async function() {
+        await node.rpc.devel!.stopSealing();
+
+        const sq = (await node.rpc.chain.getSeq({
+            address: faucetAddress.toString()
+        }))!;
+        const tx = await node.sendPayTx({ seq: sq + 3 });
+        const count = await node.rpc.mempool.countPendingTransactions({
+            futureIncluded: true
+        });
+
+        expect(count).to.equal(1);
+    });
+
+    afterEach(async function() {
+        if (this.currentTest!.state === "failed") {
+            node.keepLogs();
+        }
+        await node.clean();
+    });
+});
+
 describe("Delete All Pending Transactions", function() {
     let node: CodeChain;
 
