@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::{ClientState, Seal, UpdateHeader};
+use crate::consensus::tendermint::types::TendermintSealView;
 use ckey::verify_schnorr;
 pub use ctypes::BlockNumber;
 use ctypes::CompactValidatorSet;
@@ -23,7 +24,13 @@ use primitives::H256;
 pub fn verify_signature(block_hash: H256, vset: &CompactValidatorSet, seal: &Seal) -> bool {
     let n = vset.len();
 
-    for (index, sign) in &seal.0 {
+    let seal_view = TendermintSealView::new(&seal.raw).signatures();
+    if seal_view.is_err() {
+        return false
+    }
+    let seal_dec = seal_view.unwrap();
+
+    for (index, sign) in &seal_dec {
         if *index >= n {
             return false
         }
@@ -37,9 +44,15 @@ pub fn verify_signature(block_hash: H256, vset: &CompactValidatorSet, seal: &Sea
 }
 
 pub fn verify_quorum(vset: &CompactValidatorSet, seal: &Seal) -> bool {
+    let seal_view = TendermintSealView::new(&seal.raw).signatures();
+    if seal_view.is_err() {
+        return false
+    }
+    let seal_dec = seal_view.unwrap();
+
     // Note that invalid index would already be rejcted in verify_signature()
     let total_delegation: u64 = vset.iter().map(|validator| validator.delegation).sum();
-    let voted_delegation: u64 = seal.0.iter().map(|(index, _)| vset[*index].delegation).sum();
+    let voted_delegation: u64 = seal_dec.iter().map(|(index, _)| vset[*index].delegation).sum();
     if total_delegation * 2 >= voted_delegation * 3 {
         return false
     }
@@ -70,8 +83,11 @@ mod tests {
     in unit tests in rust-merkle-trie
     */
     use super::*;
+    use crate::consensus::BitSet;
+    use crate::consensus::Seal as TendermintSeal;
     use ccrypto::blake256;
     use ckey::sign_schnorr;
+    use ckey::SchnorrSignature;
     use ckey::{Generator, Private, Public, Random};
     use ctypes::CompactValidatorEntry;
     use rand::{rngs::StdRng, Rng};
@@ -88,7 +104,7 @@ mod tests {
 
             let mut users: Vec<(Public, Private)> = Vec::new();
             let mut vset = CompactValidatorSet::new(Vec::new());
-            let mut seal = Seal(Vec::new());
+            let mut seal: Vec<(usize, SchnorrSignature)> = Vec::new();
 
             let mut del_total = 0 as u64;
             let mut del_signed = 0 as u64;
@@ -109,10 +125,20 @@ mod tests {
                 if rng.gen_range(0, 3) == 0 {
                     continue
                 } else {
-                    seal.0.push((i as usize, sign_schnorr(&user.1, &hash).unwrap()));
+                    seal.push((i as usize, sign_schnorr(&user.1, &hash).unwrap()));
                     del_signed += vset[i].delegation;
                 }
             }
+            let seal_indices: Vec<usize> = seal.iter().map(|(index, _)| *index).collect();
+            let seal_signs: Vec<SchnorrSignature> = seal.iter().map(|(_, sign)| *sign).collect();
+
+            let precommit_bitset = BitSet::new_with_indices(&seal_indices);
+            let seal_enc = TendermintSeal::Tendermint {
+                prev_view: 0,
+                cur_view: 0,
+                precommits: seal_signs,
+                precommit_bitset,
+            };
 
             let client_state = ClientState {
                 number: 10,
@@ -122,7 +148,9 @@ mod tests {
             let proposal = UpdateHeader {
                 number: 11,
                 hash,
-                seal,
+                seal: Seal {
+                    raw: seal_enc.seal_fields().unwrap(),
+                },
                 validator_set: vset,
             };
 

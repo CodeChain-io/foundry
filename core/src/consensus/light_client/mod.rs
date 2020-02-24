@@ -16,41 +16,14 @@
 
 pub mod verification;
 pub use self::verification::verify_header;
-use ckey::SchnorrSignature;
 pub use ctypes::BlockNumber;
 use ctypes::{CompactValidatorSet, Header};
-pub use primitives::{H256, H512};
-use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+pub use primitives::{Bytes, H256, H512};
 
-#[derive(PartialEq, Debug)]
+#[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 // (index_in_vset, sign); schnorr scheme
-pub struct Seal(Vec<(usize, SchnorrSignature)>);
-
-impl Encodable for Seal {
-    fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(self.0.len() * 2);
-        for (x, y) in self.0.iter() {
-            s.append(x);
-            s.append(y);
-        }
-    }
-}
-
-impl Decodable for Seal {
-    fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
-        let item_count = rlp.item_count()?;
-        if item_count % 2 == 1 {
-            return Err(DecoderError::RlpInvalidLength {
-                expected: item_count + 1,
-                got: item_count,
-            })
-        }
-        let mut vec = Vec::with_capacity(item_count / 2);
-        for i in 0..(item_count / 2) {
-            vec.push((rlp.val_at(i * 2)?, rlp.val_at(i * 2 + 1)?));
-        }
-        Ok(Self(vec))
-    }
+pub struct Seal {
+    pub raw: Vec<Bytes>,
 }
 
 #[derive(PartialEq, Debug)]
