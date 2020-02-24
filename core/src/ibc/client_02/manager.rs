@@ -91,6 +91,35 @@ impl<'a> Manager<'a> {
     /// 3. They don't take a ClientState: each function retrieves it by itself.
     /// 4. They all take `id`, which indicates the counterparty chain.
 
+    fn verify_common_presence(
+        &self,
+        id: IdentifierSlice,
+        proof_height: BlockNumber,
+        proof: Bytes,
+        path: String,
+        value: Bytes,
+    ) -> Result<(), String> {
+        let client_state = self.query(&id)?;
+        if client_state.raw.number < proof_height {
+            return Err("Invalid proof height".to_owned())
+        }
+        let consensus_state = self.query_consensus_state(&id, proof_height)?;
+        let proof_dec: CommitmentProofCounter = rlp::decode(&proof).map_err(|_| "Illformed proof")?;
+
+        if verify_membership(
+            &consensus_state.state_root,
+            &proof_dec,
+            CommitmentPathCounter {
+                raw: path,
+            },
+            value,
+        ) {
+            Ok(())
+        } else {
+            Err("Invalid proof".to_owned())
+        }
+    }
+
     pub fn verify_connection_state(
         &self,
         id: IdentifierSlice,
@@ -100,25 +129,8 @@ impl<'a> Manager<'a> {
         connection_end: &ConnectionEnd,
     ) -> Result<(), String> {
         let path = format!("connections/{}", connection_identifier);
-        let client_state = self.query(&id)?;
-        if client_state.raw.number < proof_height {
-            return Err("Invalid proof height".to_owned())
-        }
-        let consensus_state = self.query_consensus_state(&id, proof_height)?;
-        let proof_dec: CommitmentProofCounter = rlp::decode(&proof).map_err(|_| "Illformed proof")?;
         let value_dec = rlp::encode(connection_end);
-
-        if verify_membership(
-            &consensus_state.state_root,
-            &proof_dec,
-            CommitmentPathCounter {
-                raw: path,
-            },
-            value_dec,
-        ) {
-            Ok(())
-        } else {
-            Err("Invalid proof".to_owned())
-        }
+        self.verify_common_presence(id, proof_height, proof, path, value_dec)
+            .map_err(|e| format!("{} : connection_state", e))
     }
 }
