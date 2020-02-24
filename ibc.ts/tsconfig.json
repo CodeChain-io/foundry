@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "types": ["node"],
+    "module": "commonjs",
+    "lib": ["es2018"],
+    "declaration": true,
+    "outDir": "build",
+    "strict": true
+  },
+  "include": ["./src/**/*"],
+  "exclude": ["./src/**/*.test.ts"]
+}

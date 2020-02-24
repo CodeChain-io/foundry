@@ -1,0 +1,18 @@
+{
+  "name": "ibc",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "fmt": "tslint -p . --fix && prettier 'src/**/*.{ts, json}' --write",
+    "lint": "tsc -p . --noEmit && tslint -p . && prettier 'src/**/*.{ts, json}' -l",
+    "scenario": "yarn build && node build/scenario/index.js",
+    "relayer": "yarn build && node build/relayer/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^13.7.4",
+    "prettier": "^1.19.1",
+    "tslint": "^6.0.0",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.8.2"
+  }
+}
