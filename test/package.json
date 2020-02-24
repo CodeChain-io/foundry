@@ -59,7 +59,7 @@
     "codechain-primitives": "^1.0.4",
     "codechain-stakeholder-sdk": "https://github.com/junha1/codechain-stakeholder-sdk-js#master",
     "elliptic": "^6.4.1",
-    "foundry-rpc": "git://github.com/CodeChain-io/foundry-rpc-js.git#alpha-1",
+    "foundry-rpc": "git://github.com/CodeChain-io/foundry-rpc-js.git#alpha-2",
     "jayson": "^3.2.0",
     "lodash": "^4.17.11",
     "mkdirp": "^0.5.1",

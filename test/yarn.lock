@@ -1711,9 +1711,9 @@ form-data@~2.3.2:
     combined-stream "^1.0.6"
     mime-types "^2.1.12"
 
-"foundry-rpc@git://github.com/CodeChain-io/foundry-rpc-js.git#alpha-1":
+"foundry-rpc@git://github.com/CodeChain-io/foundry-rpc-js.git#alpha-2":
   version "2.0.0"
-  resolved "git://github.com/CodeChain-io/foundry-rpc-js.git#e8ac3979f460f837c5dcb9383d7ed22aaa15091d"
+  resolved "git://github.com/CodeChain-io/foundry-rpc-js.git#e87fba595a37932a795300e788c01609df5c681e"
   dependencies:
     "@types/node-fetch" "^2.3.4"
     node-fetch "^2.6.0"
