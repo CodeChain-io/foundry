@@ -66,6 +66,10 @@ impl ConnectionIdentifiersInClient {
     pub fn add(&mut self, identifier: Identifier) {
         self.0.push(identifier);
     }
+
+    pub fn into_vec(self) -> Vec<Identifier> {
+        self.0
+    }
 }
 
 #[cfg(test)]
