@@ -16,7 +16,7 @@
 
 use super::super::errors;
 use super::super::traits::IBC;
-use super::super::types::{ClientState, ConsensusState, IBCQuery};
+use super::super::types::{ClientState, ConnectionEnd, ConsensusState, IBCQuery};
 use ccore::ibc;
 use ccore::ibc::querier;
 use ccore::{BlockChainClient, BlockId, StateInfo};
@@ -125,5 +125,30 @@ where
             },
         };
         Ok(Some(rlp::encode(&header)))
+    }
+
+    fn query_connection(
+        &self,
+        identifier: String,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQuery<ConnectionEnd>>> {
+        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
+        let mut state = self.client.state_at(block_id).ok_or_else(errors::state_not_exist)?;
+        let block_number = match self.client.block_number(&block_id) {
+            None => return Ok(None),
+            Some(block_number) => block_number,
+        };
+
+        let context = ibc::context::TopLevelContext::new(&mut state, block_number);
+
+        let path = querier::path_connection_end(&identifier);
+        let connection_end: Option<ibc::connection_03::ConnectionEnd> = querier::query(&context, &path);
+
+        let response = IBCQuery {
+            number: block_number,
+            data: connection_end.map(ConnectionEnd::from_core),
+            proof: querier::make_proof(&context, &path),
+        };
+        Ok(Some(response))
     }
 }

@@ -15,8 +15,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use codechain_core::ibc::client_02::types::{ClientState as CoreClientState, ConsensusState as CoreConsensusState};
+use codechain_core::ibc::connection_03::types::{
+    ConnectionEnd as CoreConnectionEnd, ConnectionState as CoreConnectionState,
+};
 use primitives::{Bytes, H256};
 use serde::Serialize;
+
+type Identifier = String;
+type CommitmentPrefix = String;
 
 /// Many of RPC responses will be expressed with this
 /// Because of the nature of IBC, they commonly
@@ -65,6 +71,45 @@ impl ConsensusState {
         ConsensusState {
             validator_set_hash: state.validator_set_hash,
             state_root: state.state_root.raw,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub enum ConnectionState {
+    INIT,
+    TRYOPEN,
+    OPEN,
+}
+
+impl ConnectionState {
+    pub fn from_core(core_connection_state: CoreConnectionState) -> Self {
+        match core_connection_state {
+            CoreConnectionState::INIT => ConnectionState::INIT,
+            CoreConnectionState::TRYOPEN => ConnectionState::TRYOPEN,
+            CoreConnectionState::OPEN => ConnectionState::OPEN,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConnectionEnd {
+    pub state: ConnectionState,
+    pub counterparty_connection_identifier: Identifier,
+    pub counterparty_prefix: CommitmentPrefix,
+    pub client_identifier: Identifier,
+    pub counterparty_client_identifier: Identifier,
+}
+
+impl ConnectionEnd {
+    pub fn from_core(core_connection_end: CoreConnectionEnd) -> Self {
+        ConnectionEnd {
+            state: ConnectionState::from_core(core_connection_end.state),
+            counterparty_connection_identifier: core_connection_end.counterparty_connection_identifier,
+            counterparty_prefix: core_connection_end.counterparty_prefix.raw,
+            client_identifier: core_connection_end.client_identifier,
+            counterparty_client_identifier: core_connection_end.counterparty_client_identifier,
         }
     }
 }
