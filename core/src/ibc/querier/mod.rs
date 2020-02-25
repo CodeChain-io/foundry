@@ -49,23 +49,18 @@ impl DebugName for ibc::client_02::types::ConsensusState {
 pub fn query<T>(ctx: &dyn ibc::Context, path: &CommitmentPath) -> Option<T>
 where
     T: Decodable + DebugName, {
-    if ctx.get_kv_store().contains_key(&path.raw) {
-        let data = ctx.get_kv_store().get(&path.raw);
-        // error means that state DB has stored an invalid data. (must never happen)
-        Some(rlp::decode(&data).unwrap_or_else(|_| panic!(format!("Illformed {} stored in DB", T::debug_name()))))
-    } else {
-        None
-    }
+    let data = ctx.get_kv_store().get(&path.raw)?;
+    // error means that state DB has stored an invalid data. (must never happen)
+    Some(rlp::decode(&data).unwrap_or_else(|_| panic!(format!("Illformed {} stored in DB", T::debug_name()))))
 }
 
 /// Caller of this function should not care about the type of proof. Thus we return as Bytes
 /// It may create both proof of presence and absence. Caller should be aware of which one would be.
 pub fn make_proof(ctx: &dyn ibc::Context, path: &CommitmentPath) -> Bytes {
-    if ctx.get_kv_store().contains_key(&path.raw) {
+    if let Some(value) = ctx.get_kv_store().get(&path.raw) {
         let commitment_state = CommitmentState {
             kv_store: ctx.get_kv_store(),
         };
-        let value = ctx.get_kv_store().get(&path.raw);
         let proof = create_membership_proof(&commitment_state, &path, &value);
         rlp::encode(&proof)
     } else {
