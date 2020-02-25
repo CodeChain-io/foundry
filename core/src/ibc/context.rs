@@ -80,9 +80,9 @@ impl<'a> KVStore for TopLevelKVStore<'a> {
         self.state.ibc_data(&key).expect("Get key").is_some()
     }
 
-    fn set(&mut self, path: Path, value: &[u8]) {
+    fn insert(&mut self, path: Path, value: &[u8]) -> Option<Bytes> {
         let key = TopLevelKVStore::key(path);
-        self.state.update_ibc_data(&key, value.to_vec()).expect("Set in IBC KVStore")
+        self.state.update_ibc_data(&key, value.to_vec()).expect("Set in IBC KVStore").map(Bytes::from)
     }
 
     fn delete(&mut self, path: Path) {
