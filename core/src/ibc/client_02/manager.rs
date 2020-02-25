@@ -128,9 +128,9 @@ impl<'a> Manager<'a> {
         connection_identifier: IdentifierSlice,
         connection_end: &ConnectionEnd,
     ) -> Result<(), String> {
-        let path = format!("connections/{}", connection_identifier);
-        let value_dec = rlp::encode(connection_end);
-        self.verify_common_presence(id, proof_height, proof, path, value_dec)
+        let path = ibc::connection_03::path(connection_identifier);
+        let value_enc = rlp::encode(connection_end);
+        self.verify_common_presence(id, proof_height, proof, path, value_enc)
             .map_err(|e| format!("{} : connection_state", e))
     }
 }
