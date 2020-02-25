@@ -85,9 +85,11 @@ impl<'a> KVStore for TopLevelKVStore<'a> {
         self.state.update_ibc_data(&key, value.to_vec()).expect("Set in IBC KVStore").map(Bytes::from)
     }
 
-    fn delete(&mut self, path: Path) {
+    fn remove(&mut self, path: Path) -> Option<Bytes> {
+        let prev = self.get(path);
         let key = TopLevelKVStore::key(path);
         self.state.remove_ibc_data(&key);
+        prev
     }
 
     fn root(&self) -> H256 {
