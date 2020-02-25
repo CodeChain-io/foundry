@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::types::IBCQuery;
-use super::super::types::{ClientState, ConsensusState};
+use super::super::types::{ClientState, ConnectionEnd, ConsensusState};
 use jsonrpc_core::Result;
 use primitives::Bytes;
 
@@ -39,4 +39,11 @@ pub trait IBC {
     /// from block_number-1 to block_number. It will stay opaque until it gets finally delieverd to Foundry light client.
     #[rpc(name = "ibc_compose_header")]
     fn compose_header(&self, block_number: u64) -> Result<Option<Bytes>>;
+
+    #[rpc(name = "ibc_query_connection")]
+    fn query_connection(
+        &self,
+        identifier: String,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQuery<ConnectionEnd>>>;
 }
