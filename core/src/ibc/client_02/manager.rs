@@ -69,10 +69,7 @@ impl<'a> Manager<'a> {
 
     pub fn query(&self, id: IdentifierSlice) -> Result<ClientState, String> {
         let kv_store = self.ctx.get_kv_store();
-        if !kv_store.contains_key(&path_client_state(id)) {
-            return Err("Client doesn't exist".to_owned())
-        }
-        let data = kv_store.get(&path_client_state(id));
+        let data = kv_store.get(&path_client_state(id)).ok_or_else(|| "Client doesn't exist".to_owned())?;
         Ok(rlp::decode(&data).expect("Illformed client state stored in DB"))
     }
 
@@ -82,10 +79,8 @@ impl<'a> Manager<'a> {
         num: ctypes::BlockNumber,
     ) -> Result<ConsensusState, String> {
         let kv_store = self.ctx.get_kv_store();
-        if !kv_store.contains_key(&path_consensus_state(id, num)) {
-            return Err("Consensus state doesn't exist".to_owned())
-        }
-        let data = kv_store.get(&path_consensus_state(id, num));
+        let data =
+            kv_store.get(&path_consensus_state(id, num)).ok_or_else(|| "Consensus state doesn't exist".to_owned())?;
         Ok(rlp::decode(&data).expect("Illformed consensus state stored in DB"))
     }
 

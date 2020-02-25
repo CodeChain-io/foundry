@@ -21,7 +21,7 @@ pub type Path<'a> = &'a str;
 
 // An abstraction of state db that will be provided as a environment for the ICS handler.
 pub trait KVStore {
-    fn get(&self, path: Path) -> Bytes;
+    fn get(&self, path: Path) -> Option<Bytes>;
     fn contains_key(&self, path: Path) -> bool;
     fn set(&mut self, path: Path, value: &[u8]);
     fn delete(&mut self, path: Path);

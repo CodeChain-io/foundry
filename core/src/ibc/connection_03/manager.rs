@@ -216,13 +216,9 @@ impl<'a> Manager<'a> {
         let kv_store = self.ctx.get_kv_store();
 
         let path = connection_path(&identifier);
-        if kv_store.contains_key(&path) {
-            let raw = kv_store.get(&path);
-            let connection_end = rlp::decode(&raw).expect("Only the connection code can save the code");
-            return Some(connection_end)
-        }
-
-        None
+        let raw = kv_store.get(&path)?;
+        let connection_end = rlp::decode(&raw).expect("Only the connection code can save the code");
+        Some(connection_end)
     }
 
     fn add_connection_to_client(
@@ -231,10 +227,8 @@ impl<'a> Manager<'a> {
         connection_identifier: Identifier,
     ) -> Result<(), String> {
         let kv_store = self.ctx.get_kv_store_mut();
-        if kv_store.contains_key(&connection_path(&connection_identifier)) {
-            return Err("Connection exist".to_owned())
-        }
-        let bytes = kv_store.get(&client_connections_path(&client_identifier));
+        let bytes =
+            kv_store.get(&client_connections_path(&client_identifier)).ok_or_else(|| "Connection exist".to_owned())?;
         let rlp = Rlp::new(&bytes);
         let mut conns: ConnectionIdentifiersInClient = rlp.as_val().expect("data from DB");
 
