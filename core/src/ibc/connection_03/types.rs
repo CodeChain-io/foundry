@@ -55,10 +55,14 @@ pub struct ConnectionEnd {
     // FIXME: implement version
 }
 
-#[derive(RlpEncodableWrapper, RlpDecodableWrapper, PartialEq, Debug)]
+#[derive(RlpEncodableWrapper, RlpDecodableWrapper, PartialEq, Debug, Default)]
 pub struct ConnectionIdentifiersInClient(Vec<Identifier>);
 
 impl ConnectionIdentifiersInClient {
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
     pub fn add(&mut self, identifier: Identifier) {
         self.0.push(identifier);
     }
