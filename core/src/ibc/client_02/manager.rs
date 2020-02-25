@@ -20,6 +20,7 @@ use super::*;
 use crate::consensus::light_client::ClientState as ChainClientState;
 use crate::ctypes::BlockNumber;
 use crate::ibc;
+use crate::ibc::channel_04::types::ChannelEnd;
 use crate::ibc::connection_03::types::ConnectionEnd;
 use crate::ibc::IdentifierSlice;
 use crate::rlp::Encodable;
@@ -132,5 +133,20 @@ impl<'a> Manager<'a> {
         let value_enc = rlp::encode(connection_end);
         self.verify_common_presence(id, proof_height, proof, path, value_enc)
             .map_err(|e| format!("{} : connection_state", e))
+    }
+
+    pub fn verify_channel_state(
+        &self,
+        id: IdentifierSlice,
+        proof_height: BlockNumber,
+        proof: Bytes,
+        port_identifier: IdentifierSlice,
+        channel_identifier: IdentifierSlice,
+        channel_end: &ChannelEnd,
+    ) -> Result<(), String> {
+        let path = ibc::channel_04::channel_path(port_identifier, channel_identifier);
+        let value_enc = rlp::encode(channel_end);
+        self.verify_common_presence(id, proof_height, proof, path, value_enc)
+            .map_err(|e| format!("{} : channel_state", e))
     }
 }
