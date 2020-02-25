@@ -24,7 +24,7 @@ pub trait KVStore {
     fn get(&self, path: Path) -> Option<Bytes>;
     fn contains_key(&self, path: Path) -> bool;
     fn insert(&mut self, path: Path, value: &[u8]) -> Option<Bytes>;
-    fn delete(&mut self, path: Path);
+    fn remove(&mut self, path: Path) -> Option<Bytes>;
     fn root(&self) -> H256;
     fn make_proof(&self, path: Path) -> (CryptoProofUnit, CryptoProof);
 }
