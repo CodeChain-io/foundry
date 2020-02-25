@@ -50,7 +50,7 @@ impl<'a> Manager<'a> {
         if kv_store.contains_key(&path_client_state(id)) {
             return Err("Client exists".to_owned())
         }
-        kv_store.set(&path_client_state(id), &client.rlp_bytes());
+        kv_store.insert(&path_client_state(id), &client.rlp_bytes());
         Ok(())
     }
 
@@ -61,8 +61,8 @@ impl<'a> Manager<'a> {
             super::client::check_validity_and_update_state(&client_state, &header_dec)?;
 
         let kv_store = self.ctx.get_kv_store_mut();
-        kv_store.set(&path_client_state(id), &new_client_state.rlp_bytes());
-        kv_store.set(&path_consensus_state(id, new_client_state.raw.number), &new_consensus_state.rlp_bytes());
+        kv_store.insert(&path_client_state(id), &new_client_state.rlp_bytes());
+        kv_store.insert(&path_consensus_state(id, new_client_state.raw.number), &new_consensus_state.rlp_bytes());
 
         Ok(())
     }

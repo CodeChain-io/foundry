@@ -55,7 +55,7 @@ impl<'a> Manager<'a> {
             client_identifier: client_identifier.clone(),
             counterparty_client_identifier,
         };
-        kv_store.set(&connection_path(&identifier), &connection.rlp_bytes());
+        kv_store.insert(&connection_path(&identifier), &connection.rlp_bytes());
         self.add_connection_to_client(client_identifier, identifier)?;
         Ok(())
     }
@@ -123,7 +123,7 @@ impl<'a> Manager<'a> {
         }
 
         let kv_store = self.ctx.get_kv_store_mut();
-        kv_store.set(&connection_path(&desired_identifier), &connection.rlp_bytes());
+        kv_store.insert(&connection_path(&desired_identifier), &connection.rlp_bytes());
         Ok(())
     }
 
@@ -169,7 +169,7 @@ impl<'a> Manager<'a> {
         connection.state = ConnectionState::OPEN;
         let kv_store = self.ctx.get_kv_store_mut();
         let path = connection_path(&identifier);
-        kv_store.set(&path, &connection.rlp_bytes());
+        kv_store.insert(&path, &connection.rlp_bytes());
 
         Ok(())
     }
@@ -207,7 +207,7 @@ impl<'a> Manager<'a> {
         connection.state = ConnectionState::OPEN;
         let kv_store = self.ctx.get_kv_store_mut();
         let path = connection_path(&identifier);
-        kv_store.set(&path, &connection.rlp_bytes());
+        kv_store.insert(&path, &connection.rlp_bytes());
 
         Ok(())
     }
@@ -234,7 +234,7 @@ impl<'a> Manager<'a> {
 
         conns.add(connection_identifier);
 
-        kv_store.set(&client_connections_path(&client_identifier), &rlp::encode(&conns));
+        kv_store.insert(&client_connections_path(&client_identifier), &rlp::encode(&conns));
         Ok(())
     }
 }

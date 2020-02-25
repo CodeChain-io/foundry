@@ -35,7 +35,7 @@
 //! Unconfirmed sub-states are managed with `checkpoint`s which may be canonicalized
 //! or rolled back.
 
-use crate::cache::{ShardCache, TopCache};
+use crate::cache::{CacheableItem, ShardCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::error::Error;
 use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
@@ -59,6 +59,7 @@ use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use primitives::{Bytes, H256};
 use std::cell::{RefCell, RefMut};
 use std::collections::HashMap;
+use std::ops::DerefMut;
 
 /// Representation of the entire state of all accounts in the system.
 ///
@@ -756,10 +757,15 @@ impl TopState for TopLevelState {
         self.top_cache.remove_action_data(key)
     }
 
-    fn update_ibc_data(&mut self, key: &H256, data: Vec<u8>) -> Result<(), Error> {
+    fn update_ibc_data(&mut self, key: &H256, data: Vec<u8>) -> Result<Option<IBCData>, Error> {
+        // if the value is empty, ibc_data.is_null() == true
         let mut ibc_data = self.get_ibc_data_mut(key)?;
-        *ibc_data = data.into();
-        Ok(())
+        let prev = std::mem::replace(ibc_data.deref_mut(), data.into());
+        if prev.is_null() {
+            Ok(None)
+        } else {
+            Ok(Some(prev))
+        }
     }
 
     fn remove_ibc_data(&mut self, key: &H256) {

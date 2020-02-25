@@ -167,7 +167,7 @@ pub trait TopState {
     fn update_action_data(&mut self, key: &H256, data: Bytes) -> StateResult<()>;
     fn remove_action_data(&mut self, key: &H256);
 
-    fn update_ibc_data(&mut self, key: &H256, data: Bytes) -> StateResult<()>;
+    fn update_ibc_data(&mut self, key: &H256, data: Bytes) -> StateResult<Option<IBCData>>;
     fn remove_ibc_data(&mut self, key: &H256);
 
     fn update_params(&mut self, metadata_seq: u64, params: CommonParams) -> StateResult<()>;
