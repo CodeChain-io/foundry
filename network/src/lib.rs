@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,19 +16,12 @@
 
 #![allow(deprecated)]
 
-extern crate codechain_crypto as ccrypto;
-extern crate codechain_io as cio;
-extern crate codechain_key as ckey;
 #[macro_use]
 extern crate codechain_logger as clogger;
-extern crate codechain_timer as ctimer;
 #[macro_use]
 extern crate log;
 #[macro_use]
 extern crate rlp_derive;
-extern crate kvdb;
-
-use crossbeam_channel;
 
 mod addr;
 mod client;

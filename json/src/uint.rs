@@ -1,4 +1,5 @@
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of Parity.
 
 // Parity is free software: you can redistribute it and/or modify
@@ -181,7 +182,6 @@ where
 mod test {
     use super::Uint;
     use primitives::U256;
-    use serde_json;
 
     #[test]
     fn uint_deserialization() {

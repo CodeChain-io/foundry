@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -56,12 +56,10 @@ impl Decodable for TxHash {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use rlp::rlp_encode_and_decode_test;
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
-
-    use rlp::{self, rlp_encode_and_decode_test};
-
-    use super::*;
 
     #[test]
     fn hash_of_tx_hash_and_h256_are_the_same() {

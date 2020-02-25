@@ -5,12 +5,11 @@ authors = ["CodeChain Team <hi@codechain.io>"]
 edition = "2018"
 
 [dependencies]
-codechain-crypto = { git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
-codechain-io = { path = "../util/io" }
-codechain-key = { path = "../key" }
+ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
+cio = { package = "codechain-io", path = "../util/io" }
+ckey = { package = "codechain-key", path = "../key" }
 codechain-logger = { path = "../util/logger" }
-codechain-timer = { path = "../util/timer" }
-codechain-types = { path = "../types" }
+ctimer = { package = "codechain-timer", path = "../util/timer" }
 crossbeam-channel = "0.3"
 finally-block = "0.1"
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }

@@ -16,7 +16,7 @@
 
 //! Ethereum key-management.
 
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018, 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -32,10 +32,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-extern crate codechain_crypto as ccrypto;
-extern crate codechain_json as cjson;
-extern crate codechain_key as ckey;
-
 #[macro_use]
 extern crate log;
 #[macro_use]
@@ -44,8 +40,6 @@ extern crate serde_derive;
 #[cfg(test)]
 #[macro_use]
 extern crate matches;
-#[cfg(test)]
-extern crate primitives;
 
 pub mod accounts_dir;
 pub mod ckeys;

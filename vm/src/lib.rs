@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -13,13 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-extern crate codechain_crypto as ccrypto;
-extern crate codechain_key as ckey;
-extern crate codechain_types as ctypes;
-
-#[cfg(test)]
-extern crate secp256k1;
 
 mod decoder;
 mod executor;

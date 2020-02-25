@@ -1,4 +1,5 @@
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of Parity.
 
 // Parity is free software: you can redistribute it and/or modify
@@ -20,8 +21,6 @@ extern crate codechain_logger as clogger;
 
 use backtrace::Backtrace;
 use clogger::EmailAlarm;
-use get_if_addrs;
-use my_internet_ip;
 use std::panic::{self, PanicInfo};
 use std::thread;
 

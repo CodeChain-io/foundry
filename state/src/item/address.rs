@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -39,8 +39,7 @@ macro_rules! define_address_constructor {
 }
 
 macro_rules! define_id_getter {
-    (TOP) => {
-    };
+    (TOP) => {};
     (SHARD) => {
         pub fn shard_id(&self) -> ::ctypes::ShardId {
             debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<ShardId>());

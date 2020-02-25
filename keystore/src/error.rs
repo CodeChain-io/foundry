@@ -1,4 +1,5 @@
 // Copyright 2015-2017 Parity Technologies (UK) Ltd.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of Parity.
 
 // Parity is free software: you can redistribute it and/or modify
@@ -14,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
-use ccrypto::{self, Error as CCryptoError};
+use ccrypto::Error as CCryptoError;
 use ckey::Error as CKeyError;
 use std::fmt;
 use std::io::Error as IoError;

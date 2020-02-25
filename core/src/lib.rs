@@ -16,22 +16,8 @@
 
 #![cfg_attr(feature = "nightly", feature(test))]
 
-extern crate codechain_crypto as ccrypto;
-extern crate codechain_db as cdb;
-extern crate codechain_io as cio;
-extern crate codechain_json as cjson;
-extern crate codechain_key as ckey;
-extern crate codechain_keystore as ckeystore;
 #[macro_use]
 extern crate codechain_logger as clogger;
-extern crate codechain_network as cnetwork;
-extern crate codechain_state as cstate;
-extern crate codechain_timer as ctimer;
-extern crate codechain_types as ctypes;
-extern crate codechain_vm as cvm;
-#[cfg(test)]
-extern crate rand_xorshift;
-extern crate rlp;
 #[macro_use]
 extern crate rlp_derive;
 #[macro_use]
@@ -77,10 +63,10 @@ pub use crate::db::{COL_STATE, NUM_COLUMNS};
 pub use crate::error::{BlockImportError, Error, ImportError};
 pub use crate::miner::{MemPoolMinFees, Miner, MinerOptions, MinerService};
 pub use crate::peer_db::PeerDb;
-pub use crate::rlp::Encodable;
 pub use crate::scheme::Scheme;
 pub use crate::service::ClientService;
 pub use crate::transaction::{
     LocalizedTransaction, PendingSignedTransactions, SignedTransaction, UnverifiedTransaction,
 };
 pub use crate::types::{BlockId, BlockStatus, TransactionId};
+pub use rlp::Encodable;

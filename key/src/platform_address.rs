@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018, 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,6 +16,7 @@
 
 use crate::{Address, Error, NetworkId};
 use bech32::Bech32;
+use lazy_static::lazy_static;
 use parking_lot::Mutex;
 use primitives::H160;
 use serde::de::{Error as SerdeError, Visitor};
@@ -218,11 +219,8 @@ fn check_network_id(network_id: NetworkId) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use serde_json;
-
     use super::{rearrange_bits, PlatformAddress};
+    use std::str::FromStr;
 
     #[test]
     fn serialization() {

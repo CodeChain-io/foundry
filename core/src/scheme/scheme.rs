@@ -23,7 +23,6 @@ use crate::consensus::{CodeChainEngine, NullEngine, Solo, Tendermint};
 use crate::error::{Error, SchemeError};
 use ccrypto::{blake256, BLAKE_NULL_RLP};
 use cdb::{AsHashDB, HashDB};
-use cjson;
 use ckey::Address;
 use cstate::{Metadata, MetadataAddress, Shard, ShardAddress, StateDB, StateResult, StateWithCache, TopLevelState};
 use ctypes::errors::SyntaxError;
