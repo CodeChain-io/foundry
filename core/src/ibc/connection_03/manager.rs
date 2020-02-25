@@ -22,7 +22,7 @@ use crate::ibc::connection_03::types::{ConnectionEnd, ConnectionIdentifiersInCli
 use crate::ibc::{Identifier, IdentifierSlice};
 use ibc::client_02::Manager as ClientManager;
 use primitives::Bytes;
-use rlp::{Encodable, Rlp};
+use rlp::Encodable;
 
 pub struct Manager<'a> {
     ctx: &'a mut dyn ibc::Context,
@@ -227,10 +227,18 @@ impl<'a> Manager<'a> {
         connection_identifier: Identifier,
     ) -> Result<(), String> {
         let kv_store = self.ctx.get_kv_store_mut();
-        let bytes =
-            kv_store.get(&client_connections_path(&client_identifier)).ok_or_else(|| "Connection exist".to_owned())?;
-        let rlp = Rlp::new(&bytes);
-        let mut conns: ConnectionIdentifiersInClient = rlp.as_val().expect("data from DB");
+        if kv_store.contains_key(&connection_path(&connection_identifier)) {
+            return Err("Connection exist".to_owned())
+        }
+
+        let path = client_connections_path(&client_identifier);
+        let mut conns: ConnectionIdentifiersInClient = kv_store
+            .get(&path)
+            .map(|bytes| {
+                rlp::decode::<ConnectionIdentifiersInClient>(&bytes)
+                    .expect("Only the connection code can save the code")
+            })
+            .unwrap_or_default();
 
         conns.add(connection_identifier);
 
