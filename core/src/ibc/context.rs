@@ -75,7 +75,7 @@ impl<'a> KVStore for TopLevelKVStore<'a> {
         self.state.ibc_data(&key).expect("Get key").expect("Data empty").into()
     }
 
-    fn has(&self, path: Path) -> bool {
+    fn contains_key(&self, path: Path) -> bool {
         let key = TopLevelKVStore::key(path);
         self.state.ibc_data(&key).expect("Get key").is_some()
     }

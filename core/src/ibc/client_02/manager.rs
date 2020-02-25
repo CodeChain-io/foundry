@@ -47,7 +47,7 @@ impl<'a> Manager<'a> {
         };
 
         let kv_store = self.ctx.get_kv_store_mut();
-        if kv_store.has(&path_client_state(id)) {
+        if kv_store.contains_key(&path_client_state(id)) {
             return Err("Client exists".to_owned())
         }
         kv_store.set(&path_client_state(id), &client.rlp_bytes());
@@ -69,7 +69,7 @@ impl<'a> Manager<'a> {
 
     pub fn query(&self, id: IdentifierSlice) -> Result<ClientState, String> {
         let kv_store = self.ctx.get_kv_store();
-        if !kv_store.has(&path_client_state(id)) {
+        if !kv_store.contains_key(&path_client_state(id)) {
             return Err("Client doesn't exist".to_owned())
         }
         let data = kv_store.get(&path_client_state(id));
@@ -82,7 +82,7 @@ impl<'a> Manager<'a> {
         num: ctypes::BlockNumber,
     ) -> Result<ConsensusState, String> {
         let kv_store = self.ctx.get_kv_store();
-        if !kv_store.has(&path_consensus_state(id, num)) {
+        if !kv_store.contains_key(&path_consensus_state(id, num)) {
             return Err("Consensus state doesn't exist".to_owned())
         }
         let data = kv_store.get(&path_consensus_state(id, num));
