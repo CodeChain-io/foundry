@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::types::IBCQuery;
-use super::super::types::{ClientState, ConnectionEnd, ConsensusState};
+use super::super::types::{ClientState, ConnectionEnd, ConnectionIdentifiersInClient, ConsensusState};
 use jsonrpc_core::Result;
 use primitives::Bytes;
 
@@ -46,4 +46,11 @@ pub trait IBC {
         identifier: String,
         block_number: Option<u64>,
     ) -> Result<Option<IBCQuery<ConnectionEnd>>>;
+
+    #[rpc(name = "ibc_query_client_connections")]
+    fn query_client_connections(
+        &self,
+        client_identifier: String,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQuery<ConnectionIdentifiersInClient>>>;
 }

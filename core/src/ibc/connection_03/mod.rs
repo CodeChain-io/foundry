@@ -27,4 +27,5 @@ pub fn client_connections_path(client_id: &str) -> String {
 
 pub use manager::Manager;
 pub use types::ConnectionEnd;
+pub use types::ConnectionIdentifiersInClient;
 pub use types::ConnectionState;

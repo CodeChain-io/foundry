@@ -45,6 +45,12 @@ impl DebugName for ibc::client_02::types::ConsensusState {
     }
 }
 
+impl DebugName for ibc::connection_03::types::ConnectionIdentifiersInClient {
+    fn debug_name() -> &'static str {
+        "ConnectionIdentifiersInClient"
+    }
+}
+
 /// Queries the path and returns the result in decoded struct
 pub fn query<T>(ctx: &dyn ibc::Context, path: &CommitmentPath) -> Option<T>
 where
@@ -87,5 +93,11 @@ pub fn path_consensus_state(id: IdentifierSlice, num: u64) -> CommitmentPath {
 pub fn path_connection_end(id: IdentifierSlice) -> CommitmentPath {
     CommitmentPath {
         raw: ibc::connection_03::path(id),
+    }
+}
+
+pub fn path_connection_identifiers(client_id: IdentifierSlice) -> CommitmentPath {
+    CommitmentPath {
+        raw: ibc::connection_03::client_connections_path(client_id),
     }
 }

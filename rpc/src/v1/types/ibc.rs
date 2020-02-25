@@ -113,3 +113,5 @@ impl ConnectionEnd {
         }
     }
 }
+
+pub type ConnectionIdentifiersInClient = Vec<String>;
