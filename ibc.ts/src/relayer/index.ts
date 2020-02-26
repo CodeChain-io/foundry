@@ -1,5 +1,6 @@
 import Debug from "debug";
 import { Chain } from "../common/chain";
+import { Datagram } from "../common/datagram/index";
 import { delay } from "../common/util";
 
 const debug = Debug("relayer:main");
@@ -45,6 +46,6 @@ async function relayFromTo({
 
 async function pendingDatagrams(
     args: any
-): Promise<{ localDatagrams: any[]; counterpartyDatagrams: any[] }> {
+): Promise<{ localDatagrams: Datagram[]; counterpartyDatagrams: Datagram[] }> {
     return { localDatagrams: [], counterpartyDatagrams: [] };
 }
