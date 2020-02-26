@@ -1,11 +1,15 @@
+import Debug from "debug";
 import { Chain } from "../common/chain";
 import { delay } from "../common/util";
+
+const debug = Debug("relayer:main");
 
 async function main() {
     const chainA = new Chain();
     const chainB = new Chain();
 
     while (true) {
+        debug("Run relay");
         await relay(chainA, chainB);
         await delay(1000);
     }
