@@ -17,6 +17,7 @@
     "typescript": "^3.8.2"
   },
   "dependencies": {
-    "debug": "^4.1.1"
+    "debug": "^4.1.1",
+    "rlp": "^2.0.0"
   }
 }
