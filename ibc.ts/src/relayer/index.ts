@@ -5,6 +5,8 @@ import { delay } from "../common/util";
 import { getConfig } from "./config";
 import { PlatformAddress } from "codechain-primitives/lib";
 
+require("dotenv").config();
+
 const debug = Debug("relayer:main");
 
 async function main() {
