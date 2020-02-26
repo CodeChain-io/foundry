@@ -189,7 +189,7 @@ When `Transaction` is included in any response, there will be an additional fiel
  - quantity: `U64`
 
 ## Signature
-`H520` for ECDSA signature | `H512` for Schnorr signature
+`H512` for Ed25519 Signatures
 
 ## CommonParams
 
@@ -2100,7 +2100,7 @@ Get a key to communicate with the given address
  2. port: `number`
 
 ### Returns
-The 512-bit public key.
+The 256-bit public key.
 
 Errors: `Invalid Params`
 
@@ -2116,7 +2116,7 @@ Errors: `Invalid Params`
 ```
 {
   "jsonrpc":"2.0",
-  "result": "0x2a8a69439f2396c9a328289fdc3905d9736da9e14eb1a282cfd2c036cc21a17a5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08",
+  "result": "0x0b3f1e817ced530a586f029e66831f4d47b8fffa5eef0ba118f0e9dc1dd9b698",
   "id":5
 }
 ```
@@ -2132,7 +2132,7 @@ Register the remote public key to communicate with the given address
  3. remote_public_key: `string`
 
 ### Returns
-The 512-bit local public key.
+The 256-bit local public key.
 
 Errors: `Invalid Params`
 
@@ -2140,7 +2140,7 @@ Errors: `Invalid Params`
 ```
   curl \
     -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "net_registerRemoteKeyFor", "params": ["192.168.0.3", 3485, "0x545ebdc0b8fb2d0be77a27d843945950db6dbddc60477c0cf001751a797df8a41fc51fe5b76e371c8875ad1d0585a60af2eef2b5d631f7bfba86e7988c25088d"], "id": 5}' \
+    -d '{"jsonrpc": "2.0", "method": "net_registerRemoteKeyFor", "params": ["192.168.0.3", 3485, "0x0b3f1e817ced530a586f029e66831f4d47b8fffa5eef0ba118f0e9dc1dd9b698"], "id": 5}' \
     localhost:8080
 ```
 
@@ -2148,7 +2148,7 @@ Errors: `Invalid Params`
 ```
 {
   "jsonrpc":"2.0",
-  "result": "0x2a8a69439f2396c9a328289fdc3905d9736da9e14eb1a282cfd2c036cc21a17a5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08",
+  "result": "0x46f85ec82c7859c29b0e51a412a3842b1f360f8983a66038bc37b37872f144b1",
   "id":5
 }
 ```
@@ -2710,7 +2710,7 @@ curl \
 Imports a secret key and add the corresponding account.
 
 ### Params
- 1. secret: `H256`
+ 1. secret: `H512`
  2. password: `string` | `null`
 
 ### Returns
@@ -2722,7 +2722,7 @@ Errors: `Keystore Error`, `Key Error`, `Already Exists`, `Invalid Params`
 ```
 curl \
     -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "account_importRaw", "params": ["a2b39d4aefecdb17f84ed4cf629e7c8817691cc4f444ac7522902b8fb4b7bd53"], "id": 6}' \
+    -d '{"jsonrpc": "2.0", "method": "account_importRaw", "params": ["5c681224c650e9c96af5239991d38cc3ba2abba6b43926c35fc5c0439c7b9efa0b3f1e817ced530a586f029e66831f4d47b8fffa5eef0ba118f0e9dc1dd9b698"], "id": 6}' \
     localhost:8080
 ```
 
@@ -2730,7 +2730,7 @@ curl \
 ```
 {
   "jsonrpc":"2.0",
-  "result":"cccqz3z4e3x6f5j80wexg0xfr0qsrqcuyzf7g4y0je6",
+  "result":"cccq99c90k2lmu3l5e6z5hajhvwsh57v60845sfdk74",
   "id":6
 }
 ```

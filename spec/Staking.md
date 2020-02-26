@@ -368,7 +368,7 @@ It is the list of the values that the transaction changes.
 The stakeholder MUST NOT sign the transaction when the type of value is not a type that the key expected.
 
 #### signatures
-`signatures` are the ECDSA signatures of stakeholders.
+`signatures` are the Ed25519 signatures of stakeholders.
 The stakeholders should send the signature of `blake256(rlp_encode([ 0xFF, metadata_seq, new_parameters ]))` to the vote initiator if they agree to the change.
 The transaction is valid only if more than half of the stakeholders agree.
 
