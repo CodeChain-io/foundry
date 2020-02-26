@@ -2,12 +2,23 @@ import Debug from "debug";
 import { Chain } from "../common/chain";
 import { Datagram } from "../common/datagram/index";
 import { delay } from "../common/util";
+import { getConfig } from "./config";
+import { PlatformAddress } from "codechain-primitives/lib";
 
 const debug = Debug("relayer:main");
 
 async function main() {
-    const chainA = new Chain();
-    const chainB = new Chain();
+    const config = getConfig();
+    const chainA = new Chain({
+        server: config.chainA.rpcURL,
+        networkId: config.chainA.networkId,
+        faucetAddress: PlatformAddress.fromString(config.chainA.faucetAddress)
+    });
+    const chainB = new Chain({
+        server: config.chainB.rpcURL,
+        networkId: config.chainB.networkId,
+        faucetAddress: PlatformAddress.fromString(config.chainB.faucetAddress)
+    });
 
     while (true) {
         debug("Run relay");

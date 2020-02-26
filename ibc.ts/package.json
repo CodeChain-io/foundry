@@ -17,6 +17,8 @@
     "typescript": "^3.8.2"
   },
   "dependencies": {
+    "codechain-primitives": "^1.0.4",
+    "codechain-sdk": "^2.0.1",
     "debug": "^4.1.1",
     "rlp": "^2.0.0"
   }
