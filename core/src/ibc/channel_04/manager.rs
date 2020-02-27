@@ -256,4 +256,50 @@ impl<'a> Manager<'a> {
 
         Ok(key)
     }
+
+    pub fn chan_open_ack(
+        &mut self,
+        channel_identifier: Identifier,
+        counterparty_version: String,
+        proof_try: Bytes,
+        proof_height: u64,
+    ) -> Result<(), String> {
+        let previous = self.get_previous_channel_end(DEFAULT_PORT, &channel_identifier)?;
+        if previous.state != ChannelState::INIT && previous.state != ChannelState::TRYOPEN {
+            return Err("Channel already established".to_owned())
+        }
+        self.check_capability_key(DEFAULT_PORT, &channel_identifier)?;
+        let client_identifier = self.check_connection_opened(&previous.connection_hops[0])?;
+
+        // Verification
+        let expected = ChannelEnd {
+            state: ChannelState::TRYOPEN,
+            ordering: previous.ordering,
+            counterparty_port_identifier: DEFAULT_PORT.to_string(),
+            counterparty_channel_identifier: channel_identifier.clone(),
+            connection_hops: {
+                let mut x = previous.connection_hops.clone();
+                x.reverse();
+                x
+            },
+            version: counterparty_version.clone(),
+        };
+
+        let client_manager = ClientManager::new(self.ctx);
+        client_manager.verify_channel_state(
+            &client_identifier,
+            proof_height,
+            proof_try,
+            &previous.counterparty_port_identifier,
+            &previous.counterparty_channel_identifier,
+            &expected,
+        )?;
+
+        // Update
+        let mut channel = previous;
+        channel.state = ChannelState::OPEN;
+        channel.version = counterparty_version;
+        self.ctx.get_kv_store_mut().insert(&channel_path(DEFAULT_PORT, &channel_identifier), &rlp::encode(&channel));
+        Ok(())
+    }
 }
