@@ -14,8 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::{ChannelEnd, ChannelOrder, ChannelState, Sequence};
-use super::{channel_capability_path, channel_path, next_sequence_recv_path, next_sequence_send_path, DEFAULT_PORT};
+use super::log::{remove_packet, set_packet};
+use super::types::{ChannelEnd, ChannelOrder, ChannelState, Packet, PacketCommitment, Sequence};
+use super::{
+    channel_capability_path, channel_path, next_sequence_recv_path, next_sequence_send_path, packet_commitment_path,
+    DEFAULT_PORT,
+};
 use crate::ibc;
 use crate::ibc::connection_03::path as connection_path;
 use crate::ibc::connection_03::types::{ConnectionEnd, ConnectionState};
@@ -407,6 +411,59 @@ impl<'a> Manager<'a> {
         let mut channel = previous;
         channel.state = ChannelState::CLOSED;
         self.ctx.get_kv_store_mut().insert(&channel_path(DEFAULT_PORT, &channel_identifier), &rlp::encode(&channel));
+        Ok(())
+    }
+
+    // ICS Packet
+    pub fn send_packet(&mut self, packet: Packet) -> Result<(), String> {
+        let channel = self.get_previous_channel_end(&packet.source_port, &packet.source_channel)?;
+        if channel.state == ChannelState::CLOSED {
+            return Err("Channel closed.".to_owned())
+        }
+        if packet.dest_port != channel.counterparty_port_identifier {
+            return Err("Packet's dest_port doesn't match with counterparty's channel.".to_owned())
+        }
+        if packet.dest_channel != channel.counterparty_channel_identifier {
+            return Err("Packet's dest_channel doesn't match with counterparty's channel.".to_owned())
+        }
+
+        self.check_capability_key(&packet.source_port, &packet.source_channel)?;
+        let client_identifier = self.check_connection_opened(&channel.connection_hops[0])?;
+
+        let client_manager = ClientManager::new(self.ctx);
+        let client_state = client_manager.query(&client_identifier)?;
+
+        if packet.timeout_height <= client_state.raw.number {
+            return Err("Packet carries invalid timeout_height".to_owned())
+        }
+
+        let mut next_sequence_send = self.get_sequence_send(&packet.source_port, &packet.source_channel)?;
+
+        if packet.sequence != next_sequence_send {
+            return Err("Packet carries invalid sequence".to_owned())
+        }
+
+        next_sequence_send.raw += 1;
+        let kv_store = self.ctx.get_kv_store_mut();
+
+        kv_store.insert(
+            &next_sequence_send_path(&packet.source_port, &packet.source_channel),
+            &rlp::encode(&next_sequence_send),
+        );
+        kv_store.insert(
+            &packet_commitment_path(&packet.source_port, &packet.source_channel, &packet.sequence),
+            &rlp::encode(
+                &PacketCommitment {
+                    data: packet.data.clone(),
+                    timeout: packet.timeout_height,
+                }
+                .hash(),
+            ),
+        );
+
+        // check log.rs to understand this statement
+        set_packet(self.ctx, &packet, "send");
+
         Ok(())
     }
 }
