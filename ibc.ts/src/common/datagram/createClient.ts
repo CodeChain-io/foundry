@@ -28,6 +28,6 @@ export class CreateClientDatagram {
     }
 
     public toEncodeObject(): any[] {
-        return [this.id, this.kind, this.consensusState, this.data];
+        return [1, this.id, this.kind, this.consensusState, this.data];
     }
 }
