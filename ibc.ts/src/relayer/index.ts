@@ -4,6 +4,7 @@ import { Datagram } from "../common/datagram/index";
 import { delay } from "../common/util";
 import { getConfig } from "./config";
 import { PlatformAddress } from "codechain-primitives/lib";
+import { UpdateClientDatagram } from "../common/datagram/updateClient";
 
 require("dotenv").config();
 
@@ -111,6 +112,27 @@ async function updateLightClient({
     height: number;
     counterpartyChainHeight: number;
 }): Promise<Datagram[]> {
-    console.error("Not implemented");
-    return [];
+    const datagrams = [];
+    const clientState = await chain.queryClient(height);
+
+    if (clientState!.data == null) {
+        throw new Error(
+            `No client state found. Please create a light client with identifier: ${chain.counterpartyIdentifiers.client}`
+        );
+    }
+    let currentBlockNumber = clientState!.data!.number;
+    while (currentBlockNumber < counterpartyChainHeight) {
+        const header = (await counterpartyChain.queryHeader(
+            currentBlockNumber + 1
+        ))!;
+        datagrams.push(
+            new UpdateClientDatagram({
+                id: chain.counterpartyIdentifiers.client,
+                header: Buffer.from(header, "hex")
+            })
+        );
+        currentBlockNumber += 1;
+    }
+
+    return datagrams;
 }
