@@ -14,12 +14,22 @@ async function main() {
     const chainA = new Chain({
         server: config.chainA.rpcURL,
         networkId: config.chainA.networkId,
-        faucetAddress: PlatformAddress.fromString(config.chainA.faucetAddress)
+        faucetAddress: PlatformAddress.fromString(config.chainA.faucetAddress),
+        counterpartyIdentifiers: {
+            client: config.chainA.counterpartyClientId,
+            connection: config.chainA.counterpartyConnectionId,
+            channel: config.chainA.counterpartyChannelId
+        }
     });
     const chainB = new Chain({
         server: config.chainB.rpcURL,
         networkId: config.chainB.networkId,
-        faucetAddress: PlatformAddress.fromString(config.chainB.faucetAddress)
+        faucetAddress: PlatformAddress.fromString(config.chainB.faucetAddress),
+        counterpartyIdentifiers: {
+            client: config.chainB.counterpartyClientId,
+            connection: config.chainB.counterpartyConnectionId,
+            channel: config.chainB.counterpartyChannelId
+        }
     });
 
     while (true) {

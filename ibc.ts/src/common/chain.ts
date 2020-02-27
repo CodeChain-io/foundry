@@ -4,8 +4,24 @@ import { H256, PlatformAddress } from "codechain-primitives";
 import { IBC } from "./foundry/transaction";
 import { delay } from "./util";
 import Debug from "debug";
+import { ClientState } from "./foundry/types";
 
 const debug = Debug("common:tx");
+
+export interface CounterpartyIdentifiers {
+    /**
+     * Identifier for counter party chain's light client saved in this chain
+     */
+    client: string;
+    /**
+     * Identifier for connection with counterparty chain
+     */
+    connection: string;
+    /**
+     * Identifier for channel with counterparty chain
+     */
+    channel: string;
+}
 
 export interface ChainConfig {
     /**
@@ -14,11 +30,13 @@ export interface ChainConfig {
     server: string;
     networkId: string;
     faucetAddress: PlatformAddress;
+    counterpartyIdentifiers: CounterpartyIdentifiers;
 }
 
 export class Chain {
     private readonly sdk: SDK;
     private readonly faucetAddress: PlatformAddress;
+    private readonly counterpartyIdentifiers: CounterpartyIdentifiers;
 
     public constructor(config: ChainConfig) {
         this.sdk = new SDK({
@@ -26,6 +44,7 @@ export class Chain {
             networkId: config.networkId
         });
         this.faucetAddress = config.faucetAddress;
+        this.counterpartyIdentifiers = config.counterpartyIdentifiers;
     }
 
     public async submitDatagram(datagram: Datagram): Promise<void> {
