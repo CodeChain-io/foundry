@@ -19,7 +19,7 @@ use super::{channel_capability_path, channel_path, next_sequence_recv_path, next
 use crate::ibc;
 use crate::ibc::connection_03::path as connection_path;
 use crate::ibc::connection_03::types::{ConnectionEnd, ConnectionState};
-use crate::ibc::Identifier;
+use crate::ibc::{Identifier, IdentifierSlice};
 use ibc::client_02::Manager as ClientManager;
 use primitives::Bytes;
 
@@ -47,6 +47,66 @@ impl<'a> Manager<'a> {
         }
     }
 
+    // Utility functions
+    fn check_connection_opened(&self, id: IdentifierSlice) -> Result<Identifier, String> {
+        let kv_store = self.ctx.get_kv_store();
+        let connection_end: ConnectionEnd =
+            rlp::decode(&kv_store.get(&connection_path(&id)).ok_or_else(|| "Connection doesn't exist".to_owned())?)
+                .expect("Illformed ConnectionEnd stored in the DB");
+
+        if connection_end.state != ConnectionState::OPEN {
+            return Err("Connection not opened".to_owned())
+        }
+        Ok(connection_end.client_identifier)
+    }
+
+    fn check_capability_key(&self, port: IdentifierSlice, channel: IdentifierSlice) -> Result<(), String> {
+        let kv_store = self.ctx.get_kv_store();
+        let key: String = rlp::decode(
+            &kv_store
+                .get(&channel_capability_path(port, channel))
+                .ok_or_else(|| "capability key not found".to_owned())?,
+        )
+        .expect("Illformed capability key stored in the DB");
+
+        if !port05_authenticate(key) {
+            return Err("Invalid capability key".to_owned())
+        }
+        Ok(())
+    }
+
+    fn get_previous_channel_end(&self, port: IdentifierSlice, channel: IdentifierSlice) -> Result<ChannelEnd, String> {
+        let kv_store = self.ctx.get_kv_store();
+        let previous: ChannelEnd =
+            rlp::decode(&kv_store.get(&channel_path(port, channel)).ok_or_else(|| "ChannelEnd not found".to_owned())?)
+                .expect("Illformed ChannelEnd stored in the DB");
+
+        Ok(previous)
+    }
+
+    fn get_sequence_send(&self, port: IdentifierSlice, channel: IdentifierSlice) -> Result<Sequence, String> {
+        let kv_store = self.ctx.get_kv_store();
+        let sequence: Sequence = rlp::decode(
+            &kv_store
+                .get(&next_sequence_send_path(port, channel))
+                .ok_or_else(|| "Next sequence(Send) not found".to_owned())?,
+        )
+        .expect("Illformed Sequence stored in the DB");
+        Ok(sequence)
+    }
+
+    fn get_sequence_recv(&self, port: IdentifierSlice, channel: IdentifierSlice) -> Result<Sequence, String> {
+        let kv_store = self.ctx.get_kv_store();
+        let sequence: Sequence = rlp::decode(
+            &kv_store
+                .get(&next_sequence_recv_path(port, channel))
+                .ok_or_else(|| "Next sequence(Recv) not found".to_owned())?,
+        )
+        .expect("Illformed Sequence stored in the DB");
+        Ok(sequence)
+    }
+
+    // ICS Channel
     pub fn chan_open_init(
         &mut self,
         order: ChannelOrder,
@@ -136,14 +196,7 @@ impl<'a> Manager<'a> {
             }
         }
 
-        let connection_end: ConnectionEnd = rlp::decode(
-            &kv_store.get(&connection_path(&connection)).ok_or_else(|| "Connection doesn't exist".to_owned())?,
-        )
-        .expect("Illformed connection end stored in the DB");
-
-        if connection_end.state != ConnectionState::OPEN {
-            return Err("Connection not opend".to_owned())
-        }
+        let client_identifier = self.check_connection_opened(&connection)?;
 
         let expected = ChannelEnd {
             state: ChannelState::INIT,
@@ -157,7 +210,7 @@ impl<'a> Manager<'a> {
 
         let client_manager = ClientManager::new(self.ctx);
         client_manager.verify_channel_state(
-            &connection_end.client_identifier,
+            &client_identifier,
             proof_height,
             proof_init,
             DEFAULT_PORT,
