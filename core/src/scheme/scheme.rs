@@ -236,18 +236,6 @@ impl Scheme {
         load_bundled!("tendermint")
     }
 
-    pub fn new_mainnet() -> Self {
-        load_bundled!("mainnet")
-    }
-
-    pub fn new_corgi() -> Self {
-        load_bundled!("corgi")
-    }
-
-    pub fn new_beagle() -> Self {
-        load_bundled!("beagle")
-    }
-
     /// Get common blockchain parameters.
     pub fn genesis_params(&self) -> CommonParams {
         *self.engine.machine().genesis_common_params()

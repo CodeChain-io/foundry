@@ -23,11 +23,8 @@ use std::{fmt, fs};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ChainType {
-    Mainnet,
     Solo,
     Tendermint,
-    Corgi,
-    Beagle,
     Custom(String),
 }
 
@@ -42,11 +39,8 @@ impl FromStr for ChainType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let scheme = match s {
-            "mainnet" => ChainType::Mainnet,
             "solo" => ChainType::Solo,
             "tendermint" => ChainType::Tendermint,
-            "corgi" => ChainType::Corgi,
-            "beagle" => ChainType::Beagle,
             other => ChainType::Custom(other.into()),
         };
         Ok(scheme)
@@ -86,11 +80,8 @@ impl<'a> Deserialize<'a> for ChainType {
 impl fmt::Display for ChainType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            ChainType::Mainnet => "mainnet",
             ChainType::Solo => "solo",
             ChainType::Tendermint => "tendermint",
-            ChainType::Corgi => "corgi",
-            ChainType::Beagle => "beagle",
             ChainType::Custom(custom) => custom,
         })
     }
@@ -99,11 +90,8 @@ impl fmt::Display for ChainType {
 impl ChainType {
     pub fn scheme(&self) -> Result<Scheme, String> {
         match self {
-            ChainType::Mainnet => Ok(Scheme::new_mainnet()),
             ChainType::Solo => Ok(Scheme::new_test_solo()),
             ChainType::Tendermint => Ok(Scheme::new_test_tendermint()),
-            ChainType::Corgi => Ok(Scheme::new_corgi()),
-            ChainType::Beagle => Ok(Scheme::new_beagle()),
             ChainType::Custom(filename) => {
                 let file = fs::File::open(filename)
                     .map_err(|e| format!("Could not load specification file at {}: {}", filename, e))?;
