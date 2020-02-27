@@ -61,8 +61,10 @@ mod tests {
                 "tendermint": {
                     "params": {
                         "validators" : [
-                            "0x4f1541fc6bdec60bf0ac6380a8e3914a469fe6cd4fa817c890d5823cfdda83932f61dc083e1b6736dadeceb5afd3fcfbac915e5fa2c9c20acf1c30b080114d7f",
-                            "0x1ac8248deb29a58c4bdbfce031fb22c7ba3bcc9384bf6de058a1c8bef5a17422cf8ca26666a5505684db7364eabeed6fc678b02658ae7c1848a4ae6e50244cf2"
+                            ["0xc1f7057e36205fe711c1d645c6c037d10e40e0a8",
+          "0x81fc91b26e2bb60e4f1936d63ec3d540507578d38ee3800a691de957419f2f455ce074cb6ef2e179434cf900c6eac9d80af3ac0c7b1b56f118826f33272b8f2cdd62cde37505e2fa3f3f8c89740513c5c055099c02cbed96d26ecef84d224768"],
+          ["0xb5f5782552e883ea5b20a3ad0cc4f2f60bd87c39",
+          "0xaabd584b58a269c1cf8e790f9561aa0aff86014a121ee3fef76ab36cae0be0e1e942bd242db6cb32321019e74b308a7e01bae6b0c2e41bc8ea751981ec64afa51aa2de5b9bec2e344a109ac58d79492f4bb603586de384d766e8059ac80858ee"]
                         ],
                         "timeoutPropose": 10000,
                         "timeoutPrevote": 10000,

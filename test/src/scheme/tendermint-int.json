@@ -4,10 +4,14 @@
         "tendermint": {
             "params": {
                 "validators": [
-                    "0x4f1541fc6bdec60bf0ac6380a8e3914a469fe6cd4fa817c890d5823cfdda83932f61dc083e1b6736dadeceb5afd3fcfbac915e5fa2c9c20acf1c30b080114d7f",
-                    "0x1ac8248deb29a58c4bdbfce031fb22c7ba3bcc9384bf6de058a1c8bef5a17422cf8ca26666a5505684db7364eabeed6fc678b02658ae7c1848a4ae6e50244cf2",
-                    "0xdb3a858d2bafd2cb5382fcf366b847a86b58b42ce1fc29fec0cb0315af881a2ad495045adbdbc86ef7a777b541c4e62a0747f25ff6068a5ec3a052c690c4ff8a",
-                    "0x42829b18de338aa3abf5e6d80cd511121bf9d34be9a135bbace32a3226479e7f3bb6af76c11dcc724a1666a22910d756b075d54d8fdd97be11efd7a0ac3bb222"
+                    ["0x6a8e5ec34cdb3cde78ebf4dfd8d84f00f437fddb",
+                    "0x8a362f3b7e98dd0288d4298fb620e7251ae3dc759584e3445bbfe01b1aac9626e245dc41a8656f951b2456379533779507463c0a2a2268d7c929914f3c26371f0ab0a2649ae648b2a830cdcb61187ec4ccc7b60ea8b5cef8fb1000ec690785bc"],
+                    ["0xc25b8e91fccd3b8b137b5faa7f86f656252ba2ee",
+                    "0xa7865b12157bb34875726479acc5dc6c0e9a85bc2a1bd536bbdc082d2d2cb331373fb314f1cfe89bcfb9ef32b752064417ceb1bc8fc67dd73d1caa51cfe6ba1311661435ece91efb48f807887ad94588a40377265d4469d95f1229662e2fddf8"],
+                    ["0xd32d7cd32af1703400c9624ea3ba488d7a0e6d17",
+                    "0xaa4b34bb0be98ff752def3fae13f9dc5ac3b494bd0295e684dd367842a5939cd8cfcea40c792497b0d2a009c96098a7e18d6318ddcb49f85658d3d53f0b032b29735701033395f5e03eeac65084feb50ebf21f5a1181ee1df6659632edb76331"],
+                    ["0x49acbedaea4afa1c00adea94856536fab532d927",
+                    "0x893ec45952f9550384e7d0689766bdda923a7d7a22465f60ed3e33671e9e9ea7672c819267b5ab6bafa15948fb7e0e090d67df89de3fac918a4836ddb321c6e2dfda934ba2679c39eb8177e97989e4317de48e54a66e99cf77d6ec07728106c6"]
                 ],
                 "timeoutPropose": 1000,
                 "timeoutProposeDelta": 1000,
