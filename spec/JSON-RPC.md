@@ -1631,7 +1631,7 @@ Gets transactions that have insertion_timestamps within the given range from the
 ### Params
  1. from: `number | null` - The lower bound of collected pending transactions. If null, there is no lower bound.
  2. to: `number | null` - The upper bound of collected pending transactions. If null, there is no upper bound.
-
+ 3. future_included: `boolean` -  The parameter to include future transactions. If true, future transactions are included.
 ### Returns
 `{ transactions: Transaction[], lastTimestamp: number }`
 
@@ -1639,7 +1639,7 @@ Gets transactions that have insertion_timestamps within the given range from the
 ```
   curl \
     -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "mempool_getPendingTransactions", "params": [null, null], "id": null}' \
+    -d '{"jsonrpc": "2.0", "method": "mempool_getPendingTransactions", "params": [null, null,true], "id": null}' \
     localhost:8080
 ```
 
@@ -1683,7 +1683,8 @@ Returns a count of the transactions that have insertion_timestamps within the gi
 ### Params
  1. from: `number | null` - The lower bound of collected pending transactions. If null, there is no lower bound.
  2. to: `number | null` - The upper bound of collected pending transactions. If null, there is no upper bound.
-
+ 3. future_included: `boolean` -  The parameter to count future transactions. If true, future transactions are also counted.
+ 
 ### Returns
 `number`
 
@@ -1691,7 +1692,7 @@ Returns a count of the transactions that have insertion_timestamps within the gi
 ```
   curl \
     -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "mempool_getPendingTransactionsCount", "params": [null, null], "id": null}' \
+    -d '{"jsonrpc": "2.0", "method": "mempool_getPendingTransactionsCount", "params": [null, null,true], "id": null}' \
     localhost:8080
 ```
 
