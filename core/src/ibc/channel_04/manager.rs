@@ -347,4 +347,21 @@ impl<'a> Manager<'a> {
         self.ctx.get_kv_store_mut().insert(&channel_path(DEFAULT_PORT, &channel_identifier), &rlp::encode(&channel));
         Ok(())
     }
+
+    pub fn chan_close_init(&mut self, channel_identifier: Identifier) -> Result<(), String> {
+        let previous = self.get_previous_channel_end(DEFAULT_PORT, &channel_identifier)?;
+        if previous.state == ChannelState::CLOSED {
+            return Err("Channel already closed.".to_owned())
+        }
+
+        self.check_capability_key(DEFAULT_PORT, &channel_identifier)?;
+        self.check_connection_opened(&previous.connection_hops[0])?;
+
+        // Update
+        let mut channel = previous;
+        channel.state = ChannelState::CLOSED;
+        let kv_store = self.ctx.get_kv_store_mut();
+        kv_store.insert(&channel_path(DEFAULT_PORT, &channel_identifier), &rlp::encode(&channel));
+        Ok(())
+    }
 }
