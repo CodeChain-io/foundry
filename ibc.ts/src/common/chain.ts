@@ -41,6 +41,10 @@ export class Chain {
         const txHash = await this.sdk.rpc.chain.sendSignedTransaction(signedTx);
         waitForTx(this.sdk, txHash);
     }
+
+    public async latestHeight(): Promise<number> {
+        return await this.sdk.rpc.chain.getBestBlockNumber();
+    }
 }
 
 async function waitForTx(sdk: SDK, txHash: H256) {

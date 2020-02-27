@@ -57,8 +57,50 @@ async function relayFromTo({
     }
 }
 
-async function pendingDatagrams(
-    args: any
-): Promise<{ localDatagrams: Datagram[]; counterpartyDatagrams: Datagram[] }> {
-    return { localDatagrams: [], counterpartyDatagrams: [] };
+async function pendingDatagrams({
+    chain,
+    counterpartyChain
+}: {
+    chain: Chain;
+    counterpartyChain: Chain;
+}): Promise<{ localDatagrams: Datagram[]; counterpartyDatagrams: Datagram[] }> {
+    const height = await chain.latestHeight();
+    const counterpartyChainHeight = await chain.latestHeight();
+    let localDatagrams: Datagram[] = [];
+    let counterpartyDatagrams: Datagram[] = [];
+
+    localDatagrams = localDatagrams.concat(
+        await updateLightClient({
+            chain,
+            counterpartyChain,
+            height,
+            counterpartyChainHeight
+        })
+    );
+
+    counterpartyDatagrams = counterpartyDatagrams.concat(
+        await updateLightClient({
+            chain: counterpartyChain,
+            counterpartyChain: chain,
+            height: counterpartyChainHeight,
+            counterpartyChainHeight: height
+        })
+    );
+
+    return { localDatagrams, counterpartyDatagrams };
+}
+
+async function updateLightClient({
+    chain,
+    counterpartyChain,
+    height,
+    counterpartyChainHeight
+}: {
+    chain: Chain;
+    counterpartyChain: Chain;
+    height: number;
+    counterpartyChainHeight: number;
+}): Promise<Datagram[]> {
+    console.error("Not implemented");
+    return [];
 }
