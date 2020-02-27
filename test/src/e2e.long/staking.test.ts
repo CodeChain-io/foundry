@@ -26,8 +26,12 @@ import {
     stakeActionHandlerId,
     validator0Address,
     validator0Secret,
+    validator0BlsPublic,
+    validator0PopSignature,
     validator1Address,
     validator1Secret,
+    validator1BlsPublic,
+    validator1PopSignature,
     validator2Address,
     validator3Address
 } from "../helper/constants";
@@ -300,13 +304,22 @@ describe("Staking", function() {
     async function selfNominate(params: {
         senderAddress: PlatformAddress;
         senderSecret: string;
+        senderBlsPublic: string;
+        senderPopSignature: string;
         deposit: number;
         metadata: Buffer | null;
         fee?: number;
         seq?: number;
         waitForEnd?: boolean;
     }): Promise<string> {
-        const { fee = 10, deposit, metadata, waitForEnd = true } = params;
+        const {
+            fee = 10,
+            deposit,
+            senderBlsPublic,
+            senderPopSignature,
+            metadata,
+            waitForEnd = true
+        } = params;
         const seq =
             params.seq == null
                 ? (await nodes[0].rpc.chain.getSeq({
@@ -317,7 +330,15 @@ describe("Staking", function() {
         const tx = nodes[0].sdk.core
             .createCustomTransaction({
                 handlerId: stakeActionHandlerId,
-                bytes: Buffer.from(RLP.encode([4, deposit, metadata]))
+                bytes: Buffer.from(
+                    RLP.encode([
+                        4,
+                        deposit,
+                        senderBlsPublic,
+                        senderPopSignature,
+                        metadata
+                    ])
+                )
             })
             .sign({
                 secret: params.senderSecret,
@@ -446,6 +467,8 @@ describe("Staking", function() {
         await selfNominate({
             senderAddress: validator0Address,
             senderSecret: validator0Secret,
+            senderBlsPublic: validator0BlsPublic,
+            senderPopSignature: validator0PopSignature,
             deposit: 0,
             metadata: null
         });
@@ -495,6 +518,8 @@ describe("Staking", function() {
         await selfNominate({
             senderAddress: validator0Address,
             senderSecret: validator0Secret,
+            senderBlsPublic: validator0BlsPublic,
+            senderPopSignature: validator0PopSignature,
             deposit: 0,
             metadata: null
         });
@@ -604,6 +629,8 @@ describe("Staking", function() {
         await selfNominate({
             senderAddress: validator0Address,
             senderSecret: validator0Secret,
+            senderBlsPublic: validator0BlsPublic,
+            senderPopSignature: validator0PopSignature,
             deposit: 0,
             metadata: null
         });
@@ -666,6 +693,8 @@ describe("Staking", function() {
         await selfNominate({
             senderAddress: validator0Address,
             senderSecret: validator0Secret,
+            senderBlsPublic: validator0BlsPublic,
+            senderPopSignature: validator0PopSignature,
             deposit: 0,
             metadata: null
         });
@@ -757,6 +786,8 @@ describe("Staking", function() {
         await selfNominate({
             senderAddress: validator0Address,
             senderSecret: validator0Secret,
+            senderBlsPublic: validator0BlsPublic,
+            senderPopSignature: validator0PopSignature,
             deposit: 0,
             metadata: null
         });
@@ -905,6 +936,8 @@ describe("Staking", function() {
         await selfNominate({
             senderAddress: validator1Address,
             senderSecret: validator1Secret,
+            senderBlsPublic: validator1BlsPublic,
+            senderPopSignature: validator1PopSignature,
             deposit: 0,
             metadata: null
         });
@@ -1054,6 +1087,8 @@ describe("Staking", function() {
         await selfNominate({
             senderAddress: validator1Address,
             senderSecret: validator1Secret,
+            senderBlsPublic: validator1BlsPublic,
+            senderPopSignature: validator1PopSignature,
             deposit: 0,
             metadata: null
         });

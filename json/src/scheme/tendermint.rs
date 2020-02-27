@@ -57,21 +57,22 @@ pub struct Tendermint {
 #[cfg(test)]
 mod tests {
     use super::Tendermint;
-    use ckey::Public;
     use ckey::{Address, BlsPublic};
-    use serde_json;
     use std::str::FromStr;
 
     #[test]
     fn tendermint_deserialization() {
         let s = r#"{
             "params": {
-                "validators": ["0x2a8a69439f2396c9a328289fdc3905d9736da9e14eb1a282cfd2c036cc21a17a5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08"]
+                "validators": [["0xc1f7057e36205fe711c1d645c6c037d10e40e0a8",
+                "0x81fc91b26e2bb60e4f1936d63ec3d540507578d38ee3800a691de957419f2f455ce074cb6ef2e179434cf900c6eac9d80af3ac0c7b1b56f118826f33272b8f2cdd62cde37505e2fa3f3f8c89740513c5c055099c02cbed96d26ecef84d224768"]]
             }
         }"#;
 
         let deserialized: Tendermint = serde_json::from_str(s).unwrap();
-        let vs = vec![Public::from_str("2a8a69439f2396c9a328289fdc3905d9736da9e14eb1a282cfd2c036cc21a17a5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08").unwrap()];
-        assert_eq!(deserialized.params.validators, vs);
+        let address = Address::from_str("c1f7057e36205fe711c1d645c6c037d10e40e0a8").unwrap();
+        let bls_public = BlsPublic::from_str("81fc91b26e2bb60e4f1936d63ec3d540507578d38ee3800a691de957419f2f455ce074cb6ef2e179434cf900c6eac9d80af3ac0c7b1b56f118826f33272b8f2cdd62cde37505e2fa3f3f8c89740513c5c055099c02cbed96d26ecef84d224768").unwrap();
+        let validators = vec![(address, bls_public)];
+        assert_eq!(deserialized.params.validators, validators);
     }
 }

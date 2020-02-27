@@ -79,6 +79,14 @@ export const validator0Address = SDK.Core.classes.PlatformAddress.fromAccountId(
     validator0AccountId,
     { networkId: "tc" }
 ); // tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f
+export const validator0BlsPublic =
+    "0x8a362f3b7e98dd0288d4298fb620e7251ae3dc759584e3445bbfe01b1aac9626e245dc41a8656f951b2456379533779507463c0a2a2268d7c929914f3c26371f0ab0a2649ae648b2a830cdcb61187ec4ccc7b60ea8b5cef8fb1000ec690785bc";
+// TODO: replace hard-coded values with SDK function call
+// 0x prefix is required since the rlp library reads the prefix to encode the value
+export const validator0PopSignature =
+    "0xa14c2321cc2c4de037f371d80a2895d16afcea9cc0e98d2c122a46a990737695cb198e8314fb3a796590ef9335bfb8c8";
+// TODO: replace hard-coded values with SDK function call
+// 0x prefix is required since the rlp library reads the prefix to encode the valu
 
 export const validator1Secret =
     "79d26d5788ca5f5ae87e8dd0f057124c2cfda11136aeb140f1d9ac3648d5b703";
@@ -91,6 +99,14 @@ export const validator1Address = SDK.Core.classes.PlatformAddress.fromAccountId(
     validator1AccountId,
     { networkId: "tc" }
 ); // tccq8p9hr53lnxnhzcn0d065lux7etz22azaca786tt
+export const validator1BlsPublic =
+    "0xa7865b12157bb34875726479acc5dc6c0e9a85bc2a1bd536bbdc082d2d2cb331373fb314f1cfe89bcfb9ef32b752064417ceb1bc8fc67dd73d1caa51cfe6ba1311661435ece91efb48f807887ad94588a40377265d4469d95f1229662e2fddf8";
+// TODO: replace hard-coded values with SDK function call
+// 0x prefix is required since the rlp library reads the prefix to encode the value
+export const validator1PopSignature =
+    "0x822a8cf830f03e075d40931107fc8d14af1d2eaa92cfe98888089a60e47fea246d6e5d361e3d473db7e04ea22d47ffbf";
+// TODO: replace hard-coded values with SDK function call
+// 0x prefix is required since the rlp library reads the prefix to encode the value
 
 export const validator2Secret =
     "83352d249f5fe8d85b792dd26d70050b2f7fab02be9ea33e52c83a2be73a2700";
@@ -103,6 +119,14 @@ export const validator2Address = SDK.Core.classes.PlatformAddress.fromAccountId(
     validator2AccountId,
     { networkId: "tc" }
 ); // tccq8fj6lxn9tchqdqqe93yaga6fzxh5rndzu8k2gdw
+export const validator2BlsPublic =
+    "aa4b34bb0be98ff752def3fae13f9dc5ac3b494bd0295e684dd367842a5939cd8cfcea40c792497b0d2a009c96098a7e18d6318ddcb49f85658d3d53f0b032b29735701033395f5e03eeac65084feb50ebf21f5a1181ee1df6659632edb76331";
+// TODO: replace hard-coded values with SDK function call
+// 0x prefix is required since the rlp library reads the prefix to encode the value
+export const validator2PopSignature =
+    "b3540334534d13885921c6f3641e5865ba4e55626fdb8ee590ce87de10d1b58c9ef0a3884eb47e52de105bb825bebbd8";
+// TODO: replace hard-coded values with SDK function call
+// 0x prefix is required since the rlp library reads the prefix to encode the value
 
 export const validator3Secret =
     "0afa81c02fba3671ec9578f3be040e0186b445e9dc37d8bf4a866c8636841836";
@@ -115,6 +139,14 @@ export const validator3Address = SDK.Core.classes.PlatformAddress.fromAccountId(
     validator3AccountId,
     { networkId: "tc" }
 ); // tccq9y6e0k6af9058qq4h4ffpt9xmat2vkeyue23j8y
+export const validator3BlsPublic =
+    "893ec45952f9550384e7d0689766bdda923a7d7a22465f60ed3e33671e9e9ea7672c819267b5ab6bafa15948fb7e0e090d67df89de3fac918a4836ddb321c6e2dfda934ba2679c39eb8177e97989e4317de48e54a66e99cf77d6ec07728106c6";
+// TODO: replace hard-coded values with SDK function call
+// 0x prefix is required since the rlp library reads the prefix to encode the value
+export const validator3PopSignature =
+    "99f8d282646f106153e8ad7ceae97b3610127008e615d1e6ea266071dc7d04237192360f0cdcb222665cc7a076b78771";
+// TODO: replace hard-coded values with SDK function call
+// 0x prefix is required since the rlp library reads the prefix to encode the value
 
 export const hitActionHandlerId = 1;
 export const stakeActionHandlerId = 2;

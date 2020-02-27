@@ -63,7 +63,8 @@ mod tests {
         let s = r#"{
             "tendermint": {
                 "params": {
-                    "validators": ["0x1ac8248deb29a58c4bdbfce031fb22c7ba3bcc9384bf6de058a1c8bef5a17422cf8ca26666a5505684db7364eabeed6fc678b02658ae7c1848a4ae6e50244cf2"]
+                    "validators":[["0xc1f7057e36205fe711c1d645c6c037d10e40e0a8",
+                    "0x81fc91b26e2bb60e4f1936d63ec3d540507578d38ee3800a691de957419f2f455ce074cb6ef2e179434cf900c6eac9d80af3ac0c7b1b56f118826f33272b8f2cdd62cde37505e2fa3f3f8c89740513c5c055099c02cbed96d26ecef84d224768"]]
                 }
             }
         }"#;
