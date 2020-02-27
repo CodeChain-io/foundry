@@ -25,6 +25,7 @@ import {
 } from "../helper/constants";
 import { PromiseExpect } from "../helper/promise";
 import CodeChain from "../helper/spawn";
+import { ERROR } from "../helper/error";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -107,26 +108,38 @@ describe("Tendermint ", function() {
 
         it("larger than the current block", async function() {
             const currentBlock = await nodes[0].getBestBlockNumber();
-            expect(
-                nodes[0].rpc.chain.getPossibleAuthors({
+            try {
+                await nodes[0].rpc.chain.getPossibleAuthors({
                     blockNumber: currentBlock + 10
-                })
-            ).be.rejectedWith("Engine");
-            expect(
-                nodes[1].rpc.chain.getPossibleAuthors({
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(ERROR.ENGIN_ERROR);
+            }
+            try {
+                await nodes[1].rpc.chain.getPossibleAuthors({
                     blockNumber: currentBlock + 100
-                })
-            ).be.rejectedWith("Engine");
-            expect(
-                nodes[2].rpc.chain.getPossibleAuthors({
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(ERROR.ENGIN_ERROR);
+            }
+            try {
+                await nodes[2].rpc.chain.getPossibleAuthors({
                     blockNumber: currentBlock + 1000
-                })
-            ).be.rejectedWith("Engine");
-            expect(
-                nodes[3].rpc.chain.getPossibleAuthors({
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(ERROR.ENGIN_ERROR);
+            }
+            try {
+                await nodes[3].rpc.chain.getPossibleAuthors({
                     blockNumber: currentBlock + 10000
-                })
-            ).be.rejectedWith("Engine");
+                });
+                expect.fail();
+            } catch (e) {
+                expect(e.toString()).is.include(ERROR.ENGIN_ERROR);
+            }
         });
     });
 
