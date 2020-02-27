@@ -5,6 +5,7 @@ import { IBC } from "./foundry/transaction";
 import { delay } from "./util";
 import Debug from "debug";
 import { ClientState } from "./foundry/types";
+import { IBCHeader, IBCQueryResult } from "./types";
 
 const debug = Debug("common:tx");
 
@@ -36,7 +37,7 @@ export interface ChainConfig {
 export class Chain {
     private readonly sdk: SDK;
     private readonly faucetAddress: PlatformAddress;
-    private readonly counterpartyIdentifiers: CounterpartyIdentifiers;
+    public readonly counterpartyIdentifiers: CounterpartyIdentifiers;
 
     public constructor(config: ChainConfig) {
         this.sdk = new SDK({
@@ -63,6 +64,19 @@ export class Chain {
 
     public async latestHeight(): Promise<number> {
         return await this.sdk.rpc.chain.getBestBlockNumber();
+    }
+
+    public async queryClient(
+        blockNumber: number
+    ): Promise<IBCQueryResult<ClientState> | null> {
+        return this.sdk.rpc.sendRpcRequest("ibc_query_client_state", [
+            this.counterpartyIdentifiers.client,
+            blockNumber
+        ]);
+    }
+
+    public async queryHeader(blockNumber: number): Promise<IBCHeader | null> {
+        return this.sdk.rpc.sendRpcRequest("ibc_compose_header", [blockNumber]);
     }
 }
 
