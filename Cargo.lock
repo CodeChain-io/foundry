@@ -650,6 +650,10 @@ dependencies = [
 [[package]]
 name = "coordinator"
 version = "0.1.0"
+dependencies = [
+ "codechain-key",
+ "codechain-types",
+]
 
 [[package]]
 name = "core-foundation"
