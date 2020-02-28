@@ -15,7 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::ibc::Identifier;
-use primitives::Bytes;
+use ccrypto::blake256;
+use primitives::{Bytes, H256};
 use rlp;
 use rlp::{DecoderError, Rlp, RlpStream};
 
@@ -95,6 +96,21 @@ pub struct Packet {
     pub dest_port: Identifier,
     pub dest_channel: Identifier,
     pub data: Bytes,
+}
+
+/// Hash of this struct, which is part of Packet, will be stored in state DB
+#[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
+pub struct PacketCommitment {
+    pub data: Bytes,
+    pub timeout: u64,
+}
+
+impl PacketCommitment {
+    pub fn hash(&self) -> H256 {
+        let mut concated = self.data.clone();
+        concated.append(&mut rlp::encode(&self.timeout));
+        blake256(concated)
+    }
 }
 
 #[cfg(test)]
