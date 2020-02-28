@@ -17,15 +17,16 @@
 use super::log::{remove_packet, set_packet};
 use super::types::{ChannelEnd, ChannelOrder, ChannelState, Packet, PacketCommitment, Sequence};
 use super::{
-    channel_capability_path, channel_path, next_sequence_recv_path, next_sequence_send_path, packet_commitment_path,
-    DEFAULT_PORT,
+    channel_capability_path, channel_path, next_sequence_recv_path, next_sequence_send_path,
+    packet_acknowledgement_path, packet_commitment_path, DEFAULT_PORT,
 };
 use crate::ibc;
 use crate::ibc::connection_03::path as connection_path;
 use crate::ibc::connection_03::types::{ConnectionEnd, ConnectionState};
 use crate::ibc::{Identifier, IdentifierSlice};
+use ccrypto::blake256;
 use ibc::client_02::Manager as ClientManager;
-use primitives::Bytes;
+use primitives::{Bytes, H256};
 
 pub struct Manager<'a> {
     ctx: &'a mut dyn ibc::Context,
@@ -465,5 +466,74 @@ impl<'a> Manager<'a> {
         set_packet(self.ctx, &packet, "send");
 
         Ok(())
+    }
+
+    pub fn recv_packet(
+        &mut self,
+        packet: Packet,
+        proof: Bytes,
+        proof_height: u64,
+        ack: Bytes,
+    ) -> Result<Packet, String> {
+        let channel = self.get_previous_channel_end(&packet.dest_port, &packet.dest_channel)?;
+        if channel.state != ChannelState::OPEN {
+            return Err("Channel not opened.".to_owned())
+        }
+        if packet.source_port != channel.counterparty_port_identifier {
+            return Err("Packet's source_port doesn't match with counterparty's channel.".to_owned())
+        }
+        if packet.source_channel != channel.counterparty_channel_identifier {
+            return Err("Packet's source_channel doesn't match with counterparty's channel.".to_owned())
+        }
+
+        self.check_capability_key(&packet.dest_port, &packet.dest_channel)?;
+        let client_identifier = self.check_connection_opened(&channel.connection_hops[0])?;
+        let client_manager = ClientManager::new(self.ctx);
+
+        let expected = PacketCommitment {
+            data: packet.data.clone(),
+            timeout: packet.timeout_height,
+        };
+
+        client_manager.verify_packet_data(
+            &client_identifier,
+            proof_height,
+            proof,
+            &packet.source_port,
+            &packet.source_channel,
+            &packet.sequence,
+            &expected,
+        )?;
+
+        if self.ctx.get_current_height() >= packet.timeout_height {
+            return Err("Packet timeout.".to_owned())
+        }
+
+        let mut next_sequence_recv = self.get_sequence_recv(&packet.dest_port, &packet.dest_channel)?;
+        let kv_store = self.ctx.get_kv_store_mut();
+        if channel.ordering == ChannelOrder::ORDERED {
+            kv_store.insert(
+                &packet_acknowledgement_path(&packet.dest_port, &packet.dest_channel, &packet.sequence),
+                &rlp::encode(&blake256(&ack)),
+            );
+
+            if packet.sequence != next_sequence_recv {
+                return Err("Packet carries invalid sequence".to_owned())
+            }
+            next_sequence_recv.raw += 1;
+            kv_store.insert(
+                &next_sequence_recv_path(&packet.dest_port, &packet.dest_channel),
+                &rlp::encode(&next_sequence_recv),
+            );
+        } else {
+            panic!("PoC doesn't support UNORDERED channel");
+        }
+
+        // check log.rs to understand this statement
+        // Unlike send, we just overwrite an old event.
+        remove_packet(self.ctx, &packet.dest_port, &packet.dest_channel, "recv");
+        set_packet(self.ctx, &packet, "recv");
+
+        Ok(packet)
     }
 }
