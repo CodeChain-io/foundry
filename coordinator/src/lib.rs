@@ -16,16 +16,76 @@
 
 pub mod context;
 mod header;
+mod traits;
 mod transaction;
 mod types;
 
-use self::context::Context;
+use self::context::{Context, StorageAccess};
+use self::header::Header;
+use self::traits::{BlockExecutor, Initializer, TxFilter};
+use self::transaction::{Transaction, TransactionWithMetadata};
+use self::types::{BlockOutcome, ErrorCode, VerifiedCrime};
+use crate::types::{CloseBlockError, ExecuteTransactionError, HeaderError, TransactionExecutionOutcome};
+use ctypes::{CompactValidatorSet, ConsensusParams};
 
 /// The `Coordinator` encapsulates all the logic for a Foundry application.
 ///
 /// It assembles modules and feeds them various events from the underlying
 /// consensus engine.
+#[derive(Default)]
 pub struct Coordinator {}
+
+impl Initializer for Coordinator {
+    fn initialize_chain(&self, _app_state: String) -> (CompactValidatorSet, ConsensusParams) {
+        unimplemented!()
+    }
+}
+
+impl BlockExecutor for Coordinator {
+    fn open_block(
+        &self,
+        _storage: &mut dyn StorageAccess,
+        _header: &Header,
+        _verified_crimes: &[VerifiedCrime],
+    ) -> Result<(), HeaderError> {
+        unimplemented!()
+    }
+
+    fn execute_transactions(
+        &self,
+        _storage: &mut dyn StorageAccess,
+        _transactions: &[Transaction],
+    ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError> {
+        unimplemented!()
+    }
+
+    fn prepare_block<'a>(
+        &self,
+        _storage: &mut dyn StorageAccess,
+        _transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+    ) -> Vec<&'a Transaction> {
+        unimplemented!()
+    }
+
+    fn close_block(&self, _storage: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError> {
+        unimplemented!()
+    }
+}
+
+impl TxFilter for Coordinator {
+    fn check_transaction(&self, _transaction: &Transaction) -> Result<(), ErrorCode> {
+        unimplemented!()
+    }
+
+    fn filter_transactions<'a>(
+        &self,
+        _transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+        _memory_limit: Option<usize>,
+        _size_limit: Option<usize>,
+    ) -> (Vec<&'a TransactionWithMetadata>, Vec<&'a TransactionWithMetadata>) {
+        unimplemented!()
+    }
+}
 
 pub struct Builder<C: Context> {
     _context: C,
