@@ -6,7 +6,8 @@
     "fmt": "tslint -p . --fix && prettier 'src/**/*.{ts, json}' --write",
     "lint": "tsc -p . --noEmit && tslint -p . && prettier 'src/**/*.{ts, json}' -l",
     "scenario": "yarn build && node build/scenario/index.js",
-    "relayer": "yarn build && node build/relayer/index.js"
+    "relayer": "yarn build && node build/relayer/index.js",
+    "runChains": "yarn build && node build/scenario/runChains.js"
   },
   "devDependencies": {
     "@types/debug": "^4.1.5",

@@ -3,3 +3,5 @@ yarn-error.log
 yarn.lock
 build/
 .env
+/chainA/db/
+/chainB/db/
