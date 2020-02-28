@@ -1,3 +1,7 @@
+use ctypes::header::Header;
+use std::unimplemented;
+use validator::*;
+
 pub mod context;
 pub mod validator;
 
@@ -9,7 +13,19 @@ pub struct Coordinator<C: context::Context> {
     context: C,
 }
 
-impl<C: context::Context> validator::Validator for Coordinator<C> {}
+impl<C: context::Context> validator::Validator for Coordinator<C> {
+    fn initialize_chain() -> ConsensusParams {
+        unimplemented!()
+    }
+
+    fn execute_block(header: Header, transactions: &[Transaction], evidences: &[Evidence]) -> BlockOutcome {
+        unimplemented!()
+    }
+
+    fn check_transaction(transaction: &Transaction) -> TransactionCheckOutcome {
+        unimplemented!()
+    }
+}
 
 impl<C: context::Context> Coordinator<C> {}
 
