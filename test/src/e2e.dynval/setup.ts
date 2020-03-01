@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -389,23 +389,12 @@ export async function fullyConnect(
 
 export const defaultParams = {
     maxExtraDataSize: 0x20,
-    maxAssetSchemeMetadataSize: 0x0400,
-    maxTransferMetadataSize: 0x0100,
-    maxTextContentSize: 0x0200,
     networkID: "tc",
     minPayCost: 10,
     minCreateShardCost: 10,
     minSetShardOwnersCost: 10,
     minSetShardUsersCost: 10,
-    minWrapCccCost: 10,
     minCustomCost: 0,
-    minMintAssetCost: 10,
-    minTransferAssetCost: 10,
-    minChangeAssetSchemeCost: 10,
-    minIncreaseAssetSupplyCost: 10,
-    minComposeAssetCost: 10,
-    minDecomposeAssetCost: 10,
-    minUnwrapCccCost: 10,
     maxBodySize: 4194304,
     snapshotPeriod: 16384,
 
@@ -429,23 +418,12 @@ type CommonParams = typeof defaultParams & Partial<EraCommonParams>;
 function encodeParams(params: CommonParams): any[] {
     const result = [
         params.maxExtraDataSize,
-        params.maxAssetSchemeMetadataSize,
-        params.maxTransferMetadataSize,
-        params.maxTextContentSize,
         params.networkID,
         params.minPayCost,
         params.minCreateShardCost,
         params.minSetShardOwnersCost,
         params.minSetShardUsersCost,
-        params.minWrapCccCost,
         params.minCustomCost,
-        params.minMintAssetCost,
-        params.minTransferAssetCost,
-        params.minChangeAssetSchemeCost,
-        params.minIncreaseAssetSupplyCost,
-        params.minComposeAssetCost,
-        params.minDecomposeAssetCost,
-        params.minUnwrapCccCost,
         params.maxBodySize,
         params.snapshotPeriod,
         params.termSeconds,

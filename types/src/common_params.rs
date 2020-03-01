@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -23,12 +23,6 @@ pub struct CommonParams {
     size: usize,
     /// Maximum size of extra data.
     max_extra_data_size: usize,
-    /// Maximum size of metadata of AssetScheme.
-    max_asset_scheme_metadata_size: usize,
-    /// Maximum size of metadata of TransferAsset.
-    max_transfer_metadata_size: usize,
-    /// Maximum size of the content of text used in store/remove actions.
-    max_text_content_size: usize,
     /// Network id.
     network_id: NetworkId,
     /// Minimum transaction cost.
@@ -36,17 +30,7 @@ pub struct CommonParams {
     min_create_shard_transaction_cost: u64,
     min_set_shard_owners_transaction_cost: u64,
     min_set_shard_users_transaction_cost: u64,
-    min_wrap_ccc_transaction_cost: u64,
     min_custom_transaction_cost: u64,
-    min_asset_mint_cost: u64,
-    min_asset_transfer_cost: u64,
-    min_asset_scheme_change_cost: u64,
-    min_asset_supply_increase_cost: u64,
-    /// Deprecated
-    min_asset_compose_cost: u64,
-    /// Deprecated
-    min_asset_decompose_cost: u64,
-    min_asset_unwrap_ccc_cost: u64,
     /// Maximum size of block body.
     max_body_size: usize,
     /// Snapshot creation period in unit of block numbers.
@@ -69,15 +53,6 @@ impl CommonParams {
     pub fn max_extra_data_size(&self) -> usize {
         self.max_extra_data_size
     }
-    pub fn max_asset_scheme_metadata_size(&self) -> usize {
-        self.max_asset_scheme_metadata_size
-    }
-    pub fn max_transfer_metadata_size(&self) -> usize {
-        self.max_transfer_metadata_size
-    }
-    pub fn max_text_content_size(&self) -> usize {
-        self.max_text_content_size
-    }
     pub fn network_id(&self) -> NetworkId {
         self.network_id
     }
@@ -93,34 +68,8 @@ impl CommonParams {
     pub fn min_set_shard_users_transaction_cost(&self) -> u64 {
         self.min_set_shard_users_transaction_cost
     }
-    pub fn min_wrap_ccc_transaction_cost(&self) -> u64 {
-        self.min_wrap_ccc_transaction_cost
-    }
     pub fn min_custom_transaction_cost(&self) -> u64 {
         self.min_custom_transaction_cost
-    }
-    pub fn min_asset_mint_cost(&self) -> u64 {
-        self.min_asset_mint_cost
-    }
-    pub fn min_asset_transfer_cost(&self) -> u64 {
-        self.min_asset_transfer_cost
-    }
-    pub fn min_asset_scheme_change_cost(&self) -> u64 {
-        self.min_asset_scheme_change_cost
-    }
-    pub fn min_asset_supply_increase_cost(&self) -> u64 {
-        self.min_asset_supply_increase_cost
-    }
-    #[deprecated]
-    pub fn min_asset_compose_cost(&self) -> u64 {
-        self.min_asset_compose_cost
-    }
-    #[deprecated]
-    pub fn min_asset_decompose_cost(&self) -> u64 {
-        self.min_asset_decompose_cost
-    }
-    pub fn min_asset_unwrap_ccc_cost(&self) -> u64 {
-        self.min_asset_unwrap_ccc_cost
     }
     pub fn max_body_size(&self) -> usize {
         self.max_body_size
@@ -196,12 +145,6 @@ impl CommonParams {
                     self.release_period, self.custody_period
                 ))
             }
-            if self.max_candidate_metadata_size >= self.max_text_content_size {
-                return Err(format!(
-                    "The candidate metadata size limit({}) should be shorter than the text limit({})",
-                    self.max_candidate_metadata_size, self.max_text_content_size
-                ))
-            }
         }
         Ok(())
     }
@@ -223,7 +166,7 @@ impl CommonParams {
     }
 }
 
-const DEFAULT_PARAMS_SIZE: usize = 20;
+const DEFAULT_PARAMS_SIZE: usize = 9;
 const NUMBER_OF_STAKE_PARAMS: usize = 9;
 const NUMBER_OF_ERA_PARAMS: usize = 1;
 const STAKE_PARAM_SIZE: usize = DEFAULT_PARAMS_SIZE + NUMBER_OF_STAKE_PARAMS;
@@ -243,23 +186,12 @@ impl From<Params> for CommonParams {
         Self {
             size,
             max_extra_data_size: p.max_extra_data_size.into(),
-            max_asset_scheme_metadata_size: p.max_asset_scheme_metadata_size.into(),
-            max_transfer_metadata_size: p.max_transfer_metadata_size.into(),
-            max_text_content_size: p.max_text_content_size.into(),
             network_id: p.network_id,
             min_pay_transaction_cost: p.min_pay_cost.into(),
             min_create_shard_transaction_cost: p.min_create_shard_cost.into(),
             min_set_shard_owners_transaction_cost: p.min_set_shard_owners_cost.into(),
             min_set_shard_users_transaction_cost: p.min_set_shard_users_cost.into(),
-            min_wrap_ccc_transaction_cost: p.min_wrap_ccc_cost.into(),
             min_custom_transaction_cost: p.min_custom_cost.into(),
-            min_asset_mint_cost: p.min_mint_asset_cost.into(),
-            min_asset_transfer_cost: p.min_transfer_asset_cost.into(),
-            min_asset_scheme_change_cost: p.min_change_asset_scheme_cost.into(),
-            min_asset_supply_increase_cost: p.min_increase_asset_supply_cost.into(),
-            min_asset_compose_cost: p.min_compose_asset_cost.into(),
-            min_asset_decompose_cost: p.min_decompose_asset_cost.into(),
-            min_asset_unwrap_ccc_cost: p.min_unwrap_ccc_cost.into(),
             max_body_size: p.max_body_size.into(),
             snapshot_period: p.snapshot_period.into(),
             term_seconds: p.term_seconds.map(From::from).unwrap_or_default(),
@@ -281,23 +213,12 @@ impl From<CommonParams> for Params {
         #[allow(deprecated)]
         let mut result: Params = Params {
             max_extra_data_size: p.max_extra_data_size().into(),
-            max_asset_scheme_metadata_size: p.max_asset_scheme_metadata_size().into(),
-            max_transfer_metadata_size: p.max_transfer_metadata_size().into(),
-            max_text_content_size: p.max_text_content_size().into(),
             network_id: p.network_id(),
             min_pay_cost: p.min_pay_transaction_cost().into(),
             min_create_shard_cost: p.min_create_shard_transaction_cost().into(),
             min_set_shard_owners_cost: p.min_set_shard_owners_transaction_cost().into(),
             min_set_shard_users_cost: p.min_set_shard_users_transaction_cost().into(),
-            min_wrap_ccc_cost: p.min_wrap_ccc_transaction_cost().into(),
             min_custom_cost: p.min_custom_transaction_cost().into(),
-            min_mint_asset_cost: p.min_asset_mint_cost().into(),
-            min_transfer_asset_cost: p.min_asset_transfer_cost().into(),
-            min_change_asset_scheme_cost: p.min_asset_scheme_change_cost().into(),
-            min_increase_asset_supply_cost: p.min_asset_supply_increase_cost().into(),
-            min_compose_asset_cost: p.min_asset_compose_cost().into(),
-            min_decompose_asset_cost: p.min_asset_decompose_cost().into(),
-            min_unwrap_ccc_cost: p.min_asset_unwrap_ccc_cost().into(),
             max_body_size: p.max_body_size().into(),
             snapshot_period: p.snapshot_period().into(),
             ..Default::default()
@@ -325,23 +246,12 @@ impl Encodable for CommonParams {
         assert!(VALID_SIZE.contains(&self.size), "{} must be in {:?}", self.size, VALID_SIZE);
         s.begin_list(self.size)
             .append(&self.max_extra_data_size)
-            .append(&self.max_asset_scheme_metadata_size)
-            .append(&self.max_transfer_metadata_size)
-            .append(&self.max_text_content_size)
             .append(&self.network_id)
             .append(&self.min_pay_transaction_cost)
             .append(&self.min_create_shard_transaction_cost)
             .append(&self.min_set_shard_owners_transaction_cost)
             .append(&self.min_set_shard_users_transaction_cost)
-            .append(&self.min_wrap_ccc_transaction_cost)
             .append(&self.min_custom_transaction_cost)
-            .append(&self.min_asset_mint_cost)
-            .append(&self.min_asset_transfer_cost)
-            .append(&self.min_asset_scheme_change_cost)
-            .append(&self.min_asset_supply_increase_cost)
-            .append(&self.min_asset_compose_cost)
-            .append(&self.min_asset_decompose_cost)
-            .append(&self.min_asset_unwrap_ccc_cost)
             .append(&self.max_body_size)
             .append(&self.snapshot_period);
         if self.size >= STAKE_PARAM_SIZE {
@@ -372,25 +282,14 @@ impl Decodable for CommonParams {
         }
 
         let max_extra_data_size = rlp.val_at(0)?;
-        let max_asset_scheme_metadata_size = rlp.val_at(1)?;
-        let max_transfer_metadata_size = rlp.val_at(2)?;
-        let max_text_content_size = rlp.val_at(3)?;
-        let network_id = rlp.val_at(4)?;
-        let min_pay_transaction_cost = rlp.val_at(5)?;
-        let min_create_shard_transaction_cost = rlp.val_at(6)?;
-        let min_set_shard_owners_transaction_cost = rlp.val_at(7)?;
-        let min_set_shard_users_transaction_cost = rlp.val_at(8)?;
-        let min_wrap_ccc_transaction_cost = rlp.val_at(9)?;
-        let min_custom_transaction_cost = rlp.val_at(10)?;
-        let min_asset_mint_cost = rlp.val_at(11)?;
-        let min_asset_transfer_cost = rlp.val_at(12)?;
-        let min_asset_scheme_change_cost = rlp.val_at(13)?;
-        let min_asset_supply_increase_cost = rlp.val_at(14)?;
-        let min_asset_compose_cost = rlp.val_at(15)?;
-        let min_asset_decompose_cost = rlp.val_at(16)?;
-        let min_asset_unwrap_ccc_cost = rlp.val_at(17)?;
-        let max_body_size = rlp.val_at(18)?;
-        let snapshot_period = rlp.val_at(19)?;
+        let network_id = rlp.val_at(1)?;
+        let min_pay_transaction_cost = rlp.val_at(2)?;
+        let min_create_shard_transaction_cost = rlp.val_at(3)?;
+        let min_set_shard_owners_transaction_cost = rlp.val_at(4)?;
+        let min_set_shard_users_transaction_cost = rlp.val_at(5)?;
+        let min_custom_transaction_cost = rlp.val_at(6)?;
+        let max_body_size = rlp.val_at(7)?;
+        let snapshot_period = rlp.val_at(8)?;
 
         let (
             term_seconds,
@@ -404,22 +303,22 @@ impl Decodable for CommonParams {
             max_candidate_metadata_size,
         ) = if size >= STAKE_PARAM_SIZE {
             (
-                rlp.val_at(20)?,
-                rlp.val_at(21)?,
-                rlp.val_at(22)?,
-                rlp.val_at(23)?,
-                rlp.val_at(24)?,
-                rlp.val_at(25)?,
-                rlp.val_at(26)?,
-                rlp.val_at(27)?,
-                rlp.val_at(28)?,
+                rlp.val_at(9)?,
+                rlp.val_at(10)?,
+                rlp.val_at(11)?,
+                rlp.val_at(12)?,
+                rlp.val_at(13)?,
+                rlp.val_at(14)?,
+                rlp.val_at(15)?,
+                rlp.val_at(16)?,
+                rlp.val_at(17)?,
             )
         } else {
             Default::default()
         };
 
         let era = if size >= ERA_PARAM_SIZE {
-            rlp.val_at(29)?
+            rlp.val_at(18)?
         } else {
             Default::default()
         };
@@ -427,23 +326,12 @@ impl Decodable for CommonParams {
         Ok(Self {
             size,
             max_extra_data_size,
-            max_asset_scheme_metadata_size,
-            max_transfer_metadata_size,
-            max_text_content_size,
             network_id,
             min_pay_transaction_cost,
             min_create_shard_transaction_cost,
             min_set_shard_owners_transaction_cost,
             min_set_shard_users_transaction_cost,
-            min_wrap_ccc_transaction_cost,
             min_custom_transaction_cost,
-            min_asset_mint_cost,
-            min_asset_transfer_cost,
-            min_asset_scheme_change_cost,
-            min_asset_supply_increase_cost,
-            min_asset_compose_cost,
-            min_asset_decompose_cost,
-            min_asset_unwrap_ccc_cost,
             max_body_size,
             snapshot_period,
             term_seconds,
@@ -463,21 +351,6 @@ impl Decodable for CommonParams {
 impl CommonParams {
     pub fn default_for_test() -> Self {
         Self::from(Params::default())
-    }
-
-    #[cfg(test)]
-    pub fn set_max_asset_scheme_metadata_size(&mut self, max_asset_scheme_metadata_size: usize) {
-        self.max_asset_scheme_metadata_size = max_asset_scheme_metadata_size;
-    }
-
-    #[cfg(test)]
-    pub fn set_max_transfer_metadata_size(&mut self, max_transfer_metadata_size: usize) {
-        self.max_transfer_metadata_size = max_transfer_metadata_size;
-    }
-
-    #[cfg(test)]
-    pub fn set_max_text_content_size(&mut self, max_text_content_size: usize) {
-        self.max_text_content_size = max_text_content_size;
     }
 
     pub fn set_dynamic_validator_params_for_test(
@@ -546,9 +419,6 @@ mod tests {
     fn params_from_json() {
         let s = r#"{
             "maxExtraDataSize": "0x20",
-            "maxAssetSchemeMetadataSize": "0x0400",
-            "maxTransferMetadataSize": "0x0100",
-            "maxTextContentSize": "0x0200",
             "networkID" : "tc",
             "minPayCost" : 10,
             "minCreateShardCost" : 12,
@@ -570,23 +440,12 @@ mod tests {
         let params = serde_json::from_str::<Params>(s).unwrap();
         let deserialized = CommonParams::from(params.clone());
         assert_eq!(deserialized.max_extra_data_size, 0x20);
-        assert_eq!(deserialized.max_asset_scheme_metadata_size, 0x0400);
-        assert_eq!(deserialized.max_transfer_metadata_size, 0x0100);
-        assert_eq!(deserialized.max_text_content_size, 0x0200);
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_transaction_cost, 10);
         assert_eq!(deserialized.min_create_shard_transaction_cost, 12);
         assert_eq!(deserialized.min_set_shard_owners_transaction_cost, 13);
         assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
-        assert_eq!(deserialized.min_wrap_ccc_transaction_cost, 15);
         assert_eq!(deserialized.min_custom_transaction_cost, 16);
-        assert_eq!(deserialized.min_asset_mint_cost, 17);
-        assert_eq!(deserialized.min_asset_transfer_cost, 18);
-        assert_eq!(deserialized.min_asset_scheme_change_cost, 19);
-        assert_eq!(deserialized.min_asset_compose_cost, 20);
-        assert_eq!(deserialized.min_asset_decompose_cost, 21);
-        assert_eq!(deserialized.min_asset_unwrap_ccc_cost, 22);
-        assert_eq!(deserialized.min_asset_supply_increase_cost, 23);
         assert_eq!(deserialized.max_body_size, 4_194_304);
         assert_eq!(deserialized.snapshot_period, 16_384);
         assert_eq!(deserialized.term_seconds, 0);
@@ -634,23 +493,12 @@ mod tests {
         let deserialized = CommonParams::from(params.clone());
         assert_eq!(deserialized.size, STAKE_PARAM_SIZE);
         assert_eq!(deserialized.max_extra_data_size, 0x20);
-        assert_eq!(deserialized.max_asset_scheme_metadata_size, 0x0400);
-        assert_eq!(deserialized.max_transfer_metadata_size, 0x0100);
-        assert_eq!(deserialized.max_text_content_size, 0x0200);
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_transaction_cost, 10);
         assert_eq!(deserialized.min_create_shard_transaction_cost, 12);
         assert_eq!(deserialized.min_set_shard_owners_transaction_cost, 13);
         assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
-        assert_eq!(deserialized.min_wrap_ccc_transaction_cost, 15);
         assert_eq!(deserialized.min_custom_transaction_cost, 16);
-        assert_eq!(deserialized.min_asset_mint_cost, 17);
-        assert_eq!(deserialized.min_asset_transfer_cost, 18);
-        assert_eq!(deserialized.min_asset_scheme_change_cost, 19);
-        assert_eq!(deserialized.min_asset_compose_cost, 20);
-        assert_eq!(deserialized.min_asset_decompose_cost, 21);
-        assert_eq!(deserialized.min_asset_unwrap_ccc_cost, 22);
-        assert_eq!(deserialized.min_asset_supply_increase_cost, 23);
         assert_eq!(deserialized.max_body_size, 4_194_304);
         assert_eq!(deserialized.snapshot_period, 16_384);
         assert_eq!(deserialized.term_seconds, 3600);
@@ -687,23 +535,12 @@ mod tests {
     fn params_from_json_with_stake_params() {
         let s = r#"{
             "maxExtraDataSize": "0x20",
-            "maxAssetSchemeMetadataSize": "0x0400",
-            "maxTransferMetadataSize": "0x0100",
-            "maxTextContentSize": "0x0200",
             "networkID" : "tc",
             "minPayCost" : 10,
             "minCreateShardCost" : 12,
             "minSetShardOwnersCost" : 13,
             "minSetShardUsersCost" : 14,
-            "minWrapCccCost" : 15,
             "minCustomCost" : 16,
-            "minMintAssetCost" : 17,
-            "minTransferAssetCost" : 18,
-            "minChangeAssetSchemeCost" : 19,
-            "minComposeAssetCost" : 20,
-            "minDecomposeAssetCost" : 21,
-            "minUnwrapCccCost" : 22,
-            "minIncreaseAssetSupplyCost": 23,
             "maxBodySize" : 4194304,
             "snapshotPeriod": 16384,
             "termSeconds": 3600,
@@ -720,23 +557,12 @@ mod tests {
         let deserialized = CommonParams::from(params.clone());
         assert_eq!(deserialized.size, STAKE_PARAM_SIZE);
         assert_eq!(deserialized.max_extra_data_size, 0x20);
-        assert_eq!(deserialized.max_asset_scheme_metadata_size, 0x0400);
-        assert_eq!(deserialized.max_transfer_metadata_size, 0x0100);
-        assert_eq!(deserialized.max_text_content_size, 0x0200);
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_transaction_cost, 10);
         assert_eq!(deserialized.min_create_shard_transaction_cost, 12);
         assert_eq!(deserialized.min_set_shard_owners_transaction_cost, 13);
         assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
-        assert_eq!(deserialized.min_wrap_ccc_transaction_cost, 15);
         assert_eq!(deserialized.min_custom_transaction_cost, 16);
-        assert_eq!(deserialized.min_asset_mint_cost, 17);
-        assert_eq!(deserialized.min_asset_transfer_cost, 18);
-        assert_eq!(deserialized.min_asset_scheme_change_cost, 19);
-        assert_eq!(deserialized.min_asset_compose_cost, 20);
-        assert_eq!(deserialized.min_asset_decompose_cost, 21);
-        assert_eq!(deserialized.min_asset_unwrap_ccc_cost, 22);
-        assert_eq!(deserialized.min_asset_supply_increase_cost, 23);
         assert_eq!(deserialized.max_body_size, 4_194_304);
         assert_eq!(deserialized.snapshot_period, 16_384);
         assert_eq!(deserialized.term_seconds, 3600);
@@ -758,23 +584,12 @@ mod tests {
     fn params_from_json_with_era() {
         let s = r#"{
             "maxExtraDataSize": "0x20",
-            "maxAssetSchemeMetadataSize": "0x0400",
-            "maxTransferMetadataSize": "0x0100",
-            "maxTextContentSize": "0x0200",
             "networkID" : "tc",
             "minPayCost" : 10,
             "minCreateShardCost" : 12,
             "minSetShardOwnersCost" : 13,
             "minSetShardUsersCost" : 14,
-            "minWrapCccCost" : 15,
             "minCustomCost" : 16,
-            "minMintAssetCost" : 17,
-            "minTransferAssetCost" : 18,
-            "minChangeAssetSchemeCost" : 19,
-            "minComposeAssetCost" : 20,
-            "minDecomposeAssetCost" : 21,
-            "minUnwrapCccCost" : 22,
-            "minIncreaseAssetSupplyCost": 23,
             "maxBodySize" : 4194304,
             "snapshotPeriod": 16384,
             "termSeconds": 3600,
@@ -792,23 +607,12 @@ mod tests {
         let deserialized = CommonParams::from(params.clone());
         assert_eq!(deserialized.size, ERA_PARAM_SIZE);
         assert_eq!(deserialized.max_extra_data_size, 0x20);
-        assert_eq!(deserialized.max_asset_scheme_metadata_size, 0x0400);
-        assert_eq!(deserialized.max_transfer_metadata_size, 0x0100);
-        assert_eq!(deserialized.max_text_content_size, 0x0200);
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_transaction_cost, 10);
         assert_eq!(deserialized.min_create_shard_transaction_cost, 12);
         assert_eq!(deserialized.min_set_shard_owners_transaction_cost, 13);
         assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
-        assert_eq!(deserialized.min_wrap_ccc_transaction_cost, 15);
         assert_eq!(deserialized.min_custom_transaction_cost, 16);
-        assert_eq!(deserialized.min_asset_mint_cost, 17);
-        assert_eq!(deserialized.min_asset_transfer_cost, 18);
-        assert_eq!(deserialized.min_asset_scheme_change_cost, 19);
-        assert_eq!(deserialized.min_asset_compose_cost, 20);
-        assert_eq!(deserialized.min_asset_decompose_cost, 21);
-        assert_eq!(deserialized.min_asset_unwrap_ccc_cost, 22);
-        assert_eq!(deserialized.min_asset_supply_increase_cost, 23);
         assert_eq!(deserialized.max_body_size, 4_194_304);
         assert_eq!(deserialized.snapshot_period, 16_384);
         assert_eq!(deserialized.term_seconds, 3600);

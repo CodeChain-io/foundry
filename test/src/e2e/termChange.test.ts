@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -56,23 +56,12 @@ describe("Term change", function() {
     async function changeTermSeconds(metadataSeq: number, termSeconds: number) {
         const newParams = [
             0x20, // maxExtraDataSize
-            0x0400, // maxAssetSchemeMetadataSize
-            0x0100, // maxTransferMetadataSize
-            0x0200, // maxTextContentSize
             "tc", // networkID
             10, // minPayCost
             10, // minCreateShardCost
             10, // minSetShardOwnersCost
             10, // minSetShardUsersCost
-            10, // minWrapCccCost
             10, // minCustomCost
-            10, // minMintAssetCost
-            10, // minTransferAssetCost
-            10, // minChangeAssetSchemeCost
-            10, // minIncreaseAssetSupplyCost
-            10, // minComposeAssetCost
-            10, // minDecomposeAssetCost
-            10, // minUnwrapCccCost
             4194304, // maxBodySize
             16384, // snapshotPeriod
             termSeconds, // termSeconds

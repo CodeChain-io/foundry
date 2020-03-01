@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -64,23 +64,12 @@ describe("ChangeParams", function() {
     it("change", async function() {
         const newParams = [
             0x20, // maxExtraDataSize
-            0x0400, // maxAssetSchemeMetadataSize
-            0x0100, // maxTransferMetadataSize
-            0x0200, // maxTextContentSize
             "tc", // networkID
             11, // minPayCost
             10, // minCreateShardCost
             10, // minSetShardOwnersCost
             10, // minSetShardUsersCost
-            10, // minWrapCccCost
             10, // minCustomCost
-            10, // minMintAssetCost
-            10, // minTransferAssetCost
-            10, // minChangeAssetSchemeCost
-            10, // minIncreaseAssetSupplyCost
-            10, // minComposeAssetCost
-            10, // minDecomposeAssetCost
-            10, // minUnwrapCccCost
             4194304, // maxBodySize
             16384 // snapshotPeriod
         ];
@@ -135,23 +124,12 @@ describe("ChangeParams", function() {
     it("cannot change the network id", async function() {
         const newParams = [
             0x20, // maxExtraDataSize
-            0x0400, // maxAssetSchemeMetadataSize
-            0x0100, // maxTransferMetadataSize
-            0x0200, // maxTextContentSize
             "cc", // networkID
             11, // minPayCost
             10, // minCreateShardCost
             10, // minSetShardOwnersCost
             10, // minSetShardUsersCost
-            10, // minWrapCccCost
             10, // minCustomCost
-            10, // minMintAssetCost
-            10, // minTransferAssetCost
-            10, // minChangeAssetSchemeCost
-            10, // minIncreaseAssetSupplyCost
-            10, // minComposeAssetCost
-            10, // minDecomposeAssetCost
-            10, // minUnwrapCccCost
             4194304, // maxBodySize
             16384 // snapshotPeriod
         ];
@@ -202,23 +180,12 @@ describe("ChangeParams", function() {
     it("the parameter is applied from the next block", async function() {
         const newParams = [
             0x20, // maxExtraDataSize
-            0x0400, // maxAssetSchemeMetadataSize
-            0x0100, // maxTransferMetadataSize
-            0x0200, // maxTextContentSize
             "tc", // networkID
             11, // minPayCost
             10, // minCreateShardCost
             10, // minSetShardOwnersCost
             10, // minSetShardUsersCost
-            10, // minWrapCccCost
             10, // minCustomCost
-            10, // minMintAssetCost
-            10, // minTransferAssetCost
-            10, // minChangeAssetSchemeCost
-            10, // minIncreaseAssetSupplyCost
-            10, // minComposeAssetCost
-            10, // minDecomposeAssetCost
-            10, // minUnwrapCccCost
             4194304, // maxBodySize
             16384 // snapshotPeriod
         ];
@@ -286,45 +253,23 @@ describe("ChangeParams", function() {
     it("the parameter changed twice in the same block", async function() {
         const newParams1 = [
             0x20, // maxExtraDataSize
-            0x0400, // maxAssetSchemeMetadataSize
-            0x0100, // maxTransferMetadataSize
-            0x0200, // maxTextContentSize
             "tc", // networkID
             11, // minPayCost
             10, // minCreateShardCost
             10, // minSetShardOwnersCost
             10, // minSetShardUsersCost
-            10, // minWrapCccCost
             10, // minCustomCost
-            10, // minMintAssetCost
-            10, // minTransferAssetCost
-            10, // minChangeAssetSchemeCost
-            10, // minIncreaseAssetSupplyCost
-            10, // minComposeAssetCost
-            10, // minDecomposeAssetCost
-            10, // minUnwrapCccCost
             4194304, // maxBodySize
             16384 // snapshotPeriod
         ];
         const newParams2 = [
             0x20, // maxExtraDataSize
-            0x0400, // maxAssetSchemeMetadataSize
-            0x0100, // maxTransferMetadataSize
-            0x0200, // maxTextContentSize
             "tc", // networkID
             5, // minPayCost
             10, // minCreateShardCost
             10, // minSetShardOwnersCost
             10, // minSetShardUsersCost
-            10, // minWrapCccCost
             10, // minCustomCost
-            10, // minMintAssetCost
-            10, // minTransferAssetCost
-            10, // minChangeAssetSchemeCost
-            10, // minIncreaseAssetSupplyCost
-            10, // minComposeAssetCost
-            10, // minDecomposeAssetCost
-            10, // minUnwrapCccCost
             4194304, // maxBodySize
             16384 // snapshotPeriod
         ];
@@ -428,45 +373,23 @@ describe("ChangeParams", function() {
     it("cannot reuse the same signature", async function() {
         const newParams1 = [
             0x20, // maxExtraDataSize
-            0x0400, // maxAssetSchemeMetadataSize
-            0x0100, // maxTransferMetadataSize
-            0x0200, // maxTextContentSize
             "tc", // networkID
             11, // minPayCost
             10, // minCreateShardCost
             10, // minSetShardOwnersCost
             10, // minSetShardUsersCost
-            10, // minWrapCccCost
             10, // minCustomCost
-            10, // minMintAssetCost
-            10, // minTransferAssetCost
-            10, // minChangeAssetSchemeCost
-            10, // minIncreaseAssetSupplyCost
-            10, // minComposeAssetCost
-            10, // minDecomposeAssetCost
-            10, // minUnwrapCccCost
             4194304, // maxBodySize
             16384 // snapshotPeriod
         ];
         const newParams2 = [
             0x20, // maxExtraDataSize
-            0x0400, // maxAssetSchemeMetadataSize
-            0x0100, // maxTransferMetadataSize
-            0x0200, // maxTextContentSize
             "tc", // networkID
             5, // minPayCost
             10, // minCreateShardCost
             10, // minSetShardOwnersCost
             10, // minSetShardUsersCost
-            10, // minWrapCccCost
             10, // minCustomCost
-            10, // minMintAssetCost
-            10, // minTransferAssetCost
-            10, // minChangeAssetSchemeCost
-            10, // minIncreaseAssetSupplyCost
-            10, // minComposeAssetCost
-            10, // minDecomposeAssetCost
-            10, // minUnwrapCccCost
             4194304, // maxBodySize
             16384 // snapshotPeriod
         ];
@@ -570,23 +493,12 @@ describe("ChangeParams", function() {
     it("cannot change params with insufficient stakes", async function() {
         const newParams = [
             0x20, // maxExtraDataSize
-            0x0400, // maxAssetSchemeMetadataSize
-            0x0100, // maxTransferMetadataSize
-            0x0200, // maxTextContentSize
             "tc", // networkID
             11, // minPayCost
             10, // minCreateShardCost
             10, // minSetShardOwnersCost
             10, // minSetShardUsersCost
-            10, // minWrapCccCost
             10, // minCustomCost
-            10, // minMintAssetCost
-            10, // minTransferAssetCost
-            10, // minChangeAssetSchemeCost
-            10, // minIncreaseAssetSupplyCost
-            10, // minComposeAssetCost
-            10, // minDecomposeAssetCost
-            10, // minUnwrapCccCost
             4194304, // maxBodySize
             16384 // snapshotPeriod
         ];
@@ -652,23 +564,12 @@ describe("ChangeParams", function() {
     it("the amount of stakes not the number of stakeholders", async function() {
         const newParams = [
             0x20, // maxExtraDataSize
-            0x0400, // maxAssetSchemeMetadataSize
-            0x0100, // maxTransferMetadataSize
-            0x0200, // maxTextContentSize
             "tc", // networkID
             11, // minPayCost
             10, // minCreateShardCost
             10, // minSetShardOwnersCost
             10, // minSetShardUsersCost
-            10, // minWrapCccCost
             10, // minCustomCost
-            10, // minMintAssetCost
-            10, // minTransferAssetCost
-            10, // minChangeAssetSchemeCost
-            10, // minIncreaseAssetSupplyCost
-            10, // minComposeAssetCost
-            10, // minDecomposeAssetCost
-            10, // minUnwrapCccCost
             4194304, // maxBodySize
             16384 // snapshotPeriod
         ];
@@ -707,23 +608,12 @@ describe("ChangeParams", function() {
     it("needs more than half to change params", async function() {
         const newParams = [
             0x20, // maxExtraDataSize
-            0x0400, // maxAssetSchemeMetadataSize
-            0x0100, // maxTransferMetadataSize
-            0x0200, // maxTextContentSize
             "tc", // networkID
             11, // minPayCost
             10, // minCreateShardCost
             10, // minSetShardOwnersCost
             10, // minSetShardUsersCost
-            10, // minWrapCccCost
             10, // minCustomCost
-            10, // minMintAssetCost
-            10, // minTransferAssetCost
-            10, // minChangeAssetSchemeCost
-            10, // minIncreaseAssetSupplyCost
-            10, // minComposeAssetCost
-            10, // minDecomposeAssetCost
-            10, // minUnwrapCccCost
             4194304, // maxBodySize
             16384 // snapshotPeriod
         ];
@@ -809,23 +699,12 @@ describe("ChangeParams", function() {
         it("change", async function() {
             const newParams = [
                 0x20, // maxExtraDataSize
-                0x0400, // maxAssetSchemeMetadataSize
-                0x0100, // maxTransferMetadataSize
-                0x0200, // maxTextContentSize
                 "tc", // networkID
                 11, // minPayCost
                 10, // minCreateShardCost
                 10, // minSetShardOwnersCost
                 10, // minSetShardUsersCost
-                10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minMintAssetCost
-                10, // minTransferAssetCost
-                10, // minChangeAssetSchemeCost
-                10, // minIncreaseAssetSupplyCost
-                10, // minComposeAssetCost
-                10, // minDecomposeAssetCost
-                10, // minUnwrapCccCost
                 4194304, // maxBodySize
                 16384 // snapshotPeriod
             ];
@@ -883,23 +762,12 @@ describe("ChangeParams", function() {
         it("nomination expiration cannot be zero", async function() {
             const newParams = [
                 0x20, // maxExtraDataSize
-                0x0400, // maxAssetSchemeMetadataSize
-                0x0100, // maxTransferMetadataSize
-                0x0200, // maxTextContentSize
                 "tc", // networkID
                 10, // minPayCost
                 10, // minCreateShardCost
                 10, // minSetShardOwnersCost
                 10, // minSetShardUsersCost
-                10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minMintAssetCost
-                10, // minTransferAssetCost
-                10, // minChangeAssetSchemeCost
-                10, // minIncreaseAssetSupplyCost
-                10, // minComposeAssetCost
-                10, // minDecomposeAssetCost
-                10, // minUnwrapCccCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -954,23 +822,12 @@ describe("ChangeParams", function() {
         it("custody period cannot be zero", async function() {
             const newParams = [
                 0x20, // maxExtraDataSize
-                0x0400, // maxAssetSchemeMetadataSize
-                0x0100, // maxTransferMetadataSize
-                0x0200, // maxTextContentSize
                 "tc", // networkID
                 10, // minPayCost
                 10, // minCreateShardCost
                 10, // minSetShardOwnersCost
                 10, // minSetShardUsersCost
-                10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minMintAssetCost
-                10, // minTransferAssetCost
-                10, // minChangeAssetSchemeCost
-                10, // minIncreaseAssetSupplyCost
-                10, // minComposeAssetCost
-                10, // minDecomposeAssetCost
-                10, // minUnwrapCccCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1025,23 +882,12 @@ describe("ChangeParams", function() {
         it("release period cannot be zero", async function() {
             const newParams = [
                 0x20, // maxExtraDataSize
-                0x0400, // maxAssetSchemeMetadataSize
-                0x0100, // maxTransferMetadataSize
-                0x0200, // maxTextContentSize
                 "tc", // networkID
                 10, // minPayCost
                 10, // minCreateShardCost
                 10, // minSetShardOwnersCost
                 10, // minSetShardUsersCost
-                10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minMintAssetCost
-                10, // minTransferAssetCost
-                10, // minChangeAssetSchemeCost
-                10, // minIncreaseAssetSupplyCost
-                10, // minComposeAssetCost
-                10, // minDecomposeAssetCost
-                10, // minUnwrapCccCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1096,23 +942,12 @@ describe("ChangeParams", function() {
         it("A release period cannot be equal to a custody period", async function() {
             const newParams = [
                 0x20, // maxExtraDataSize
-                0x0400, // maxAssetSchemeMetadataSize
-                0x0100, // maxTransferMetadataSize
-                0x0200, // maxTextContentSize
                 "tc", // networkID
                 10, // minPayCost
                 10, // minCreateShardCost
                 10, // minSetShardOwnersCost
                 10, // minSetShardUsersCost
-                10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minMintAssetCost
-                10, // minTransferAssetCost
-                10, // minChangeAssetSchemeCost
-                10, // minIncreaseAssetSupplyCost
-                10, // minComposeAssetCost
-                10, // minDecomposeAssetCost
-                10, // minUnwrapCccCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1167,23 +1002,12 @@ describe("ChangeParams", function() {
         it("min deposit cannot be zero", async function() {
             const newParams = [
                 0x20, // maxExtraDataSize
-                0x0400, // maxAssetSchemeMetadataSize
-                0x0100, // maxTransferMetadataSize
-                0x0200, // maxTextContentSize
                 "tc", // networkID
                 10, // minPayCost
                 10, // minCreateShardCost
                 10, // minSetShardOwnersCost
                 10, // minSetShardUsersCost
-                10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minMintAssetCost
-                10, // minTransferAssetCost
-                10, // minChangeAssetSchemeCost
-                10, // minIncreaseAssetSupplyCost
-                10, // minComposeAssetCost
-                10, // minDecomposeAssetCost
-                10, // minUnwrapCccCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1238,23 +1062,12 @@ describe("ChangeParams", function() {
         it("delegation threshold cannot be zero", async function() {
             const newParams = [
                 0x20, // maxExtraDataSize
-                0x0400, // maxAssetSchemeMetadataSize
-                0x0100, // maxTransferMetadataSize
-                0x0200, // maxTextContentSize
                 "tc", // networkID
                 10, // minPayCost
                 10, // minCreateShardCost
                 10, // minSetShardOwnersCost
                 10, // minSetShardUsersCost
-                10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minMintAssetCost
-                10, // minTransferAssetCost
-                10, // minChangeAssetSchemeCost
-                10, // minIncreaseAssetSupplyCost
-                10, // minComposeAssetCost
-                10, // minDecomposeAssetCost
-                10, // minUnwrapCccCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1309,23 +1122,12 @@ describe("ChangeParams", function() {
         it("min number of validators cannot be zero", async function() {
             const newParams = [
                 0x20, // maxExtraDataSize
-                0x0400, // maxAssetSchemeMetadataSize
-                0x0100, // maxTransferMetadataSize
-                0x0200, // maxTextContentSize
                 "tc", // networkID
                 10, // minPayCost
                 10, // minCreateShardCost
                 10, // minSetShardOwnersCost
                 10, // minSetShardUsersCost
-                10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minMintAssetCost
-                10, // minTransferAssetCost
-                10, // minChangeAssetSchemeCost
-                10, // minIncreaseAssetSupplyCost
-                10, // minComposeAssetCost
-                10, // minDecomposeAssetCost
-                10, // minUnwrapCccCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1380,23 +1182,12 @@ describe("ChangeParams", function() {
         it("max number of validators cannot be zero", async function() {
             const newParams = [
                 0x20, // maxExtraDataSize
-                0x0400, // maxAssetSchemeMetadataSize
-                0x0100, // maxTransferMetadataSize
-                0x0200, // maxTextContentSize
                 "tc", // networkID
                 10, // minPayCost
                 10, // minCreateShardCost
                 10, // minSetShardOwnersCost
                 10, // minSetShardUsersCost
-                10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minMintAssetCost
-                10, // minTransferAssetCost
-                10, // minChangeAssetSchemeCost
-                10, // minIncreaseAssetSupplyCost
-                10, // minComposeAssetCost
-                10, // minDecomposeAssetCost
-                10, // minUnwrapCccCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1451,23 +1242,12 @@ describe("ChangeParams", function() {
         it("The maximum number of candidates cannot be equal to the minimum number of candidates", async function() {
             const newParams = [
                 0x20, // maxExtraDataSize
-                0x0400, // maxAssetSchemeMetadataSize
-                0x0100, // maxTransferMetadataSize
-                0x0200, // maxTextContentSize
                 "tc", // networkID
                 10, // minPayCost
                 10, // minCreateShardCost
                 10, // minSetShardOwnersCost
                 10, // minSetShardUsersCost
-                10, // minWrapCccCost
                 10, // minCustomCost
-                10, // minMintAssetCost
-                10, // minTransferAssetCost
-                10, // minChangeAssetSchemeCost
-                10, // minIncreaseAssetSupplyCost
-                10, // minComposeAssetCost
-                10, // minDecomposeAssetCost
-                10, // minUnwrapCccCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1479,77 +1259,6 @@ describe("ChangeParams", function() {
                 4, // delegationThreshold
                 1000, // minDeposit
                 128 // maxCandidateMetadataSize
-            ];
-            const changeParams: (number | string | (number | string)[])[] = [
-                0xff,
-                0,
-                newParams
-            ];
-            const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, aliceSecret)}`
-            );
-            changeParams.push(
-                `0x${node.testFramework.util.signEcdsa(message, carolSecret)}`
-            );
-
-            const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
-                })
-                .sign({
-                    secret: faucetSecret,
-                    seq: (await node.rpc.chain.getSeq({
-                        address: faucetAddress.toString(),
-                        blockNumber: null
-                    }))!,
-                    fee: 10
-                });
-            const trans = tx.rlpBytes().toString("hex");
-            try {
-                await node.rpc.mempool.sendSignedTransaction({
-                    tx: `0x${trans}`
-                });
-                expect.fail();
-            } catch (e) {
-                expect(e.toString()).is.include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
-            }
-        });
-
-        it("The candidate metadata limit should be smaller than the text size limit", async function() {
-            const newParams = [
-                0x20, // maxExtraDataSize
-                0x0400, // maxAssetSchemeMetadataSize
-                0x0100, // maxTransferMetadataSize
-                0x0200, // maxTextContentSize
-                "tc", // networkID
-                10, // minPayCost
-                10, // minCreateShardCost
-                10, // minSetShardOwnersCost
-                10, // minSetShardUsersCost
-                10, // minWrapCccCost
-                10, // minCustomCost
-                10, // minMintAssetCost
-                10, // minTransferAssetCost
-                10, // minChangeAssetSchemeCost
-                10, // minIncreaseAssetSupplyCost
-                10, // minComposeAssetCost
-                10, // minDecomposeAssetCost
-                10, // minUnwrapCccCost
-                4194304, // maxBodySize
-                16384, // snapshotPeriod
-                100, // termSeconds
-                10, // nominationExpiration
-                10, // custodyPeriod
-                20, // releasePeriod
-                100, // maxNumOfValidators
-                100, // minNumOfValidators
-                4, // delegationThreshold
-                1000, // minDeposit
-                0x0200 // maxCandidateMetadataSize
             ];
             const changeParams: (number | string | (number | string)[])[] = [
                 0xff,

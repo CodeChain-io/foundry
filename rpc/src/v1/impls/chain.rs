@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -170,16 +170,10 @@ where
         let block_id = block_number.map(|n| (n - 1).into()).unwrap_or(BlockId::Latest);
         if let Some(common_parameters) = self.client.common_params(block_id) {
             Ok(match action_type.as_str() {
-                "mintAsset" => Some(common_parameters.min_asset_mint_cost()),
-                "transferAsset" => Some(common_parameters.min_asset_transfer_cost()),
-                "changeAssetScheme" => Some(common_parameters.min_asset_scheme_change_cost()),
-                "increaseAssetSupply" => Some(common_parameters.min_asset_supply_increase_cost()),
-                "unwrapCCC" => Some(common_parameters.min_asset_unwrap_ccc_cost()),
                 "pay" => Some(common_parameters.min_pay_transaction_cost()),
                 "createShard" => Some(common_parameters.min_create_shard_transaction_cost()),
                 "setShardOwners" => Some(common_parameters.min_set_shard_owners_transaction_cost()),
                 "setShardUsers" => Some(common_parameters.min_set_shard_users_transaction_cost()),
-                "wrapCCC" => Some(common_parameters.min_wrap_ccc_transaction_cost()),
                 "custom" => Some(common_parameters.min_custom_transaction_cost()),
 
                 _ => None,
