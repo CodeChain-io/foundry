@@ -438,6 +438,8 @@ function encodeParams(params: CommonParams): any[] {
     ];
     if (params.era) {
         result.push(params.era);
+    } else {
+        result.push(0);
     }
     return result;
 }

@@ -72,7 +72,8 @@ describe("Term change", function() {
             4, // minNumOfValidators
             4, // delegationThreshold
             1000, // minDeposit
-            128 // maxCandidateMetadataSize
+            128, // maxCandidateMetadataSize
+            0 // era
         ];
         const changeParams: (number | string | (number | string)[])[] = [
             0xff,

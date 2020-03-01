@@ -71,7 +71,17 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minCustomCost
             4194304, // maxBodySize
-            16384 // snapshotPeriod
+            16384, // snapshotPeriod
+            0, // termSeconds
+            100, // nominationExpiration
+            100, // custodyPeriod
+            200, // releasePeriod
+            10, // maxNumOfValidators
+            1, // minNumOfValidators
+            100, // delegationThreshold
+            100, // minDeposit
+            500, // maxCandidateMetadataSize
+            0 // era
         ];
         const changeParams: (number | string | (number | string)[])[] = [
             0xff,
@@ -131,7 +141,17 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minCustomCost
             4194304, // maxBodySize
-            16384 // snapshotPeriod
+            16384, // snapshotPeriod
+            0, // termSeconds
+            100, // nominationExpiration
+            100, // custodyPeriod
+            200, // releasePeriod
+            10, // maxNumOfValidators
+            1, // minNumOfValidators
+            100, // delegationThreshold
+            100, // minDeposit
+            500, // maxCandidateMetadataSize
+            0 // era
         ];
         const changeParams: (number | string | (number | string)[])[] = [
             0xff,
@@ -187,7 +207,17 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minCustomCost
             4194304, // maxBodySize
-            16384 // snapshotPeriod
+            16384, // snapshotPeriod
+            0, // termSeconds
+            100, // nominationExpiration
+            100, // custodyPeriod
+            200, // releasePeriod
+            10, // maxNumOfValidators
+            1, // minNumOfValidators
+            100, // delegationThreshold
+            100, // minDeposit
+            500, // maxCandidateMetadataSize
+            0 // era
         ];
         const changeParams: (number | string | (number | string)[])[] = [
             0xff,
@@ -260,7 +290,17 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minCustomCost
             4194304, // maxBodySize
-            16384 // snapshotPeriod
+            16384, // snapshotPeriod
+            0, // termSeconds
+            100, // nominationExpiration
+            100, // custodyPeriod
+            200, // releasePeriod
+            10, // maxNumOfValidators
+            1, // minNumOfValidators
+            100, // delegationThreshold
+            100, // minDeposit
+            500, // maxCandidateMetadataSize
+            0 // era
         ];
         const newParams2 = [
             0x20, // maxExtraDataSize
@@ -271,7 +311,17 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minCustomCost
             4194304, // maxBodySize
-            16384 // snapshotPeriod
+            16384, // snapshotPeriod
+            0, // termSeconds
+            100, // nominationExpiration
+            100, // custodyPeriod
+            200, // releasePeriod
+            10, // maxNumOfValidators
+            1, // minNumOfValidators
+            100, // delegationThreshold
+            100, // minDeposit
+            500, // maxCandidateMetadataSize
+            0 // era
         ];
         const changeParams1: (number | string | (number | string)[])[] = [
             0xff,
@@ -380,7 +430,17 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minCustomCost
             4194304, // maxBodySize
-            16384 // snapshotPeriod
+            16384, // snapshotPeriod
+            0, // termSeconds
+            100, // nominationExpiration
+            100, // custodyPeriod
+            200, // releasePeriod
+            10, // maxNumOfValidators
+            1, // minNumOfValidators
+            100, // delegationThreshold
+            100, // minDeposit
+            500, // maxCandidateMetadataSize
+            0 // era
         ];
         const newParams2 = [
             0x20, // maxExtraDataSize
@@ -391,7 +451,17 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minCustomCost
             4194304, // maxBodySize
-            16384 // snapshotPeriod
+            16384, // snapshotPeriod
+            0, // termSeconds
+            100, // nominationExpiration
+            100, // custodyPeriod
+            200, // releasePeriod
+            10, // maxNumOfValidators
+            1, // minNumOfValidators
+            100, // delegationThreshold
+            100, // minDeposit
+            500, // maxCandidateMetadataSize
+            0 // era
         ];
         const changeParams1: (number | string | (number | string)[])[] = [
             0xff,
@@ -500,7 +570,17 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minCustomCost
             4194304, // maxBodySize
-            16384 // snapshotPeriod
+            16384, // snapshotPeriod
+            0, // termSeconds
+            100, // nominationExpiration
+            100, // custodyPeriod
+            200, // releasePeriod
+            10, // maxNumOfValidators
+            1, // minNumOfValidators
+            100, // delegationThreshold
+            100, // minDeposit
+            500, // maxCandidateMetadataSize
+            0 // era
         ];
         const changeParams: (number | string | (number | string)[])[] = [
             0xff,
@@ -571,7 +651,17 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minCustomCost
             4194304, // maxBodySize
-            16384 // snapshotPeriod
+            16384, // snapshotPeriod
+            0, // termSeconds
+            100, // nominationExpiration
+            100, // custodyPeriod
+            200, // releasePeriod
+            10, // maxNumOfValidators
+            1, // minNumOfValidators
+            100, // delegationThreshold
+            100, // minDeposit
+            500, // maxCandidateMetadataSize
+            0 // era
         ];
         const changeParams: (number | string | (number | string)[])[] = [
             0xff,
@@ -615,7 +705,17 @@ describe("ChangeParams", function() {
             10, // minSetShardUsersCost
             10, // minCustomCost
             4194304, // maxBodySize
-            16384 // snapshotPeriod
+            16384, // snapshotPeriod
+            0, // termSeconds
+            100, // nominationExpiration
+            100, // custodyPeriod
+            200, // releasePeriod
+            10, // maxNumOfValidators
+            1, // minNumOfValidators
+            100, // delegationThreshold
+            100, // minDeposit
+            500, // maxCandidateMetadataSize
+            0 // era
         ];
 
         const changeParams: (number | string | (number | string)[])[] = [
@@ -706,7 +806,17 @@ describe("ChangeParams", function() {
                 10, // minSetShardUsersCost
                 10, // minCustomCost
                 4194304, // maxBodySize
-                16384 // snapshotPeriod
+                16384, // snapshotPeriod
+                0, // termSeconds
+                100, // nominationExpiration
+                100, // custodyPeriod
+                200, // releasePeriod
+                10, // maxNumOfValidators
+                1, // minNumOfValidators
+                100, // delegationThreshold
+                100, // minDeposit
+                500, // maxCandidateMetadataSize
+                0 // era
             ];
             const changeParams: (number | string | (number | string)[])[] = [
                 0xff,
@@ -778,7 +888,8 @@ describe("ChangeParams", function() {
                 100, // minNumOfValidators
                 4, // delegationThreshold
                 1000, // minDeposit
-                128 // maxCandidateMetadataSize
+                128, // maxCandidateMetadataSize
+                0 // era
             ];
             const changeParams: (number | string | (number | string)[])[] = [
                 0xff,
@@ -838,7 +949,8 @@ describe("ChangeParams", function() {
                 100, // minNumOfValidators
                 4, // delegationThreshold
                 1000, // minDeposit
-                128 // maxCandidateMetadataSize
+                128, // maxCandidateMetadataSize
+                0 // era
             ];
             const changeParams: (number | string | (number | string)[])[] = [
                 0xff,
@@ -898,7 +1010,8 @@ describe("ChangeParams", function() {
                 100, // minNumOfValidators
                 4, // delegationThreshold
                 1000, // minDeposit
-                128 // maxCandidateMetadataSize
+                128, // maxCandidateMetadataSize
+                0 // era
             ];
             const changeParams: (number | string | (number | string)[])[] = [
                 0xff,
@@ -958,7 +1071,8 @@ describe("ChangeParams", function() {
                 100, // minNumOfValidators
                 4, // delegationThreshold
                 1000, // minDeposit
-                128 // maxCandidateMetadataSize
+                128, // maxCandidateMetadataSize
+                0 // era
             ];
             const changeParams: (number | string | (number | string)[])[] = [
                 0xff,
@@ -1018,7 +1132,8 @@ describe("ChangeParams", function() {
                 100, // minNumOfValidators
                 4, // delegationThreshold
                 0, // minDeposit
-                128 // maxCandidateMetadataSize
+                128, // maxCandidateMetadataSize
+                0 // era
             ];
             const changeParams: (number | string | (number | string)[])[] = [
                 0xff,
@@ -1078,7 +1193,8 @@ describe("ChangeParams", function() {
                 100, // minNumOfValidators
                 0, // delegationThreshold
                 100, // minDeposit
-                100 // maxCandidateMetadataSize
+                100, // maxCandidateMetadataSize
+                0 // era
             ];
             const changeParams: (number | string | (number | string)[])[] = [
                 0xff,
@@ -1138,7 +1254,8 @@ describe("ChangeParams", function() {
                 0, // minNumOfValidators
                 100, // delegationThreshold
                 100, // minDeposit
-                100 // maxCandidateMetadataSize
+                100, // maxCandidateMetadataSize
+                0 // era
             ];
             const changeParams: (number | string | (number | string)[])[] = [
                 0xff,
@@ -1198,7 +1315,8 @@ describe("ChangeParams", function() {
                 10, // minNumOfValidators
                 100, // delegationThreshold
                 100, // minDeposit
-                100 // maxCandidateMetadataSize
+                100, // maxCandidateMetadataSize
+                0 // era
             ];
             const changeParams: (number | string | (number | string)[])[] = [
                 0xff,
@@ -1258,7 +1376,8 @@ describe("ChangeParams", function() {
                 100, // minNumOfValidators
                 4, // delegationThreshold
                 1000, // minDeposit
-                128 // maxCandidateMetadataSize
+                128, // maxCandidateMetadataSize
+                0 // era
             ];
             const changeParams: (number | string | (number | string)[])[] = [
                 0xff,

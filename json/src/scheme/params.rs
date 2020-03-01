@@ -39,15 +39,15 @@ pub struct Params {
     /// Snapshot creation period in unit of block numbers.
     pub snapshot_period: Uint,
 
-    pub term_seconds: Option<Uint>,
-    pub nomination_expiration: Option<Uint>,
-    pub custody_period: Option<Uint>,
-    pub release_period: Option<Uint>,
-    pub max_num_of_validators: Option<Uint>,
-    pub min_num_of_validators: Option<Uint>,
-    pub delegation_threshold: Option<Uint>,
-    pub min_deposit: Option<Uint>,
-    pub max_candidate_metadata_size: Option<Uint>,
+    pub term_seconds: Uint,
+    pub nomination_expiration: Uint,
+    pub custody_period: Uint,
+    pub release_period: Uint,
+    pub max_num_of_validators: Uint,
+    pub min_num_of_validators: Uint,
+    pub delegation_threshold: Uint,
+    pub min_deposit: Uint,
+    pub max_candidate_metadata_size: Uint,
 
     /// A monotonically increasing number to denote the consensus version.
     /// It is increased when we fork.
@@ -61,79 +61,6 @@ mod tests {
     #[test]
     #[allow(clippy::cognitive_complexity)]
     fn params_deserialization() {
-        let s = r#"{
-            "maxExtraDataSize": "0x20",
-            "networkID" : "tc",
-            "minPayCost" : 10,
-            "minCreateShardCost" : 12,
-            "minSetShardOwnersCost" : 13,
-            "minSetShardUsersCost" : 14,
-            "minCustomCost" : 16,
-            "maxBodySize" : 4194304,
-            "snapshotPeriod": 16384
-        }"#;
-
-        let deserialized: Params = serde_json::from_str(s).unwrap();
-        assert_eq!(deserialized.max_extra_data_size, 0x20.into());
-        assert_eq!(deserialized.network_id, "tc".into());
-        assert_eq!(deserialized.min_pay_cost, 10.into());
-        assert_eq!(deserialized.min_create_shard_cost, 12.into());
-        assert_eq!(deserialized.min_set_shard_owners_cost, 13.into());
-        assert_eq!(deserialized.min_set_shard_users_cost, 14.into());
-        assert_eq!(deserialized.min_custom_cost, 16.into());
-        assert_eq!(deserialized.max_body_size, 4_194_304.into());
-        assert_eq!(deserialized.snapshot_period, 16_384.into());
-        assert_eq!(deserialized.term_seconds, None);
-        assert_eq!(deserialized.nomination_expiration, None);
-        assert_eq!(deserialized.custody_period, None);
-        assert_eq!(deserialized.release_period, None);
-        assert_eq!(deserialized.max_num_of_validators, None);
-        assert_eq!(deserialized.min_num_of_validators, None);
-        assert_eq!(deserialized.delegation_threshold, None);
-        assert_eq!(deserialized.min_deposit, None);
-        assert_eq!(deserialized.max_candidate_metadata_size, None);
-    }
-
-    #[test]
-    #[allow(clippy::cognitive_complexity)]
-    fn params_deserialization_with_term_seconds() {
-        let s = r#"{
-            "maxExtraDataSize": "0x20",
-            "networkID" : "tc",
-            "minPayCost" : 10,
-            "minCreateShardCost" : 12,
-            "minSetShardOwnersCost" : 13,
-            "minSetShardUsersCost" : 14,
-            "minCustomCost" : 16,
-            "maxBodySize" : 4194304,
-            "snapshotPeriod": 16384,
-            "termSeconds": 3600
-        }"#;
-
-        let deserialized: Params = serde_json::from_str(s).unwrap();
-        assert_eq!(deserialized.max_extra_data_size, 0x20.into());
-        assert_eq!(deserialized.network_id, "tc".into());
-        assert_eq!(deserialized.min_pay_cost, 10.into());
-        assert_eq!(deserialized.min_create_shard_cost, 12.into());
-        assert_eq!(deserialized.min_set_shard_owners_cost, 13.into());
-        assert_eq!(deserialized.min_set_shard_users_cost, 14.into());
-        assert_eq!(deserialized.min_custom_cost, 16.into());
-        assert_eq!(deserialized.max_body_size, 4_194_304.into());
-        assert_eq!(deserialized.snapshot_period, 16_384.into());
-        assert_eq!(deserialized.term_seconds, Some(3600.into()));
-        assert_eq!(deserialized.nomination_expiration, None);
-        assert_eq!(deserialized.custody_period, None);
-        assert_eq!(deserialized.release_period, None);
-        assert_eq!(deserialized.max_num_of_validators, None);
-        assert_eq!(deserialized.min_num_of_validators, None);
-        assert_eq!(deserialized.delegation_threshold, None);
-        assert_eq!(deserialized.min_deposit, None);
-        assert_eq!(deserialized.max_candidate_metadata_size, None);
-    }
-
-    #[test]
-    #[allow(clippy::cognitive_complexity)]
-    fn params_deserialization_with_stake_params() {
         let s = r#"{
             "maxExtraDataSize": "0x20",
             "networkID" : "tc",
@@ -165,15 +92,16 @@ mod tests {
         assert_eq!(deserialized.min_custom_cost, 16.into());
         assert_eq!(deserialized.max_body_size, 4_194_304.into());
         assert_eq!(deserialized.snapshot_period, 16_384.into());
-        assert_eq!(deserialized.term_seconds, Some(3600.into()));
-        assert_eq!(deserialized.nomination_expiration, Some(24.into()));
-        assert_eq!(deserialized.custody_period, Some(25.into()));
-        assert_eq!(deserialized.release_period, Some(26.into()));
-        assert_eq!(deserialized.max_num_of_validators, Some(27.into()));
-        assert_eq!(deserialized.min_num_of_validators, Some(28.into()));
-        assert_eq!(deserialized.delegation_threshold, Some(29.into()));
-        assert_eq!(deserialized.min_deposit, Some(30.into()));
-        assert_eq!(deserialized.max_candidate_metadata_size, Some(31.into()));
+        assert_eq!(deserialized.term_seconds, 3600.into());
+        assert_eq!(deserialized.nomination_expiration, 24.into());
+        assert_eq!(deserialized.custody_period, 25.into());
+        assert_eq!(deserialized.release_period, 26.into());
+        assert_eq!(deserialized.max_num_of_validators, 27.into());
+        assert_eq!(deserialized.min_num_of_validators, 28.into());
+        assert_eq!(deserialized.delegation_threshold, 29.into());
+        assert_eq!(deserialized.min_deposit, 30.into());
+        assert_eq!(deserialized.max_candidate_metadata_size, 31.into());
+        assert_eq!(deserialized.era, None);
     }
 
     #[test]
@@ -211,15 +139,15 @@ mod tests {
         assert_eq!(deserialized.min_custom_cost, 16.into());
         assert_eq!(deserialized.max_body_size, 4_194_304.into());
         assert_eq!(deserialized.snapshot_period, 16_384.into());
-        assert_eq!(deserialized.term_seconds, Some(3600.into()));
-        assert_eq!(deserialized.nomination_expiration, Some(24.into()));
-        assert_eq!(deserialized.custody_period, Some(25.into()));
-        assert_eq!(deserialized.release_period, Some(26.into()));
-        assert_eq!(deserialized.max_num_of_validators, Some(27.into()));
-        assert_eq!(deserialized.min_num_of_validators, Some(28.into()));
-        assert_eq!(deserialized.delegation_threshold, Some(29.into()));
-        assert_eq!(deserialized.min_deposit, Some(30.into()));
-        assert_eq!(deserialized.max_candidate_metadata_size, Some(31.into()));
+        assert_eq!(deserialized.term_seconds, 3600.into());
+        assert_eq!(deserialized.nomination_expiration, 24.into());
+        assert_eq!(deserialized.custody_period, 25.into());
+        assert_eq!(deserialized.release_period, 26.into());
+        assert_eq!(deserialized.max_num_of_validators, 27.into());
+        assert_eq!(deserialized.min_num_of_validators, 28.into());
+        assert_eq!(deserialized.delegation_threshold, 29.into());
+        assert_eq!(deserialized.min_deposit, 30.into());
+        assert_eq!(deserialized.max_candidate_metadata_size, 31.into());
         assert_eq!(deserialized.era, Some(32.into()));
     }
 }

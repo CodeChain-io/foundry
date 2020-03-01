@@ -91,7 +91,16 @@ mod tests {
                 "minDecomposeAssetCost" : 22,
                 "minUnwrapCccCost" : 23,
                 "maxBodySize": 4194304,
-                "snapshotPeriod": 16384
+                "snapshotPeriod": 16384,
+                "termSeconds": 3600,
+                "nominationExpiration": 24,
+                "custodyPeriod": 25,
+                "releasePeriod": 26,
+                "maxNumOfValidators": 27,
+                "minNumOfValidators": 28,
+                "delegationThreshold": 29,
+                "minDeposit": 30,
+                "maxCandidateMetadataSize": 31
             },
             "genesis": {
                 "seal": {
