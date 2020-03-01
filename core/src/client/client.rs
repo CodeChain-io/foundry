@@ -399,13 +399,11 @@ impl EngineInfo for Client {
 
     fn common_params(&self, block_id: BlockId) -> Option<CommonParams> {
         self.state_info(block_id.into()).map(|state| {
-            state
+            *state
                 .metadata()
                 .unwrap_or_else(|err| unreachable!("Unexpected failure. Maybe DB was corrupted: {:?}", err))
                 .unwrap()
                 .params()
-                .map(Clone::clone)
-                .unwrap_or_else(|| *self.engine().machine().genesis_common_params())
         })
     }
 
@@ -723,17 +721,7 @@ impl TermInfo for Client {
         let state = self.state_at(id)?;
         let metadata = state.metadata().unwrap().expect("Metadata always exist");
 
-        if let Some(term_params) = metadata.term_params() {
-            Some(*term_params)
-        } else {
-            let block_number =
-                self.last_term_finished_block_num(id).expect("The block of the parent hash should exist");
-            if block_number == 0 {
-                None
-            } else {
-                Some(self.common_params((block_number).into()).expect("Common params should exist"))
-            }
-        }
+        Some(*metadata.term_params())
     }
 }
 

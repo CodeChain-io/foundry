@@ -48,7 +48,7 @@ use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::{public_to_address, Address, Generator, KeyPair, NetworkId, PlatformAddress, Private, Public, Random};
 use cnetwork::NodeId;
-use cstate::tests::helpers::empty_top_state;
+use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{FindActionHandler, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::header::Header;
@@ -667,7 +667,7 @@ impl TermInfo for TestBlockChainClient {
 impl StateInfo for TestBlockChainClient {
     fn state_at(&self, _id: BlockId) -> Option<TopLevelState> {
         let statedb = StateDB::new_with_memorydb();
-        let mut top_state = empty_top_state(statedb);
+        let mut top_state = empty_top_state_with_metadata(statedb, CommonParams::default_for_test());
         let _ = self.validators.save_to_state(&mut top_state);
 
         Some(top_state)

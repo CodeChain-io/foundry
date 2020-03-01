@@ -18,7 +18,7 @@ pub mod helpers {
     use crate::impls::TopLevelState;
     use crate::{FindActionHandler, Metadata, MetadataAddress, StateDB};
     use cdb::AsHashDB;
-    use ctypes::{BlockNumber, Tracker};
+    use ctypes::{BlockNumber, CommonParams, Tracker};
     use cvm::ChainTimeInfo;
     use kvdb::KeyValueDB;
     use merkle_trie::{TrieFactory, TrieMut};
@@ -48,13 +48,12 @@ pub mod helpers {
     }
 
     pub fn get_temp_state() -> TopLevelState {
-        let state_db = get_temp_state_db();
-        empty_top_state(state_db)
+        get_temp_state_with_metadata(CommonParams::default_for_test())
     }
 
-    pub fn get_temp_state_with_metadata() -> TopLevelState {
+    pub fn get_temp_state_with_metadata(params: CommonParams) -> TopLevelState {
         let state_db = get_temp_state_db();
-        empty_top_state_with_metadata(state_db)
+        empty_top_state_with_metadata(state_db, params)
     }
 
     pub fn get_test_client() -> TestClient {
@@ -73,12 +72,12 @@ pub mod helpers {
 
     /// Creates new state with empty state root
     /// Used for tests.
-    fn empty_top_state_with_metadata(mut db: StateDB) -> TopLevelState {
+    pub fn empty_top_state_with_metadata(mut db: StateDB, params: CommonParams) -> TopLevelState {
         let mut root = H256::new();
         // init trie and reset root too null
         {
             let mut t = TrieFactory::create(db.as_hashdb_mut(), &mut root);
-            t.insert(&*MetadataAddress::new(), &Metadata::new(1).rlp_bytes()).unwrap();
+            t.insert(&*MetadataAddress::new(), &Metadata::new(0, params).rlp_bytes()).unwrap();
         }
 
         TopLevelState::from_existing(db, root).expect("The empty trie root was initialized")

@@ -101,10 +101,10 @@ impl Scheme {
         }
     }
 
-    fn initialize_state(&self, db: StateDB) -> Result<StateDB, Error> {
+    fn initialize_state(&self, db: StateDB, genesis_params: CommonParams) -> Result<StateDB, Error> {
         let root = BLAKE_NULL_RLP;
         let (db, root) = self.initialize_accounts(db, root)?;
-        let (db, root) = self.initialize_shards(db, root)?;
+        let (db, root) = self.initialize_shards(db, root, genesis_params)?;
         let (db, root) = self.initialize_action_handlers(db, root)?;
 
         *self.state_root_memo.write() = root;
@@ -126,7 +126,12 @@ impl Scheme {
         Ok((db, root))
     }
 
-    fn initialize_shards<DB: AsHashDB>(&self, mut db: DB, mut root: H256) -> Result<(DB, H256), Error> {
+    fn initialize_shards<DB: AsHashDB>(
+        &self,
+        mut db: DB,
+        mut root: H256,
+        genesis_params: CommonParams,
+    ) -> Result<(DB, H256), Error> {
         let mut shards = Vec::<(ShardAddress, Shard)>::with_capacity(self.genesis_shards.len());
 
         // Initialize shard-level tries
@@ -142,7 +147,7 @@ impl Scheme {
 
         debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<ShardId>());
         debug_assert!(shards.len() <= ::std::u16::MAX as usize, "{} <= {}", shards.len(), ::std::u16::MAX as usize);
-        let global_metadata = Metadata::new(shards.len() as ShardId);
+        let global_metadata = Metadata::new(shards.len() as ShardId, genesis_params);
 
         // Initialize shards
         for (address, shard) in shards.into_iter() {
@@ -190,7 +195,7 @@ impl Scheme {
             return Ok(db)
         }
 
-        Ok(self.initialize_state(db)?)
+        Ok(self.initialize_state(db, self.genesis_params())?)
     }
 
     pub fn check_genesis_common_params<HP: HeaderProvider>(&self, chain: &HP) -> Result<(), Error> {
@@ -305,7 +310,7 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
         Some(root) => *s.state_root_memo.get_mut() = root,
         None => {
             let db = StateDB::new_with_memorydb();
-            let _ = s.initialize_state(db)?;
+            let _ = s.initialize_state(db, s.genesis_params())?;
         }
     }
 

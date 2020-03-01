@@ -686,7 +686,9 @@ mod tests_state {
     use cdb::{new_journaldb, Algorithm};
 
     use super::*;
-    use crate::tests::helpers::{empty_top_state, get_memory_db, get_temp_state, get_temp_state_db};
+    use crate::tests::helpers::{
+        empty_top_state, empty_top_state_with_metadata, get_memory_db, get_temp_state, get_temp_state_db,
+    };
 
     #[test]
     fn work_when_cloned() {
@@ -752,7 +754,7 @@ mod tests_state {
         let db = StateDB::new(jorunal.boxed_clone());
         let a = Address::default();
         let root = {
-            let mut state = empty_top_state(StateDB::new(jorunal));
+            let mut state = empty_top_state_with_metadata(db.clone(&H256::zero()), CommonParams::default_for_test());
             assert_eq!(Ok(()), state.inc_seq(&a));
             assert_eq!(Ok(()), state.add_balance(&a, 100));
             assert_eq!(Ok(100), state.balance(&a));
@@ -763,7 +765,7 @@ mod tests_state {
             let mut transaction = memory_db.transaction();
             let records = state.journal_under(&mut transaction, 1);
             assert!(records.is_ok(), "{:?}", records);
-            assert_eq!(1, records.unwrap());
+            assert_eq!(4, records.unwrap());
             memory_db.write_buffered(transaction);
 
             assert!(root.is_ok(), "{:?}", root);
@@ -783,7 +785,7 @@ mod tests_state {
         let mut db = StateDB::new(jorunal.boxed_clone());
         let a = Address::default();
         let root = {
-            let mut state = empty_top_state(StateDB::new(jorunal));
+            let mut state = empty_top_state_with_metadata(db.clone(&H256::zero()), CommonParams::default_for_test());
             assert_eq!(Ok(()), state.inc_seq(&a));
             assert_eq!(Ok(()), state.add_balance(&a, 69));
             assert_eq!(Ok(69), state.balance(&a));
@@ -794,7 +796,7 @@ mod tests_state {
             let mut transaction = memory_db.transaction();
             let records = state.journal_under(&mut transaction, 1);
             assert!(records.is_ok(), "{:?}", records);
-            assert_eq!(1, records.unwrap());
+            assert_eq!(4, records.unwrap());
             memory_db.write_buffered(transaction);
 
             assert!(root.is_ok(), "{:?}", root);
@@ -854,7 +856,7 @@ mod tests_state {
         let jorunal = new_journaldb(Arc::clone(&memory_db), Algorithm::Archive, Some(0));
         let mut db = StateDB::new(jorunal.boxed_clone());
         let root = {
-            let mut state = empty_top_state(StateDB::new(jorunal));
+            let mut state = empty_top_state_with_metadata(db.clone(&H256::zero()), CommonParams::default_for_test());
             assert_eq!(Ok(()), state.inc_seq(&a));
             let root = state.commit();
             assert!(root.is_ok(), "{:?}", root);
@@ -864,7 +866,7 @@ mod tests_state {
             let mut transaction = memory_db.transaction();
             let records = state.journal_under(&mut transaction, 1);
             assert!(records.is_ok(), "{:?}", records);
-            assert_eq!(1, records.unwrap());
+            assert_eq!(4, records.unwrap());
             memory_db.write_buffered(transaction);
 
             assert_eq!(Ok(true), state.account_exists(&a));
@@ -888,7 +890,7 @@ mod tests_state {
             let mut transaction = memory_db.transaction();
             let records = state.journal_under(&mut transaction, 1);
             assert!(records.is_ok(), "{:?}", records);
-            assert_eq!(0, records.unwrap());
+            assert_eq!(1, records.unwrap());
             memory_db.write_buffered(transaction);
 
             assert_eq!(Ok(false), state.account_exists(&a));
@@ -963,7 +965,7 @@ mod tests_state {
         let mut state = get_temp_state();
         let a = Address::default();
         state.get_account_mut(&a).unwrap();
-        assert_eq!(Ok(H256::from("9e14103f4537534c835b69916aa554cb7d2064f07a86d569949b971576893116")), state.commit());
+        assert_eq!(Ok(H256::from("37db9832f9e2f164789ddf7e399481a0386f61acb49a52d975466058bc1bbbcb")), state.commit());
     }
 
     #[test]
@@ -1014,12 +1016,6 @@ mod tests_state {
         state.revert_to_checkpoint(0);
         assert_eq!(Ok(0), state.balance(&a));
         assert_eq!(Ok(0), state.seq(&a));
-    }
-
-    #[test]
-    fn create_empty() {
-        let mut state = get_temp_state();
-        assert_eq!(Ok(BLAKE_NULL_RLP), state.commit());
     }
 }
 

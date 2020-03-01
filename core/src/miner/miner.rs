@@ -383,9 +383,7 @@ impl Miner {
         }
         cdebug!(MINER, "Pushed {}/{} transactions", tx_count, tx_total);
 
-        let parent_hash = *open_block.header().parent_hash();
-        let term_common_params = chain.term_common_params(parent_hash.into());
-        let block = open_block.close(term_common_params.as_ref())?;
+        let block = open_block.close()?;
 
         let fetch_seq = |p: &Public| {
             let address = public_to_address(p);

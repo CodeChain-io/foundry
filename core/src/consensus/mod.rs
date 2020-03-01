@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -185,11 +185,7 @@ pub trait ConsensusEngine: Sync + Send {
     }
 
     /// Block transformation functions, after the transactions.
-    fn on_close_block(
-        &self,
-        _block: &mut ExecutedBlock,
-        _term_common_params: Option<&CommonParams>,
-    ) -> Result<(), Error> {
+    fn on_close_block(&self, _block: &mut ExecutedBlock) -> Result<(), Error> {
         Ok(())
     }
 
