@@ -17,7 +17,8 @@
 use super::super::validator_set::DynamicValidator;
 use super::types::View;
 use super::Step;
-use ckey::{Address, PlatformAddress};
+use ckey::{Address, Ed25519Public as Public};
+use primitives::Bytes;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -30,11 +31,38 @@ pub struct TendermintParams {
     pub timeouts: TimeoutParams,
     /// Tokens distributed at genesis.
     pub genesis_stakes: HashMap<Address, u64>,
+    pub genesis_candidates: HashMap<Address, Deposit>,
+    pub genesis_delegations: HashMap<Address, HashMap<Address, u64>>,
+}
+
+#[derive(Eq, Ord, PartialEq, PartialOrd)]
+pub struct Deposit {
+    pub pubkey: Public,
+    pub deposit: u64,
+    pub nomination_ends_at: u64,
+    pub metadata: Bytes,
 }
 
 impl From<cjson::scheme::TendermintParams> for TendermintParams {
     fn from(p: cjson::scheme::TendermintParams) -> Self {
         let dt = TimeoutParams::default();
+        let genesis_stakes_params = p.genesis_stakes.unwrap_or_default();
+        let genesis_stakes =
+            genesis_stakes_params.iter().map(|(pa, stake_account)| (pa.into_address(), stake_account.stake)).collect();
+        let genesis_delegations = genesis_stakes_params
+            .into_iter()
+            .map(|(pa, stake_account)| {
+                (
+                    pa.into_address(),
+                    stake_account
+                        .delegations
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(|(delegatee, amount)| (delegatee.into_address(), amount))
+                        .collect(),
+                )
+            })
+            .collect();
         TendermintParams {
             validators: Arc::new(DynamicValidator::new(p.validators)),
             timeouts: TimeoutParams {
@@ -46,12 +74,21 @@ impl From<cjson::scheme::TendermintParams> for TendermintParams {
                 precommit_delta: p.timeout_precommit_delta.map_or(dt.precommit_delta, to_duration),
                 commit: p.timeout_commit.map_or(dt.commit, to_duration),
             },
-            genesis_stakes: p
-                .genesis_stakes
+            genesis_stakes,
+            genesis_candidates: p
+                .genesis_candidates
                 .unwrap_or_default()
                 .into_iter()
-                .map(|(pa, amount)| (PlatformAddress::into_address(pa), amount))
+                .map(|(pubkey, deposit)| {
+                    (pubkey.into_address(), Deposit {
+                        pubkey: deposit.pubkey,
+                        deposit: deposit.deposit,
+                        nomination_ends_at: deposit.nomination_ends_at,
+                        metadata: deposit.metadata.into_bytes(),
+                    })
+                })
                 .collect(),
+            genesis_delegations,
         }
     }
 }

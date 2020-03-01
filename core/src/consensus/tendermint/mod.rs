@@ -27,7 +27,7 @@ mod worker;
 
 use self::chain_notify::TendermintChainNotify;
 pub use self::message::{ConsensusMessage, VoteOn, VoteStep};
-pub use self::params::{TendermintParams, TimeGapParams, TimeoutParams};
+pub use self::params::{Deposit, TendermintParams, TimeGapParams, TimeoutParams};
 pub use self::types::{Height, Step, View};
 pub use super::{stake, ValidatorSet};
 use crate::client::ConsensusClient;
@@ -87,7 +87,11 @@ impl Tendermint {
     /// Create a new instance of Tendermint engine
     pub fn new(our_params: TendermintParams, machine: CodeChainMachine) -> Arc<Self> {
         let validators = Arc::clone(&our_params.validators);
-        let stake = Arc::new(stake::Stake::new(our_params.genesis_stakes));
+        let stake = Arc::new(stake::Stake::new(
+            our_params.genesis_stakes,
+            our_params.genesis_candidates,
+            our_params.genesis_delegations,
+        ));
         let timeouts = our_params.timeouts;
         let machine = Arc::new(machine);
 

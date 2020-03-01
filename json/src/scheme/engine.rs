@@ -55,7 +55,9 @@ mod tests {
         let s = r#"{
             "tendermint": {
                 "params": {
-                    "validators": ["0x6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375"]
+                    "validators": ["0x6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375"],
+                    "genesisStakes": {},
+                    "genesisCandidates": {}
                 }
             }
         }"#;

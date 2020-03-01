@@ -496,6 +496,7 @@ impl From<PreviousValidators> for Vec<Validator> {
     }
 }
 
+#[derive(Default)]
 pub struct Candidates(Vec<Candidate>);
 #[derive(Clone, Debug, Eq, PartialEq, RlpEncodable, RlpDecodable)]
 pub struct Candidate {

@@ -46,7 +46,11 @@ impl Solo {
         if params.enable_hit_handler {
             action_handlers.push(Arc::new(HitHandler::new()));
         }
-        action_handlers.push(Arc::new(stake::Stake::new(params.genesis_stakes)));
+        action_handlers.push(Arc::new(stake::Stake::new(
+            params.genesis_stakes,
+            Default::default(),
+            Default::default(),
+        )));
 
         Solo {
             client: Default::default(),
