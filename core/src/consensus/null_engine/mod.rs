@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -23,7 +23,6 @@ use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
-use ctypes::CommonParams;
 
 /// An engine which does not provide any consensus mechanism and does not seal blocks.
 pub struct NullEngine {
@@ -58,11 +57,7 @@ impl ConsensusEngine for NullEngine {
         EngineType::Solo
     }
 
-    fn on_close_block(
-        &self,
-        block: &mut ExecutedBlock,
-        _term_common_params: Option<&CommonParams>,
-    ) -> Result<(), Error> {
+    fn on_close_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
         let (author, total_reward) = {
             let header = block.header();
             let author = *header.author();

@@ -27,7 +27,7 @@ use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
 use cstate::{ActionHandler, HitHandler, TopStateView};
-use ctypes::{BlockHash, CommonParams, Header};
+use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
 use std::sync::{Arc, Weak};
 
@@ -94,11 +94,7 @@ impl ConsensusEngine for Solo {
         Ok(())
     }
 
-    fn on_close_block(
-        &self,
-        block: &mut ExecutedBlock,
-        _term_common_params: Option<&CommonParams>,
-    ) -> Result<(), Error> {
+    fn on_close_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
 
         let parent_hash = *block.header().parent_hash();
@@ -183,15 +179,13 @@ impl ConsensusEngine for Solo {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
-    use ctypes::{CommonParams, Header};
-    use primitives::H520;
-
     use crate::block::{IsBlock, OpenBlock};
     use crate::client::{ConsensusClient, TestBlockChainClient};
     use crate::scheme::Scheme;
     use crate::tests::helpers::get_temp_state_db;
+    use ctypes::Header;
+    use primitives::H520;
+    use std::sync::Arc;
 
     #[test]
     fn seal() {
@@ -202,8 +196,7 @@ mod tests {
         let db = client.scheme.ensure_genesis_state(get_temp_state_db()).unwrap();
         let genesis_header = client.scheme.genesis_header();
         let b = OpenBlock::try_new(&*engine, db, &genesis_header, Default::default(), vec![]).unwrap();
-        let term_common_params = CommonParams::default_for_test();
-        let b = b.close_and_lock(Some(&term_common_params)).unwrap();
+        let b = b.close_and_lock().unwrap();
         if let Some(seal) = engine.generate_seal(Some(b.block()), &genesis_header).seal_fields() {
             b.seal_block(seal);
         }

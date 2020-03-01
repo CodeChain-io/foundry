@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -118,12 +118,8 @@ impl ActionHandler for Stake {
             } => {
                 let (current_term, nomination_ends_at) = {
                     let metadata = state.metadata()?.expect("Metadata must exist");
-                    const DEFAULT_NOMINATION_EXPIRATION: u64 = 24;
                     let current_term = metadata.current_term_id();
-                    let expiration = metadata
-                        .params()
-                        .map(CommonParams::nomination_expiration)
-                        .unwrap_or(DEFAULT_NOMINATION_EXPIRATION);
+                    let expiration = metadata.params().nomination_expiration();
                     let nomination_ends_at = current_term + expiration;
                     (current_term, nomination_ends_at)
                 };
@@ -397,10 +393,7 @@ pub fn on_term_close(
     ctrace!(ENGINE, "on_term_close. current_term: {}", current_term);
 
     let (nomination_expiration, custody_until, kick_at) = {
-        let metadata = metadata.params().expect(
-            "Term close events can be called after the ChangeParams called, \
-             so the metadata always has CommonParams",
-        );
+        let metadata = metadata.params();
         let nomination_expiration = metadata.nomination_expiration();
         assert_ne!(0, nomination_expiration);
         let custody_period = metadata.custody_period();
@@ -551,9 +544,9 @@ mod tests {
     use rlp::Encodable;
 
     fn metadata_for_election() -> TopLevelState {
-        let mut state = helpers::get_temp_state_with_metadata();
-        state.metadata().unwrap().unwrap().set_params(CommonParams::default_for_test());
         let mut params = CommonParams::default_for_test();
+        let mut state = helpers::get_temp_state_with_metadata(params);
+        state.metadata().unwrap().unwrap().set_params(CommonParams::default_for_test());
         params.set_dynamic_validator_params_for_test(30, 10, 3, 20, 30, 4, 1000, 10000, 100);
         assert_eq!(Ok(()), state.update_params(0, params));
         state

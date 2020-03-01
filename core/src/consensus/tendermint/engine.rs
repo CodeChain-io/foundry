@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -36,7 +36,7 @@ use ckey::{public_to_address, Address};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{ActionHandler, TopState, TopStateView};
-use ctypes::{BlockHash, CommonParams, Header};
+use ctypes::{BlockHash, Header};
 use num_rational::Ratio;
 use rlp::Encodable;
 use std::collections::btree_map::BTreeMap;
@@ -173,11 +173,7 @@ impl ConsensusEngine for Tendermint {
         Ok(())
     }
 
-    fn on_close_block(
-        &self,
-        block: &mut ExecutedBlock,
-        term_common_params: Option<&CommonParams>,
-    ) -> Result<(), Error> {
+    fn on_close_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
 
         let parent_hash = *block.header().parent_hash();
@@ -206,10 +202,6 @@ impl ConsensusEngine for Tendermint {
 
         let metadata = block.state().metadata()?.expect("Metadata must exist");
         let term = metadata.current_term_id();
-        let term_seconds = match term {
-            0 => parent_common_params.term_seconds(),
-            _ => term_common_params.expect("TermCommonParams should exist").term_seconds(),
-        };
 
         match term {
             0 => {
@@ -221,6 +213,7 @@ impl ConsensusEngine for Tendermint {
             }
         }
 
+        let term_seconds = parent_common_params.term_seconds();
         if !is_term_changed(block.header(), &parent, term_seconds) {
             return Ok(())
         }

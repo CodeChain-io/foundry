@@ -303,7 +303,7 @@ impl NextValidators {
     pub fn elect(state: &TopLevelState) -> StateResult<Self> {
         let (delegation_threshold, max_num_of_validators, min_num_of_validators, min_deposit) = {
             let metadata = state.metadata()?.expect("Metadata must exist");
-            let common_params = metadata.params().expect("CommonParams must exist in the metadata when elect");
+            let common_params = metadata.params();
             (
                 common_params.delegation_threshold(),
                 common_params.max_num_of_validators(),

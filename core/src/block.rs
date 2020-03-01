@@ -20,14 +20,13 @@ use crate::consensus::CodeChainEngine;
 use crate::error::{BlockError, Error};
 use crate::stake;
 use crate::transaction::{SignedTransaction, UnverifiedTransaction};
-use crate::BlockId;
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Address;
 use cstate::{FindActionHandler, StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{BlockNumber, CommonParams, TxHash};
+use ctypes::{BlockNumber, TxHash};
 use cvm::ChainTimeInfo;
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
@@ -214,8 +213,8 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Turn this into a `ClosedBlock`.
-    fn close_impl(&mut self, term_common_params: Option<&CommonParams>) -> Result<(), Error> {
-        if let Err(e) = self.engine.on_close_block(&mut self.block, term_common_params) {
+    fn close_impl(&mut self) -> Result<(), Error> {
+        if let Err(e) = self.engine.on_close_block(&mut self.block) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
         }
@@ -245,10 +244,10 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Turn this into a `ClosedBlock`.
-    pub fn close(mut self, term_common_params: Option<&CommonParams>) -> Result<ClosedBlock, Error> {
+    pub fn close(mut self) -> Result<ClosedBlock, Error> {
         let unclosed_state = self.block.state.clone();
 
-        self.close_impl(term_common_params)?;
+        self.close_impl()?;
 
         self.block.header.set_transactions_root(skewed_merkle_root(
             BLAKE_NULL_RLP,
@@ -262,8 +261,8 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Turn this into a `LockedBlock`.
-    pub fn close_and_lock(mut self, term_common_params: Option<&CommonParams>) -> Result<LockedBlock, Error> {
-        self.close_impl(term_common_params)?;
+    pub fn close_and_lock(mut self) -> Result<LockedBlock, Error> {
+        self.close_impl()?;
 
         if self.block.header.transactions_root() == &BLAKE_NULL_RLP {
             self.block.header.set_transactions_root(skewed_merkle_root(
@@ -478,18 +477,14 @@ pub fn enact<C: ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo>(
     engine.on_open_block(b.inner_mut())?;
     b.push_transactions(transactions, client, parent.number(), parent.timestamp())?;
 
-    let term_common_params = client.term_common_params(BlockId::Hash(*header.parent_hash()));
-    b.close_and_lock(term_common_params.as_ref())
+    b.close_and_lock()
 }
 
 #[cfg(test)]
 mod tests {
-    use ctypes::CommonParams;
-
+    use super::*;
     use crate::scheme::Scheme;
     use crate::tests::helpers::get_temp_state_db;
-
-    use super::*;
 
     #[test]
     fn open_block() {
@@ -497,8 +492,7 @@ mod tests {
         let genesis_header = scheme.genesis_header();
         let db = scheme.ensure_genesis_state(get_temp_state_db()).unwrap();
         let b = OpenBlock::try_new(&*scheme.engine, db, &genesis_header, Address::default(), vec![]).unwrap();
-        let term_common_params = CommonParams::default_for_test();
-        let b = b.close_and_lock(Some(&term_common_params)).unwrap();
+        let b = b.close_and_lock().unwrap();
         let _ = b.seal(&*scheme.engine, vec![]);
     }
 }
