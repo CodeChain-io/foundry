@@ -34,20 +34,29 @@ pub use self::action_data::{
 };
 use self::action_data::{Delegation, ReleaseResult, StakeAccount, Stakeholders};
 pub use self::actions::{Action, Approval};
+use super::tendermint::Deposit;
 use super::ValidatorSet;
 
 pub const CUSTOM_ACTION_HANDLER_ID: u64 = 2;
 
 pub struct Stake {
     genesis_stakes: HashMap<Address, u64>,
+    genesis_candidates: HashMap<Address, Deposit>,
+    genesis_delegations: HashMap<Address, HashMap<Address, u64>>,
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
     validators: RwLock<Option<Weak<dyn ValidatorSet>>>,
 }
 
 impl Stake {
-    pub fn new(genesis_stakes: HashMap<Address, u64>) -> Stake {
+    pub fn new(
+        genesis_stakes: HashMap<Address, u64>,
+        genesis_candidates: HashMap<Address, Deposit>,
+        genesis_delegations: HashMap<Address, HashMap<Address, u64>>,
+    ) -> Stake {
         Stake {
             genesis_stakes,
+            genesis_candidates,
+            genesis_delegations,
             client: Default::default(),
             validators: Default::default(),
         }
@@ -68,8 +77,30 @@ impl ActionHandler for Stake {
     }
 
     fn init(&self, state: &mut TopLevelState) -> StateResult<()> {
+        let mut genesis_stakes = self.genesis_stakes.clone();
+        for (delegator, delegation) in &self.genesis_delegations {
+            let stake = genesis_stakes.entry(*delegator).or_default();
+            let total_delegation = delegation.values().sum();
+            if *stake < total_delegation {
+                cerror!(STATE, "{} has insufficient stakes to delegate", delegator);
+                return Err(RuntimeError::InsufficientStakes(Mismatch {
+                    expected: total_delegation,
+                    found: *stake,
+                })
+                .into())
+            }
+            for delegatee in delegation.keys() {
+                if !self.genesis_candidates.contains_key(delegatee) {
+                    return Err(
+                        RuntimeError::FailedToHandleCustomAction("Can delegate to who is a candidate".into()).into()
+                    )
+                }
+            }
+            *stake -= total_delegation;
+        }
+
         let mut stakeholders = Stakeholders::load_from_state(state)?;
-        for (address, amount) in self.genesis_stakes.iter() {
+        for (address, amount) in &genesis_stakes {
             let account = StakeAccount {
                 address,
                 balance: *amount,
@@ -78,6 +109,45 @@ impl ActionHandler for Stake {
             stakeholders.update_by_increased_balance(&account);
         }
         stakeholders.save_to_state(state)?;
+
+        for (address, deposit) in &self.genesis_candidates {
+            let balance = state.balance(address).unwrap_or_default();
+            if balance < deposit.deposit {
+                cerror!(STATE, "{} has insufficient balance to become the candidate", address);
+                return Err(RuntimeError::InsufficientBalance {
+                    address: *address,
+                    balance,
+                    cost: deposit.deposit,
+                }
+                .into())
+            }
+            state.sub_balance(address, deposit.deposit).unwrap();
+        }
+
+        let mut candidates = Candidates::default();
+        {
+            let mut values: Vec<_> = self.genesis_candidates.values().collect();
+            values.sort_unstable(); // The insertion order of candidates is important.
+
+            for candidate in values {
+                candidates.add_deposit(
+                    &candidate.pubkey,
+                    candidate.deposit,
+                    candidate.nomination_ends_at,
+                    candidate.metadata.clone(),
+                );
+            }
+        }
+        candidates.save_to_state(state)?;
+
+        for (delegator, delegations) in &self.genesis_delegations {
+            let mut delegation = Delegation::load_from_state(state, &delegator)?;
+            for (delegatee, amount) in delegations {
+                delegation.add_quantity(*delegatee, *amount)?;
+            }
+            delegation.save_to_state(state)?;
+        }
+
         Ok(())
     }
 
@@ -519,7 +589,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(address1, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
 
@@ -544,7 +614,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(address1, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
 
@@ -572,7 +642,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(address1, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
 
@@ -604,7 +674,7 @@ mod tests {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -647,7 +717,7 @@ mod tests {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -691,7 +761,7 @@ mod tests {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
 
@@ -715,7 +785,7 @@ mod tests {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -740,7 +810,7 @@ mod tests {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -771,7 +841,7 @@ mod tests {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -802,7 +872,7 @@ mod tests {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -840,7 +910,7 @@ mod tests {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -878,7 +948,7 @@ mod tests {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -915,7 +985,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -957,7 +1027,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -999,7 +1069,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -1041,7 +1111,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
 
@@ -1080,7 +1150,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -1132,7 +1202,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
@@ -1174,7 +1244,7 @@ mod tests {
         let mut state = helpers::get_temp_state();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(HashMap::new());
+        let stake = Stake::new(Default::default(), Default::default(), Default::default());
         stake.init(&mut state).unwrap();
 
         // TODO: change with stake.execute()
@@ -1234,7 +1304,7 @@ mod tests {
         let mut state = helpers::get_temp_state();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(HashMap::new());
+        let stake = Stake::new(Default::default(), Default::default(), Default::default());
         stake.init(&mut state).unwrap();
 
         // TODO: change with stake.execute()
@@ -1259,7 +1329,7 @@ mod tests {
         increase_term_id_until(&mut state, 29);
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(HashMap::new());
+        let stake = Stake::new(Default::default(), Default::default(), Default::default());
         stake.init(&mut state).unwrap();
 
         // TODO: change with stake.execute()
@@ -1303,7 +1373,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
 
@@ -1341,7 +1411,7 @@ mod tests {
         let mut state = helpers::get_temp_state();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(HashMap::new());
+        let stake = Stake::new(Default::default(), Default::default(), Default::default());
         stake.init(&mut state).unwrap();
 
         // TODO: change with stake.execute()
@@ -1379,7 +1449,7 @@ mod tests {
         let mut state = metadata_for_election();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(HashMap::new());
+        let stake = Stake::new(Default::default(), Default::default(), Default::default());
         stake.init(&mut state).unwrap();
 
         // TODO: change with stake.execute()
@@ -1418,7 +1488,7 @@ mod tests {
         let mut state = metadata_for_election();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(HashMap::new());
+        let stake = Stake::new(Default::default(), Default::default(), Default::default());
         stake.init(&mut state).unwrap();
 
         // TODO: change with stake.execute()
@@ -1472,7 +1542,7 @@ mod tests {
         let mut state = metadata_for_election();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(HashMap::new());
+        let stake = Stake::new(Default::default(), Default::default(), Default::default());
         stake.init(&mut state).unwrap();
 
         // TODO: change with stake.execute()
@@ -1517,7 +1587,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
 
@@ -1561,7 +1631,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
 
@@ -1604,7 +1674,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
 
@@ -1660,7 +1730,7 @@ mod tests {
         let stake = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes)
+            Stake::new(genesis_stakes, Default::default(), Default::default())
         };
         stake.init(&mut state).unwrap();
 
@@ -1697,7 +1767,7 @@ mod tests {
         let criminal = public_to_address(&criminal_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = Stake::new(HashMap::new());
+        let stake = Stake::new(Default::default(), Default::default(), Default::default());
         stake.init(&mut state).unwrap();
         assert_eq!(Ok(()), state.add_balance(&criminal, 100));
 

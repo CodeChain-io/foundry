@@ -39,11 +39,29 @@ pub struct TendermintParams {
     /// Commit step timeout in milliseconds.
     pub timeout_commit: Option<Uint>,
     /// How much tokens are distributed at Genesis?
-    pub genesis_stakes: Option<HashMap<PlatformAddress, u64>>,
+    pub genesis_stakes: Option<HashMap<PlatformAddress, StakeAccount>>,
     /// allowed past time gap in milliseconds.
     pub allowed_past_timegap: Option<Uint>,
     /// allowed future time gap in milliseconds.
     pub allowed_future_timegap: Option<Uint>,
+    /// Genesis candidates.
+    pub genesis_candidates: Option<HashMap<PlatformAddress, Deposit>>,
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Deposit {
+    pub pubkey: Public,
+    pub deposit: u64,
+    pub nomination_ends_at: u64,
+    pub metadata: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StakeAccount {
+    pub stake: u64,
+    pub delegations: Option<HashMap<PlatformAddress, u64>>,
 }
 
 /// Tendermint engine deserialization.
@@ -54,8 +72,7 @@ pub struct Tendermint {
 
 #[cfg(test)]
 mod tests {
-    use super::Tendermint;
-    use ckey::Ed25519Public as Public;
+    use super::*;
     use std::str::FromStr;
 
     #[test]
@@ -69,5 +86,92 @@ mod tests {
         let deserialized: Tendermint = serde_json::from_str(s).unwrap();
         let vs = vec![Public::from_str("6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375").unwrap()];
         assert_eq!(deserialized.params.validators, vs);
+    }
+
+    #[test]
+    fn candidates_deserialization() {
+        let s = r#"{
+            "params": {
+                "validators": ["0x5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08"],
+                "genesisCandidates": {
+                    "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": {
+                        "pubkey": "0x5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08",
+                        "deposit": 300,
+                        "nominationEndsAt": 100,
+                        "metadata": "alice"
+                    }
+                }
+            }
+        }"#;
+
+        let deserialized: Tendermint = serde_json::from_str(s).unwrap();
+        let vs = vec![Public::from_str("5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08").unwrap()];
+        assert_eq!(deserialized.params.validators, vs);
+
+        assert_eq!(
+            deserialized.params.genesis_candidates,
+            Some(
+                [(PlatformAddress::from_str("tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5").unwrap(), Deposit {
+                    pubkey: Public::from_str("5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08")
+                        .unwrap(),
+                    deposit: 300,
+                    nomination_ends_at: 100,
+                    metadata: "alice".to_string(),
+                })]
+                .iter()
+                .cloned()
+                .collect()
+            )
+        );
+    }
+
+    #[test]
+    fn delegations() {
+        let s = r#"{
+            "params": {
+                "validators": ["0x5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08"],
+                "genesisStakes": {
+                    "tccq8qlwpt7xcs9lec3c8tyt3kqxlgsus8q4qp3m6ft": {
+                        "stake": 100,
+                        "delegations": {
+                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqyca3rwt": 1,
+                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgfrhflv": 2,
+                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvxf40sk": 3,
+                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqszkma5z": 4,
+                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5duemmc": 5,
+                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqcuzl32l": 6,
+                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqungah99": 7,
+                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqc2ul2h": 8
+                        }
+                    }
+                }
+            }
+        }"#;
+
+        let deserialized: Tendermint = serde_json::from_str(s).unwrap();
+        let vs = vec![Public::from_str("5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08").unwrap()];
+        assert_eq!(deserialized.params.validators, vs);
+        let expected_delegations = [
+            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqyca3rwt").unwrap(), 1),
+            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgfrhflv").unwrap(), 2),
+            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvxf40sk").unwrap(), 3),
+            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqszkma5z").unwrap(), 4),
+            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5duemmc").unwrap(), 5),
+            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqcuzl32l").unwrap(), 6),
+            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqungah99").unwrap(), 7),
+            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqc2ul2h").unwrap(), 8),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        let expected_genesis_stakes =
+            [(PlatformAddress::from_str("tccq8qlwpt7xcs9lec3c8tyt3kqxlgsus8q4qp3m6ft").unwrap(), StakeAccount {
+                stake: 100,
+                delegations: Some(expected_delegations),
+            })]
+            .iter()
+            .cloned()
+            .collect();
+        assert_eq!(deserialized.params.genesis_stakes, Some(expected_genesis_stakes));
     }
 }

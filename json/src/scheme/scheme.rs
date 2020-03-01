@@ -67,7 +67,26 @@ mod tests {
                         "timeoutPropose": 10000,
                         "timeoutPrevote": 10000,
                         "timeoutPrecommit": 10000,
-                        "timeoutCommit": 10000
+                        "timeoutCommit": 10000,
+                        "genesisStakes": {
+                          "tccq8qlwpt7xcs9lec3c8tyt3kqxlgsus8q4qp3m6ft": {
+                            "stake": 100,
+                            "delegations": {
+                              "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": 10
+                            }
+                          },
+                          "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": {
+                            "stake": 100
+                          }
+                        },
+                        "genesisCandidates": {
+                          "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": {
+                            "pubkey": "0x6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375",
+                            "deposit": 20,
+                            "nominationEndsAt": 100,
+                            "metadata": "alice"
+                          }
+                        }
                     }
                 }
             },
