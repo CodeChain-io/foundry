@@ -18,7 +18,7 @@ import { expect } from "chai";
 import "mocha";
 import {
     aliceAddress,
-    faucetAccointId,
+    faucetAccountId,
     faucetAddress,
     faucetSecret
 } from "../helper/constants";
