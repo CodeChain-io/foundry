@@ -107,6 +107,10 @@ pub trait Chain {
     #[rpc(name = "chain_getBlockTransactionCountByHash")]
     fn get_block_transaction_count_by_hash(&self, block_hash: BlockHash) -> Result<Option<usize>>;
 
+    ///Gets the raw bytes of a header with given number.
+    #[rpc(name = "chain_getRawHeaderByNumber")]
+    fn get_raw_header_by_number(&self, block_number: u64) -> Result<Option<String>>;
+
     ///Gets the minimum transaction fee of the given name.
     #[rpc(name = "chain_getMinTransactionFee")]
     fn get_min_transaction_fee(&self, action_type: String, block_number: Option<u64>) -> Result<Option<u64>>;
