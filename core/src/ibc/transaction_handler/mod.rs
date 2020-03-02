@@ -226,7 +226,9 @@ pub fn execute(
         } => {
             let mut channel_manager = ibc_channel::Manager::new(&mut context);
             channel_manager
-                .recv_packet(raw.packet, raw.proof, raw.proof_height, raw.ack)
+                .recv_packet(raw.packet, raw.proof, raw.proof_height, ibc::channel_04::types::Acknowledgement {
+                    raw: raw.ack,
+                })
                 .map_err(|err| RuntimeError::IBC(format!("RecvPacket: {}", err)))?;
             Ok(())
         }
@@ -235,7 +237,14 @@ pub fn execute(
         } => {
             let mut channel_manager = ibc_channel::Manager::new(&mut context);
             channel_manager
-                .acknowledge_packet(raw.packet, raw.ack, raw.proof, raw.proof_height)
+                .acknowledge_packet(
+                    raw.packet,
+                    ibc::channel_04::types::Acknowledgement {
+                        raw: raw.ack,
+                    },
+                    raw.proof,
+                    raw.proof_height,
+                )
                 .map_err(|err| RuntimeError::IBC(format!("AcknowledgePacket: {}", err)))?;
             Ok(())
         }

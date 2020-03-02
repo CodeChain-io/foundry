@@ -15,7 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::log::{remove_packet, set_packet};
-use super::types::{ChannelEnd, ChannelOrder, ChannelState, Packet, PacketCommitment, Sequence};
+use super::types::{
+    Acknowledgement, ChannelEnd, ChannelOrder, ChannelState, Packet, PacketCommitment, PacketCommitmentHash, Sequence,
+};
 use super::{
     channel_capability_path, channel_path, next_sequence_recv_path, next_sequence_send_path,
     packet_acknowledgement_path, packet_commitment_path, DEFAULT_PORT,
@@ -24,9 +26,8 @@ use crate::ibc;
 use crate::ibc::connection_03::path as connection_path;
 use crate::ibc::connection_03::types::{ConnectionEnd, ConnectionState};
 use crate::ibc::{Identifier, IdentifierSlice};
-use ccrypto::blake256;
 use ibc::client_02::Manager as ClientManager;
-use primitives::{Bytes, H256};
+use primitives::Bytes;
 
 pub struct Manager<'a> {
     ctx: &'a mut dyn ibc::Context,
@@ -473,7 +474,7 @@ impl<'a> Manager<'a> {
         packet: Packet,
         proof: Bytes,
         proof_height: u64,
-        ack: Bytes,
+        ack: Acknowledgement,
     ) -> Result<Packet, String> {
         let channel = self.get_previous_channel_end(&packet.dest_port, &packet.dest_channel)?;
         if channel.state != ChannelState::OPEN {
@@ -514,7 +515,7 @@ impl<'a> Manager<'a> {
         if channel.ordering == ChannelOrder::ORDERED {
             kv_store.insert(
                 &packet_acknowledgement_path(&packet.dest_port, &packet.dest_channel, &packet.sequence),
-                &rlp::encode(&blake256(&ack)),
+                &rlp::encode(&ack.hash()),
             );
 
             if packet.sequence != next_sequence_recv {
@@ -540,7 +541,7 @@ impl<'a> Manager<'a> {
     pub fn acknowledge_packet(
         &mut self,
         packet: Packet,
-        ack: Bytes,
+        ack: Acknowledgement,
         proof: Bytes,
         proof_height: u64,
     ) -> Result<Packet, String> {
@@ -558,7 +559,7 @@ impl<'a> Manager<'a> {
         self.check_capability_key(&packet.source_port, &packet.source_channel)?;
 
         let kv_store = self.ctx.get_kv_store();
-        let packet_commitment: H256 = rlp::decode(
+        let packet_commitment: PacketCommitmentHash = rlp::decode(
             &kv_store
                 .get(&packet_commitment_path(&packet.source_port, &packet.source_channel, &packet.sequence))
                 .ok_or_else(|| "Packet commitment not found".to_owned())?,

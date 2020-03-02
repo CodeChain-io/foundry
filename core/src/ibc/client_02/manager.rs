@@ -20,7 +20,7 @@ use super::*;
 use crate::consensus::light_client::ClientState as ChainClientState;
 use crate::ctypes::BlockNumber;
 use crate::ibc;
-use crate::ibc::channel_04::types::{ChannelEnd, PacketCommitment, Sequence};
+use crate::ibc::channel_04::types::{Acknowledgement, ChannelEnd, PacketCommitment, Sequence};
 use crate::ibc::connection_03::types::ConnectionEnd;
 use crate::ibc::IdentifierSlice;
 use crate::rlp::Encodable;
@@ -201,10 +201,10 @@ impl<'a> Manager<'a> {
         port_identifier: IdentifierSlice,
         channel_identifier: IdentifierSlice,
         sequence: &Sequence,
-        acknowledgment: &[u8],
+        acknowledgment: &Acknowledgement,
     ) -> Result<(), String> {
         let path = ibc::channel_04::packet_acknowledgement_path(port_identifier, channel_identifier, sequence);
-        let value_enc = rlp::encode(&acknowledgment);
+        let value_enc = rlp::encode(&acknowledgment.hash());
         self.verify_common_presence(id, proof_height, proof, path, value_enc)
             .map_err(|e| format!("{} : packet_acknowledgment", e))
     }
