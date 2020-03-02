@@ -124,7 +124,7 @@ async function updateLightClient({
     }
     let currentBlockNumber = clientState!.data!.number;
     while (currentBlockNumber < counterpartyChainHeight) {
-        const header = (await counterpartyChain.queryHeader(
+        const header = (await counterpartyChain.queryIBCHeader(
             currentBlockNumber + 1
         ))!;
         datagrams.push(

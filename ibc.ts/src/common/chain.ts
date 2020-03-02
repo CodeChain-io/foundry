@@ -80,7 +80,9 @@ export class Chain {
         ]);
     }
 
-    public async queryHeader(blockNumber: number): Promise<IBCHeader | null> {
+    public async queryIBCHeader(
+        blockNumber: number
+    ): Promise<IBCHeader | null> {
         return this.sdk.rpc.sendRpcRequest("ibc_compose_header", [blockNumber]);
     }
 }
