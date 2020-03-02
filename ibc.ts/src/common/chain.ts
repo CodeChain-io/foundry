@@ -32,6 +32,7 @@ export interface ChainConfig {
     networkId: string;
     faucetAddress: PlatformAddress;
     counterpartyIdentifiers: CounterpartyIdentifiers;
+    keystorePath: string;
 }
 
 export class Chain {
@@ -42,7 +43,11 @@ export class Chain {
     public constructor(config: ChainConfig) {
         this.sdk = new SDK({
             server: config.server,
-            networkId: config.networkId
+            networkId: config.networkId,
+            keyStoreType: {
+                type: "local",
+                path: config.keystorePath
+            }
         });
         this.faucetAddress = config.faucetAddress;
         this.counterpartyIdentifiers = config.counterpartyIdentifiers;

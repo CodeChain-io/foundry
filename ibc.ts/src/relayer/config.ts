@@ -14,6 +14,7 @@ interface FoundryChainConfig {
     counterpartyClientId: string;
     counterpartyConnectionId: string;
     counterpartyChannelId: string;
+    keystorePath: string;
 }
 
 export function getConfig(): Config {
@@ -26,7 +27,8 @@ export function getConfig(): Config {
             counterpartyConnectionId: getEnv(
                 "CHAIN_A_COUNTERPARTY_CONNECTION_ID"
             ),
-            counterpartyChannelId: getEnv("CHAIN_A_COUNTERPARTY_CHANNEL_ID")
+            counterpartyChannelId: getEnv("CHAIN_A_COUNTERPARTY_CHANNEL_ID"),
+            keystorePath: "./chainA/keystore.db"
         },
         chainB: {
             rpcURL: getEnv("CHAIN_B_RPC_URL"),
@@ -36,7 +38,8 @@ export function getConfig(): Config {
             counterpartyConnectionId: getEnv(
                 "CHAIN_B_COUNTERPARTY_CONNECTION_ID"
             ),
-            counterpartyChannelId: getEnv("CHAIN_B_COUNTERPARTY_CHANNEL_ID")
+            counterpartyChannelId: getEnv("CHAIN_B_COUNTERPARTY_CHANNEL_ID"),
+            keystorePath: "./chainB/keystore.db"
         }
     };
 }
