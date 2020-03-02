@@ -18,7 +18,6 @@ mod log;
 mod manager;
 pub mod types;
 
-
 pub use manager::Manager;
 use types::Sequence;
 
