@@ -132,5 +132,6 @@ pub fn execute(
                 .handle_open_confirm(identifier, proof_ack, proof_height)
                 .map_err(|err| RuntimeError::IBC(format!("ConnOpenConfirm: {}", err)).into())
         }
+        _ => unimplemented!(),
     }
 }
