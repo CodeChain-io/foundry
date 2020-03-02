@@ -20,7 +20,8 @@ async function main() {
             client: config.chainA.counterpartyClientId,
             connection: config.chainA.counterpartyConnectionId,
             channel: config.chainA.counterpartyChannelId
-        }
+        },
+        keystorePath: config.chainA.keystorePath
     });
     const chainB = new Chain({
         server: config.chainB.rpcURL,
@@ -30,7 +31,8 @@ async function main() {
             client: config.chainB.counterpartyClientId,
             connection: config.chainB.counterpartyConnectionId,
             channel: config.chainB.counterpartyChannelId
-        }
+        },
+        keystorePath: config.chainB.keystorePath
     });
 
     while (true) {
