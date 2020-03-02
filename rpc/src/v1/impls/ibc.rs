@@ -16,13 +16,17 @@
 
 use super::super::errors;
 use super::super::traits::IBC;
-use super::super::types::{ClientState, ConnectionEnd, ConnectionIdentifiersInClient, ConsensusState, IBCQuery};
+use super::super::types::{
+    ClientState, ConnectionEnd, ConnectionIdentifiersInClient, ConsensusState, FromCore, IBCQuery,
+};
 use ccore::ibc;
 use ccore::ibc::querier;
 use ccore::{BlockChainClient, BlockId, StateInfo};
 use ibc::client_02::types::Header;
+use ibc::commitment_23::CommitmentPath;
 use jsonrpc_core::Result;
 use primitives::Bytes;
+use rlp::{Decodable, Encodable};
 use rustc_hex::ToHex;
 use std::sync::Arc;
 
@@ -44,6 +48,35 @@ where
     }
 }
 
+fn query_common<C, TC, T>(
+    client: &Arc<C>,
+    path: &CommitmentPath,
+    block_number: Option<u64>,
+) -> Result<Option<IBCQuery<T>>>
+where
+    C: StateInfo + 'static + Send + Sync + BlockChainClient,
+    TC: Encodable + Decodable + querier::DebugName,
+    T: serde::Serialize + FromCore<TC>, {
+    let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
+    if client.state_at(block_id).is_none() {
+        return Ok(None)
+    }
+    let mut state = client.state_at(block_id).unwrap();
+    let block_number = match client.block_number(&block_id) {
+        None => return Ok(None),
+        Some(block_number) => block_number,
+    };
+
+    let context = ibc::context::TopLevelContext::new(&mut state, block_number);
+    let data: Option<TC> = querier::query(&context, &path);
+
+    Ok(Some(IBCQuery {
+        number: block_number,
+        data: data.map(T::from_core),
+        proof: querier::make_proof(&context, &path).to_hex(),
+    }))
+}
+
 impl<C> IBC for IBCClient<C>
 where
     C: StateInfo + 'static + Send + Sync + BlockChainClient,
@@ -53,25 +86,8 @@ where
         client_id: String,
         block_number: Option<u64>,
     ) -> Result<Option<IBCQuery<ClientState>>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        if self.client.state_at(block_id).is_none() {
-            return Ok(None)
-        }
-        let mut state = self.client.state_at(block_id).unwrap();
-        let block_number = match self.client.block_number(&block_id) {
-            None => return Ok(None),
-            Some(block_number) => block_number,
-        };
-
-        let context = ibc::context::TopLevelContext::new(&mut state, block_number);
         let path = querier::path_client_state(&client_id);
-        let client_state: Option<ibc::client_02::types::ClientState> = querier::query(&context, &path);
-
-        Ok(Some(IBCQuery {
-            number: block_number,
-            data: client_state.map(|x| ClientState::from_core(&x)),
-            proof: querier::make_proof(&context, &path).to_hex(),
-        }))
+        query_common(&self.client, &path, block_number)
     }
 
     fn query_consensus_state(
@@ -80,25 +96,8 @@ where
         counterparty_block_number: u64,
         block_number: Option<u64>,
     ) -> Result<Option<IBCQuery<ConsensusState>>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        if self.client.state_at(block_id).is_none() {
-            return Ok(None)
-        }
-        let mut state = self.client.state_at(block_id).unwrap();
-        let block_number = match self.client.block_number(&block_id) {
-            None => return Ok(None),
-            Some(block_number) => block_number,
-        };
-
-        let context = ibc::context::TopLevelContext::new(&mut state, block_number);
         let path = querier::path_consensus_state(&client_id, counterparty_block_number);
-        let consensus_state: Option<ibc::client_02::types::ConsensusState> = querier::query(&context, &path);
-
-        Ok(Some(IBCQuery {
-            number: block_number,
-            data: consensus_state.map(|x| ConsensusState::from_core(&x)),
-            proof: querier::make_proof(&context, &path).to_hex(),
-        }))
+        query_common(&self.client, &path, block_number)
     }
 
     fn compose_header(&self, block_number: u64) -> Result<Option<Bytes>> {
@@ -133,24 +132,8 @@ where
         identifier: String,
         block_number: Option<u64>,
     ) -> Result<Option<IBCQuery<ConnectionEnd>>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        let mut state = self.client.state_at(block_id).ok_or_else(errors::state_not_exist)?;
-        let block_number = match self.client.block_number(&block_id) {
-            None => return Ok(None),
-            Some(block_number) => block_number,
-        };
-
-        let context = ibc::context::TopLevelContext::new(&mut state, block_number);
-
         let path = querier::path_connection_end(&identifier);
-        let connection_end: Option<ibc::connection_03::ConnectionEnd> = querier::query(&context, &path);
-
-        let response = IBCQuery {
-            number: block_number,
-            data: connection_end.map(ConnectionEnd::from_core),
-            proof: querier::make_proof(&context, &path).to_hex(),
-        };
-        Ok(Some(response))
+        query_common(&self.client, &path, block_number)
     }
 
     fn query_client_connections(
@@ -158,23 +141,7 @@ where
         client_identifier: String,
         block_number: Option<u64>,
     ) -> Result<Option<IBCQuery<ConnectionIdentifiersInClient>>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        let mut state = self.client.state_at(block_id).ok_or_else(errors::state_not_exist)?;
-        let block_number = match self.client.block_number(&block_id) {
-            None => return Ok(None),
-            Some(block_number) => block_number,
-        };
-
-        let context = ibc::context::TopLevelContext::new(&mut state, block_number);
         let path = querier::path_connection_identifiers(&client_identifier);
-        let connections_in_client: Option<ibc::connection_03::ConnectionIdentifiersInClient> =
-            querier::query(&context, &path);
-
-        let response = IBCQuery {
-            number: block_number,
-            data: connections_in_client.map(|from_core| from_core.into_vec()),
-            proof: querier::make_proof(&context, &path).to_hex(),
-        };
-        Ok(Some(response))
+        query_common(&self.client, &path, block_number)
     }
 }

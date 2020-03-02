@@ -25,7 +25,7 @@ mod work;
 pub use self::action::{Action, ActionWithTracker};
 pub use self::block::Block;
 pub use self::block::BlockNumberAndHash;
-pub use self::ibc::{ClientState, ConnectionEnd, ConnectionIdentifiersInClient, ConsensusState, IBCQuery};
+pub use self::ibc::{ClientState, ConnectionEnd, ConnectionIdentifiersInClient, ConsensusState, FromCore, IBCQuery};
 pub use self::mem_pool::MemPoolMinFees;
 pub use self::transaction::{PendingTransactions, Transaction};
 pub use self::unsigned_transaction::UnsignedTransaction;

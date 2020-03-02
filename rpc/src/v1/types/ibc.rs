@@ -16,7 +16,8 @@
 
 use codechain_core::ibc::client_02::types::{ClientState as CoreClientState, ConsensusState as CoreConsensusState};
 use codechain_core::ibc::connection_03::types::{
-    ConnectionEnd as CoreConnectionEnd, ConnectionState as CoreConnectionState,
+    ConnectionEnd as CoreConnectionEnd, ConnectionIdentifiersInClient as CoreConnectionIdentifiersInClient,
+    ConnectionState as CoreConnectionState,
 };
 use primitives::H256;
 use serde::Serialize;
@@ -39,7 +40,9 @@ pub struct IBCQuery<T: Serialize> {
     pub proof: String,
 }
 
-/// Client 02 related types
+pub trait FromCore<T> {
+    fn from_core(core: T) -> Self;
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -57,20 +60,20 @@ pub struct ConsensusState {
     pub state_root: H256,
 }
 
-impl ClientState {
-    pub fn from_core(state: &CoreClientState) -> Self {
+impl FromCore<CoreClientState> for ClientState {
+    fn from_core(core: CoreClientState) -> Self {
         ClientState {
-            number: state.raw.number,
-            next_validator_set_hash: state.raw.next_validator_set_hash,
+            number: core.raw.number,
+            next_validator_set_hash: core.raw.next_validator_set_hash,
         }
     }
 }
 
-impl ConsensusState {
-    pub fn from_core(state: &CoreConsensusState) -> Self {
+impl FromCore<CoreConsensusState> for ConsensusState {
+    fn from_core(core: CoreConsensusState) -> Self {
         ConsensusState {
-            validator_set_hash: state.validator_set_hash,
-            state_root: state.state_root.raw,
+            validator_set_hash: core.validator_set_hash,
+            state_root: core.state_root.raw,
         }
     }
 }
@@ -82,9 +85,9 @@ pub enum ConnectionState {
     OPEN,
 }
 
-impl ConnectionState {
-    pub fn from_core(core_connection_state: CoreConnectionState) -> Self {
-        match core_connection_state {
+impl FromCore<CoreConnectionState> for ConnectionState {
+    fn from_core(core: CoreConnectionState) -> Self {
+        match core {
             CoreConnectionState::INIT => ConnectionState::INIT,
             CoreConnectionState::TRYOPEN => ConnectionState::TRYOPEN,
             CoreConnectionState::OPEN => ConnectionState::OPEN,
@@ -102,16 +105,28 @@ pub struct ConnectionEnd {
     pub counterparty_client_identifier: Identifier,
 }
 
-impl ConnectionEnd {
-    pub fn from_core(core_connection_end: CoreConnectionEnd) -> Self {
+impl FromCore<CoreConnectionEnd> for ConnectionEnd {
+    fn from_core(core: CoreConnectionEnd) -> Self {
         ConnectionEnd {
-            state: ConnectionState::from_core(core_connection_end.state),
-            counterparty_connection_identifier: core_connection_end.counterparty_connection_identifier,
-            counterparty_prefix: core_connection_end.counterparty_prefix.raw,
-            client_identifier: core_connection_end.client_identifier,
-            counterparty_client_identifier: core_connection_end.counterparty_client_identifier,
+            state: ConnectionState::from_core(core.state),
+            counterparty_connection_identifier: core.counterparty_connection_identifier,
+            counterparty_prefix: core.counterparty_prefix.raw,
+            client_identifier: core.client_identifier,
+            counterparty_client_identifier: core.counterparty_client_identifier,
         }
     }
 }
 
-pub type ConnectionIdentifiersInClient = Vec<String>;
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConnectionIdentifiersInClient {
+    raw: Vec<String>,
+}
+
+impl FromCore<CoreConnectionIdentifiersInClient> for ConnectionIdentifiersInClient {
+    fn from_core(core: CoreConnectionIdentifiersInClient) -> Self {
+        ConnectionIdentifiersInClient {
+            raw: core.into_vec(),
+        }
+    }
+}
