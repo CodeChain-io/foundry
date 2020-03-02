@@ -536,4 +536,63 @@ impl<'a> Manager<'a> {
 
         Ok(packet)
     }
+
+    pub fn acknowledge_packet(
+        &mut self,
+        packet: Packet,
+        ack: Bytes,
+        proof: Bytes,
+        proof_height: u64,
+    ) -> Result<Packet, String> {
+        let channel = self.get_previous_channel_end(&packet.source_port, &packet.source_channel)?;
+        if channel.state != ChannelState::OPEN {
+            return Err("Channel not opened.".to_owned())
+        }
+        if packet.dest_port != channel.counterparty_port_identifier {
+            return Err("Packet's dest_port doesn't match with counterparty's channel.".to_owned())
+        }
+        if packet.dest_channel != channel.counterparty_channel_identifier {
+            return Err("Packet's dest_channel doesn't match with counterparty's channel.".to_owned())
+        }
+
+        self.check_capability_key(&packet.source_port, &packet.source_channel)?;
+
+        let kv_store = self.ctx.get_kv_store();
+        let packet_commitment: H256 = rlp::decode(
+            &kv_store
+                .get(&packet_commitment_path(&packet.source_port, &packet.source_channel, &packet.sequence))
+                .ok_or_else(|| "Packet commitment not found".to_owned())?,
+        )
+        .expect("Illformed Packet commitment stored in the DB");
+
+        let expected_to_store = PacketCommitment {
+            data: packet.data.clone(),
+            timeout: packet.timeout_height,
+        }
+        .hash();
+        if packet_commitment != expected_to_store {
+            return Err("This acknowledge is not an expected one.".to_owned())
+        }
+
+        let client_identifier = self.check_connection_opened(&channel.connection_hops[0])?;
+        let client_manager = ClientManager::new(self.ctx);
+
+        client_manager.verify_packet_acknowledgment(
+            &client_identifier,
+            proof_height,
+            proof,
+            &packet.dest_port,
+            &packet.dest_channel,
+            &packet.sequence,
+            &ack,
+        )?;
+
+        let kv_store = self.ctx.get_kv_store_mut();
+        kv_store.remove(&packet_commitment_path(&packet.source_port, &packet.source_channel, &packet.sequence));
+
+        // check log.rs to understand this statement
+        remove_packet(self.ctx, &packet.source_port, &packet.source_channel, "send");
+
+        Ok(packet)
+    }
 }
