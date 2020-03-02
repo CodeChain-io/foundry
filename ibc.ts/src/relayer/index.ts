@@ -2,7 +2,7 @@ import Debug from "debug";
 import { Chain } from "../common/chain";
 import { Datagram } from "../common/datagram/index";
 import { delay } from "../common/util";
-import { getConfig } from "./config";
+import { getConfig } from "../common/config";
 import { PlatformAddress } from "codechain-primitives/lib";
 import { UpdateClientDatagram } from "../common/datagram/updateClient";
 
