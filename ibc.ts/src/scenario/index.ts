@@ -1,7 +1,5 @@
-import { HelloWorld } from "../common/example";
-
 async function main() {
-    console.log(HelloWorld);
+    console.log("Not implemented");
 }
 
 main().catch(console.error);
