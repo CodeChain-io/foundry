@@ -51,6 +51,7 @@ impl Decodable for ActionTag {
             0x05 => Ok(Self::SetShardOwners),
             0x06 => Ok(Self::SetShardUsers),
             0x19 => Ok(Self::ShardStore),
+            0x20 => Ok(Self::IBC),
             0xFF => Ok(Self::Custom),
             _ => Err(DecoderError::Custom("Unexpected action prefix")),
         }
