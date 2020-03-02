@@ -18,7 +18,7 @@ use codechain_core::ibc::client_02::types::{ClientState as CoreClientState, Cons
 use codechain_core::ibc::connection_03::types::{
     ConnectionEnd as CoreConnectionEnd, ConnectionState as CoreConnectionState,
 };
-use primitives::{Bytes, H256};
+use primitives::H256;
 use serde::Serialize;
 
 type Identifier = String;
@@ -36,7 +36,7 @@ type CommitmentPrefix = String;
 pub struct IBCQuery<T: Serialize> {
     pub number: u64,
     pub data: Option<T>,
-    pub proof: Bytes,
+    pub proof: String,
 }
 
 /// Client 02 related types

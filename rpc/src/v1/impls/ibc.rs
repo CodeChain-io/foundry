@@ -23,6 +23,7 @@ use ccore::{BlockChainClient, BlockId, StateInfo};
 use ibc::client_02::types::Header;
 use jsonrpc_core::Result;
 use primitives::Bytes;
+use rustc_hex::ToHex;
 use std::sync::Arc;
 
 #[allow(dead_code)]
@@ -69,7 +70,7 @@ where
         Ok(Some(IBCQuery {
             number: block_number,
             data: client_state.map(|x| ClientState::from_core(&x)),
-            proof: querier::make_proof(&context, &path),
+            proof: querier::make_proof(&context, &path).to_hex(),
         }))
     }
 
@@ -96,7 +97,7 @@ where
         Ok(Some(IBCQuery {
             number: block_number,
             data: consensus_state.map(|x| ConsensusState::from_core(&x)),
-            proof: querier::make_proof(&context, &path),
+            proof: querier::make_proof(&context, &path).to_hex(),
         }))
     }
 
@@ -147,7 +148,7 @@ where
         let response = IBCQuery {
             number: block_number,
             data: connection_end.map(ConnectionEnd::from_core),
-            proof: querier::make_proof(&context, &path),
+            proof: querier::make_proof(&context, &path).to_hex(),
         };
         Ok(Some(response))
     }
@@ -172,7 +173,7 @@ where
         let response = IBCQuery {
             number: block_number,
             data: connections_in_client.map(|from_core| from_core.into_vec()),
-            proof: querier::make_proof(&context, &path),
+            proof: querier::make_proof(&context, &path).to_hex(),
         };
         Ok(Some(response))
     }
