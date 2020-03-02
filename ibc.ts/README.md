@@ -12,6 +12,11 @@ This directory contains IBC relayer implementation and IBC demo scenario script.
 
 Run `yarn run runChains`
 
+## How to run a scenario
+
+Run `yarn run scenario`. It will create light clients, a connection, and a channel.
+Finally, it will send a packet.
+
 ## Print debug log
 
 Please use `DEBUG` environment variable.
