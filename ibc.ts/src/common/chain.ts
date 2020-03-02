@@ -72,7 +72,7 @@ export class Chain {
     }
 
     public async queryClient(
-        blockNumber: number
+        blockNumber?: number
     ): Promise<IBCQueryResult<ClientState> | null> {
         return this.sdk.rpc.sendRpcRequest("ibc_query_client_state", [
             this.counterpartyIdentifiers.client,
@@ -84,6 +84,12 @@ export class Chain {
         blockNumber: number
     ): Promise<IBCHeader | null> {
         return this.sdk.rpc.sendRpcRequest("ibc_compose_header", [blockNumber]);
+    }
+
+    public async queryChainHeader(blockNumber: number): Promise<string | null> {
+        return this.sdk.rpc.sendRpcRequest("chain_getRawHeaderByNumber", [
+            blockNumber
+        ]);
     }
 }
 
