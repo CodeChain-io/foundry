@@ -26,6 +26,7 @@ use ctypes::transaction::Action;
 use ctypes::{BlockHash, BlockNumber, ShardId, Tracker, TxHash};
 use jsonrpc_core::Result;
 use primitives::H256;
+use rustc_hex::ToHex;
 use std::convert::TryFrom;
 use std::sync::Arc;
 
@@ -170,6 +171,11 @@ where
             let block = block.decode();
             Block::from_core(block, self.client.network_id())
         }))
+    }
+
+    fn get_raw_header_by_number(&self, block_number: u64) -> Result<Option<String>> {
+        let id = BlockId::Number(block_number);
+        Ok(self.client.block_header(&id).map(|header| header.into_inner().as_slice().to_hex()))
     }
 
     fn get_block_transaction_count_by_hash(&self, block_hash: BlockHash) -> Result<Option<usize>> {
