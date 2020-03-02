@@ -340,9 +340,9 @@ impl Decodable for Datagram {
         match tag {
             DatagramTag::CreateClient => {
                 let item_count = rlp.item_count()?;
-                if item_count != 4 {
+                if item_count != 5 {
                     return Err(DecoderError::RlpInvalidLength {
-                        expected: 4,
+                        expected: 5,
                         got: item_count,
                     })
                 }
