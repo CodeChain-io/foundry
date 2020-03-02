@@ -98,7 +98,32 @@ pub struct Packet {
     pub data: Bytes,
 }
 
-/// Hash of this struct, which is part of Packet, will be stored in state DB
+/// Acknowledgement and PacketCommitment's behaviors are somewhat different from other ICS data:
+/// They are not saved directly in the state, but the hash PacketCommitmentHash will be.
+#[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
+pub struct AcknowledgementHash {
+    pub raw: H256,
+}
+
+#[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
+pub struct Acknowledgement {
+    pub raw: Bytes,
+}
+
+impl Acknowledgement {
+    pub fn hash(&self) -> AcknowledgementHash {
+        AcknowledgementHash {
+            raw: blake256(&self.raw),
+        }
+    }
+}
+
+#[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
+pub struct PacketCommitmentHash {
+    pub raw: H256,
+}
+
+/// This is part of Packet.
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct PacketCommitment {
     pub data: Bytes,
@@ -106,10 +131,12 @@ pub struct PacketCommitment {
 }
 
 impl PacketCommitment {
-    pub fn hash(&self) -> H256 {
+    pub fn hash(&self) -> PacketCommitmentHash {
         let mut concated = self.data.clone();
         concated.append(&mut rlp::encode(&self.timeout));
-        blake256(concated)
+        PacketCommitmentHash {
+            raw: blake256(concated),
+        }
     }
 }
 
