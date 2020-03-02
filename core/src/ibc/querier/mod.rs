@@ -16,6 +16,7 @@
 
 /// This module representes all accessible interface
 use crate::ibc;
+use ibc::channel_04::types::Sequence;
 use ibc::commitment_23::types::{create_membership_proof, create_non_membership_proof};
 use ibc::commitment_23::{CommitmentPath, CommitmentState};
 use primitives::Bytes;
@@ -48,6 +49,30 @@ impl DebugName for ibc::client_02::types::ConsensusState {
 impl DebugName for ibc::connection_03::types::ConnectionIdentifiersInClient {
     fn debug_name() -> &'static str {
         "ConnectionIdentifiersInClient"
+    }
+}
+
+impl DebugName for ibc::channel_04::types::ChannelEnd {
+    fn debug_name() -> &'static str {
+        "ChannelEnd"
+    }
+}
+
+impl DebugName for ibc::channel_04::types::Sequence {
+    fn debug_name() -> &'static str {
+        "Sequence"
+    }
+}
+
+impl DebugName for ibc::channel_04::types::AcknowledgementHash {
+    fn debug_name() -> &'static str {
+        "AcknowledgementHash"
+    }
+}
+
+impl DebugName for ibc::channel_04::types::PacketCommitmentHash {
+    fn debug_name() -> &'static str {
+        "PacketCommitmentHash"
     }
 }
 
@@ -99,5 +124,43 @@ pub fn path_connection_end(id: IdentifierSlice) -> CommitmentPath {
 pub fn path_connection_identifiers(client_id: IdentifierSlice) -> CommitmentPath {
     CommitmentPath {
         raw: ibc::connection_03::client_connections_path(client_id),
+    }
+}
+
+pub fn path_channel_end(port_id: IdentifierSlice, channel_id: IdentifierSlice) -> CommitmentPath {
+    CommitmentPath {
+        raw: ibc::channel_04::channel_path(port_id, channel_id),
+    }
+}
+
+pub fn path_next_sequence_send(port_id: IdentifierSlice, channel_id: IdentifierSlice) -> CommitmentPath {
+    CommitmentPath {
+        raw: ibc::channel_04::next_sequence_send_path(port_id, channel_id),
+    }
+}
+
+pub fn path_next_sequence_recv(port_id: IdentifierSlice, channel_id: IdentifierSlice) -> CommitmentPath {
+    CommitmentPath {
+        raw: ibc::channel_04::next_sequence_recv_path(port_id, channel_id),
+    }
+}
+
+pub fn path_packet_commitment_hash(
+    port_id: IdentifierSlice,
+    channel_id: IdentifierSlice,
+    sequence: &Sequence,
+) -> CommitmentPath {
+    CommitmentPath {
+        raw: ibc::channel_04::packet_commitment_path(port_id, channel_id, sequence),
+    }
+}
+
+pub fn path_acknowledgement_hash(
+    port_id: IdentifierSlice,
+    channel_id: IdentifierSlice,
+    sequence: &Sequence,
+) -> CommitmentPath {
+    CommitmentPath {
+        raw: ibc::channel_04::packet_acknowledgement_path(port_id, channel_id, sequence),
     }
 }
