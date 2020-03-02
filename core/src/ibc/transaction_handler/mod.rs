@@ -22,6 +22,7 @@ use crate::ibc::commitment_23::types::CommitmentPrefix;
 use ckey::{Address, Public};
 use cstate::{StateResult, TopLevelState};
 use ctypes::errors::RuntimeError;
+use ibc::channel_04 as ibc_channel;
 use ibc::client_02 as ibc_client;
 use ibc::connection_03 as ibc_connection;
 use ibc::context as ibc_context;
@@ -132,6 +133,111 @@ pub fn execute(
                 .handle_open_confirm(identifier, proof_ack, proof_height)
                 .map_err(|err| RuntimeError::IBC(format!("ConnOpenConfirm: {}", err)).into())
         }
-        _ => unimplemented!(),
+        Datagram::ChanOpenInit {
+            raw,
+        } => {
+            let mut channel_manager = ibc_channel::Manager::new(&mut context);
+            channel_manager
+                .chan_open_init(
+                    {
+                        if raw.order == 1 {
+                            ibc::channel_04::types::ChannelOrder::ORDERED
+                        } else {
+                            ibc::channel_04::types::ChannelOrder::UNORDERED
+                        }
+                    },
+                    raw.connection,
+                    raw.channel_identifier,
+                    raw.counterparty_channel_identifier,
+                    raw.version,
+                )
+                .map_err(|err| RuntimeError::IBC(format!("ChanOpenInit: {}", err)))?;
+            Ok(())
+        }
+        Datagram::ChanOpenTry {
+            raw,
+        } => {
+            let mut channel_manager = ibc_channel::Manager::new(&mut context);
+            channel_manager
+                .chan_open_try(
+                    {
+                        if raw.order == 1 {
+                            ibc::channel_04::types::ChannelOrder::ORDERED
+                        } else {
+                            ibc::channel_04::types::ChannelOrder::UNORDERED
+                        }
+                    },
+                    raw.connection,
+                    raw.channel_identifier,
+                    raw.counterparty_channel_identifier,
+                    raw.version,
+                    raw.counterparty_version,
+                    raw.proof_init,
+                    raw.proof_height,
+                )
+                .map_err(|err| RuntimeError::IBC(format!("ChanOpenTry: {}", err)))?;
+            Ok(())
+        }
+        Datagram::ChanOpenAck {
+            raw,
+        } => {
+            let mut channel_manager = ibc_channel::Manager::new(&mut context);
+            channel_manager
+                .chan_open_ack(raw.channel_identifier, raw.counterparty_version, raw.proof_try, raw.proof_height)
+                .map_err(|err| RuntimeError::IBC(format!("ChanOpenAck: {}", err)))?;
+            Ok(())
+        }
+        Datagram::ChanOpenConfirm {
+            raw,
+        } => {
+            let mut channel_manager = ibc_channel::Manager::new(&mut context);
+            channel_manager
+                .chan_open_confirm(raw.channel_identifier, raw.proof_ack, raw.proof_height)
+                .map_err(|err| RuntimeError::IBC(format!("ChanOpenConfirm: {}", err)))?;
+            Ok(())
+        }
+        Datagram::ChanCloseInit {
+            raw,
+        } => {
+            let mut channel_manager = ibc_channel::Manager::new(&mut context);
+            channel_manager
+                .chan_close_init(raw.channel_identifier)
+                .map_err(|err| RuntimeError::IBC(format!("ChanCloseInit: {}", err)))?;
+            Ok(())
+        }
+        Datagram::ChanCloseConfirm {
+            raw,
+        } => {
+            let mut channel_manager = ibc_channel::Manager::new(&mut context);
+            channel_manager
+                .chan_close_confirm(raw.channel_identifier, raw.proof_init, raw.proof_height)
+                .map_err(|err| RuntimeError::IBC(format!("ChanCloseConfirm: {}", err)))?;
+            Ok(())
+        }
+        Datagram::SendPacket {
+            raw,
+        } => {
+            let mut channel_manager = ibc_channel::Manager::new(&mut context);
+            channel_manager.send_packet(raw.packet).map_err(|err| RuntimeError::IBC(format!("SendPacket: {}", err)))?;
+            Ok(())
+        }
+        Datagram::RecvPacket {
+            raw,
+        } => {
+            let mut channel_manager = ibc_channel::Manager::new(&mut context);
+            channel_manager
+                .recv_packet(raw.packet, raw.proof, raw.proof_height, raw.ack)
+                .map_err(|err| RuntimeError::IBC(format!("RecvPacket: {}", err)))?;
+            Ok(())
+        }
+        Datagram::AcknowledgePacket {
+            raw,
+        } => {
+            let mut channel_manager = ibc_channel::Manager::new(&mut context);
+            channel_manager
+                .acknowledge_packet(raw.packet, raw.ack, raw.proof, raw.proof_height)
+                .map_err(|err| RuntimeError::IBC(format!("AcknowledgePacket: {}", err)))?;
+            Ok(())
+        }
     }
 }
