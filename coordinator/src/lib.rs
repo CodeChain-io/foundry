@@ -9,6 +9,8 @@ pub mod validator;
 ///
 /// It assembles modules and feeds them various events from the underlying
 /// consensus engine.
+
+#[derive(Default)]
 pub struct Coordinator<C: context::Context> {
     context: C,
 }
