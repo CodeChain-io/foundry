@@ -22,7 +22,7 @@ import {
     bobAddress,
     carolAddress,
     daveAddress,
-    faucetAccointId,
+    faucetAccountId,
     faucetAddress
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
