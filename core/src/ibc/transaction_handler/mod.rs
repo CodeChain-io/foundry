@@ -59,7 +59,7 @@ pub fn execute(
             header,
         } => {
             let mut client_manager = ibc_client::Manager::new(&mut context);
-            client_manager.update(&id, header).map_err(|err| RuntimeError::IBC(format!("CreateClient: {:?}", err)))?;
+            client_manager.update(&id, header).map_err(|err| RuntimeError::IBC(format!("UpdateClient: {:?}", err)))?;
             Ok(())
         }
         Datagram::ConnOpenInit {
