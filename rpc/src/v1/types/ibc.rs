@@ -14,12 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use codechain_core::ibc::channel_04::types::{
+    AcknowledgementHash as CoreAcknowledgementHash, ChannelEnd as CoreChannelEnd, ChannelOrder as CoreChannelOrder,
+    ChannelState as CoreChannelState, Packet as CorePacket, PacketCommitmentHash as CorePacketCommitmentHash,
+    Sequence as CoreSequence,
+};
 use codechain_core::ibc::client_02::types::{ClientState as CoreClientState, ConsensusState as CoreConsensusState};
 use codechain_core::ibc::connection_03::types::{
     ConnectionEnd as CoreConnectionEnd, ConnectionIdentifiersInClient as CoreConnectionIdentifiersInClient,
     ConnectionState as CoreConnectionState,
 };
-use primitives::H256;
+use primitives::{Bytes, H256};
 use serde::Serialize;
 
 type Identifier = String;
@@ -127,6 +132,133 @@ impl FromCore<CoreConnectionIdentifiersInClient> for ConnectionIdentifiersInClie
     fn from_core(core: CoreConnectionIdentifiersInClient) -> Self {
         ConnectionIdentifiersInClient {
             raw: core.into_vec(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub enum ChannelState {
+    INIT,
+    TRYOPEN,
+    OPEN,
+    CLOSED,
+}
+
+impl FromCore<CoreChannelState> for ChannelState {
+    fn from_core(core: CoreChannelState) -> Self {
+        match core {
+            CoreChannelState::INIT => ChannelState::INIT,
+            CoreChannelState::TRYOPEN => ChannelState::TRYOPEN,
+            CoreChannelState::OPEN => ChannelState::OPEN,
+            CoreChannelState::CLOSED => ChannelState::CLOSED,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub enum ChannelOrder {
+    ORDERED,
+    UNORDERED,
+}
+
+impl FromCore<CoreChannelOrder> for ChannelOrder {
+    fn from_core(core: CoreChannelOrder) -> Self {
+        match core {
+            CoreChannelOrder::ORDERED => ChannelOrder::ORDERED,
+            CoreChannelOrder::UNORDERED => ChannelOrder::UNORDERED,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChannelEnd {
+    pub state: ChannelState,
+    pub ordering: ChannelOrder,
+    pub counterparty_port_identifier: Identifier,
+    pub counterparty_channel_identifier: Identifier,
+    pub connection_hops: Vec<Identifier>,
+    pub version: Identifier,
+}
+
+impl FromCore<CoreChannelEnd> for ChannelEnd {
+    fn from_core(core: CoreChannelEnd) -> Self {
+        ChannelEnd {
+            state: ChannelState::from_core(core.state),
+            ordering: ChannelOrder::from_core(core.ordering),
+            counterparty_port_identifier: core.counterparty_port_identifier,
+            counterparty_channel_identifier: core.counterparty_channel_identifier,
+            connection_hops: core.connection_hops,
+            version: core.version,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Packet {
+    pub sequence: u64,
+    pub timeout_height: u64,
+    pub source_port: Identifier,
+    pub source_channel: Identifier,
+    pub dest_port: Identifier,
+    pub dest_channel: Identifier,
+    pub data: Bytes,
+}
+
+// Packet doesn't have to be FromCore
+impl Packet {
+    pub fn from_core(core: CorePacket) -> Self {
+        Packet {
+            sequence: core.sequence.raw,
+            timeout_height: core.timeout_height,
+            source_port: core.source_port,
+            source_channel: core.source_channel,
+            dest_port: core.dest_port,
+            dest_channel: core.dest_channel,
+            data: core.data,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Sequence {
+    pub raw: u64,
+}
+
+impl FromCore<CoreSequence> for Sequence {
+    fn from_core(core: CoreSequence) -> Self {
+        Sequence {
+            raw: core.raw,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PacketCommitmentHash {
+    pub raw: H256,
+}
+
+impl FromCore<CorePacketCommitmentHash> for PacketCommitmentHash {
+    fn from_core(core: CorePacketCommitmentHash) -> Self {
+        PacketCommitmentHash {
+            raw: core.raw,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AcknowledgementHash {
+    pub raw: H256,
+}
+
+impl FromCore<CoreAcknowledgementHash> for AcknowledgementHash {
+    fn from_core(core: CoreAcknowledgementHash) -> Self {
+        AcknowledgementHash {
+            raw: core.raw,
         }
     }
 }

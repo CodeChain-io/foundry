@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::types::IBCQuery;
-use super::super::types::{ClientState, ConnectionEnd, ConnectionIdentifiersInClient, ConsensusState};
+use super::super::types::{
+    AcknowledgementHash, ChannelEnd, ClientState, ConnectionEnd, ConnectionIdentifiersInClient, ConsensusState,
+    IBCQuery, Packet, PacketCommitmentHash, Sequence,
+};
 use jsonrpc_core::Result;
 use primitives::Bytes;
 
@@ -53,4 +55,44 @@ pub trait IBC {
         client_identifier: String,
         block_number: Option<u64>,
     ) -> Result<Option<IBCQuery<ConnectionIdentifiersInClient>>>;
+
+    #[rpc(name = "ibc_query_channel_end")]
+    fn query_channel_end(
+        &self,
+        port_id: String,
+        channel_id: String,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQuery<ChannelEnd>>>;
+
+    #[rpc(name = "ibc_query_packet_commitment")]
+    fn query_packet_commitment(
+        &self,
+        port_id: String,
+        channel_id: String,
+        sequence: u64,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQuery<PacketCommitmentHash>>>;
+
+    #[rpc(name = "ibc_query_packet_acknowledgement")]
+    fn query_packet_acknowledgement(
+        &self,
+        port_id: String,
+        channel_id: String,
+        sequence: u64,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQuery<AcknowledgementHash>>>;
+
+    #[rpc(name = "ibc_query_next_sequence_recv")]
+    fn query_next_sequence_recv(
+        &self,
+        port_id: String,
+        channel_id: String,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQuery<Sequence>>>;
+
+    #[rpc(name = "ibc_query_latest_send_packet")]
+    fn query_latest_send_packet(&self, port_id: String, channel_id: String) -> Result<Option<Packet>>;
+
+    #[rpc(name = "ibc_query_latest_recv_packet")]
+    fn query_latest_recv_packet(&self, port_id: String, channel_id: String) -> Result<Option<Packet>>;
 }
