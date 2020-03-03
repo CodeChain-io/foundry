@@ -135,7 +135,7 @@ async function waitForTx(sdk: SDK, txHash: H256) {
     const wait = (async () => {
         while (true) {
             debug(`wait tx: ${txHash.toString()}`);
-            if (sdk.rpc.chain.containsTransaction(txHash)) {
+            if (await sdk.rpc.chain.containsTransaction(txHash)) {
                 return;
             }
             await delay(500);
