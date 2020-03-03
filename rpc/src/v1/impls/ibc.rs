@@ -17,7 +17,8 @@
 use super::super::errors;
 use super::super::traits::IBC;
 use super::super::types::{
-    ClientState, ConnectionEnd, ConnectionIdentifiersInClient, ConsensusState, FromCore, IBCQuery,
+    AcknowledgementHash, ChannelEnd, ClientState, ConnectionEnd, ConnectionIdentifiersInClient, ConsensusState,
+    FromCore, IBCQuery, Packet, PacketCommitmentHash, Sequence,
 };
 use ccore::ibc;
 use ccore::ibc::querier;
@@ -143,5 +144,79 @@ where
     ) -> Result<Option<IBCQuery<ConnectionIdentifiersInClient>>> {
         let path = querier::path_connection_identifiers(&client_identifier);
         query_common(&self.client, &path, block_number)
+    }
+
+    fn query_channel_end(
+        &self,
+        port_id: String,
+        channel_id: String,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQuery<ChannelEnd>>> {
+        let path = querier::path_channel_end(&port_id, &channel_id);
+        query_common(&self.client, &path, block_number)
+    }
+
+    fn query_packet_commitment(
+        &self,
+        port_id: String,
+        channel_id: String,
+        sequence: u64,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQuery<PacketCommitmentHash>>> {
+        let path =
+            querier::path_packet_commitment_hash(&port_id, &channel_id, &ccore::ibc::channel_04::types::Sequence {
+                raw: sequence,
+            });
+        query_common(&self.client, &path, block_number)
+    }
+
+    fn query_packet_acknowledgement(
+        &self,
+        port_id: String,
+        channel_id: String,
+        sequence: u64,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQuery<AcknowledgementHash>>> {
+        let path =
+            querier::path_acknowledgement_hash(&port_id, &channel_id, &ccore::ibc::channel_04::types::Sequence {
+                raw: sequence,
+            });
+        query_common(&self.client, &path, block_number)
+    }
+
+    fn query_next_sequence_recv(
+        &self,
+        port_id: String,
+        channel_id: String,
+        block_number: Option<u64>,
+    ) -> Result<Option<IBCQuery<Sequence>>> {
+        let path = querier::path_next_sequence_recv(&port_id, &channel_id);
+        query_common(&self.client, &path, block_number)
+    }
+
+    fn query_latest_send_packet(&self, port_id: String, channel_id: String) -> Result<Option<Packet>> {
+        if self.client.state_at(BlockId::Latest).is_none() {
+            return Ok(None)
+        }
+        let mut state = self.client.state_at(BlockId::Latest).unwrap();
+        let block_number = match self.client.block_number(&BlockId::Latest) {
+            None => return Ok(None),
+            Some(block_number) => block_number,
+        };
+        let mut context = ibc::context::TopLevelContext::new(&mut state, block_number);
+        Ok(ibc::channel_04::log::get_packet(&mut context, &port_id, &channel_id, "send").map(Packet::from_core))
+    }
+
+    fn query_latest_recv_packet(&self, port_id: String, channel_id: String) -> Result<Option<Packet>> {
+        if self.client.state_at(BlockId::Latest).is_none() {
+            return Ok(None)
+        }
+        let mut state = self.client.state_at(BlockId::Latest).unwrap();
+        let block_number = match self.client.block_number(&BlockId::Latest) {
+            None => return Ok(None),
+            Some(block_number) => block_number,
+        };
+        let mut context = ibc::context::TopLevelContext::new(&mut state, block_number);
+        Ok(ibc::channel_04::log::get_packet(&mut context, &port_id, &channel_id, "recv").map(Packet::from_core))
     }
 }
