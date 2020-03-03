@@ -1,9 +1,18 @@
 {
   "name": "Chain A",
   "engine": {
-    "solo": {
+    "tendermint": {
       "params": {
-        "hit": {},
+        "validators": [
+          "0xc7db8f558a87a45d3b4d2e7422abb48a27e6eeee00a0f884ca244d1d783d6ead2ca445e9ac8f08b311d78b4b4b69d48a9daf0c98d2a19e87e482f8060138ba88"
+        ],
+        "timeoutPropose": 3000,
+        "timeoutProposeDelta": 500,
+        "timeoutPrevote": 1000,
+        "timeoutPrevoteDelta": 500,
+        "timeoutPrecommit": 1000,
+        "timeoutPrecommitDelta": 500,
+        "timeoutCommit": 1000,
         "genesisStakes": {
           "accqym7qmn5yj29cdl405xlmx6awd3f3yz07g7vq2c9": 100000
         }

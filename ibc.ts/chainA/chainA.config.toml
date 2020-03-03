@@ -1,8 +1,10 @@
 [codechain]
 quiet = false
 base_path = "."
+password_path = "./password.json"
 
 [mining]
+engine_signer = "accqym7qmn5yj29cdl405xlmx6awd3f3yz07g7vq2c9"
 mem_pool_mem_limit = 512 # MB
 mem_pool_size = 524288
 self_nomination_enable =false
@@ -15,7 +17,8 @@ allowed_past_gap = 30000
 allowed_future_gap = 5000
 
 [network]
-disable = true
+disable = false
+port = 13485
 
 [rpc]
 disable = false
