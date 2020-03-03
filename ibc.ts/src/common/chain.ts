@@ -64,7 +64,7 @@ export class Chain {
         });
 
         const txHash = await this.sdk.rpc.chain.sendSignedTransaction(signedTx);
-        waitForTx(this.sdk, txHash);
+        await waitForTx(this.sdk, txHash);
     }
 
     public async latestHeight(): Promise<number> {
@@ -100,7 +100,7 @@ async function waitForTx(sdk: SDK, txHash: H256) {
     const wait = (async () => {
         while (true) {
             debug(`wait tx: ${txHash.toString()}`);
-            if (sdk.rpc.chain.containsTransaction(txHash)) {
+            if (await sdk.rpc.chain.containsTransaction(txHash)) {
                 return;
             }
             await delay(500);
