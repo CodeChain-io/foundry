@@ -5,6 +5,7 @@ import { delay } from "../common/util";
 import { getConfig } from "../common/config";
 import { PlatformAddress } from "codechain-primitives/lib";
 import { UpdateClientDatagram } from "../common/datagram/updateClient";
+import { strict as assert } from "assert";
 
 require("dotenv").config();
 
@@ -123,6 +124,7 @@ async function updateLightClient({
         const header = (await counterpartyChain.queryIBCHeader(
             currentBlockNumber + 1
         ))!;
+        assert.notEqual(header, null, "Composed header should not be null");
         datagrams.push(
             new UpdateClientDatagram({
                 id: chain.counterpartyIdentifiers.client,
