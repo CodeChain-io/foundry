@@ -88,5 +88,5 @@ pub struct BlockOutcome {
 pub trait Validator {
     fn initialize_chain(&mut self) -> ConsensusParams;
     fn execute_block(&mut self, header: &Header, transactions: &[Transaction], evidences: &[Evidence]) -> BlockOutcome;
-    fn check_transaction(&mut self, transaction: &Transaction) -> TransactionCheckOutcome;
+    fn check_transaction(&mut self, transaction: &Transaction, is_recheck: bool) -> TransactionCheckOutcome;
 }
