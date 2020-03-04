@@ -114,7 +114,7 @@ mod tests {
     use rlp::{Encodable, Rlp};
 
     use ccore::UnverifiedTransaction;
-    use ckey::{Address, Public, Signature};
+    use ckey::{Address, Ed25519Public as Public, Signature};
     use ctypes::transaction::{Action, Transaction};
     use ctypes::Header;
 

@@ -979,7 +979,7 @@ pub mod test {
     use std::cmp::Ordering;
 
     use crate::client::{AccountData, TestBlockChainClient};
-    use ckey::{Ed25519KeyPair as KeyPair, Generator, Random};
+    use ckey::{Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
     use ctypes::transaction::{Action, Transaction};
 
     use super::*;
@@ -996,7 +996,7 @@ pub mod test {
         let fee = 100;
         let quantity = 100_000;
         let receiver = 1u64.into();
-        let keypair = Random.generate().unwrap();
+        let keypair: KeyPair = Random.generate().unwrap();
         let tx = Transaction {
             seq: 0,
             fee,
@@ -1020,7 +1020,7 @@ pub mod test {
     #[test]
     fn signed_transaction_encode_and_decode() {
         let receiver = 0u64.into();
-        let keypair = Random.generate().unwrap();
+        let keypair: KeyPair = Random.generate().unwrap();
         let tx = Transaction {
             seq: 0,
             fee: 100,
@@ -1037,7 +1037,7 @@ pub mod test {
 
     #[test]
     fn mempool_item_encode_and_decode() {
-        let keypair = Random.generate().unwrap();
+        let keypair: KeyPair = Random.generate().unwrap();
         let tx = Transaction {
             seq: 0,
             fee: 10,
@@ -1057,7 +1057,7 @@ pub mod test {
     fn db_backup_and_recover() {
         //setup test_client
         let test_client = TestBlockChainClient::new();
-        let keypair = Random.generate().unwrap();
+        let keypair: KeyPair = Random.generate().unwrap();
         let default_addr = public_to_address(keypair.public());
         test_client.set_seq(default_addr, 4u64);
         test_client.set_balance(default_addr, u64::max_value());
@@ -1169,7 +1169,7 @@ pub mod test {
 
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db, fees);
-        let keypair = Random.generate().unwrap();
+        let keypair: KeyPair = Random.generate().unwrap();
         let address = public_to_address(keypair.public());
 
         test_client.set_balance(address, 1_000_000_000_000);
@@ -1210,7 +1210,7 @@ pub mod test {
 
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db, fees);
-        let keypair = Random.generate().unwrap();
+        let keypair: KeyPair = Random.generate().unwrap();
         let address = public_to_address(keypair.public());
 
         test_client.set_balance(address, 1_000_000_000_000);
@@ -1255,7 +1255,7 @@ pub mod test {
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db, Default::default());
 
         let fetch_account = fetch_account_creator(&test_client);
-        let keypair = Random.generate().unwrap();
+        let keypair: KeyPair = Random.generate().unwrap();
         let address = public_to_address(keypair.public());
         println!("! {}", address);
         test_client.set_balance(address, 1_000_000_000_000);

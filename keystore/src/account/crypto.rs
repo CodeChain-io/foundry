@@ -170,11 +170,11 @@ impl Crypto {
 #[cfg(test)]
 mod tests {
     use super::{Crypto, Error};
-    use ckey::{Generator, Random};
+    use ckey::{Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
 
     #[test]
     fn crypto_with_secret_create() {
-        let keypair = Random.generate().unwrap();
+        let keypair: KeyPair = Random.generate().unwrap();
         let private_key = keypair.private();
         let crypto = Crypto::with_secret(keypair.private(), &"this is sparta".into(), 10240).unwrap();
         let secret = crypto.secret(&"this is sparta".into()).unwrap();
@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn crypto_with_secret_invalid_password() {
-        let keypair = Random.generate().unwrap();
+        let keypair: KeyPair = Random.generate().unwrap();
         let crypto = Crypto::with_secret(keypair.private(), &"this is sparta".into(), 10240).unwrap();
         assert_matches!(crypto.secret(&"this is sparta!".into()), Err(Error::InvalidPassword))
     }

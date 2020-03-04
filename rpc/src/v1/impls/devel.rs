@@ -22,7 +22,7 @@ use ccore::{
     SnapshotClient, TermInfo, COL_STATE,
 };
 use cjson::bytes::Bytes;
-use ckey::{Address, Ed25519KeyPair as KeyPair, Generator, Random};
+use ckey::{Address, Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
 use cnetwork::{unbounded_event_callback, EventSender, IntoSocketAddr};
 use csync::BlockSyncEvent;
 use ctypes::transaction::{Action, Transaction};
@@ -132,7 +132,7 @@ where
         let network_id = common_params.network_id();
 
         // NOTE: Assuming solo network
-        let genesis_keypair = Random.generate().unwrap();
+        let genesis_keypair: KeyPair = Random.generate().unwrap();
 
         let base_seq = self.client.seq(&genesis_keypair.address(), BlockId::Latest).unwrap();
 

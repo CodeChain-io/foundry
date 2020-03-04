@@ -257,13 +257,13 @@ impl<'a> ScopedAccount<'a> {
 
 #[cfg(test)]
 mod tests {
-    use ckey::{Generator, Random};
+    use ckey::{Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
 
     use super::AccountProvider;
 
     #[test]
     fn unlock_account_temp() {
-        let kp = Random.generate().unwrap();
+        let kp: KeyPair = Random.generate().unwrap();
         let ap = AccountProvider::transient_provider();
         assert!(ap.insert_account(kp.private().clone(), &"test".into()).is_ok());
         assert!(ap.unlock_account_temporarily(kp.address(), "test1".into()).is_err());
@@ -274,7 +274,7 @@ mod tests {
 
     #[test]
     fn unlock_account_perm() {
-        let kp = Random.generate().unwrap();
+        let kp: KeyPair = Random.generate().unwrap();
         let ap = AccountProvider::transient_provider();
         assert!(ap.insert_account(kp.private().clone(), &"test".into()).is_ok());
         assert!(ap.unlock_account_permanently(kp.address(), "test1".into()).is_err());

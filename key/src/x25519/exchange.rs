@@ -29,7 +29,7 @@ pub fn exchange(other_public: &X25519Public, my_private: &X25519Private) -> Resu
 mod tests {
     use super::super::keypair::KeyPair;
     use super::exchange;
-    use crate::{Generator, KeyPair as KeyPairTrait, Random};
+    use crate::{Generator, KeyPairTrait, Random};
 
     #[test]
     fn exchange_makes_same_private_key() {

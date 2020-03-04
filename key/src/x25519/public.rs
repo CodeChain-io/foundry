@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sodiumoxide::crypto::kx::gen_keypair;
 use sodiumoxide::crypto::scalarmult::{GroupElement, GROUPELEMENTBYTES};
 
@@ -39,6 +41,12 @@ impl From<GroupElement> for Public {
     }
 }
 
+impl AsRef<[u8]> for Public {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
+    }
+}
+
 impl Encodable for Public {
     fn rlp_append(&self, s: &mut RlpStream) {
         s.append_single_value(&self.0.as_ref());
@@ -59,6 +67,24 @@ impl Decodable for Public {
                 got: length,
             })
         }
+    }
+}
+
+impl Serialize for Public {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer, {
+        let h256_pubkey = H256::from_slice(self.as_ref());
+        h256_pubkey.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Public {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>, {
+        let h256_pubkey = H256::deserialize(deserializer)?;
+        Ok(Self::from_slice(&h256_pubkey).expect("Bytes length was verified"))
     }
 }
 

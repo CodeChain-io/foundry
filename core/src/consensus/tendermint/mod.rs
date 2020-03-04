@@ -132,7 +132,7 @@ const SEAL_FIELDS: usize = 4;
 
 #[cfg(test)]
 mod tests {
-    use ckey::{Address, Private};
+    use ckey::{Address, Ed25519Private as Private};
     use ctypes::Header;
 
     use super::super::BitSet;

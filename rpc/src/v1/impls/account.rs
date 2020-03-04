@@ -18,7 +18,7 @@ use super::super::errors::{self, account_provider};
 use super::super::traits::Account;
 use super::super::types::{SendTransactionResult, UnsignedTransaction};
 use ccore::{AccountData, AccountProvider, EngineInfo, MinerService, MiningBlockChainClient, TermInfo};
-use ckey::{Password, PlatformAddress, Private, Signature};
+use ckey::{Ed25519Private as Private, Password, PlatformAddress, Signature};
 use ctypes::transaction::IncompleteTransaction;
 use jsonrpc_core::{Error, Result};
 use lazy_static::lazy_static;
