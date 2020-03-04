@@ -61,13 +61,9 @@ async function relayFromTo({
         counterpartyChain
     });
 
-    for (const localDiagram of localDatagrams) {
-        await chain.submitDatagram(localDiagram);
-    }
+    await chain.submitDatagrams(localDatagrams);
 
-    for (const counterpartyDatagram of counterpartyDatagrams) {
-        await counterpartyChain.submitDatagram(counterpartyDatagram);
-    }
+    await counterpartyChain.submitDatagrams(counterpartyDatagrams);
 }
 
 async function pendingDatagrams({
