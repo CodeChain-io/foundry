@@ -22,6 +22,7 @@
     "codechain-sdk": "^2.0.1",
     "debug": "^4.1.1",
     "dotenv": "^8.2.0",
+    "enquirer": "^2.3.4",
     "rlp": "^2.0.0"
   }
 }
