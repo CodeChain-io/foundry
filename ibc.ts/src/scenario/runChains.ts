@@ -101,6 +101,11 @@ async function checkChainAAndBAreRunning() {
     debug("Send ping to B");
     await sdkB.rpc.node.ping();
 
+    debug("Delete pending Txs in A");
+    await sdkA.rpc.sendRpcRequest("mempool_deleteAllPendingTransactions", []);
+    debug("Delete pending Txs in B");
+    await sdkB.rpc.sendRpcRequest("mempool_deleteAllPendingTransactions", []);
+
     await sendPayTx({
         sdk: sdkA,
         from: "accqym7qmn5yj29cdl405xlmx6awd3f3yz07g7vq2c9",
@@ -131,7 +136,7 @@ async function sendPayTx({
         account: from,
         passphrase: "",
         fee: 1000,
-        seq: 0
+        seq: await sdk.rpc.chain.getSeq(from)
     });
     debug(`Send payTx to ${chainName}`);
     const txhash = await sdk.rpc.chain.sendSignedTransaction(signedPay);
