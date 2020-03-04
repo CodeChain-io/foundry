@@ -18,7 +18,7 @@ use crate::config::ChainType;
 use ckey::hex::ToHex;
 use ckey::{
     public_to_address, Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public,
-    NetworkId, PlatformAddress,
+    KeyPairTrait, NetworkId, PlatformAddress,
 };
 use clap::ArgMatches;
 use primitives::remove_0x_prefix;
@@ -126,8 +126,7 @@ fn get_account_id(input: &str) -> Result<PlatformAddress, String> {
 }
 
 fn private_to_public(private: Private) -> Result<Public, String> {
-    let keypair =
-        KeyPair::from_private(private).map_err(|e| format!("Error on converting private key to public key: {}", e))?;
+    let keypair: KeyPair = KeyPair::from_private(private);
     Ok(*keypair.public())
 }
 

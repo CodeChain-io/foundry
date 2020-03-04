@@ -1021,7 +1021,7 @@ mod tests_state {
 
 #[cfg(test)]
 mod tests_tx {
-    use ckey::{Generator, Random};
+    use ckey::{Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
     use ctypes::errors::RuntimeError;
 
     use super::*;
@@ -1029,7 +1029,7 @@ mod tests_tx {
     use crate::StateError;
 
     fn address() -> (Address, Public) {
-        let keypair = Random.generate().unwrap();
+        let keypair: KeyPair = Random.generate().unwrap();
         (keypair.address(), *keypair.public())
     }
 

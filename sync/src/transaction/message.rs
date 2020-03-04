@@ -66,7 +66,7 @@ mod tests {
     use rlp::rlp_encode_and_decode_test;
 
     use ccore::UnverifiedTransaction;
-    use ckey::{Address, Public, Signature};
+    use ckey::{Address, Ed25519Public as Public, Signature};
     use ctypes::transaction::{Action, Transaction};
 
     use super::Message;

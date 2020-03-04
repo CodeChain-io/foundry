@@ -464,15 +464,15 @@ mod tests {
 
 #[cfg(test)]
 mod tests_check_multi_sig {
-    use ckey::{sign, Generator, Random};
+    use ckey::{sign, Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
 
     use super::*;
 
     #[test]
     fn valid_2_of_3_110() {
-        let key_pair1 = Random.generate().unwrap();
-        let key_pair2 = Random.generate().unwrap();
-        let key_pair3 = Random.generate().unwrap();
+        let key_pair1: KeyPair = Random.generate().unwrap();
+        let key_pair2: KeyPair = Random.generate().unwrap();
+        let key_pair3: KeyPair = Random.generate().unwrap();
         let pubkey1 = *key_pair1.public();
         let pubkey2 = *key_pair2.public();
         let pubkey3 = *key_pair3.public();
@@ -485,9 +485,9 @@ mod tests_check_multi_sig {
 
     #[test]
     fn valid_2_of_3_101() {
-        let key_pair1 = Random.generate().unwrap();
-        let key_pair2 = Random.generate().unwrap();
-        let key_pair3 = Random.generate().unwrap();
+        let key_pair1: KeyPair = Random.generate().unwrap();
+        let key_pair2: KeyPair = Random.generate().unwrap();
+        let key_pair3: KeyPair = Random.generate().unwrap();
         let pubkey1 = *key_pair1.public();
         let pubkey2 = *key_pair2.public();
         let pubkey3 = *key_pair3.public();
@@ -500,9 +500,9 @@ mod tests_check_multi_sig {
 
     #[test]
     fn valid_2_of_3_011() {
-        let key_pair1 = Random.generate().unwrap();
-        let key_pair2 = Random.generate().unwrap();
-        let key_pair3 = Random.generate().unwrap();
+        let key_pair1: KeyPair = Random.generate().unwrap();
+        let key_pair2: KeyPair = Random.generate().unwrap();
+        let key_pair3: KeyPair = Random.generate().unwrap();
         let pubkey1 = *key_pair1.public();
         let pubkey2 = *key_pair2.public();
         let pubkey3 = *key_pair3.public();
@@ -515,8 +515,8 @@ mod tests_check_multi_sig {
 
     #[test]
     fn invalid_2_of_2_if_order_is_different() {
-        let key_pair1 = Random.generate().unwrap();
-        let key_pair2 = Random.generate().unwrap();
+        let key_pair1: KeyPair = Random.generate().unwrap();
+        let key_pair2: KeyPair = Random.generate().unwrap();
         let pubkey1 = *key_pair1.public();
         let pubkey2 = *key_pair2.public();
         let message = H256::random();

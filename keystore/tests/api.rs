@@ -19,7 +19,7 @@ extern crate codechain_keystore as ckeystore;
 
 mod util;
 
-use ckey::{verify, Ed25519KeyPair as KeyPair, Ed25519Private as Private};
+use ckey::{verify, Ed25519KeyPair as KeyPair, Ed25519Private as Private, KeyPairTrait};
 use ckeystore::accounts_dir::RootDiskDirectory;
 use ckeystore::{KeyStore, SimpleSecretStore};
 use primitives::H256;
@@ -116,13 +116,12 @@ fn secret_store_load_pat_files() {
 #[test]
 fn decrypting_files_with_short_ciphertext() {
     // 0x0e8d3d2a8c5ad882331c94249806bdc2867ca186
-    let kp1 =
+    let kp1: KeyPair =
         KeyPair::from_private("f52e5b0b80c5e7b6fcd64869dd5f4dc84763395b05620209fcc11e7436f0ac05800a29dbeab141ada7923517e945bf4594917473809547bc0bb2e47cd39ac94b".parse().unwrap())
-            .unwrap();
+            ;
     // 0x1c593662f2812124a3ab842faf20acfbf9217eb7
-    let kp2 =
-        KeyPair::from_private("44795b6f434fde613af66cb01fe14ecf51f0f610b7db38ce3b369e15a49016709f3f180b63b95559a95735385e35cd973c3d4e9f81bbf0faa61cf6159841feb5".parse().unwrap())
-            .unwrap();
+    let kp2: KeyPair =
+        KeyPair::from_private("44795b6f434fde613af66cb01fe14ecf51f0f610b7db38ce3b369e15a49016709f3f180b63b95559a95735385e35cd973c3d4e9f81bbf0faa61cf6159841feb5".parse().unwrap());
     let dir = RootDiskDirectory::at(ciphertext_path());
     let store = KeyStore::open(Box::new(dir)).unwrap();
     let accounts = store.accounts().unwrap();
