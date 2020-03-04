@@ -75,7 +75,7 @@ async function pendingDatagrams({
     counterpartyChain: Chain;
 }): Promise<{ localDatagrams: Datagram[]; counterpartyDatagrams: Datagram[] }> {
     const height = await chain.latestHeight();
-    const counterpartyChainHeight = await chain.latestHeight();
+    const counterpartyChainHeight = await counterpartyChain.latestHeight();
     let localDatagrams: Datagram[] = [];
     let counterpartyDatagrams: Datagram[] = [];
 
