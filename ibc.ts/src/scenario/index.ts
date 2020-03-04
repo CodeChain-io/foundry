@@ -4,6 +4,7 @@ import { Chain } from "../common/chain";
 import { PlatformAddress } from "codechain-primitives/lib";
 import { CreateClientDatagram } from "../common/datagram/createClient";
 import { strict as assert } from "assert";
+import { ConnOpenInitDatagram } from "../common/datagram/connOpenInit";
 const { Select } = require("enquirer");
 
 require("dotenv").config();
@@ -56,6 +57,22 @@ async function main() {
         console.log("Create a light client in chain B");
         await createLightClient({ chain: chainB, counterpartyChain: chainA });
     }
+
+    const connectionPrompt = new Select({
+        name: "connection",
+        message: "Will you create connection?",
+        choices: ["yes", "skip", "exit"]
+    });
+    const connectionAnswer = await connectionPrompt.run();
+
+    if (connectionAnswer === "exit") {
+        return;
+    }
+
+    if (connectionAnswer === "yes") {
+        console.log("Create a connection");
+        await createConnection({ chainA, chainB });
+    }
 }
 
 main().catch(console.error);
@@ -102,4 +119,23 @@ async function createLightClient({
     assert.notEqual(clientStateAfter, null, "querying on the best block");
     assert.notEqual(clientStateAfter!.data, null, "client is initialized");
     debug(`Create client is ${JSON.stringify(clientStateAfter)}`);
+}
+
+async function createConnection({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}) {
+    await chainA.submitDatagram(
+        new ConnOpenInitDatagram({
+            id: chainA.counterpartyIdentifiers.connection,
+            desiredCounterpartyConnectionIdentifier:
+                chainB.counterpartyIdentifiers.connection,
+            counterpartyPrefix: "",
+            clientIdentifier: chainA.counterpartyIdentifiers.client,
+            counterpartyClientIdentifier: chainB.counterpartyIdentifiers.client
+        })
+    );
 }
