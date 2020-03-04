@@ -57,6 +57,7 @@ impl<'a> Manager<'a> {
 
     pub fn update(&mut self, id: IdentifierSlice, header: Bytes) -> Result<(), String> {
         let header_dec: Header = rlp::decode(&header).map_err(|_| "Failed to decode IBC header")?;
+        cdebug!(IBC, "Decoded header in update: {:?}", header_dec);
         let client_state = self.query(id)?;
         let (new_client_state, new_consensus_state) =
             super::client::check_validity_and_update_state(&client_state, &header_dec)?;
