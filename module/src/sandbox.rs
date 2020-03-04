@@ -16,12 +16,12 @@
 
 use crate::link::Linkable;
 use linkme::distributed_slice;
-use primitives::H256;
 use std::fmt::Debug;
+use std::path::Path;
 use std::sync::Arc;
 use thiserror::Error;
 
-type Result<T> = std::result::Result<T, Error>;
+type Result<'a, T> = std::result::Result<T, Error<'a>>;
 
 #[distributed_slice]
 pub static SANDBOXERS: [fn() -> Arc<dyn Sandboxer>] = [..];
@@ -36,13 +36,15 @@ pub trait Sandboxer: Send + Sync {
     /// Returns a list of module types that can be loaded by this `Sandboxer`.
     fn supported_module_types(&self) -> &'static [&'static str];
 
-    /// Loads the module identified by the given `hash` into a [`Sandbox`].
+    /// Loads the module in the given `path` into a [`Sandbox`] and pass the given
+    /// `init` and `exports` to the module for initialization.
     ///
     /// The corresponding module must have been imported into the module repository
-    /// configured for the current Foundry host.
+    /// configured for the current Foundry host. That is why this method accepts a `path`
+    /// to identify a module.
     ///
     /// [`Sandbox`]: ./trait.Sandbox.html
-    fn load(&self, hash: &dyn AsRef<H256>) -> Result<Arc<dyn Sandbox>>;
+    fn load(&self, path: &dyn AsRef<Path>, init: &[u8], exports: &[(&str, &[u8])]) -> Result<Arc<dyn Sandbox>>;
 }
 
 /// A sandbox instance hosting an instantiated module.
@@ -52,19 +54,19 @@ pub trait Sandbox: Linkable {
 }
 
 #[derive(Debug, Error)]
-pub enum Error {
-    /// The module identified by the given `H256` is not in the module repository.
-    #[error("Could not find the specified module: {id:?}")]
+pub enum Error<'a> {
+    /// The module identified by the given `path` is not in the module repository.
+    #[error("Could not find the specified module: {path:?}")]
     ModuleNotFound {
-        id: H256,
+        path: &'a Path,
     },
 
-    /// The module identified by the given `H256` is not supported by the provider.
-    #[error("The module is not supported: type '{ty:?}', id '{id:?}'")]
+    /// The module identified by the given `path` is not supported by the provider.
+    #[error("The module is not supported: type '{ty:?}' at '{path:?}'")]
     UnsupportedModuleType {
         /// The identifier of the subject module.
-        id: H256,
-        /// The type of the subject module module.
+        path: &'a Path,
+        /// The type of the subject module.
         ty: String,
     },
 }
