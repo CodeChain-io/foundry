@@ -327,6 +327,7 @@ dependencies = [
  "codechain-timer",
  "codechain-types",
  "codechain-vm",
+ "coordinator",
  "crossbeam-channel 0.3.8",
  "hyper 0.10.0-a.0",
  "kvdb",

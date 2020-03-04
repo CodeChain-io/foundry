@@ -34,6 +34,7 @@ use crate::client::ConsensusClient;
 use crate::codechain_machine::CodeChainMachine;
 use crate::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::ChainNotify;
+use coordinator::{context::DummyContext, Coordinator};
 use crossbeam_channel as crossbeam;
 use cstate::ActionHandler;
 use ctimer::TimerToken;
@@ -54,6 +55,7 @@ const ENGINE_TIMEOUT_BROADCAT_STEP_STATE_INTERVAL: u64 = 1;
 
 /// ConsensusEngine using `Tendermint` consensus algorithm
 pub struct Tendermint {
+    coordinator: Coordinator<DummyContext>,
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
     external_params_initializer: crossbeam::Sender<TimeGapParams>,
     extension_initializer: crossbeam::Sender<(crossbeam::Sender<network::Event>, Weak<dyn ConsensusClient>)>,
@@ -105,6 +107,7 @@ impl Tendermint {
         let chain_notify = Arc::new(TendermintChainNotify::new(inner.clone()));
 
         Arc::new(Tendermint {
+            coordinator: Coordinator::default(),
             client: Default::default(),
             external_params_initializer,
             extension_initializer,

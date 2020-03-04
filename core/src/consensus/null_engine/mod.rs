@@ -23,6 +23,7 @@ use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
+use coordinator::{context::DummyContext, Coordinator};
 use ctypes::CommonParams;
 
 /// An engine which does not provide any consensus mechanism and does not seal blocks.
@@ -48,6 +49,10 @@ impl ConsensusEngine for NullEngine {
 
     fn machine(&self) -> &CodeChainMachine {
         &self.machine
+    }
+
+    fn coordinator(&mut self) -> &mut Coordinator<DummyContext> {
+        unimplemented!()
     }
 
     fn seals_internally(&self) -> bool {

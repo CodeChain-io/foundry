@@ -12,6 +12,7 @@ cjson = { package = "codechain-json", path = "../json" }
 ckey = { package = "codechain-key", path = "../key" }
 ckeystore = { package = "codechain-keystore", path="../keystore" }
 codechain-logger = { path = "../util/logger" }
+coordinator = { path = "../coordinator" }
 cnetwork = { package = "codechain-network", path = "../network" }
 cstate = { package = "codechain-state", path = "../state" }
 ctimer = { package = "codechain-timer", path = "../util/timer" }

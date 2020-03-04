@@ -34,6 +34,7 @@ use crate::views::HeaderView;
 use crate::BlockId;
 use ckey::{public_to_address, Address};
 use cnetwork::NetworkService;
+use coordinator::{context::DummyContext, Coordinator};
 use crossbeam_channel as crossbeam;
 use cstate::{ActionHandler, TopState, TopStateView};
 use ctypes::{BlockHash, CommonParams, Header};
@@ -60,6 +61,10 @@ impl ConsensusEngine for Tendermint {
 
     fn machine(&self) -> &CodeChainMachine {
         &self.machine.as_ref()
+    }
+
+    fn coordinator(&mut self) -> &mut Coordinator<DummyContext> {
+        &mut self.coordinator
     }
 
     /// (consensus view, proposal signature, authority signatures)

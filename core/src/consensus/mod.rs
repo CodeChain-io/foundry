@@ -42,6 +42,7 @@ use crate::views::HeaderView;
 use crate::Client;
 use ckey::{Address, SchnorrSignature};
 use cnetwork::NetworkService;
+use coordinator::{context::DummyContext, Coordinator};
 use cstate::ActionHandler;
 use ctypes::errors::SyntaxError;
 use ctypes::transaction::Action;
@@ -119,6 +120,8 @@ pub trait ConsensusEngine: Sync + Send {
 
     /// Get access to the underlying state machine.
     fn machine(&self) -> &CodeChainMachine;
+
+    fn coordinator(&mut self) -> &mut Coordinator<DummyContext>;
 
     /// The number of additional header fields required for this engine.
     fn seal_fields(&self, _header: &Header) -> usize {

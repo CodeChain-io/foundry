@@ -26,6 +26,7 @@ use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
+use coordinator::{context::DummyContext, Coordinator};
 use cstate::{ActionHandler, HitHandler, TopStateView};
 use ctypes::{BlockHash, CommonParams, Header};
 use parking_lot::RwLock;
@@ -70,6 +71,10 @@ impl ConsensusEngine for Solo {
 
     fn machine(&self) -> &CodeChainMachine {
         &self.machine
+    }
+
+    fn coordinator(&mut self) -> &mut Coordinator<DummyContext> {
+        unimplemented!()
     }
 
     fn seals_internally(&self) -> bool {
