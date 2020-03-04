@@ -27,6 +27,7 @@ use crate::verification::queue::{BlockQueue, HeaderQueue};
 use crate::verification::{self, PreverifiedBlock, Verifier};
 use crate::views::{BlockView, HeaderView};
 use cio::IoChannel;
+use coordinator::{context::DummyContext, validator::Validator, Coordinator};
 use ctypes::header::{Header, Seal};
 use ctypes::BlockHash;
 use kvdb::DBTransaction;
@@ -86,11 +87,10 @@ impl Importer {
 
     /// This is triggered by a message coming from a block queue when the block is ready for insertion
     pub fn import_verified_blocks(&self, client: &Client) -> usize {
-        let (imported_blocks, import_results, invalid_blocks, imported, is_empty) = {
+        let (imported_blocks, invalid_blocks, imported, is_empty) = {
             const MAX_BLOCKS_TO_IMPORT: usize = 1_000;
             let mut imported_blocks = Vec::with_capacity(MAX_BLOCKS_TO_IMPORT);
             let mut invalid_blocks = HashSet::new();
-            let mut import_results = Vec::with_capacity(MAX_BLOCKS_TO_IMPORT);
 
             let import_lock = self.import_lock.lock();
             let blocks = self.block_queue.drain(MAX_BLOCKS_TO_IMPORT);
@@ -111,10 +111,16 @@ impl Importer {
                     invalid_blocks.insert(header.hash());
                     continue
                 }
-                if let Ok(closed_block) = self.check_and_close_block(&block, client) {
+
+                let mut coordinator = Coordinator::<DummyContext>::default(); // TODO: replace with reference
+                let transactions = Vec::new(); // TODO: replace with block.transactions
+                let evidences = Vec::new();
+
+                let block_outcome = coordinator.execute_block(header, &transactions, &evidences);
+                if block_outcome.block_hash == header.hash()
+                    && block_outcome.transaction_results.iter().all(|tx| tx.is_success)
+                {
                     imported_blocks.push(header.hash());
-                    let route = self.commit_block(&closed_block, &header, &block.bytes, client);
-                    import_results.push(route);
                 } else {
                     invalid_blocks.insert(header.hash());
                 }
@@ -127,7 +133,7 @@ impl Importer {
                 self.block_queue.mark_as_bad(&invalid_blocks);
             }
             let is_empty = self.block_queue.mark_as_good(&imported_blocks);
-            (imported_blocks, import_results, invalid_blocks, imported, is_empty)
+            (imported_blocks, invalid_blocks, imported, is_empty)
         };
 
         {
@@ -135,8 +141,7 @@ impl Importer {
                 if !is_empty {
                     ctrace!(CLIENT, "Call new_blocks even though block verification queue is not empty");
                 }
-                let enacted = self.extract_enacted(import_results);
-                self.miner.chain_new_blocks(client, &imported_blocks, &invalid_blocks, &enacted);
+                let enacted = imported_blocks.clone();
                 client.new_blocks(&imported_blocks, &invalid_blocks, &enacted, &[]);
             }
         }
