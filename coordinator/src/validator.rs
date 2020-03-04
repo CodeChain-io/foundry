@@ -73,9 +73,10 @@ pub struct TransactionExecutionOutcome {
     pub events: Vec<Event>,
 }
 
-pub struct TransactionCheckOutcome {
-    pub is_success: bool,
-    pub events: Vec<Event>,
+pub enum TransactionCheckOutcome {
+    IncludeInCurrentQueue,
+    IncludeInFutureQueue,
+    Exclude,
 }
 
 pub struct BlockOutcome {
