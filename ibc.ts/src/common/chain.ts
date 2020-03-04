@@ -54,17 +54,34 @@ export class Chain {
     }
 
     public async submitDatagram(datagram: Datagram): Promise<void> {
-        const ibcAction = new IBC(this.sdk.networkId, datagram.rlpBytes());
+        await this.submitDatagrams([datagram]);
+    }
 
+    public async submitDatagrams(datagrams: Datagram[]): Promise<void> {
+        const txHashes = [];
         const seq = await this.sdk.rpc.chain.getSeq(this.faucetAddress);
-        const signedTx = await this.sdk.key.signTransaction(ibcAction, {
-            account: this.faucetAddress,
-            fee: 100,
-            seq
-        });
 
-        const txHash = await this.sdk.rpc.chain.sendSignedTransaction(signedTx);
-        await waitForTx(this.sdk, txHash);
+        for (let i = 0; i < datagrams.length; i += 1) {
+            const datagram = datagrams[i];
+            const ibcAction = new IBC(this.sdk.networkId, datagram.rlpBytes());
+
+            const signedTx = await this.sdk.key.signTransaction(ibcAction, {
+                account: this.faucetAddress,
+                fee: 100,
+                seq: seq + i
+            });
+
+            debug(`Send tx with seq ${seq + i}`);
+            const txHash = await this.sdk.rpc.chain.sendSignedTransaction(
+                signedTx
+            );
+            txHashes.push(txHash);
+        }
+
+        for (const txHash of txHashes) {
+            debug(`Wait for tx ${txHash}`);
+            await waitForTx(this.sdk, txHash);
+        }
     }
 
     public async latestHeight(): Promise<number> {
