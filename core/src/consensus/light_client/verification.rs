@@ -66,6 +66,13 @@ pub fn verify_header(client_state: &ClientState, proposal: &UpdateHeader) -> boo
     if client_state.next_validator_set_hash != proposal.validator_set.hash() {
         return false
     }
+
+    // FIXME: We should remove this if statement when the static validator is removed.
+    let bypass_verification = std::env::var("BYPASS_VERIFICATION_IN_STATIC_VALIDATOR");
+    if bypass_verification.is_ok() {
+        return true
+    }
+
     if !verify_signature(proposal.hash, &proposal.validator_set, &proposal.seal) {
         return false
     }
