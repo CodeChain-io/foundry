@@ -4,6 +4,7 @@ import { Chain } from "../common/chain";
 import { PlatformAddress } from "codechain-primitives/lib";
 import { CreateClientDatagram } from "../common/datagram/createClient";
 import { strict as assert } from "assert";
+const { Select } = require("enquirer");
 
 require("dotenv").config();
 
@@ -38,10 +39,23 @@ async function main() {
         keystorePath: config.chainB.keystorePath
     });
 
-    console.log("Create a light client in chain A");
-    await createLightClient({ chain: chainA, counterpartyChain: chainB });
-    console.log("Create a light client in chain B");
-    await createLightClient({ chain: chainB, counterpartyChain: chainA });
+    const lightclientPrompt = new Select({
+        name: "light client",
+        message: "Will you create light clients?",
+        choices: ["yes", "skip", "exit"]
+    });
+    const lightclientAnswer = await lightclientPrompt.run();
+
+    if (lightclientAnswer === "exit") {
+        return;
+    }
+
+    if (lightclientAnswer === "yes") {
+        console.log("Create a light client in chain A");
+        await createLightClient({ chain: chainA, counterpartyChain: chainB });
+        console.log("Create a light client in chain B");
+        await createLightClient({ chain: chainB, counterpartyChain: chainA });
+    }
 }
 
 main().catch(console.error);
