@@ -328,6 +328,14 @@ impl Miner {
         };
 
         assert!(self.engine.seals_internally(), "If a signer is not prepared, prepare_block should not be called");
+
+        // FIXME this sleeping is for the experimental branch. This should not be included in the master branch.
+        let wait = std::env::var("WAIT_1_SEC_BEFORE_CREATING_A_BLOCK");
+        if wait.is_ok() {
+            cinfo!(MINER, "Wait 1 second before generating a block");
+            std::thread::sleep(std::time::Duration::from_secs(1));
+        }
+
         let seal = self.engine.generate_seal(None, &parent_header.decode());
         if let Some(seal_bytes) = seal.seal_fields() {
             open_block.seal(self.engine.borrow(), seal_bytes).expect("Sealing always success");
