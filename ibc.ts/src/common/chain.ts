@@ -5,7 +5,7 @@ import { IBC } from "./foundry/transaction";
 import { delay } from "./util";
 import Debug from "debug";
 import { ClientState } from "./foundry/types";
-import { IBCHeader, IBCQueryResult } from "./types";
+import { IBCHeader, IBCQueryResult, ConnectionEnd } from "./types";
 
 const debug = Debug("common:tx");
 
@@ -105,6 +105,24 @@ export class Chain {
 
     public async queryChainHeader(blockNumber: number): Promise<string | null> {
         return this.sdk.rpc.sendRpcRequest("chain_getRawHeaderByNumber", [
+            blockNumber
+        ]);
+    }
+
+    public async queryConnection(
+        blockNumber?: number
+    ): Promise<IBCQueryResult<ConnectionEnd> | null> {
+        return this.sdk.rpc.sendRpcRequest("ibc_query_connection", [
+            this.counterpartyIdentifiers.connection,
+            blockNumber
+        ]);
+    }
+
+    public async queryClientConnections(
+        blockNumber?: number
+    ): Promise<IBCQueryResult<string[]> | null> {
+        return this.sdk.rpc.sendRpcRequest("ibc_query_client_connections", [
+            this.counterpartyIdentifiers.client,
             blockNumber
         ]);
     }
