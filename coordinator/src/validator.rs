@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use ckey::Public;
-use ctypes::header::Header;
+use ctypes::{header::Header, BlockHash};
 
 /// A `Validator` receives requests from the underlying consensus engine
 /// and performs validation of blocks and Txes.
@@ -79,7 +79,7 @@ pub struct TransactionCheckOutcome {
 }
 
 pub struct BlockOutcome {
-    pub block_hash: Bytes,
+    pub block_hash: BlockHash,
     pub updated_consensus_params: ConsensusParams,
     pub transaction_results: Vec<TransactionExecutionOutcome>,
     pub events: Vec<Event>,
