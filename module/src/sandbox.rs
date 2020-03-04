@@ -1,13 +1,13 @@
 use std::fmt::Debug;
+use std::path::Path;
 use std::sync::Arc;
 
 use linkme::distributed_slice;
-use primitives::H256;
 use thiserror::Error;
 
 use crate::link::Linkable;
 
-type Result<T> = std::result::Result<T, Error>;
+type Result<'a, T> = std::result::Result<T, Error<'a>>;
 
 #[distributed_slice]
 pub static SANDBOXERS: [fn() -> Arc<dyn Sandboxer>] = [..];
@@ -28,7 +28,7 @@ pub trait Sandboxer {
     /// configured for the current Foundry host.
     ///
     /// [`Sandbox`]: ./trait.Sandbox.html
-    fn load(&self, hash: &dyn AsRef<H256>) -> Result<Arc<dyn Sandbox>>;
+    fn load(&self, hash: &dyn AsRef<Path>) -> Result<Arc<dyn Sandbox>>;
 }
 
 /// A sandbox instance hosting an instantiated module.
@@ -38,18 +38,18 @@ pub trait Sandbox: Linkable {
 }
 
 #[derive(Debug, Error)]
-pub enum Error {
+pub enum Error<'a> {
     /// The module identified by the given `H256` is not in the module repository.
-    #[error("Could not find the specified module: {id:?}")]
+    #[error("Could not find the specified module: {path:?}")]
     ModuleNotFound {
-        id: H256,
+        path: &'a Path,
     },
 
     /// The module identified by the given `H256` is not supported by the provider.
-    #[error("The module is not supported: type '{ty:?}', id '{id:?}'")]
+    #[error("The module is not supported: type '{ty:?}' at '{path:?}'")]
     UnsupportedModuleType {
         /// The identifier of the subject module.
-        id: H256,
+        path: &'a Path,
         /// The type of the subject module module.
         ty: String,
     },
