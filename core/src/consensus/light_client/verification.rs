@@ -26,18 +26,31 @@ pub fn verify_signature(block_hash: H256, vset: &CompactValidatorSet, seal: &Sea
 
     let seal_view = TendermintSealView::new(&seal.raw).signatures();
     if seal_view.is_err() {
+        cdebug!(LIGHT_CLIENT, "verify_signature: seal is not a valis tendermint seal");
         return false
     }
     let seal_dec = seal_view.unwrap();
 
     for (index, sign) in &seal_dec {
         if *index >= n {
+            cdebug!(
+                LIGHT_CLIENT,
+                "verify_signature: index {} is equal or greater than validator set size {}",
+                index,
+                n
+            );
             return false
         }
         match verify_schnorr(&vset[*index].public_key, &sign, &block_hash) {
             Ok(true) => (),
-            Ok(false) => return false,
-            _ => return false,
+            Ok(false) => {
+                cdebug!(LIGHT_CLIENT, "verify_signature: verify_schnorr verified that signature is not correct");
+                return false
+            }
+            _ => {
+                cdebug!(LIGHT_CLIENT, "verify_signature: verify_schnorr failed");
+                return false
+            }
         };
     }
     true
@@ -61,9 +74,21 @@ pub fn verify_quorum(vset: &CompactValidatorSet, seal: &Seal) -> bool {
 
 pub fn verify_header(client_state: &ClientState, proposal: &UpdateHeader) -> bool {
     if client_state.number + 1 != proposal.number {
+        ctrace!(
+            IBC,
+            "verify_header: The number in the header does not match. expted: {} given: {}",
+            client_state.number + 1,
+            proposal.number
+        );
         return false
     }
     if client_state.next_validator_set_hash != proposal.validator_set.hash() {
+        ctrace!(
+            IBC,
+            "verify_header: Next validator set hash does not match. expected: {} given: {}",
+            client_state.next_validator_set_hash,
+            proposal.validator_set.hash()
+        );
         return false
     }
 
@@ -74,9 +99,11 @@ pub fn verify_header(client_state: &ClientState, proposal: &UpdateHeader) -> boo
     }
 
     if !verify_signature(proposal.hash, &proposal.validator_set, &proposal.seal) {
+        ctrace!(IBC, "verify_header: Signature verification of seal failed");
         return false
     }
     if !verify_quorum(&proposal.validator_set, &proposal.seal) {
+        ctrace!(IBC, "verify_header: Qurom not met");
         return false
     }
     true

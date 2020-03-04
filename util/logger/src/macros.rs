@@ -97,6 +97,12 @@ macro_rules! log_target {
     (TX) => {
         "tx"
     };
+    (IBC) => {
+        "ibc"
+    };
+    (LIGHT_CLIENT) => {
+        "light_client"
+    };
 }
 
 #[macro_export]
