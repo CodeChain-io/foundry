@@ -56,6 +56,10 @@
     "bccqygjwzj8wupc9m7du9ccef4j6k2u3erjuv2w8pt0": {
       "balance": "10000000000000000000",
       "seq": "0"
+    },
+    "bccq8rd3qky8xqvzjrwwkz3ytgr34fvq40gfysdpk6d": {
+      "balance": "10000000000000000000",
+      "seq": "0"
     }
   },
   "shards": {
