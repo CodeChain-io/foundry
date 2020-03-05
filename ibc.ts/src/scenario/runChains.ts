@@ -81,9 +81,6 @@ async function runChainB() {
 }
 
 async function checkChainAAndBAreRunning() {
-    // Wait for Foundry to listen on the port, three seconds is an arbitrary value.
-    await delay(3000);
-
     // FIXME: read values from config
     const sdkA = new SDK({
         server: "http://localhost:18080",
@@ -96,10 +93,25 @@ async function checkChainAAndBAreRunning() {
         keyStoreType: { type: "local", path: "./chainB/keystore.db" }
     });
 
-    debug("Send ping to A");
-    await sdkA.rpc.node.ping();
-    debug("Send ping to B");
-    await sdkB.rpc.node.ping();
+    // Wait for Foundry to listen on the port, three seconds is an arbitrary value.
+    let retryCount = 0;
+    while (true) {
+        try {
+            debug("Send ping to A");
+            await sdkA.rpc.node.ping();
+            debug("Send ping to B");
+            await sdkB.rpc.node.ping();
+            break;
+        } catch (err) {
+            if (retryCount < 10) {
+                retryCount += 1;
+                debug("Failed to send ping. I will retry");
+                await delay(1000);
+            } else {
+                throw err;
+            }
+        }
+    }
 
     debug("Delete pending Txs in A");
     await sdkA.rpc.sendRpcRequest("mempool_deleteAllPendingTransactions", []);
