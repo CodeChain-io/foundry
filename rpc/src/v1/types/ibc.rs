@@ -123,16 +123,11 @@ impl FromCore<CoreConnectionEnd> for ConnectionEnd {
 }
 
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ConnectionIdentifiersInClient {
-    raw: Vec<String>,
-}
+pub struct ConnectionIdentifiersInClient(Vec<String>);
 
 impl FromCore<CoreConnectionIdentifiersInClient> for ConnectionIdentifiersInClient {
     fn from_core(core: CoreConnectionIdentifiersInClient) -> Self {
-        ConnectionIdentifiersInClient {
-            raw: core.into_vec(),
-        }
+        ConnectionIdentifiersInClient(core.into_vec())
     }
 }
 
