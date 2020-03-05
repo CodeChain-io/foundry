@@ -16,7 +16,7 @@ async function main() {
     const chainA = new Chain({
         server: config.chainA.rpcURL,
         networkId: config.chainA.networkId,
-        faucetAddress: PlatformAddress.fromString(config.chainA.faucetAddress),
+        faucetAddress: PlatformAddress.fromString(config.chainA.relayerAddress),
         counterpartyIdentifiers: {
             client: config.chainA.counterpartyClientId,
             connection: config.chainA.counterpartyConnectionId,
@@ -27,7 +27,7 @@ async function main() {
     const chainB = new Chain({
         server: config.chainB.rpcURL,
         networkId: config.chainB.networkId,
-        faucetAddress: PlatformAddress.fromString(config.chainB.faucetAddress),
+        faucetAddress: PlatformAddress.fromString(config.chainB.relayerAddress),
         counterpartyIdentifiers: {
             client: config.chainB.counterpartyClientId,
             connection: config.chainB.counterpartyConnectionId,

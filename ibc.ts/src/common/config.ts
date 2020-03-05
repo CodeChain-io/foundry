@@ -10,7 +10,8 @@ interface FoundryChainConfig {
      */
     rpcURL: string;
     networkId: string;
-    faucetAddress: string;
+    relayerAddress: string;
+    scenarioAddress: string;
     counterpartyClientId: string;
     counterpartyConnectionId: string;
     counterpartyChannelId: string;
@@ -22,7 +23,8 @@ export function getConfig(): Config {
         chainA: {
             rpcURL: getEnv("CHAIN_A_RPC_URL"),
             networkId: getEnv("CHAIN_A_NETWORK_ID"),
-            faucetAddress: getEnv("CHAIN_A_FAUCET_ADDRESS"),
+            relayerAddress: getEnv("CHAIN_A_RELAYER_ADDRESS"),
+            scenarioAddress: getEnv("CHAIN_A_SCENARIO_ADDRESS"),
             counterpartyClientId: getEnv("CHAIN_A_COUNTERPARTY_CLIENT_ID"),
             counterpartyConnectionId: getEnv(
                 "CHAIN_A_COUNTERPARTY_CONNECTION_ID"
@@ -33,7 +35,8 @@ export function getConfig(): Config {
         chainB: {
             rpcURL: getEnv("CHAIN_B_RPC_URL"),
             networkId: getEnv("CHAIN_B_NETWORK_ID"),
-            faucetAddress: getEnv("CHAIN_B_FAUCET_ADDRESS"),
+            relayerAddress: getEnv("CHAIN_B_RELAYER_ADDRESS"),
+            scenarioAddress: getEnv("CHAIN_B_SCENARIO_ADDRESS"),
             counterpartyClientId: getEnv("CHAIN_B_COUNTERPARTY_CLIENT_ID"),
             counterpartyConnectionId: getEnv(
                 "CHAIN_B_COUNTERPARTY_CONNECTION_ID"
