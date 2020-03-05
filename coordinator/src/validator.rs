@@ -75,12 +75,12 @@ pub struct TransactionExecutionOutcome {
 
 pub enum TransactionCheckOutcome {
     IncludeInCurrentQueue {
-        priority: u64,
-        gas: u64,
+        priority: usize,
+        gas: usize,
     },
     IncludeInFutureQueue {
-        priority: u64,
-        gas: u64,
+        priority: usize,
+        gas: usize,
     },
     Exclude,
 }
