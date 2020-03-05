@@ -27,7 +27,6 @@ use ibc::client_02 as ibc_client;
 use ibc::connection_03 as ibc_connection;
 use ibc::context as ibc_context;
 use rlp::{Decodable, Rlp};
-use rustc_hex::ToHex;
 
 pub fn execute(
     bytes: &[u8],
@@ -38,7 +37,19 @@ pub fn execute(
 ) -> StateResult<()> {
     let mut context = ibc_context::TopLevelContext::new(state, current_block_number);
     let datagram = Datagram::decode(&Rlp::new(bytes)).expect("Verification passed");
-    match datagram {
+    match &datagram {
+        Datagram::UpdateClient {
+            ..
+        } => {
+            ctrace!(IBC, "IBC Datagram decoded {:?}", datagram);
+            cdebug!(IBC, "IBC UpdateClient");
+        }
+        _ => {
+            cdebug!(IBC, "IBC Datagram decoded {:?}", datagram);
+        }
+    }
+
+    let result = match datagram {
         Datagram::CreateClient {
             id,
             kind,
@@ -59,7 +70,6 @@ pub fn execute(
             id,
             header,
         } => {
-            cdebug!(IBC, "Update client {} {}", id, header.to_hex());
             let mut client_manager = ibc_client::Manager::new(&mut context);
             client_manager.update(&id, header).map_err(|err| RuntimeError::IBC(format!("UpdateClient: {:?}", err)))?;
             Ok(())
@@ -250,5 +260,11 @@ pub fn execute(
                 .map_err(|err| RuntimeError::IBC(format!("AcknowledgePacket: {}", err)))?;
             Ok(())
         }
+    };
+
+    if let Err(err) = &result {
+        cwarn!(IBC, "Executing datagram failed: {:?}", err);
     }
+
+    result
 }
