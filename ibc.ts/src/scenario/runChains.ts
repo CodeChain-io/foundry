@@ -53,6 +53,11 @@ async function runChainA() {
         "../../target/debug/foundry",
         ["-c", "./chainA.schem.json", "--config", "./chainA.config.toml"],
         {
+            env: {
+                ...process.env,
+                WAIT_1_SEC_BEFORE_CREATING_A_BLOCK: "true",
+                BYPASS_VERIFICATION_IN_STATIC_VALIDATOR: "true"
+            },
             cwd: "./chainA"
         }
     );
@@ -64,6 +69,11 @@ async function runChainB() {
         "../../target/debug/foundry",
         ["-c", "./chainB.schem.json", "--config", "./chainB.config.toml"],
         {
+            env: {
+                ...process.env,
+                WAIT_1_SEC_BEFORE_CREATING_A_BLOCK: "true",
+                BYPASS_VERIFICATION_IN_STATIC_VALIDATOR: "true"
+            },
             cwd: "./chainB"
         }
     );
