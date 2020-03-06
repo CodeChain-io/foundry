@@ -102,21 +102,29 @@ where
     }
 
     fn compose_header(&self, block_number: u64) -> Result<Option<Bytes>> {
+        // FIXME: Currently compose_header() works only for at most bestblock-1,
+        // because we need a seal for that block, which is stored in next block.
+        // We can fix this by querying only seal for the best block.
         let block_id = BlockId::Number(block_number);
+        let block_id_next = BlockId::Number(block_number + 1);
         if self.client.state_at(block_id).is_none() {
             return Ok(None)
         }
+        if self.client.state_at(block_id_next).is_none() {
+            return Ok(None)
+        }
         let state = self.client.state_at(block_id).unwrap();
-
         let header_core = self.client.block_header(&block_id).unwrap();
-        let vset_raw = ccore::stake::NextValidators::load_from_state(&state).map_err(errors::core)?;
+        let header_core_next = self.client.block_header(&block_id_next).unwrap();
+        let vset = ccore::stake::CurrentValidators::load_from_state(&state)
+            .map_err(errors::core)?
+            .create_compact_validator_set();
 
-        let vset = vset_raw.create_compact_validator_set();
         let header = Header {
             update_header: ccore::consensus::light_client::UpdateHeader {
                 header_raw: header_core.decode(),
                 seal: ccore::consensus::light_client::Seal {
-                    raw: header_core.seal(),
+                    raw: header_core_next.seal(),
                 },
                 validator_set: vset,
             },
