@@ -70,7 +70,7 @@ export class Key {
                 `Expected keyStore param to be a KeyStore instance but found ${keyStore}`
             );
         }
-        const accountId = await keyStore.platform.createKey({ passphrase });
+        const accountId = await keyStore.createKey({ passphrase });
         const { networkId } = this;
         return Address.fromAccountId(accountId, { networkId });
     }
@@ -108,7 +108,7 @@ export class Key {
             );
         }
         const accountId = Address.ensure(account).getAccountId();
-        return await keyStore.platform.sign({
+        return await keyStore.sign({
             key: accountId.value,
             message: transaction.tracker().value,
             passphrase
@@ -169,7 +169,7 @@ export class Key {
         tx.setFee(fee);
         tx.setSeq(seq);
         const accountId = Address.ensure(account).getAccountId();
-        const signerPublic = await keyStore.platform.getPublicKey({
+        const signerPublic = await keyStore.getPublicKey({
             key: accountId.value,
             passphrase
         });
@@ -179,7 +179,7 @@ export class Key {
             );
         }
 
-        const sig = await keyStore.platform.sign({
+        const sig = await keyStore.sign({
             key: accountId.value,
             message: tx.unsignedHash().value,
             passphrase
