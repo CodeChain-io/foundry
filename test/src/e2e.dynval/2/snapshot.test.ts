@@ -100,9 +100,9 @@ describe("Snapshot for Tendermint with Dynamic Validator", function() {
             chain: `${__dirname}/../../scheme/tendermint-dynval.json`,
             argv: [
                 "--engine-signer",
-                freshNodeValidator.platformAddress.toString(),
+                freshNodeValidator.address.toString(),
                 "--password-path",
-                `test/tendermint.dynval/${freshNodeValidator.platformAddress.value}/password.json`,
+                `test/tendermint.dynval/${freshNodeValidator.address.value}/password.json`,
                 "--force-sealing",
                 "--snapshot-path",
                 snapshotPath,
@@ -113,7 +113,7 @@ describe("Snapshot for Tendermint with Dynamic Validator", function() {
                 "--snapshot-number",
                 snapshotBlock.number.toString()
             ],
-            additionalKeysPath: `tendermint.dynval/${freshNodeValidator.platformAddress.value}/keys`
+            additionalKeysPath: `tendermint.dynval/${freshNodeValidator.address.value}/keys`
         });
         try {
             await node.start();
@@ -159,7 +159,7 @@ describe("Snapshot for Tendermint with Dynamic Validator", function() {
         ))!.map(platformAddr => platformAddr.toString());
 
         expect(validatorsAfter).and.contains(
-            freshNodeValidator.platformAddress.toString()
+            freshNodeValidator.address.toString()
         );
     }
 });
@@ -179,7 +179,7 @@ async function makeItValidator(node: CodeChain, freshNodeValidator: Signer) {
     }))!;
     const payTx = node.testFramework.core
         .createPayTransaction({
-            recipient: freshNodeValidator.platformAddress,
+            recipient: freshNodeValidator.address,
             quantity: 200000000
         })
         .sign({
@@ -199,7 +199,7 @@ async function makeItValidator(node: CodeChain, freshNodeValidator: Signer) {
         .sign({
             secret: freshNodeValidator.privateKey,
             seq: (await node.rpc.chain.getSeq({
-                address: freshNodeValidator.platformAddress.toString()
+                address: freshNodeValidator.address.toString()
             }))!,
             fee: 10
         });
@@ -213,7 +213,7 @@ async function makeItValidator(node: CodeChain, freshNodeValidator: Signer) {
     const delegateTx = stake
         .createDelegateCCSTransaction(
             node.testFramework,
-            freshNodeValidator.platformAddress,
+            freshNodeValidator.address,
             10000
         )
         .sign({

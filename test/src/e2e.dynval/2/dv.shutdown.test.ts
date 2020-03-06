@@ -33,9 +33,7 @@ describe("Shutdown test", function() {
         return {
             length: selected.length,
             nodes: selected.map(({ node }) => node),
-            addrs: selected.map(({ signer }) =>
-                signer.platformAddress.toString()
-            )
+            addrs: selected.map(({ signer }) => signer.address.toString())
         };
     }
 

@@ -43,11 +43,11 @@ const privateKeys = [
 export const validators: Signer[] = privateKeys.map(privateKey => {
   const publicKey = SDK.util.getPublicFromPrivate(privateKey);
   const accountId = SDK.util.getAccountIdFromPrivate(privateKey);
-  const platformAddress = SDK.Core.classes.PlatformAddress.fromPublic(
+  const address = SDK.Core.classes.Address.fromPublic(
     publicKey,
     {
       networkId: "tc"
     }
   );
-  return { privateKey, publicKey, accountId, platformAddress };
+  return { privateKey, publicKey, accountId, address };
 });

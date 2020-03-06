@@ -1,6 +1,6 @@
 import RPC from "foundry-rpc";
 import { SDK } from "../sdk";
-import { PlatformAddress } from "../sdk/core/classes";
+import { Address } from "../sdk/core/classes";
 
 export interface TermMetadata {
     lastTermFinishedBlockNumber: number;
@@ -32,13 +32,13 @@ export async function getTermMetadata(
 export async function getPossibleAuthors(
     rpc: RPC,
     blockNumber?: number
-): Promise<PlatformAddress[] | null> {
+): Promise<Address[] | null> {
     const result = await rpc.chain.getPossibleAuthors({ blockNumber });
     if (result === null) {
         return null;
     }
     if (Array.isArray(result)) {
-        return result.map(PlatformAddress.ensure);
+        return result.map(Address.ensure);
     }
-    throw new Error(`Expected PlatformAddress[], but got ${result}`);
+    throw new Error(`Expected address[], but got ${result}`);
 }

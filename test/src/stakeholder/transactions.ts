@@ -1,16 +1,16 @@
-// FIXME: The SDK doesn't export PlatformAddressValue and U64Value.
+// FIXME: The SDK doesn't export addressValue and U64Value.
 // In the import statement below uses "foundry-primitives" which is installed by the SDK.
-// We should use the SDK's PlatformAddressValue when the SDK is updated.
-import { PlatformAddressValue, U64Value } from "foundry-primitives/lib";
+// We should use the SDK's addressValue when the SDK is updated.
+import { AddressValue, U64Value } from "foundry-primitives/lib";
 import * as RLP from "rlp";
 import { SDK } from "../sdk";
-import { PlatformAddress, U64 } from "../sdk/core/classes";
+import { Address, U64 } from "../sdk/core/classes";
 import { Custom } from "../sdk/core/transaction/Custom";
 
 import ReportDoubleVote from "./actions/reportDoubleVote";
 import { HANDLER_ID } from "./index";
 import { ConsensusMessage } from "./message";
-import { decodePlatformAddress, decodeU64, decodeUInt } from "./util";
+import { decodeaddress, decodeU64, decodeUInt } from "./util";
 
 export const TRANSFER_CCS_ACTION_ID = 1;
 export const DELEGATE_CCS_ACTION_ID = 2;
@@ -22,14 +22,14 @@ export const CHANGE_PARAMS_ACTION_ID = 0xff;
 
 export function createTransferCCSTransaction(
     sdk: SDK,
-    recipient: PlatformAddressValue,
+    recipient: AddressValue,
     quantity: U64Value
 ): Custom {
     return sdk.core.createCustomTransaction({
         handlerId: HANDLER_ID,
         bytes: RLP.encode([
             TRANSFER_CCS_ACTION_ID,
-            PlatformAddress.ensure(recipient).accountId.toEncodeObject(),
+            Address.ensure(recipient).accountId.toEncodeObject(),
             U64.ensure(quantity).toEncodeObject()
         ])
     });
@@ -37,14 +37,14 @@ export function createTransferCCSTransaction(
 
 export function createDelegateCCSTransaction(
     sdk: SDK,
-    delegatee: PlatformAddressValue,
+    delegatee: AddressValue,
     quantity: U64Value
 ): Custom {
     return sdk.core.createCustomTransaction({
         handlerId: HANDLER_ID,
         bytes: RLP.encode([
             DELEGATE_CCS_ACTION_ID,
-            PlatformAddress.ensure(delegatee).accountId.toEncodeObject(),
+            Address.ensure(delegatee).accountId.toEncodeObject(),
             U64.ensure(quantity).toEncodeObject()
         ])
     });
@@ -52,14 +52,14 @@ export function createDelegateCCSTransaction(
 
 export function createRevokeTransaction(
     sdk: SDK,
-    delegatee: PlatformAddressValue,
+    delegatee: AddressValue,
     quantity: U64Value
 ): Custom {
     return sdk.core.createCustomTransaction({
         handlerId: HANDLER_ID,
         bytes: RLP.encode([
             REVOKE_ACTION_ID,
-            PlatformAddress.ensure(delegatee).accountId.toEncodeObject(),
+            Address.ensure(delegatee).accountId.toEncodeObject(),
             U64.ensure(quantity).toEncodeObject()
         ])
     });
@@ -94,16 +94,16 @@ export function createReportDoubleVoteTransaction(
 
 export function createRedelegateTransaction(
     sdk: SDK,
-    prevDelegatee: PlatformAddressValue,
-    nextDelegatee: PlatformAddressValue,
+    prevDelegatee: AddressValue,
+    nextDelegatee: AddressValue,
     quantity: U64Value
 ): Custom {
     return sdk.core.createCustomTransaction({
         handlerId: HANDLER_ID,
         bytes: RLP.encode([
             REDELEGATE_ACTION_ID,
-            PlatformAddress.ensure(prevDelegatee).accountId.toEncodeObject(),
-            PlatformAddress.ensure(nextDelegatee).accountId.toEncodeObject(),
+            Address.ensure(prevDelegatee).accountId.toEncodeObject(),
+            Address.ensure(nextDelegatee).accountId.toEncodeObject(),
             U64.ensure(quantity).toEncodeObject()
         ])
     });
@@ -111,19 +111,19 @@ export function createRedelegateTransaction(
 
 interface TransferCCS {
     type: "transferCCS";
-    recipient: PlatformAddress;
+    recipient: Address;
     quantity: U64;
 }
 
 interface DelegateCCS {
     type: "delegateCCS";
-    delegatee: PlatformAddress;
+    delegatee: Address;
     quantity: U64;
 }
 
 interface Revoke {
     type: "revoke";
-    delegatee: PlatformAddress;
+    delegatee: Address;
     quantity: U64;
 }
 
@@ -135,8 +135,8 @@ interface SelfNominate {
 
 interface Redelegate {
     type: "redelegate";
-    prevDelegatee: PlatformAddress;
-    nextDelegatee: PlatformAddress;
+    prevDelegatee: Address;
+    nextDelegatee: Address;
     quantity: U64;
 }
 
@@ -189,7 +189,7 @@ export function actionFromRLP(sdk: SDK, rlp: Buffer): Action {
             }
             return {
                 type: "transferCCS",
-                recipient: decodePlatformAddress(sdk, decoded[1]),
+                recipient: decodeaddress(sdk, decoded[1]),
                 quantity: decodeU64(decoded[2])
             };
         case DELEGATE_CCS_ACTION_ID:
@@ -200,7 +200,7 @@ export function actionFromRLP(sdk: SDK, rlp: Buffer): Action {
             }
             return {
                 type: "delegateCCS",
-                delegatee: decodePlatformAddress(sdk, decoded[1]),
+                delegatee: decodeaddress(sdk, decoded[1]),
                 quantity: decodeU64(decoded[2])
             };
         case REVOKE_ACTION_ID:
@@ -211,7 +211,7 @@ export function actionFromRLP(sdk: SDK, rlp: Buffer): Action {
             }
             return {
                 type: "revoke",
-                delegatee: decodePlatformAddress(sdk, decoded[1]),
+                delegatee: decodeaddress(sdk, decoded[1]),
                 quantity: decodeU64(decoded[2])
             };
         case SELF_NOMINATE_ACTION_ID:
@@ -240,8 +240,8 @@ export function actionFromRLP(sdk: SDK, rlp: Buffer): Action {
             }
             return {
                 type: "redelegate",
-                prevDelegatee: decodePlatformAddress(sdk, decoded[1]),
-                nextDelegatee: decodePlatformAddress(sdk, decoded[2]),
+                prevDelegatee: decodeaddress(sdk, decoded[1]),
+                nextDelegatee: decodeaddress(sdk, decoded[2]),
                 quantity: decodeU64(decoded[3])
             };
         case CHANGE_PARAMS_ACTION_ID:

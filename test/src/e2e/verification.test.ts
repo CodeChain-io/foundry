@@ -250,7 +250,7 @@ describe("solo - 1 node", function() {
                 address: faucetAddress.toString(),
                 blockNumber: null
             }))!;
-            const account = await node.createPlatformAddress();
+            const account = await node.createaddress();
             const signed = node.testFramework.core
                 .createSetShardOwnersTransaction({
                     shardId: 0,
@@ -288,7 +288,7 @@ describe("solo - 1 node", function() {
                 address: faucetAddress.toString(),
                 blockNumber: null
             }))!;
-            const account = await node.createPlatformAddress();
+            const account = await node.createaddress();
             const signed = node.testFramework.core
                 .createSetShardUsersTransaction({
                     shardId: 0,

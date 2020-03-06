@@ -1,4 +1,4 @@
-import { PlatformAddress } from "foundry-primitives";
+import { Address } from "foundry-primitives";
 
 export interface TextJSON {
     content: string;
@@ -13,14 +13,14 @@ export class Text {
         const { content, certifier } = data;
         return new Text({
             content,
-            certifier: PlatformAddress.ensure(certifier)
+            certifier: Address.ensure(certifier)
         });
     }
 
     public readonly content: string;
-    public readonly certifier: PlatformAddress;
+    public readonly certifier: Address;
 
-    constructor(data: { content: string; certifier: PlatformAddress }) {
+    constructor(data: { content: string; certifier: Address }) {
         const { content, certifier } = data;
         this.content = content;
         this.certifier = certifier;

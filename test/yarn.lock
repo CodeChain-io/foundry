@@ -1696,9 +1696,10 @@ form-data@~2.3.2:
     combined-stream "^1.0.6"
     mime-types "^2.1.12"
 
-"foundry-primitives@https://github.com/HoOngEe/foundry-primitives-js#build-2":
-  version "0.1.0"
-  resolved "https://github.com/HoOngEe/foundry-primitives-js#6987a72558a7d1ce9d1ebd413aef3551375142ad"
+foundry-primitives@^0.2.0:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/foundry-primitives/-/foundry-primitives-0.2.1.tgz#287f35d7179905f10e87ac71dc4acc5636f41437"
+  integrity sha512-q/m/08djWYMfaZWddCz6QVL6tEcCzyJyigQOmUZDS8WIuT6mVF60fpewpxhy892F/E+hEl8mgE5iutgXf74lbg==
   dependencies:
     bignumber.js "^7.2.1"
     blakejs "^1.1.0"

@@ -39,7 +39,7 @@ describe("Dynamic Validator N -> N", function() {
         ))!;
         expect(possibleAuthors).to.have.lengthOf(expectedValidators.length);
         expect(possibleAuthors.map(x => x.value)).contains.all.members(
-            expectedValidators.map(x => x.platformAddress.value)
+            expectedValidators.map(x => x.address.value)
         );
     }
 
@@ -122,7 +122,7 @@ describe("Dynamic Validator N -> N", function() {
                     tx: stake
                         .createDelegateCCSTransaction(
                             nodes[0].testFramework,
-                            alice.platformAddress,
+                            alice.address,
                             50
                         )
                         .sign({
@@ -193,7 +193,7 @@ describe("Dynamic Validator N -> N", function() {
                     tx: stake
                         .createDelegateCCSTransaction(
                             nodes[0].testFramework,
-                            alice.platformAddress,
+                            alice.address,
                             50
                         )
                         .sign({
@@ -264,7 +264,7 @@ describe("Dynamic Validator N -> N", function() {
                     tx: stake
                         .createRevokeTransaction(
                             nodes[0].testFramework,
-                            alice.platformAddress,
+                            alice.address,
                             50
                         )
                         .sign({
@@ -335,7 +335,7 @@ describe("Dynamic Validator N -> N", function() {
                     tx: stake
                         .createRevokeTransaction(
                             nodes[0].testFramework,
-                            alice.platformAddress,
+                            alice.address,
                             50
                         )
                         .sign({
@@ -438,7 +438,7 @@ describe("Dynamic Validator N -> N", function() {
                                 .sign({
                                     secret: alice.privateKey,
                                     seq: (await aliceNode.rpc.chain.getSeq({
-                                        address: alice.platformAddress.toString()
+                                        address: alice.address.toString()
                                     }))!,
                                     fee: 10
                                 })
@@ -454,7 +454,7 @@ describe("Dynamic Validator N -> N", function() {
                                 tx: stake
                                     .createDelegateCCSTransaction(
                                         nodes[0].testFramework,
-                                        alice.platformAddress,
+                                        alice.address,
                                         delegation
                                     )
                                     .sign({

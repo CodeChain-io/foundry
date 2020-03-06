@@ -84,7 +84,7 @@ describe("Jail state transition test", function() {
             nodes[0].testFramework
         );
         return prisoners.some(
-            p => p.address.toString() === entity.platformAddress.toString()
+            p => p.address.toString() === entity.address.toString()
         );
     }
 
@@ -141,7 +141,7 @@ describe("Jail state transition test", function() {
                 .sign({
                     secret: alice.privateKey,
                     seq: (await node.rpc.chain.getSeq({
-                        address: alice.platformAddress.toString()
+                        address: alice.address.toString()
                     }))!,
                     fee: 10
                 })
@@ -170,7 +170,7 @@ describe("Jail state transition test", function() {
                 .sign({
                     secret: alice.privateKey,
                     seq: (await node.rpc.chain.getSeq({
-                        address: alice.platformAddress.toString()
+                        address: alice.address.toString()
                     }))!,
                     fee: 10
                 })

@@ -1,4 +1,4 @@
-import { PlatformAddress } from "../classes";
+import { Address } from "../classes";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
@@ -9,9 +9,9 @@ export interface SetShardUsersActionJSON {
 
 export class SetShardUsers extends Transaction {
     private readonly shardId: number;
-    private readonly users: PlatformAddress[];
+    private readonly users: Address[];
     public constructor(
-        params: { shardId: number; users: PlatformAddress[] },
+        params: { shardId: number; users: Address[] },
         networkId: NetworkId
     ) {
         super(networkId);

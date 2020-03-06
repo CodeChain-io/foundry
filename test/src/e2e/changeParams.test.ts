@@ -17,7 +17,7 @@
 import * as chai from "chai";
 import { expect } from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { H256, PlatformAddress } from "foundry-primitives";
+import { H256, Address } from "foundry-primitives";
 import "mocha";
 import {
     aliceAddress,
@@ -1346,9 +1346,9 @@ describe("ChangeParams", function() {
 
 async function sendStakeToken(params: {
     node: CodeChain;
-    senderAddress: PlatformAddress;
+    senderAddress: Address;
     senderSecret: string;
-    receiverAddress: PlatformAddress;
+    receiverAddress: Address;
     quantity: number;
     fee?: number;
     seq?: number;

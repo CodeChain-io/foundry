@@ -98,7 +98,7 @@ describe("Nomination", function() {
                 candidates.map(candidate => candidate.pubkey.toString())
             ).not.to.includes(alice.publicKey);
             expect(jailed.map(jail => jail.address)).not.to.includes(
-                alice.platformAddress.toString()
+                alice.address.toString()
             );
         });
     });

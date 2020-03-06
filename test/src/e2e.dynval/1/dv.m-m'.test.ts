@@ -71,7 +71,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
         expect(possibleAuthors.map(x => x.toString())).to.includes.members(
             validators
                 .slice(0, maxNumOfValidators)
-                .map(x => x.platformAddress.toString())
+                .map(x => x.address.toString())
         );
     }
 
@@ -85,15 +85,15 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
         expect(possibleAuthors!).to.have.lengthOf(maxNumOfValidators);
         const authorAddresses = possibleAuthors!.map(x => x.toString());
         expect(authorAddresses).to.includes.members(
-            validators.slice(0, alice).map(x => x.platformAddress.toString()),
+            validators.slice(0, alice).map(x => x.address.toString()),
             "Contains previous validators except for Alice"
         );
         expect(authorAddresses).not.contains(
-            validators[alice].platformAddress.toString(),
+            validators[alice].address.toString(),
             "Alice should not be elected as a validator"
         );
         expect(authorAddresses).contains(
-            validators[index].platformAddress.toString(),
+            validators[index].address.toString(),
             `${name} should be elected as a validator instead of alice`
         );
     }
@@ -126,7 +126,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     await stake.getJailed(nodes[0].rpc, nodes[0].testFramework)
                 ).map(x => x.address.toString())
             ).contains(
-                validators[alice].platformAddress.toString(),
+                validators[alice].address.toString(),
                 "Alice should be jailed for doing nothing"
             );
             await expectAliceIsReplacedBy(nodes[0].rpc, "Bob", bob);
@@ -142,7 +142,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     tx: stake
                         .createDelegateCCSTransaction(
                             nodes[0].testFramework,
-                            validators[charlie].platformAddress,
+                            validators[charlie].address,
                             charlieDelegationToCatchBob
                         )
                         .sign({
@@ -171,7 +171,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     await stake.getJailed(nodes[0].rpc, nodes[0].testFramework)
                 ).map(x => x.address.toString())
             ).contains(
-                validators[alice].platformAddress.toString(),
+                validators[alice].address.toString(),
                 "Alice should be jailed for doing nothing"
             );
             await expectAliceIsReplacedBy(nodes[0].rpc, "Charlie", charlie);
@@ -194,7 +194,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     .sign({
                         secret: validators[dave].privateKey,
                         seq: (await nodes[dave].rpc.chain.getSeq({
-                            address: validators[dave].platformAddress.toString()
+                            address: validators[dave].address.toString()
                         }))!,
                         fee: 10
                     })
@@ -212,7 +212,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     await stake.getJailed(nodes[0].rpc, nodes[0].testFramework)
                 ).map(x => x.address.toString())
             ).contains(
-                validators[alice].platformAddress.toString(),
+                validators[alice].address.toString(),
                 "Alice should be jailed for doing nothing"
             );
             await expectAliceIsReplacedBy(nodes[0].rpc, "Dave", dave);
@@ -231,7 +231,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                 tx: stake
                     .createRevokeTransaction(
                         nodes[0].testFramework,
-                        validators[alice].platformAddress,
+                        validators[alice].address,
                         aliceRevokeToBeLowerThanBob
                     )
                     .sign({
@@ -270,7 +270,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     tx: stake
                         .createDelegateCCSTransaction(
                             nodes[0].testFramework,
-                            validators[charlie].platformAddress,
+                            validators[charlie].address,
                             charlieDelegationToCatchBob
                         )
                         .sign({
@@ -310,7 +310,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     .sign({
                         secret: validators[dave].privateKey,
                         seq: (await nodes[dave].rpc.chain.getSeq({
-                            address: validators[dave].platformAddress.toString()
+                            address: validators[dave].address.toString()
                         }))!,
                         fee: 10
                     })
@@ -344,7 +344,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     tx: stake
                         .createDelegateCCSTransaction(
                             nodes[0].testFramework,
-                            validators[charlie].platformAddress,
+                            validators[charlie].address,
                             charlieDelegationToCatchAlice
                         )
                         .sign({
@@ -384,7 +384,7 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
                     .sign({
                         secret: validators[dave].privateKey,
                         seq: (await nodes[dave].rpc.chain.getSeq({
-                            address: validators[dave].platformAddress.toString()
+                            address: validators[dave].address.toString()
                         }))!,
                         fee: 10
                     })

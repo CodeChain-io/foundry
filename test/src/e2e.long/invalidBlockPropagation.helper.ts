@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H160, H256, PlatformAddress, U256 } from "foundry-primitives";
+import { Address, H160, H256, U256 } from "foundry-primitives";
 import { Block } from "foundry-rpc/build/src/chain";
 import "mocha";
 import Test = Mocha.Test;
@@ -48,7 +48,7 @@ async function setup(): Promise<[Header, Block, Header]> {
     }
 
     await temporaryNode.clean();
-    const authorPaddress = PlatformAddress.fromString(block0.author);
+    const authorPaddress = Address.fromString(block0.author);
     const header0 = new Header(
         new H256(block0.parentHash),
         new U256(block0.timestamp),
@@ -61,7 +61,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         new U256(`${block0.score}`),
         block0.seal
     );
-    const author1 = PlatformAddress.fromString(block1.author);
+    const author1 = Address.fromString(block1.author);
     const header1 = new Header(
         header0.hashing(),
         new U256(block1.timestamp),
@@ -74,7 +74,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         new U256(2222222222222),
         block1.seal
     );
-    const author3 = PlatformAddress.fromString(block0.author);
+    const author3 = Address.fromString(block0.author);
     const header2 = new Header(
         header1.hashing(),
         new U256(block2.timestamp),
@@ -139,7 +139,7 @@ async function testBody(
     const bestHash = header2.hashing();
     const bestScore = header2.getScore();
 
-    const author4 = PlatformAddress.fromString(block1.author);
+    const author4 = Address.fromString(block1.author);
     const header = new Header(
         header0.hashing(),
         new U256(block1.timestamp),

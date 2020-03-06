@@ -1,4 +1,4 @@
-import { PlatformAddress } from "foundry-primitives/lib";
+import { Address } from "foundry-primitives/lib";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
@@ -7,12 +7,9 @@ export interface CreateShardActionJSON {
 }
 
 export class CreateShard extends Transaction {
-    private readonly users: PlatformAddress[];
+    private readonly users: Address[];
 
-    public constructor(
-        params: { users: PlatformAddress[] },
-        networkId: NetworkId
-    ) {
+    public constructor(params: { users: Address[] }, networkId: NetworkId) {
         throw Error("CreateShard is disabled");
         super(networkId);
         const { users } = params;

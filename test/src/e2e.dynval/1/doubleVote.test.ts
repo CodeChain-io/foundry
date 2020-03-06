@@ -73,7 +73,7 @@ describe("Double vote detection", function() {
             aliceNode.testFramework
         );
         expect(banned.map(b => b.toString())).to.include(
-            betty.platformAddress.toString()
+            betty.address.toString()
         );
     });
 
@@ -98,7 +98,7 @@ describe("Double vote detection", function() {
             aliceNode.testFramework
         );
         expect(banned.map(b => b.toString())).to.include(
-            betty.platformAddress.toString()
+            betty.address.toString()
         );
     });
 
@@ -123,7 +123,7 @@ describe("Double vote detection", function() {
             aliceNode.testFramework
         );
         expect(banned.map(b => b.toString())).to.include(
-            betty.platformAddress.toString()
+            betty.address.toString()
         );
     });
 

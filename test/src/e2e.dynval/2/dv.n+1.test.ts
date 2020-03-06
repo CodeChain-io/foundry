@@ -45,9 +45,7 @@ describe("Dynamic Validator N -> N+1", function() {
         expect(validatorsBefore)
             .to.have.lengthOf(initialValidators.length)
             .and.contains.all.members(
-                initialValidators.map(validator =>
-                    validator.platformAddress.toString()
-                )
+                initialValidators.map(validator => validator.address.toString())
             );
     }
 
@@ -66,7 +64,7 @@ describe("Dynamic Validator N -> N+1", function() {
             .to.have.lengthOf(initialValidators.length + 1)
             .and.contains.all.members(
                 [...initialValidators, betty].map(validator =>
-                    validator.platformAddress.toString()
+                    validator.address.toString()
                 )
             );
     }
@@ -101,7 +99,7 @@ describe("Dynamic Validator N -> N+1", function() {
                 .sign({
                     secret: betty.privateKey,
                     seq: (await bettyNode.rpc.chain.getSeq({
-                        address: betty.platformAddress.toString()
+                        address: betty.address.toString()
                     }))!,
                     fee: 10
                 });
@@ -111,7 +109,7 @@ describe("Dynamic Validator N -> N+1", function() {
             const delegateTx = stake
                 .createDelegateCCSTransaction(
                     bettyNode.testFramework,
-                    betty.platformAddress,
+                    betty.address,
                     5_000
                 )
                 .sign({
@@ -166,7 +164,7 @@ describe("Dynamic Validator N -> N+1", function() {
                 .sign({
                     secret: betty.privateKey,
                     seq: (await checkingNode.rpc.chain.getSeq({
-                        address: betty.platformAddress.toString()
+                        address: betty.address.toString()
                     }))!,
                     fee: 10
                 });
@@ -209,7 +207,7 @@ describe("Dynamic Validator N -> N+1", function() {
             const delegateTx = stake
                 .createDelegateCCSTransaction(
                     checkingNode.testFramework,
-                    betty.platformAddress,
+                    betty.address,
                     2
                 )
                 .sign({

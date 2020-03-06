@@ -2,20 +2,14 @@ import { H256, H512, H512Value, U64, U64Value } from "foundry-primitives";
 
 import { blake256, getPublicFromPrivate, signEd25519 } from "../utils";
 import { SignedTransaction } from "./SignedTransaction";
-import { ChangeAssetSchemeActionJSON } from "./transaction/ChangeAssetScheme";
 import { CreateShardActionJSON } from "./transaction/CreateShard";
 import { CustomActionJSON } from "./transaction/Custom";
-import { IncreaseAssetSupplyActionJSON } from "./transaction/IncreaseAssetSupply";
-import { MintAssetActionJSON } from "./transaction/MintAsset";
 import { PayActionJSON } from "./transaction/Pay";
 import { RemoveActionJSON } from "./transaction/Remove";
 import { SetRegularKeyActionJSON } from "./transaction/SetRegularKey";
 import { SetShardOwnersActionJSON } from "./transaction/SetShardOwners";
 import { SetShardUsersActionJSON } from "./transaction/SetShardUsers";
 import { StoreActionJSON } from "./transaction/Store";
-import { TransferAssetActionJSON } from "./transaction/TransferAsset";
-import { UnwrapCCCActionJSON } from "./transaction/UnwrapCCC";
-import { WrapCCCActionJSON } from "./transaction/WrapCCC";
 import { NetworkId } from "./types";
 
 const RLP = require("rlp");
@@ -30,16 +24,10 @@ type ActionJSON =
     | SetRegularKeyActionJSON
     | SetShardOwnersActionJSON
     | SetShardUsersActionJSON
-    | IncreaseAssetSupplyActionJSON
     | CreateShardActionJSON
-    | MintAssetActionJSON
-    | TransferAssetActionJSON
-    | ChangeAssetSchemeActionJSON
     | StoreActionJSON
     | RemoveActionJSON
-    | CustomActionJSON
-    | WrapCCCActionJSON
-    | UnwrapCCCActionJSON;
+    | CustomActionJSON;
 
 export interface TransactionJSON {
     action: ActionJSON & { type: string };
