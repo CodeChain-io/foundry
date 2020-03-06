@@ -36,7 +36,6 @@ A string that starts with "(NetworkID)c", and Bech32 string follows. For example
  - transactions: `Transaction[]`
  - transactionsRoot: `H256`
  - parentHash: `H256`
- - score: `number`
  - seal: `string[]`
  - stateRoot: `H256`
  - timestamp: `number`
@@ -567,7 +566,6 @@ Errors: `Invalid Params`
     ],
     "transactionsRoot":"0xa4a8229a90d91e9a38b17f95c9ac2d01f46b10553e62c68df5bbfe1cc5b3e164",
     "parentHash":"0xbc4f7e7b1dded863c500147243d78436ca297bfae64e1ec2d17396286cf14b6e",
-    "score":"0x20000",
     "seal":[
 
     ],
@@ -629,7 +627,6 @@ Errors: `Invalid Params`
     ],
     "transactionsRoot":"0x0270d11d2bd21a0ec8e78d1c4e918103d7c4b02fdf734051231cb9eea90ae88e",
     "parentHash":"0xddf9fece0c6dee067a409e73a299bca21cec2d8300dff45739a5b76c680f378d",
-    "score":"0x20000",
     "seal":[
 
     ],

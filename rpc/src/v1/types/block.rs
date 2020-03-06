@@ -18,7 +18,7 @@ use super::Transaction;
 use ccore::{Block as CoreBlock, LocalizedTransaction};
 use ckey::{NetworkId, PlatformAddress};
 use ctypes::{BlockHash, BlockNumber};
-use primitives::{H256, U256};
+use primitives::H256;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -34,7 +34,6 @@ pub struct Block {
     state_root: H256,
     next_validator_set_hash: H256,
 
-    score: U256,
     seal: Vec<Vec<u8>>,
 
     hash: BlockHash,
@@ -65,7 +64,6 @@ impl Block {
             state_root: *block.header.state_root(),
             next_validator_set_hash: *block.header.next_validator_set_hash(),
 
-            score: U256::default(),
             seal: block.header.seal().to_vec(),
 
             hash: block.header.hash(),

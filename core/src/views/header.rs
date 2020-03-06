@@ -17,7 +17,7 @@
 use ccrypto::blake256;
 use ckey::Address;
 use ctypes::{BlockHash, BlockNumber};
-use primitives::{Bytes, H256, U256};
+use primitives::{Bytes, H256};
 use rlp::Rlp;
 
 /// View onto block header rlp.
@@ -75,29 +75,24 @@ impl<'a> HeaderView<'a> {
         self.rlp.val_at(4).unwrap()
     }
 
-    /// Returns block score.
-    pub fn score(&self) -> U256 {
-        self.rlp.val_at(5).unwrap()
-    }
-
     /// Returns block number.
     pub fn number(&self) -> BlockNumber {
-        self.rlp.val_at(6).unwrap()
+        self.rlp.val_at(5).unwrap()
     }
 
     /// Returns timestamp.
     pub fn timestamp(&self) -> u64 {
-        self.rlp.val_at(7).unwrap()
+        self.rlp.val_at(6).unwrap()
     }
 
     /// Returns block extra data.
     pub fn extra_data(&self) -> Bytes {
-        self.rlp.val_at(8).unwrap()
+        self.rlp.val_at(7).unwrap()
     }
 
     /// Returns a vector of post-RLP-encoded seal fields.
     pub fn seal(&self) -> Vec<Bytes> {
-        const SIZE_WITHOUT_SEAL: usize = 9;
+        const SIZE_WITHOUT_SEAL: usize = 8;
 
         let item_count = self.rlp.item_count().unwrap();
         let mut seal = Vec::with_capacity(item_count - SIZE_WITHOUT_SEAL);
