@@ -1,29 +1,22 @@
-import { H160 } from "foundry-primitives";
 import * as _ from "lodash";
 
 import {
-    blake160,
     generatePrivateKey,
     getAccountIdFromPublic,
     getPublicFromPrivate,
     signEd25519
 } from "../utils";
-import { KeyManagementAPI, KeyStore } from "./KeyStore";
+import { KeyStore } from "./KeyStore";
 
 /**
  * @hidden
  */
 
-class KeyManager implements KeyManagementAPI {
+export class MemoryKeyStore implements KeyStore {
     private privateKeyMap: { [key: string]: string } = {};
     private passphraseMap: { [key: string]: string } = {};
-    private publicKeyMap: { [key: string]: string };
-    private mappingKeyMaker: (value: string) => string;
-
-    public constructor(keyMaker: (value: string) => string) {
-        this.publicKeyMap = {};
-        this.mappingKeyMaker = keyMaker;
-    }
+    private publicKeyMap: { [key: string]: string } = {};
+    private mappingKeyMaker: (value: string) => string = getAccountIdFromPublic;
 
     public getKeyList(): Promise<string[]> {
         return Promise.resolve(_.keys(this.privateKeyMap));
@@ -81,14 +74,5 @@ class KeyManager implements KeyManagementAPI {
             return Promise.reject("The passphrase does not match");
         }
         return Promise.resolve(signEd25519(message, this.privateKeyMap[key]));
-    }
-}
-
-export class MemoryKeyStore implements KeyStore {
-    public platform = new KeyManager(getAccountIdFromPublic);
-    public asset = new KeyManager(this.getHash);
-
-    private getHash(publicKey: string): string {
-        return H160.ensure(blake160(publicKey)).value;
     }
 }

@@ -7,32 +7,32 @@ import { MemoryKeyStore } from "../MemoryKeyStore";
 
 test("createKey", async () => {
     const store = new MemoryKeyStore();
-    await expect(store.asset.createKey()).resolves.toEqual(expect.anything());
+    await expect(store.createKey()).resolves.toEqual(expect.anything());
 });
 
 test("removeKey", async () => {
     const store = new MemoryKeyStore();
-    const key1 = await store.asset.createKey();
-    expect(await store.asset.removeKey({ key: key1 })).toBe(true);
-    expect(await store.asset.removeKey({ key: key1 })).toBe(false);
+    const key1 = await store.createKey();
+    expect(await store.removeKey({ key: key1 })).toBe(true);
+    expect(await store.removeKey({ key: key1 })).toBe(false);
 });
 
 test("getKeyList", async () => {
     const store = new MemoryKeyStore();
-    const key1 = await store.asset.createKey();
-    const key2 = await store.asset.createKey();
-    expect(await store.asset.getKeyList()).toContain(key1);
-    expect(await store.asset.getKeyList()).toContain(key2);
+    const key1 = await store.createKey();
+    const key2 = await store.createKey();
+    expect(await store.getKeyList()).toContain(key1);
+    expect(await store.getKeyList()).toContain(key2);
 
-    await store.asset.removeKey({ key: key1 });
+    await store.removeKey({ key: key1 });
 
-    expect(await store.asset.getKeyList()).not.toContain(key1);
+    expect(await store.getKeyList()).not.toContain(key1);
 });
 
 test("exportRawKey", async () => {
     const store = new MemoryKeyStore();
-    const key = await store.platform.createKey({ passphrase: "satoshi" });
-    const privateKey = await store.platform.exportRawKey({
+    const key = await store.createKey({ passphrase: "satoshi" });
+    const privateKey = await store.exportRawKey({
         key,
         passphrase: "satoshi"
     });
@@ -44,11 +44,11 @@ test("exportRawKey", async () => {
 
 test("sign", async () => {
     const store = new MemoryKeyStore();
-    const key = await store.asset.createKey();
-    const publicKey = (await store.asset.getPublicKey({ key }))!;
+    const key = await store.createKey();
+    const publicKey = (await store.getPublicKey({ key }))!;
     const message =
         "00000000c0dec6a100000000c0dec6a100000000c0dec6a100000000c0dec6a1";
-    const signature = await store.asset.sign({
+    const signature = await store.sign({
         key,
         message
     });
