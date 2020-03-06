@@ -113,16 +113,12 @@ where
 
         let vset = vset_raw.create_compact_validator_set();
         let header = Header {
-            header_proposal: ccore::consensus::light_client::UpdateHeader {
-                number: block_number,
-                hash: *header_core.hash(),
+            update_header: ccore::consensus::light_client::UpdateHeader {
+                header_raw: header_core.decode(),
                 seal: ccore::consensus::light_client::Seal {
                     raw: header_core.seal(),
                 },
                 validator_set: vset,
-            },
-            state_root: ccore::ibc::commitment_23::CommitmentRoot {
-                raw: header_core.state_root(),
             },
         };
         Ok(Some(rlp::encode(&header)))
