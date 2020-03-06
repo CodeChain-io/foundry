@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use super::commitment_23::CommitmentRootCounter;
 use super::*;
 use crate::consensus::light_client::verify_header;
 use types::{ClientState, ConsensusState, Header};
@@ -22,16 +23,18 @@ pub fn check_validity_and_update_state(
     client_state: &ClientState,
     header: &Header,
 ) -> Result<(ClientState, ConsensusState), String> {
-    if !verify_header(&client_state.raw, &header.header_proposal) {
+    if !verify_header(&client_state.raw, &header.update_header) {
         return Err("Invalid header has been given".to_string())
     }
 
     let new_client_state = ClientState {
-        raw: header.header_proposal.make_client_state(),
+        raw: header.update_header.make_client_state(),
     };
     let consensus_state = ConsensusState {
         validator_set_hash: client_state.raw.next_validator_set_hash,
-        state_root: header.state_root.clone(),
+        state_root: CommitmentRootCounter {
+            raw: *header.update_header.header_raw.state_root(),
+        },
     };
 
     Ok((new_client_state, consensus_state))

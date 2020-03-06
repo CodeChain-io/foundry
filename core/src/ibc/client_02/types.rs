@@ -14,9 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use super::commitment_23 as commitment;
 use crate::consensus::light_client::{ClientState as ChainClientState, UpdateHeader};
-use crate::ibc;
-use ibc::commitment_23 as commitment;
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -27,16 +26,14 @@ pub type Kind = u8;
 pub struct ConsensusState {
     // This is not used untill we add a misbehavior predicate
     pub validator_set_hash: H256,
-    pub state_root: commitment::CommitmentRoot,
+    pub state_root: commitment::CommitmentRootCounter,
 }
 
 // It represents set of data that is required to update the client, as ICS said.
 // But be careful since the name 'Header' is confusing.
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct Header {
-    pub header_proposal: UpdateHeader,
-    // This is not used in verification, but part of header. (will be stored in ConsensusState)
-    pub state_root: commitment::CommitmentRoot,
+    pub update_header: UpdateHeader,
 }
 
 // Note: We don't store validator set directly but only hash,

@@ -44,10 +44,11 @@ impl ClientState {
 /// All data for updating a light client up to Nth block.
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct UpdateHeader {
-    /// 'N'
-    pub number: BlockNumber,
-    /// Hash of Nth block.
-    pub hash: H256,
+    /// header.BlockNumber will be 'N'
+    /// TODO: we can carry only required fields if we elaborate our current block hashing scheme
+    pub header_raw: Header,
+
+    /// These two are not part of the actual block header.
     /// Seal to Nth block which will be stored in (N+1)th block.
     pub seal: Seal,
     /// Validator set of Nth block which will be stored in (N-1)th state.
@@ -57,8 +58,8 @@ pub struct UpdateHeader {
 impl UpdateHeader {
     pub fn make_client_state(&self) -> ClientState {
         ClientState {
-            number: self.number,
-            next_validator_set_hash: self.validator_set.hash(),
+            number: self.header_raw.number(),
+            next_validator_set_hash: *self.header_raw.next_validator_set_hash(),
         }
     }
 }

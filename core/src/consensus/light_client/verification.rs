@@ -73,12 +73,12 @@ pub fn verify_quorum(vset: &CompactValidatorSet, seal: &Seal) -> bool {
 }
 
 pub fn verify_header(client_state: &ClientState, proposal: &UpdateHeader) -> bool {
-    if client_state.number + 1 != proposal.number {
+    if client_state.number + 1 != proposal.header_raw.number() {
         ctrace!(
             IBC,
             "verify_header: The number in the header does not match. expted: {} given: {}",
             client_state.number + 1,
-            proposal.number
+            proposal.header_raw.number()
         );
         return false
     }
@@ -98,7 +98,7 @@ pub fn verify_header(client_state: &ClientState, proposal: &UpdateHeader) -> boo
         return true
     }
 
-    if !verify_signature(proposal.hash, &proposal.validator_set, &proposal.seal) {
+    if !verify_signature(*proposal.header_raw.hash(), &proposal.validator_set, &proposal.seal) {
         ctrace!(IBC, "verify_header: Signature verification of seal failed");
         return false
     }
@@ -119,11 +119,10 @@ mod tests {
     use super::*;
     use crate::consensus::BitSet;
     use crate::consensus::Seal as TendermintSeal;
-    use ccrypto::blake256;
     use ckey::sign_schnorr;
     use ckey::SchnorrSignature;
     use ckey::{Generator, Private, Public, Random};
-    use ctypes::CompactValidatorEntry;
+    use ctypes::{CompactValidatorEntry, Header};
     use rand::{rngs::StdRng, Rng};
 
     #[test]
@@ -134,7 +133,10 @@ mod tests {
 
         for _ in 0..iteration {
             let n: usize = rng.gen_range(4, 255 + 1);
-            let hash = blake256(format!("{}", rng.gen::<u64>()));
+
+            let mut header = Header::new();
+            header.set_number(11);
+            let hash = *header.hash();
 
             let mut users: Vec<(Public, Private)> = Vec::new();
             let mut vset = CompactValidatorSet::new(Vec::new());
@@ -180,8 +182,7 @@ mod tests {
             };
 
             let proposal = UpdateHeader {
-                number: 11,
-                hash,
+                header_raw: header,
                 seal: Seal {
                     raw: seal_enc.seal_fields().unwrap(),
                 },
