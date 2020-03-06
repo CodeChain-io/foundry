@@ -74,15 +74,11 @@ pub struct TransactionExecutionOutcome {
 }
 
 pub enum TransactionCheckOutcome {
-    IncludeInCurrentQueue {
+    Valid {
         priority: usize,
         gas: usize,
     },
-    IncludeInFutureQueue {
-        priority: usize,
-        gas: usize,
-    },
-    Exclude,
+    Invalid,
 }
 
 pub struct BlockOutcome {
