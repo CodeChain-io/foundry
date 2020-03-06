@@ -54,8 +54,6 @@ pub struct Header {
     /// Next validator set hash.
     next_validator_set_hash: H256,
 
-    /// Block score.
-    score: U256,
     /// Vector of post-RLP-encoded fields.
     seal: Vec<Bytes>,
 
@@ -79,7 +77,6 @@ impl Default for Header {
             state_root: BLAKE_NULL_RLP,
             next_validator_set_hash: BLAKE_NULL_RLP,
 
-            score: U256::default(),
             seal: vec![],
             hash: RefCell::new(None),
             bare_hash: RefCell::new(None),
@@ -87,7 +84,7 @@ impl Default for Header {
     }
 }
 
-const SIZE_WITHOUT_SEAL: usize = 9;
+const SIZE_WITHOUT_SEAL: usize = 8;
 
 impl Header {
     /// Create a new, default-valued, header.
@@ -210,11 +207,6 @@ impl Header {
         self.next_validator_set_hash = a;
         self.note_dirty()
     }
-    /// Set the score field of the header.
-    pub fn set_score(&mut self, a: U256) {
-        self.score = a;
-        self.note_dirty();
-    }
     /// Set the seal field of the header.
     pub fn set_seal(&mut self, a: Vec<Bytes>) {
         self.seal = a;
@@ -261,7 +253,6 @@ impl Header {
         s.append(&self.state_root);
         s.append(&self.transactions_root);
         s.append(&self.next_validator_set_hash);
-        s.append(&self.score);
         s.append(&self.number);
         s.append(&self.timestamp);
         s.append(&self.extra_data);
@@ -310,10 +301,9 @@ impl Decodable for Header {
             state_root: r.val_at(2)?,
             transactions_root: r.val_at(3)?,
             next_validator_set_hash: r.val_at(4)?,
-            score: r.val_at(5)?,
-            number: r.val_at(6)?,
-            timestamp: cmp::min(r.val_at::<U256>(7)?, u64::max_value().into()).as_u64(),
-            extra_data: r.val_at(8)?,
+            number: r.val_at(5)?,
+            timestamp: cmp::min(r.val_at::<U256>(6)?, u64::max_value().into()).as_u64(),
+            extra_data: r.val_at(7)?,
             seal: vec![],
             hash: RefCell::new(Some(blake256(r.as_raw()))),
             bare_hash: RefCell::new(None),

@@ -43,7 +43,7 @@ pub struct HeaderChain {
     // All locks must be captured in the order declared here.
     /// The hash of the best block of the canonical chain.
     best_header_hash: RwLock<BlockHash>,
-    /// The hash of the block which has the best score among the proposal blocks
+    /// The hash of the block which has the best possibility among the proposal blocks
     best_proposal_header_hash: RwLock<BlockHash>,
 
     // cache
@@ -287,7 +287,7 @@ impl HeaderChain {
         if is_new_best {
             ctrace!(
                 HEADERCHAIN,
-                "Block header #{}({}) has higher total score, changing the best proposal/canonical chain.",
+                "Block header #{}({}) has higher block number and lower view, changing the best proposal/canonical chain.",
                 new_header.number(),
                 new_header.hash()
             );
