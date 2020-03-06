@@ -38,7 +38,7 @@ import CodeChain from "../helper/spawn";
         const accountId = node.testFramework.util.getAccountIdFromPrivate(
             value
         );
-        const recipient = node.testFramework.core.classes.PlatformAddress.fromAccountId(
+        const recipient = node.testFramework.core.classes.Address.fromAccountId(
             accountId,
             { networkId: "tc" }
         );

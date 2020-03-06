@@ -19,7 +19,7 @@ import {
     blake256,
     H256,
     H512,
-    PlatformAddress,
+    Address,
     signEd25519,
     U64
 } from "foundry-primitives/lib";
@@ -77,7 +77,7 @@ function encodableMessage(data: MessageData): RLP.Input {
     const ed25519Signature = signEd25519(messageForEd25519, privKey);
     // pad because signEd25519 function does not guarantee the length of r and s to be 64.
     const encodableEd25519Signature = new H512(
-        ed25519Signature.padStart("0", 64)
+        ed25519Signature.padStart(64, "0")
     ).toEncodeObject();
 
     return [
@@ -124,7 +124,7 @@ async function expectPossibleAuthors(
     expect(authors)
         .to.have.lengthOf(expected.length)
         .and.to.include.members(
-            expected.map(signer => signer.platformAddress.toString())
+            expected.map(signer => signer.address.toString())
         );
 }
 
@@ -133,11 +133,11 @@ async function ensureAliceIsBanned(rpc: RPC, sdk: SDK, blockNumber: number) {
     const bannedAfter = (
         await stake.getBanned(rpc, sdk, blockNumber)
     ).map(platformAddr => platformAddr.toString());
-    expect(bannedAfter).to.includes(alice.platformAddress.toString());
+    expect(bannedAfter).to.includes(alice.address.toString());
     const delegteesAfter = (
         await stake.getDelegations(rpc, sdk, faucetAddress, blockNumber)
     ).map(delegation => delegation.delegatee.toString());
-    expect(delegteesAfter).not.to.includes(alice.platformAddress.toString());
+    expect(delegteesAfter).not.to.includes(alice.address.toString());
 }
 
 describe("Report Double Vote", function() {
@@ -149,7 +149,7 @@ describe("Report Double Vote", function() {
     ): Promise<number> {
         return (await stake.getPossibleAuthors(rpc, blockNumber))!
             .map(platfromAddr => platfromAddr.toString())
-            .indexOf(alice.platformAddress.toString());
+            .indexOf(alice.address.toString());
     }
 
     async function waitUntilAliceGetBanned(
@@ -265,7 +265,7 @@ describe("Report Double Vote", function() {
             const jailedBefore = (
                 await stake.getJailed(rpc, sdk, bestBlockNumber)
             ).map(prisoner => prisoner.address.toString());
-            expect(jailedBefore).to.includes(alice.platformAddress.toString());
+            expect(jailedBefore).to.includes(alice.address.toString());
         }
 
         async function ensureAliceIsReleased(
@@ -276,9 +276,7 @@ describe("Report Double Vote", function() {
             const jailedAfter = (
                 await stake.getJailed(rpc, sdk, bestBlockNumber)
             ).map(prisoner => prisoner.address.toString());
-            expect(jailedAfter).not.to.includes(
-                alice.platformAddress.toString()
-            );
+            expect(jailedAfter).not.to.includes(alice.address.toString());
         }
 
         it("alice should be banned from the prisoners", async function() {
@@ -383,13 +381,11 @@ describe("Report Double Vote", function() {
             const candidatesBefore = (
                 await stake.getCandidates(rpc, blockNumber)
             ).map(candidate =>
-                PlatformAddress.fromPublic(candidate.pubkey, {
+                Address.fromPublic(candidate.pubkey, {
                     networkId: "tc"
                 }).toString()
             );
-            expect(candidatesBefore).to.includes(
-                alice.platformAddress.toString()
-            );
+            expect(candidatesBefore).to.includes(alice.address.toString());
         }
 
         async function ensureAliceIsNotACandidate(
@@ -399,13 +395,11 @@ describe("Report Double Vote", function() {
             const candidatesAfter = (
                 await stake.getCandidates(rpc, blockNumber)
             ).map(candidate =>
-                PlatformAddress.fromPublic(candidate.pubkey, {
+                Address.fromPublic(candidate.pubkey, {
                     networkId: "tc"
                 }).toString()
             );
-            expect(candidatesAfter).not.to.includes(
-                alice.platformAddress.toString()
-            );
+            expect(candidatesAfter).not.to.includes(alice.address.toString());
         }
 
         it("alice should be banned from the candidates", async function() {
@@ -433,7 +427,7 @@ describe("Report Double Vote", function() {
             const revoketx = stake
                 .createRevokeTransaction(
                     checkingNode.testFramework,
-                    alice.platformAddress,
+                    alice.address,
                     4_500
                 )
                 .sign({

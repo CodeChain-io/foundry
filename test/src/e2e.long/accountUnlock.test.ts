@@ -33,7 +33,7 @@ describe("account unlock", function() {
     it(`unlock 1 second ${unlockTestSize} times and check working well with sign`, async function() {
         const secret = node.testFramework.util.generatePrivateKey();
         const account = node.testFramework.util.getAccountIdFromPrivate(secret);
-        const address = node.testFramework.core.classes.PlatformAddress.fromAccountId(
+        const address = node.testFramework.core.classes.Address.fromAccountId(
             account,
             { networkId: "tc" }
         );

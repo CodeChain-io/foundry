@@ -23,20 +23,13 @@ import { ncp } from "ncp";
 import { createInterface as createReadline, ReadLine } from "readline";
 import { SDK } from "../sdk";
 import {
-    Asset,
-    AssetAddress,
-    AssetTransferInput,
+    Address,
     H256,
-    PlatformAddress,
     SignedTransaction,
     Transaction,
-    TransferAsset,
-    U64,
-    UnwrapCCC
+    U64
 } from "../sdk/core/classes";
 import { AssetTransaction } from "../sdk/core/Transaction";
-import { P2PKH } from "../sdk/key/P2PKH";
-import { P2PKHBurn } from "../sdk/key/P2PKHBurn";
 import * as stake from "../stakeholder";
 import { faucetAddress, faucetSecret } from "./constants";
 import { wait } from "./promise";
@@ -72,7 +65,7 @@ export interface Signer {
     privateKey: string;
     publicKey: string;
     accountId: string;
-    platformAddress: PlatformAddress;
+    address: Address;
 }
 export default class CodeChain {
     private static idCounter = 0;
@@ -473,71 +466,15 @@ export default class CodeChain {
         );
     }
 
-    public async createP2PKHAddress() {
+    public async createaddress() {
         const keyStore = await this.testFramework.key.createLocalKeyStore(
             this.localKeyStorePath
         );
-        const p2pkh = this.testFramework.key.createP2PKH({ keyStore });
-        return p2pkh.createAddress();
-    }
-
-    public async signTransactionP2PKHBurn(
-        txInput: AssetTransferInput,
-        txhash: H256
-    ) {
-        const keyStore = await this.testFramework.key.createLocalKeyStore(
-            this.localKeyStorePath
-        );
-        const p2pkhBurn = this.testFramework.key.createP2PKHBurn({ keyStore });
-        if (txInput.prevOut.parameters === undefined) {
-            throw Error(`prevOut.parameters is undefined`);
-        }
-        const publicKeyHash = Buffer.from(
-            txInput.prevOut.parameters[0]
-        ).toString("hex");
-        txInput.setLockScript(P2PKHBurn.getLockScript());
-        txInput.setUnlockScript(
-            await p2pkhBurn.createUnlockScript(publicKeyHash, txhash)
-        );
-    }
-
-    public async signTransactionP2PKH(
-        txInput: AssetTransferInput,
-        txhash: H256
-    ) {
-        const keyStore = await this.testFramework.key.createLocalKeyStore(
-            this.localKeyStorePath
-        );
-        const p2pkh = this.testFramework.key.createP2PKH({ keyStore });
-        if (txInput.prevOut.parameters === undefined) {
-            throw Error(`prevOut.parameters is undefined`);
-        }
-        const publicKeyHash = Buffer.from(
-            txInput.prevOut.parameters[0]
-        ).toString("hex");
-        txInput.setLockScript(P2PKH.getLockScript());
-        txInput.setUnlockScript(
-            await p2pkh.createUnlockScript(publicKeyHash, txhash)
-        );
-    }
-
-    public async createP2PKHBurnAddress() {
-        const keyStore = await this.testFramework.key.createLocalKeyStore(
-            this.localKeyStorePath
-        );
-        const p2pkhBurn = this.testFramework.key.createP2PKHBurn({ keyStore });
-        return p2pkhBurn.createAddress();
-    }
-
-    public async createPlatformAddress() {
-        const keyStore = await this.testFramework.key.createLocalKeyStore(
-            this.localKeyStorePath
-        );
-        return this.testFramework.key.createPlatformAddress({ keyStore });
+        return this.testFramework.key.createaddress({ keyStore });
     }
 
     public async pay(
-        recipient: string | PlatformAddress,
+        recipient: string | Address,
         quantity: U64 | string | number
     ): Promise<H256> {
         const tx = this.testFramework.core
@@ -563,7 +500,7 @@ export default class CodeChain {
     public async sendTransaction(
         tx: Transaction,
         params: {
-            account: string | PlatformAddress;
+            account: string | Address;
             fee?: number | string | U64;
             seq?: number;
         }
@@ -619,64 +556,9 @@ export default class CodeChain {
         );
     }
 
-    public async mintAsset(params: {
-        supply: U64 | number;
-        recipient?: string | AssetAddress;
-        secret?: string;
-        seq?: number;
-        metadata?: string;
-        registrar?: PlatformAddress | string;
-        awaitMint?: boolean;
-    }): Promise<Asset> {
-        const {
-            supply,
-            seq,
-            recipient = await this.createP2PKHAddress(),
-            secret,
-            metadata = "",
-            registrar,
-            awaitMint = true
-        } = params;
-        const tx = this.testFramework.core.createMintAssetTransaction({
-            scheme: {
-                shardId: 0,
-                metadata,
-                supply,
-                registrar
-            },
-            recipient
-        });
-        await this.sendAssetTransaction(tx, {
-            secret,
-            seq
-        });
-        return tx.getMintedAsset();
-    }
-
-    public async signTransactionInput(tx: TransferAsset, index: number) {
-        const keyStore = await this.testFramework.key.createLocalKeyStore(
-            this.localKeyStorePath
-        );
-        await this.testFramework.key.signTransactionInput(tx, index, {
-            keyStore
-        });
-    }
-
-    public async signTransactionBurn(
-        tx: TransferAsset | UnwrapCCC,
-        index: number
-    ) {
-        const keyStore = await this.testFramework.key.createLocalKeyStore(
-            this.localKeyStorePath
-        );
-        await this.testFramework.key.signTransactionBurn(tx, index, {
-            keyStore
-        });
-    }
-
     public createPayTx(options: {
         seq: number;
-        recipient?: PlatformAddress | string;
+        recipient?: Address | string;
         quantity?: number;
         secret?: any;
         fee?: number;
@@ -702,7 +584,7 @@ export default class CodeChain {
 
     public async sendPayTx(options?: {
         seq?: number;
-        recipient?: PlatformAddress | string;
+        recipient?: Address | string;
         quantity?: number;
         secret?: any;
         fee?: number;
@@ -790,7 +672,7 @@ export default class CodeChain {
     // So to clearly check the result failed, insert the failing transactions after succeessful ones.
     public async sendTransactionExpectedToFail(
         tx: Transaction,
-        options: { account: string | PlatformAddress }
+        options: { account: string | Address }
     ): Promise<H256> {
         const { account } = options;
         await this.rpc.devel!.stopSealing();

@@ -1,4 +1,4 @@
-import { H256, PlatformAddress, U256, U64 } from "foundry-primitives";
+import { Address, H256, U256, U64 } from "foundry-primitives";
 
 import { Block } from "../Block";
 import { Pay } from "../transaction/Pay";
@@ -8,10 +8,9 @@ test("toJSON", () => {
         "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"
     );
     const pay = new Pay(
-        PlatformAddress.fromAccountId(
-            "0x2222222222222222222222222222222222222222",
-            { networkId: "tc" }
-        ),
+        Address.fromAccountId("0x2222222222222222222222222222222222222222", {
+            networkId: "tc"
+        }),
         new U64(11),
         "tc"
     );
@@ -27,7 +26,7 @@ test("toJSON", () => {
         ),
         timestamp: 1,
         number: 2,
-        author: PlatformAddress.fromAccountId(
+        author: Address.fromAccountId(
             "1111111111111111111111111111111111111111",
             { networkId: "tc" }
         ),

@@ -1,9 +1,8 @@
-import { H160, H256, H512, PlatformAddress } from "foundry-primitives";
+import { Address, H160, H256 } from "foundry-primitives";
 import * as _ from "lodash";
 
 import { blake160, blake256 } from "../utils";
 
-import { Asset } from "./Asset";
 import { Transaction, TransactionJSON } from "./Transaction";
 import { NetworkId } from "./types";
 
@@ -100,11 +99,6 @@ export class SignedTransaction {
         return new H256(blake256(this.rlpBytes()));
     }
 
-    public getAsset(): Asset {
-        // FIXME: Only UnwrapCCC has getAsset method
-        return (this.unsigned as any).getAsset();
-    }
-
     /**
      * Get the account ID of a tx's signer.
      * @returns An account ID.
@@ -116,11 +110,11 @@ export class SignedTransaction {
 
     /**
      * Get the platform address of a tx's signer.
-     * @returns A PlatformAddress.
+     * @returns A address.
      * @deprecated
      */
-    public getSignerAddress(params: { networkId: NetworkId }): PlatformAddress {
-        return PlatformAddress.fromAccountId(this.getSignerAccountId(), params);
+    public getSignerAddress(params: { networkId: NetworkId }): Address {
+        return Address.fromAccountId(this.getSignerAccountId(), params);
     }
 
     /**

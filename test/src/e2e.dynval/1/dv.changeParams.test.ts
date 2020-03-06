@@ -86,7 +86,7 @@ describe("Change commonParams that affects validator set", function() {
                 stake
                     .createRevokeTransaction(
                         checkingNode.testFramework,
-                        signer.platformAddress,
+                        signer.address,
                         4_999
                     )
                     .sign({
@@ -112,7 +112,7 @@ describe("Change commonParams that affects validator set", function() {
             const expectedValidators = [
                 ...revoked.slice(0, 2),
                 ...untouched
-            ].map(signer => signer.platformAddress.toString());
+            ].map(signer => signer.address.toString());
             await checkValidators(checkingNode.rpc, 2, expectedValidators);
         });
     });
@@ -128,9 +128,7 @@ describe("Change commonParams that affects validator set", function() {
             await checkValidators(
                 checkingNode.rpc,
                 1,
-                validators
-                    .slice(0, 5)
-                    .map(val => val.platformAddress.toString())
+                validators.slice(0, 5).map(val => val.address.toString())
             );
 
             const param1 = {
@@ -146,9 +144,7 @@ describe("Change commonParams that affects validator set", function() {
             await checkValidators(
                 checkingNode.rpc,
                 2,
-                validators
-                    .slice(0, 3)
-                    .map(val => val.platformAddress.toString())
+                validators.slice(0, 3).map(val => val.address.toString())
             );
 
             const param2 = {
@@ -164,9 +160,7 @@ describe("Change commonParams that affects validator set", function() {
             await checkValidators(
                 checkingNode.rpc,
                 3,
-                validators
-                    .slice(0, 4)
-                    .map(val => val.platformAddress.toString())
+                validators.slice(0, 4).map(val => val.address.toString())
             );
         });
     });
@@ -260,7 +254,7 @@ describe("Change commonParams that doesn't affects validator set", function() {
 
             const tx = checkingNode.testFramework.core
                 .createPayTransaction({
-                    recipient: validators[0].platformAddress,
+                    recipient: validators[0].address,
                     quantity: 100
                 })
                 .sign({
@@ -303,7 +297,7 @@ describe("Change commonParams that doesn't affects validator set", function() {
             await checkingNode.waitForTx(changeTxHash);
             const normalNomination = nominationWithMetadata(129);
             const seq = (await checkingNode.rpc.chain.getSeq({
-                address: alice.platformAddress.toString()
+                address: alice.address.toString()
             }))!;
             const normalHash = await checkingNode.rpc.mempool.sendSignedTransaction(
                 {
@@ -352,7 +346,7 @@ describe("Change commonParams that doesn't affects validator set", function() {
             await checkingNode.waitForTx(changeTxHash);
             const normalNomination = nominationWithMetadata(63);
             const seq = (await checkingNode.rpc.chain.getSeq({
-                address: alice.platformAddress.toString()
+                address: alice.address.toString()
             }))!;
             const normalHash = await checkingNode.rpc.mempool.sendSignedTransaction(
                 {

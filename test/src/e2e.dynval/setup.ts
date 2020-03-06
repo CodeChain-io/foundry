@@ -103,15 +103,12 @@ export function withNodes<T>(
 
 export function findNode(nodes: CodeChain[], signer: Signer) {
     for (const node of nodes) {
-        if (
-            node.signer.platformAddress.toString() ===
-            signer.platformAddress.toString()
-        ) {
+        if (node.signer.address.toString() === signer.address.toString()) {
             return node;
         }
     }
     throw new Error(
-        `Cannot find a node of signer ${signer.platformAddress.toString()}`
+        `Cannot find a node of signer ${signer.address.toString()}`
     );
 }
 
@@ -150,9 +147,9 @@ async function createNodes<T>(options: {
         const { signer: validator } = validators[i];
         const argv = [
             "--engine-signer",
-            validator.platformAddress.value,
+            validator.address.value,
             "--password-path",
-            `test/tendermint.dynval/${validator.platformAddress.value}/password.json`,
+            `test/tendermint.dynval/${validator.address.value}/password.json`,
             "--force-sealing"
         ];
         if (validators[i].autoSelfNominate) {
@@ -170,7 +167,7 @@ async function createNodes<T>(options: {
         const node = new CodeChain({
             chain,
             argv: [...argv, ...modifier.additionalArgv],
-            additionalKeysPath: `tendermint.dynval/${validator.platformAddress.value}/keys`
+            additionalKeysPath: `tendermint.dynval/${validator.address.value}/keys`
         });
         nodes[i] = Object.assign(node, modifier.nodeAdditionalProperties);
         nodes[i].signer = validator;
@@ -192,7 +189,7 @@ async function createNodes<T>(options: {
             const { signer: validator } = validators[i];
             const tx = initialNodes[0].testFramework.core
                 .createPayTransaction({
-                    recipient: validator.platformAddress,
+                    recipient: validator.address,
                     quantity: 100_000_000
                 })
                 .sign({
@@ -229,7 +226,7 @@ async function createNodes<T>(options: {
                 .sign({
                     secret: validator.privateKey,
                     seq: (await nodes[i].rpc.chain.getSeq({
-                        address: validator.platformAddress.toString()
+                        address: validator.address.toString()
                     }))!,
                     fee: 10
                 });
@@ -266,7 +263,7 @@ async function createNodes<T>(options: {
             const tx = stake
                 .createDelegateCCSTransaction(
                     initialNodes[0].testFramework,
-                    validator.platformAddress,
+                    validator.address,
                     delegation
                 )
                 .sign({
@@ -333,7 +330,7 @@ export async function selfNominate(
     const tx = stake.createSelfNominateTransaction(sdk, deposit, "").sign({
         secret: validator.privateKey,
         seq: (await rpc.chain.getSeq({
-            address: validator.platformAddress.toString()
+            address: validator.address.toString()
         }))!,
         fee: 10
     });
@@ -352,11 +349,7 @@ export async function receiveDelegation(
     delegation: number
 ): Promise<H256> {
     const tx = stake
-        .createDelegateCCSTransaction(
-            sdk,
-            validator.platformAddress,
-            delegation
-        )
+        .createDelegateCCSTransaction(sdk, validator.address, delegation)
         .sign({
             secret: faucetSecret,
             seq: (await rpc.chain.getSeq({

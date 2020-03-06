@@ -1,14 +1,13 @@
-import { H256, PlatformAddress, U64 } from "foundry-primitives";
+import { Address, H256, U64 } from "foundry-primitives";
 import { Pay } from "../Pay";
 
 import { fromJSONToTransaction } from "../json";
 
 test("rlp", () => {
     const t = new Pay(
-        PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000",
-            { networkId: "tc" }
-        ),
+        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
+            networkId: "tc"
+        }),
         new U64(11),
         "tc"
     );
@@ -52,10 +51,9 @@ test("rlp", () => {
 
 test("hash", () => {
     const t = new Pay(
-        PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000",
-            { networkId: "tc" }
-        ),
+        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
+            networkId: "tc"
+        }),
         new U64(11),
         "tc"
     );
@@ -70,10 +68,9 @@ test("hash", () => {
 
 test("sign", () => {
     const pay = new Pay(
-        PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000",
-            { networkId: "tc" }
-        ),
+        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
+            networkId: "tc"
+        }),
         new U64(11),
         "tc"
     );
@@ -90,10 +87,9 @@ test("sign", () => {
 
 test("signed hash", () => {
     const pay = new Pay(
-        PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000",
-            { networkId: "tc" }
-        ),
+        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
+            networkId: "tc"
+        }),
         new U64(11),
         "tc"
     );
@@ -112,10 +108,9 @@ test("signed hash", () => {
 
 test("toJSON", () => {
     const p = new Pay(
-        PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000",
-            { networkId: "tc" }
-        ),
+        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
+            networkId: "tc"
+        }),
         new U64(11),
         "tc"
     );

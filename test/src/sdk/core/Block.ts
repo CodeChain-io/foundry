@@ -1,4 +1,4 @@
-import { H256, PlatformAddress, U256 } from "foundry-primitives";
+import { Address, H256, U256 } from "foundry-primitives";
 
 import { SignedTransaction, SignedTransactionJSON } from "./SignedTransaction";
 import { fromJSONToSignedTransaction } from "./transaction/json";
@@ -12,7 +12,7 @@ export interface BlockData {
     parentHash: H256;
     timestamp: number;
     number: number;
-    author: PlatformAddress;
+    author: Address;
     extraData: number[];
     transactionsRoot: H256;
     stateRoot: H256;
@@ -59,7 +59,7 @@ export class Block {
             parentHash: new H256(parentHash),
             timestamp,
             number,
-            author: PlatformAddress.fromString(author),
+            author: Address.fromString(author),
             extraData,
             transactionsRoot: new H256(transactionsRoot),
             stateRoot: new H256(stateRoot),
@@ -73,7 +73,7 @@ export class Block {
     public parentHash: H256;
     public timestamp: number;
     public number: number;
-    public author: PlatformAddress;
+    public author: Address;
     public extraData: number[];
     public transactionsRoot: H256;
     public stateRoot: H256;

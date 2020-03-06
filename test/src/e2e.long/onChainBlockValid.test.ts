@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H160, H256, PlatformAddress, U256 } from "foundry-primitives/lib";
+import { H160, H256, Address, U256 } from "foundry-primitives/lib";
 import "mocha";
 import { Mock } from "../helper/mock";
 import { Header } from "../helper/mock/cHeader";
@@ -66,9 +66,7 @@ describe("Test onChain block communication", async function() {
         }
 
         await node.clean();
-        const author1PlatformAddr = PlatformAddress.fromString(
-            genesisBlock.author
-        );
+        const author1PlatformAddr = Address.fromString(genesisBlock.author);
         soloGenesisBlock = new Header(
             new H256(genesisBlock.parentHash),
             new U256(genesisBlock.timestamp),
@@ -81,7 +79,7 @@ describe("Test onChain block communication", async function() {
             new U256(`${genesisBlock.score}`),
             genesisBlock.seal
         );
-        const author2PlatformAddr = PlatformAddress.fromString(block1.author);
+        const author2PlatformAddr = Address.fromString(block1.author);
         soloBlock1 = new Header(
             soloGenesisBlock.hashing(),
             new U256(block1.timestamp),
@@ -94,7 +92,7 @@ describe("Test onChain block communication", async function() {
             new U256(2222222222222),
             block1.seal
         );
-        const author3PlatformAddr = PlatformAddress.fromString(block2.author);
+        const author3PlatformAddr = Address.fromString(block2.author);
         soloBlock2 = new Header(
             soloBlock1.hashing(),
             new U256(block2.timestamp),

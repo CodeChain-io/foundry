@@ -1,5 +1,5 @@
 import { SDK } from "../sdk";
-import { H256, H512, PlatformAddress, U64 } from "../sdk/core/classes";
+import { Address, H256, H512, U64 } from "../sdk/core/classes";
 
 export function isArrayOf<T>(
     list: any,
@@ -36,12 +36,9 @@ export function decodeH512(buffer: Buffer): H512 {
     return H512.ensure("0x" + buffer.toString("hex"));
 }
 
-export function decodePlatformAddress(
-    sdk: SDK,
-    buffer: Buffer
-): PlatformAddress {
+export function decodeaddress(sdk: SDK, buffer: Buffer): Address {
     const accountId = buffer.toString("hex");
-    return PlatformAddress.fromAccountId(accountId, {
+    return Address.fromAccountId(accountId, {
         networkId: sdk.networkId
     });
 }

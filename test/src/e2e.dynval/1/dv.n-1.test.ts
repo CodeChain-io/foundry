@@ -43,9 +43,9 @@ describe("Dynamic Validator N -> N-1", function() {
 
         expect(termMedata!.currentTermId).to.be.equals(1);
         expect(validatorsBefore.length).to.be.equals(allDynValidators.length);
-        expect(validatorsBefore).to.includes(alice.platformAddress.toString());
+        expect(validatorsBefore).to.includes(alice.address.toString());
         expect(validatorsBefore).contains.all.members(
-            allDynValidators.map(validator => validator.platformAddress.value)
+            allDynValidators.map(validator => validator.address.value)
         );
     }
 
@@ -61,11 +61,9 @@ describe("Dynamic Validator N -> N-1", function() {
 
         expect(termMedata!.currentTermId).to.be.equals(2);
         expect(validatorsAfter.length).to.be.equals(otherDynValidators.length);
-        expect(validatorsAfter).not.to.includes(
-            alice.platformAddress.toString()
-        );
+        expect(validatorsAfter).not.to.includes(alice.address.toString());
         expect(validatorsAfter).contains.all.members(
-            otherDynValidators.map(validator => validator.platformAddress.value)
+            otherDynValidators.map(validator => validator.address.value)
         );
     }
 
@@ -125,7 +123,7 @@ describe("Dynamic Validator N -> N-1", function() {
             const tx = stake
                 .createRevokeTransaction(
                     checkingNode.testFramework,
-                    alice.platformAddress,
+                    alice.address,
                     5_000
                 )
                 .sign({
@@ -161,7 +159,7 @@ describe("Dynamic Validator N -> N-1", function() {
             const tx = stake
                 .createRevokeTransaction(
                     checkingNode.testFramework,
-                    alice.platformAddress,
+                    alice.address,
                     4_500
                 )
                 .sign({

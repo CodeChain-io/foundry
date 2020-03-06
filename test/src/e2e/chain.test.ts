@@ -25,7 +25,7 @@ import {
     invalidAddress
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
-import { PlatformAddress } from "../sdk/core/classes";
+import { Address } from "../sdk/core/classes";
 import { H160, H256, H512, U64 } from "../sdk/core/classes";
 const RLP = require("rlp");
 
@@ -240,10 +240,9 @@ describe("chain", function() {
         expect(signed.sig).to.equal(`0x${sig.signature()}`);
         expect(+signed.fee).to.equal(Number(tx.fee()!.toString()));
         expect(
-            node.testFramework.core.classes.PlatformAddress.fromPublic(
-                publicKey,
-                { networkId: "tc" }
-            ).toString()
+            node.testFramework.core.classes.Address.fromPublic(publicKey, {
+                networkId: "tc"
+            }).toString()
         ).equal(signer);
     });
 

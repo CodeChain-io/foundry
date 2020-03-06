@@ -1,4 +1,4 @@
-import { H256, PlatformAddress, U64 } from "foundry-primitives";
+import { Address, H256, U64 } from "foundry-primitives";
 
 import { getAccountIdFromPrivate } from "../../utils";
 import { Pay } from "../classes";
@@ -9,10 +9,9 @@ test("toJSON", () => {
         "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"
     );
     const pay = new Pay(
-        PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000",
-            { networkId: "tc" }
-        ),
+        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
+            networkId: "tc"
+        }),
         new U64(11),
         "tc"
     );
@@ -28,15 +27,14 @@ test("getSignerAccountId", () => {
     const secret = new H256(
         "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"
     );
-    const signerAccountId = PlatformAddress.fromAccountId(
+    const signerAccountId = Address.fromAccountId(
         getAccountIdFromPrivate(secret.value),
         { networkId: "tc" }
     ).getAccountId();
     const pay = new Pay(
-        PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000",
-            { networkId: "tc" }
-        ),
+        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
+            networkId: "tc"
+        }),
         new U64(11),
         "tc"
     );
@@ -52,18 +50,17 @@ test("getSignerAddress", () => {
     const secret = new H256(
         "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"
     );
-    const signerAccountId = PlatformAddress.fromAccountId(
+    const signerAccountId = Address.fromAccountId(
         getAccountIdFromPrivate(secret.value),
         { networkId: "tc" }
     ).getAccountId();
-    const signerAddress = PlatformAddress.fromAccountId(signerAccountId, {
+    const signerAddress = Address.fromAccountId(signerAccountId, {
         networkId: "tc"
     });
     const pay = new Pay(
-        PlatformAddress.fromAccountId(
-            "0x0000000000000000000000000000000000000000",
-            { networkId: "tc" }
-        ),
+        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
+            networkId: "tc"
+        }),
         new U64(11),
         "tc"
     );

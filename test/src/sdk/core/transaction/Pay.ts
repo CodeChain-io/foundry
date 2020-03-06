@@ -1,4 +1,4 @@
-import { PlatformAddress, U64 } from "../classes";
+import { Address, U64 } from "../classes";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
 
@@ -8,14 +8,10 @@ export interface PayActionJSON {
 }
 
 export class Pay extends Transaction {
-    private readonly receiver: PlatformAddress;
+    private readonly receiver: Address;
     private readonly quantity: U64;
 
-    public constructor(
-        receiver: PlatformAddress,
-        quantity: U64,
-        networkId: NetworkId
-    ) {
+    public constructor(receiver: Address, quantity: U64, networkId: NetworkId) {
         super(networkId);
         this.receiver = receiver;
         this.quantity = quantity;

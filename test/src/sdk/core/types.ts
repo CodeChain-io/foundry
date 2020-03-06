@@ -1,21 +1,6 @@
-import {
-    AssetAddressValue,
-    H160Value,
-    U64,
-    U64Value
-} from "foundry-primitives";
-import { AssetTransferOutput } from "./transaction/AssetTransferOutput";
+import { H160Value, U64, U64Value } from "foundry-primitives";
 
 export type NetworkId = string;
-
-export type AssetTransferOutputValue =
-    | AssetTransferOutput
-    | {
-          quantity: U64Value;
-          assetType: H160Value;
-          shardId: number;
-          recipient: AssetAddressValue;
-      };
 
 export interface CommonParams {
     maxExtraDataSize: U64;

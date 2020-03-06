@@ -49,7 +49,7 @@ describe("account", function() {
                 const account = node.testFramework.util.getAccountIdFromPrivate(
                     randomSecret
                 );
-                const address = node.testFramework.core.classes.PlatformAddress.fromAccountId(
+                const address = node.testFramework.core.classes.Address.fromAccountId(
                     account,
                     { networkId: "tc" }
                 );

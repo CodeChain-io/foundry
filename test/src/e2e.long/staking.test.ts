@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { PlatformAddress } from "foundry-primitives/lib";
+import { Address } from "foundry-primitives/lib";
 import "mocha";
 import {
     aliceAddress,
@@ -181,9 +181,9 @@ describe("Staking", function() {
     }
 
     async function sendStakeToken(params: {
-        senderAddress: PlatformAddress;
+        senderAddress: Address;
         senderSecret: string;
-        receiverAddress: PlatformAddress;
+        receiverAddress: Address;
         quantity: number;
         fee?: number;
         seq?: number;
@@ -220,9 +220,9 @@ describe("Staking", function() {
     }
 
     async function delegateToken(params: {
-        senderAddress: PlatformAddress;
+        senderAddress: Address;
         senderSecret: string;
-        receiverAddress: PlatformAddress;
+        receiverAddress: Address;
         quantity: number;
         fee?: number;
         seq?: number;
@@ -259,9 +259,9 @@ describe("Staking", function() {
     }
 
     async function revokeToken(params: {
-        senderAddress: PlatformAddress;
+        senderAddress: Address;
         senderSecret: string;
-        delegateeAddress: PlatformAddress;
+        delegateeAddress: Address;
         quantity: number;
         fee?: number;
         seq?: number;
@@ -298,7 +298,7 @@ describe("Staking", function() {
     }
 
     async function selfNominate(params: {
-        senderAddress: PlatformAddress;
+        senderAddress: Address;
         senderSecret: string;
         deposit: number;
         metadata: Buffer | null;

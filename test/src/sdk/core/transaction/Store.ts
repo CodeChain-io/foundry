@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 
 import { blake256, getPublicFromPrivate, signEd25519 } from "../../utils";
-import { H256, PlatformAddress } from "../classes";
+import { Address, H256 } from "../classes";
 import { Text } from "../Text";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
@@ -16,13 +16,13 @@ export interface StoreActionJSON {
 
 export class Store extends Transaction {
     private content: string;
-    private certifier: PlatformAddress;
+    private certifier: Address;
     private signature: string;
     public constructor(
         params:
             | {
                   content: string;
-                  certifier: PlatformAddress;
+                  certifier: Address;
                   signature: string;
               }
             | {
@@ -36,7 +36,7 @@ export class Store extends Transaction {
         if ("secret" in params) {
             const { content, secret } = params;
             this.content = content;
-            this.certifier = PlatformAddress.fromPublic(
+            this.certifier = Address.fromPublic(
                 getPublicFromPrivate(secret.value),
                 { networkId }
             );

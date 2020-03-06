@@ -39,9 +39,7 @@ describe("Dynamic Validator N -> N'", function() {
         ))!.map(author => author.toString());
         expect(authors)
             .to.have.lengthOf(expected.length)
-            .and.to.include.members(
-                expected.map(x => x.platformAddress.toString())
-            );
+            .and.to.include.members(expected.map(x => x.address.toString()));
     }
 
     describe("1. Jail one of the validator + increase the delegation of a candidate who doesn’t have enough delegation", async function() {
@@ -80,7 +78,7 @@ describe("Dynamic Validator N -> N'", function() {
             const tx = stake
                 .createDelegateCCSTransaction(
                     rpcNode.testFramework,
-                    betty.platformAddress,
+                    betty.address,
                     5_000
                 )
                 .sign({
@@ -153,7 +151,7 @@ describe("Dynamic Validator N -> N'", function() {
                 .sign({
                     secret: betty.privateKey,
                     seq: (await bettyNode.rpc.chain.getSeq({
-                        address: betty.platformAddress.toString()
+                        address: betty.address.toString()
                     }))!,
                     fee: 10
                 });
@@ -213,7 +211,7 @@ describe("Dynamic Validator N -> N'", function() {
             const tx = stake
                 .createDelegateCCSTransaction(
                     rpcNode.testFramework,
-                    betty.platformAddress,
+                    betty.address,
                     5_000
                 )
                 .sign({
@@ -224,7 +222,7 @@ describe("Dynamic Validator N -> N'", function() {
             const tx2 = stake
                 .createRevokeTransaction(
                     rpcNode.testFramework,
-                    alice.platformAddress,
+                    alice.address,
                     4999
                 )
                 .sign({
@@ -296,7 +294,7 @@ describe("Dynamic Validator N -> N'", function() {
                 .sign({
                     secret: betty.privateKey,
                     seq: (await bettyNode.rpc.chain.getSeq({
-                        address: betty.platformAddress.toString()
+                        address: betty.address.toString()
                     }))!,
                     fee: 10
                 });
@@ -304,7 +302,7 @@ describe("Dynamic Validator N -> N'", function() {
             const tx2 = stake
                 .createRevokeTransaction(
                     rpcNode.testFramework,
-                    alice.platformAddress,
+                    alice.address,
                     4999
                 )
                 .sign({

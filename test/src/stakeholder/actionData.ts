@@ -1,25 +1,20 @@
-// FIXME: The SDK doesn't export PlatformAddressValue.
+// FIXME: The SDK doesn't export addressValue.
 // In the import statement below uses "foundry-primitives" which is installed by the SDK.
-// We should use the SDK's PlatformAddressValue when the SDK is updated.
-import { PlatformAddressValue } from "foundry-primitives";
+// We should use the SDK's addressValue when the SDK is updated.
+import { AddressValue } from "foundry-primitives";
 import RPC from "foundry-rpc";
 import { SDK } from "../sdk";
-import { H512, PlatformAddress, U64 } from "../sdk/core/classes";
+import { Address, H512, U64 } from "../sdk/core/classes";
 
 import { toHex } from "foundry-primitives/lib";
 import { HANDLER_ID } from "./index";
-import {
-    decodeH256,
-    decodePlatformAddress,
-    decodeU64,
-    isArrayOf
-} from "./util";
+import { decodeaddress, decodeH256, decodeU64, isArrayOf } from "./util";
 
 const RLP = require("rlp");
 
 export async function getUndelegatedCCS(
     rpc: RPC,
-    address: PlatformAddressValue,
+    address: AddressValue,
     blockNumber?: number
 ): Promise<U64> {
     const data = await rpc.engine.getCustomActionData({
@@ -27,7 +22,7 @@ export async function getUndelegatedCCS(
         bytes: `0x${toHex(
             RLP.encode([
                 "Account",
-                PlatformAddress.ensure(address)
+                Address.ensure(address)
                     .getAccountId()
                     .toEncodeObject()
             ])
@@ -44,7 +39,7 @@ export async function getCCSHolders(
     rpc: RPC,
     sdk: SDK,
     blockNumber?: number
-): Promise<PlatformAddress[]> {
+): Promise<Address[]> {
     const data = await rpc.engine.getCustomActionData({
         handlerId: HANDLER_ID,
         bytes: `0x${toHex(RLP.encode(["StakeholderAddresses"]))}`,
@@ -59,17 +54,17 @@ export async function getCCSHolders(
             "Expected a rlp of Array<Buffer>, but got an invalid shaped value"
         );
     }
-    return decoded.map(buf => decodePlatformAddress(sdk, buf));
+    return decoded.map(buf => decodeaddress(sdk, buf));
 }
 
 export interface Delegation {
-    delegatee: PlatformAddress;
+    delegatee: Address;
     quantity: U64;
 }
 export async function getDelegations(
     rpc: RPC,
     sdk: SDK,
-    delegator: PlatformAddress,
+    delegator: Address,
     blockNumber?: number
 ): Promise<Delegation[]> {
     const data = await rpc.engine.getCustomActionData({
@@ -93,7 +88,7 @@ export async function getDelegations(
     }
     return decoded.map(([delegatee, quantity]) => {
         return {
-            delegatee: decodePlatformAddress(sdk, delegatee),
+            delegatee: decodeaddress(sdk, delegatee),
             quantity: decodeU64(quantity)
         };
     });
@@ -136,7 +131,7 @@ export async function getCandidates(
 }
 
 export interface Prisoner {
-    address: PlatformAddress;
+    address: Address;
     deposit: U64;
     custodyUntil: U64;
     releasedAt: U64;
@@ -164,7 +159,7 @@ export async function getJailed(
         );
     }
     return decoded.map(([address, deposit, custodyUntil, releasedAt]) => ({
-        address: decodePlatformAddress(sdk, address),
+        address: decodeaddress(sdk, address),
         deposit: decodeU64(deposit),
         custodyUntil: decodeU64(custodyUntil),
         releasedAt: decodeU64(releasedAt)
@@ -175,7 +170,7 @@ export async function getBanned(
     rpc: RPC,
     sdk: SDK,
     blockNumber?: number
-): Promise<PlatformAddress[]> {
+): Promise<Address[]> {
     const data = await rpc.engine.getCustomActionData({
         handlerId: HANDLER_ID,
         bytes: `0x${toHex(RLP.encode(["Banned"]))}`,
@@ -190,7 +185,7 @@ export async function getBanned(
             "Expected a rlp of Array<Buffer>, but an invalid shaped value"
         );
     }
-    return decoded.map(address => decodePlatformAddress(sdk, address));
+    return decoded.map(address => decodeaddress(sdk, address));
 }
 
 export interface IntermediateRewards {
@@ -199,7 +194,7 @@ export interface IntermediateRewards {
 }
 
 export interface IntermediateReward {
-    address: PlatformAddress;
+    address: Address;
     quantity: U64;
 }
 
@@ -236,7 +231,7 @@ export async function getIntermediateRewards(
     }
     function convert(entries: Buffer[][]): IntermediateReward[] {
         return entries.map(([address, quantity]) => ({
-            address: decodePlatformAddress(sdk, address),
+            address: decodeaddress(sdk, address),
             quantity: decodeU64(quantity)
         }));
     }
