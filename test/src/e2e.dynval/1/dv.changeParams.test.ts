@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -223,7 +223,7 @@ describe("Change commonParams that doesn't affects validator set", function() {
 
             const term3Metadata = (await stake.getTermMetadata(nodes[0].rpc))!;
             {
-                expect(term2Metadata.currentTermId).to.be.equal(2);
+                expect(term3Metadata.currentTermId).to.be.equal(3);
             }
 
             const [ts1, ts2, ts3] = await Promise.all(
