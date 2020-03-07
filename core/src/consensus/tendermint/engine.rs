@@ -213,7 +213,13 @@ impl ConsensusEngine for Tendermint {
             }
         }
 
-        let term_seconds = parent_common_params.term_seconds();
+        let term_seconds = match term {
+            0 => parent_common_params.term_seconds(),
+            _ => {
+                let parent_term_common_params = client.term_common_params(parent_hash.into());
+                parent_term_common_params.expect("TermCommonParams should exist").term_seconds()
+            }
+        };
         if !is_term_changed(block.header(), &parent, term_seconds) {
             return Ok(())
         }
