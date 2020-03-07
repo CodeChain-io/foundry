@@ -202,9 +202,8 @@ describe("Change commonParams that doesn't affects validator set", function() {
             this.timeout((initialTermSeconds + newTermSeconds) * 1000 * 2);
 
             const term1Metadata = (await stake.getTermMetadata(nodes[0].rpc))!;
-            {
-                expect(term1Metadata.currentTermId).to.be.equal(1);
-            }
+            expect(term1Metadata.currentTermId).to.be.equal(1);
+
             await nodes[0].waitForTx(
                 changeParams(nodes[0], 1, {
                     ...initialParams,
@@ -215,16 +214,12 @@ describe("Change commonParams that doesn't affects validator set", function() {
             await nodes[0].waitForTermChange(2, initialTermSeconds * margin);
 
             const term2Metadata = (await stake.getTermMetadata(nodes[0].rpc))!;
-            {
-                expect(term2Metadata.currentTermId).to.be.equal(2);
-            }
+            expect(term2Metadata.currentTermId).to.be.equal(2);
 
             await nodes[0].waitForTermChange(3, newTermSeconds * margin);
 
             const term3Metadata = (await stake.getTermMetadata(nodes[0].rpc))!;
-            {
-                expect(term3Metadata.currentTermId).to.be.equal(3);
-            }
+            expect(term3Metadata.currentTermId).to.be.equal(3);
 
             const [ts1, ts2, ts3] = await Promise.all(
                 [term1Metadata, term2Metadata, term3Metadata].map(m =>
