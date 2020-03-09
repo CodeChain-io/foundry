@@ -429,6 +429,18 @@ impl CurrentValidators {
         Ok(Self(validators))
     }
 
+    pub fn create_compact_validator_set(&self) -> CompactValidatorSet {
+        CompactValidatorSet::new(
+            self.0
+                .iter()
+                .map(|x| CompactValidatorEntry {
+                    public_key: *x.pubkey(),
+                    delegation: x.delegation(),
+                })
+                .collect(),
+        )
+    }
+
     pub fn save_to_state(&self, state: &mut TopLevelState) -> StateResult<()> {
         let key = &*CURRENT_VALIDATORS_KEY;
         if !self.is_empty() {
