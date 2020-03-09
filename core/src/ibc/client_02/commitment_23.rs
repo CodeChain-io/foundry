@@ -58,3 +58,50 @@ pub(in crate::ibc::client_02) fn verify_non_membership(
     };
     verify(&proof.raw, &unit)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::ibc::commitment_23::types::create_membership_proof;
+    use crate::ibc::context::{Context, TopLevelContext};
+    use cstate::tests::helpers::get_temp_state;
+    use cstate::{StateWithCache, TopState};
+
+    #[test]
+    fn test_verify() {
+        let data = rlp::encode(&b"data".to_vec());
+        let mut state = {
+            let mut state = get_temp_state();
+
+            state.update_ibc_data(&TopLevelKVStore::key("0"), data.clone()).unwrap();
+            state.commit().unwrap();
+            state
+        };
+        let state_root = state.root();
+
+        let context = TopLevelContext::new(&mut state, 1);
+
+        let commitment_state = CommitmentState {
+            kv_store: context.get_kv_store(),
+        };
+        let membership_proof = create_membership_proof(
+            &commitment_state,
+            &CommitmentPath {
+                raw: "0".to_owned(),
+            },
+            &data,
+        );
+
+        assert!(verify_membership(
+            &CommitmentRoot {
+                raw: state_root,
+            },
+            &membership_proof,
+            CommitmentPath {
+                raw: "0".to_owned(),
+            },
+            data,
+        ));
+    }
+}
