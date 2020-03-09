@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::ibc::commitment_23::*;
+use crate::ibc::context::TopLevelKVStore;
 use merkle_trie::proof::{verify, CryptoProofUnit};
 use primitives::Bytes;
 
@@ -34,9 +35,10 @@ pub(in crate::ibc::client_02) fn verify_membership(
     path: CommitmentPathCounter,
     value: Bytes,
 ) -> bool {
+    let key = TopLevelKVStore::key(&path.raw);
     let unit = CryptoProofUnit {
         root: root.raw,
-        key: path.raw.into_bytes(),
+        key: key.to_vec(),
         value: Some(value),
     };
     verify(&proof.raw, &unit)
@@ -48,9 +50,10 @@ pub(in crate::ibc::client_02) fn verify_non_membership(
     proof: &CommitmentProofCounter,
     path: CommitmentPathCounter,
 ) -> bool {
+    let key = TopLevelKVStore::key(&path.raw);
     let unit = CryptoProofUnit {
         root: root.raw,
-        key: path.raw.into_bytes(),
+        key: key.to_vec(),
         value: None,
     };
     verify(&proof.raw, &unit)
