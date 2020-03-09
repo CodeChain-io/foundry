@@ -56,12 +56,12 @@ impl<'a> Context for TopLevelContext<'a> {
     }
 }
 
-struct TopLevelKVStore<'a> {
+pub struct TopLevelKVStore<'a> {
     state: &'a mut TopLevelState,
 }
 
 impl<'a> TopLevelKVStore<'a> {
-    fn key(path: &str) -> H256 {
+    pub fn key(path: &str) -> H256 {
         let mut rlp = RlpStream::new_list(2);
         rlp.append(&"IBCData");
         rlp.append(&path);
