@@ -2,6 +2,7 @@
 quiet = false
 base_path = "."
 password_path = "./password.json"
+instance_id = 2
 
 [mining]
 engine_signer = "bccqygjwzj8wupc9m7du9ccef4j6k2u3erjuv2w8pt0"
