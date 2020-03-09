@@ -18,9 +18,37 @@ async function main() {
     console.log("Reset DB");
     await resetDB();
     console.log("Run Chain A");
-    await runChainA();
+    const chainA = await runChainA();
     console.log("Run Chain B");
-    await runChainB();
+    const chainB = await runChainB();
+
+    process.stdin.resume();
+    let sentKillSignal = false;
+    process.on("SIGINT", () => {
+        if (sentKillSignal === false) {
+            sentKillSignal = true;
+            chainA.kill("SIGINT");
+            chainB.kill("SIGINT");
+            console.log("Sent kill signal to Foundry");
+        } else if (!chainA.killed || !chainB.killed) {
+            console.log("Waiting for foundry is killed");
+        } else {
+            process.exit();
+        }
+    });
+    chainA.on("close", () => {
+        console.log("Chain A is killed");
+        if (chainA.killed && chainB.killed && sentKillSignal) {
+            process.exit();
+        }
+    });
+    chainA.on("close", () => {
+        console.log("Chain B is killed");
+        if (chainA.killed && chainB.killed && sentKillSignal) {
+            process.exit();
+        }
+    });
+
     console.log("Check the chains");
     await checkChainAAndBAreRunning();
     console.log("Chains are running!");
@@ -62,6 +90,7 @@ async function runChainA() {
         }
     );
     streamOutToDebug(foundryProcess);
+    return foundryProcess;
 }
 
 async function runChainB() {
@@ -78,6 +107,7 @@ async function runChainB() {
         }
     );
     streamOutToDebug(foundryProcess);
+    return foundryProcess;
 }
 
 async function checkChainAAndBAreRunning() {
