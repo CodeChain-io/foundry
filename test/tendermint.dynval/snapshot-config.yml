@@ -1,6 +1,7 @@
 [codechain]
 
 [mining]
+self_nomination_enable = false
 
 [network]
 
