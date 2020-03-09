@@ -22,7 +22,11 @@ impl<C: context::Context> validator::Validator for Coordinator<C> {
         unimplemented!()
     }
 
-    fn check_transaction(&mut self, transaction: &Transaction, is_recheck: bool) -> TransactionCheckOutcome {
+    fn check_transaction(
+        &mut self,
+        transaction: &Transaction,
+        check_type: TransactionCheckType,
+    ) -> TransactionCheckOutcome {
         unimplemented!()
     }
 }
