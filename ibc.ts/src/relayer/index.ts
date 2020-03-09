@@ -77,8 +77,8 @@ async function pendingDatagrams({
     chain: Chain;
     counterpartyChain: Chain;
 }): Promise<{ localDatagrams: Datagram[]; counterpartyDatagrams: Datagram[] }> {
-    const height = await chain.latestHeight();
-    const counterpartyChainHeight = await counterpartyChain.latestHeight();
+    let height = await chain.latestHeight();
+    let counterpartyChainHeight = await counterpartyChain.latestHeight();
     let localDatagrams: Datagram[] = [];
     let counterpartyDatagrams: Datagram[] = [];
 
@@ -99,6 +99,10 @@ async function pendingDatagrams({
             counterpartyChainHeight: height
         })
     );
+
+    // FIXME: We can't update light client upto the best block.
+    height = height - 1;
+    counterpartyChainHeight = counterpartyChainHeight - 1;
 
     const {
         localDatagrams: localDatagramsForConnection,
@@ -138,7 +142,8 @@ async function updateLightClient({
         );
     }
     let currentBlockNumber = clientState!.data!.number;
-    while (currentBlockNumber < counterpartyChainHeight) {
+    // FIXME: We can't get the best block's IBC header
+    while (currentBlockNumber < counterpartyChainHeight - 1) {
         const header = (await counterpartyChain.queryIBCHeader(
             currentBlockNumber + 1
         ))!;
