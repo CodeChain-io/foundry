@@ -151,15 +151,15 @@ impl<'a> Manager<'a> {
 
     pub fn verify_connection_state(
         &self,
-        id: IdentifierSlice,
+        client_identifier: IdentifierSlice,
         proof_height: BlockNumber,
         proof: Bytes,
-        connection_identifier: IdentifierSlice,
+        counterparty_connection_identifier: IdentifierSlice,
         connection_end: &ConnectionEnd,
     ) -> Result<(), String> {
-        let path = ibc::connection_03::path(connection_identifier);
+        let path = ibc::connection_03::path(counterparty_connection_identifier);
         let value_enc = rlp::encode(connection_end);
-        self.verify_common_presence(id, proof_height, proof, path, value_enc)
+        self.verify_common_presence(client_identifier, proof_height, proof, path, value_enc)
             .map_err(|e| format!("{} : connection_state", e))
     }
 
@@ -169,10 +169,10 @@ impl<'a> Manager<'a> {
         proof_height: BlockNumber,
         proof: Bytes,
         port_identifier: IdentifierSlice,
-        channel_identifier: IdentifierSlice,
+        counterparty_channel_identifier: IdentifierSlice,
         channel_end: &ChannelEnd,
     ) -> Result<(), String> {
-        let path = ibc::channel_04::channel_path(port_identifier, channel_identifier);
+        let path = ibc::channel_04::channel_path(port_identifier, counterparty_channel_identifier);
         let value_enc = rlp::encode(channel_end);
         self.verify_common_presence(id, proof_height, proof, path, value_enc)
             .map_err(|e| format!("{} : channel_state", e))
@@ -183,12 +183,16 @@ impl<'a> Manager<'a> {
         id: IdentifierSlice,
         proof_height: BlockNumber,
         proof: Bytes,
-        port_identifier: IdentifierSlice,
-        channel_identifier: IdentifierSlice,
+        counterparty_port_identifier: IdentifierSlice,
+        counterparty_channel_identifier: IdentifierSlice,
         sequence: &Sequence,
         packet_commitment: &PacketCommitment,
     ) -> Result<(), String> {
-        let path = ibc::channel_04::packet_commitment_path(port_identifier, channel_identifier, sequence);
+        let path = ibc::channel_04::packet_commitment_path(
+            counterparty_port_identifier,
+            counterparty_channel_identifier,
+            sequence,
+        );
         let value_enc = rlp::encode(&packet_commitment.hash());
         self.verify_common_presence(id, proof_height, proof, path, value_enc)
             .map_err(|e| format!("{} : packet_data", e))
