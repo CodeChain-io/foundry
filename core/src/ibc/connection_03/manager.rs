@@ -91,7 +91,7 @@ impl<'a> Manager<'a> {
 
         let connection = ConnectionEnd {
             state: ConnectionState::TRYOPEN,
-            counterparty_connection_identifier: counterparty_client_identifier.clone(),
+            counterparty_connection_identifier: counterparty_connection_identifier.clone(),
             counterparty_prefix: counterparty_prefix.clone(),
             client_identifier: client_identifier.clone(),
             counterparty_client_identifier: counterparty_client_identifier.clone(),
@@ -99,10 +99,10 @@ impl<'a> Manager<'a> {
 
         let client_manager = ClientManager::new(self.ctx);
         client_manager.verify_connection_state(
-            &counterparty_client_identifier,
+            &client_identifier,
             proof_height,
             proof_init,
-            &desired_identifier,
+            &counterparty_connection_identifier,
             &expected,
         )?;
 
@@ -162,7 +162,7 @@ impl<'a> Manager<'a> {
             &connection.client_identifier,
             proof_height,
             proof_try,
-            &identifier,
+            &connection.counterparty_connection_identifier,
             &expected,
         )?;
 
@@ -200,7 +200,7 @@ impl<'a> Manager<'a> {
             &connection.client_identifier,
             proof_height,
             proof_ack,
-            &identifier,
+            &connection.counterparty_connection_identifier,
             &expected,
         )?;
 
