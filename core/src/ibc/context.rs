@@ -101,3 +101,38 @@ impl<'a> KVStore for TopLevelKVStore<'a> {
         self.state.ibc_data_proof(&key).unwrap()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use cstate::tests::helpers::get_temp_state;
+    use cstate::StateWithCache;
+    use merkle_trie::proof::verify;
+
+    #[test]
+    fn test_verify() {
+        let data = rlp::encode(&b"data".to_vec());
+        let mut state = {
+            let mut state = get_temp_state();
+
+            state.update_ibc_data(&TopLevelKVStore::key("0"), data.clone()).unwrap();
+            state.commit().unwrap();
+            state
+        };
+        let state_root = state.root();
+
+        let context = TopLevelContext::new(&mut state, 1);
+        let (proof_unit, proof) = context.get_kv_store().make_proof("0");
+        let read_value = context.get_kv_store().get("0");
+        assert_eq!(proof_unit.root, state_root, "Test root");
+        assert_eq!(
+            rustc_hex::ToHex::to_hex(proof_unit.key.as_slice()),
+            rustc_hex::ToHex::to_hex(TopLevelKVStore::key("0").to_vec().as_slice()),
+            "Test key"
+        );
+        assert_eq!(Some(data.clone()), read_value, "Read value");
+        assert_eq!(proof_unit.value, Some(data), "Test value");
+        assert!(verify(&proof, &proof_unit));
+    }
+}
