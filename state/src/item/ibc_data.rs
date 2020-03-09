@@ -45,13 +45,13 @@ impl CacheableItem for IBCData {
 
 impl Encodable for IBCData {
     fn rlp_append(&self, s: &mut RlpStream) {
-        self.0.rlp_append(s);
+        s.append_raw(&self.0, 1);
     }
 }
 
 impl Decodable for IBCData {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
-        Bytes::decode(rlp).map(IBCData)
+        Ok(IBCData(rlp.as_raw().to_vec()))
     }
 }
 
