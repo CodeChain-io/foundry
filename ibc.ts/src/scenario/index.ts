@@ -73,6 +73,28 @@ async function main() {
         console.log("Create a connection");
         await createConnection({ chainA, chainB });
     }
+
+    while (true) {
+        const connectionCheckPrompt = new Select({
+            name: "connection check",
+            message: "Will you check connection?",
+            choices: ["yes", "skip", "exit"]
+        });
+        const connectionCheckAnswer = await connectionCheckPrompt.run();
+
+        if (connectionCheckAnswer === "exit") {
+            return;
+        }
+
+        if (connectionCheckAnswer === "yes") {
+            console.log("Check a connection");
+            await checkConnections({ chainA, chainB });
+        }
+
+        if (connectionCheckAnswer === "skip") {
+            break;
+        }
+    }
 }
 
 main().catch(console.error);
@@ -138,4 +160,18 @@ async function createConnection({
             counterpartyClientIdentifier: chainB.counterpartyIdentifiers.client
         })
     );
+}
+
+async function checkConnections({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}) {
+    const connectionA = await chainA.queryConnection();
+    console.log(`Connection in A ${JSON.stringify(connectionA)}`);
+
+    const connectionB = await chainB.queryConnection();
+    console.log(`Connection in B ${JSON.stringify(connectionB)}`);
 }
