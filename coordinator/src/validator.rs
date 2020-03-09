@@ -73,6 +73,11 @@ pub struct TransactionExecutionOutcome {
     pub events: Vec<Event>,
 }
 
+pub enum TransactionCheckType {
+    New,
+    Recheck,
+    OwnTxCheck,
+}
 pub enum TransactionCheckOutcome {
     Valid {
         priority: usize,
@@ -91,5 +96,9 @@ pub struct BlockOutcome {
 pub trait Validator {
     fn initialize_chain(&mut self) -> ConsensusParams;
     fn execute_block(&mut self, header: &Header, transactions: &[Transaction], evidences: &[Evidence]) -> BlockOutcome;
-    fn check_transaction(&mut self, transaction: &Transaction, is_recheck: bool) -> TransactionCheckOutcome;
+    fn check_transaction(
+        &mut self,
+        transaction: &Transaction,
+        check_type: TransactionCheckType,
+    ) -> TransactionCheckOutcome;
 }
