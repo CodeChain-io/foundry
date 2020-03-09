@@ -79,8 +79,8 @@ describe("Snapshot for Tendermint with Dynamic Validator", function() {
         expect(
             path.join(
                 nodes[0].snapshotPath,
-                snapshotBlock.hash.toString(),
-                snapshotBlock.stateRoot.toString()
+                remove_0x_prefix(snapshotBlock.hash),
+                remove_0x_prefix(snapshotBlock.stateRoot)
             )
         ).to.satisfy(fs.existsSync);
     });
@@ -109,7 +109,7 @@ describe("Snapshot for Tendermint with Dynamic Validator", function() {
                 "--config",
                 SNAPSHOT_CONFIG,
                 "--snapshot-hash",
-                snapshotBlock.hash.toString(),
+                remove_0x_prefix(snapshotBlock.hash),
                 "--snapshot-number",
                 snapshotBlock.number.toString()
             ],
@@ -229,3 +229,11 @@ async function makeItValidator(node: CodeChain, freshNodeValidator: Signer) {
         )
     );
 }
+
+const remove_0x_prefix = (target: string): string => {
+    if (target.startsWith("0x")) {
+        return target.slice(2);
+    } else {
+        return target;
+    }
+};
