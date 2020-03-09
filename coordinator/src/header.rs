@@ -14,33 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub mod context;
-mod header;
-mod transaction;
-mod types;
+use ckey::Ed25519Public as Public;
+use primitives::Bytes;
 
-use self::context::Context;
-
-/// The `Coordinator` encapsulates all the logic for a Foundry application.
-///
-/// It assembles modules and feeds them various events from the underlying
-/// consensus engine.
-pub struct Coordinator {}
-
-pub struct Builder<C: Context> {
-    _context: C,
+#[derive(Debug, Clone, PartialEq)]
+pub struct Header {
+    /// Block timestamp.
+    timestamp: u64,
+    /// Block number.
+    number: u64,
+    /// Block author.
+    author: Public,
+    /// Block extra data.
+    extra_data: Bytes,
 }
 
-impl<C: Context> Builder<C> {
+impl Header {
     #[allow(dead_code)]
-    fn new(context: C) -> Self {
-        Builder {
-            _context: context,
+    pub fn new(timestamp: u64, number: u64, author: Public, extra_data: Bytes) -> Self {
+        Self {
+            timestamp,
+            number,
+            author,
+            extra_data,
         }
-    }
-
-    #[allow(dead_code)]
-    fn build(self) -> Coordinator {
-        Coordinator {}
     }
 }
