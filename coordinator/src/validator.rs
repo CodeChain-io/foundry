@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use ckey::Public;
-use ctypes::{header::Header, BlockHash};
+use ctypes::BlockHash;
 
 /// A `Validator` receives requests from the underlying consensus engine
 /// and performs validation of blocks and Txes.
@@ -47,6 +47,19 @@ pub struct ConsensusParams {
     /// allowed future time gap in milliseconds.
     pub allowed_future_timegap: Option<u64>,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Header {
+    /// Block timestamp.
+    timestamp: u64,
+    /// Block number.
+    number: u64,
+    /// Block author.
+    author: Public,
+    /// Block extra data.
+    extra_data: Bytes,
+}
+
 
 /// A decoded transaction.
 pub struct Transaction<'a> {
