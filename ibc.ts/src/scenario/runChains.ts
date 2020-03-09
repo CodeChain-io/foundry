@@ -144,7 +144,7 @@ async function sendPayTx({
 }
 
 async function waitForTx(sdk: SDK, txHash: H256) {
-    const timeout = delay(10 * 1000).then(() => {
+    const timeout = delay(30 * 1000).then(() => {
         throw new Error("Timeout");
     });
     const wait = (async () => {
