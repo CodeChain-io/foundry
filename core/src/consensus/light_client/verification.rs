@@ -75,7 +75,7 @@ pub fn verify_quorum(vset: &CompactValidatorSet, seal: &Seal) -> bool {
 pub fn verify_header(client_state: &ClientState, proposal: &UpdateHeader) -> bool {
     if client_state.number + 1 != proposal.header_raw.number() {
         ctrace!(
-            IBC,
+            LIGHT_CLIENT,
             "verify_header: The number in the header does not match. expted: {} given: {}",
             client_state.number + 1,
             proposal.header_raw.number()
@@ -84,7 +84,7 @@ pub fn verify_header(client_state: &ClientState, proposal: &UpdateHeader) -> boo
     }
     if client_state.next_validator_set_hash != proposal.validator_set.hash() {
         ctrace!(
-            IBC,
+            LIGHT_CLIENT,
             "verify_header: Next validator set hash does not match. expected: {} given: {}",
             client_state.next_validator_set_hash,
             proposal.validator_set.hash()
@@ -99,11 +99,11 @@ pub fn verify_header(client_state: &ClientState, proposal: &UpdateHeader) -> boo
     }
 
     if !verify_signature(*proposal.header_raw.hash(), &proposal.validator_set, &proposal.seal) {
-        ctrace!(IBC, "verify_header: Signature verification of seal failed");
+        ctrace!(LIGHT_CLIENT, "verify_header: Signature verification of seal failed");
         return false
     }
     if !verify_quorum(&proposal.validator_set, &proposal.seal) {
-        ctrace!(IBC, "verify_header: Qurom not met");
+        ctrace!(LIGHT_CLIENT, "verify_header: Qurom not met");
         return false
     }
     true
