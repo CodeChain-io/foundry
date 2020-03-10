@@ -8,6 +8,8 @@ pub mod validator;
 ///
 /// It assembles modules and feeds them various events from the underlying
 /// consensus engine.
+
+#[derive(Default)]
 pub struct Coordinator<C: context::Context> {
     context: C,
 }
@@ -21,11 +23,15 @@ impl<C: context::Context> validator::Validator for Coordinator<C> {
         unimplemented!()
     }
 
-    fn check_transaction(
-        &mut self,
-        transaction: &Transaction,
-        check_type: TransactionCheckType,
-    ) -> TransactionCheckOutcome {
+    fn check_transaction(&mut self, transaction: &Transaction) -> bool {
+        unimplemented!()
+    }
+
+    fn fetch_transactions_for_block(&self, transactions: &[TransactionWithMetadata]) -> Vec<TransactionWithGas> {
+        unimplemented!()
+    }
+
+    fn remove_old_transactions(&self, all_transactions: &[TransactionWithMetadata]) -> Vec<TransactionWithMetadata> {
         unimplemented!()
     }
 }
