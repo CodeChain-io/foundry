@@ -46,13 +46,13 @@ impl TryFrom<MemPoolItemProjection> for MemPoolItem {
     type Error = Error;
     fn try_from(mem_pool: MemPoolItemProjection) -> Result<Self, Error> {
         let verified_tx = mem_pool.tx.try_into()?;
-        Ok(MemPoolItem {
-            tx: verified_tx,
-            origin: mem_pool.origin,
-            inserted_block_number: mem_pool.inserted_block_number,
-            inserted_timestamp: mem_pool.inserted_timestamp,
-            insertion_id: mem_pool.insertion_id,
-        })
+        Ok(MemPoolItem::new(
+            verified_tx,
+            mem_pool.origin,
+            mem_pool.inserted_block_number,
+            mem_pool.inserted_timestamp,
+            mem_pool.insertion_id,
+        ))
     }
 }
 

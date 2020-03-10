@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::backup;
-use super::mem_pool_types::{CurrentQueue, MemPoolItem, PoolingInstant, TransactionOrder};
+use super::mem_pool_types::{MemPoolItem, PoolingInstant, TransactionPool};
 use super::TransactionImportResult;
 use crate::transaction::{PendingVerifiedTransactions, VerifiedTransaction};
 use crate::Error as CoreError;
@@ -24,7 +24,6 @@ use coordinator::TxOrigin;
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use ctypes::TxHash;
 use kvdb::{DBTransaction, KeyValueDB};
-use std::collections::{BTreeSet, HashMap};
 use std::ops::Range;
 use std::sync::Arc;
 
@@ -64,16 +63,14 @@ impl From<SyntaxError> for Error {
 }
 
 pub struct MemPool {
-    /// Priority queue for transactions that can go to block
-    current: CurrentQueue,
     /// Coordinator used for checking incoming transactions and fetching transactions
     _tx_filter: Arc<dyn TxFilter>,
+    /// list of all transactions in the pool
+    transaction_pool: TransactionPool,
     /// The count(number) limit of each queue
     queue_count_limit: usize,
     /// The memory limit of each queue
     queue_memory_limit: usize,
-    /// All transactions managed by pool indexed by hash
-    by_hash: HashMap<TxHash, MemPoolItem>,
     /// Next id that should be assigned to a transaction imported to the pool
     next_transaction_id: u64,
     /// Arc of KeyValueDB in which the backup information is stored.
@@ -90,10 +87,9 @@ impl MemPool {
     ) -> Self {
         MemPool {
             _tx_filter: tx_filter,
-            current: CurrentQueue::new(),
+            transaction_pool: TransactionPool::new(),
             queue_count_limit: limit,
             queue_memory_limit: memory_limit,
-            by_hash: HashMap::new(),
             next_transaction_id: 0,
             db,
         }
@@ -106,35 +102,29 @@ impl MemPool {
 
     /// Enforce the limit to the current queue
     fn enforce_limit(&mut self, batch: &mut DBTransaction) {
-        // Get transaction orders to drop from the current queue
-        fn get_orders_to_drop(
-            set: &BTreeSet<TransactionOrder>,
-            limit: usize,
-            memory_limit: usize,
-        ) -> Vec<TransactionOrder> {
+        let to_drop = if self.transaction_pool.mem_usage > self.queue_memory_limit
+            || self.transaction_pool.count > self.queue_count_limit
+        {
             let mut count = 0;
             let mut mem_usage = 0;
-            set.iter()
-                .filter(|order| {
+            self.transaction_pool
+                .pool
+                .values()
+                .filter(|item| {
                     count += 1;
-                    mem_usage += order.mem_usage;
-                    !order.origin.is_local() && (mem_usage > memory_limit || count > limit)
+                    mem_usage += item.mem_usage;
+                    !item.origin.is_local() && (mem_usage > self.queue_memory_limit || count > self.queue_count_limit)
                 })
                 .cloned()
                 .collect()
-        }
+        } else {
+            vec![]
+        };
 
-        let to_drop_current =
-            if self.current.mem_usage > self.queue_memory_limit || self.current.count > self.queue_count_limit {
-                get_orders_to_drop(&self.current.queue, self.queue_count_limit, self.queue_memory_limit)
-            } else {
-                vec![]
-            };
-
-        for order in to_drop_current {
-            let hash = order.hash;
+        for item in to_drop {
+            let hash = item.hash();
             backup::remove_item(batch, &hash);
-            self.current.remove(&order);
+            self.transaction_pool.remove(&hash);
         }
     }
 
@@ -145,7 +135,7 @@ impl MemPool {
 
     /// Returns the number of transactions in the pool
     pub fn num_pending_transactions(&self) -> usize {
-        self.current.len()
+        self.transaction_pool.len()
     }
 
     /// Add signed transaction to pool to be verified and imported.
@@ -176,15 +166,12 @@ impl MemPool {
             let item = MemPoolItem::new(tx, origin, inserted_block_number, inserted_timestamp, id);
 
             backup::backup_item(&mut batch, *hash, &item);
-            self.current.insert(TransactionOrder::for_transaction(&item));
-            self.by_hash.insert(hash, item);
+            self.transaction_pool.insert(item);
 
             insert_results.push(Ok(()));
         }
 
         self.enforce_limit(&mut batch);
-
-        assert_eq!(self.current.len(), self.by_hash.len());
 
         self.db.write(batch).expect("Low level database error. Some issue with disk?");
         insert_results
@@ -198,8 +185,7 @@ impl MemPool {
 
     /// Clear current queue.
     pub fn remove_all(&mut self) {
-        self.by_hash.clear();
-        self.current.clear();
+        self.transaction_pool.clear();
     }
 
     // Recover MemPool state from db stored data
@@ -207,13 +193,12 @@ impl MemPool {
         let by_hash = backup::recover_to_data(self.db.as_ref());
 
         let mut max_insertion_id = 0u64;
-        for (hash, item) in by_hash {
+        for (_hash, item) in by_hash {
             if item.insertion_id > max_insertion_id {
                 max_insertion_id = item.insertion_id;
             }
 
-            self.current.insert(TransactionOrder::for_transaction(&item));
-            self.by_hash.insert(hash.into(), item);
+            self.transaction_pool.insert(item);
         }
 
         self.next_transaction_id = max_insertion_id + 1;
@@ -232,13 +217,10 @@ impl MemPool {
         let mut batch = backup::backup_batch_with_capacity(transaction_hashes.len());
 
         for hash in transaction_hashes {
-            if let Some(item) = self.by_hash.remove(hash) {
-                self.current.remove(&TransactionOrder::for_transaction(&item));
+            if self.transaction_pool.remove(hash) {
                 backup::remove_item(&mut batch, hash);
             }
         }
-
-        assert_eq!(self.current.len(), self.by_hash.len());
 
         self.db.write(batch).expect("Low level database error. Some issue with disk?");
     }
@@ -247,7 +229,7 @@ impl MemPool {
     /// This function can return errors: InsufficientFee, InsufficientBalance,
     /// TransactionAlreadyImported, Old, TooCheapToReplace
     fn verify_transaction(&self, tx: &VerifiedTransaction) -> Result<(), Error> {
-        if self.by_hash.get(&tx.hash()).is_some() {
+        if self.transaction_pool.contains(&tx.hash()) {
             ctrace!(MEM_POOL, "Dropping already imported transaction: {:?}", tx.hash());
             return Err(HistoryError::TransactionAlreadyImported.into())
         }
@@ -260,37 +242,30 @@ impl MemPool {
     // FIXME: if range_contains becomes stable, use range.contains instead of inequality.
     pub fn top_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions {
         let mut current_size: usize = 0;
-        let pending_items: Vec<_> = self
-            .current
-            .queue
-            .iter()
-            .map(|t| self.by_hash.get(&t.hash).expect("All transactions in `current` are always included in `by_hash`"))
-            .filter(|t| range.contains(&t.inserted_timestamp))
-            .take_while(|t| {
-                let encoded_byte_array = rlp::encode(&t.tx);
+        let items: Vec<_> = self
+            .transaction_pool
+            .pool
+            .values()
+            .filter(|item| range.contains(&item.inserted_timestamp))
+            .take_while(|item| {
+                let encoded_byte_array = rlp::encode(&item.tx);
                 let size_in_byte = encoded_byte_array.len();
                 current_size += size_in_byte;
                 current_size < size_limit
             })
             .collect();
 
-        let transactions = pending_items.iter().map(|t| t.tx.clone()).collect();
-        let last_timestamp = pending_items.into_iter().map(|t| t.inserted_timestamp).max();
+        let last_timestamp = items.iter().map(|t| t.inserted_timestamp).max();
 
         PendingVerifiedTransactions {
-            transactions,
+            transactions: items.into_iter().map(|t| t.tx.clone()).collect(),
             last_timestamp,
         }
     }
 
     /// Return all transactions whose timestamp are in the given range in the memory pool.
     pub fn count_pending_transactions(&self, range: Range<u64>) -> usize {
-        self.current
-            .queue
-            .iter()
-            .map(|t| self.by_hash.get(&t.hash).expect("All transactions in `current` are always included in `by_hash`"))
-            .filter(|t| range.contains(&t.inserted_timestamp))
-            .count()
+        self.transaction_pool.pool.values().filter(|t| range.contains(&t.inserted_timestamp)).count()
     }
 }
 
@@ -409,10 +384,9 @@ pub mod test {
         mem_pool_recovered.recover_from_db();
 
         assert_eq!(mem_pool_recovered.next_transaction_id, mem_pool.next_transaction_id);
-        assert_eq!(mem_pool_recovered.by_hash, mem_pool.by_hash);
         assert_eq!(mem_pool_recovered.queue_count_limit, mem_pool.queue_count_limit);
         assert_eq!(mem_pool_recovered.queue_memory_limit, mem_pool.queue_memory_limit);
-        assert_eq!(mem_pool_recovered.current, mem_pool.current);
+        assert_eq!(mem_pool_recovered.transaction_pool, mem_pool.transaction_pool);
     }
 
     fn create_signed_pay(keypair: &KeyPair) -> VerifiedTransaction {
