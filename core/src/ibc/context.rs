@@ -81,8 +81,13 @@ impl<'a> KVStore for TopLevelKVStore<'a> {
     }
 
     fn insert(&mut self, path: Path, value: &[u8]) -> Option<Bytes> {
+        // FIXME: the update_ibc_data returns the previous data.
+        // When the previous data is empty, it should return None.
+        // Currently it is returning an empty RLP array.
+        let prev = self.get(path);
         let key = TopLevelKVStore::key(path);
-        self.state.update_ibc_data(&key, value.to_vec()).expect("Set in IBC KVStore").map(Bytes::from)
+        self.state.update_ibc_data(&key, value.to_vec()).expect("Set in IBC KVStore");
+        prev
     }
 
     fn remove(&mut self, path: Path) -> Option<Bytes> {
