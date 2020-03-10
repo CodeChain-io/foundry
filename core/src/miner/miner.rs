@@ -87,8 +87,6 @@ pub struct Miner {
 
     sealing_enabled: AtomicBool,
 
-    accounts: Arc<AccountProvider>,
-
     _block_executor: Arc<dyn BlockExecutor>,
 }
 
@@ -139,11 +137,10 @@ impl Miner {
     pub fn new<C: 'static + BlockExecutor + TxFilter>(
         options: MinerOptions,
         scheme: &Scheme,
-        accounts: Arc<AccountProvider>,
         db: Arc<dyn KeyValueDB>,
         block_executor: Arc<C>,
     ) -> Arc<Self> {
-        Arc::new(Self::new_raw(options, scheme, accounts, db, block_executor))
+        Arc::new(Self::new_raw(options, scheme, db, block_executor))
     }
 
     pub fn with_scheme_for_test<C: 'static + BlockExecutor + TxFilter>(
@@ -151,13 +148,12 @@ impl Miner {
         db: Arc<dyn KeyValueDB>,
         coordinator: Arc<C>,
     ) -> Self {
-        Self::new_raw(Default::default(), scheme, AccountProvider::transient_provider(), db, coordinator)
+        Self::new_raw(Default::default(), scheme, db, coordinator)
     }
 
     fn new_raw<C: 'static + BlockExecutor + TxFilter>(
         options: MinerOptions,
         scheme: &Scheme,
-        accounts: Arc<AccountProvider>,
         db: Arc<dyn KeyValueDB>,
         coordinator: Arc<C>,
     ) -> Self {
@@ -172,7 +168,6 @@ impl Miner {
             engine: scheme.engine.clone(),
             options,
             sealing_enabled: AtomicBool::new(true),
-            accounts,
             _block_executor: coordinator,
         }
     }
@@ -352,14 +347,14 @@ impl MinerService for Miner {
         self.params.get()
     }
 
-    fn set_author(&self, pubkey: Public) -> Result<(), AccountProviderError> {
+    fn set_author(&self, ap: Arc<AccountProvider>, pubkey: Public) -> Result<(), AccountProviderError> {
         self.params.apply(|params| params.author = pubkey);
 
         if self.engine_type().need_signer_key() {
             ctrace!(MINER, "Set author to {:?}", pubkey);
             // Sign test message
-            self.accounts.get_unlocked_account(&pubkey)?.sign(&Default::default())?;
-            self.engine.set_signer(Arc::clone(&self.accounts), pubkey);
+            ap.get_unlocked_account(&pubkey)?.sign(&Default::default())?;
+            self.engine.set_signer(ap, pubkey);
         }
         Ok(())
     }
