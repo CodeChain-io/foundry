@@ -14,17 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::ShardId;
 use primitives::{Bytes, H160};
-
-#[derive(Debug, Clone, Eq, PartialEq, RlpDecodable, RlpEncodable)]
-pub struct AssetTransferOutput {
-    pub lock_script_hash: H160,
-    pub parameters: Vec<Bytes>,
-    pub asset_type: H160,
-    pub shard_id: ShardId,
-    pub quantity: u64,
-}
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct AssetMintOutput {
