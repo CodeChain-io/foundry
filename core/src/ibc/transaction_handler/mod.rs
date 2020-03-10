@@ -31,6 +31,22 @@ use rlp::{Decodable, Rlp};
 pub fn execute(
     bytes: &[u8],
     state: &mut TopLevelState,
+    fee_payer: &Address,
+    sender_public: &Public,
+    current_block_number: u64,
+) -> StateResult<()> {
+    let result = execute_inner(bytes, state, fee_payer, sender_public, current_block_number);
+
+    if let Err(err) = &result {
+        cwarn!(IBC, "Executing datagram failed: {:?}", err);
+    }
+
+    result
+}
+
+fn execute_inner(
+    bytes: &[u8],
+    state: &mut TopLevelState,
     _fee_payer: &Address,
     _sender_public: &Public,
     current_block_number: u64,
@@ -49,7 +65,7 @@ pub fn execute(
         }
     }
 
-    let result = match datagram {
+    match datagram {
         Datagram::CreateClient {
             id,
             kind,
@@ -248,11 +264,5 @@ pub fn execute(
                 .map_err(|err| RuntimeError::IBC(format!("AcknowledgePacket: {}", err)))?;
             Ok(())
         }
-    };
-
-    if let Err(err) = &result {
-        cwarn!(IBC, "Executing datagram failed: {:?}", err);
     }
-
-    result
 }
