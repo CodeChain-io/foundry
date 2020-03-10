@@ -41,7 +41,15 @@ async function main() {
 
     while (true) {
         debug("Run relay");
-        await relay(chainA, chainB);
+        try {
+            await relay(chainA, chainB);
+        } catch (err) {
+            if (err.message === "NoClient") {
+                console.log("Light client does not exist");
+            } else {
+                throw err;
+            }
+        }
         await delay(1000);
     }
 }
@@ -137,9 +145,7 @@ async function updateLightClient({
     const clientState = await chain.queryClient(height);
 
     if (clientState!.data == null) {
-        throw new Error(
-            `No client state found. Please create a light client with identifier: ${chain.counterpartyIdentifiers.client}`
-        );
+        throw new Error("NoClient");
     }
     let currentBlockNumber = clientState!.data!.number;
     // FIXME: We can't get the best block's IBC header
