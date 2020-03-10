@@ -34,26 +34,24 @@ use crate::block::{Block, ClosedBlock, OpenBlock};
 use crate::blockchain_info::BlockChainInfo;
 use crate::client::{
     AccountData, BlockChainClient, BlockChainTrait, BlockProducer, BlockStatus, ConsensusClient, EngineInfo,
-    ImportBlock, ImportResult, MiningBlockChainClient, StateInfo, StateOrBlock, TermInfo,
+    ImportBlock, ImportResult, StateInfo, StateOrBlock, TermInfo,
 };
 use crate::consensus::EngineError;
 use crate::db::{COL_STATE, NUM_COLUMNS};
 use crate::encoded;
-use crate::error::{BlockImportError, Error as GenericError};
-use crate::miner::{Miner, MinerService, TransactionImportResult};
+use crate::error::BlockImportError;
+use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
-use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
 use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
+use crate::Error;
+use crate::{LocalizedTransaction, PendingVerifiedTransactions};
 use ccrypto::BLAKE_NULL_RLP;
-use ckey::{
-    public_to_address, Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public,
-    Generator, KeyPairTrait, NetworkId, PlatformAddress, Random,
-};
+use ckey::{Address, Ed25519Private as Private, Ed25519Public as Public, NetworkId, PlatformAddress};
+use coordinator::validator::Transaction;
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState, Validator};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::header::Header;
-use ctypes::transaction::{Action, Transaction};
 use ctypes::{BlockHash, BlockNumber, CommonParams, Header as BlockHeader, TxHash};
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
@@ -201,20 +199,8 @@ impl TestBlockChainClient {
         }
         let mut transactions = Vec::with_capacity(transaction_length);
         for _ in 0..transaction_length {
-            let keypair: KeyPair = Random.generate().unwrap();
-            // Update seqs value
-            self.seqs.write().insert(keypair.address(), 0);
-            let tx = Transaction {
-                seq: 0,
-                fee: 10,
-                network_id: NetworkId::default(),
-                action: Action::Pay {
-                    receiver: Address::random(),
-                    quantity: 0,
-                },
-            };
-            let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
-            transactions.push(signed);
+            let tx = Self::sample_transaction();
+            transactions.push(tx);
         }
         header.set_transactions_root(skewed_merkle_root(BLAKE_NULL_RLP, transactions.iter().map(Encodable::rlp_bytes)));
         let mut rlp = RlpStream::new_list(2);
@@ -276,24 +262,7 @@ impl TestBlockChainClient {
 
     /// Inserts a transaction to miners mem pool.
     pub fn insert_transaction_to_pool(&self) -> TxHash {
-        let keypair: KeyPair = Random.generate().unwrap();
-        let tx = Transaction {
-            seq: 0,
-            fee: 10,
-            network_id: NetworkId::default(),
-            action: Action::Pay {
-                receiver: Address::random(),
-                quantity: 0,
-            },
-        };
-        let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
-        let sender_address = public_to_address(&signed.signer_public());
-        self.set_balance(sender_address, 10_000_000_000_000_000_000);
-        let hash = signed.transaction().hash();
-        let res = self.miner.import_external_transactions(self, vec![signed.into()]);
-        let res = res.into_iter().next().unwrap().expect("Successful import");
-        assert_eq!(res, TransactionImportResult::Current);
-        hash
+        unimplemented!()
     }
 
     /// Set reported history size.
@@ -320,6 +289,10 @@ impl TestBlockChainClient {
     pub fn get_validators(&self) -> &NextValidators {
         &self.validators
     }
+
+    fn sample_transaction() -> Transaction {
+        unimplemented!()
+    }
 }
 
 pub fn get_temp_state_db() -> StateDB {
@@ -339,28 +312,6 @@ impl BlockProducer for TestBlockChainClient {
         // TODO [todr] Override timestamp for predictability (set_timestamp_now kind of sucks)
         open_block.set_timestamp(*self.latest_block_timestamp.read());
         open_block
-    }
-}
-
-impl MiningBlockChainClient for TestBlockChainClient {
-    fn get_malicious_users(&self) -> Vec<Address> {
-        self.miner.get_malicious_users()
-    }
-
-    fn release_malicious_users(&self, prisoner_vec: Vec<Address>) {
-        self.miner.release_malicious_users(prisoner_vec)
-    }
-
-    fn imprison_malicious_users(&self, prisoner_vec: Vec<Address>) {
-        self.miner.imprison_malicious_users(prisoner_vec)
-    }
-
-    fn get_immune_users(&self) -> Vec<Address> {
-        self.miner.get_immune_users()
-    }
-
-    fn register_immune_users(&self, immune_user_vec: Vec<Address>) {
-        self.miner.register_immune_users(immune_user_vec)
     }
 }
 
@@ -493,9 +444,8 @@ impl BlockChainClient for TestBlockChainClient {
         }
     }
 
-    fn queue_own_transaction(&self, transaction: VerifiedTransaction) -> Result<(), GenericError> {
-        self.miner.import_own_transaction(self, transaction)?;
-        Ok(())
+    fn queue_own_transaction(&self, transaction: Transaction) -> Result<(), Error> {
+        self.miner.import_own_transaction(self, transaction)
     }
 
     fn queue_transactions(&self, transactions: Vec<Bytes>) {
@@ -509,23 +459,12 @@ impl BlockChainClient for TestBlockChainClient {
     }
 
     fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
-        let size_limit = self
-            .common_params(BlockId::Latest)
-            .expect("Common params of the latest block always exists")
-            .max_body_size();
-        self.miner.ready_transactions(size_limit, range)
-    }
-
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
-        self.miner.future_pending_transactions(range)
+        let params = self.common_params(BlockId::Latest).expect("Common params of the latest block always exists");
+        self.miner.ready_transactions(params.max_body_size(), params.max_body_size(), range)
     }
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {
         self.miner.count_pending_transactions(range)
-    }
-
-    fn future_included_count_pending_transactions(&self, range: Range<u64>) -> usize {
-        self.miner.future_included_count_pending_transactions(range)
     }
 
     fn is_pending_queue_empty(&self) -> bool {

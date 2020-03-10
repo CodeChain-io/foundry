@@ -17,8 +17,7 @@
 use super::importer::Importer;
 use super::{
     AccountData, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify, ClientConfig,
-    DatabaseClient, EngineClient, EngineInfo, ImportBlock, ImportResult, MiningBlockChainClient, StateInfo,
-    StateOrBlock,
+    DatabaseClient, EngineClient, EngineInfo, ImportBlock, ImportResult, StateInfo, StateOrBlock,
 };
 use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock};
 use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, InvoiceProvider, TransactionAddress};
@@ -29,13 +28,12 @@ use crate::error::{BlockImportError, Error, ImportError, SchemeError};
 use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
 use crate::service::ClientIoMessage;
-use crate::transaction::{
-    LocalizedTransaction, PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction,
-};
+use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions};
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress};
+use coordinator::validator::Transaction;
 use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
@@ -191,7 +189,7 @@ impl Client {
     pub fn import_queued_transactions(&self, transactions: &[Bytes]) -> usize {
         ctrace!(EXTERNAL_TX, "Importing queued");
         self.queue_transactions.fetch_sub(transactions.len(), AtomicOrdering::SeqCst);
-        let transactions: Vec<UnverifiedTransaction> =
+        let transactions: Vec<Transaction> =
             transactions.iter().filter_map(|bytes| Rlp::new(bytes).as_val().ok()).collect();
         let results = self.importer.miner.import_external_transactions(self, transactions);
         results.len()
@@ -489,9 +487,8 @@ impl BlockChainClient for Client {
     }
 
     /// Import own transaction
-    fn queue_own_transaction(&self, transaction: VerifiedTransaction) -> Result<(), Error> {
-        self.importer.miner.import_own_transaction(self, transaction)?;
-        Ok(())
+    fn queue_own_transaction(&self, transaction: Transaction) -> Result<(), Error> {
+        self.importer.miner.import_own_transaction(self, transaction)
     }
 
     fn queue_transactions(&self, transactions: Vec<Bytes>) {
@@ -517,23 +514,13 @@ impl BlockChainClient for Client {
     }
 
     fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
-        let size_limit = self
-            .common_params(BlockId::Latest)
-            .expect("Common params of the latest block always exists")
-            .max_body_size();
-        self.importer.miner.ready_transactions(size_limit, range)
+        let params = self.common_params(BlockId::Latest).expect("Common params of the latest block always exists");
+
+        self.importer.miner.ready_transactions(params.max_body_size(), params.max_body_size(), range)
     }
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {
         self.importer.miner.count_pending_transactions(range)
-    }
-
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
-        self.importer.miner.future_pending_transactions(range)
-    }
-
-    fn future_included_count_pending_transactions(&self, range: Range<u64>) -> usize {
-        self.importer.miner.future_included_count_pending_transactions(range)
     }
 
     fn is_pending_queue_empty(&self) -> bool {
@@ -621,28 +608,6 @@ impl BlockProducer for Client {
             author,
             extra_data,
         ).expect("OpenBlock::new only fails if parent state root invalid; state root of best block's header is never invalid; qed")
-    }
-}
-
-impl MiningBlockChainClient for Client {
-    fn get_malicious_users(&self) -> Vec<Address> {
-        self.importer.miner.get_malicious_users()
-    }
-
-    fn release_malicious_users(&self, prisoner_vec: Vec<Address>) {
-        self.importer.miner.release_malicious_users(prisoner_vec)
-    }
-
-    fn imprison_malicious_users(&self, prisoner_vec: Vec<Address>) {
-        self.importer.miner.imprison_malicious_users(prisoner_vec)
-    }
-
-    fn get_immune_users(&self) -> Vec<Address> {
-        self.importer.miner.get_immune_users()
-    }
-
-    fn register_immune_users(&self, immune_user_vec: Vec<Address>) {
-        self.importer.miner.register_immune_users(immune_user_vec)
     }
 }
 

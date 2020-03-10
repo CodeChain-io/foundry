@@ -32,12 +32,14 @@ use crate::block::{Block, ClosedBlock, OpenBlock};
 use crate::blockchain_info::BlockChainInfo;
 use crate::consensus::EngineError;
 use crate::encoded;
-use crate::error::{BlockImportError, Error as GenericError};
-use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
+use crate::error::BlockImportError;
+use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions};
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
+use crate::Error;
 use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress};
-use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
+use coordinator::validator::Transaction;
+use cstate::{TopLevelState, TopStateView};
 use ctypes::header::Header;
 use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
 use kvdb::KeyValueDB;
@@ -181,7 +183,7 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
     fn queue_info(&self) -> BlockQueueInfo;
 
     /// Queue own transaction for importing
-    fn queue_own_transaction(&self, transaction: VerifiedTransaction) -> Result<(), GenericError>;
+    fn queue_own_transaction(&self, transaction: Transaction) -> Result<(), Error>;
 
     /// Queue transactions for importing.
     fn queue_transactions(&self, transactions: Vec<Bytes>);
@@ -192,14 +194,8 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
     /// List all transactions that are allowed into the next block.
     fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions;
 
-    /// List all transactions in future block.
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions;
-
     /// Get the count of all pending transactions currently in the mem_pool.
     fn count_pending_transactions(&self, range: Range<u64>) -> usize;
-
-    /// Get the count of all pending transactions included future transaction in the mem_pool.
-    fn future_included_count_pending_transactions(&self, range: Range<u64>) -> usize;
 
     /// Check there are transactions which are allowed into the next block.
     fn is_pending_queue_empty(&self) -> bool;
@@ -231,24 +227,6 @@ pub type ImportResult = Result<BlockHash, DatabaseError>;
 pub trait BlockProducer {
     /// Returns OpenBlock prepared for closing.
     fn prepare_open_block(&self, parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock<'_>;
-}
-
-/// Extended client interface used for mining
-pub trait MiningBlockChainClient: BlockChainClient + BlockProducer + FindDoubleVoteHandler {
-    /// Returns malicious users who sent failing transactions.
-    fn get_malicious_users(&self) -> Vec<Address>;
-
-    /// Release designated users from the malicious user list.
-    fn release_malicious_users(&self, prisoner_vec: Vec<Address>);
-
-    /// Append designated users to the malicious user list.
-    fn imprison_malicious_users(&self, prisoner_vec: Vec<Address>);
-
-    /// Returns users immune from getting banned.
-    fn get_immune_users(&self) -> Vec<Address>;
-
-    /// Append designated users to the immune user list.
-    fn register_immune_users(&self, immune_user_vec: Vec<Address>);
 }
 
 /// Provides methods to access database.
