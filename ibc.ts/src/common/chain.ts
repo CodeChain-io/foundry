@@ -130,7 +130,8 @@ export class Chain {
     public async queryChannel(
         blockNumber?: number
     ): Promise<IBCQueryResult<ChannelEnd> | null> {
-        return this.sdk.rpc.sendRpcRequest("", [
+        return this.sdk.rpc.sendRpcRequest("ibc_query_channel_end", [
+            "DEFAULT_PORT",
             this.counterpartyIdentifiers.channel,
             blockNumber
         ]);

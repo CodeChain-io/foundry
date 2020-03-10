@@ -1,6 +1,6 @@
 import Debug from "debug";
 import { Chain } from "../common/chain";
-import { Datagram } from "../common/datagram/index";
+import { Datagram, ChannelOrdered } from "../common/datagram/index";
 import { delay } from "../common/util";
 import { getConfig } from "../common/config";
 import { PlatformAddress } from "codechain-primitives/lib";
@@ -9,6 +9,9 @@ import { strict as assert } from "assert";
 import { ConnOpenTryDatagram } from "../common/datagram/connOpenTry";
 import { ConnOpenAckDatagram } from "../common/datagram/connOpenAck";
 import { ConnOpenConfirmDatagram } from "../common/datagram/connOpenConfirm";
+import { ChanOpenTryDatagram } from "../common/datagram/chanOpenTry";
+import { ChanOpenAckDatagram } from "../common/datagram/chanOpenAck";
+import { ChanOpenConfirmDatagram } from "../common/datagram/chanOpenConfirm";
 
 require("dotenv").config();
 
@@ -125,6 +128,21 @@ async function pendingDatagrams({
     localDatagrams = localDatagrams.concat(localDatagramsForConnection);
     counterpartyDatagrams = counterpartyDatagrams.concat(
         counterpartyDatagramsForConnection
+    );
+
+    const {
+        localDatagrams: localDatagramsForChannel,
+        counterpartyDatagrams: counterpartyDatagramsForChannel
+    } = await buildChannel({
+        chain,
+        counterpartyChain,
+        height,
+        counterpartyChainHeight
+    });
+
+    localDatagrams = localDatagrams.concat(localDatagramsForChannel);
+    counterpartyDatagrams = counterpartyDatagrams.concat(
+        counterpartyDatagramsForChannel
     );
 
     return { localDatagrams, counterpartyDatagrams };
@@ -255,4 +273,75 @@ async function buildConnection({
     }
 
     return { localDatagrams, counterpartyDatagrams };
+}
+
+async function buildChannel({
+    chain,
+    counterpartyChain,
+    height,
+    counterpartyChainHeight
+}: {
+    chain: Chain;
+    counterpartyChain: Chain;
+    height: number;
+    counterpartyChainHeight: number;
+}) {
+    const localDatagrams: Datagram[] = [];
+    const counterpartyDatagrams = [];
+
+    const channel = await chain.queryChannel(height);
+    assert.notEqual(channel, null, "Block at height exists");
+
+    const counterpartyChannel = await counterpartyChain.queryChannel(
+        counterpartyChainHeight
+    );
+    assert.notEqual(counterpartyChannel, null, "Block at height exists");
+
+    if (channel!.data?.state === "INIT" && counterpartyChannel!.data == null) {
+        counterpartyDatagrams.push(
+            new ChanOpenTryDatagram({
+                order: ChannelOrdered,
+                connection:
+                    counterpartyChain.counterpartyIdentifiers.connection,
+                channelIdentifier:
+                    counterpartyChain.counterpartyIdentifiers.channel,
+                counterpartyChannelIdentifier:
+                    chain.counterpartyIdentifiers.channel,
+                version: "",
+                counterpartyVersion: "",
+                proofInit: Buffer.from(channel!.proof, "hex"),
+                proofHeight: height
+            })
+        );
+    }
+    if (
+        channel!.data?.state === "INIT" &&
+        counterpartyChannel!.data?.state === "TRYOPEN"
+    ) {
+        localDatagrams.push(
+            new ChanOpenAckDatagram({
+                channelIdentifier: chain.counterpartyIdentifiers.channel,
+                counterpartyVersion: "",
+                proofTry: Buffer.from(counterpartyChannel!.proof, "hex"),
+                proofHeight: counterpartyChainHeight
+            })
+        );
+    }
+    if (
+        channel!.data?.state === "OPEN" &&
+        counterpartyChannel!.data?.state === "TRYOPEN"
+    ) {
+        counterpartyDatagrams.push(
+            new ChanOpenConfirmDatagram({
+                channelIdentifier:
+                    counterpartyChain.counterpartyIdentifiers.channel,
+                proofAck: Buffer.from(channel!.proof, "hex"),
+                proofHeight: height
+            })
+        );
+    }
+    return {
+        localDatagrams,
+        counterpartyDatagrams
+    };
 }
