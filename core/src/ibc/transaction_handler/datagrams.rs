@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::ibc::channel_04::types::ChannelOrder;
 use crate::ibc::channel_04::types::Packet;
 use primitives::Bytes;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -73,7 +74,7 @@ impl Decodable for DatagramTag {
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct ChanOpenInit {
     pub tag: DatagramTag,
-    pub order: u8,
+    pub order: ChannelOrder,
     pub connection: String,
     pub channel_identifier: String,
     pub counterparty_channel_identifier: String,
@@ -82,7 +83,7 @@ pub struct ChanOpenInit {
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct ChanOpenTry {
     pub tag: DatagramTag,
-    pub order: u8,
+    pub order: ChannelOrder,
     pub connection: String,
     pub channel_identifier: String,
     pub counterparty_channel_identifier: String,
@@ -532,7 +533,7 @@ mod tests {
         let chan_open_init = Datagram::ChanOpenInit {
             raw: ChanOpenInit {
                 tag: DatagramTag::ChanOpenInit,
-                order: 1,
+                order: ChannelOrder::ORDERED,
                 connection: "connection".to_owned(),
                 channel_identifier: "channel".to_owned(),
                 counterparty_channel_identifier: "counterparty_channel".to_owned(),
