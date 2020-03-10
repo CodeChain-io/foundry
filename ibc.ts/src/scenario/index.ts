@@ -5,6 +5,8 @@ import { PlatformAddress } from "codechain-primitives/lib";
 import { CreateClientDatagram } from "../common/datagram/createClient";
 import { strict as assert } from "assert";
 import { ConnOpenInitDatagram } from "../common/datagram/connOpenInit";
+import { ChanOpenInitDatagram } from "../common/datagram/chanOpenInit";
+import { ChannelOrdered } from "../common/datagram";
 const { Select } = require("enquirer");
 
 require("dotenv").config();
@@ -95,6 +97,44 @@ async function main() {
             break;
         }
     }
+
+    const channelPrompt = new Select({
+        name: "channel",
+        message: "Will you create a channel?",
+        choices: ["yes", "skip", "exit"]
+    });
+    const channelAnswer = await channelPrompt.run();
+
+    if (channelAnswer === "exit") {
+        return;
+    }
+
+    if (channelAnswer === "yes") {
+        console.log("Create a channel");
+        await createChannel({ chainA, chainB });
+    }
+
+    while (true) {
+        const channelCheckPrompt = new Select({
+            name: "channel check",
+            message: "Will you check the channel?",
+            choices: ["yes", "skip", "exit"]
+        });
+        const channelCheckAnsser = await channelCheckPrompt.run();
+
+        if (channelCheckAnsser === "exit") {
+            return;
+        }
+
+        if (channelCheckAnsser === "yes") {
+            console.log("Check a channel");
+            await checkChannels({ chainA, chainB });
+        }
+
+        if (channelCheckAnsser === "skip") {
+            break;
+        }
+    }
 }
 
 main().catch(console.error);
@@ -174,4 +214,36 @@ async function checkConnections({
 
     const connectionB = await chainB.queryConnection();
     console.log(`Connection in B ${JSON.stringify(connectionB)}`);
+}
+
+async function createChannel({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}) {
+    await chainA.submitDatagram(
+        new ChanOpenInitDatagram({
+            order: ChannelOrdered,
+            connection: chainA.counterpartyIdentifiers.connection,
+            channelIdentifier: chainA.counterpartyIdentifiers.channel,
+            counterpartyChannelIdentifier:
+                chainB.counterpartyIdentifiers.channel,
+            version: ""
+        })
+    );
+}
+
+async function checkChannels({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}) {
+    const channelA = await chainA.queryChannel();
+    console.log(`Channel in A ${JSON.stringify(channelA)}`);
+    const channelB = await chainB.queryChannel();
+    console.log(`Channel in B ${JSON.stringify(channelB)}`);
 }
