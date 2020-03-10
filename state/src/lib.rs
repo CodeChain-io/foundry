@@ -45,6 +45,7 @@ pub use crate::item::account::Account;
 pub use crate::item::action_data::ActionData;
 pub use crate::item::dummy_shard_text::{ShardText, ShardTextAddress};
 pub use crate::item::metadata::{Metadata, MetadataAddress};
+pub use crate::item::module_datum::{ModuleDatum, ModuleDatumAddress};
 pub use crate::item::shard::{Shard, ShardAddress};
 pub use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
 

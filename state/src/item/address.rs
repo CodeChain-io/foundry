@@ -36,6 +36,18 @@ macro_rules! define_address_constructor {
             $name(hash)
         }
     };
+    (MODULE, $name:ident, $prefix:expr) => {
+        fn from_key_with_storage_id<T: AsRef<[u8]>>(input: T, storage_id: ::ctypes::StorageId) -> Self {
+            let mut hash: ::primitives::H256 = ::ccrypto::Blake::blake(&input);
+            hash[0..2].copy_from_slice(&[$prefix, 0]);
+
+            debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<::ctypes::StorageId>());
+            let storage_id_bytes: [u8; 2] = storage_id.to_be_bytes();
+            hash[2..4].copy_from_slice(&storage_id_bytes);
+
+            $name(hash)
+        }
+    };
 }
 
 macro_rules! define_id_getter {
@@ -45,6 +57,13 @@ macro_rules! define_id_getter {
             debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<ShardId>());
             let shard_id_bytes: [u8; 2] = [self.0[2], self.0[3]];
             ::ctypes::ShardId::from_be_bytes(shard_id_bytes)
+        }
+    };
+    (MODULE) => {
+        pub fn storage_id(&self) -> ::ctypes::StorageId {
+            debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<StorageId>());
+            let storage_id_bytes: [u8; 2] = [self.0[2], self.0[3]];
+            ::ctypes::StorageId::from_be_bytes(storage_id_bytes)
         }
     };
 }
