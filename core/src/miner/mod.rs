@@ -28,7 +28,6 @@ use cvm::ChainTimeInfo;
 use primitives::Bytes;
 use std::ops::Range;
 
-use self::mem_pool_types::AccountDetails;
 pub use self::mem_pool_types::MemPoolMinFees;
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
@@ -39,6 +38,7 @@ use crate::consensus::EngineType;
 use crate::error::Error;
 use crate::transaction::{PendingSignedTransactions, SignedTransaction, UnverifiedTransaction};
 use crate::BlockId;
+use coordinator::validator::Transaction;
 
 /// Miner client API
 pub trait MinerService: Send + Sync {
@@ -90,15 +90,15 @@ pub trait MinerService: Send + Sync {
     fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
         &self,
         client: &C,
-        transactions: Vec<UnverifiedTransaction>,
-    ) -> Vec<Result<TransactionImportResult, Error>>;
+        transactions: Vec<Transaction>,
+    ) -> Vec<bool>;
 
     /// Imports own (node owner) transaction to mem pool.
     fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo>(
         &self,
         chain: &C,
-        tx: SignedTransaction,
-    ) -> Result<TransactionImportResult, Error>;
+        tx: Transaction,
+    ) -> bool;
 
     /// Imports incomplete (node owner) transaction to mem pool.
     fn import_incomplete_transaction<C: MiningBlockChainClient + AccountData + EngineInfo + TermInfo>(
@@ -112,7 +112,7 @@ pub trait MinerService: Send + Sync {
     ) -> Result<(TxHash, u64), Error>;
 
     /// Get a list of all pending transactions in the mem pool.
-    fn ready_transactions(&self, range: Range<u64>) -> PendingSignedTransactions;
+    fn ready_transactions(&self, range: Range<u64>) -> Vec<Transaction>;
 
     /// Get list of all future transaction in the mem pool.
     fn future_pending_transactions(&self, range: Range<u64>) -> PendingSignedTransactions;

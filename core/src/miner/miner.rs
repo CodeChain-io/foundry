@@ -14,22 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::mem_pool::{Error as MemPoolError, MemPool};
+use super::mem_pool::MemPool;
 pub use super::mem_pool_types::MemPoolMinFees;
-use super::mem_pool_types::{MemPoolInput, TxOrigin};
-use super::{fetch_account_creator, MinerService, MinerStatus, TransactionImportResult};
+use super::{MinerService, MinerStatus};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::block::{ClosedBlock, IsBlock};
 use crate::client::{
     AccountData, BlockChainTrait, BlockProducer, Client, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo,
 };
-use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{CodeChainEngine, EngineType};
 use crate::error::Error;
 use crate::scheme::Scheme;
 use crate::transaction::{PendingSignedTransactions, SignedTransaction, UnverifiedTransaction};
-use crate::types::{BlockId, TransactionId};
+use crate::types::BlockId;
 use ckey::{public_to_address, Address, Password, PlatformAddress, Public};
+use coordinator::validator::{Transaction, TxOrigin};
 use cstate::{FindActionHandler, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::transaction::{Action, IncompleteTransaction};
@@ -131,13 +130,7 @@ impl Miner {
         db: Arc<dyn KeyValueDB>,
     ) -> Self {
         let mem_limit = options.mem_pool_memory_limit.unwrap_or_else(usize::max_value);
-        let mem_pool = Arc::new(RwLock::new(MemPool::with_limits(
-            options.mem_pool_size,
-            mem_limit,
-            options.mem_pool_fee_bump_shift,
-            db,
-            options.mem_pool_min_fees,
-        )));
+        let mem_pool = Arc::new(RwLock::new(MemPool::with_limits(options.mem_pool_size, mem_limit, db)));
 
         Self {
             mem_pool,
@@ -169,109 +162,21 @@ impl Miner {
     fn add_transactions_to_pool<C: AccountData + BlockChainTrait + EngineInfo>(
         &self,
         client: &C,
-        transactions: Vec<UnverifiedTransaction>,
-        default_origin: TxOrigin,
+        transactions: Vec<Transaction>,
+        origin: TxOrigin,
         mem_pool: &mut MemPool,
-    ) -> Vec<Result<TransactionImportResult, Error>> {
-        let best_header = client.best_block_header().decode();
-        let fake_header = best_header.generate_child();
+    ) -> Vec<bool> {
         let current_block_number = client.chain_info().best_block_number;
         let current_timestamp = client.chain_info().best_block_timestamp;
         let mut inserted = Vec::with_capacity(transactions.len());
-        let mut to_insert = Vec::new();
-        let mut tx_hashes = Vec::new();
 
-        let intermediate_results: Vec<Result<(), Error>> = transactions
-            .into_iter()
-            .map(|tx| {
-                let hash = tx.hash();
-                // FIXME: Refactoring is needed. recover_public is calling in verify_transaction_unordered.
-                let signer_public = tx.recover_public()?;
-                let signer_address = public_to_address(&signer_public);
-                if default_origin.is_local() {
-                    self.immune_users.write().insert(signer_address);
-                }
+        let results = mem_pool.add(transactions, origin, current_block_number, current_timestamp);
 
-                let origin = self
-                    .accounts
-                    .as_ref()
-                    .and_then(|accounts| match accounts.has_public(&signer_public) {
-                        Ok(true) => Some(TxOrigin::Local),
-                        Ok(false) => None,
-                        Err(_) => None,
-                    })
-                    .unwrap_or(default_origin);
-
-                if self.malicious_users.read().contains(&signer_address) {
-                    // FIXME: just to skip, think about another way.
-                    return Ok(())
-                }
-                if client.transaction_block(&TransactionId::Hash(hash)).is_some() {
-                    cdebug!(MINER, "Rejected transaction {:?}: already in the blockchain", hash);
-                    return Err(HistoryError::TransactionAlreadyImported.into())
-                }
-                if !self.is_allowed_transaction(&tx.action) {
-                    cdebug!(MINER, "Rejected transaction {:?}: {:?} is not allowed transaction", hash, tx.action);
-                    return Err(Error::Other("Not allowed transaction".to_string()))
-                }
-                let immune_users = self.immune_users.read();
-                let tx = tx
-                    .verify_basic()
-                    .map_err(From::from)
-                    .and_then(|_| {
-                        let common_params = client.common_params(best_header.hash().into()).unwrap();
-                        self.engine.verify_transaction_with_params(&tx, &common_params)
-                    })
-                    .and_then(|_| CodeChainMachine::verify_transaction_seal(tx, &fake_header))
-                    .map_err(|e| {
-                        match e {
-                            Error::Syntax(_) if !origin.is_local() && !immune_users.contains(&signer_address) => {
-                                self.malicious_users.write().insert(signer_address);
-                            }
-                            _ => {}
-                        }
-                        cdebug!(MINER, "Rejected transaction {:?} with invalid signature: {:?}", hash, e);
-                        e
-                    })?;
-
-                // This check goes here because verify_transaction takes SignedTransaction parameter
-                self.engine.machine().verify_transaction(&tx, &fake_header, client, false).map_err(|e| {
-                    match e {
-                        Error::Syntax(_) if !origin.is_local() && !immune_users.contains(&signer_address) => {
-                            self.malicious_users.write().insert(signer_address);
-                        }
-                        _ => {}
-                    }
-                    e
-                })?;
-
-                let tx_hash = tx.hash();
-
-                to_insert.push(MemPoolInput::new(tx, origin));
-                tx_hashes.push(tx_hash);
-                Ok(())
-            })
-            .collect();
-
-        let fetch_account = fetch_account_creator(client);
-
-        let insertion_results = mem_pool.add(to_insert, current_block_number, current_timestamp, &fetch_account);
-
-        debug_assert_eq!(insertion_results.len(), intermediate_results.iter().filter(|r| r.is_ok()).count());
-        let mut insertion_results_index = 0;
-        let results = intermediate_results
-            .into_iter()
-            .map(|res| match res {
-                Err(e) => Err(e),
-                Ok(()) => {
-                    let idx = insertion_results_index;
-                    let result = insertion_results[idx].clone().map_err(MemPoolError::into_core_error)?;
-                    inserted.push(tx_hashes[idx]);
-                    insertion_results_index += 1;
-                    Ok(result)
-                }
-            })
-            .collect();
+        results.iter().zip(transactions.iter()).map(|(is_inserted, tx)| {
+            if *is_inserted {
+                inserted.push(tx.hash());
+            }
+        });
 
         for listener in &*self.transaction_listener.read() {
             listener(&inserted);
@@ -308,9 +213,9 @@ impl Miner {
 
             // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock
             let mem_pool = self.mem_pool.read();
+            // TODO: Create a gas_limit parameter and use it
             let transactions = mem_pool
-                .top_transactions(max_body_size, Some(open_block.header().timestamp()), DEFAULT_RANGE)
-                .transactions;
+                .top_transactions(max_body_size, max_body_size, DEFAULT_RANGE);
 
             (transactions, open_block, block_number)
         };
@@ -444,7 +349,6 @@ impl MinerService for Miner {
         let status = self.mem_pool.read().status();
         MinerStatus {
             transactions_in_pending_queue: status.pending,
-            transactions_in_future_queue: status.future,
         }
     }
 
@@ -493,11 +397,8 @@ impl MinerService for Miner {
         ctrace!(MINER, "chain_new_blocks");
 
         {
-            let fetch_account = fetch_account_creator(chain);
-            let current_block_number = chain.chain_info().best_block_number;
-            let current_timestamp = chain.chain_info().best_block_timestamp;
             let mut mem_pool = self.mem_pool.write();
-            mem_pool.remove_old(&fetch_account, current_block_number, current_timestamp);
+            mem_pool.remove_old();
         }
 
         if !self.options.no_reseal_timer {
@@ -559,15 +460,15 @@ impl MinerService for Miner {
     fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
         &self,
         client: &C,
-        transactions: Vec<UnverifiedTransaction>,
-    ) -> Vec<Result<TransactionImportResult, Error>> {
+        transactions: Vec<Transaction>,
+    ) -> Vec<bool> {
         ctrace!(EXTERNAL_TX, "Importing external transactions");
         let results = {
             let mut mem_pool = self.mem_pool.write();
             self.add_transactions_to_pool(client, transactions, TxOrigin::External, &mut mem_pool)
         };
 
-        if !results.is_empty()
+        if !results.iter().any(|result| *result)
             && self.options.reseal_on_external_transaction
             && self.transaction_reseal_allowed()
             && !self.engine_type().ignore_reseal_on_transaction()
@@ -584,8 +485,8 @@ impl MinerService for Miner {
     fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo>(
         &self,
         chain: &C,
-        tx: SignedTransaction,
-    ) -> Result<TransactionImportResult, Error> {
+        tx: Transaction,
+    ) -> bool {
         ctrace!(OWN_TX, "Importing transaction: {:?}", tx);
 
         let imported = {
@@ -593,27 +494,27 @@ impl MinerService for Miner {
             let mut mem_pool = self.mem_pool.write();
             // We need to re-validate transactions
             let import = self
-                .add_transactions_to_pool(chain, vec![tx.into()], TxOrigin::Local, &mut mem_pool)
-                .pop()
-                .expect("one result returned per added transaction; one added => one result; qed");
+                .add_transactions_to_pool(chain, vec![tx], TxOrigin::Local, &mut mem_pool)
+                .pop();
 
             match import {
-                Ok(_) => {
+                Some(true) => {
                     ctrace!(OWN_TX, "Status: {:?}", mem_pool.status());
+                    true
                 }
-                Err(ref e) => {
+                _ => {
                     ctrace!(OWN_TX, "Status: {:?}", mem_pool.status());
-                    cwarn!(OWN_TX, "Error importing transaction: {:?}", e);
+                    cwarn!(OWN_TX, "Failed to import transaction");
+                    false
                 }
             }
-            import
         };
 
         // ------------------------------------------------------------------
         // | NOTE Code below requires mem_pool and sealing_queue locks.     |
         // | Make sure to release the locks before calling that method.     |
         // ------------------------------------------------------------------
-        if imported.is_ok() && self.options.reseal_on_own_transaction && self.transaction_reseal_allowed() && !self.engine_type().ignore_reseal_on_transaction()
+        if imported && self.options.reseal_on_own_transaction && self.transaction_reseal_allowed() && !self.engine_type().ignore_reseal_on_transaction()
             // Make sure to do it after transaction is imported and lock is dropped.
             // We need to create pending block and enable sealing.
             && self.engine.seals_internally()
@@ -664,10 +565,11 @@ impl MinerService for Miner {
         Ok((hash, seq))
     }
 
-    fn ready_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
+    fn ready_transactions(&self, range: Range<u64>) -> Vec<Transaction> {
         // FIXME: Update the body size when the common params are updated
         let max_body_size = self.engine.machine().genesis_common_params().max_body_size();
-        self.mem_pool.read().top_transactions(max_body_size, None, range)
+        // TODO: Create a gas_limit parameter and use it.
+        self.mem_pool.read().top_transactions(max_body_size, max_body_size, range)
     }
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {
