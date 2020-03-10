@@ -376,7 +376,6 @@ impl MemPool {
     }
 
     /// Checks the current seq for all transactions' senders in the pool and removes the old transactions.
-    /// Expired transactions are removed by this function only.
     pub fn remove_old<F>(&mut self, fetch_account: &F, current_block_number: PoolingInstant, current_timestamp: u64)
     where
         F: Fn(&Public) -> AccountDetails, {
@@ -386,19 +385,13 @@ impl MemPool {
         let max_block_number = self.max_block_number_period_in_pool;
         let balance_check = max_block_number >> 3;
 
-        // Clear transactions occupying the pool too long, or expired
+        // Clear transactions occupying the pool too long
         let invalid = self
             .by_hash
             .iter()
             .filter(|&(_, ref item)| !item.origin.is_local())
             .map(|(hash, item)| (hash, item, current_block_number.saturating_sub(item.inserted_block_number)))
             .filter_map(|(hash, item, time_diff)| {
-                if let Some(expiration) = item.expiration() {
-                    if expiration < current_timestamp {
-                        return Some(*hash)
-                    }
-                }
-
                 if time_diff > max_block_number {
                     return Some(*hash)
                 }
@@ -809,12 +802,7 @@ impl MemPool {
     /// Returns top transactions whose timestamp are in the given range from the pool ordered by priority.
     // FIXME: current_timestamp should be `u64`, not `Option<u64>`.
     // FIXME: if range_contains becomes stable, use range.contains instead of inequality.
-    pub fn top_transactions(
-        &self,
-        size_limit: usize,
-        current_timestamp: Option<u64>,
-        range: Range<u64>,
-    ) -> PendingSignedTransactions {
+    pub fn top_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingSignedTransactions {
         let mut current_size: usize = 0;
         let pending_items: Vec<_> = self
             .current
@@ -824,14 +812,6 @@ impl MemPool {
                 self.by_hash
                     .get(&t.hash)
                     .expect("All transactions in `current` and `future` are always included in `by_hash`")
-            })
-            .filter(|t| {
-                if let Some(expiration) = t.expiration() {
-                    if let Some(timestamp) = current_timestamp {
-                        return expiration >= timestamp
-                    }
-                }
-                true
             })
             .filter(|t| range.contains(&t.inserted_timestamp))
             .take_while(|t| {
@@ -890,12 +870,7 @@ impl MemPool {
     }
 
     /// Return all future transactions along with current transactions.
-    pub fn get_future_pending_transactions(
-        &self,
-        size_limit: usize,
-        current_timestamp: Option<u64>,
-        range: Range<u64>,
-    ) -> PendingSignedTransactions {
+    pub fn get_future_pending_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingSignedTransactions {
         let mut current_size: usize = 0;
         let pending_items: Vec<_> = self
             .current
@@ -905,14 +880,6 @@ impl MemPool {
                 self.by_hash
                     .get(&t.hash)
                     .expect("All transactions in `current` and `future` are always included in `by_hash`")
-            })
-            .filter(|t| {
-                if let Some(expiration) = t.expiration() {
-                    if let Some(timestamp) = current_timestamp {
-                        return expiration >= timestamp
-                    }
-                }
-                true
             })
             .filter(|t| range.contains(&t.inserted_timestamp))
             .take_while(|t| {
@@ -930,14 +897,6 @@ impl MemPool {
                 self.by_hash
                     .get(&t.hash)
                     .expect("All transactions in `current` and `future` are always included in `by_hash`")
-            })
-            .filter(|t| {
-                if let Some(expiration) = t.expiration() {
-                    if let Some(timestamp) = current_timestamp {
-                        return expiration >= timestamp
-                    }
-                }
-                true
             })
             .filter(|t| range.contains(&t.inserted_timestamp))
             .take_while(|t| {
@@ -1195,7 +1154,7 @@ pub mod test {
                 create_signed_pay_with_fee(1, 140, &keypair),
                 create_signed_pay_with_fee(2, 160, &keypair)
             ],
-            mem_pool.top_transactions(std::usize::MAX, None, 0..std::u64::MAX).transactions
+            mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
         );
 
         assert_eq!(Vec::<SignedTransaction>::default(), mem_pool.future_transactions());
@@ -1240,7 +1199,7 @@ pub mod test {
 
         assert_eq!(
             vec![create_signed_pay_with_fee(0, 200, &keypair), create_signed_pay_with_fee(1, 160, &keypair)],
-            mem_pool.top_transactions(std::usize::MAX, None, 0..std::u64::MAX).transactions
+            mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
         );
 
         assert_eq!(Vec::<SignedTransaction>::default(), mem_pool.future_transactions());
@@ -1280,7 +1239,7 @@ pub mod test {
 
         assert_eq!(
             vec![create_signed_pay(0, &keypair), create_signed_pay(1, &keypair), create_signed_pay(2, &keypair),],
-            mem_pool.top_transactions(std::usize::MAX, None, 0..std::u64::MAX).transactions
+            mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
         );
 
         assert_eq!(Vec::<SignedTransaction>::default(), mem_pool.future_transactions());
@@ -1295,7 +1254,7 @@ pub mod test {
 
         assert_eq!(
             vec![create_signed_pay(0, &keypair),],
-            mem_pool.top_transactions(std::usize::MAX, None, 0..std::u64::MAX).transactions
+            mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
         );
 
         assert_eq!(vec![create_signed_pay(2, &keypair),], mem_pool.future_transactions());

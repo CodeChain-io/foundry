@@ -226,11 +226,6 @@ impl MemPoolItem {
             _ => self.tx.fee,
         }
     }
-
-    pub fn expiration(&self) -> Option<u64> {
-        // FIXME: please remove the expiration function
-        None
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
