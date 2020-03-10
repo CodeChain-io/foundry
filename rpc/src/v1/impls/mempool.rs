@@ -40,7 +40,7 @@ impl<C> MempoolClient<C> {
 
 impl<C> Mempool for MempoolClient<C>
 where
-    C: BlockChainClient + MiningBlockChainClient + EngineInfo + 'static,
+    C: BlockChainClient + EngineInfo + 'static,
 {
     fn send_signed_transaction(&self, raw: Bytes) -> Result<TxHash> {
         Rlp::new(&raw.into_vec())

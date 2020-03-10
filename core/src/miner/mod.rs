@@ -20,23 +20,20 @@ mod mem_pool_types;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod miner;
 
-use ckey::{public_to_address, Address, Ed25519Public as Public, Password, PlatformAddress};
-use cstate::{FindDoubleVoteHandler, TopStateView};
-use ctypes::transaction::IncompleteTransaction;
-use ctypes::{BlockHash, TxHash};
+use ckey::Address;
+use cstate::TopStateView;
+use ctypes::BlockHash;
 use primitives::Bytes;
 use std::ops::Range;
 
-use self::mem_pool_types::AccountDetails;
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};
-use crate::account_provider::{AccountProvider, Error as AccountProviderError};
-use crate::client::{
-    AccountData, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo,
-};
+use crate::account_provider::Error as AccountProviderError;
+use crate::client::{AccountData, BlockChainClient, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, TermInfo};
 use crate::consensus::EngineType;
 use crate::error::Error;
-use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
+use crate::transaction::PendingVerifiedTransactions;
 use crate::BlockId;
+use coordinator::validator::Transaction;
 
 /// Miner client API
 pub trait MinerService: Send + Sync {
@@ -52,7 +49,7 @@ pub trait MinerService: Send + Sync {
     /// Set the author that we will seal blocks as.
     fn set_author(&self, author: Address) -> Result<(), AccountProviderError>;
 
-    ///Get the address of block author.
+    ///Get the address that sealed the block.
     fn get_author_address(&self) -> Address;
 
     /// Set the extra_data that we will seal blocks with.
@@ -67,7 +64,7 @@ pub trait MinerService: Send + Sync {
     /// Called when blocks are imported to chain, updates transactions queue.
     fn chain_new_blocks<C>(&self, chain: &C, imported: &[BlockHash], invalid: &[BlockHash], enacted: &[BlockHash])
     where
-        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock;
+        C: BlockChainTrait + BlockProducer + EngineInfo + ImportBlock;
 
     /// Get the type of consensus engine.
     fn engine_type(&self) -> EngineType;
@@ -75,68 +72,34 @@ pub trait MinerService: Send + Sync {
     /// New chain head event. Restart mining operation.
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: AccountData + BlockChainTrait + BlockProducer + ImportBlock + EngineInfo + FindDoubleVoteHandler + TermInfo;
+        C: AccountData + BlockChainTrait + BlockProducer + ImportBlock + EngineInfo + TermInfo;
 
     /// Imports transactions to mem pool.
-    fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
+    fn import_external_transactions<C: BlockChainClient + BlockProducer + EngineInfo + TermInfo>(
         &self,
         client: &C,
-        transactions: Vec<UnverifiedTransaction>,
-    ) -> Vec<Result<TransactionImportResult, Error>>;
+        transactions: Vec<Transaction>,
+    ) -> Vec<Result<(), Error>>;
 
     /// Imports own (node owner) transaction to mem pool.
-    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo>(
+    fn import_own_transaction<C: BlockChainClient + BlockProducer + EngineInfo + TermInfo>(
         &self,
         chain: &C,
-        tx: VerifiedTransaction,
-    ) -> Result<TransactionImportResult, Error>;
-
-    /// Imports incomplete (node owner) transaction to mem pool.
-    fn import_incomplete_transaction<C: MiningBlockChainClient + AccountData + EngineInfo + TermInfo>(
-        &self,
-        chain: &C,
-        account_provider: &AccountProvider,
-        tx: IncompleteTransaction,
-        platform_address: PlatformAddress,
-        passphrase: Option<Password>,
-        seq: Option<u64>,
-    ) -> Result<(TxHash, u64), Error>;
+        tx: Transaction,
+    ) -> Result<(), Error>;
 
     /// Get a list of all pending transactions in the mem pool.
-    fn ready_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions;
-
-    /// Get list of all future transaction in the mem pool.
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions;
+    fn ready_transactions(&self, gas_limit: usize, size_limit: usize, range: Range<u64>)
+        -> PendingVerifiedTransactions;
 
     /// Get a count of all pending transactions in the mem pool.
     fn count_pending_transactions(&self, range: Range<u64>) -> usize;
 
-    /// a count of all pending transaction including both current and future transactions.
-    fn future_included_count_pending_transactions(&self, range: Range<u64>) -> usize;
-
-    /// Get a list of all future transactions.
-    fn future_transactions(&self) -> Vec<VerifiedTransaction>;
-
     /// Start sealing.
-    fn start_sealing<C: MiningBlockChainClient + EngineInfo + TermInfo>(&self, client: &C);
+    fn start_sealing<C: BlockChainClient + BlockProducer + EngineInfo + TermInfo>(&self, client: &C);
 
     /// Stop sealing.
     fn stop_sealing(&self);
-
-    /// Get malicious users
-    fn get_malicious_users(&self) -> Vec<Address>;
-
-    /// Release target malicious users from malicious user set.
-    fn release_malicious_users(&self, prisoner_vec: Vec<Address>);
-
-    /// Imprison target malicious users to malicious user set.
-    fn imprison_malicious_users(&self, prisoner_vec: Vec<Address>);
-
-    /// Get ban-immune users.
-    fn get_immune_users(&self) -> Vec<Address>;
-
-    /// Register users to ban-immune users.
-    fn register_immune_users(&self, immune_user_vec: Vec<Address>);
 }
 
 /// Mining status
@@ -144,19 +107,7 @@ pub trait MinerService: Send + Sync {
 pub struct MinerStatus {
     /// Number of transactions in queue with state `pending` (ready to be included in block)
     pub transactions_in_pending_queue: usize,
-    /// Number of transactions in queue with state `future` (not yet ready to be included in block)
-    pub transactions_in_future_queue: usize,
 }
 
 #[cfg(all(feature = "nightly", test))]
 mod mem_pool_benches;
-
-fn fetch_account_creator<'c>(client: &'c dyn AccountData) -> impl Fn(&Public) -> AccountDetails + 'c {
-    move |public: &Public| {
-        let address = public_to_address(public);
-        AccountDetails {
-            seq: client.latest_seq(&address),
-            balance: client.latest_balance(&address),
-        }
-    }
-}

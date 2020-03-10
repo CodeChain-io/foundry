@@ -17,7 +17,7 @@
 use super::super::errors::{self, account_provider};
 use super::super::traits::Account;
 use super::super::types::{SendTransactionResult, UnsignedTransaction};
-use ccore::{AccountData, AccountProvider, EngineInfo, MinerService, MiningBlockChainClient, TermInfo};
+use ccore::{AccountData, AccountProvider, EngineInfo, MinerService, TermInfo};
 use ckey::{Ed25519Private as Private, Password, PlatformAddress, Signature};
 use ctypes::transaction::IncompleteTransaction;
 use jsonrpc_core::{Error, Result};
@@ -49,7 +49,7 @@ where
 
 impl<C, M> Account for AccountClient<C, M>
 where
-    C: EngineInfo + MiningBlockChainClient + AccountData + TermInfo + 'static,
+    C: EngineInfo + AccountData + TermInfo + 'static,
     M: MinerService + 'static,
 {
     fn get_account_list(&self) -> Result<Vec<PlatformAddress>> {
