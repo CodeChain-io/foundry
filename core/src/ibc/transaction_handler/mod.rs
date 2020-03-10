@@ -151,13 +151,7 @@ pub fn execute(
             let mut channel_manager = ibc_channel::Manager::new(&mut context);
             channel_manager
                 .chan_open_init(
-                    {
-                        if raw.order == 1 {
-                            ibc::channel_04::types::ChannelOrder::ORDERED
-                        } else {
-                            ibc::channel_04::types::ChannelOrder::UNORDERED
-                        }
-                    },
+                    raw.order,
                     raw.connection,
                     raw.channel_identifier,
                     raw.counterparty_channel_identifier,
@@ -172,13 +166,7 @@ pub fn execute(
             let mut channel_manager = ibc_channel::Manager::new(&mut context);
             channel_manager
                 .chan_open_try(
-                    {
-                        if raw.order == 1 {
-                            ibc::channel_04::types::ChannelOrder::ORDERED
-                        } else {
-                            ibc::channel_04::types::ChannelOrder::UNORDERED
-                        }
-                    },
+                    raw.order,
                     raw.connection,
                     raw.channel_identifier,
                     raw.counterparty_channel_identifier,
