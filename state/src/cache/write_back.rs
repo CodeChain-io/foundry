@@ -18,7 +18,7 @@ use super::CacheableItem;
 use merkle_trie::{Result as TrieResult, Trie, TrieMut};
 use std::cell::{RefCell, RefMut};
 use std::collections::hash_map::Entry as HashMapEntry;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::convert::AsRef;
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -74,6 +74,7 @@ pub struct WriteBack<Item>
 where
     Item: CacheableItem, {
     cache: RefCell<HashMap<Item::Address, Entry<Item>>>,
+    address_cache: RefCell<HashSet<Item::Address>>,
     // The original item is preserved in
     checkpoints: RefCell<CheckPoints<Item::Address, Item>>,
 }
@@ -85,6 +86,7 @@ where
     pub fn new() -> Self {
         Self {
             cache: Default::default(),
+            address_cache: Default::default(),
             checkpoints: Default::default(),
         }
     }
@@ -128,18 +130,25 @@ where
         if let Some(mut checkpoint) = self.checkpoints.get_mut().pop() {
             for (k, v) in checkpoint.drain() {
                 match v {
-                    Some(v) => match self.cache.get_mut().entry(k) {
-                        HashMapEntry::Occupied(mut e) => {
-                            *e.get_mut() = v;
+                    Some(v) => {
+                        match &v.item {
+                            Some(_) => self.address_cache.get_mut().insert(k),
+                            None => self.address_cache.get_mut().remove(&k),
+                        };
+                        match self.cache.get_mut().entry(k) {
+                            HashMapEntry::Occupied(mut e) => {
+                                *e.get_mut() = v;
+                            }
+                            HashMapEntry::Vacant(e) => {
+                                e.insert(v);
+                            }
                         }
-                        HashMapEntry::Vacant(e) => {
-                            e.insert(v);
-                        }
-                    },
+                    }
                     None => {
                         if let HashMapEntry::Occupied(e) = self.cache.get_mut().entry(k) {
                             if e.get().is_dirty {
                                 e.remove();
+                                self.address_cache.get_mut().remove(&k);
                             }
                         }
                     }
@@ -155,6 +164,11 @@ where
         // In all other cases item is read as clean first, and after that made
         // dirty in and added to the checkpoint with `note_cache`.
         let is_dirty = item.is_dirty;
+        // Address caching for has method.
+        match &item.item {
+            Some(_) => self.address_cache.borrow_mut().insert(*address),
+            None => self.address_cache.borrow_mut().remove(address),
+        };
         let old_value = self.cache.borrow_mut().insert(*address, item);
         if !is_dirty {
             return
@@ -188,6 +202,27 @@ where
             };
         }
         Ok(())
+    }
+
+    // Checks if the key exists utilizing the address_cache
+    // Note: address_cache is not fully synchronized with the addresses in the cache field
+    // but always has less or equal information about the key existence than the cache field.
+    // because get_mut method later modify the item after inserting maybe_item which can be None.
+    // It can be resolved by handling address_cache for get_mut method.
+    pub fn has(&self, a: &Item::Address, db: &dyn Trie) -> TrieResult<bool> {
+        if self.address_cache.borrow().contains(a) {
+            Ok(true)
+        } else {
+            let result = match self.cache.borrow().get(a) {
+                // Even if entry exists, cached with "None" implies it doesn't exist as an actual datum
+                Some(entry) => entry.item.is_some(),
+                None => db.contains(a.as_ref())?,
+            };
+            if result {
+                self.address_cache.borrow_mut().insert(*a);
+            }
+            Ok(result)
+        }
     }
 
     /// Check caches for required data
@@ -273,7 +308,8 @@ where
     Item: CacheableItem,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.cache.borrow().fmt(f)
+        self.cache.borrow().fmt(f)?;
+        self.address_cache.borrow().fmt(f)
     }
 }
 
@@ -285,6 +321,7 @@ where
         assert_eq!(0, self.checkpoints.borrow().len());
         Self {
             cache: self.cache.clone(),
+            address_cache: self.address_cache.clone(),
             checkpoints: RefCell::new(vec![]),
         }
     }
