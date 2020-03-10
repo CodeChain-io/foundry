@@ -33,6 +33,7 @@ pub mod util;
 
 pub type BlockNumber = u64;
 pub type ShardId = u16;
+pub type StorageId = u16;
 
 pub use block_hash::BlockHash;
 pub use common_params::CommonParams;
