@@ -5,7 +5,7 @@ import { IBC } from "./foundry/transaction";
 import { delay } from "./util";
 import Debug from "debug";
 import { ClientState } from "./foundry/types";
-import { IBCHeader, IBCQueryResult, ConnectionEnd } from "./types";
+import { IBCHeader, IBCQueryResult, ConnectionEnd, ChannelEnd } from "./types";
 
 const debug = Debug("common:tx");
 
@@ -123,6 +123,15 @@ export class Chain {
     ): Promise<IBCQueryResult<string[]> | null> {
         return this.sdk.rpc.sendRpcRequest("ibc_query_client_connections", [
             this.counterpartyIdentifiers.client,
+            blockNumber
+        ]);
+    }
+
+    public async queryChannel(
+        blockNumber?: number
+    ): Promise<IBCQueryResult<ChannelEnd> | null> {
+        return this.sdk.rpc.sendRpcRequest("", [
+            this.counterpartyIdentifiers.channel,
             blockNumber
         ]);
     }
