@@ -19,8 +19,8 @@ use primitives::Bytes;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 #[repr(u8)]
-#[derive(Clone, Copy)]
-enum DatagramTag {
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum DatagramTag {
     CreateClient = 1,
     UpdateClient = 2,
     ConnOpenInit = 3,
@@ -72,6 +72,7 @@ impl Decodable for DatagramTag {
 // This is because of RLP macro's weak support.
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct ChanOpenInit {
+    pub tag: DatagramTag,
     pub order: u8,
     pub connection: String,
     pub channel_identifier: String,
@@ -80,6 +81,7 @@ pub struct ChanOpenInit {
 }
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct ChanOpenTry {
+    pub tag: DatagramTag,
     pub order: u8,
     pub connection: String,
     pub channel_identifier: String,
@@ -91,6 +93,7 @@ pub struct ChanOpenTry {
 }
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct ChanOpenAck {
+    pub tag: DatagramTag,
     pub channel_identifier: String,
     pub counterparty_version: String,
     pub proof_try: Bytes,
@@ -98,26 +101,31 @@ pub struct ChanOpenAck {
 }
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct ChanOpenConfirm {
+    pub tag: DatagramTag,
     pub channel_identifier: String,
     pub proof_ack: Bytes,
     pub proof_height: u64,
 }
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct ChanCloseInit {
+    pub tag: DatagramTag,
     pub channel_identifier: String,
 }
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct ChanCloseConfirm {
+    pub tag: DatagramTag,
     pub channel_identifier: String,
     pub proof_init: Bytes,
     pub proof_height: u64,
 }
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct SendPacket {
+    pub tag: DatagramTag,
     pub packet: Packet,
 }
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct RecvPacket {
+    pub tag: DatagramTag,
     pub packet: Packet,
     pub proof: Bytes,
     pub proof_height: u64,
@@ -125,6 +133,7 @@ pub struct RecvPacket {
 }
 #[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
 pub struct AcknowledgePacket {
+    pub tag: DatagramTag,
     pub packet: Packet,
     pub ack: Bytes,
     pub proof: Bytes,
@@ -288,47 +297,47 @@ impl Encodable for Datagram {
             Datagram::ChanOpenInit {
                 raw,
             } => {
-                s.append(&DatagramTag::ChanOpenInit).append(raw);
+                s.append_single_value(raw);
             }
             Datagram::ChanOpenTry {
                 raw,
             } => {
-                s.append(&DatagramTag::ChanOpenTry).append(raw);
+                s.append_single_value(raw);
             }
             Datagram::ChanOpenAck {
                 raw,
             } => {
-                s.append(&DatagramTag::ChanOpenAck).append(raw);
+                s.append_single_value(raw);
             }
             Datagram::ChanOpenConfirm {
                 raw,
             } => {
-                s.append(&DatagramTag::ChanOpenConfirm).append(raw);
+                s.append_single_value(raw);
             }
             Datagram::ChanCloseInit {
                 raw,
             } => {
-                s.append(&DatagramTag::ChanCloseInit).append(raw);
+                s.append_single_value(raw);
             }
             Datagram::ChanCloseConfirm {
                 raw,
             } => {
-                s.append(&DatagramTag::ChanCloseConfirm).append(raw);
+                s.append_single_value(raw);
             }
             Datagram::SendPacket {
                 raw,
             } => {
-                s.append(&DatagramTag::SendPacket).append(raw);
+                s.append_single_value(raw);
             }
             Datagram::RecvPacket {
                 raw,
             } => {
-                s.append(&DatagramTag::RecvPacket).append(raw);
+                s.append_single_value(raw);
             }
             Datagram::AcknowledgePacket {
                 raw,
             } => {
-                s.append(&DatagramTag::AcknowledgePacket).append(raw);
+                s.append_single_value(raw);
             }
         };
     }
@@ -516,5 +525,20 @@ mod tests {
             proof_height: 1,
         };
         rlp_encode_and_decode_test!(conn_open_confirm);
+    }
+
+    #[test]
+    fn chann_open_init() {
+        let chan_open_init = Datagram::ChanOpenInit {
+            raw: ChanOpenInit {
+                tag: DatagramTag::ChanOpenInit,
+                order: 1,
+                connection: "connection".to_owned(),
+                channel_identifier: "channel".to_owned(),
+                counterparty_channel_identifier: "counterparty_channel".to_owned(),
+                version: "version".to_owned(),
+            },
+        };
+        rlp_encode_and_decode_test!(chan_open_init);
     }
 }
