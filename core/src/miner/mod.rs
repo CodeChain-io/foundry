@@ -148,15 +148,6 @@ pub struct MinerStatus {
     pub transactions_in_future_queue: usize,
 }
 
-/// Represents the result of importing tranasction.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum TransactionImportResult {
-    /// Tranasction was imported to current queue.
-    Current,
-    /// Transaction was imported to future queue.
-    Future,
-}
-
 #[cfg(all(feature = "nightly", test))]
 mod mem_pool_benches;
 
