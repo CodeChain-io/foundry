@@ -35,7 +35,7 @@
 //! Unconfirmed sub-states are managed with `checkpoint`s which may be canonicalized
 //! or rolled back.
 
-use crate::cache::{ShardCache, TopCache};
+use crate::cache::{ModuleCache, ShardCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::stake::{change_params, delegate_ccs, redelegate, revoke, transfer_ccs};
 use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
@@ -51,7 +51,7 @@ use ctypes::transaction::{Action, ShardTransaction, Transaction};
 use ctypes::util::unexpected::Mismatch;
 #[cfg(test)]
 use ctypes::Tracker;
-use ctypes::{BlockNumber, CommonParams, ShardId, TxHash};
+use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, TxHash};
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use primitives::{Bytes, H256};
@@ -86,6 +86,7 @@ pub struct TopLevelState {
 
     top_cache: TopCache,
     shard_caches: HashMap<ShardId, ShardCache>,
+    module_caches: HashMap<StorageId, ModuleCache>,
     id_of_checkpoints: Vec<CheckpointId>,
 }
 
@@ -217,12 +218,14 @@ impl TopLevelState {
 
         let top_cache = db.top_cache();
         let shard_caches = db.shard_caches();
+        let module_caches = db.module_caches();
 
         let state = TopLevelState {
             db: RefCell::new(db),
             root,
             top_cache,
             shard_caches,
+            module_caches,
             id_of_checkpoints: Default::default(),
         };
 
@@ -527,6 +530,10 @@ impl TopLevelState {
         &self.shard_caches
     }
 
+    pub fn module_caches(&self) -> &HashMap<StorageId, ModuleCache> {
+        &self.module_caches
+    }
+
     pub fn root(&self) -> H256 {
         self.root
     }
@@ -559,6 +566,7 @@ impl Clone for TopLevelState {
             id_of_checkpoints: self.id_of_checkpoints.clone(),
             top_cache: self.top_cache.clone(),
             shard_caches: self.shard_caches.clone(),
+            module_caches: self.module_caches.clone(),
         }
     }
 }
