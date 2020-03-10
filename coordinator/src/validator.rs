@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use ckey::Public;
-use ctypes::BlockHash;
+use ctypes::{BlockHash, TxHash};
 
 /// A `Validator` receives requests from the underlying consensus engine
 /// and performs validation of blocks and Txes.
@@ -75,8 +75,81 @@ impl Transaction<'_> {
     fn body<T: 'static>(&self) -> Option<&T> {
         self.body.downcast_ref()
     }
+
+    fn size(&self) -> usize {
+        unimplemented!()
+    }
+
+    fn hash(&self) -> TxHash {
+        unimplemented!()
+    }
 }
 
+/// Transaction origin
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TxOrigin {
+    /// Transaction coming from local RPC
+    Local,
+    /// External transaction received from network
+    External,
+}
+
+pub struct TransactionWithMetadata<'a> {
+    pub tx: Transaction<'a>,
+    pub origin: TxOrigin,
+    pub inserted_block_number: u64,
+    pub inserted_timestamp: u64,
+    /// ID assigned upon insertion, should be unique
+    pub insertion_id: u64,
+}
+
+impl<'a> TransactionWithMetadata<'a> {
+    fn new(
+        tx: Transaction<'a>,
+        origin: TxOrigin,
+        inserted_block_number: u64,
+        inserted_timestamp: u64,
+        insertion_id: u64,
+    ) -> Self {
+        Self {
+            tx,
+            origin,
+            inserted_block_number,
+            inserted_timestamp,
+            insertion_id,
+        }
+    }
+
+    fn size(&self) -> usize {
+        self.tx.size()
+    }
+
+    fn hash(&self) -> TxHash {
+        self.tx.hash()
+    }
+}
+
+pub struct TransactionWithGas<'a> {
+    pub tx: Transaction<'a>,
+    pub gas: usize,
+}
+
+impl<'a> TransactionWithGas<'a> {
+    fn new(tx: Transaction<'a>, gas: usize) -> Self {
+        Self {
+            tx,
+            gas,
+        }
+    }
+
+    fn size(&self) -> usize {
+        self.tx.size()
+    }
+
+    fn hash(&self) -> TxHash {
+        self.tx.hash()
+    }
+}
 pub enum Evidence {
     DoubleVote, // Should import and use DoubleVote type defined in tendermint module?
 }
@@ -84,19 +157,6 @@ pub enum Evidence {
 pub struct TransactionExecutionOutcome {
     pub is_success: bool,
     pub events: Vec<Event>,
-}
-
-pub enum TransactionCheckType {
-    New,
-    Recheck,
-    OwnTxCheck,
-}
-pub enum TransactionCheckOutcome {
-    Valid {
-        priority: usize,
-        gas: usize,
-    },
-    Invalid,
 }
 
 pub struct BlockOutcome {
@@ -109,9 +169,7 @@ pub struct BlockOutcome {
 pub trait Validator {
     fn initialize_chain(&mut self) -> ConsensusParams;
     fn execute_block(&mut self, header: &Header, transactions: &[Transaction], evidences: &[Evidence]) -> BlockOutcome;
-    fn check_transaction(
-        &mut self,
-        transaction: &Transaction,
-        check_type: TransactionCheckType,
-    ) -> TransactionCheckOutcome;
+    fn check_transaction(&mut self, transaction: &Transaction) -> bool;
+    fn fetch_transactions_for_block(&self, transactions: &[TransactionWithMetadata]) -> Vec<TransactionWithGas>;
+    fn remove_old_transactions(&self, transactions: &[TransactionWithMetadata]) -> Vec<TransactionWithMetadata>;
 }
