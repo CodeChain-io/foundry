@@ -14,7 +14,4 @@ export interface KeyManagementAPI {
     }): Promise<string>;
 }
 
-export interface KeyStore {
-    platform: KeyManagementAPI;
-    asset: KeyManagementAPI;
-}
+export type KeyStore = KeyManagementAPI;
