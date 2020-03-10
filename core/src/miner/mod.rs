@@ -114,17 +114,8 @@ pub trait MinerService: Send + Sync {
     /// Get a list of all pending transactions in the mem pool.
     fn ready_transactions(&self, range: Range<u64>) -> Vec<Transaction>;
 
-    /// Get list of all future transaction in the mem pool.
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingSignedTransactions;
-
     /// Get a count of all pending transactions in the mem pool.
     fn count_pending_transactions(&self, range: Range<u64>) -> usize;
-
-    /// a count of all pending transaction including both current and future transactions.
-    fn future_included_count_pending_transactions(&self, range: Range<u64>) -> usize;
-
-    /// Get a list of all future transactions.
-    fn future_transactions(&self) -> Vec<SignedTransaction>;
 
     /// Start sealing.
     fn start_sealing<C: MiningBlockChainClient + EngineInfo + TermInfo>(&self, client: &C);
@@ -153,28 +144,4 @@ pub trait MinerService: Send + Sync {
 pub struct MinerStatus {
     /// Number of transactions in queue with state `pending` (ready to be included in block)
     pub transactions_in_pending_queue: usize,
-    /// Number of transactions in queue with state `future` (not yet ready to be included in block)
-    pub transactions_in_future_queue: usize,
-}
-
-/// Represents the result of importing tranasction.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum TransactionImportResult {
-    /// Tranasction was imported to current queue.
-    Current,
-    /// Transaction was imported to future queue.
-    Future,
-}
-
-#[cfg(all(feature = "nightly", test))]
-mod mem_pool_benches;
-
-fn fetch_account_creator<'c>(client: &'c dyn AccountData) -> impl Fn(&Public) -> AccountDetails + 'c {
-    move |public: &Public| {
-        let address = public_to_address(public);
-        AccountDetails {
-            seq: client.latest_seq(&address),
-            balance: client.latest_balance(&address),
-        }
-    }
 }

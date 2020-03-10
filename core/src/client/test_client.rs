@@ -41,7 +41,7 @@ use crate::consensus::EngineError;
 use crate::db::{COL_STATE, NUM_COLUMNS};
 use crate::encoded;
 use crate::error::{BlockImportError, Error as GenericError};
-use crate::miner::{MemPoolMinFees, Miner, MinerService, TransactionImportResult};
+use crate::miner::{MemPoolMinFees, Miner, MinerService};
 use crate::scheme::Scheme;
 use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction};
 use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
@@ -292,7 +292,6 @@ impl TestBlockChainClient {
         let hash = signed.hash();
         let res = self.miner.import_external_transactions(self, vec![signed.into()]);
         let res = res.into_iter().next().unwrap().expect("Successful import");
-        assert_eq!(res, TransactionImportResult::Current);
         hash
     }
 
@@ -528,16 +527,8 @@ impl BlockChainClient for TestBlockChainClient {
         self.miner.ready_transactions(range)
     }
 
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
-        self.miner.future_pending_transactions(range)
-    }
-
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {
         self.miner.count_pending_transactions(range)
-    }
-
-    fn future_included_count_pending_transactions(&self, range: Range<u64>) -> usize {
-        self.miner.future_included_count_pending_transactions(range)
     }
 
     fn is_pending_queue_empty(&self) -> bool {

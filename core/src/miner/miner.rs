@@ -576,19 +576,6 @@ impl MinerService for Miner {
         self.mem_pool.read().count_pending_transactions(range)
     }
 
-    fn future_included_count_pending_transactions(&self, range: Range<u64>) -> usize {
-        self.mem_pool.read().future_included_count_pending_transactions(range)
-    }
-
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
-        self.mem_pool.read().get_future_pending_transactions(usize::max_value(), None, range)
-    }
-
-    /// Get a list of all future transactions.
-    fn future_transactions(&self) -> Vec<SignedTransaction> {
-        self.mem_pool.read().future_transactions()
-    }
-
     fn start_sealing<C: MiningBlockChainClient + EngineInfo + TermInfo>(&self, client: &C) {
         cdebug!(MINER, "Start sealing");
         self.sealing_enabled.store(true, Ordering::Relaxed);
