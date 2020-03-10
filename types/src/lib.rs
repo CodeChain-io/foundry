@@ -15,8 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #[macro_use]
-extern crate rlp_derive;
-#[macro_use]
 extern crate serde_derive;
 
 mod block_hash;
