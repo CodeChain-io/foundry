@@ -21,6 +21,7 @@ pub mod account;
 pub mod action_data;
 pub mod dummy_shard_text;
 pub mod metadata;
+pub mod module_datum;
 pub mod shard;
 
 #[derive(Clone, Copy)]
@@ -30,4 +31,5 @@ enum Prefix {
     Shard = b'H',
     Metadata = b'M',
     ShardText = b'X',
+    ModuleDatum = b'S',
 }
