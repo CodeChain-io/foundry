@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::WriteBack;
-use crate::{Account, ActionData, Metadata, MetadataAddress, Shard, ShardAddress};
+use crate::{Account, ActionData, Metadata, MetadataAddress, Module, ModuleAddress, Shard, ShardAddress};
 use ckey::Address;
 use merkle_trie::{Result as TrieResult, Trie, TrieMut};
 use primitives::H256;
@@ -26,6 +26,7 @@ pub struct TopCache {
     account: WriteBack<Account>,
     metadata: WriteBack<Metadata>,
     shard: WriteBack<Shard>,
+    module: WriteBack<Module>,
     action_data: WriteBack<ActionData>,
 }
 
@@ -34,12 +35,14 @@ impl TopCache {
         accounts: impl Iterator<Item = (Address, Account)>,
         metadata: impl Iterator<Item = (MetadataAddress, Metadata)>,
         shards: impl Iterator<Item = (ShardAddress, Shard)>,
+        modules: impl Iterator<Item = (ModuleAddress, Module)>,
         action_data: impl Iterator<Item = (H256, ActionData)>,
     ) -> Self {
         Self {
             account: WriteBack::new_with_iter(accounts),
             metadata: WriteBack::new_with_iter(metadata),
             shard: WriteBack::new_with_iter(shards),
+            module: WriteBack::new_with_iter(modules),
             action_data: WriteBack::new_with_iter(action_data),
         }
     }
@@ -132,5 +135,9 @@ impl TopCache {
 
     pub fn cached_action_data(&self) -> Vec<(H256, Option<ActionData>)> {
         self.action_data.items_sorted_by_touched()
+    }
+
+    pub fn cached_modules(&self) -> Vec<(ModuleAddress, Option<Module>)> {
+        self.module.items_sorted_by_touched()
     }
 }
