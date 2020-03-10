@@ -12,3 +12,12 @@ export interface ConnectionEnd {
     clientIdentifier: string;
     counterpartyClientIdentifier: string;
 }
+
+export interface ChannelEnd {
+    state: "INIT" | "TRYOPEN" | "OPEN" | "CLOSED";
+    ordering: "ORDERED" | "UNORDERED";
+    counterpartyPortIdentifier: string;
+    counterpartyChannelIdentifier: string;
+    connectionHops: string[];
+    version: string;
+}
