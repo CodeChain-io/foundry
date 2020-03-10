@@ -308,9 +308,7 @@ impl Miner {
 
             // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock
             let mem_pool = self.mem_pool.read();
-            let transactions = mem_pool
-                .top_transactions(max_body_size, Some(open_block.header().timestamp()), DEFAULT_RANGE)
-                .transactions;
+            let transactions = mem_pool.top_transactions(max_body_size, DEFAULT_RANGE).transactions;
 
             (transactions, open_block, block_number)
         };
@@ -667,7 +665,7 @@ impl MinerService for Miner {
     fn ready_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
         // FIXME: Update the body size when the common params are updated
         let max_body_size = self.engine.machine().genesis_common_params().max_body_size();
-        self.mem_pool.read().top_transactions(max_body_size, None, range)
+        self.mem_pool.read().top_transactions(max_body_size, range)
     }
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {
@@ -679,7 +677,7 @@ impl MinerService for Miner {
     }
 
     fn future_pending_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
-        self.mem_pool.read().get_future_pending_transactions(usize::max_value(), None, range)
+        self.mem_pool.read().get_future_pending_transactions(usize::max_value(), range)
     }
 
     /// Get a list of all future transactions.
