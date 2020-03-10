@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::mem_pool_types::MemPoolItem;
 use crate::db as dblib;
+use coordinator::validator::TransactionWithMetadata;
 use kvdb::{DBTransaction, KeyValueDB};
 use primitives::H256;
 use rlp::Encodable;
@@ -28,7 +28,7 @@ pub fn backup_batch_with_capacity(length: usize) -> DBTransaction {
     DBTransaction::with_capacity(length)
 }
 
-pub fn backup_item(batch: &mut DBTransaction, key: H256, item: &MemPoolItem) {
+pub fn backup_item(batch: &mut DBTransaction, key: H256, item: &TransactionWithMetadata) {
     let mut db_key = PREFIX_ITEM.to_vec();
     db_key.extend_from_slice(key.as_ref());
     batch.put(dblib::COL_MEMPOOL, db_key.as_ref(), item.rlp_bytes().as_ref());
@@ -40,7 +40,7 @@ pub fn remove_item(batch: &mut DBTransaction, key: &H256) {
     batch.delete(dblib::COL_MEMPOOL, db_key.as_ref());
 }
 
-pub fn recover_to_data(db: &dyn KeyValueDB) -> HashMap<H256, MemPoolItem> {
+pub fn recover_to_data(db: &dyn KeyValueDB) -> HashMap<H256, TransactionWithMetadata> {
     let mut by_hash = HashMap::new();
 
     for (key, value) in db.iter(dblib::COL_MEMPOOL) {
