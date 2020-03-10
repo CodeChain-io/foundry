@@ -21,6 +21,7 @@ pub mod account;
 pub mod action_data;
 pub mod dummy_shard_text;
 pub mod metadata;
+pub mod module;
 pub mod module_datum;
 pub mod shard;
 
@@ -32,4 +33,5 @@ enum Prefix {
     Metadata = b'M',
     ShardText = b'X',
     ModuleDatum = b'S',
+    Module = b'U',
 }
