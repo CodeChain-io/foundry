@@ -38,6 +38,10 @@ impl<Item: CacheableItem> LruCache<Item> {
         self.cache.iter()
     }
 
+    pub fn cloned_iter<'a>(&'a self) -> impl Iterator<Item = (Item::Address, Item)> + 'a {
+        self.cache.iter().map(|(addr, value)| (*addr, value.clone()))
+    }
+
     pub fn insert(&mut self, k: Item::Address, v: Item) -> Option<Item> {
         self.cache.insert(k, v)
     }
