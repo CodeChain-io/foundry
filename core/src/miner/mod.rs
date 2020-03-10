@@ -25,9 +25,10 @@ use cstate::TopStateView;
 use ctypes::{BlockHash, BlockId};
 use primitives::Bytes;
 use std::ops::Range;
+use std::sync::Arc;
 
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};
-use crate::account_provider::Error as AccountProviderError;
+use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::client::{BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo};
 use crate::consensus::EngineType;
 use crate::error::Error;
@@ -46,7 +47,7 @@ pub trait MinerService: Send + Sync {
     fn authoring_params(&self) -> AuthoringParams;
 
     /// Set the author that we will seal blocks as.
-    fn set_author(&self, author: Public) -> Result<(), AccountProviderError>;
+    fn set_author(&self, ap: Arc<AccountProvider>, author: Public) -> Result<(), AccountProviderError>;
 
     ///Get the address of block author.
     fn get_author(&self) -> Public;
