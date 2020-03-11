@@ -177,6 +177,6 @@ pub trait Validator {
     fn initialize_chain(&mut self) -> ConsensusParams;
     fn execute_block(&mut self, header: &Header, transactions: &[Transaction], evidences: &[Evidence]) -> BlockOutcome;
     fn check_transaction(&mut self, transaction: &Transaction) -> bool;
-    fn fetch_transactions_for_block(&self, transactions: &[TransactionWithMetadata]) -> Vec<TransactionWithGas>;
-    fn remove_old_transactions(&self, transactions: &[TransactionWithMetadata]) -> Vec<TransactionWithMetadata>;
+    fn fetch_transactions_for_block(&self, transactions: &[&TransactionWithMetadata]) -> Vec<TransactionWithGas>;
+    fn remove_old_transactions(&self, transactions: &[&TransactionWithMetadata]) -> Vec<TransactionWithMetadata>;
 }
