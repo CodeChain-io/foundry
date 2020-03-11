@@ -20,8 +20,7 @@ async function sendBlock() {
             header2.toEncodeObject()
         ],
         [[], []],
-        header2.hashing(),
-        header2.getScore()
+        header2.hashing()
     );
 
     await mock.end();

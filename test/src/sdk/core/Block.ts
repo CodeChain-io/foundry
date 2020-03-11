@@ -17,7 +17,6 @@ export interface BlockData {
     transactionsRoot: H256;
     stateRoot: H256;
     nextValidatorSetHash: H256;
-    score: U256;
     seal: number[][];
     hash: H256;
     transactions: SignedTransaction[];
@@ -31,7 +30,6 @@ export interface BlockJSON {
     transactionsRoot: string;
     stateRoot: string;
     nextValidatorSetHash: string;
-    score: string;
     seal: number[][];
     hash: string;
     transactions: SignedTransactionJSON[];
@@ -50,7 +48,6 @@ export class Block {
             transactionsRoot,
             stateRoot,
             nextValidatorSetHash,
-            score,
             seal,
             hash,
             transactions
@@ -64,7 +61,6 @@ export class Block {
             transactionsRoot: new H256(transactionsRoot),
             stateRoot: new H256(stateRoot),
             nextValidatorSetHash: new H256(nextValidatorSetHash),
-            score: new U256(score),
             seal,
             hash: new H256(hash),
             transactions: transactions.map(fromJSONToSignedTransaction)
@@ -78,7 +74,6 @@ export class Block {
     public transactionsRoot: H256;
     public stateRoot: H256;
     public nextValidatorSetHash: H256;
-    public score: U256;
     public seal: number[][];
     public hash: H256;
     public transactions: SignedTransaction[];
@@ -93,7 +88,6 @@ export class Block {
             transactionsRoot,
             stateRoot,
             nextValidatorSetHash,
-            score,
             seal,
             hash,
             transactions
@@ -106,7 +100,6 @@ export class Block {
         this.transactionsRoot = transactionsRoot;
         this.stateRoot = stateRoot;
         this.nextValidatorSetHash = nextValidatorSetHash;
-        this.score = score;
         this.seal = seal;
         this.hash = hash;
         this.transactions = transactions;
@@ -122,7 +115,6 @@ export class Block {
             transactionsRoot,
             stateRoot,
             nextValidatorSetHash,
-            score,
             seal,
             hash,
             transactions
@@ -136,7 +128,6 @@ export class Block {
             transactionsRoot: transactionsRoot.toJSON(),
             stateRoot: stateRoot.toJSON(),
             nextValidatorSetHash: nextValidatorSetHash.toJSON(),
-            score: score.value.toString(),
             seal: seal.map(buffer => [...buffer]),
             hash: hash.toJSON(),
             transactions: transactions.map(p => p.toJSON())
@@ -153,7 +144,6 @@ export class Block {
             transactionsRoot,
             stateRoot,
             nextValidatorSetHash,
-            score,
             seal,
             transactions
         } = this;
@@ -164,7 +154,6 @@ export class Block {
         blockHeader.push(stateRoot.toEncodeObject());
         blockHeader.push(transactionsRoot.toEncodeObject());
         blockHeader.push(nextValidatorSetHash.toEncodeObject());
-        blockHeader.push(score.toEncodeObject());
         blockHeader.push(number);
         blockHeader.push(timestamp);
         blockHeader.push(`0x${Buffer.from(extraData).toString("hex")}`);

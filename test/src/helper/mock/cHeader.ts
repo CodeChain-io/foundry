@@ -29,10 +29,9 @@ export class Header {
         const stateRoot = new H256(decodedmsg[2].toString("hex"));
         const transactionsRoot = new H256(decodedmsg[3].toString("hex"));
         const nextValidatorSetHash = new H256(decodedmsg[4].toString("hex"));
-        const score = decodedmsg[5];
-        const number = new U256(parseInt(decodedmsg[6].toString("hex"), 16));
-        const timestamp = new U256(parseInt(decodedmsg[7].toString("hex"), 16));
-        const extraData = decodedmsg[8];
+        const number = new U256(parseInt(decodedmsg[5].toString("hex"), 16));
+        const timestamp = new U256(parseInt(decodedmsg[6].toString("hex"), 16));
+        const extraData = decodedmsg[7];
 
         // Be careful of the order! Three roots have same types, so mistake on the order will not be catched by typechecker.
         const header = new Header(
@@ -44,11 +43,10 @@ export class Header {
             transactionsRoot,
             stateRoot,
             nextValidatorSetHash,
-            score,
             []
         );
 
-        for (let i = 9; i < decodedmsg.getLength(); i++) {
+        for (let i = 8; i < decodedmsg.getLength(); i++) {
             header.seal.push(decodedmsg[i]);
         }
 
@@ -62,7 +60,6 @@ export class Header {
     private transactionsRoot: H256;
     private stateRoot: H256;
     private nextValidatorSetHash: H256;
-    private score: U256;
     private seal: number[][];
     private hash: null | H256;
     private bareHash: null | H256;
@@ -76,7 +73,6 @@ export class Header {
         transactionsRoot: H256,
         stateRoot: H256,
         nextValidatorSetHash: H256,
-        score: U256,
         seal: number[][],
         hash?: H256,
         bareHash?: H256
@@ -89,7 +85,6 @@ export class Header {
         this.transactionsRoot = transactionsRoot;
         this.stateRoot = stateRoot;
         this.nextValidatorSetHash = nextValidatorSetHash;
-        this.score = score;
         this.seal = seal;
         this.hash = hash == null ? this.hashing() : hash;
         this.bareHash = bareHash == null ? null : bareHash;
@@ -127,10 +122,6 @@ export class Header {
         this.nextValidatorSetHash = root;
     }
 
-    public setScore(score: U256) {
-        this.score = score;
-    }
-
     public setSeal(seal: number[][]) {
         this.seal = seal;
     }
@@ -141,10 +132,6 @@ export class Header {
 
     public getBareHash(): H256 | null {
         return this.bareHash;
-    }
-
-    public getScore(): U256 {
-        return this.score;
     }
 
     public default(): Header {
@@ -159,9 +146,6 @@ export class Header {
             BLAKE_NULL_RLP,
             BLAKE_NULL_RLP,
             BLAKE_NULL_RLP,
-            new U256(
-                "0000000000000000000000000000000000000000000000000000000000000000"
-            ),
             []
         );
     }
@@ -173,7 +157,6 @@ export class Header {
             this.stateRoot.toEncodeObject(),
             this.transactionsRoot.toEncodeObject(),
             this.nextValidatorSetHash.toEncodeObject(),
-            this.score.toEncodeObject(),
             this.number.toEncodeObject(),
             this.timestamp.toEncodeObject(),
             this.extraData

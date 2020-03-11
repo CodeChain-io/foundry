@@ -21,4 +21,4 @@ const INVALID_SEAL = [Buffer.from("DEADBEEF")];
 const params = {
     tseal: INVALID_SEAL
 };
-createTestSuite(9, "OnChain invalid score seal propagation test", params);
+createTestSuite(9, "OnChain invalid seal propagation test", params);

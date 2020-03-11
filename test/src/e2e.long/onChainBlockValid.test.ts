@@ -76,7 +76,6 @@ describe("Test onChain block communication", async function() {
             new H256(genesisBlock.transactionsRoot),
             new H256(genesisBlock.stateRoot),
             new H256(genesisBlock.nextValidatorSetHash),
-            new U256(`${genesisBlock.score}`),
             genesisBlock.seal
         );
         const author2PlatformAddr = Address.fromString(block1.author);
@@ -89,7 +88,6 @@ describe("Test onChain block communication", async function() {
             new H256(block1.transactionsRoot),
             new H256(block1.stateRoot),
             new H256(block1.nextValidatorSetHash),
-            new U256(2222222222222),
             block1.seal
         );
         const author3PlatformAddr = Address.fromString(block2.author);
@@ -102,7 +100,6 @@ describe("Test onChain block communication", async function() {
             new H256(block2.transactionsRoot),
             new H256(block2.stateRoot),
             new H256(block2.nextValidatorSetHash),
-            new U256(33333333333333),
             block2.seal
         );
 
@@ -137,8 +134,7 @@ describe("Test onChain block communication", async function() {
                 header2.toEncodeObject()
             ],
             [[], []],
-            header2.hashing(),
-            header2.getScore()
+            header2.hashing()
         );
 
         await mock.waitStatusMessage();
