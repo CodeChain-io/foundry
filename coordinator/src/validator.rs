@@ -1,7 +1,8 @@
 use std::any::Any;
 
 use ckey::Public;
-use ctypes::{BlockHash, TxHash};
+use ctypes::TxHash;
+use primitives::H256;
 
 /// A `Validator` receives requests from the underlying consensus engine
 /// and performs validation of blocks and Txes.
@@ -59,7 +60,6 @@ pub struct Header {
     /// Block extra data.
     extra_data: Bytes,
 }
-
 
 /// A decoded transaction.
 pub struct Transaction<'a> {
@@ -157,6 +157,15 @@ pub enum Evidence {
 pub struct TransactionExecutionOutcome {
     pub is_success: bool,
     pub events: Vec<Event>,
+}
+
+pub struct BlockHash {
+    /// Transactions root.
+    transactions_root: H256,
+    /// State root.
+    state_root: H256,
+    /// Next validator set hash.
+    next_validator_set_hash: H256,
 }
 
 pub struct BlockOutcome {
