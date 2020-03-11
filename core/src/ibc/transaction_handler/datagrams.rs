@@ -476,6 +476,7 @@ impl Decodable for Datagram {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ibc::channel_04::types::Sequence;
     use rlp::{self, rlp_encode_and_decode_test};
 
     #[test]
@@ -541,5 +542,26 @@ mod tests {
             },
         };
         rlp_encode_and_decode_test!(chan_open_init);
+    }
+
+    #[test]
+    fn send_packet() {
+        let send_packet = Datagram::SendPacket {
+            raw: SendPacket {
+                tag: DatagramTag::SendPacket,
+                packet: Packet {
+                    sequence: Sequence {
+                        raw: 1,
+                    },
+                    timeout_height: 32,
+                    source_port: "source_port".to_owned(),
+                    source_channel: "source_channel".to_owned(),
+                    dest_port: "dest_port".to_owned(),
+                    dest_channel: "dest_channel".to_owned(),
+                    data: b"data".to_vec(),
+                },
+            },
+        };
+        rlp_encode_and_decode_test!(send_packet);
     }
 }

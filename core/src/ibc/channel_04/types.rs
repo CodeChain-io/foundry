@@ -20,9 +20,23 @@ use primitives::{Bytes, H256};
 use rlp;
 use rlp::{DecoderError, Rlp, RlpStream};
 
-#[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
+#[derive(PartialEq, Debug)]
 pub struct Sequence {
     pub raw: u64,
+}
+
+impl rlp::Encodable for Sequence {
+    fn rlp_append(&self, s: &mut RlpStream) {
+        s.append_single_value(&self.raw);
+    }
+}
+
+impl rlp::Decodable for Sequence {
+    fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
+        Ok(Self {
+            raw: rlp.as_val()?,
+        })
+    }
 }
 
 #[repr(u8)]
