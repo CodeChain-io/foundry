@@ -12,7 +12,6 @@ export { SignedTransaction } from "./SignedTransaction";
 export { CreateShard } from "./transaction/CreateShard";
 export { Pay } from "./transaction/Pay";
 export { Remove } from "./transaction/Remove";
-export { SetRegularKey } from "./transaction/SetRegularKey";
 export { SetShardOwners } from "./transaction/SetShardOwners";
 export { SetShardUsers } from "./transaction/SetShardUsers";
 export { Store } from "./transaction/Store";

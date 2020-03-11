@@ -21,7 +21,6 @@ import { CreateShard } from "./transaction/CreateShard";
 import { Custom } from "./transaction/Custom";
 import { Pay } from "./transaction/Pay";
 import { Remove } from "./transaction/Remove";
-import { SetRegularKey } from "./transaction/SetRegularKey";
 import { SetShardOwners } from "./transaction/SetShardOwners";
 import { SetShardUsers } from "./transaction/SetShardUsers";
 import { Store } from "./transaction/Store";
@@ -43,7 +42,6 @@ export class Core {
         SignedTransaction,
         // Transaction
         Pay,
-        SetRegularKey,
         CreateShard,
         SetShardOwners,
         SetShardUsers,
@@ -86,19 +84,6 @@ export class Core {
             U64.ensure(quantity),
             this.networkId
         );
-    }
-
-    /**
-     * Creates SetRegularKey type which sets the regular key of the tx signer.
-     * @param params.key The public key of a regular key
-     * @throws Given string for key is invalid for converting it to H512
-     */
-    public createSetRegularKeyTransaction(params: {
-        key: H512Value;
-    }): SetRegularKey {
-        const { key } = params;
-        checkKey(key);
-        return new SetRegularKey(H512.ensure(key), this.networkId);
     }
 
     /**
