@@ -62,14 +62,14 @@ pub struct Header {
 }
 
 /// A decoded transaction.
-pub struct Transaction<'a> {
-    tx_type: &'a str,
-    body: &'a dyn Any,
+pub struct Transaction {
+    tx_type: String,
+    body: Box<dyn Any>,
 }
 
-impl Transaction<'_> {
+impl Transaction {
     fn tx_type(&self) -> &str {
-        self.tx_type
+        &self.tx_type
     }
 
     fn body<T: 'static>(&self) -> Option<&T> {
@@ -94,8 +94,8 @@ pub enum TxOrigin {
     External,
 }
 
-pub struct TransactionWithMetadata<'a> {
-    pub tx: Transaction<'a>,
+pub struct TransactionWithMetadata {
+    pub tx: Transaction,
     pub origin: TxOrigin,
     pub inserted_block_number: u64,
     pub inserted_timestamp: u64,
@@ -103,9 +103,9 @@ pub struct TransactionWithMetadata<'a> {
     pub insertion_id: u64,
 }
 
-impl<'a> TransactionWithMetadata<'a> {
+impl<'a> TransactionWithMetadata {
     fn new(
-        tx: Transaction<'a>,
+        tx: Transaction,
         origin: TxOrigin,
         inserted_block_number: u64,
         inserted_timestamp: u64,
@@ -129,13 +129,13 @@ impl<'a> TransactionWithMetadata<'a> {
     }
 }
 
-pub struct TransactionWithGas<'a> {
-    pub tx: Transaction<'a>,
+pub struct TransactionWithGas {
+    pub tx: Transaction,
     pub gas: usize,
 }
 
-impl<'a> TransactionWithGas<'a> {
-    fn new(tx: Transaction<'a>, gas: usize) -> Self {
+impl<'a> TransactionWithGas {
+    fn new(tx: Transaction, gas: usize) -> Self {
         Self {
             tx,
             gas,
