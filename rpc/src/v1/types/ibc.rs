@@ -218,42 +218,30 @@ impl Packet {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Sequence {
-    pub raw: u64,
-}
+pub struct Sequence(u64);
 
 impl FromCore<CoreSequence> for Sequence {
     fn from_core(core: CoreSequence) -> Self {
-        Sequence {
-            raw: core.raw,
-        }
+        Sequence(core.raw)
     }
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PacketCommitmentHash {
-    pub raw: H256,
-}
+pub struct PacketCommitmentHash(H256);
 
 impl FromCore<CorePacketCommitmentHash> for PacketCommitmentHash {
     fn from_core(core: CorePacketCommitmentHash) -> Self {
-        PacketCommitmentHash {
-            raw: core.raw,
-        }
+        PacketCommitmentHash(core.raw)
     }
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct AcknowledgementHash {
-    pub raw: H256,
-}
+pub struct AcknowledgementHash(H256);
 
 impl FromCore<CoreAcknowledgementHash> for AcknowledgementHash {
     fn from_core(core: CoreAcknowledgementHash) -> Self {
-        AcknowledgementHash {
-            raw: core.raw,
-        }
+        AcknowledgementHash(core.raw)
     }
 }
