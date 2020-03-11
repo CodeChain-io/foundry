@@ -28,11 +28,11 @@ impl<C: context::Context> validator::Validator for Coordinator<C> {
         unimplemented!()
     }
 
-    fn fetch_transactions_for_block(&self, transactions: &[TransactionWithMetadata]) -> Vec<TransactionWithGas> {
+    fn fetch_transactions_for_block(&self, transactions: &[&TransactionWithMetadata]) -> Vec<TransactionWithGas> {
         unimplemented!()
     }
 
-    fn remove_old_transactions(&self, all_transactions: &[TransactionWithMetadata]) -> Vec<TransactionWithMetadata> {
+    fn remove_old_transactions(&self, all_transactions: &[&TransactionWithMetadata]) -> Vec<TransactionWithMetadata> {
         unimplemented!()
     }
 }
