@@ -6,7 +6,7 @@
         "validators": [
           "0xc7db8f558a87a45d3b4d2e7422abb48a27e6eeee00a0f884ca244d1d783d6ead2ca445e9ac8f08b311d78b4b4b69d48a9daf0c98d2a19e87e482f8060138ba88"
         ],
-        "timeoutPropose": 10000,
+        "timeoutPropose": 3000,
         "timeoutProposeDelta": 500,
         "timeoutPrevote": 1000,
         "timeoutPrevoteDelta": 500,
