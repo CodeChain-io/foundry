@@ -74,11 +74,11 @@ impl Transaction {
         unimplemented!()
     }
 
-    fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         unimplemented!()
     }
 
-    fn hash(&self) -> TxHash {
+    pub fn hash(&self) -> TxHash {
         unimplemented!()
     }
 }
@@ -102,7 +102,7 @@ pub struct TransactionWithMetadata {
 }
 
 impl<'a> TransactionWithMetadata {
-    fn new(
+    pub fn new(
         tx: Transaction,
         origin: TxOrigin,
         inserted_block_number: u64,
@@ -118,11 +118,11 @@ impl<'a> TransactionWithMetadata {
         }
     }
 
-    fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.tx.size()
     }
 
-    fn hash(&self) -> TxHash {
+    pub fn hash(&self) -> TxHash {
         self.tx.hash()
     }
 }
@@ -140,11 +140,11 @@ impl<'a> TransactionWithGas {
         }
     }
 
-    fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.tx.size()
     }
 
-    fn hash(&self) -> TxHash {
+    pub fn hash(&self) -> TxHash {
         self.tx.hash()
     }
 }
