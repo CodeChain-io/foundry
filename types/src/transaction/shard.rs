@@ -16,7 +16,7 @@
 
 use super::{HashingError, PartialHashing};
 use crate::util::tag::Tag;
-use crate::{ShardId, Tracker, TxHash};
+use crate::{ShardId, Tracker};
 use ccrypto::blake256;
 use ckey::NetworkId;
 use primitives::H256;
@@ -25,11 +25,6 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 /// Shard Transaction type.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ShardTransaction {
-    WrapCCC {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        tx_hash: TxHash,
-    },
     ShardStore {
         network_id: NetworkId,
         shard_id: ShardId,
@@ -39,23 +34,12 @@ pub enum ShardTransaction {
 
 impl ShardTransaction {
     pub fn tracker(&self) -> Tracker {
-        if let ShardTransaction::WrapCCC {
-            tx_hash,
-            ..
-        } = self
-        {
-            return (**tx_hash).into()
-        }
         blake256(&*self.rlp_bytes()).into()
     }
 
     pub fn network_id(&self) -> NetworkId {
         match self {
-            ShardTransaction::WrapCCC {
-                network_id,
-                ..
-            }
-            | ShardTransaction::ShardStore {
+            ShardTransaction::ShardStore {
                 network_id,
                 ..
             } => *network_id,
@@ -68,17 +52,11 @@ impl ShardTransaction {
                 shard_id,
                 ..
             } => vec![*shard_id],
-            ShardTransaction::WrapCCC {
-                ..
-            } => panic!("To be removed"),
         }
     }
 
     fn is_valid_output_index(&self, index: usize) -> bool {
         match self {
-            ShardTransaction::WrapCCC {
-                ..
-            } => index == 0,
             ShardTransaction::ShardStore {
                 ..
             } => index == 0,
@@ -90,10 +68,6 @@ impl ShardTransaction {
             return false
         }
         match self {
-            ShardTransaction::WrapCCC {
-                shard_id,
-                ..
-            } => &id == shard_id,
             ShardTransaction::ShardStore {
                 shard_id,
                 ..
@@ -159,11 +133,6 @@ impl Decodable for ShardTransaction {
 impl Encodable for ShardTransaction {
     fn rlp_append(&self, s: &mut RlpStream) {
         match self {
-            ShardTransaction::WrapCCC {
-                ..
-            } => {
-                unreachable!("No reason to get a RLP encoding of WrapCCC");
-            }
             ShardTransaction::ShardStore {
                 network_id,
                 shard_id,
