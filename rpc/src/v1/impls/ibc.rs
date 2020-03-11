@@ -198,12 +198,18 @@ where
         query_common(&self.client, &path, block_number)
     }
 
-    fn query_latest_send_packet(&self, port_id: String, channel_id: String) -> Result<Option<Packet>> {
-        if self.client.state_at(BlockId::Latest).is_none() {
+    fn query_latest_send_packet(
+        &self,
+        port_id: String,
+        channel_id: String,
+        block_number: Option<u64>,
+    ) -> Result<Option<Packet>> {
+        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
+        if self.client.state_at(block_id).is_none() {
             return Ok(None)
         }
-        let mut state = self.client.state_at(BlockId::Latest).unwrap();
-        let block_number = match self.client.block_number(&BlockId::Latest) {
+        let mut state = self.client.state_at(block_id).unwrap();
+        let block_number = match self.client.block_number(&block_id) {
             None => return Ok(None),
             Some(block_number) => block_number,
         };
@@ -211,12 +217,18 @@ where
         Ok(ibc::channel_04::log::get_packet(&mut context, &port_id, &channel_id, "send").map(Packet::from_core))
     }
 
-    fn query_latest_recv_packet(&self, port_id: String, channel_id: String) -> Result<Option<Packet>> {
-        if self.client.state_at(BlockId::Latest).is_none() {
+    fn query_latest_recv_packet(
+        &self,
+        port_id: String,
+        channel_id: String,
+        block_number: Option<u64>,
+    ) -> Result<Option<Packet>> {
+        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
+        if self.client.state_at(block_id).is_none() {
             return Ok(None)
         }
-        let mut state = self.client.state_at(BlockId::Latest).unwrap();
-        let block_number = match self.client.block_number(&BlockId::Latest) {
+        let mut state = self.client.state_at(block_id).unwrap();
+        let block_number = match self.client.block_number(&block_id) {
             None => return Ok(None),
             Some(block_number) => block_number,
         };

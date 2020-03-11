@@ -91,8 +91,18 @@ pub trait IBC {
     ) -> Result<Option<IBCQuery<Sequence>>>;
 
     #[rpc(name = "ibc_query_latest_send_packet")]
-    fn query_latest_send_packet(&self, port_id: String, channel_id: String) -> Result<Option<Packet>>;
+    fn query_latest_send_packet(
+        &self,
+        port_id: String,
+        channel_id: String,
+        block_number: Option<u64>,
+    ) -> Result<Option<Packet>>;
 
     #[rpc(name = "ibc_query_latest_recv_packet")]
-    fn query_latest_recv_packet(&self, port_id: String, channel_id: String) -> Result<Option<Packet>>;
+    fn query_latest_recv_packet(
+        &self,
+        port_id: String,
+        channel_id: String,
+        block_number: Option<u64>,
+    ) -> Result<Option<Packet>>;
 }
