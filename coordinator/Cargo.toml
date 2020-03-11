@@ -7,3 +7,4 @@ edition = "2018"
 [dependencies]
 ctypes = { package = "codechain-types", path = "../types" }
 ckey = {package = "codechain-key", path = "../key" }
+primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
