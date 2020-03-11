@@ -25,6 +25,6 @@ mod transaction;
 pub use self::action::Action;
 pub use self::incomplete_transaction::IncompleteTransaction;
 pub use self::partial_hashing::{HashingError, PartialHashing};
-pub use self::shard::{AssetWrapCCCOutput, ShardTransaction};
+pub use self::shard::ShardTransaction;
 pub use self::timelock::Timelock;
 pub use self::transaction::Transaction;
