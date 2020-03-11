@@ -21,6 +21,7 @@ use merkle_trie::{Result as TrieResult, Trie, TrieMut};
 use primitives::H256;
 use std::cell::RefMut;
 
+#[derive(Clone)]
 pub struct TopCache {
     account: WriteBack<Account>,
     metadata: WriteBack<Metadata>,
@@ -118,37 +119,18 @@ impl TopCache {
     }
 
     pub fn cached_accounts(&self) -> Vec<(Address, Option<Account>)> {
-        let mut items = self.account.items();
-        items.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-        items.into_iter().map(|(_, addr, item)| (addr, item)).collect()
+        self.account.items_sorted_by_touched()
     }
 
     pub fn cached_metadata(&self) -> Vec<(MetadataAddress, Option<Metadata>)> {
-        let mut items = self.metadata.items();
-        items.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-        items.into_iter().map(|(_, addr, item)| (addr, item)).collect()
+        self.metadata.items_sorted_by_touched()
     }
 
     pub fn cached_shards(&self) -> Vec<(ShardAddress, Option<Shard>)> {
-        let mut items = self.shard.items();
-        items.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-        items.into_iter().map(|(_, addr, item)| (addr, item)).collect()
+        self.shard.items_sorted_by_touched()
     }
 
     pub fn cached_action_data(&self) -> Vec<(H256, Option<ActionData>)> {
-        let mut items = self.action_data.items();
-        items.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-        items.into_iter().map(|(_, addr, item)| (addr, item)).collect()
-    }
-}
-
-impl Clone for TopCache {
-    fn clone(&self) -> Self {
-        Self {
-            account: self.account.clone(),
-            metadata: self.metadata.clone(),
-            shard: self.shard.clone(),
-            action_data: self.action_data.clone(),
-        }
+        self.action_data.items_sorted_by_touched()
     }
 }
