@@ -16,10 +16,12 @@
 
 use super::lru_cache::LruCache;
 use super::{ShardCache, TopCache};
+use crate::CacheableItem;
 use crate::{Account, ActionData, Metadata, Shard, ShardText};
 use ctypes::ShardId;
 use std::collections::{HashMap, HashSet};
 
+#[derive(Clone)]
 pub struct GlobalCache {
     account: LruCache<Account>,
     metadata: LruCache<Metadata>,
@@ -67,43 +69,28 @@ impl GlobalCache {
         self.shard_ids().into_iter().map(|shard_id| (shard_id, self.shard_cache(shard_id))).collect()
     }
 
+    fn drain_cacheable_into_lru_cache<T: CacheableItem>(from: Vec<(T::Address, Option<T>)>, to: &mut LruCache<T>) {
+        from.into_iter().for_each(|(addr, item)| {
+            match item {
+                Some(item) => to.insert(addr, item),
+                None => to.remove(&addr),
+            };
+        })
+    }
+
     pub fn override_cache(&mut self, top_cache: &TopCache, shard_caches: &HashMap<ShardId, ShardCache>) {
         self.clear();
 
-        for (addr, item) in top_cache.cached_accounts().into_iter() {
-            match item {
-                Some(item) => self.account.insert(addr, item),
-                None => self.account.remove(&addr),
-            };
-        }
-        for (addr, item) in top_cache.cached_metadata().into_iter() {
-            match item {
-                Some(item) => self.metadata.insert(addr, item),
-                None => self.metadata.remove(&addr),
-            };
-        }
-        for (addr, item) in top_cache.cached_shards().into_iter() {
-            match item {
-                Some(item) => self.shard.insert(addr, item),
-                None => self.shard.remove(&addr),
-            };
-        }
-        for (addr, item) in top_cache.cached_action_data().into_iter() {
-            match item {
-                Some(item) => self.action_data.insert(addr, item),
-                None => self.action_data.remove(&addr),
-            };
-        }
+        Self::drain_cacheable_into_lru_cache(top_cache.cached_accounts(), &mut self.account);
+        Self::drain_cacheable_into_lru_cache(top_cache.cached_metadata(), &mut self.metadata);
+        Self::drain_cacheable_into_lru_cache(top_cache.cached_shards(), &mut self.shard);
+        Self::drain_cacheable_into_lru_cache(top_cache.cached_action_data(), &mut self.action_data);
 
         let mut cached_shard_texts: Vec<_> =
             shard_caches.iter().flat_map(|(_, shard_cache)| shard_cache.cached_shard_text().into_iter()).collect();
-        cached_shard_texts.sort_unstable_by(|lhs, rhs| lhs.0.cmp(&rhs.0));
-        for (_, addr, item) in cached_shard_texts.into_iter() {
-            match item {
-                Some(item) => self.shard_text.insert(addr, item),
-                None => self.shard_text.remove(&addr),
-            };
-        }
+        cached_shard_texts.sort_unstable_by_key(|item| item.0);
+        let cached_shard_texts: Vec<_> = cached_shard_texts.into_iter().map(|(_, addr, item)| (addr, item)).collect();
+        Self::drain_cacheable_into_lru_cache(cached_shard_texts, &mut self.shard_text);
     }
 
     pub fn clear(&mut self) {
@@ -123,18 +110,5 @@ impl Default for GlobalCache {
         const N_ACTION_DATA: usize = 10;
         const N_SHARD_TEXT: usize = 1000;
         Self::new(N_ACCOUNT, N_SHARD, N_ACTION_DATA, N_SHARD_TEXT)
-    }
-}
-
-impl Clone for GlobalCache {
-    fn clone(&self) -> Self {
-        Self {
-            account: self.account.clone(),
-            metadata: self.metadata.clone(),
-            shard: self.shard.clone(),
-            action_data: self.action_data.clone(),
-
-            shard_text: self.shard_text.clone(),
-        }
     }
 }

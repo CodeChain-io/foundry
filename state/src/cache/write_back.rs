@@ -256,6 +256,12 @@ where
             .collect()
     }
 
+    pub fn items_sorted_by_touched(&self) -> Vec<(Item::Address, Option<Item>)> {
+        let mut items = self.items();
+        items.sort_unstable_by_key(|item| item.0);
+        items.into_iter().map(|(_, addr, item)| (addr, item)).collect()
+    }
+
     fn len(&self) -> usize {
         let cache = self.cache.borrow();
         cache.len()
