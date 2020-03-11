@@ -79,6 +79,15 @@ async function main() {
     if ("exit" === (await runSendPacketPrompt({ chainA, chainB }))) {
         return;
     }
+
+    while (true) {
+        const result = await runPacketCheckPrompt({ chainA, chainB });
+        if (result === "exit") {
+            return;
+        } else if (result === "break") {
+            break;
+        }
+    }
 }
 
 main().catch(console.error);
@@ -213,6 +222,27 @@ async function sendPacket({
             })
         })
     );
+}
+
+async function checkPackets({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}) {
+    const commitment = await chainA.queryCommitment(SEQUENCE);
+    console.log(`Chain A's commitment: ${JSON.stringify(commitment)}`);
+    const recvSequence = await chainB.queryNextSequenceRecv();
+    console.log(`Chain B's recvSequence ${JSON.stringify(recvSequence)}`);
+    const acknowledgement = await chainB.queryAcknowledgement(SEQUENCE);
+    console.log(
+        `Chain B's acknowledgement: ${JSON.stringify(acknowledgement)}`
+    );
+    const chainASendPacket = await chainA.queryLatestSendPacket();
+    console.log(`Chain A's sendPacket: ${JSON.stringify(chainASendPacket)}`);
+    const chainBRecvPacket = await chainB.queryLatestRecvPacket();
+    console.log(`Chain B's recvPacket: ${JSON.stringify(chainBRecvPacket)}`);
 }
 
 async function runLightClientCreationPrompt({
@@ -377,6 +407,37 @@ async function runSendPacketPrompt({
     if (packetAnswer === "yes") {
         console.log("Send a packet");
         await sendPacket({ chainA, chainB });
+    }
+
+    return null;
+}
+
+async function runPacketCheckPrompt({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}): Promise<"exit" | "break" | null> {
+    const packetCheckPrompt = new Select({
+        name: "packet check",
+        message: "Will you check the packet status?",
+        choices: ["yes", "skip", "exit"]
+    });
+
+    const packetCheckAnswer = await packetCheckPrompt.run();
+
+    if (packetCheckAnswer === "exit") {
+        return "exit";
+    }
+
+    if (packetCheckAnswer === "yes") {
+        console.log("Check packets");
+        await checkPackets({ chainA, chainB });
+    }
+
+    if (packetCheckAnswer === "skip") {
+        return "break";
     }
 
     return null;

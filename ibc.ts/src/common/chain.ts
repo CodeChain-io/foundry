@@ -136,6 +136,60 @@ export class Chain {
             blockNumber
         ]);
     }
+
+    public async queryCommitment(
+        sequence: number,
+        blockNumber?: number
+    ): Promise<IBCQueryResult<string> | null> {
+        return this.sdk.rpc.sendRpcRequest("ibc_query_packet_commitment", [
+            "DEFAULT_PORT",
+            this.counterpartyIdentifiers.channel,
+            sequence,
+            blockNumber
+        ]);
+    }
+
+    public async queryAcknowledgement(
+        sequence: number,
+        blockNumber?: number
+    ): Promise<IBCQueryResult<string> | null> {
+        return this.sdk.rpc.sendRpcRequest("ibc_query_packet_acknowledgement", [
+            "DEFAULT_PORT",
+            this.counterpartyIdentifiers.channel,
+            sequence,
+            blockNumber
+        ]);
+    }
+
+    public async queryLatestSendPacket(
+        blockNumber?: number
+    ): Promise<PacketJSON | null> {
+        return this.sdk.rpc.sendRpcRequest("ibc_query_latest_send_packet", [
+            "DEFAULT_PORT",
+            this.counterpartyIdentifiers.channel,
+            blockNumber
+        ]);
+    }
+
+    public async queryLatestRecvPacket(
+        blockNumber?: number
+    ): Promise<PacketJSON | null> {
+        return this.sdk.rpc.sendRpcRequest("ibc_query_latest_recv_packet", [
+            "DEFAULT_PORT",
+            this.counterpartyIdentifiers.channel,
+            blockNumber
+        ]);
+    }
+
+    public async queryNextSequenceRecv(
+        blockNumber?: number
+    ): Promise<IBCQueryResult<number> | null> {
+        return this.sdk.rpc.sendRpcRequest("ibc_query_next_sequence_recv", [
+            "DEFAULT_PORT",
+            this.counterpartyIdentifiers.channel,
+            blockNumber
+        ]);
+    }
 }
 
 async function waitForTx(sdk: SDK, txHash: H256) {
