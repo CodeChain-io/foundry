@@ -42,96 +42,32 @@ async function main() {
         keystorePath: config.chainB.keystorePath
     });
 
-    const lightclientPrompt = new Select({
-        name: "light client",
-        message: "Will you create light clients?",
-        choices: ["yes", "skip", "exit"]
-    });
-    const lightclientAnswer = await lightclientPrompt.run();
-
-    if (lightclientAnswer === "exit") {
+    if ("exit" === (await runLightClientCreationPrompt({ chainA, chainB }))) {
         return;
     }
 
-    if (lightclientAnswer === "yes") {
-        console.log("Create a light client in chain A");
-        await createLightClient({ chain: chainA, counterpartyChain: chainB });
-        console.log("Create a light client in chain B");
-        await createLightClient({ chain: chainB, counterpartyChain: chainA });
-    }
-
-    const connectionPrompt = new Select({
-        name: "connection",
-        message: "Will you create connection?",
-        choices: ["yes", "skip", "exit"]
-    });
-    const connectionAnswer = await connectionPrompt.run();
-
-    if (connectionAnswer === "exit") {
+    if ("exit" === (await runConnectionCreationPrompt({ chainA, chainB }))) {
         return;
-    }
-
-    if (connectionAnswer === "yes") {
-        console.log("Create a connection");
-        await createConnection({ chainA, chainB });
     }
 
     while (true) {
-        const connectionCheckPrompt = new Select({
-            name: "connection check",
-            message: "Will you check connection?",
-            choices: ["yes", "skip", "exit"]
-        });
-        const connectionCheckAnswer = await connectionCheckPrompt.run();
-
-        if (connectionCheckAnswer === "exit") {
+        const result = await runConnectionCheckPrompt({ chainA, chainB });
+        if (result === "exit") {
             return;
-        }
-
-        if (connectionCheckAnswer === "yes") {
-            console.log("Check a connection");
-            await checkConnections({ chainA, chainB });
-        }
-
-        if (connectionCheckAnswer === "skip") {
+        } else if (result === "break") {
             break;
         }
     }
 
-    const channelPrompt = new Select({
-        name: "channel",
-        message: "Will you create a channel?",
-        choices: ["yes", "skip", "exit"]
-    });
-    const channelAnswer = await channelPrompt.run();
-
-    if (channelAnswer === "exit") {
+    if ("exit" === (await runChannelCreationPrompt({ chainA, chainB }))) {
         return;
     }
 
-    if (channelAnswer === "yes") {
-        console.log("Create a channel");
-        await createChannel({ chainA, chainB });
-    }
-
     while (true) {
-        const channelCheckPrompt = new Select({
-            name: "channel check",
-            message: "Will you check the channel?",
-            choices: ["yes", "skip", "exit"]
-        });
-        const channelCheckAnsser = await channelCheckPrompt.run();
-
-        if (channelCheckAnsser === "exit") {
+        const result = await runChannelCheckPrompt({ chainA, chainB });
+        if (result === "exit") {
             return;
-        }
-
-        if (channelCheckAnsser === "yes") {
-            console.log("Check a channel");
-            await checkChannels({ chainA, chainB });
-        }
-
-        if (channelCheckAnsser === "skip") {
+        } else if (result === "break") {
             break;
         }
     }
@@ -246,4 +182,144 @@ async function checkChannels({
     console.log(`Channel in A ${JSON.stringify(channelA)}`);
     const channelB = await chainB.queryChannel();
     console.log(`Channel in B ${JSON.stringify(channelB)}`);
+}
+
+async function runLightClientCreationPrompt({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}): Promise<"exit" | null> {
+    const lightclientPrompt = new Select({
+        name: "light client",
+        message: "Will you create light clients?",
+        choices: ["yes", "skip", "exit"]
+    });
+    const lightclientAnswer = await lightclientPrompt.run();
+
+    if (lightclientAnswer === "exit") {
+        return "exit";
+    }
+
+    if (lightclientAnswer === "yes") {
+        console.log("Create a light client in chain A");
+        await createLightClient({ chain: chainA, counterpartyChain: chainB });
+        console.log("Create a light client in chain B");
+        await createLightClient({ chain: chainB, counterpartyChain: chainA });
+    }
+
+    return null;
+}
+
+async function runConnectionCreationPrompt({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}): Promise<"exit" | null> {
+    const connectionPrompt = new Select({
+        name: "connection",
+        message: "Will you create connection?",
+        choices: ["yes", "skip", "exit"]
+    });
+    const connectionAnswer = await connectionPrompt.run();
+
+    if (connectionAnswer === "exit") {
+        return "exit";
+    }
+
+    if (connectionAnswer === "yes") {
+        console.log("Create a connection");
+        await createConnection({ chainA, chainB });
+    }
+
+    return null;
+}
+
+async function runConnectionCheckPrompt({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}): Promise<"exit" | "break" | null> {
+    const connectionCheckPrompt = new Select({
+        name: "connection check",
+        message: "Will you check connection?",
+        choices: ["yes", "skip", "exit"]
+    });
+    const connectionCheckAnswer = await connectionCheckPrompt.run();
+
+    if (connectionCheckAnswer === "exit") {
+        return "exit";
+    }
+
+    if (connectionCheckAnswer === "yes") {
+        console.log("Check a connection");
+        await checkConnections({ chainA, chainB });
+    }
+
+    if (connectionCheckAnswer === "skip") {
+        return "break";
+    }
+
+    return null;
+}
+
+async function runChannelCreationPrompt({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}): Promise<"exit" | null> {
+    const channelPrompt = new Select({
+        name: "channel",
+        message: "Will you create a channel?",
+        choices: ["yes", "skip", "exit"]
+    });
+    const channelAnswer = await channelPrompt.run();
+
+    if (channelAnswer === "exit") {
+        return "exit";
+    }
+
+    if (channelAnswer === "yes") {
+        console.log("Create a channel");
+        await createChannel({ chainA, chainB });
+    }
+
+    return null;
+}
+
+async function runChannelCheckPrompt({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}): Promise<"exit" | "break" | null> {
+    const channelCheckPrompt = new Select({
+        name: "channel check",
+        message: "Will you check the channel?",
+        choices: ["yes", "skip", "exit"]
+    });
+    const channelCheckAnsser = await channelCheckPrompt.run();
+
+    if (channelCheckAnsser === "exit") {
+        return "exit";
+    }
+
+    if (channelCheckAnsser === "yes") {
+        console.log("Check a channel");
+        await checkChannels({ chainA, chainB });
+    }
+
+    if (channelCheckAnsser === "skip") {
+        return "break";
+    }
+
+    return null;
 }
