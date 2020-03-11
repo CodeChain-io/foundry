@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use ckey::Public;
 use ctypes::TxHash;
 use primitives::H256;
@@ -64,7 +62,7 @@ pub struct Header {
 /// A decoded transaction.
 pub struct Transaction {
     tx_type: String,
-    body: Box<dyn Any>,
+    body: Bytes,
 }
 
 impl Transaction {
@@ -73,7 +71,7 @@ impl Transaction {
     }
 
     fn body<T: 'static>(&self) -> Option<&T> {
-        self.body.downcast_ref()
+        unimplemented!()
     }
 
     fn size(&self) -> usize {
