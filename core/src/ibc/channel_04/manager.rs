@@ -54,12 +54,17 @@ impl<'a> Manager<'a> {
     }
 
     // Utility functions
-    fn check_connection_opened(&self, id: IdentifierSlice) -> Result<Identifier, String> {
+    fn query_connection(&self, connection_id: IdentifierSlice) -> Result<ConnectionEnd, String> {
         let kv_store = self.ctx.get_kv_store();
-        let connection_end: ConnectionEnd =
-            rlp::decode(&kv_store.get(&connection_path(&id)).ok_or_else(|| "Connection doesn't exist".to_owned())?)
-                .expect("Illformed ConnectionEnd stored in the DB");
+        let connection_end: ConnectionEnd = rlp::decode(
+            &kv_store.get(&connection_path(&connection_id)).ok_or_else(|| "Connection doesn't exist".to_owned())?,
+        )
+        .expect("Illformed ConnectionEnd stored in the DB");
+        Ok(connection_end)
+    }
 
+    fn check_connection_opened(&self, id: IdentifierSlice) -> Result<Identifier, String> {
+        let connection_end = self.query_connection(id)?;
         if connection_end.state != ConnectionState::OPEN {
             return Err("Connection not opened".to_owned())
         }
@@ -203,6 +208,7 @@ impl<'a> Manager<'a> {
         }
 
         let client_identifier = self.check_connection_opened(&connection)?;
+        let connection_end = self.query_connection(&connection)?;
 
         let expected = ChannelEnd {
             state: ChannelState::INIT,
@@ -210,7 +216,7 @@ impl<'a> Manager<'a> {
             counterparty_port_identifier: DEFAULT_PORT.to_string(),
             counterparty_channel_identifier: channel_identifier.clone(),
             // Note: the array should be reversed in the future where `connection` becomes an array.
-            connection_hops: vec![connection.clone()],
+            connection_hops: vec![connection_end.counterparty_connection_identifier],
             version: counterparty_version,
         };
 
@@ -284,9 +290,8 @@ impl<'a> Manager<'a> {
             counterparty_port_identifier: DEFAULT_PORT.to_string(),
             counterparty_channel_identifier: channel_identifier.clone(),
             connection_hops: {
-                let mut x = previous.connection_hops.clone();
-                x.reverse();
-                x
+                let connection_end = self.query_connection(&previous.connection_hops[0])?;
+                vec![connection_end.counterparty_connection_identifier]
             },
             version: counterparty_version.clone(),
         };
@@ -330,9 +335,8 @@ impl<'a> Manager<'a> {
             counterparty_port_identifier: DEFAULT_PORT.to_string(),
             counterparty_channel_identifier: channel_identifier.clone(),
             connection_hops: {
-                let mut x = previous.connection_hops.clone();
-                x.reverse();
-                x
+                let connection_end = self.query_connection(&previous.connection_hops[0])?;
+                vec![connection_end.counterparty_connection_identifier]
             },
             version: previous.version.clone(),
         };
@@ -392,9 +396,8 @@ impl<'a> Manager<'a> {
             counterparty_port_identifier: DEFAULT_PORT.to_string(),
             counterparty_channel_identifier: channel_identifier.clone(),
             connection_hops: {
-                let mut x = previous.connection_hops.clone();
-                x.reverse();
-                x
+                let connection_end = self.query_connection(&previous.connection_hops[0])?;
+                vec![connection_end.counterparty_connection_identifier]
             },
             version: previous.version.clone(),
         };
