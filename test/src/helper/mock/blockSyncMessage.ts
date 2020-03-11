@@ -39,7 +39,7 @@ type BlockSyncMessageBody = IStatus | IRequest | IResponse;
 
 interface IStatus {
     type: "status";
-    totalScore: U256;
+    seq: U256;
     bestHash: H256;
     genesisHash: H256;
 }
@@ -64,14 +64,12 @@ export class BlockSyncMessage {
         if (msgId === MessageType.MESSAGE_ID_STATUS) {
             Emitter.emit("status");
             const msg = decodedmsg[1];
-            const totalScore = new U256(
-                parseInt(msg[0].toString("hex"), 16) || 0
-            );
+            const seq = new U256(parseInt(msg[0].toString("hex"), 16) || 0);
             const bestHash = new H256(msg[1].toString("hex"));
             const genesisHash = new H256(msg[2].toString("hex"));
             return new BlockSyncMessage({
                 type: "status",
-                totalScore,
+                seq,
                 bestHash,
                 genesisHash
             });
@@ -123,7 +121,7 @@ export class BlockSyncMessage {
                 return [
                     MessageType.MESSAGE_ID_STATUS,
                     [
-                        this.body.totalScore.toEncodeObject(),
+                        this.body.seq.toEncodeObject(),
                         this.body.bestHash.toEncodeObject(),
                         this.body.genesisHash.toEncodeObject()
                     ]
