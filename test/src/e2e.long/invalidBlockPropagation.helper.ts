@@ -58,7 +58,6 @@ async function setup(): Promise<[Header, Block, Header]> {
         new H256(block0.transactionsRoot),
         new H256(block0.nextValidatorSetHash),
         new H256(block0.stateRoot),
-        new U256(`${block0.score}`),
         block0.seal
     );
     const author1 = Address.fromString(block1.author);
@@ -71,7 +70,6 @@ async function setup(): Promise<[Header, Block, Header]> {
         new H256(block1.transactionsRoot),
         new H256(block1.nextValidatorSetHash),
         new H256(block1.stateRoot),
-        new U256(2222222222222),
         block1.seal
     );
     const author3 = Address.fromString(block0.author);
@@ -84,7 +82,6 @@ async function setup(): Promise<[Header, Block, Header]> {
         new H256(block2.transactionsRoot),
         new H256(block2.nextValidatorSetHash),
         new H256(block2.stateRoot),
-        new U256(33333333333333),
         block2.seal
     );
     return [header0, block1, header2];
@@ -120,14 +117,12 @@ async function testBody(
         ttransactionRoot?: H256;
         tstateRoot?: H256;
         tnextValidatorSetHash?: H256;
-        tscore?: U256;
         tseal?: number[][];
     }
 ) {
     const {
         tnumber,
         textraData,
-        tscore,
         tparent,
         tauthor,
         ttransactionRoot,
@@ -137,7 +132,6 @@ async function testBody(
     } = params;
 
     const bestHash = header2.hashing();
-    const bestScore = header2.getScore();
 
     const author4 = Address.fromString(block1.author);
     const header = new Header(
@@ -149,7 +143,6 @@ async function testBody(
         new H256(block1.transactionsRoot),
         new H256(block1.nextValidatorSetHash),
         new H256(block1.stateRoot),
-        new U256(2222222222222),
         block1.seal
     );
 
@@ -173,9 +166,6 @@ async function testBody(
     }
     if (tnextValidatorSetHash != null) {
         header.setNextValidatorSetHash(tnextValidatorSetHash);
-    }
-    if (tscore != null) {
-        header.setScore(tscore);
     }
     if (tseal != null) {
         header.setSeal(tseal);
