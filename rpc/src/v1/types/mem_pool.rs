@@ -21,13 +21,7 @@ pub struct MemPoolMinFees {
     min_create_shard_transaction_cost: u64,
     min_set_shard_owners_transaction_cost: u64,
     min_set_shard_users_transaction_cost: u64,
-    min_wrap_ccc_transaction_cost: u64,
     min_custom_transaction_cost: u64,
-    min_asset_mint_cost: u64,
-    min_asset_transfer_cost: u64,
-    min_asset_scheme_change_cost: u64,
-    min_asset_supply_increase_cost: u64,
-    min_asset_unwrap_ccc_cost: u64,
 }
 
 impl From<ccore::MemPoolMinFees> for MemPoolMinFees {
@@ -37,13 +31,7 @@ impl From<ccore::MemPoolMinFees> for MemPoolMinFees {
             min_create_shard_transaction_cost: fees.min_create_shard_transaction_cost,
             min_set_shard_owners_transaction_cost: fees.min_set_shard_owners_transaction_cost,
             min_set_shard_users_transaction_cost: fees.min_set_shard_users_transaction_cost,
-            min_wrap_ccc_transaction_cost: fees.min_wrap_ccc_transaction_cost,
             min_custom_transaction_cost: fees.min_custom_transaction_cost,
-            min_asset_mint_cost: fees.min_asset_mint_cost,
-            min_asset_transfer_cost: fees.min_asset_transfer_cost,
-            min_asset_scheme_change_cost: fees.min_asset_scheme_change_cost,
-            min_asset_supply_increase_cost: fees.min_asset_supply_increase_cost,
-            min_asset_unwrap_ccc_cost: fees.min_asset_unwrap_ccc_cost,
         }
     }
 }
