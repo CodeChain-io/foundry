@@ -50,7 +50,7 @@ jobs:
           profile: minimal
           override: true
       - run: cargo fetch --verbose
-      - run: cargo build
+      - run: cargo build --workspace
       - run: cargo test --verbose --all
         env:
           RUST_BACKTRACE: 1
