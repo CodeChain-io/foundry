@@ -19,7 +19,7 @@ use crate::util::tag::Tag;
 use crate::{ShardId, Tracker, TxHash};
 use ccrypto::blake256;
 use ckey::NetworkId;
-use primitives::{Bytes, H160, H256};
+use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 /// Shard Transaction type.
@@ -29,20 +29,12 @@ pub enum ShardTransaction {
         network_id: NetworkId,
         shard_id: ShardId,
         tx_hash: TxHash,
-        output: AssetWrapCCCOutput,
     },
     ShardStore {
         network_id: NetworkId,
         shard_id: ShardId,
         content: String,
     },
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AssetWrapCCCOutput {
-    pub lock_script_hash: H160,
-    pub parameters: Vec<Bytes>,
-    pub quantity: u64,
 }
 
 impl ShardTransaction {
