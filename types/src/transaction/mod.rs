@@ -16,7 +16,6 @@
 
 mod action;
 mod incomplete_transaction;
-mod output;
 mod partial_hashing;
 mod shard;
 mod timelock;
@@ -25,7 +24,6 @@ mod transaction;
 
 pub use self::action::Action;
 pub use self::incomplete_transaction::IncompleteTransaction;
-pub use self::output::AssetMintOutput;
 pub use self::partial_hashing::{HashingError, PartialHashing};
 pub use self::shard::{AssetWrapCCCOutput, ShardTransaction};
 pub use self::timelock::Timelock;
