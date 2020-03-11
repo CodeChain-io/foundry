@@ -172,7 +172,8 @@ async function testBody(
     }
 
     const genesis = mock.genesisHash;
-    await mock.sendStatus(bestScore, bestHash, genesis);
+    const seq = new U256(0);
+    await mock.sendStatus(seq, bestHash, genesis);
     await mock.sendBlockHeaderResponse([
         header0.toEncodeObject(),
         header.toEncodeObject(),

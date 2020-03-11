@@ -68,7 +68,7 @@ export class Mock {
         this.p2psocket.enableLog();
     }
 
-    public async establish(bestHash?: H256, bestScore?: U256) {
+    public async establish(bestHash?: H256) {
         await this.p2psocket.connect();
 
         let isStatusArrived;
@@ -84,8 +84,6 @@ export class Mock {
             await this.waitStatusMessage();
         }
 
-        const score =
-            bestScore == undefined ? new U256("99999999999999999") : bestScore;
         const best =
             bestHash == undefined
                 ? new H256(
@@ -93,8 +91,8 @@ export class Mock {
                   )
                 : bestHash;
         const genesis = this.p2psocket.getGenesisHash();
-        this.sendStatus(score, best, genesis);
-
+        const seq = new U256(0);
+        this.sendStatus(seq, best, genesis);
         await this.waitHeaderRequest();
 
         if (this.log) {
@@ -192,10 +190,10 @@ export class Mock {
         return null;
     }
 
-    public async sendStatus(score: U256, bestHash: H256, genesisHash: H256) {
+    public async sendStatus(seq: U256, bestHash: H256, genesisHash: H256) {
         const msg = new BlockSyncMessage({
+            seq,
             type: "status",
-            totalScore: score,
             bestHash,
             genesisHash
         });
@@ -257,17 +255,15 @@ export class Mock {
     public async sendEncodedBlock(
         header: EncodedHeaders,
         body: EncodedBodies,
-        bestBlockHash: H256,
-        bestBlockScore: U256
+        bestBlockHash: H256
     ) {
         if (this.log) {
             console.log("Send blocks");
         }
-        const score = bestBlockScore;
         const best = bestBlockHash;
         const genesis = this.p2psocket.getGenesisHash();
-        await this.sendStatus(score, best, genesis);
-
+        const seq = new U256(0);
+        this.sendStatus(seq, best, genesis);
         await this.sendBlockHeaderResponse(header);
         if (this.log) {
             console.log("Send header response");
@@ -288,11 +284,10 @@ export class Mock {
             console.log("Send blocks");
         }
         const bestBlock = header[header.length - 1];
-        const score = bestBlock.getScore();
         const best = bestBlock.hashing();
         const genesis = this.p2psocket.getGenesisHash();
-        await this.sendStatus(score, best, genesis);
-
+        const seq = new U256(0);
+        await this.sendStatus(seq, best, genesis);
         await this.sendBlockHeaderResponse(header.map(h => h.toEncodeObject()));
         if (this.log) {
             console.log("Send header response");
