@@ -6,12 +6,16 @@ import { CreateClientDatagram } from "../common/datagram/createClient";
 import { strict as assert } from "assert";
 import { ConnOpenInitDatagram } from "../common/datagram/connOpenInit";
 import { ChanOpenInitDatagram } from "../common/datagram/chanOpenInit";
-import { ChannelOrdered } from "../common/datagram";
+import { ChannelOrdered, Packet } from "../common/datagram";
+import { SendPacketDatagram } from "../common/datagram/sendPacket";
 const { Select } = require("enquirer");
 
 require("dotenv").config();
 
 const debug = Debug("scenario:main");
+
+// Fix the packet's sequence in the PoC scenario.
+const SEQUENCE = 1;
 
 async function main() {
     const config = getConfig();
@@ -70,6 +74,10 @@ async function main() {
         } else if (result === "break") {
             break;
         }
+    }
+
+    if ("exit" === (await runSendPacketPrompt({ chainA, chainB }))) {
+        return;
     }
 }
 
@@ -182,6 +190,29 @@ async function checkChannels({
     console.log(`Channel in A ${JSON.stringify(channelA)}`);
     const channelB = await chainB.queryChannel();
     console.log(`Channel in B ${JSON.stringify(channelB)}`);
+}
+
+async function sendPacket({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}) {
+    const chainBHeight = await chainB.latestHeight();
+    await chainA.submitDatagram(
+        new SendPacketDatagram({
+            packet: new Packet({
+                sequence: SEQUENCE,
+                timeoutHeight: chainBHeight + 1000,
+                sourcePort: "DEFAULT_PORT",
+                sourceChannel: chainA.counterpartyIdentifiers.channel,
+                destPort: "DEFAULT_PORT",
+                destChannel: chainB.counterpartyIdentifiers.channel,
+                data: Buffer.from("PING", "utf8").toString("hex")
+            })
+        })
+    );
 }
 
 async function runLightClientCreationPrompt({
@@ -319,6 +350,33 @@ async function runChannelCheckPrompt({
 
     if (channelCheckAnsser === "skip") {
         return "break";
+    }
+
+    return null;
+}
+
+async function runSendPacketPrompt({
+    chainA,
+    chainB
+}: {
+    chainA: Chain;
+    chainB: Chain;
+}): Promise<"exit" | null> {
+    const packetPrompt = new Select({
+        name: "packet",
+        message: "Will you send a packet?",
+        choices: ["yes", "skip", "exit"]
+    });
+
+    const packetAnswer = await packetPrompt.run();
+
+    if (packetAnswer === "exit") {
+        return "exit";
+    }
+
+    if (packetAnswer === "yes") {
+        console.log("Send a packet");
+        await sendPacket({ chainA, chainB });
     }
 
     return null;
