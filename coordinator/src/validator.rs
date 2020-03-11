@@ -60,6 +60,7 @@ pub struct Header {
 }
 
 /// A decoded transaction.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Transaction {
     tx_type: String,
     body: Bytes,
@@ -92,6 +93,7 @@ pub enum TxOrigin {
     External,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransactionWithMetadata {
     pub tx: Transaction,
     pub origin: TxOrigin,
