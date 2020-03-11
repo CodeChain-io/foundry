@@ -653,6 +653,7 @@ version = "0.1.0"
 dependencies = [
  "codechain-key",
  "codechain-types",
+ "primitives",
 ]
 
 [[package]]
