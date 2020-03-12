@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::log::{remove_packet, set_packet};
+use super::log::{get_packet, remove_packet, set_packet};
 use super::types::{
     Acknowledgement, ChannelEnd, ChannelOrder, ChannelState, Packet, PacketCommitment, PacketCommitmentHash, Sequence,
 };
@@ -541,7 +541,9 @@ impl<'a> Manager<'a> {
 
         // check log.rs to understand this statement
         // Unlike send, we just overwrite an old event.
-        remove_packet(self.ctx, &packet.dest_port, &packet.dest_channel, "recv");
+        if get_packet(self.ctx, &packet.dest_port, &packet.dest_channel, "recv").is_some() {
+            remove_packet(self.ctx, &packet.dest_port, &packet.dest_channel, "recv");
+        }
         set_packet(self.ctx, &packet.dest_port, &packet.dest_channel, &packet, "recv");
 
         Ok(packet)
