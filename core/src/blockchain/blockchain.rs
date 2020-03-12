@@ -97,7 +97,7 @@ impl BlockChain {
         engine: &dyn CodeChainEngine,
     ) -> ImportRoute {
         match self.headerchain.insert_header(batch, header, engine) {
-            Some(c) => ImportRoute::new_from_best_header_changed(header.hash(), &c),
+            Some(c) => ImportRoute::new_from_best_header_changed(&c),
             None => ImportRoute::none(),
         }
     }
@@ -185,7 +185,7 @@ impl BlockChain {
             *pending_best_proposal_block_hash = Some(new_block_hash);
         }
 
-        ImportRoute::new(new_block_hash, &best_block_changed)
+        ImportRoute::new(&best_block_changed)
     }
 
     /// Apply pending insertion updates
@@ -322,7 +322,7 @@ impl BlockChain {
         batch.put(db::COL_EXTRA, BEST_PROPOSAL_BLOCK_KEY, &*block_hash);
         *pending_best_proposal_block_hash = Some(block_hash);
 
-        ImportRoute::new(block_hash, &best_block_changed)
+        ImportRoute::new(&best_block_changed)
     }
 
     /// Returns general blockchain information
