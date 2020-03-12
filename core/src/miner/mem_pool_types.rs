@@ -399,13 +399,7 @@ pub struct MemPoolMinFees {
     pub min_create_shard_transaction_cost: u64,
     pub min_set_shard_owners_transaction_cost: u64,
     pub min_set_shard_users_transaction_cost: u64,
-    pub min_wrap_ccc_transaction_cost: u64,
     pub min_custom_transaction_cost: u64,
-    pub min_asset_mint_cost: u64,
-    pub min_asset_transfer_cost: u64,
-    pub min_asset_scheme_change_cost: u64,
-    pub min_asset_supply_increase_cost: u64,
-    pub min_asset_unwrap_ccc_cost: u64,
 }
 
 impl MemPoolMinFees {
@@ -415,26 +409,14 @@ impl MemPoolMinFees {
         min_create_shard_cost_option: Option<u64>,
         min_set_shard_owners_cost_option: Option<u64>,
         min_set_shard_users_cost_option: Option<u64>,
-        min_wrap_ccc_cost_option: Option<u64>,
         min_custom_cost_option: Option<u64>,
-        min_asset_mint_cost_option: Option<u64>,
-        min_asset_transfer_cost_option: Option<u64>,
-        min_asset_scheme_change_cost_option: Option<u64>,
-        min_asset_supply_increase_cost_option: Option<u64>,
-        min_asset_unwrap_ccc_cost_option: Option<u64>,
     ) -> Self {
         MemPoolMinFees {
             min_pay_transaction_cost: min_pay_cost_option.unwrap_or_default(),
             min_create_shard_transaction_cost: min_create_shard_cost_option.unwrap_or_default(),
             min_set_shard_owners_transaction_cost: min_set_shard_owners_cost_option.unwrap_or_default(),
             min_set_shard_users_transaction_cost: min_set_shard_users_cost_option.unwrap_or_default(),
-            min_wrap_ccc_transaction_cost: min_wrap_ccc_cost_option.unwrap_or_default(),
             min_custom_transaction_cost: min_custom_cost_option.unwrap_or_default(),
-            min_asset_mint_cost: min_asset_mint_cost_option.unwrap_or_default(),
-            min_asset_transfer_cost: min_asset_transfer_cost_option.unwrap_or_default(),
-            min_asset_scheme_change_cost: min_asset_scheme_change_cost_option.unwrap_or_default(),
-            min_asset_supply_increase_cost: min_asset_supply_increase_cost_option.unwrap_or_default(),
-            min_asset_unwrap_ccc_cost: min_asset_unwrap_ccc_cost_option.unwrap_or_default(),
         }
     }
     pub fn min_cost(&self, action: &Action) -> u64 {

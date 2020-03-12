@@ -14,23 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{AssetTransferInput, HashingError, PartialHashing};
+use super::{HashingError, PartialHashing};
 use crate::util::tag::Tag;
-use crate::{ShardId, Tracker, TxHash};
+use crate::{ShardId, Tracker};
 use ccrypto::blake256;
 use ckey::NetworkId;
-use primitives::{Bytes, H160, H256};
+use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 /// Shard Transaction type.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ShardTransaction {
-    WrapCCC {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        tx_hash: TxHash,
-        output: AssetWrapCCCOutput,
-    },
     ShardStore {
         network_id: NetworkId,
         shard_id: ShardId,
@@ -38,32 +32,14 @@ pub enum ShardTransaction {
     },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AssetWrapCCCOutput {
-    pub lock_script_hash: H160,
-    pub parameters: Vec<Bytes>,
-    pub quantity: u64,
-}
-
 impl ShardTransaction {
     pub fn tracker(&self) -> Tracker {
-        if let ShardTransaction::WrapCCC {
-            tx_hash,
-            ..
-        } = self
-        {
-            return (**tx_hash).into()
-        }
         blake256(&*self.rlp_bytes()).into()
     }
 
     pub fn network_id(&self) -> NetworkId {
         match self {
-            ShardTransaction::WrapCCC {
-                network_id,
-                ..
-            }
-            | ShardTransaction::ShardStore {
+            ShardTransaction::ShardStore {
                 network_id,
                 ..
             } => *network_id,
@@ -76,17 +52,11 @@ impl ShardTransaction {
                 shard_id,
                 ..
             } => vec![*shard_id],
-            ShardTransaction::WrapCCC {
-                ..
-            } => panic!("To be removed"),
         }
     }
 
     fn is_valid_output_index(&self, index: usize) -> bool {
         match self {
-            ShardTransaction::WrapCCC {
-                ..
-            } => index == 0,
             ShardTransaction::ShardStore {
                 ..
             } => index == 0,
@@ -98,10 +68,6 @@ impl ShardTransaction {
             return false
         }
         match self {
-            ShardTransaction::WrapCCC {
-                shard_id,
-                ..
-            } => &id == shard_id,
             ShardTransaction::ShardStore {
                 shard_id,
                 ..
@@ -111,7 +77,7 @@ impl ShardTransaction {
 }
 
 impl PartialHashing for ShardTransaction {
-    fn hash_partially(&self, _tag: Tag, _cur: &AssetTransferInput, _is_burn: bool) -> Result<H256, HashingError> {
+    fn hash_partially(&self, _tag: Tag, _is_burn: bool) -> Result<H256, HashingError> {
         // FIXME: delete this function
         Ok(Default::default())
     }
@@ -167,11 +133,6 @@ impl Decodable for ShardTransaction {
 impl Encodable for ShardTransaction {
     fn rlp_append(&self, s: &mut RlpStream) {
         match self {
-            ShardTransaction::WrapCCC {
-                ..
-            } => {
-                unreachable!("No reason to get a RLP encoding of WrapCCC");
-            }
             ShardTransaction::ShardStore {
                 network_id,
                 shard_id,
@@ -185,283 +146,9 @@ impl Encodable for ShardTransaction {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
 
-    use rlp::rlp_encode_and_decode_test;
-
-    use super::super::{AssetOutPoint, AssetTransferOutput};
     use super::*;
-
-    #[test]
-    fn _is_input_and_output_consistent() {
-        let asset_type = H160::random();
-        let quantity = 100;
-
-        assert!(is_input_and_output_consistent(
-            &[AssetTransferInput {
-                prev_out: AssetOutPoint {
-                    tracker: H256::random().into(),
-                    index: 0,
-                    asset_type,
-                    shard_id: 0,
-                    quantity,
-                },
-                timelock: None,
-                lock_script: vec![],
-                unlock_script: vec![],
-            }],
-            &[AssetTransferOutput {
-                lock_script_hash: H160::random(),
-                parameters: vec![],
-                asset_type,
-                shard_id: 0,
-                quantity,
-            }]
-        ));
-    }
-
-    #[test]
-    fn multiple_asset_is_input_and_output_consistent() {
-        let asset_type1 = H160::random();
-        let asset_type2 = {
-            let mut asset_type = H160::random();
-            while asset_type == asset_type1 {
-                asset_type = H160::random();
-            }
-            asset_type
-        };
-        let quantity1 = 100;
-        let quantity2 = 200;
-
-        assert!(is_input_and_output_consistent(
-            &[
-                AssetTransferInput {
-                    prev_out: AssetOutPoint {
-                        tracker: H256::random().into(),
-                        index: 0,
-                        asset_type: asset_type1,
-                        shard_id: 0,
-                        quantity: quantity1,
-                    },
-                    timelock: None,
-                    lock_script: vec![],
-                    unlock_script: vec![],
-                },
-                AssetTransferInput {
-                    prev_out: AssetOutPoint {
-                        tracker: H256::random().into(),
-                        index: 0,
-                        asset_type: asset_type2,
-                        shard_id: 0,
-                        quantity: quantity2,
-                    },
-                    timelock: None,
-                    lock_script: vec![],
-                    unlock_script: vec![],
-                },
-            ],
-            &[
-                AssetTransferOutput {
-                    lock_script_hash: H160::random(),
-                    parameters: vec![],
-                    asset_type: asset_type1,
-                    shard_id: 0,
-                    quantity: quantity1,
-                },
-                AssetTransferOutput {
-                    lock_script_hash: H160::random(),
-                    parameters: vec![],
-                    asset_type: asset_type2,
-                    shard_id: 0,
-                    quantity: quantity2,
-                },
-            ]
-        ));
-    }
-
-    #[test]
-    fn multiple_asset_different_order_is_input_and_output_consistent() {
-        let asset_type1 = H160::random();
-        let asset_type2 = {
-            let mut asset_type = H160::random();
-            while asset_type == asset_type1 {
-                asset_type = H160::random();
-            }
-            asset_type
-        };
-        let quantity1 = 100;
-        let quantity2 = 200;
-
-        assert!(is_input_and_output_consistent(
-            &[
-                AssetTransferInput {
-                    prev_out: AssetOutPoint {
-                        tracker: H256::random().into(),
-                        index: 0,
-                        asset_type: asset_type1,
-                        shard_id: 0,
-                        quantity: quantity1,
-                    },
-                    timelock: None,
-                    lock_script: vec![],
-                    unlock_script: vec![],
-                },
-                AssetTransferInput {
-                    prev_out: AssetOutPoint {
-                        tracker: H256::random().into(),
-                        index: 0,
-                        asset_type: asset_type2,
-                        shard_id: 0,
-                        quantity: quantity2,
-                    },
-                    timelock: None,
-                    lock_script: vec![],
-                    unlock_script: vec![],
-                },
-            ],
-            &[
-                AssetTransferOutput {
-                    lock_script_hash: H160::random(),
-                    parameters: vec![],
-                    asset_type: asset_type2,
-                    shard_id: 0,
-                    quantity: quantity2,
-                },
-                AssetTransferOutput {
-                    lock_script_hash: H160::random(),
-                    parameters: vec![],
-                    asset_type: asset_type1,
-                    shard_id: 0,
-                    quantity: quantity1,
-                },
-            ]
-        ));
-    }
-
-    #[test]
-    fn empty_is_input_and_output_consistent() {
-        assert!(is_input_and_output_consistent(&[], &[]));
-    }
-
-    #[test]
-    fn fail_if_output_has_more_asset() {
-        let asset_type = H160::random();
-        let output_quantity = 100;
-        assert!(!is_input_and_output_consistent(&[], &[AssetTransferOutput {
-            lock_script_hash: H160::random(),
-            parameters: vec![],
-            asset_type,
-            shard_id: 0,
-            quantity: output_quantity,
-        }]));
-    }
-
-    #[test]
-    fn fail_if_input_has_more_asset() {
-        let asset_type = H160::random();
-        let input_quantity = 100;
-
-        assert!(!is_input_and_output_consistent(
-            &[AssetTransferInput {
-                prev_out: AssetOutPoint {
-                    tracker: H256::random().into(),
-                    index: 0,
-                    asset_type,
-                    shard_id: 0,
-                    quantity: input_quantity,
-                },
-                timelock: None,
-                lock_script: vec![],
-                unlock_script: vec![],
-            }],
-            &[]
-        ));
-    }
-
-    #[test]
-    fn fail_if_input_is_larger_than_output() {
-        let asset_type = H160::random();
-        let input_quantity = 100;
-        let output_quantity = 80;
-
-        assert!(!is_input_and_output_consistent(
-            &[AssetTransferInput {
-                prev_out: AssetOutPoint {
-                    tracker: H256::random().into(),
-                    index: 0,
-                    asset_type,
-                    shard_id: 0,
-                    quantity: input_quantity,
-                },
-                timelock: None,
-                lock_script: vec![],
-                unlock_script: vec![],
-            }],
-            &[AssetTransferOutput {
-                lock_script_hash: H160::random(),
-                parameters: vec![],
-                asset_type,
-                shard_id: 0,
-                quantity: output_quantity,
-            }]
-        ));
-    }
-
-    #[test]
-    fn fail_if_input_is_smaller_than_output() {
-        let asset_type = H160::random();
-        let input_quantity = 80;
-        let output_quantity = 100;
-
-        assert!(!is_input_and_output_consistent(
-            &[AssetTransferInput {
-                prev_out: AssetOutPoint {
-                    tracker: H256::random().into(),
-                    index: 0,
-                    asset_type,
-                    shard_id: 0,
-                    quantity: input_quantity,
-                },
-                timelock: None,
-                lock_script: vec![],
-                unlock_script: vec![],
-            }],
-            &[AssetTransferOutput {
-                lock_script_hash: H160::random(),
-                parameters: vec![],
-                asset_type,
-                shard_id: 0,
-                quantity: output_quantity,
-            }]
-        ));
-    }
-
-    // FIXME: Remove it and reuse the same function declared in action.rs
-    fn is_input_and_output_consistent(inputs: &[AssetTransferInput], outputs: &[AssetTransferOutput]) -> bool {
-        let mut sum: HashMap<H160, u128> = HashMap::new();
-
-        for input in inputs {
-            let asset_type = input.prev_out.asset_type;
-            let quantity = u128::from(input.prev_out.quantity);
-            *sum.entry(asset_type).or_insert_with(Default::default) += quantity;
-        }
-        for output in outputs {
-            let asset_type = output.asset_type;
-            let quantity = u128::from(output.quantity);
-            let current_quantity = if let Some(current_quantity) = sum.get(&asset_type) {
-                if *current_quantity < quantity {
-                    return false
-                }
-                *current_quantity
-            } else {
-                return false
-            };
-            let t = sum.insert(asset_type, current_quantity - quantity);
-            debug_assert!(t.is_some());
-        }
-
-        sum.iter().all(|(_, sum)| *sum == 0)
-    }
+    use rlp::rlp_encode_and_decode_test;
 
     #[test]
     fn encode_and_decode_shard_store_text() {

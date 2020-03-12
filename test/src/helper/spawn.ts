@@ -29,7 +29,6 @@ import {
     Transaction,
     U64
 } from "../sdk/core/classes";
-import { AssetTransaction } from "../sdk/core/Transaction";
 import * as stake from "../stakeholder";
 import { faucetAddress, faucetSecret } from "./constants";
 import { wait } from "./promise";
@@ -528,34 +527,6 @@ export default class CodeChain {
         );
     }
 
-    public async sendAssetTransaction(
-        tx: AssetTransaction & Transaction,
-        options?: {
-            seq?: number;
-            fee?: number;
-            secret?: string;
-        }
-    ): Promise<H256> {
-        const {
-            seq = (await this.rpc.chain.getSeq({
-                address: faucetAddress.toString(),
-                blockNumber: null
-            }))!,
-            fee = 10,
-            secret = faucetSecret
-        } = options || {};
-        const signed = tx.sign({
-            secret,
-            fee: fee + this.id,
-            seq
-        });
-        return new H256(
-            await this.rpc.mempool.sendSignedTransaction({
-                tx: signed.rlpBytes().toString("hex")
-            })
-        );
-    }
-
     public createPayTx(options: {
         seq: number;
         recipient?: Address | string;
@@ -603,69 +574,6 @@ export default class CodeChain {
             tx: tx.rlpBytes().toString("hex")
         });
         return tx;
-    }
-
-    // If one only sends certainly failing transactions, the miner would not generate any block.
-    // So to clearly check the result failed, insert the failing transactions after succeessful ones.
-    public async sendAssetTransactionExpectedToFail(
-        tx: Transaction & AssetTransaction,
-        options: { seq?: number } = {}
-    ): Promise<H256> {
-        await this.rpc.devel!.stopSealing();
-
-        const seq =
-            options.seq == null
-                ? (await this.rpc.chain.getSeq({
-                      address: faucetAddress.toString()
-                  }))!
-                : options.seq;
-
-        const blockNumber = await this.getBestBlockNumber();
-        const signedDummyTxHash = (
-            await this.sendPayTx({
-                seq,
-                quantity: 1
-            })
-        ).hash();
-        const targetTxHash = await this.sendAssetTransaction(tx, {
-            seq: seq + 1
-        });
-
-        await this.rpc.devel!.startSealing();
-        await this.waitBlockNumber(blockNumber + 1);
-
-        expect(
-            await this.rpc.chain.containsTransaction({
-                transactionHash: `0x${targetTxHash.toString()}`
-            })
-        ).be.false;
-        expect(
-            await this.rpc.mempool.getErrorHint({
-                transactionHash: targetTxHash.toString()
-            })
-        ).not.null;
-        expect(
-            await this.rpc.chain.getTransaction({
-                transactionHash: `0x${targetTxHash.toString()}`
-            })
-        ).be.null;
-
-        expect(
-            await this.rpc.chain.containsTransaction({
-                transactionHash: `0x${signedDummyTxHash.toString()}`
-            })
-        ).be.true;
-        expect(
-            await this.rpc.mempool.getErrorHint({
-                transactionHash: signedDummyTxHash.toString()
-            })
-        ).null;
-        expect(
-            await this.rpc.chain.getTransaction({
-                transactionHash: `0x${signedDummyTxHash.toString()}`
-            })
-        ).not.be.null;
-        return targetTxHash;
     }
 
     // If one only sends certainly failing transactions, the miner would not generate any block.
