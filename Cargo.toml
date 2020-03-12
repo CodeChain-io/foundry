@@ -29,6 +29,7 @@ csync = { package = "codechain-sync", path = "sync" }
 ctimer = { package = "codechain-timer", path = "util/timer" }
 cmodule = { package = "codechain-module", path = "module" }
 ctrlc = { git = "https://github.com/paritytech/rust-ctrlc.git" }
+cbasesandbox = {package = "codechain-basesandbox", path = "basesandbox"}
 fdlimit = "0.1"
 finally-block = "0.1"
 futures = "0.1"
@@ -72,5 +73,6 @@ members = [
     "types",
     "module",
     "module-macros",
-    "coordinator"
+    "coordinator",
+    "basesandbox"
 ]

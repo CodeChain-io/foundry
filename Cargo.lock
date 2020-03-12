@@ -144,9 +144,9 @@ checksum = "1955ebdd52d5c5f1fb4f94e97aa241c2ce5729d200b3c34fc71ac6ff7a7cc556"
 
 [[package]]
 name = "bitflags"
-version = "1.0.3"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0c54bb8f454c567f21197eefcdbf5679d0bd99f2ddbe52e84c77061952e6789"
+checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 
 [[package]]
 name = "bitstring"
@@ -309,6 +309,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ec65ee4f9c9d16f335091d23693457ed4928657ba4982289d7fafee03bc614a"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "codechain-basesandbox"
+version = "0.1.0"
+dependencies = [
+ "codechain-crypto",
+ "codechain-module",
+ "crossbeam-channel 0.4.0",
+ "linkme",
+ "nix",
+ "once_cell",
+ "primitives",
+ "thiserror",
 ]
 
 [[package]]
@@ -1039,6 +1053,7 @@ dependencies = [
  "app_dirs",
  "cidr",
  "clap",
+ "codechain-basesandbox",
  "codechain-core",
  "codechain-discovery",
  "codechain-key",
@@ -1872,6 +1887,19 @@ name = "never-type"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c026cbdf8890d6cab75bd177f36e948bf3a512c61f3e93898fd288f571da6551"
+
+[[package]]
+name = "nix"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50e4785f2c3b7589a0d0c1dd60285e1188adac4006e8abd6dd578e1567027363"
+dependencies = [
+ "bitflags",
+ "cc",
+ "cfg-if",
+ "libc",
+ "void",
+]
 
 [[package]]
 name = "nodrop"
