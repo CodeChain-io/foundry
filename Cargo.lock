@@ -618,6 +618,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "codechain-testmodule"
+version = "0.1.0"
+dependencies = [
+ "codechain-basesandbox",
+ "nix",
+]
+
+[[package]]
 name = "codechain-timer"
 version = "0.1.0"
 dependencies = [

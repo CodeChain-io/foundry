@@ -13,8 +13,19 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 
-extern crate codechain_module as cmodule;
+#[cfg(test)]
+mod tests {
+    use crate::execution::executor;
+    use crate::ipc::Ipc;
 
-pub mod execution;
-pub mod ipc;
-mod test;
+    #[test]
+    fn simple_rs() {
+        let mut ctx =
+            executor::execute::<crate::execution::IpcUnixDomainSocket>("./../target/debug/tm_simple_rs", "unittest")
+                .unwrap();
+
+        ctx.ipc.send(b"Hello?\0");
+        let r = ctx.ipc.recv();
+        assert_eq!(r, b"I'm here!\0");
+    }
+}
