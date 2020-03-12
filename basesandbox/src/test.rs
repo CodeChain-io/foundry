@@ -18,6 +18,7 @@ mod tests {
     use crate::execution::executor;
     use crate::ipc::Ipc;
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn simple_rs() {
         let mut ctx =
