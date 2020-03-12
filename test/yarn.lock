@@ -1638,9 +1638,10 @@ foundry-primitives@^0.2.0, foundry-primitives@^0.2.1:
     rlp "^2.1.0"
     tweetnacl "^1.0.3"
 
-"foundry-rpc@git://github.com/CodeChain-io/foundry-rpc-js.git#alpha-2":
-  version "2.0.0"
-  resolved "git://github.com/CodeChain-io/foundry-rpc-js.git#e87fba595a37932a795300e788c01609df5c681e"
+foundry-rpc@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/foundry-rpc/-/foundry-rpc-0.1.0.tgz#c808048ad4e8605b50b28eac46f55cb71b4ba009"
+  integrity sha512-vQ5fSTA5Upu0bpu8ImNqR6NncM+lSeBMyNz20fly5HVifsEHjD8Rl3Tn0mjcvOlrpMoNRghNwA7OjGpjjJsCcA==
   dependencies:
     "@types/node-fetch" "^2.3.4"
     node-fetch "^2.6.0"
