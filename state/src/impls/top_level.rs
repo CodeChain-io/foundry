@@ -51,7 +51,6 @@ use ctypes::util::unexpected::Mismatch;
 #[cfg(test)]
 use ctypes::Tracker;
 use ctypes::{BlockNumber, CommonParams, ShardId, TxHash};
-use cvm::ChainTimeInfo;
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use primitives::{Bytes, H256};
@@ -231,7 +230,7 @@ impl TopLevelState {
 
     /// Execute a given tranasction, charging tranasction fee.
     /// This will change the state accordingly.
-    pub fn apply<C: ChainTimeInfo + FindActionHandler>(
+    pub fn apply<C: FindActionHandler>(
         &mut self,
         tx: &Transaction,
         signed_hash: &TxHash,
@@ -262,7 +261,7 @@ impl TopLevelState {
         result
     }
 
-    fn apply_internal<C: ChainTimeInfo + FindActionHandler>(
+    fn apply_internal<C: FindActionHandler>(
         &mut self,
         tx: &Transaction,
         signed_hash: &TxHash,
@@ -314,7 +313,7 @@ impl TopLevelState {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn apply_action<C: ChainTimeInfo + FindActionHandler>(
+    fn apply_action<C: FindActionHandler>(
         &mut self,
         action: &Action,
         network_id: NetworkId,
@@ -377,18 +376,16 @@ impl TopLevelState {
             &transaction,
             sender_address,
             &approvers,
-            client,
             parent_block_number,
             parent_block_timestamp,
         )
     }
 
-    pub fn apply_shard_transaction<C: ChainTimeInfo>(
+    pub fn apply_shard_transaction(
         &mut self,
         transaction: &ShardTransaction,
         sender: &Address,
         approvers: &[Address],
-        client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
     ) -> StateResult<()> {
@@ -398,7 +395,6 @@ impl TopLevelState {
                 shard_id,
                 sender,
                 approvers,
-                client,
                 parent_block_number,
                 parent_block_timestamp,
             )?;
@@ -406,13 +402,12 @@ impl TopLevelState {
         Ok(())
     }
 
-    fn apply_shard_transaction_to_shard<C: ChainTimeInfo>(
+    fn apply_shard_transaction_to_shard(
         &mut self,
         transaction: &ShardTransaction,
         shard_id: ShardId,
         sender: &Address,
         approvers: &[Address],
-        client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
     ) -> StateResult<()> {
@@ -426,7 +421,6 @@ impl TopLevelState {
             sender,
             &shard_users,
             approvers,
-            client,
             parent_block_number,
             parent_block_timestamp,
         )

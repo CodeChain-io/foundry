@@ -23,7 +23,6 @@ use cdb::AsHashDB;
 use ckey::Address;
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, ShardId, Tracker};
-use cvm::ChainTimeInfo;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use primitives::H256;
 use std::cell::RefCell;
@@ -88,13 +87,12 @@ impl<'db> ShardLevelState<'db> {
         })
     }
 
-    fn apply_internal<C: ChainTimeInfo>(
+    fn apply_internal(
         &mut self,
         transaction: &ShardTransaction,
         _sender: &Address,
         _shard_users: &[Address],
         _approvers: &[Address],
-        _client: &C,
         _parent_block_number: BlockNumber,
         _parent_block_timestamp: u64,
     ) -> StateResult<()> {
@@ -156,13 +154,12 @@ impl<'db> StateWithCheckpoint for ShardLevelState<'db> {
 const TRANSACTION_CHECKPOINT: CheckpointId = 456;
 
 impl<'db> ShardState for ShardLevelState<'db> {
-    fn apply<C: ChainTimeInfo>(
+    fn apply(
         &mut self,
         transaction: &ShardTransaction,
         sender: &Address,
         shard_users: &[Address],
         approvers: &[Address],
-        client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
     ) -> StateResult<()> {
@@ -174,7 +171,6 @@ impl<'db> ShardState for ShardLevelState<'db> {
             sender,
             shard_users,
             approvers,
-            client,
             parent_block_number,
             parent_block_timestamp,
         );
@@ -210,7 +206,7 @@ impl<'db> ShardStateView for ReadOnlyShardLevelState<'db> {
 mod tests {
     use super::super::test_helper::SHARD_ID;
     use super::*;
-    use crate::tests::helpers::{get_temp_state_db, get_test_client};
+    use crate::tests::helpers::get_temp_state_db;
 
     fn address() -> Address {
         Address::random()
@@ -241,7 +237,7 @@ mod tests {
 
         let store_shard_text_tracker = store_shard_text.tracker();
 
-        assert_eq!(Ok(()), state.apply(&store_shard_text, &sender, &[sender], &[], &get_test_client(), 0, 0));
+        assert_eq!(Ok(()), state.apply(&store_shard_text, &sender, &[sender], &[], 0, 0));
 
         check_shard_level_state!(state, [
             (text: (store_shard_text_tracker) => { content: &content })
