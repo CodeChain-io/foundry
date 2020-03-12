@@ -1,0 +1,13 @@
+[package]
+name = "codechain-testmodule"
+version = "0.1.0"
+authors = ["CodeChain Team <hi@codechain.io>"]
+edition = "2018"
+
+[dependencies]
+codechain-basesandbox = { path = "../basesandbox" }
+nix = "0.17.0"
+
+[[bin]]
+path = "./src/simple.rs"
+name = "tm_simple_rs"
