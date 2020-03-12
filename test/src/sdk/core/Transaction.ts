@@ -6,7 +6,6 @@ import { CreateShardActionJSON } from "./transaction/CreateShard";
 import { CustomActionJSON } from "./transaction/Custom";
 import { PayActionJSON } from "./transaction/Pay";
 import { RemoveActionJSON } from "./transaction/Remove";
-import { SetRegularKeyActionJSON } from "./transaction/SetRegularKey";
 import { SetShardOwnersActionJSON } from "./transaction/SetShardOwners";
 import { SetShardUsersActionJSON } from "./transaction/SetShardUsers";
 import { StoreActionJSON } from "./transaction/Store";
@@ -21,7 +20,6 @@ export interface AssetTransaction {
 
 type ActionJSON =
     | PayActionJSON
-    | SetRegularKeyActionJSON
     | SetShardOwnersActionJSON
     | SetShardUsersActionJSON
     | CreateShardActionJSON

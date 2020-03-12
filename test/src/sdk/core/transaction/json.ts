@@ -12,7 +12,6 @@ import { CreateShard } from "./CreateShard";
 import { Custom } from "./Custom";
 import { Pay } from "./Pay";
 import { Remove } from "./Remove";
-import { SetRegularKey } from "./SetRegularKey";
 import { SetShardOwners } from "./SetShardOwners";
 import { SetShardUsers } from "./SetShardUsers";
 import { Store } from "./Store";
@@ -25,11 +24,6 @@ export function fromJSONToTransaction(result: any): Transaction {
             const receiver = Address.ensure(action.receiver);
             const quantity = new U64(action.quantity);
             tx = new Pay(receiver, quantity, networkId);
-            break;
-        }
-        case "setRegularKey": {
-            const key = new H512(action.key);
-            tx = new SetRegularKey(key, networkId);
             break;
         }
         case "createShard": {
