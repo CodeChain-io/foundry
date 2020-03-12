@@ -33,6 +33,8 @@ import * as stake from "../stakeholder";
 import { faucetAddress, faucetSecret } from "./constants";
 import { wait } from "./promise";
 
+const getPort = require("get-port");
+
 const projectRoot = `${__dirname}/../../..`;
 
 export type SchemeFilepath = string;
@@ -69,7 +71,6 @@ export interface Signer {
 export default class CodeChain {
     private static idCounter = 0;
     private readonly _id: number;
-    private readonly _rpc: RPC;
     private readonly _testFramework: SDK;
     private readonly _localKeyStorePath: string;
     private readonly _dbPath: string;
@@ -78,9 +79,11 @@ export default class CodeChain {
     private readonly _logFile: string;
     private readonly _logPath: string;
     private readonly _chain: ChainType;
-    private readonly _rpcPort: number;
     private readonly argv: string[];
     private readonly env: { [key: string]: string };
+    private _port?: number;
+    private _rpcPort?: number;
+    private _rpc?: RPC;
     private process: ProcessState;
     private restarts: number;
     private _keepLogs: boolean;
@@ -99,7 +102,7 @@ export default class CodeChain {
     }
     public get rpc(): RPC {
         if (this.process.state === "running") {
-            return this._rpc;
+            return this._rpc!;
         } else {
             throw new ProcessStateError(this.id, this.process);
         }
@@ -123,10 +126,10 @@ export default class CodeChain {
         return this._logPath;
     }
     public get rpcPort(): number {
-        return this._rpcPort;
+        return this._rpcPort!;
     }
     public get port(): number {
-        return 3486 + this.id;
+        return this._port!;
     }
     public get secretKey(): number {
         return 1 + this.id;
@@ -160,9 +163,6 @@ export default class CodeChain {
         const { chain, argv, additionalKeysPath, env } = options;
         this._id = CodeChain.idCounter++;
 
-        const { rpcPort = 8081 + this.id } = options;
-        this._rpcPort = rpcPort;
-
         mkdirp.sync(`${projectRoot}/db/`);
         mkdirp.sync(`${projectRoot}/keys/`);
         mkdirp.sync(`${projectRoot}/test/log/`);
@@ -188,9 +188,6 @@ export default class CodeChain {
             this.id
         }.log`;
         this._logPath = `${projectRoot}/test/log/${this._logFile}`;
-        this._rpc = new RPC(`http://localhost:${this.rpcPort}`, {
-            devel: true
-        });
         this._testFramework = new SDK({});
         this._chain = chain || "solo";
         this.argv = argv || [];
@@ -209,6 +206,12 @@ export default class CodeChain {
         if (this.process.state !== "stopped") {
             throw new ProcessStateError(this.id, this.process);
         }
+
+        await this.initialize_port();
+
+        this._rpc = new RPC(`http://localhost:${this.rpcPort}`, {
+            devel: true
+        });
 
         const {
             argv = [],
@@ -768,5 +771,10 @@ export default class CodeChain {
                 }
             }
         }
+    }
+
+    private async initialize_port() {
+        this._port = await getPort({ port: this.id + 3486 });
+        this._rpcPort = await getPort({ port: this.id + 8081 });
     }
 }
