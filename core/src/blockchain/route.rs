@@ -110,8 +110,9 @@ pub fn tree_route(db: &dyn HeaderProvider, from: BlockHash, to: BlockHash) -> Op
 /// Import route for newly inserted block.
 #[derive(Debug, PartialEq)]
 pub struct ImportRoute {
-    /// Blocks that were validated by new block.
-    pub enacted: Vec<BlockHash>,
+    // Some(updated_best_block_hash) if chain is updated
+    // None if chain is not updated
+    pub enacted: Option<BlockHash>,
 }
 
 impl ImportRoute {
@@ -120,14 +121,13 @@ impl ImportRoute {
             BestBlockChanged::CanonChainAppended {
                 ..
             } => {
-                let mut enacted = Vec::new();
-                enacted.push(best_block_changed.new_best_hash().unwrap());
+                let enacted = Some(best_block_changed.new_best_hash().unwrap());
                 ImportRoute {
                     enacted,
                 }
             }
             BestBlockChanged::None => ImportRoute {
-                enacted: vec![],
+                enacted: None,
             },
         }
     }
@@ -137,24 +137,24 @@ impl ImportRoute {
             BestHeaderChanged::CanonChainAppended {
                 ..
             } => {
-                let enacted = vec![best_header_changed.new_best_hash().unwrap()];
+                let enacted = Some(best_header_changed.new_best_hash().unwrap());
                 ImportRoute {
                     enacted,
                 }
             }
             BestHeaderChanged::None => ImportRoute {
-                enacted: vec![],
+                enacted: None,
             },
         }
     }
 
     pub fn none() -> Self {
         ImportRoute {
-            enacted: vec![],
+            enacted: None,
         }
     }
 
     pub fn is_none(&self) -> bool {
-        self.enacted.is_empty() 
+        self.enacted.is_none()
     }
 }
