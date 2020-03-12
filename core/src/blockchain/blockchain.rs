@@ -19,7 +19,8 @@ use super::body_db::{BodyDB, BodyProvider};
 use super::extras::{BlockDetails, TransactionAddress};
 use super::headerchain::{HeaderChain, HeaderProvider};
 use super::invoice_db::{InvoiceDB, InvoiceProvider};
-use super::route::{tree_route, ImportRoute};
+use super::route::tree_route;
+use super::update_result::ChainUpdateResult;
 use crate::blockchain_info::BlockChainInfo;
 use crate::consensus::CodeChainEngine;
 use crate::db;
@@ -95,10 +96,10 @@ impl BlockChain {
         batch: &mut DBTransaction,
         header: &HeaderView<'_>,
         engine: &dyn CodeChainEngine,
-    ) -> ImportRoute {
+    ) -> ChainUpdateResult {
         match self.headerchain.insert_header(batch, header, engine) {
-            Some(c) => ImportRoute::new_from_best_header_changed(&c),
-            None => ImportRoute::none(),
+            Some(c) => ChainUpdateResult::new_from_best_header_changed(&c),
+            None => ChainUpdateResult::none(),
         }
     }
 
@@ -150,7 +151,7 @@ impl BlockChain {
         bytes: &[u8],
         invoices: Vec<Invoice>,
         engine: &dyn CodeChainEngine,
-    ) -> ImportRoute {
+    ) -> ChainUpdateResult {
         // create views onto rlp
         let new_block = BlockView::new(bytes);
         let new_header = new_block.header_view();
@@ -160,7 +161,7 @@ impl BlockChain {
 
         if self.is_known(&new_block_hash) {
             cdebug!(BLOCKCHAIN, "Block #{}({}) is already known.", new_header.number(), new_block_hash);
-            return ImportRoute::none()
+            return ChainUpdateResult::none()
         }
 
         assert!(self.pending_best_block_hash.read().is_none());
@@ -185,7 +186,7 @@ impl BlockChain {
             *pending_best_proposal_block_hash = Some(new_block_hash);
         }
 
-        ImportRoute::new(&best_block_changed)
+        ChainUpdateResult::new(&best_block_changed)
     }
 
     /// Apply pending insertion updates
@@ -273,7 +274,7 @@ impl BlockChain {
     /// The new best block should be a child of the current best block.
     /// This will not change the best proposal block chain. This means it is possible
     /// to have the best block and the best proposal block in different branches.
-    pub fn update_best_as_committed(&self, batch: &mut DBTransaction, block_hash: BlockHash) -> ImportRoute {
+    pub fn update_best_as_committed(&self, batch: &mut DBTransaction, block_hash: BlockHash) -> ChainUpdateResult {
         // FIXME: If it is possible, double check with the consensus engine.
         ctrace!(BLOCKCHAIN, "Update the best block to {}", block_hash);
 
@@ -299,7 +300,7 @@ impl BlockChain {
                 block_detail.number,
                 prev_best_block_detail.number
             );
-            return ImportRoute::none()
+            return ChainUpdateResult::none()
         }
 
         assert_eq!(block_detail.number, prev_best_block_detail.number + 1);
@@ -322,7 +323,7 @@ impl BlockChain {
         batch.put(db::COL_EXTRA, BEST_PROPOSAL_BLOCK_KEY, &*block_hash);
         *pending_best_proposal_block_hash = Some(block_hash);
 
-        ImportRoute::new(&best_block_changed)
+        ChainUpdateResult::new(&best_block_changed)
     }
 
     /// Returns general blockchain information

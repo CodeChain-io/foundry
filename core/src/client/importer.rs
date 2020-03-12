@@ -16,7 +16,7 @@
 
 use super::{BlockChainTrait, Client, ClientConfig};
 use crate::block::{enact, Block, ClosedBlock, IsBlock};
-use crate::blockchain::{BodyProvider, HeaderProvider, ImportRoute};
+use crate::blockchain::{BodyProvider, ChainUpdateResult, HeaderProvider};
 use crate::client::EngineInfo;
 use crate::consensus::CodeChainEngine;
 use crate::error::Error;
@@ -145,7 +145,7 @@ impl Importer {
         imported
     }
 
-    pub fn extract_enacted(&self, import_results: Vec<ImportRoute>) -> Vec<BlockHash> {
+    pub fn extract_enacted(&self, import_results: Vec<ChainUpdateResult>) -> Vec<BlockHash> {
         let set = import_results.into_iter().fold(HashSet::new(), |mut set, route| {
             set.extend(route.enacted);
             set
@@ -153,7 +153,11 @@ impl Importer {
         Vec::from_iter(set)
     }
 
-    pub fn commit_block<B>(&self, block: &B, header: &Header, block_data: &[u8], client: &Client) -> ImportRoute
+    // NOTE: the header of the block passed here is not necessarily sealed, as
+    // it is for reconstructing the state transition.
+    //
+    // The header passed is from the original block data and is sealed.
+    pub fn commit_block<B>(&self, block: &B, header: &Header, block_data: &[u8], client: &Client) -> ChainUpdateResult
     where
         B: IsBlock, {
         let hash = header.hash();
@@ -391,7 +395,7 @@ impl Importer {
         true
     }
 
-    fn commit_header(&self, header: &Header, client: &Client) -> ImportRoute {
+    fn commit_header(&self, header: &Header, client: &Client) -> ChainUpdateResult {
         let chain = client.block_chain();
 
         let mut batch = DBTransaction::new();

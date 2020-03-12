@@ -22,10 +22,11 @@ mod extras;
 mod headerchain;
 mod invoice_db;
 mod route;
+mod update_result;
 
 pub use self::blockchain::{BlockChain, BlockProvider};
 pub use self::body_db::BodyProvider;
 pub use self::extras::{BlockDetails, TransactionAddress, TransactionAddresses};
 pub use self::headerchain::HeaderProvider;
 pub use self::invoice_db::InvoiceProvider;
-pub use self::route::ImportRoute;
+pub use self::update_result::ChainUpdateResult;
