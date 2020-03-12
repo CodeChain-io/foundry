@@ -14,10 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod storage_access;
-mod sub_storage_access;
+pub use ctypes::StorageId;
 
-pub use storage_access::StorageAccess;
-pub use sub_storage_access::SubStorageAccess;
+pub type Key = dyn AsRef<[u8]>;
+pub type Value = Vec<u8>;
 
-pub trait Context: SubStorageAccess {}
+// Interface between host and the coordinator
+pub trait StorageAccess {
+    fn get(&self, storage_id: StorageId, key: &Key) -> Option<Value>;
+    fn set(&mut self, storage_id: StorageId, key: &Key, value: Value);
+    fn has(&self, storage_id: StorageId, key: &Key) -> bool;
+    fn remove(&mut self, storage_id: StorageId, key: &Key);
+
+    /// Create a recoverable checkpoint of this state
+    fn create_checkpoint(&mut self);
+    /// Revert to the last checkpoint and discard it
+    fn revert_to_the_checkpoint(&mut self);
+    /// Merge last checkpoint with the previous
+    fn discard_checkpoint(&mut self);
+}
