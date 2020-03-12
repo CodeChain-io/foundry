@@ -18,7 +18,6 @@ use crate::{Account, ActionData, CacheableItem, Metadata, Shard, ShardText, Stat
 use ckey::Address;
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, CommonParams, ShardId, Tracker, TxHash};
-use cvm::ChainTimeInfo;
 use merkle_trie::Result as TrieResult;
 use primitives::{Bytes, H256};
 
@@ -93,13 +92,12 @@ pub trait ShardStateView {
 }
 
 pub trait ShardState {
-    fn apply<C: ChainTimeInfo>(
+    fn apply(
         &mut self,
         transaction: &ShardTransaction,
         sender: &Address,
         shard_owners: &[Address],
         approvers: &[Address],
-        client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
     ) -> StateResult<()>;

@@ -326,7 +326,6 @@ dependencies = [
  "codechain-state",
  "codechain-timer",
  "codechain-types",
- "codechain-vm",
  "crossbeam-channel",
  "hyper 0.10.0-a.0",
  "kvdb",
@@ -552,7 +551,6 @@ dependencies = [
  "codechain-key",
  "codechain-logger",
  "codechain-types",
- "codechain-vm",
  "kvdb",
  "kvdb-memorydb",
  "log 0.4.6",
@@ -617,17 +615,6 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
-]
-
-[[package]]
-name = "codechain-vm"
-version = "0.1.0"
-dependencies = [
- "codechain-crypto",
- "codechain-key",
- "codechain-types",
- "primitives",
- "rlp",
 ]
 
 [[package]]
@@ -1022,7 +1009,6 @@ dependencies = [
  "codechain-sync",
  "codechain-timer",
  "codechain-types",
- "codechain-vm",
  "ctrlc",
  "env_logger 0.5.10",
  "fdlimit",
