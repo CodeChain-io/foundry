@@ -3,11 +3,9 @@ import {
     AddressValue,
     H128,
     H160,
-    H160Value,
     H256,
     H256Value,
     H512,
-    H512Value,
     U256,
     U64,
     U64Value
@@ -239,14 +237,6 @@ export class Core {
     }
 }
 
-function checkNetworkId(networkId: NetworkId) {
-    if (typeof networkId !== "string" || networkId.length !== 2) {
-        throw Error(
-            `Expected networkId param to be a string of length 2 but found ${networkId}`
-        );
-    }
-}
-
 function checkAddressRecipient(recipient: AddressValue) {
     if (!Address.check(recipient)) {
         throw Error(
@@ -263,20 +253,6 @@ function checkAmount(amount: U64Value) {
     }
 }
 
-function checkExpiration(expiration: U64Value) {
-    if (!U64.check(expiration)) {
-        throw Error(
-            `Expected expiration param to be a U64 value but found ${expiration}`
-        );
-    }
-}
-
-function checkKey(key: H512Value) {
-    if (!H512.check(key)) {
-        throw Error(`Expected key param to be an H512 value but found ${key}`);
-    }
-}
-
 function checkShardId(shardId: number) {
     if (
         typeof shardId !== "number" ||
@@ -290,29 +266,11 @@ function checkShardId(shardId: number) {
     }
 }
 
-function checkMetadata(metadata: string | object) {
-    if (
-        typeof metadata !== "string" &&
-        typeof metadata !== "object" &&
-        metadata != null
-    ) {
-        throw Error(
-            `Expected metadata param to be either a string or an object but found ${metadata}`
-        );
-    }
-}
-
 function checkCertifier(certifier: AddressValue) {
     if (!Address.check(certifier)) {
         throw Error(
             `Expected certifier param to be a address but found ${certifier}`
         );
-    }
-}
-
-function checkPayer(payer: AddressValue) {
-    if (!Address.check(payer)) {
-        throw Error(`Expected payer param to be a address but found ${payer}`);
     }
 }
 
@@ -342,51 +300,6 @@ function checkUsers(users: Array<AddressValue>) {
     });
 }
 
-function checkTracker(value: H256Value) {
-    if (!H256.check(value)) {
-        throw Error(
-            `Expected tracker param to be an H256 value but found ${value}`
-        );
-    }
-}
-
-function checkIndex(index: number) {
-    if (typeof index !== "number") {
-        throw Error(`Expected index param to be a number but found ${index}`);
-    }
-}
-
-function checkAssetType(value: H160Value) {
-    if (!H160.check(value)) {
-        throw Error(
-            `Expected assetType param to be an H160 value but found ${value}`
-        );
-    }
-}
-
-function checkIndices(indices: Array<number>) {
-    if (!Array.isArray(indices)) {
-        throw Error(
-            `Expected indices param to be an array but found ${indices}`
-        );
-    }
-    indices.forEach((value, idx) => {
-        if (typeof value !== "number") {
-            throw Error(
-                `Expected an indices to be an array of numbers but found ${value} at index ${idx}`
-            );
-        }
-    });
-}
-
-function checkLockScriptHash(value: H160Value) {
-    if (!H160.check(value)) {
-        throw Error(
-            `Expected lockScriptHash param to be an H160 value but found ${value}`
-        );
-    }
-}
-
 function checkTransactionHash(value: H256Value) {
     if (!H256.check(value)) {
         throw Error(
@@ -399,37 +312,6 @@ function checkSecret(value: H256Value) {
     if (!H256.check(value)) {
         throw Error(
             `Expected secret param to be an H256 value but found ${value}`
-        );
-    }
-}
-
-function checkParameters(parameters: Buffer[]) {
-    if (!Array.isArray(parameters)) {
-        throw Error(
-            `Expected parameters param to be an array but found ${parameters}`
-        );
-    }
-    parameters.forEach((p, index) => {
-        if (!(p instanceof Buffer)) {
-            throw Error(
-                `Expected an item of parameters to be a Buffer instance but found ${p} at index ${index}`
-            );
-        }
-    });
-}
-
-function checkLockScript(lockScript: Buffer) {
-    if (!(lockScript instanceof Buffer)) {
-        throw Error(
-            `Expedted lockScript param to be an instance of Buffer but found ${lockScript}`
-        );
-    }
-}
-
-function checkUnlockScript(unlockScript: Buffer) {
-    if (!(unlockScript instanceof Buffer)) {
-        throw Error(
-            `Expected unlockScript param to be an instance of Buffer but found ${unlockScript}`
         );
     }
 }
