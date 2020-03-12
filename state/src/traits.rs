@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{Account, ActionData, CacheableItem, Metadata, Shard, ShardText, StateDB, StateResult};
+use crate::{Account, ActionData, CacheableItem, Metadata, ModuleDatum, Shard, ShardText, StateDB, StateResult};
 use ckey::Address;
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, CommonParams, ShardId, Tracker, TxHash};
@@ -89,6 +89,13 @@ pub trait TopStateView {
 pub trait ShardStateView {
     /// Get shard text.
     fn text(&self, tracker: Tracker) -> TrieResult<Option<ShardText>>;
+}
+
+pub trait ModuleStateView {
+    /// Get module datum from the key
+    fn get_datum(&self, key: &dyn AsRef<[u8]>) -> TrieResult<Option<ModuleDatum>>;
+    /// Check if the key exists
+    fn has_key(&self, key: &dyn AsRef<[u8]>) -> TrieResult<bool>;
 }
 
 pub trait ShardState {
