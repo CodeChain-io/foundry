@@ -1,7 +1,6 @@
 import { Address, AddressValue, H256, U64Value } from "foundry-primitives";
 
 import { SignedTransaction, Transaction, U64 } from "../core/classes";
-import { AssetTransaction } from "../core/Transaction";
 import { NetworkId } from "../core/types";
 import { SignatureTag } from "../utils";
 
@@ -75,45 +74,6 @@ export class Key {
         return Address.fromAccountId(accountId, { networkId });
     }
 
-    /**
-     * Approves the transaction
-     * @param transaction A transaction
-     * @param params
-     * @param params.keyStore A key store.
-     * @param params.account An account.
-     * @param params.passphrase The passphrase for the given account
-     * @returns An approval
-     */
-    public async approveTransaction(
-        transaction: AssetTransaction,
-        params: {
-            keyStore?: KeyStore;
-            account: AddressValue;
-            passphrase?: string;
-        }
-    ): Promise<string> {
-        const {
-            account,
-            passphrase,
-            keyStore = await this.ensureKeyStore()
-        } = params;
-        if (!isKeyStore(keyStore)) {
-            throw Error(
-                `Expected keyStore param to be a KeyStore instance but found ${keyStore}`
-            );
-        }
-        if (!Address.check(account)) {
-            throw Error(
-                `Expected account param to be a address value but found ${account}`
-            );
-        }
-        const accountId = Address.ensure(account).getAccountId();
-        return await keyStore.sign({
-            key: accountId.value,
-            message: transaction.tracker().value,
-            passphrase
-        });
-    }
     /**
      * Signs a Transaction with the given account.
      * @param tx A Transaction
