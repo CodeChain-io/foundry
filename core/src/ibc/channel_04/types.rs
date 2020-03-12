@@ -114,12 +114,12 @@ pub struct Packet {
 
 /// Acknowledgement and PacketCommitment's behaviors are somewhat different from other ICS data:
 /// They are not saved directly in the state, but the hash PacketCommitmentHash will be.
-#[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
+#[derive(RlpEncodableWrapper, RlpDecodableWrapper, PartialEq, Debug)]
 pub struct AcknowledgementHash {
     pub raw: H256,
 }
 
-#[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
+#[derive(RlpEncodableWrapper, RlpDecodableWrapper, PartialEq, Debug)]
 pub struct Acknowledgement {
     pub raw: Bytes,
 }
@@ -132,7 +132,7 @@ impl Acknowledgement {
     }
 }
 
-#[derive(RlpEncodable, RlpDecodable, PartialEq, Debug)]
+#[derive(RlpEncodableWrapper, RlpDecodableWrapper, PartialEq, Debug)]
 pub struct PacketCommitmentHash {
     pub raw: H256,
 }
