@@ -1,4 +1,4 @@
-import { Datagram } from "./datagram/index";
+import { Datagram, PacketJSON } from "./datagram/index";
 import { SDK } from "codechain-sdk";
 import { H256, PlatformAddress } from "codechain-primitives";
 import { IBC } from "./foundry/transaction";

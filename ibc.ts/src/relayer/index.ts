@@ -1,9 +1,9 @@
 import Debug from "debug";
 import { Chain } from "../common/chain";
-import { Datagram, ChannelOrdered } from "../common/datagram/index";
+import { Datagram, ChannelOrdered, Packet } from "../common/datagram/index";
 import { delay } from "../common/util";
 import { getConfig } from "../common/config";
-import { PlatformAddress } from "codechain-primitives/lib";
+import { PlatformAddress, blake256 } from "codechain-primitives/lib";
 import { UpdateClientDatagram } from "../common/datagram/updateClient";
 import { strict as assert } from "assert";
 import { ConnOpenTryDatagram } from "../common/datagram/connOpenTry";
@@ -12,6 +12,8 @@ import { ConnOpenConfirmDatagram } from "../common/datagram/connOpenConfirm";
 import { ChanOpenTryDatagram } from "../common/datagram/chanOpenTry";
 import { ChanOpenAckDatagram } from "../common/datagram/chanOpenAck";
 import { ChanOpenConfirmDatagram } from "../common/datagram/chanOpenConfirm";
+import { RecvPacketDatagram } from "../common/datagram/recvPacket";
+import { AcknowledgePacketDatagram } from "../common/datagram/acknowledgePacket";
 
 require("dotenv").config();
 
@@ -143,6 +145,15 @@ async function pendingDatagrams({
     localDatagrams = localDatagrams.concat(localDatagramsForChannel);
     counterpartyDatagrams = counterpartyDatagrams.concat(
         counterpartyDatagramsForChannel
+    );
+
+    counterpartyDatagrams = counterpartyDatagrams.concat(
+        await relayPacket({
+            chain,
+            counterpartyChain,
+            height,
+            counterpartyChainHeight
+        })
     );
 
     return { localDatagrams, counterpartyDatagrams };
@@ -344,4 +355,96 @@ async function buildChannel({
         localDatagrams,
         counterpartyDatagrams
     };
+}
+
+async function relayPacket({
+    chain,
+    counterpartyChain,
+    height,
+    counterpartyChainHeight
+}: {
+    chain: Chain;
+    counterpartyChain: Chain;
+    height: number;
+    counterpartyChainHeight: number;
+}): Promise<Datagram[]> {
+    const counterpartyDatagrams = [];
+
+    // FIXME: what will be acknowledgement?
+    const acknowledgementValue = Buffer.from("acknowledgement", "utf8");
+
+    const sendPacket = await chain.queryLatestSendPacket(height);
+    if (sendPacket != null) {
+        const counterpartyAcknowledgement = await counterpartyChain.queryAcknowledgement(
+            sendPacket.sequence,
+            counterpartyChainHeight
+        );
+        assert.notEqual(
+            counterpartyAcknowledgement,
+            null,
+            `block at ${counterpartyChainHeight} exists`
+        );
+        if (counterpartyAcknowledgement!.data == null) {
+            const commitment = await chain.queryCommitment(
+                sendPacket.sequence,
+                height
+            );
+            assert.notEqual(
+                commitment?.data,
+                null,
+                `block at ${height} exists`
+            );
+
+            counterpartyDatagrams.push(
+                new RecvPacketDatagram({
+                    packet: new Packet(sendPacket),
+                    proof: Buffer.from(commitment!.proof, "hex"),
+                    proofHeight: height,
+                    ack: acknowledgementValue
+                })
+            );
+        }
+    }
+
+    const recvPacket = await chain.queryLatestRecvPacket(height);
+    if (recvPacket != null) {
+        const acknowledgement = await chain.queryAcknowledgement(
+            recvPacket.sequence,
+            height
+        );
+        assert.notEqual(
+            acknowledgement?.data,
+            null,
+            "(Recivecd packet != null) -> (ack !== null)"
+        );
+        assert.strictEqual(
+            acknowledgement!.data!,
+            "0x" + blake256(acknowledgementValue),
+            "Acknowledgement should be the same"
+        );
+        const counterpartyCommitment = await counterpartyChain.queryCommitment(
+            recvPacket.sequence,
+            counterpartyChainHeight
+        );
+        assert.notEqual(
+            counterpartyCommitment,
+            null,
+            `block at ${counterpartyChainHeight} exists`
+        );
+        if (counterpartyCommitment!.data == null) {
+            debug("Counterparty commitment does not exist");
+        }
+        if (counterpartyCommitment!.data != null) {
+            counterpartyDatagrams.push(
+                new AcknowledgePacketDatagram({
+                    packet: new Packet(recvPacket),
+                    ack: acknowledgementValue,
+                    proof: Buffer.from(acknowledgement!.proof, "hex"),
+                    proofHeight: height
+                })
+            );
+        }
+    }
+
+    return counterpartyDatagrams;
 }
