@@ -470,7 +470,7 @@ impl<'a> Manager<'a> {
         );
 
         // check log.rs to understand this statement
-        set_packet(self.ctx, &packet, "send");
+        set_packet(self.ctx, &packet.source_port, &packet.source_channel, &packet, "send");
 
         Ok(())
     }
@@ -542,7 +542,7 @@ impl<'a> Manager<'a> {
         // check log.rs to understand this statement
         // Unlike send, we just overwrite an old event.
         remove_packet(self.ctx, &packet.dest_port, &packet.dest_channel, "recv");
-        set_packet(self.ctx, &packet, "recv");
+        set_packet(self.ctx, &packet.dest_port, &packet.dest_channel, &packet, "recv");
 
         Ok(packet)
     }

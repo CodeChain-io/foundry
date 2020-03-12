@@ -23,9 +23,15 @@ use super::types::Packet;
 use crate::ibc;
 use ibc::IdentifierSlice;
 
-pub fn set_packet<'a>(ctx: &'a mut dyn ibc::Context, packet: &Packet, tag: &str) {
+pub fn set_packet<'a>(
+    ctx: &'a mut dyn ibc::Context,
+    port: IdentifierSlice,
+    channel: IdentifierSlice,
+    packet: &Packet,
+    tag: &str,
+) {
     let value = rlp::encode(packet);
-    let path = format!("nastylogs/{}/{}/{}/latest", packet.source_port, packet.source_channel, tag);
+    let path = format!("nastylogs/{}/{}/{}/latest", port, channel, tag);
     let result = ctx.get_kv_store_mut().insert(&path, &value);
     if result.is_some() {
         panic!("Packet already exists.");
