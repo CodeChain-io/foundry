@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::block_info::{BestBlockChanged, BestHeaderChanged};
 use super::headerchain::HeaderProvider;
 use ctypes::BlockHash;
 
@@ -105,56 +104,4 @@ pub fn tree_route(db: &dyn HeaderProvider, from: BlockHash, to: BlockHash) -> Op
         retracted,
         enacted,
     })
-}
-
-/// Import route for newly inserted block.
-#[derive(Debug, PartialEq)]
-pub struct ImportRoute {
-    // Some(updated_best_block_hash) if chain is updated
-    // None if chain is not updated
-    pub enacted: Option<BlockHash>,
-}
-
-impl ImportRoute {
-    pub fn new(best_block_changed: &BestBlockChanged) -> Self {
-        match best_block_changed {
-            BestBlockChanged::CanonChainAppended {
-                ..
-            } => {
-                let enacted = Some(best_block_changed.new_best_hash().unwrap());
-                ImportRoute {
-                    enacted,
-                }
-            }
-            BestBlockChanged::None => ImportRoute {
-                enacted: None,
-            },
-        }
-    }
-
-    pub fn new_from_best_header_changed(best_header_changed: &BestHeaderChanged) -> Self {
-        match best_header_changed {
-            BestHeaderChanged::CanonChainAppended {
-                ..
-            } => {
-                let enacted = Some(best_header_changed.new_best_hash().unwrap());
-                ImportRoute {
-                    enacted,
-                }
-            }
-            BestHeaderChanged::None => ImportRoute {
-                enacted: None,
-            },
-        }
-    }
-
-    pub fn none() -> Self {
-        ImportRoute {
-            enacted: None,
-        }
-    }
-
-    pub fn is_none(&self) -> bool {
-        self.enacted.is_none()
-    }
 }
