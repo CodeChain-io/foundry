@@ -445,7 +445,10 @@ impl<'a> Manager<'a> {
         let mut next_sequence_send = self.get_sequence_send(&packet.source_port, &packet.source_channel)?;
 
         if packet.sequence != next_sequence_send {
-            return Err("Packet carries invalid sequence".to_owned())
+            return Err(format!(
+                "Packet carries invalid sequence. expected: {:?}, actual: {:?}",
+                next_sequence_send, packet.sequence
+            ))
         }
 
         next_sequence_send.raw += 1;
@@ -522,7 +525,10 @@ impl<'a> Manager<'a> {
             );
 
             if packet.sequence != next_sequence_recv {
-                return Err("Packet carries invalid sequence".to_owned())
+                return Err(format!(
+                    "Packet carries invalid sequence. expected: {:?} actal: {:?}",
+                    next_sequence_recv, packet.sequence
+                ))
             }
             next_sequence_recv.raw += 1;
             kv_store.insert(
