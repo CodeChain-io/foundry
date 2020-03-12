@@ -38,7 +38,6 @@ pub fn set_packet<'a>(
     }
 }
 
-#[allow(dead_code)]
 pub fn get_packet<'a>(
     ctx: &'a mut dyn ibc::Context,
     port: IdentifierSlice,
