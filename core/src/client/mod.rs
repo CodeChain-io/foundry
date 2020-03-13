@@ -38,7 +38,6 @@ use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions, Veri
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress};
-use cnetwork::NodeId;
 use cstate::{FindActionHandler, StateResult, TopLevelState, TopStateView};
 use ctypes::header::Header;
 use ctypes::transaction::ShardTransaction;
@@ -198,7 +197,7 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
     fn queue_own_transaction(&self, transaction: VerifiedTransaction) -> Result<(), GenericError>;
 
     /// Queue transactions for importing.
-    fn queue_transactions(&self, transactions: Vec<Bytes>, peer_id: NodeId);
+    fn queue_transactions(&self, transactions: Vec<Bytes>);
 
     /// Delete all pending transactions.
     fn delete_all_pending_transactions(&self);
