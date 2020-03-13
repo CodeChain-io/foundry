@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -196,7 +196,7 @@ mod tests {
         let db = client.scheme.ensure_genesis_state(get_temp_state_db()).unwrap();
         let genesis_header = client.scheme.genesis_header();
         let b = OpenBlock::try_new(&*engine, db, &genesis_header, Default::default(), vec![]).unwrap();
-        let b = b.close_and_lock().unwrap();
+        let b = b.close().unwrap();
         if let Some(seal) = engine.generate_seal(Some(b.block()), &genesis_header).seal_fields() {
             b.seal_block(seal);
         }

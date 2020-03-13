@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::{BlockChainTrait, Client, ClientConfig};
-use crate::block::{enact, Block, IsBlock, LockedBlock};
+use crate::block::{enact, Block, ClosedBlock, IsBlock};
 use crate::blockchain::{BodyProvider, HeaderProvider, ImportRoute};
 use crate::client::EngineInfo;
 use crate::consensus::CodeChainEngine;
@@ -188,7 +188,7 @@ impl Importer {
         route
     }
 
-    fn check_and_close_block(&self, block: &PreverifiedBlock, client: &Client) -> Result<LockedBlock, ()> {
+    fn check_and_close_block(&self, block: &PreverifiedBlock, client: &Client) -> Result<ClosedBlock, ()> {
         let engine = &*self.engine;
         let header = &block.header;
 
@@ -256,12 +256,12 @@ impl Importer {
         let db = client.state_db().read().clone(&parent.state_root());
 
         let enact_result = enact(&block.header, &block.transactions, engine, client, db, &parent);
-        let locked_block = enact_result.map_err(|e| {
+        let closed_block = enact_result.map_err(|e| {
             cwarn!(CLIENT, "Block import failed for #{} ({})\nError: {:?}", header.number(), header.hash(), e);
         })?;
 
         // Final Verification
-        self.verifier.verify_block_final(header, locked_block.block().header()).map_err(|e| {
+        self.verifier.verify_block_final(header, closed_block.block().header()).map_err(|e| {
             cwarn!(
                 CLIENT,
                 "Stage 5 block verification failed for #{} ({})\nError: {:?}",
@@ -271,7 +271,7 @@ impl Importer {
             );
         })?;
 
-        Ok(locked_block)
+        Ok(closed_block)
     }
 
     /// This is triggered by a message coming from a header queue when the header is ready for insertion

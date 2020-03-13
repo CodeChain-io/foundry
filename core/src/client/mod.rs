@@ -28,7 +28,7 @@ pub use self::client::Client;
 pub use self::config::ClientConfig;
 pub use self::test_client::TestBlockChainClient;
 
-use crate::block::{Block, ClosedBlock, OpenBlock, SealedBlock};
+use crate::block::{Block, OpenBlock, SealedBlock};
 use crate::blockchain_info::BlockChainInfo;
 use crate::consensus::EngineError;
 use crate::encoded;
@@ -261,9 +261,6 @@ pub type ImportResult = Result<BlockHash, DatabaseError>;
 
 /// Provides methods used for sealing new state
 pub trait BlockProducer {
-    /// Reopens an OpenBlock and updates uncles.
-    fn reopen_block(&self, block: ClosedBlock) -> OpenBlock<'_>;
-
     /// Returns OpenBlock prepared for closing.
     fn prepare_open_block(&self, parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock<'_>;
 }
