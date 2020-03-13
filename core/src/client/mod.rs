@@ -34,7 +34,7 @@ use crate::consensus::EngineError;
 use crate::encoded;
 use crate::error::{BlockImportError, Error as GenericError};
 use crate::miner::MemPoolMinFees;
-use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction};
+use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress};
@@ -195,7 +195,7 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
     fn queue_info(&self) -> BlockQueueInfo;
 
     /// Queue own transaction for importing
-    fn queue_own_transaction(&self, transaction: SignedTransaction) -> Result<(), GenericError>;
+    fn queue_own_transaction(&self, transaction: VerifiedTransaction) -> Result<(), GenericError>;
 
     /// Queue transactions for importing.
     fn queue_transactions(&self, transactions: Vec<Bytes>, peer_id: NodeId);
@@ -204,10 +204,10 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
     fn delete_all_pending_transactions(&self);
 
     /// List all transactions that are allowed into the next block.
-    fn ready_transactions(&self, range: Range<u64>) -> PendingSignedTransactions;
+    fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions;
 
     /// List all transactions in future block.
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingSignedTransactions;
+    fn future_pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions;
 
     /// Get the count of all pending transactions currently in the mem_pool.
     fn count_pending_transactions(&self, range: Range<u64>) -> usize;

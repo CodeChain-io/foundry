@@ -19,7 +19,7 @@ use crate::client::BlockChainTrait;
 use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::CodeChainEngine;
 use crate::error::{BlockError, Error};
-use crate::transaction::{SignedTransaction, UnverifiedTransaction};
+use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use crate::views::BlockView;
 use ccrypto::BLAKE_NULL_RLP;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
@@ -34,7 +34,7 @@ pub struct PreverifiedBlock {
     /// Populated block header
     pub header: Header,
     /// Populated block transactions
-    pub transactions: Vec<SignedTransaction>,
+    pub transactions: Vec<VerifiedTransaction>,
     /// Block bytes
     pub bytes: Bytes,
 }
@@ -187,7 +187,7 @@ pub struct FullFamilyParams<'a, C: BlockChainTrait> {
     pub block_bytes: &'a [u8],
 
     /// Signed transactions
-    pub transactions: &'a [SignedTransaction],
+    pub transactions: &'a [VerifiedTransaction],
 
     /// Block provider to use during verification
     pub block_provider: &'a dyn BlockProvider,

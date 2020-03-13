@@ -17,16 +17,14 @@
 use crate::config::load_config;
 use ccore::stake::Action::SelfNominate;
 use ccore::stake::{Banned, Candidates, Jail, CUSTOM_ACTION_HANDLER_ID};
-use ccore::{
-    AccountProvider, AccountProviderError, BlockId, ConsensusClient, Encodable, SignedTransaction,
-    UnverifiedTransaction,
-};
+use ccore::{AccountProvider, AccountProviderError, BlockId, ConsensusClient, Encodable, UnverifiedTransaction};
 use ckey::PlatformAddress;
 use ckey::{Address, Ed25519Public as Public, Signature};
 use ckeystore::DecryptedAccount;
 use clap::ArgMatches;
 use ctypes::transaction::{Action, Transaction};
 use primitives::{Bytes, H256};
+use std::convert::TryInto;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -195,7 +193,7 @@ impl AutoSelfNomination {
         };
         let signer_public = *signer.public().expect("Signer must be initialized");
         let unverified = UnverifiedTransaction::new(tx, signature, signer_public);
-        let signed = SignedTransaction::try_new(unverified).expect("secret is valid so it's recoverable");
+        let signed = unverified.try_into().expect("secret is valid so it's recoverable");
 
         match client.queue_own_transaction(signed) {
             Ok(_) => {

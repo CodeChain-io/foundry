@@ -66,7 +66,7 @@ where
         let id = transaction_hash.into();
         Ok(self.client.transaction(&id).map(|mut tx| {
             let address = public_to_address(&tx.signer());
-            PlatformAddress::new_v1(tx.network_id, address)
+            PlatformAddress::new_v1(tx.unverified_tx().transaction().network_id, address)
         }))
     }
 

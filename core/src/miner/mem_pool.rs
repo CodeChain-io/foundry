@@ -22,7 +22,7 @@ use super::mem_pool_types::{
 use super::TransactionImportResult;
 use crate::client::{AccountData, BlockChainTrait};
 use crate::miner::fetch_account_creator;
-use crate::transaction::{PendingSignedTransactions, SignedTransaction};
+use crate::transaction::{PendingVerifiedTransactions, VerifiedTransaction};
 use crate::Error as CoreError;
 use ckey::{public_to_address, Ed25519Public as Public};
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
@@ -246,7 +246,7 @@ impl MemPool {
         for input in inputs {
             let tx = input.transaction;
             let signer_public = tx.signer_public();
-            let seq = tx.seq;
+            let seq = tx.transaction().seq;
             let hash = tx.hash();
 
             let origin = if input.origin.is_local() && !self.is_local_account.contains(&signer_public) {
@@ -696,56 +696,56 @@ impl MemPool {
     /// TransactionAlreadyImported, Old, TooCheapToReplace
     fn verify_transaction(
         &self,
-        tx: &SignedTransaction,
+        tx: &VerifiedTransaction,
         origin: TxOrigin,
         client_account: &AccountDetails,
     ) -> Result<(), Error> {
-        let action_min_fee = self.minimum_fees.min_cost(&tx.action);
-        if origin != TxOrigin::Local && tx.fee < action_min_fee {
+        let action_min_fee = self.minimum_fees.min_cost(&tx.transaction().action);
+        if origin != TxOrigin::Local && tx.transaction().fee < action_min_fee {
             ctrace!(
                 MEM_POOL,
                 "Dropping transaction below mempool defined minimum fee: {:?} (gp: {} < {})",
                 tx.hash(),
-                tx.fee,
+                tx.transaction().fee,
                 action_min_fee
             );
 
             return Err(SyntaxError::InsufficientFee {
                 minimal: action_min_fee,
-                got: tx.fee,
+                got: tx.transaction().fee,
             }
             .into())
         }
 
         let full_pools_lowest = self.effective_minimum_fee();
-        if origin != TxOrigin::Local && tx.fee < full_pools_lowest {
+        if origin != TxOrigin::Local && tx.transaction().fee < full_pools_lowest {
             ctrace!(
                 MEM_POOL,
                 "Dropping transaction below lowest fee in a full pool: {:?} (gp: {} < {})",
                 tx.hash(),
-                tx.fee,
+                tx.transaction().fee,
                 full_pools_lowest
             );
 
             return Err(SyntaxError::InsufficientFee {
                 minimal: full_pools_lowest,
-                got: tx.fee,
+                got: tx.transaction().fee,
             }
             .into())
         }
 
-        if client_account.balance < tx.fee {
+        if client_account.balance < tx.transaction().fee {
             ctrace!(
                 MEM_POOL,
                 "Dropping transaction without sufficient balance: {:?} ({} < {})",
                 tx.hash(),
                 client_account.balance,
-                tx.fee
+                tx.transaction().fee
             );
 
             return Err(RuntimeError::InsufficientBalance {
                 address: public_to_address(&tx.signer_public()),
-                cost: tx.fee,
+                cost: tx.transaction().fee,
                 balance: client_account.balance,
             }
             .into())
@@ -756,8 +756,14 @@ impl MemPool {
             return Err(HistoryError::TransactionAlreadyImported.into())
         }
 
-        if tx.seq < client_account.seq {
-            ctrace!(MEM_POOL, "Dropping old transaction: {:?} (seq: {} < {})", tx.hash(), tx.seq, client_account.seq);
+        if tx.transaction().seq < client_account.seq {
+            ctrace!(
+                MEM_POOL,
+                "Dropping old transaction: {:?} (seq: {} < {})",
+                tx.hash(),
+                tx.transaction().seq,
+                client_account.seq
+            );
             return Err(HistoryError::Old.into())
         }
 
@@ -765,10 +771,10 @@ impl MemPool {
             if let Some(TransactionOrderWithTag {
                 order,
                 ..
-            }) = self.by_signer_public.get(&tx.signer_public(), &tx.seq)
+            }) = self.by_signer_public.get(&tx.signer_public(), &tx.transaction().seq)
             {
                 let old_fee = order.fee;
-                let new_fee = tx.fee;
+                let new_fee = tx.transaction().fee;
                 let min_required_fee = old_fee + (old_fee >> self.fee_bump_shift);
 
                 if new_fee < min_required_fee {
@@ -802,7 +808,7 @@ impl MemPool {
     /// Returns top transactions whose timestamp are in the given range from the pool ordered by priority.
     // FIXME: current_timestamp should be `u64`, not `Option<u64>`.
     // FIXME: if range_contains becomes stable, use range.contains instead of inequality.
-    pub fn top_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingSignedTransactions {
+    pub fn top_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions {
         let mut current_size: usize = 0;
         let pending_items: Vec<_> = self
             .current
@@ -825,7 +831,7 @@ impl MemPool {
         let transactions = pending_items.iter().map(|t| t.tx.clone()).collect();
         let last_timestamp = pending_items.into_iter().map(|t| t.inserted_timestamp).max();
 
-        PendingSignedTransactions {
+        PendingVerifiedTransactions {
             transactions,
             last_timestamp,
         }
@@ -870,7 +876,7 @@ impl MemPool {
     }
 
     /// Return all future transactions along with current transactions.
-    pub fn get_future_pending_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingSignedTransactions {
+    pub fn get_future_pending_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions {
         let mut current_size: usize = 0;
         let pending_items: Vec<_> = self
             .current
@@ -906,20 +912,21 @@ impl MemPool {
                 current_size < size_limit
             })
             .collect();
-        let mut current_signed_tx: Vec<SignedTransaction> = pending_items.iter().map(|t| t.tx.clone()).collect();
+        let mut current_signed_tx: Vec<VerifiedTransaction> = pending_items.iter().map(|t| t.tx.clone()).collect();
         let current_last_timestamp = pending_items.into_iter().map(|t| t.inserted_timestamp).max();
-        let mut future_signed_tx: Vec<SignedTransaction> = future_pending_items.iter().map(|t| t.tx.clone()).collect();
+        let mut future_signed_tx: Vec<VerifiedTransaction> =
+            future_pending_items.iter().map(|t| t.tx.clone()).collect();
         current_signed_tx.append(&mut future_signed_tx);
-        let transactions: Vec<SignedTransaction> = current_signed_tx;
+        let transactions: Vec<VerifiedTransaction> = current_signed_tx;
         let future_last_timestamp = future_pending_items.into_iter().map(|t| t.inserted_timestamp).max();
         let last_timestamp = max(current_last_timestamp, future_last_timestamp);
-        PendingSignedTransactions {
+        PendingVerifiedTransactions {
             transactions,
             last_timestamp,
         }
     }
 
-    pub fn future_transactions(&self) -> Vec<SignedTransaction> {
+    pub fn future_transactions(&self) -> Vec<VerifiedTransaction> {
         self.future
             .queue
             .iter()
@@ -965,7 +972,7 @@ pub mod test {
                 quantity,
             },
         };
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
+        let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
         let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0);
 
         assert_eq!(fee + quantity, item.cost());
@@ -989,7 +996,7 @@ pub mod test {
                 quantity: 100_000,
             },
         };
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
+        let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
 
         rlp_encode_and_decode_test!(signed);
     }
@@ -1006,7 +1013,7 @@ pub mod test {
                 quantity: 0,
             },
         };
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
+        let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
         let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0);
 
         rlp_encode_and_decode_test!(item);
@@ -1071,7 +1078,7 @@ pub mod test {
         assert_eq!(mem_pool_recovered.future, mem_pool.future);
     }
 
-    fn create_signed_pay(seq: u64, keypair: &KeyPair) -> SignedTransaction {
+    fn create_signed_pay(seq: u64, keypair: &KeyPair) -> VerifiedTransaction {
         let receiver = 1u64.into();
         let tx = Transaction {
             seq,
@@ -1082,10 +1089,10 @@ pub mod test {
                 quantity: 100_000,
             },
         };
-        SignedTransaction::new_with_sign(tx, keypair.private())
+        VerifiedTransaction::new_with_sign(tx, keypair.private())
     }
 
-    fn create_signed_pay_with_fee(seq: u64, fee: u64, keypair: &KeyPair) -> SignedTransaction {
+    fn create_signed_pay_with_fee(seq: u64, fee: u64, keypair: &KeyPair) -> VerifiedTransaction {
         let receiver = 1u64.into();
         let tx = Transaction {
             seq,
@@ -1096,7 +1103,7 @@ pub mod test {
                 quantity: 100_000,
             },
         };
-        SignedTransaction::new_with_sign(tx, keypair.private())
+        VerifiedTransaction::new_with_sign(tx, keypair.private())
     }
 
     fn create_mempool_input_with_pay(seq: u64, keypair: &KeyPair) -> MemPoolInput {
@@ -1107,7 +1114,7 @@ pub mod test {
     fn abbreviated_mempool_add(
         test_client: &TestBlockChainClient,
         mem_pool: &mut MemPool,
-        txs: Vec<SignedTransaction>,
+        txs: Vec<VerifiedTransaction>,
         origin: TxOrigin,
     ) -> Vec<Result<TransactionImportResult, Error>> {
         let fetch_account = fetch_account_creator(test_client);
@@ -1156,7 +1163,7 @@ pub mod test {
             mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
         );
 
-        assert_eq!(Vec::<SignedTransaction>::default(), mem_pool.future_transactions());
+        assert_eq!(Vec::<VerifiedTransaction>::default(), mem_pool.future_transactions());
     }
 
     #[test]
@@ -1200,7 +1207,7 @@ pub mod test {
             mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
         );
 
-        assert_eq!(Vec::<SignedTransaction>::default(), mem_pool.future_transactions());
+        assert_eq!(Vec::<VerifiedTransaction>::default(), mem_pool.future_transactions());
     }
 
     #[test]
@@ -1240,7 +1247,7 @@ pub mod test {
             mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
         );
 
-        assert_eq!(Vec::<SignedTransaction>::default(), mem_pool.future_transactions());
+        assert_eq!(Vec::<VerifiedTransaction>::default(), mem_pool.future_transactions());
 
         let best_block_number = test_client.chain_info().best_block_number;
         let best_block_timestamp = test_client.chain_info().best_block_timestamp;

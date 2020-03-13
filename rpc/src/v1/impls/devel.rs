@@ -18,8 +18,8 @@ use super::super::errors;
 use super::super::traits::Devel;
 use super::super::types::TPSTestSetting;
 use ccore::{
-    BlockId, DatabaseClient, EngineClient, EngineInfo, MinerService, MiningBlockChainClient, SignedTransaction,
-    SnapshotClient, TermInfo, COL_STATE,
+    BlockId, DatabaseClient, EngineClient, EngineInfo, MinerService, MiningBlockChainClient, SnapshotClient, TermInfo,
+    VerifiedTransaction, COL_STATE,
 };
 use cjson::bytes::Bytes;
 use ckey::{Address, Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
@@ -155,8 +155,8 @@ where
         }
 
         // Helper functions
-        fn sign_tx(tx: Transaction, key_pair: &KeyPair) -> SignedTransaction {
-            SignedTransaction::new_with_sign(tx, key_pair.private())
+        fn sign_tx(tx: Transaction, key_pair: &KeyPair) -> VerifiedTransaction {
+            VerifiedTransaction::new_with_sign(tx, key_pair.private())
         }
 
         fn tps(count: u64, start_time: PreciseTime, end_time: PreciseTime) -> f64 {

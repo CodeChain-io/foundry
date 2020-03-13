@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::transaction::SignedTransaction;
+use crate::transaction::VerifiedTransaction;
 use ckey::Ed25519Public as Public;
 use ctypes::transaction::Action;
 use ctypes::{BlockNumber, TxHash};
@@ -111,7 +111,7 @@ pub struct TransactionOrder {
 impl TransactionOrder {
     pub fn for_transaction(item: &MemPoolItem, seq_seq: u64) -> Self {
         let rlp_bytes_len = rlp::encode(&item.tx).len();
-        let fee = item.tx.fee;
+        let fee = item.tx.transaction().fee;
         ctrace!(MEM_POOL, "New tx with size {}", rlp_bytes_len);
         Self {
             seq_height: item.seq() - seq_seq,
@@ -177,7 +177,7 @@ impl Ord for TransactionOrder {
 #[derive(Clone, Eq, PartialEq, Debug, RlpEncodable, RlpDecodable)]
 pub struct MemPoolItem {
     /// Transaction.
-    pub tx: SignedTransaction,
+    pub tx: VerifiedTransaction,
     /// Transaction origin.
     pub origin: TxOrigin,
     /// Insertion time
@@ -190,7 +190,7 @@ pub struct MemPoolItem {
 
 impl MemPoolItem {
     pub fn new(
-        tx: SignedTransaction,
+        tx: VerifiedTransaction,
         origin: TxOrigin,
         inserted_block_number: PoolingInstant,
         inserted_timestamp: u64,
@@ -210,7 +210,7 @@ impl MemPoolItem {
     }
 
     pub fn seq(&self) -> u64 {
-        self.tx.seq
+        self.tx.transaction().seq
     }
 
     pub fn signer_public(&self) -> Public {
@@ -218,12 +218,12 @@ impl MemPoolItem {
     }
 
     pub fn cost(&self) -> u64 {
-        match &self.tx.action {
+        match &self.tx.transaction().action {
             Action::Pay {
                 quantity,
                 ..
-            } => self.tx.fee + *quantity,
-            _ => self.tx.fee,
+            } => self.tx.transaction().fee + *quantity,
+            _ => self.tx.transaction().fee,
         }
     }
 }
@@ -361,12 +361,12 @@ impl FutureQueue {
 
 #[derive(Clone, Debug)]
 pub struct MemPoolInput {
-    pub transaction: SignedTransaction,
+    pub transaction: VerifiedTransaction,
     pub origin: TxOrigin,
 }
 
 impl MemPoolInput {
-    pub fn new(transaction: SignedTransaction, origin: TxOrigin) -> Self {
+    pub fn new(transaction: VerifiedTransaction, origin: TxOrigin) -> Self {
         Self {
             transaction,
             origin,

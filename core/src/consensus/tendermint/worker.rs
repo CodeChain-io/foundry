@@ -35,7 +35,7 @@ use crate::consensus::{EngineError, Seal};
 use crate::encoded;
 use crate::error::{BlockError, Error};
 use crate::snapshot_notify::NotifySender as SnapshotNotifySender;
-use crate::transaction::{SignedTransaction, UnverifiedTransaction};
+use crate::transaction::UnverifiedTransaction;
 use crate::types::BlockStatus;
 use crate::views::BlockView;
 use crate::BlockId;
@@ -49,6 +49,7 @@ use primitives::Bytes;
 use rlp::{Encodable, Rlp};
 use std::cell::Cell;
 use std::cmp::Ordering;
+use std::convert::TryInto;
 use std::iter::Iterator;
 use std::mem;
 use std::sync::{Arc, Weak};
@@ -1475,7 +1476,7 @@ impl Worker {
         };
         let signer_public = *self.signer.public().expect("Signer must be initialized");
         let unverified = UnverifiedTransaction::new(tx, signature, signer_public);
-        let signed = SignedTransaction::try_new(unverified).expect("secret is valid so it's recoverable");
+        let signed = unverified.try_into().expect("secret is valid so it's recoverable");
 
         match self.client().queue_own_transaction(signed) {
             Ok(_) => {}

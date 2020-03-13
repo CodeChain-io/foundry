@@ -19,7 +19,7 @@ use crate::client::{EngineInfo, TermInfo};
 use crate::consensus::CodeChainEngine;
 use crate::error::{BlockError, Error};
 use crate::stake;
-use crate::transaction::{SignedTransaction, UnverifiedTransaction};
+use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Address;
 use cstate::{FindActionHandler, StateDB, StateError, StateWithCache, TopLevelState};
@@ -86,7 +86,7 @@ impl Decodable for Block {
 pub struct ExecutedBlock {
     header: Header,
     state: TopLevelState,
-    transactions: Vec<SignedTransaction>,
+    transactions: Vec<VerifiedTransaction>,
     invoices: Vec<Invoice>,
     transactions_set: HashSet<TxHash>,
 }
@@ -107,7 +107,7 @@ impl ExecutedBlock {
         &mut self.state
     }
 
-    pub fn transactions(&self) -> &[SignedTransaction] {
+    pub fn transactions(&self) -> &[VerifiedTransaction] {
         &self.transactions
     }
 
@@ -149,7 +149,7 @@ impl<'x> OpenBlock<'x> {
     /// Push a transaction into the block.
     pub fn push_transaction<C: FindActionHandler>(
         &mut self,
-        tx: SignedTransaction,
+        tx: VerifiedTransaction,
         h: Option<TxHash>,
         client: &C,
         parent_block_number: BlockNumber,
@@ -161,7 +161,7 @@ impl<'x> OpenBlock<'x> {
 
         let hash = tx.hash();
         let error = match self.block.state.apply(
-            &tx,
+            &tx.transaction(),
             &hash,
             &tx.signer_public(),
             client,
@@ -190,7 +190,7 @@ impl<'x> OpenBlock<'x> {
     /// Push transactions onto the block.
     pub fn push_transactions<C: FindActionHandler>(
         &mut self,
-        transactions: &[SignedTransaction],
+        transactions: &[VerifiedTransaction],
         client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
@@ -325,7 +325,7 @@ pub trait IsBlock {
     }
 
     /// Get all information on transactions in this block.
-    fn transactions(&self) -> &[SignedTransaction] {
+    fn transactions(&self) -> &[VerifiedTransaction] {
         &self.block().transactions
     }
 
@@ -361,7 +361,7 @@ impl<'x> IsBlock for ClosedBlock {
 /// Enact the block given by block header, transactions and uncles
 pub fn enact<C: EngineInfo + FindActionHandler + TermInfo>(
     header: &Header,
-    transactions: &[SignedTransaction],
+    transactions: &[VerifiedTransaction],
     engine: &dyn CodeChainEngine,
     client: &C,
     db: StateDB,

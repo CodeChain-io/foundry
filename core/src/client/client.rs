@@ -29,7 +29,9 @@ use crate::error::{BlockImportError, Error, ImportError, SchemeError};
 use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
 use crate::service::ClientIoMessage;
-use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction, UnverifiedTransaction};
+use crate::transaction::{
+    LocalizedTransaction, PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction,
+};
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use crate::MemPoolMinFees;
 use cdb::{new_journaldb, Algorithm, AsHashDB};
@@ -528,7 +530,7 @@ impl BlockChainClient for Client {
     }
 
     /// Import own transaction
-    fn queue_own_transaction(&self, transaction: SignedTransaction) -> Result<(), Error> {
+    fn queue_own_transaction(&self, transaction: VerifiedTransaction) -> Result<(), Error> {
         self.importer.miner.import_own_transaction(self, transaction)?;
         Ok(())
     }
@@ -555,7 +557,7 @@ impl BlockChainClient for Client {
         self.importer.miner.delete_all_pending_transactions();
     }
 
-    fn ready_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
+    fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
         self.importer.miner.ready_transactions(range)
     }
 
@@ -563,7 +565,7 @@ impl BlockChainClient for Client {
         self.importer.miner.count_pending_transactions(range)
     }
 
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
+    fn future_pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
         self.importer.miner.future_pending_transactions(range)
     }
 

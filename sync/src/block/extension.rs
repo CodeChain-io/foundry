@@ -930,7 +930,7 @@ impl Extension {
                 }
                 for body in bodies {
                     for tx in body {
-                        let is_valid = match &tx.action {
+                        let is_valid = match &tx.transaction().action {
                             Action::Custom {
                                 handler_id,
                                 ..
