@@ -153,7 +153,7 @@ impl Extension {
             let unsent: Vec<_> = transactions
                 .iter()
                 .filter(|tx| !peer.contains(&tx.hash()))
-                .map(|signed| signed.clone().deconstruct().0)
+                .map(|signed| UnverifiedTransaction::from(signed.clone()))
                 .collect();
             if unsent.is_empty() {
                 continue

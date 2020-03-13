@@ -43,7 +43,7 @@ use crate::encoded;
 use crate::error::{BlockImportError, Error as GenericError};
 use crate::miner::{MemPoolMinFees, Miner, MinerService, TransactionImportResult};
 use crate::scheme::Scheme;
-use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction};
+use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
 use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::{
@@ -215,7 +215,7 @@ impl TestBlockChainClient {
                     quantity: 0,
                 },
             };
-            let signed = SignedTransaction::new_with_sign(tx, keypair.private());
+            let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
             transactions.push(signed);
         }
         header.set_transactions_root(skewed_merkle_root(BLAKE_NULL_RLP, transactions.iter().map(Encodable::rlp_bytes)));
@@ -288,10 +288,10 @@ impl TestBlockChainClient {
                 quantity: 0,
             },
         };
-        let signed = SignedTransaction::new_with_sign(tx, keypair.private());
+        let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
         let sender_address = public_to_address(&signed.signer_public());
         self.set_balance(sender_address, 10_000_000_000_000_000_000);
-        let hash = signed.hash();
+        let hash = signed.transaction().hash();
         let res = self.miner.import_external_transactions(self, vec![signed.into()]);
         let res = res.into_iter().next().unwrap().expect("Successful import");
         assert_eq!(res, TransactionImportResult::Current);
@@ -503,7 +503,7 @@ impl BlockChainClient for TestBlockChainClient {
         }
     }
 
-    fn queue_own_transaction(&self, transaction: SignedTransaction) -> Result<(), GenericError> {
+    fn queue_own_transaction(&self, transaction: VerifiedTransaction) -> Result<(), GenericError> {
         self.miner.import_own_transaction(self, transaction)?;
         Ok(())
     }
@@ -518,11 +518,11 @@ impl BlockChainClient for TestBlockChainClient {
         self.miner.delete_all_pending_transactions();
     }
 
-    fn ready_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
+    fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
         self.miner.ready_transactions(range)
     }
 
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
+    fn future_pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
         self.miner.future_pending_transactions(range)
     }
 

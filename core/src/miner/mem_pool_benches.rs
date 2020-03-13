@@ -17,7 +17,7 @@
 use self::test::{black_box, Bencher};
 use super::mem_pool::MemPool;
 use super::mem_pool_types::{AccountDetails, MemPoolInput, PoolingInstant, TxOrigin};
-use crate::transaction::SignedTransaction;
+use crate::transaction::VerifiedTransaction;
 use ckey::{Ed25519KeyPair as KeyPair, Ed25519Public as Public, Generator, Random};
 use ctypes::transaction::{Action, Transaction};
 use rand::prelude::SliceRandom;
@@ -36,7 +36,7 @@ fn create_input(keypair: &KeyPair, seq: u64, block: Option<PoolingInstant>, time
             quantity: 100,
         },
     };
-    let signed = SignedTransaction::new_with_sign(tx, keypair.private());
+    let signed = Verified::new_with_sign(tx, keypair.private());
 
     MemPoolInput::new(signed, TxOrigin::Local)
 }

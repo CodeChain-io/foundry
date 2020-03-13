@@ -18,12 +18,13 @@
 use crate::block::{ExecutedBlock, IsBlock};
 use crate::client::BlockChainTrait;
 use crate::error::Error;
-use crate::transaction::{SignedTransaction, UnverifiedTransaction};
+use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ckey::Address;
 use cstate::{StateError, TopState, TopStateView};
 use ctypes::errors::SyntaxError;
 use ctypes::transaction::Action;
 use ctypes::{CommonParams, Header};
+use std::convert::TryInto;
 
 pub struct CodeChainMachine {
     params: CommonParams,
@@ -47,11 +48,11 @@ impl CodeChainMachine {
         tx: &UnverifiedTransaction,
         common_params: &CommonParams,
     ) -> Result<(), Error> {
-        let min_cost = Self::min_cost(common_params, &tx.action);
-        if tx.fee < min_cost {
+        let min_cost = Self::min_cost(common_params, &tx.transaction().action);
+        if tx.transaction().fee < min_cost {
             return Err(SyntaxError::InsufficientFee {
                 minimal: min_cost,
-                got: tx.fee,
+                got: tx.transaction().fee,
             }
             .into())
         }
@@ -61,14 +62,14 @@ impl CodeChainMachine {
     }
 
     /// Verify a particular transaction's seal is valid.
-    pub fn verify_transaction_seal(p: UnverifiedTransaction, _header: &Header) -> Result<SignedTransaction, Error> {
-        Ok(SignedTransaction::try_new(p)?)
+    pub fn verify_transaction_seal(p: UnverifiedTransaction, _header: &Header) -> Result<VerifiedTransaction, Error> {
+        Ok(p.try_into()?)
     }
 
     /// Does verification of the transaction against the parent state.
     pub fn verify_transaction<C: BlockChainTrait>(
         &self,
-        _tx: &SignedTransaction,
+        _tx: &VerifiedTransaction,
         _header: &Header,
         _client: &C,
         _verify_timelock: bool,

@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::ActionWithTracker;
-use ccore::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction};
+use ccore::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
 use cjson::uint::Uint;
 use ckey::{NetworkId, Signature};
 use ctypes::{BlockHash, TxHash};
@@ -42,8 +42,8 @@ pub struct PendingTransactions {
     last_timestamp: Option<u64>,
 }
 
-impl From<PendingSignedTransactions> for PendingTransactions {
-    fn from(p: PendingSignedTransactions) -> Self {
+impl From<PendingVerifiedTransactions> for PendingTransactions {
+    fn from(p: PendingVerifiedTransactions) -> Self {
         let transactions = p.transactions.into_iter().map(From::from).collect();
         Self {
             transactions,
@@ -54,34 +54,37 @@ impl From<PendingSignedTransactions> for PendingTransactions {
 
 impl From<LocalizedTransaction> for Transaction {
     fn from(p: LocalizedTransaction) -> Self {
-        let sig = p.signature();
+        let sig = p.unverified_tx().signature();
         Self {
             block_number: Some(p.block_number),
             block_hash: Some(p.block_hash),
             transaction_index: Some(p.transaction_index),
             result: Some(true),
-            seq: p.seq,
-            fee: p.fee.into(),
-            network_id: p.network_id,
-            action: ActionWithTracker::from_core(p.action.clone(), p.network_id),
-            hash: p.hash(),
+            seq: p.unverified_tx().transaction().seq,
+            fee: p.unverified_tx().transaction().fee.into(),
+            network_id: p.unverified_tx().transaction().network_id,
+            action: ActionWithTracker::from_core(
+                p.unverified_tx().transaction().action.clone(),
+                p.unverified_tx().transaction().network_id,
+            ),
+            hash: p.unverified_tx().hash(),
             sig,
         }
     }
 }
 
-impl From<SignedTransaction> for Transaction {
-    fn from(p: SignedTransaction) -> Self {
+impl From<VerifiedTransaction> for Transaction {
+    fn from(p: VerifiedTransaction) -> Self {
         let sig = p.signature();
         Self {
             block_number: None,
             block_hash: None,
             transaction_index: None,
             result: None,
-            seq: p.seq,
-            fee: p.fee.into(),
-            network_id: p.network_id,
-            action: ActionWithTracker::from_core(p.action.clone(), p.network_id),
+            seq: p.transaction().seq,
+            fee: p.transaction().fee.into(),
+            network_id: p.transaction().network_id,
+            action: ActionWithTracker::from_core(p.transaction().action.clone(), p.transaction().network_id),
             hash: p.hash(),
             sig,
         }
