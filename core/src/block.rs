@@ -301,51 +301,6 @@ impl ClosedBlock {
         self.header().rlp_blake(&Seal::Without)
     }
 
-    /// Provide a valid seal in order to turn this into a `SealedBlock`.
-    ///
-    /// NOTE: This does not check the validity of `seal` with the engine.
-    pub fn seal(mut self, engine: &dyn CodeChainEngine, seal: Vec<Bytes>) -> Result<SealedBlock, BlockError> {
-        let expected_seal_fields = engine.seal_fields(self.header());
-        if seal.len() != expected_seal_fields {
-            return Err(BlockError::InvalidSealArity(Mismatch {
-                expected: expected_seal_fields,
-                found: seal.len(),
-            }))
-        }
-        self.block.header.set_seal(seal);
-        Ok(SealedBlock {
-            block: self.block,
-        })
-    }
-
-    /// Provide a valid seal in order to turn this into a `SealedBlock`.
-    /// This does check the validity of `seal` with the engine.
-    /// Returns the `ClosedBlock` back again if the seal is no good.
-    pub fn seal_block(mut self, seal: Vec<Bytes>) -> SealedBlock {
-        self.block.header.set_seal(seal);
-
-        SealedBlock {
-            block: self.block,
-        }
-    }
-
-    pub fn already_sealed(self) -> SealedBlock {
-        SealedBlock {
-            block: self.block,
-        }
-    }
-}
-
-/// A block that has a valid seal.
-///
-/// The block's header has valid seal arguments. The block cannot be reversed into a `ClosedBlock` or `OpenBlock`.
-#[derive(Clone)]
-pub struct SealedBlock {
-    block: ExecutedBlock,
-}
-
-impl SealedBlock {
-    /// Get the RLP-encoding of the block.
     pub fn rlp_bytes(&self) -> Bytes {
         let mut block_rlp = RlpStream::new_list(2);
         self.block.header.stream_rlp(&mut block_rlp, &Seal::With);
@@ -354,7 +309,6 @@ impl SealedBlock {
     }
 }
 
-/// Trait for a object that is a `ExecutedBlock`.
 pub trait IsBlock {
     /// Get the `ExecutedBlock` associated with this object.
     fn block(&self) -> &ExecutedBlock;
@@ -406,12 +360,6 @@ impl<'x> IsBlock for ClosedBlock {
     }
 }
 
-impl IsBlock for SealedBlock {
-    fn block(&self) -> &ExecutedBlock {
-        &self.block
-    }
-}
-
 /// Enact the block given by block header, transactions and uncles
 pub fn enact<C: EngineInfo + FindActionHandler + TermInfo>(
     header: &Header,
@@ -428,21 +376,4 @@ pub fn enact<C: EngineInfo + FindActionHandler + TermInfo>(
     b.push_transactions(transactions, client, parent.number(), parent.timestamp())?;
 
     b.close()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::scheme::Scheme;
-    use crate::tests::helpers::get_temp_state_db;
-
-    #[test]
-    fn open_block() {
-        let scheme = Scheme::new_test();
-        let genesis_header = scheme.genesis_header();
-        let db = scheme.ensure_genesis_state(get_temp_state_db()).unwrap();
-        let b = OpenBlock::try_new(&*scheme.engine, db, &genesis_header, Address::default(), vec![]).unwrap();
-        let b = b.close().unwrap();
-        let _ = b.seal(&*scheme.engine, vec![]);
-    }
 }

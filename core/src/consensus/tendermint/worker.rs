@@ -111,7 +111,7 @@ pub enum Event {
         parent_hash: BlockHash,
         result: crossbeam::Sender<Seal>,
     },
-    ProposalGenerated(Box<SealedBlock>),
+    ProposalGenerated(Box<ClosedBlock>),
     VerifyHeaderBasic {
         header: Box<Header>,
         result: crossbeam::Sender<Result<(), Error>>,
@@ -291,8 +291,8 @@ impl Worker {
                                 let seal = inner.generate_seal(block_number, parent_hash);
                                 result.send(seal).unwrap();
                             }
-                            Ok(Event::ProposalGenerated(sealed)) => {
-                                inner.proposal_generated(&*sealed);
+                            Ok(Event::ProposalGenerated(closed)) => {
+                                inner.proposal_generated(&*closed);
                             }
                             Ok(Event::VerifyHeaderBasic{header, result}) => {
                                 result.send(inner.verify_header_basic(&*header)).unwrap();
@@ -1126,9 +1126,9 @@ impl Worker {
         }
     }
 
-    fn proposal_generated(&mut self, sealed_block: &SealedBlock) {
-        let proposal_height = sealed_block.header().number();
-        let proposal_seal = sealed_block.header().seal();
+    fn proposal_generated(&mut self, closed_block: &ClosedBlock) {
+        let proposal_height = closed_block.header().number();
+        let proposal_seal = closed_block.header().seal();
         let proposal_author_view =
             TendermintSealView::new(proposal_seal).author_view().expect("Generated proposal should have a valid seal");
         assert!(proposal_height <= self.height, "A proposal cannot be generated on the future height");
@@ -1144,7 +1144,7 @@ impl Worker {
             return
         }
 
-        let header = sealed_block.header();
+        let header = closed_block.header();
 
         if let TendermintState::ProposeWaitBlockGeneration {
             parent_hash: expected_parent_hash,
@@ -1169,7 +1169,7 @@ impl Worker {
         self.vote_on_header_for_proposal(&header).expect("I'm a proposer");
 
         self.step = TendermintState::ProposeWaitImported {
-            block: Box::new(sealed_block.clone()),
+            block: Box::new(closed_block.clone()),
         };
     }
 

@@ -32,7 +32,7 @@ pub use self::validator_set::{DynamicValidator, ValidatorSet};
 
 use self::bit_set::BitSet;
 use crate::account_provider::AccountProvider;
-use crate::block::{ExecutedBlock, SealedBlock};
+use crate::block::{ClosedBlock, ExecutedBlock};
 use crate::client::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::client::ConsensusClient;
 use crate::codechain_machine::CodeChainMachine;
@@ -145,7 +145,7 @@ pub trait ConsensusEngine: Sync + Send {
         Seal::None
     }
 
-    fn proposal_generated(&self, _sealed_block: &SealedBlock) {}
+    fn proposal_generated(&self, _block: &ClosedBlock) {}
 
     /// Phase 1 quick block verification. Only does checks that are cheap. Returns either a null `Ok` or a general error detailing the problem with import.
     fn verify_header_basic(&self, _header: &Header) -> Result<(), Error> {
