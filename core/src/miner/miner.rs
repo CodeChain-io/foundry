@@ -406,7 +406,7 @@ impl Miner {
         C: BlockChainTrait + ImportBlock, {
         assert!(self.engine.seals_internally());
 
-        let sealed = block.lock().already_sealed();
+        let sealed = block.already_sealed();
 
         if self.engine.is_proposal(sealed.header()) {
             self.engine.proposal_generated(&sealed);

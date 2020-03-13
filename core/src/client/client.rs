@@ -20,7 +20,7 @@ use super::{
     DatabaseClient, EngineClient, EngineInfo, ExecuteClient, ImportBlock, ImportResult, MiningBlockChainClient, Shard,
     StateInfo, StateOrBlock,
 };
-use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock, SealedBlock};
+use crate::block::{Block, IsBlock, OpenBlock, SealedBlock};
 use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, InvoiceProvider, TransactionAddress};
 use crate::client::{ConsensusClient, SnapshotClient, TermInfo};
 use crate::consensus::{CodeChainEngine, EngineError};
@@ -720,11 +720,6 @@ impl Shard for Client {
 }
 
 impl BlockProducer for Client {
-    fn reopen_block(&self, block: ClosedBlock) -> OpenBlock<'_> {
-        let engine = &*self.engine;
-        block.reopen(engine)
-    }
-
     fn prepare_open_block(&self, parent_block_id: BlockId, author: Address, extra_data: Bytes) -> OpenBlock<'_> {
         let engine = &*self.engine;
         let chain = self.block_chain();
