@@ -16,7 +16,7 @@
 
 use super::TaggedRlp;
 use crate::util::unexpected::Mismatch;
-use crate::ShardId;
+use crate::{ShardId, StorageId};
 use ckey::Address;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::fmt::{Display, Formatter, Result as FormatResult};
@@ -35,6 +35,7 @@ pub enum Error {
     InsufficientPermission,
     /// Returned when transaction seq does not match state seq
     InvalidShardId(ShardId),
+    InvalidStorageId(StorageId),
     InvalidTransferDestination,
     NewOwnersMustContainSender,
     InvalidSeq(Mismatch<u64>),
@@ -57,14 +58,15 @@ enum ErrorID {
     InsufficientBalance = 1,
     InsufficientPermission = 2,
     InvalidShardID = 3,
-    InvalidTransferDestination = 4,
-    NewOwnersMustContainSender = 5,
-    InvalidSeq = 6,
-    NonActiveAccount = 7,
-    FailedToHandleCustomAction = 8,
-    SignatureOfInvalid = 9,
-    InsufficientStakes = 10,
-    InvalidValidatorIndex = 11,
+    InvalidStorageID = 4,
+    InvalidTransferDestination = 5,
+    NewOwnersMustContainSender = 6,
+    InvalidSeq = 7,
+    NonActiveAccount = 8,
+    FailedToHandleCustomAction = 9,
+    SignatureOfInvalid = 10,
+    InsufficientStakes = 11,
+    InvalidValidatorIndex = 12,
 }
 
 impl Encodable for ErrorID {
@@ -104,6 +106,7 @@ impl TaggedRlp for RlpHelper {
             ErrorID::InsufficientPermission => 1,
             ErrorID::InvalidSeq => 2,
             ErrorID::InvalidShardID => 2,
+            ErrorID::InvalidStorageID => 2,
             ErrorID::InvalidTransferDestination => 1,
             ErrorID::NewOwnersMustContainSender => 1,
             ErrorID::NonActiveAccount => 3,
@@ -130,6 +133,9 @@ impl Encodable for Error {
             Error::InsufficientPermission => RlpHelper::new_tagged_list(s, ErrorID::InsufficientPermission),
             Error::InvalidSeq(mismatch) => RlpHelper::new_tagged_list(s, ErrorID::InvalidSeq).append(mismatch),
             Error::InvalidShardId(shard_id) => RlpHelper::new_tagged_list(s, ErrorID::InvalidShardID).append(shard_id),
+            Error::InvalidStorageId(storage_id) => {
+                RlpHelper::new_tagged_list(s, ErrorID::InvalidStorageID).append(storage_id)
+            }
             Error::InvalidTransferDestination => RlpHelper::new_tagged_list(s, ErrorID::InvalidTransferDestination),
             Error::NewOwnersMustContainSender => RlpHelper::new_tagged_list(s, ErrorID::NewOwnersMustContainSender),
             Error::NonActiveAccount {
@@ -164,6 +170,7 @@ impl Decodable for Error {
             ErrorID::InsufficientPermission => Error::InsufficientPermission,
             ErrorID::InvalidSeq => Error::InvalidSeq(rlp.val_at(1)?),
             ErrorID::InvalidShardID => Error::InvalidShardId(rlp.val_at(1)?),
+            ErrorID::InvalidStorageID => Error::InvalidStorageId(rlp.val_at(1)?),
             ErrorID::InvalidTransferDestination => Error::InvalidTransferDestination,
             ErrorID::NewOwnersMustContainSender => Error::NewOwnersMustContainSender,
             ErrorID::NonActiveAccount => Error::NonActiveAccount {
@@ -197,6 +204,7 @@ impl Display for Error {
             Error::InsufficientPermission => write!(f, "Sender doesn't have a permission"),
             Error::InvalidSeq(mismatch) => write!(f, "Invalid transaction seq {}", mismatch),
             Error::InvalidShardId(shard_id) => write!(f, "{} is an invalid shard id", shard_id),
+            Error::InvalidStorageId(storage_id) => write!(f, "{} is an invalid storage id", storage_id),
             Error::InvalidTransferDestination => write!(f, "Transfer receiver is not valid account"),
             Error::NewOwnersMustContainSender => write!(f, "New owners must contain the sender"),
             Error::NonActiveAccount {
