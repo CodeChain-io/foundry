@@ -13,11 +13,28 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 
-extern crate codechain_module as cmodule;
+use crate::cmodule::link::{Linkable, Port};
+use crate::cmodule::sandbox::{Result, Sandbox, Sandboxer};
+use crate::sandbox::BaseSandbox;
+use std::path::Path;
+use std::sync::Arc;
 
-pub mod execution;
-pub mod ipc;
-mod link;
-pub mod sandbox;
-pub mod sandboxer;
-mod test;
+pub struct BaseSandboxer {}
+
+impl Sandboxer for BaseSandboxer {
+    fn id(&self) -> &'static str {
+        "Base"
+    }
+
+    fn supported_module_types(&self) -> &'static [&'static str] {
+        static L: [&'static str; 1] = ["Base"];
+        &L
+    }
+
+    fn load(&self, hash: &dyn AsRef<Path>) -> Result<Arc<dyn Sandbox>> {
+        let path = "Hi.exe".to_owned();
+        let id = "John".to_owned();
+
+        Ok(Arc::new(BaseSandbox::new(path, id, self.id().to_string())))
+    }
+}

@@ -7,7 +7,7 @@ use thiserror::Error;
 
 use crate::link::Linkable;
 
-type Result<'a, T> = std::result::Result<T, Error<'a>>;
+pub type Result<'a, T> = std::result::Result<T, Error<'a>>;
 
 #[distributed_slice]
 pub static SANDBOXERS: [fn() -> Arc<dyn Sandboxer>] = [..];
@@ -15,7 +15,7 @@ pub static SANDBOXERS: [fn() -> Arc<dyn Sandboxer>] = [..];
 /// An entity that can sandbox modules of types it supports.
 ///
 /// A `Sandboxer` is thread-safe.
-pub trait Sandboxer {
+pub trait Sandboxer: Send + Sync {
     /// Returns the identifier string for this provider.
     fn id(&self) -> &'static str;
 
@@ -34,7 +34,7 @@ pub trait Sandboxer {
 /// A sandbox instance hosting an instantiated module.
 pub trait Sandbox: Linkable {
     /// Returns the `Sandboxer` for this sandbox.
-    fn sandboxer(&self) -> Arc<dyn Sandboxer>;
+    fn sandboxer(&self) -> &str;
 }
 
 #[derive(Debug, Error)]

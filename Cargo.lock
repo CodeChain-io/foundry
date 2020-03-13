@@ -322,6 +322,9 @@ dependencies = [
  "nix",
  "once_cell",
  "primitives",
+ "proc-macro-crate",
+ "proc-macro2 1.0.8",
+ "syn 1.0.15",
  "thiserror",
 ]
 

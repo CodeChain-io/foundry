@@ -7,7 +7,7 @@ use linkme::distributed_slice;
 use once_cell::sync;
 use thiserror::Error;
 
-type Result<T> = std::result::Result<T, Error>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 /// The list of functions for creating [`Linker`] implementations.
 ///
@@ -65,7 +65,7 @@ pub trait Linkable: Send + Sync {
 /// [`Linkable`]: ./trait.Linkable.html
 /// [`send`]: ./trait.Port.html#tymnethod.send
 /// [`receive`]: ./trait.Port.html#tymnethod.receive
-pub trait Port: Any + 'static {
+pub trait Port: Any + 'static + Send + Sync {
     /// Sets to send a list of handles to the other end on link.
     ///
     /// `desc` is encoded in `CBOR`.
@@ -86,7 +86,7 @@ pub trait Port: Any + 'static {
     /// [`Linkable`]: ./trait.Linkable.html
     /// [`send`]: #tymethod.send
     /// [`receive`]: #tymethod.receive
-    fn link(&mut self, sender: Sender<Box<dyn AsRef<[u8]>>>, receiver: Receiver<Box<dyn AsRef<[u8]>>>);
+    fn link(&mut self, sender: Sender<Vec<u8>>, receiver: Receiver<Vec<u8>>);
 }
 
 #[derive(Debug, Error)]

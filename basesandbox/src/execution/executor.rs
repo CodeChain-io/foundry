@@ -17,6 +17,7 @@ use crate::ipc::semaphore::WaitOnlySemaphore;
 use crate::ipc::Ipc;
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::Arc;
 
 const SOCKET_SRC: &str = "./tmp/Foundry_Socket_Boxer";
 const SOCKET_DST: &str = "./tmp/Foundry_Socket_Boxee";
@@ -74,7 +75,7 @@ impl Drop for DirectoryReserver {
 
 /// declaration order of fields is important because of Drop dependencies
 pub struct Context<T: Ipc> {
-    pub ipc: T,
+    pub ipc: Arc<T>,
     pub semaphore: WaitOnlySemaphore,
     _child: Executor,
     _directory: DirectoryReserver,
@@ -105,7 +106,7 @@ pub fn execute<T: Ipc>(path: &str, id: &str) -> Result<Context<T>, String> {
     let mut semaphore = WaitOnlySemaphore::new(addr_sem.clone() + "_Boxer", addr_sem.clone() + "_Boxee");
     let child = Executor::new(path, &args);
     semaphore.wait();
-    let ipc = T::new(addr_src, addr_dst);
+    let ipc = Arc::new(T::new(addr_src, addr_dst));
     ipc.send(b"#INIT");
 
     Ok(Context {
