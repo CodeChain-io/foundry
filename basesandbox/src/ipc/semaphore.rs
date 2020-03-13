@@ -13,6 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 
+use crate::ipc::domain_socket::DomainSocket;
+use crate::ipc::Ipc;
 use nix::errno::Errno;
 use nix::libc;
 
@@ -75,5 +77,40 @@ impl Drop for Semaphore {
                 libc::sem_unlink(self.name.as_ptr() as *const i8);
             }
         }
+    }
+}
+
+// One-way, One-cosumer, One-produce limited semaphore
+// It is less platform-dependent and supports Send + Sync
+pub struct WaitOnlySemaphore {
+    socket: DomainSocket,
+}
+
+pub struct SignalOnlySemaphore {
+    socket: DomainSocket,
+}
+
+impl WaitOnlySemaphore {
+    pub fn new(name: String, counter_name: String) -> Self {
+        WaitOnlySemaphore {
+            socket: DomainSocket::new(name, counter_name),
+        }
+    }
+
+    pub fn wait(&mut self) {
+        let r = self.socket.recv();
+        assert_eq!(r, []);
+    }
+}
+
+impl SignalOnlySemaphore {
+    pub fn new(name: String, counter_name: String) -> Self {
+        SignalOnlySemaphore {
+            socket: DomainSocket::new(name, counter_name),
+        }
+    }
+
+    pub fn signal(&mut self) {
+        self.socket.send(&[]);
     }
 }

@@ -13,13 +13,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 
-use crate::ipc::semaphore::{Mode, Semaphore};
+use crate::ipc::semaphore::SignalOnlySemaphore;
 use crate::ipc::Ipc;
 
 // Interface for the sandboxee written in Rust
 pub struct Context<T: Ipc> {
     pub ipc: T,
-    pub semaphore: Semaphore,
+    pub semaphore: SignalOnlySemaphore,
 }
 
 impl<T: Ipc> Drop for Context<T> {
@@ -36,7 +36,7 @@ pub fn start<T: Ipc>() -> Context<T> {
     let socket_dst_name = &args[2];
     let semaphore_name = &args[3];
 
-    let mut semaphore = Semaphore::new(semaphore_name.to_string(), Mode::OPEN);
+    let mut semaphore = SignalOnlySemaphore::new(semaphore_name.clone() + "_Boxee", semaphore_name.clone() + "_Boxer");
 
     let mut ipc = T::new(socket_src_name.to_string(), socket_dst_name.to_string());
     semaphore.signal();

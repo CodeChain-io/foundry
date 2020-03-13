@@ -13,14 +13,14 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 
-use crate::ipc::semaphore::{Mode, Semaphore};
+use crate::ipc::semaphore::WaitOnlySemaphore;
 use crate::ipc::Ipc;
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 const SOCKET_SRC: &str = "./tmp/Foundry_Socket_Boxer";
 const SOCKET_DST: &str = "./tmp/Foundry_Socket_Boxee";
-const SEMAPHORE: &str = "/Foundry_Semaphore";
+const SEMAPHORE: &str = "./tmp/Foundry_Semaphore";
 
 struct Executor {
     child: std::process::Child,
@@ -75,7 +75,7 @@ impl Drop for DirectoryReserver {
 /// declaration order of fields is important because of Drop dependencies
 pub struct Context<T: Ipc> {
     pub ipc: T,
-    pub semaphore: Semaphore,
+    pub semaphore: WaitOnlySemaphore,
     _child: Executor,
     _directory: DirectoryReserver,
 }
@@ -100,7 +100,7 @@ pub fn execute<T: Ipc>(path: &str, id: &str) -> Result<Context<T>, String> {
     let args: Vec<&str> = vec![&addr_dst, &addr_src, &addr_sem];
 
     // Here the order of 5 statements is very important
-    let mut semaphore = Semaphore::new(addr_sem.to_string(), Mode::CREATE);
+    let mut semaphore = WaitOnlySemaphore::new(addr_sem.clone() + "_Boxer", addr_sem.clone() + "_Boxee");
     let child = Executor::new(path, &args);
     semaphore.wait();
     let ipc = T::new(addr_src, addr_dst);
