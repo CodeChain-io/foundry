@@ -1,4 +1,4 @@
-use ckey::Public;
+use ckey::Ed25519Public as Public;
 use ctypes::TxHash;
 use primitives::H256;
 
