@@ -406,13 +406,11 @@ impl Miner {
         C: BlockChainTrait + ImportBlock, {
         assert!(self.engine.seals_internally());
 
-        let sealed = block.already_sealed();
-
-        if self.engine.is_proposal(sealed.header()) {
-            self.engine.proposal_generated(&sealed);
+        if self.engine.is_proposal(block.header()) {
+            self.engine.proposal_generated(&block);
         }
 
-        chain.import_sealed_block(&sealed).is_ok()
+        chain.import_closed_block(&block).is_ok()
     }
 
     /// Are we allowed to do a non-mandatory reseal?
@@ -538,7 +536,7 @@ impl MinerService for Miner {
         if self.engine.seals_internally() {
             ctrace!(MINER, "update_sealing: engine indicates internal sealing");
             if self.import_block_internally(chain, block) {
-                ctrace!(MINER, "update_sealing: imported internally sealed block");
+                ctrace!(MINER, "update_sealing: imported internally closed block");
             }
         } else {
             ctrace!(MINER, "update_sealing: engine is not keen to seal internally right now");

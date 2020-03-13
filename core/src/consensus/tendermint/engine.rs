@@ -95,8 +95,8 @@ impl ConsensusEngine for Tendermint {
 
     /// Called when the node is the leader and a proposal block is generated from the miner.
     /// This writes the proposal information and go to the prevote step.
-    fn proposal_generated(&self, sealed_block: &SealedBlock) {
-        self.inner.send(worker::Event::ProposalGenerated(Box::from(sealed_block.clone()))).unwrap();
+    fn proposal_generated(&self, block: &ClosedBlock) {
+        self.inner.send(worker::Event::ProposalGenerated(Box::from(block.clone()))).unwrap();
     }
 
     fn verify_header_basic(&self, header: &Header) -> Result<(), Error> {

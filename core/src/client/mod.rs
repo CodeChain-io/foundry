@@ -28,7 +28,7 @@ pub use self::client::Client;
 pub use self::config::ClientConfig;
 pub use self::test_client::TestBlockChainClient;
 
-use crate::block::{Block, OpenBlock, SealedBlock};
+use crate::block::{Block, ClosedBlock, OpenBlock};
 use crate::blockchain_info::BlockChainInfo;
 use crate::consensus::EngineError;
 use crate::encoded;
@@ -195,8 +195,8 @@ pub trait ImportBlock {
     /// Forcefully update the best block
     fn force_update_best_block(&self, hash: &BlockHash);
 
-    /// Import sealed block. Skips all verifications.
-    fn import_sealed_block(&self, block: &SealedBlock) -> ImportResult;
+    /// Import closed block. Skips all verifications.
+    fn import_closed_block(&self, block: &ClosedBlock) -> ImportResult;
 
     /// Set reseal min timer as reseal_min_period, for creating blocks with transactions which are pending because of reseal_min_period
     fn set_min_timer(&self);

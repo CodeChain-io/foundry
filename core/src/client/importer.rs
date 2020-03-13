@@ -153,10 +153,6 @@ impl Importer {
         Vec::from_iter(set)
     }
 
-    // NOTE: the header of the block passed here is not necessarily sealed, as
-    // it is for reconstructing the state transition.
-    //
-    // The header passed is from the original block data and is sealed.
     pub fn commit_block<B>(&self, block: &B, header: &Header, block_data: &[u8], client: &Client) -> ImportRoute
     where
         B: IsBlock, {

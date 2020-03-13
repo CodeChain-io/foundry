@@ -30,7 +30,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::block::{Block, OpenBlock, SealedBlock};
+use crate::block::{Block, ClosedBlock, OpenBlock};
 use crate::blockchain_info::BlockChainInfo;
 use crate::client::{
     AccountData, BlockChainClient, BlockChainTrait, BlockProducer, BlockStatus, ConsensusClient, EngineInfo,
@@ -93,7 +93,7 @@ pub struct TestBlockChainClient {
     pub miner: Arc<Miner>,
     /// Scheme
     pub scheme: Scheme,
-    /// Timestamp assigned to latest sealed block
+    /// Timestamp assigned to latest closed block
     pub latest_block_timestamp: RwLock<u64>,
     /// Pruning history size to report.
     pub history: RwLock<Option<u64>>,
@@ -181,7 +181,7 @@ impl TestBlockChainClient {
         self.queue_size.store(size, AtomicOrder::Relaxed);
     }
 
-    /// Set timestamp assigned to latest sealed block
+    /// Set timestamp assigned to latest closed block
     pub fn set_latest_block_timestamp(&self, ts: u64) {
         *self.latest_block_timestamp.write() = ts;
     }
@@ -489,7 +489,7 @@ impl ImportBlock for TestBlockChainClient {
         unimplemented!()
     }
 
-    fn import_sealed_block(&self, _block: &SealedBlock) -> ImportResult {
+    fn import_closed_block(&self, _block: &ClosedBlock) -> ImportResult {
         Ok(H256::default().into())
     }
 

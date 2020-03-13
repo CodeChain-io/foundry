@@ -29,10 +29,10 @@ pub enum TendermintState {
        parent_hash: H256,
    },
    ProposeWaitImported {
-       block: Box<SealedBlock>,
+       block: Box<ClosedBlock>,
    },
    ProposeWaitEmptyBlockTimer {
-       block: Box<SealedBlock>,
+       block: Box<ClosedBlock>,
    },
    Prevote,
    Precommit,
