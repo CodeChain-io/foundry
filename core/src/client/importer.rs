@@ -328,13 +328,7 @@ impl Importer {
             None
         };
 
-        client.new_headers(
-            &imported,
-            &bad.iter().cloned().collect::<Vec<_>>(),
-            &enacted,
-            &[],
-            best_proposal_header_changed,
-        );
+        client.new_headers(&imported, &enacted, best_proposal_header_changed);
 
         client.db().flush().expect("DB flush failed.");
 
@@ -352,7 +346,7 @@ impl Importer {
             client.db().write_buffered(batch);
             chain.commit();
         }
-        client.new_headers(&[hash], &[], &[], &[], None);
+        client.new_headers(&[hash], &[], None);
 
         client.db().flush().expect("DB flush failed.");
     }
