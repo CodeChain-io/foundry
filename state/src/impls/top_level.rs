@@ -37,10 +37,10 @@
 
 use crate::cache::{ModuleCache, ShardCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
-use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
+use crate::traits::{ModuleStateView, ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
 use crate::{
-    Account, ActionData, FindActionHandler, Metadata, MetadataAddress, Shard, ShardAddress, ShardLevelState, StateDB,
-    StateResult,
+    Account, ActionData, FindActionHandler, Metadata, MetadataAddress, Module, ModuleAddress, ModuleLevelState, Shard,
+    ShardAddress, ShardLevelState, StateDB, StateResult,
 };
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
@@ -113,12 +113,30 @@ impl TopStateView for TopLevelState {
         self.top_cache.shard(&shard_address, &trie)
     }
 
+    fn module(&self, storage_id: StorageId) -> TrieResult<Option<Module>> {
+        let db = self.db.borrow();
+        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
+        let module_address = ModuleAddress::new(storage_id);
+        self.top_cache.module(&module_address, &trie)
+    }
+
     fn shard_state<'db>(&'db self, shard_id: ShardId) -> TrieResult<Option<Box<dyn ShardStateView + 'db>>> {
         match self.shard_root(shard_id)? {
             // FIXME: Find a way to use stored cache.
             Some(shard_root) => {
                 let shard_cache = self.shard_caches.get(&shard_id).cloned().unwrap_or_default();
                 Ok(Some(Box::new(ShardLevelState::read_only(shard_id, &self.db, shard_root, shard_cache)?)))
+            }
+            None => Ok(None),
+        }
+    }
+
+    fn module_state<'db>(&'db self, storage_id: StorageId) -> TrieResult<Option<Box<dyn ModuleStateView + 'db>>> {
+        match self.module_root(storage_id)? {
+            // FIXME: Find a way to use stored cache.
+            Some(module_root) => {
+                let module_cache = self.module_caches.get(&storage_id).cloned().unwrap_or_default();
+                Ok(Some(Box::new(ModuleLevelState::read_only(storage_id, &self.db, module_root, module_cache)?)))
             }
             None => Ok(None),
         }
@@ -155,6 +173,28 @@ impl StateWithCache for TopLevelState {
             }
             self.set_shard_root(shard_id, shard_root)?;
         }
+        let module_changes = self
+            .module_caches
+            .iter()
+            .map(|(&storage_id, _)| {
+                if let Some(module_root) = self.module_root(storage_id)? {
+                    Ok(Some((storage_id, module_root)))
+                } else {
+                    Ok(None)
+                }
+            })
+            .collect::<StateResult<Vec<_>>>()?;
+        for (storage_id, mut module_root) in module_changes.into_iter().filter_map(|result| result) {
+            {
+                let mut db = self.db.borrow_mut();
+                let mut trie = TrieFactory::from_existing(db.as_hashdb_mut(), &mut module_root)?;
+
+                let module_cache = self.module_caches.get_mut(&storage_id).expect("Module must exist");
+
+                module_cache.commit(&mut trie)?;
+            }
+            self.set_module_root(storage_id, module_root)?;
+        }
         {
             let mut db = self.db.borrow_mut();
             let mut trie = TrieFactory::from_existing(db.as_hashdb_mut(), &mut self.root)?;
@@ -181,6 +221,7 @@ impl StateWithCheckpoint for TopLevelState {
         for (_, cache) in self.shard_caches.iter_mut() {
             cache.checkpoint()
         }
+        self.module_caches.iter_mut().for_each(|(_, cache)| cache.checkpoint())
     }
 
     fn discard_checkpoint(&mut self, id: CheckpointId) {
@@ -193,6 +234,7 @@ impl StateWithCheckpoint for TopLevelState {
         for (_, cache) in self.shard_caches.iter_mut() {
             cache.discard_checkpoint();
         }
+        self.module_caches.iter_mut().for_each(|(_, cache)| cache.discard_checkpoint())
     }
 
     fn revert_to_checkpoint(&mut self, id: CheckpointId) {
@@ -205,6 +247,7 @@ impl StateWithCheckpoint for TopLevelState {
         for (_, cache) in self.shard_caches.iter_mut() {
             cache.revert_to_checkpoint();
         }
+        self.module_caches.iter_mut().for_each(|(_, cache)| cache.revert_to_checkpoint())
     }
 }
 
@@ -449,6 +492,23 @@ impl TopLevelState {
         Ok(())
     }
 
+    fn create_module_level_state(&mut self, storage_id: StorageId) -> StateResult<()> {
+        const DEFAULT_MODULE_ROOT: H256 = BLAKE_NULL_RLP;
+        {
+            let module_cache = self.module_caches.entry(storage_id).or_default();
+            ModuleLevelState::from_existing(storage_id, &mut self.db, DEFAULT_MODULE_ROOT, module_cache)?;
+        }
+        ctrace!(STATE, "module storage({}) created", storage_id);
+        self.set_module_root(storage_id, DEFAULT_MODULE_ROOT)?;
+        Ok(())
+    }
+
+    fn module_state_mut(&mut self, storage_id: StorageId) -> StateResult<ModuleLevelState> {
+        let module_root = self.module_root(storage_id)?.ok_or_else(|| RuntimeError::InvalidStorageId(storage_id))?;
+        let module_cache = self.module_caches.get_mut(&storage_id).expect("storage id is verified");
+        Ok(ModuleLevelState::from_existing(storage_id, &mut self.db, module_root, module_cache)?)
+    }
+
     fn get_account_mut(&self, a: &Address) -> TrieResult<RefMut<'_, Account>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
@@ -460,6 +520,13 @@ impl TopLevelState {
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         let address = MetadataAddress::new();
         self.top_cache.metadata_mut(&address, &trie)
+    }
+
+    fn get_module_mut(&self, storage_id: StorageId) -> TrieResult<RefMut<'_, Module>> {
+        let db = self.db.borrow();
+        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
+        let address = ModuleAddress::new(storage_id);
+        self.top_cache.module_mut(&address, &trie)
     }
 
     fn get_shard_mut(&self, shard_id: ShardId) -> TrieResult<RefMut<'_, Shard>> {
@@ -579,6 +646,16 @@ impl TopState for TopLevelState {
         Ok(())
     }
 
+    fn create_module(&mut self) -> StateResult<()> {
+        let storage_id = {
+            let mut metadata = self.get_metadata_mut()?;
+            metadata.add_module()
+        };
+        self.create_module_level_state(storage_id)?;
+
+        Ok(())
+    }
+
     fn change_shard_owners(&mut self, shard_id: ShardId, owners: &[Address], sender: &Address) -> StateResult<()> {
         let old_owners = self.shard_owners(shard_id)?.ok_or_else(|| RuntimeError::InvalidShardId(shard_id))?;
         if !old_owners.contains(sender) {
@@ -603,6 +680,12 @@ impl TopState for TopLevelState {
     fn set_shard_root(&mut self, shard_id: ShardId, new_root: H256) -> StateResult<()> {
         let mut shard = self.get_shard_mut(shard_id)?;
         shard.set_root(new_root);
+        Ok(())
+    }
+
+    fn set_module_root(&mut self, storage_id: StorageId, new_root: H256) -> StateResult<()> {
+        let mut module = self.get_module_mut(storage_id)?;
+        module.set_root(new_root);
         Ok(())
     }
 
@@ -967,7 +1050,7 @@ mod tests_state {
         let mut state = get_temp_state();
         let a = Address::default();
         state.get_account_mut(&a).unwrap();
-        assert_eq!(Ok(H256::from("37db9832f9e2f164789ddf7e399481a0386f61acb49a52d975466058bc1bbbcb")), state.commit());
+        assert_eq!(Ok(H256::from("2e594d2da19716006e514f67113ce75c3e9155d31e3a90e79592996fedd377d7")), state.commit());
     }
 
     #[test]
