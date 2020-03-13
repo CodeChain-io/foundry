@@ -14,10 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{Account, ActionData, CacheableItem, Metadata, ModuleDatum, Shard, ShardText, StateDB, StateResult};
+use crate::{
+    Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, Shard, ShardText, StateDB, StateResult,
+};
 use ckey::Address;
 use ctypes::transaction::ShardTransaction;
-use ctypes::{BlockNumber, CommonParams, ShardId, Tracker, TxHash};
+use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, Tracker, TxHash};
 use merkle_trie::Result as TrieResult;
 use primitives::{Bytes, H256};
 
@@ -64,8 +66,15 @@ pub trait TopStateView {
     fn shard(&self, shard_id: ShardId) -> TrieResult<Option<Shard>>;
     fn shard_state<'db>(&'db self, shard_id: ShardId) -> TrieResult<Option<Box<dyn ShardStateView + 'db>>>;
 
+    fn module(&self, storage_id: StorageId) -> TrieResult<Option<Module>>;
+    fn module_state<'db>(&'db self, storage_id: StorageId) -> TrieResult<Option<Box<dyn ModuleStateView + 'db>>>;
+
     fn shard_root(&self, shard_id: ShardId) -> TrieResult<Option<H256>> {
         Ok(self.shard(shard_id)?.map(|shard| *shard.root()))
+    }
+
+    fn module_root(&self, storage_id: StorageId) -> TrieResult<Option<H256>> {
+        Ok(self.module(storage_id)?.map(|module| *module.root()))
     }
 
     fn shard_owners(&self, shard_id: ShardId) -> TrieResult<Option<Vec<Address>>> {
@@ -82,6 +91,13 @@ pub trait TopStateView {
         match self.shard_state(shard_id)? {
             None => Ok(None),
             Some(state) => state.text(tracker),
+        }
+    }
+
+    fn module_datum(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> TrieResult<Option<ModuleDatum>> {
+        match self.module_state(storage_id)? {
+            None => Ok(None),
+            Some(state) => state.get_datum(key),
         }
     }
 }
@@ -131,6 +147,9 @@ pub trait TopState {
     fn set_shard_root(&mut self, shard_id: ShardId, new_root: H256) -> StateResult<()>;
     fn set_shard_owners(&mut self, shard_id: ShardId, new_owners: Vec<Address>) -> StateResult<()>;
     fn set_shard_users(&mut self, shard_id: ShardId, new_users: Vec<Address>) -> StateResult<()>;
+
+    fn create_module(&mut self) -> StateResult<()>;
+    fn set_module_root(&mut self, storage_id: StorageId, new_root: H256) -> StateResult<()>;
 
     fn increase_term_id(&mut self, last_term_finished_block_num: u64) -> StateResult<()>;
 
