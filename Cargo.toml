@@ -75,5 +75,6 @@ members = [
     "module-macros",
     "coordinator",
     "basesandbox",
-    "testmodule"
+    "testmodule",
+    "fml"
 ]
