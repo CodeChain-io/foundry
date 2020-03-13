@@ -147,22 +147,9 @@ impl Client {
         self.notify(|notify| notify.new_blocks(imported.to_vec(), invalid.to_vec(), enacted.to_vec()));
     }
 
-    pub fn new_headers(
-        &self,
-        imported: &[BlockHash],
-        invalid: &[BlockHash],
-        enacted: &[BlockHash],
-        sealed: &[BlockHash],
-        new_best_proposal: Option<BlockHash>,
-    ) {
+    pub fn new_headers(&self, imported: &[BlockHash], enacted: &[BlockHash], new_best_proposal: Option<BlockHash>) {
         self.notify(|notify| {
-            notify.new_headers(
-                imported.to_vec(),
-                invalid.to_vec(),
-                enacted.to_vec(),
-                sealed.to_vec(),
-                new_best_proposal,
-            );
+            notify.new_headers(imported.to_vec(), enacted.to_vec(), new_best_proposal);
         });
     }
 

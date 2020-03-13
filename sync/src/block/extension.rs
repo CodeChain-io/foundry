@@ -1194,14 +1194,7 @@ impl From<EventSender<Event>> for BlockSyncSender {
 }
 
 impl ChainNotify for BlockSyncSender {
-    fn new_headers(
-        &self,
-        imported: Vec<BlockHash>,
-        _invalid: Vec<BlockHash>,
-        enacted: Vec<BlockHash>,
-        _sealed: Vec<BlockHash>,
-        _new_best_proposal: Option<BlockHash>,
-    ) {
+    fn new_headers(&self, imported: Vec<BlockHash>, enacted: Vec<BlockHash>, _new_best_proposal: Option<BlockHash>) {
         self.0
             .send(Event::NewHeaders {
                 imported,
