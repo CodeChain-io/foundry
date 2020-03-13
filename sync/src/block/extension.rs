@@ -1210,13 +1210,7 @@ impl ChainNotify for BlockSyncSender {
             .unwrap();
     }
 
-    fn new_blocks(
-        &self,
-        imported: Vec<BlockHash>,
-        invalid: Vec<BlockHash>,
-        _enacted: Vec<BlockHash>,
-        _sealed: Vec<BlockHash>,
-    ) {
+    fn new_blocks(&self, imported: Vec<BlockHash>, invalid: Vec<BlockHash>, _enacted: Vec<BlockHash>) {
         self.0
             .send(Event::NewBlocks {
                 imported,
