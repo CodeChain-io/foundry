@@ -66,7 +66,7 @@ pub use crate::peer_db::PeerDb;
 pub use crate::scheme::Scheme;
 pub use crate::service::ClientService;
 pub use crate::transaction::{
-    LocalizedTransaction, PendingSignedTransactions, SignedTransaction, UnverifiedTransaction,
+    LocalizedTransaction, PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction,
 };
 pub use crate::types::{BlockId, BlockStatus, TransactionId};
 pub use rlp::Encodable;
