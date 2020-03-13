@@ -37,7 +37,6 @@ use crate::MemPoolMinFees;
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress};
-use cnetwork::NodeId;
 use cstate::{ActionHandler, FindActionHandler, StateDB, StateResult, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
@@ -138,12 +137,6 @@ impl Client {
         self.notify.write().push(target);
     }
 
-    pub fn transactions_received(&self, hashes: &[TxHash], peer_id: NodeId) {
-        self.notify(|notify| {
-            notify.transactions_received(hashes.to_vec(), peer_id);
-        });
-    }
-
     pub fn new_blocks(&self, imported: &[BlockHash], invalid: &[BlockHash], enacted: &[BlockHash]) {
         self.notify(|notify| notify.new_blocks(imported.to_vec(), invalid.to_vec(), enacted.to_vec()));
     }
@@ -202,13 +195,11 @@ impl Client {
     }
 
     /// Import transactions from the IO queue
-    pub fn import_queued_transactions(&self, transactions: &[Bytes], peer_id: NodeId) -> usize {
+    pub fn import_queued_transactions(&self, transactions: &[Bytes]) -> usize {
         ctrace!(EXTERNAL_TX, "Importing queued");
         self.queue_transactions.fetch_sub(transactions.len(), AtomicOrdering::SeqCst);
         let transactions: Vec<UnverifiedTransaction> =
             transactions.iter().filter_map(|bytes| Rlp::new(bytes).as_val().ok()).collect();
-        let hashes: Vec<_> = transactions.iter().map(UnverifiedTransaction::hash).collect();
-        self.transactions_received(&hashes, peer_id);
         let results = self.importer.miner.import_external_transactions(self, transactions);
         results.len()
     }
@@ -535,14 +526,14 @@ impl BlockChainClient for Client {
         Ok(())
     }
 
-    fn queue_transactions(&self, transactions: Vec<Bytes>, peer_id: NodeId) {
+    fn queue_transactions(&self, transactions: Vec<Bytes>) {
         let queue_size = self.queue_transactions.load(AtomicOrdering::Relaxed);
         ctrace!(EXTERNAL_TX, "Queue size: {}", queue_size);
         if queue_size > MAX_MEM_POOL_SIZE {
             cwarn!(EXTERNAL_TX, "Ignoring {} transactions: queue is full", transactions.len());
         } else {
             let len = transactions.len();
-            match self.io_channel.lock().send(ClientIoMessage::NewTransactions(transactions, peer_id)) {
+            match self.io_channel.lock().send(ClientIoMessage::NewTransactions(transactions)) {
                 Ok(_) => {
                     self.queue_transactions.fetch_add(len, AtomicOrdering::SeqCst);
                 }
