@@ -41,7 +41,7 @@ use ckey::{Address, NetworkId, PlatformAddress};
 use cnetwork::NodeId;
 use cstate::{FindActionHandler, StateResult, TopLevelState, TopStateView};
 use ctypes::header::Header;
-use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
+use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
 use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
@@ -295,14 +295,6 @@ pub trait DatabaseClient {
 
 pub trait ExecuteClient: ChainTimeInfo {
     fn execute_transaction(&self, transaction: &ShardTransaction, sender: &Address) -> StateResult<()>;
-
-    fn execute_vm(
-        &self,
-        tx: &dyn PartialHashing,
-        inputs: &[AssetTransferInput],
-        params: &[Vec<Bytes>],
-        indices: &[usize],
-    ) -> Result<Vec<String>, DatabaseError>;
 }
 
 pub trait StateInfo {

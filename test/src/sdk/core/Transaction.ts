@@ -13,11 +13,6 @@ import { NetworkId } from "./types";
 
 const RLP = require("rlp");
 
-export interface AssetTransaction {
-    tracker(): H256;
-    addApproval(approval: string): void;
-}
-
 type ActionJSON =
     | PayActionJSON
     | SetShardOwnersActionJSON

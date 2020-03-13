@@ -16,7 +16,7 @@
 
 import { expect } from "chai";
 import { Address, H160, H256, U256 } from "foundry-primitives";
-import { Block } from "foundry-rpc/build/src/chain";
+import { Block } from "foundry-rpc";
 import "mocha";
 import Test = Mocha.Test;
 import { Mock } from "../helper/mock/";

@@ -56,7 +56,7 @@
     "chai-as-promised": "^7.1.1",
     "foundry-keystore": "^0.1.0",
     "foundry-primitives": "^0.2.0",
-    "foundry-rpc": "git://github.com/CodeChain-io/foundry-rpc-js.git#alpha-2",
+    "foundry-rpc": "^0.1.0",
     "jayson": "^3.2.0",
     "lodash": "^4.17.11",
     "mkdirp": "^0.5.1",

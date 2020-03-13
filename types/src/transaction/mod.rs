@@ -15,10 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 mod action;
-mod asset_out_point;
 mod incomplete_transaction;
-mod input;
-mod output;
 mod partial_hashing;
 mod shard;
 mod timelock;
@@ -26,11 +23,8 @@ mod timelock;
 mod transaction;
 
 pub use self::action::Action;
-pub use self::asset_out_point::AssetOutPoint;
 pub use self::incomplete_transaction::IncompleteTransaction;
-pub use self::input::AssetTransferInput;
-pub use self::output::{AssetMintOutput, AssetTransferOutput};
 pub use self::partial_hashing::{HashingError, PartialHashing};
-pub use self::shard::{AssetWrapCCCOutput, ShardTransaction};
+pub use self::shard::ShardTransaction;
 pub use self::timelock::Timelock;
 pub use self::transaction::Transaction;

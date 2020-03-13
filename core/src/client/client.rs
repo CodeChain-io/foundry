@@ -32,16 +32,16 @@ use crate::service::ClientIoMessage;
 use crate::transaction::{LocalizedTransaction, PendingSignedTransactions, SignedTransaction, UnverifiedTransaction};
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use crate::MemPoolMinFees;
-use cdb::{new_journaldb, Algorithm, AsHashDB, DatabaseError};
+use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress};
 use cnetwork::NodeId;
 use cstate::{ActionHandler, FindActionHandler, StateDB, StateResult, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
-use ctypes::transaction::{AssetTransferInput, PartialHashing, ShardTransaction};
+use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
-use cvm::{decode, execute, ChainTimeInfo, ScriptResult, VMConfig};
+use cvm::ChainTimeInfo;
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::{Bytes, H256};
@@ -336,50 +336,6 @@ impl ExecuteClient for Client {
             self.best_block_header().number(),
             self.best_block_header().timestamp(),
         )
-    }
-
-    fn execute_vm(
-        &self,
-        tx: &dyn PartialHashing,
-        inputs: &[AssetTransferInput],
-        params: &[Vec<Bytes>],
-        indices: &[usize],
-    ) -> Result<Vec<String>, DatabaseError> {
-        let mut results = Vec::with_capacity(indices.len());
-        for (i, index) in indices.iter().enumerate() {
-            let input = inputs.get(*index);
-            let param = params.get(i);
-            let result = match (input, param) {
-                (Some(input), Some(param)) => {
-                    let lock_script = decode(&input.lock_script);
-                    let unlock_script = decode(&input.unlock_script);
-                    match (lock_script, unlock_script) {
-                        (Ok(lock_script), Ok(unlock_script)) => {
-                            match execute(
-                                &unlock_script,
-                                &param,
-                                &lock_script,
-                                tx,
-                                VMConfig::default(),
-                                &input,
-                                false,
-                                self,
-                                self.best_block_header().number(),
-                                self.best_block_header().timestamp(),
-                            ) {
-                                Ok(ScriptResult::Burnt) => "burnt".to_string(),
-                                Ok(ScriptResult::Unlocked) => "unlocked".to_string(),
-                                _ => "failed".to_string(),
-                            }
-                        }
-                        _ => "invalid".to_string(),
-                    }
-                }
-                _ => "invalid".to_string(),
-            };
-            results.push(result);
-        }
-        Ok(results)
     }
 }
 

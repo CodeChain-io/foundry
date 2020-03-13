@@ -75,13 +75,7 @@ impl Config {
             self.mining.min_create_shard_transaction_cost,
             self.mining.min_set_shard_owners_transaction_cost,
             self.mining.min_set_shard_users_transaction_cost,
-            self.mining.min_wrap_ccc_transaction_cost,
             self.mining.min_custom_transaction_cost,
-            self.mining.min_asset_mint_cost,
-            self.mining.min_asset_transfer_cost,
-            self.mining.min_asset_scheme_change_cost,
-            self.mining.min_asset_supply_increase_cost,
-            self.mining.min_asset_unwrap_ccc_cost,
         );
 
         Ok(MinerOptions {
@@ -229,13 +223,7 @@ pub struct Mining {
     pub min_create_shard_transaction_cost: Option<u64>,
     pub min_set_shard_owners_transaction_cost: Option<u64>,
     pub min_set_shard_users_transaction_cost: Option<u64>,
-    pub min_wrap_ccc_transaction_cost: Option<u64>,
     pub min_custom_transaction_cost: Option<u64>,
-    pub min_asset_mint_cost: Option<u64>,
-    pub min_asset_transfer_cost: Option<u64>,
-    pub min_asset_scheme_change_cost: Option<u64>,
-    pub min_asset_supply_increase_cost: Option<u64>,
-    pub min_asset_unwrap_ccc_cost: Option<u64>,
 }
 
 #[derive(Deserialize)]
@@ -421,26 +409,8 @@ impl Mining {
         if other.min_set_shard_users_transaction_cost.is_some() {
             self.min_set_shard_users_transaction_cost = other.min_set_shard_users_transaction_cost;
         }
-        if other.min_wrap_ccc_transaction_cost.is_some() {
-            self.min_wrap_ccc_transaction_cost = other.min_wrap_ccc_transaction_cost;
-        }
         if other.min_custom_transaction_cost.is_some() {
             self.min_custom_transaction_cost = other.min_custom_transaction_cost;
-        }
-        if other.min_asset_mint_cost.is_some() {
-            self.min_asset_mint_cost = other.min_asset_mint_cost;
-        }
-        if other.min_asset_transfer_cost.is_some() {
-            self.min_asset_transfer_cost = other.min_asset_transfer_cost;
-        }
-        if other.min_asset_scheme_change_cost.is_some() {
-            self.min_asset_scheme_change_cost = other.min_asset_scheme_change_cost;
-        }
-        if other.min_asset_supply_increase_cost.is_some() {
-            self.min_asset_supply_increase_cost = other.min_asset_supply_increase_cost;
-        }
-        if other.min_asset_unwrap_ccc_cost.is_some() {
-            self.min_asset_unwrap_ccc_cost = other.min_asset_unwrap_ccc_cost;
         }
     }
 
