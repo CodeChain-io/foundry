@@ -245,23 +245,6 @@ impl<'x> OpenBlock<'x> {
 
     /// Turn this into a `ClosedBlock`.
     pub fn close(mut self) -> Result<ClosedBlock, Error> {
-        let unclosed_state = self.block.state.clone();
-
-        self.close_impl()?;
-
-        self.block.header.set_transactions_root(skewed_merkle_root(
-            BLAKE_NULL_RLP,
-            self.block.transactions.iter().map(Encodable::rlp_bytes),
-        ));
-
-        Ok(ClosedBlock {
-            block: self.block,
-            unclosed_state,
-        })
-    }
-
-    /// Turn this into a `LockedBlock`.
-    pub fn close_and_lock(mut self) -> Result<LockedBlock, Error> {
         self.close_impl()?;
 
         if self.block.header.transactions_root() == &BLAKE_NULL_RLP {
@@ -275,7 +258,7 @@ impl<'x> OpenBlock<'x> {
             &skewed_merkle_root(BLAKE_NULL_RLP, self.block.transactions.iter().map(Encodable::rlp_bytes),)
         );
 
-        Ok(LockedBlock {
+        Ok(ClosedBlock {
             block: self.block,
         })
     }
@@ -311,7 +294,6 @@ impl<'x> OpenBlock<'x> {
 #[derive(Clone)]
 pub struct ClosedBlock {
     block: ExecutedBlock,
-    unclosed_state: TopLevelState,
 }
 
 impl ClosedBlock {
@@ -320,31 +302,6 @@ impl ClosedBlock {
         self.header().rlp_blake(&Seal::Without)
     }
 
-    /// Turn this into a `LockedBlock`, unable to be reopened again.
-    pub fn lock(self) -> LockedBlock {
-        LockedBlock {
-            block: self.block,
-        }
-    }
-
-    /// Given an engine reference, reopen the `ClosedBlock` into an `OpenBlock`.
-    pub fn reopen(self, engine: &dyn CodeChainEngine) -> OpenBlock<'_> {
-        // revert rewards (i.e. set state back at last transaction's state).
-        let mut block = self.block;
-        block.state = self.unclosed_state;
-        OpenBlock {
-            block,
-            engine,
-        }
-    }
-}
-
-/// Just like `ClosedBlock` except that we can't reopen it and it's faster.
-pub struct LockedBlock {
-    block: ExecutedBlock,
-}
-
-impl LockedBlock {
     /// Provide a valid seal in order to turn this into a `SealedBlock`.
     ///
     /// NOTE: This does not check the validity of `seal` with the engine.
@@ -450,12 +407,6 @@ impl<'x> IsBlock for ClosedBlock {
     }
 }
 
-impl<'x> IsBlock for LockedBlock {
-    fn block(&self) -> &ExecutedBlock {
-        &self.block
-    }
-}
-
 impl IsBlock for SealedBlock {
     fn block(&self) -> &ExecutedBlock {
         &self.block
@@ -470,14 +421,14 @@ pub fn enact<C: ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo>(
     client: &C,
     db: StateDB,
     parent: &Header,
-) -> Result<LockedBlock, Error> {
+) -> Result<ClosedBlock, Error> {
     let mut b = OpenBlock::try_new(engine, db, parent, Address::default(), vec![])?;
 
     b.populate_from(header);
     engine.on_open_block(b.inner_mut())?;
     b.push_transactions(transactions, client, parent.number(), parent.timestamp())?;
 
-    b.close_and_lock()
+    b.close()
 }
 
 #[cfg(test)]
@@ -492,7 +443,7 @@ mod tests {
         let genesis_header = scheme.genesis_header();
         let db = scheme.ensure_genesis_state(get_temp_state_db()).unwrap();
         let b = OpenBlock::try_new(&*scheme.engine, db, &genesis_header, Address::default(), vec![]).unwrap();
-        let b = b.close_and_lock().unwrap();
+        let b = b.close().unwrap();
         let _ = b.seal(&*scheme.engine, vec![]);
     }
 }
