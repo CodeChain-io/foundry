@@ -104,6 +104,14 @@ impl TopCache {
         self.shard.get_mut(a, db)
     }
 
+    pub fn module(&self, a: &ModuleAddress, db: &dyn Trie) -> TrieResult<Option<Module>> {
+        self.module.get(a, db)
+    }
+
+    pub fn module_mut(&self, a: &ModuleAddress, db: &dyn Trie) -> TrieResult<RefMut<'_, Module>> {
+        self.module.get_mut(a, db)
+    }
+
     #[allow(dead_code)]
     pub fn remove_shard(&self, address: &ShardAddress) {
         self.shard.remove(address)
