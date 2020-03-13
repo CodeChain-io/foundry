@@ -32,13 +32,7 @@ pub trait ChainNotify: Send + Sync {
     }
 
     /// fires when chain has new blocks.
-    fn new_blocks(
-        &self,
-        _imported: Vec<BlockHash>,
-        _invalid: Vec<BlockHash>,
-        _enacted: Vec<BlockHash>,
-        _sealed: Vec<BlockHash>,
-    ) {
+    fn new_blocks(&self, _imported: Vec<BlockHash>, _invalid: Vec<BlockHash>, _enacted: Vec<BlockHash>) {
         // does nothing by default
     }
 

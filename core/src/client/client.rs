@@ -143,14 +143,8 @@ impl Client {
         });
     }
 
-    pub fn new_blocks(
-        &self,
-        imported: &[BlockHash],
-        invalid: &[BlockHash],
-        enacted: &[BlockHash],
-        sealed: &[BlockHash],
-    ) {
-        self.notify(|notify| notify.new_blocks(imported.to_vec(), invalid.to_vec(), enacted.to_vec(), sealed.to_vec()));
+    pub fn new_blocks(&self, imported: &[BlockHash], invalid: &[BlockHash], enacted: &[BlockHash]) {
+        self.notify(|notify| notify.new_blocks(imported.to_vec(), invalid.to_vec(), enacted.to_vec()));
     }
 
     pub fn new_headers(
@@ -262,7 +256,7 @@ impl Client {
 
         let enacted = self.importer.extract_enacted(vec![route]);
         self.importer.miner.chain_new_blocks(self, &[], &[], &enacted);
-        self.new_blocks(&[], &[], &enacted, &[]);
+        self.new_blocks(&[], &[], &enacted);
     }
 
     fn block_number_ref(&self, id: &BlockId) -> Option<BlockNumber> {
@@ -541,7 +535,7 @@ impl ImportBlock for Client {
         };
         let enacted = self.importer.extract_enacted(vec![route]);
         self.importer.miner.chain_new_blocks(self, &[h], &[], &enacted);
-        self.new_blocks(&[h], &[], &enacted, &[h]);
+        self.new_blocks(&[h], &[], &enacted);
         self.db().flush().expect("DB flush failed.");
         Ok(h)
     }

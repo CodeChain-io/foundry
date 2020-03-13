@@ -137,7 +137,7 @@ impl Importer {
                 }
                 let enacted = self.extract_enacted(import_results);
                 self.miner.chain_new_blocks(client, &imported_blocks, &invalid_blocks, &enacted);
-                client.new_blocks(&imported_blocks, &invalid_blocks, &enacted, &[]);
+                client.new_blocks(&imported_blocks, &invalid_blocks, &enacted);
             }
         }
 
@@ -371,7 +371,7 @@ impl Importer {
             chain.commit();
         }
         self.miner.chain_new_blocks(client, &[hash], &[], &[]);
-        client.new_blocks(&[hash], &[], &[], &[]);
+        client.new_blocks(&[hash], &[], &[]);
 
         client.db().flush().expect("DB flush failed.");
     }
