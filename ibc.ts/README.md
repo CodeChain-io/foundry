@@ -7,7 +7,7 @@ This directory contains IBC relayer implementation and IBC demo scenario script.
 
 1. Prepare the node version 12, yarn and rust development environment.
 1. Please run `yarn install`. It will install dependencies.
-2. Please run `cp .env.default .env`
+1. Please run `cp .env.default .env`
 
 ## Running an IBC scenario
 
