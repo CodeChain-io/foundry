@@ -1,12 +1,10 @@
 import * as _ from "lodash";
-
+import * as RLP from "rlp";
 import { blake256, getPublicFromPrivate, signEd25519 } from "../../utils";
 import { Address, H256 } from "../classes";
 import { Text } from "../Text";
 import { Transaction } from "../Transaction";
 import { NetworkId } from "../types";
-
-const RLP = require("rlp");
 
 export interface StoreActionJSON {
     content: string;

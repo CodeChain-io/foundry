@@ -1,9 +1,7 @@
 import { Address, H256, U256 } from "foundry-primitives";
-
+import * as RLP from "rlp";
 import { SignedTransaction, SignedTransactionJSON } from "./SignedTransaction";
 import { fromJSONToSignedTransaction } from "./transaction/json";
-
-const RLP = require("rlp");
 
 // Disable lint error from using "number" as variable name
 // tslint:disable:variable-name

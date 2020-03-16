@@ -26,11 +26,10 @@ import {
 } from "../helper/constants";
 import { ERROR } from "../helper/error";
 import CodeChain from "../helper/spawn";
+import * as RLP from "rlp";
 
 chai.use(chaiAsPromised);
 const expect = chai.expect;
-
-const RLP = require("rlp");
 
 const hitcount = toHex(RLP.encode(["hit count"]));
 const closecount = toHex(RLP.encode(["close count"]));

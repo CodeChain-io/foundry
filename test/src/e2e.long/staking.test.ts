@@ -33,8 +33,7 @@ import {
 import { PromiseExpect, wait } from "../helper/promise";
 import CodeChain from "../helper/spawn";
 import { toHex } from "../sdk/utils";
-
-const RLP = require("rlp");
+import * as RLP from "rlp";
 
 describe("Staking", function() {
     this.timeout(60_000);

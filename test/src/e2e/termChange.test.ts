@@ -28,8 +28,7 @@ import {
 import CodeChain from "../helper/spawn";
 import { H256 } from "foundry-primitives";
 import { blake256, getPublicFromPrivate } from "../sdk/utils";
-
-const RLP = require("rlp");
+import * as RLP from "rlp";
 
 describe("Term change", function() {
     const chain = `${__dirname}/../scheme/solo-block-reward-50.json`;

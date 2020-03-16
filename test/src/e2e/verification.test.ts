@@ -24,8 +24,7 @@ import {
 } from "../helper/constants";
 import { ERROR } from "../helper/error";
 import CodeChain from "../helper/spawn";
-
-const RLP = require("rlp");
+import * as RLP from "rlp";
 
 describe("solo - 1 node", function() {
     const recipient = "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw";

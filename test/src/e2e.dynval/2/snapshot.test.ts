@@ -22,8 +22,7 @@ import * as fs from "fs";
 import "mocha";
 import * as path from "path";
 import * as stake from "../../stakeholder";
-
-import mkdirp = require("mkdirp");
+import * as mkdirp from "mkdirp";
 import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
 import { PromiseExpect } from "../../helper/promise";
