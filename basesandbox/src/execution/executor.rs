@@ -95,6 +95,8 @@ pub fn execute<T: Ipc>(path: &str, id: &str) -> Result<Context<T>, String> {
     let addr_dst = format!("{}.{}", SOCKET_DST, hash);
     let addr_sem = format!("{}.{}", SEMAPHORE, hash);
 
+    std::fs::remove_dir_all("./tmp").ok(); // we don't care whether it succeeds
+
     let directory = DirectoryReserver::new("./tmp".to_owned());
     // src-dst order is reversed for the boxee
     let args: Vec<&str> = vec![&addr_dst, &addr_src, &addr_sem];
