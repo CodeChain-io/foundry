@@ -173,4 +173,6 @@ pub trait Validator {
         transactions: &[TransactionWithMetadata],
         size: Option<usize>,
     ) -> (Vec<&TransactionWithMetadata>, Vec<&TransactionWithMetadata>);
+    fn commit(&mut self);
+    fn revert(&mut self);
 }
