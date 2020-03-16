@@ -1,6 +1,5 @@
+import * as SDK from "codechain-sdk";
 import { Mock } from "..";
-
-const SDK = require("codechain-sdk");
 
 async function sendTransaction() {
     const mock = new Mock("0.0.0.0", 3485, "tc");

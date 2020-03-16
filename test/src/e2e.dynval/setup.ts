@@ -22,6 +22,7 @@ import {
 } from "foundry-primitives/lib";
 import RPC from "foundry-rpc";
 import { Context, Suite } from "mocha";
+import * as RLP from "rlp";
 import {
     aliceSecret,
     bobSecret,
@@ -36,8 +37,6 @@ import { PromiseExpect, wait } from "../helper/promise";
 import CodeChain, { Signer } from "../helper/spawn";
 import { SDK } from "../sdk";
 import * as stake from "../stakeholder";
-
-const RLP = require("rlp");
 
 interface ValidatorConfig {
     signer: Signer;

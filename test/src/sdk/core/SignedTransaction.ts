@@ -1,12 +1,9 @@
 import { Address, H160, H256 } from "foundry-primitives";
 import * as _ from "lodash";
-
+import * as RLP from "rlp";
 import { blake160, blake256 } from "../utils";
-
 import { Transaction, TransactionJSON } from "./Transaction";
 import { NetworkId } from "./types";
-
-const RLP = require("rlp");
 
 export interface SignedTransactionJSON extends TransactionJSON {
     blockNumber: number | null;

@@ -18,6 +18,7 @@ import { expect } from "chai";
 import { ChildProcess, spawn } from "child_process";
 import RPC from "foundry-rpc";
 import { createWriteStream, mkdtempSync, unlinkSync } from "fs";
+import * as getPort from "get-port";
 import * as mkdirp from "mkdirp";
 import { ncp } from "ncp";
 import { createInterface as createReadline, ReadLine } from "readline";
@@ -32,8 +33,6 @@ import {
 import * as stake from "../stakeholder";
 import { faucetAddress, faucetSecret } from "./constants";
 import { wait } from "./promise";
-
-const getPort = require("get-port");
 
 const projectRoot = `${__dirname}/../../..`;
 

@@ -33,8 +33,7 @@ import {
 import CodeChain from "../helper/spawn";
 import { blake256, getPublicFromPrivate } from "../sdk/utils";
 import { ERROR } from "../helper/error";
-
-const RLP = require("rlp");
+import * as RLP from "rlp";
 
 chai.use(chaiAsPromised);
 
