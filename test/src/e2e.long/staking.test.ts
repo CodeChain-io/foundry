@@ -34,6 +34,7 @@ import { PromiseExpect, wait } from "../helper/promise";
 import CodeChain from "../helper/spawn";
 import { toHex } from "../sdk/utils";
 import * as RLP from "rlp";
+import * as Scheme from "../scheme/tendermint-int.json";
 
 describe("Staking", function() {
     this.timeout(60_000);
@@ -834,8 +835,7 @@ describe("Staking", function() {
         // faucet: 20000, alice: 20000, bob: 10000, val0: 50000,
 
         const blockNumber = await nodes[0].getBestBlockNumber();
-        const minCustomCost = require("../scheme/tendermint-int.json").params
-            .minCustomCost;
+        const minCustomCost = Scheme.params.minCustomCost;
 
         const oldAliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString(),
@@ -961,8 +961,7 @@ describe("Staking", function() {
         // faucet: 20000, alice: 20000, bob: 10000, val0: 0 (delegated 50000 to val1), val1: 0
 
         const blockNumber = await nodes[0].getBestBlockNumber();
-        const minCustomCost = require("../scheme/tendermint-int.json").params
-            .minCustomCost;
+        const minCustomCost = Scheme.params.minCustomCost;
 
         const oldAliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString(),
@@ -1126,8 +1125,7 @@ describe("Staking", function() {
         // faucet: 20000, alice: 20000, bob: 10000, val0: 0 (delegated 30000 to val1), val1: 30000
 
         const blockNumber = await nodes[0].getBestBlockNumber();
-        const minCustomCost = require("../scheme/tendermint-int.json").params
-            .minCustomCost;
+        const minCustomCost = Scheme.params.minCustomCost;
 
         const oldAliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString(),

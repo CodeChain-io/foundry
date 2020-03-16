@@ -34,6 +34,7 @@ import { PromiseExpect } from "../helper/promise";
 import CodeChain from "../helper/spawn";
 import { toHex } from "../sdk/utils";
 import * as RLP from "rlp";
+import * as Scheme from "../scheme/solo-block-reward-50.json";
 
 describe("Staking", function() {
     const promiseExpect = new PromiseExpect();
@@ -629,10 +630,10 @@ describe("Staking", function() {
 
         const blockNumber = await node.getBestBlockNumber();
         const blockReward = parseInt(
-            require(chain).engine.solo.params.blockReward as string,
+            Scheme.engine.solo.params.blockReward as string,
             16
         );
-        const minCustomCost = require(chain).params.minCustomCost;
+        const minCustomCost = Scheme.params.minCustomCost;
 
         const oldAliceBalance = +(await node.rpc.chain.getBalance({
             address: aliceAddress.toString(),
@@ -745,10 +746,10 @@ describe("Staking", function() {
 
         const blockNumber = await node.getBestBlockNumber();
         const blockReward = parseInt(
-            require(chain).engine.solo.params.blockReward as string,
+            Scheme.engine.solo.params.blockReward as string,
             16
         );
-        const minCustomCost = require(chain).params.minCustomCost as number;
+        const minCustomCost = Scheme.params.minCustomCost as number;
 
         const oldAliceBalance = +(await node.rpc.chain.getBalance({
             address: aliceAddress.toString(),
@@ -880,10 +881,10 @@ describe("Staking", function() {
 
         const blockNumber = await node.getBestBlockNumber();
         const blockReward = parseInt(
-            require(chain).engine.solo.params.blockReward as string,
+            Scheme.engine.solo.params.blockReward as string,
             16
         );
-        const minCustomCost = require(chain).params.minCustomCost as number;
+        const minCustomCost = Scheme.params.minCustomCost as number;
 
         const oldAliceBalance = +(await node.rpc.chain.getBalance({
             address: aliceAddress.toString(),
