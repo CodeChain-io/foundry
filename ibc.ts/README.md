@@ -5,17 +5,18 @@ This directory contains IBC relayer implementation and IBC demo scenario script.
 
 ## Before start
 
+1. Prepare the node version 12, yarn and rust development environment.
 1. Please run `yarn install`. It will install dependencies.
 2. Please run `cp .env.default .env`
 
-## How to run chains
+## Running an IBC scenario
 
-Run `yarn run runChains`
-
-## How to run a scenario
-
-Run `yarn run scenario`. It will create light clients, a connection, and a channel.
-Finally, it will send a packet.
+1. Run two foundry chains using `yarn run runChains`. Since they will use 13485, 13486, 18080 and 18081 port, please make sure the ports are available.
+1. When a "Chains are running!" is printed, run relayer and scenario script.
+   1. Run a relayer using `yarn run relayer`.
+   1. Run a scenario script using `yarn run scenario`.
+1. Create light clients connection, and channel in the scenario script. The scenario script has an interactive user interface for you.
+1. Send a packet using the scenario script.
 
 ## Print debug log
 
