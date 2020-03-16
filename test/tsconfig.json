@@ -6,6 +6,7 @@
     "lib": ["es2018"],
     "declaration": true,
     "outDir": "lib",
+    "resolveJsonModule": true,
     "strict": true
   },
   "include": ["./src/**/*"],
