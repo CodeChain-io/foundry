@@ -97,6 +97,9 @@ macro_rules! log_target {
     (TX) => {
         "tx"
     };
+    (INFORMER) => {
+        "informer"
+    };
 }
 
 #[macro_export]
