@@ -39,6 +39,13 @@ impl<C: context::Context> validator::Validator for Coordinator<C> {
     ) -> (Vec<&TransactionWithMetadata>, Vec<&TransactionWithMetadata>) {
         unimplemented!()
     }
+
+    fn commit(&mut self) {
+        unimplemented!()
+    }
+    fn revert(&mut self) {
+        unimplemented!()
+    }
 }
 
 impl<C: context::Context> Coordinator<C> {}
