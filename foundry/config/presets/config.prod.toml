@@ -14,7 +14,7 @@ reseal_min_period = 4000
 no_reseal_timer = false
 allowed_past_gap = 30000
 allowed_future_gap = 5000
-i
+
 [network]
 disable = false
 interface = "0.0.0.0"
