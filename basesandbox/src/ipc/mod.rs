@@ -23,5 +23,5 @@ pub trait Ipc {
     /// It might block until counterparty's recv(). Even if not, the order is still guaranteed.
     fn send(&self, data: &[u8]);
     /// Synchronous recv.
-    fn recv(&mut self) -> Vec<u8>;
+    fn recv(&self) -> Vec<u8>;
 }

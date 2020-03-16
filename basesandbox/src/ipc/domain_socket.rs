@@ -16,12 +16,13 @@
 use super::Ipc;
 use std::os::unix::net::UnixDatagram;
 use std::path::Path;
+use std::sync::Mutex;
 
 pub struct DomainSocket {
     address_src: String,
     address_dst: String,
     socket: UnixDatagram,
-    buffer: Vec<u8>,
+    buffer: Mutex<Vec<u8>>,
 }
 
 fn create(address_src: String, address_dst: String) -> DomainSocket {
@@ -30,7 +31,7 @@ fn create(address_src: String, address_dst: String) -> DomainSocket {
         address_src,
         address_dst,
         socket,
-        buffer: vec![0; 1024],
+        buffer: Mutex::new(vec![0; 1024]),
     }
 }
 
@@ -51,14 +52,15 @@ impl Ipc for DomainSocket {
         assert_eq!(self.socket.send_to(data, &self.address_dst).unwrap(), data.len());
     }
 
-    fn recv(&mut self) -> Vec<u8> {
-        let (count, address) = self.socket.recv_from(&mut self.buffer).unwrap();
-        assert!(count <= self.buffer.len(), "Unix datagram got data larger than the buffer.");
+    fn recv(&self) -> Vec<u8> {
+        let mut buffer = self.buffer.lock().unwrap();
+        let (count, address) = self.socket.recv_from(&mut buffer).unwrap();
+        assert!(count <= buffer.len(), "Unix datagram got data larger than the buffer.");
         assert_eq!(
             address.as_pathname().unwrap(),
             Path::new(&self.address_dst),
             "Unix datagram received packet from an unexpected sender."
         );
-        self.buffer[0..count].to_vec()
+        buffer[0..count].to_vec()
     }
 }

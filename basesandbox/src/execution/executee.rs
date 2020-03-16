@@ -38,7 +38,7 @@ pub fn start<T: Ipc>() -> Context<T> {
 
     let mut semaphore = SignalOnlySemaphore::new(semaphore_name.clone() + "_Boxee", semaphore_name.clone() + "_Boxer");
 
-    let mut ipc = T::new(socket_src_name.to_string(), socket_dst_name.to_string());
+    let ipc = T::new(socket_src_name.to_string(), socket_dst_name.to_string());
     semaphore.signal();
     assert_eq!(ipc.recv(), b"#INIT");
 

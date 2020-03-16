@@ -21,7 +21,7 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn simple_rs() {
-        let mut ctx =
+        let ctx =
             executor::execute::<crate::execution::IpcUnixDomainSocket>("./../target/debug/tm_simple_rs", "unittest")
                 .unwrap();
 
