@@ -16,7 +16,6 @@ cnetwork = { package = "codechain-network", path = "../network" }
 cstate = { package = "codechain-state", path = "../state" }
 ctimer = { package = "codechain-timer", path = "../util/timer" }
 ctypes = { package = "codechain-types", path = "../types" }
-cvm = { package = "codechain-vm", path = "../vm" }
 crossbeam-channel = "0.3"
 hyper = { git = "https://github.com/paritytech/hyper", default-features = false }
 kvdb = "0.1"

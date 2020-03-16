@@ -18,24 +18,13 @@ pub mod helpers {
     use crate::impls::TopLevelState;
     use crate::{FindActionHandler, Metadata, MetadataAddress, StateDB};
     use cdb::AsHashDB;
-    use ctypes::{BlockNumber, CommonParams, Tracker};
-    use cvm::ChainTimeInfo;
+    use ctypes::CommonParams;
     use kvdb::KeyValueDB;
     use merkle_trie::{TrieFactory, TrieMut};
     use primitives::H256;
     use rlp::Encodable;
     use std::sync::Arc;
     pub struct TestClient {}
-
-    impl ChainTimeInfo for TestClient {
-        fn transaction_block_age(&self, _: &Tracker, _parent_block_number: BlockNumber) -> Option<u64> {
-            Some(0)
-        }
-
-        fn transaction_time_age(&self, _: &Tracker, _parent_block_timestamp: u64) -> Option<u64> {
-            Some(0)
-        }
-    }
 
     impl FindActionHandler for TestClient {}
 
