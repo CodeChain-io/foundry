@@ -17,6 +17,7 @@
 use super::{HeaderView, TransactionView};
 use crate::transaction::{LocalizedTransaction, UnverifiedTransaction};
 use ccrypto::blake256;
+use coordinator::validator::Transaction;
 use ctypes::{BlockHash, Header, TxHash};
 use rlp::Rlp;
 
@@ -66,7 +67,7 @@ impl<'a> BlockView<'a> {
     }
 
     /// Return List of transactions in given block.
-    pub fn transactions(&self) -> Vec<UnverifiedTransaction> {
+    pub fn transactions(&self) -> Vec<Transaction> {
         self.rlp.list_at(1).unwrap()
     }
 
