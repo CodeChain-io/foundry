@@ -69,21 +69,22 @@ impl<'a> Manager<'a> {
         Ok(())
     }
 
-    pub fn query(&self, id: IdentifierSlice) -> Result<ClientState, String> {
+    fn query(&self, id: IdentifierSlice) -> Result<ClientState, String> {
         let kv_store = self.ctx.get_kv_store();
         let data = kv_store.get(&path_client_state(id)).ok_or_else(|| "Client doesn't exist".to_owned())?;
         Ok(rlp::decode(&data).expect("Illformed client state stored in DB"))
     }
 
-    pub fn query_consensus_state(
-        &self,
-        id: IdentifierSlice,
-        num: ctypes::BlockNumber,
-    ) -> Result<ConsensusState, String> {
+    fn query_consensus_state(&self, id: IdentifierSlice, num: ctypes::BlockNumber) -> Result<ConsensusState, String> {
         let kv_store = self.ctx.get_kv_store();
         let data =
             kv_store.get(&path_consensus_state(id, num)).ok_or_else(|| "Consensus state doesn't exist".to_owned())?;
         Ok(rlp::decode(&data).expect("Illformed consensus state stored in DB"))
+    }
+
+    pub fn query_latest_height(&self, id: IdentifierSlice) -> Result<u64, String> {
+        let client_state = self.query(id)?;
+        Ok(client_state.raw.number)
     }
 
     /* -------- Various verifiers -------- */
