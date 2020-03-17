@@ -43,7 +43,6 @@ use cstate::{FindActionHandler, StateResult, TopLevelState, TopStateView};
 use ctypes::header::Header;
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
-use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
 use primitives::{Bytes, H256};
 use std::ops::Range;
@@ -203,7 +202,7 @@ pub trait ImportBlock {
 }
 
 /// Blockchain database client. Owns and manages a blockchain and a block queue.
-pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + ImportBlock + ChainTimeInfo {
+pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + ImportBlock {
     /// Get block queue information.
     fn queue_info(&self) -> BlockQueueInfo;
 
@@ -290,7 +289,7 @@ pub trait DatabaseClient {
     fn database(&self) -> Arc<dyn KeyValueDB>;
 }
 
-pub trait ExecuteClient: ChainTimeInfo {
+pub trait ExecuteClient {
     fn execute_transaction(&self, transaction: &ShardTransaction, sender: &Address) -> StateResult<()>;
 }
 

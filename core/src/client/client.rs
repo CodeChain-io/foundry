@@ -41,7 +41,6 @@ use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
-use cvm::ChainTimeInfo;
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::{Bytes, H256};
@@ -313,7 +312,6 @@ impl ExecuteClient for Client {
             transaction,
             sender,
             &[],
-            self,
             self.best_block_header().number(),
             self.best_block_header().timestamp(),
         )
@@ -740,16 +738,6 @@ impl MiningBlockChainClient for Client {
 
     fn mem_pool_min_fees(&self) -> MemPoolMinFees {
         self.importer.miner.get_options().mem_pool_min_fees
-    }
-}
-
-impl ChainTimeInfo for Client {
-    fn transaction_block_age(&self, tracker: &Tracker, parent_block_number: BlockNumber) -> Option<u64> {
-        self.transaction_block_number(tracker).map(|block_number| parent_block_number - block_number)
-    }
-
-    fn transaction_time_age(&self, tracker: &Tracker, parent_timestamp: u64) -> Option<u64> {
-        self.transaction_block_timestamp(tracker).map(|block_timestamp| parent_timestamp - block_timestamp)
     }
 }
 

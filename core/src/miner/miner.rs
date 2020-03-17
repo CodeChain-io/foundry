@@ -34,7 +34,6 @@ use cstate::{FindActionHandler, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::transaction::{Action, IncompleteTransaction};
 use ctypes::{BlockHash, TxHash};
-use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
@@ -287,7 +286,7 @@ impl Miner {
 
     /// Prepares new block for sealing including top transactions from queue and seal it.
     fn prepare_and_seal_block<
-        C: AccountData + BlockChainTrait + BlockProducer + ChainTimeInfo + EngineInfo + FindActionHandler + TermInfo,
+        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + FindActionHandler + TermInfo,
     >(
         &self,
         parent_block_id: BlockId,
@@ -505,14 +504,8 @@ impl MinerService for Miner {
 
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: AccountData
-            + BlockChainTrait
-            + BlockProducer
-            + EngineInfo
-            + ImportBlock
-            + ChainTimeInfo
-            + FindActionHandler
-            + TermInfo, {
+        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock + FindActionHandler + TermInfo,
+    {
         ctrace!(MINER, "update_sealing: preparing a block");
 
         let block = match self.prepare_and_seal_block(parent_block, chain) {

@@ -57,7 +57,6 @@ use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::header::Header;
 use ctypes::transaction::{Action, Transaction};
 use ctypes::{BlockHash, BlockNumber, CommonParams, Header as BlockHeader, Tracker, TxHash};
-use cvm::ChainTimeInfo;
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
 use parking_lot::RwLock;
@@ -590,16 +589,6 @@ impl BlockChainClient for TestBlockChainClient {
 
 impl TimeoutHandler for TestBlockChainClient {
     fn on_timeout(&self, _token: TimerToken) {}
-}
-
-impl ChainTimeInfo for TestBlockChainClient {
-    fn transaction_block_age(&self, _: &Tracker, _parent_block_number: BlockNumber) -> Option<u64> {
-        Some(0)
-    }
-
-    fn transaction_time_age(&self, _: &Tracker, _parent_timestamp: u64) -> Option<u64> {
-        Some(0)
-    }
 }
 
 impl FindActionHandler for TestBlockChainClient {}

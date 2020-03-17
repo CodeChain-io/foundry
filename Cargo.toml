@@ -17,7 +17,6 @@ edition = "2018"
 [dependencies]
 app_dirs = "^1.2.1"
 clap = { version = "2", features = ["yaml"] }
-codechain-vm = { path = "vm" }
 ccore = { package = "codechain-core", path = "core" }
 cdiscovery = { package = "codechain-discovery", path = "discovery" }
 codechain-logger = { path = "util/logger" }
@@ -70,5 +69,4 @@ members = [
     "rpc",
     "sync",
     "types",
-    "vm",
 ]

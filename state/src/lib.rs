@@ -20,7 +20,6 @@ extern crate codechain_db as cdb;
 extern crate codechain_logger as clogger;
 extern crate codechain_key as ckey;
 extern crate codechain_types as ctypes;
-extern crate codechain_vm as cvm;
 #[macro_use]
 extern crate log;
 #[macro_use]

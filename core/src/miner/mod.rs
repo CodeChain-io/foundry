@@ -24,7 +24,6 @@ use ckey::{public_to_address, Address, Ed25519Public as Public, Password, Platfo
 use cstate::{FindActionHandler, TopStateView};
 use ctypes::transaction::IncompleteTransaction;
 use ctypes::{BlockHash, TxHash};
-use cvm::ChainTimeInfo;
 use primitives::Bytes;
 use std::ops::Range;
 
@@ -77,14 +76,7 @@ pub trait MinerService: Send + Sync {
     /// New chain head event. Restart mining operation.
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: AccountData
-            + BlockChainTrait
-            + BlockProducer
-            + ImportBlock
-            + ChainTimeInfo
-            + EngineInfo
-            + FindActionHandler
-            + TermInfo;
+        C: AccountData + BlockChainTrait + BlockProducer + ImportBlock + EngineInfo + FindActionHandler + TermInfo;
 
     /// Imports transactions to mem pool.
     fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
