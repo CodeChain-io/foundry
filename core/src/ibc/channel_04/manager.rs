@@ -436,9 +436,9 @@ impl<'a> Manager<'a> {
         let client_identifier = self.check_connection_opened(&channel.connection_hops[0])?;
 
         let client_manager = ClientManager::new(self.ctx);
-        let client_state = client_manager.query(&client_identifier)?;
+        let client_latest_height = client_manager.query_latest_height(&client_identifier)?;
 
-        if packet.timeout_height <= client_state.raw.number {
+        if packet.timeout_height <= client_latest_height {
             return Err("Packet carries invalid timeout_height".to_owned())
         }
 
