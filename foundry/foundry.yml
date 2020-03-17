@@ -105,6 +105,31 @@ args:
         value_name: PORT
         help: Listen for rpc connections on PORT.
         takes_value: true
+    - informer-interface:
+        long: informer-interface
+        value_name: INFORMER
+        help: Specify the interface address for the WebSockets JSON-RPC server.
+        takes_value: true
+        conflicts_with:
+          - no-informer
+    - informer-port:
+        long: informer-port
+        value_name: INF-PORT
+        help: Specify the port portion of the WebSockets JSON-RPC server.
+        takes_value: true
+        conflicts_with:
+          - no-informer
+    - informer-max-connections:
+        long: informer-max-connections
+        value_name: MCON
+        help: Maximum number of allowed concurrent WebSockets JSON-RPC connections.
+        takes_value: true
+        conflicts_with:
+          - no-informer
+    - no-informer:
+        long: no-informer
+        help: Do not run the WebSockets JSON-RPC server.
+        takes_value: false
     - no-ipc:
         long: no-ipc
         help: Do not run JSON-RPC over IPC service.
