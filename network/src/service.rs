@@ -20,6 +20,7 @@ use crate::filters::{FilterEntry, FiltersControl};
 use crate::routing_table::RoutingTable;
 use crate::{p2p, Api, ManagingPeerdb, NetworkExtension, SocketAddr};
 use cidr::IpCidr;
+use cinformer::InformerEventSender;
 use cio::{IoError, IoService};
 use ckey::{NetworkId, X25519Public as Public};
 use crossbeam_channel::Sender;
@@ -47,6 +48,7 @@ impl Service {
         filters_control: Arc<dyn FiltersControl>,
         routing_table: Arc<RoutingTable>,
         peer_db: Box<dyn ManagingPeerdb>,
+        sender: InformerEventSender,
     ) -> Result<Arc<Self>, Error> {
         let p2p = IoService::start("P2P")?;
 
@@ -63,6 +65,7 @@ impl Service {
             min_peers,
             max_peers,
             peer_db,
+            sender,
         )?);
         p2p.register_handler(p2p_handler.clone())?;
 
