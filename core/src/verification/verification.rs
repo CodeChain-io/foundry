@@ -16,15 +16,14 @@
 
 use crate::consensus::ConsensusEngine;
 use crate::error::{BlockError, Error};
-use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use crate::views::BlockView;
 use ccrypto::BLAKE_NULL_RLP;
+use coordinator::validator::Transaction;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockNumber, CommonParams, Header};
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
 use rlp::Rlp;
-use std::convert::TryInto;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Preprocessed block data gathered in `verify_block_seal` call
@@ -32,7 +31,7 @@ pub struct PreverifiedBlock {
     /// Populated block header
     pub header: Header,
     /// Populated block transactions
-    pub transactions: Vec<VerifiedTransaction>,
+    pub transactions: Vec<Transaction>,
     /// Block bytes
     pub bytes: Bytes,
 }
@@ -46,8 +45,7 @@ pub fn verify_block_basic(header: &Header, bytes: &[u8]) -> Result<(), Error> {
     let raw_transactions = body_rlp
         .iter()
         .map(|rlp| {
-            let tx = rlp.as_val::<UnverifiedTransaction>()?;
-            tx.verify_basic()?;
+            let _tx = rlp.as_val::<Transaction>()?;
             Ok(rlp.as_raw().to_vec())
         })
         .collect::<Result<Vec<Bytes>, Error>>()?;
@@ -68,21 +66,12 @@ pub fn verify_header_with_engine(header: &Header, engine: &dyn ConsensusEngine) 
     Ok(())
 }
 
-pub fn verify_block_with_params(
-    header: &Header,
-    bytes: &[u8],
-    engine: &dyn ConsensusEngine,
-    common_params: &CommonParams,
-) -> Result<(), Error> {
+pub fn verify_block_with_params(header: &Header, bytes: &[u8], common_params: &CommonParams) -> Result<(), Error> {
     verify_header_with_params(&header, common_params)?;
 
     let body_rlp = Rlp::new(bytes).at(1).expect("verify_block_basic already checked it");
     if body_rlp.as_raw().len() > common_params.max_body_size() {
         return Err(BlockError::BodySizeIsTooBig.into())
-    }
-
-    for t in body_rlp.iter().map(|rlp| rlp.as_val().expect("verify_block_basic already checked it")) {
-        engine.verify_transaction_with_params(&t, common_params)?;
     }
     Ok(())
 }
@@ -155,8 +144,7 @@ fn verify_transactions_root(
 /// Still operates on a individual block
 /// Returns a `PreverifiedBlock` structure populated with transactions
 pub fn verify_block_seal(header: Header, bytes: Bytes) -> Result<PreverifiedBlock, Error> {
-    let transactions: Vec<_> =
-        BlockView::new(&bytes).transactions().into_iter().map(TryInto::try_into).collect::<Result<_, _>>()?;
+    let transactions = BlockView::new(&bytes).transactions();
     Ok(PreverifiedBlock {
         header,
         transactions,
@@ -172,7 +160,7 @@ pub fn verify_block_family(
     engine: &dyn ConsensusEngine,
     common_params: &CommonParams,
 ) -> Result<(), Error> {
-    verify_block_with_params(header, block, engine, common_params)?;
+    verify_block_with_params(header, block, common_params)?;
 
     // TODO: verify timestamp
     verify_parent(&header, &parent)?;
