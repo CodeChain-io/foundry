@@ -16,7 +16,7 @@
 
 use crate::consensus::{CodeChainEngine, Evidence};
 use crate::error::{BlockError, Error};
-use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
+use crate::transaction::VerifiedTransaction;
 use crate::views::BlockView;
 use ccrypto::BLAKE_NULL_RLP;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
@@ -45,14 +45,8 @@ pub fn verify_block_basic(header: &Header, bytes: &[u8]) -> Result<(), Error> {
 
     let body_rlp = Rlp::new(bytes).at(2)?;
 
-    let raw_transactions = body_rlp
-        .iter()
-        .map(|rlp| {
-            let tx = rlp.as_val::<UnverifiedTransaction>()?;
-            tx.verify_basic()?;
-            Ok(rlp.as_raw().to_vec())
-        })
-        .collect::<Result<Vec<Bytes>, Error>>()?;
+    let raw_transactions =
+        body_rlp.iter().map(|rlp| Ok(rlp.as_raw().to_vec())).collect::<Result<Vec<Bytes>, Error>>()?;
     verify_transactions_root(raw_transactions, header.transactions_root())?;
 
     // TODO: verify evidences root
@@ -72,21 +66,12 @@ pub fn verify_header_with_engine(header: &Header, engine: &dyn CodeChainEngine) 
     Ok(())
 }
 
-pub fn verify_block_with_params(
-    header: &Header,
-    bytes: &[u8],
-    engine: &dyn CodeChainEngine,
-    common_params: &CommonParams,
-) -> Result<(), Error> {
+pub fn verify_block_with_params(header: &Header, bytes: &[u8], common_params: &CommonParams) -> Result<(), Error> {
     verify_header_with_params(&header, common_params)?;
 
     let body_rlp = Rlp::new(bytes).at(2).expect("verify_block_basic already checked it");
     if body_rlp.as_raw().len() > common_params.max_body_size() {
         return Err(BlockError::BodySizeIsTooBig.into())
-    }
-
-    for t in body_rlp.iter().map(|rlp| rlp.as_val().expect("verify_block_basic already checked it")) {
-        engine.verify_transaction_with_params(&t, common_params)?;
     }
     Ok(())
 }
@@ -178,7 +163,7 @@ pub fn verify_block_family(
     engine: &dyn CodeChainEngine,
     common_params: &CommonParams,
 ) -> Result<(), Error> {
-    verify_block_with_params(header, block, engine, common_params)?;
+    verify_block_with_params(header, block, common_params)?;
 
     // TODO: verify timestamp
     verify_parent(&header, &parent)?;

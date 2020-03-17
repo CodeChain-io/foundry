@@ -216,15 +216,8 @@ impl Miner {
                     cdebug!(MINER, "Rejected transaction {:?}: already in the blockchain", hash);
                     return Err(HistoryError::TransactionAlreadyImported.into())
                 }
-                let tx: VerifiedTransaction = tx
-                    .verify_basic()
-                    .map_err(From::from)
-                    .and_then(|_| {
-                        let common_params = client.common_params(best_header.hash().into()).unwrap();
-                        self.engine.verify_transaction_with_params(&tx, &common_params)
-                    })
-                    .and_then(|_| Ok(tx.try_into()?))
-                    .map_err(|e| {
+                let tx: VerifiedTransaction =
+                    tx.verify_basic().map_err(From::from).and_then(|_| tx.try_into()).map_err(|e: Error| {
                         cdebug!(MINER, "Rejected transaction {:?} with error {:?}", hash, e);
                         e
                     })?;
