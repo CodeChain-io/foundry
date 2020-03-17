@@ -85,7 +85,7 @@ describe("Snapshot for Tendermint with Dynamic Validator", function() {
         ).to.satisfy(fs.existsSync);
     });
 
-    it("should be able to boot with the snapshot", async function() {
+    it.skip("should be able to boot with the snapshot", async function() {
         const termWaiter = setTermTestTimeout(this, {
             terms: 3
         });
