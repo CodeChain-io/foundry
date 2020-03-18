@@ -174,7 +174,7 @@ impl Ord for TransactionOrder {
 }
 
 /// Transaction item in the mem pool.
-#[derive(Clone, Eq, PartialEq, Debug, RlpEncodable, RlpDecodable)]
+#[derive(Clone, Eq, PartialEq, Debug, RlpEncodable)]
 pub struct MemPoolItem {
     /// Transaction.
     pub tx: VerifiedTransaction,

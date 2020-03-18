@@ -942,14 +942,17 @@ impl MemPool {
 
 #[cfg(test)]
 pub mod test {
+    use crate::transaction::UnverifiedTransaction;
     use std::cmp::Ordering;
 
     use crate::client::{AccountData, TestBlockChainClient};
     use ckey::{Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
     use ctypes::transaction::{Action, Transaction};
 
+    use super::backup::MemPoolItemProjection;
     use super::*;
-    use rlp::rlp_encode_and_decode_test;
+    use rlp::{rlp_encode_and_decode_test, Rlp};
+    use std::convert::TryInto;
 
     #[test]
     fn origin_ordering() {
@@ -998,7 +1001,12 @@ pub mod test {
         };
         let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
 
-        rlp_encode_and_decode_test!(signed);
+        let rlp = rlp::encode(&signed);
+        let encoded = Rlp::new(&rlp);
+        let decoded: UnverifiedTransaction = encoded.as_val().unwrap();
+        let result = decoded.try_into().unwrap();
+
+        assert_eq!(signed, result);
     }
 
     #[test]
@@ -1016,7 +1024,12 @@ pub mod test {
         let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
         let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0);
 
-        rlp_encode_and_decode_test!(item);
+        let rlp = rlp::encode(&item);
+        let encoded = Rlp::new(&rlp);
+        let decoded: MemPoolItemProjection = encoded.as_val().unwrap();
+        let result = decoded.try_into().unwrap();
+
+        assert_eq!(item, result);
     }
 
     #[test]

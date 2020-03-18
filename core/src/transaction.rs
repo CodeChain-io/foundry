@@ -91,14 +91,6 @@ impl rlp::Encodable for VerifiedTransaction {
     }
 }
 
-impl rlp::Decodable for VerifiedTransaction {
-    fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
-        let transaction = d.as_val()?;
-        let verified = UnverifiedTransaction(transaction).try_into().expect("Invalid signature");
-        Ok(verified)
-    }
-}
-
 impl From<VerifiedTransaction> for UnverifiedTransaction {
     fn from(tx: VerifiedTransaction) -> Self {
         UnverifiedTransaction(tx.0)
