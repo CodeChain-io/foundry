@@ -240,6 +240,7 @@ export default class CodeChain {
                 `target/${useDebugBuild ? "debug" : "release"}/foundry`,
                 [
                     ...baseArgs,
+                    "--no-informer",
                     "--chain",
                     this.chain,
                     "--db-path",
