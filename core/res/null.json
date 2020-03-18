@@ -1,9 +1,7 @@
 {
   "name": "Null",
   "engine": {
-    "null": {
-      "params": {}
-    }
+    "null": null
   },
   "params": {
     "maxExtraDataSize": "0x20",
