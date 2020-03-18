@@ -160,7 +160,6 @@ impl<'x> OpenBlock<'x> {
         }
 
         let hash = tx.hash();
-        let tracker = tx.tracker();
         let error = match self.block.state.apply(
             &tx,
             &hash,
@@ -179,7 +178,6 @@ impl<'x> OpenBlock<'x> {
         };
         self.block.invoices.push(Invoice {
             hash,
-            tracker,
             error: error.clone().map(|err| err.to_string()),
         });
 

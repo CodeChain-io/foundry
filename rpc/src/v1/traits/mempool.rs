@@ -17,7 +17,7 @@
 use super::super::types::{MemPoolMinFees, PendingTransactions};
 use cjson::bytes::Bytes;
 use ckey::PlatformAddress;
-use ctypes::{Tracker, TxHash};
+use ctypes::TxHash;
 use jsonrpc_core::Result;
 
 #[rpc(server)]
@@ -25,10 +25,6 @@ pub trait Mempool {
     /// Sends signed transaction, returning its hash.
     #[rpc(name = "mempool_sendSignedTransaction")]
     fn send_signed_transaction(&self, raw: Bytes) -> Result<TxHash>;
-
-    /// Gets transaction results with given transaction tracker.
-    #[rpc(name = "mempool_getTransactionResultsByTracker")]
-    fn get_transaction_results_by_tracker(&self, tracker: Tracker) -> Result<Vec<bool>>;
 
     /// Gets a hint to find out why the transaction failed.
     #[rpc(name = "mempool_getErrorHint")]

@@ -173,7 +173,7 @@ impl BlockChain {
         self.body_db.insert_body(batch, &new_block);
         self.body_db.update_best_block(batch, &best_block_changed);
         for invoice in invoices {
-            self.invoice_db.insert_invoice(batch, invoice.hash, invoice.tracker, invoice.error);
+            self.invoice_db.insert_invoice(batch, invoice.hash, invoice.error);
         }
 
         if let Some(best_block_hash) = best_block_changed.new_best_hash() {
@@ -461,10 +461,6 @@ impl InvoiceProvider for BlockChain {
     /// Returns true if invoices for given hash is known
     fn is_known_error_hint(&self, hash: &TxHash) -> bool {
         self.invoice_db.is_known_error_hint(hash)
-    }
-
-    fn error_hints_by_tracker(&self, tracker: &Tracker) -> Vec<(TxHash, Option<String>)> {
-        self.invoice_db.error_hints_by_tracker(tracker)
     }
 
     fn error_hint(&self, hash: &TxHash) -> Option<String> {
