@@ -16,7 +16,7 @@
 
 use super::{BlockChainTrait, Client, ClientConfig};
 use crate::block::{enact, Block, ClosedBlock, IsBlock};
-use crate::blockchain::{BodyProvider, HeaderProvider, ImportRoute};
+use crate::blockchain::{BodyProvider, ChainUpdateResult, HeaderProvider};
 use crate::client::EngineInfo;
 use crate::consensus::CodeChainEngine;
 use crate::error::Error;
@@ -137,7 +137,7 @@ impl Importer {
                 }
                 let enacted = self.extract_enacted(import_results);
                 self.miner.chain_new_blocks(client, &imported_blocks, &invalid_blocks, &enacted);
-                client.new_blocks(&imported_blocks, &invalid_blocks, &enacted, &[]);
+                client.new_blocks(&imported_blocks, &invalid_blocks, &enacted);
             }
         }
 
@@ -145,7 +145,7 @@ impl Importer {
         imported
     }
 
-    pub fn extract_enacted(&self, import_results: Vec<ImportRoute>) -> Vec<BlockHash> {
+    pub fn extract_enacted(&self, import_results: Vec<ChainUpdateResult>) -> Vec<BlockHash> {
         let set = import_results.into_iter().fold(HashSet::new(), |mut set, route| {
             set.extend(route.enacted);
             set
@@ -157,7 +157,7 @@ impl Importer {
     // it is for reconstructing the state transition.
     //
     // The header passed is from the original block data and is sealed.
-    pub fn commit_block<B>(&self, block: &B, header: &Header, block_data: &[u8], client: &Client) -> ImportRoute
+    pub fn commit_block<B>(&self, block: &B, header: &Header, block_data: &[u8], client: &Client) -> ChainUpdateResult
     where
         B: IsBlock, {
         let hash = header.hash();
@@ -328,13 +328,7 @@ impl Importer {
             None
         };
 
-        client.new_headers(
-            &imported,
-            &bad.iter().cloned().collect::<Vec<_>>(),
-            &enacted,
-            &[],
-            best_proposal_header_changed,
-        );
+        client.new_headers(&imported, &enacted, best_proposal_header_changed);
 
         client.db().flush().expect("DB flush failed.");
 
@@ -352,7 +346,7 @@ impl Importer {
             client.db().write_buffered(batch);
             chain.commit();
         }
-        client.new_headers(&[hash], &[], &[], &[], None);
+        client.new_headers(&[hash], &[], None);
 
         client.db().flush().expect("DB flush failed.");
     }
@@ -371,7 +365,7 @@ impl Importer {
             chain.commit();
         }
         self.miner.chain_new_blocks(client, &[hash], &[], &[]);
-        client.new_blocks(&[hash], &[], &[], &[]);
+        client.new_blocks(&[hash], &[], &[]);
 
         client.db().flush().expect("DB flush failed.");
     }
@@ -401,7 +395,7 @@ impl Importer {
         true
     }
 
-    fn commit_header(&self, header: &Header, client: &Client) -> ImportRoute {
+    fn commit_header(&self, header: &Header, client: &Client) -> ChainUpdateResult {
         let chain = client.block_chain();
 
         let mut batch = DBTransaction::new();

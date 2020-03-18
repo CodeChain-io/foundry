@@ -893,7 +893,7 @@ describe("Staking", function() {
                 address: author.toString(),
                 blockNumber: blockNumber - 1
             }))!;
-            const authorBalance = (await nodes[0].rpc.chain.getBalance({
+            const authorBalance = +(await nodes[0].rpc.chain.getBalance({
                 address: author.toString()
             }))!;
             expect(authorBalance).to.be.deep.equal(

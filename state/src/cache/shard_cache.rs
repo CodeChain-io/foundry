@@ -19,6 +19,7 @@ use crate::{ShardText, ShardTextAddress};
 use merkle_trie::{Result as TrieResult, Trie, TrieMut};
 use std::cell::RefMut;
 
+#[derive(Clone)]
 pub struct ShardCache {
     text: WriteBack<ShardText>,
 }
@@ -67,14 +68,6 @@ impl ShardCache {
 
     pub fn cached_shard_text(&self) -> Vec<(usize, ShardTextAddress, Option<ShardText>)> {
         self.text.items()
-    }
-}
-
-impl Clone for ShardCache {
-    fn clone(&self) -> Self {
-        Self {
-            text: self.text.clone(),
-        }
     }
 }
 

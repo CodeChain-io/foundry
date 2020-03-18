@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::block_info::{BestBlockChanged, BestHeaderChanged};
 use super::headerchain::HeaderProvider;
 use ctypes::BlockHash;
 
@@ -105,73 +104,4 @@ pub fn tree_route(db: &dyn HeaderProvider, from: BlockHash, to: BlockHash) -> Op
         retracted,
         enacted,
     })
-}
-
-/// Import route for newly inserted block.
-#[derive(Debug, PartialEq)]
-pub struct ImportRoute {
-    /// Blocks that were validated by new block.
-    pub enacted: Vec<BlockHash>,
-    /// Blocks which are not enacted.
-    pub omitted: Vec<BlockHash>,
-}
-
-impl ImportRoute {
-    pub fn new(new_block_hash: BlockHash, best_block_changed: &BestBlockChanged) -> Self {
-        let mut omitted = Vec::new();
-        if best_block_changed.new_best_hash() != Some(new_block_hash) {
-            omitted.push(new_block_hash);
-        }
-
-        match best_block_changed {
-            BestBlockChanged::CanonChainAppended {
-                ..
-            } => {
-                let mut enacted = Vec::new();
-                enacted.push(best_block_changed.new_best_hash().unwrap());
-                ImportRoute {
-                    enacted,
-                    omitted,
-                }
-            }
-            BestBlockChanged::None => ImportRoute {
-                enacted: vec![],
-                omitted,
-            },
-        }
-    }
-
-    pub fn new_from_best_header_changed(new_block_hash: BlockHash, best_header_changed: &BestHeaderChanged) -> Self {
-        let mut omitted = Vec::new();
-        if best_header_changed.new_best_hash() != Some(new_block_hash) {
-            omitted.push(new_block_hash);
-        }
-
-        match best_header_changed {
-            BestHeaderChanged::CanonChainAppended {
-                ..
-            } => {
-                let enacted = vec![best_header_changed.new_best_hash().unwrap()];
-                ImportRoute {
-                    enacted,
-                    omitted,
-                }
-            }
-            BestHeaderChanged::None => ImportRoute {
-                enacted: vec![],
-                omitted,
-            },
-        }
-    }
-
-    pub fn none() -> Self {
-        ImportRoute {
-            enacted: vec![],
-            omitted: vec![],
-        }
-    }
-
-    pub fn is_none(&self) -> bool {
-        self.enacted.is_empty() && self.omitted.is_empty()
-    }
 }

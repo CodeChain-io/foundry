@@ -17,6 +17,7 @@
 use crate::CacheableItem;
 use lru_cache::LruCache as LruCacheImpl;
 
+#[derive(Clone)]
 pub struct LruCache<Item: CacheableItem> {
     cache: LruCacheImpl<Item::Address, Item>,
 }
@@ -43,13 +44,5 @@ impl<Item: CacheableItem> LruCache<Item> {
 
     pub fn remove(&mut self, k: &Item::Address) -> Option<Item> {
         self.cache.remove(&k)
-    }
-}
-
-impl<Item: CacheableItem> Clone for LruCache<Item> {
-    fn clone(&self) -> Self {
-        Self {
-            cache: self.cache.clone(),
-        }
     }
 }

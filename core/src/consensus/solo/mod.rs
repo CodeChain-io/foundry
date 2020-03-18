@@ -179,28 +179,9 @@ impl ConsensusEngine for Solo {
 
 #[cfg(test)]
 mod tests {
-    use crate::block::{IsBlock, OpenBlock};
-    use crate::client::{ConsensusClient, TestBlockChainClient};
     use crate::scheme::Scheme;
-    use crate::tests::helpers::get_temp_state_db;
     use ctypes::Header;
     use primitives::H520;
-    use std::sync::Arc;
-
-    #[test]
-    fn seal() {
-        let scheme = Scheme::new_test_solo();
-        let client = Arc::new(TestBlockChainClient::new_with_scheme(scheme));
-        let engine = client.scheme.engine.clone();
-        engine.register_client(Arc::downgrade(&(client.clone() as Arc<dyn ConsensusClient>)));
-        let db = client.scheme.ensure_genesis_state(get_temp_state_db()).unwrap();
-        let genesis_header = client.scheme.genesis_header();
-        let b = OpenBlock::try_new(&*engine, db, &genesis_header, Default::default(), vec![]).unwrap();
-        let b = b.close().unwrap();
-        if let Some(seal) = engine.generate_seal(Some(b.block()), &genesis_header).seal_fields() {
-            b.seal_block(seal);
-        }
-    }
 
     #[test]
     fn fail_to_verify() {

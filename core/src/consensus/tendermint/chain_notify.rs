@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -33,13 +33,7 @@ impl TendermintChainNotify {
 
 impl ChainNotify for TendermintChainNotify {
     /// fires when chain has new blocks.
-    fn new_blocks(
-        &self,
-        imported: Vec<BlockHash>,
-        _invalid: Vec<BlockHash>,
-        enacted: Vec<BlockHash>,
-        _sealed: Vec<BlockHash>,
-    ) {
+    fn new_blocks(&self, imported: Vec<BlockHash>, _invalid: Vec<BlockHash>, enacted: Vec<BlockHash>) {
         self.inner
             .send(worker::Event::NewBlocks {
                 imported,
