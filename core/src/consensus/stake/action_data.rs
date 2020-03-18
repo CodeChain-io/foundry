@@ -25,7 +25,6 @@ use std::cmp::Ordering;
 use std::collections::btree_map::{BTreeMap, Entry};
 use std::collections::btree_set::{self, BTreeSet};
 use std::collections::{btree_map, HashMap, HashSet};
-use std::mem;
 use std::ops::Deref;
 use std::vec;
 
@@ -49,10 +48,6 @@ lazy_static! {
 
 pub fn get_delegation_key(address: &Address) -> H256 {
     ActionDataKeyBuilder::new(CUSTOM_ACTION_HANDLER_ID, 2).append(&"Delegation").append(address).into_key()
-}
-
-pub fn get_intermediate_rewards_key() -> H256 {
-    ActionDataKeyBuilder::new(CUSTOM_ACTION_HANDLER_ID, 1).append(&"IntermediateRewards").into_key()
 }
 
 pub type StakeQuantity = u64;
@@ -501,59 +496,6 @@ impl From<PreviousValidators> for Vec<Validator> {
     }
 }
 
-#[derive(Default, Debug, PartialEq)]
-pub struct IntermediateRewards {
-    current: BTreeMap<Address, u64>,
-    calculated: BTreeMap<Address, u64>,
-}
-
-impl IntermediateRewards {
-    pub fn load_from_state(state: &TopLevelState) -> StateResult<Self> {
-        let key = get_intermediate_rewards_key();
-        let action_data = state.action_data(&key)?;
-        let (current, calculated) = decode_map_tuple(action_data.as_ref());
-
-        Ok(Self {
-            current,
-            calculated,
-        })
-    }
-
-    pub fn save_to_state(&self, state: &mut TopLevelState) -> StateResult<()> {
-        let key = get_intermediate_rewards_key();
-        if self.current.is_empty() && self.calculated.is_empty() {
-            state.remove_action_data(&key);
-        } else {
-            let encoded = encode_map_tuple(&self.current, &self.calculated);
-            state.update_action_data(&key, encoded)?;
-        }
-        Ok(())
-    }
-
-    pub fn add_quantity(&mut self, address: Address, quantity: StakeQuantity) {
-        if quantity == 0 {
-            return
-        }
-        *self.current.entry(address).or_insert(0) += quantity;
-    }
-
-    pub fn update_calculated(&mut self, rewards: BTreeMap<Address, u64>) {
-        self.calculated = rewards;
-    }
-
-    pub fn drain_current(&mut self) -> BTreeMap<Address, u64> {
-        let mut new = BTreeMap::new();
-        mem::swap(&mut new, &mut self.current);
-        new
-    }
-
-    pub fn drain_calculated(&mut self) -> BTreeMap<Address, u64> {
-        let mut new = BTreeMap::new();
-        mem::swap(&mut new, &mut self.calculated);
-        new
-    }
-}
-
 pub struct Candidates(Vec<Candidate>);
 #[derive(Clone, Debug, Eq, PartialEq, RlpEncodable, RlpDecodable)]
 pub struct Candidate {
@@ -867,33 +809,6 @@ where
         record.append(key);
         record.append(value);
     }
-}
-
-fn decode_map_tuple<K, V>(data: Option<&ActionData>) -> (BTreeMap<K, V>, BTreeMap<K, V>)
-where
-    K: Ord + Decodable,
-    V: Decodable, {
-    if let Some(rlp) = data.map(|x| Rlp::new(x)) {
-        assert_eq!(Ok(2), rlp.item_count());
-        let map0 = decode_map_impl(rlp.at(0).unwrap());
-        let map1 = decode_map_impl(rlp.at(1).unwrap());
-        (map0, map1)
-    } else {
-        Default::default()
-    }
-}
-
-fn encode_map_tuple<K, V>(map0: &BTreeMap<K, V>, map1: &BTreeMap<K, V>) -> Vec<u8>
-where
-    K: Ord + Encodable,
-    V: Encodable, {
-    let mut rlp = RlpStream::new();
-    rlp.begin_list(2);
-
-    encode_map_impl(&mut rlp, map0);
-    encode_map_impl(&mut rlp, map1);
-
-    rlp.drain()
 }
 
 fn encode_iter<'a, V, I>(iter: I) -> Vec<u8>
@@ -1230,45 +1145,6 @@ mod tests {
         // Assert
         let result = state.action_data(&get_delegation_key(&delegator)).unwrap();
         assert_eq!(result, None);
-    }
-
-    #[test]
-    fn load_and_save_intermediate_rewards() {
-        let mut state = helpers::get_temp_state();
-        let rewards = IntermediateRewards::load_from_state(&state).unwrap();
-        rewards.save_to_state(&mut state).unwrap();
-    }
-
-    #[test]
-    fn add_quantity() {
-        let address1 = Address::random();
-        let address2 = Address::random();
-        let mut state = helpers::get_temp_state();
-        let mut origin_rewards = IntermediateRewards::load_from_state(&state).unwrap();
-        origin_rewards.add_quantity(address1, 1);
-        origin_rewards.add_quantity(address2, 2);
-        origin_rewards.save_to_state(&mut state).unwrap();
-        let recovered_rewards = IntermediateRewards::load_from_state(&state).unwrap();
-        assert_eq!(origin_rewards, recovered_rewards);
-    }
-
-    #[test]
-    fn drain() {
-        let address1 = Address::random();
-        let address2 = Address::random();
-        let mut state = helpers::get_temp_state();
-        let mut origin_rewards = IntermediateRewards::load_from_state(&state).unwrap();
-        origin_rewards.add_quantity(address1, 1);
-        origin_rewards.add_quantity(address2, 2);
-        origin_rewards.save_to_state(&mut state).unwrap();
-        let mut recovered_rewards = IntermediateRewards::load_from_state(&state).unwrap();
-        assert_eq!(origin_rewards, recovered_rewards);
-        recovered_rewards.drain_current();
-        recovered_rewards.save_to_state(&mut state).unwrap();
-        let mut final_rewards = IntermediateRewards::load_from_state(&state).unwrap();
-        assert_eq!(BTreeMap::new(), final_rewards.current);
-        final_rewards.drain_calculated();
-        assert_eq!(BTreeMap::new(), final_rewards.calculated);
     }
 
     #[test]

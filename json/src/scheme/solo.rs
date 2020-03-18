@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::uint::Uint;
 use ckey::PlatformAddress;
 use std::collections::HashMap;
 
@@ -22,8 +21,6 @@ use std::collections::HashMap;
 #[derive(Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SoloParams {
-    /// Block reward.
-    pub block_reward: Option<Uint>,
     #[serde(flatten)]
     pub action_handlers: SoloActionHandlersParams,
 }
@@ -56,7 +53,6 @@ mod tests {
         }"#;
 
         let deserialized: Solo = serde_json::from_str(s).unwrap();
-        assert_eq!(deserialized.params.block_reward, Some(0x0d.into()));
         assert_eq!(deserialized.params.action_handlers.hit, Some(Default::default()));
         assert_eq!(deserialized.params.action_handlers.genesis_stakes, Some(Default::default()));
     }

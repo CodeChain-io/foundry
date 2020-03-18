@@ -16,7 +16,6 @@
 
 mod action_data;
 mod actions;
-mod distribute;
 
 use crate::client::ConsensusClient;
 use ckey::{public_to_address, Address, Ed25519Public as Public};
@@ -27,17 +26,14 @@ use ctypes::{CommonParams, Header};
 use parking_lot::RwLock;
 use primitives::Bytes;
 use rlp::{Decodable, Rlp};
-use std::collections::btree_map::BTreeMap;
-use std::collections::hash_map::RandomState;
 use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 
 pub use self::action_data::{
     Banned, Candidates, CurrentValidators, Jail, NextValidators, PreviousValidators, Validator,
 };
-use self::action_data::{Delegation, IntermediateRewards, ReleaseResult, StakeAccount, Stakeholders};
+use self::action_data::{Delegation, ReleaseResult, StakeAccount, Stakeholders};
 pub use self::actions::{Action, Approval};
-pub use self::distribute::fee_distribute;
 use super::ValidatorSet;
 
 pub const CUSTOM_ACTION_HANDLER_ID: u64 = 2;
@@ -308,36 +304,6 @@ pub fn get_stakes(state: &TopLevelState) -> StateResult<HashMap<Address, u64>> {
         result.insert(*stakeholder, account.balance + delegation.sum());
     }
     Ok(result)
-}
-
-pub fn add_intermediate_rewards(state: &mut TopLevelState, address: Address, reward: u64) -> StateResult<()> {
-    let mut rewards = IntermediateRewards::load_from_state(state)?;
-    rewards.add_quantity(address, reward);
-    rewards.save_to_state(state)?;
-    Ok(())
-}
-
-pub fn drain_current_rewards(state: &mut TopLevelState) -> StateResult<BTreeMap<Address, u64>> {
-    let mut rewards = IntermediateRewards::load_from_state(state)?;
-    let drained = rewards.drain_current();
-    rewards.save_to_state(state)?;
-    Ok(drained)
-}
-
-pub fn update_calculated_rewards(
-    state: &mut TopLevelState,
-    values: HashMap<Address, u64, RandomState>,
-) -> StateResult<()> {
-    let mut rewards = IntermediateRewards::load_from_state(state)?;
-    rewards.update_calculated(values.into_iter().collect());
-    rewards.save_to_state(state)
-}
-
-pub fn drain_calculated_rewards(state: &mut TopLevelState) -> StateResult<BTreeMap<Address, u64>> {
-    let mut rewards = IntermediateRewards::load_from_state(state)?;
-    let drained = rewards.drain_calculated();
-    rewards.save_to_state(state)?;
-    Ok(drained)
 }
 
 pub fn update_validator_weights(state: &mut TopLevelState, block_author: &Address) -> StateResult<()> {

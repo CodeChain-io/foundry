@@ -16,15 +16,10 @@
 
 /// Params for a null engine.
 #[derive(Clone, Default)]
-pub struct NullEngineParams {
-    /// base reward for a block.
-    pub block_reward: u64,
-}
+pub struct NullEngineParams {}
 
 impl From<cjson::scheme::NullEngineParams> for NullEngineParams {
-    fn from(p: cjson::scheme::NullEngineParams) -> Self {
-        NullEngineParams {
-            block_reward: p.block_reward.map_or_else(Default::default, Into::into),
-        }
+    fn from(_p: cjson::scheme::NullEngineParams) -> Self {
+        NullEngineParams {}
     }
 }

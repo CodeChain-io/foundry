@@ -18,7 +18,6 @@ use super::super::stake;
 use super::super::{ConsensusEngine, EngineError, Seal};
 use super::network::TendermintExtension;
 pub use super::params::{TendermintParams, TimeoutParams};
-use super::types::TendermintSealView;
 use super::worker;
 use super::{ChainNotify, Tendermint, SEAL_FIELDS};
 use crate::account_provider::AccountProvider;
@@ -27,8 +26,7 @@ use crate::client::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::client::{Client, ConsensusClient};
 use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::tendermint::params::TimeGapParams;
-use crate::consensus::{EngineType, ValidatorSet};
-use crate::encoded;
+use crate::consensus::EngineType;
 use crate::error::Error;
 use crate::views::HeaderView;
 use crate::BlockId;
@@ -37,21 +35,10 @@ use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{ActionHandler, TopState, TopStateView};
 use ctypes::{BlockHash, Header};
-use num_rational::Ratio;
-use rlp::Encodable;
-use std::collections::btree_map::BTreeMap;
-use std::collections::{HashMap, HashSet};
-use std::convert::TryFrom;
+use std::collections::HashSet;
 use std::iter::Iterator;
 use std::sync::atomic::Ordering as AtomicOrdering;
 use std::sync::{Arc, Weak};
-
-#[derive(Default)]
-struct WorkInfo {
-    proposed: usize,
-    missed: usize,
-    signed: u64,
-}
 
 impl ConsensusEngine for Tendermint {
     fn name(&self) -> &str {
@@ -130,9 +117,6 @@ impl ConsensusEngine for Tendermint {
 
     /// Block transformation functions, before the transactions.
     fn on_open_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
-        let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
-
-        let block_number = block.header().number();
         let metadata = block.state().metadata()?.expect("Metadata must exist");
         let term = metadata.current_term_id();
 
@@ -148,28 +132,6 @@ impl ConsensusEngine for Tendermint {
                 current_validators.save_to_state(block.state_mut())?;
             }
         }
-
-        if block_number == metadata.last_term_finished_block_num() + 1 {
-            match term {
-                0 | 1 => {}
-                _ => {
-                    let rewards = stake::drain_current_rewards(block.state_mut())?;
-                    let banned = stake::Banned::load_from_state(block.state())?;
-                    let start_of_the_current_term_header =
-                        encoded::Header::new(block.header().clone().rlp_bytes().to_vec());
-
-                    let pending_rewards = calculate_pending_rewards_of_the_term(
-                        &*client,
-                        &*self.validators,
-                        rewards,
-                        start_of_the_current_term_header,
-                        &banned,
-                    )?;
-
-                    stake::update_calculated_rewards(block.state_mut(), pending_rewards)?;
-                }
-            }
-        }
         Ok(())
     }
 
@@ -179,37 +141,16 @@ impl ConsensusEngine for Tendermint {
         let parent_hash = *block.header().parent_hash();
         let parent = client.block_header(&parent_hash.into()).expect("Parent header must exist").decode();
         let parent_common_params = client.common_params(parent_hash.into()).expect("CommonParams of parent must exist");
-        let author = *block.header().author();
         let block_number = block.header().number();
-
-        let (total_reward, total_min_fee) = {
-            let transactions = block.transactions();
-            let block_reward = self.block_reward(block_number);
-            let total_min_fee: u64 = transactions.iter().map(|tx| tx.fee).sum();
-            let min_fee =
-                transactions.iter().map(|tx| CodeChainMachine::min_cost(&parent_common_params, &tx.action)).sum();
-            (block_reward + total_min_fee, min_fee)
-        };
-        assert!(total_reward >= total_min_fee, "{} >= {}", total_reward, total_min_fee);
-        let stakes = stake::get_stakes(block.state()).expect("Cannot get Stake status");
-
-        let mut distributor = stake::fee_distribute(total_min_fee, &stakes);
-        for (address, share) in &mut distributor {
-            self.machine.add_balance(block, &address, share)?
-        }
-
-        let block_author_reward = total_reward - total_min_fee + distributor.remaining_fee();
 
         let metadata = block.state().metadata()?.expect("Metadata must exist");
         let term = metadata.current_term_id();
 
         match term {
-            0 => {
-                self.machine.add_balance(block, &author, block_author_reward)?;
-            }
+            0 => {}
             _ => {
+                let author = *block.header().author();
                 stake::update_validator_weights(block.state_mut(), &author)?;
-                stake::add_intermediate_rewards(block.state_mut(), author, block_author_reward)?;
             }
         }
 
@@ -227,10 +168,6 @@ impl ConsensusEngine for Tendermint {
         let inactive_validators = match term {
             0 => Vec::new(),
             _ => {
-                for (address, reward) in stake::drain_calculated_rewards(block.state_mut())? {
-                    self.machine.add_balance(block, &address, reward)?;
-                }
-
                 let start_of_the_current_term = metadata.last_term_finished_block_num() + 1;
                 let validators = stake::NextValidators::load_from_state(block.state())?
                     .into_iter()
@@ -284,10 +221,6 @@ impl ConsensusEngine for Tendermint {
 
     fn register_time_gap_config_to_worker(&self, time_gap_params: TimeGapParams) {
         self.external_params_initializer.send(time_gap_params).unwrap();
-    }
-
-    fn block_reward(&self, _block_number: u64) -> u64 {
-        self.block_reward
     }
 
     fn recommended_confirmation(&self) -> u32 {
@@ -368,327 +301,4 @@ fn inactive_validators(
     }
 
     validators.into_iter().collect()
-}
-
-// Aggregate the validators' work info of a term
-fn aggregate_work_info(
-    chain: &dyn ConsensusClient,
-    validators: &dyn ValidatorSet,
-    start_of_the_next_term_header: encoded::Header,
-) -> Result<HashMap<Address, WorkInfo>, Error> {
-    let mut work_info = HashMap::<Address, WorkInfo>::new();
-
-    let start_of_the_current_term = {
-        let end_of_the_last_term =
-            chain.last_term_finished_block_num((start_of_the_next_term_header.number() - 2).into()).unwrap();
-
-        end_of_the_last_term + 1
-    };
-    let mut header = start_of_the_next_term_header;
-    while start_of_the_current_term != header.number() {
-        let parent = chain.block_header(&header.parent_hash().into()).unwrap();
-        let current_validators = validators.current_addresses(&parent.hash());
-        let previous_validators = validators.previous_addresses(&parent.hash());
-        for index in TendermintSealView::new(&header.seal()).bitset()?.true_index_iter() {
-            let signer = *current_validators.get(index).expect("The seal must be the signature of the validator");
-            work_info.entry(signer).or_default().signed += 1;
-        }
-
-        let author = parent.author();
-        let info = work_info.entry(author).or_default();
-        info.proposed += 1;
-        info.missed += previous_validators.len() - TendermintSealView::new(&header.seal()).bitset()?.count();
-
-        header = parent;
-    }
-
-    Ok(work_info)
-}
-
-fn calculate_pending_rewards_of_the_term(
-    chain: &dyn ConsensusClient,
-    validators: &dyn ValidatorSet,
-    rewards: BTreeMap<Address, u64>,
-    start_of_the_next_term_header: encoded::Header,
-    banned: &stake::Banned,
-) -> Result<HashMap<Address, u64>, Error> {
-    // XXX: It's okay because we don't have a plan to increasing the maximum number of validators.
-    //      However, it's better to use the correct number.
-    const MAX_NUM_OF_VALIDATORS: usize = 30;
-    let work_info = aggregate_work_info(chain, validators, start_of_the_next_term_header)?;
-    let mut pending_rewards = HashMap::<Address, u64>::with_capacity(MAX_NUM_OF_VALIDATORS);
-
-    let mut reduced_rewards = 0;
-
-    // Penalty disloyal validators
-    let number_of_blocks_in_term: usize = work_info.values().map(|info| info.proposed).sum();
-    for (address, intermediate_reward) in rewards {
-        if banned.is_banned(&address) {
-            reduced_rewards += intermediate_reward;
-            continue
-        }
-        let number_of_signatures = work_info.get(&address).unwrap().signed;
-        let final_block_rewards =
-            final_rewards(intermediate_reward, number_of_signatures, u64::try_from(number_of_blocks_in_term).unwrap());
-        reduced_rewards += intermediate_reward - final_block_rewards;
-        pending_rewards.insert(address, final_block_rewards);
-    }
-
-    // Give additional rewards
-    give_additional_rewards(reduced_rewards, work_info, |address, reward| {
-        let prev = pending_rewards.entry(*address).or_default();
-        *prev += reward;
-        Ok(())
-    })?;
-
-    Ok(pending_rewards)
-}
-
-/// reward = floor(intermediate_rewards * (a * number_of_signatures / number_of_blocks_in_term + b) / 10)
-fn final_rewards(intermediate_reward: u64, number_of_signatures: u64, number_of_blocks_in_term: u64) -> u64 {
-    let (a, b) = if number_of_signatures * 3 >= number_of_blocks_in_term * 2 {
-        // number_of_signatures / number_of_blocks_in_term >= 2 / 3
-        // x * 3/10 + 7/10
-        (3, 7)
-    } else if number_of_signatures * 2 >= number_of_blocks_in_term {
-        // number_of_signatures / number_of_blocks_in_term >= 1 / 2
-        // x * 48/10 - 23/10
-        (48, -23)
-    } else if number_of_signatures * 3 >= number_of_blocks_in_term {
-        // number_of_signatures / number_of_blocks_in_term >= 1 / 3
-        // x * 6/10 - 2/10
-        (6, -2)
-    } else {
-        // 1 / 3 > number_of_signatures / number_of_blocks_in_term
-        // 0
-        assert!(
-            number_of_blocks_in_term > 3 * number_of_signatures,
-            "number_of_signatures / number_of_blocks_in_term = {}",
-            (number_of_signatures as f64) / (number_of_blocks_in_term as f64)
-        );
-        (0, 0)
-    };
-    let numerator = i128::from(intermediate_reward)
-        * (a * i128::from(number_of_signatures) + b * i128::from(number_of_blocks_in_term));
-    assert!(numerator >= 0);
-    let denominator = 10 * i128::from(number_of_blocks_in_term);
-    // Rust's division rounds towards zero.
-    u64::try_from(numerator / denominator).unwrap()
-}
-
-fn give_additional_rewards<F: FnMut(&Address, u64) -> Result<(), Error>>(
-    mut reduced_rewards: u64,
-    work_info: HashMap<Address, WorkInfo>,
-    mut f: F,
-) -> Result<(), Error> {
-    let sorted_validators = work_info
-        .into_iter()
-        .map(|(address, info)| (address, Ratio::new(info.missed, info.proposed)))
-        // When one sees the Ratio crate's Order trait implementation, he/she can easily realize that the
-        // comparing routine is erroneous. It inversely compares denominators when the numerators are the same.
-        // That's problematic when it makes comparisons between ratios such as Ratio{numer: 0, denom:2} and Ratio{numer: 0, denom: 3}.
-        // But Ratio::new() calls Ratio::reduce() from within so that the numerator and the denominator are
-        // divided equally by the gcd. Therefore the comparison between above two instances would never happen and only
-        // comparisons between the reduced ones like Ratio{numer:0, denom:1} and Ratio{numer:0, denom: 1} should occur.
-        .fold(BTreeMap::<Ratio<usize>, Vec<Address>>::new(), |mut map, (address, average_missed)| {
-            map.entry(average_missed).or_default().push(address);
-            map
-        });
-    for validators in sorted_validators.values() {
-        let reward = reduced_rewards / (u64::try_from(validators.len()).unwrap() + 1);
-        if reward == 0 {
-            break
-        }
-        for validator in validators {
-            f(validator, reward)?;
-            reduced_rewards -= reward;
-        }
-    }
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use std::iter::FromIterator;
-
-    use super::*;
-
-    #[test]
-    fn test_final_rewards() {
-        let intermediate_reward = 1000;
-        {
-            let number_of_signatures = 300;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(1000, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 250;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(950, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 200;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(900, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 175;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(500, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 150;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(100, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 125;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(50, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 100;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(0, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 0;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(0, final_rewards);
-        }
-    }
-
-    #[test]
-    fn final_rewards_are_rounded_towards_zero() {
-        let intermediate_reward = 4321;
-        {
-            let number_of_signatures = 300;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(4321, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 250;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(4104, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 200;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(3888, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 175;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(2160, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 150;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(432, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 125;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(216, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 100;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(0, final_rewards);
-        }
-
-        {
-            let number_of_signatures = 0;
-            let number_of_blocks_in_term = 300;
-            let final_rewards = final_rewards(intermediate_reward, number_of_signatures, number_of_blocks_in_term);
-            assert_eq!(0, final_rewards);
-        }
-    }
-
-    #[test]
-    fn test_additional_rewards() {
-        let reduced_rewards = 100;
-        let addr00 = Address::random();
-        let addr10 = Address::random();
-        let addr11 = Address::random();
-        let addr12 = Address::random();
-        let addr20 = Address::random();
-        let addr21 = Address::random();
-        let work_info = HashMap::from_iter(
-            vec![
-                (addr00, WorkInfo {
-                    proposed: 30,
-                    missed: 28,
-                    signed: 0,
-                }),
-                (addr10, WorkInfo {
-                    proposed: 60,
-                    missed: 59,
-                    signed: 0,
-                }),
-                (addr11, WorkInfo {
-                    proposed: 120,
-                    missed: 118,
-                    signed: 0,
-                }),
-                (addr12, WorkInfo {
-                    proposed: 120,
-                    missed: 118,
-                    signed: 0,
-                }),
-                (addr20, WorkInfo {
-                    proposed: 60,
-                    missed: 60,
-                    signed: 0,
-                }),
-                (addr21, WorkInfo {
-                    proposed: 120,
-                    missed: 120,
-                    signed: 0,
-                }),
-            ]
-            .into_iter(),
-        );
-
-        let mut result = HashMap::with_capacity(7);
-        give_additional_rewards(reduced_rewards, work_info, |address, reward| {
-            assert_eq!(None, result.insert(*address, reward));
-            Ok(())
-        })
-        .unwrap();
-        assert_eq!(
-            result,
-            HashMap::from_iter(
-                vec![(addr00, 50), (addr10, 12), (addr11, 12), (addr12, 12), (addr20, 4), (addr21, 4)].into_iter()
-            )
-        );
-    }
 }

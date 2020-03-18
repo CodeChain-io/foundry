@@ -18,15 +18,13 @@ mod params;
 
 use self::params::NullEngineParams;
 use super::ConsensusEngine;
-use crate::block::ExecutedBlock;
 use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
-use crate::error::Error;
 use ckey::Address;
 
 /// An engine which does not provide any consensus mechanism and does not seal blocks.
 pub struct NullEngine {
-    params: NullEngineParams,
+    _params: NullEngineParams,
     machine: CodeChainMachine,
 }
 
@@ -34,7 +32,7 @@ impl NullEngine {
     /// Returns new instance of NullEngine with default VM Factory
     pub fn new(params: NullEngineParams, machine: CodeChainMachine) -> Self {
         NullEngine {
-            params,
+            _params: params,
             machine,
         }
     }
@@ -55,21 +53,6 @@ impl ConsensusEngine for NullEngine {
 
     fn engine_type(&self) -> EngineType {
         EngineType::Solo
-    }
-
-    fn on_close_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
-        let (author, total_reward) = {
-            let header = block.header();
-            let author = *header.author();
-            let total_reward = self.block_reward(header.number())
-                + self.block_fee(Box::new(block.transactions().to_owned().into_iter().map(Into::into)));
-            (author, total_reward)
-        };
-        self.machine.add_balance(block, &author, total_reward)
-    }
-
-    fn block_reward(&self, _block_number: u64) -> u64 {
-        self.params.block_reward
     }
 
     fn recommended_confirmation(&self) -> u32 {

@@ -20,8 +20,6 @@ use std::collections::HashMap;
 /// Params for a null engine.
 #[derive(Clone, Default)]
 pub struct SoloParams {
-    /// base reward for a block.
-    pub block_reward: u64,
     pub enable_hit_handler: bool,
     pub genesis_stakes: HashMap<Address, u64>,
 }
@@ -29,7 +27,6 @@ pub struct SoloParams {
 impl From<cjson::scheme::SoloParams> for SoloParams {
     fn from(p: cjson::scheme::SoloParams) -> Self {
         SoloParams {
-            block_reward: p.block_reward.map_or_else(Default::default, Into::into),
             enable_hit_handler: p.action_handlers.hit.is_some(),
             genesis_stakes: p
                 .action_handlers

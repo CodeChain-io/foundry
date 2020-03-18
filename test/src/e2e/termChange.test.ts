@@ -31,7 +31,7 @@ import { blake256, getPublicFromPrivate } from "../sdk/utils";
 import * as RLP from "rlp";
 
 describe("Term change", function() {
-    const chain = `${__dirname}/../scheme/solo-block-reward-50.json`;
+    const chain = `${__dirname}/../scheme/solo.json`;
     let node: CodeChain;
 
     const approvalEncoded = (message: string, secret: string): any => {

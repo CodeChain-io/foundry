@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -694,6 +694,7 @@ describe("Staking", function() {
             recipient: faucetAddress,
             secret: faucetSecret,
             quantity: 1,
+            fee: 20,
             seq
         });
 
@@ -844,9 +845,7 @@ describe("Staking", function() {
         const aliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString()
         }))!;
-        expect(aliceBalance).to.be.deep.equal(
-            oldAliceBalance + Math.floor((minCustomCost * 2) / 10)
-        );
+        expect(aliceBalance).to.be.deep.equal(oldAliceBalance);
 
         const oldBobBalance = +(await nodes[0].rpc.chain.getBalance({
             address: bobAddress.toString(),
@@ -855,9 +854,7 @@ describe("Staking", function() {
         const bobBalance = +(await nodes[0].rpc.chain.getBalance({
             address: bobAddress.toString()
         }))!;
-        expect(bobBalance).to.be.deep.equal(
-            oldBobBalance + Math.floor((minCustomCost * 1) / 10)
-        );
+        expect(bobBalance).to.be.deep.equal(oldBobBalance);
 
         const oldFaucetBalance = +(await nodes[0].rpc.chain.getBalance({
             address: faucetAddress.toString(),
@@ -866,9 +863,7 @@ describe("Staking", function() {
         const faucetBalance = +(await nodes[0].rpc.chain.getBalance({
             address: faucetAddress.toString()
         }))!;
-        expect(faucetBalance).to.be.deep.equal(
-            oldFaucetBalance + (Math.floor((minCustomCost * 2) / 10) - fee)
-        );
+        expect(faucetBalance).to.be.deep.equal(oldFaucetBalance - fee);
 
         const author = (await nodes[0].rpc.chain.getBlockByNumber({
             blockNumber
@@ -881,14 +876,9 @@ describe("Staking", function() {
             address: validator0Address.toString()
         }))!;
         if (author === validator0Address.value) {
-            expect(validator0Balance).to.be.deep.equal(
-                oldValidator0Balance +
-                    (Math.floor((minCustomCost * 5) / 10) + fee - minCustomCost)
-            );
+            expect(validator0Balance).to.be.deep.equal(oldValidator0Balance);
         } else {
-            expect(validator0Balance).to.be.deep.equal(
-                oldValidator0Balance + Math.floor((minCustomCost * 5) / 10)
-            );
+            expect(validator0Balance).to.be.deep.equal(oldValidator0Balance);
             const oldAuthorBalance = +(await nodes[0].rpc.chain.getBalance({
                 address: author.toString(),
                 blockNumber: blockNumber - 1
@@ -896,9 +886,7 @@ describe("Staking", function() {
             const authorBalance = +(await nodes[0].rpc.chain.getBalance({
                 address: author.toString()
             }))!;
-            expect(authorBalance).to.be.deep.equal(
-                oldAuthorBalance + (fee - minCustomCost)
-            );
+            expect(authorBalance).to.be.deep.equal(oldAuthorBalance);
         }
     });
 
@@ -970,9 +958,7 @@ describe("Staking", function() {
         const aliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString()
         }))!;
-        expect(aliceBalance).to.be.deep.equal(
-            oldAliceBalance + Math.floor((minCustomCost * 2) / 10)
-        );
+        expect(aliceBalance).to.be.deep.equal(oldAliceBalance);
 
         const oldBobBalance = +(await nodes[0].rpc.chain.getBalance({
             address: bobAddress.toString(),
@@ -981,9 +967,7 @@ describe("Staking", function() {
         const bobBalance = +(await nodes[0].rpc.chain.getBalance({
             address: bobAddress.toString()
         }))!;
-        expect(bobBalance).to.be.deep.equal(
-            oldBobBalance + Math.floor((minCustomCost * 1) / 10)
-        );
+        expect(bobBalance).to.be.deep.equal(oldBobBalance);
 
         const oldFaucetBalance = +(await nodes[0].rpc.chain.getBalance({
             address: faucetAddress.toString(),
@@ -992,9 +976,7 @@ describe("Staking", function() {
         const faucetBalance = +(await nodes[0].rpc.chain.getBalance({
             address: faucetAddress.toString()
         }))!;
-        expect(faucetBalance).to.be.deep.equal(
-            oldFaucetBalance + Math.floor((minCustomCost * 2) / 10)
-        );
+        expect(faucetBalance).to.be.deep.equal(oldFaucetBalance);
 
         const author = (await nodes[0].rpc.chain.getBlockByNumber({
             blockNumber
@@ -1008,16 +990,11 @@ describe("Staking", function() {
         }))!;
         if (author === validator0Address.value) {
             expect(validator0Balance).to.be.deep.equal(
-                oldValidator0Balance +
-                    Math.floor((minCustomCost * 5) / 10) -
-                    fee +
-                    fee -
-                    minCustomCost
+                oldValidator0Balance - fee
             );
         } else {
             expect(validator0Balance).to.be.deep.equal(
-                oldValidator0Balance +
-                    (Math.floor((minCustomCost * 5) / 10) - fee)
+                oldValidator0Balance - fee
             );
 
             const oldValidator1Balance = +(await nodes[0].rpc.chain.getBalance({
@@ -1029,7 +1006,7 @@ describe("Staking", function() {
             }))!;
             if (author === validator1Address.value) {
                 expect(validator1Balance).to.be.deep.equal(
-                    oldValidator1Balance + fee - minCustomCost
+                    oldValidator1Balance
                 );
             } else {
                 expect(validator1Balance.toString(10)).to.be.deep.equal(
@@ -1043,9 +1020,7 @@ describe("Staking", function() {
                 const authorBalance = +(await nodes[0].rpc.chain.getBalance({
                     address: author.toString()
                 }))!;
-                expect(authorBalance).to.be.deep.equal(
-                    oldAuthorBalance + fee - minCustomCost
-                );
+                expect(authorBalance).to.be.deep.equal(oldAuthorBalance);
             }
         }
     });
@@ -1135,9 +1110,7 @@ describe("Staking", function() {
             address: aliceAddress.toString()
         }))!;
 
-        expect(aliceBalance).to.equal(
-            oldAliceBalance + Math.floor((minCustomCost * 2) / 10)
-        );
+        expect(aliceBalance).to.equal(oldAliceBalance);
 
         const oldBobBalance = +(await nodes[0].rpc.chain.getBalance({
             address: bobAddress.toString(),
@@ -1146,9 +1119,7 @@ describe("Staking", function() {
         const bobBalance = +(await nodes[0].rpc.chain.getBalance({
             address: bobAddress.toString()
         }))!;
-        expect(bobBalance).to.be.deep.equal(
-            oldBobBalance + Math.floor((minCustomCost * 1) / 10)
-        );
+        expect(bobBalance).to.be.deep.equal(oldBobBalance);
         const oldFaucetBalance = +(await nodes[0].rpc.chain.getBalance({
             address: faucetAddress.toString(),
             blockNumber: blockNumber - 1
@@ -1156,9 +1127,7 @@ describe("Staking", function() {
         const faucetBalance = +(await nodes[0].rpc.chain.getBalance({
             address: faucetAddress.toString()
         }))!;
-        expect(faucetBalance).to.be.deep.equal(
-            oldFaucetBalance + Math.floor((minCustomCost * 1) / 10)
-        );
+        expect(faucetBalance).to.be.deep.equal(oldFaucetBalance);
         const author = (await nodes[0].rpc.chain.getBlockByNumber({
             blockNumber
         }))!.author;
@@ -1171,16 +1140,11 @@ describe("Staking", function() {
         }))!;
         if (author === validator0Address.value) {
             expect(validator0Balance).to.be.deep.equal(
-                oldValidator0Balance +
-                    Math.floor((minCustomCost * 3) / 10) -
-                    fee +
-                    fee -
-                    minCustomCost
+                oldValidator0Balance - fee
             );
         } else {
             expect(validator0Balance).to.be.deep.equal(
-                oldValidator0Balance +
-                    (Math.floor((minCustomCost * 3) / 10) - fee)
+                oldValidator0Balance - fee
             );
 
             const oldValidator1Balance = +(await nodes[0].rpc.chain.getBalance({
@@ -1192,14 +1156,11 @@ describe("Staking", function() {
             }))!;
             if (author === validator1Address.value) {
                 expect(validator1Balance).to.be.deep.equal(
-                    oldValidator1Balance +
-                        Math.floor((minCustomCost * 3) / 10) +
-                        fee -
-                        minCustomCost
+                    oldValidator1Balance
                 );
             } else {
                 expect(validator1Balance).to.be.deep.equal(
-                    oldValidator1Balance + Math.floor((minCustomCost * 3) / 10)
+                    oldValidator1Balance
                 );
 
                 const oldAuthorBalance = +(await nodes[0].rpc.chain.getBalance({
@@ -1209,9 +1170,7 @@ describe("Staking", function() {
                 const authorBalance = +(await nodes[0].rpc.chain.getBalance({
                     address: author.toString()
                 }))!;
-                expect(authorBalance).to.be.deep.equal(
-                    oldAuthorBalance + fee - minCustomCost
-                );
+                expect(authorBalance).to.be.deep.equal(oldAuthorBalance);
             }
         }
     });

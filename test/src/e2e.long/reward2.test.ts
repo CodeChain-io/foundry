@@ -25,11 +25,11 @@ describe("reward2", function() {
 
     beforeEach(async function() {
         nodeA = new CodeChain({
-            chain: `${__dirname}/../scheme/solo-block-reward-50.json`,
+            chain: `${__dirname}/../scheme/solo.json`,
             argv: ["--author", aliceAddress.toString(), "--force-sealing"]
         });
         nodeB = new CodeChain({
-            chain: `${__dirname}/../scheme/solo-block-reward-50.json`,
+            chain: `${__dirname}/../scheme/solo.json`,
             argv: ["--author", bobAddress.toString(), "--force-sealing"]
         });
 
@@ -42,7 +42,7 @@ describe("reward2", function() {
             +(await nodeA.rpc.chain.getBalance({
                 address: aliceAddress.toString()
             }))!
-        ).to.deep.equal(50);
+        ).to.deep.equal(0);
 
         await nodeB.connect(nodeA);
         await nodeB.waitBlockNumberSync(nodeA);
@@ -51,7 +51,7 @@ describe("reward2", function() {
             +(await nodeB.rpc.chain.getBalance({
                 address: aliceAddress.toString()
             }))!
-        ).to.deep.equal(50);
+        ).to.deep.equal(0);
     }).timeout(30_000);
 
     afterEach(async function() {

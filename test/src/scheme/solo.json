@@ -3,7 +3,6 @@
     "engine": {
         "solo": {
             "params": {
-                "blockReward": "0x32",
                 "genesisStakes": {
                     "tccqx0xyvalakl59psh34wlph0xlf5c2l3a3syrjauu": 40000,
                     "tccq86dg0p4f2f06jtqrdu3dvavm5pjfacarypp0ka3": 30000,

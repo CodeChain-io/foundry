@@ -14,35 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::uint::Uint;
-
 /// Authority params deserialization.
 #[derive(Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct NullEngineParams {
-    /// Block reward.
-    pub block_reward: Option<Uint>,
-}
+pub struct NullEngineParams {}
 
 /// Null engine descriptor
 #[derive(Debug, PartialEq, Deserialize)]
 pub struct NullEngine {
     pub params: NullEngineParams,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn null_engine_deserialization() {
-        let s = r#"{
-            "params": {
-                "blockReward": "0x0d"
-            }
-        }"#;
-
-        let deserialized: NullEngine = serde_json::from_str(s).unwrap();
-        assert_eq!(deserialized.params.block_reward, Some(0x0d.into()));
-    }
 }

@@ -38,8 +38,6 @@ pub struct TendermintParams {
     pub timeout_precommit_delta: Option<Uint>,
     /// Commit step timeout in milliseconds.
     pub timeout_commit: Option<Uint>,
-    /// Reward per block.
-    pub block_reward: Option<Uint>,
     /// How much tokens are distributed at Genesis?
     pub genesis_stakes: Option<HashMap<PlatformAddress, u64>>,
     /// allowed past time gap in milliseconds.

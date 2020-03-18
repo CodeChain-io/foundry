@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -98,10 +98,6 @@ pub trait Chain {
     ///Gets the minimum transaction fee of the given name.
     #[rpc(name = "chain_getMinTransactionFee")]
     fn get_min_transaction_fee(&self, action_type: String, block_number: Option<u64>) -> Result<Option<u64>>;
-
-    /// Gets the mining given block number
-    #[rpc(name = "chain_getMiningReward")]
-    fn get_mining_reward(&self, block_number: u64) -> Result<Option<u64>>;
 
     /// Return the network id that is used in this chain.
     #[rpc(name = "chain_getNetworkId")]

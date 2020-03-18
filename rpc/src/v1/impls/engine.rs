@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -49,10 +49,6 @@ where
     C: EngineInfo + StateInfo + FindActionHandler + 'static,
     M: MinerService + 'static,
 {
-    fn get_block_reward(&self, block_number: u64) -> Result<u64> {
-        Ok(self.client.block_reward(block_number))
-    }
-
     fn get_coinbase(&self) -> Result<Option<PlatformAddress>> {
         let author = self.miner.authoring_params().author;
         if author.is_zero() {
