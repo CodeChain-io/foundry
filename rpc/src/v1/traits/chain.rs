@@ -18,7 +18,7 @@ use super::super::types::{Block, BlockNumberAndHash, Transaction, UnsignedTransa
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress};
-use ctypes::{BlockHash, BlockNumber, ShardId, Tracker, TxHash};
+use ctypes::{BlockHash, BlockNumber, ShardId, TxHash};
 use jsonrpc_core::Result;
 use primitives::H256;
 
@@ -38,10 +38,6 @@ pub trait Chain {
 
     #[rpc(name = "chain_containTransaction")]
     fn contain_transaction(&self, transaction_hash: TxHash) -> Result<bool>;
-
-    /// Gets transaction with given transaction tracker.
-    #[rpc(name = "chain_getTransactionByTracker")]
-    fn get_transaction_by_tracker(&self, tracker: Tracker) -> Result<Option<Transaction>>;
 
     /// Gets seq with given account.
     #[rpc(name = "chain_getSeq")]

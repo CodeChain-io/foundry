@@ -23,7 +23,7 @@ use cjson::uint::Uint;
 use ckey::{public_to_address, NetworkId, PlatformAddress};
 use cstate::FindActionHandler;
 use ctypes::transaction::Action;
-use ctypes::{BlockHash, BlockNumber, ShardId, Tracker, TxHash};
+use ctypes::{BlockHash, BlockNumber, ShardId, TxHash};
 use jsonrpc_core::Result;
 use primitives::H256;
 use std::convert::TryFrom;
@@ -76,10 +76,6 @@ where
 
     fn contain_transaction(&self, transaction_hash: TxHash) -> Result<bool> {
         self.contains_transaction(transaction_hash)
-    }
-
-    fn get_transaction_by_tracker(&self, tracker: Tracker) -> Result<Option<Transaction>> {
-        Ok(self.client.transaction_by_tracker(&tracker).map(From::from))
     }
 
     fn get_seq(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<u64>> {

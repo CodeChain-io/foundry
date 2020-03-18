@@ -15,18 +15,18 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::block_info::BestBlockChanged;
-use super::extras::{TransactionAddress, TransactionAddresses};
+use super::extras::TransactionAddress;
 use crate::db::{self, CacheUpdatePolicy, Readable, Writable};
+use crate::encoded;
 use crate::views::BlockView;
-use crate::{encoded, UnverifiedTransaction};
-use ctypes::{BlockHash, Tracker, TxHash};
+use ctypes::{BlockHash, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use lru_cache::LruCache;
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
 use rlp::RlpStream;
 use rlp_compress::{blocks_swapper, compress, decompress};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::mem;
 use std::sync::Arc;
 
@@ -38,13 +38,8 @@ pub struct BodyDB {
     address_by_hash_cache: RwLock<HashMap<TxHash, TransactionAddress>>,
     pending_addresses_by_hash: RwLock<HashMap<TxHash, TransactionAddress>>,
 
-    addresses_by_tracker_cache: Mutex<HashMap<Tracker, TransactionAddresses>>,
-    pending_addresses_by_tracker: Mutex<HashMap<Tracker, TransactionAddresses>>,
-
     db: Arc<dyn KeyValueDB>,
 }
-
-type TrackerAndAddress = (Tracker, TransactionAddresses);
 
 impl BodyDB {
     /// Create new instance of blockchain from given Genesis.
@@ -53,9 +48,6 @@ impl BodyDB {
             body_cache: Mutex::new(LruCache::new(BODY_CACHE_SIZE)),
             address_by_hash_cache: RwLock::new(HashMap::new()),
             pending_addresses_by_hash: RwLock::new(HashMap::new()),
-
-            addresses_by_tracker_cache: Default::default(),
-            pending_addresses_by_tracker: Default::default(),
 
             db,
         };
@@ -89,17 +81,10 @@ impl BodyDB {
 
     pub fn update_best_block(&self, batch: &mut DBTransaction, best_block_changed: &BestBlockChanged) {
         let mut pending_addresses_by_hash = self.pending_addresses_by_hash.write();
-        let mut pending_addresses_by_tracker = self.pending_addresses_by_tracker.lock();
         batch.extend_with_cache(
             db::COL_EXTRA,
             &mut *pending_addresses_by_hash,
             self.new_transaction_address_entries(best_block_changed),
-            CacheUpdatePolicy::Overwrite,
-        );
-        batch.extend_with_cache(
-            db::COL_EXTRA,
-            &mut *pending_addresses_by_tracker,
-            self.new_transaction_addresses_entries(best_block_changed),
             CacheUpdatePolicy::Overwrite,
         );
     }
@@ -109,16 +94,9 @@ impl BodyDB {
         let mut address_by_hash_cache = self.address_by_hash_cache.write();
         let mut pending_addresses_by_hash = self.pending_addresses_by_hash.write();
 
-        let mut addresses_by_tracker_cache = self.addresses_by_tracker_cache.lock();
-        let mut pending_addresses_by_tracker = self.pending_addresses_by_tracker.lock();
-
         let new_txs_by_hash = mem::replace(&mut *pending_addresses_by_hash, HashMap::new());
 
         address_by_hash_cache.extend(new_txs_by_hash.into_iter());
-
-        let new_txs_by_tracker = mem::replace(&mut *pending_addresses_by_tracker, HashMap::new());
-
-        addresses_by_tracker_cache.extend(new_txs_by_tracker.into_iter());
     }
 
     /// This function returns modified transaction addresses.
@@ -140,48 +118,6 @@ impl BodyDB {
         }
     }
 
-    fn new_transaction_addresses_entries(
-        &self,
-        best_block_changed: &BestBlockChanged,
-    ) -> HashMap<Tracker, TransactionAddresses> {
-        let block_hash = if let Some(best_block_hash) = best_block_changed.new_best_hash() {
-            best_block_hash
-        } else {
-            return HashMap::new()
-        };
-        let block = match best_block_changed.best_block() {
-            Some(block) => block,
-            None => return HashMap::new(),
-        };
-
-        let added: Box<dyn Iterator<Item = TrackerAndAddress>> = match best_block_changed {
-            BestBlockChanged::CanonChainAppended {
-                ..
-            } => Box::new(tracker_and_addresses_entries(block_hash, block.transactions())),
-            BestBlockChanged::None => return Default::default(),
-        };
-
-        let mut added_addresses: HashMap<Tracker, TransactionAddresses> = Default::default();
-        let mut trackers: HashSet<Tracker> = Default::default();
-        for (tracker, address) in added {
-            trackers.insert(tracker);
-            *added_addresses.entry(tracker).or_insert_with(Default::default) += address;
-        }
-        let mut inserted_address: HashMap<Tracker, TransactionAddresses> = Default::default();
-        for tracker in trackers.into_iter() {
-            let address: TransactionAddresses = self.db.read(db::COL_EXTRA, &tracker).unwrap_or_default();
-            inserted_address.insert(tracker, address);
-        }
-
-        for (tracker, added_address) in added_addresses.into_iter() {
-            *inserted_address
-                .get_mut(&tracker)
-                .expect("inserted addresses are sum of added_addresses and removed_addresses") += added_address;
-        }
-
-        inserted_address
-    }
-
     /// Create a block body from a block.
     pub fn block_to_body(block: &BlockView<'_>) -> Bytes {
         let mut body = RlpStream::new_list(1);
@@ -199,8 +135,6 @@ pub trait BodyProvider {
     /// Get the address of transaction with given hash.
     fn transaction_address(&self, hash: &TxHash) -> Option<TransactionAddress>;
 
-    fn transaction_address_by_tracker(&self, tracker: &Tracker) -> Option<TransactionAddress>;
-
     /// Get the block body (transactions).
     fn block_body(&self, hash: &BlockHash) -> Option<encoded::Body>;
 }
@@ -214,12 +148,6 @@ impl BodyProvider for BodyDB {
     fn transaction_address(&self, hash: &TxHash) -> Option<TransactionAddress> {
         let result = self.db.read_with_cache(db::COL_EXTRA, &mut *self.address_by_hash_cache.write(), hash)?;
         Some(result)
-    }
-
-    fn transaction_address_by_tracker(&self, tracker: &Tracker) -> Option<TransactionAddress> {
-        let addresses =
-            self.db.read_with_cache(db::COL_EXTRA, &mut *self.addresses_by_tracker_cache.lock(), tracker)?;
-        addresses.into_iter().next()
     }
 
     /// Get block body data
@@ -252,23 +180,6 @@ fn tx_hash_and_address_entries(
         (tx_hash, TransactionAddress {
             block_hash,
             index,
-        })
-    })
-}
-
-fn tracker_and_addresses_entries(
-    block_hash: BlockHash,
-    transactions: impl IntoIterator<Item = UnverifiedTransaction>,
-) -> impl Iterator<Item = TrackerAndAddress> {
-    transactions.into_iter().enumerate().filter_map(move |(index, tx)| {
-        tx.tracker().map(|tracker| {
-            (
-                tracker,
-                TransactionAddresses::new(TransactionAddress {
-                    block_hash,
-                    index,
-                }),
-            )
         })
     })
 }

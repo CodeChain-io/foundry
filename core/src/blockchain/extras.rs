@@ -16,9 +16,9 @@
 
 use crate::db::Key;
 use crate::types::TransactionId;
-use ctypes::{BlockHash, BlockNumber, Tracker, TxHash};
+use ctypes::{BlockHash, BlockNumber, TxHash};
 use primitives::{H256, H264};
-use std::ops::{Add, AddAssign, Deref, Sub, SubAssign};
+use std::ops::Deref;
 
 /// Represents index of extra data in database
 #[derive(Copy, Debug, Hash, Eq, PartialEq, Clone)]
@@ -29,10 +29,6 @@ enum ExtrasIndex {
     BlockHash = 1,
     /// Transaction address index
     TransactionAddress = 2,
-    /// Transaction addresses index
-    TransactionAddresses = 3,
-    // (Reserved) = 4,
-    // (Reserved) = 5,
 }
 
 fn with_index(hash: &H256, i: ExtrasIndex) -> H264 {
@@ -82,14 +78,6 @@ impl Key<TransactionAddress> for TxHash {
     }
 }
 
-impl Key<TransactionAddresses> for Tracker {
-    type Target = H264;
-
-    fn key(&self) -> H264 {
-        with_index(self, ExtrasIndex::TransactionAddresses)
-    }
-}
-
 /// Familial details concerning a block
 #[derive(Debug, Clone, RlpEncodable, RlpDecodable)]
 pub struct BlockDetails {
@@ -116,65 +104,6 @@ impl From<TransactionAddress> for TransactionId {
     }
 }
 
-/// Represents address of certain transaction that has the same tracker
-#[derive(Debug, Default, PartialEq, Clone, RlpEncodableWrapper, RlpDecodableWrapper)]
-pub struct TransactionAddresses {
-    addresses: Vec<TransactionAddress>,
-}
-
-impl TransactionAddresses {
-    pub fn new(address: TransactionAddress) -> Self {
-        Self {
-            addresses: vec![address],
-        }
-    }
-}
-
-impl IntoIterator for TransactionAddresses {
-    type Item = TransactionAddress;
-    type IntoIter = ::std::vec::IntoIter<<Self as IntoIterator>::Item>;
-
-    fn into_iter(self) -> <Self as IntoIterator>::IntoIter {
-        self.addresses.into_iter()
-    }
-}
-
-impl Add for TransactionAddresses {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> <Self as Add>::Output {
-        let mut s = self;
-        s += rhs;
-        s
-    }
-}
-
-impl AddAssign for TransactionAddresses {
-    fn add_assign(&mut self, rhs: Self) {
-        // FIXME: Please fix this O(n*m) algorithm
-        let new_addresses: Vec<_> = rhs.into_iter().filter(|addr| !self.addresses.contains(addr)).collect();
-        self.addresses.extend(new_addresses);
-    }
-}
-
-impl Sub for TransactionAddresses {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> <Self as Add>::Output {
-        let mut s = self;
-        s -= rhs;
-        s
-    }
-}
-
-impl SubAssign for TransactionAddresses {
-    fn sub_assign(&mut self, rhs: Self) {
-        // FIXME: Please fix this O(n*m) algorithm
-        self.addresses.retain(|addr| !rhs.addresses.contains(addr));
-        self.addresses.shrink_to_fit();
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use rlp::rlp_encode_and_decode_test;
@@ -182,149 +111,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn encode_and_decode_transaction_address_with_single_address() {
-        rlp_encode_and_decode_test!(TransactionAddresses::new(TransactionAddress {
+    fn encode_and_decode_transaction_address() {
+        rlp_encode_and_decode_test!(TransactionAddress {
             block_hash: H256::random().into(),
             index: 0,
-        }));
-    }
-
-    #[test]
-    fn encode_and_decode_transaction_address_without_address() {
-        rlp_encode_and_decode_test!(TransactionAddresses::default());
-    }
-
-    #[test]
-    fn encode_and_decode_transaction_address_with_multiple_addresses() {
-        rlp_encode_and_decode_test!(TransactionAddresses {
-            addresses: vec![
-                TransactionAddress {
-                    block_hash: H256::random().into(),
-                    index: 0,
-                },
-                TransactionAddress {
-                    block_hash: H256::random().into(),
-                    index: 3,
-                },
-                TransactionAddress {
-                    block_hash: H256::random().into(),
-                    index: 1,
-                },
-            ],
         });
-    }
-
-    #[test]
-    fn add() {
-        let t1 = TransactionAddresses {
-            addresses: vec![TransactionAddress {
-                block_hash: H256::zero().into(),
-                index: 0,
-            }],
-        };
-        let t2 = TransactionAddresses {
-            addresses: vec![TransactionAddress {
-                block_hash: H256::from(1).into(),
-                index: 0,
-            }],
-        };
-        assert_eq!(
-            vec![
-                TransactionAddress {
-                    block_hash: H256::zero().into(),
-                    index: 0,
-                },
-                TransactionAddress {
-                    block_hash: H256::from(1).into(),
-                    index: 0,
-                }
-            ],
-            (t1 + t2).addresses
-        );
-    }
-
-    #[test]
-    fn do_not_add_duplicated_item() {
-        let t1 = TransactionAddresses {
-            addresses: vec![TransactionAddress {
-                block_hash: H256::zero().into(),
-                index: 0,
-            }],
-        };
-        let t2 = TransactionAddresses {
-            addresses: vec![TransactionAddress {
-                block_hash: H256::zero().into(),
-                index: 0,
-            }],
-        };
-        assert_eq!(
-            vec![TransactionAddress {
-                block_hash: H256::zero().into(),
-                index: 0,
-            },],
-            (t1 + t2).addresses
-        );
-    }
-
-    #[test]
-    fn remove() {
-        let t1 = TransactionAddresses {
-            addresses: vec![
-                TransactionAddress {
-                    block_hash: H256::zero().into(),
-                    index: 0,
-                },
-                TransactionAddress {
-                    block_hash: H256::from(1).into(),
-                    index: 0,
-                },
-                TransactionAddress {
-                    block_hash: H256::from(2).into(),
-                    index: 0,
-                },
-            ],
-        };
-        let t2 = TransactionAddresses {
-            addresses: vec![TransactionAddress {
-                block_hash: H256::from(1).into(),
-                index: 0,
-            }],
-        };
-        assert_eq!(
-            vec![
-                TransactionAddress {
-                    block_hash: H256::zero().into(),
-                    index: 0,
-                },
-                TransactionAddress {
-                    block_hash: H256::from(2).into(),
-                    index: 0,
-                }
-            ],
-            (t1 - t2).addresses
-        );
-    }
-
-    #[test]
-    fn remove_dont_touch_unmatched_item() {
-        let t1 = TransactionAddresses {
-            addresses: vec![TransactionAddress {
-                block_hash: H256::zero().into(),
-                index: 0,
-            }],
-        };
-        let t2 = TransactionAddresses {
-            addresses: vec![TransactionAddress {
-                block_hash: H256::from(1).into(),
-                index: 0,
-            }],
-        };
-        assert_eq!(
-            vec![TransactionAddress {
-                block_hash: H256::zero().into(),
-                index: 0,
-            },],
-            (t1 - t2).addresses
-        );
     }
 }

@@ -40,7 +40,7 @@ use cstate::{ActionHandler, FindActionHandler, StateDB, StateResult, TopLevelSta
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
 use ctypes::transaction::ShardTransaction;
-use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::{Bytes, H256};
@@ -197,10 +197,6 @@ impl Client {
                 })
             }
         }
-    }
-
-    fn transaction_addresses(&self, tracker: &Tracker) -> Option<TransactionAddress> {
-        self.block_chain().transaction_address_by_tracker(tracker)
     }
 
     /// Import transactions from the IO queue
@@ -440,10 +436,6 @@ impl BlockChainTrait for Client {
     fn transaction_block(&self, id: &TransactionId) -> Option<BlockHash> {
         self.transaction_address(id).map(|addr| addr.block_hash)
     }
-
-    fn transaction_header(&self, tracker: &Tracker) -> Option<encoded::Header> {
-        self.transaction_addresses(tracker).map(|addr| addr.block_hash).and_then(|hash| self.block_header(&hash.into()))
-    }
 }
 
 impl ImportBlock for Client {
@@ -615,17 +607,6 @@ impl BlockChainClient for Client {
     fn error_hint(&self, hash: &TxHash) -> Option<String> {
         let chain = self.block_chain();
         chain.error_hint(hash)
-    }
-
-    fn transaction_by_tracker(&self, tracker: &Tracker) -> Option<LocalizedTransaction> {
-        let chain = self.block_chain();
-        let address = self.transaction_addresses(tracker);
-        address.and_then(|address| chain.transaction(&address))
-    }
-
-    fn error_hints_by_tracker(&self, tracker: &Tracker) -> Vec<(TxHash, Option<String>)> {
-        let chain = self.block_chain();
-        chain.error_hints_by_tracker(tracker)
     }
 }
 

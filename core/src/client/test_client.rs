@@ -56,7 +56,7 @@ use cstate::{FindActionHandler, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::header::Header;
 use ctypes::transaction::{Action, Transaction};
-use ctypes::{BlockHash, BlockNumber, CommonParams, Header as BlockHeader, Tracker, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, Header as BlockHeader, TxHash};
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
 use parking_lot::RwLock;
@@ -429,10 +429,6 @@ impl BlockChainTrait for TestBlockChainClient {
     fn transaction_block(&self, _id: &TransactionId) -> Option<BlockHash> {
         None // Simple default.
     }
-
-    fn transaction_header(&self, _tracker: &Tracker) -> Option<encoded::Header> {
-        None
-    }
 }
 
 impl ImportBlock for TestBlockChainClient {
@@ -575,14 +571,6 @@ impl BlockChainClient for TestBlockChainClient {
     }
 
     fn error_hint(&self, _hash: &TxHash) -> Option<String> {
-        unimplemented!();
-    }
-
-    fn transaction_by_tracker(&self, _: &Tracker) -> Option<LocalizedTransaction> {
-        unimplemented!();
-    }
-
-    fn error_hints_by_tracker(&self, _: &Tracker) -> Vec<(TxHash, Option<String>)> {
         unimplemented!();
     }
 }

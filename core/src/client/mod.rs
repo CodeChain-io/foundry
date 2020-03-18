@@ -42,7 +42,7 @@ use cnetwork::NodeId;
 use cstate::{FindActionHandler, StateResult, TopLevelState, TopStateView};
 use ctypes::header::Header;
 use ctypes::transaction::ShardTransaction;
-use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, Tracker, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, TxHash};
 use kvdb::KeyValueDB;
 use primitives::{Bytes, H256};
 use std::ops::Range;
@@ -72,16 +72,6 @@ pub trait BlockChainTrait {
 
     /// Get the hash of block that contains the transaction, if any.
     fn transaction_block(&self, id: &TransactionId) -> Option<BlockHash>;
-
-    fn transaction_header(&self, tracker: &Tracker) -> Option<encoded::Header>;
-
-    fn transaction_block_number(&self, tracker: &Tracker) -> Option<BlockNumber> {
-        self.transaction_header(tracker).map(|header| header.number())
-    }
-
-    fn transaction_block_timestamp(&self, tracker: &Tracker) -> Option<u64> {
-        self.transaction_header(tracker).map(|header| header.timestamp())
-    }
 }
 
 pub trait EngineInfo: Send + Sync {
@@ -246,11 +236,6 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
 
     /// Get invoice with given hash.
     fn error_hint(&self, hash: &TxHash) -> Option<String>;
-
-    /// Get the transaction with given tracker.
-    fn transaction_by_tracker(&self, tracker: &Tracker) -> Option<LocalizedTransaction>;
-
-    fn error_hints_by_tracker(&self, tracker: &Tracker) -> Vec<(TxHash, Option<String>)>;
 }
 
 /// Result of import block operation.
