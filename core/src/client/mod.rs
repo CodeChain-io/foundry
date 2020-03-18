@@ -88,8 +88,6 @@ pub trait EngineInfo: Send + Sync {
     fn network_id(&self) -> NetworkId;
     fn common_params(&self, block_id: BlockId) -> Option<CommonParams>;
     fn metadata_seq(&self, block_id: BlockId) -> Option<u64>;
-    fn block_reward(&self, block_number: u64) -> u64;
-    fn mining_reward(&self, block_number: u64) -> Option<u64>;
     fn recommended_confirmation(&self) -> u32;
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>, EngineError>;
 }

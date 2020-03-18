@@ -276,7 +276,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_getShardRoot](#chain_getshardroot)
  * [chain_getShardOwners](#chain_getshardowners)
  * [chain_getShardUsers](#chain_getshardusers)
- * [chain_getMiningReward](#chain_getminingreward)
  * [chain_getMinTransactionFee](#chain_getmintransactionfee)
  * [chain_getCommonParams](#chain_getcommonparams)
  * [chain_getTermMetadata](#chain_gettermmetadata)
@@ -298,7 +297,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [mempool_getMachineMinimumFees](#mempool_getmachineminimumfees)
 ***
  * [engine_getCoinbase](#engine_getcoinbase)
- * [engine_getBlockReward](#engine_getblockreward)
  * [engine_getRecommendedConfirmation](#engine_getrecommendedconfirmation)
  * [engine_getCustomActionData](#engine_getcustomactiondata)
 ***
@@ -1203,36 +1201,6 @@ Errors: `KVDB Error`, `Invalid Params`
 
 [Back to **List of methods**](#list-of-methods)
 
-## chain_getMiningReward
-Gets the mining reward of the given block number.
-Unlike `engine_getBlockReward`, it returns the actual quantity received, including the transaction fee.
-It returns `null` if the given block number is not mined yet.
-
-### Params
- 1. block number: `number`
-
-### Returns
-`U64` | `null`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getMiningReward", "params": [10], "id": 41}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result": null,
-  "id":41
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
 # chain_getMinTransactionFee
 Gets the min cost of the transaction.
 It returns null if the first parameter is an invalid transaction type or the second parameter is larger than the current best block.
@@ -1934,34 +1902,6 @@ No parameters
   "jsonrpc":"2.0",
   "result":"cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7",
   "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## engine_getBlockReward
-Gets the reward of the given block number
-
-### Params
- 1. block number: `number`
-
-### Returns
-`U64`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "engine_getBlockReward", "params": [10], "id": 41}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":"0x50",
-  "id":41
 }
 ```
 

@@ -38,7 +38,7 @@ import * as RLP from "rlp";
 chai.use(chaiAsPromised);
 
 describe("ChangeParams", function() {
-    const chain = `${__dirname}/../scheme/solo-block-reward-50.json`;
+    const chain = `${__dirname}/../scheme/solo.json`;
     let node: CodeChain;
 
     const approvalEncoded = (message: string, secret: string): any => {

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -34,11 +34,10 @@ import { PromiseExpect } from "../helper/promise";
 import CodeChain from "../helper/spawn";
 import { toHex } from "../sdk/utils";
 import * as RLP from "rlp";
-import * as Scheme from "../scheme/solo-block-reward-50.json";
 
 describe("Staking", function() {
     const promiseExpect = new PromiseExpect();
-    const chain = `${__dirname}/../scheme/solo-block-reward-50.json`;
+    const chain = `${__dirname}/../scheme/solo.json`;
     let node: CodeChain;
 
     beforeEach(async function() {
@@ -48,6 +47,10 @@ describe("Staking", function() {
         });
         await node.start();
         await node.sendPayTx({ recipient: aliceAddress, quantity: 100_000 });
+        await node.sendPayTx({
+            recipient: validator0Address,
+            quantity: 100_000
+        });
         await node.sendPayTx({
             recipient: validator1Address,
             quantity: 100_000
@@ -629,11 +632,6 @@ describe("Staking", function() {
         // alice: 20000, bob: 30000, carol: 20000, dave: 10000, val0: 20000,
 
         const blockNumber = await node.getBestBlockNumber();
-        const blockReward = parseInt(
-            Scheme.engine.solo.params.blockReward as string,
-            16
-        );
-        const minCustomCost = Scheme.params.minCustomCost;
 
         const oldAliceBalance = +(await node.rpc.chain.getBalance({
             address: aliceAddress.toString(),
@@ -643,9 +641,7 @@ describe("Staking", function() {
         const aliceBalance = +(await node.rpc.chain.getBalance({
             address: aliceAddress.toString()
         }))!;
-        expect(aliceBalance).to.be.deep.equal(
-            oldAliceBalance - fee + Math.floor((minCustomCost * 2) / 10)
-        );
+        expect(aliceBalance).to.be.deep.equal(oldAliceBalance - fee);
 
         const oldBobBalance = +(await node.rpc.chain.getBalance({
             address: bobAddress.toString(),
@@ -654,9 +650,7 @@ describe("Staking", function() {
         const bobBalance = +(await node.rpc.chain.getBalance({
             address: bobAddress.toString()
         }))!;
-        expect(bobBalance).to.be.deep.equal(
-            oldBobBalance + Math.floor((minCustomCost * 3) / 10)
-        );
+        expect(bobBalance).to.be.deep.equal(oldBobBalance);
 
         const oldCarolBalance = +(await node.rpc.chain.getBalance({
             address: carolAddress.toString(),
@@ -665,9 +659,7 @@ describe("Staking", function() {
         const carolBalance = +(await node.rpc.chain.getBalance({
             address: carolAddress.toString()
         }))!;
-        expect(carolBalance).to.be.deep.equal(
-            oldCarolBalance + Math.floor((minCustomCost * 2) / 10)
-        );
+        expect(carolBalance).to.be.deep.equal(oldCarolBalance);
 
         const oldDaveBalance = +(await node.rpc.chain.getBalance({
             address: daveAddress.toString(),
@@ -676,9 +668,7 @@ describe("Staking", function() {
         const daveBalance = +(await node.rpc.chain.getBalance({
             address: daveAddress.toString()
         }))!;
-        expect(daveBalance).to.be.deep.equal(
-            oldDaveBalance + Math.floor((minCustomCost * 1) / 10)
-        );
+        expect(daveBalance).to.be.deep.equal(oldDaveBalance);
 
         const oldValidator0Balance = +(await node.rpc.chain.getBalance({
             address: validator0Address.toString(),
@@ -687,13 +677,7 @@ describe("Staking", function() {
         const validator0Balance = +(await node.rpc.chain.getBalance({
             address: validator0Address.toString()
         }))!;
-        expect(validator0Balance).to.be.deep.equal(
-            oldValidator0Balance +
-                Math.floor((minCustomCost * 2) / 10) +
-                fee -
-                minCustomCost +
-                blockReward
-        );
+        expect(validator0Balance).to.be.deep.equal(oldValidator0Balance);
     });
 
     it("get fee even if it delegated stakes to other", async function() {
@@ -745,11 +729,6 @@ describe("Staking", function() {
         ]);
 
         const blockNumber = await node.getBestBlockNumber();
-        const blockReward = parseInt(
-            Scheme.engine.solo.params.blockReward as string,
-            16
-        );
-        const minCustomCost = Scheme.params.minCustomCost as number;
 
         const oldAliceBalance = +(await node.rpc.chain.getBalance({
             address: aliceAddress.toString(),
@@ -758,9 +737,7 @@ describe("Staking", function() {
         const aliceBalance = +(await node.rpc.chain.getBalance({
             address: aliceAddress.toString()
         }))!;
-        expect(aliceBalance).to.be.deep.equal(
-            oldAliceBalance + Math.floor((minCustomCost * 2) / 10)
-        );
+        expect(aliceBalance).to.be.deep.equal(oldAliceBalance);
 
         const oldBobBalance = +(await node.rpc.chain.getBalance({
             address: bobAddress.toString(),
@@ -769,9 +746,7 @@ describe("Staking", function() {
         const bobBalance = +(await node.rpc.chain.getBalance({
             address: bobAddress.toString()
         }))!;
-        expect(bobBalance).to.be.deep.equal(
-            oldBobBalance + Math.floor((minCustomCost * 3) / 10)
-        );
+        expect(bobBalance).to.be.deep.equal(oldBobBalance);
 
         const oldCarolBalance = +(await node.rpc.chain.getBalance({
             address: carolAddress.toString(),
@@ -780,9 +755,7 @@ describe("Staking", function() {
         const carolBalance = +(await node.rpc.chain.getBalance({
             address: carolAddress.toString()
         }))!;
-        expect(carolBalance).to.be.deep.equal(
-            oldCarolBalance + Math.floor((minCustomCost * 2) / 10)
-        );
+        expect(carolBalance).to.be.deep.equal(oldCarolBalance);
 
         const oldDaveBalance = +(await node.rpc.chain.getBalance({
             address: daveAddress.toString(),
@@ -791,9 +764,7 @@ describe("Staking", function() {
         const daveBalance = +(await node.rpc.chain.getBalance({
             address: daveAddress.toString()
         }))!;
-        expect(daveBalance).to.be.deep.equal(
-            oldDaveBalance + Math.floor((minCustomCost * 1) / 10)
-        );
+        expect(daveBalance).to.be.deep.equal(oldDaveBalance);
 
         const oldValidator0Balance = +(await node.rpc.chain.getBalance({
             address: validator0Address.toString(),
@@ -802,14 +773,7 @@ describe("Staking", function() {
         const validator0Balance = +(await node.rpc.chain.getBalance({
             address: validator0Address.toString()
         }))!;
-        expect(validator0Balance).to.be.deep.equal(
-            oldValidator0Balance +
-                Math.floor((minCustomCost * 2) / 10) -
-                fee +
-                fee -
-                minCustomCost +
-                blockReward
-        );
+        expect(validator0Balance).to.be.deep.equal(oldValidator0Balance - fee);
 
         const oldValidator1Balance = +(await node.rpc.chain.getBalance({
             address: validator1Address.toString(),
@@ -880,11 +844,6 @@ describe("Staking", function() {
         ]);
 
         const blockNumber = await node.getBestBlockNumber();
-        const blockReward = parseInt(
-            Scheme.engine.solo.params.blockReward as string,
-            16
-        );
-        const minCustomCost = Scheme.params.minCustomCost as number;
 
         const oldAliceBalance = +(await node.rpc.chain.getBalance({
             address: aliceAddress.toString(),
@@ -893,9 +852,7 @@ describe("Staking", function() {
         const aliceBalance = +(await node.rpc.chain.getBalance({
             address: aliceAddress.toString()
         }))!;
-        expect(aliceBalance).to.be.deep.equal(
-            oldAliceBalance + Math.floor((minCustomCost * 1) / 10)
-        );
+        expect(aliceBalance).to.be.deep.equal(oldAliceBalance);
 
         const oldBobBalance = +(await node.rpc.chain.getBalance({
             address: bobAddress.toString(),
@@ -904,9 +861,7 @@ describe("Staking", function() {
         const bobBalance = +(await node.rpc.chain.getBalance({
             address: bobAddress.toString()
         }))!;
-        expect(bobBalance).to.be.deep.equal(
-            oldBobBalance + Math.floor((minCustomCost * 3) / 10)
-        );
+        expect(bobBalance).to.be.deep.equal(oldBobBalance);
 
         const oldFaucetBalance = +(await node.rpc.chain.getBalance({
             address: faucetAddress.toString(),
@@ -924,14 +879,7 @@ describe("Staking", function() {
         const validator0Balance = +(await node.rpc.chain.getBalance({
             address: validator0Address.toString()
         }))!;
-        expect(validator0Balance).to.be.deep.equal(
-            oldValidator0Balance +
-                Math.floor((minCustomCost * 2) / 10) -
-                fee +
-                fee -
-                minCustomCost +
-                blockReward
-        );
+        expect(validator0Balance).to.be.deep.equal(oldValidator0Balance - fee);
 
         const oldValidator1Balance = +(await node.rpc.chain.getBalance({
             address: validator1Address.toString(),
@@ -940,9 +888,7 @@ describe("Staking", function() {
         const validator1Balance = +(await node.rpc.chain.getBalance({
             address: validator1Address.toString()
         }))!;
-        expect(validator1Balance).to.be.deep.equal(
-            oldValidator1Balance + Math.floor((minCustomCost * 1) / 10)
-        );
+        expect(validator1Balance).to.be.deep.equal(oldValidator1Balance);
     });
 
     afterEach(async function() {

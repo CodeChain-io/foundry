@@ -19,14 +19,14 @@ mod params;
 use self::params::SoloParams;
 use super::stake;
 use super::{ConsensusEngine, Seal};
-use crate::block::{ExecutedBlock, IsBlock};
+use crate::block::ExecutedBlock;
 use crate::client::snapshot_notify::NotifySender;
 use crate::client::ConsensusClient;
 use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
-use cstate::{ActionHandler, HitHandler, TopStateView};
+use cstate::{ActionHandler, HitHandler};
 use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
 use std::sync::{Arc, Weak};
@@ -34,7 +34,6 @@ use std::sync::{Arc, Weak};
 /// A consensus engine which does not provide any consensus mechanism.
 pub struct Solo {
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
-    params: SoloParams,
     machine: CodeChainMachine,
     action_handlers: Vec<Arc<dyn ActionHandler>>,
     snapshot_notify_sender: Arc<RwLock<Option<NotifySender>>>,
@@ -47,11 +46,10 @@ impl Solo {
         if params.enable_hit_handler {
             action_handlers.push(Arc::new(HitHandler::new()));
         }
-        action_handlers.push(Arc::new(stake::Stake::new(params.genesis_stakes.clone())));
+        action_handlers.push(Arc::new(stake::Stake::new(params.genesis_stakes)));
 
         Solo {
             client: Default::default(),
-            params,
             machine,
             action_handlers,
             snapshot_notify_sender: Arc::new(RwLock::new(None)),
@@ -84,48 +82,16 @@ impl ConsensusEngine for Solo {
         Seal::Solo
     }
 
-    fn on_open_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
-        let block_number = block.header().number();
-        let metadata = block.state().metadata()?.expect("Metadata must exist");
-        if block_number == metadata.last_term_finished_block_num() + 1 {
-            let rewards = stake::drain_current_rewards(block.state_mut())?;
-            stake::update_calculated_rewards(block.state_mut(), rewards.into_iter().collect())?;
-        }
-        Ok(())
-    }
-
     fn on_close_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
 
         let parent_hash = *block.header().parent_hash();
         let parent = client.block_header(&parent_hash.into()).expect("Parent header must exist");
         let parent_common_params = client.common_params(parent_hash.into()).expect("CommonParams of parent must exist");
-        let author = *block.header().author();
-        let (total_reward, total_min_fee) = {
-            let transactions = block.transactions();
-            let block_reward = self.block_reward(block.header().number());
-            let total_min_fee: u64 = transactions.iter().map(|tx| tx.fee).sum();
-            let min_fee: u64 =
-                transactions.iter().map(|tx| CodeChainMachine::min_cost(&parent_common_params, &tx.action)).sum();
-            (block_reward + total_min_fee, min_fee)
-        };
-
-        assert!(total_reward >= total_min_fee, "{} >= {}", total_reward, total_min_fee);
-        let stakes = stake::get_stakes(block.state()).expect("Cannot get Stake status");
-
-        let mut distributor = stake::fee_distribute(total_min_fee, &stakes);
-        for (address, share) in &mut distributor {
-            self.machine.add_balance(block, &address, share)?
-        }
-
-        let block_author_reward = total_reward - total_min_fee + distributor.remaining_fee();
-
         let term_seconds = parent_common_params.term_seconds();
         if term_seconds == 0 {
-            self.machine.add_balance(block, &author, block_author_reward)?;
             return Ok(())
         }
-        stake::add_intermediate_rewards(block.state_mut(), author, block_author_reward)?;
         let last_term_finished_block_num = {
             let header = block.header();
             let current_term_period = header.timestamp() / term_seconds;
@@ -135,10 +101,6 @@ impl ConsensusEngine for Solo {
             }
             header.number()
         };
-        let rewards = stake::drain_calculated_rewards(&mut block.state_mut())?;
-        for (address, reward) in rewards {
-            self.machine.add_balance(block, &address, reward)?;
-        }
 
         stake::on_term_close(block.state_mut(), last_term_finished_block_num, &[])?;
         Ok(())
@@ -146,10 +108,6 @@ impl ConsensusEngine for Solo {
 
     fn register_client(&self, client: Weak<dyn ConsensusClient>) {
         *self.client.write() = Some(Weak::clone(&client));
-    }
-
-    fn block_reward(&self, _block_number: u64) -> u64 {
-        self.params.block_reward
     }
 
     fn recommended_confirmation(&self) -> u32 {

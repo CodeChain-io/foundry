@@ -619,14 +619,6 @@ impl EngineInfo for TestBlockChainClient {
         unimplemented!()
     }
 
-    fn block_reward(&self, _block_number: u64) -> u64 {
-        unimplemented!()
-    }
-
-    fn mining_reward(&self, _block_number: u64) -> Option<u64> {
-        unimplemented!()
-    }
-
     fn recommended_confirmation(&self) -> u32 {
         unimplemented!()
     }

@@ -28,8 +28,6 @@ pub struct TendermintParams {
     pub validators: Arc<DynamicValidator>,
     /// Timeout durations for different steps.
     pub timeouts: TimeoutParams,
-    /// Reward per block in base units.
-    pub block_reward: u64,
     /// Tokens distributed at genesis.
     pub genesis_stakes: HashMap<Address, u64>,
 }
@@ -48,7 +46,6 @@ impl From<cjson::scheme::TendermintParams> for TendermintParams {
                 precommit_delta: p.timeout_precommit_delta.map_or(dt.precommit_delta, to_duration),
                 commit: p.timeout_commit.map_or(dt.commit, to_duration),
             },
-            block_reward: p.block_reward.map_or(0, Into::into),
             genesis_stakes: p
                 .genesis_stakes
                 .unwrap_or_default()

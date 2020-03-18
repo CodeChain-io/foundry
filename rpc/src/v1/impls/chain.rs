@@ -183,10 +183,6 @@ where
         }
     }
 
-    fn get_mining_reward(&self, block_number: u64) -> Result<Option<u64>> {
-        Ok(self.client.mining_reward(block_number))
-    }
-
     fn get_network_id(&self) -> Result<NetworkId> {
         Ok(self.client.network_id())
     }

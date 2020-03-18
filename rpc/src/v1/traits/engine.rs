@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -20,10 +20,6 @@ use jsonrpc_core::Result;
 
 #[rpc(server)]
 pub trait Engine {
-    /// Gets the reward of the given block number
-    #[rpc(name = "engine_getBlockReward")]
-    fn get_block_reward(&self, block_number: u64) -> Result<u64>;
-
     /// Gets coinbase's account id
     #[rpc(name = "engine_getCoinbase")]
     fn get_coinbase(&self) -> Result<Option<PlatformAddress>>;

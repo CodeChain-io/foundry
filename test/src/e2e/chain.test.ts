@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -164,13 +164,6 @@ describe("chain", function() {
         expect(accounts).to.include.members(expected);
     });
 
-    it("getBlockReward", async function() {
-        const reward = (await node.rpc.engine.getBlockReward({
-            blockNumber: 10
-        }))!;
-        expect(reward).to.equal(0);
-    });
-
     it("getPendingTransactions", async function() {
         const pending = await node.rpc.mempool.getPendingTransactions();
         expect(pending.transactions.length).to.equal(0);
@@ -273,12 +266,6 @@ describe("chain", function() {
                 blockNumber: null
             })
         ).to.be.null;
-    });
-
-    it("getMiningReward", async function() {
-        expect(
-            await node.rpc.chain.getMiningReward({ blockNumber: 0 })
-        ).to.equal(0);
     });
 
     afterEach(function() {

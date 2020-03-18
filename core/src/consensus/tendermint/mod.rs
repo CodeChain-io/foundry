@@ -63,8 +63,6 @@ pub struct Tendermint {
     quit_tendermint: crossbeam::Sender<()>,
     inner: crossbeam::Sender<worker::Event>,
     validators: Arc<dyn ValidatorSet>,
-    /// Reward per block, in base units.
-    block_reward: u64,
     /// codechain machine descriptor
     machine: Arc<CodeChainMachine>,
     /// Action handlers for this consensus method
@@ -114,7 +112,6 @@ impl Tendermint {
             quit_tendermint,
             inner,
             validators,
-            block_reward: our_params.block_reward,
             machine,
             action_handlers,
             stake,
