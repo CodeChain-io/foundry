@@ -46,12 +46,7 @@ impl InvoiceDB {
     /// Inserts the block into backing cache database.
     /// Expects the block to be valid and already verified.
     /// If the block is already known, does nothing.
-    pub fn insert_invoice(
-        &self,
-        batch: &mut DBTransaction,
-        hash: TxHash,
-        error_hint: Option<String>,
-    ) {
+    pub fn insert_invoice(&self, batch: &mut DBTransaction, hash: TxHash, error_hint: Option<String>) {
         if self.is_known_error_hint(&hash) {
             return
         }

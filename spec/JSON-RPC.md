@@ -263,7 +263,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_getTransaction](#chain_gettransaction)
  * [chain_getTransactionSigner](#chain_gettransactionsigner)
  * [chain_containsTransaction](#chain_containstransaction)
- * [chain_getTransactionByTracker](#chain_gettransactionbytracker)
  * [chain_getAssetSchemeByTracker](#chain_getassetschemebytracker)
  * [chain_getAssetSchemeByType](#chain_getassetschemebytype)
  * [chain_getAsset](#chain_getasset)
@@ -765,52 +764,6 @@ Errors: `Invalid Params`
   "id":null
 }
 ```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_getTransactionByTracker
-Gets transaction with the given tracker.
-
-### Params
- 1. tracker - `H256`
-
-### Returns
-`Transaction`
-
-Errors: `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getTransactionsByTracker", "params": ["0x24df02abcd4e984e90253dc344e89b8431bbb319c66643bfef566dfdf46ec6bc"], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-    "jsonrpc": "2.0",
-    "result": {
-        "action": {
-          "type":"pay",
-          "quantity":"0xa",
-          "receiver": "cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7"
-          "hash": "0x24df02abcd4e984e90253dc344e89b8431bbb319c66643bfef566dfdf46ec6bc",
-        },
-        "blockHash": "0xfc196ede542b03b55aee9f106004e7e3d7ea6a9600692e964b4735a260356b50",
-        "blockNumber": 5,
-        "fee": "0xa",
-        "hash": "0xdb7c705d02e8961880783b4cb3dc051c41e551ade244bed5521901d8de190fc6",
-        "networkId": "cc",
-        "seq": 4,
-        "transactionIndex": 0,
-        "sig":"0x291d932e55162407eb01915923d68cf78df4815a25fc6033488b644bda44b02251123feac3a3c56a399a2b32331599fd50b7a39ec2c1a2325e37f383c6aeedc301"
-    },
-    "id": null,
-}
-```
-
 [Back to **List of methods**](#list-of-methods)
 
 ## chain_getAssetSchemeByTracker

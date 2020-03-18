@@ -28,7 +28,7 @@ use crate::encoded;
 use crate::invoice::Invoice;
 use crate::transaction::LocalizedTransaction;
 use crate::views::{BlockView, HeaderView};
-use ctypes::{BlockHash, BlockNumber, Tracker, TxHash};
+use ctypes::{BlockHash, BlockNumber, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::RwLock;
 use primitives::H256;
@@ -446,10 +446,6 @@ impl BodyProvider for BlockChain {
 
     fn transaction_address(&self, hash: &TxHash) -> Option<TransactionAddress> {
         self.body_db.transaction_address(hash)
-    }
-
-    fn transaction_address_by_tracker(&self, tracker: &Tracker) -> Option<TransactionAddress> {
-        self.body_db.transaction_address_by_tracker(tracker)
     }
 
     fn block_body(&self, hash: &BlockHash) -> Option<encoded::Body> {
