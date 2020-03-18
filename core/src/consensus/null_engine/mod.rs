@@ -14,9 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod params;
-
-use self::params::NullEngineParams;
 use super::ConsensusEngine;
 use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
@@ -24,15 +21,13 @@ use ckey::Address;
 
 /// An engine which does not provide any consensus mechanism and does not seal blocks.
 pub struct NullEngine {
-    _params: NullEngineParams,
     machine: CodeChainMachine,
 }
 
 impl NullEngine {
     /// Returns new instance of NullEngine with default VM Factory
-    pub fn new(params: NullEngineParams, machine: CodeChainMachine) -> Self {
+    pub fn new(machine: CodeChainMachine) -> Self {
         NullEngine {
-            _params: params,
             machine,
         }
     }

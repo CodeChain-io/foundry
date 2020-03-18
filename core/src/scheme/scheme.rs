@@ -95,7 +95,7 @@ impl Scheme {
         let machine = Self::machine(&engine_scheme, params);
 
         match engine_scheme {
-            cjson::scheme::Engine::Null(null) => Arc::new(NullEngine::new(null.params.into(), machine)),
+            cjson::scheme::Engine::Null => Arc::new(NullEngine::new(machine)),
             cjson::scheme::Engine::Solo(solo) => Arc::new(Solo::new(solo.params.into(), machine)),
             cjson::scheme::Engine::Tendermint(tendermint) => Tendermint::new(tendermint.params.into(), machine),
         }
