@@ -287,7 +287,6 @@ When `Transaction` is included in any response, there will be an additional fiel
 ***
  * [mempool_sendSignedTransaction](#mempool_sendsignedtransaction)
  * [mempool_getErrorHint](#mempool_geterrorhint)
- * [mempool_getTransactionResultsByTracker](#mempool_getTransactionResultsByTracker)
  * [mempool_getPendingTransactions](#mempool_getpendingtransactions)
  * [mempool_getPendingTransactionsCount](#mempool_getpendingtransactionscount)
  * [mempool_getBannedAccounts](#mempool_getbannedaccounts)
@@ -1562,36 +1561,6 @@ Errors: `Invalid Params`
 {
   "jsonrpc":"2.0",
   "result":"Text verification has failed: Invalid Signature",
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## mempool_getTransactionResultsByTracker
-Gets transaction results with the given tracker.
-
-### Params
- 1. tracker - `H256`
-
-### Returns
-`boolean[]`
-
-Errors: `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "mempool_getTransactionResultsByTracker", "params": ["0x24df02abcd4e984e90253dc344e89b8431bbb319c66643bfef566dfdf46ec6bc"], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result": [false, true],
   "id":null
 }
 ```

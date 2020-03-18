@@ -251,8 +251,6 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
 
     /// Get the transaction with given tracker.
     fn transaction_by_tracker(&self, tracker: &Tracker) -> Option<LocalizedTransaction>;
-
-    fn error_hints_by_tracker(&self, tracker: &Tracker) -> Vec<(TxHash, Option<String>)>;
 }
 
 /// Result of import block operation.

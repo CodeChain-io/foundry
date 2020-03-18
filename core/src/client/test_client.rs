@@ -581,10 +581,6 @@ impl BlockChainClient for TestBlockChainClient {
     fn transaction_by_tracker(&self, _: &Tracker) -> Option<LocalizedTransaction> {
         unimplemented!();
     }
-
-    fn error_hints_by_tracker(&self, _: &Tracker) -> Vec<(TxHash, Option<String>)> {
-        unimplemented!();
-    }
 }
 
 impl TimeoutHandler for TestBlockChainClient {

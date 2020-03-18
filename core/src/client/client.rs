@@ -632,11 +632,6 @@ impl BlockChainClient for Client {
         let address = self.transaction_addresses(tracker);
         address.and_then(|address| chain.transaction(&address))
     }
-
-    fn error_hints_by_tracker(&self, tracker: &Tracker) -> Vec<(TxHash, Option<String>)> {
-        let chain = self.block_chain();
-        chain.error_hints_by_tracker(tracker)
-    }
 }
 
 impl TermInfo for Client {
