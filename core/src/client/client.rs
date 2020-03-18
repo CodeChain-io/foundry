@@ -20,7 +20,7 @@ use super::{
     DatabaseClient, EngineClient, EngineInfo, ExecuteClient, ImportBlock, ImportResult, MiningBlockChainClient, Shard,
     StateInfo, StateOrBlock,
 };
-use crate::block::{Block, IsBlock, OpenBlock, SealedBlock};
+use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock};
 use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, InvoiceProvider, TransactionAddress};
 use crate::client::{ConsensusClient, SnapshotClient, TermInfo};
 use crate::consensus::{CodeChainEngine, EngineError};
@@ -142,32 +142,13 @@ impl Client {
         });
     }
 
-    pub fn new_blocks(
-        &self,
-        imported: &[BlockHash],
-        invalid: &[BlockHash],
-        enacted: &[BlockHash],
-        sealed: &[BlockHash],
-    ) {
-        self.notify(|notify| notify.new_blocks(imported.to_vec(), invalid.to_vec(), enacted.to_vec(), sealed.to_vec()));
+    pub fn new_blocks(&self, imported: &[BlockHash], invalid: &[BlockHash], enacted: &[BlockHash]) {
+        self.notify(|notify| notify.new_blocks(imported.to_vec(), invalid.to_vec(), enacted.to_vec()));
     }
 
-    pub fn new_headers(
-        &self,
-        imported: &[BlockHash],
-        invalid: &[BlockHash],
-        enacted: &[BlockHash],
-        sealed: &[BlockHash],
-        new_best_proposal: Option<BlockHash>,
-    ) {
+    pub fn new_headers(&self, imported: &[BlockHash], enacted: &[BlockHash], new_best_proposal: Option<BlockHash>) {
         self.notify(|notify| {
-            notify.new_headers(
-                imported.to_vec(),
-                invalid.to_vec(),
-                enacted.to_vec(),
-                sealed.to_vec(),
-                new_best_proposal,
-            );
+            notify.new_headers(imported.to_vec(), enacted.to_vec(), new_best_proposal);
         });
     }
 
@@ -261,7 +242,7 @@ impl Client {
 
         let enacted = self.importer.extract_enacted(vec![route]);
         self.importer.miner.chain_new_blocks(self, &[], &[], &enacted);
-        self.new_blocks(&[], &[], &enacted, &[]);
+        self.new_blocks(&[], &[], &enacted);
     }
 
     fn block_number_ref(&self, id: &BlockId) -> Option<BlockNumber> {
@@ -521,7 +502,7 @@ impl ImportBlock for Client {
         self.importer.force_update_best_block(hash, self)
     }
 
-    fn import_sealed_block(&self, block: &SealedBlock) -> ImportResult {
+    fn import_closed_block(&self, block: &ClosedBlock) -> ImportResult {
         let h = block.header().hash();
         let route = {
             // scope for self.import_lock
@@ -534,12 +515,12 @@ impl ImportBlock for Client {
             self.importer.import_headers(vec![header], self, &import_lock);
 
             let route = self.importer.commit_block(block, header, &block_data, self);
-            cinfo!(CLIENT, "Imported sealed block #{} ({})", number, h);
+            cinfo!(CLIENT, "Imported closed block #{} ({})", number, h);
             route
         };
         let enacted = self.importer.extract_enacted(vec![route]);
         self.importer.miner.chain_new_blocks(self, &[h], &[], &enacted);
-        self.new_blocks(&[h], &[], &enacted, &[h]);
+        self.new_blocks(&[h], &[], &enacted);
         self.db().flush().expect("DB flush failed.");
         Ok(h)
     }

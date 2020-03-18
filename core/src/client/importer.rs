@@ -137,7 +137,7 @@ impl Importer {
                 }
                 let enacted = self.extract_enacted(import_results);
                 self.miner.chain_new_blocks(client, &imported_blocks, &invalid_blocks, &enacted);
-                client.new_blocks(&imported_blocks, &invalid_blocks, &enacted, &[]);
+                client.new_blocks(&imported_blocks, &invalid_blocks, &enacted);
             }
         }
 
@@ -153,10 +153,6 @@ impl Importer {
         Vec::from_iter(set)
     }
 
-    // NOTE: the header of the block passed here is not necessarily sealed, as
-    // it is for reconstructing the state transition.
-    //
-    // The header passed is from the original block data and is sealed.
     pub fn commit_block<B>(&self, block: &B, header: &Header, block_data: &[u8], client: &Client) -> ImportRoute
     where
         B: IsBlock, {
@@ -328,13 +324,7 @@ impl Importer {
             None
         };
 
-        client.new_headers(
-            &imported,
-            &bad.iter().cloned().collect::<Vec<_>>(),
-            &enacted,
-            &[],
-            best_proposal_header_changed,
-        );
+        client.new_headers(&imported, &enacted, best_proposal_header_changed);
 
         client.db().flush().expect("DB flush failed.");
 
@@ -352,7 +342,7 @@ impl Importer {
             client.db().write_buffered(batch);
             chain.commit();
         }
-        client.new_headers(&[hash], &[], &[], &[], None);
+        client.new_headers(&[hash], &[], None);
 
         client.db().flush().expect("DB flush failed.");
     }
@@ -371,7 +361,7 @@ impl Importer {
             chain.commit();
         }
         self.miner.chain_new_blocks(client, &[hash], &[], &[]);
-        client.new_blocks(&[hash], &[], &[], &[]);
+        client.new_blocks(&[hash], &[], &[]);
 
         client.db().flush().expect("DB flush failed.");
     }

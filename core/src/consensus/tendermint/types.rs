@@ -16,7 +16,7 @@
 
 use super::super::BitSet;
 use super::message::VoteStep;
-use crate::block::{IsBlock, SealedBlock};
+use crate::block::{ClosedBlock, IsBlock};
 use ckey::Signature;
 use ctypes::BlockHash;
 use primitives::Bytes;
@@ -33,10 +33,10 @@ pub enum TendermintState {
         parent_hash: BlockHash,
     },
     ProposeWaitImported {
-        block: Box<SealedBlock>,
+        block: Box<ClosedBlock>,
     },
     ProposeWaitEmptyBlockTimer {
-        block: Box<SealedBlock>,
+        block: Box<ClosedBlock>,
     },
     Prevote,
     Precommit,

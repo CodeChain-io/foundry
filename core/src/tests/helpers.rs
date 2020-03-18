@@ -16,7 +16,6 @@
 
 use crate::scheme::Scheme;
 use crate::transaction::SignedTransaction;
-use cstate::StateDB;
 use ctypes::{BlockHash, Header};
 use primitives::Bytes;
 use rlp::RlpStream;
@@ -53,8 +52,4 @@ pub fn get_good_dummy_block_hash() -> (BlockHash, Bytes) {
     block_header.set_parent_hash(test_scheme.genesis_header().hash());
 
     (block_header.hash(), create_test_block(&block_header))
-}
-
-pub fn get_temp_state_db() -> StateDB {
-    StateDB::new_with_memorydb()
 }
