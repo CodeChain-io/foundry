@@ -88,7 +88,7 @@ impl Decodable for ShardText {
         }
         let prefix = rlp.val_at::<u8>(0)?;
         if PREFIX != prefix {
-            cdebug!(STATE, "{} is not an expected prefix for asset", prefix);
+            cdebug!(STATE, "{} is not an expected prefix for shard text", prefix);
             return Err(DecoderError::Custom("Unexpected prefix"))
         }
         Ok(Self {

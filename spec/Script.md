@@ -1,8 +1,8 @@
-Codechain saves the unlock condition for each asset, and anyone who can pass this condition is authorized to use the asset. The unlock condition is represented in a byte array, and decoded as a list of instructions before execution. Script language is intentionally designed to not be Turing-complete, and all scripts are ensured to be finished in finite time.
+Codechain saves the unlock condition, and anyone who can pass this condition is authorized. The unlock condition is represented in a byte array, and decoded as a list of instructions before execution. Script language is intentionally designed to not be Turing-complete, and all scripts are ensured to be finished in finite time.
 
 # Notation
 
-Assets don’t hold a full script describing its unlock condition, but only a hash of it. We refer to this script as the **lock script**, and the hash as the **script hash**. Before lock script is executed, some predefined values are inserted to stack. These values are called **parameters**, and saved along with script hash. To consume an asset, user must provide **unlock script**, a script which will be executed together with lock script.
+Addresses don’t hold a full script describing its unlock condition, but only a hash of it. We refer to this script as the **lock script**, and the hash as the **script hash**. Before lock script is executed, some predefined values are inserted to stack. These values are called **parameters**, and saved along with script hash. To consume an address, user must provide **unlock script**, a script which will be executed together with lock script.
 
 Script is encoded as a byte string, and each byte of this string is referred to as a script byte. Instructions are execution units of CCVM, and can be composed of multiple script bytes. The frontmost byte of instruction is the identifier of instruction, and is called opcode.
 
@@ -16,7 +16,7 @@ Script language in CodeChain uses [CodeChain Virtual Machine](CodeChain-Virtual-
 
 The overall execution process is similar to P2SH in Bitcoin. Detailed execution process is as follows:
 
-1. Check if an asset’s script hash is equal to the hash of provided lock script.
+1. Check if an address’s script hash is equal to the hash of provided lock script.
 1. Decode the lock script and unlock script into a list of instructions.
 1. Check if unlock script is sane. Currently, it's considered invalid if any opcode other than PUSH-related codes are included.
 1. Insert the provided parameters into stack. Order of insertion must be last to first, so that first parameter appears at top of the stack.
