@@ -10,6 +10,8 @@ self_nomination_enable = false
 
 [ipc]
 
+[informer]
+
 [ws]
 
 [snapshot]
