@@ -150,7 +150,7 @@ impl Decodable for Metadata {
 
         let prefix = rlp.val_at::<u8>(0)?;
         if PREFIX != prefix {
-            cdebug!(STATE, "{} is not an expected prefix for asset", prefix);
+            cdebug!(STATE, "{} is not an expected prefix for metadata", prefix);
             return Err(DecoderError::Custom("Unexpected prefix"))
         }
         let number_of_shards = rlp.val_at(1)?;
