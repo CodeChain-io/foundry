@@ -8,6 +8,8 @@ self_nomination_enable = false
 
 [rpc]
 
+[informer]
+
 [ipc]
 
 [ws]

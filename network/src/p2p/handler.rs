@@ -24,6 +24,7 @@ use crate::session::Session;
 use crate::stream::Stream;
 use crate::{FiltersControl, NodeId, RoutingTable, SocketAddr};
 use ccrypto::error::SymmError;
+use cinformer::{Events as InformerEvents, InformerEventSender};
 use cio::{IoChannel, IoContext, IoHandler, IoHandlerResult, IoManager, StreamToken, TimerToken};
 use ckey::NetworkId;
 use finally_block::finally;
@@ -120,8 +121,11 @@ pub struct Handler {
     max_peers: usize,
     peer_db: Box<dyn (ManagingPeerdb)>,
     rng: Mutex<OsRng>,
+
+    informer_event_sender: InformerEventSender,
 }
 
+#[allow(clippy::too_many_arguments)]
 impl Handler {
     pub fn try_new(
         channel: IoChannel<Message>,
@@ -134,6 +138,7 @@ impl Handler {
         min_peers: usize,
         max_peers: usize,
         peer_db: Box<dyn ManagingPeerdb>,
+        sender: InformerEventSender,
     ) -> ::std::result::Result<Self, String> {
         if MAX_INBOUND_CONNECTIONS + MAX_OUTBOUND_CONNECTIONS < max_peers {
             return Err(format!("Max peers must be less than {}", MAX_INBOUND_CONNECTIONS + MAX_OUTBOUND_CONNECTIONS))
@@ -174,6 +179,7 @@ impl Handler {
             max_peers,
             peer_db,
             rng: Mutex::new(OsRng::new().unwrap()),
+            informer_event_sender: sender,
         })
     }
 
@@ -230,6 +236,8 @@ impl Handler {
             let t = outgoing_connections.insert(token, con);
             assert!(t.is_none());
             io.register_stream(token);
+            let added_peer = InformerEvents::PeerAdded("PeerAdded".to_string(), socket_address.to_string(), token);
+            self.informer_event_sender.notify(added_peer);
             cinfo!(NETWORK, "New connection to {}({})", socket_address, token);
         } else {
             cwarn!(NETWORK, "Cannot create a connection to {}", socket_address);

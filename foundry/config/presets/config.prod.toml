@@ -40,6 +40,12 @@ port = 8080
 disable = false
 path = "/tmp/jsonrpc.ipc"
 
+[informer]
+disable = true
+interface = "127.0.0.1"
+port = 7070
+max_connections = 100
+
 [ws]
 disable = true
 interface = "127.0.0.1"

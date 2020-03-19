@@ -18,6 +18,7 @@ mod chain_type;
 
 use ccore::{MemPoolMinFees, MinerOptions, TimeGapParams};
 use cidr::IpCidr;
+use cinformer::InformerConfig;
 use ckey::PlatformAddress;
 use cnetwork::{FilterEntry, NetworkConfig, SocketAddr};
 use primitives::H256;
@@ -38,6 +39,7 @@ pub struct Config {
     pub network: Network,
     pub rpc: Rpc,
     pub ws: Ws,
+    pub informer: Informer,
     pub snapshot: Snapshot,
     #[serde(default)]
     pub email_alarm: EmailAlarm,
@@ -51,6 +53,7 @@ impl Config {
         self.network.merge(&other.network);
         self.rpc.merge(&other.rpc);
         self.ws.merge(&other.ws);
+        self.informer.merge(&other.informer);
         self.snapshot.merge(&other.snapshot);
         self.email_alarm.merge(&other.email_alarm);
     }
@@ -122,6 +125,16 @@ impl Config {
             interface: self.ws.interface.clone().unwrap(),
             port: self.ws.port.unwrap(),
             max_connections: self.ws.max_connections.unwrap(),
+        }
+    }
+
+    pub fn informer_config(&self) -> InformerConfig {
+        debug_assert!(!self.informer.disable.unwrap());
+
+        InformerConfig {
+            interface: self.informer.interface.clone().unwrap(),
+            port: self.informer.port.unwrap(),
+            max_connections: self.informer.max_connections.unwrap(),
         }
     }
 
@@ -270,6 +283,15 @@ pub struct Ws {
 
 fn default_enable_devel_api() -> bool {
     cfg!(debug_assertions)
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Informer {
+    pub disable: Option<bool>,
+    pub interface: Option<String>,
+    pub port: Option<u16>,
+    pub max_connections: Option<usize>,
 }
 
 #[derive(Deserialize)]
@@ -641,6 +663,39 @@ impl Rpc {
     }
 }
 
+impl Informer {
+    pub fn merge(&mut self, other: &Informer) {
+        if other.disable.is_some() {
+            self.disable = other.disable;
+        }
+        if other.interface.is_some() {
+            self.interface = other.interface.clone();
+        }
+        if other.port.is_some() {
+            self.port = other.port;
+        }
+        if other.max_connections.is_some() {
+            self.max_connections = other.max_connections;
+        }
+    }
+    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
+        if matches.is_present("no-informer") {
+            self.disable = Some(true);
+        }
+
+        if let Some(interface) = matches.value_of("informer-interface") {
+            self.interface = Some(interface.to_string());
+        }
+        if let Some(port) = matches.value_of("informer-port") {
+            self.port = Some(port.parse().map_err(|_| "Invalid port")?);
+        }
+        if let Some(max_connections) = matches.value_of("informer-max-connections") {
+            self.max_connections = Some(max_connections.parse().map_err(|_| "Invalid max connections")?);
+        }
+        Ok(())
+    }
+}
+
 impl Ws {
     pub fn merge(&mut self, other: &Ws) {
         if other.disable.is_some() {
@@ -769,6 +824,7 @@ pub fn load_config(matches: &clap::ArgMatches<'_>) -> Result<Config, String> {
     config.network.overwrite_with(&matches)?;
     config.rpc.overwrite_with(&matches)?;
     config.ws.overwrite_with(&matches)?;
+    config.informer.overwrite_with(&matches)?;
     config.snapshot.overwrite_with(&matches)?;
     config.email_alarm.overwrite_with(&matches)?;
     Ok(config)

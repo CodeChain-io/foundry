@@ -24,10 +24,12 @@ ckey = { package = "codechain-key", path = "key" }
 ctypes = { package = "codechain-types", path = "types" }
 ckeystore = { package = "codechain-keystore", path = "keystore" }
 cnetwork = { package = "codechain-network", path = "network" }
+cinformer = {package = "codechain-informer", path = "informer"}
 crpc = { package = "codechain-rpc", path = "rpc" }
 csync = { package = "codechain-sync", path = "sync" }
 ctimer = { package = "codechain-timer", path = "util/timer" }
 ctrlc = { git = "https://github.com/paritytech/rust-ctrlc.git" }
+crossbeam-channel = "0.3"
 fdlimit = "0.1"
 finally-block = "0.1"
 futures = "0.1"
@@ -67,6 +69,7 @@ members = [
     "keystore",
     "network",
     "rpc",
+    "informer",
     "sync",
     "types",
 ]
