@@ -152,7 +152,6 @@ pub enum Evidence {
 }
 
 pub struct TransactionExecutionOutcome {
-    pub is_success: bool,
     pub events: Vec<Event>,
 }
 
