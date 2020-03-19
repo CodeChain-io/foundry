@@ -399,6 +399,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "codechain-informer"
+version = "0.1.0"
+dependencies = [
+ "cidr",
+ "codechain-logger",
+ "crossbeam-channel",
+ "jsonrpc-core",
+ "jsonrpc-derive",
+ "jsonrpc-http-server",
+ "jsonrpc-ipc-server",
+ "jsonrpc-pubsub",
+ "jsonrpc-ws-server",
+ "kvdb",
+ "lazy_static 1.2.0",
+ "log 0.4.6",
+ "parking_lot 0.6.4",
+ "primitives",
+ "rand 0.6.1",
+ "rlp",
+ "rustc-hex 1.0.0",
+ "rustc-serialize",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "time",
+]
+
+[[package]]
 name = "codechain-io"
 version = "1.9.0"
 dependencies = [
@@ -1001,6 +1029,7 @@ dependencies = [
  "clap",
  "codechain-core",
  "codechain-discovery",
+ "codechain-informer",
  "codechain-key",
  "codechain-keystore",
  "codechain-logger",
@@ -1009,6 +1038,7 @@ dependencies = [
  "codechain-sync",
  "codechain-timer",
  "codechain-types",
+ "crossbeam-channel",
  "ctrlc",
  "env_logger 0.5.10",
  "fdlimit",
@@ -1388,6 +1418,17 @@ dependencies = [
  "parity-tokio-ipc",
  "parking_lot 0.9.0",
  "tokio-service",
+]
+
+[[package]]
+name = "jsonrpc-pubsub"
+version = "14.0.3"
+source = "git+https://github.com/paritytech/jsonrpc.git?tag=v14.0.3#2135c25df57715238f1709365e3ea3bedc88e030"
+dependencies = [
+ "jsonrpc-core",
+ "log 0.4.6",
+ "parking_lot 0.9.0",
+ "serde",
 ]
 
 [[package]]
@@ -2514,9 +2555,9 @@ checksum = "dcf128d1287d2ea9d80910b5f1120d0b8eede3fbf1abe91c40d39ea7d51e6fda"
 
 [[package]]
 name = "rustc_version"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a54aa04a10c68c1c4eacb4337fd883b435997ede17a9385784b990777686b09a"
+checksum = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
 dependencies = [
  "semver",
 ]
