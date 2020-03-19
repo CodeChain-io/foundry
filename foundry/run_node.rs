@@ -27,12 +27,15 @@ use ccore::{
     MinerService, PeerDb, Scheme, NUM_COLUMNS,
 };
 use cdiscovery::{Config, Discovery};
+use cinformer::{handler::Handler, InformerEventSender, InformerService, MetaIoHandler, PubSubHandler, Session};
 use ckey::{Address, NetworkId, PlatformAddress};
 use ckeystore::accounts_dir::RootDiskDirectory;
 use ckeystore::KeyStore;
 use clap::ArgMatches;
 use clogger::{EmailAlarm, LoggerConfig};
 use cnetwork::{Filters, ManagingPeerdb, NetworkConfig, NetworkControl, NetworkService, RoutingTable, SocketAddr};
+use crossbeam::unbounded;
+use crossbeam_channel as crossbeam;
 use csync::snapshot::Service as SnapshotService;
 use csync::{BlockSyncExtension, BlockSyncSender, TransactionSyncExtension};
 use ctimer::TimerLoop;
@@ -52,6 +55,7 @@ fn network_start(
     cfg: &NetworkConfig,
     routing_table: Arc<RoutingTable>,
     peer_db: Box<dyn ManagingPeerdb>,
+    sender: InformerEventSender,
 ) -> Result<Arc<NetworkService>, String> {
     let addr = cfg.address.parse().map_err(|_| format!("Invalid NETWORK listen host given: {}", cfg.address))?;
     let sockaddress = SocketAddr::new(addr, cfg.port);
@@ -66,6 +70,7 @@ fn network_start(
         filters,
         routing_table,
         peer_db,
+        sender,
     )
     .map_err(|e| format!("Network service error: {:?}", e))?;
 
@@ -246,6 +251,19 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
         panic_hook::set_with_email_alarm(email_alarm);
     }
 
+    // FIXME: unbound would cause memory leak.
+    // FIXME: The full queue should be handled.
+    // This will be fixed soon.
+    let (informer_connection_sender, informer_connection_receiver) = unbounded();
+    let informer_event_sender = {
+        if !config.informer.disable.unwrap() {
+            let (service, event_sender) = InformerService::new(informer_connection_receiver);
+            service.run_service();
+            event_sender
+        } else {
+            InformerEventSender::null_notifier()
+        }
+    };
     let pf = load_password_file(&config.operating.password_path)?;
     let base_path = config.operating.base_path.as_ref().unwrap().clone();
     let keys_path =
@@ -273,7 +291,14 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
             let network_id = c.network_id();
             let routing_table = RoutingTable::new();
             let peer_db = PeerDb::new(c.get_kvdb());
-            let service = network_start(network_id, timer_loop, &network_config, Arc::clone(&routing_table), peer_db)?;
+            let service = network_start(
+                network_id,
+                timer_loop,
+                &network_config,
+                Arc::clone(&routing_table),
+                peer_db,
+                informer_event_sender,
+            )?;
 
             if config.network.discovery.unwrap() {
                 discovery_start(&service, &config.network, routing_table)?;
@@ -317,6 +342,17 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
         self_nominate_start(c, matches, accountp, address);
     }
 
+    let informer_server = {
+        if !config.informer.disable.unwrap() {
+            let io: PubSubHandler<Arc<Session>> = PubSubHandler::new(MetaIoHandler::default());
+            let mut informer_handler = Handler::new(io);
+            informer_handler.event_subscription(informer_connection_sender);
+
+            Some(informer_handler.start_ws(config.informer_config())?)
+        } else {
+            None
+        }
+    };
     let (rpc_server, ipc_server, ws_server) = {
         let rpc_apis_deps = ApiDependencies {
             client: client.client(),
@@ -377,6 +413,9 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
 
     wait_for_exit();
 
+    if let Some(server) = informer_server {
+        server.close_handle().close();
+    }
     if let Some(server) = rpc_server {
         server.close_handle().close();
         server.wait();
