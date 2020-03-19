@@ -156,6 +156,7 @@ pub struct TransactionExecutionOutcome {
 }
 
 pub struct BlockOutcome {
+    pub is_success: bool,
     pub block_hash: BlockHash,
     pub updated_consensus_params: ConsensusParams,
     pub transaction_results: Vec<TransactionExecutionOutcome>,
