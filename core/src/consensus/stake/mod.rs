@@ -29,9 +29,7 @@ use rlp::{Decodable, Rlp};
 use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 
-pub use self::action_data::{
-    Banned, Candidates, CurrentValidators, Jail, NextValidators, PreviousValidators, Validator,
-};
+pub use self::action_data::{Banned, Candidates, CurrentValidators, Jail, NextValidators, Validator};
 use self::action_data::{Delegation, ReleaseResult, StakeAccount, Stakeholders};
 pub use self::actions::{Action, Approval};
 use super::tendermint::Deposit;
