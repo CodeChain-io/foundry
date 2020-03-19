@@ -1,5 +1,6 @@
 use ckey::Ed25519Public as Public;
-use ctypes::{BlockHash, TxHash};
+use ctypes::TxHash;
+use primitives::H256;
 
 /// A `Validator` receives requests from the underlying consensus engine
 /// and performs validation of blocks and Txes.
@@ -157,7 +158,7 @@ pub struct TransactionExecutionOutcome {
 
 pub struct BlockOutcome {
     pub is_success: bool,
-    pub block_hash: BlockHash,
+    pub state_root: H256,
     pub updated_consensus_params: ConsensusParams,
     pub transaction_results: Vec<TransactionExecutionOutcome>,
     pub events: Vec<Event>,
