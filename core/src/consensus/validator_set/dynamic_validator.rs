@@ -17,7 +17,7 @@
 use super::ValidatorSet;
 use crate::client::ConsensusClient;
 use crate::consensus::bit_set::BitSet;
-use crate::consensus::stake::{CurrentValidators, NextValidators, PreviousValidators, Validator};
+use crate::consensus::stake::{CurrentValidators, NextValidators, Validator};
 use crate::consensus::EngineError;
 use ckey::{public_to_address, Address, Ed25519Public as Public};
 use ctypes::util::unexpected::OutOfBounds;
@@ -53,17 +53,6 @@ impl DynamicValidator {
         validators
     }
 
-    fn previous_validators(&self, hash: BlockHash) -> Vec<Validator> {
-        let client: Arc<dyn ConsensusClient> =
-            self.client.read().as_ref().and_then(Weak::upgrade).expect("Client is not initialized");
-        let block_id = hash.into();
-        let state = client.state_at(block_id).expect("The previous validators must be called on the confirmed block");
-        let validators = PreviousValidators::load_from_state(&state).unwrap();
-        let mut validators: Vec<_> = validators.into();
-        validators.reverse();
-        validators
-    }
-
     fn validators_pubkey(&self, hash: BlockHash) -> Vec<Public> {
         let validators = self.next_validators(hash);
         validators.into_iter().map(|val| *val.pubkey()).collect()
@@ -71,10 +60,6 @@ impl DynamicValidator {
 
     fn current_validators_pubkey(&self, hash: BlockHash) -> Vec<Public> {
         self.current_validators(hash).into_iter().map(|val| *val.pubkey()).collect()
-    }
-
-    fn previous_validators_pubkey(&self, hash: BlockHash) -> Vec<Public> {
-        self.previous_validators(hash).into_iter().map(|val| *val.pubkey()).collect()
     }
 
     pub fn proposer_index(&self, parent: BlockHash, proposed_view: usize) -> usize {
@@ -193,10 +178,6 @@ impl ValidatorSet for DynamicValidator {
         let mut client_lock = self.client.write();
         assert!(client_lock.is_none());
         *client_lock = Some(client);
-    }
-
-    fn previous_addresses(&self, hash: &BlockHash) -> Vec<Address> {
-        self.previous_validators_pubkey(*hash).iter().map(public_to_address).collect()
     }
 
     fn current_addresses(&self, hash: &BlockHash) -> Vec<Address> {
