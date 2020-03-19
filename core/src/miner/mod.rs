@@ -36,7 +36,7 @@ use crate::client::{
 };
 use crate::consensus::EngineType;
 use crate::error::Error;
-use crate::transaction::{PendingSignedTransactions, SignedTransaction, UnverifiedTransaction};
+use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
 use crate::BlockId;
 
 /// Miner client API
@@ -89,7 +89,7 @@ pub trait MinerService: Send + Sync {
     fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo>(
         &self,
         chain: &C,
-        tx: SignedTransaction,
+        tx: VerifiedTransaction,
     ) -> Result<TransactionImportResult, Error>;
 
     /// Imports incomplete (node owner) transaction to mem pool.
@@ -104,10 +104,10 @@ pub trait MinerService: Send + Sync {
     ) -> Result<(TxHash, u64), Error>;
 
     /// Get a list of all pending transactions in the mem pool.
-    fn ready_transactions(&self, range: Range<u64>) -> PendingSignedTransactions;
+    fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions;
 
     /// Get list of all future transaction in the mem pool.
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingSignedTransactions;
+    fn future_pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions;
 
     /// Get a count of all pending transactions in the mem pool.
     fn count_pending_transactions(&self, range: Range<u64>) -> usize;
@@ -116,7 +116,7 @@ pub trait MinerService: Send + Sync {
     fn future_included_count_pending_transactions(&self, range: Range<u64>) -> usize;
 
     /// Get a list of all future transactions.
-    fn future_transactions(&self) -> Vec<SignedTransaction>;
+    fn future_transactions(&self) -> Vec<VerifiedTransaction>;
 
     /// Start sealing.
     fn start_sealing<C: MiningBlockChainClient + EngineInfo + TermInfo>(&self, client: &C);

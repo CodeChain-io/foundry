@@ -27,7 +27,7 @@ use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{CodeChainEngine, EngineType};
 use crate::error::Error;
 use crate::scheme::Scheme;
-use crate::transaction::{PendingSignedTransactions, SignedTransaction, UnverifiedTransaction};
+use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
 use crate::types::{BlockId, TransactionId};
 use ckey::{public_to_address, Address, Ed25519Public as Public, Password, PlatformAddress};
 use cstate::{FindActionHandler, TopLevelState};
@@ -39,6 +39,7 @@ use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
 use std::borrow::Borrow;
 use std::collections::HashSet;
+use std::convert::TryInto;
 use std::iter::FromIterator;
 use std::ops::Range;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -209,8 +210,13 @@ impl Miner {
                     cdebug!(MINER, "Rejected transaction {:?}: already in the blockchain", hash);
                     return Err(HistoryError::TransactionAlreadyImported.into())
                 }
-                if !self.is_allowed_transaction(&tx.action) {
-                    cdebug!(MINER, "Rejected transaction {:?}: {:?} is not allowed transaction", hash, tx.action);
+                if !self.is_allowed_transaction(&tx.transaction().action) {
+                    cdebug!(
+                        MINER,
+                        "Rejected transaction {:?}: {:?} is not allowed transaction",
+                        hash,
+                        tx.transaction().action
+                    );
                     return Err(Error::Other("Not allowed transaction".to_string()))
                 }
                 let immune_users = self.immune_users.read();
@@ -233,7 +239,7 @@ impl Miner {
                         e
                     })?;
 
-                // This check goes here because verify_transaction takes SignedTransaction parameter
+                // This check goes here because verify_transaction takes Verified parameter
                 self.engine.machine().verify_transaction(&tx, &fake_header, client, false).map_err(|e| {
                     match e {
                         Error::Syntax(_) if !origin.is_local() && !immune_users.contains(&signer_address) => {
@@ -343,7 +349,7 @@ impl Miner {
                 // The previous transaction has failed
                 continue
             }
-            if !self.is_allowed_transaction(&tx.action) {
+            if !self.is_allowed_transaction(&tx.transaction().action) {
                 invalid_tx_users.insert(signer_public);
                 invalid_transactions.push(tx.hash());
                 continue
@@ -571,7 +577,7 @@ impl MinerService for Miner {
     fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo>(
         &self,
         chain: &C,
-        tx: SignedTransaction,
+        tx: VerifiedTransaction,
     ) -> Result<TransactionImportResult, Error> {
         ctrace!(OWN_TX, "Importing transaction: {:?}", tx);
 
@@ -646,14 +652,14 @@ impl MinerService for Miner {
         let sig = account.sign(&tx_hash)?;
         let signer_public = account.public()?;
         let unverified = UnverifiedTransaction::new(tx, sig, signer_public);
-        let signed = SignedTransaction::try_new(unverified)?;
+        let signed: VerifiedTransaction = unverified.try_into()?;
         let hash = signed.hash();
         self.import_own_transaction(client, signed)?;
 
         Ok((hash, seq))
     }
 
-    fn ready_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
+    fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
         // FIXME: Update the body size when the common params are updated
         let max_body_size = self.engine.machine().genesis_common_params().max_body_size();
         self.mem_pool.read().top_transactions(max_body_size, range)
@@ -667,12 +673,12 @@ impl MinerService for Miner {
         self.mem_pool.read().future_included_count_pending_transactions(range)
     }
 
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingSignedTransactions {
+    fn future_pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
         self.mem_pool.read().get_future_pending_transactions(usize::max_value(), range)
     }
 
     /// Get a list of all future transactions.
-    fn future_transactions(&self) -> Vec<SignedTransaction> {
+    fn future_transactions(&self) -> Vec<VerifiedTransaction> {
         self.mem_pool.read().future_transactions()
     }
 
@@ -724,11 +730,11 @@ impl MinerService for Miner {
     }
 }
 
-fn get_next_seq(transactions: impl IntoIterator<Item = SignedTransaction>, addresses: &[Address]) -> Option<u64> {
+fn get_next_seq(transactions: impl IntoIterator<Item = VerifiedTransaction>, addresses: &[Address]) -> Option<u64> {
     let mut txes = transactions
         .into_iter()
         .filter(|tx| addresses.contains(&public_to_address(&tx.signer_public())))
-        .map(|tx| tx.seq);
+        .map(|tx| tx.transaction().seq);
     if let Some(first) = txes.next() {
         Some(txes.fold(first, std::cmp::max) + 1)
     } else {
@@ -745,7 +751,7 @@ pub mod test {
 
     use super::super::super::client::ClientConfig;
     use super::super::super::service::ClientIoMessage;
-    use super::super::super::transaction::{SignedTransaction, UnverifiedTransaction};
+    use super::super::super::transaction::{UnverifiedTransaction, VerifiedTransaction};
     use super::*;
     use crate::client::Client;
     use crate::db::NUM_COLUMNS;
@@ -760,7 +766,7 @@ pub mod test {
         let client = generate_test_client(db, Arc::clone(&miner), &scheme).unwrap();
 
         let private = Private::random();
-        let transaction1: UnverifiedTransaction = SignedTransaction::new_with_sign(
+        let transaction1: UnverifiedTransaction = VerifiedTransaction::new_with_sign(
             Transaction {
                 seq: 30,
                 fee: 40,

@@ -16,10 +16,45 @@
 
 use super::mem_pool_types::MemPoolItem;
 use crate::db as dblib;
+use crate::error::Error;
+use crate::miner::mem_pool_types::TxOrigin;
+use crate::transaction::UnverifiedTransaction;
+use ctypes::BlockNumber;
 use kvdb::{DBTransaction, KeyValueDB};
 use primitives::H256;
 use rlp::Encodable;
 use std::collections::HashMap;
+use std::convert::{TryFrom, TryInto};
+
+pub type PoolingInstant = BlockNumber;
+
+#[derive(Clone, Eq, PartialEq, Debug, RlpEncodable, RlpDecodable)]
+pub struct MemPoolItemProjection {
+    /// Transaction.
+    pub tx: UnverifiedTransaction,
+    /// Transaction origin.
+    pub origin: TxOrigin,
+    /// Insertion time
+    pub inserted_block_number: PoolingInstant,
+    /// Insertion timstamp
+    pub inserted_timestamp: u64,
+    /// ID assigned upon insertion, should be unique.
+    pub insertion_id: u64,
+}
+
+impl TryFrom<MemPoolItemProjection> for MemPoolItem {
+    type Error = Error;
+    fn try_from(mem_pool: MemPoolItemProjection) -> Result<Self, Error> {
+        let verified_tx = mem_pool.tx.try_into()?;
+        Ok(MemPoolItem {
+            tx: verified_tx,
+            origin: mem_pool.origin,
+            inserted_block_number: mem_pool.inserted_block_number,
+            inserted_timestamp: mem_pool.inserted_timestamp,
+            insertion_id: mem_pool.insertion_id,
+        })
+    }
+}
 
 const PREFIX_SIZE: usize = 5;
 const PREFIX_ITEM: &[u8; PREFIX_SIZE] = b"item_";
@@ -46,9 +81,9 @@ pub fn recover_to_data(db: &dyn KeyValueDB) -> HashMap<H256, MemPoolItem> {
     for (key, value) in db.iter(dblib::COL_MEMPOOL) {
         let bytes = (*value).to_vec();
         let rlp = rlp::Rlp::new(&bytes);
-
         let decoded_key = (key.as_ref()[PREFIX_SIZE..]).into();
-        let decoded_item = rlp.as_val().unwrap();
+        let mem_pool_projection: MemPoolItemProjection = rlp.as_val().unwrap();
+        let decoded_item = mem_pool_projection.try_into().expect("DB corruption detected");
         by_hash.insert(decoded_key, decoded_item);
     }
 

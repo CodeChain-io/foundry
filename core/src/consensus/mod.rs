@@ -206,7 +206,7 @@ pub trait ConsensusEngine: Sync + Send {
     fn register_time_gap_config_to_worker(&self, _time_gap_params: TimeGapParams) {}
 
     fn block_fee(&self, transactions: Box<dyn Iterator<Item = UnverifiedTransaction>>) -> u64 {
-        transactions.map(|tx| tx.fee).sum()
+        transactions.map(|tx| tx.transaction().fee).sum()
     }
 
     fn recommended_confirmation(&self) -> u32;
@@ -326,7 +326,7 @@ pub trait CodeChainEngine: ConsensusEngine {
         if let Action::Custom {
             handler_id,
             bytes,
-        } = &tx.action
+        } = &tx.transaction().action
         {
             let handler = self
                 .find_action_handler_for(*handler_id)
