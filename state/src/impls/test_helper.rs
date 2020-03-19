@@ -69,84 +69,77 @@ macro_rules! transaction {
 }
 
 macro_rules! set_top_level_state {
-    ($state: expr, []) => {
-    };
-    ($state:expr, [(account: $addr:expr => balance: $quantity:expr) $(,$x:tt)*]) => {
+    // base cases
+    ($state:expr, [(account: $addr:expr => balance: $quantity:expr)]) => {
         assert_eq!(Ok(()), $state.set_balance(&$addr, $quantity));
-
-        set_top_level_state!($state, [$($x),*]);
     };
-    ($state:expr, [(account: $addr:expr => seq: $seq:expr) $(,$x:tt)*]) => {
+    ($state:expr, [(account: $addr:expr => seq: $seq:expr)]) => {
         assert_eq!(Ok(()), $state.set_seq(&$addr, $seq));
-
-        set_top_level_state!($state, [$($x),*]);
     };
-    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*]) $(,$x:tt)*]) => {
-        set_top_level_state!($state, [(shard: $shard_id => owners: [$($owner),*], users: Vec::new()) $(,$x)*]);
+    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*])]) => {
+        set_top_level_state!($state, [(shard: $shard_id => owners: [$($owner),*], users: Vec::new())]);
     };
-    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*], users: [$($user:expr),*]) $(,$x:tt)*]) => {
-        set_top_level_state!($state, [(shard: $shard_id => owners: [$($owner),*], users: vec![$($user),*]) $(,$x)*]);
+    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*], users: [$($user:expr),*])]) => {
+        set_top_level_state!($state, [(shard: $shard_id => owners: [$($owner),*], users: vec![$($user),*])]);
     };
-    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*], users: $users:expr) $(,$x:tt)*]) => {
-        set_top_level_state!($state, [(shard: $shard_id => owners: vec![$($owner),*], users: $users) $(,$x)*]);
+    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*], users: $users:expr)]) => {
+        set_top_level_state!($state, [(shard: $shard_id => owners: vec![$($owner),*], users: $users)]);
     };
-    ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr, users: $users:expr) $(,$x:tt)*]) => {
+    ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr, users: $users:expr)]) => {
         assert_eq!(Ok(()), $state.create_shard_level_state($shard_id, $owners, $users));
-
-        set_top_level_state!($state, [$($x),*]);
     };
-    ($state:expr, [(metadata: shards: $number_of_shards:expr) $(,$x:tt)*]) => {
+    ($state:expr, [(metadata: shards: $number_of_shards:expr)]) => {
         assert_eq!(Ok(()), $state.set_number_of_shards($number_of_shards));
-
-        set_top_level_state!($state, [$($x),*]);
+    };
+    // recursion
+    ($state:expr, [$head:tt, $($tail:tt),+]) => {
+        set_top_level_state!($state, [$head]);
+        set_top_level_state!($state, [$($tail),+]);
     };
 }
 
 macro_rules! check_top_level_state {
-    ($state: expr, []) => { };
-    ($state:expr, [(account: $addr:expr => (seq: $seq:expr, balance: $balance:expr)) $(,$x:tt)*]) => {
+    // base cases
+    ($state:expr, [(account: $addr:expr => (seq: $seq:expr, balance: $balance:expr))]) => {
         assert_eq!(Ok($seq), $state.seq(&$addr));
         assert_eq!(Ok($balance), $state.balance(&$addr));
-
-        check_top_level_state!($state, [$($x),*]);
     };
-    ($state:expr, [(account: $addr:expr) $(,$x:tt)*]) => {
-        check_top_level_state!($state, [(account: $addr => (seq: 0, balance: 0)) $(,$x)*]);
+    ($state:expr, [(account: $addr:expr)]) => {
+        check_top_level_state!($state, [(account: $addr => (seq: 0, balance: 0))]);
     };
-    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*]) $(,$x:tt)*]) => {
-        check_top_level_state!($state, [(shard: $shard_id => owners: vec![$($owner,)*]) $(,$x)*]);
+    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*])]) => {
+        check_top_level_state!($state, [(shard: $shard_id => owners: vec![$($owner,)*])]);
     };
-    ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr) $(,$x:tt)*]) => {
+    ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr)]) => {
         assert_eq!(Ok(Some($owners)), $state.shard_owners($shard_id));
-
-        check_top_level_state!($state, [$($x),*]);
     };
-    ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr, users: $users:expr) $(,$x:tt)*]) => {
+    ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr, users: $users:expr)]) => {
         assert_eq!(Ok(Some($users)), $state.shard_users($shard_id));
-
-        check_top_level_state!($state, [(shard: $shard_id => owners: $owners) $(,$x)*]);
     };
-    ($state:expr, [(shard: $shard_id:expr) $(,$x:tt)*]) => {
+    ($state:expr, [(shard: $shard_id:expr)]) => {
         assert_eq!(Ok(None), $state.shard_root($shard_id));
-
-        check_top_level_state!($state, [$($x),*]);
     };
-    ($state:expr, [(shard_text: ($shard_id:expr, $tracker:expr)) $(,$x:tt)*]) => {
+    ($state:expr, [(shard_text: ($shard_id:expr, $tracker:expr))]) => {
         assert_eq!(Ok(None), $state.shard_text($shard_id, $tracker));
-
-        check_top_level_state!($state, [$($x), *]);
     };
+    //recursion
+    ($state:expr, [$head:tt, $($tail:tt),+]) => {
+        check_top_level_state!($state, [$head]);
+        check_top_level_state!($state, [$($tail),+]);
+    }
 }
 
 macro_rules! check_shard_level_state {
-    ($state: expr, []) => { };
-    ($state:expr, [(text: ($tracker:expr) => { content: $content: expr}) $(,$x:tt)*]) => {
+    // base cases
+    ($state:expr, [(text: ($tracker:expr) => { content: $content: expr})]) => {
         let stored_text = $state.text($tracker)
             .expect(&format!("Cannot read Text from {}:{}", $state.shard_id(), $tracker))
             .expect(&format!("Text for {}:{} not exist", $state.shard_id(), $tracker));
-
         assert_eq!($content, stored_text.content());
-
-        check_shard_level_state!($state, [$($x), *])
     };
+    // recursion
+    ($state:expr, [$head:tt, $($tail:tt),+]) => {
+        check_shard_level_state!($state, [$head]);
+        check_shard_level_state!($state, [$($tail),+]);
+    }
 }
