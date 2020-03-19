@@ -1479,7 +1479,7 @@ mod tests_tx {
             (account: owners[0] => seq: 1),
             (account: owners[1] => seq: 1),
             (account: owners[2] => seq: 1),
-            (shard: shard_id => owners: owners.clone(), users: old_users.clone()),
+            (shard: shard_id => owners: owners, users: old_users.clone()),
             (metadata: shards: 1)
         ]);
 
