@@ -45,6 +45,7 @@ use crate::{
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
 use ckey::{public_to_address, Address, Ed25519Public as Public, NetworkId};
+use coordinator::context::{Key as DbCxtKey, SubStorageAccess, Value as DbCxtValue};
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, ShardTransaction, Transaction};
 use ctypes::util::unexpected::Mismatch;
@@ -149,6 +150,66 @@ impl TopStateView for TopLevelState {
     }
 }
 
+macro_rules! panic_at {
+    ($method: literal, $e: expr) => {
+        panic!("SubStorageAccess {} method failed with {}", $method, $e);
+    };
+}
+
+impl SubStorageAccess for TopLevelState {
+    fn get(&self, storage_id: StorageId, key: &DbCxtKey) -> Option<DbCxtValue> {
+        match self.module_state(storage_id) {
+            Ok(state) => match state?.get_datum(key) {
+                Ok(datum) => datum.map(|datum| datum.content()),
+                Err(e) => panic_at!("get", e),
+            },
+            Err(e) => panic_at!("get", e),
+        }
+    }
+
+    fn set(&mut self, storage_id: StorageId, key: &DbCxtKey, value: DbCxtValue) {
+        match self.module_state_mut(storage_id) {
+            Ok(state) => {
+                if let Err(e) = state.set_datum(key, value) {
+                    panic_at!("set", e)
+                }
+            }
+            Err(e) => panic_at!("set", e),
+        }
+    }
+
+    fn has(&self, storage_id: StorageId, key: &DbCxtKey) -> bool {
+        match self.module_state(storage_id) {
+            Ok(state) => state
+                .map(|state| match state.has_key(key) {
+                    Ok(result) => result,
+                    Err(e) => panic_at!("has", e),
+                })
+                .unwrap_or(false),
+            Err(e) => panic_at!("has", e),
+        }
+    }
+
+    fn remove(&mut self, storage_id: StorageId, key: &DbCxtKey) {
+        match self.module_state_mut(storage_id) {
+            Ok(state) => state.remove_key(key),
+            Err(e) => panic_at!("remove", e),
+        }
+    }
+
+    fn create_checkpoint(&mut self) {
+        StateWithCheckpoint::create_checkpoint(self, TOP_CHECKPOINT)
+    }
+
+    fn revert_to_the_checkpoint(&mut self) {
+        StateWithCheckpoint::revert_to_checkpoint(self, TOP_CHECKPOINT)
+    }
+
+    fn discard_checkpoint(&mut self) {
+        StateWithCheckpoint::discard_checkpoint(self, TOP_CHECKPOINT)
+    }
+}
+
 impl StateWithCache for TopLevelState {
     fn commit(&mut self) -> StateResult<H256> {
         let shard_ids: Vec<_> = self.shard_caches.iter().map(|(shard_id, _)| *shard_id).collect();
@@ -209,6 +270,7 @@ impl StateWithCache for TopLevelState {
     }
 }
 
+const TOP_CHECKPOINT: CheckpointId = 777;
 const FEE_CHECKPOINT: CheckpointId = 123;
 const ACTION_CHECKPOINT: CheckpointId = 130;
 
@@ -286,7 +348,7 @@ impl TopLevelState {
         parent_block_timestamp: u64,
         current_block_timestamp: u64,
     ) -> StateResult<()> {
-        self.create_checkpoint(FEE_CHECKPOINT);
+        StateWithCheckpoint::create_checkpoint(self, FEE_CHECKPOINT);
         let result = self.apply_internal(
             tx,
             signed_hash,
@@ -298,7 +360,7 @@ impl TopLevelState {
         );
         match result {
             Ok(()) => {
-                self.discard_checkpoint(FEE_CHECKPOINT);
+                StateWithCheckpoint::discard_checkpoint(self, FEE_CHECKPOINT);
             }
             Err(_) => {
                 self.revert_to_checkpoint(FEE_CHECKPOINT);
@@ -334,7 +396,7 @@ impl TopLevelState {
         self.sub_balance(&sender_address, fee)?;
 
         // The failed transaction also must pay the fee and increase seq.
-        self.create_checkpoint(ACTION_CHECKPOINT);
+        StateWithCheckpoint::create_checkpoint(self, ACTION_CHECKPOINT);
         let result = self.apply_action(
             &tx.action,
             tx.network_id,
@@ -349,7 +411,7 @@ impl TopLevelState {
         );
         match &result {
             Ok(()) => {
-                self.discard_checkpoint(ACTION_CHECKPOINT);
+                StateWithCheckpoint::discard_checkpoint(self, ACTION_CHECKPOINT);
             }
             Err(_) => {
                 self.revert_to_checkpoint(ACTION_CHECKPOINT);
@@ -1057,15 +1119,15 @@ mod tests_state {
     fn checkpoint_basic() {
         let mut state = get_temp_state();
         let a = Address::default();
-        state.create_checkpoint(0);
+        StateWithCheckpoint::create_checkpoint(&mut state, 0);
         assert_eq!(Ok(()), state.add_balance(&a, 100));
         assert_eq!(Ok(100), state.balance(&a));
-        state.discard_checkpoint(0);
+        StateWithCheckpoint::discard_checkpoint(&mut state, 0);
         assert_eq!(Ok(100), state.balance(&a));
-        state.create_checkpoint(1);
+        StateWithCheckpoint::create_checkpoint(&mut state, 1);
         assert_eq!(Ok(()), state.add_balance(&a, 1));
         assert_eq!(Ok(100 + 1), state.balance(&a));
-        state.revert_to_checkpoint(1);
+        StateWithCheckpoint::revert_to_checkpoint(&mut state, 1);
         assert_eq!(Ok(100), state.balance(&a));
     }
 
@@ -1073,14 +1135,14 @@ mod tests_state {
     fn checkpoint_nested() {
         let mut state = get_temp_state();
         let a = Address::default();
-        state.create_checkpoint(0);
+        StateWithCheckpoint::create_checkpoint(&mut state, 0);
         assert_eq!(Ok(()), state.add_balance(&a, 100));
-        state.create_checkpoint(1);
+        StateWithCheckpoint::create_checkpoint(&mut state, 1);
         assert_eq!(Ok(()), state.add_balance(&a, 120));
         assert_eq!(Ok(100 + 120), state.balance(&a));
-        state.revert_to_checkpoint(1);
+        StateWithCheckpoint::revert_to_checkpoint(&mut state, 1);
         assert_eq!(Ok(100), state.balance(&a));
-        state.revert_to_checkpoint(0);
+        StateWithCheckpoint::revert_to_checkpoint(&mut state, 0);
         assert_eq!(Ok(0), state.balance(&a));
     }
 
@@ -1088,17 +1150,17 @@ mod tests_state {
     fn checkpoint_discard() {
         let mut state = get_temp_state();
         let a = Address::default();
-        state.create_checkpoint(0);
+        StateWithCheckpoint::create_checkpoint(&mut state, 0);
         assert_eq!(Ok(()), state.add_balance(&a, 100));
-        state.create_checkpoint(1);
+        StateWithCheckpoint::create_checkpoint(&mut state, 1);
         assert_eq!(Ok(()), state.add_balance(&a, 123));
         assert_eq!(Ok(()), state.inc_seq(&a));
         assert_eq!(Ok(100 + 123), state.balance(&a));
         assert_eq!(Ok(1), state.seq(&a));
-        state.discard_checkpoint(1);
+        StateWithCheckpoint::discard_checkpoint(&mut state, 1);
         assert_eq!(Ok(100 + 123), state.balance(&a));
         assert_eq!(Ok(1), state.seq(&a));
-        state.revert_to_checkpoint(0);
+        StateWithCheckpoint::revert_to_checkpoint(&mut state, 0);
         assert_eq!(Ok(0), state.balance(&a));
         assert_eq!(Ok(0), state.seq(&a));
     }

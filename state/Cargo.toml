@@ -10,6 +10,7 @@ codechain-db = { git = "https://github.com/CodeChain-io/rust-codechain-db.git", 
 codechain-logger = { path = "../util/logger" }
 codechain-key = { path = "../key" }
 codechain-types = { path = "../types" }
+coordinator = { path = "../coordinator" }
 kvdb = "0.1"
 kvdb-memorydb = "0.1"
 log = "0.4.6"
