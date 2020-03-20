@@ -1,5 +1,5 @@
 use ckey::Ed25519Public as Public;
-use ctypes::TxHash;
+use ctypes::{CompactValidatorSet, TxHash};
 use primitives::H256;
 
 /// A `Validator` receives requests from the underlying consensus engine
@@ -16,14 +16,9 @@ pub struct Event {
     pub value: Bytes,
 }
 
-pub struct ValidatorInfo {
-    weight: VoteWeight,
-    pubkey: Public,
-}
-
 pub struct ConsensusParams {
     /// Validators' public keys with their voting powers.
-    pub validators: Vec<ValidatorInfo>,
+    pub validators: CompactValidatorSet,
     // Note: This code is copied from json/src/tendermint.rs
     /// Propose step timeout in milliseconds.
     pub timeout_propose: Option<u64>,
