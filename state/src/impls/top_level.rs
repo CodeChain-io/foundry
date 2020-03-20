@@ -48,6 +48,7 @@ use crate::{
 };
 use cdb::{AsHashDB, DatabaseError};
 use ckey::Ed25519Public as Public;
+use coordinator::context::{Key as DbCxtKey, StorageAccess, Value as DbCxtValue};
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, Transaction};
 use ctypes::util::unexpected::Mismatch;
@@ -131,6 +132,66 @@ impl TopStateView for TopLevelState {
     }
 }
 
+macro_rules! panic_at {
+    ($method: literal, $e: expr) => {
+        panic!("StorageAccess {} method failed with {}", $method, $e);
+    };
+}
+
+impl StorageAccess for TopLevelState {
+    fn get(&self, storage_id: StorageId, key: &DbCxtKey) -> Option<DbCxtValue> {
+        match self.module_state(storage_id) {
+            Ok(state) => match state?.get_datum(key) {
+                Ok(datum) => datum.map(|datum| datum.content()),
+                Err(e) => panic_at!("get", e),
+            },
+            Err(e) => panic_at!("get", e),
+        }
+    }
+
+    fn set(&mut self, storage_id: StorageId, key: &DbCxtKey, value: DbCxtValue) {
+        match self.module_state_mut(storage_id) {
+            Ok(state) => {
+                if let Err(e) = state.set_datum(key, value) {
+                    panic_at!("set", e)
+                }
+            }
+            Err(e) => panic_at!("set", e),
+        }
+    }
+
+    fn has(&self, storage_id: StorageId, key: &DbCxtKey) -> bool {
+        match self.module_state(storage_id) {
+            Ok(state) => state
+                .map(|state| match state.has_key(key) {
+                    Ok(result) => result,
+                    Err(e) => panic_at!("has", e),
+                })
+                .unwrap_or(false),
+            Err(e) => panic_at!("has", e),
+        }
+    }
+
+    fn remove(&mut self, storage_id: StorageId, key: &DbCxtKey) {
+        match self.module_state_mut(storage_id) {
+            Ok(state) => state.remove_key(key),
+            Err(e) => panic_at!("remove", e),
+        }
+    }
+
+    fn create_checkpoint(&mut self) {
+        StateWithCheckpoint::create_checkpoint(self, TOP_CHECKPOINT)
+    }
+
+    fn revert_to_the_checkpoint(&mut self) {
+        StateWithCheckpoint::revert_to_checkpoint(self, TOP_CHECKPOINT)
+    }
+
+    fn discard_checkpoint(&mut self) {
+        StateWithCheckpoint::discard_checkpoint(self, TOP_CHECKPOINT)
+    }
+}
+
 impl StateWithCache for TopLevelState {
     fn commit(&mut self) -> StateResult<H256> {
         let module_changes = self
@@ -169,6 +230,7 @@ impl StateWithCache for TopLevelState {
     }
 }
 
+const TOP_CHECKPOINT: CheckpointId = 777;
 const FEE_CHECKPOINT: CheckpointId = 123;
 const ACTION_CHECKPOINT: CheckpointId = 130;
 
@@ -233,11 +295,11 @@ impl TopLevelState {
         parent_block_number: BlockNumber,
         transaction_index: TransactionIndex,
     ) -> StateResult<()> {
-        self.create_checkpoint(FEE_CHECKPOINT);
+        StateWithCheckpoint::create_checkpoint(self, FEE_CHECKPOINT);
         let result = self.apply_internal(tx, sender_public, client, parent_block_number, transaction_index);
         match result {
             Ok(()) => {
-                self.discard_checkpoint(FEE_CHECKPOINT);
+                StateWithCheckpoint::discard_checkpoint(self, FEE_CHECKPOINT);
             }
             Err(_) => {
                 self.revert_to_checkpoint(FEE_CHECKPOINT);
@@ -270,11 +332,11 @@ impl TopLevelState {
         self.sub_balance(sender, fee)?;
 
         // The failed transaction also must pay the fee and increase seq.
-        self.create_checkpoint(ACTION_CHECKPOINT);
+        StateWithCheckpoint::create_checkpoint(self, ACTION_CHECKPOINT);
         let result = self.apply_action(&tx.action, sender, client, parent_block_number, transaction_index);
         match &result {
             Ok(()) => {
-                self.discard_checkpoint(ACTION_CHECKPOINT);
+                StateWithCheckpoint::discard_checkpoint(self, ACTION_CHECKPOINT);
             }
             Err(_) => {
                 self.revert_to_checkpoint(ACTION_CHECKPOINT);
@@ -394,7 +456,6 @@ impl TopLevelState {
         Ok(())
     }
 
-    #[cfg(test)]
     fn module_state_mut(&mut self, storage_id: StorageId) -> StateResult<ModuleLevelState> {
         let module_root = self.module_root(storage_id)?.ok_or_else(|| RuntimeError::InvalidStorageId(storage_id))?;
         let module_cache = self.module_caches.entry(storage_id).or_default();
@@ -916,21 +977,21 @@ mod tests_state {
     fn checkpoint_basic() {
         let mut state = get_temp_state();
         let a = Public::default();
-        state.create_checkpoint(0);
+        StateWithCheckpoint::create_checkpoint(&mut state, 0);
         top_level!(state, {
             set: [(account: a => balance: add 100)],
             check: [(account: a => balance: 100)]
         });
-        state.discard_checkpoint(0);
+        StateWithCheckpoint::discard_checkpoint(&mut state, 0);
         top_level!(state, {
             check: [(account: a => balance: 100)]
         });
-        state.create_checkpoint(1);
+        StateWithCheckpoint::create_checkpoint(&mut state, 1);
         top_level!(state, {
             set: [(account: a => balance: add 1)],
             check: [(account: a => balance: 100 + 1)]
         });
-        state.revert_to_checkpoint(1);
+        StateWithCheckpoint::revert_to_checkpoint(&mut state, 1);
         top_level!(state, {
             check: [(account: a => balance: 100)]
         });
@@ -940,20 +1001,20 @@ mod tests_state {
     fn checkpoint_nested() {
         let mut state = get_temp_state();
         let a = Public::default();
-        state.create_checkpoint(0);
+        StateWithCheckpoint::create_checkpoint(&mut state, 0);
         top_level!(state, {
             set: [(account: a => balance: add 100)]
         });
-        state.create_checkpoint(1);
+        StateWithCheckpoint::create_checkpoint(&mut state, 1);
         top_level!(state, {
             set: [(account: a => balance: add 120)],
             check: [(account: a => balance: 100 + 120)]
         });
-        state.revert_to_checkpoint(1);
+        StateWithCheckpoint::revert_to_checkpoint(&mut state, 1);
         top_level!(state, {
             check: [(account: a => balance: 100)]
         });
-        state.revert_to_checkpoint(0);
+        StateWithCheckpoint::revert_to_checkpoint(&mut state, 0);
         top_level!(state, {
             check: [(account: a => balance: 0)]
         });
@@ -963,20 +1024,20 @@ mod tests_state {
     fn checkpoint_discard() {
         let mut state = get_temp_state();
         let a = Public::default();
-        state.create_checkpoint(0);
+        StateWithCheckpoint::create_checkpoint(&mut state, 0);
         top_level!(state, {
             set: [(account: a => balance: add 100)]
         });
-        state.create_checkpoint(1);
+        StateWithCheckpoint::create_checkpoint(&mut state, 1);
         top_level!(state, {
             set: [(account: a => balance: add 123), (account: a => seq++)],
             check: [(account: a => balance: 100 + 123, seq: 1)]
         });
-        state.discard_checkpoint(1);
+        StateWithCheckpoint::discard_checkpoint(&mut state, 1);
         top_level!(state, {
             check: [(account: a => balance: 100 + 123, seq: 1)]
         });
-        state.revert_to_checkpoint(0);
+        StateWithCheckpoint::revert_to_checkpoint(&mut state, 0);
         top_level!(state, {
             check: [(account: a => balance: 0, seq: 0)]
         });
