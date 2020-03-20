@@ -20,14 +20,12 @@ use std::collections::HashMap;
 /// Params for a null engine.
 #[derive(Clone, Default)]
 pub struct SoloParams {
-    pub enable_hit_handler: bool,
     pub genesis_stakes: HashMap<Address, u64>,
 }
 
 impl From<cjson::scheme::SoloParams> for SoloParams {
     fn from(p: cjson::scheme::SoloParams) -> Self {
         SoloParams {
-            enable_hit_handler: p.action_handlers.hit.is_some(),
             genesis_stakes: p
                 .action_handlers
                 .genesis_stakes

@@ -22,8 +22,6 @@ extern crate codechain_key as ckey;
 extern crate codechain_types as ctypes;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate rlp_derive;
 
 mod action_handler;
 mod cache;
@@ -36,7 +34,7 @@ mod traits;
 
 pub mod tests;
 
-pub use crate::action_handler::{ActionDataKeyBuilder, ActionHandler, FindActionHandler, HitHandler};
+pub use crate::action_handler::{ActionDataKeyBuilder, ActionHandler, FindActionHandler};
 pub use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 pub use crate::db::StateDB;
 pub use crate::error::Error as StateError;

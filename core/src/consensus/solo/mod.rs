@@ -26,7 +26,7 @@ use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
-use cstate::{ActionHandler, HitHandler};
+use cstate::ActionHandler;
 use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
 use std::sync::{Arc, Weak};
@@ -43,9 +43,6 @@ impl Solo {
     /// Returns new instance of Solo over the given state machine.
     pub fn new(params: SoloParams, machine: CodeChainMachine) -> Self {
         let mut action_handlers: Vec<Arc<dyn ActionHandler>> = Vec::new();
-        if params.enable_hit_handler {
-            action_handlers.push(Arc::new(HitHandler::new()));
-        }
         action_handlers.push(Arc::new(stake::Stake::new(
             params.genesis_stakes,
             Default::default(),

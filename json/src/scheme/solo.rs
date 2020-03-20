@@ -28,7 +28,6 @@ pub struct SoloParams {
 #[derive(Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SoloActionHandlersParams {
-    pub hit: Option<HashMap<(), ()>>,
     pub genesis_stakes: Option<HashMap<PlatformAddress, u64>>,
 }
 
@@ -47,13 +46,11 @@ mod tests {
         let s = r#"{
             "params": {
                 "blockReward": "0x0d",
-                "hit": {},
                 "genesisStakes": {}
             }
         }"#;
 
         let deserialized: Solo = serde_json::from_str(s).unwrap();
-        assert_eq!(deserialized.params.action_handlers.hit, Some(Default::default()));
         assert_eq!(deserialized.params.action_handlers.genesis_stakes, Some(Default::default()));
     }
 }
