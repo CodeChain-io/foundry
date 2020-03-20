@@ -1,12 +1,11 @@
-# CodeChain
-CodeChain is a programmable blockchain supporting multiple asset types. You can instantly create new digital assets and use them for your services.
+# Foundry
+Foundry is a framework for building blockchain applications. The goal of the Foundry is to allow developers to easily create custom blockchains from scratch that can natively interoperate with other blockchains.
 
 # Specification
 * [CodeChain Account](CodeChain-Account.md)
 * [CodeChain Address](CodeChain-Address.md)
 * [CodeChain Coin](CodeChain-Coin.md)
 * [Transaction](Transaction.md)
-* [Asset Exchange Protocol](Asset-Exchange-Protocol.md)
 * [Consensus](Consensus.md)
 * [Script](Script.md)
 * [CodeChain Virtual Machine](CodeChain-Virtual-Machine.md)
