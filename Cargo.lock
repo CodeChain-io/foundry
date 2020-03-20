@@ -591,6 +591,7 @@ dependencies = [
  "codechain-key",
  "codechain-logger",
  "codechain-types",
+ "coordinator",
  "kvdb",
  "kvdb-memorydb",
  "log 0.4.6",
