@@ -148,7 +148,7 @@ pub enum Evidence {
     DoubleVote {
         author: Public,
         block_hash: BlockHash,
-    }, 
+    },
 }
 
 pub struct TransactionExecutionOutcome {
