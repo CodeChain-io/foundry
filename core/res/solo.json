@@ -3,7 +3,6 @@
   "engine": {
     "solo": {
       "params": {
-        "hit": {},
         "genesisStakes": {
           "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg": 70000,
           "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": 20000,
