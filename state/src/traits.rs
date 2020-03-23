@@ -63,14 +63,8 @@ pub trait TopStateView {
         Ok(self.metadata()?.and_then(|metadata| metadata.shard_id_by_hash(tx_hash)))
     }
 
-    fn shard(&self, shard_id: ShardId) -> TrieResult<Option<Shard>>;
-
     fn module(&self, storage_id: StorageId) -> TrieResult<Option<Module>>;
     fn module_state<'db>(&'db self, storage_id: StorageId) -> TrieResult<Option<Box<dyn ModuleStateView + 'db>>>;
-
-    fn shard_root(&self, shard_id: ShardId) -> TrieResult<Option<H256>> {
-        Ok(self.shard(shard_id)?.map(|shard| *shard.root()))
-    }
 
     fn module_root(&self, storage_id: StorageId) -> TrieResult<Option<H256>> {
         Ok(self.module(storage_id)?.map(|module| *module.root()))
