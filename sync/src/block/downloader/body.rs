@@ -15,7 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::message::RequestMessage;
-use ccore::UnverifiedTransaction;
+use ccore::Evidence;
+use coordinator::validator::Transaction;
 use ctypes::BlockHash;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
@@ -26,7 +27,8 @@ enum State {
     Queued,
     Downloading,
     Downloaded {
-        transactions: Vec<UnverifiedTransaction>,
+        evidences: Vec<Evidence>,
+        transactions: Vec<Transaction>,
     },
     Drained,
 }
@@ -65,14 +67,15 @@ impl BodyDownloader {
         }
     }
 
-    pub fn import_bodies(&mut self, hashes: Vec<BlockHash>, bodies: Vec<Vec<UnverifiedTransaction>>) {
+    pub fn import_bodies(&mut self, hashes: Vec<BlockHash>, bodies: Vec<(Vec<Evidence>, Vec<Transaction>)>) {
         assert_eq!(hashes.len(), bodies.len());
-        for (hash, transactions) in hashes.into_iter().zip(bodies) {
+        for (hash, (evidences, transactions)) in hashes.into_iter().zip(bodies) {
             if let Some(state) = self.states.get_mut(&hash) {
                 if state != &State::Downloading {
                     continue
                 }
                 *state = State::Downloaded {
+                    evidences,
                     transactions,
                 }
             }
@@ -114,7 +117,7 @@ impl BodyDownloader {
         }
     }
 
-    pub fn drain(&mut self) -> Vec<(BlockHash, Vec<UnverifiedTransaction>)> {
+    pub fn drain(&mut self) -> Vec<(BlockHash, Vec<Evidence>, Vec<Transaction>)> {
         let mut result = Vec::new();
         for hash in &self.targets {
             let entry = self.states.entry(*hash);
@@ -129,9 +132,10 @@ impl BodyDownloader {
             };
             match state {
                 State::Downloaded {
+                    evidences,
                     transactions,
                 } => {
-                    result.push((*hash, transactions));
+                    result.push((*hash, evidences, transactions));
                 }
                 _ => unreachable!(),
             }
@@ -139,7 +143,7 @@ impl BodyDownloader {
         result
     }
 
-    pub fn re_request(&mut self, hash: BlockHash, remains: Vec<(BlockHash, Vec<UnverifiedTransaction>)>) {
+    pub fn re_request(&mut self, hash: BlockHash, remains: Vec<(BlockHash, Vec<Evidence>, Vec<Transaction>)>) {
         #[inline]
         fn insert(states: &mut HashMap<BlockHash, State>, hash: BlockHash, state: State) {
             let old = states.insert(hash, state);
@@ -149,8 +153,9 @@ impl BodyDownloader {
         // However, our implementation guarantees that new items are already in the map and it just
         // update the states. So iterating over new items and calling the insert method is faster
         // than using the extend method and uses less memory.
-        for (hash, transactions) in remains {
+        for (hash, evidences, transactions) in remains {
             insert(&mut self.states, hash, State::Downloaded {
+                evidences,
                 transactions,
             });
         }

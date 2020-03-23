@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ccore::UnverifiedTransaction;
+use coordinator::validator::Transaction;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 #[derive(Debug, PartialEq)]
 pub enum Message {
-    Transactions(Vec<UnverifiedTransaction>),
+    Transactions(Vec<Transaction>),
 }
 
 impl Encodable for Message {
@@ -63,11 +63,8 @@ impl Decodable for Message {
 
 #[cfg(test)]
 mod tests {
+    use coordinator::validator::Transaction;
     use rlp::rlp_encode_and_decode_test;
-
-    use ccore::UnverifiedTransaction;
-    use ckey::{Address, Ed25519Public as Public, Signature};
-    use ctypes::transaction::{Action, Transaction};
 
     use super::Message;
 
@@ -78,20 +75,7 @@ mod tests {
 
     #[test]
     fn transactions_message_rlp_with_tx() {
-        let tx = UnverifiedTransaction::new(
-            Transaction {
-                seq: 0,
-                fee: 10,
-                action: Action::Pay {
-                    receiver: Address::random(),
-                    quantity: 30,
-                },
-                network_id: "tc".into(),
-            },
-            Signature::default(),
-            Public::random(),
-        );
-
+        let tx = Transaction::new("sample".to_string(), vec![1, 2, 3, 4, 5]);
         rlp_encode_and_decode_test!(Message::Transactions(vec![tx]));
     }
 }
