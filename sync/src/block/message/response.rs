@@ -15,14 +15,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::MessageID;
-use ccore::UnverifiedTransaction;
+use ccore::Evidence;
+use coordinator::validator::Transaction;
 use ctypes::Header;
 use rlp::{DecoderError, Encodable, Rlp, RlpStream};
 
 #[derive(Debug, PartialEq)]
 pub enum ResponseMessage {
     Headers(Vec<Header>),
-    Bodies(Vec<Vec<UnverifiedTransaction>>),
+    Bodies(Vec<(Vec<Evidence>, Vec<Transaction>)>),
     StateChunk(Vec<Vec<u8>>),
 }
 
@@ -37,8 +38,10 @@ impl Encodable for ResponseMessage {
 
                 let uncompressed = {
                     let mut inner_list = RlpStream::new_list(bodies.len());
-                    bodies.iter().for_each(|body| {
-                        inner_list.append_list(body);
+                    bodies.iter().for_each(|(evidences, transactions)| {
+                        inner_list.begin_list(2);
+                        inner_list.append_list(evidences);
+                        inner_list.append_list(transactions);
                     });
                     inner_list.out()
                 };
@@ -97,7 +100,9 @@ impl ResponseMessage {
 
                 let mut bodies = Vec::new();
                 for item in uncompressed_rlp.into_iter() {
-                    bodies.push(item.as_list()?);
+                    let evidences = item.list_at(0)?;
+                    let transactions = item.list_at(1)?;
+                    bodies.push((evidences, transactions));
                 }
                 ResponseMessage::Bodies(bodies)
             }
@@ -111,12 +116,9 @@ impl ResponseMessage {
 
 #[cfg(test)]
 mod tests {
-    use rlp::{Encodable, Rlp};
-
-    use ccore::UnverifiedTransaction;
-    use ckey::{Address, Ed25519Public as Public, Signature};
-    use ctypes::transaction::{Action, Transaction};
+    use coordinator::validator::Transaction;
     use ctypes::Header;
+    use rlp::{Encodable, Rlp};
 
     use super::{MessageID, ResponseMessage};
 
@@ -138,24 +140,12 @@ mod tests {
 
     #[test]
     fn bodies_message_rlp() {
-        let message = ResponseMessage::Bodies(vec![vec![]]);
+        let message = ResponseMessage::Bodies(vec![(vec![], vec![])]);
         assert_eq!(message, decode_bytes(message.message_id(), message.rlp_bytes().as_ref()));
 
-        let tx = UnverifiedTransaction::new(
-            Transaction {
-                seq: 0,
-                fee: 10,
-                action: Action::Pay {
-                    receiver: Address::random(),
-                    quantity: 64,
-                },
-                network_id: "tc".into(),
-            },
-            Signature::default(),
-            Public::random(),
-        );
+        let tx = Transaction::new("sample".to_string(), vec![1, 2, 3, 4, 5]);
 
-        let message = ResponseMessage::Bodies(vec![vec![tx]]);
+        let message = ResponseMessage::Bodies(vec![(vec![], vec![tx])]);
         assert_eq!(message, decode_bytes(message.message_id(), message.rlp_bytes().as_ref()));
     }
 
