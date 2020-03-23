@@ -35,7 +35,6 @@ pub mod util;
 
 pub type BlockNumber = u64;
 pub type TransactionIndex = u32;
-pub type ShardId = u16;
 pub type StorageId = u16;
 
 #[derive(Copy, Clone)]

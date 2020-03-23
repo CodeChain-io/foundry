@@ -17,7 +17,7 @@
 use super::super::errors;
 use super::super::traits::Chain;
 use super::super::types::{Block, BlockNumberAndHash, Transaction, ValidatorSet};
-use ccore::{AccountData, EngineInfo, MiningBlockChainClient, Shard, TermInfo};
+use ccore::{AccountData, EngineInfo, MiningBlockChainClient, TermInfo};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress};
@@ -28,13 +28,13 @@ use std::sync::Arc;
 
 pub struct ChainClient<C>
 where
-    C: MiningBlockChainClient + Shard + EngineInfo, {
+    C: MiningBlockChainClient + EngineInfo, {
     client: Arc<C>,
 }
 
 impl<C> ChainClient<C>
 where
-    C: MiningBlockChainClient + Shard + AccountData + EngineInfo,
+    C: MiningBlockChainClient + AccountData + EngineInfo,
 {
     pub fn new(client: Arc<C>) -> Self {
         ChainClient {
@@ -45,7 +45,7 @@ where
 
 impl<C> Chain for ChainClient<C>
 where
-    C: MiningBlockChainClient + Shard + AccountData + EngineInfo + FindDoubleVoteHandler + TermInfo + 'static,
+    C: MiningBlockChainClient + AccountData + EngineInfo + FindDoubleVoteHandler + TermInfo + 'static,
 {
     fn get_transaction(&self, transaction_hash: TxHash) -> Result<Option<Transaction>> {
         let id = transaction_hash.into();

@@ -14,11 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{
-    Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, Shard, ShardText, StateDB, StateResult,
-};
+use crate::{Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, StateDB, StateResult};
 use ckey::Ed25519Public as Public;
-use ctypes::{CommonParams, ShardId, StorageId, TxHash};
+use ctypes::{CommonParams, StorageId};
 use merkle_trie::Result as TrieResult;
 use primitives::{Bytes, H256};
 
@@ -54,19 +52,8 @@ pub trait TopStateView {
 
     fn metadata(&self) -> TrieResult<Option<Metadata>>;
 
-    fn number_of_shards(&self) -> TrieResult<ShardId> {
-        Ok(*self.metadata()?.expect("Metadata must exist").number_of_shards())
-    }
-
-    fn shard(&self, shard_id: ShardId) -> TrieResult<Option<Shard>>;
-    fn shard_state<'db>(&'db self, shard_id: ShardId) -> TrieResult<Option<Box<dyn ShardStateView + 'db>>>;
-
     fn module(&self, storage_id: StorageId) -> TrieResult<Option<Module>>;
     fn module_state<'db>(&'db self, storage_id: StorageId) -> TrieResult<Option<Box<dyn ModuleStateView + 'db>>>;
-
-    fn shard_root(&self, shard_id: ShardId) -> TrieResult<Option<H256>> {
-        Ok(self.shard(shard_id)?.map(|shard| *shard.root()))
-    }
 
     fn module_root(&self, storage_id: StorageId) -> TrieResult<Option<H256>> {
         Ok(self.module(storage_id)?.map(|module| *module.root()))
@@ -74,24 +61,12 @@ pub trait TopStateView {
 
     fn action_data(&self, key: &H256) -> TrieResult<Option<ActionData>>;
 
-    fn shard_text(&self, shard_id: ShardId, tx_hash: TxHash) -> TrieResult<Option<ShardText>> {
-        match self.shard_state(shard_id)? {
-            None => Ok(None),
-            Some(state) => state.text(tx_hash),
-        }
-    }
-
     fn module_datum(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> TrieResult<Option<ModuleDatum>> {
         match self.module_state(storage_id)? {
             None => Ok(None),
             Some(state) => state.get_datum(key),
         }
     }
-}
-
-pub trait ShardStateView {
-    /// Get shard text.
-    fn text(&self, hash: TxHash) -> TrieResult<Option<ShardText>>;
 }
 
 pub trait ModuleStateView {
@@ -114,8 +89,6 @@ pub trait TopState {
 
     /// Increment the seq of account `a` by 1.
     fn inc_seq(&mut self, a: &Public) -> TrieResult<()>;
-
-    fn set_shard_root(&mut self, shard_id: ShardId, new_root: H256) -> StateResult<()>;
 
     fn create_module(&mut self) -> StateResult<()>;
     fn set_module_root(&mut self, storage_id: StorageId, new_root: H256) -> StateResult<()>;

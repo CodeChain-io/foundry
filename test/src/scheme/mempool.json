@@ -47,6 +47,5 @@
     "fjjh0008AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgtc0": { "balance": "1000000" },
     "fjjh0009AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAktc0": { "balance": "1000000" },
     "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0": { "balance": "10000000000000000000", "seq": "0" }
-  },
-  "shards": 1
+  }
 }

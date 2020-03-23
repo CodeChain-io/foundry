@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::WriteBack;
-use crate::{Account, ActionData, Metadata, MetadataAddress, Module, ModuleAddress, Shard, ShardAddress};
+use crate::{Account, ActionData, Metadata, MetadataAddress, Module, ModuleAddress};
 use ckey::Ed25519Public as Public;
 use merkle_trie::{Result as TrieResult, Trie, TrieMut};
 use primitives::H256;
@@ -25,7 +25,6 @@ use std::cell::RefMut;
 pub struct TopCache {
     account: WriteBack<Account>,
     metadata: WriteBack<Metadata>,
-    shard: WriteBack<Shard>,
     module: WriteBack<Module>,
     action_data: WriteBack<ActionData>,
 }
@@ -34,14 +33,12 @@ impl TopCache {
     pub fn new(
         accounts: impl Iterator<Item = (Public, Account)>,
         metadata: impl Iterator<Item = (MetadataAddress, Metadata)>,
-        shards: impl Iterator<Item = (ShardAddress, Shard)>,
         modules: impl Iterator<Item = (ModuleAddress, Module)>,
         action_data: impl Iterator<Item = (H256, ActionData)>,
     ) -> Self {
         Self {
             account: WriteBack::new_with_iter(accounts),
             metadata: WriteBack::new_with_iter(metadata),
-            shard: WriteBack::new_with_iter(shards),
             module: WriteBack::new_with_iter(modules),
             action_data: WriteBack::new_with_iter(action_data),
         }
@@ -50,7 +47,6 @@ impl TopCache {
     pub fn checkpoint(&mut self) {
         self.account.checkpoint();
         self.metadata.checkpoint();
-        self.shard.checkpoint();
         self.module.checkpoint();
         self.action_data.checkpoint();
     }
@@ -58,7 +54,6 @@ impl TopCache {
     pub fn discard_checkpoint(&mut self) {
         self.account.discard_checkpoint();
         self.metadata.discard_checkpoint();
-        self.shard.discard_checkpoint();
         self.module.discard_checkpoint();
         self.action_data.discard_checkpoint();
     }
@@ -66,7 +61,6 @@ impl TopCache {
     pub fn revert_to_checkpoint(&mut self) {
         self.account.revert_to_checkpoint();
         self.metadata.revert_to_checkpoint();
-        self.shard.revert_to_checkpoint();
         self.module.revert_to_checkpoint();
         self.action_data.revert_to_checkpoint();
     }
@@ -74,7 +68,6 @@ impl TopCache {
     pub fn commit<'db>(&mut self, trie: &mut (dyn TrieMut + 'db)) -> TrieResult<()> {
         self.account.commit(trie)?;
         self.metadata.commit(trie)?;
-        self.shard.commit(trie)?;
         self.module.commit(trie)?;
         self.action_data.commit(trie)?;
         Ok(())
@@ -98,14 +91,6 @@ impl TopCache {
 
     pub fn metadata_mut(&self, a: &MetadataAddress, db: &dyn Trie) -> TrieResult<RefMut<'_, Metadata>> {
         self.metadata.get_mut(a, db)
-    }
-
-    pub fn shard(&self, a: &ShardAddress, db: &dyn Trie) -> TrieResult<Option<Shard>> {
-        self.shard.get(a, db)
-    }
-
-    pub fn shard_mut(&self, a: &ShardAddress, db: &dyn Trie) -> TrieResult<RefMut<'_, Shard>> {
-        self.shard.get_mut(a, db)
     }
 
     pub fn module(&self, a: &ModuleAddress, db: &dyn Trie) -> TrieResult<Option<Module>> {
@@ -134,10 +119,6 @@ impl TopCache {
 
     pub fn cached_metadata(&self) -> Vec<(MetadataAddress, Option<Metadata>)> {
         self.metadata.items_sorted_by_touched()
-    }
-
-    pub fn cached_shards(&self) -> Vec<(ShardAddress, Option<Shard>)> {
-        self.shard.items_sorted_by_touched()
     }
 
     pub fn cached_action_data(&self) -> Vec<(H256, Option<ActionData>)> {
