@@ -98,13 +98,13 @@ fn snapshot(db: &StateDB, block_hash: BlockHash, root: H256, dir: &str) -> Resul
     snapshot_trie(db.as_hashdb(), block_hash, root, dir)?;
 
     let top_state = TopLevelState::from_existing(db.clone(&root), root)?;
-    let shard_roots = {
+    let module_roots = {
         let metadata = top_state.metadata()?.expect("Metadata must exist for snapshot block");
-        let shard_num = *metadata.number_of_shards();
-        (0..shard_num).map(|n| top_state.shard_root(n))
+        let module_num = *metadata.number_of_modules();
+        (0..module_num).map(|n| top_state.module_root(n))
     };
-    for sr in shard_roots {
-        snapshot_trie(db.as_hashdb(), block_hash, sr?.expect("Shard root must exist"), dir)?;
+    for sr in module_roots {
+        snapshot_trie(db.as_hashdb(), block_hash, sr?.expect("Module root must exist"), dir)?;
     }
     Ok(())
 }
