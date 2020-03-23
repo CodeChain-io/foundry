@@ -19,7 +19,7 @@ use super::{MinerService, MinerStatus};
 use crate::account_provider::Error as AccountProviderError;
 use crate::block::{ClosedBlock, IsBlock};
 use crate::client::{AccountData, BlockChainClient, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, TermInfo};
-use crate::consensus::{CodeChainEngine, EngineType};
+use crate::consensus::{ConsensusEngine, EngineType};
 use crate::error::Error;
 use crate::scheme::Scheme;
 use crate::transaction::PendingVerifiedTransactions;
@@ -88,7 +88,7 @@ pub struct Miner {
     transaction_listener: RwLock<Vec<TransactionListener>>,
     next_allowed_reseal: Mutex<Instant>,
     params: RwLock<AuthoringParams>,
-    engine: Arc<dyn CodeChainEngine>,
+    engine: Arc<dyn ConsensusEngine>,
     options: MinerOptions,
     sealing_enabled: AtomicBool,
 }

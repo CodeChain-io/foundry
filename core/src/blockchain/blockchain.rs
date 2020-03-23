@@ -22,7 +22,7 @@ use super::invoice_db::{InvoiceDB, InvoiceProvider};
 use super::route::tree_route;
 use super::update_result::ChainUpdateResult;
 use crate::blockchain_info::BlockChainInfo;
-use crate::consensus::CodeChainEngine;
+use crate::consensus::ConsensusEngine;
 use crate::db;
 use crate::encoded;
 use crate::invoice::Invoice;
@@ -95,7 +95,7 @@ impl BlockChain {
         &self,
         batch: &mut DBTransaction,
         header: &HeaderView<'_>,
-        engine: &dyn CodeChainEngine,
+        engine: &dyn ConsensusEngine,
     ) -> ChainUpdateResult {
         match self.headerchain.insert_header(batch, header, engine) {
             Some(c) => ChainUpdateResult::new_from_best_header_changed(&c),
@@ -150,7 +150,7 @@ impl BlockChain {
         batch: &mut DBTransaction,
         bytes: &[u8],
         invoices: Vec<Invoice>,
-        engine: &dyn CodeChainEngine,
+        engine: &dyn ConsensusEngine,
     ) -> ChainUpdateResult {
         // create views onto rlp
         let new_block = BlockView::new(bytes);
@@ -219,7 +219,7 @@ impl BlockChain {
     }
 
     /// Calculate how best block is changed
-    fn best_block_changed(&self, new_block: &BlockView<'_>, engine: &dyn CodeChainEngine) -> BestBlockChanged {
+    fn best_block_changed(&self, new_block: &BlockView<'_>, engine: &dyn ConsensusEngine) -> BestBlockChanged {
         let new_header = new_block.header_view();
         let parent_hash_of_new_block = new_header.parent_hash();
         let parent_details_of_new_block = self.block_details(&parent_hash_of_new_block).expect("Invalid parent hash");
