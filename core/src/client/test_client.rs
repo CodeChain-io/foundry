@@ -49,6 +49,7 @@ use ckey::{
     Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public, Generator, KeyPairTrait, NetworkId,
     PlatformAddress, Random,
 };
+use coordinator::types::Event;
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
@@ -552,6 +553,14 @@ impl BlockChainClient for TestBlockChainClient {
 
     fn transaction(&self, _id: &TransactionId) -> Option<LocalizedTransaction> {
         unimplemented!();
+    }
+
+    fn events_by_tx_hash(&self, _hash: &TxHash) -> Vec<Event> {
+        unimplemented!()
+    }
+
+    fn events_by_block_hash(&self, _hash: &BlockHash) -> Vec<Event> {
+        unimplemented!()
     }
 }
 
