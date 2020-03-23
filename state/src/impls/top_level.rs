@@ -35,12 +35,12 @@
 //! Unconfirmed sub-states are managed with `checkpoint`s which may be canonicalized
 //! or rolled back.
 
-use crate::cache::{ModuleCache, ShardCache, TopCache};
+use crate::cache::{ModuleCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
-use crate::traits::{ModuleStateView, ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
+use crate::traits::{ModuleStateView, StateWithCache, TopState, TopStateView};
 use crate::{
     Account, ActionData, FindActionHandler, Metadata, MetadataAddress, Module, ModuleAddress, ModuleLevelState, Shard,
-    ShardAddress, ShardLevelState, StateDB, StateResult,
+    ShardAddress, StateDB, StateResult,
 };
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
@@ -49,8 +49,6 @@ use coordinator::context::{Key as DbCxtKey, SubStorageAccess, Value as DbCxtValu
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, ShardTransaction, Transaction};
 use ctypes::util::unexpected::Mismatch;
-#[cfg(test)]
-use ctypes::Tracker;
 use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, TxHash};
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
@@ -85,7 +83,6 @@ pub struct TopLevelState {
     root: H256,
 
     top_cache: TopCache,
-    shard_caches: HashMap<ShardId, ShardCache>,
     module_caches: HashMap<StorageId, ModuleCache>,
     id_of_checkpoints: Vec<CheckpointId>,
 }
@@ -119,17 +116,6 @@ impl TopStateView for TopLevelState {
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         let module_address = ModuleAddress::new(storage_id);
         self.top_cache.module(&module_address, &trie)
-    }
-
-    fn shard_state<'db>(&'db self, shard_id: ShardId) -> TrieResult<Option<Box<dyn ShardStateView + 'db>>> {
-        match self.shard_root(shard_id)? {
-            // FIXME: Find a way to use stored cache.
-            Some(shard_root) => {
-                let shard_cache = self.shard_caches.get(&shard_id).cloned().unwrap_or_default();
-                Ok(Some(Box::new(ShardLevelState::read_only(shard_id, &self.db, shard_root, shard_cache)?)))
-            }
-            None => Ok(None),
-        }
     }
 
     fn module_state<'db>(&'db self, storage_id: StorageId) -> TrieResult<Option<Box<dyn ModuleStateView + 'db>>> {
@@ -212,28 +198,6 @@ impl SubStorageAccess for TopLevelState {
 
 impl StateWithCache for TopLevelState {
     fn commit(&mut self) -> StateResult<H256> {
-        let shard_ids: Vec<_> = self.shard_caches.iter().map(|(shard_id, _)| *shard_id).collect();
-        let shard_changes = shard_ids
-            .into_iter()
-            .map(|shard_id| {
-                if let Some(shard_root) = self.shard_root(shard_id)? {
-                    Ok(Some((shard_id, shard_root)))
-                } else {
-                    Ok(None)
-                }
-            })
-            .collect::<StateResult<Vec<_>>>()?;
-        for (shard_id, mut shard_root) in shard_changes.into_iter().filter_map(|result| result) {
-            {
-                let mut db = self.db.borrow_mut();
-                let mut trie = TrieFactory::from_existing(db.as_hashdb_mut(), &mut shard_root)?;
-
-                let shard_cache = self.shard_caches.get_mut(&shard_id).expect("Shard must exist");
-
-                shard_cache.commit(&mut trie)?;
-            }
-            self.set_shard_root(shard_id, shard_root)?;
-        }
         let module_changes = self
             .module_caches
             .iter()
@@ -280,9 +244,6 @@ impl StateWithCheckpoint for TopLevelState {
         self.id_of_checkpoints.push(id);
         self.top_cache.checkpoint();
 
-        for (_, cache) in self.shard_caches.iter_mut() {
-            cache.checkpoint()
-        }
         self.module_caches.iter_mut().for_each(|(_, cache)| cache.checkpoint())
     }
 
@@ -293,9 +254,6 @@ impl StateWithCheckpoint for TopLevelState {
         ctrace!(STATE, "Checkpoint({}) for top level is discarded", id);
         self.top_cache.discard_checkpoint();
 
-        for (_, cache) in self.shard_caches.iter_mut() {
-            cache.discard_checkpoint();
-        }
         self.module_caches.iter_mut().for_each(|(_, cache)| cache.discard_checkpoint())
     }
 
@@ -306,9 +264,6 @@ impl StateWithCheckpoint for TopLevelState {
         ctrace!(STATE, "Checkpoint({}) for top level is reverted", id);
         self.top_cache.revert_to_checkpoint();
 
-        for (_, cache) in self.shard_caches.iter_mut() {
-            cache.revert_to_checkpoint();
-        }
         self.module_caches.iter_mut().for_each(|(_, cache)| cache.revert_to_checkpoint())
     }
 }
@@ -321,14 +276,12 @@ impl TopLevelState {
         }
 
         let top_cache = db.top_cache();
-        let shard_caches = db.shard_caches();
         let module_caches = db.module_caches();
 
         let state = TopLevelState {
             db: RefCell::new(db),
             root,
             top_cache,
-            shard_caches,
             module_caches,
             id_of_checkpoints: Default::default(),
         };
@@ -434,41 +387,12 @@ impl TopLevelState {
         parent_block_timestamp: u64,
         _current_block_timestamp: u64,
     ) -> StateResult<()> {
-        let (transaction, approvers) = match action {
-            Action::ShardStore {
-                ..
-            } => {
-                let transaction = Option::<ShardTransaction>::from(action.clone()).expect("It's a shard transaction");
-                debug_assert_eq!(network_id, transaction.network_id());
-
-                let approvers = vec![]; // WrapCCC doesn't have approvers
-                (transaction, approvers)
-            }
+        match action {
             Action::Pay {
                 receiver,
                 quantity,
             } => {
                 self.transfer_balance(sender_address, receiver, *quantity)?;
-                return Ok(())
-            }
-            Action::CreateShard {
-                users,
-            } => {
-                self.create_shard(sender_address, *signed_hash, users.clone())?;
-                return Ok(())
-            }
-            Action::SetShardOwners {
-                shard_id,
-                owners,
-            } => {
-                self.change_shard_owners(*shard_id, owners, sender_address)?;
-                return Ok(())
-            }
-            Action::SetShardUsers {
-                shard_id,
-                users,
-            } => {
-                self.change_shard_users(*shard_id, users, sender_address)?;
                 return Ok(())
             }
             Action::Custom {
@@ -479,14 +403,8 @@ impl TopLevelState {
                 handler.execute(bytes, self, sender_address, sender_public)?;
                 return Ok(())
             }
-        };
-        self.apply_shard_transaction(
-            &transaction,
-            sender_address,
-            &approvers,
-            parent_block_number,
-            parent_block_timestamp,
-        )
+            _ => panic!(),
+        }
     }
 
     pub fn apply_shard_transaction(
@@ -519,38 +437,6 @@ impl TopLevelState {
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
     ) -> StateResult<()> {
-        let shard_root = self.shard_root(shard_id)?.ok_or_else(|| RuntimeError::InvalidShardId(shard_id))?;
-        let shard_users = self.shard_users(shard_id)?.expect("Shard must exist");
-
-        let shard_cache = self.shard_caches.entry(shard_id).or_default();
-        let mut shard_level_state = ShardLevelState::from_existing(shard_id, &mut self.db, shard_root, shard_cache)?;
-        shard_level_state.apply(
-            &transaction,
-            sender,
-            &shard_users,
-            approvers,
-            parent_block_number,
-            parent_block_timestamp,
-        )
-    }
-
-    fn create_shard_level_state(
-        &mut self,
-        shard_id: ShardId,
-        owners: Vec<Address>,
-        users: Vec<Address>,
-    ) -> StateResult<()> {
-        const DEFAULT_SHARD_ROOT: H256 = BLAKE_NULL_RLP;
-        {
-            let shard_cache = self.shard_caches.entry(shard_id).or_default();
-            ShardLevelState::from_existing(shard_id, &mut self.db, DEFAULT_SHARD_ROOT, shard_cache)?;
-        }
-
-        ctrace!(STATE, "shard({}) created. owners: {:?}, users: {:?}", shard_id, owners, users);
-
-        self.set_shard_root(shard_id, DEFAULT_SHARD_ROOT)?;
-        self.set_shard_owners(shard_id, owners)?;
-        self.set_shard_users(shard_id, users)?;
         Ok(())
     }
 
@@ -611,9 +497,6 @@ impl TopLevelState {
     pub fn top_cache(&self) -> &TopCache {
         &self.top_cache
     }
-    pub fn shard_caches(&self) -> &HashMap<ShardId, ShardCache> {
-        &self.shard_caches
-    }
 
     pub fn module_caches(&self) -> &HashMap<StorageId, ModuleCache> {
         &self.module_caches
@@ -650,7 +533,6 @@ impl Clone for TopLevelState {
             root: self.root,
             id_of_checkpoints: self.id_of_checkpoints.clone(),
             top_cache: self.top_cache.clone(),
-            shard_caches: self.shard_caches.clone(),
             module_caches: self.module_caches.clone(),
         }
     }
@@ -698,16 +580,6 @@ impl TopState for TopLevelState {
         Ok(())
     }
 
-    fn create_shard(&mut self, fee_payer: &Address, tx_hash: TxHash, users: Vec<Address>) -> StateResult<()> {
-        let shard_id = {
-            let mut metadata = self.get_metadata_mut()?;
-            metadata.add_shard(tx_hash)
-        };
-        self.create_shard_level_state(shard_id, vec![*fee_payer], users)?;
-
-        Ok(())
-    }
-
     fn create_module(&mut self) -> StateResult<()> {
         let storage_id = {
             let mut metadata = self.get_metadata_mut()?;
@@ -718,66 +590,9 @@ impl TopState for TopLevelState {
         Ok(())
     }
 
-    fn change_shard_owners(&mut self, shard_id: ShardId, owners: &[Address], sender: &Address) -> StateResult<()> {
-        let old_owners = self.shard_owners(shard_id)?.ok_or_else(|| RuntimeError::InvalidShardId(shard_id))?;
-        if !old_owners.contains(sender) {
-            return Err(RuntimeError::InsufficientPermission.into())
-        }
-        if !owners.contains(sender) {
-            return Err(RuntimeError::NewOwnersMustContainSender.into())
-        }
-
-        self.set_shard_owners(shard_id, owners.to_vec())
-    }
-
-    fn change_shard_users(&mut self, shard_id: ShardId, users: &[Address], sender: &Address) -> StateResult<()> {
-        let owners = self.shard_owners(shard_id)?.ok_or_else(|| RuntimeError::InvalidShardId(shard_id))?;
-        if !owners.contains(sender) {
-            return Err(RuntimeError::InsufficientPermission.into())
-        }
-
-        self.set_shard_users(shard_id, users.to_vec())
-    }
-
-    fn set_shard_root(&mut self, shard_id: ShardId, new_root: H256) -> StateResult<()> {
-        let mut shard = self.get_shard_mut(shard_id)?;
-        shard.set_root(new_root);
-        Ok(())
-    }
-
     fn set_module_root(&mut self, storage_id: StorageId, new_root: H256) -> StateResult<()> {
         let mut module = self.get_module_mut(storage_id)?;
         module.set_root(new_root);
-        Ok(())
-    }
-
-    fn set_shard_owners(&mut self, shard_id: ShardId, new_owners: Vec<Address>) -> StateResult<()> {
-        for owner in &new_owners {
-            if !is_active_account(self, owner)? {
-                return Err(RuntimeError::NonActiveAccount {
-                    name: "shard owner".to_string(),
-                    address: *owner,
-                }
-                .into())
-            }
-        }
-        let mut shard = self.get_shard_mut(shard_id)?;
-        shard.set_owners(new_owners);
-        Ok(())
-    }
-
-    fn set_shard_users(&mut self, shard_id: ShardId, new_users: Vec<Address>) -> StateResult<()> {
-        for user in &new_users {
-            if !is_active_account(self, user)? {
-                return Err(RuntimeError::NonActiveAccount {
-                    name: "shard user".to_string(),
-                    address: *user,
-                }
-                .into())
-            }
-        }
-        let mut shard = self.get_shard_mut(shard_id)?;
-        shard.set_users(new_users);
         Ok(())
     }
 
@@ -1265,343 +1080,6 @@ mod tests_tx {
         check_top_level_state!(state, [
             (account: sender => (seq: 0, balance: 20)),
             (account: receiver => (seq: 0, balance: 0))
-        ]);
-    }
-
-    #[test]
-    fn get_invalid_shard_root() {
-        let state = get_temp_state();
-
-        let shard_id = 3;
-        check_top_level_state!(state, [(shard: shard_id)]);
-    }
-
-    #[test]
-    fn get_shard_text_in_invalid_shard() {
-        let state = get_temp_state();
-
-        let shard_id = 3;
-        check_top_level_state!(state, [(shard_text: (shard_id, Tracker::from(H256::random())))]);
-    }
-
-    #[test]
-    #[allow(clippy::cognitive_complexity)]
-    fn apply_create_shard() {
-        let mut state = get_temp_state();
-        let (sender, sender_public) = address();
-        let users = vec![Address::random(), Address::random(), Address::random()];
-        set_top_level_state!(state, [
-            (account: users[0] => seq: 1),
-            (account: users[1] => seq: 1),
-            (account: users[2] => seq: 1),
-            (account: sender => balance: 20)
-        ]);
-
-        let tx1 = transaction!(fee: 5, Action::CreateShard { users: vec![] });
-        let tx2 = transaction!(seq: 1, fee: 5, Action::CreateShard { users: users.clone() });
-        let invalid_hash = TxHash::from(H256::random());
-        let signed_hash1 = TxHash::from(H256::random());
-        let signed_hash2 = TxHash::from(H256::random());
-
-        assert_eq!(Ok(None), state.shard_id_by_hash(&invalid_hash));
-        assert_eq!(Ok(None), state.shard_id_by_hash(&signed_hash1));
-        assert_eq!(Ok(None), state.shard_id_by_hash(&signed_hash2));
-
-        assert_eq!(Ok(()), state.apply(&tx1, &signed_hash1, &sender_public, &get_test_client(), 0, 0, 0));
-
-        assert_eq!(Ok(None), state.shard_id_by_hash(&invalid_hash));
-        assert_eq!(Ok(Some(0)), state.shard_id_by_hash(&signed_hash1));
-        assert_eq!(Ok(None), state.shard_id_by_hash(&signed_hash2));
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 20 - 5)),
-            (shard: 0 => owners: [sender]),
-            (shard: 1)
-        ]);
-
-        assert_eq!(Ok(()), state.apply(&tx2, &signed_hash2, &sender_public, &get_test_client(), 0, 0, 0));
-        assert_eq!(Ok(None), state.shard_id_by_hash(&invalid_hash));
-        assert_eq!(Ok(Some(0)), state.shard_id_by_hash(&signed_hash1));
-        assert_eq!(Ok(Some(1)), state.shard_id_by_hash(&signed_hash2));
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 2, balance: 20 - 5 - 5)),
-            (shard: 0 => owners: vec![sender], users: vec![]),
-            (shard: 1 => owners: vec![sender], users: users),
-            (shard: 2)
-        ]);
-    }
-
-    #[test]
-    #[allow(clippy::cognitive_complexity)]
-    fn apply_create_shard_when_there_are_default_shards() {
-        let mut state = get_temp_state();
-        let (sender, sender_public) = address();
-        let shard_owner0 = address().0;
-        let shard_owner1 = address().0;
-        let shard_user = Address::random();
-
-        set_top_level_state!(state, [
-            (account: shard_owner0 => seq: 1),
-            (account: shard_owner1 => seq: 1),
-            (account: shard_user => seq: 1),
-            (shard: 0 => owners: [shard_owner0]),
-            (shard: 1 => owners: [shard_owner1]),
-            (metadata: shards: 2),
-            (account: sender => balance: 20)
-        ]);
-
-        let tx1 = transaction!(fee: 5, Action::CreateShard { users: vec![shard_user] });
-        let invalid_hash = TxHash::from(H256::random());
-        let signed_hash1 = TxHash::from(H256::random());
-        let signed_hash2 = TxHash::from(H256::random());
-
-        assert_eq!(Ok(None), state.shard_id_by_hash(&invalid_hash));
-        assert_eq!(Ok(None), state.shard_id_by_hash(&signed_hash1));
-        assert_eq!(Ok(None), state.shard_id_by_hash(&signed_hash2));
-
-        assert_eq!(Ok(()), state.apply(&tx1, &signed_hash1, &sender_public, &get_test_client(), 0, 0, 0));
-
-        assert_eq!(Ok(None), state.shard_id_by_hash(&invalid_hash));
-        assert_eq!(Ok(Some(2)), state.shard_id_by_hash(&signed_hash1));
-        assert_eq!(Ok(None), state.shard_id_by_hash(&signed_hash2));
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 20 - 5)),
-            (shard: 0 => owners: [shard_owner0]),
-            (shard: 1 => owners: vec![shard_owner1]),
-            (shard: 2 => owners: vec![sender], users: vec![shard_user]),
-            (shard: 3)
-        ]);
-
-        let tx2 = transaction!(seq: 1, fee: 5, Action::CreateShard { users: vec![] });
-        assert_eq!(Ok(()), state.apply(&tx2, &signed_hash2, &sender_public, &get_test_client(), 0, 0, 0));
-        assert_eq!(Ok(None), state.shard_id_by_hash(&invalid_hash));
-        assert_eq!(Ok(Some(2)), state.shard_id_by_hash(&signed_hash1));
-        assert_eq!(Ok(Some(3)), state.shard_id_by_hash(&signed_hash2));
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 2, balance: 20 - 5 - 5)),
-            (shard: 0 => owners: [shard_owner0]),
-            (shard: 1 => owners: [shard_owner1]),
-            (shard: 2 => owners: vec![sender], users: vec![shard_user]),
-            (shard: 3 => owners: vec![sender], users: vec![]),
-            (shard: 4)
-        ]);
-    }
-
-    #[test]
-    fn get_shard_text_in_invalid_shard2() {
-        let mut state = get_temp_state();
-        let (sender, sender_public) = address();
-        set_top_level_state!(state, [
-            (account: sender => balance: 20)
-        ]);
-        let tx = transaction!(fee: 5, Action::CreateShard { users: vec![] });
-        assert_eq!(Ok(()), state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0));
-
-        let invalid_shard_id = 3;
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 20 - 5)),
-            (shard: 0 => owners: vec![sender], users: vec![]),
-            (shard_text: (invalid_shard_id, Tracker::from(H256::random())))
-        ]);
-    }
-
-    #[test]
-    fn set_shard_owners() {
-        let (sender, sender_public) = address();
-
-        let shard_id = 0;
-
-        let mut state = get_temp_state();
-        let owners = vec![Address::random(), Address::random(), sender];
-        set_top_level_state!(state, [
-            (account: sender => balance: 100),
-            (account: owners[0] => balance: 100),
-            (account: owners[1] => balance: 100),
-            (shard: shard_id => owners: [sender]),
-            (metadata: shards: 1)
-        ]);
-
-        let tx = transaction!(fee: 5, set_shard_owners!(owners.clone()));
-        assert_eq!(Ok(()), state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0));
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 100 - 5)),
-            (shard: 0 => owners: owners)
-        ]);
-    }
-
-    #[test]
-    fn new_owners_must_contain_sender() {
-        let (sender, sender_public) = address();
-
-        let shard_id = 0;
-
-        let mut state = get_temp_state();
-        let owners = vec![Address::random(), Address::random()];
-        set_top_level_state!(state, [
-            (account: sender => balance: 100),
-            (account: owners[0] => seq: 1),
-            (account: owners[0] => seq: 1),
-            (shard: shard_id => owners: [sender]),
-            (metadata: shards: 1)
-        ]);
-
-        let tx = transaction!(fee: 5, set_shard_owners!(owners));
-        assert_eq!(
-            Err(RuntimeError::NewOwnersMustContainSender.into()),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 100)),
-            (shard: 0 => owners: [sender])
-        ]);
-    }
-
-    #[test]
-    fn only_owner_can_set_owners() {
-        let (original_owner, ..) = address();
-
-        let shard_id = 0;
-
-        let mut state = get_temp_state();
-        let (sender, sender_public) = address();
-        set_top_level_state!(state, [
-            (account: sender => balance: 100),
-            (account: original_owner => seq: 1),
-            (shard: shard_id => owners: [original_owner]),
-            (metadata: shards: 1)
-        ]);
-
-        let owners = vec![Address::random(), Address::random(), sender];
-        let tx = transaction!(fee: 5, set_shard_owners!(owners));
-
-        assert_eq!(
-            Err(RuntimeError::InsufficientPermission.into()),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 100)),
-            (shard: 0 => owners: [original_owner])
-        ]);
-    }
-
-    #[test]
-    fn set_shard_owners_fail_on_invalid_shard_id() {
-        let (sender, sender_public) = address();
-        let shard_id = 0;
-
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 100),
-            (shard: shard_id => owners: [sender]),
-            (metadata: shards: 1)
-        ]);
-
-        let invalid_shard_id = 0xF;
-        let owners = vec![Address::random(), Address::random(), sender];
-        let tx = transaction!(fee: 5, set_shard_owners!(shard_id: invalid_shard_id, owners));
-
-        assert_eq!(
-            Err(RuntimeError::InvalidShardId(invalid_shard_id).into()),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 100)),
-            (shard: 0 => owners: [sender]),
-            (shard: invalid_shard_id)
-        ]);
-    }
-
-    #[test]
-    fn user_cannot_set_owners() {
-        let (original_owner, ..) = address();
-        let (sender, sender_public) = address();
-        let shard_id = 0;
-
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 100),
-            (account: original_owner => seq: 1),
-            (shard: shard_id => owners: [original_owner], users: [sender]),
-            (metadata: shards: 1)
-        ]);
-
-        let owners = vec![Address::random(), Address::random(), sender];
-
-        let tx = transaction!(fee: 5, set_shard_owners!(owners));
-        assert_eq!(
-            Err(StateError::Runtime(RuntimeError::InsufficientPermission)),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 100)),
-            (shard: 0 => owners: [original_owner])
-        ]);
-    }
-
-    #[test]
-    fn set_shard_users() {
-        let (sender, sender_public) = address();
-        let old_users = vec![Address::random(), Address::random(), Address::random()];
-        let shard_id = 0;
-
-        let mut state = get_temp_state();
-        let new_users = vec![Address::random(), Address::random(), sender];
-        set_top_level_state!(state, [
-            (account: sender => balance: 100),
-            (account: old_users[0] => seq: 1),
-            (account: old_users[1] => seq: 1),
-            (account: old_users[2] => seq: 1),
-            (account: new_users[0] => seq: 1),
-            (account: new_users[1] => seq: 1),
-            (shard: shard_id => owners: [sender], users: old_users),
-            (metadata: shards: 1)
-        ]);
-
-        let tx = transaction!(fee: 5, set_shard_users!(new_users));
-
-        assert_eq!(Ok(()), state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0));
-        check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 100 - 5))
-        ]);
-    }
-
-    #[test]
-    fn user_cannot_set_shard_users() {
-        let (sender, sender_public) = address();
-        let owners = vec![Address::random(), Address::random(), Address::random()];
-        let old_users = vec![Address::random(), Address::random(), Address::random(), sender];
-        let shard_id = 0;
-
-        let mut state = get_temp_state();
-        set_top_level_state!(state, [
-            (account: sender => balance: 100),
-            (account: old_users[0] => seq: 1),
-            (account: old_users[1] => seq: 1),
-            (account: old_users[2] => seq: 1),
-            (account: owners[0] => seq: 1),
-            (account: owners[1] => seq: 1),
-            (account: owners[2] => seq: 1),
-            (shard: shard_id => owners: owners, users: old_users.clone()),
-            (metadata: shards: 1)
-        ]);
-
-        let new_users = vec![Address::random(), Address::random(), sender];
-        let tx = transaction!(fee: 5, set_shard_users!(new_users));
-
-        assert_eq!(
-            Err(RuntimeError::InsufficientPermission.into()),
-            state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0)
-        );
-        check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 100)),
-            (shard: 0 => owners: owners, users: old_users)
         ]);
     }
 }
