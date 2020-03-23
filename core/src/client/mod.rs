@@ -39,9 +39,9 @@ use cdb::DatabaseError;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ShardId, SyncHeader, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, SyncHeader, TxHash};
 use kvdb::KeyValueDB;
-use primitives::{Bytes, H256};
+use primitives::Bytes;
 use std::ops::Range;
 use std::sync::Arc;
 
@@ -146,12 +146,6 @@ impl From<BlockId> for StateOrBlock {
     fn from(id: BlockId) -> StateOrBlock {
         StateOrBlock::Block(id)
     }
-}
-
-pub trait Shard {
-    fn number_of_shards(&self, state: StateOrBlock) -> Option<ShardId>;
-
-    fn shard_root(&self, shard_id: ShardId, state: StateOrBlock) -> Option<H256>;
 }
 
 /// Provides methods to import block into blockchain

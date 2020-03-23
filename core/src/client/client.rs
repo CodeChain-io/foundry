@@ -17,7 +17,7 @@
 use super::importer::{Importer, VerifiedHeader};
 use super::{
     AccountData, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify, ClientConfig,
-    DatabaseClient, EngineClient, EngineInfo, ImportBlock, ImportResult, MiningBlockChainClient, Shard, StateInfo,
+    DatabaseClient, EngineClient, EngineInfo, ImportBlock, ImportResult, MiningBlockChainClient, StateInfo,
     StateOrBlock,
 };
 use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock};
@@ -39,10 +39,10 @@ use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ShardId, SyncHeader, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use primitives::{Bytes, H256};
+use primitives::Bytes;
 use rlp::Rlp;
 use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
@@ -608,18 +608,6 @@ impl AccountData for Client {
     fn balance(&self, pubkey: &Public, state: StateOrBlock) -> Option<u64> {
         let state = self.state_info(state)?;
         state.balance(pubkey).ok()
-    }
-}
-
-impl Shard for Client {
-    fn number_of_shards(&self, state: StateOrBlock) -> Option<ShardId> {
-        let state = self.state_info(state)?;
-        state.number_of_shards().ok()
-    }
-
-    fn shard_root(&self, shard_id: ShardId, state: StateOrBlock) -> Option<H256> {
-        let state = self.state_info(state)?;
-        state.shard_root(shard_id).ok()?
     }
 }
 

@@ -119,15 +119,6 @@ macro_rules! set_top_level_state {
     ($state:expr, [(account: $from:expr => transfer: $to:expr, $quantity:expr)]) => {
         assert_eq!(Ok(()), $state.transfer_balance(&$from, &$to, $quantity));
     };
-    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*])]) => {
-        set_top_level_state!($state, [(shard: $shard_id => owners: vec![$($owner),*])]);
-    };
-    ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr)]) => {
-        assert_eq!(Ok(()), $state.create_shard_level_state($shard_id, $owners));
-    };
-    ($state:expr, [(metadata: shards: $number_of_shards:expr)]) => {
-        assert_eq!(Ok(()), $state.set_number_of_shards($number_of_shards));
-    };
     // recursion
     ($state:expr, [$head:tt, $($tail:tt),+ $(,)?]) => {
         set_top_level_state!($state, [$head]);
@@ -157,15 +148,6 @@ macro_rules! check_top_level_state {
     ($state:expr, [(account: $addr:expr => $head:ident: $head_val:expr, $($tail:ident: $tail_val:expr),+)]) => {
         check_top_level_state!($state, [(account: $addr => $head: $head_val)]);
         check_top_level_state!($state, [(account: $addr => $($tail: $tail_val),+)]);
-    };
-    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*])]) => {
-        check_top_level_state!($state, [(shard: $shard_id => owners: vec![$($owner,)*])]);
-    };
-    ($state:expr, [(shard: $shard_id:expr)]) => {
-        assert_eq!(Ok(None), $state.shard_root($shard_id));
-    };
-    ($state:expr, [(shard_text: ($shard_id:expr, $tx_hash:expr))]) => {
-        assert_eq!(Ok(None), $state.shard_text($shard_id, $tx_hash));
     };
     //recursion
     ($state:expr, [$head:tt, $($tail:tt),+ $(,)?]) => {

@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::{Accounts, Engine, Genesis, Params};
-use crate::uint::Uint;
 use serde_json::Error;
 use std::io::Read;
 
@@ -35,7 +34,6 @@ pub struct Scheme {
     pub genesis: Genesis,
     /// Genesis state.
     pub accounts: Accounts,
-    pub shards: Uint,
     /// Boot nodes.
     pub nodes: Option<Vec<String>>,
 }
@@ -131,8 +129,7 @@ mod tests {
                 "fjjh0003AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMtc0": { "balance": "1", "seq": "1048576" },
                 "fjjh0004AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQtc0": { "balance": "1", "seq": "1048576" },
                 "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0": { "balance": "1606938044258990275541962092341162602522202993782792835301376", "seq": "1048576" }
-            },
-            "shards": 1
+            }
         }"#;
         let _deserialized: Scheme = serde_json::from_str(s).unwrap();
         // TODO: validate all fields
