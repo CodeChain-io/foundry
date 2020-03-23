@@ -60,7 +60,6 @@ pub trait TopStateView {
     }
 
     fn shard(&self, shard_id: ShardId) -> TrieResult<Option<Shard>>;
-    fn shard_state<'db>(&'db self, shard_id: ShardId) -> TrieResult<Option<Box<dyn ShardStateView + 'db>>>;
 
     fn module(&self, storage_id: StorageId) -> TrieResult<Option<Module>>;
     fn module_state<'db>(&'db self, storage_id: StorageId) -> TrieResult<Option<Box<dyn ModuleStateView + 'db>>>;
@@ -74,13 +73,6 @@ pub trait TopStateView {
     }
 
     fn action_data(&self, key: &H256) -> TrieResult<Option<ActionData>>;
-
-    fn shard_text(&self, shard_id: ShardId, tx_hash: TxHash) -> TrieResult<Option<ShardText>> {
-        match self.shard_state(shard_id)? {
-            None => Ok(None),
-            Some(state) => state.text(tx_hash),
-        }
-    }
 
     fn module_datum(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> TrieResult<Option<ModuleDatum>> {
         match self.module_state(storage_id)? {
@@ -127,8 +119,6 @@ pub trait TopState {
 
     /// Increment the seq of account `a` by 1.
     fn inc_seq(&mut self, a: &Address) -> TrieResult<()>;
-
-    fn set_shard_root(&mut self, shard_id: ShardId, new_root: H256) -> StateResult<()>;
 
     fn create_module(&mut self) -> StateResult<()>;
     fn set_module_root(&mut self, storage_id: StorageId, new_root: H256) -> StateResult<()>;

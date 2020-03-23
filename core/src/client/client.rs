@@ -616,11 +616,6 @@ impl Shard for Client {
         let state = self.state_info(state)?;
         state.number_of_shards().ok()
     }
-
-    fn shard_root(&self, shard_id: ShardId, state: StateOrBlock) -> Option<H256> {
-        let state = self.state_info(state)?;
-        state.shard_root(shard_id).ok()?
-    }
 }
 
 impl BlockProducer for Client {

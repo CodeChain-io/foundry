@@ -35,13 +35,13 @@
 //! Unconfirmed sub-states are managed with `checkpoint`s which may be canonicalized
 //! or rolled back.
 
-use crate::cache::{ModuleCache, ShardCache, TopCache};
+use crate::cache::{ModuleCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::stake::{change_params, delegate_ccs, redelegate, revoke, transfer_ccs};
-use crate::traits::{ModuleStateView, ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
+use crate::traits::{ModuleStateView, StateWithCache, TopState, TopStateView};
 use crate::{
     self_nominate, Account, ActionData, FindDoubleVoteHandler, Metadata, MetadataAddress, Module, ModuleAddress,
-    ModuleLevelState, Shard, ShardAddress, ShardLevelState, StateDB, StateResult,
+    ModuleLevelState, Shard, ShardAddress, StateDB, StateResult,
 };
 use cdb::{AsHashDB, DatabaseError};
 use ckey::{public_to_address, Address, Ed25519Public as Public, NetworkId};
@@ -83,7 +83,6 @@ pub struct TopLevelState {
     root: H256,
 
     top_cache: TopCache,
-    shard_caches: HashMap<ShardId, ShardCache>,
     module_caches: HashMap<StorageId, ModuleCache>,
     id_of_checkpoints: Vec<CheckpointId>,
 }
@@ -117,17 +116,6 @@ impl TopStateView for TopLevelState {
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         let module_address = ModuleAddress::new(storage_id);
         self.top_cache.module(&module_address, &trie)
-    }
-
-    fn shard_state<'db>(&'db self, shard_id: ShardId) -> TrieResult<Option<Box<dyn ShardStateView + 'db>>> {
-        match self.shard_root(shard_id)? {
-            // FIXME: Find a way to use stored cache.
-            Some(shard_root) => {
-                let shard_cache = self.shard_caches.get(&shard_id).cloned().unwrap_or_default();
-                Ok(Some(Box::new(ShardLevelState::read_only(shard_id, &self.db, shard_root, shard_cache)?)))
-            }
-            None => Ok(None),
-        }
     }
 
     fn module_state<'db>(&'db self, storage_id: StorageId) -> TrieResult<Option<Box<dyn ModuleStateView + 'db>>> {
@@ -210,28 +198,6 @@ impl SubStorageAccess for TopLevelState {
 
 impl StateWithCache for TopLevelState {
     fn commit(&mut self) -> StateResult<H256> {
-        let shard_ids: Vec<_> = self.shard_caches.iter().map(|(shard_id, _)| *shard_id).collect();
-        let shard_changes = shard_ids
-            .into_iter()
-            .map(|shard_id| {
-                if let Some(shard_root) = self.shard_root(shard_id)? {
-                    Ok(Some((shard_id, shard_root)))
-                } else {
-                    Ok(None)
-                }
-            })
-            .collect::<StateResult<Vec<_>>>()?;
-        for (shard_id, mut shard_root) in shard_changes.into_iter().filter_map(|result| result) {
-            {
-                let mut db = self.db.borrow_mut();
-                let mut trie = TrieFactory::from_existing(db.as_hashdb_mut(), &mut shard_root)?;
-
-                let shard_cache = self.shard_caches.get_mut(&shard_id).expect("Shard must exist");
-
-                shard_cache.commit(&mut trie)?;
-            }
-            self.set_shard_root(shard_id, shard_root)?;
-        }
         let module_changes = self
             .module_caches
             .iter()
@@ -278,9 +244,6 @@ impl StateWithCheckpoint for TopLevelState {
         self.id_of_checkpoints.push(id);
         self.top_cache.checkpoint();
 
-        for (_, cache) in self.shard_caches.iter_mut() {
-            cache.checkpoint()
-        }
         self.module_caches.iter_mut().for_each(|(_, cache)| cache.checkpoint())
     }
 
@@ -291,9 +254,6 @@ impl StateWithCheckpoint for TopLevelState {
         ctrace!(STATE, "Checkpoint({}) for top level is discarded", id);
         self.top_cache.discard_checkpoint();
 
-        for (_, cache) in self.shard_caches.iter_mut() {
-            cache.discard_checkpoint();
-        }
         self.module_caches.iter_mut().for_each(|(_, cache)| cache.discard_checkpoint())
     }
 
@@ -304,9 +264,6 @@ impl StateWithCheckpoint for TopLevelState {
         ctrace!(STATE, "Checkpoint({}) for top level is reverted", id);
         self.top_cache.revert_to_checkpoint();
 
-        for (_, cache) in self.shard_caches.iter_mut() {
-            cache.revert_to_checkpoint();
-        }
         self.module_caches.iter_mut().for_each(|(_, cache)| cache.revert_to_checkpoint())
     }
 }
@@ -319,14 +276,12 @@ impl TopLevelState {
         }
 
         let top_cache = db.top_cache();
-        let shard_caches = db.shard_caches();
         let module_caches = db.module_caches();
 
         let state = TopLevelState {
             db: RefCell::new(db),
             root,
             top_cache,
-            shard_caches,
             module_caches,
             id_of_checkpoints: Default::default(),
         };
@@ -427,16 +382,7 @@ impl TopLevelState {
         parent_block_timestamp: u64,
         _current_block_timestamp: u64,
     ) -> StateResult<()> {
-        let (transaction, approvers) = match action {
-            Action::ShardStore {
-                ..
-            } => {
-                let transaction = Option::<ShardTransaction>::from(action.clone()).expect("It's a shard transaction");
-                debug_assert_eq!(network_id, transaction.network_id());
-
-                let approvers = vec![]; // WrapCCC doesn't have approvers
-                (transaction, approvers)
-            }
+        match action {
             Action::Pay {
                 receiver,
                 quantity,
@@ -495,15 +441,8 @@ impl TopLevelState {
                 handler.execute(message1, self, sender_address)?;
                 return Ok(())
             }
-        };
-        self.apply_shard_transaction(
-            tx_hash,
-            &transaction,
-            sender_address,
-            &approvers,
-            parent_block_number,
-            parent_block_timestamp,
-        )
+            _ => panic!(),
+        }
     }
 
     fn apply_shard_transaction(
@@ -539,11 +478,7 @@ impl TopLevelState {
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
     ) -> StateResult<()> {
-        let shard_root = self.shard_root(shard_id)?.ok_or_else(|| RuntimeError::InvalidShardId(shard_id))?;
-
-        let shard_cache = self.shard_caches.entry(shard_id).or_default();
-        let mut shard_level_state = ShardLevelState::from_existing(shard_id, &mut self.db, shard_root, shard_cache)?;
-        shard_level_state.apply(tx_hash, &transaction, sender, approvers, parent_block_number, parent_block_timestamp)
+        Ok(())
     }
 
     fn create_module_level_state(&mut self, storage_id: StorageId) -> StateResult<()> {
@@ -603,9 +538,6 @@ impl TopLevelState {
     pub fn top_cache(&self) -> &TopCache {
         &self.top_cache
     }
-    pub fn shard_caches(&self) -> &HashMap<ShardId, ShardCache> {
-        &self.shard_caches
-    }
 
     pub fn module_caches(&self) -> &HashMap<StorageId, ModuleCache> {
         &self.module_caches
@@ -631,7 +563,6 @@ impl Clone for TopLevelState {
             root: self.root,
             id_of_checkpoints: self.id_of_checkpoints.clone(),
             top_cache: self.top_cache.clone(),
-            shard_caches: self.shard_caches.clone(),
             module_caches: self.module_caches.clone(),
         }
     }
@@ -686,12 +617,6 @@ impl TopState for TopLevelState {
         };
         self.create_module_level_state(storage_id)?;
 
-        Ok(())
-    }
-
-    fn set_shard_root(&mut self, shard_id: ShardId, new_root: H256) -> StateResult<()> {
-        let mut shard = self.get_shard_mut(shard_id)?;
-        shard.set_root(new_root);
         Ok(())
     }
 
@@ -1262,21 +1187,5 @@ mod tests_tx {
             (account: sender => seq: 0, balance: 20),
             (account: receiver => seq: 0, balance: 0)
         ]);
-    }
-
-    #[test]
-    fn get_invalid_shard_root() {
-        let state = get_temp_state();
-
-        let shard_id = 3;
-        check_top_level_state!(state, [(shard: shard_id)]);
-    }
-
-    #[test]
-    fn get_shard_text_in_invalid_shard() {
-        let state = get_temp_state();
-
-        let shard_id = 3;
-        check_top_level_state!(state, [(shard_text: (shard_id, TxHash::from(H256::random())))]);
     }
 }
