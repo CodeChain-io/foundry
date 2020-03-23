@@ -18,7 +18,7 @@ use super::{BlockChainTrait, Client, ClientConfig};
 use crate::block::{enact, Block, ClosedBlock, IsBlock};
 use crate::blockchain::{BodyProvider, ChainUpdateResult, HeaderProvider};
 use crate::client::EngineInfo;
-use crate::consensus::CodeChainEngine;
+use crate::consensus::ConsensusEngine;
 use crate::error::Error;
 use crate::miner::{Miner, MinerService};
 use crate::service::ClientIoMessage;
@@ -53,13 +53,13 @@ pub struct Importer {
     miner: Arc<Miner>,
 
     /// CodeChain engine to be used during import
-    pub engine: Arc<dyn CodeChainEngine>,
+    pub engine: Arc<dyn ConsensusEngine>,
 }
 
 impl Importer {
     pub fn try_new(
         config: &ClientConfig,
-        engine: Arc<dyn CodeChainEngine>,
+        engine: Arc<dyn ConsensusEngine>,
         message_channel: IoChannel<ClientIoMessage>,
         miner: Arc<Miner>,
     ) -> Result<Importer, Error> {

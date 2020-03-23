@@ -17,7 +17,7 @@
 use super::block_info::BestHeaderChanged;
 use super::extras::BlockDetails;
 use super::route::tree_route;
-use crate::consensus::CodeChainEngine;
+use crate::consensus::ConsensusEngine;
 use crate::db::{self, CacheUpdatePolicy, Readable, Writable};
 use crate::encoded;
 use crate::views::HeaderView;
@@ -165,7 +165,7 @@ impl HeaderChain {
         &self,
         batch: &mut DBTransaction,
         header: &HeaderView<'_>,
-        engine: &dyn CodeChainEngine,
+        engine: &dyn ConsensusEngine,
     ) -> Option<BestHeaderChanged> {
         let hash = header.hash();
 
@@ -276,7 +276,7 @@ impl HeaderChain {
     }
 
     /// Calculate how best block is changed
-    fn best_header_changed(&self, new_header: &HeaderView<'_>, engine: &dyn CodeChainEngine) -> BestHeaderChanged {
+    fn best_header_changed(&self, new_header: &HeaderView<'_>, engine: &dyn ConsensusEngine) -> BestHeaderChanged {
         let parent_hash_of_new_header = new_header.parent_hash();
         let parent_details_of_new_header = self.block_details(&parent_hash_of_new_header).expect("Invalid parent hash");
         let grandparent_hash_of_new_header = parent_details_of_new_header.parent;
