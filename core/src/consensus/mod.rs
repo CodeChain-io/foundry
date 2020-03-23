@@ -37,16 +37,14 @@ use crate::client::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::client::ConsensusClient;
 pub use crate::consensus::tendermint::Evidence;
 use crate::error::Error;
-use crate::transaction::UnverifiedTransaction;
 use crate::views::HeaderView;
 use crate::Client;
 use ckey::{Ed25519Public as Public, Signature};
 use cnetwork::NetworkService;
 use cstate::DoubleVoteHandler;
-use ctypes::errors::SyntaxError;
 use ctypes::transaction::Action;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
-use ctypes::{BlockHash, CommonParams, CompactValidatorSet, Header, SyncHeader};
+use ctypes::{BlockHash, CompactValidatorSet, Header, SyncHeader};
 use primitives::Bytes;
 use std::fmt;
 use std::sync::{Arc, Weak};
@@ -306,28 +304,3 @@ impl fmt::Display for EngineError {
         f.write_fmt(format_args!("Engine error ({})", msg))
     }
 }
-
-/// Common type alias for an engine coupled with an CodeChain-like state machine.
-pub trait CodeChainEngine: ConsensusEngine {
-    /// Additional verification for transactions in blocks.
-    fn verify_transaction_with_params(
-        &self,
-        tx: &UnverifiedTransaction,
-        common_params: &CommonParams,
-    ) -> Result<(), Error> {
-        if let Action::ReportDoubleVote {
-            message1,
-            message2,
-        } = &tx.transaction().action
-        {
-            let handler =
-                self.stake_handler().ok_or_else(|| SyntaxError::InvalidCustomAction("no valid handler".to_string()))?;
-            handler.verify(message1, message2)?;
-        }
-        tx.verify_with_params(common_params)?;
-        Ok(())
-    }
-}
-
-// convenience wrappers for existing functions.
-impl<T> CodeChainEngine for T where T: ConsensusEngine {}

@@ -16,7 +16,7 @@
 
 use super::seal::Generic as GenericSeal;
 use super::Genesis;
-use crate::consensus::{CodeChainEngine, NullEngine, Solo, Tendermint};
+use crate::consensus::{ConsensusEngine, NullEngine, Solo, Tendermint};
 use crate::error::{Error, SchemeError};
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, HashDB};
@@ -37,7 +37,7 @@ pub struct Scheme {
     /// User friendly scheme name
     pub name: String,
     /// What engine are we using for this?
-    pub engine: Arc<dyn CodeChainEngine>,
+    pub engine: Arc<dyn ConsensusEngine>,
     /// Name of the subdir inside the main data dir to use for chain data and settings.
     pub data_dir: String,
 
@@ -82,7 +82,7 @@ macro_rules! load_bundled {
 impl Scheme {
     /// Convert engine scheme into a arc'd Engine of the right underlying type.
     /// TODO avoid this hard-coded nastiness - use dynamic-linked plugin framework instead.
-    fn engine(engine_scheme: cjson::scheme::Engine) -> Arc<dyn CodeChainEngine> {
+    fn engine(engine_scheme: cjson::scheme::Engine) -> Arc<dyn ConsensusEngine> {
         match engine_scheme {
             cjson::scheme::Engine::Null => Arc::new(NullEngine::default()),
             cjson::scheme::Engine::Solo => Arc::new(Solo::new()),

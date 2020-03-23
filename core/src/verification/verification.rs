@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::consensus::{CodeChainEngine, Evidence};
+use crate::consensus::{ConsensusEngine, Evidence};
 use crate::error::{BlockError, Error};
 use crate::transaction::VerifiedTransaction;
 use crate::views::BlockView;
@@ -53,7 +53,7 @@ pub fn verify_block_basic(header: &Header, bytes: &[u8]) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn verify_header_with_engine(header: &Header, engine: &dyn CodeChainEngine) -> Result<(), Error> {
+pub fn verify_header_with_engine(header: &Header, engine: &dyn ConsensusEngine) -> Result<(), Error> {
     engine.verify_header_basic(&header)?;
 
     let expected_seal_fields = engine.seal_fields(header);
@@ -160,7 +160,7 @@ pub fn verify_block_family(
     block: &[u8],
     header: &Header,
     parent: &Header,
-    engine: &dyn CodeChainEngine,
+    engine: &dyn ConsensusEngine,
     common_params: &CommonParams,
 ) -> Result<(), Error> {
     verify_block_with_params(header, block, common_params)?;
