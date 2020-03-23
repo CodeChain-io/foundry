@@ -270,7 +270,7 @@ describe("Change commonParams that doesn't affects validator set", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(ERROR.TOO_LOW_FEE);
+                expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
             }
         });
     });
@@ -327,9 +327,7 @@ describe("Change commonParams that doesn't affects validator set", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
 
@@ -376,9 +374,7 @@ describe("Change commonParams that doesn't affects validator set", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
     });

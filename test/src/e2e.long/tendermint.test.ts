@@ -114,7 +114,7 @@ describe("Tendermint ", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(ERROR.ENGIN_ERROR);
+                expect(e).is.similarTo(ERROR.ENGIN_ERROR);
             }
             try {
                 await nodes[1].rpc.chain.getPossibleAuthors({
@@ -122,7 +122,7 @@ describe("Tendermint ", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(ERROR.ENGIN_ERROR);
+                expect(e).is.similarTo(ERROR.ENGIN_ERROR);
             }
             try {
                 await nodes[2].rpc.chain.getPossibleAuthors({
@@ -130,7 +130,7 @@ describe("Tendermint ", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(ERROR.ENGIN_ERROR);
+                expect(e).is.similarTo(ERROR.ENGIN_ERROR);
             }
             try {
                 await nodes[3].rpc.chain.getPossibleAuthors({
@@ -138,7 +138,7 @@ describe("Tendermint ", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(ERROR.ENGIN_ERROR);
+                expect(e).is.similarTo(ERROR.ENGIN_ERROR);
             }
         });
     });

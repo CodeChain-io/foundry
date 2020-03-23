@@ -59,6 +59,10 @@ export const ERROR: any = {
         code: -32602,
         message: $anything
     },
+    INVALID_SECRET: {
+        code: -32602,
+        message: "Invalid secret"
+    },
     INVALID_RLP_TOO_BIG: {
         code: -32009,
         data: $containsWord("RlpIsTooBig"),

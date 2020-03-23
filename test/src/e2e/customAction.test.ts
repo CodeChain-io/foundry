@@ -141,7 +141,7 @@ describe("customAction", function() {
                 });
                 fail();
             } catch (e) {
-                expect(e.toString()).include(ERROR.STATE_NOT_EXIST);
+                expect(e).is.similarTo(ERROR.STATE_NOT_EXIST);
             }
         });
 
@@ -154,9 +154,7 @@ describe("customAction", function() {
                 });
                 fail();
             } catch (e) {
-                expect(e.toString()).include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
 
@@ -181,9 +179,7 @@ describe("customAction", function() {
                 });
                 fail();
             } catch (e) {
-                expect(e.toString()).include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
 

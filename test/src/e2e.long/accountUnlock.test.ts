@@ -75,7 +75,7 @@ describe("account unlock", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).include(ERROR.NOT_UNLOCKED);
+                expect(e).is.similarTo(ERROR.NOT_UNLOCKED);
             }
         }
     }).timeout(2000 * unlockTestSize + 5000);
