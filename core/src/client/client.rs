@@ -20,11 +20,12 @@ use super::{
     EngineClient, EngineInfo, ImportBlock, ImportResult, StateInfo, StateOrBlock,
 };
 use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock};
-use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, InvoiceProvider, TransactionAddress};
+use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, EventProvider, HeaderProvider, TransactionAddress};
 use crate::client::{ConsensusClient, SnapshotClient, TermInfo};
 use crate::consensus::{ConsensusEngine, EngineError};
 use crate::encoded;
 use crate::error::{BlockImportError, Error, ImportError, SchemeError};
+use crate::event::EventSource;
 use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
 use crate::service::ClientIoMessage;
@@ -33,7 +34,7 @@ use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress};
-use coordinator::validator::Transaction;
+use coordinator::validator::{Event, Transaction};
 use cstate::{StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
@@ -556,9 +557,16 @@ impl BlockChainClient for Client {
         self.transaction_address(id).and_then(|address| chain.transaction(&address))
     }
 
-    fn error_hint(&self, hash: &TxHash) -> Option<String> {
+    fn events_by_tx_hash(&self, hash: &TxHash) -> Vec<Event> {
         let chain = self.block_chain();
-        chain.error_hint(hash)
+        let source = EventSource::Transaction(*hash);
+        chain.events(&source)
+    }
+
+    fn events_by_block_hash(&self, hash: &BlockHash) -> Vec<Event> {
+        let chain = self.block_chain();
+        let source = EventSource::Block(*hash);
+        chain.events(&source)
     }
 }
 

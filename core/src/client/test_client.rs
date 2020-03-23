@@ -47,7 +47,7 @@ use crate::Error;
 use crate::{LocalizedTransaction, PendingTransactions};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::{Address, Ed25519Private as Private, Ed25519Public as Public, NetworkId, PlatformAddress};
-use coordinator::validator::Transaction;
+use coordinator::validator::{Event, Transaction};
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState, Validator};
 use ctimer::{TimeoutHandler, TimerToken};
@@ -465,8 +465,12 @@ impl BlockChainClient for TestBlockChainClient {
         unimplemented!();
     }
 
-    fn error_hint(&self, _hash: &TxHash) -> Option<String> {
-        unimplemented!();
+    fn events_by_tx_hash(&self, _hash: &TxHash) -> Vec<Event> {
+        unimplemented!()
+    }
+
+    fn events_by_block_hash(&self, _hash: &BlockHash) -> Vec<Event> {
+        unimplemented!()
     }
 }
 
