@@ -126,9 +126,7 @@ describe("ChangeParams", function() {
             await node.sendPayTx({ fee: 10 });
             expect.fail();
         } catch (e) {
-            expect(e.toString()).is.include(
-                ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-            );
+            expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
         }
         const params = await node.rpc.chain.getCommonParams({});
         expect(+params!.minPayCost!).to.be.deep.equal(11);
@@ -183,9 +181,7 @@ describe("ChangeParams", function() {
             await node.rpc.mempool.sendSignedTransaction({ tx: `0x${trans}` });
             expect.fail();
         } catch (e) {
-            expect(e.toString()).is.include(
-                ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-            );
+            expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
         }
     });
 
@@ -269,7 +265,7 @@ describe("ChangeParams", function() {
             await node.sendPayTx({ fee: 10 });
             expect.fail();
         } catch (e) {
-            expect(e.toString()).is.include(ERROR.TOO_LOW_FEE);
+            expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
         }
     });
 
@@ -397,7 +393,7 @@ describe("ChangeParams", function() {
             await node.sendPayTx({ fee: 4 });
             expect.fail();
         } catch (e) {
-            expect(e.toString()).is.include(ERROR.TOO_LOW_FEE);
+            expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
         }
     });
 
@@ -525,7 +521,7 @@ describe("ChangeParams", function() {
             await node.sendPayTx({ fee: 4 });
             expect.fail();
         } catch (e) {
-            expect(e.toString()).is.include(ERROR.TOO_LOW_FEE);
+            expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
         }
     });
 
@@ -748,7 +744,7 @@ describe("ChangeParams", function() {
             await node.sendPayTx({ fee: 10 });
             expect.fail();
         } catch (e) {
-            expect(e.toString()).is.include(ERROR.TOO_LOW_FEE);
+            expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
         }
     });
 
@@ -813,7 +809,7 @@ describe("ChangeParams", function() {
                 await node.sendPayTx({ fee: 10 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(ERROR.TOO_LOW_FEE);
+                expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
             }
 
             const params = await node.rpc.chain.getCommonParams({
@@ -873,9 +869,7 @@ describe("ChangeParams", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
 
@@ -930,9 +924,7 @@ describe("ChangeParams", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
 
@@ -987,9 +979,7 @@ describe("ChangeParams", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
 
@@ -1044,9 +1034,7 @@ describe("ChangeParams", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
 
@@ -1101,9 +1089,7 @@ describe("ChangeParams", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
 
@@ -1158,9 +1144,7 @@ describe("ChangeParams", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
 
@@ -1215,9 +1199,7 @@ describe("ChangeParams", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
 
@@ -1272,9 +1254,7 @@ describe("ChangeParams", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
 
@@ -1329,9 +1309,7 @@ describe("ChangeParams", function() {
                 });
                 expect.fail();
             } catch (e) {
-                expect(e.toString()).is.include(
-                    ERROR.ACTION_DATA_HANDLER_NOT_FOUND
-                );
+                expect(e).is.similarTo(ERROR.ACTION_DATA_HANDLER_NOT_FOUND);
             }
         });
     });

@@ -69,7 +69,7 @@ describe("account", function() {
                     });
                     expect.fail();
                 } catch (e) {
-                    expect(e.toString()).is.include(ERROR.KEY_ERROR);
+                    expect(e).is.similarTo(ERROR.INVALID_SECRET);
                 }
             });
 
@@ -85,7 +85,7 @@ describe("account", function() {
                     });
                     expect.fail();
                 } catch (e) {
-                    expect(e.toString()).is.include(ERROR.ALREADY_EXISTS);
+                    expect(e).is.similarTo(ERROR.ALREADY_EXISTS);
                 }
             });
         });
@@ -125,7 +125,7 @@ describe("account", function() {
                     });
                     expect.fail();
                 } catch (e) {
-                    expect(e.toString()).is.include(ERROR.WRONG_PASSWORD);
+                    expect(e).is.similarTo(ERROR.WRONG_PASSWORD);
                 }
             });
 
@@ -138,7 +138,7 @@ describe("account", function() {
                     });
                     expect.fail();
                 } catch (e) {
-                    expect(e.toString()).is.include(ERROR.NO_SUCH_ACCOUNT);
+                    expect(e).is.similarTo(ERROR.NO_SUCH_ACCOUNT);
                 }
             });
         });
@@ -174,7 +174,7 @@ describe("account", function() {
                     });
                     expect.fail();
                 } catch (e) {
-                    expect(e.toString()).is.include(ERROR.WRONG_PASSWORD);
+                    expect(e).is.similarTo(ERROR.WRONG_PASSWORD);
                 }
             });
 
@@ -186,7 +186,7 @@ describe("account", function() {
                     });
                     expect.fail();
                 } catch (e) {
-                    expect(e.toString()).is.include(ERROR.NO_SUCH_ACCOUNT);
+                    expect(e).is.similarTo(ERROR.NO_SUCH_ACCOUNT);
                 }
             });
         });
@@ -214,7 +214,7 @@ describe("account", function() {
                     });
                     expect.fail();
                 } catch (e) {
-                    expect(e.toString()).is.include(ERROR.WRONG_PASSWORD);
+                    expect(e).is.similarTo(ERROR.WRONG_PASSWORD);
                 }
             });
 
@@ -227,7 +227,7 @@ describe("account", function() {
                     });
                     expect.fail();
                 } catch (e) {
-                    expect(e.toString()).is.include(ERROR.NO_SUCH_ACCOUNT);
+                    expect(e).is.similarTo(ERROR.NO_SUCH_ACCOUNT);
                 }
             });
         });
