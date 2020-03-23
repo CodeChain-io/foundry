@@ -123,7 +123,8 @@ describe("ChangeParams", function() {
             ).be.true;
         }
         try {
-            await expect(node.sendPayTx({ fee: 10 }));
+            await node.sendPayTx({ fee: 10 });
+            expect.fail();
         } catch (e) {
             expect(e.toString()).is.include(
                 ERROR.ACTION_DATA_HANDLER_NOT_FOUND
