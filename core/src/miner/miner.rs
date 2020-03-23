@@ -22,7 +22,7 @@ use crate::block::{ClosedBlock, IsBlock};
 use crate::client::{
     AccountData, BlockChainTrait, BlockProducer, Client, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo,
 };
-use crate::consensus::{CodeChainEngine, EngineType};
+use crate::consensus::{ConsensusEngine, EngineType};
 use crate::error::Error;
 use crate::scheme::Scheme;
 use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
@@ -87,7 +87,7 @@ pub struct Miner {
     mem_pool: Arc<RwLock<MemPool>>,
     next_allowed_reseal: NextAllowedReseal,
     params: Params,
-    engine: Arc<dyn CodeChainEngine>,
+    engine: Arc<dyn ConsensusEngine>,
     options: MinerOptions,
 
     sealing_enabled: AtomicBool,

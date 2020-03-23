@@ -23,7 +23,7 @@ use super::{
 use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock};
 use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, InvoiceProvider, TransactionAddress};
 use crate::client::{ConsensusClient, SnapshotClient, TermInfo};
-use crate::consensus::{CodeChainEngine, EngineError};
+use crate::consensus::{ConsensusEngine, EngineError};
 use crate::encoded;
 use crate::error::{BlockImportError, Error, ImportError, SchemeError};
 use crate::miner::{Miner, MinerService};
@@ -52,7 +52,7 @@ use std::sync::{Arc, Weak};
 const MAX_MEM_POOL_SIZE: usize = 4096;
 
 pub struct Client {
-    engine: Arc<dyn CodeChainEngine>,
+    engine: Arc<dyn ConsensusEngine>,
 
     io_channel: Mutex<IoChannel<ClientIoMessage>>,
 
@@ -126,7 +126,7 @@ impl Client {
     }
 
     /// Returns engine reference.
-    pub fn engine(&self) -> &dyn CodeChainEngine {
+    pub fn engine(&self) -> &dyn ConsensusEngine {
         &*self.engine
     }
 

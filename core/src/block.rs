@@ -16,7 +16,7 @@
 
 use super::invoice::Invoice;
 use crate::client::{EngineInfo, TermInfo};
-use crate::consensus::{CodeChainEngine, Evidence};
+use crate::consensus::{ConsensusEngine, Evidence};
 use crate::error::{BlockError, Error};
 use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ccrypto::BLAKE_NULL_RLP;
@@ -129,7 +129,7 @@ pub struct OpenBlock {
 impl OpenBlock {
     /// Create a new `OpenBlock` ready for transaction pushing.
     pub fn try_new(
-        engine: &dyn CodeChainEngine,
+        engine: &dyn ConsensusEngine,
         db: StateDB,
         parent: &Header,
         author: Public,
@@ -250,7 +250,7 @@ impl OpenBlock {
     /// Provide a valid seal
     ///
     /// NOTE: This does not check the validity of `seal` with the engine.
-    pub fn seal(&mut self, engine: &dyn CodeChainEngine, seal: Vec<Bytes>) -> Result<(), BlockError> {
+    pub fn seal(&mut self, engine: &dyn ConsensusEngine, seal: Vec<Bytes>) -> Result<(), BlockError> {
         let expected_seal_fields = engine.seal_fields(self.header());
         if seal.len() != expected_seal_fields {
             return Err(BlockError::InvalidSealArity(Mismatch {
@@ -352,7 +352,7 @@ pub fn enact<C: EngineInfo + FindDoubleVoteHandler + TermInfo>(
     header: &Header,
     evidences: Vec<Evidence>,
     transactions: &[VerifiedTransaction],
-    engine: &dyn CodeChainEngine,
+    engine: &dyn ConsensusEngine,
     client: &C,
     db: StateDB,
     parent: &Header,
