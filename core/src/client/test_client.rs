@@ -50,7 +50,6 @@ use ckey::{
     public_to_address, Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public,
     Generator, KeyPairTrait, NetworkId, PlatformAddress, Random,
 };
-use cnetwork::NodeId;
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{FindActionHandler, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
@@ -508,7 +507,7 @@ impl BlockChainClient for TestBlockChainClient {
         Ok(())
     }
 
-    fn queue_transactions(&self, transactions: Vec<Bytes>, _peer_id: NodeId) {
+    fn queue_transactions(&self, transactions: Vec<Bytes>) {
         // import right here
         let transactions = transactions.into_iter().filter_map(|bytes| Rlp::new(&bytes).as_val().ok()).collect();
         self.miner.import_external_transactions(self, transactions);

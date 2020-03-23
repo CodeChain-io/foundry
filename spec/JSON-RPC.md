@@ -61,68 +61,12 @@ A string that starts with "(NetworkID)c", and Bech32 string follows. For example
 
 ## Actions
 
-### MintAsset Action
-
- - networkId: `NetworkID`
- - shardId: `number`
- - metadata: `string`
- - approver: `PlatformAddress` | `null`
- - registrar: `PlatformAddress` | `null`
- - allowedScriptHashes: `H160[]`
- - output: `AssetMintOutput`
- - approvals: `Signature[]`
-
-### TransferAsset Action
-
- - networkId: `NetworkID`
- - burns: `AssetTransferInput[]`
- - inputs: `AssetTransferInput[]`
- - outputs: `AssetTransferOutput[]`
- - metadata: `string`
- - approvals: `Signature[]`
- - expiration: `Expiration time` | `null`
-
-### ChangeAssetScheme Action
-
- - networkId: `NetworkID`
- - shardId: `number`
- - assetType: `H160`
- - metadata: `string`
- - approver: `PlatformAddress` | `null`
- - registrar: `PlatformAddress` | `null`
- - allowedScriptHashes: `H160[]`
- - approvals: `Signature[]`
-
-### IncreaseAssetSupply Action
-
- - networkId: `NetWorkID`
- - shardId: `number`
- - assetType: `H160`
- - output: `AssetMintOutput`
- - approvals: `Signarture[]`
-
-### UnwrapCCC Action
-
- - networkId: `NetworkID`
- - burn: `AssetTransferInput`
- - receiver: `PlatformAddress`
-
 ### Pay Action
 
  - type: "pay"
  - networkId: `NetworkID`
  - receiver: `PlatformAddress`
  - quantity: `U64`
-
-### WrapCCC Action
-
- - type: "wrapCCC"
- - networkId: `NetworkID`
- - shardId: `number`
- - lockScriptHash: `H160`
- - parameters: `string[]`
- - quantity: `U64`
- - payer: `PlatformAddress`
 
 ### Custom Action
 
@@ -131,61 +75,14 @@ A string that starts with "(NetworkID)c", and Bech32 string follows. For example
  - handlerId: `number`
  - bytes: `string`
 
-## AssetScheme
-
- - supply: `U64`
- - metadata: `string`
- - approver: `PlatformAddress` | `null`
-
-## Asset
-
- - quantity: `U64`
- - assetType: `H160`
- - lockScriptHash: `H160`
- - parameters: `string[]`
-
-## Transactions
-
- - type: "assetMint" | "assetTransfer" | "assetUnwrapCCC"
- - data: `AssetMintData` | `AssetTransferData` | `AssetUnwrapCCCData`
-
 ### Transaction in Response
 
 When `Transaction` is included in any response, there will be an additional field `hash` in the data, which is the hash value of the given transaction. This decreases the time to calculate the transaction hash when it is needed from the response.
-
-### AssetMintOutput
-
- - lockScriptHash: `H160`
- - parameters: `string[]`
- - quantity: `U64` | `null`
-
-### AssetTransferInput
-
- - prevOut: `AssetOutPoint`
- - timelock: `Timelock`
- - lockScript: `number[]`
- - unlockScript: `number[]`
 
 #### Timelock
 
  - type: "block" | "blockAge" | "time" | "timeAge"
  - value: `number`
-
-#### AssetOutPoint
-
- - transactionId: `H256`
- - index: `number`
- - assetType: `H160`
- - shardId: `number`
- - quantity: `U64`
-
-### AssetTransferOutput
-
- - lockScriptHash: `H160`
- - parameters: `string[]`
- - assetType: `H160`
- - shardId: `number`
- - quantity: `U64`
 
 ## Signature
 `H512` for Ed25519 Signatures
@@ -193,7 +90,6 @@ When `Transaction` is included in any response, there will be an additional fiel
 ## CommonParams
 
  - maxExtraDataSize: `U64`
- - maxAssetSchemeMetadataSize: `U64`
  - maxTransferMetadataSize: `U64`
  - maxTextContentSize: `U64`
  - networkID: `string`
@@ -201,15 +97,7 @@ When `Transaction` is included in any response, there will be an additional fiel
  - minCreateShardCost: `U64`
  - minSetShardOwnersCost: `U64`
  - minSetShardUsersCost: `U64`
- - minWrapCccCost: `U64`
  - minCustomCost: `U64`
- - minMintAssetCost: `U64`
- - minTransferAssetCost: `U64`
- - minChangeAssetSchemeCost: `U64`
- - minIncreaseAssetSupplyCost: `U64`
- - minComposeAssetCost: `U64`
- - minDecomposeAssetCost: `U64`
- - minUnwrapCccCost: `U64`
  - maxBodySize: `U64`
  - snapshotPeriod: `U64`
  - termSeconds?: `U64`
@@ -244,7 +132,6 @@ When `Transaction` is included in any response, there will be an additional fiel
 | -32043 | `Wrong Password`       | The password does not match                                  |
 | -32044 | `No Such Account`      | There is no such account in the key store                    |
 | -32045 | `Not Unlocked`         | The account is not unlocked                                  |
-| -32046 | `Transfer Only`        | chain_executeVM() only accepts AssetTransfer transactions    |
 | -32099 | `Unknown Error`        | An unknown error occurred                                    |
 | -32602 | `Invalid Params`       | At least one of the parameters is invalid                    |
 
@@ -263,10 +150,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_getTransaction](#chain_gettransaction)
  * [chain_getTransactionSigner](#chain_gettransactionsigner)
  * [chain_containsTransaction](#chain_containstransaction)
- * [chain_getAssetSchemeByTracker](#chain_getassetschemebytracker)
- * [chain_getAssetSchemeByType](#chain_getassetschemebytype)
- * [chain_getAsset](#chain_getasset)
- * [chain_isAssetSpent](#chain_isassetspent)
  * [chain_getSeq](#chain_getseq)
  * [chain_getBalance](#chain_getbalance)
  * [chain_getGenesisAccounts](#chain_getgenesisaccounts)
@@ -764,149 +647,6 @@ Errors: `Invalid Params`
 ```
 [Back to **List of methods**](#list-of-methods)
 
-## chain_getAssetSchemeByTracker
-Gets an asset scheme with the tracker of the mint transaction.
-
-### Params
- 1. tracker of AssetMintTransaction - `H256`
- 2. shard id - `number`
- 3. block number: `number` | `null`
-
-### Returns
-`null` | `AssetScheme`
-
-Errors: `KVDB Error`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getAssetSchemeByTracker", "params": ["0x24df02abcd4e984e90253dc344e89b8431bbb319c66643bfef566dfdf46ec6bc", 0, null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":{
-    "supply":100,
-    "metadata":"",
-    "approver":null
-  },
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_getAssetSchemeByType
-Gets an asset scheme with the given asset type.
-
-### Params
- 1. asset type - `H256`
- 2. shard id - `number`
- 3. block number: `number` | `null`
-
-### Returns
-`null` | `AssetScheme`
-
-Errors: `KVDB Error`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getAssetSchemeByType", "params": ["0x24df02abcd4e984e90253dc344e89b8431bbb319c66643bfef566dfdf46ec6bc", null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":{
-    "supply":100,
-    "metadata":"",
-    "approver":null
-  },
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_getAsset
-Gets an asset with the given tracker of previous input transaction and the index.
-
-### Params
- 1. tracker - `H256`
- 2. index - `number`
- 3. shard id - `number`
- 4. block number: `number` | `null`
-
-### Returns
-`null` | `Asset`
-
-Errors: `KVDB Error`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getAsset", "params": ["0x24df02abcd4e984e90253dc344e89b8431bbb319c66643bfef566dfdf46ec6bc", 0], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":{
-    "quantity":100,
-    "assetType":"0x53000000000000002ec1193ecd52e2833ffc10b45bea1fda49f857e34db67c68",
-    "lockScriptHash":"0x0000000000000000000000000000000000000000",
-    "parameters":[
-
-    ]
-  },
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_isAssetSpent
-Checks whether an asset is spent or not.
-
-### Params
- 1. tracker: `H256`
- 2. index: `number`
- 3. shard id: `number`
- 4. block number: `number` | `null`
-
-### Returns
-`null` | `false` | `true` - It returns null when no such asset exists.
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_isAssetSpent", "params": ["0x24df02abcd4e984e90253dc344e89b8431bbb319c66643bfef566dfdf46ec6bc", 0, 0], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":false,
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
 ## chain_getSeq
 Gets a seq of an account of the given address, at state of the given blockNumber.
 
@@ -1211,7 +951,6 @@ Errors: `Invalid Params`
   "jsonrpc":"2.0",
   "result":{
     "maxExtraDataSize":"0x20",
-    "maxAssetSchemeMetadataSize":"0x0400",
     "maxTransferMetadataSize":"0x0100",
     "maxTextContentSize":"0x0200",
     "networkID":"tc",
@@ -1219,15 +958,7 @@ Errors: `Invalid Params`
     "minCreateShardCost":10,
     "minSetShardOwnersCost":10,
     "minSetShardUsersCost":10,
-    "minWrapCccCost":10,
     "minCustomCost":10,
-    "minMintAssetCost":10,
-    "minTransferAssetCost":10,
-    "minChangeAssetSchemeCost":10,
-    "minIncreaseAssetSupplyCost":10,
-    "minComposeAssetCost":10,
-    "minDecomposeAssetCost":10,
-    "minUnwrapCccCost":10,
     "maxBodySize":4194304,
     "snapshotPeriod":16384
   },
@@ -1332,7 +1063,7 @@ Errors: `Invalid RLP`, `Execution Failed`, `Invalid Params`, `Invalid NetworkId`
 [Back to **List of methods**](#list-of-methods)
 
 ## chain_executeVM
-Execute the inputs of the AssetTransfer transaction in the CodeChain VM, and return the results. This does not run the VM on burns.
+Execute the inputs of the transaction in the CodeChain VM, and return the results. This does not run the VM on burns.
 
 ### Params
  1. transaction: `Transaction`
@@ -1756,17 +1487,11 @@ No parameters
 
 ### Returns
 {
-  "minAssetMintCost": `number`,
-  "minAssetSchemeChangeCost":`number`,
-  "minAssetSupplyIncreaseCost": `number`,
-  "minAssetTransferCost":`number`,
-  "minAssetUnwrapCccCost":`number`,
   "minCreateShardTransactionCost":`number`,
   "minCustomTransactionCost":`number`,
   "minPayTransactionCost":`number`,
   "minSetShardOwnersTransactionCost":`number`,
   "minSetShardUsersTransactionCost":`number`,
-  "minWrapCccTransactionCost":`number`
 }
 
 ### Request Example
@@ -1782,17 +1507,11 @@ curl \
 {
   "jsonrpc":"2.0",
   "result":{
-    "minAssetMintCost":0,
-    "minAssetSchemeChangeCost":0,
-    "minAssetSupplyIncreaseCost":0,
-    "minAssetTransferCost":0,
-    "minAssetUnwrapCccCost":0,
     "minCreateShardTransactionCost":0,
     "minCustomTransactionCost":0,
     "minPayTransactionCost":0,
     "minSetShardOwnersTransactionCost":0,
     "minSetShardUsersTransactionCost":0,
-    "minWrapCccTransactionCost":0
     },
   "id":null
 }

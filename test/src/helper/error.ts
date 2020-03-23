@@ -104,11 +104,6 @@ export const ERROR: any = {
         data: $containsWord("Syntax(InconsistentTransactionInOut"),
         message: $anything
     },
-    INVALID_TX_ASSET_TYPE: {
-        code: -32099,
-        data: $containsWord("Syntax(InvalidAssetType"),
-        message: $anything
-    },
     INVALID_TX_DUPLICATED_PREV_OUT: {
         code: -32099,
         data: $containsWord("Syntax(DuplicatedPreviousOutput"),
