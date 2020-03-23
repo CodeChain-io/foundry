@@ -38,7 +38,7 @@ use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as
 use crate::Error;
 use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress};
-use coordinator::validator::Transaction;
+use coordinator::validator::{Event, Transaction};
 use cstate::{TopLevelState, TopStateView};
 use ctypes::header::Header;
 use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
@@ -187,8 +187,11 @@ pub trait BlockChainClient: Sync + Send + BlockChainTrait + ImportBlock {
     /// Get transaction with given hash.
     fn transaction(&self, id: &TransactionId) -> Option<LocalizedTransaction>;
 
-    /// Get invoice with given hash.
-    fn error_hint(&self, hash: &TxHash) -> Option<String>;
+    /// get events emitted by given transaction
+    fn events_by_tx_hash(&self, hash: &TxHash) -> Vec<Event>;
+
+    /// get events emitted by given block
+    fn events_by_block_hash(&self, hash: &BlockHash) -> Vec<Event>;
 }
 
 /// Result of import block operation.
