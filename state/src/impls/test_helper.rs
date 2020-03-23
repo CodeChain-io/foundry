@@ -106,15 +106,6 @@ macro_rules! check_top_level_state {
         check_top_level_state!($state, [(account: $addr => $head: $head_val)]);
         check_top_level_state!($state, [(account: $addr => $($tail: $tail_val),+)]);
     };
-    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*])]) => {
-        check_top_level_state!($state, [(shard: $shard_id => owners: vec![$($owner,)*])]);
-    };
-    ($state:expr, [(shard: $shard_id:expr)]) => {
-        assert_eq!(Ok(None), $state.shard_root($shard_id));
-    };
-    ($state:expr, [(shard_text: ($shard_id:expr, $tx_hash:expr))]) => {
-        assert_eq!(Ok(None), $state.shard_text($shard_id, $tx_hash));
-    };
     //recursion
     ($state:expr, [$head:tt, $($tail:tt),+ $(,)?]) => {
         check_top_level_state!($state, [$head]);
