@@ -52,7 +52,7 @@
     "chai-as-promised": "^7.1.1",
     "foundry-keystore": "^0.1.0",
     "foundry-primitives": "^0.2.0",
-    "foundry-rpc": "^0.1.0",
+    "foundry-rpc": "^0.1.2",
     "get-port": "^5.1.1",
     "jayson": "^3.2.0",
     "lodash": "^4.17.11",
