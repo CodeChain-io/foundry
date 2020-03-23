@@ -21,11 +21,12 @@ use super::{
     StateOrBlock,
 };
 use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock};
-use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, TransactionAddress};
+use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, EventProvider, HeaderProvider, TransactionAddress};
 use crate::client::{ConsensusClient, SnapshotClient, TermInfo};
 use crate::consensus::{ConsensusEngine, EngineError};
 use crate::encoded;
 use crate::error::{BlockImportError, Error, ImportError, SchemeError};
+use crate::event::EventSource;
 use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
 use crate::service::ClientIoMessage;
@@ -37,10 +38,10 @@ use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::context::{ChainHistoryAccess, StateHistoryAccess, StorageAccess};
+use coordinator::types::Event;
 use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
-use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, StorageId, SyncHeader};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header, StorageId, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::Bytes;
@@ -595,6 +596,18 @@ impl BlockChainClient for Client {
     fn transaction(&self, id: &TransactionId) -> Option<LocalizedTransaction> {
         let chain = self.block_chain();
         self.transaction_address(id).and_then(|pubkey| chain.transaction(&pubkey))
+    }
+
+    fn events_by_tx_hash(&self, hash: &TxHash) -> Vec<Event> {
+        let chain = self.block_chain();
+        let source = EventSource::Transaction(*hash);
+        chain.events(&source)
+    }
+
+    fn events_by_block_hash(&self, hash: &BlockHash) -> Vec<Event> {
+        let chain = self.block_chain();
+        let source = EventSource::Block(*hash);
+        chain.events(&source)
     }
 }
 
