@@ -28,7 +28,7 @@ use codechain_crypto::BLAKE_NULL_RLP;
 use cstate::{TopLevelState, TopStateView};
 use ctimer::TimerToken;
 use ctypes::header::{Header, Seal};
-use ctypes::{BlockHash, BlockNumber, ShardId};
+use ctypes::{BlockHash, BlockNumber, StorageId};
 use kvdb::DBTransaction;
 use merkle_trie::snapshot::{ChunkDecompressor, Restore as SnapshotRestore};
 use merkle_trie::{skewed_merkle_root, Trie, TrieFactory};
@@ -70,9 +70,9 @@ enum State {
         block: BlockHash,
         restore: SnapshotRestore,
     },
-    SnapshotShardChunk {
+    SnapShotModuleChunk {
         block: BlockHash,
-        shard_id: ShardId,
+        storage_id: StorageId,
         restore: SnapshotRestore,
     },
     Full,
@@ -106,21 +106,21 @@ impl State {
 
         let top_state = client.state_at(hash.into()).expect("Top level state at the snapshot header exists");
         let metadata = top_state.metadata().unwrap().expect("Metadata must exist for the snapshot block");
-        let shard_num = *metadata.number_of_shards();
-        let empty_shard = (0..shard_num).find_map(|n| {
-            let shard_root = top_state.shard_root(n).unwrap().expect("Shard root must exist");
-            let trie = TrieFactory::readonly(state_db.as_hashdb(), &shard_root);
+        let module_num = *metadata.number_of_modules();
+        let empty_module = (0..module_num).find_map(|n| {
+            let module_root = top_state.module_root(n).unwrap().expect("Module root must exist");
+            let trie = TrieFactory::readonly(state_db.as_hashdb(), &module_root);
             if !trie.map(|t| t.is_complete()).unwrap_or(false) {
-                Some((n, shard_root))
+                Some((n, module_root))
             } else {
                 None
             }
         });
-        if let Some((shard_id, shard_root)) = empty_shard {
-            return State::SnapshotShardChunk {
+        if let Some((storage_id, module_root)) = empty_module {
+            return State::SnapShotModuleChunk {
                 block: hash,
-                shard_id,
-                restore: SnapshotRestore::new(shard_root),
+                storage_id,
+                restore: SnapshotRestore::new(module_root),
             }
         }
 
@@ -150,33 +150,33 @@ impl State {
                 let state_root = header.state_root();
                 let state_db = client.state_db().read();
                 let top_state = TopLevelState::from_existing(state_db.clone(&state_root), state_root).unwrap();
-                let shard_root = top_state.shard_root(0).unwrap().expect("Shard 0 always exists");
-                State::SnapshotShardChunk {
+                let module_root = top_state.module_root(0).unwrap().expect("Module 0 always exists");
+                State::SnapShotModuleChunk {
                     block: *block,
-                    shard_id: 0,
-                    restore: SnapshotRestore::new(shard_root),
+                    storage_id: 0,
+                    restore: SnapshotRestore::new(module_root),
                 }
             }
-            State::SnapshotShardChunk {
+            State::SnapShotModuleChunk {
                 block,
-                shard_id,
+                storage_id,
                 ..
             } => {
                 let top_state = client.state_at((*block).into()).expect("State at the snapshot header must exist");
                 let metadata = top_state.metadata().unwrap().expect("Metadata must exist for snapshot block");
-                let shard_num = *metadata.number_of_shards();
-                if shard_id + 1 == shard_num {
+                let storage_count = *metadata.number_of_modules();
+                if storage_id + 1 == storage_count {
                     State::Full
                 } else {
-                    let next_shard = shard_id + 1;
-                    let shard_root = top_state
-                        .shard_root(next_shard)
+                    let next_storage = storage_id + 1;
+                    let module_root = top_state
+                        .module_root(next_storage)
                         .expect("Top level state must be valid")
-                        .expect("Shard root must exist");
-                    State::SnapshotShardChunk {
+                        .expect("Module root must exist");
+                    State::SnapShotModuleChunk {
                         block: *block,
-                        shard_id: next_shard,
-                        restore: SnapshotRestore::new(shard_root),
+                        storage_id: next_storage,
+                        restore: SnapshotRestore::new(module_root),
                     }
                 }
             }
@@ -266,7 +266,7 @@ impl Extension {
                     block,
                     ..
                 } => *block,
-                State::SnapshotShardChunk {
+                State::SnapShotModuleChunk {
                     block,
                     ..
                 } => *block,
@@ -592,7 +592,7 @@ impl NetworkExtension<Event> for Extension {
                             self.move_state();
                         }
                     }
-                    State::SnapshotShardChunk {
+                    State::SnapShotModuleChunk {
                         block,
                         ref mut restore,
                         ..
@@ -1111,7 +1111,7 @@ impl Extension {
                 block,
                 ref mut restore,
             } => (block, restore),
-            State::SnapshotShardChunk {
+            State::SnapShotModuleChunk {
                 block,
                 ref mut restore,
                 ..
