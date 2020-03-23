@@ -104,13 +104,6 @@ impl TopStateView for TopLevelState {
         self.top_cache.metadata(&address, &trie)
     }
 
-    fn shard(&self, shard_id: ShardId) -> TrieResult<Option<Shard>> {
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        let shard_address = ShardAddress::new(shard_id);
-        self.top_cache.shard(&shard_address, &trie)
-    }
-
     fn module(&self, storage_id: StorageId) -> TrieResult<Option<Module>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;

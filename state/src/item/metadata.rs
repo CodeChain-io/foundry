@@ -47,6 +47,10 @@ impl Metadata {
         &self.number_of_shards
     }
 
+    pub fn number_of_modules(&self) -> &StorageId {
+        &self.number_of_modules
+    }
+
     pub fn add_module(&mut self) -> StorageId {
         let r = self.number_of_modules;
         self.number_of_modules += 1;
