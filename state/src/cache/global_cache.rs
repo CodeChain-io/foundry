@@ -107,24 +107,13 @@ impl GlobalCache {
         })
     }
 
-    pub fn override_cache(
-        &mut self,
-        top_cache: &TopCache,
-        shard_caches: &HashMap<ShardId, ShardCache>,
-        module_caches: &HashMap<StorageId, ModuleCache>,
-    ) {
+    pub fn override_cache(&mut self, top_cache: &TopCache, module_caches: &HashMap<StorageId, ModuleCache>) {
         self.clear();
 
         Self::drain_cacheable_into_lru_cache(top_cache.cached_accounts(), &mut self.account);
         Self::drain_cacheable_into_lru_cache(top_cache.cached_metadata(), &mut self.metadata);
         Self::drain_cacheable_into_lru_cache(top_cache.cached_shards(), &mut self.shard);
         Self::drain_cacheable_into_lru_cache(top_cache.cached_action_data(), &mut self.action_data);
-
-        let mut cached_shard_texts: Vec<_> =
-            shard_caches.iter().flat_map(|(_, shard_cache)| shard_cache.cached_shard_text().into_iter()).collect();
-        cached_shard_texts.sort_unstable_by_key(|item| item.0);
-        let cached_shard_texts: Vec<_> = cached_shard_texts.into_iter().map(|(_, addr, item)| (addr, item)).collect();
-        Self::drain_cacheable_into_lru_cache(cached_shard_texts, &mut self.shard_text);
 
         let mut cached_module_data: Vec<_> =
             module_caches.iter().flat_map(|(_, module_cache)| module_cache.cached_module_datum().into_iter()).collect();

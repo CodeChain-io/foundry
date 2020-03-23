@@ -646,19 +646,16 @@ impl Shard for Client {
         state.shard_id_by_hash(&create_shard_tx_hash).ok()?
     }
 
-    fn shard_root(&self, shard_id: ShardId, state: StateOrBlock) -> Option<H256> {
-        let state = self.state_info(state)?;
-        state.shard_root(shard_id).ok()?
+    fn shard_root(&self, _shard_id: ShardId, _state: StateOrBlock) -> Option<H256> {
+        None
     }
 
-    fn shard_owners(&self, shard_id: u16, state: StateOrBlock) -> Option<Vec<Address>> {
-        let state = self.state_info(state)?;
-        state.shard_owners(shard_id).ok()?
+    fn shard_owners(&self, _shard_id: u16, _state: StateOrBlock) -> Option<Vec<Address>> {
+        None
     }
 
-    fn shard_users(&self, shard_id: u16, state: StateOrBlock) -> Option<Vec<Address>> {
-        let state = self.state_info(state)?;
-        state.shard_users(shard_id).ok()?
+    fn shard_users(&self, _shard_id: u16, _state: StateOrBlock) -> Option<Vec<Address>> {
+        None
     }
 }
 
