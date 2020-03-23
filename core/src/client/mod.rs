@@ -37,9 +37,11 @@ use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions, Veri
 use crate::types::{BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::DatabaseError;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
+use coordinator::types::Event;
 use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
-use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ConsensusParams, SyncHeader};
+use ctypes::{
+    BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ConsensusParams, Header, SyncHeader, TxHash,
+};
 use kvdb::KeyValueDB;
 use primitives::Bytes;
 use std::ops::Range;
@@ -221,6 +223,12 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
 
     /// Get transaction with given hash.
     fn transaction(&self, id: &TransactionId) -> Option<LocalizedTransaction>;
+
+    /// get events emitted by given transaction
+    fn events_by_tx_hash(&self, hash: &TxHash) -> Vec<Event>;
+
+    /// get events emitted by given block
+    fn events_by_block_hash(&self, hash: &BlockHash) -> Vec<Event>;
 }
 
 /// Result of import block operation.
