@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018, 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -35,4 +35,4 @@ pub use self::seal::{Seal, TendermintSeal};
 pub use self::shard::Shard;
 pub use self::solo::{Solo, SoloParams};
 pub use self::state::{Accounts, Shards};
-pub use self::tendermint::{Tendermint, TendermintParams};
+pub use self::tendermint::{StakeAccount, Tendermint, TendermintParams};

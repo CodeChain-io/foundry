@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use self::validator_list::RoundRobinValidator;
 use super::BitSet;
 use crate::client::ConsensusClient;
 use crate::consensus::EngineError;
@@ -23,7 +22,6 @@ use ctypes::BlockHash;
 use std::sync::Weak;
 
 mod dynamic_validator;
-pub mod validator_list;
 
 pub use self::dynamic_validator::DynamicValidator;
 
@@ -45,7 +43,7 @@ pub trait ValidatorSet: Send + Sync {
     /// Draws a validator index from validator address.
     fn get_index_by_address(&self, parent: &BlockHash, address: &Address) -> Option<usize>;
 
-    fn next_block_proposer(&self, parent: &BlockHash, view: u64) -> Option<Address>;
+    fn next_block_proposer(&self, parent: &BlockHash, view: u64) -> Address;
 
     /// Returns the current number of validators.
     fn count(&self, parent: &BlockHash) -> usize;
@@ -54,8 +52,6 @@ pub trait ValidatorSet: Send + Sync {
 
     /// Allows blockchain state access.
     fn register_client(&self, _client: Weak<dyn ConsensusClient>) {}
-
-    fn previous_addresses(&self, _hash: &BlockHash) -> Vec<Address>;
 
     fn current_addresses(&self, _hash: &BlockHash) -> Vec<Address>;
 

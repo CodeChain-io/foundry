@@ -106,6 +106,7 @@ impl Scheme {
         let (db, root) = self.initialize_accounts(db, root)?;
         let (db, root) = self.initialize_shards(db, root, genesis_params)?;
         let (db, root) = self.initialize_action_handlers(db, root)?;
+        let (db, root) = self.engine.initialize_genesis_state(db, root)?;
 
         *self.state_root_memo.write() = root;
         Ok(db)

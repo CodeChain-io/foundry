@@ -3,12 +3,6 @@
     "engine": {
         "tendermint": {
             "params": {
-                "validators": [
-                    "0x0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0",
-                    "0x0473f782c3aec053c37fe2bccefa9298dcf8ae3dc2262ae540a14a580ff773e6",
-                    "0x2502d5e6210679a19e45f3c0f93257e7a327baaf5f403f5ca1ab2685a9e1724e",
-                    "0xe909f311fd115ee412edcfcde88cc507370101f7635a67b9cb45390f1ccb4b5e"
-                ],
                 "timeoutPropose": 2000,
                 "timeoutProposeDelta": 100,
                 "timeoutPrevote": 1000,
@@ -17,9 +11,43 @@
                 "timeoutPrecommitDelta": 100,
                 "timeoutCommit": 100,
                 "genesisStakes": {
-                    "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg": 70000,
-                    "tccqx0xyvalakl59psh34wlph0xlf5c2l3a3syrjauu": 20000,
-                    "tccq86dg0p4f2f06jtqrdu3dvavm5pjfacarypp0ka3": 10000
+                    "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg": {
+                        "stake": 70000,
+                        "delegations": {
+                            "tccq8zjtcf7d27l55hgthudmhx0g7zd6dw9rg9c77t5": 104,
+                            "tccq9a6jxr90f0zf99sedck0jnklus4sf4yey0wrn0l": 103,
+                            "tccq9tfhmdvnwg0r6mvp6q399mffr8w46dmys2ft4tr": 102,
+                            "tccq8ce67j2vr69jmenfeqj8pratyss2478hswel8gr": 101
+                        }
+                    },
+                    "tccqx0xyvalakl59psh34wlph0xlf5c2l3a3syrjauu": { "stake": 20000 },
+                    "tccq86dg0p4f2f06jtqrdu3dvavm5pjfacarypp0ka3": { "stake": 10000 }
+                },
+                "genesisCandidates": {
+                    "tccq8zjtcf7d27l55hgthudmhx0g7zd6dw9rg9c77t5": {
+                        "pubkey": "0x0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0",
+                        "deposit": 100,
+                        "nominationEndsAt": 100,
+                        "metadata": "validator 0"
+                    },
+                    "tccq9a6jxr90f0zf99sedck0jnklus4sf4yey0wrn0l": {
+                        "pubkey": "0x0473f782c3aec053c37fe2bccefa9298dcf8ae3dc2262ae540a14a580ff773e6",
+                        "deposit": 100,
+                        "nominationEndsAt": 100,
+                        "metadata": "validator 1"
+                    },
+                    "tccq9tfhmdvnwg0r6mvp6q399mffr8w46dmys2ft4tr": {
+                        "pubkey": "0x2502d5e6210679a19e45f3c0f93257e7a327baaf5f403f5ca1ab2685a9e1724e",
+                        "deposit": 100,
+                        "nominationEndsAt": 100,
+                        "metadata": "validator 2"
+                    },
+                    "tccq8ce67j2vr69jmenfeqj8pratyss2478hswel8gr": {
+                        "pubkey": "0xe909f311fd115ee412edcfcde88cc507370101f7635a67b9cb45390f1ccb4b5e",
+                        "deposit": 100,
+                        "nominationEndsAt": 100,
+                        "metadata": "validator 3"
+                    }
                 }
             }
         }
@@ -71,7 +99,11 @@
         "tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u": { "balance": "1000000" },
         "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg": {
             "balance": "10000000000000000000"
-        }
+        },
+        "tccq8zjtcf7d27l55hgthudmhx0g7zd6dw9rg9c77t5": { "balance": 104 },
+        "tccq9a6jxr90f0zf99sedck0jnklus4sf4yey0wrn0l": { "balance": 103 },
+        "tccq9tfhmdvnwg0r6mvp6q399mffr8w46dmys2ft4tr": { "balance": 102 },
+        "tccq8ce67j2vr69jmenfeqj8pratyss2478hswel8gr": { "balance": 101 }
     },
     "shards": {
         "0": {

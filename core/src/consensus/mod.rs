@@ -27,7 +27,6 @@ pub use self::solo::Solo;
 pub use self::tendermint::{
     ConsensusMessage, Height, Step, Tendermint, TendermintParams, TimeGapParams, View, VoteOn, VoteStep,
 };
-pub use self::validator_set::validator_list::RoundRobinValidator;
 pub use self::validator_set::{DynamicValidator, ValidatorSet};
 
 use self::bit_set::BitSet;
@@ -42,12 +41,12 @@ use crate::views::HeaderView;
 use crate::Client;
 use ckey::{Address, Signature};
 use cnetwork::NetworkService;
-use cstate::ActionHandler;
+use cstate::{ActionHandler, StateDB, StateResult};
 use ctypes::errors::SyntaxError;
 use ctypes::transaction::Action;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockHash, CommonParams, Header};
-use primitives::Bytes;
+use primitives::{Bytes, H256};
 use std::fmt;
 use std::sync::{Arc, Weak};
 
@@ -243,6 +242,10 @@ pub trait ConsensusEngine: Sync + Send {
     }
 
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError>;
+
+    fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
+        Ok((db, root))
+    }
 }
 
 /// Voting errors.

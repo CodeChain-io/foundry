@@ -27,11 +27,12 @@ mod worker;
 
 use self::chain_notify::TendermintChainNotify;
 pub use self::message::{ConsensusMessage, VoteOn, VoteStep};
-pub use self::params::{TendermintParams, TimeGapParams, TimeoutParams};
+pub use self::params::{Deposit, TendermintParams, TimeGapParams, TimeoutParams};
 pub use self::types::{Height, Step, View};
 pub use super::{stake, ValidatorSet};
 use crate::client::ConsensusClient;
 use crate::codechain_machine::CodeChainMachine;
+use crate::consensus::DynamicValidator;
 use crate::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::ChainNotify;
 use crossbeam_channel as crossbeam;
@@ -86,8 +87,12 @@ impl Drop for Tendermint {
 impl Tendermint {
     /// Create a new instance of Tendermint engine
     pub fn new(our_params: TendermintParams, machine: CodeChainMachine) -> Arc<Self> {
-        let validators = Arc::clone(&our_params.validators);
-        let stake = Arc::new(stake::Stake::new(our_params.genesis_stakes));
+        let validators = Arc::new(DynamicValidator::default());
+        let stake = Arc::new(stake::Stake::new(
+            our_params.genesis_stakes,
+            our_params.genesis_candidates,
+            our_params.genesis_delegations,
+        ));
         let timeouts = our_params.timeouts;
         let machine = Arc::new(machine);
 
@@ -98,7 +103,7 @@ impl Tendermint {
             snapshot_notify_sender_initializer,
             inner,
             quit_tendermint,
-        ) = worker::spawn(our_params.validators);
+        ) = worker::spawn(Arc::clone(&validators));
         let action_handlers: Vec<Arc<dyn ActionHandler>> = vec![stake.clone()];
         let chain_notify = Arc::new(TendermintChainNotify::new(inner.clone()));
 
