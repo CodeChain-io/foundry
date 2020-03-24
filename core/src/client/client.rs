@@ -208,13 +208,13 @@ impl Client {
     /// See EngineClient::update_best_as_committed() for details.
     pub fn update_best_as_committed(&self, block_hash: BlockHash) {
         ctrace!(CLIENT, "Update the best block to the hash({}), as requested", block_hash);
-        let route = {
+        let update_result = {
             let _import_lock = self.importer.import_lock.lock();
 
             let chain = self.block_chain();
             let mut batch = DBTransaction::new();
 
-            let route = chain.update_best_as_committed(&mut batch, block_hash);
+            let update_result = chain.update_best_as_committed(&mut batch, block_hash);
             self.db().write(batch).expect("DB flush failed.");
             chain.commit();
 
@@ -222,14 +222,14 @@ impl Client {
             let mut state_db = self.state_db().write();
             state_db.clear_cache();
 
-            route
+            update_result
         };
 
-        if route.is_none() {
+        if update_result.is_none() {
             return
         }
 
-        let enacted = self.importer.extract_enacted(vec![route]);
+        let enacted = self.importer.extract_enacted(vec![update_result]);
         self.importer.miner.chain_new_blocks(self, &[], &[], &enacted);
         self.new_blocks(&[], &[], &enacted);
     }
@@ -479,7 +479,7 @@ impl ImportBlock for Client {
 
     fn import_closed_block(&self, block: &ClosedBlock) -> ImportResult {
         let h = block.header().hash();
-        let route = {
+        let update_result = {
             // scope for self.import_lock
             let import_lock = self.importer.import_lock.lock();
 
@@ -489,11 +489,11 @@ impl ImportBlock for Client {
 
             self.importer.import_headers(vec![header], self, &import_lock);
 
-            let route = self.importer.commit_block(block, header, &block_data, self);
+            let update_result = self.importer.commit_block(block, header, &block_data, self);
             cinfo!(CLIENT, "Imported closed block #{} ({})", number, h);
-            route
+            update_result
         };
-        let enacted = self.importer.extract_enacted(vec![route]);
+        let enacted = self.importer.extract_enacted(vec![update_result]);
         self.importer.miner.chain_new_blocks(self, &[h], &[], &enacted);
         self.new_blocks(&[h], &[], &enacted);
         self.db().flush().expect("DB flush failed.");
