@@ -86,11 +86,11 @@ impl Importer {
 
     /// This is triggered by a message coming from a block queue when the block is ready for insertion
     pub fn import_verified_blocks(&self, client: &Client) -> usize {
-        let (imported_blocks, import_results, invalid_blocks, imported, is_empty) = {
+        let (imported_blocks, update_results, invalid_blocks, imported, is_empty) = {
             const MAX_BLOCKS_TO_IMPORT: usize = 1_000;
             let mut imported_blocks = Vec::with_capacity(MAX_BLOCKS_TO_IMPORT);
             let mut invalid_blocks = HashSet::new();
-            let mut import_results = Vec::with_capacity(MAX_BLOCKS_TO_IMPORT);
+            let mut update_results = Vec::with_capacity(MAX_BLOCKS_TO_IMPORT);
 
             let import_lock = self.import_lock.lock();
             let blocks = self.block_queue.drain(MAX_BLOCKS_TO_IMPORT);
@@ -113,8 +113,8 @@ impl Importer {
                 }
                 if let Ok(closed_block) = self.check_and_close_block(&block, client) {
                     imported_blocks.push(header.hash());
-                    let route = self.commit_block(&closed_block, &header, &block.bytes, client);
-                    import_results.push(route);
+                    let update_result = self.commit_block(&closed_block, &header, &block.bytes, client);
+                    update_results.push(update_result);
                 } else {
                     invalid_blocks.insert(header.hash());
                 }
@@ -127,7 +127,7 @@ impl Importer {
                 self.block_queue.mark_as_bad(&invalid_blocks);
             }
             let is_empty = self.block_queue.mark_as_good(&imported_blocks);
-            (imported_blocks, import_results, invalid_blocks, imported, is_empty)
+            (imported_blocks, update_results, invalid_blocks, imported, is_empty)
         };
 
         {
@@ -135,7 +135,7 @@ impl Importer {
                 if !is_empty {
                     ctrace!(CLIENT, "Call new_blocks even though block verification queue is not empty");
                 }
-                let enacted = self.extract_enacted(import_results);
+                let enacted = self.extract_enacted(update_results);
                 self.miner.chain_new_blocks(client, &imported_blocks, &invalid_blocks, &enacted);
                 client.new_blocks(&imported_blocks, &invalid_blocks, &enacted);
             }
@@ -145,9 +145,9 @@ impl Importer {
         imported
     }
 
-    pub fn extract_enacted(&self, import_results: Vec<ChainUpdateResult>) -> Vec<BlockHash> {
-        let set = import_results.into_iter().fold(HashSet::new(), |mut set, route| {
-            set.extend(route.enacted);
+    pub fn extract_enacted(&self, update_results: Vec<ChainUpdateResult>) -> Vec<BlockHash> {
+        let set = update_results.into_iter().fold(HashSet::new(), |mut set, result| {
+            set.extend(result.enacted);
             set
         });
         Vec::from_iter(set)
@@ -173,7 +173,7 @@ impl Importer {
         let mut batch = DBTransaction::new();
 
         block.state().journal_under(&mut batch, number).expect("DB commit failed");
-        let route = chain.insert_block(&mut batch, block_data, invoices, self.engine.borrow());
+        let update_result = chain.insert_block(&mut batch, block_data, invoices, self.engine.borrow());
 
         // Final commit to the DB
         client.db().write_buffered(batch);
@@ -185,7 +185,7 @@ impl Importer {
             state_db.override_state(&state);
         }
 
-        route
+        update_result
     }
 
     fn check_and_close_block(&self, block: &PreverifiedBlock, client: &Client) -> Result<ClosedBlock, ()> {
@@ -292,7 +292,7 @@ impl Importer {
 
         let mut bad = HashSet::new();
         let mut imported = Vec::new();
-        let mut routes = Vec::new();
+        let mut update_results = Vec::new();
 
         for header in headers {
             let hash = header.hash();
@@ -312,14 +312,14 @@ impl Importer {
                 // Do nothing if the header is already imported
             } else if self.check_header(&header, &parent_header) {
                 imported.push(hash);
-                routes.push(self.commit_header(&header, client));
+                update_results.push(self.commit_header(&header, client));
             } else {
                 bad.insert(hash);
             }
         }
 
         self.header_queue.mark_as_bad(&bad.drain().collect::<Vec<_>>());
-        let enacted = self.extract_enacted(routes);
+        let enacted = self.extract_enacted(update_results);
 
         let new_best_proposal_header_hash = client.block_chain().best_proposal_header().hash();
         let best_proposal_header_changed = if prev_best_proposal_header_hash != new_best_proposal_header_hash {
@@ -399,10 +399,11 @@ impl Importer {
         let chain = client.block_chain();
 
         let mut batch = DBTransaction::new();
-        let route = chain.insert_header(&mut batch, &HeaderView::new(&header.rlp_bytes()), self.engine.borrow());
+        let update_result =
+            chain.insert_header(&mut batch, &HeaderView::new(&header.rlp_bytes()), self.engine.borrow());
         client.db().write_buffered(batch);
         chain.commit();
 
-        route
+        update_result
     }
 }
