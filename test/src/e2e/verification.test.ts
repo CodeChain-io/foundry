@@ -89,7 +89,32 @@ describe("solo - 1 node", function() {
 
         ["tcc", "a", "ac"].forEach(function(networkId) {
             it(`networkId: ${networkId}`, async function() {
-                encoded[2] = networkId;
+                encoded = [];
+                {
+                    // Since Foundry checks signature before checking the network id,
+                    // we should sign the transaction with invalid network id.
+                    const seq = (await node.rpc.chain.getSeq({
+                        address: faucetAddress.toString(),
+                        blockNumber: null
+                    }))!;
+                    const unsigned = node.testFramework.core.createPayTransaction(
+                        {
+                            recipient,
+                            quantity: 0
+                        }
+                    );
+                    (unsigned as any)._networkId = networkId;
+
+                    const tx = unsigned.sign({
+                        secret: faucetSecret,
+                        fee: 10,
+                        seq
+                    });
+                    encoded = tx.toEncodeObject();
+                }
+
+                expect(encoded[2]).equals(networkId);
+
                 try {
                     await node.sendSignedTransactionWithRlpBytes(
                         RLP.encode(encoded)
@@ -166,9 +191,7 @@ describe("solo - 1 node", function() {
                     );
                     expect.fail();
                 } catch (e) {
-                    if (sig.length < 130)
-                        expect(e).is.similarTo(ERROR.INVALID_RLP_TOO_SHORT);
-                    else expect(e).is.similarTo(ERROR.INVALID_RLP_TOO_BIG);
+                    expect(e).is.similarTo(ERROR.INVALID_RLP_INVALID_LENGTH);
                 }
             });
         });
