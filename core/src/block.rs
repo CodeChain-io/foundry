@@ -149,7 +149,6 @@ impl OpenBlock {
         tx: VerifiedTransaction,
         client: &C,
         parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
         transaction_index: TransactionIndex,
     ) -> Result<(), Error> {
         if self.block.transactions_set.contains(&tx.hash()) {
@@ -162,8 +161,6 @@ impl OpenBlock {
             &tx.signer_public(),
             client,
             parent_block_number,
-            parent_block_timestamp,
-            self.block.header.timestamp(),
             transaction_index,
         ) {
             Ok(()) => {
@@ -190,16 +187,9 @@ impl OpenBlock {
         transactions: &[VerifiedTransaction],
         client: &C,
         parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
     ) -> Result<(), Error> {
         for (index, tx) in transactions.iter().enumerate() {
-            self.push_transaction(
-                tx.clone(),
-                client,
-                parent_block_number,
-                parent_block_timestamp,
-                index as TransactionIndex,
-            )?;
+            self.push_transaction(tx.clone(), client, parent_block_number, index as TransactionIndex)?;
         }
         Ok(())
     }
@@ -350,7 +340,7 @@ pub fn enact<C: EngineInfo + FindDoubleVoteHandler + TermInfo>(
     let mut b = OpenBlock::try_new(engine, db, parent, Public::default(), vec![])?;
 
     b.populate_from(header);
-    b.push_transactions(transactions, client, parent.number(), parent.timestamp())?;
+    b.push_transactions(transactions, client, parent.number())?;
 
     b.close()
 }

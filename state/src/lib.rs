@@ -53,7 +53,7 @@ pub use crate::item::stake::{
 pub use crate::stake::{
     ban, init_stake, query as query_stake_state, DoubleVoteHandler, FindDoubleVoteHandler, StakeKeyBuilder,
 };
-pub use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
+pub use crate::traits::{ShardStateView, StateWithCache, TopState, TopStateView};
 
 use crate::cache::CacheableItem;
 

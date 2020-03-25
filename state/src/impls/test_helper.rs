@@ -16,10 +16,7 @@
 
 #![macro_use]
 
-use ctypes::ShardId;
-
 pub const NETWORK_ID: &str = "tc";
-pub const SHARD_ID: ShardId = 0;
 
 macro_rules! pay {
     ($receiver:expr, $quantity:expr) => {
@@ -119,21 +116,6 @@ macro_rules! check_top_level_state {
     ($state:expr, [$head:tt, $($tail:tt),+ $(,)?]) => {
         check_top_level_state!($state, [$head]);
         check_top_level_state!($state, [$($tail),+]);
-    }
-}
-
-macro_rules! check_shard_level_state {
-    // base cases
-    ($state:expr, [(text: ($tx_hash:expr) => { content: $content: expr})]) => {
-        let stored_text = $state.text($tx_hash)
-            .expect(&format!("Cannot read Text from {}:{}", $state.shard_id(), $tx_hash))
-            .expect(&format!("Text for {}:{} not exist", $state.shard_id(), $tx_hash));
-        assert_eq!($content, stored_text.content());
-    };
-    // recursion
-    ($state:expr, [$head:tt, $($tail:tt),+]) => {
-        check_shard_level_state!($state, [$head]);
-        check_shard_level_state!($state, [$($tail),+]);
     }
 }
 

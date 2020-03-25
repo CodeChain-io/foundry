@@ -16,13 +16,11 @@
 
 use crate::cache::ShardCache;
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
-use crate::traits::{ShardState, ShardStateView};
+use crate::traits::ShardStateView;
 use crate::{ShardText, ShardTextAddress, StateDB, StateResult};
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::AsHashDB;
-use ckey::Ed25519Public as Public;
-use ctypes::transaction::ShardTransaction;
-use ctypes::{BlockNumber, ShardId, TxHash};
+use ctypes::{ShardId, TxHash};
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use primitives::H256;
 use std::cell::RefCell;
@@ -86,37 +84,6 @@ impl<'db> ShardLevelState<'db> {
             shard_id,
         })
     }
-
-    fn apply_internal(
-        &mut self,
-        tx_hash: TxHash,
-        transaction: &ShardTransaction,
-        _sender: &Public,
-        _approvers: &[Public],
-        _parent_block_number: BlockNumber,
-        _parent_block_timestamp: u64,
-    ) -> StateResult<()> {
-        match transaction {
-            ShardTransaction::ShardStore {
-                shard_id,
-                content,
-                ..
-            } => {
-                assert_eq!(*shard_id, self.shard_id);
-                self.store_text(tx_hash, content.to_string())
-            }
-        }
-    }
-
-    fn store_text(&self, tx_hash: TxHash, content: String) -> StateResult<()> {
-        self.cache.create_shard_text(&ShardTextAddress::new(tx_hash, self.shard_id), || ShardText::new(&content))?;
-        Ok(())
-    }
-
-    #[cfg(test)]
-    fn shard_id(&self) -> ShardId {
-        self.shard_id
-    }
 }
 
 impl<'db> ShardStateView for ShardLevelState<'db> {
@@ -151,36 +118,6 @@ impl<'db> StateWithCheckpoint for ShardLevelState<'db> {
     }
 }
 
-const TRANSACTION_CHECKPOINT: CheckpointId = 456;
-
-impl<'db> ShardState for ShardLevelState<'db> {
-    fn apply(
-        &mut self,
-        tx_hash: TxHash,
-        transaction: &ShardTransaction,
-        sender: &Public,
-        approvers: &[Public],
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-    ) -> StateResult<()> {
-        ctrace!(TX, "Execute InnerTx {:?}", transaction);
-
-        self.create_checkpoint(TRANSACTION_CHECKPOINT);
-        let result =
-            self.apply_internal(tx_hash, transaction, sender, approvers, parent_block_number, parent_block_timestamp);
-        match result {
-            Ok(_) => {
-                self.discard_checkpoint(TRANSACTION_CHECKPOINT);
-                Ok(())
-            }
-            Err(err) => {
-                self.revert_to_checkpoint(TRANSACTION_CHECKPOINT);
-                Err(err)
-            }
-        }
-    }
-}
-
 pub struct ReadOnlyShardLevelState<'db> {
     db: &'db RefCell<StateDB>,
     root: H256,
@@ -193,48 +130,5 @@ impl<'db> ShardStateView for ReadOnlyShardLevelState<'db> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.cache.shard_text(&ShardTextAddress::new(tx_hash, self.shard_id), &trie)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::super::test_helper::SHARD_ID;
-    use super::*;
-    use crate::tests::helpers::get_temp_state_db;
-
-    fn random_pubkey() -> Public {
-        Public::random()
-    }
-
-    fn get_temp_shard_state<'d>(
-        state_db: &'d mut RefCell<StateDB>,
-        shard_id: ShardId,
-        cache: &'d mut ShardCache,
-    ) -> ShardLevelState<'d> {
-        ShardLevelState::try_new(shard_id, state_db, cache).unwrap()
-    }
-
-    #[test]
-    fn store_shard_text() {
-        let sender = random_pubkey();
-        let mut state_db = RefCell::new(get_temp_state_db());
-        let mut shard_cache = ShardCache::default();
-        let mut state = get_temp_shard_state(&mut state_db, SHARD_ID, &mut shard_cache);
-
-        let content = "stored text".to_string();
-
-        let store_shard_text = ShardTransaction::ShardStore {
-            network_id: "tc".into(),
-            shard_id: crate::impls::test_helper::SHARD_ID,
-            content: content.clone(),
-        };
-
-        let tx_hash = TxHash::from(H256::random());
-
-        assert_eq!(Ok(()), state.apply(tx_hash, &store_shard_text, &sender, &[sender], 0, 0));
-
-        check_shard_level_state!(state, [
-            (text: (tx_hash) => { content: &content })
-        ]);
     }
 }
