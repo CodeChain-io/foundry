@@ -23,9 +23,9 @@ use crate::error::{Error, SchemeError};
 use ccrypto::{blake256, BLAKE_NULL_RLP};
 use cdb::{AsHashDB, HashDB};
 use ckey::Address;
-use cstate::{Metadata, MetadataAddress, Shard, ShardAddress, StateDB, StateResult};
+use cstate::{Metadata, MetadataAddress, StateDB, StateResult};
 use ctypes::errors::SyntaxError;
-use ctypes::{BlockHash, CommonParams, Header, ShardId};
+use ctypes::{BlockHash, CommonParams, Header};
 use merkle_trie::{TrieFactory, TrieMut};
 use parking_lot::RwLock;
 use primitives::{Bytes, H256};
@@ -64,7 +64,6 @@ pub struct Scheme {
 
     /// Genesis state as plain old data.
     genesis_accounts: PodAccounts,
-    genesis_shards: ShardId,
     genesis_params: CommonParams,
 }
 
@@ -97,7 +96,7 @@ impl Scheme {
     fn initialize_state(&self, db: StateDB, genesis_params: CommonParams) -> Result<StateDB, Error> {
         let root = BLAKE_NULL_RLP;
         let (db, root) = self.initialize_accounts(db, root)?;
-        let (db, root) = self.initialize_shards(db, root, genesis_params)?;
+        let (db, root) = self.initialize_modules(db, root, genesis_params)?;
         let (db, root) = self.engine.initialize_genesis_state(db, root)?;
 
         *self.state_root_memo.write() = root;
@@ -119,24 +118,14 @@ impl Scheme {
         Ok((db, root))
     }
 
-    fn initialize_shards<DB: AsHashDB>(
+    fn initialize_modules<DB: AsHashDB>(
         &self,
         mut db: DB,
         mut root: H256,
         genesis_params: CommonParams,
     ) -> Result<(DB, H256), Error> {
-        debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<ShardId>());
+        // Here we need module initialization
         let global_metadata = Metadata::new(genesis_params);
-
-        // Initialize shards
-        for shard_id in 0..self.genesis_shards {
-            let mut t = TrieFactory::from_existing(db.as_hashdb_mut(), &mut root)?;
-            let address = ShardAddress::new(shard_id);
-            let r = t.insert(&*address, &Shard::new(BLAKE_NULL_RLP).rlp_bytes());
-            debug_assert_eq!(Ok(None), r);
-            r?;
-        }
-
         {
             let mut t = TrieFactory::from_existing(db.as_hashdb_mut(), &mut root)?;
             let address = MetadataAddress::new();
@@ -273,7 +262,6 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
         seal_rlp,
         state_root_memo: RwLock::new(Default::default()), // will be overwritten right after.
         genesis_accounts: s.accounts.into(),
-        genesis_shards: s.shards.into(),
         genesis_params: params,
     };
 
