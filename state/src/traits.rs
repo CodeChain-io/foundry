@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{
-    Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, Shard, ShardText, StateDB, StateResult,
-};
+use crate::{Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, ShardText, StateDB, StateResult};
 use ckey::Address;
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, Tracker, TxHash};
