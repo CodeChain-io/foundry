@@ -42,11 +42,9 @@ pub use crate::error::Error as StateError;
 pub use crate::impls::{ModuleLevelState, TopLevelState};
 pub use crate::item::account::Account;
 pub use crate::item::action_data::ActionData;
-pub use crate::item::dummy_shard_text::{ShardText, ShardTextAddress};
 pub use crate::item::metadata::{Metadata, MetadataAddress};
 pub use crate::item::module::{Module, ModuleAddress};
 pub use crate::item::module_datum::{ModuleDatum, ModuleDatumAddress};
-pub use crate::item::shard::{Shard, ShardAddress};
 pub use crate::item::stake::{
     get_delegation_key, get_stake_account_key, Banned, Candidate, Candidates, CurrentValidators, Delegation, Jail,
     NextValidators, Prisoner, ReleaseResult, StakeAccount, Stakeholders, Validator,
