@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{
-    Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, Shard, ShardText, StateDB, StateResult,
+    Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, ShardText, StateDB, StateResult,
 };
 use ckey::Address;
 use ctypes::transaction::ShardTransaction;

@@ -39,8 +39,8 @@ use crate::cache::{ModuleCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::traits::{ModuleStateView, StateWithCache, TopState, TopStateView};
 use crate::{
-    Account, ActionData, FindActionHandler, Metadata, MetadataAddress, Module, ModuleAddress, ModuleLevelState, Shard,
-    ShardAddress, StateDB, StateResult,
+    Account, ActionData, FindActionHandler, Metadata, MetadataAddress, Module, ModuleAddress, ModuleLevelState,
+    StateDB, StateResult,
 };
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
@@ -468,13 +468,6 @@ impl TopLevelState {
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         let address = ModuleAddress::new(storage_id);
         self.top_cache.module_mut(&address, &trie)
-    }
-
-    fn get_shard_mut(&self, shard_id: ShardId) -> TrieResult<RefMut<'_, Shard>> {
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        let shard_address = ShardAddress::new(shard_id);
-        self.top_cache.shard_mut(&shard_address, &trie)
     }
 
     fn get_action_data_mut(&self, key: &H256) -> TrieResult<RefMut<'_, ActionData>> {
