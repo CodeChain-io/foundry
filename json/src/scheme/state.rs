@@ -14,9 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{Account, Shard};
+use super::Account;
 use ckey::PlatformAddress;
 use std::collections::BTreeMap;
 
 pub type Accounts = BTreeMap<PlatformAddress, Account>;
-pub type Shards = BTreeMap<u16, Shard>;

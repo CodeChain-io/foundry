@@ -21,7 +21,6 @@ mod params;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod scheme;
 mod seal;
-mod shard;
 mod solo;
 mod state;
 mod tendermint;
@@ -32,7 +31,6 @@ pub use self::genesis::Genesis;
 pub use self::params::Params;
 pub use self::scheme::Scheme;
 pub use self::seal::{Seal, TendermintSeal};
-pub use self::shard::Shard;
 pub use self::solo::{Solo, SoloParams};
-pub use self::state::{Accounts, Shards};
+pub use self::state::Accounts;
 pub use self::tendermint::{StakeAccount, Tendermint, TendermintParams};
