@@ -15,8 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::errors::SyntaxError;
-use crate::transaction::ShardTransaction;
-use crate::{CommonParams, ShardId, Tracker};
+use crate::{CommonParams, Tracker};
 use ccrypto::Blake;
 use ckey::{Address, NetworkId};
 use primitives::{Bytes, H256};
@@ -26,10 +25,6 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 #[repr(u8)]
 enum ActionTag {
     Pay = 0x02,
-    CreateShard = 0x04,
-    SetShardOwners = 0x05,
-    SetShardUsers = 0x06,
-    ShardStore = 0x19,
     Custom = 0xFF,
 }
 
@@ -44,10 +39,6 @@ impl Decodable for ActionTag {
         let tag = rlp.as_val()?;
         match tag {
             0x02u8 => Ok(Self::Pay),
-            0x04 => Ok(Self::CreateShard),
-            0x05 => Ok(Self::SetShardOwners),
-            0x06 => Ok(Self::SetShardUsers),
-            0x19 => Ok(Self::ShardStore),
             0xFF => Ok(Self::Custom),
             _ => Err(DecoderError::Custom("Unexpected action prefix")),
         }
@@ -61,25 +52,9 @@ pub enum Action {
         /// Transferred quantity.
         quantity: u64,
     },
-    CreateShard {
-        users: Vec<Address>,
-    },
-    SetShardOwners {
-        shard_id: ShardId,
-        owners: Vec<Address>,
-    },
-    SetShardUsers {
-        shard_id: ShardId,
-        users: Vec<Address>,
-    },
     Custom {
         handler_id: u64,
         bytes: Bytes,
-    },
-    ShardStore {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        content: String,
     },
 }
 
@@ -89,17 +64,8 @@ impl Action {
         Blake::blake(rlp)
     }
 
-    pub fn shard_transaction(&self) -> Option<ShardTransaction> {
-        match self {
-            Action::ShardStore {
-                ..
-            } => self.clone().into(),
-            _ => None,
-        }
-    }
-
     pub fn tracker(&self) -> Option<Tracker> {
-        self.shard_transaction().map(|tx| tx.tracker())
+        Default::default()
     }
 
     pub fn verify(&self) -> Result<(), SyntaxError> {
@@ -118,30 +84,7 @@ impl Action {
     }
 
     fn network_id(&self) -> Option<NetworkId> {
-        match self {
-            Action::ShardStore {
-                network_id,
-                ..
-            } => Some(*network_id),
-            _ => None,
-        }
-    }
-}
-
-impl From<Action> for Option<ShardTransaction> {
-    fn from(action: Action) -> Self {
-        match action {
-            Action::ShardStore {
-                network_id,
-                shard_id,
-                content,
-            } => Some(ShardTransaction::ShardStore {
-                network_id,
-                shard_id,
-                content,
-            }),
-            _ => None,
-        }
+        None
     }
 }
 
@@ -157,31 +100,6 @@ impl Encodable for Action {
                 s.append(receiver);
                 s.append(quantity);
             }
-            Action::CreateShard {
-                users,
-            } => {
-                s.begin_list(2);
-                s.append(&ActionTag::CreateShard);
-                s.append_list(users);
-            }
-            Action::SetShardOwners {
-                shard_id,
-                owners,
-            } => {
-                s.begin_list(3);
-                s.append(&ActionTag::SetShardOwners);
-                s.append(shard_id);
-                s.append_list(owners);
-            }
-            Action::SetShardUsers {
-                shard_id,
-                users,
-            } => {
-                s.begin_list(3);
-                s.append(&ActionTag::SetShardUsers);
-                s.append(shard_id);
-                s.append_list(users);
-            }
             Action::Custom {
                 handler_id,
                 bytes,
@@ -190,17 +108,6 @@ impl Encodable for Action {
                 s.append(&ActionTag::Custom);
                 s.append(handler_id);
                 s.append(bytes);
-            }
-            Action::ShardStore {
-                shard_id,
-                content,
-                network_id,
-            } => {
-                s.begin_list(4);
-                s.append(&ActionTag::ShardStore);
-                s.append(network_id);
-                s.append(shard_id);
-                s.append(content);
             }
         }
     }
@@ -222,44 +129,6 @@ impl Decodable for Action {
                     quantity: rlp.val_at(2)?,
                 })
             }
-            ActionTag::CreateShard => {
-                let item_count = rlp.item_count()?;
-                if item_count != 2 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 2,
-                    })
-                }
-                Ok(Action::CreateShard {
-                    users: rlp.list_at(1)?,
-                })
-            }
-            ActionTag::SetShardOwners => {
-                let item_count = rlp.item_count()?;
-                if item_count != 3 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 3,
-                    })
-                }
-                Ok(Action::SetShardOwners {
-                    shard_id: rlp.val_at(1)?,
-                    owners: rlp.list_at(2)?,
-                })
-            }
-            ActionTag::SetShardUsers => {
-                let item_count = rlp.item_count()?;
-                if item_count != 3 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 3,
-                    })
-                }
-                Ok(Action::SetShardUsers {
-                    shard_id: rlp.val_at(1)?,
-                    users: rlp.list_at(2)?,
-                })
-            }
             ActionTag::Custom => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
@@ -271,20 +140,6 @@ impl Decodable for Action {
                 Ok(Action::Custom {
                     handler_id: rlp.val_at(1)?,
                     bytes: rlp.val_at(2)?,
-                })
-            }
-            ActionTag::ShardStore => {
-                let item_count = rlp.item_count()?;
-                if item_count != 4 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 4,
-                    })
-                }
-                Ok(Action::ShardStore {
-                    network_id: rlp.val_at(1)?,
-                    shard_id: rlp.val_at(2)?,
-                    content: rlp.val_at(3)?,
                 })
             }
         }
@@ -302,22 +157,6 @@ mod tests {
         rlp_encode_and_decode_test!(Action::Pay {
             receiver: Address::random(),
             quantity: 300,
-        });
-    }
-
-    #[test]
-    fn encode_and_decode_set_shard_owners() {
-        rlp_encode_and_decode_test!(Action::SetShardOwners {
-            shard_id: 1,
-            owners: vec![Address::random(), Address::random()],
-        });
-    }
-
-    #[test]
-    fn encode_and_decode_set_shard_users() {
-        rlp_encode_and_decode_test!(Action::SetShardUsers {
-            shard_id: 1,
-            users: vec![Address::random(), Address::random()],
         });
     }
 }

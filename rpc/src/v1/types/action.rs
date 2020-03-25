@@ -18,7 +18,6 @@ use super::super::errors::ConversionError;
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress};
 use ctypes::transaction::Action as ActionType;
-use ctypes::{ShardId, Tracker};
 use primitives::Bytes;
 use std::convert::TryFrom;
 
@@ -29,28 +28,10 @@ pub enum Action {
         receiver: PlatformAddress,
         quantity: Uint,
     },
-    CreateShard {
-        users: Vec<PlatformAddress>,
-    },
-    #[serde(rename_all = "camelCase")]
-    SetShardOwners {
-        shard_id: ShardId,
-        owners: Vec<PlatformAddress>,
-    },
-    #[serde(rename_all = "camelCase")]
-    SetShardUsers {
-        shard_id: ShardId,
-        users: Vec<PlatformAddress>,
-    },
     #[serde(rename_all = "camelCase")]
     Custom {
         handler_id: Uint,
         bytes: Bytes,
-    },
-    ShardStore {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        content: String,
     },
 }
 
@@ -61,35 +42,15 @@ pub enum ActionWithTracker {
         receiver: PlatformAddress,
         quantity: Uint,
     },
-    CreateShard {
-        users: Vec<PlatformAddress>,
-    },
-    #[serde(rename_all = "camelCase")]
-    SetShardOwners {
-        shard_id: ShardId,
-        owners: Vec<PlatformAddress>,
-    },
-    #[serde(rename_all = "camelCase")]
-    SetShardUsers {
-        shard_id: ShardId,
-        users: Vec<PlatformAddress>,
-    },
     #[serde(rename_all = "camelCase")]
     Custom {
         handler_id: Uint,
         bytes: Bytes,
     },
-    ShardStore {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        content: String,
-        tracker: Tracker,
-    },
 }
 
 impl ActionWithTracker {
     pub fn from_core(from: ActionType, network_id: NetworkId) -> Self {
-        let tracker = from.tracker();
         match from {
             ActionType::Pay {
                 receiver,
@@ -98,44 +59,12 @@ impl ActionWithTracker {
                 receiver: PlatformAddress::new_v1(network_id, receiver),
                 quantity: quantity.into(),
             },
-            ActionType::CreateShard {
-                users,
-            } => {
-                let users = users.into_iter().map(|user| PlatformAddress::new_v1(network_id, user)).collect();
-                ActionWithTracker::CreateShard {
-                    users,
-                }
-            }
-            ActionType::SetShardOwners {
-                shard_id,
-                owners,
-            } => ActionWithTracker::SetShardOwners {
-                shard_id,
-                owners: owners.into_iter().map(|owner| PlatformAddress::new_v1(network_id, owner)).collect(),
-            },
-            ActionType::SetShardUsers {
-                shard_id,
-                users,
-            } => ActionWithTracker::SetShardUsers {
-                shard_id,
-                users: users.into_iter().map(|user| PlatformAddress::new_v1(network_id, user)).collect(),
-            },
             ActionType::Custom {
                 handler_id,
                 bytes,
             } => ActionWithTracker::Custom {
                 handler_id: handler_id.into(),
                 bytes,
-            },
-            ActionType::ShardStore {
-                network_id,
-                shard_id,
-                content,
-            } => ActionWithTracker::ShardStore {
-                network_id,
-                shard_id,
-                content,
-                tracker: tracker.unwrap(),
             },
         }
     }
@@ -152,49 +81,12 @@ impl TryFrom<Action> for ActionType {
                 receiver: receiver.try_into_address()?,
                 quantity: quantity.into(),
             },
-            Action::CreateShard {
-                users,
-            } => {
-                let users = users.into_iter().map(PlatformAddress::try_into_address).collect::<Result<_, _>>()?;
-                ActionType::CreateShard {
-                    users,
-                }
-            }
-            Action::SetShardOwners {
-                shard_id,
-                owners,
-            } => {
-                let owners: Result<_, _> = owners.into_iter().map(PlatformAddress::try_into_address).collect();
-                ActionType::SetShardOwners {
-                    shard_id,
-                    owners: owners?,
-                }
-            }
-            Action::SetShardUsers {
-                shard_id,
-                users,
-            } => {
-                let users: Result<_, _> = users.into_iter().map(PlatformAddress::try_into_address).collect();
-                ActionType::SetShardUsers {
-                    shard_id,
-                    users: users?,
-                }
-            }
             Action::Custom {
                 handler_id,
                 bytes,
             } => ActionType::Custom {
                 handler_id: handler_id.into(),
                 bytes,
-            },
-            Action::ShardStore {
-                network_id,
-                shard_id,
-                content,
-            } => ActionType::ShardStore {
-                network_id,
-                shard_id,
-                content,
             },
         })
     }

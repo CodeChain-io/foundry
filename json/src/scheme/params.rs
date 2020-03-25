@@ -29,9 +29,6 @@ pub struct Params {
 
     /// Minimum transaction cost.
     pub min_pay_cost: Uint,
-    pub min_create_shard_cost: Uint,
-    pub min_set_shard_owners_cost: Uint,
-    pub min_set_shard_users_cost: Uint,
     pub min_custom_cost: Uint,
 
     /// Maximum size of block body.
@@ -65,9 +62,6 @@ mod tests {
             "maxExtraDataSize": "0x20",
             "networkID" : "tc",
             "minPayCost" : 10,
-            "minCreateShardCost" : 12,
-            "minSetShardOwnersCost" : 13,
-            "minSetShardUsersCost" : 14,
             "minCustomCost" : 16,
             "maxBodySize" : 4194304,
             "snapshotPeriod": 16384,
@@ -86,9 +80,6 @@ mod tests {
         assert_eq!(deserialized.max_extra_data_size, 0x20.into());
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_cost, 10.into());
-        assert_eq!(deserialized.min_create_shard_cost, 12.into());
-        assert_eq!(deserialized.min_set_shard_owners_cost, 13.into());
-        assert_eq!(deserialized.min_set_shard_users_cost, 14.into());
         assert_eq!(deserialized.min_custom_cost, 16.into());
         assert_eq!(deserialized.max_body_size, 4_194_304.into());
         assert_eq!(deserialized.snapshot_period, 16_384.into());
@@ -111,9 +102,6 @@ mod tests {
             "maxExtraDataSize": "0x20",
             "networkID" : "tc",
             "minPayCost" : 10,
-            "minCreateShardCost" : 12,
-            "minSetShardOwnersCost" : 13,
-            "minSetShardUsersCost" : 14,
             "minCustomCost" : 16,
             "maxBodySize" : 4194304,
             "snapshotPeriod": 16384,
@@ -133,9 +121,6 @@ mod tests {
         assert_eq!(deserialized.max_extra_data_size, 0x20.into());
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_cost, 10.into());
-        assert_eq!(deserialized.min_create_shard_cost, 12.into());
-        assert_eq!(deserialized.min_set_shard_owners_cost, 13.into());
-        assert_eq!(deserialized.min_set_shard_users_cost, 14.into());
         assert_eq!(deserialized.min_custom_cost, 16.into());
         assert_eq!(deserialized.max_body_size, 4_194_304.into());
         assert_eq!(deserialized.snapshot_period, 16_384.into());

@@ -18,9 +18,6 @@
 #[serde(rename_all = "camelCase")]
 pub struct MemPoolMinFees {
     min_pay_transaction_cost: u64,
-    min_create_shard_transaction_cost: u64,
-    min_set_shard_owners_transaction_cost: u64,
-    min_set_shard_users_transaction_cost: u64,
     min_custom_transaction_cost: u64,
 }
 
@@ -28,9 +25,6 @@ impl From<ccore::MemPoolMinFees> for MemPoolMinFees {
     fn from(fees: ccore::MemPoolMinFees) -> Self {
         Self {
             min_pay_transaction_cost: fees.min_pay_transaction_cost,
-            min_create_shard_transaction_cost: fees.min_create_shard_transaction_cost,
-            min_set_shard_owners_transaction_cost: fees.min_set_shard_owners_transaction_cost,
-            min_set_shard_users_transaction_cost: fees.min_set_shard_users_transaction_cost,
             min_custom_transaction_cost: fees.min_custom_transaction_cost,
         }
     }

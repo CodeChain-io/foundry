@@ -22,11 +22,9 @@ use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{public_to_address, NetworkId, PlatformAddress};
 use cstate::FindActionHandler;
-use ctypes::transaction::Action;
 use ctypes::{BlockHash, BlockNumber, ShardId, TxHash};
 use jsonrpc_core::Result;
 use primitives::H256;
-use std::convert::TryFrom;
 use std::sync::Arc;
 
 pub struct ChainClient<C>
@@ -157,9 +155,6 @@ where
         if let Some(common_parameters) = self.client.common_params(block_id) {
             Ok(match action_type.as_str() {
                 "pay" => Some(common_parameters.min_pay_transaction_cost()),
-                "createShard" => Some(common_parameters.min_create_shard_transaction_cost()),
-                "setShardOwners" => Some(common_parameters.min_set_shard_owners_transaction_cost()),
-                "setShardUsers" => Some(common_parameters.min_set_shard_users_transaction_cost()),
                 "custom" => Some(common_parameters.min_custom_transaction_cost()),
 
                 _ => None,
@@ -200,17 +195,7 @@ where
         Ok(self.client.possible_authors(block_number).map_err(errors::core)?)
     }
 
-    fn execute_transaction(&self, tx: UnsignedTransaction, sender: PlatformAddress) -> Result<Option<String>> {
-        let sender_address = sender.try_address().map_err(errors::core)?;
-        let action = Action::try_from(tx.action).map_err(errors::conversion)?;
-        if let Some(transaction) = action.shard_transaction() {
-            let result = self.client.execute_transaction(&transaction, sender_address);
-            match result {
-                Ok(()) => Ok(None),
-                Err(err) => Ok(Some(err.to_string())),
-            }
-        } else {
-            Err(errors::shard_transaction_only())
-        }
+    fn execute_transaction(&self, _tx: UnsignedTransaction, _sender: PlatformAddress) -> Result<Option<String>> {
+        Ok(None)
     }
 }

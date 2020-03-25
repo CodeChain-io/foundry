@@ -396,26 +396,14 @@ pub struct AccountDetails {
 /// Minimum fee thresholds defined not by network but by Mempool
 pub struct MemPoolMinFees {
     pub min_pay_transaction_cost: u64,
-    pub min_create_shard_transaction_cost: u64,
-    pub min_set_shard_owners_transaction_cost: u64,
-    pub min_set_shard_users_transaction_cost: u64,
     pub min_custom_transaction_cost: u64,
 }
 
 impl MemPoolMinFees {
     #[allow(clippy::too_many_arguments)]
-    pub fn create_from_options(
-        min_pay_cost_option: Option<u64>,
-        min_create_shard_cost_option: Option<u64>,
-        min_set_shard_owners_cost_option: Option<u64>,
-        min_set_shard_users_cost_option: Option<u64>,
-        min_custom_cost_option: Option<u64>,
-    ) -> Self {
+    pub fn create_from_options(min_pay_cost_option: Option<u64>, min_custom_cost_option: Option<u64>) -> Self {
         MemPoolMinFees {
             min_pay_transaction_cost: min_pay_cost_option.unwrap_or_default(),
-            min_create_shard_transaction_cost: min_create_shard_cost_option.unwrap_or_default(),
-            min_set_shard_owners_transaction_cost: min_set_shard_owners_cost_option.unwrap_or_default(),
-            min_set_shard_users_transaction_cost: min_set_shard_users_cost_option.unwrap_or_default(),
             min_custom_transaction_cost: min_custom_cost_option.unwrap_or_default(),
         }
     }
@@ -424,24 +412,9 @@ impl MemPoolMinFees {
             Action::Pay {
                 ..
             } => self.min_pay_transaction_cost,
-            Action::CreateShard {
-                ..
-            } => self.min_create_shard_transaction_cost,
-            Action::SetShardOwners {
-                ..
-            } => self.min_set_shard_owners_transaction_cost,
-            Action::SetShardUsers {
-                ..
-            } => self.min_set_shard_users_transaction_cost,
             Action::Custom {
                 ..
             } => self.min_custom_transaction_cost,
-            Action::ShardStore {
-                ..
-            } => {
-                // FIXME
-                0
-            }
         }
     }
 }
