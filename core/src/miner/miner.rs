@@ -347,13 +347,7 @@ impl Miner {
             let start = Instant::now();
             let transaction_index = tx_count as TransactionIndex;
             // Check whether transaction type is allowed for sender
-            let result = open_block.push_transaction(
-                tx,
-                chain,
-                parent_header.number(),
-                parent_header.timestamp(),
-                transaction_index,
-            );
+            let result = open_block.push_transaction(tx, chain, parent_header.number(), transaction_index);
 
             match result {
                 // already have transaction - ignore
@@ -400,13 +394,7 @@ impl Miner {
                 let tx = VerifiedTransaction::new_with_sign(tx, &tx_signer);
                 // TODO: The current code can insert more transactions than size limit.
                 // It should be fixed to pre-calculate the maximum size of the close transactions and prevent the size overflow.
-                open_block.push_transaction(
-                    tx,
-                    chain,
-                    parent_header.number(),
-                    parent_header.timestamp(),
-                    transaction_index,
-                )?;
+                open_block.push_transaction(tx, chain, parent_header.number(), transaction_index)?;
             }
         }
         let block = open_block.close()?;

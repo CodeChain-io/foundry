@@ -41,17 +41,17 @@ use crate::stake::{
     change_params, close_term, delegate_ccs, jail, redelegate, release_jailed_prisoners, revoke, self_nominate,
     transfer_ccs,
 };
-use crate::traits::{ModuleStateView, ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
+use crate::traits::{ModuleStateView, ShardStateView, StateWithCache, TopState, TopStateView};
 use crate::{
     Account, ActionData, CurrentValidators, FindDoubleVoteHandler, Metadata, MetadataAddress, Module, ModuleAddress,
     ModuleLevelState, NextValidators, Shard, ShardAddress, ShardLevelState, StateDB, StateResult,
 };
 use cdb::{AsHashDB, DatabaseError};
-use ckey::{Ed25519Public as Public, NetworkId};
+use ckey::Ed25519Public as Public;
 use ctypes::errors::RuntimeError;
-use ctypes::transaction::{Action, ShardTransaction, Transaction};
+use ctypes::transaction::{Action, Transaction};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, TransactionIndex, TransactionLocation, TxHash};
+use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, TransactionIndex, TransactionLocation};
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use primitives::{Bytes, H256};
@@ -283,20 +283,10 @@ impl TopLevelState {
         sender_public: &Public,
         client: &C,
         parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-        current_block_timestamp: u64,
         transaction_index: TransactionIndex,
     ) -> StateResult<()> {
         self.create_checkpoint(FEE_CHECKPOINT);
-        let result = self.apply_internal(
-            tx,
-            sender_public,
-            client,
-            parent_block_number,
-            parent_block_timestamp,
-            current_block_timestamp,
-            transaction_index,
-        );
+        let result = self.apply_internal(tx, sender_public, client, parent_block_number, transaction_index);
         match result {
             Ok(()) => {
                 self.discard_checkpoint(FEE_CHECKPOINT);
@@ -314,8 +304,6 @@ impl TopLevelState {
         sender: &Public,
         client: &C,
         parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-        current_block_timestamp: u64,
         transaction_index: TransactionIndex,
     ) -> StateResult<()> {
         let seq = self.seq(sender)?;
@@ -335,17 +323,7 @@ impl TopLevelState {
 
         // The failed transaction also must pay the fee and increase seq.
         self.create_checkpoint(ACTION_CHECKPOINT);
-        let result = self.apply_action(
-            &tx.action,
-            tx.network_id,
-            tx.hash(),
-            sender,
-            client,
-            parent_block_number,
-            parent_block_timestamp,
-            current_block_timestamp,
-            transaction_index,
-        );
+        let result = self.apply_action(&tx.action, sender, client, parent_block_number, transaction_index);
         match &result {
             Ok(()) => {
                 self.discard_checkpoint(ACTION_CHECKPOINT);
@@ -361,49 +339,33 @@ impl TopLevelState {
     fn apply_action<C: FindDoubleVoteHandler>(
         &mut self,
         action: &Action,
-        network_id: NetworkId,
-        tx_hash: TxHash,
         sender: &Public,
         client: &C,
         parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-        _current_block_timestamp: u64,
         transaction_index: TransactionIndex,
     ) -> StateResult<()> {
-        let (transaction, approvers) = match action {
-            Action::ShardStore {
-                ..
-            } => {
-                let transaction = Option::<ShardTransaction>::from(action.clone()).expect("It's a shard transaction");
-                debug_assert_eq!(network_id, transaction.network_id());
-
-                let approvers = vec![]; // WrapCCC doesn't have approvers
-                (transaction, approvers)
-            }
+        match action {
             Action::Pay {
                 receiver,
                 quantity,
-            } => {
-                self.transfer_balance(sender, receiver, *quantity)?;
-                return Ok(())
-            }
+            } => self.transfer_balance(sender, receiver, *quantity),
             Action::TransferCCS {
                 address,
                 quantity,
-            } => return transfer_ccs(self, sender, &address, *quantity),
+            } => transfer_ccs(self, sender, &address, *quantity),
             Action::DelegateCCS {
                 address,
                 quantity,
-            } => return delegate_ccs(self, sender, &address, *quantity),
+            } => delegate_ccs(self, sender, &address, *quantity),
             Action::Revoke {
                 address,
                 quantity,
-            } => return revoke(self, sender, address, *quantity),
+            } => revoke(self, sender, address, *quantity),
             Action::Redelegate {
                 prev_delegatee,
                 next_delegatee,
                 quantity,
-            } => return redelegate(self, sender, prev_delegatee, next_delegatee, *quantity),
+            } => redelegate(self, sender, prev_delegatee, next_delegatee, *quantity),
             Action::SelfNominate {
                 deposit,
                 metadata,
@@ -415,7 +377,7 @@ impl TopLevelState {
                     let nomination_ends_at = current_term + expiration;
                     (current_term, nomination_ends_at)
                 };
-                return self_nominate(
+                self_nominate(
                     self,
                     sender,
                     *deposit,
@@ -432,14 +394,13 @@ impl TopLevelState {
                 metadata_seq,
                 params,
                 approvals,
-            } => return change_params(self, *metadata_seq, **params, &approvals),
+            } => change_params(self, *metadata_seq, **params, &approvals),
             Action::ReportDoubleVote {
                 message1,
                 ..
             } => {
                 let handler = client.double_vote_handler().expect("Unknown custom transaction applied!");
-                handler.execute(message1, self, sender)?;
-                return Ok(())
+                handler.execute(message1, self, sender)
             }
             Action::UpdateValidators {
                 validators,
@@ -450,8 +411,7 @@ impl TopLevelState {
                 }
                 let mut current_validators = CurrentValidators::load_from_state(self)?;
                 current_validators.update(validators.clone());
-                current_validators.save_to_state(self)?;
-                return Ok(())
+                current_validators.save_to_state(self)
             }
             Action::CloseTerm {
                 inactive_validators,
@@ -463,64 +423,16 @@ impl TopLevelState {
                 close_term(self, next_validators, inactive_validators)?;
                 release_jailed_prisoners(self, released_addresses)?;
                 jail(self, inactive_validators, *custody_until, *kick_at)?;
-                return self.increase_term_id(parent_block_number + 1)
+                self.increase_term_id(parent_block_number + 1)
             }
             Action::ChangeNextValidators {
                 validators,
-            } => return NextValidators::from(validators.clone()).save_to_state(self),
+            } => NextValidators::from(validators.clone()).save_to_state(self),
             Action::Elect => {
                 NextValidators::elect(self)?.save_to_state(self)?;
-                return self.update_term_params()
+                self.update_term_params()
             }
-        };
-        self.apply_shard_transaction(
-            tx_hash,
-            &transaction,
-            sender,
-            &approvers,
-            parent_block_number,
-            parent_block_timestamp,
-        )
-    }
-
-    fn apply_shard_transaction(
-        &mut self,
-        tx_hash: TxHash,
-        transaction: &ShardTransaction,
-        sender: &Public,
-        approvers: &[Public],
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-    ) -> StateResult<()> {
-        for shard_id in transaction.related_shards() {
-            self.apply_shard_transaction_to_shard(
-                tx_hash,
-                transaction,
-                shard_id,
-                sender,
-                approvers,
-                parent_block_number,
-                parent_block_timestamp,
-            )?;
         }
-        Ok(())
-    }
-
-    fn apply_shard_transaction_to_shard(
-        &mut self,
-        tx_hash: TxHash,
-        transaction: &ShardTransaction,
-        shard_id: ShardId,
-        sender: &Public,
-        approvers: &[Public],
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-    ) -> StateResult<()> {
-        let shard_root = self.shard_root(shard_id)?.ok_or_else(|| RuntimeError::InvalidShardId(shard_id))?;
-
-        let shard_cache = self.shard_caches.entry(shard_id).or_default();
-        let mut shard_level_state = ShardLevelState::from_existing(shard_id, &mut self.db, shard_root, shard_cache)?;
-        shard_level_state.apply(tx_hash, &transaction, sender, approvers, parent_block_number, parent_block_timestamp)
     }
 
     fn create_module_level_state(&mut self, storage_id: StorageId) -> StateResult<()> {
@@ -1142,12 +1054,12 @@ mod tests_state {
 
 #[cfg(test)]
 mod tests_tx {
-    use ckey::{Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
-    use ctypes::errors::RuntimeError;
-
     use super::*;
     use crate::tests::helpers::{get_temp_state, get_test_client};
     use crate::StateError;
+    use ckey::{Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
+    use ctypes::errors::RuntimeError;
+    use ctypes::TxHash;
 
     fn random_pubkey() -> Public {
         let keypair: KeyPair = Random.generate().unwrap();
@@ -1167,7 +1079,7 @@ mod tests_tx {
                 expected: 0,
                 found: 2
             }))),
-            state.apply(&tx, &sender, &get_test_client(), 0, 0, 0, 0)
+            state.apply(&tx, &sender, &get_test_client(), 0, 0)
         );
 
         check_top_level_state!(state, [
@@ -1190,7 +1102,7 @@ mod tests_tx {
                 cost: 5,
             }
             .into()),
-            state.apply(&tx, &sender, &get_test_client(), 0, 0, 0, 0)
+            state.apply(&tx, &sender, &get_test_client(), 0, 0)
         );
 
         check_top_level_state!(state, [
@@ -1207,7 +1119,7 @@ mod tests_tx {
 
         let receiver = 1u64.into();
         let tx = transaction!(fee: 5, pay!(receiver, 10));
-        assert_eq!(Ok(()), state.apply(&tx, &sender, &get_test_client(), 0, 0, 0, 0));
+        assert_eq!(Ok(()), state.apply(&tx, &sender, &get_test_client(), 0, 0));
 
         check_top_level_state!(state, [
             (account: sender => seq: 1, balance: 5),
@@ -1233,7 +1145,7 @@ mod tests_tx {
                 cost: 30,
             }
             .into()),
-            state.apply(&tx, &sender, &get_test_client(), 0, 0, 0, 0)
+            state.apply(&tx, &sender, &get_test_client(), 0, 0)
         );
 
         check_top_level_state!(state, [

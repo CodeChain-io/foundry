@@ -18,7 +18,6 @@ use super::super::errors::ConversionError;
 use cjson::uint::Uint;
 use ckey::{Error as KeyError, NetworkId, PlatformAddress};
 use ctypes::transaction::{Action as ActionType, Approval};
-use ctypes::ShardId;
 use primitives::Bytes;
 use rlp::Encodable;
 use std::convert::TryFrom;
@@ -29,11 +28,6 @@ pub enum Action {
     Pay {
         receiver: PlatformAddress,
         quantity: Uint,
-    },
-    ShardStore {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        content: String,
     },
     TransferCCS {
         address: PlatformAddress,
@@ -82,15 +76,6 @@ impl Action {
             } => Action::Pay {
                 receiver: PlatformAddress::new_v0(network_id, receiver),
                 quantity: quantity.into(),
-            },
-            ActionType::ShardStore {
-                network_id,
-                shard_id,
-                content,
-            } => Action::ShardStore {
-                network_id,
-                shard_id,
-                content,
             },
             ActionType::TransferCCS {
                 address,
@@ -171,15 +156,6 @@ impl TryFrom<Action> for ActionType {
             } => ActionType::Pay {
                 receiver: receiver.try_into_pubkey()?,
                 quantity: quantity.into(),
-            },
-            Action::ShardStore {
-                network_id,
-                shard_id,
-                content,
-            } => ActionType::ShardStore {
-                network_id,
-                shard_id,
-                content,
             },
             Action::TransferCCS {
                 address,

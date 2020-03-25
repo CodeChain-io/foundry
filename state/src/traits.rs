@@ -18,8 +18,7 @@ use crate::{
     Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, Shard, ShardText, StateDB, StateResult,
 };
 use ckey::Ed25519Public as Public;
-use ctypes::transaction::ShardTransaction;
-use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, TxHash};
+use ctypes::{CommonParams, ShardId, StorageId, TxHash};
 use merkle_trie::Result as TrieResult;
 use primitives::{Bytes, H256};
 
@@ -100,18 +99,6 @@ pub trait ModuleStateView {
     fn get_datum(&self, key: &dyn AsRef<[u8]>) -> TrieResult<Option<ModuleDatum>>;
     /// Check if the key exists
     fn has_key(&self, key: &dyn AsRef<[u8]>) -> TrieResult<bool>;
-}
-
-pub trait ShardState {
-    fn apply(
-        &mut self,
-        tx_hash: TxHash,
-        transaction: &ShardTransaction,
-        sender: &Public,
-        approvers: &[Public],
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-    ) -> StateResult<()>;
 }
 
 pub trait TopState {
