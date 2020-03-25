@@ -16,10 +16,7 @@
 
 #![macro_use]
 
-use ctypes::ShardId;
-
 pub const NETWORK_ID: &str = "tc";
-pub const SHARD_ID: ShardId = 0;
 
 macro_rules! pay {
     ($receiver:expr, $quantity:expr) => {
@@ -52,21 +49,6 @@ macro_rules! set_top_level_state {
     ($state:expr, [(account: $addr:expr => seq: $seq:expr)]) => {
         assert_eq!(Ok(()), $state.set_seq(&$addr, $seq));
     };
-    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*])]) => {
-        set_top_level_state!($state, [(shard: $shard_id => owners: [$($owner),*], users: Vec::new())]);
-    };
-    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*], users: [$($user:expr),*])]) => {
-        set_top_level_state!($state, [(shard: $shard_id => owners: [$($owner),*], users: vec![$($user),*])]);
-    };
-    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*], users: $users:expr)]) => {
-        set_top_level_state!($state, [(shard: $shard_id => owners: vec![$($owner),*], users: $users)]);
-    };
-    ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr, users: $users:expr)]) => {
-        assert_eq!(Ok(()), $state.create_shard_level_state($shard_id, $owners, $users));
-    };
-    ($state:expr, [(metadata: shards: $number_of_shards:expr)]) => {
-        assert_eq!(Ok(()), $state.set_number_of_shards($number_of_shards));
-    };
     // recursion
     ($state:expr, [$head:tt, $($tail:tt),+]) => {
         set_top_level_state!($state, [$head]);
@@ -87,20 +69,5 @@ macro_rules! check_top_level_state {
     ($state:expr, [$head:tt, $($tail:tt),+]) => {
         check_top_level_state!($state, [$head]);
         check_top_level_state!($state, [$($tail),+]);
-    }
-}
-
-macro_rules! check_shard_level_state {
-    // base cases
-    ($state:expr, [(text: ($tracker:expr) => { content: $content: expr})]) => {
-        let stored_text = $state.text($tracker)
-            .expect(&format!("Cannot read Text from {}:{}", $state.shard_id(), $tracker))
-            .expect(&format!("Text for {}:{} not exist", $state.shard_id(), $tracker));
-        assert_eq!($content, stored_text.content());
-    };
-    // recursion
-    ($state:expr, [$head:tt, $($tail:tt),+]) => {
-        check_shard_level_state!($state, [$head]);
-        check_shard_level_state!($state, [$($tail),+]);
     }
 }

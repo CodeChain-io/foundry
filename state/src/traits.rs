@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, ShardText, StateDB, StateResult};
+use crate::{Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, StateDB, StateResult};
 use ckey::Address;
-use ctypes::transaction::ShardTransaction;
-use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, Tracker, TxHash};
+use ctypes::{CommonParams, StorageId};
 use merkle_trie::Result as TrieResult;
 use primitives::{Bytes, H256};
 
@@ -70,28 +69,11 @@ pub trait TopStateView {
     }
 }
 
-pub trait ShardStateView {
-    /// Get shard text.
-    fn text(&self, tracker: Tracker) -> TrieResult<Option<ShardText>>;
-}
-
 pub trait ModuleStateView {
     /// Get module datum from the key
     fn get_datum(&self, key: &dyn AsRef<[u8]>) -> TrieResult<Option<ModuleDatum>>;
     /// Check if the key exists
     fn has_key(&self, key: &dyn AsRef<[u8]>) -> TrieResult<bool>;
-}
-
-pub trait ShardState {
-    fn apply(
-        &mut self,
-        transaction: &ShardTransaction,
-        sender: &Address,
-        shard_owners: &[Address],
-        approvers: &[Address],
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-    ) -> StateResult<()>;
 }
 
 pub trait TopState {
