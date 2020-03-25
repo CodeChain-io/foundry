@@ -18,9 +18,8 @@ use super::super::types::{Block, BlockNumberAndHash, Transaction, UnsignedTransa
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress};
-use ctypes::{BlockHash, BlockNumber, ShardId, TxHash};
+use ctypes::{BlockHash, BlockNumber, TxHash};
 use jsonrpc_core::Result;
-use primitives::H256;
 
 #[rpc(server)]
 pub trait Chain {
@@ -50,18 +49,6 @@ pub trait Chain {
     /// Gets the genesis accounts
     #[rpc(name = "chain_getGenesisAccounts")]
     fn get_genesis_accounts(&self) -> Result<Vec<PlatformAddress>>;
-
-    /// Gets shard root
-    #[rpc(name = "chain_getShardRoot")]
-    fn get_shard_root(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<H256>>;
-
-    /// Gets shard owners
-    #[rpc(name = "chain_getShardOwners")]
-    fn get_shard_owners(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>>;
-
-    /// Gets shard users
-    #[rpc(name = "chain_getShardUsers")]
-    fn get_shard_users(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>>;
 
     /// Gets number of best block.
     #[rpc(name = "chain_getBestBlockNumber")]
