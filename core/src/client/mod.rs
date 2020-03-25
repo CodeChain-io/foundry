@@ -147,12 +147,6 @@ impl From<BlockId> for StateOrBlock {
     }
 }
 
-pub trait Shard {
-    fn number_of_shards(&self, state: StateOrBlock) -> Option<ShardId>;
-
-    fn shard_root(&self, shard_id: ShardId, state: StateOrBlock) -> Option<H256>;
-}
-
 /// Provides methods to import block into blockchain
 pub trait ImportBlock {
     /// Import a block into the blockchain.

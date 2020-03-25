@@ -607,13 +607,6 @@ impl AccountData for Client {
     }
 }
 
-impl Shard for Client {
-    fn number_of_shards(&self, state: StateOrBlock) -> Option<ShardId> {
-        let state = self.state_info(state)?;
-        state.number_of_shards().ok()
-    }
-}
-
 impl BlockProducer for Client {
     fn prepare_open_block(&self, parent_block_id: BlockId, author: Address, extra_data: Bytes) -> OpenBlock<'_> {
         let engine = &*self.engine;
