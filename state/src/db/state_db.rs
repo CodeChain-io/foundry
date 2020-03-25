@@ -30,10 +30,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::cache::{GlobalCache, ModuleCache, ShardCache, TopCache};
+use crate::cache::{GlobalCache, ModuleCache, TopCache};
 use crate::impls::TopLevelState;
 use cdb::{new_journaldb, Algorithm, AsHashDB, DatabaseError, HashDB, JournalDB};
-use ctypes::{ShardId, StorageId};
+use ctypes::StorageId;
 use kvdb::DBTransaction;
 use primitives::H256;
 use std::collections::HashMap;
@@ -77,10 +77,6 @@ impl StateDB {
 
     pub fn top_cache(&self) -> TopCache {
         self.cache.top_cache()
-    }
-
-    pub fn shard_caches(&self) -> HashMap<ShardId, ShardCache> {
-        self.cache.shard_caches()
     }
 
     pub fn module_caches(&self) -> HashMap<StorageId, ModuleCache> {
