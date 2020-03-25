@@ -42,7 +42,7 @@ use cstate::{FindActionHandler, StateResult, TopLevelState, TopStateView};
 use ctypes::header::Header;
 use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
 use kvdb::KeyValueDB;
-use primitives::{Bytes};
+use primitives::Bytes;
 use std::ops::Range;
 use std::sync::Arc;
 

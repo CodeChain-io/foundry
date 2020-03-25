@@ -43,7 +43,7 @@ use ctypes::header::Header;
 use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use primitives::{Bytes};
+use primitives::Bytes;
 use rlp::Rlp;
 use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};

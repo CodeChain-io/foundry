@@ -105,12 +105,5 @@
     "tccq8ce67j2vr69jmenfeqj8pratyss2478hswel8gr": {
       "balance": 20
     }
-  },
-  "shards": {
-    "0": {
-      "seq": 0,
-      "owners": ["tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u"],
-      "users": []
-    }
   }
 }

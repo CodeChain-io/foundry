@@ -15,9 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::pod_account::PodAccount;
-use super::pod_shard_metadata::PodShardMetadata;
 use ckey::Address;
-use ctypes::ShardId;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::ops::Deref;
@@ -49,34 +47,6 @@ impl fmt::Display for PodAccounts {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (add, acc) in &self.0 {
             writeln!(f, "{} => {}", add, acc)?;
-        }
-        Ok(())
-    }
-}
-
-/// State of all accounts in the system expressed in Plain Old Data.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct PodShards(BTreeMap<ShardId, PodShardMetadata>);
-
-impl Deref for PodShards {
-    type Target = BTreeMap<ShardId, PodShardMetadata>;
-
-    fn deref(&self) -> &<Self as Deref>::Target {
-        &self.0
-    }
-}
-
-impl From<cjson::scheme::Shards> for PodShards {
-    fn from(s: cjson::scheme::Shards) -> PodShards {
-        let shards = s.into_iter().map(|(shard_id, shard)| (shard_id, shard.into())).collect();
-        PodShards(shards)
-    }
-}
-
-impl fmt::Display for PodShards {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (shard_id, shard) in &self.0 {
-            writeln!(f, "{}: {}", shard_id, shard)?;
         }
         Ok(())
     }

@@ -45,13 +45,7 @@ where
 
 impl<C> Chain for ChainClient<C>
 where
-    C: MiningBlockChainClient
-        + AccountData
-        + ExecuteClient
-        + EngineInfo
-        + FindActionHandler
-        + TermInfo
-        + 'static,
+    C: MiningBlockChainClient + AccountData + ExecuteClient + EngineInfo + FindActionHandler + TermInfo + 'static,
 {
     fn get_transaction(&self, transaction_hash: TxHash) -> Result<Option<Transaction>> {
         let id = transaction_hash.into();

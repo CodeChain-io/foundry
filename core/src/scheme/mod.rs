@@ -16,7 +16,6 @@
 
 mod genesis;
 mod pod_account;
-mod pod_shard_metadata;
 mod pod_state;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod scheme;
