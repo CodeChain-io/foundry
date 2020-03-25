@@ -1,5 +1,5 @@
 use ckey::Ed25519Public as Public;
-use ctypes::{CompactValidatorSet, TxHash};
+use ctypes::{BlockHash, CompactValidatorSet, TxHash};
 use primitives::H256;
 
 /// A `Validator` receives requests from the underlying consensus engine
@@ -144,7 +144,10 @@ impl<'a> TransactionWithGas {
     }
 }
 pub enum Evidence {
-    DoubleVote, // Should import and use DoubleVote type defined in tendermint module?
+    DoubleVote {
+        author: Public,
+        block_hash: BlockHash,
+    }, 
 }
 
 pub struct TransactionExecutionOutcome {
