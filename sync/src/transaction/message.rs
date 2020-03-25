@@ -66,7 +66,7 @@ mod tests {
     use rlp::rlp_encode_and_decode_test;
 
     use ccore::UnverifiedTransaction;
-    use ckey::{Address, Ed25519Public as Public, Signature};
+    use ckey::{Ed25519Public as Public, Signature};
     use ctypes::transaction::{Action, Transaction};
 
     use super::Message;
@@ -82,8 +82,9 @@ mod tests {
             Transaction {
                 seq: 0,
                 fee: 10,
-                action: Action::CreateShard {
-                    users: vec![Address::random(), Address::random()],
+                action: Action::Custom {
+                    handler_id: 1,
+                    bytes: Default::default(),
                 },
                 network_id: "tc".into(),
             },

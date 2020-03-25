@@ -26,9 +26,6 @@ pub struct CommonParams {
     network_id: NetworkId,
     /// Minimum transaction cost.
     min_pay_transaction_cost: u64,
-    min_create_shard_transaction_cost: u64,
-    min_set_shard_owners_transaction_cost: u64,
-    min_set_shard_users_transaction_cost: u64,
     min_custom_transaction_cost: u64,
     /// Maximum size of block body.
     max_body_size: usize,
@@ -57,15 +54,6 @@ impl CommonParams {
     }
     pub fn min_pay_transaction_cost(&self) -> u64 {
         self.min_pay_transaction_cost
-    }
-    pub fn min_create_shard_transaction_cost(&self) -> u64 {
-        self.min_create_shard_transaction_cost
-    }
-    pub fn min_set_shard_owners_transaction_cost(&self) -> u64 {
-        self.min_set_shard_owners_transaction_cost
-    }
-    pub fn min_set_shard_users_transaction_cost(&self) -> u64 {
-        self.min_set_shard_users_transaction_cost
     }
     pub fn min_custom_transaction_cost(&self) -> u64 {
         self.min_custom_transaction_cost
@@ -171,9 +159,6 @@ impl From<Params> for CommonParams {
             max_extra_data_size: p.max_extra_data_size.into(),
             network_id: p.network_id,
             min_pay_transaction_cost: p.min_pay_cost.into(),
-            min_create_shard_transaction_cost: p.min_create_shard_cost.into(),
-            min_set_shard_owners_transaction_cost: p.min_set_shard_owners_cost.into(),
-            min_set_shard_users_transaction_cost: p.min_set_shard_users_cost.into(),
             min_custom_transaction_cost: p.min_custom_cost.into(),
             max_body_size: p.max_body_size.into(),
             snapshot_period: p.snapshot_period.into(),
@@ -198,9 +183,6 @@ impl From<CommonParams> for Params {
             max_extra_data_size: p.max_extra_data_size().into(),
             network_id: p.network_id(),
             min_pay_cost: p.min_pay_transaction_cost().into(),
-            min_create_shard_cost: p.min_create_shard_transaction_cost().into(),
-            min_set_shard_owners_cost: p.min_set_shard_owners_transaction_cost().into(),
-            min_set_shard_users_cost: p.min_set_shard_users_transaction_cost().into(),
             min_custom_cost: p.min_custom_transaction_cost().into(),
             max_body_size: p.max_body_size().into(),
             snapshot_period: p.snapshot_period().into(),
@@ -225,13 +207,10 @@ impl From<CommonParams> for Params {
 
 impl Encodable for CommonParams {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(19)
+        s.begin_list(16)
             .append(&self.max_extra_data_size)
             .append(&self.network_id)
             .append(&self.min_pay_transaction_cost)
-            .append(&self.min_create_shard_transaction_cost)
-            .append(&self.min_set_shard_owners_transaction_cost)
-            .append(&self.min_set_shard_users_transaction_cost)
             .append(&self.min_custom_transaction_cost)
             .append(&self.max_body_size)
             .append(&self.snapshot_period)
@@ -251,9 +230,9 @@ impl Encodable for CommonParams {
 impl Decodable for CommonParams {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let size = rlp.item_count()?;
-        if size != 19 {
+        if size != 16 {
             return Err(DecoderError::RlpIncorrectListLen {
-                expected: 19,
+                expected: 16,
                 got: size,
             })
         }
@@ -261,31 +240,25 @@ impl Decodable for CommonParams {
         let max_extra_data_size = rlp.val_at(0)?;
         let network_id = rlp.val_at(1)?;
         let min_pay_transaction_cost = rlp.val_at(2)?;
-        let min_create_shard_transaction_cost = rlp.val_at(3)?;
-        let min_set_shard_owners_transaction_cost = rlp.val_at(4)?;
-        let min_set_shard_users_transaction_cost = rlp.val_at(5)?;
-        let min_custom_transaction_cost = rlp.val_at(6)?;
-        let max_body_size = rlp.val_at(7)?;
-        let snapshot_period = rlp.val_at(8)?;
+        let min_custom_transaction_cost = rlp.val_at(3)?;
+        let max_body_size = rlp.val_at(4)?;
+        let snapshot_period = rlp.val_at(5)?;
 
-        let term_seconds = rlp.val_at(9)?;
-        let nomination_expiration = rlp.val_at(10)?;
-        let custody_period = rlp.val_at(11)?;
-        let release_period = rlp.val_at(12)?;
-        let max_num_of_validators = rlp.val_at(13)?;
-        let min_num_of_validators = rlp.val_at(14)?;
-        let delegation_threshold = rlp.val_at(15)?;
-        let min_deposit = rlp.val_at(16)?;
-        let max_candidate_metadata_size = rlp.val_at(17)?;
-        let era = rlp.val_at(18)?;
+        let term_seconds = rlp.val_at(6)?;
+        let nomination_expiration = rlp.val_at(7)?;
+        let custody_period = rlp.val_at(8)?;
+        let release_period = rlp.val_at(9)?;
+        let max_num_of_validators = rlp.val_at(10)?;
+        let min_num_of_validators = rlp.val_at(11)?;
+        let delegation_threshold = rlp.val_at(12)?;
+        let min_deposit = rlp.val_at(13)?;
+        let max_candidate_metadata_size = rlp.val_at(14)?;
+        let era = rlp.val_at(15)?;
 
         Ok(Self {
             max_extra_data_size,
             network_id,
             min_pay_transaction_cost,
-            min_create_shard_transaction_cost,
-            min_set_shard_owners_transaction_cost,
-            min_set_shard_users_transaction_cost,
             min_custom_transaction_cost,
             max_body_size,
             snapshot_period,
@@ -359,9 +332,6 @@ mod tests {
             "maxExtraDataSize": "0x20",
             "networkID" : "tc",
             "minPayCost" : 10,
-            "minCreateShardCost" : 12,
-            "minSetShardOwnersCost" : 13,
-            "minSetShardUsersCost" : 14,
             "minCustomCost" : 16,
             "maxBodySize" : 4194304,
             "snapshotPeriod": 16384,
@@ -381,9 +351,6 @@ mod tests {
         assert_eq!(deserialized.max_extra_data_size, 0x20);
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_transaction_cost, 10);
-        assert_eq!(deserialized.min_create_shard_transaction_cost, 12);
-        assert_eq!(deserialized.min_set_shard_owners_transaction_cost, 13);
-        assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
         assert_eq!(deserialized.min_custom_transaction_cost, 16);
         assert_eq!(deserialized.max_body_size, 4_194_304);
         assert_eq!(deserialized.snapshot_period, 16_384);
@@ -408,9 +375,6 @@ mod tests {
             "maxExtraDataSize": "0x20",
             "networkID" : "tc",
             "minPayCost" : 10,
-            "minCreateShardCost" : 12,
-            "minSetShardOwnersCost" : 13,
-            "minSetShardUsersCost" : 14,
             "minCustomCost" : 16,
             "maxBodySize" : 4194304,
             "snapshotPeriod": 16384,
@@ -430,9 +394,6 @@ mod tests {
         assert_eq!(deserialized.max_extra_data_size, 0x20);
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.min_pay_transaction_cost, 10);
-        assert_eq!(deserialized.min_create_shard_transaction_cost, 12);
-        assert_eq!(deserialized.min_set_shard_owners_transaction_cost, 13);
-        assert_eq!(deserialized.min_set_shard_users_transaction_cost, 14);
         assert_eq!(deserialized.min_custom_transaction_cost, 16);
         assert_eq!(deserialized.max_body_size, 4_194_304);
         assert_eq!(deserialized.snapshot_period, 16_384);

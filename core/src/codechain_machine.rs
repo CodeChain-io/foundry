@@ -83,24 +83,9 @@ impl CodeChainMachine {
             Action::Pay {
                 ..
             } => params.min_pay_transaction_cost(),
-            Action::CreateShard {
-                ..
-            } => params.min_create_shard_transaction_cost(),
-            Action::SetShardOwners {
-                ..
-            } => params.min_set_shard_owners_transaction_cost(),
-            Action::SetShardUsers {
-                ..
-            } => params.min_set_shard_users_transaction_cost(),
             Action::Custom {
                 ..
             } => params.min_custom_transaction_cost(),
-            Action::ShardStore {
-                ..
-            } => {
-                // FIXME
-                0
-            }
         }
     }
 

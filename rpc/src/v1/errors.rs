@@ -61,7 +61,6 @@ mod codes {
     pub const WRONG_PASSWORD: i64 = -32043;
     pub const NO_SUCH_ACCOUNT: i64 = -32044;
     pub const NOT_UNLOCKED: i64 = -32045;
-    pub const SHARD_TRANSACTION_ONLY_IN_EXECUTE_TRANSACITON: i64 = -32047;
     pub const STATE_NOT_EXIST: i64 = -32048;
     pub const ACTION_DATA_HANDLER_NOT_FOUND: i64 = -32049;
     pub const UNKNOWN_ERROR: i64 = -32099;
@@ -218,14 +217,6 @@ pub fn network_control(error: &NetworkControlError) -> Error {
             message: "Network is diabled.".into(),
             data: None,
         },
-    }
-}
-
-pub fn shard_transaction_only() -> Error {
-    Error {
-        code: ErrorCode::ServerError(codes::SHARD_TRANSACTION_ONLY_IN_EXECUTE_TRANSACITON),
-        message: "chain_executeTransaction() only accepts shard transactions.".into(),
-        data: None,
     }
 }
 

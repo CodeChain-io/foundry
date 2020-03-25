@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::TaggedRlp;
-use crate::ShardId;
 use ckey::NetworkId;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::fmt::{Display, Formatter, Result as FormatResult};
@@ -23,7 +22,6 @@ use std::fmt::{Display, Formatter, Result as FormatResult};
 #[derive(Debug, PartialEq, Clone, Eq, Serialize)]
 #[serde(tag = "type", content = "content")]
 pub enum Error {
-    EmptyShardOwners(ShardId),
     /// Transaction's fee is below currently set minimal fee requirement.
     InsufficientFee {
         /// Minimal expected fee
@@ -44,14 +42,13 @@ pub enum Error {
 #[derive(Clone, Copy)]
 #[repr(u8)]
 enum ErrorID {
-    EmptyShardOwners = 1,
-    InsufficientFee = 2,
-    InvalidNetworkID = 3,
-    InvalidApproval = 4,
-    MetadataTooBig = 5,
-    TextContentTooBig = 6,
-    TxIsTooBig = 7,
-    InvalidCustomAction = 8,
+    InsufficientFee = 1,
+    InvalidNetworkID = 2,
+    InvalidApproval = 3,
+    MetadataTooBig = 4,
+    TextContentTooBig = 5,
+    TxIsTooBig = 6,
+    InvalidCustomAction = 7,
 }
 
 impl Encodable for ErrorID {
@@ -64,14 +61,13 @@ impl Decodable for ErrorID {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         let tag = rlp.as_val()?;
         match tag {
-            1u8 => Ok(ErrorID::EmptyShardOwners),
-            2 => Ok(ErrorID::InsufficientFee),
-            3 => Ok(ErrorID::InvalidNetworkID),
-            4 => Ok(ErrorID::InvalidApproval),
-            5 => Ok(ErrorID::MetadataTooBig),
-            6 => Ok(ErrorID::TextContentTooBig),
-            7 => Ok(ErrorID::TxIsTooBig),
-            8 => Ok(ErrorID::InvalidCustomAction),
+            1u8 => Ok(ErrorID::InsufficientFee),
+            2 => Ok(ErrorID::InvalidNetworkID),
+            3 => Ok(ErrorID::InvalidApproval),
+            4 => Ok(ErrorID::MetadataTooBig),
+            5 => Ok(ErrorID::TextContentTooBig),
+            6 => Ok(ErrorID::TxIsTooBig),
+            7 => Ok(ErrorID::InvalidCustomAction),
             _ => Err(DecoderError::Custom("Unexpected ErrorID Value")),
         }
     }
@@ -83,7 +79,6 @@ impl TaggedRlp for RlpHelper {
 
     fn length_of(tag: ErrorID) -> Result<usize, DecoderError> {
         Ok(match tag {
-            ErrorID::EmptyShardOwners => 2,
             ErrorID::InsufficientFee => 3,
             ErrorID::InvalidCustomAction => 2,
             ErrorID::InvalidNetworkID => 2,
@@ -98,9 +93,6 @@ impl TaggedRlp for RlpHelper {
 impl Encodable for Error {
     fn rlp_append(&self, s: &mut RlpStream) {
         match self {
-            Error::EmptyShardOwners(shard_id) => {
-                RlpHelper::new_tagged_list(s, ErrorID::EmptyShardOwners).append(shard_id)
-            }
             Error::InsufficientFee {
                 minimal,
                 got,
@@ -121,7 +113,6 @@ impl Decodable for Error {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let tag = rlp.val_at(0)?;
         let error = match tag {
-            ErrorID::EmptyShardOwners => Error::EmptyShardOwners(rlp.val_at(1)?),
             ErrorID::InsufficientFee => Error::InsufficientFee {
                 minimal: rlp.val_at(1)?,
                 got: rlp.val_at(2)?,
@@ -141,7 +132,6 @@ impl Decodable for Error {
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
         match self {
-            Error::EmptyShardOwners(shard_id) => write!(f, "Shard({}) must have at least one owner", shard_id),
             Error::InsufficientFee {
                 minimal,
                 got,

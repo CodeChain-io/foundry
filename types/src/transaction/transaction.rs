@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::Action;
-use super::ShardTransaction;
 use crate::{Tracker, TxHash};
 use ccrypto::blake256;
 use ckey::NetworkId;
@@ -51,7 +50,6 @@ impl Transaction {
     }
 
     pub fn tracker(&self) -> Option<Tracker> {
-        let shard_tx: Option<ShardTransaction> = self.action.clone().into();
-        shard_tx.map(|t| t.tracker())
+        Default::default()
     }
 }
