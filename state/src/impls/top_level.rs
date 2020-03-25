@@ -546,12 +546,6 @@ impl TopLevelState {
         self.get_account_mut(a)?.set_seq(seq);
         Ok(())
     }
-
-    #[cfg(test)]
-    fn set_number_of_shards(&mut self, number_of_shards: ShardId) -> TrieResult<()> {
-        self.get_metadata_mut()?.set_number_of_shards(number_of_shards);
-        Ok(())
-    }
 }
 
 // TODO: cloning for `State` shouldn't be possible in general; Remove this and use
@@ -1020,7 +1014,7 @@ mod tests_state {
         let mut state = get_temp_state();
         let a = Address::default();
         state.get_account_mut(&a).unwrap();
-        assert_eq!(Ok(H256::from("18b00f3183c037c6091a7acf4ce1fbdb6fe88bad626a4b8e9ac467994c97adc8")), state.commit());
+        assert_eq!(Ok(H256::from("6e218029d05b2ffc4094fb1f9b27a45f917075e9ef2a41878b66c9236735495b")), state.commit());
     }
 
     #[test]
