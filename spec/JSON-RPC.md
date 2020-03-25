@@ -759,9 +759,6 @@ Errors: `Invalid Params`
     "maxTextContentSize":"0x0200",
     "networkID":"tc",
     "minPayCost":10,
-    "minCreateShardCost":10,
-    "minSetShardOwnersCost":10,
-    "minSetShardUsersCost":10,
     "minCustomCost":10,
     "maxBodySize":4194304,
     "snapshotPeriod":16384
@@ -1224,11 +1221,8 @@ No parameters
 
 ### Returns
 {
-  "minCreateShardTransactionCost":`number`,
   "minCustomTransactionCost":`number`,
   "minPayTransactionCost":`number`,
-  "minSetShardOwnersTransactionCost":`number`,
-  "minSetShardUsersTransactionCost":`number`,
 }
 
 ### Request Example
@@ -1244,11 +1238,8 @@ curl \
 {
   "jsonrpc":"2.0",
   "result":{
-    "minCreateShardTransactionCost":0,
     "minCustomTransactionCost":0,
     "minPayTransactionCost":0,
-    "minSetShardOwnersTransactionCost":0,
-    "minSetShardUsersTransactionCost":0,
     },
   "id":null
 }

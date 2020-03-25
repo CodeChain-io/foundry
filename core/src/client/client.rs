@@ -17,7 +17,7 @@
 use super::importer::Importer;
 use super::{
     AccountData, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify, ClientConfig,
-    DatabaseClient, EngineClient, EngineInfo, ImportBlock, ImportResult, MiningBlockChainClient, Shard, StateInfo,
+    DatabaseClient, EngineClient, EngineInfo, ImportBlock, ImportResult, MiningBlockChainClient, StateInfo,
     StateOrBlock,
 };
 use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock};
@@ -39,10 +39,10 @@ use ckey::{Address, NetworkId, PlatformAddress};
 use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
-use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use primitives::{Bytes, H256};
+use primitives::Bytes;
 use rlp::Rlp;
 use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
