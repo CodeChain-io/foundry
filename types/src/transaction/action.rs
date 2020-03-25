@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::errors::SyntaxError;
-use crate::transaction::{Approval, ShardTransaction};
-use crate::{CommonParams, ShardId};
+use crate::transaction::Approval;
+use crate::CommonParams;
 use ccrypto::Blake;
 use ckey::{verify, Address, NetworkId};
 use primitives::{Bytes, H256};
@@ -26,7 +26,6 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 #[repr(u8)]
 enum ActionTag {
     Pay = 0x02,
-    ShardStore = 0x19,
     TransferCCS = 0x21,
     DelegateCCS = 0x22,
     Revoke = 0x23,
@@ -47,7 +46,6 @@ impl Decodable for ActionTag {
         let tag = rlp.as_val()?;
         match tag {
             0x02u8 => Ok(Self::Pay),
-            0x19 => Ok(Self::ShardStore),
             0x21 => Ok(Self::TransferCCS),
             0x22 => Ok(Self::DelegateCCS),
             0x23 => Ok(Self::Revoke),
@@ -66,11 +64,6 @@ pub enum Action {
         receiver: Address,
         /// Transferred quantity.
         quantity: u64,
-    },
-    ShardStore {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        content: String,
     },
     TransferCCS {
         address: Address,
@@ -108,15 +101,6 @@ impl Action {
     pub fn hash(&self) -> H256 {
         let rlp = self.rlp_bytes();
         Blake::blake(rlp)
-    }
-
-    pub fn shard_transaction(&self) -> Option<ShardTransaction> {
-        match self {
-            Action::ShardStore {
-                ..
-            } => self.clone().into(),
-            _ => None,
-        }
     }
 
     pub fn verify(&self) -> Result<(), SyntaxError> {
@@ -192,30 +176,7 @@ impl Action {
     }
 
     fn network_id(&self) -> Option<NetworkId> {
-        match self {
-            Action::ShardStore {
-                network_id,
-                ..
-            } => Some(*network_id),
-            _ => None,
-        }
-    }
-}
-
-impl From<Action> for Option<ShardTransaction> {
-    fn from(action: Action) -> Self {
-        match action {
-            Action::ShardStore {
-                network_id,
-                shard_id,
-                content,
-            } => Some(ShardTransaction::ShardStore {
-                network_id,
-                shard_id,
-                content,
-            }),
-            _ => None,
-        }
+        None
     }
 }
 
@@ -230,17 +191,6 @@ impl Encodable for Action {
                 s.append(&ActionTag::Pay);
                 s.append(receiver);
                 s.append(quantity);
-            }
-            Action::ShardStore {
-                shard_id,
-                content,
-                network_id,
-            } => {
-                s.begin_list(4);
-                s.append(&ActionTag::ShardStore);
-                s.append(network_id);
-                s.append(shard_id);
-                s.append(content);
             }
             Action::TransferCCS {
                 address,
@@ -314,20 +264,6 @@ impl Decodable for Action {
                 Ok(Action::Pay {
                     receiver: rlp.val_at(1)?,
                     quantity: rlp.val_at(2)?,
-                })
-            }
-            ActionTag::ShardStore => {
-                let item_count = rlp.item_count()?;
-                if item_count != 4 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 4,
-                    })
-                }
-                Ok(Action::ShardStore {
-                    network_id: rlp.val_at(1)?,
-                    shard_id: rlp.val_at(2)?,
-                    content: rlp.val_at(3)?,
                 })
             }
             ActionTag::TransferCCS => {

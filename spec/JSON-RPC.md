@@ -94,9 +94,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  - maxTextContentSize: `U64`
  - networkID: `string`
  - minPayCost: `U64`
- - minCreateShardCost: `U64`
- - minSetShardOwnersCost: `U64`
- - minSetShardUsersCost: `U64`
  - minCustomCost: `U64`
  - maxBodySize: `U64`
  - snapshotPeriod: `U64`
@@ -152,7 +149,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_containsTransaction](#chain_containstransaction)
  * [chain_getSeq](#chain_getseq)
  * [chain_getBalance](#chain_getbalance)
- * [chain_getShardRoot](#chain_getshardroot)
  * [chain_getMinTransactionFee](#chain_getmintransactionfee)
  * [chain_getCommonParams](#chain_getcommonparams)
  * [chain_getTermMetadata](#chain_gettermmetadata)
