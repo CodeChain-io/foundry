@@ -502,12 +502,6 @@ impl TopLevelState {
         self.get_account_mut(a)?.set_seq(seq);
         Ok(())
     }
-
-    #[cfg(test)]
-    fn set_number_of_shards(&mut self, number_of_shards: ShardId) -> TrieResult<()> {
-        self.get_metadata_mut()?.set_number_of_shards(number_of_shards);
-        Ok(())
-    }
 }
 
 // TODO: cloning for `State` shouldn't be possible in general; Remove this and use
