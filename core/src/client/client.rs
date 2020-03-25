@@ -17,7 +17,7 @@
 use super::importer::Importer;
 use super::{
     AccountData, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify, ClientConfig,
-    DatabaseClient, EngineClient, EngineInfo, ExecuteClient, ImportBlock, ImportResult, MiningBlockChainClient, Shard,
+    DatabaseClient, EngineClient, EngineInfo, ExecuteClient, ImportBlock, ImportResult, MiningBlockChainClient,
     StateInfo, StateOrBlock,
 };
 use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock};
@@ -40,10 +40,10 @@ use ckey::{Address, NetworkId, PlatformAddress};
 use cstate::{ActionHandler, FindActionHandler, StateDB, StateResult, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
-use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use primitives::{Bytes, H256};
+use primitives::{Bytes};
 use rlp::Rlp;
 use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
@@ -624,20 +624,6 @@ impl AccountData for Client {
     fn balance(&self, address: &Address, state: StateOrBlock) -> Option<u64> {
         let state = self.state_info(state)?;
         state.balance(address).ok()
-    }
-}
-
-impl Shard for Client {
-    fn shard_root(&self, _shard_id: ShardId, _state: StateOrBlock) -> Option<H256> {
-        None
-    }
-
-    fn shard_owners(&self, _shard_id: u16, _state: StateOrBlock) -> Option<Vec<Address>> {
-        None
-    }
-
-    fn shard_users(&self, _shard_id: u16, _state: StateOrBlock) -> Option<Vec<Address>> {
-        None
     }
 }
 

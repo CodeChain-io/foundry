@@ -17,25 +17,24 @@
 use super::super::errors;
 use super::super::traits::Chain;
 use super::super::types::{Block, BlockNumberAndHash, Transaction, UnsignedTransaction};
-use ccore::{AccountData, BlockId, EngineInfo, ExecuteClient, MiningBlockChainClient, Shard, TermInfo};
+use ccore::{AccountData, BlockId, EngineInfo, ExecuteClient, MiningBlockChainClient, TermInfo};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{public_to_address, NetworkId, PlatformAddress};
 use cstate::FindActionHandler;
-use ctypes::{BlockHash, BlockNumber, ShardId, TxHash};
+use ctypes::{BlockHash, BlockNumber, TxHash};
 use jsonrpc_core::Result;
-use primitives::H256;
 use std::sync::Arc;
 
 pub struct ChainClient<C>
 where
-    C: MiningBlockChainClient + Shard + ExecuteClient + EngineInfo, {
+    C: MiningBlockChainClient + ExecuteClient + EngineInfo, {
     client: Arc<C>,
 }
 
 impl<C> ChainClient<C>
 where
-    C: MiningBlockChainClient + Shard + AccountData + ExecuteClient + EngineInfo,
+    C: MiningBlockChainClient + AccountData + ExecuteClient + EngineInfo,
 {
     pub fn new(client: Arc<C>) -> Self {
         ChainClient {
@@ -47,7 +46,6 @@ where
 impl<C> Chain for ChainClient<C>
 where
     C: MiningBlockChainClient
-        + Shard
         + AccountData
         + ExecuteClient
         + EngineInfo
@@ -90,27 +88,6 @@ where
 
     fn get_genesis_accounts(&self) -> Result<Vec<PlatformAddress>> {
         Ok(self.client.genesis_accounts())
-    }
-
-    fn get_shard_root(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<H256>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        Ok(self.client.shard_root(shard_id, block_id.into()))
-    }
-
-    fn get_shard_owners(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        Ok(self.client.shard_owners(shard_id, block_id.into()).map(|owners| {
-            let network_id = self.client.network_id();
-            owners.into_iter().map(|owner| PlatformAddress::new_v1(network_id, owner)).collect()
-        }))
-    }
-
-    fn get_shard_users(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        Ok(self.client.shard_users(shard_id, block_id.into()).map(|users| {
-            let network_id = self.client.network_id();
-            users.into_iter().map(|user| PlatformAddress::new_v1(network_id, user)).collect()
-        }))
     }
 
     fn get_best_block_number(&self) -> Result<BlockNumber> {

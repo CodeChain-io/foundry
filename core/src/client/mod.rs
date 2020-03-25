@@ -40,9 +40,9 @@ use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress};
 use cstate::{FindActionHandler, StateResult, TopLevelState, TopStateView};
 use ctypes::header::Header;
-use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
 use kvdb::KeyValueDB;
-use primitives::{Bytes, H256};
+use primitives::{Bytes};
 use std::ops::Range;
 use std::sync::Arc;
 
@@ -149,13 +149,6 @@ impl From<BlockId> for StateOrBlock {
     fn from(id: BlockId) -> StateOrBlock {
         StateOrBlock::Block(id)
     }
-}
-
-pub trait Shard {
-    fn shard_root(&self, shard_id: ShardId, state: StateOrBlock) -> Option<H256>;
-
-    fn shard_owners(&self, shard_id: ShardId, state: StateOrBlock) -> Option<Vec<Address>>;
-    fn shard_users(&self, shard_id: ShardId, state: StateOrBlock) -> Option<Vec<Address>>;
 }
 
 /// Provides methods to import block into blockchain
