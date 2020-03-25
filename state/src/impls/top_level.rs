@@ -999,7 +999,7 @@ mod tests_state {
         let mut state = get_temp_state();
         let a = Address::default();
         state.get_account_mut(&a).unwrap();
-        assert_eq!(Ok(H256::from("f176a4b3b32331d40362e5d49e8237738aee46ea4bbff4091e97b5c65fedd5db")), state.commit());
+        assert_eq!(Ok(H256::from("efb7a4b3a69ab41afa99f9ee3b4fd7753f9a69469039772643d6ebd88f98aeb6")), state.commit());
     }
 
     #[test]

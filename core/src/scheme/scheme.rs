@@ -126,7 +126,7 @@ impl Scheme {
         genesis_params: CommonParams,
     ) -> Result<(DB, H256), Error> {
         debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<ShardId>());
-        let global_metadata = Metadata::new(self.genesis_shards as ShardId, genesis_params);
+        let global_metadata = Metadata::new(genesis_params);
 
         // Initialize shards
         for shard_id in 0..self.genesis_shards {
