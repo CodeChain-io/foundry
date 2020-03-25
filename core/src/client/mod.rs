@@ -39,9 +39,9 @@ use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress};
 use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
 use ctypes::header::Header;
-use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
 use kvdb::KeyValueDB;
-use primitives::{Bytes, H256};
+use primitives::Bytes;
 use std::ops::Range;
 use std::sync::Arc;
 
