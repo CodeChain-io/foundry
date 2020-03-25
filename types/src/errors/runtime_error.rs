@@ -16,7 +16,7 @@
 
 use super::TaggedRlp;
 use crate::util::unexpected::Mismatch;
-use crate::{ShardId, StorageId};
+use crate::StorageId;
 use ckey::Address;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::fmt::{Display, Formatter, Result as FormatResult};
@@ -34,7 +34,6 @@ pub enum Error {
     },
     InsufficientPermission,
     /// Returned when transaction seq does not match state seq
-    InvalidShardId(ShardId),
     InvalidStorageId(StorageId),
     InvalidTransferDestination,
     NewOwnersMustContainSender,
@@ -57,16 +56,15 @@ pub enum Error {
 enum ErrorID {
     InsufficientBalance = 1,
     InsufficientPermission = 2,
-    InvalidShardID = 3,
-    InvalidStorageID = 4,
-    InvalidTransferDestination = 5,
-    NewOwnersMustContainSender = 6,
-    InvalidSeq = 7,
-    NonActiveAccount = 8,
-    FailedToHandleCustomAction = 9,
-    SignatureOfInvalid = 10,
-    InsufficientStakes = 11,
-    InvalidValidatorIndex = 12,
+    InvalidStorageID = 3,
+    InvalidTransferDestination = 4,
+    NewOwnersMustContainSender = 5,
+    InvalidSeq = 6,
+    NonActiveAccount = 7,
+    FailedToHandleCustomAction = 8,
+    SignatureOfInvalid = 9,
+    InsufficientStakes = 10,
+    InvalidValidatorIndex = 11,
 }
 
 impl Encodable for ErrorID {
@@ -81,15 +79,14 @@ impl Decodable for ErrorID {
         match tag {
             1u8 => Ok(ErrorID::InsufficientBalance),
             2 => Ok(ErrorID::InsufficientPermission),
-            3 => Ok(ErrorID::InvalidShardID),
-            4 => Ok(ErrorID::InvalidTransferDestination),
-            5 => Ok(ErrorID::NewOwnersMustContainSender),
-            6 => Ok(ErrorID::InvalidSeq),
-            7 => Ok(ErrorID::NonActiveAccount),
-            8 => Ok(ErrorID::FailedToHandleCustomAction),
-            9 => Ok(ErrorID::SignatureOfInvalid),
-            10 => Ok(ErrorID::InsufficientStakes),
-            11 => Ok(ErrorID::InvalidValidatorIndex),
+            3 => Ok(ErrorID::InvalidTransferDestination),
+            4 => Ok(ErrorID::NewOwnersMustContainSender),
+            5 => Ok(ErrorID::InvalidSeq),
+            6 => Ok(ErrorID::NonActiveAccount),
+            7 => Ok(ErrorID::FailedToHandleCustomAction),
+            8 => Ok(ErrorID::SignatureOfInvalid),
+            9 => Ok(ErrorID::InsufficientStakes),
+            10 => Ok(ErrorID::InvalidValidatorIndex),
             _ => Err(DecoderError::Custom("Unexpected ActionTag Value")),
         }
     }
@@ -105,7 +102,6 @@ impl TaggedRlp for RlpHelper {
             ErrorID::InsufficientBalance => 4,
             ErrorID::InsufficientPermission => 1,
             ErrorID::InvalidSeq => 2,
-            ErrorID::InvalidShardID => 2,
             ErrorID::InvalidStorageID => 2,
             ErrorID::InvalidTransferDestination => 1,
             ErrorID::NewOwnersMustContainSender => 1,
@@ -132,7 +128,6 @@ impl Encodable for Error {
             }
             Error::InsufficientPermission => RlpHelper::new_tagged_list(s, ErrorID::InsufficientPermission),
             Error::InvalidSeq(mismatch) => RlpHelper::new_tagged_list(s, ErrorID::InvalidSeq).append(mismatch),
-            Error::InvalidShardId(shard_id) => RlpHelper::new_tagged_list(s, ErrorID::InvalidShardID).append(shard_id),
             Error::InvalidStorageId(storage_id) => {
                 RlpHelper::new_tagged_list(s, ErrorID::InvalidStorageID).append(storage_id)
             }
@@ -169,7 +164,6 @@ impl Decodable for Error {
             },
             ErrorID::InsufficientPermission => Error::InsufficientPermission,
             ErrorID::InvalidSeq => Error::InvalidSeq(rlp.val_at(1)?),
-            ErrorID::InvalidShardID => Error::InvalidShardId(rlp.val_at(1)?),
             ErrorID::InvalidStorageID => Error::InvalidStorageId(rlp.val_at(1)?),
             ErrorID::InvalidTransferDestination => Error::InvalidTransferDestination,
             ErrorID::NewOwnersMustContainSender => Error::NewOwnersMustContainSender,
@@ -203,7 +197,6 @@ impl Display for Error {
             } => write!(f, "{} has only {:?} but it must be larger than {:?}", address, balance, cost),
             Error::InsufficientPermission => write!(f, "Sender doesn't have a permission"),
             Error::InvalidSeq(mismatch) => write!(f, "Invalid transaction seq {}", mismatch),
-            Error::InvalidShardId(shard_id) => write!(f, "{} is an invalid shard id", shard_id),
             Error::InvalidStorageId(storage_id) => write!(f, "{} is an invalid storage id", storage_id),
             Error::InvalidTransferDestination => write!(f, "Transfer receiver is not valid account"),
             Error::NewOwnersMustContainSender => write!(f, "New owners must contain the sender"),
