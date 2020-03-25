@@ -697,160 +697,6 @@ Errors: `KVDB Error`, `Invalid Params`, `Invalid NetworkId`
 
 [Back to **List of methods**](#list-of-methods)
 
-## chain_getNumberOfShards
-Gets the number of shards, at the state of the given blockNumber.
-
-### Params
- 1. block number: `number` | `null`
-
-### Returns
-`number` - the number of shards
-
-Errors: `KVDB Error`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getNumberOfShards", "params": [null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":3,
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_getShardIdByHash
-Gets the id of shard, at the state of the given blockNumber.
-
-### Params
- 1. the hash of CreateShard transaction: `H256`
- 2. block number: `number` | `null`
-
-### Returns
-`null` | `number` - the id of shard
-
-Errors: `KVDB Error`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getShardIdByHash", "params": ["0xfc196ede542b03b55aee9f106004e7e3d7ea6a9600692e964b4735a260356b50", null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":3,
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_getShardRoot
-Gets the root of shard, at the state of the given blockNumber.
-
-### Params
- 1. shard id: `number`
- 2. block number: `number` | `null`
-
-### Returns
-`null` | `H256` - the root of shard
-
-Errors: `KVDB Error`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getShardRoot", "params": [1, null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":"0xf3841adc1615bfeabb801dda23585c1722b80d810df084a5f2198e92285d4bfd",
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_getShardOwners
-Gets the owners of shard, at the state of the given blockNumber.
-
-### Params
- 1. shard id: `number`
- 2. block number: `number` | `null`
-
-### Returns
-`PlatformAddress`[] | `null` - the owners of the shard
-
-Errors: `KVDB Error`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getShardOwners", "params": [1, null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":["cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7"],
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_getShardUsers
-Gets the users of shard, at the state of the given blockNumber.
-
-### Params
- 1. shard id: `number`
- 2. block number: `number` | `null`
-
-### Returns
-`PlatformAddress`[] | `null` - the users of the shard
-
-Errors: `KVDB Error`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getShardUsers", "params": [1, null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":["cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7"],
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
 # chain_getMinTransactionFee
 Gets the min cost of the transaction.
 It returns null if the first parameter is an invalid transaction type or the second parameter is larger than the current best block.
@@ -913,9 +759,6 @@ Errors: `Invalid Params`
     "maxTextContentSize":"0x0200",
     "networkID":"tc",
     "minPayCost":10,
-    "minCreateShardCost":10,
-    "minSetShardOwnersCost":10,
-    "minSetShardUsersCost":10,
     "minCustomCost":10,
     "maxBodySize":4194304,
     "snapshotPeriod":16384
@@ -1378,11 +1221,8 @@ No parameters
 
 ### Returns
 {
-  "minCreateShardTransactionCost":`number`,
   "minCustomTransactionCost":`number`,
   "minPayTransactionCost":`number`,
-  "minSetShardOwnersTransactionCost":`number`,
-  "minSetShardUsersTransactionCost":`number`,
 }
 
 ### Request Example
@@ -1398,11 +1238,8 @@ curl \
 {
   "jsonrpc":"2.0",
   "result":{
-    "minCreateShardTransactionCost":0,
     "minCustomTransactionCost":0,
     "minPayTransactionCost":0,
-    "minSetShardOwnersTransactionCost":0,
-    "minSetShardUsersTransactionCost":0,
     },
   "id":null
 }
