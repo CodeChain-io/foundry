@@ -39,7 +39,7 @@ pub mod tests;
 pub use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 pub use crate::db::StateDB;
 pub use crate::error::Error as StateError;
-pub use crate::impls::{ModuleLevelState, ShardLevelState, TopLevelState};
+pub use crate::impls::{ModuleLevelState, TopLevelState};
 pub use crate::item::account::Account;
 pub use crate::item::action_data::ActionData;
 pub use crate::item::dummy_shard_text::{ShardText, ShardTextAddress};
@@ -56,7 +56,7 @@ pub use crate::stake::{
     self_nominate, update_candidates, update_validator_weights, DoubleVoteHandler, FindDoubleVoteHandler,
     StakeKeyBuilder,
 };
-pub use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
+pub use crate::traits::{StateWithCache, TopState, TopStateView};
 
 use crate::cache::CacheableItem;
 
