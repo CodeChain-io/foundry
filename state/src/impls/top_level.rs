@@ -49,7 +49,7 @@ use coordinator::context::{Key as DbCxtKey, SubStorageAccess, Value as DbCxtValu
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, ShardTransaction, Transaction};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, TxHash};
+use ctypes::{BlockNumber, CommonParams, StorageId, TxHash};
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use primitives::{Bytes, H256};
@@ -366,13 +366,13 @@ impl TopLevelState {
     fn apply_action<C: FindDoubleVoteHandler>(
         &mut self,
         action: &Action,
-        network_id: NetworkId,
-        tx_hash: TxHash,
+        _network_id: NetworkId,
+        _tx_hash: TxHash,
         sender_address: &Address,
         sender_public: &Public,
         client: &C,
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
+        _parent_block_number: BlockNumber,
+        _parent_block_timestamp: u64,
         _current_block_timestamp: u64,
     ) -> StateResult<()> {
         match action {
@@ -463,13 +463,13 @@ impl TopLevelState {
 
     fn apply_shard_transaction_to_shard(
         &mut self,
-        tx_hash: TxHash,
-        transaction: &ShardTransaction,
-        shard_id: ShardId,
-        sender: &Address,
-        approvers: &[Address],
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
+        _tx_hash: TxHash,
+        _transaction: &ShardTransaction,
+        _shard_id: ShardId,
+        _sender: &Address,
+        _approvers: &[Address],
+        _parent_block_number: BlockNumber,
+        _parent_block_timestamp: u64,
     ) -> StateResult<()> {
         Ok(())
     }
