@@ -636,16 +636,6 @@ impl AccountData for Client {
 }
 
 impl Shard for Client {
-    fn number_of_shards(&self, state: StateOrBlock) -> Option<ShardId> {
-        let state = self.state_info(state)?;
-        state.number_of_shards().ok()
-    }
-
-    fn shard_id_by_hash(&self, create_shard_tx_hash: &TxHash, state: StateOrBlock) -> Option<u16> {
-        let state = self.state_info(state)?;
-        state.shard_id_by_hash(&create_shard_tx_hash).ok()?
-    }
-
     fn shard_root(&self, _shard_id: ShardId, _state: StateOrBlock) -> Option<H256> {
         None
     }

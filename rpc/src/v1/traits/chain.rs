@@ -51,14 +51,6 @@ pub trait Chain {
     #[rpc(name = "chain_getGenesisAccounts")]
     fn get_genesis_accounts(&self) -> Result<Vec<PlatformAddress>>;
 
-    /// Gets the number of shards
-    #[rpc(name = "chain_getNumberOfShards")]
-    fn get_number_of_shards(&self, block_number: Option<u64>) -> Result<Option<ShardId>>;
-
-    /// Gets shard id
-    #[rpc(name = "chain_getShardIdByHash")]
-    fn get_shard_id_by_hash(&self, create_shard_tx_hash: TxHash, block_number: Option<u64>) -> Result<Option<ShardId>>;
-
     /// Gets shard root
     #[rpc(name = "chain_getShardRoot")]
     fn get_shard_root(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<H256>>;

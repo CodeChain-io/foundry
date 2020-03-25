@@ -147,7 +147,7 @@ impl Scheme {
 
         debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<ShardId>());
         debug_assert!(shards.len() <= ::std::u16::MAX as usize, "{} <= {}", shards.len(), ::std::u16::MAX as usize);
-        let global_metadata = Metadata::new(shards.len() as ShardId, genesis_params);
+        let global_metadata = Metadata::new(genesis_params);
 
         // Initialize shards
         for (address, shard) in shards.into_iter() {

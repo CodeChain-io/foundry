@@ -66,7 +66,7 @@ pub mod helpers {
         // init trie and reset root too null
         {
             let mut t = TrieFactory::create(db.as_hashdb_mut(), &mut root);
-            t.insert(&*MetadataAddress::new(), &Metadata::new(0, params).rlp_bytes()).unwrap();
+            t.insert(&*MetadataAddress::new(), &Metadata::new(params).rlp_bytes()).unwrap();
         }
 
         TopLevelState::from_existing(db, root).expect("The empty trie root was initialized")

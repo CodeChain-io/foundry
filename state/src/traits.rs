@@ -53,14 +53,6 @@ pub trait TopStateView {
 
     fn metadata(&self) -> TrieResult<Option<Metadata>>;
 
-    fn number_of_shards(&self) -> TrieResult<ShardId> {
-        Ok(*self.metadata()?.expect("Metadata must exist").number_of_shards())
-    }
-
-    fn shard_id_by_hash(&self, tx_hash: &TxHash) -> TrieResult<Option<ShardId>> {
-        Ok(self.metadata()?.and_then(|metadata| metadata.shard_id_by_hash(tx_hash)))
-    }
-
     fn module(&self, storage_id: StorageId) -> TrieResult<Option<Module>>;
     fn module_state<'db>(&'db self, storage_id: StorageId) -> TrieResult<Option<Box<dyn ModuleStateView + 'db>>>;
 
