@@ -145,8 +145,9 @@ mod tests {
             Transaction {
                 seq: 0,
                 fee: 10,
-                action: Action::CreateShard {
-                    users: vec![Address::random(), Address::random()],
+                action: Action::Pay {
+                    receiver: Address::random(),
+                    quantity: 100,
                 },
                 network_id: "tc".into(),
             },

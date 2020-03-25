@@ -48,7 +48,7 @@ use cdb::{AsHashDB, DatabaseError};
 use ckey::{public_to_address, Address, Ed25519Public as Public, NetworkId};
 use coordinator::context::{Key as DbCxtKey, SubStorageAccess, Value as DbCxtValue};
 use ctypes::errors::RuntimeError;
-use ctypes::transaction::{Action, ShardTransaction, Transaction};
+use ctypes::transaction::{Action, Transaction};
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{BlockNumber, CommonParams, StorageId, TxHash};
 use kvdb::DBTransaction;
@@ -387,25 +387,25 @@ impl TopLevelState {
                 quantity,
             } => {
                 self.transfer_balance(sender_address, receiver, *quantity)?;
-                return Ok(())
+                Ok(())
             }
             Action::TransferCCS {
                 address,
                 quantity,
-            } => return transfer_ccs(self, sender_address, &address, *quantity),
+            } => transfer_ccs(self, sender_address, &address, *quantity),
             Action::DelegateCCS {
                 address,
                 quantity,
-            } => return delegate_ccs(self, sender_address, &address, *quantity),
+            } => delegate_ccs(self, sender_address, &address, *quantity),
             Action::Revoke {
                 address,
                 quantity,
-            } => return revoke(self, sender_address, address, *quantity),
+            } => revoke(self, sender_address, address, *quantity),
             Action::Redelegate {
                 prev_delegatee,
                 next_delegatee,
                 quantity,
-            } => return redelegate(self, sender_address, prev_delegatee, next_delegatee, *quantity),
+            } => redelegate(self, sender_address, prev_delegatee, next_delegatee, *quantity),
             Action::SelfNominate {
                 deposit,
                 metadata,
@@ -417,7 +417,7 @@ impl TopLevelState {
                     let nomination_ends_at = current_term + expiration;
                     (current_term, nomination_ends_at)
                 };
-                return self_nominate(
+                self_nominate(
                     self,
                     sender_address,
                     sender_public,
@@ -431,50 +431,16 @@ impl TopLevelState {
                 metadata_seq,
                 params,
                 approvals,
-            } => return change_params(self, *metadata_seq, **params, &approvals),
+            } => change_params(self, *metadata_seq, **params, &approvals),
             Action::ReportDoubleVote {
                 message1,
                 ..
             } => {
                 let handler = client.double_vote_handler().expect("Unknown custom transaction applied!");
                 handler.execute(message1, self, sender_address)?;
-                return Ok(())
+                Ok(())
             }
-            _ => panic!(),
         }
-    }
-
-    fn apply_shard_transaction(
-        &mut self,
-        transaction: &ShardTransaction,
-        sender: &Address,
-        approvers: &[Address],
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-    ) -> StateResult<()> {
-        for shard_id in transaction.related_shards() {
-            self.apply_shard_transaction_to_shard(
-                transaction,
-                shard_id,
-                sender,
-                approvers,
-                parent_block_number,
-                parent_block_timestamp,
-            )?;
-        }
-        Ok(())
-    }
-
-    fn apply_shard_transaction_to_shard(
-        &mut self,
-        _transaction: &ShardTransaction,
-        _shard_id: ShardId,
-        _sender: &Address,
-        _approvers: &[Address],
-        _parent_block_number: BlockNumber,
-        _parent_block_timestamp: u64,
-    ) -> StateResult<()> {
-        Ok(())
     }
 
     fn create_module_level_state(&mut self, storage_id: StorageId) -> StateResult<()> {
