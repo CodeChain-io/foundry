@@ -4,11 +4,9 @@ import { ChangeParams } from "./ChangeParams";
 import { DelegateCCS } from "./DelegateCCS";
 import { Pay } from "./Pay";
 import { Redelegate } from "./Redelegate";
-import { Remove } from "./Remove";
 import { ReportDoubleVote } from "./ReportDoubleVote";
 import { Revoke } from "./Revoke";
 import { SelfNominate } from "./SelfNominate";
-import { Store } from "./Store";
 import { TransferCCS } from "./TransferCCS";
 
 export function fromJSONToTransaction(result: any): Transaction {
@@ -19,31 +17,6 @@ export function fromJSONToTransaction(result: any): Transaction {
             const receiver = Address.ensure(action.receiver);
             const quantity = new U64(action.quantity);
             tx = new Pay(receiver, quantity, networkId);
-            break;
-        }
-        case "store": {
-            const { content, signature } = action;
-            const certifier = Address.ensure(action.certifier);
-            tx = new Store(
-                {
-                    content,
-                    certifier: Address.ensure(certifier),
-                    signature
-                },
-                networkId
-            );
-            break;
-        }
-        case "remove": {
-            const signature = action.signature;
-            const hash = H256.ensure(action.hash);
-            tx = new Remove(
-                {
-                    hash: H256.ensure(hash),
-                    signature
-                },
-                networkId
-            );
             break;
         }
         case "delegateCCS": {

@@ -6,18 +6,14 @@ import { ChangeParamsActionJSON } from "./transaction/ChangeParams";
 import { DelegateCCSActionJSON } from "./transaction/DelegateCCS";
 import { PayActionJSON } from "./transaction/Pay";
 import { RedelegateActionJSON } from "./transaction/Redelegate";
-import { RemoveActionJSON } from "./transaction/Remove";
 import { ReportDoubleVoteActionJSON } from "./transaction/ReportDoubleVote";
 import { RevokeActionJSON } from "./transaction/Revoke";
 import { SelfNominateActionJSON } from "./transaction/SelfNominate";
-import { StoreActionJSON } from "./transaction/Store";
 import { TransferCCSActionJSON } from "./transaction/TransferCCS";
 import { NetworkId } from "./types";
 
 type ActionJSON =
     | PayActionJSON
-    | StoreActionJSON
-    | RemoveActionJSON
     | TransferCCSActionJSON
     | DelegateCCSActionJSON
     | RevokeActionJSON
