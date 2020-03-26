@@ -4,27 +4,17 @@ import * as RLP from "rlp";
 import { blake256, getPublicFromPrivate, signEd25519 } from "../utils";
 import { SignedTransaction } from "./SignedTransaction";
 import { ChangeParamsActionJSON } from "./transaction/ChangeParams";
-import { CreateShardActionJSON } from "./transaction/CreateShard";
 import { DelegateCCSActionJSON } from "./transaction/DelegateCCS";
 import { PayActionJSON } from "./transaction/Pay";
 import { RedelegateActionJSON } from "./transaction/Redelegate";
-import { RemoveActionJSON } from "./transaction/Remove";
 import { ReportDoubleVoteActionJSON } from "./transaction/ReportDoubleVote";
 import { RevokeActionJSON } from "./transaction/Revoke";
 import { SelfNominateActionJSON } from "./transaction/SelfNominate";
-import { SetShardOwnersActionJSON } from "./transaction/SetShardOwners";
-import { SetShardUsersActionJSON } from "./transaction/SetShardUsers";
-import { StoreActionJSON } from "./transaction/Store";
 import { TransferCCSActionJSON } from "./transaction/TransferCCS";
 import { NetworkId } from "./types";
 
 type ActionJSON =
     | PayActionJSON
-    | SetShardOwnersActionJSON
-    | SetShardUsersActionJSON
-    | CreateShardActionJSON
-    | StoreActionJSON
-    | RemoveActionJSON
     | TransferCCSActionJSON
     | DelegateCCSActionJSON
     | RevokeActionJSON
