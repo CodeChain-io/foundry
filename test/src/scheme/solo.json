@@ -43,11 +43,5 @@
             "balance": "18000000000000000000",
             "seq": "0"
         }
-    },
-    "shards": {
-        "0": {
-            "seq": 0,
-            "owners": ["tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u"]
-        }
     }
 }

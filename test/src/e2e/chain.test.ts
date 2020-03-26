@@ -239,35 +239,6 @@ describe("chain", function() {
         ).equal(signer);
     });
 
-    it("getNumberOfShards", async function() {
-        expect(await node.rpc.chain.getNumberOfShards()).to.equal(1);
-
-        expect(
-            await node.rpc.chain.getNumberOfShards({ blockNumber: 0 })
-        ).to.equal(1);
-    });
-
-    it("getShardRoot", async function() {
-        const result1 = (await node.rpc.chain.getShardRoot({
-            shardId: 0,
-            blockNumber: null
-        }))!;
-        expect(result1).not.to.be.null;
-        H256.ensure(result1);
-        const result2 = (await node.rpc.chain.getShardRoot({
-            shardId: 0,
-            blockNumber: 0
-        }))!;
-        expect(result2).not.to.be.null;
-        H256.ensure(result2);
-        expect(
-            await node.rpc.chain.getShardRoot({
-                shardId: 10000,
-                blockNumber: null
-            })
-        ).to.be.null;
-    });
-
     afterEach(function() {
         if (this.currentTest!.state === "failed") {
             node.keepLogs();

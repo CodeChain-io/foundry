@@ -8,13 +8,8 @@ import {
     U64
 } from "../classes";
 import { SignedTransactionJSON } from "../SignedTransaction";
-import { CreateShard } from "./CreateShard";
 import { Custom } from "./Custom";
 import { Pay } from "./Pay";
-import { Remove } from "./Remove";
-import { SetShardOwners } from "./SetShardOwners";
-import { SetShardUsers } from "./SetShardUsers";
-import { Store } from "./Store";
 
 export function fromJSONToTransaction(result: any): Transaction {
     const { seq, fee, networkId, action } = result;
@@ -24,60 +19,6 @@ export function fromJSONToTransaction(result: any): Transaction {
             const receiver = Address.ensure(action.receiver);
             const quantity = new U64(action.quantity);
             tx = new Pay(receiver, quantity, networkId);
-            break;
-        }
-        case "createShard": {
-            const users = action.users.map(Address.ensure);
-            tx = new CreateShard({ users }, networkId);
-            break;
-        }
-        case "setShardOwners": {
-            const shardId = action.shardId;
-            const owners = action.owners.map(Address.ensure);
-            tx = new SetShardOwners(
-                {
-                    shardId,
-                    owners
-                },
-                networkId
-            );
-            break;
-        }
-        case "setShardUsers": {
-            const shardId = action.shardId;
-            const users = action.users.map(Address.ensure);
-            tx = new SetShardUsers(
-                {
-                    shardId,
-                    users
-                },
-                networkId
-            );
-            break;
-        }
-        case "store": {
-            const { content, signature } = action;
-            const certifier = Address.ensure(action.certifier);
-            tx = new Store(
-                {
-                    content,
-                    certifier: Address.ensure(certifier),
-                    signature
-                },
-                networkId
-            );
-            break;
-        }
-        case "remove": {
-            const signature = action.signature;
-            const hash = H256.ensure(action.hash);
-            tx = new Remove(
-                {
-                    hash: H256.ensure(hash),
-                    signature
-                },
-                networkId
-            );
             break;
         }
         case "custom": {
