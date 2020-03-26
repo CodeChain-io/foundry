@@ -45,7 +45,7 @@ pub fn get_delegation_key(address: &Address) -> H256 {
 }
 
 pub type StakeQuantity = u64;
-pub type Deposit = u64;
+pub type DepositQuantity = u64;
 
 pub struct StakeAccount<'a> {
     pub address: &'a Address,
@@ -226,12 +226,12 @@ impl<'a> Delegation<'a> {
 pub struct Validator {
     weight: StakeQuantity,
     delegation: StakeQuantity,
-    deposit: Deposit,
+    deposit: DepositQuantity,
     pubkey: Public,
 }
 
 impl Validator {
-    pub fn new_for_test(delegation: StakeQuantity, deposit: Deposit, pubkey: Public) -> Self {
+    pub fn new_for_test(delegation: StakeQuantity, deposit: DepositQuantity, pubkey: Public) -> Self {
         Self {
             weight: delegation,
             delegation,
@@ -240,7 +240,7 @@ impl Validator {
         }
     }
 
-    fn new(delegation: StakeQuantity, deposit: Deposit, pubkey: Public) -> Self {
+    fn new(delegation: StakeQuantity, deposit: DepositQuantity, pubkey: Public) -> Self {
         Self {
             weight: delegation,
             delegation,
@@ -455,7 +455,7 @@ pub struct Candidates(Vec<Candidate>);
 #[derive(Clone, Debug, Eq, PartialEq, RlpEncodable, RlpDecodable)]
 pub struct Candidate {
     pub pubkey: Public,
-    pub deposit: Deposit,
+    pub deposit: DepositQuantity,
     pub nomination_ends_at: u64,
     pub metadata: Bytes,
 }
@@ -481,7 +481,7 @@ impl Candidates {
     // Sorted list of validators in ascending order of (delegation, deposit, priority).
     fn prepare_validators(
         state: &TopLevelState,
-        min_deposit: Deposit,
+        min_deposit: DepositQuantity,
         delegations: &HashMap<Address, StakeQuantity>,
     ) -> StateResult<Vec<Validator>> {
         let Candidates(candidates) = Self::load_from_state(state)?;
@@ -516,7 +516,7 @@ impl Candidates {
         self.0.iter().position(|c| public_to_address(&c.pubkey) == *account)
     }
 
-    pub fn add_deposit(&mut self, pubkey: &Public, quantity: Deposit, nomination_ends_at: u64, metadata: Bytes) {
+    pub fn add_deposit(&mut self, pubkey: &Public, quantity: DepositQuantity, nomination_ends_at: u64, metadata: Bytes) {
         if let Some(index) = self.0.iter().position(|c| c.pubkey == *pubkey) {
             let candidate = &mut self.0[index];
             candidate.deposit += quantity;
@@ -589,7 +589,7 @@ pub struct Jail(BTreeMap<Address, Prisoner>);
 #[derive(Clone, Debug, Eq, PartialEq, RlpEncodable, RlpDecodable)]
 pub struct Prisoner {
     pub address: Address,
-    pub deposit: Deposit,
+    pub deposit: DepositQuantity,
     pub custody_until: u64,
     pub released_at: u64,
 }
