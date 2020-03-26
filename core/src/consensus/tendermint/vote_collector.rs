@@ -43,9 +43,6 @@ pub struct DoubleVote {
     vote_two: ConsensusMessage,
 }
 
-#[allow(dead_code)]
-pub type Evidence = DoubleVote;
-
 impl DoubleVote {
     pub fn to_action(&self) -> Action {
         Action::ReportDoubleVote {

@@ -16,6 +16,7 @@
 
 use super::super::BitSet;
 use super::backup::{backup, restore, BackupView};
+use super::evidence_collector::{Evidence, EvidenceCollector};
 use super::message::*;
 use super::network;
 use super::params::TimeGapParams;
@@ -79,6 +80,8 @@ struct Worker {
     votes_received: MutTrigger<BitSet>,
     /// Vote accumulator.
     votes: VoteCollector,
+    /// evidence accumulator
+    evidences: EvidenceCollector,
     /// Used to sign messages and proposals.
     signer: EngineSigner,
     /// Last majority
@@ -123,6 +126,12 @@ pub enum Event {
     HandleMessages {
         messages: Vec<Vec<u8>>,
         result: crossbeam::Sender<Result<(), EngineError>>,
+    },
+    FetchEvidences {
+        result: crossbeam::Sender<Vec<Evidence>>,
+    },
+    RemovePublishedEvidences {
+        published: Vec<Evidence>,
     },
     IsProposal {
         block_number: BlockNumber,
@@ -185,6 +194,7 @@ impl Worker {
             view: 0,
             step: TendermintState::Propose,
             votes: Default::default(),
+            evidences: Default::default(),
             signer: Default::default(),
             last_two_thirds_majority: TwoThirdsMajority::Empty,
             proposal: Proposal::None,
@@ -310,6 +320,16 @@ impl Worker {
                                     result.send(inner.handle_message(&message, false)).unwrap();
                                 }
                             }
+                            Ok(Event::FetchEvidences {
+                                result,
+                            }) => {
+                                result.send(inner.fetch_evidences()).unwrap();
+                            }
+                            Ok(Event::RemovePublishedEvidences {
+                                published,
+                            }) => {
+                                inner.remove_published_evidences(published);
+                            },
                             Ok(Event::IsProposal {
                                 block_number,
                                 block_hash,
@@ -952,6 +972,7 @@ impl Worker {
                 if let Err(double_vote) = self.votes.collect(message) {
                     cerror!(ENGINE, "Double vote found on_commit_message: {:?}", double_vote);
                     self.report_double_vote(&double_vote);
+                    self.evidences.insert_double_vote(double_vote);
                 }
             }
         }
@@ -1406,6 +1427,7 @@ impl Worker {
             if let Err(double_vote) = self.votes.collect(message.clone()) {
                 cerror!(ENGINE, "Double vote found {:?}", double_vote);
                 self.report_double_vote(&double_vote);
+                self.evidences.insert_double_vote(double_vote);
                 return Err(EngineError::DoubleVote(sender))
             }
             ctrace!(ENGINE, "Handling a valid {:?} from {:?}.", message, sender);
@@ -1447,6 +1469,14 @@ impl Worker {
                 cerror!(ENGINE, "Failed to queue double vote transaction: {}", e);
             }
         }
+    }
+
+    fn fetch_evidences(&mut self) -> Vec<Evidence> {
+        self.evidences.fetch_evidences()
+    }
+
+    fn remove_published_evidences(&mut self, published: Vec<Evidence>) {
+        self.evidences.remove_published_evidences(published);
     }
 
     fn is_proposal(&self, block_number: BlockNumber, block_hash: BlockHash) -> bool {
@@ -1798,6 +1828,7 @@ impl Worker {
             if let Err(double_vote) = self.votes.collect(message) {
                 cerror!(ENGINE, "Double Vote found {:?}", double_vote);
                 self.report_double_vote(&double_vote);
+                self.evidences.insert_double_vote(double_vote);
                 return None
             }
         }
@@ -2123,6 +2154,7 @@ impl Worker {
                 if let Err(double_vote) = self.votes.collect(vote) {
                     cerror!(ENGINE, "Double vote found on_commit_message: {:?}", double_vote);
                     self.report_double_vote(&double_vote);
+                    self.evidences.insert_double_vote(double_vote);
                 }
             }
         }
