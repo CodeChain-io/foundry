@@ -16,11 +16,12 @@
 
 use super::super::BitSet;
 use super::backup::{backup, restore, BackupView};
+use super::evidence_collector::{Evidence, EvidenceCollector};
 use super::message::*;
 use super::network;
 use super::params::TimeGapParams;
 use super::types::{Height, Proposal, Step, TendermintSealView, TendermintState, TwoThirdsMajority, View};
-use super::vote_collector::{DoubleVote, VoteCollector};
+use super::vote_collector::VoteCollector;
 use super::vote_regression_checker::VoteRegressionChecker;
 use super::{
     ENGINE_TIMEOUT_BROADCAST_STEP_STATE, ENGINE_TIMEOUT_EMPTY_PROPOSAL, ENGINE_TIMEOUT_TOKEN_NONCE_BASE, SEAL_FIELDS,
@@ -34,21 +35,18 @@ use crate::consensus::{EngineError, Seal};
 use crate::encoded;
 use crate::error::{BlockError, Error};
 use crate::snapshot_notify::NotifySender as SnapshotNotifySender;
-use crate::transaction::UnverifiedTransaction;
 use crate::types::BlockStatus;
 use crate::views::BlockView;
 use crate::BlockId;
 use ckey::{public_to_address, verify, Address, Signature};
 use cnetwork::{EventSender, NodeId};
 use crossbeam_channel as crossbeam;
-use ctypes::transaction::Transaction;
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{BlockHash, BlockNumber, Header};
 use primitives::Bytes;
 use rlp::{Encodable, Rlp};
 use std::cell::Cell;
 use std::cmp::Ordering;
-use std::convert::TryInto;
 use std::iter::Iterator;
 use std::mem;
 use std::sync::{Arc, Weak};
@@ -80,6 +78,8 @@ struct Worker {
     votes_received: MutTrigger<BitSet>,
     /// Vote accumulator.
     votes: VoteCollector,
+    /// evidence accumulator
+    evidences: EvidenceCollector,
     /// Used to sign messages and proposals.
     signer: EngineSigner,
     /// Last majority
@@ -124,6 +124,12 @@ pub enum Event {
     HandleMessages {
         messages: Vec<Vec<u8>>,
         result: crossbeam::Sender<Result<(), EngineError>>,
+    },
+    FetchEvidences {
+        result: crossbeam::Sender<Vec<Evidence>>,
+    },
+    RemovePublishedEvidences {
+        published: Vec<Evidence>,
     },
     IsProposal {
         block_number: BlockNumber,
@@ -186,6 +192,7 @@ impl Worker {
             view: 0,
             step: TendermintState::Propose,
             votes: Default::default(),
+            evidences: Default::default(),
             signer: Default::default(),
             last_two_thirds_majority: TwoThirdsMajority::Empty,
             proposal: Proposal::None,
@@ -311,6 +318,16 @@ impl Worker {
                                     result.send(inner.handle_message(&message, false)).unwrap();
                                 }
                             }
+                            Ok(Event::FetchEvidences {
+                                result,
+                            }) => {
+                                result.send(inner.fetch_evidences()).unwrap();
+                            }
+                            Ok(Event::RemovePublishedEvidences {
+                                published,
+                            }) => {
+                                inner.remove_published_evidences(published);
+                            },
                             Ok(Event::IsProposal {
                                 block_number,
                                 block_hash,
@@ -952,7 +969,7 @@ impl Worker {
             if !self.votes.is_old_or_known(&message) {
                 if let Err(double_vote) = self.votes.collect(message) {
                     cerror!(ENGINE, "Double vote found on_commit_message: {:?}", double_vote);
-                    self.report_double_vote(&double_vote);
+                    self.evidences.insert_double_vote(double_vote);
                 }
             }
         }
@@ -1409,7 +1426,7 @@ impl Worker {
 
             if let Err(double_vote) = self.votes.collect(message.clone()) {
                 cerror!(ENGINE, "Double vote found {:?}", double_vote);
-                self.report_double_vote(&double_vote);
+                self.evidences.insert_double_vote(double_vote);
                 return Err(EngineError::DoubleVote(sender))
             }
             ctrace!(ENGINE, "Handling a valid {:?} from {}.", message, sender);
@@ -1418,39 +1435,12 @@ impl Worker {
         Ok(())
     }
 
-    fn report_double_vote(&self, double: &DoubleVote) {
-        let network_id = self.client().network_id();
-        let seq = match self.signer.address() {
-            Some(address) => self.client().latest_seq(address),
-            None => {
-                cerror!(ENGINE, "Found double vote, but signer was not assigned yet");
-                return
-            }
-        };
+    fn fetch_evidences(&mut self) -> Vec<Evidence> {
+        self.evidences.fetch_evidences()
+    }
 
-        let tx = Transaction {
-            seq,
-            fee: 0,
-            network_id,
-            action: double.to_action(),
-        };
-        let signature = match self.signer.sign(*tx.hash()) {
-            Ok(signature) => signature,
-            Err(e) => {
-                cerror!(ENGINE, "Found double vote, but could not sign the message: {}", e);
-                return
-            }
-        };
-        let signer_public = *self.signer.public().expect("Signer must be initialized");
-        let unverified = UnverifiedTransaction::new(tx, signature, signer_public);
-        let signed = unverified.try_into().expect("secret is valid so it's recoverable");
-
-        match self.client().queue_own_transaction(signed) {
-            Ok(_) => {}
-            Err(e) => {
-                cerror!(ENGINE, "Failed to queue double vote transaction: {}", e);
-            }
-        }
+    fn remove_published_evidences(&mut self, published: Vec<Evidence>) {
+        self.evidences.remove_published_evidences(published);
     }
 
     fn is_proposal(&self, block_number: BlockNumber, block_hash: BlockHash) -> bool {
@@ -1802,7 +1792,7 @@ impl Worker {
 
             if let Err(double_vote) = self.votes.collect(message) {
                 cerror!(ENGINE, "Double Vote found {:?}", double_vote);
-                self.report_double_vote(&double_vote);
+                self.evidences.insert_double_vote(double_vote);
                 return None
             }
         }
@@ -2127,7 +2117,7 @@ impl Worker {
             if !self.votes.is_old_or_known(&vote) {
                 if let Err(double_vote) = self.votes.collect(vote) {
                     cerror!(ENGINE, "Double vote found on_commit_message: {:?}", double_vote);
-                    self.report_double_vote(&double_vote);
+                    self.evidences.insert_double_vote(double_vote);
                 }
             }
         }
