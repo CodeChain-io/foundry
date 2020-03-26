@@ -28,9 +28,9 @@ use rlp::{Decodable, Rlp};
 use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 
-use super::tendermint::Deposit;
 use super::ValidatorSet;
 use crate::consensus::ConsensusMessage;
+use ctypes::Deposit;
 
 #[derive(Default)]
 pub struct Stake {
