@@ -15,13 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::config::load_config;
-use ccore::stake::StakeAction::SelfNominate;
 use ccore::stake::{Banned, Candidates, Jail, CUSTOM_ACTION_HANDLER_ID};
 use ccore::{AccountProvider, AccountProviderError, BlockId, ConsensusClient, Encodable, UnverifiedTransaction};
 use ckey::PlatformAddress;
 use ckey::{Address, Ed25519Public as Public, Signature};
 use ckeystore::DecryptedAccount;
 use clap::ArgMatches;
+use ctypes::transaction::StakeAction::SelfNominate;
 use ctypes::transaction::{Action, Transaction};
 use primitives::{Bytes, H256};
 use std::convert::TryInto;

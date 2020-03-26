@@ -16,6 +16,8 @@
 
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate rlp_derive;
 
 mod block_hash;
 mod common_params;
