@@ -14,8 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::stake::{self, NextValidators};
-use super::super::{ConsensusEngine, EngineError, Seal};
+use super::super::{stake, ConsensusEngine, EngineError, Seal};
 use super::network::TendermintExtension;
 pub use super::params::{TendermintParams, TimeoutParams};
 use super::worker;
@@ -33,7 +32,10 @@ use crate::BlockId;
 use ckey::{public_to_address, Address};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::{StakeHandler, StateDB, StateResult, StateWithCache, TopLevelState, TopState, TopStateView};
+use cstate::{
+    CurrentValidators, NextValidators, StakeHandler, StateDB, StateResult, StateWithCache, TopLevelState, TopState,
+    TopStateView,
+};
 use ctypes::{BlockHash, Header};
 use primitives::H256;
 use std::collections::HashSet;
@@ -118,8 +120,8 @@ impl ConsensusEngine for Tendermint {
 
     /// Block transformation functions, before the transactions.
     fn on_open_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
-        let mut current_validators = stake::CurrentValidators::load_from_state(block.state())?;
-        current_validators.update(stake::NextValidators::load_from_state(block.state())?.clone());
+        let mut current_validators = CurrentValidators::load_from_state(block.state())?;
+        current_validators.update(NextValidators::load_from_state(block.state())?.clone());
         current_validators.save_to_state(block.state_mut())?;
 
         Ok(())
@@ -154,7 +156,7 @@ impl ConsensusEngine for Tendermint {
             0 => Vec::new(),
             _ => {
                 let start_of_the_current_term = metadata.last_term_finished_block_num() + 1;
-                let validators = stake::NextValidators::load_from_state(block.state())?
+                let validators = NextValidators::load_from_state(block.state())?
                     .into_iter()
                     .map(|val| public_to_address(val.pubkey()))
                     .collect();
