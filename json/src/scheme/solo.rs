@@ -21,13 +21,6 @@ use std::collections::HashMap;
 #[derive(Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SoloParams {
-    #[serde(flatten)]
-    pub action_handlers: SoloActionHandlersParams,
-}
-
-#[derive(Debug, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SoloActionHandlersParams {
     pub genesis_stakes: Option<HashMap<PlatformAddress, u64>>,
 }
 
@@ -51,6 +44,6 @@ mod tests {
         }"#;
 
         let deserialized: Solo = serde_json::from_str(s).unwrap();
-        assert_eq!(deserialized.params.action_handlers.genesis_stakes, Some(Default::default()));
+        assert_eq!(deserialized.params.genesis_stakes, Some(Default::default()));
     }
 }

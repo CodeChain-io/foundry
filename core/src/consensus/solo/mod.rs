@@ -26,34 +26,33 @@ use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
-use cstate::ActionHandler;
+use cstate::{StakeHandler, StateDB, StateResult, StateWithCache, TopLevelState};
 use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
+use primitives::H256;
+use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 
 /// A consensus engine which does not provide any consensus mechanism.
 pub struct Solo {
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
     machine: CodeChainMachine,
-    action_handlers: Vec<Arc<dyn ActionHandler>>,
     snapshot_notify_sender: Arc<RwLock<Option<NotifySender>>>,
+    genesis_stakes: HashMap<Address, u64>,
+    stake: stake::Stake,
 }
 
 impl Solo {
     /// Returns new instance of Solo over the given state machine.
     pub fn new(params: SoloParams, machine: CodeChainMachine) -> Self {
-        let mut action_handlers: Vec<Arc<dyn ActionHandler>> = Vec::new();
-        action_handlers.push(Arc::new(stake::Stake::new(
-            params.genesis_stakes,
-            Default::default(),
-            Default::default(),
-        )));
+        let genesis_stakes = params.genesis_stakes;
 
         Solo {
             client: Default::default(),
             machine,
-            action_handlers,
             snapshot_notify_sender: Arc::new(RwLock::new(None)),
+            genesis_stakes,
+            stake: stake::Stake::default(),
         }
     }
 
@@ -127,12 +126,18 @@ impl ConsensusEngine for Solo {
         }
     }
 
-    fn action_handlers(&self) -> &[Arc<dyn ActionHandler>] {
-        &self.action_handlers
+    fn stake_handler(&self) -> Option<&dyn StakeHandler> {
+        Some(&self.stake)
     }
 
     fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {
         Ok(None)
+    }
+
+    fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
+        let mut top_level = TopLevelState::from_existing(db, root)?;
+        stake::init(&mut top_level, self.genesis_stakes.clone(), Default::default(), Default::default())?;
+        Ok(top_level.commit_and_into_db()?)
     }
 }
 
