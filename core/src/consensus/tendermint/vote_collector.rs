@@ -19,7 +19,7 @@ use crate::consensus::BitSet;
 use ckey::Signature;
 use ctypes::transaction::Action;
 use ctypes::BlockHash;
-use rlp::{Encodable, RlpStream};
+use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::collections::{BTreeMap, HashMap};
 use std::iter::Iterator;
 
@@ -36,12 +36,15 @@ struct StepCollector {
     messages: Vec<ConsensusMessage>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct DoubleVote {
     author_index: usize,
     vote_one: ConsensusMessage,
     vote_two: ConsensusMessage,
 }
+
+#[allow(dead_code)]
+pub type Evidence = DoubleVote;
 
 impl DoubleVote {
     pub fn to_action(&self) -> Action {
@@ -55,6 +58,12 @@ impl DoubleVote {
 impl Encodable for DoubleVote {
     fn rlp_append(&self, s: &mut RlpStream) {
         s.begin_list(2).append(&self.vote_one).append(&self.vote_two);
+    }
+}
+
+impl Decodable for DoubleVote {
+    fn decode(_rlp: &Rlp) -> Result<Self, DecoderError> {
+        todo!()
     }
 }
 
