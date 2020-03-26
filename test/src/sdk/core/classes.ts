@@ -10,7 +10,5 @@ export { Transaction } from "./Transaction";
 export { SignedTransaction } from "./SignedTransaction";
 
 export { Pay } from "./transaction/Pay";
-export { Remove } from "./transaction/Remove";
-export { Store } from "./transaction/Store";
 
 export { Address, AddressValue } from "foundry-primitives";
