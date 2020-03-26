@@ -33,7 +33,7 @@ use ckey::{public_to_address, Address};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{
-    init_stake, update_validator_weights, CurrentValidators, NextValidators, StakeHandler, StateDB, StateResult,
+    init_stake, update_validator_weights, CurrentValidators, DoubleVoteHandler, NextValidators, StateDB, StateResult,
     StateWithCache, TopLevelState, TopState, TopStateView,
 };
 use ctypes::{BlockHash, Header};
@@ -245,7 +245,7 @@ impl ConsensusEngine for Tendermint {
         parent_hash_of_new_header == prev_best_hash || grandparent_hash_of_new_header == prev_best_hash
     }
 
-    fn stake_handler(&self) -> Option<&dyn StakeHandler> {
+    fn stake_handler(&self) -> Option<&dyn DoubleVoteHandler> {
         Some(&*self.stake)
     }
 

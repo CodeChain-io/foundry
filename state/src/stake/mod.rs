@@ -23,22 +23,15 @@ pub use self::actions::{
 use super::TopStateView;
 use crate::{StateResult, TopLevelState};
 use ccrypto::blake256;
-use ckey::{Address, Ed25519Public as Public};
+use ckey::Address;
 use ctypes::errors::SyntaxError;
-use ctypes::CommonParams;
 use primitives::H256;
 use rlp::{Encodable, RlpStream};
 use std::convert::From;
 
-pub trait StakeHandler: Send + Sync {
-    fn execute(
-        &self,
-        bytes: &[u8],
-        state: &mut TopLevelState,
-        fee_payer: &Address,
-        sender_pubkey: &Public,
-    ) -> StateResult<()>;
-    fn verify(&self, bytes: &[u8], common_params: &CommonParams) -> Result<(), SyntaxError>;
+pub trait DoubleVoteHandler: Send + Sync {
+    fn execute(&self, message1: &[u8], state: &mut TopLevelState, fee_payer: &Address) -> StateResult<()>;
+    fn verify(&self, message1: &[u8], message2: &[u8]) -> Result<(), SyntaxError>;
 }
 
 pub fn query(key_fragment: &[u8], state: &TopLevelState) -> StateResult<Option<Vec<u8>>> {
@@ -47,8 +40,8 @@ pub fn query(key_fragment: &[u8], state: &TopLevelState) -> StateResult<Option<V
     Ok(some_action_data)
 }
 
-pub trait FindStakeHandler {
-    fn stake_handler(&self) -> Option<&dyn StakeHandler> {
+pub trait FindDoubleVoteHandler {
+    fn double_vote_handler(&self) -> Option<&dyn DoubleVoteHandler> {
         None
     }
 }

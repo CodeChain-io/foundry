@@ -15,16 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::client::ConsensusClient;
-use ckey::{public_to_address, Address, Ed25519Public as Public};
+use ckey::{public_to_address, Address};
 use cstate::{
-    ban, execute_stake_action, jail, release_jailed_prisoners, revert_delegations, update_candidates, StakeHandler,
-    StateResult, TopLevelState, TopState, TopStateView,
+    ban, jail, release_jailed_prisoners, revert_delegations, update_candidates, DoubleVoteHandler, StateResult,
+    TopLevelState, TopState, TopStateView,
 };
 use ctypes::errors::{RuntimeError, SyntaxError};
-use ctypes::transaction::StakeAction;
-use ctypes::CommonParams;
 use parking_lot::RwLock;
-use rlp::{Decodable, Rlp};
 use std::sync::{Arc, Weak};
 
 use super::ValidatorSet;
@@ -43,54 +40,30 @@ impl Stake {
     }
 }
 
-impl StakeHandler for Stake {
-    fn execute(
-        &self,
-        bytes: &[u8],
-        state: &mut TopLevelState,
-        sender_address: &Address,
-        sender_public: &Public,
-    ) -> StateResult<()> {
-        let action = StakeAction::decode(&Rlp::new(bytes)).expect("Verification passed");
+impl DoubleVoteHandler for Stake {
+    fn execute(&self, message1: &[u8], state: &mut TopLevelState, sender_address: &Address) -> StateResult<()> {
+        let message1: ConsensusMessage =
+            rlp::decode(message1).map_err(|err| RuntimeError::FailedToHandleCustomAction(err.to_string()))?;
+        let validators =
+            self.validators.read().as_ref().and_then(Weak::upgrade).expect("ValidatorSet must be initialized");
+        let client = self.client.read().as_ref().and_then(Weak::upgrade).expect("Client must be initialized");
 
-        if let StakeAction::ReportDoubleVote {
-            message1,
-            ..
-        } = &action
-        {
-            let message1: ConsensusMessage =
-                rlp::decode(message1).map_err(|err| RuntimeError::FailedToHandleCustomAction(err.to_string()))?;
-            let validators =
-                self.validators.read().as_ref().and_then(Weak::upgrade).expect("ValidatorSet must be initialized");
-            let client = self.client.read().as_ref().and_then(Weak::upgrade).expect("Client must be initialized");
-
-            execute_report_double_vote(message1, state, sender_address, &*client, &*validators)?;
-        }
-        execute_stake_action(action, state, sender_address, sender_public)
+        execute_report_double_vote(message1, state, sender_address, &*client, &*validators)?;
+        Ok(())
     }
 
-    fn verify(&self, bytes: &[u8], current_params: &CommonParams) -> Result<(), SyntaxError> {
-        let action =
-            StakeAction::decode(&Rlp::new(bytes)).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
-        action.verify(current_params)?;
-        if let StakeAction::ReportDoubleVote {
-            message1,
-            message2,
-        } = action
-        {
-            let client: Arc<dyn ConsensusClient> =
-                self.client.read().as_ref().and_then(Weak::upgrade).expect("Client should be initialized");
-            let validators: Arc<dyn ValidatorSet> =
-                self.validators.read().as_ref().and_then(Weak::upgrade).expect("ValidatorSet should be initialized");
+    fn verify(&self, message1: &[u8], message2: &[u8]) -> Result<(), SyntaxError> {
+        let client: Arc<dyn ConsensusClient> =
+            self.client.read().as_ref().and_then(Weak::upgrade).expect("Client should be initialized");
+        let validators: Arc<dyn ValidatorSet> =
+            self.validators.read().as_ref().and_then(Weak::upgrade).expect("ValidatorSet should be initialized");
 
-            let message1: ConsensusMessage =
-                rlp::decode(&message1).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
-            let message2: ConsensusMessage =
-                rlp::decode(&message2).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
+        let message1: ConsensusMessage =
+            rlp::decode(message1).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
+        let message2: ConsensusMessage =
+            rlp::decode(message2).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
 
-            verify_report_double_vote(message1, message2, &*client, &*validators)?;
-        }
-        Ok(())
+        verify_report_double_vote(message1, message2, &*client, &*validators)
     }
 }
 
@@ -188,9 +161,14 @@ pub fn on_term_close(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ckey::Ed25519Public as Public;
     use cstate::tests::helpers;
-    use cstate::{init_stake, self_nominate, Candidate, Candidates, Delegation, Jail, StakeAccount, TopStateView};
-    use rlp::Encodable;
+    use cstate::{
+        execute_stake_action, init_stake, self_nominate, Candidate, Candidates, Delegation, Jail, StakeAccount,
+        TopStateView,
+    };
+    use ctypes::transaction::StakeAction;
+    use ctypes::CommonParams;
     use std::collections::HashMap;
 
     fn metadata_for_election() -> TopLevelState {
@@ -273,7 +251,7 @@ mod tests {
             address,
             quantity: 40,
         };
-        Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
+        execute_stake_action(action, &mut state, &delegator, &delegator_pubkey).unwrap();
 
         let result = on_term_close(&mut state, pseudo_term_to_block_num_calculator(29), &[]);
         assert_eq!(result, Ok(()));
@@ -452,7 +430,7 @@ mod tests {
                 address,
                 quantity: 1,
             };
-            let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+            let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
             assert_ne!(Ok(()), result);
 
             on_term_close(&mut state, pseudo_term_to_block_num_calculator(current_term), &[]).unwrap();
@@ -462,7 +440,7 @@ mod tests {
             address,
             quantity: 1,
         };
-        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_err());
     }
 
@@ -494,7 +472,7 @@ mod tests {
             address,
             quantity: 40,
         };
-        Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
+        execute_stake_action(action, &mut state, &delegator, &delegator_pubkey).unwrap();
 
         jail(&mut state, &[address], custody_until, released_at).unwrap();
 
@@ -536,7 +514,7 @@ mod tests {
             address,
             quantity: 40,
         };
-        Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
+        execute_stake_action(action, &mut state, &delegator, &delegator_pubkey).unwrap();
 
         jail(&mut state, &[address], custody_until, released_at).unwrap();
 

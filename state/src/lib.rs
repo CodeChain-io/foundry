@@ -51,8 +51,8 @@ pub use crate::item::stake::{
 };
 pub use crate::stake::{
     ban, execute_stake_action, init_stake, jail, query as query_stake_state, release_jailed_prisoners,
-    revert_delegations, self_nominate, update_candidates, update_validator_weights, FindStakeHandler, StakeHandler,
-    StakeKeyBuilder,
+    revert_delegations, self_nominate, update_candidates, update_validator_weights, DoubleVoteHandler,
+    FindDoubleVoteHandler, StakeKeyBuilder,
 };
 pub use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
 
