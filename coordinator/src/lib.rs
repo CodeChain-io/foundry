@@ -12,11 +12,9 @@ pub mod validator;
 /// consensus engine.
 
 #[derive(Default)]
-pub struct Coordinator<C: context::Context> {
-    context: C,
-}
+pub struct Coordinator {}
 
-impl<C: context::Context> validator::Validator for Coordinator<C> {
+impl validator::Validator for Coordinator {
     fn initialize_chain(&mut self) -> ConsensusParams {
         unimplemented!()
     }
@@ -50,7 +48,7 @@ impl<C: context::Context> validator::Validator for Coordinator<C> {
     }
 }
 
-impl<C: context::Context> Coordinator<C> {}
+impl Coordinator {}
 
 pub struct Builder<C: context::Context> {
     context: C,
@@ -63,9 +61,7 @@ impl<C: context::Context> Builder<C> {
         }
     }
 
-    fn build(self) -> Coordinator<C> {
-        Coordinator {
-            context: self.context,
-        }
+    fn build(self) -> Coordinator {
+        Coordinator {}
     }
 }
