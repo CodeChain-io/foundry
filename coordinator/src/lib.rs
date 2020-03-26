@@ -1,4 +1,5 @@
 #![allow(dead_code, unused_variables)]
+use context::Context;
 use std::unimplemented;
 use validator::*;
 
@@ -20,7 +21,15 @@ impl<C: context::Context> validator::Validator for Coordinator<C> {
         unimplemented!()
     }
 
-    fn execute_block(&mut self, header: &Header, transactions: &[Transaction], evidences: &[Evidence]) -> BlockOutcome {
+    fn open_block(&self, context: &mut dyn Context, header: &Header, evidences: &[Evidence]) {
+        unimplemented!()
+    }
+
+    fn execute_transactions(&self, context: &mut dyn Context, transactions: &[Transaction]) {
+        unimplemented!()
+    }
+
+    fn close_block(&self, context: &mut dyn Context) -> BlockOutcome {
         unimplemented!()
     }
 
