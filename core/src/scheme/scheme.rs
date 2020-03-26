@@ -24,7 +24,7 @@ use crate::error::{Error, SchemeError};
 use ccrypto::{blake256, BLAKE_NULL_RLP};
 use cdb::{AsHashDB, HashDB};
 use ckey::Address;
-use cstate::{Metadata, MetadataAddress, Shard, ShardAddress, StateDB, StateResult, StateWithCache, TopLevelState};
+use cstate::{Metadata, MetadataAddress, Shard, ShardAddress, StateDB, StateResult};
 use ctypes::errors::SyntaxError;
 use ctypes::{BlockHash, CommonParams, Header, ShardId};
 use merkle_trie::{TrieFactory, TrieMut};
@@ -105,7 +105,6 @@ impl Scheme {
         let root = BLAKE_NULL_RLP;
         let (db, root) = self.initialize_accounts(db, root)?;
         let (db, root) = self.initialize_shards(db, root, genesis_params)?;
-        let (db, root) = self.initialize_action_handlers(db, root)?;
         let (db, root) = self.engine.initialize_genesis_state(db, root)?;
 
         *self.state_root_memo.write() = root;
@@ -168,15 +167,6 @@ impl Scheme {
         }
 
         Ok((db, root))
-    }
-
-    fn initialize_action_handlers(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
-        // basic accounts in scheme.
-        let mut top_level = TopLevelState::from_existing(db, root)?;
-        for handler in self.engine.action_handlers() {
-            handler.init(&mut top_level)?;
-        }
-        Ok(top_level.commit_and_into_db()?)
     }
 
     pub fn check_genesis_root(&self, db: &dyn HashDB) -> bool {

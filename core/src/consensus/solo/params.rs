@@ -27,7 +27,6 @@ impl From<cjson::scheme::SoloParams> for SoloParams {
     fn from(p: cjson::scheme::SoloParams) -> Self {
         SoloParams {
             genesis_stakes: p
-                .action_handlers
                 .genesis_stakes
                 .unwrap_or_default()
                 .into_iter()

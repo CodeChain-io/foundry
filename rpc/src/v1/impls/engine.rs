@@ -19,13 +19,13 @@ use super::super::traits::Engine;
 use ccore::{BlockId, EngineInfo, MinerService, StateInfo};
 use cjson::bytes::{Bytes, WithoutPrefix};
 use ckey::PlatformAddress;
-use cstate::FindActionHandler;
+use cstate::{query_stake_state, FindStakeHandler};
 use jsonrpc_core::Result;
 use std::sync::Arc;
 
 pub struct EngineClient<C, M>
 where
-    C: EngineInfo + StateInfo + FindActionHandler,
+    C: EngineInfo + StateInfo + FindStakeHandler,
     M: MinerService, {
     client: Arc<C>,
     miner: Arc<M>,
@@ -33,7 +33,7 @@ where
 
 impl<C, M> EngineClient<C, M>
 where
-    C: EngineInfo + StateInfo + FindActionHandler,
+    C: EngineInfo + StateInfo + FindStakeHandler,
     M: MinerService,
 {
     pub fn new(client: Arc<C>, miner: Arc<M>) -> Self {
@@ -46,7 +46,7 @@ where
 
 impl<C, M> Engine for EngineClient<C, M>
 where
-    C: EngineInfo + StateInfo + FindActionHandler + 'static,
+    C: EngineInfo + StateInfo + FindStakeHandler + 'static,
     M: MinerService + 'static,
 {
     fn get_coinbase(&self) -> Result<Option<PlatformAddress>> {
@@ -66,20 +66,14 @@ where
 
     fn get_custom_action_data(
         &self,
-        handler_id: u64,
+        _handler_id: u64,
         key_fragment: Bytes,
         block_number: Option<u64>,
     ) -> Result<Option<WithoutPrefix<Bytes>>> {
-        let handler = self.client.find_action_handler_for(handler_id).ok_or_else(|| {
-            errors::invalid_custom_action(format!(
-                "Current consensus engine doesn't have an action handler for a given handler_id({})",
-                handler_id
-            ))
-        })?;
         let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
         let state = self.client.state_at(block_id).ok_or_else(errors::state_not_exist)?;
 
-        match handler.query(&key_fragment, &state) {
+        match query_stake_state(&key_fragment, &state) {
             Ok(Some(action_data)) => Ok(Some(Bytes::new(action_data).into_without_prefix())),
             Ok(None) => Ok(None),
             Err(e) => Err(errors::transaction_core(e)),

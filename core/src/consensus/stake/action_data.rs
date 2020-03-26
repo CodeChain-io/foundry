@@ -14,9 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::CUSTOM_ACTION_HANDLER_ID;
 use ckey::{public_to_address, Address, Ed25519Public as Public};
-use cstate::{ActionData, ActionDataKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
+use cstate::{ActionData, StakeKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::RuntimeError;
 use ctypes::{CompactValidatorEntry, CompactValidatorSet};
 use primitives::{Bytes, H256};
@@ -29,25 +28,20 @@ use std::ops::Deref;
 use std::vec;
 
 pub fn get_account_key(address: &Address) -> H256 {
-    ActionDataKeyBuilder::new(CUSTOM_ACTION_HANDLER_ID, 2).append(&"Account").append(address).into_key()
+    StakeKeyBuilder::new(2).append(&"Account").append(address).into_key()
 }
 
 lazy_static! {
-    pub static ref STAKEHOLDER_ADDRESSES_KEY: H256 =
-        ActionDataKeyBuilder::new(CUSTOM_ACTION_HANDLER_ID, 1).append(&"StakeholderAddresses").into_key();
-    pub static ref CANDIDATES_KEY: H256 =
-        ActionDataKeyBuilder::new(CUSTOM_ACTION_HANDLER_ID, 1).append(&"Candidates").into_key();
-    pub static ref JAIL_KEY: H256 = ActionDataKeyBuilder::new(CUSTOM_ACTION_HANDLER_ID, 1).append(&"Jail").into_key();
-    pub static ref BANNED_KEY: H256 =
-        ActionDataKeyBuilder::new(CUSTOM_ACTION_HANDLER_ID, 1).append(&"Banned").into_key();
-    pub static ref NEXT_VALIDATORS_KEY: H256 =
-        ActionDataKeyBuilder::new(CUSTOM_ACTION_HANDLER_ID, 1).append(&"Validators").into_key();
-    pub static ref CURRENT_VALIDATORS_KEY: H256 =
-        ActionDataKeyBuilder::new(CUSTOM_ACTION_HANDLER_ID, 1).append(&"CurrentValidators").into_key();
+    pub static ref STAKEHOLDER_ADDRESSES_KEY: H256 = StakeKeyBuilder::new(1).append(&"StakeholderAddresses").into_key();
+    pub static ref CANDIDATES_KEY: H256 = StakeKeyBuilder::new(1).append(&"Candidates").into_key();
+    pub static ref JAIL_KEY: H256 = StakeKeyBuilder::new(1).append(&"Jail").into_key();
+    pub static ref BANNED_KEY: H256 = StakeKeyBuilder::new(1).append(&"Banned").into_key();
+    pub static ref NEXT_VALIDATORS_KEY: H256 = StakeKeyBuilder::new(1).append(&"Validators").into_key();
+    pub static ref CURRENT_VALIDATORS_KEY: H256 = StakeKeyBuilder::new(1).append(&"CurrentValidators").into_key();
 }
 
 pub fn get_delegation_key(address: &Address) -> H256 {
-    ActionDataKeyBuilder::new(CUSTOM_ACTION_HANDLER_ID, 2).append(&"Delegation").append(address).into_key()
+    StakeKeyBuilder::new(2).append(&"Delegation").append(address).into_key()
 }
 
 pub type StakeQuantity = u64;
