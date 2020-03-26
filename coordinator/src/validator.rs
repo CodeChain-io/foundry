@@ -1,3 +1,4 @@
+use super::context::Context;
 use ckey::Ed25519Public as Public;
 use ctypes::{CompactValidatorSet, TxHash};
 use primitives::H256;
@@ -161,7 +162,9 @@ pub struct BlockOutcome {
 
 pub trait Validator {
     fn initialize_chain(&mut self) -> ConsensusParams;
-    fn execute_block(&mut self, header: &Header, transactions: &[Transaction], evidences: &[Evidence]) -> BlockOutcome;
+    fn open_block(&self, context: &mut dyn Context, header: &Header, evidences: &[Evidence]);
+    fn execute_transactions(&self, context: &mut dyn Context, transactions: &[Transaction]);
+    fn close_block(&self, context: &mut dyn Context) -> BlockOutcome;
     fn check_transaction(&mut self, transaction: &Transaction) -> bool;
     fn fetch_transactions_for_block(&self, transactions: Vec<&TransactionWithMetadata>) -> Vec<&TransactionWithGas>;
     fn remove_transactions(
