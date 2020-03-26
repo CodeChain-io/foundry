@@ -15,12 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 mod action_data;
-mod actions;
 
 use crate::client::ConsensusClient;
 use ckey::{public_to_address, Address, Ed25519Public as Public};
 use cstate::{StakeHandler, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::{RuntimeError, SyntaxError};
+use ctypes::transaction::{Approval, StakeAction};
 use ctypes::util::unexpected::Mismatch;
 use ctypes::CommonParams;
 use parking_lot::RwLock;
@@ -31,7 +31,6 @@ use std::sync::{Arc, Weak};
 
 pub use self::action_data::{Banned, Candidates, CurrentValidators, Jail, NextValidators, Validator};
 use self::action_data::{Delegation, ReleaseResult, StakeAccount, Stakeholders};
-pub use self::actions::{Approval, StakeAction};
 use super::tendermint::Deposit;
 use super::ValidatorSet;
 use crate::consensus::ConsensusMessage;
@@ -60,6 +59,21 @@ impl StakeHandler for Stake {
         sender_public: &Public,
     ) -> StateResult<()> {
         let action = StakeAction::decode(&Rlp::new(bytes)).expect("Verification passed");
+
+        if let StakeAction::ReportDoubleVote {
+            message1,
+            ..
+        } = &action
+        {
+            let message1: ConsensusMessage =
+                rlp::decode(message1).map_err(|err| RuntimeError::FailedToHandleCustomAction(err.to_string()))?;
+            let validators =
+                self.validators.read().as_ref().and_then(Weak::upgrade).expect("ValidatorSet must be initialized");
+            let client = self.client.read().as_ref().and_then(Weak::upgrade).expect("Client must be initialized");
+
+            execute_report_double_vote(message1, state, sender_address, &*client, &*validators)?;
+        }
+
         match action {
             StakeAction::TransferCCS {
                 address,
@@ -97,30 +111,93 @@ impl StakeHandler for Stake {
                 approvals,
             } => change_params(state, metadata_seq, *params, &approvals),
             StakeAction::ReportDoubleVote {
-                message1,
                 ..
-            } => {
-                let message1: ConsensusMessage =
-                    rlp::decode(&message1).map_err(|err| RuntimeError::FailedToHandleCustomAction(err.to_string()))?;
-                let validator_set =
-                    self.validators.read().as_ref().and_then(Weak::upgrade).expect("ValidatorSet must be initialized");
-                let client = self.client.read().as_ref().and_then(Weak::upgrade).expect("Client must be initialized");
-                let parent_hash =
-                    client.block_header(&(message1.height() - 1).into()).expect("Parent header verified").hash();
-                let malicious_user_public = validator_set.get(&parent_hash, message1.signer_index());
-
-                ban(state, sender_address, public_to_address(&malicious_user_public))
-            }
+            } => Ok(()),
         }
     }
 
     fn verify(&self, bytes: &[u8], current_params: &CommonParams) -> Result<(), SyntaxError> {
         let action =
             StakeAction::decode(&Rlp::new(bytes)).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
-        let client: Option<Arc<dyn ConsensusClient>> = self.client.read().as_ref().and_then(Weak::upgrade);
-        let validators: Option<Arc<dyn ValidatorSet>> = self.validators.read().as_ref().and_then(Weak::upgrade);
-        action.verify(current_params, client, validators)
+        action.verify(current_params)?;
+        if let StakeAction::ReportDoubleVote {
+            message1,
+            message2,
+        } = action
+        {
+            let client: Arc<dyn ConsensusClient> =
+                self.client.read().as_ref().and_then(Weak::upgrade).expect("Client should be initialized");
+            let validators: Arc<dyn ValidatorSet> =
+                self.validators.read().as_ref().and_then(Weak::upgrade).expect("ValidatorSet should be initialized");
+
+            let message1: ConsensusMessage =
+                rlp::decode(&message1).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
+            let message2: ConsensusMessage =
+                rlp::decode(&message2).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
+
+            verify_report_double_vote(message1, message2, &*client, &*validators)?;
+        }
+        Ok(())
     }
+}
+
+fn execute_report_double_vote(
+    message1: ConsensusMessage,
+    state: &mut TopLevelState,
+    sender_address: &Address,
+    client: &dyn ConsensusClient,
+    validators: &dyn ValidatorSet,
+) -> StateResult<()> {
+    let parent_hash = client.block_header(&(message1.height() - 1).into()).expect("Parent header verified").hash();
+    let malicious_user_public = validators.get(&parent_hash, message1.signer_index());
+
+    ban(state, sender_address, public_to_address(&malicious_user_public))
+}
+
+pub fn verify_report_double_vote(
+    message1: ConsensusMessage,
+    message2: ConsensusMessage,
+    client: &dyn ConsensusClient,
+    validators: &dyn ValidatorSet,
+) -> Result<(), SyntaxError> {
+    if message1.round() != message2.round() {
+        return Err(SyntaxError::InvalidCustomAction(String::from("The messages are from two different voting rounds")))
+    }
+
+    let signer_idx1 = message1.signer_index();
+    let signer_idx2 = message2.signer_index();
+
+    if signer_idx1 != signer_idx2 {
+        return Err(SyntaxError::InvalidCustomAction(format!(
+            "Two messages have different signer indexes: {}, {}",
+            signer_idx1, signer_idx2
+        )))
+    }
+
+    assert_eq!(
+        message1.height(),
+        message2.height(),
+        "Heights of both messages must be same because message1.round() == message2.round()"
+    );
+
+    let signed_block_height = message1.height();
+    if signed_block_height == 0 {
+        return Err(SyntaxError::InvalidCustomAction(String::from(
+            "Double vote on the genesis block does not make sense",
+        )))
+    }
+    let parent_hash = client
+        .block_header(&(signed_block_height - 1).into())
+        .ok_or_else(|| {
+            SyntaxError::InvalidCustomAction(format!("Cannot get header from the height {}", signed_block_height))
+        })?
+        .hash();
+    let signer_idx1 = message1.signer_index();
+    let signer = validators.get(&parent_hash, signer_idx1);
+    if !message1.verify(&signer) || !message2.verify(&signer) {
+        return Err(SyntaxError::InvalidCustomAction(String::from("Ed25519 signature verification fails")))
+    }
+    Ok(())
 }
 
 fn transfer_ccs(state: &mut TopLevelState, sender: &Address, receiver: &Address, quantity: u64) -> StateResult<()> {
@@ -1751,5 +1828,285 @@ mod tests {
 
     fn pseudo_term_to_block_num_calculator(term_id: u64) -> u64 {
         term_id * 10 + 1
+    }
+}
+
+#[cfg(test)]
+mod tests_double_vote {
+    use super::*;
+    use crate::client::{ConsensusClient, TestBlockChainClient};
+    use crate::consensus::{DynamicValidator, Step, VoteOn, VoteStep};
+    use ckey::sign;
+    use ctypes::BlockHash;
+    use primitives::H256;
+    use rlp::Encodable;
+
+    struct ConsensusMessageInfo {
+        pub height: u64,
+        pub view: u64,
+        pub step: Step,
+        pub block_hash: Option<BlockHash>,
+        pub signer_index: usize,
+    }
+
+    fn create_consensus_message<F, G>(
+        info: ConsensusMessageInfo,
+        client: &TestBlockChainClient,
+        vote_step_twister: &F,
+        block_hash_twister: &G,
+    ) -> ConsensusMessage
+    where
+        F: Fn(VoteStep) -> VoteStep,
+        G: Fn(Option<BlockHash>) -> Option<BlockHash>, {
+        let ConsensusMessageInfo {
+            height,
+            view,
+            step,
+            block_hash,
+            signer_index,
+        } = info;
+        let vote_step = VoteStep::new(height, view, step);
+        let on = VoteOn {
+            step: vote_step,
+            block_hash,
+        };
+        let twisted = VoteOn {
+            step: vote_step_twister(vote_step),
+            block_hash: block_hash_twister(block_hash),
+        };
+        let reversed_idx = client.get_validators().len() - 1 - signer_index;
+        let pubkey = *client.get_validators().get(reversed_idx).unwrap().pubkey();
+        let validator_keys = client.validator_keys.read();
+        let privkey = validator_keys.get(&pubkey).unwrap();
+        let signature = sign(&twisted.hash(), privkey);
+
+        ConsensusMessage {
+            signature,
+            signer_index,
+            on,
+        }
+    }
+
+    fn double_vote_verification_result<F, G>(
+        message_info1: ConsensusMessageInfo,
+        message_info2: ConsensusMessageInfo,
+        vote_step_twister: &F,
+        block_hash_twister: &G,
+    ) -> Result<(), SyntaxError>
+    where
+        F: Fn(VoteStep) -> VoteStep,
+        G: Fn(Option<BlockHash>) -> Option<BlockHash>, {
+        let mut test_client = TestBlockChainClient::default();
+        test_client.add_blocks(10, 1);
+        test_client.set_random_validators(10);
+        let validator_set = DynamicValidator::default();
+
+        let consensus_message1 =
+            create_consensus_message(message_info1, &test_client, vote_step_twister, block_hash_twister);
+        let consensus_message2 =
+            create_consensus_message(message_info2, &test_client, vote_step_twister, block_hash_twister);
+        let action = StakeAction::ReportDoubleVote {
+            message1: consensus_message1.rlp_bytes(),
+            message2: consensus_message2.rlp_bytes(),
+        };
+        let arced_client: Arc<dyn ConsensusClient> = Arc::new(test_client);
+        validator_set.register_client(Arc::downgrade(&arced_client));
+        action.verify(&CommonParams::default_for_test())?;
+        verify_report_double_vote(consensus_message1, consensus_message2, &*arced_client, &validator_set)
+    }
+
+    #[test]
+    fn double_vote_verify_desirable_report() {
+        let result = double_vote_verification_result(
+            ConsensusMessageInfo {
+                height: 2,
+                view: 0,
+                step: Step::Precommit,
+                block_hash: None,
+                signer_index: 0,
+            },
+            ConsensusMessageInfo {
+                height: 2,
+                view: 0,
+                step: Step::Precommit,
+                block_hash: Some(H256::random().into()),
+                signer_index: 0,
+            },
+            &|v| v,
+            &|v| v,
+        );
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn double_vote_verify_same_message() {
+        let block_hash = Some(H256::random().into());
+        let result = double_vote_verification_result(
+            ConsensusMessageInfo {
+                height: 3,
+                view: 1,
+                step: Step::Precommit,
+                block_hash,
+                signer_index: 2,
+            },
+            ConsensusMessageInfo {
+                height: 3,
+                view: 1,
+                step: Step::Precommit,
+                block_hash,
+                signer_index: 2,
+            },
+            &|v| v,
+            &|v| v,
+        );
+        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("Messages are duplicated")));
+        assert_eq!(result, expected_err);
+    }
+
+    #[test]
+    fn double_vote_verify_different_height() {
+        let block_hash = Some(H256::random().into());
+        let result = double_vote_verification_result(
+            ConsensusMessageInfo {
+                height: 3,
+                view: 1,
+                step: Step::Precommit,
+                block_hash,
+                signer_index: 2,
+            },
+            ConsensusMessageInfo {
+                height: 2,
+                view: 1,
+                step: Step::Precommit,
+                block_hash,
+                signer_index: 2,
+            },
+            &|v| v,
+            &|v| v,
+        );
+        let expected_err =
+            Err(SyntaxError::InvalidCustomAction(String::from("The messages are from two different voting rounds")));
+        assert_eq!(result, expected_err);
+    }
+
+    #[test]
+    fn double_vote_verify_different_signer() {
+        let result = double_vote_verification_result(
+            ConsensusMessageInfo {
+                height: 2,
+                view: 0,
+                step: Step::Precommit,
+                block_hash: None,
+                signer_index: 1,
+            },
+            ConsensusMessageInfo {
+                height: 2,
+                view: 0,
+                step: Step::Precommit,
+                block_hash: Some(H256::random().into()),
+                signer_index: 0,
+            },
+            &|v| v,
+            &|v| v,
+        );
+        match result {
+            Err(SyntaxError::InvalidCustomAction(ref s))
+                if s.contains("Two messages have different signer indexes") => {}
+            _ => panic!(),
+        }
+    }
+
+    #[test]
+    fn double_vote_verify_different_message_and_signer() {
+        let hash1 = Some(H256::random().into());
+        let mut hash2 = Some(H256::random().into());
+        while hash1 == hash2 {
+            hash2 = Some(H256::random().into());
+        }
+        let result = double_vote_verification_result(
+            ConsensusMessageInfo {
+                height: 2,
+                view: 0,
+                step: Step::Precommit,
+                block_hash: hash1,
+                signer_index: 1,
+            },
+            ConsensusMessageInfo {
+                height: 2,
+                view: 0,
+                step: Step::Precommit,
+                block_hash: hash2,
+                signer_index: 0,
+            },
+            &|v| v,
+            &|v| v,
+        );
+        match result {
+            Err(SyntaxError::InvalidCustomAction(ref s))
+                if s.contains("Two messages have different signer indexes") => {}
+            _ => panic!(),
+        }
+    }
+
+    #[test]
+    fn double_vote_verify_strange_sig1() {
+        let vote_step_twister = |original: VoteStep| VoteStep {
+            height: original.height + 1,
+            view: original.height + 1,
+            step: original.step,
+        };
+        let result = double_vote_verification_result(
+            ConsensusMessageInfo {
+                height: 2,
+                view: 0,
+                step: Step::Precommit,
+                block_hash: None,
+                signer_index: 0,
+            },
+            ConsensusMessageInfo {
+                height: 2,
+                view: 0,
+                step: Step::Precommit,
+                block_hash: Some(H256::random().into()),
+                signer_index: 0,
+            },
+            &vote_step_twister,
+            &|v| v,
+        );
+        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("Ed25519 signature verification fails")));
+        assert_eq!(result, expected_err);
+    }
+
+    #[test]
+    fn double_vote_verify_strange_sig2() {
+        let block_hash_twister = |original: Option<BlockHash>| {
+            original.map(|hash| {
+                let mut twisted = H256::random();
+                while twisted == *hash {
+                    twisted = H256::random();
+                }
+                BlockHash::from(twisted)
+            })
+        };
+        let result = double_vote_verification_result(
+            ConsensusMessageInfo {
+                height: 2,
+                view: 0,
+                step: Step::Precommit,
+                block_hash: None,
+                signer_index: 0,
+            },
+            ConsensusMessageInfo {
+                height: 2,
+                view: 0,
+                step: Step::Precommit,
+                block_hash: Some(H256::random().into()),
+                signer_index: 0,
+            },
+            &|v| v,
+            &block_hash_twister,
+        );
+        let expected_err = Err(SyntaxError::InvalidCustomAction(String::from("Ed25519 signature verification fails")));
+        assert_eq!(result, expected_err);
     }
 }
