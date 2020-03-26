@@ -29,6 +29,7 @@ use self::chain_notify::TendermintChainNotify;
 pub use self::message::{ConsensusMessage, VoteOn, VoteStep};
 pub use self::params::{TendermintParams, TimeGapParams, TimeoutParams};
 pub use self::types::{Height, Step, View};
+pub use self::vote_collector::Evidence;
 pub use super::{stake, ValidatorSet};
 use crate::client::ConsensusClient;
 use crate::consensus::DynamicValidator;
