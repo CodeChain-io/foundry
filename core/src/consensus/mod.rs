@@ -173,6 +173,12 @@ pub trait ConsensusEngine: Sync + Send {
     /// Add Client which can be used for sealing, potentially querying the state and sending messages.
     fn register_client(&self, _client: Weak<dyn ConsensusClient>) {}
 
+    fn fetch_evidences(&self) -> Vec<Evidence> {
+        Vec::new()
+    }
+
+    fn remove_published_evidences(&self, _published: Vec<Evidence>) {}
+
     /// Find out if the block is a proposal block and should not be inserted into the DB.
     /// Takes a header of a fully verified block.
     fn is_proposal(&self, _verified_header: &Header) -> bool {
