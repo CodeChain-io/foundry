@@ -516,7 +516,13 @@ impl Candidates {
         self.0.iter().position(|c| public_to_address(&c.pubkey) == *account)
     }
 
-    pub fn add_deposit(&mut self, pubkey: &Public, quantity: DepositQuantity, nomination_ends_at: u64, metadata: Bytes) {
+    pub fn add_deposit(
+        &mut self,
+        pubkey: &Public,
+        quantity: DepositQuantity,
+        nomination_ends_at: u64,
+        metadata: Bytes,
+    ) {
         if let Some(index) = self.0.iter().position(|c| c.pubkey == *pubkey) {
             let candidate = &mut self.0[index];
             candidate.deposit += quantity;
@@ -778,6 +784,7 @@ where
     rlp.drain()
 }
 
+#[allow(clippy::implicit_hasher)] // XXX: Fix this clippy warning if it becomes a real problem.
 #[cfg(test)]
 mod tests {
     use super::*;

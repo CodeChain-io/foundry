@@ -14,6 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+mod actions;
+
+pub use self::actions::{
+    ban, execute_stake_action, init_stake, jail, release_jailed_prisoners, revert_delegations, self_nominate,
+    update_candidates, update_validator_weights,
+};
 use super::TopStateView;
 use crate::{StateResult, TopLevelState};
 use ccrypto::blake256;

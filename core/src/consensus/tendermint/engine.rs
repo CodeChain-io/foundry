@@ -33,8 +33,8 @@ use ckey::{public_to_address, Address};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{
-    CurrentValidators, NextValidators, StakeHandler, StateDB, StateResult, StateWithCache, TopLevelState, TopState,
-    TopStateView,
+    init_stake, update_validator_weights, CurrentValidators, NextValidators, StakeHandler, StateDB, StateResult,
+    StateWithCache, TopLevelState, TopState, TopStateView,
 };
 use ctypes::{BlockHash, Header};
 use primitives::H256;
@@ -138,7 +138,7 @@ impl ConsensusEngine for Tendermint {
         let metadata = block.state().metadata()?.expect("Metadata must exist");
 
         let author = *block.header().author();
-        stake::update_validator_weights(block.state_mut(), &author)?;
+        update_validator_weights(block.state_mut(), &author)?;
 
         let term = metadata.current_term_id();
         let term_seconds = match term {
@@ -268,7 +268,7 @@ impl ConsensusEngine for Tendermint {
 
     fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
         let mut state = TopLevelState::from_existing(db, root)?;
-        stake::init(
+        init_stake(
             &mut state,
             self.genesis_stakes.clone(),
             self.genesis_candidates.clone(),
