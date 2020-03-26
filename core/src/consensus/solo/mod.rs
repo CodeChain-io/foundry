@@ -26,7 +26,7 @@ use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
-use cstate::{init_stake, StakeHandler, StateDB, StateResult, StateWithCache, TopLevelState};
+use cstate::{init_stake, DoubleVoteHandler, StateDB, StateResult, StateWithCache, TopLevelState};
 use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
 use primitives::H256;
@@ -126,7 +126,7 @@ impl ConsensusEngine for Solo {
         }
     }
 
-    fn stake_handler(&self) -> Option<&dyn StakeHandler> {
+    fn stake_handler(&self) -> Option<&dyn DoubleVoteHandler> {
         Some(&self.stake)
     }
 

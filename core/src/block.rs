@@ -21,7 +21,7 @@ use crate::error::{BlockError, Error};
 use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Address;
-use cstate::{FindStakeHandler, NextValidators, StateDB, StateError, StateWithCache, TopLevelState};
+use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
@@ -146,7 +146,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Push a transaction into the block.
-    pub fn push_transaction<C: FindStakeHandler>(
+    pub fn push_transaction<C: FindDoubleVoteHandler>(
         &mut self,
         tx: VerifiedTransaction,
         h: Option<TxHash>,
@@ -187,7 +187,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Push transactions onto the block.
-    pub fn push_transactions<C: FindStakeHandler>(
+    pub fn push_transactions<C: FindDoubleVoteHandler>(
         &mut self,
         transactions: &[VerifiedTransaction],
         client: &C,
@@ -351,7 +351,7 @@ impl<'x> IsBlock for ClosedBlock {
 }
 
 /// Enact the block given by block header, transactions and uncles
-pub fn enact<C: EngineInfo + FindStakeHandler + TermInfo>(
+pub fn enact<C: EngineInfo + FindDoubleVoteHandler + TermInfo>(
     header: &Header,
     transactions: &[VerifiedTransaction],
     engine: &dyn CodeChainEngine,
