@@ -26,7 +26,7 @@ use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
-use cstate::{StakeHandler, StateDB, StateResult, StateWithCache, TopLevelState};
+use cstate::{init_stake, StakeHandler, StateDB, StateResult, StateWithCache, TopLevelState};
 use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
 use primitives::H256;
@@ -136,7 +136,7 @@ impl ConsensusEngine for Solo {
 
     fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
         let mut top_level = TopLevelState::from_existing(db, root)?;
-        stake::init(&mut top_level, self.genesis_stakes.clone(), Default::default(), Default::default())?;
+        init_stake(&mut top_level, self.genesis_stakes.clone(), Default::default(), Default::default())?;
         Ok(top_level.commit_and_into_db()?)
     }
 }

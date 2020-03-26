@@ -49,7 +49,11 @@ pub use crate::item::stake::{
     get_delegation_key, get_stake_account_key, Banned, Candidate, Candidates, CurrentValidators, Delegation, Jail,
     NextValidators, Prisoner, ReleaseResult, StakeAccount, Stakeholders, Validator,
 };
-pub use crate::stake::{query as query_stake_state, FindStakeHandler, StakeHandler, StakeKeyBuilder};
+pub use crate::stake::{
+    ban, execute_stake_action, init_stake, jail, query as query_stake_state, release_jailed_prisoners,
+    revert_delegations, self_nominate, update_candidates, update_validator_weights, FindStakeHandler, StakeHandler,
+    StakeKeyBuilder,
+};
 pub use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
 
 use crate::cache::CacheableItem;
