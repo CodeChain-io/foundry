@@ -17,7 +17,7 @@
 use super::super::{ConsensusEngine, EngineError, Seal};
 use super::network::TendermintExtension;
 pub use super::params::{TendermintParams, TimeoutParams};
-use super::worker;
+use super::{worker, Evidence};
 use super::{ChainNotify, Step, Tendermint, VoteOn, VoteStep, SEAL_FIELDS};
 use crate::account_provider::AccountProvider;
 use crate::block::*;
@@ -241,6 +241,24 @@ impl ConsensusEngine for Tendermint {
     fn register_client(&self, client: Weak<dyn ConsensusClient>) {
         *self.client.write() = Some(Weak::clone(&client));
         self.stake.register_resources(client, Arc::downgrade(&self.validators));
+    }
+
+    fn fetch_evidences(&self) -> Vec<Evidence> {
+        let (result, receiver) = crossbeam::bounded(1);
+        self.inner
+            .send(worker::Event::FetchEvidences {
+                result,
+            })
+            .unwrap();
+        receiver.recv().unwrap()
+    }
+
+    fn remove_published_evidences(&self, published: Vec<Evidence>) {
+        self.inner
+            .send(worker::Event::RemovePublishedEvidences {
+                published,
+            })
+            .unwrap();
     }
 
     fn is_proposal(&self, header: &Header) -> bool {

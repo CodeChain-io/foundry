@@ -35,6 +35,7 @@ use crate::account_provider::AccountProvider;
 use crate::block::{ClosedBlock, ExecutedBlock};
 use crate::client::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::client::ConsensusClient;
+use crate::consensus::tendermint::Evidence;
 use crate::error::Error;
 use crate::transaction::UnverifiedTransaction;
 use crate::views::HeaderView;
@@ -193,6 +194,12 @@ pub trait ConsensusEngine: Sync + Send {
 
     /// Add Client which can be used for sealing, potentially querying the state and sending messages.
     fn register_client(&self, _client: Weak<dyn ConsensusClient>) {}
+
+    fn fetch_evidences(&self) -> Vec<Evidence> {
+        Vec::new()
+    }
+
+    fn remove_published_evidences(&self, _published: Vec<Evidence>) {}
 
     /// Find out if the block is a proposal block and should not be inserted into the DB.
     /// Takes a header of a fully verified block.
