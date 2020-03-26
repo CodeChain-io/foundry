@@ -3,23 +3,11 @@ import { H256, H512, H512Value, U64, U64Value } from "foundry-primitives";
 import * as RLP from "rlp";
 import { blake256, getPublicFromPrivate, signEd25519 } from "../utils";
 import { SignedTransaction } from "./SignedTransaction";
-import { CreateShardActionJSON } from "./transaction/CreateShard";
 import { CustomActionJSON } from "./transaction/Custom";
 import { PayActionJSON } from "./transaction/Pay";
-import { RemoveActionJSON } from "./transaction/Remove";
-import { SetShardOwnersActionJSON } from "./transaction/SetShardOwners";
-import { SetShardUsersActionJSON } from "./transaction/SetShardUsers";
-import { StoreActionJSON } from "./transaction/Store";
 import { NetworkId } from "./types";
 
-type ActionJSON =
-    | PayActionJSON
-    | SetShardOwnersActionJSON
-    | SetShardUsersActionJSON
-    | CreateShardActionJSON
-    | StoreActionJSON
-    | RemoveActionJSON
-    | CustomActionJSON;
+type ActionJSON = PayActionJSON | CustomActionJSON;
 
 export interface TransactionJSON {
     action: ActionJSON & { type: string };

@@ -98,12 +98,5 @@
         "tccq9a6jxr90f0zf99sedck0jnklus4sf4yey0wrn0l": { "balance": 103 },
         "tccq9tfhmdvnwg0r6mvp6q399mffr8w46dmys2ft4tr": { "balance": 102 },
         "tccq8ce67j2vr69jmenfeqj8pratyss2478hswel8gr": { "balance": 101 }
-    },
-    "shards": {
-        "0": {
-            "seq": 0,
-            "owners": ["tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f"],
-            "users": []
-        }
     }
 }

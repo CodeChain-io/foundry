@@ -65,9 +65,6 @@ describe("Term change", function() {
             0x20, // maxExtraDataSize
             "tc", // networkID
             10, // minPayCost
-            10, // minCreateShardCost
-            10, // minSetShardOwnersCost
-            10, // minSetShardUsersCost
             10, // minCustomCost
             4194304, // maxBodySize
             16384, // snapshotPeriod
