@@ -36,7 +36,6 @@ use crate::client::{
     AccountData, BlockChainClient, BlockChainTrait, BlockProducer, BlockStatus, ConsensusClient, EngineInfo,
     ImportBlock, ImportResult, MiningBlockChainClient, StateInfo, StateOrBlock, TermInfo,
 };
-use crate::consensus::stake::{NextValidators, Validator};
 use crate::consensus::EngineError;
 use crate::db::{COL_STATE, NUM_COLUMNS};
 use crate::encoded;
@@ -51,7 +50,7 @@ use ckey::{
     Generator, KeyPairTrait, NetworkId, PlatformAddress, Random,
 };
 use cstate::tests::helpers::empty_top_state_with_metadata;
-use cstate::{FindStakeHandler, StateDB, TopLevelState};
+use cstate::{FindStakeHandler, NextValidators, StateDB, TopLevelState, Validator};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::header::Header;
 use ctypes::transaction::{Action, Transaction};

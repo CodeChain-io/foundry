@@ -19,7 +19,6 @@ use super::backup::{backup, restore, BackupView};
 use super::message::*;
 use super::network;
 use super::params::TimeGapParams;
-use super::stake::CUSTOM_ACTION_HANDLER_ID;
 use super::types::{Height, Proposal, Step, TendermintSealView, TendermintState, TwoThirdsMajority, View};
 use super::vote_collector::{DoubleVote, VoteCollector};
 use super::vote_regression_checker::VoteRegressionChecker;
@@ -1434,7 +1433,7 @@ impl Worker {
             fee: 0,
             network_id,
             action: Action::Custom {
-                handler_id: CUSTOM_ACTION_HANDLER_ID,
+                handler_id: 0,
                 bytes: double.to_action().rlp_bytes(),
             },
         };

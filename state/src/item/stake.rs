@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::{ActionData, StakeKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
 use ckey::{public_to_address, Address, Ed25519Public as Public};
-use cstate::{ActionData, StakeKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::RuntimeError;
 use ctypes::{CompactValidatorEntry, CompactValidatorSet};
 use primitives::{Bytes, H256};
@@ -27,7 +27,7 @@ use std::collections::{btree_map, HashMap, HashSet};
 use std::ops::Deref;
 use std::vec;
 
-pub fn get_account_key(address: &Address) -> H256 {
+pub fn get_stake_account_key(address: &Address) -> H256 {
     StakeKeyBuilder::new(2).append(&"Account").append(address).into_key()
 }
 
@@ -54,7 +54,7 @@ pub struct StakeAccount<'a> {
 
 impl<'a> StakeAccount<'a> {
     pub fn load_from_state(state: &TopLevelState, address: &'a Address) -> StateResult<StakeAccount<'a>> {
-        let account_key = get_account_key(address);
+        let account_key = get_stake_account_key(address);
         let action_data = state.action_data(&account_key)?;
 
         let balance = match action_data {
@@ -69,7 +69,7 @@ impl<'a> StakeAccount<'a> {
     }
 
     pub fn save_to_state(&self, state: &mut TopLevelState) -> StateResult<()> {
-        let account_key = get_account_key(self.address);
+        let account_key = get_stake_account_key(self.address);
         if self.balance != 0 {
             let rlp = rlp::encode(&self.balance);
             state.update_action_data(&account_key, rlp)?;
@@ -128,7 +128,6 @@ impl Stakeholders {
         Ok(result)
     }
 
-    #[cfg(test)]
     pub fn contains(&self, address: &Address) -> bool {
         self.0.contains(address)
     }
@@ -504,10 +503,10 @@ impl Candidates {
         self.0.iter().find(|c| public_to_address(&c.pubkey) == *account)
     }
 
-    #[cfg(test)]
     pub fn len(&self) -> usize {
         self.0.len()
     }
+
     pub fn is_empty(&self) -> bool {
         self.0.len() == 0
     }
@@ -782,7 +781,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cstate::tests::helpers;
+    use crate::tests::helpers;
     use rand::{Rng, SeedableRng};
     use rand_xorshift::XorShiftRng;
 
@@ -871,7 +870,7 @@ mod tests {
         assert!(result.is_ok());
         account.save_to_state(&mut state).unwrap();
 
-        let data = state.action_data(&get_account_key(&address)).unwrap();
+        let data = state.action_data(&get_stake_account_key(&address)).unwrap();
         assert_eq!(data, None);
     }
 

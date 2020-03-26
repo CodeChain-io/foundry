@@ -18,11 +18,10 @@ use super::invoice::Invoice;
 use crate::client::{EngineInfo, TermInfo};
 use crate::consensus::CodeChainEngine;
 use crate::error::{BlockError, Error};
-use crate::stake;
 use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Address;
-use cstate::{FindStakeHandler, StateDB, StateError, StateWithCache, TopLevelState};
+use cstate::{FindStakeHandler, NextValidators, StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
@@ -226,7 +225,7 @@ impl<'x> OpenBlock<'x> {
         It doesn't cause a direct error since we use unwrap_or_default() here, but should be aware of such problem.
         Remove this comment after we completely omit static-validator-set-mode.
         */
-        let vset_raw = stake::NextValidators::load_from_state(self.block.state())?;
+        let vset_raw = NextValidators::load_from_state(self.block.state())?;
         let vset = vset_raw.create_compact_validator_set();
         self.block.header.set_next_validator_set_hash(vset.hash());
 

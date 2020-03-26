@@ -15,12 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::config::load_config;
-use ccore::stake::{Banned, Candidates, Jail, CUSTOM_ACTION_HANDLER_ID};
 use ccore::{AccountProvider, AccountProviderError, BlockId, ConsensusClient, Encodable, UnverifiedTransaction};
 use ckey::PlatformAddress;
 use ckey::{Address, Ed25519Public as Public, Signature};
 use ckeystore::DecryptedAccount;
 use clap::ArgMatches;
+use cstate::{Banned, Candidates, Jail};
 use ctypes::transaction::StakeAction::SelfNominate;
 use ctypes::transaction::{Action, Transaction};
 use primitives::{Bytes, H256};
@@ -179,7 +179,7 @@ impl AutoSelfNomination {
             fee: 0,
             network_id,
             action: Action::Custom {
-                handler_id: CUSTOM_ACTION_HANDLER_ID,
+                handler_id: 0,
                 bytes: selfnominate.rlp_bytes(),
             },
         };

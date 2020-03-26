@@ -22,6 +22,7 @@ pub mod action_data;
 pub mod dummy_shard_text;
 pub mod metadata;
 pub mod shard;
+pub mod stake;
 
 #[derive(Clone, Copy)]
 #[repr(u8)]

@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod action_data;
-
 use crate::client::ConsensusClient;
 use ckey::{public_to_address, Address, Ed25519Public as Public};
+use cstate::{Banned, Candidates, Delegation, Jail, NextValidators, ReleaseResult, StakeAccount, Stakeholders};
 use cstate::{StakeHandler, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::{RuntimeError, SyntaxError};
 use ctypes::transaction::{Approval, StakeAction};
@@ -29,13 +28,9 @@ use rlp::{Decodable, Rlp};
 use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 
-pub use self::action_data::{Banned, Candidates, CurrentValidators, Jail, NextValidators, Validator};
-use self::action_data::{Delegation, ReleaseResult, StakeAccount, Stakeholders};
 use super::tendermint::Deposit;
 use super::ValidatorSet;
 use crate::consensus::ConsensusMessage;
-
-pub const CUSTOM_ACTION_HANDLER_ID: u64 = 2;
 
 #[derive(Default)]
 pub struct Stake {
@@ -614,12 +609,9 @@ pub(super) fn init(
 
 #[cfg(test)]
 mod tests {
-    use super::action_data::get_account_key;
     use super::*;
-
-    use crate::consensus::stake::action_data::{get_delegation_key, Candidate, Prisoner};
     use cstate::tests::helpers;
-    use cstate::TopStateView;
+    use cstate::{get_delegation_key, get_stake_account_key, Candidate, Prisoner, TopStateView};
     use rlp::Encodable;
 
     fn metadata_for_election() -> TopLevelState {
@@ -702,7 +694,7 @@ mod tests {
 
         let account1 = StakeAccount::load_from_state(&state, &address1).unwrap();
         assert_eq!(account1.balance, 0);
-        assert_eq!(state.action_data(&get_account_key(&address1)).unwrap(), None, "Should clear state");
+        assert_eq!(state.action_data(&get_stake_account_key(&address1)).unwrap(), None, "Should clear state");
 
         let account2 = StakeAccount::load_from_state(&state, &address2).unwrap();
         assert_eq!(account2.balance, 100);
@@ -782,7 +774,7 @@ mod tests {
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         assert_eq!(delegator_account.balance, 0);
-        assert_eq!(state.action_data(&get_account_key(&delegator)).unwrap(), None, "Should clear state");
+        assert_eq!(state.action_data(&get_stake_account_key(&delegator)).unwrap(), None, "Should clear state");
 
         let delegatee_account = StakeAccount::load_from_state(&state, &delegatee).unwrap();
         assert_eq!(delegatee_account.balance, 100, "Shouldn't be touched");
