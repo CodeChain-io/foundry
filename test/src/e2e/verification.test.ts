@@ -144,8 +144,21 @@ describe("solo - 1 node", function() {
         [
             { actionType: 2, actionLength: 2 }, // Pay
             { actionType: 2, actionLength: 4 },
-            { actionType: 0x19, actionLength: 3 }, // ShardStore
-            { actionType: 0x19, actionLength: 5 }
+            { actionType: 0x21, actionLength: 2 }, // TransferCCS
+            { actionType: 0x21, actionLength: 4 },
+            { actionType: 0x22, actionLength: 2 }, // DelegateCCS
+            { actionType: 0x22, actionLength: 4 },
+            { actionType: 0x23, actionLength: 2 }, // Revoke
+            { actionType: 0x23, actionLength: 4 },
+            { actionType: 0x24, actionLength: 3 }, // SelfNominate
+            { actionType: 0x24, actionLength: 5 },
+            { actionType: 0x25, actionLength: 2 }, // ReportDoubleVote
+            { actionType: 0x25, actionLength: 4 },
+            { actionType: 0x26, actionLength: 4 }, // Redelegate
+            { actionType: 0x26, actionLength: 5 },
+            { actionType: 0xff, actionLength: 1 }, // ChangeParams
+            { actionType: 0xff, actionLength: 2 },
+            { actionType: 0xff, actionLength: 3 }
         ].forEach(function(params: {
             actionType: number;
             actionLength: number;
@@ -158,11 +171,7 @@ describe("solo - 1 node", function() {
                         RLP.encode(encoded)
                     );
                     expect.fail();
-                } catch (e) {
-                    expect(e).is.similarTo(
-                        ERROR.INVALID_RLP_INCORRECT_LIST_LEN
-                    );
-                }
+                } catch (_) {}
             });
         });
 
