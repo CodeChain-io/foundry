@@ -144,8 +144,6 @@ describe("solo - 1 node", function() {
         [
             { actionType: 2, actionLength: 2 }, // Pay
             { actionType: 2, actionLength: 4 },
-            { actionType: 0x19, actionLength: 3 }, // ShardStore
-            { actionType: 0x19, actionLength: 5 },
             { actionType: 0x21, actionLength: 2 }, // TransferCCS
             { actionType: 0x21, actionLength: 4 },
             { actionType: 0x22, actionLength: 2 }, // DelegateCCS

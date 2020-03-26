@@ -16,11 +16,9 @@ import { ChangeParams } from "./transaction/ChangeParams";
 import { DelegateCCS } from "./transaction/DelegateCCS";
 import { Pay } from "./transaction/Pay";
 import { Redelegate } from "./transaction/Redelegate";
-import { Remove } from "./transaction/Remove";
 import { ReportDoubleVote } from "./transaction/ReportDoubleVote";
 import { Revoke } from "./transaction/Revoke";
 import { SelfNominate } from "./transaction/SelfNominate";
-import { Store } from "./transaction/Store";
 import { TransferCCS } from "./transaction/TransferCCS";
 import { NetworkId } from "./types";
 
@@ -39,8 +37,6 @@ export class Core {
         SignedTransaction,
         // Transaction
         Pay,
-        Store,
-        Remove,
         DelegateCCS,
         TransferCCS,
         Revoke,
@@ -82,86 +78,6 @@ export class Core {
             U64.ensure(quantity),
             this.networkId
         );
-    }
-
-    /**
-     * Creates Store type which store content with certifier on chain.
-     * @param params.content Content to store
-     * @param params.secret Secret key to sign
-     * @param params.certifier Certifier of the text, which is address
-     * @param params.signature Signature on the content by the certifier
-     * @throws Given string for secret is invalid for converting it to H256
-     */
-    public createStoreTransaction(
-        params:
-            | {
-                  content: string;
-                  certifier: AddressValue;
-                  signature: string;
-              }
-            | {
-                  content: string;
-                  secret: H256Value;
-              }
-    ): Store {
-        let storeParams;
-        if ("secret" in params) {
-            const { content, secret } = params;
-            checkSecret(secret);
-            storeParams = {
-                content,
-                secret: H256.ensure(secret)
-            };
-        } else {
-            const { content, certifier, signature } = params;
-            checkCertifier(certifier);
-            checkSignature(signature);
-            storeParams = {
-                content,
-                certifier: Address.ensure(certifier),
-                signature
-            };
-        }
-        return new Store(storeParams, this.networkId);
-    }
-
-    /**
-     * Creates Remove type which remove the text from the chain.
-     * @param params.hash Transaction hash which stored the text
-     * @param params.secret Secret key to sign
-     * @param params.signature Signature on tx hash by the certifier of the text
-     * @throws Given string for hash or secret is invalid for converting it to H256
-     */
-    public createRemoveTransaction(
-        params:
-            | {
-                  hash: H256Value;
-                  secret: H256Value;
-              }
-            | {
-                  hash: H256Value;
-                  signature: string;
-              }
-    ): Remove {
-        let removeParam = null;
-        if ("secret" in params) {
-            const { hash, secret } = params;
-            checkTransactionHash(hash);
-            checkSecret(secret);
-            removeParam = {
-                hash: H256.ensure(hash),
-                secret: H256.ensure(secret)
-            };
-        } else {
-            const { hash, signature } = params;
-            checkTransactionHash(hash);
-            checkSignature(signature);
-            removeParam = {
-                hash: H256.ensure(hash),
-                signature
-            };
-        }
-        return new Remove(removeParam, this.networkId);
     }
 
     public createDelegateCCSTransaction(params: {
@@ -275,53 +191,6 @@ function checkAmount(amount: U64Value) {
             `Expected amount param to be a U64 value but found ${amount}`
         );
     }
-}
-
-function checkShardId(shardId: number) {
-    if (
-        typeof shardId !== "number" ||
-        !Number.isInteger(shardId) ||
-        shardId < 0 ||
-        shardId > 0xffff
-    ) {
-        throw Error(
-            `Expected shardId param to be a number but found ${shardId}`
-        );
-    }
-}
-
-function checkCertifier(certifier: AddressValue) {
-    if (!Address.check(certifier)) {
-        throw Error(
-            `Expected certifier param to be a address but found ${certifier}`
-        );
-    }
-}
-
-function checkOwners(owners: Array<AddressValue>) {
-    if (!Array.isArray(owners)) {
-        throw Error(`Expected owners param to be an array but found ${owners}`);
-    }
-    owners.forEach((owner, index) => {
-        if (!Address.check(owner)) {
-            throw Error(
-                `Expected an owner address to be a address value but found ${owner} at index ${index}`
-            );
-        }
-    });
-}
-
-function checkUsers(users: Array<AddressValue>) {
-    if (!Array.isArray(users)) {
-        throw Error(`Expected users param to be an array but found ${users}`);
-    }
-    users.forEach((user, index) => {
-        if (!Address.check(user)) {
-            throw Error(
-                `Expected a user address to be a address value but found ${user} at index ${index}`
-            );
-        }
-    });
 }
 
 function checkTransactionHash(value: H256Value) {
