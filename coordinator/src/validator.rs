@@ -1,7 +1,6 @@
 use super::context::Context;
 use ckey::Ed25519Public as Public;
 use ctypes::{CompactValidatorSet, TxHash};
-use primitives::H256;
 
 /// A `Validator` receives requests from the underlying consensus engine
 /// and performs validation of blocks and Txes.
@@ -154,7 +153,6 @@ pub struct TransactionExecutionOutcome {
 
 pub struct BlockOutcome {
     pub is_success: bool,
-    pub state_root: H256,
     pub updated_consensus_params: ConsensusParams,
     pub transaction_results: Vec<TransactionExecutionOutcome>,
     pub events: Vec<Event>,
