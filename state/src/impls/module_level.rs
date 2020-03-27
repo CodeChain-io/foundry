@@ -165,7 +165,6 @@ impl<'db> ModuleStateView for ReadOnlyModuleLevelState<'db> {
 mod tests {
     use super::*;
     use crate::tests::helpers::get_temp_state_db;
-    use crate::ModuleDatum;
 
     const STORAGE_ID: StorageId = 4;
     const CHECKPOINT_ID: usize = 777;
@@ -178,23 +177,6 @@ mod tests {
         ModuleLevelState::try_new(storage_id, state_db, cache).unwrap()
     }
 
-    fn set_str_datum(state: &ModuleLevelState, key: &dyn AsRef<[u8]>, datum: &str) {
-        let datum = String::from(datum).into_bytes();
-        state.set_datum(key, datum).unwrap();
-    }
-
-    fn module_datum_from_str(datum: &str) -> ModuleDatum {
-        let datum = String::from(datum).into_bytes();
-        ModuleDatum::new(datum)
-    }
-
-    fn assert_key_str_datum(state: &ModuleLevelState, key: &dyn AsRef<[u8]>, datum: Option<&str>) {
-        match datum {
-            Some(datum) => assert_eq!(state.get_datum(key).unwrap(), Some(module_datum_from_str(datum))),
-            None => assert_eq!(state.get_datum(key).unwrap(), None),
-        }
-    }
-
     #[test]
     fn set_module_datum() {
         let mut state_db = RefCell::new(get_temp_state_db());
@@ -204,8 +186,10 @@ mod tests {
         let key = "datum key";
         let datum = "module_datum";
 
-        set_str_datum(&state, &key, datum);
-        assert_eq!(state.get_datum(&key).unwrap().unwrap(), module_datum_from_str(datum));
+        module_level!(state, {
+            set: [(key: key => datum_str: datum)],
+            check: [(key: key => datum_str: datum)],
+        });
     }
 
     #[test]
@@ -217,26 +201,35 @@ mod tests {
         // state 1
         let key1 = "datum key 1";
         let datum = "module datum";
-        set_str_datum(&state, &key1, datum);
-        assert_eq!(state.get_datum(&key1).unwrap().unwrap(), module_datum_from_str(datum));
+        module_level!(state, {
+            set: [(key: key1 => datum_str: datum)],
+            check: [(key: key1 => datum_str: datum)]
+        });
         state.create_checkpoint(CHECKPOINT_ID);
 
         // state 2
         let modified_datum = "A modified module datum";
-        set_str_datum(&state, &key1, modified_datum);
         let key2 = "datum key 2";
         let new_datum = "A new module datum";
-        set_str_datum(&state, &key2, new_datum);
-
-        // state 2
-        assert_key_str_datum(&state, &key1, Some(modified_datum));
-        assert_key_str_datum(&state, &key2, Some(new_datum));
+        module_level!(state, {
+            set: [
+                (key: key1 => datum_str: modified_datum),
+                (key: key2 => datum_str: new_datum)
+            ],
+            check: [
+                (key: key1 => datum_str: modified_datum),
+                (key: key2 => datum_str: new_datum)
+            ],
+        });
 
         // state 1
         state.revert_to_checkpoint(CHECKPOINT_ID);
-        assert_key_str_datum(&state, &key1, Some(datum));
-        assert_key_str_datum(&state, &key2, None);
-        assert!(!state.has_key(&key2).unwrap());
+        module_level!(state, {
+            check: [
+                (key: key1 => datum_str: datum),
+                (key: key2 => None)
+            ]
+        });
     }
 
     #[test]
@@ -248,38 +241,56 @@ mod tests {
         // state 1
         let key = "datum key";
         let datum = "module datum";
-        set_str_datum(&state, &key, datum);
-        assert_key_str_datum(&state, &key, Some(datum));
+        module_level!(state, {
+            set: [(key: key => datum_str: datum)],
+            check: [(key: key => datum_str: datum)]
+        });
         state.create_checkpoint(CHECKPOINT_ID);
 
         // state 2
         let another_key = "another datum key";
         let modified_datum_1 = "A modified module datum 1";
         let another_datum = "another module datum";
-        set_str_datum(&state, &key, modified_datum_1);
-        set_str_datum(&state, &another_key, another_datum);
-        assert_key_str_datum(&state, &key, Some(modified_datum_1));
+        module_level!(state, {
+            set: [
+                (key: key => datum_str: modified_datum_1),
+                (key: another_key => datum_str: another_datum)
+            ],
+            check: [
+                (key: key => datum_str: modified_datum_1),
+                (key: another_key => datum_str: another_datum)
+            ],
+        });
         state.create_checkpoint(CHECKPOINT_ID);
 
         // state 3
         let modified_datum_2 = "A modified module datum 2";
-        set_str_datum(&state, &key, modified_datum_2);
-        assert_key_str_datum(&state, &key, Some(modified_datum_2));
+        module_level!(state, {
+            set: [(key: key => datum_str: modified_datum_2)],
+            check: [(key: key => datum_str: modified_datum_2)],
+        });
         state.create_checkpoint(CHECKPOINT_ID);
-        assert!(state.has_key(&another_key).unwrap());
 
         // state 3 checkpoint merged into state 2
         state.discard_checkpoint(CHECKPOINT_ID);
 
         // Revert to the state 2
         state.revert_to_checkpoint(CHECKPOINT_ID);
-        assert_key_str_datum(&state, &key, Some(modified_datum_1));
-        assert!(state.has_key(&another_key).unwrap());
+        module_level!(state, {
+            check: [
+                (key: key => datum_str: modified_datum_1),
+                (key: another_key => datum_str: another_datum)
+            ]
+        });
 
         // Revert to the state 1
         state.revert_to_checkpoint(CHECKPOINT_ID);
-        assert_key_str_datum(&state, &key, Some(datum));
-        assert!(!state.has_key(&another_key).unwrap());
+        module_level!(state, {
+            check: [
+                (key: key => datum_str: datum),
+                (key: another_key => None)
+            ]
+        });
     }
 
     #[test]
@@ -291,29 +302,45 @@ mod tests {
         // state 1
         let key1 = "datum key1";
         let datum1 = "module datum1";
-        set_str_datum(&state, &key1, datum1);
         let key2 = "datum key2";
         let datum2 = "module datum2";
-        set_str_datum(&state, &key2, datum2);
+        module_level!(state, {
+            set: [
+                (key: key1 => datum_str: datum1),
+                (key: key2 => datum_str: datum2)
+            ]
+        });
         state.create_checkpoint(CHECKPOINT_ID);
 
         // state 2: key2 removed
         state.remove_key(&key2);
         state.create_checkpoint(CHECKPOINT_ID);
-        assert!(!state.has_key(&key2).unwrap());
+        module_level!(state, {
+            check: [(key: key2 => None)]
+        });
 
         // state 3: key1 removed
         state.remove_key(&key1);
-        assert!(!state.has_key(&key1).unwrap());
+        module_level!(state, {
+            check: [(key: key1 => None)]
+        });
 
         // state 4: key1 revived
         state.revert_to_checkpoint(CHECKPOINT_ID);
-        assert!(state.has_key(&key1).unwrap());
-        assert!(!state.has_key(&key2).unwrap());
+        module_level!(state, {
+            check: [
+                (key: key1 => Some),
+                (key: key2 => None)
+            ]
+        });
 
         // state 5: key2 revived
         state.revert_to_checkpoint(CHECKPOINT_ID);
-        assert!(state.has_key(&key1).unwrap());
-        assert!(state.has_key(&key2).unwrap());
+        module_level!(state, {
+            check: [
+                (key: key1 => Some),
+                (key: key2 => Some)
+            ]
+        });
     }
 }
