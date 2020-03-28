@@ -27,7 +27,6 @@ import RPC from "foundry-rpc";
 import "mocha";
 import * as RLP from "rlp";
 import { SDK } from "../sdk";
-import { Custom } from "../sdk/core/transaction/Custom";
 import * as stake from "../stakeholder";
 
 import { validators as originalValidators } from "../../tendermint.dynval/constants";
@@ -36,6 +35,7 @@ import { PromiseExpect } from "../helper/promise";
 import { Signer } from "../helper/spawn";
 import CodeChain from "../helper/spawn";
 import { findNode, setTermTestTimeout, withNodes } from "./setup";
+import { ReportDoubleVote } from "../sdk/core/transaction/ReportDoubleVote";
 
 const HANDLER_ID = 2;
 const REPORT_DOUBLE_VOTE_ACTION_ID = 5;
@@ -96,17 +96,6 @@ function createDoubleVoteMessages(
         encodableMessage({ ...data, blockHash: blockHash1 }),
         encodableMessage({ ...data, blockHash: blockHash2 })
     ];
-}
-
-function createReportDoubleVoteTransaction(
-    sdk: SDK,
-    message1: RLP.Input,
-    message2: RLP.Input
-): Custom {
-    return sdk.core.createCustomTransaction({
-        handlerId: HANDLER_ID,
-        bytes: RLP.encode([REPORT_DOUBLE_VOTE_ACTION_ID, message1, message2])
-    });
 }
 
 const allDynValidators = originalValidators.slice(0, 4);
@@ -212,10 +201,11 @@ describe("Report Double Vote", function() {
                 )
             );
 
-            const reportTx = createReportDoubleVoteTransaction(
-                checkingNode.testFramework,
-                message1,
-                message2
+            const reportTx = checkingNode.testFramework.core.createReportDoubleVoteTransaction(
+                {
+                    message1,
+                    message2
+                }
             );
             const reportTxHash = await checkingNode.rpc.mempool.sendSignedTransaction(
                 {
@@ -324,10 +314,11 @@ describe("Report Double Vote", function() {
                 )
             );
 
-            const reportTx = createReportDoubleVoteTransaction(
-                checkingNode.testFramework,
-                message1,
-                message2
+            const reportTx = checkingNode.testFramework.core.createReportDoubleVoteTransaction(
+                {
+                    message1,
+                    message2
+                }
             );
             const reportTxHash = await checkingNode.rpc.mempool.sendSignedTransaction(
                 {
@@ -424,12 +415,11 @@ describe("Report Double Vote", function() {
                 currentTermInitialBlockNumber
             );
 
-            const revoketx = stake
-                .createRevokeTransaction(
-                    checkingNode.testFramework,
-                    alice.address,
-                    4_500
-                )
+            const revoketx = checkingNode.testFramework.core
+                .createRevokeTransaction({
+                    delegatee: alice.address,
+                    quantity: 4_500
+                })
                 .sign({
                     secret: faucetSecret,
                     seq: (await checkingNode.rpc.chain.getSeq({
@@ -467,10 +457,11 @@ describe("Report Double Vote", function() {
                 )
             );
 
-            const reportTx = createReportDoubleVoteTransaction(
-                checkingNode.testFramework,
-                message1,
-                message2
+            const reportTx = checkingNode.testFramework.core.createReportDoubleVoteTransaction(
+                {
+                    message1,
+                    message2
+                }
             );
             const reportTxHash = await checkingNode.rpc.mempool.sendSignedTransaction(
                 {

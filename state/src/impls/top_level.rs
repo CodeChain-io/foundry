@@ -37,16 +37,17 @@
 
 use crate::cache::{ShardCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
+use crate::stake::{change_params, delegate_ccs, redelegate, revoke, transfer_ccs};
 use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
 use crate::{
-    execute_stake_action, Account, ActionData, FindDoubleVoteHandler, Metadata, MetadataAddress, Shard, ShardAddress,
+    self_nominate, Account, ActionData, FindDoubleVoteHandler, Metadata, MetadataAddress, Shard, ShardAddress,
     ShardLevelState, StateDB, StateResult,
 };
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
 use ckey::{public_to_address, Address, Ed25519Public as Public, NetworkId};
 use ctypes::errors::RuntimeError;
-use ctypes::transaction::{Action, ShardTransaction, StakeAction, Transaction};
+use ctypes::transaction::{Action, ShardTransaction, Transaction};
 use ctypes::util::unexpected::Mismatch;
 #[cfg(test)]
 use ctypes::Tracker;
@@ -363,20 +364,55 @@ impl TopLevelState {
                 self.change_shard_users(*shard_id, users, sender_address)?;
                 return Ok(())
             }
-            Action::Custom {
-                bytes,
+            Action::TransferCCS {
+                address,
+                quantity,
+            } => return transfer_ccs(self, sender_address, &address, *quantity),
+            Action::DelegateCCS {
+                address,
+                quantity,
+            } => return delegate_ccs(self, sender_address, &address, *quantity),
+            Action::Revoke {
+                address,
+                quantity,
+            } => return revoke(self, sender_address, address, *quantity),
+            Action::Redelegate {
+                prev_delegatee,
+                next_delegatee,
+                quantity,
+            } => return redelegate(self, sender_address, prev_delegatee, next_delegatee, *quantity),
+            Action::SelfNominate {
+                deposit,
+                metadata,
+            } => {
+                let (current_term, nomination_ends_at) = {
+                    let metadata = self.metadata()?.expect("Metadata must exist");
+                    let current_term = metadata.current_term_id();
+                    let expiration = metadata.params().nomination_expiration();
+                    let nomination_ends_at = current_term + expiration;
+                    (current_term, nomination_ends_at)
+                };
+                return self_nominate(
+                    self,
+                    sender_address,
+                    sender_public,
+                    *deposit,
+                    current_term,
+                    nomination_ends_at,
+                    metadata.clone(),
+                )
+            }
+            Action::ChangeParams {
+                metadata_seq,
+                params,
+                approvals,
+            } => return change_params(self, *metadata_seq, **params, &approvals),
+            Action::ReportDoubleVote {
+                message1,
                 ..
             } => {
-                let action = rlp::decode(&bytes).expect("Verification passed");
                 let handler = client.double_vote_handler().expect("Unknown custom transaction applied!");
-                if let StakeAction::ReportDoubleVote {
-                    message1,
-                    ..
-                } = &action
-                {
-                    handler.execute(message1, self, sender_address)?;
-                }
-                execute_stake_action(action, self, sender_address, sender_public)?;
+                handler.execute(message1, self, sender_address)?;
                 return Ok(())
             }
         };

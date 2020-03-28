@@ -139,12 +139,11 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
 
             const delegateToCharlie = await nodes[0].rpc.mempool.sendSignedTransaction(
                 {
-                    tx: stake
-                        .createDelegateCCSTransaction(
-                            nodes[0].testFramework,
-                            validators[charlie].address,
-                            charlieDelegationToCatchBob
-                        )
+                    tx: nodes[0].testFramework.core
+                        .createDelegateCCSTransaction({
+                            delegatee: validators[charlie].address,
+                            quantity: charlieDelegationToCatchBob
+                        })
                         .sign({
                             secret: faucetSecret,
                             seq: (await nodes[0].rpc.chain.getSeq({
@@ -185,12 +184,11 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
             const depositDave = await nodes[
                 dave
             ].rpc.mempool.sendSignedTransaction({
-                tx: stake
-                    .createSelfNominateTransaction(
-                        nodes[dave].testFramework,
-                        daveDepositToCatchBob,
-                        ""
-                    )
+                tx: nodes[dave].testFramework.core
+                    .createSelfNominateTransaction({
+                        deposit: daveDepositToCatchBob,
+                        metadata: ""
+                    })
                     .sign({
                         secret: validators[dave].privateKey,
                         seq: (await nodes[dave].rpc.chain.getSeq({
@@ -228,12 +226,11 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
             await expectAllValidatorsArePossibleAuthors(nodes[0].rpc);
 
             const revokeTx = await nodes[0].rpc.mempool.sendSignedTransaction({
-                tx: stake
-                    .createRevokeTransaction(
-                        nodes[0].testFramework,
-                        validators[alice].address,
-                        aliceRevokeToBeLowerThanBob
-                    )
+                tx: nodes[0].testFramework.core
+                    .createRevokeTransaction({
+                        delegatee: validators[alice].address,
+                        quantity: aliceRevokeToBeLowerThanBob
+                    })
                     .sign({
                         secret: faucetSecret,
                         seq: (await nodes[0].rpc.chain.getSeq({
@@ -267,12 +264,11 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
 
             const delegateToCharlie = await nodes[0].rpc.mempool.sendSignedTransaction(
                 {
-                    tx: stake
-                        .createDelegateCCSTransaction(
-                            nodes[0].testFramework,
-                            validators[charlie].address,
-                            charlieDelegationToCatchBob
-                        )
+                    tx: nodes[0].testFramework.core
+                        .createDelegateCCSTransaction({
+                            delegatee: validators[charlie].address,
+                            quantity: charlieDelegationToCatchBob
+                        })
                         .sign({
                             secret: faucetSecret,
                             seq: (await nodes[0].rpc.chain.getSeq({
@@ -301,12 +297,11 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
             const depositDave = await nodes[
                 dave
             ].rpc.mempool.sendSignedTransaction({
-                tx: stake
-                    .createSelfNominateTransaction(
-                        nodes[dave].testFramework,
-                        daveDepositToCatchBob,
-                        ""
-                    )
+                tx: nodes[dave].testFramework.core
+                    .createSelfNominateTransaction({
+                        deposit: daveDepositToCatchBob,
+                        metadata: ""
+                    })
                     .sign({
                         secret: validators[dave].privateKey,
                         seq: (await nodes[dave].rpc.chain.getSeq({
@@ -341,12 +336,11 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
 
             const delegateToCharlie = await nodes[0].rpc.mempool.sendSignedTransaction(
                 {
-                    tx: stake
-                        .createDelegateCCSTransaction(
-                            nodes[0].testFramework,
-                            validators[charlie].address,
-                            charlieDelegationToCatchAlice
-                        )
+                    tx: nodes[0].testFramework.core
+                        .createDelegateCCSTransaction({
+                            delegatee: validators[charlie].address,
+                            quantity: charlieDelegationToCatchAlice
+                        })
                         .sign({
                             secret: faucetSecret,
                             seq: (await nodes[0].rpc.chain.getSeq({
@@ -375,12 +369,11 @@ describe("Dynamic Validator M -> M' (Changed the subset, M, M’ = maximum numbe
             const depositDave = await nodes[
                 dave
             ].rpc.mempool.sendSignedTransaction({
-                tx: stake
-                    .createSelfNominateTransaction(
-                        nodes[dave].testFramework,
-                        daveDepositToCatchAlice,
-                        ""
-                    )
+                tx: nodes[dave].testFramework.core
+                    .createSelfNominateTransaction({
+                        deposit: daveDepositToCatchAlice,
+                        metadata: ""
+                    })
                     .sign({
                         secret: validators[dave].privateKey,
                         seq: (await nodes[dave].rpc.chain.getSeq({

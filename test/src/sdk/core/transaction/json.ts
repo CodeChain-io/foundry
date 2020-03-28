@@ -8,13 +8,19 @@ import {
     U64
 } from "../classes";
 import { SignedTransactionJSON } from "../SignedTransaction";
+import { ChangeParams } from "./ChangeParams";
 import { CreateShard } from "./CreateShard";
-import { Custom } from "./Custom";
+import { DelegateCCS } from "./DelegateCCS";
 import { Pay } from "./Pay";
+import { Redelegate } from "./Redelegate";
 import { Remove } from "./Remove";
+import { ReportDoubleVote } from "./ReportDoubleVote";
+import { Revoke } from "./Revoke";
+import { SelfNominate } from "./SelfNominate";
 import { SetShardOwners } from "./SetShardOwners";
 import { SetShardUsers } from "./SetShardUsers";
 import { Store } from "./Store";
+import { TransferCCS } from "./TransferCCS";
 
 export function fromJSONToTransaction(result: any): Transaction {
     const { seq, fee, networkId, action } = result;
@@ -80,16 +86,53 @@ export function fromJSONToTransaction(result: any): Transaction {
             );
             break;
         }
-        case "custom": {
-            const handlerId = U64.ensure(action.handlerId);
-            const bytes = Buffer.from(action.bytes);
-            tx = new Custom(
-                {
-                    handlerId,
-                    bytes
-                },
+        case "delegateCCS": {
+            const address = Address.ensure(action.address);
+            const quantity = new U64(action.quantity);
+            tx = new DelegateCCS(address, quantity, networkId);
+            break;
+        }
+        case "transferCCS": {
+            const address = Address.ensure(action.address);
+            const quantity = new U64(action.quantity);
+            tx = new TransferCCS(address, quantity, networkId);
+            break;
+        }
+        case "revoke": {
+            const address = Address.ensure(action.address);
+            const quantity = new U64(action.quantity);
+            tx = new Revoke(address, quantity, networkId);
+            break;
+        }
+        case "redelegate": {
+            const prevDelegator = Address.ensure(action.prevDelegator);
+            const nextDelegator = Address.ensure(action.nextDelegator);
+            const quantity = new U64(action.quantity);
+            tx = new Redelegate(
+                prevDelegator,
+                nextDelegator,
+                quantity,
                 networkId
             );
+            break;
+        }
+        case "selfNominate": {
+            const deposit = new U64(action.deposit);
+            const metadata = Buffer.from(action.metadata);
+            tx = new SelfNominate(deposit, metadata, networkId);
+            break;
+        }
+        case "reportDoubleVote": {
+            const message1 = Buffer.from(action.message1);
+            const message2 = Buffer.from(action.message2);
+            tx = new ReportDoubleVote(message1, message2, networkId);
+            break;
+        }
+        case "changeParams": {
+            const metadataSeq = new U64(action.metadataSeq);
+            const params = action.params;
+            const approvals = action.approvals;
+            tx = new ChangeParams(metadataSeq, params, approvals, networkId);
             break;
         }
         default:

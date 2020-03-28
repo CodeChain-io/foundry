@@ -20,7 +20,7 @@ use crate::{
 };
 use ckey::{public_to_address, Address, Ed25519Public as Public};
 use ctypes::errors::RuntimeError;
-use ctypes::transaction::{Approval, StakeAction};
+use ctypes::transaction::Approval;
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{CommonParams, Deposit};
 use primitives::Bytes;
@@ -105,55 +105,7 @@ pub fn init_stake(
     Ok(())
 }
 
-pub fn execute_stake_action(
-    action: StakeAction,
-    state: &mut TopLevelState,
-    sender_address: &Address,
-    sender_public: &Public,
-) -> StateResult<()> {
-    match action {
-        StakeAction::TransferCCS {
-            address,
-            quantity,
-        } => transfer_ccs(state, sender_address, &address, quantity),
-        StakeAction::DelegateCCS {
-            address,
-            quantity,
-        } => delegate_ccs(state, sender_address, &address, quantity),
-        StakeAction::Revoke {
-            address,
-            quantity,
-        } => revoke(state, sender_address, &address, quantity),
-        StakeAction::Redelegate {
-            prev_delegatee,
-            next_delegatee,
-            quantity,
-        } => redelegate(state, sender_address, &prev_delegatee, &next_delegatee, quantity),
-        StakeAction::SelfNominate {
-            deposit,
-            metadata,
-        } => {
-            let (current_term, nomination_ends_at) = {
-                let metadata = state.metadata()?.expect("Metadata must exist");
-                let current_term = metadata.current_term_id();
-                let expiration = metadata.params().nomination_expiration();
-                let nomination_ends_at = current_term + expiration;
-                (current_term, nomination_ends_at)
-            };
-            self_nominate(state, sender_address, sender_public, deposit, current_term, nomination_ends_at, metadata)
-        }
-        StakeAction::ChangeParams {
-            metadata_seq,
-            params,
-            approvals,
-        } => change_params(state, metadata_seq, *params, &approvals),
-        StakeAction::ReportDoubleVote {
-            ..
-        } => Ok(()),
-    }
-}
-
-fn transfer_ccs(state: &mut TopLevelState, sender: &Address, receiver: &Address, quantity: u64) -> StateResult<()> {
+pub fn transfer_ccs(state: &mut TopLevelState, sender: &Address, receiver: &Address, quantity: u64) -> StateResult<()> {
     let mut stakeholders = Stakeholders::load_from_state(state)?;
     let mut sender_account = StakeAccount::load_from_state(state, sender)?;
     let mut receiver_account = StakeAccount::load_from_state(state, receiver)?;
@@ -173,7 +125,12 @@ fn transfer_ccs(state: &mut TopLevelState, sender: &Address, receiver: &Address,
     Ok(())
 }
 
-fn delegate_ccs(state: &mut TopLevelState, delegator: &Address, delegatee: &Address, quantity: u64) -> StateResult<()> {
+pub fn delegate_ccs(
+    state: &mut TopLevelState,
+    delegator: &Address,
+    delegatee: &Address,
+    quantity: u64,
+) -> StateResult<()> {
     let candidates = Candidates::load_from_state(state)?;
     if candidates.get_candidate(delegatee).is_none() {
         return Err(RuntimeError::FailedToHandleCustomAction("Can delegate to who is a candidate".into()).into())
@@ -198,7 +155,7 @@ fn delegate_ccs(state: &mut TopLevelState, delegator: &Address, delegatee: &Addr
     Ok(())
 }
 
-fn revoke(state: &mut TopLevelState, delegator: &Address, delegatee: &Address, quantity: u64) -> StateResult<()> {
+pub fn revoke(state: &mut TopLevelState, delegator: &Address, delegatee: &Address, quantity: u64) -> StateResult<()> {
     let mut delegator_account = StakeAccount::load_from_state(state, delegator)?;
     let mut delegation = Delegation::load_from_state(state, &delegator)?;
 
@@ -213,7 +170,7 @@ fn revoke(state: &mut TopLevelState, delegator: &Address, delegatee: &Address, q
     Ok(())
 }
 
-fn redelegate(
+pub fn redelegate(
     state: &mut TopLevelState,
     delegator: &Address,
     prev_delegatee: &Address,
@@ -294,7 +251,7 @@ pub fn self_nominate(
     Ok(())
 }
 
-fn change_params(
+pub fn change_params(
     state: &mut TopLevelState,
     metadata_seq: u64,
     params: CommonParams,
@@ -463,7 +420,6 @@ mod tests {
         get_delegation_key, get_stake_account_key, init_stake, Banned, Candidate, Candidates, Delegation, Jail,
         Prisoner, StakeAccount, Stakeholders, TopStateView,
     };
-    use ctypes::transaction::StakeAction;
     use std::collections::HashMap;
 
     #[test]
@@ -565,12 +521,8 @@ mod tests {
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: delegatee,
-            quantity: 40,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert_eq!(result, Ok(()));
+        let quantity = 40;
+        delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         assert_eq!(delegator_account.balance, 60);
@@ -608,12 +560,8 @@ mod tests {
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: delegatee,
-            quantity: 100,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert_eq!(result, Ok(()));
+        let quantity = 100;
+        delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         assert_eq!(delegator_account.balance, 0);
@@ -651,12 +599,8 @@ mod tests {
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: delegatee,
-            quantity: 40,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_err());
+        let quantity = 40;
+        delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap_err();
     }
 
     #[test]
@@ -676,12 +620,8 @@ mod tests {
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: delegatee,
-            quantity: 200,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_err());
+        let quantity = 200;
+        delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap_err();
     }
 
     #[test]
@@ -701,18 +641,11 @@ mod tests {
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: delegatee,
-            quantity: 50,
-        };
-        execute_stake_action(action, &mut state, &delegator, &delegator_pubkey).unwrap();
+        let quantity = 50;
+        delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
 
-        let action = StakeAction::TransferCCS {
-            address: delegatee,
-            quantity: 50,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_ok());
+        let quantity = 50;
+        transfer_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
     }
 
     #[test]
@@ -732,18 +665,11 @@ mod tests {
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: delegatee,
-            quantity: 50,
-        };
-        execute_stake_action(action, &mut state, &delegator, &delegator_pubkey).unwrap();
+        let quantity = 50;
+        delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
 
-        let action = StakeAction::TransferCCS {
-            address: delegatee,
-            quantity: 100,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_err());
+        let quantity = 100;
+        transfer_ccs(&mut state, &delegator, &delegatee, quantity).unwrap_err();
     }
 
     #[test]
@@ -763,19 +689,11 @@ mod tests {
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: delegatee,
-            quantity: 50,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_ok());
+        let quantity = 50;
+        delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
 
-        let action = StakeAction::Revoke {
-            address: delegatee,
-            quantity: 20,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert_eq!(Ok(()), result);
+        let quantity = 20;
+        revoke(&mut state, &delegator, &delegatee, quantity).unwrap();
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         let delegation = Delegation::load_from_state(&state, &delegator).unwrap();
@@ -801,19 +719,11 @@ mod tests {
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: delegatee,
-            quantity: 50,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_ok());
+        let quantity = 50;
+        delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
 
-        let action = StakeAction::Revoke {
-            address: delegatee,
-            quantity: 70,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_err());
+        let quantity = 70;
+        revoke(&mut state, &delegator, &delegatee, quantity).unwrap_err();
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         let delegation = Delegation::load_from_state(&state, &delegator).unwrap();
@@ -839,19 +749,11 @@ mod tests {
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: delegatee,
-            quantity: 50,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_ok());
+        let quantity = 50;
+        delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
 
-        let action = StakeAction::Revoke {
-            address: delegatee,
-            quantity: 50,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert_eq!(Ok(()), result);
+        let quantity = 50;
+        revoke(&mut state, &delegator, &delegatee, quantity).unwrap();
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         assert_eq!(delegator_account.balance, 100);
@@ -877,20 +779,11 @@ mod tests {
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
         self_nominate(&mut state, &next_delegatee, &next_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: prev_delegatee,
-            quantity: 50,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_ok());
+        let quantity = 50;
+        delegate_ccs(&mut state, &delegator, &prev_delegatee, quantity).unwrap();
 
-        let action = StakeAction::Redelegate {
-            prev_delegatee,
-            next_delegatee,
-            quantity: 20,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert_eq!(Ok(()), result);
+        let quantity = 20;
+        redelegate(&mut state, &delegator, &prev_delegatee, &next_delegatee, quantity).unwrap();
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         let delegation = Delegation::load_from_state(&state, &delegator).unwrap();
@@ -919,20 +812,11 @@ mod tests {
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
         self_nominate(&mut state, &next_delegatee, &next_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: prev_delegatee,
-            quantity: 50,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_ok());
+        let quantity = 50;
+        delegate_ccs(&mut state, &delegator, &prev_delegatee, quantity).unwrap();
 
-        let action = StakeAction::Redelegate {
-            prev_delegatee,
-            next_delegatee,
-            quantity: 70,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_err());
+        let quantity = 70;
+        redelegate(&mut state, &delegator, &prev_delegatee, &next_delegatee, quantity).unwrap_err();
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         let delegation = Delegation::load_from_state(&state, &delegator).unwrap();
@@ -961,20 +845,11 @@ mod tests {
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
         self_nominate(&mut state, &next_delegatee, &next_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: prev_delegatee,
-            quantity: 50,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_ok());
+        let quantity = 50;
+        delegate_ccs(&mut state, &delegator, &prev_delegatee, quantity).unwrap();
 
-        let action = StakeAction::Redelegate {
-            prev_delegatee,
-            next_delegatee,
-            quantity: 50,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert_eq!(Ok(()), result);
+        let quantity = 50;
+        redelegate(&mut state, &delegator, &prev_delegatee, &next_delegatee, quantity).unwrap();
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         let delegation = Delegation::load_from_state(&state, &delegator).unwrap();
@@ -1003,20 +878,11 @@ mod tests {
 
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: prev_delegatee,
-            quantity: 40,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_ok());
+        let quantity = 40;
+        delegate_ccs(&mut state, &delegator, &prev_delegatee, quantity).unwrap();
 
-        let action = StakeAction::Redelegate {
-            prev_delegatee,
-            next_delegatee,
-            quantity: 50,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_err());
+        let quantity = 50;
+        redelegate(&mut state, &delegator, &prev_delegatee, &next_delegatee, quantity).unwrap_err();
     }
 
     #[test]
@@ -1042,16 +908,10 @@ mod tests {
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
         self_nominate(&mut state, &criminal, &criminal_pubkey, 100, 0, 10, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: criminal,
-            quantity: 40,
-        };
-        execute_stake_action(action, &mut state, &delegator, &delegator_pubkey).unwrap();
-        let action = StakeAction::DelegateCCS {
-            address: prev_delegatee,
-            quantity: 40,
-        };
-        execute_stake_action(action, &mut state, &delegator, &delegator_pubkey).unwrap();
+        let quantity = 40;
+        delegate_ccs(&mut state, &delegator, &criminal, quantity).unwrap();
+        let quantity = 40;
+        delegate_ccs(&mut state, &delegator, &prev_delegatee, quantity).unwrap();
 
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 2);
@@ -1064,13 +924,8 @@ mod tests {
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 1);
 
-        let action = StakeAction::Redelegate {
-            prev_delegatee,
-            next_delegatee: criminal,
-            quantity: 40,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_err());
+        let quantity = 40;
+        redelegate(&mut state, &delegator, &prev_delegatee, &criminal, quantity).unwrap_err();
     }
 
     #[test]
@@ -1096,11 +951,8 @@ mod tests {
         let deposit = 200;
         self_nominate(&mut state, &jail_address, &jail_pubkey, deposit, 0, 5, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address: prev_delegatee,
-            quantity: 40,
-        };
-        execute_stake_action(action, &mut state, &delegator, &delegator_pubkey).unwrap();
+        let quantity = 40;
+        delegate_ccs(&mut state, &delegator, &prev_delegatee, quantity).unwrap();
 
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 2);
@@ -1113,13 +965,8 @@ mod tests {
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 1);
 
-        let action = StakeAction::Redelegate {
-            prev_delegatee,
-            next_delegatee: jail_address,
-            quantity: 40,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_err());
+        let quantity = 40;
+        redelegate(&mut state, &delegator, &prev_delegatee, &jail_address, quantity).unwrap_err();
     }
 
     #[test]
@@ -1254,11 +1101,9 @@ mod tests {
 
         let deposit = 100;
         self_nominate(&mut state, &criminal, &criminal_pubkey, deposit, 0, 10, b"".to_vec()).unwrap();
-        let action = StakeAction::DelegateCCS {
-            address: criminal,
-            quantity: 40,
-        };
-        execute_stake_action(action, &mut state, &delegator, &delegator_pubkey).unwrap();
+
+        let quantity = 40;
+        delegate_ccs(&mut state, &delegator, &criminal, quantity).unwrap();
 
         assert_eq!(Ok(()), ban(&mut state, &informant, criminal));
 

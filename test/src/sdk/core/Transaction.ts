@@ -3,13 +3,19 @@ import { H256, H512, H512Value, U64, U64Value } from "foundry-primitives";
 import * as RLP from "rlp";
 import { blake256, getPublicFromPrivate, signEd25519 } from "../utils";
 import { SignedTransaction } from "./SignedTransaction";
+import { ChangeParamsActionJSON } from "./transaction/ChangeParams";
 import { CreateShardActionJSON } from "./transaction/CreateShard";
-import { CustomActionJSON } from "./transaction/Custom";
+import { DelegateCCSActionJSON } from "./transaction/DelegateCCS";
 import { PayActionJSON } from "./transaction/Pay";
+import { RedelegateActionJSON } from "./transaction/Redelegate";
 import { RemoveActionJSON } from "./transaction/Remove";
+import { ReportDoubleVoteActionJSON } from "./transaction/ReportDoubleVote";
+import { RevokeActionJSON } from "./transaction/Revoke";
+import { SelfNominateActionJSON } from "./transaction/SelfNominate";
 import { SetShardOwnersActionJSON } from "./transaction/SetShardOwners";
 import { SetShardUsersActionJSON } from "./transaction/SetShardUsers";
 import { StoreActionJSON } from "./transaction/Store";
+import { TransferCCSActionJSON } from "./transaction/TransferCCS";
 import { NetworkId } from "./types";
 
 type ActionJSON =
@@ -19,7 +25,13 @@ type ActionJSON =
     | CreateShardActionJSON
     | StoreActionJSON
     | RemoveActionJSON
-    | CustomActionJSON;
+    | TransferCCSActionJSON
+    | DelegateCCSActionJSON
+    | RevokeActionJSON
+    | RedelegateActionJSON
+    | SelfNominateActionJSON
+    | ReportDoubleVoteActionJSON
+    | ChangeParamsActionJSON;
 
 export interface TransactionJSON {
     action: ActionJSON & { type: string };

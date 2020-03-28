@@ -17,8 +17,8 @@
 mod actions;
 
 pub use self::actions::{
-    ban, execute_stake_action, init_stake, jail, release_jailed_prisoners, revert_delegations, self_nominate,
-    update_candidates, update_validator_weights,
+    ban, change_params, delegate_ccs, init_stake, jail, redelegate, release_jailed_prisoners, revert_delegations,
+    revoke, self_nominate, transfer_ccs, update_candidates, update_validator_weights,
 };
 use super::TopStateView;
 use crate::{StateResult, TopLevelState};

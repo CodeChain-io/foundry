@@ -15,10 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::errors::SyntaxError;
-use crate::transaction::ShardTransaction;
+use crate::transaction::{Approval, ShardTransaction};
 use crate::{CommonParams, ShardId, Tracker};
 use ccrypto::Blake;
-use ckey::{Address, NetworkId};
+use ckey::{verify, Address, NetworkId};
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -30,7 +30,13 @@ enum ActionTag {
     SetShardOwners = 0x05,
     SetShardUsers = 0x06,
     ShardStore = 0x19,
-    Custom = 0xFF,
+    TransferCCS = 0x21,
+    DelegateCCS = 0x22,
+    Revoke = 0x23,
+    SelfNominate = 0x24,
+    ReportDoubleVote = 0x25,
+    Redelegate = 0x26,
+    ChangeParams = 0xFF,
 }
 
 impl Encodable for ActionTag {
@@ -48,7 +54,13 @@ impl Decodable for ActionTag {
             0x05 => Ok(Self::SetShardOwners),
             0x06 => Ok(Self::SetShardUsers),
             0x19 => Ok(Self::ShardStore),
-            0xFF => Ok(Self::Custom),
+            0x21 => Ok(Self::TransferCCS),
+            0x22 => Ok(Self::DelegateCCS),
+            0x23 => Ok(Self::Revoke),
+            0x24 => Ok(Self::SelfNominate),
+            0x25 => Ok(Self::ReportDoubleVote),
+            0x26 => Ok(Self::Redelegate),
+            0xFF => Ok(Self::ChangeParams),
             _ => Err(DecoderError::Custom("Unexpected action prefix")),
         }
     }
@@ -72,14 +84,40 @@ pub enum Action {
         shard_id: ShardId,
         users: Vec<Address>,
     },
-    Custom {
-        handler_id: u64,
-        bytes: Bytes,
-    },
     ShardStore {
         network_id: NetworkId,
         shard_id: ShardId,
         content: String,
+    },
+    TransferCCS {
+        address: Address,
+        quantity: u64,
+    },
+    DelegateCCS {
+        address: Address,
+        quantity: u64,
+    },
+    Revoke {
+        address: Address,
+        quantity: u64,
+    },
+    Redelegate {
+        prev_delegatee: Address,
+        next_delegatee: Address,
+        quantity: u64,
+    },
+    SelfNominate {
+        deposit: u64,
+        metadata: Bytes,
+    },
+    ChangeParams {
+        metadata_seq: u64,
+        params: Box<CommonParams>,
+        approvals: Vec<Approval>,
+    },
+    ReportDoubleVote {
+        message1: Bytes,
+        message2: Bytes,
     },
 }
 
@@ -114,6 +152,63 @@ impl Action {
             }
         }
 
+        match self {
+            Action::TransferCCS {
+                ..
+            } => {}
+            Action::DelegateCCS {
+                ..
+            } => {}
+            Action::Revoke {
+                ..
+            } => {}
+            Action::Redelegate {
+                ..
+            } => {}
+            Action::SelfNominate {
+                metadata,
+                ..
+            } => {
+                if metadata.len() > common_params.max_candidate_metadata_size() {
+                    return Err(SyntaxError::InvalidCustomAction(format!(
+                        "Too long candidate metadata: the size limit is {}",
+                        common_params.max_candidate_metadata_size()
+                    )))
+                }
+            }
+            Action::ChangeParams {
+                metadata_seq,
+                params,
+                approvals,
+            } => {
+                params.verify_change(common_params).map_err(SyntaxError::InvalidCustomAction)?;
+                let action = Action::ChangeParams {
+                    metadata_seq: *metadata_seq,
+                    params: params.clone(),
+                    approvals: vec![],
+                };
+                let encoded_action = H256::blake(rlp::encode(&action));
+                for approval in approvals {
+                    if !verify(approval.signature(), &encoded_action, approval.signer_public()) {
+                        return Err(SyntaxError::InvalidCustomAction(format!(
+                            "Cannot decode the signature {:?} with public {:?} and the message {:?}",
+                            approval.signature(),
+                            approval.signer_public(),
+                            &encoded_action,
+                        )))
+                    }
+                }
+            }
+            Action::ReportDoubleVote {
+                message1,
+                message2,
+            } => {
+                if message1 == message2 {
+                    return Err(SyntaxError::InvalidCustomAction(String::from("Messages are duplicated")))
+                }
+            }
+            _ => {}
+        }
         Ok(())
     }
 
@@ -182,15 +277,6 @@ impl Encodable for Action {
                 s.append(shard_id);
                 s.append_list(users);
             }
-            Action::Custom {
-                handler_id,
-                bytes,
-            } => {
-                s.begin_list(3);
-                s.append(&ActionTag::Custom);
-                s.append(handler_id);
-                s.append(bytes);
-            }
             Action::ShardStore {
                 shard_id,
                 content,
@@ -201,6 +287,60 @@ impl Encodable for Action {
                 s.append(network_id);
                 s.append(shard_id);
                 s.append(content);
+            }
+            Action::TransferCCS {
+                address,
+                quantity,
+            } => {
+                s.begin_list(3).append(&ActionTag::TransferCCS).append(address).append(quantity);
+            }
+            Action::DelegateCCS {
+                address,
+                quantity,
+            } => {
+                s.begin_list(3).append(&ActionTag::DelegateCCS).append(address).append(quantity);
+            }
+            Action::Revoke {
+                address,
+                quantity,
+            } => {
+                s.begin_list(3).append(&ActionTag::Revoke).append(address).append(quantity);
+            }
+            Action::Redelegate {
+                prev_delegatee,
+                next_delegatee,
+                quantity,
+            } => {
+                s.begin_list(4)
+                    .append(&ActionTag::Redelegate)
+                    .append(prev_delegatee)
+                    .append(next_delegatee)
+                    .append(quantity);
+            }
+            Action::SelfNominate {
+                deposit,
+                metadata,
+            } => {
+                s.begin_list(3).append(&ActionTag::SelfNominate).append(deposit).append(metadata);
+            }
+            Action::ChangeParams {
+                metadata_seq,
+                params,
+                approvals,
+            } => {
+                s.begin_list(3 + approvals.len())
+                    .append(&ActionTag::ChangeParams)
+                    .append(metadata_seq)
+                    .append(&**params);
+                for approval in approvals {
+                    s.append(approval);
+                }
+            }
+            Action::ReportDoubleVote {
+                message1,
+                message2,
+            } => {
+                s.begin_list(3).append(&ActionTag::ReportDoubleVote).append(message1).append(message2);
             }
         }
     }
@@ -260,19 +400,6 @@ impl Decodable for Action {
                     users: rlp.list_at(2)?,
                 })
             }
-            ActionTag::Custom => {
-                let item_count = rlp.item_count()?;
-                if item_count != 3 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 3,
-                    })
-                }
-                Ok(Action::Custom {
-                    handler_id: rlp.val_at(1)?,
-                    bytes: rlp.val_at(2)?,
-                })
-            }
             ActionTag::ShardStore => {
                 let item_count = rlp.item_count()?;
                 if item_count != 4 {
@@ -287,15 +414,113 @@ impl Decodable for Action {
                     content: rlp.val_at(3)?,
                 })
             }
+            ActionTag::TransferCCS => {
+                let item_count = rlp.item_count()?;
+                if item_count != 3 {
+                    return Err(DecoderError::RlpInvalidLength {
+                        expected: 3,
+                        got: item_count,
+                    })
+                }
+                Ok(Action::TransferCCS {
+                    address: rlp.val_at(1)?,
+                    quantity: rlp.val_at(2)?,
+                })
+            }
+            ActionTag::DelegateCCS => {
+                let item_count = rlp.item_count()?;
+                if item_count != 3 {
+                    return Err(DecoderError::RlpInvalidLength {
+                        expected: 3,
+                        got: item_count,
+                    })
+                }
+                Ok(Action::DelegateCCS {
+                    address: rlp.val_at(1)?,
+                    quantity: rlp.val_at(2)?,
+                })
+            }
+            ActionTag::Revoke => {
+                let item_count = rlp.item_count()?;
+                if item_count != 3 {
+                    return Err(DecoderError::RlpInvalidLength {
+                        expected: 3,
+                        got: item_count,
+                    })
+                }
+                Ok(Action::Revoke {
+                    address: rlp.val_at(1)?,
+                    quantity: rlp.val_at(2)?,
+                })
+            }
+            ActionTag::Redelegate => {
+                let item_count = rlp.item_count()?;
+                if item_count != 4 {
+                    return Err(DecoderError::RlpInvalidLength {
+                        expected: 4,
+                        got: item_count,
+                    })
+                }
+                Ok(Action::Redelegate {
+                    prev_delegatee: rlp.val_at(1)?,
+                    next_delegatee: rlp.val_at(2)?,
+                    quantity: rlp.val_at(3)?,
+                })
+            }
+            ActionTag::SelfNominate => {
+                let item_count = rlp.item_count()?;
+                if item_count != 3 {
+                    return Err(DecoderError::RlpInvalidLength {
+                        expected: 3,
+                        got: item_count,
+                    })
+                }
+                Ok(Action::SelfNominate {
+                    deposit: rlp.val_at(1)?,
+                    metadata: rlp.val_at(2)?,
+                })
+            }
+            ActionTag::ChangeParams => {
+                let item_count = rlp.item_count()?;
+                if item_count < 4 {
+                    return Err(DecoderError::RlpIncorrectListLen {
+                        expected: 4,
+                        got: item_count,
+                    })
+                }
+                let metadata_seq = rlp.val_at(1)?;
+                let params = Box::new(rlp.val_at(2)?);
+                let approvals = (3..item_count).map(|i| rlp.val_at(i)).collect::<Result<_, _>>()?;
+                Ok(Action::ChangeParams {
+                    metadata_seq,
+                    params,
+                    approvals,
+                })
+            }
+            ActionTag::ReportDoubleVote => {
+                let item_count = rlp.item_count()?;
+                if item_count != 3 {
+                    return Err(DecoderError::RlpIncorrectListLen {
+                        expected: 3,
+                        got: item_count,
+                    })
+                }
+                let message1 = rlp.val_at(1)?;
+                let message2 = rlp.val_at(2)?;
+                Ok(Action::ReportDoubleVote {
+                    message1,
+                    message2,
+                })
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use rlp::rlp_encode_and_decode_test;
-
     use super::*;
+    use ckey::{Ed25519Public as Public, Signature};
+    use rlp::rlp_encode_and_decode_test;
 
     #[test]
     fn encode_and_decode_pay_action() {
@@ -319,5 +544,33 @@ mod tests {
             shard_id: 1,
             users: vec![Address::random(), Address::random()],
         });
+    }
+
+    #[test]
+    fn rlp_of_change_params() {
+        rlp_encode_and_decode_test!(Action::ChangeParams {
+            metadata_seq: 3,
+            params: CommonParams::default_for_test().into(),
+            approvals: vec![
+                Approval::new(Signature::random(), Public::random()),
+                Approval::new(Signature::random(), Public::random()),
+            ],
+        });
+    }
+
+    #[test]
+    fn decode_fail_if_change_params_have_no_signatures() {
+        let action = Action::ChangeParams {
+            metadata_seq: 3,
+            params: CommonParams::default_for_test().into(),
+            approvals: vec![],
+        };
+        assert_eq!(
+            Err(DecoderError::RlpIncorrectListLen {
+                expected: 4,
+                got: 3,
+            }),
+            Rlp::new(&rlp::encode(&action)).as_val::<Action>()
+        );
     }
 }

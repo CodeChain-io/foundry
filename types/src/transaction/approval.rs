@@ -14,19 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod action;
-mod approval;
-mod incomplete_transaction;
-mod partial_hashing;
-mod shard;
-mod timelock;
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
-mod transaction;
+use ckey::{Ed25519Public as Public, Signature};
 
-pub use self::action::Action;
-pub use self::approval::Approval;
-pub use self::incomplete_transaction::IncompleteTransaction;
-pub use self::partial_hashing::{HashingError, PartialHashing};
-pub use self::shard::ShardTransaction;
-pub use self::timelock::Timelock;
-pub use self::transaction::Transaction;
+#[derive(Clone, Debug, Eq, PartialEq, RlpEncodable, RlpDecodable, Serialize, Deserialize)]
+pub struct Approval {
+    signature: Signature,
+    signer_public: Public,
+}
+
+impl Approval {
+    pub fn new(signature: Signature, signer_public: Public) -> Self {
+        Self {
+            signature,
+            signer_public,
+        }
+    }
+    pub fn signature(&self) -> &Signature {
+        &self.signature
+    }
+
+    pub fn signer_public(&self) -> &Public {
+        &self.signer_public
+    }
+}

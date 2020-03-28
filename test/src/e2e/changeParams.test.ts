@@ -68,7 +68,7 @@ describe("ChangeParams", function() {
     });
 
     it("change", async function() {
-        const newParams = [
+        const params = [
             0x30, // maxExtraDataSize
             "tc", // networkID
             4194304, // maxBodySize
@@ -84,20 +84,22 @@ describe("ChangeParams", function() {
             500, // maxCandidateMetadataSize
             0 // era
         ];
-        const changeParams: (number | string | (number | string)[])[] = [
+        const changeParams: [number, number, (number | string)[]] = [
             0xff,
             0,
-            newParams
+            params
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(approvalEncoded(message, aliceSecret));
-        changeParams.push(approvalEncoded(message, carolSecret));
+        const approvals = [];
+        approvals.push(approvalEncoded(message, aliceSecret));
+        approvals.push(approvalEncoded(message, carolSecret));
 
         {
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    params,
+                    approvals
                 })
                 .sign({
                     secret: faucetSecret,
@@ -117,12 +119,12 @@ describe("ChangeParams", function() {
                 })
             ).be.true;
         }
-        const params = await node.rpc.chain.getCommonParams({});
-        expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x30);
+        const commonParams = await node.rpc.chain.getCommonParams({});
+        expect(+commonParams!.maxExtraDataSize!).to.be.deep.equal(0x30);
     });
 
     it("cannot change the network id", async function() {
-        const newParams = [
+        const params = [
             0x20, // maxExtraDataSize
             "cc", // networkID
             4194304, // maxBodySize
@@ -138,19 +140,21 @@ describe("ChangeParams", function() {
             500, // maxCandidateMetadataSize
             0 // era
         ];
-        const changeParams: (number | string | (number | string)[])[] = [
+        const changeParams: [number, number, (number | string)[]] = [
             0xff,
             0,
-            newParams
+            params
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(approvalEncoded(message, aliceSecret));
-        changeParams.push(approvalEncoded(message, carolSecret));
+        const approvals = [];
+        approvals.push(approvalEncoded(message, aliceSecret));
+        approvals.push(approvalEncoded(message, carolSecret));
 
         const tx = node.testFramework.core
-            .createCustomTransaction({
-                handlerId: stakeActionHandlerId,
-                bytes: RLP.encode(changeParams)
+            .createChangeParamsTransaction({
+                metadataSeq: 0,
+                params,
+                approvals
             })
             .sign({
                 secret: faucetSecret,
@@ -177,7 +181,7 @@ describe("ChangeParams", function() {
     });
 
     it("the parameter is applied from the next block", async function() {
-        const newParams = [
+        const params = [
             0x44, // maxExtraDataSize
             "tc", // networkID
             4194304, // maxBodySize
@@ -193,15 +197,16 @@ describe("ChangeParams", function() {
             500, // maxCandidateMetadataSize
             0 // era
         ];
-        const changeParams: (number | string | (number | string)[])[] = [
+        const changeParams: [number, number, (number | string)[]] = [
             0xff,
             0,
-            newParams
+            params
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(approvalEncoded(message, aliceSecret));
-        changeParams.push(approvalEncoded(message, bobSecret));
-        changeParams.push(approvalEncoded(message, carolSecret));
+        const approvals = [];
+        approvals.push(approvalEncoded(message, aliceSecret));
+        approvals.push(approvalEncoded(message, bobSecret));
+        approvals.push(approvalEncoded(message, carolSecret));
 
         {
             await node.rpc.devel!.stopSealing();
@@ -211,9 +216,10 @@ describe("ChangeParams", function() {
                 blockNumber: null
             }))!;
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    params,
+                    approvals
                 })
                 .sign({
                     secret: faucetSecret,
@@ -240,12 +246,12 @@ describe("ChangeParams", function() {
                 blockNumber + 1
             );
         }
-        const params = await node.rpc.chain.getCommonParams({});
-        expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x44);
+        const commonParams = await node.rpc.chain.getCommonParams({});
+        expect(+commonParams!.maxExtraDataSize!).to.be.deep.equal(0x44);
     });
 
     it("the parameter changed twice in the same block", async function() {
-        const newParams1 = [
+        const params1 = [
             0x30, // maxExtraDataSize
             "tc", // networkID
             4194304, // maxBodySize
@@ -261,7 +267,7 @@ describe("ChangeParams", function() {
             500, // maxCandidateMetadataSize
             0 // era
         ];
-        const newParams2 = [
+        const params2 = [
             0x40, // maxExtraDataSize
             "tc", // networkID
             4194304, // maxBodySize
@@ -277,24 +283,26 @@ describe("ChangeParams", function() {
             500, // maxCandidateMetadataSize
             0 // era
         ];
-        const changeParams1: (number | string | (number | string)[])[] = [
+        const changeParams1: [number, number, (number | string)[]] = [
             0xff,
             0,
-            newParams1
+            params1
         ];
-        const changeParams2: (number | string | (number | string)[])[] = [
+        const changeParams2: [number, number, (number | string)[]] = [
             0xff,
             1,
-            newParams2
+            params2
         ];
         const message1 = blake256(RLP.encode(changeParams1).toString("hex"));
-        changeParams1.push(approvalEncoded(message1, aliceSecret));
-        changeParams1.push(approvalEncoded(message1, bobSecret));
-        changeParams1.push(approvalEncoded(message1, carolSecret));
+        const approvals1 = [];
+        approvals1.push(approvalEncoded(message1, aliceSecret));
+        approvals1.push(approvalEncoded(message1, bobSecret));
+        approvals1.push(approvalEncoded(message1, carolSecret));
         const message2 = blake256(RLP.encode(changeParams2).toString("hex"));
-        changeParams2.push(approvalEncoded(message2, aliceSecret));
-        changeParams2.push(approvalEncoded(message2, bobSecret));
-        changeParams2.push(approvalEncoded(message2, carolSecret));
+        const approvals2 = [];
+        approvals2.push(approvalEncoded(message2, aliceSecret));
+        approvals2.push(approvalEncoded(message2, bobSecret));
+        approvals2.push(approvalEncoded(message2, carolSecret));
 
         {
             await node.rpc.devel!.stopSealing();
@@ -305,9 +313,10 @@ describe("ChangeParams", function() {
             }))!;
 
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams1)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    params: params1,
+                    approvals: approvals1
                 })
                 .sign({
                     secret: faucetSecret,
@@ -319,9 +328,10 @@ describe("ChangeParams", function() {
                 tx: `0x${trans}`
             });
             const tx2 = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams2)
+                .createChangeParamsTransaction({
+                    metadataSeq: 1,
+                    params: params2,
+                    approvals: approvals2
                 })
                 .sign({
                     secret: faucetSecret,
@@ -354,12 +364,12 @@ describe("ChangeParams", function() {
                 transactionHash: `0x${pay.hash().toString()}`
             })
         ).be.true;
-        const params = await node.rpc.chain.getCommonParams({});
-        expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x40);
+        const commonParams = await node.rpc.chain.getCommonParams({});
+        expect(+commonParams!.maxExtraDataSize!).to.be.deep.equal(0x40);
     });
 
     it("cannot reuse the same signature", async function() {
-        const newParams1 = [
+        const params1 = [
             0x30, // maxExtraDataSize
             "tc", // networkID
             4194304, // maxBodySize
@@ -375,7 +385,7 @@ describe("ChangeParams", function() {
             500, // maxCandidateMetadataSize
             0 // era
         ];
-        const newParams2 = [
+        const params2 = [
             0x40, // maxExtraDataSize
             "tc", // networkID
             4194304, // maxBodySize
@@ -391,24 +401,26 @@ describe("ChangeParams", function() {
             500, // maxCandidateMetadataSize
             0 // era
         ];
-        const changeParams1: (number | string | (number | string)[])[] = [
+        const changeParams1: [number, number, (number | string)[]] = [
             0xff,
             0,
-            newParams1
+            params1
         ];
-        const changeParams2: (number | string | (number | string)[])[] = [
+        const changeParams2: [number, number, (number | string)[]] = [
             0xff,
             1,
-            newParams2
+            params2
         ];
         const message1 = blake256(RLP.encode(changeParams1).toString("hex"));
-        changeParams1.push(approvalEncoded(message1, aliceSecret));
-        changeParams1.push(approvalEncoded(message1, bobSecret));
-        changeParams1.push(approvalEncoded(message1, carolSecret));
+        const approvals1 = [];
+        approvals1.push(approvalEncoded(message1, aliceSecret));
+        approvals1.push(approvalEncoded(message1, bobSecret));
+        approvals1.push(approvalEncoded(message1, carolSecret));
         const message2 = blake256(RLP.encode(changeParams2).toString("hex"));
-        changeParams2.push(approvalEncoded(message2, aliceSecret));
-        changeParams2.push(approvalEncoded(message2, bobSecret));
-        changeParams2.push(approvalEncoded(message2, carolSecret));
+        const approvals2 = [];
+        approvals2.push(approvalEncoded(message2, aliceSecret));
+        approvals2.push(approvalEncoded(message2, bobSecret));
+        approvals2.push(approvalEncoded(message2, carolSecret));
 
         {
             await node.rpc.devel!.stopSealing();
@@ -418,9 +430,10 @@ describe("ChangeParams", function() {
                 blockNumber: null
             }))!;
             const tx1 = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams1)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals: approvals1,
+                    params: params1
                 })
                 .sign({
                     secret: faucetSecret,
@@ -433,9 +446,10 @@ describe("ChangeParams", function() {
                 tx: `0x${trans1}`
             });
             const tx2 = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams2)
+                .createChangeParamsTransaction({
+                    metadataSeq: 1,
+                    approvals: approvals2,
+                    params: params2
                 })
                 .sign({
                     secret: faucetSecret,
@@ -462,12 +476,12 @@ describe("ChangeParams", function() {
             );
         }
 
-        const params = await node.rpc.chain.getCommonParams({});
-        expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x40);
+        const commonParams = await node.rpc.chain.getCommonParams({});
+        expect(+commonParams!.maxExtraDataSize!).to.be.deep.equal(0x40);
     });
 
     it("cannot change params with insufficient stakes", async function() {
-        const newParams = [
+        const params = [
             0x30, // maxExtraDataSize
             "tc", // networkID
             4194304, // maxBodySize
@@ -483,20 +497,22 @@ describe("ChangeParams", function() {
             500, // maxCandidateMetadataSize
             0 // era
         ];
-        const changeParams: (number | string | (number | string)[])[] = [
+        const changeParams: [number, number, (number | string)[]] = [
             0xff,
             0,
-            newParams
+            params
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(approvalEncoded(message, aliceSecret));
-        changeParams.push(approvalEncoded(message, carolSecret));
+        const approvals = [];
+        approvals.push(approvalEncoded(message, aliceSecret));
+        approvals.push(approvalEncoded(message, carolSecret));
 
         {
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -519,9 +535,10 @@ describe("ChangeParams", function() {
 
         {
             const tx2 = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -539,7 +556,7 @@ describe("ChangeParams", function() {
     });
 
     it("the amount of stakes not the number of stakeholders", async function() {
-        const newParams = [
+        const params = [
             0x30, // maxExtraDataSize
             "tc", // networkID
             4194304, // maxBodySize
@@ -555,19 +572,21 @@ describe("ChangeParams", function() {
             500, // maxCandidateMetadataSize
             0 // era
         ];
-        const changeParams: (number | string | (number | string)[])[] = [
+        const changeParams: [number, number, (number | string)[]] = [
             0xff,
             0,
-            newParams
+            params
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(approvalEncoded(message, bobSecret));
-        changeParams.push(approvalEncoded(message, carolSecret));
+        const approvals = [];
+        approvals.push(approvalEncoded(message, bobSecret));
+        approvals.push(approvalEncoded(message, carolSecret));
 
         const tx = node.testFramework.core
-            .createCustomTransaction({
-                handlerId: stakeActionHandlerId,
-                bytes: RLP.encode(changeParams)
+            .createChangeParamsTransaction({
+                metadataSeq: 0,
+                approvals,
+                params
             })
             .sign({
                 secret: faucetSecret,
@@ -584,7 +603,7 @@ describe("ChangeParams", function() {
     });
 
     it("needs more than half to change params", async function() {
-        const newParams = [
+        const params = [
             0x30, // maxExtraDataSize
             "tc", // networkID
             4194304, // maxBodySize
@@ -601,20 +620,22 @@ describe("ChangeParams", function() {
             0 // era
         ];
 
-        const changeParams: (number | string | (number | string)[])[] = [
+        const changeParams: [number, number, (number | string)[]] = [
             0xff,
             0,
-            newParams
+            params
         ];
-        {
-            const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(approvalEncoded(message, bobSecret));
-            changeParams.push(approvalEncoded(message, carolSecret));
+        const message = blake256(RLP.encode(changeParams).toString("hex"));
+        const approvals = [];
+        approvals.push(approvalEncoded(message, bobSecret));
+        approvals.push(approvalEncoded(message, carolSecret));
 
+        {
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -641,9 +662,10 @@ describe("ChangeParams", function() {
 
         {
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -666,13 +688,13 @@ describe("ChangeParams", function() {
                 await node.rpc.chain.getTransaction({ transactionHash: hash })
             ).not.be.null;
         }
-        const params = await node.rpc.chain.getCommonParams({});
-        expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x30);
+        const commonParams = await node.rpc.chain.getCommonParams({});
+        expect(+commonParams!.maxExtraDataSize!).to.be.deep.equal(0x30);
     });
 
     describe("with stake parameters", async function() {
         it("change", async function() {
-            const newParams = [
+            const params = [
                 0x30, // maxExtraDataSize
                 "tc", // networkID
                 4194304, // maxBodySize
@@ -688,20 +710,22 @@ describe("ChangeParams", function() {
                 500, // maxCandidateMetadataSize
                 0 // era
             ];
-            const changeParams: (number | string | (number | string)[])[] = [
+            const changeParams: [number, number, (number | string)[]] = [
                 0xff,
                 0,
-                newParams
+                params
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(approvalEncoded(message, aliceSecret));
-            changeParams.push(approvalEncoded(message, carolSecret));
+            const approvals = [];
+            approvals.push(approvalEncoded(message, aliceSecret));
+            approvals.push(approvalEncoded(message, carolSecret));
 
             {
                 const tx = node.testFramework.core
-                    .createCustomTransaction({
-                        handlerId: stakeActionHandlerId,
-                        bytes: RLP.encode(changeParams)
+                    .createChangeParamsTransaction({
+                        metadataSeq: 0,
+                        params,
+                        approvals
                     })
                     .sign({
                         secret: faucetSecret,
@@ -722,12 +746,12 @@ describe("ChangeParams", function() {
                 ).be.true;
             }
 
-            const params = await node.rpc.chain.getCommonParams({});
-            expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x30);
+            const commonParams = await node.rpc.chain.getCommonParams({});
+            expect(+commonParams!.maxExtraDataSize!).to.be.deep.equal(0x30);
         });
 
         it("nomination expiration cannot be zero", async function() {
-            const newParams = [
+            const params = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
                 4194304, // maxBodySize
@@ -743,19 +767,21 @@ describe("ChangeParams", function() {
                 128, // maxCandidateMetadataSize
                 0 // era
             ];
-            const changeParams: (number | string | (number | string)[])[] = [
+            const changeParams: [number, number, (number | string)[]] = [
                 0xff,
                 0,
-                newParams
+                params
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(approvalEncoded(message, aliceSecret));
-            changeParams.push(approvalEncoded(message, carolSecret));
+            const approvals = [];
+            approvals.push(approvalEncoded(message, aliceSecret));
+            approvals.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -777,7 +803,7 @@ describe("ChangeParams", function() {
         });
 
         it("custody period cannot be zero", async function() {
-            const newParams = [
+            const params = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
                 4194304, // maxBodySize
@@ -793,19 +819,21 @@ describe("ChangeParams", function() {
                 128, // maxCandidateMetadataSize
                 0 // era
             ];
-            const changeParams: (number | string | (number | string)[])[] = [
+            const changeParams: [number, number, (number | string)[]] = [
                 0xff,
                 0,
-                newParams
+                params
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(approvalEncoded(message, aliceSecret));
-            changeParams.push(approvalEncoded(message, carolSecret));
+            const approvals = [];
+            approvals.push(approvalEncoded(message, aliceSecret));
+            approvals.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -827,7 +855,7 @@ describe("ChangeParams", function() {
         });
 
         it("release period cannot be zero", async function() {
-            const newParams = [
+            const params = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
                 4194304, // maxBodySize
@@ -843,19 +871,21 @@ describe("ChangeParams", function() {
                 128, // maxCandidateMetadataSize
                 0 // era
             ];
-            const changeParams: (number | string | (number | string)[])[] = [
+            const changeParams: [number, number, (number | string)[]] = [
                 0xff,
                 0,
-                newParams
+                params
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(approvalEncoded(message, aliceSecret));
-            changeParams.push(approvalEncoded(message, carolSecret));
+            const approvals = [];
+            approvals.push(approvalEncoded(message, aliceSecret));
+            approvals.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -877,7 +907,7 @@ describe("ChangeParams", function() {
         });
 
         it("A release period cannot be equal to a custody period", async function() {
-            const newParams = [
+            const params = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
                 4194304, // maxBodySize
@@ -893,19 +923,21 @@ describe("ChangeParams", function() {
                 128, // maxCandidateMetadataSize
                 0 // era
             ];
-            const changeParams: (number | string | (number | string)[])[] = [
+            const changeParams: [number, number, (number | string)[]] = [
                 0xff,
                 0,
-                newParams
+                params
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(approvalEncoded(message, aliceSecret));
-            changeParams.push(approvalEncoded(message, carolSecret));
+            const approvals = [];
+            approvals.push(approvalEncoded(message, aliceSecret));
+            approvals.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -927,7 +959,7 @@ describe("ChangeParams", function() {
         });
 
         it("min deposit cannot be zero", async function() {
-            const newParams = [
+            const params = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
                 4194304, // maxBodySize
@@ -943,19 +975,21 @@ describe("ChangeParams", function() {
                 128, // maxCandidateMetadataSize
                 0 // era
             ];
-            const changeParams: (number | string | (number | string)[])[] = [
+            const changeParams: [number, number, (number | string)[]] = [
                 0xff,
                 0,
-                newParams
+                params
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(approvalEncoded(message, aliceSecret));
-            changeParams.push(approvalEncoded(message, carolSecret));
+            const approvals = [];
+            approvals.push(approvalEncoded(message, aliceSecret));
+            approvals.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -977,7 +1011,7 @@ describe("ChangeParams", function() {
         });
 
         it("delegation threshold cannot be zero", async function() {
-            const newParams = [
+            const params = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
                 4194304, // maxBodySize
@@ -993,19 +1027,21 @@ describe("ChangeParams", function() {
                 100, // maxCandidateMetadataSize
                 0 // era
             ];
-            const changeParams: (number | string | (number | string)[])[] = [
+            const changeParams: [number, number, (number | string)[]] = [
                 0xff,
                 0,
-                newParams
+                params
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(approvalEncoded(message, aliceSecret));
-            changeParams.push(approvalEncoded(message, carolSecret));
+            const approvals = [];
+            approvals.push(approvalEncoded(message, aliceSecret));
+            approvals.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -1027,7 +1063,7 @@ describe("ChangeParams", function() {
         });
 
         it("min number of validators cannot be zero", async function() {
-            const newParams = [
+            const params = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
                 4194304, // maxBodySize
@@ -1043,19 +1079,21 @@ describe("ChangeParams", function() {
                 100, // maxCandidateMetadataSize
                 0 // era
             ];
-            const changeParams: (number | string | (number | string)[])[] = [
+            const changeParams: [number, number, (number | string)[]] = [
                 0xff,
                 0,
-                newParams
+                params
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(approvalEncoded(message, aliceSecret));
-            changeParams.push(approvalEncoded(message, carolSecret));
+            const approvals = [];
+            approvals.push(approvalEncoded(message, aliceSecret));
+            approvals.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -1077,7 +1115,7 @@ describe("ChangeParams", function() {
         });
 
         it("max number of validators cannot be zero", async function() {
-            const newParams = [
+            const params = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
                 4194304, // maxBodySize
@@ -1093,19 +1131,21 @@ describe("ChangeParams", function() {
                 100, // maxCandidateMetadataSize
                 0 // era
             ];
-            const changeParams: (number | string | (number | string)[])[] = [
+            const changeParams: [number, number, (number | string)[]] = [
                 0xff,
                 0,
-                newParams
+                params
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(approvalEncoded(message, aliceSecret));
-            changeParams.push(approvalEncoded(message, carolSecret));
+            const approvals = [];
+            approvals.push(approvalEncoded(message, aliceSecret));
+            approvals.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -1127,7 +1167,7 @@ describe("ChangeParams", function() {
         });
 
         it("The maximum number of candidates cannot be equal to the minimum number of candidates", async function() {
-            const newParams = [
+            const params = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
                 4194304, // maxBodySize
@@ -1143,19 +1183,21 @@ describe("ChangeParams", function() {
                 128, // maxCandidateMetadataSize
                 0 // era
             ];
-            const changeParams: (number | string | (number | string)[])[] = [
+            const changeParams: [number, number, (number | string)[]] = [
                 0xff,
                 0,
-                newParams
+                params
             ];
             const message = blake256(RLP.encode(changeParams).toString("hex"));
-            changeParams.push(approvalEncoded(message, aliceSecret));
-            changeParams.push(approvalEncoded(message, carolSecret));
+            const approvals = [];
+            approvals.push(approvalEncoded(message, aliceSecret));
+            approvals.push(approvalEncoded(message, carolSecret));
 
             const tx = node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParams)
+                .createChangeParamsTransaction({
+                    metadataSeq: 0,
+                    approvals,
+                    params
                 })
                 .sign({
                     secret: faucetSecret,
@@ -1208,15 +1250,9 @@ async function sendStakeToken(params: {
         }))!
     } = params;
     const tx = node.testFramework.core
-        .createCustomTransaction({
-            handlerId: stakeActionHandlerId,
-            bytes: Buffer.from(
-                RLP.encode([
-                    1,
-                    receiverAddress.accountId.toEncodeObject(),
-                    quantity
-                ])
-            )
+        .createTransferCCSTransaction({
+            recipient: receiverAddress,
+            quantity
         })
         .sign({
             secret: senderSecret,

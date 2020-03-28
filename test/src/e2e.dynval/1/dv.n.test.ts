@@ -119,12 +119,11 @@ describe("Dynamic Validator N -> N", function() {
 
             const insufficientDelegationTx = await nodes[0].rpc.mempool.sendSignedTransaction(
                 {
-                    tx: stake
-                        .createDelegateCCSTransaction(
-                            nodes[0].testFramework,
-                            alice.address,
-                            50
-                        )
+                    tx: nodes[0].testFramework.core
+                        .createDelegateCCSTransaction({
+                            delegatee: alice.address,
+                            quantity: 50
+                        })
                         .sign({
                             secret: faucetSecret,
                             seq: (await nodes[0].rpc.chain.getSeq({
@@ -190,12 +189,11 @@ describe("Dynamic Validator N -> N", function() {
 
             const insufficientDelegationTx = await nodes[0].rpc.mempool.sendSignedTransaction(
                 {
-                    tx: stake
-                        .createDelegateCCSTransaction(
-                            nodes[0].testFramework,
-                            alice.address,
-                            50
-                        )
+                    tx: nodes[0].testFramework.core
+                        .createDelegateCCSTransaction({
+                            delegatee: alice.address,
+                            quantity: 50
+                        })
                         .sign({
                             secret: faucetSecret,
                             seq: (await nodes[0].rpc.chain.getSeq({
@@ -261,12 +259,11 @@ describe("Dynamic Validator N -> N", function() {
 
             const insufficientDelegationTx = await nodes[0].rpc.mempool.sendSignedTransaction(
                 {
-                    tx: stake
-                        .createRevokeTransaction(
-                            nodes[0].testFramework,
-                            alice.address,
-                            50
-                        )
+                    tx: nodes[0].testFramework.core
+                        .createRevokeTransaction({
+                            delegatee: alice.address,
+                            quantity: 50
+                        })
                         .sign({
                             secret: faucetSecret,
                             seq: (await nodes[0].rpc.chain.getSeq({
@@ -332,12 +329,11 @@ describe("Dynamic Validator N -> N", function() {
 
             const insufficientDelegationTx = await nodes[0].rpc.mempool.sendSignedTransaction(
                 {
-                    tx: stake
-                        .createRevokeTransaction(
-                            nodes[0].testFramework,
-                            alice.address,
-                            50
-                        )
+                    tx: nodes[0].testFramework.core
+                        .createRevokeTransaction({
+                            delegatee: alice.address,
+                            quantity: 50
+                        })
                         .sign({
                             secret: faucetSecret,
                             seq: (await nodes[0].rpc.chain.getSeq({
@@ -429,12 +425,11 @@ describe("Dynamic Validator N -> N", function() {
                     const aliceNode = findNode(nodes, alice);
                     const nominationTx = await aliceNode.rpc.mempool.sendSignedTransaction(
                         {
-                            tx: stake
-                                .createSelfNominateTransaction(
-                                    aliceNode.testFramework,
+                            tx: aliceNode.testFramework.core
+                                .createSelfNominateTransaction({
                                     deposit,
-                                    ""
-                                )
+                                    metadata: ""
+                                })
                                 .sign({
                                     secret: alice.privateKey,
                                     seq: (await aliceNode.rpc.chain.getSeq({
@@ -451,12 +446,11 @@ describe("Dynamic Validator N -> N", function() {
                     if (delegation > 0) {
                         const tx = await nodes[0].rpc.mempool.sendSignedTransaction(
                             {
-                                tx: stake
-                                    .createDelegateCCSTransaction(
-                                        nodes[0].testFramework,
-                                        alice.address,
-                                        delegation
-                                    )
+                                tx: nodes[0].testFramework.core
+                                    .createDelegateCCSTransaction({
+                                        delegatee: alice.address,
+                                        quantity: delegation
+                                    })
                                     .sign({
                                         secret: faucetSecret,
                                         seq: (await nodes[0].rpc.chain.getSeq({

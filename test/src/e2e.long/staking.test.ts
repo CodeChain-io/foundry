@@ -198,15 +198,9 @@ describe("Staking", function() {
                 : params.seq;
 
         const tx = nodes[0].testFramework.core
-            .createCustomTransaction({
-                handlerId: stakeActionHandlerId,
-                bytes: Buffer.from(
-                    RLP.encode([
-                        1,
-                        params.receiverAddress.accountId.toEncodeObject(),
-                        params.quantity
-                    ])
-                )
+            .createTransferCCSTransaction({
+                recipient: params.receiverAddress,
+                quantity: params.quantity
             })
             .sign({
                 secret: params.senderSecret,
@@ -237,15 +231,9 @@ describe("Staking", function() {
                 : params.seq;
 
         const tx = nodes[0].testFramework.core
-            .createCustomTransaction({
-                handlerId: stakeActionHandlerId,
-                bytes: Buffer.from(
-                    RLP.encode([
-                        2,
-                        params.receiverAddress.accountId.toEncodeObject(),
-                        params.quantity
-                    ])
-                )
+            .createDelegateCCSTransaction({
+                delegatee: params.receiverAddress,
+                quantity: params.quantity
             })
             .sign({
                 secret: params.senderSecret,
@@ -276,15 +264,9 @@ describe("Staking", function() {
                 : params.seq;
 
         const tx = nodes[0].testFramework.core
-            .createCustomTransaction({
-                handlerId: stakeActionHandlerId,
-                bytes: Buffer.from(
-                    RLP.encode([
-                        3,
-                        params.delegateeAddress.accountId.toEncodeObject(),
-                        params.quantity
-                    ])
-                )
+            .createRevokeTransaction({
+                delegatee: params.delegateeAddress,
+                quantity: params.quantity
             })
             .sign({
                 secret: params.senderSecret,
@@ -316,9 +298,9 @@ describe("Staking", function() {
                 : params.seq;
 
         const tx = nodes[0].testFramework.core
-            .createCustomTransaction({
-                handlerId: stakeActionHandlerId,
-                bytes: Buffer.from(RLP.encode([4, deposit, metadata]))
+            .createSelfNominateTransaction({
+                deposit,
+                metadata: metadata || Buffer.from([])
             })
             .sign({
                 secret: params.senderSecret,

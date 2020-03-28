@@ -216,12 +216,11 @@ async function createNodes<T>(options: {
             if (deposit == null) {
                 continue;
             }
-            const tx = stake
-                .createSelfNominateTransaction(
-                    nodes[i].testFramework,
+            const tx = nodes[i].testFramework.core
+                .createSelfNominateTransaction({
                     deposit,
-                    ""
-                )
+                    metadata: ""
+                })
                 .sign({
                     secret: validator.privateKey,
                     seq: (await nodes[i].rpc.chain.getSeq({
@@ -259,12 +258,11 @@ async function createNodes<T>(options: {
             if (delegation === 0) {
                 continue;
             }
-            const tx = stake
-                .createDelegateCCSTransaction(
-                    initialNodes[0].testFramework,
-                    validator.address,
-                    delegation
-                )
+            const tx = initialNodes[0].testFramework.core
+                .createDelegateCCSTransaction({
+                    delegatee: validator.address,
+                    quantity: delegation
+                })
                 .sign({
                     secret: faucetSecret,
                     seq: faucetSeq2 + delegateTxs.length,
@@ -326,13 +324,15 @@ export async function selfNominate(
     validator: ValidatorConfig["signer"],
     deposit: number
 ): Promise<H256> {
-    const tx = stake.createSelfNominateTransaction(sdk, deposit, "").sign({
-        secret: validator.privateKey,
-        seq: (await rpc.chain.getSeq({
-            address: validator.address.toString()
-        }))!,
-        fee: 10
-    });
+    const tx = sdk.core
+        .createSelfNominateTransaction({ deposit, metadata: "" })
+        .sign({
+            secret: validator.privateKey,
+            seq: (await rpc.chain.getSeq({
+                address: validator.address.toString()
+            }))!,
+            fee: 10
+        });
 
     return new H256(
         await rpc.mempool.sendSignedTransaction({
@@ -347,8 +347,11 @@ export async function receiveDelegation(
     validator: ValidatorConfig["signer"],
     delegation: number
 ): Promise<H256> {
-    const tx = stake
-        .createDelegateCCSTransaction(sdk, validator.address, delegation)
+    const tx = sdk.core
+        .createDelegateCCSTransaction({
+            delegatee: validator.address,
+            quantity: delegation
+        })
         .sign({
             secret: faucetSecret,
             seq: (await rpc.chain.getSeq({
@@ -407,7 +410,7 @@ interface EraCommonParams {
 
 type CommonParams = typeof defaultParams & Partial<EraCommonParams>;
 
-function encodeParams(params: CommonParams): any[] {
+function encodeParams(params: CommonParams): (number | string)[] {
     const result = [
         params.maxExtraDataSize,
         params.networkID,
@@ -434,25 +437,27 @@ function encodeParams(params: CommonParams): any[] {
 export async function changeParams(
     node: CodeChain,
     metadataSeq: number,
-    params: CommonParams
+    commonParams: CommonParams
 ) {
-    const changeParamsActionRlp: [
-        number,
-        number,
-        (number | string)[],
-        ...string[]
-    ] = [0xff, metadataSeq, encodeParams(params)];
+    const params = encodeParams(commonParams);
+    const changeParamsActionRlp: [number, number, (number | string)[]] = [
+        0xff,
+        metadataSeq,
+        params
+    ];
     const message = blake256(RLP.encode(changeParamsActionRlp).toString("hex"));
-    changeParamsActionRlp.push(approvalEncoded(node, message, faucetSecret));
-    changeParamsActionRlp.push(approvalEncoded(node, message, aliceSecret));
-    changeParamsActionRlp.push(approvalEncoded(node, message, bobSecret));
+    const approvals = [];
+    approvals.push(approvalEncoded(node, message, faucetSecret));
+    approvals.push(approvalEncoded(node, message, aliceSecret));
+    approvals.push(approvalEncoded(node, message, bobSecret));
 
     return new H256(
         await node.rpc.mempool.sendSignedTransaction({
             tx: node.testFramework.core
-                .createCustomTransaction({
-                    handlerId: stakeActionHandlerId,
-                    bytes: RLP.encode(changeParamsActionRlp)
+                .createChangeParamsTransaction({
+                    metadataSeq,
+                    params,
+                    approvals
                 })
                 .sign({
                     secret: faucetSecret,

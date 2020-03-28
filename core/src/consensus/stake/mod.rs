@@ -164,10 +164,8 @@ mod tests {
     use ckey::Ed25519Public as Public;
     use cstate::tests::helpers;
     use cstate::{
-        execute_stake_action, init_stake, self_nominate, Candidate, Candidates, Delegation, Jail, StakeAccount,
-        TopStateView,
+        delegate_ccs, init_stake, self_nominate, Candidate, Candidates, Delegation, Jail, StakeAccount, TopStateView,
     };
-    use ctypes::transaction::StakeAction;
     use ctypes::CommonParams;
     use std::collections::HashMap;
 
@@ -230,7 +228,6 @@ mod tests {
     fn self_nominate_reverts_delegations_after_expiration() {
         let address_pubkey = Public::random();
         let address = public_to_address(&address_pubkey);
-        let delegator_pubkey = Public::random();
         let delegator = public_to_address(&address_pubkey);
 
         let mut state = metadata_for_election();
@@ -247,11 +244,8 @@ mod tests {
         // TODO: change with stake::execute()
         self_nominate(&mut state, &address, &address_pubkey, 0, 0, 30, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address,
-            quantity: 40,
-        };
-        execute_stake_action(action, &mut state, &delegator, &delegator_pubkey).unwrap();
+        let quantity = 40;
+        delegate_ccs(&mut state, &delegator, &address, quantity).unwrap();
 
         let result = on_term_close(&mut state, pseudo_term_to_block_num_calculator(29), &[]);
         assert_eq!(result, Ok(()));
@@ -426,22 +420,14 @@ mod tests {
         jail(&mut state, &[address], custody_until, released_at).unwrap();
 
         for current_term in 0..=released_at {
-            let action = StakeAction::DelegateCCS {
-                address,
-                quantity: 1,
-            };
-            let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-            assert_ne!(Ok(()), result);
+            let quantity = 1;
+            delegate_ccs(&mut state, &delegator, &address, quantity).unwrap_err();
 
             on_term_close(&mut state, pseudo_term_to_block_num_calculator(current_term), &[]).unwrap();
         }
 
-        let action = StakeAction::DelegateCCS {
-            address,
-            quantity: 1,
-        };
-        let result = execute_stake_action(action, &mut state, &delegator, &delegator_pubkey);
-        assert!(result.is_err());
+        let quantity = 1;
+        delegate_ccs(&mut state, &delegator, &address, quantity).unwrap_err();
     }
 
     #[test]
@@ -468,11 +454,8 @@ mod tests {
         let released_at = 20;
         self_nominate(&mut state, &address, &address_pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address,
-            quantity: 40,
-        };
-        execute_stake_action(action, &mut state, &delegator, &delegator_pubkey).unwrap();
+        let quantity = 40;
+        delegate_ccs(&mut state, &delegator, &address, quantity).unwrap();
 
         jail(&mut state, &[address], custody_until, released_at).unwrap();
 
@@ -510,11 +493,8 @@ mod tests {
         let released_at = 20;
         self_nominate(&mut state, &address, &address_pubkey, 0, 0, nominate_expire, b"".to_vec()).unwrap();
 
-        let action = StakeAction::DelegateCCS {
-            address,
-            quantity: 40,
-        };
-        execute_stake_action(action, &mut state, &delegator, &delegator_pubkey).unwrap();
+        let quantity = 40;
+        delegate_ccs(&mut state, &delegator, &address, quantity).unwrap();
 
         jail(&mut state, &[address], custody_until, released_at).unwrap();
 

@@ -83,12 +83,11 @@ describe("Change commonParams that affects validator set", function() {
             const revoked = validators.slice(0, 3);
             const untouched = validators.slice(3, 5);
             const revokeTxs = revoked.map((signer, idx) =>
-                stake
-                    .createRevokeTransaction(
-                        checkingNode.testFramework,
-                        signer.address,
-                        4_999
-                    )
+                checkingNode.testFramework.core
+                    .createRevokeTransaction({
+                        delegatee: signer.address,
+                        quantity: 4_999
+                    })
                     .sign({
                         secret: faucetSecret,
                         seq: faucetSeq + idx,
@@ -239,11 +238,10 @@ describe("Change commonParams that doesn't affects validator set", function() {
 
     describe("Change the maximum size of candidate metadata", async function() {
         function nominationWithMetadata(size: number) {
-            return stake.createSelfNominateTransaction(
-                nodes[0].testFramework,
-                1,
-                " ".repeat(size)
-            );
+            return nodes[0].testFramework.core.createSelfNominateTransaction({
+                deposit: 1,
+                metadata: " ".repeat(size)
+            });
         }
 
         it("Should apply larger metadata limit after increment", async function() {
