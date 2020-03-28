@@ -21,8 +21,6 @@ use crate::error::Error;
 use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ckey::Address;
 use cstate::{StateError, TopState, TopStateView};
-use ctypes::errors::SyntaxError;
-use ctypes::transaction::Action;
 use ctypes::{CommonParams, Header};
 use std::convert::TryInto;
 
@@ -42,25 +40,6 @@ impl CodeChainMachine {
         &self.params
     }
 
-    /// Does basic verification of the transaction.
-    pub fn verify_transaction_with_params(
-        &self,
-        tx: &UnverifiedTransaction,
-        common_params: &CommonParams,
-    ) -> Result<(), Error> {
-        let min_cost = Self::min_cost(common_params, &tx.transaction().action);
-        if tx.transaction().fee < min_cost {
-            return Err(SyntaxError::InsufficientFee {
-                minimal: min_cost,
-                got: tx.transaction().fee,
-            }
-            .into())
-        }
-        tx.verify_with_params(common_params)?;
-
-        Ok(())
-    }
-
     /// Verify a particular transaction's seal is valid.
     pub fn verify_transaction_seal(p: UnverifiedTransaction, _header: &Header) -> Result<VerifiedTransaction, Error> {
         Ok(p.try_into()?)
@@ -76,32 +55,6 @@ impl CodeChainMachine {
     ) -> Result<(), Error> {
         // FIXME: Filter transactions.
         Ok(())
-    }
-
-    pub fn min_cost(params: &CommonParams, action: &Action) -> u64 {
-        match action {
-            Action::Pay {
-                ..
-            } => params.min_pay_transaction_cost(),
-            Action::CreateShard {
-                ..
-            } => params.min_create_shard_transaction_cost(),
-            Action::SetShardOwners {
-                ..
-            } => params.min_set_shard_owners_transaction_cost(),
-            Action::SetShardUsers {
-                ..
-            } => params.min_set_shard_users_transaction_cost(),
-            Action::Custom {
-                ..
-            } => params.min_custom_transaction_cost(),
-            Action::ShardStore {
-                ..
-            } => {
-                // FIXME
-                0
-            }
-        }
     }
 
     pub fn balance(&self, live: &ExecutedBlock, address: &Address) -> Result<u64, Error> {

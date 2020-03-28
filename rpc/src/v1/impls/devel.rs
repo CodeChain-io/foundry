@@ -128,7 +128,6 @@ where
 
     fn test_tps(&self, setting: TPSTestSetting) -> Result<f64> {
         let common_params = self.client.common_params(BlockId::Latest).unwrap();
-        let pay_fee = common_params.min_pay_transaction_cost();
         let network_id = common_params.network_id();
 
         // NOTE: Assuming solo network
@@ -144,7 +143,7 @@ where
             ($seq:expr, $address:expr, $quantity: expr) => {
                 Transaction {
                     seq: $seq,
-                    fee: pay_fee,
+                    fee: 0,
                     network_id,
                     action: Action::Pay {
                         receiver: $address,

@@ -336,7 +336,8 @@ pub trait CodeChainEngine: ConsensusEngine {
                 .ok_or_else(|| SyntaxError::InvalidCustomAction(format!("{} is an invalid handler id", handler_id)))?;
             handler.verify(bytes, common_params)?;
         }
-        self.machine().verify_transaction_with_params(tx, common_params)
+        tx.verify_with_params(common_params)?;
+        Ok(())
     }
 }
 

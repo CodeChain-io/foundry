@@ -28,7 +28,6 @@ use primitives::Bytes;
 use std::ops::Range;
 
 use self::mem_pool_types::AccountDetails;
-pub use self::mem_pool_types::MemPoolMinFees;
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::client::{

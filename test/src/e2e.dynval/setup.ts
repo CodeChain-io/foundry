@@ -387,11 +387,6 @@ export async function fullyConnect(
 export const defaultParams = {
     maxExtraDataSize: 0x20,
     networkID: "tc",
-    minPayCost: 10,
-    minCreateShardCost: 10,
-    minSetShardOwnersCost: 10,
-    minSetShardUsersCost: 10,
-    minCustomCost: 0,
     maxBodySize: 4194304,
     snapshotPeriod: 16384,
 
@@ -416,11 +411,6 @@ function encodeParams(params: CommonParams): any[] {
     const result = [
         params.maxExtraDataSize,
         params.networkID,
-        params.minPayCost,
-        params.minCreateShardCost,
-        params.minSetShardOwnersCost,
-        params.minSetShardUsersCost,
-        params.minCustomCost,
         params.maxBodySize,
         params.snapshotPeriod,
         params.termSeconds,
