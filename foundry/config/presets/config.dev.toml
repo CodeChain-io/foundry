@@ -7,7 +7,6 @@ chain = "solo"
 mem_pool_mem_limit = 4 # MB
 mem_pool_size = 32768
 mem_pool_fee_bump_shift = 3 # 12.5%
-allow_create_shard = false
 reseal_on_txs = "all"
 reseal_min_period = 0
 no_reseal_timer = false

@@ -80,7 +80,6 @@ impl Config {
                 mem_size => Some(mem_size * 1024 * 1024),
             },
             mem_pool_fee_bump_shift: self.mining.mem_pool_fee_bump_shift.unwrap(),
-            allow_create_shard: self.mining.allow_create_shard.unwrap_or(false),
             reseal_on_own_transaction,
             reseal_on_external_transaction,
             reseal_min_period: Duration::from_millis(self.mining.reseal_min_period.unwrap()),
@@ -217,7 +216,6 @@ pub struct Mining {
     pub self_nomination_enable: bool,
     pub self_nomination_interval: Option<u64>,
     pub mem_pool_fee_bump_shift: Option<usize>,
-    pub allow_create_shard: Option<bool>,
     pub reseal_on_txs: Option<String>,
     pub reseal_min_period: Option<u64>,
     pub no_reseal_timer: Option<bool>,
@@ -393,9 +391,6 @@ impl Mining {
         if other.mem_pool_mem_limit.is_some() {
             self.mem_pool_mem_limit = other.mem_pool_mem_limit;
         }
-        if other.allow_create_shard.is_some() {
-            self.allow_create_shard = other.allow_create_shard;
-        }
         if other.reseal_on_txs.is_some() {
             self.reseal_on_txs = other.reseal_on_txs.clone();
         }
@@ -444,9 +439,6 @@ impl Mining {
         }
         if let Some(mem_pool_size) = matches.value_of("mem-pool-size") {
             self.mem_pool_size = Some(mem_pool_size.parse().map_err(|_| "Invalid size")?);
-        }
-        if matches.is_present("allow-create-shard") {
-            self.allow_create_shard = Some(true)
         }
         if let Some(reseal_on_txs) = matches.value_of("reseal-on-txs") {
             self.reseal_on_txs = Some(reseal_on_txs.to_string());
