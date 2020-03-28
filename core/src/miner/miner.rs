@@ -31,7 +31,7 @@ use crate::types::{BlockId, TransactionId};
 use ckey::{public_to_address, Address, Ed25519Public as Public, Password, PlatformAddress};
 use cstate::{FindDoubleVoteHandler, TopLevelState};
 use ctypes::errors::HistoryError;
-use ctypes::transaction::{Action, IncompleteTransaction};
+use ctypes::transaction::IncompleteTransaction;
 use ctypes::{BlockHash, TxHash};
 use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
@@ -65,7 +65,6 @@ pub struct MinerOptions {
     /// then `new_fee > old_fee + old_fee >> mem_pool_fee_bump_shift` should be satisfied to replace.
     /// Local transactions ignore this option.
     pub mem_pool_fee_bump_shift: usize,
-    pub allow_create_shard: bool,
 }
 
 impl Default for MinerOptions {
@@ -78,7 +77,6 @@ impl Default for MinerOptions {
             mem_pool_size: 8192,
             mem_pool_memory_limit: Some(2 * 1024 * 1024),
             mem_pool_fee_bump_shift: 3,
-            allow_create_shard: false,
         }
     }
 }
@@ -204,15 +202,6 @@ impl Miner {
                 if client.transaction_block(&TransactionId::Hash(hash)).is_some() {
                     cdebug!(MINER, "Rejected transaction {:?}: already in the blockchain", hash);
                     return Err(HistoryError::TransactionAlreadyImported.into())
-                }
-                if !self.is_allowed_transaction(&tx.transaction().action) {
-                    cdebug!(
-                        MINER,
-                        "Rejected transaction {:?}: {:?} is not allowed transaction",
-                        hash,
-                        tx.transaction().action
-                    );
-                    return Err(Error::Other("Not allowed transaction".to_string()))
                 }
                 let immune_users = self.immune_users.read();
                 let tx = tx
@@ -344,11 +333,6 @@ impl Miner {
                 // The previous transaction has failed
                 continue
             }
-            if !self.is_allowed_transaction(&tx.transaction().action) {
-                invalid_tx_users.insert(signer_public);
-                invalid_transactions.push(tx.hash());
-                continue
-            }
 
             let hash = tx.hash();
             let start = Instant::now();
@@ -416,18 +400,6 @@ impl Miner {
     /// Are we allowed to do a non-mandatory reseal?
     fn transaction_reseal_allowed(&self) -> bool {
         self.sealing_enabled.load(Ordering::Relaxed) && (Instant::now() > *self.next_allowed_reseal.lock())
-    }
-
-    fn is_allowed_transaction(&self, action: &Action) -> bool {
-        if let Action::CreateShard {
-            ..
-        } = action
-        {
-            if !self.options.allow_create_shard {
-                return false
-            }
-        }
-        true
     }
 }
 
@@ -742,7 +714,7 @@ pub mod test {
     use cio::IoService;
     use ckey::{Ed25519Private as Private, Signature};
     use ctimer::TimerLoop;
-    use ctypes::transaction::Transaction;
+    use ctypes::transaction::{Action, Transaction};
 
     use super::super::super::client::ClientConfig;
     use super::super::super::service::ClientIoMessage;

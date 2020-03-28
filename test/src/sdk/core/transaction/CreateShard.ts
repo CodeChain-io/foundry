@@ -10,7 +10,6 @@ export class CreateShard extends Transaction {
     private readonly users: Address[];
 
     public constructor(params: { users: Address[] }, networkId: NetworkId) {
-        throw Error("CreateShard is disabled");
         super(networkId);
         const { users } = params;
         this.users = users;

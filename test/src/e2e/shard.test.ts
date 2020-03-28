@@ -30,10 +30,10 @@ import CodeChain from "../helper/spawn";
 
 const expect = chai.expect;
 
-describe.skip("CreateShard", function() {
+describe("CreateShard", function() {
     let node: CodeChain;
     before(async function() {
-        node = new CodeChain({ argv: ["--allow-create-shard"] });
+        node = new CodeChain();
         await node.start();
     });
 
@@ -55,12 +55,12 @@ describe.skip("CreateShard", function() {
             .createCreateShardTransaction({ users: [aliceAddress] })
             .sign({ secret: faucetSecret, seq: seq + 1, fee: 10 });
         const beforeBlockNumber = await node.rpc.chain.getBestBlockNumber();
-        expect(
-            node.rpc.chain.getShardIdByHash({
-                transactionHash: `0x${tx.hash().toString()}`,
-                blockNumber: null
-            })
-        ).to.be.null;
+        // expect(
+        //     node.rpc.chain.getShardIdByHash({
+        //         transactionHash: `0x${tx.hash().toString()}`,
+        //         blockNumber: null
+        //     })
+        // ).to.be.null;
         await node.rpc.mempool.sendSignedTransaction({
             tx: tx.rlpBytes().toString("hex")
         });
@@ -142,9 +142,8 @@ describe.skip("CreateShard", function() {
         await node.rpc.mempool.sendSignedTransaction({
             tx: setShardUsers.rlpBytes().toString("hex")
         });
-        const shardUsers = (await node.rpc.chain.getShardIdByHash({
-            transactionHash: `0x${tx.hash().toString()}`,
-            blockNumber: null
+        const shardUsers = (await node.rpc.chain.getShardUsers({
+            shardId
         }))!;
         expect(shardUsers).to.deep.equal(users.map(user => user.value));
     });
@@ -266,63 +265,6 @@ describe.skip("CreateShard", function() {
                 blockNumber: null
             })
         ).not.to.be.null;
-    });
-
-    after(async function() {
-        await node.clean();
-    });
-});
-
-describe.skip("Cannot create shard without allow-create-shard flag", function() {
-    let node: CodeChain;
-    before(async function() {
-        node = new CodeChain();
-        await node.start();
-    });
-
-    it("Create 1 shard", async function() {
-        const seq: number = (await node.rpc.chain.getSeq({
-            address: faucetAddress.toString(),
-            blockNumber: null
-        }))!;
-
-        await node.rpc.mempool.sendSignedTransaction({
-            tx: node.testFramework.core
-                .createPayTransaction({ recipient: aliceAddress, quantity: 1 })
-                .sign({ secret: faucetSecret, seq, fee: 10 })
-                .rlpBytes()
-                .toString("hex")
-        });
-
-        const tx = node.testFramework.core
-            .createCreateShardTransaction({ users: [aliceAddress] })
-            .sign({ secret: faucetSecret, seq: seq + 1, fee: 10 });
-        expect(
-            await node.rpc.chain.getShardIdByHash({
-                transactionHash: `0x${tx.hash().toString()}`,
-                blockNumber: null
-            })
-        ).be.null;
-        expect(
-            node.rpc.mempool.sendSignedTransaction({
-                tx: tx.rlpBytes().toString("hex")
-            })
-        ).be.rejected;
-        expect(
-            await node.rpc.chain.containsTransaction({
-                transactionHash: `0x${tx.hash().toString()}`
-            })
-        ).be.false;
-        expect(
-            await node.rpc.chain.getTransaction({
-                transactionHash: `0x${tx.hash().toString()}`
-            })
-        ).be.null;
-        const afterShardId = await node.rpc.chain.getShardIdByHash({
-            transactionHash: `0x${tx.hash().toString()}`,
-            blockNumber: null
-        })!;
-        expect(afterShardId).be.null;
     });
 
     after(async function() {
