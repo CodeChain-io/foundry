@@ -75,12 +75,11 @@ describe("Dynamic Validator N -> N'", function() {
                 alice
             ]);
 
-            const tx = stake
-                .createDelegateCCSTransaction(
-                    rpcNode.testFramework,
-                    betty.address,
-                    5_000
-                )
+            const tx = rpcNode.testFramework.core
+                .createDelegateCCSTransaction({
+                    delegatee: betty.address,
+                    quantity: 5_000
+                })
                 .sign({
                     secret: faucetSecret,
                     seq: (await rpcNode.rpc.chain.getSeq({
@@ -142,12 +141,11 @@ describe("Dynamic Validator N -> N'", function() {
             ]);
 
             const bettyNode = findNode(nodes, betty);
-            const tx = stake
-                .createSelfNominateTransaction(
-                    bettyNode.testFramework,
-                    100000,
-                    ""
-                )
+            const tx = bettyNode.testFramework.core
+                .createSelfNominateTransaction({
+                    deposit: 100000,
+                    metadata: ""
+                })
                 .sign({
                     secret: betty.privateKey,
                     seq: (await bettyNode.rpc.chain.getSeq({
@@ -208,23 +206,21 @@ describe("Dynamic Validator N -> N'", function() {
             const seq = (await rpcNode.rpc.chain.getSeq({
                 address: faucetAddress.toString()
             }))!;
-            const tx = stake
-                .createDelegateCCSTransaction(
-                    rpcNode.testFramework,
-                    betty.address,
-                    5_000
-                )
+            const tx = rpcNode.testFramework.core
+                .createDelegateCCSTransaction({
+                    delegatee: betty.address,
+                    quantity: 5_000
+                })
                 .sign({
                     secret: faucetSecret,
                     seq,
                     fee: 10
                 });
-            const tx2 = stake
-                .createRevokeTransaction(
-                    rpcNode.testFramework,
-                    alice.address,
-                    4999
-                )
+            const tx2 = rpcNode.testFramework.core
+                .createRevokeTransaction({
+                    delegatee: alice.address,
+                    quantity: 4999
+                })
                 .sign({
                     secret: faucetSecret,
                     seq: seq + 1,
@@ -285,12 +281,11 @@ describe("Dynamic Validator N -> N'", function() {
             ]);
 
             const bettyNode = findNode(nodes, betty);
-            const tx = stake
-                .createSelfNominateTransaction(
-                    bettyNode.testFramework,
-                    100000,
-                    ""
-                )
+            const tx = bettyNode.testFramework.core
+                .createSelfNominateTransaction({
+                    deposit: 100000,
+                    metadata: ""
+                })
                 .sign({
                     secret: betty.privateKey,
                     seq: (await bettyNode.rpc.chain.getSeq({
@@ -299,12 +294,11 @@ describe("Dynamic Validator N -> N'", function() {
                     fee: 10
                 });
 
-            const tx2 = stake
-                .createRevokeTransaction(
-                    rpcNode.testFramework,
-                    alice.address,
-                    4999
-                )
+            const tx2 = rpcNode.testFramework.core
+                .createRevokeTransaction({
+                    delegatee: alice.address,
+                    quantity: 4_999
+                })
                 .sign({
                     secret: faucetSecret,
                     seq: (await rpcNode.rpc.chain.getSeq({

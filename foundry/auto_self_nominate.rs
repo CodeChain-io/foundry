@@ -21,8 +21,8 @@ use ckey::{Address, Ed25519Public as Public, Signature};
 use ckeystore::DecryptedAccount;
 use clap::ArgMatches;
 use cstate::{Banned, Candidates, Jail};
-use ctypes::transaction::StakeAction::SelfNominate;
-use ctypes::transaction::{Action, Transaction};
+use ctypes::transaction::Action::SelfNominate;
+use ctypes::transaction::Transaction;
 use primitives::{Bytes, H256};
 use std::convert::TryInto;
 use std::sync::Arc;
@@ -178,10 +178,7 @@ impl AutoSelfNomination {
             seq,
             fee: 0,
             network_id,
-            action: Action::Custom {
-                handler_id: 0,
-                bytes: selfnominate.rlp_bytes(),
-            },
+            action: selfnominate,
         };
 
         let signature = match signer.sign_ed25519(*tx.hash()) {

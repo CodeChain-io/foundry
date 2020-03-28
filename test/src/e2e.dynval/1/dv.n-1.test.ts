@@ -120,12 +120,11 @@ describe("Dynamic Validator N -> N-1", function() {
                 address: faucetAddress.toString()
             }))!;
             // Revoke all the delegation deposits
-            const tx = stake
-                .createRevokeTransaction(
-                    checkingNode.testFramework,
-                    alice.address,
-                    5_000
-                )
+            const tx = checkingNode.testFramework.core
+                .createRevokeTransaction({
+                    delegatee: alice.address,
+                    quantity: 5_000
+                })
                 .sign({
                     secret: faucetSecret,
                     seq: faucetSeq,
@@ -156,12 +155,11 @@ describe("Dynamic Validator N -> N-1", function() {
                 address: faucetAddress.toString()
             }))!;
             // make remaining deposits under threshold.
-            const tx = stake
-                .createRevokeTransaction(
-                    checkingNode.testFramework,
-                    alice.address,
-                    4_500
-                )
+            const tx = checkingNode.testFramework.core
+                .createRevokeTransaction({
+                    delegatee: alice.address,
+                    quantity: 4_500
+                })
                 .sign({
                     secret: faucetSecret,
                     seq: faucetSeq,

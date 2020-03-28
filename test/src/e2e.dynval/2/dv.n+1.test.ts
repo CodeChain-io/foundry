@@ -90,12 +90,11 @@ describe("Dynamic Validator N -> N+1", function() {
             const checkingNode = nodes[0];
             await beforeInsertionCheck(checkingNode.rpc);
             const bettyNode = findNode(nodes, betty);
-            const nominateTx = stake
-                .createSelfNominateTransaction(
-                    bettyNode.testFramework,
-                    11_000_000,
-                    ""
-                )
+            const nominateTx = bettyNode.testFramework.core
+                .createSelfNominateTransaction({
+                    deposit: 11_000_000,
+                    metadata: ""
+                })
                 .sign({
                     secret: betty.privateKey,
                     seq: (await bettyNode.rpc.chain.getSeq({
@@ -106,12 +105,11 @@ describe("Dynamic Validator N -> N+1", function() {
             const nominateTxHash = await bettyNode.rpc.mempool.sendSignedTransaction(
                 { tx: nominateTx.rlpBytes().toString("hex") }
             );
-            const delegateTx = stake
-                .createDelegateCCSTransaction(
-                    bettyNode.testFramework,
-                    betty.address,
-                    5_000
-                )
+            const delegateTx = bettyNode.testFramework.core
+                .createDelegateCCSTransaction({
+                    delegatee: betty.address,
+                    quantity: 5_000
+                })
                 .sign({
                     secret: faucetSecret,
                     seq: (await bettyNode.rpc.chain.getSeq({
@@ -155,12 +153,11 @@ describe("Dynamic Validator N -> N+1", function() {
 
             const checkingNode = nodes[0];
             await beforeInsertionCheck(checkingNode.rpc);
-            const nominateTx = stake
-                .createSelfNominateTransaction(
-                    checkingNode.testFramework,
-                    10_000,
-                    ""
-                )
+            const nominateTx = checkingNode.testFramework.core
+                .createSelfNominateTransaction({
+                    deposit: 10_000,
+                    metadata: ""
+                })
                 .sign({
                     secret: betty.privateKey,
                     seq: (await checkingNode.rpc.chain.getSeq({
@@ -204,12 +201,11 @@ describe("Dynamic Validator N -> N+1", function() {
             const faucetSeq = (await checkingNode.rpc.chain.getSeq({
                 address: faucetAddress.toString()
             }))!;
-            const delegateTx = stake
-                .createDelegateCCSTransaction(
-                    checkingNode.testFramework,
-                    betty.address,
-                    2
-                )
+            const delegateTx = checkingNode.testFramework.core
+                .createDelegateCCSTransaction({
+                    delegatee: betty.address,
+                    quantity: 2
+                })
                 .sign({
                     secret: faucetSecret,
                     seq: faucetSeq,

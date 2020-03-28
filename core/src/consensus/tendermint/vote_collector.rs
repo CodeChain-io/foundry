@@ -17,7 +17,7 @@
 use super::{ConsensusMessage, VoteStep};
 use crate::consensus::BitSet;
 use ckey::Signature;
-use ctypes::transaction::StakeAction;
+use ctypes::transaction::Action;
 use ctypes::BlockHash;
 use rlp::{Encodable, RlpStream};
 use std::collections::{BTreeMap, HashMap};
@@ -44,8 +44,8 @@ pub struct DoubleVote {
 }
 
 impl DoubleVote {
-    pub fn to_action(&self) -> StakeAction {
-        StakeAction::ReportDoubleVote {
+    pub fn to_action(&self) -> Action {
+        Action::ReportDoubleVote {
             message1: self.vote_one.rlp_bytes(),
             message2: self.vote_two.rlp_bytes(),
         }

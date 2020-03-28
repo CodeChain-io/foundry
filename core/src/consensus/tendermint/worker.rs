@@ -41,7 +41,7 @@ use crate::BlockId;
 use ckey::{public_to_address, verify, Address, Signature};
 use cnetwork::{EventSender, NodeId};
 use crossbeam_channel as crossbeam;
-use ctypes::transaction::{Action, Transaction};
+use ctypes::transaction::Transaction;
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{BlockHash, BlockNumber, Header};
 use primitives::Bytes;
@@ -1432,10 +1432,7 @@ impl Worker {
             seq,
             fee: 0,
             network_id,
-            action: Action::Custom {
-                handler_id: 0,
-                bytes: double.to_action().rlp_bytes(),
-            },
+            action: double.to_action(),
         };
         let signature = match self.signer.sign_ed25519(*tx.hash()) {
             Ok(signature) => signature,

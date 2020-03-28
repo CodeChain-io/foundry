@@ -193,8 +193,8 @@ async function makeItValidator(node: CodeChain, freshNodeValidator: Signer) {
             })
         )
     );
-    const selfNominateTx = stake
-        .createSelfNominateTransaction(node.testFramework, 10000000, "")
+    const selfNominateTx = node.testFramework.core
+        .createSelfNominateTransaction({ deposit: 10000000, metadata: "" })
         .sign({
             secret: freshNodeValidator.privateKey,
             seq: (await node.rpc.chain.getSeq({
@@ -209,12 +209,11 @@ async function makeItValidator(node: CodeChain, freshNodeValidator: Signer) {
             })
         )
     );
-    const delegateTx = stake
-        .createDelegateCCSTransaction(
-            node.testFramework,
-            freshNodeValidator.address,
-            10000
-        )
+    const delegateTx = node.testFramework.core
+        .createDelegateCCSTransaction({
+            delegatee: freshNodeValidator.address,
+            quantity: 10000
+        })
         .sign({
             secret: faucetSecret,
             seq: faucetSeq + 1,

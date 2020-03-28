@@ -15,13 +15,19 @@ import { Block } from "./Block";
 import { Script } from "./Script";
 import { SignedTransaction } from "./SignedTransaction";
 import { Transaction } from "./Transaction";
+import { ChangeParams } from "./transaction/ChangeParams";
 import { CreateShard } from "./transaction/CreateShard";
-import { Custom } from "./transaction/Custom";
+import { DelegateCCS } from "./transaction/DelegateCCS";
 import { Pay } from "./transaction/Pay";
+import { Redelegate } from "./transaction/Redelegate";
 import { Remove } from "./transaction/Remove";
+import { ReportDoubleVote } from "./transaction/ReportDoubleVote";
+import { Revoke } from "./transaction/Revoke";
+import { SelfNominate } from "./transaction/SelfNominate";
 import { SetShardOwners } from "./transaction/SetShardOwners";
 import { SetShardUsers } from "./transaction/SetShardUsers";
 import { Store } from "./transaction/Store";
+import { TransferCCS } from "./transaction/TransferCCS";
 import { NetworkId } from "./types";
 
 export class Core {
@@ -45,7 +51,12 @@ export class Core {
         SetShardUsers,
         Store,
         Remove,
-        Custom,
+        DelegateCCS,
+        TransferCCS,
+        Revoke,
+        Redelegate,
+        SelfNominate,
+        ReportDoubleVote,
         // Script
         Script,
         Address
@@ -216,24 +227,100 @@ export class Core {
         return new Remove(removeParam, this.networkId);
     }
 
-    /**
-     * Creates Custom type that will be handled by a specified type handler
-     * @param params.handlerId An Id of an type handler which will handle a custom transaction
-     * @param params.bytes A custom transaction body
-     * @throws Given number for handlerId is invalid for converting it to U64
-     */
-    public createCustomTransaction(params: {
-        handlerId: number;
-        bytes: Buffer;
-    }): Custom {
-        const { handlerId, bytes } = params;
-        checkHandlerId(handlerId);
-        checkBytes(bytes);
-        const customParam = {
-            handlerId: U64.ensure(handlerId),
-            bytes
-        };
-        return new Custom(customParam, this.networkId);
+    public createDelegateCCSTransaction(params: {
+        delegatee: AddressValue;
+        quantity: U64Value;
+    }): DelegateCCS {
+        const { delegatee, quantity } = params;
+        checkAddressRecipient(delegatee);
+        checkAmount(quantity);
+        return new DelegateCCS(
+            Address.ensure(delegatee),
+            U64.ensure(quantity),
+            this.networkId
+        );
+    }
+
+    public createTransferCCSTransaction(params: {
+        recipient: AddressValue;
+        quantity: U64Value;
+    }): TransferCCS {
+        const { recipient, quantity } = params;
+        checkAddressRecipient(recipient);
+        checkAmount(quantity);
+        return new TransferCCS(
+            Address.ensure(recipient),
+            U64.ensure(quantity),
+            this.networkId
+        );
+    }
+
+    public createRevokeTransaction(params: {
+        delegatee: AddressValue;
+        quantity: U64Value;
+    }): Revoke {
+        const { delegatee, quantity } = params;
+        checkAddressRecipient(delegatee);
+        checkAmount(quantity);
+        return new Revoke(
+            Address.ensure(delegatee),
+            U64.ensure(quantity),
+            this.networkId
+        );
+    }
+
+    public createRedelegateTransaction(params: {
+        prevDelegator: AddressValue;
+        nextDelegator: AddressValue;
+        quantity: U64Value;
+    }): Redelegate {
+        const { prevDelegator, nextDelegator, quantity } = params;
+        checkAddressRecipient(prevDelegator);
+        checkAddressRecipient(nextDelegator);
+        checkAmount(quantity);
+        return new Redelegate(
+            Address.ensure(prevDelegator),
+            Address.ensure(nextDelegator),
+            U64.ensure(quantity),
+            this.networkId
+        );
+    }
+
+    public createSelfNominateTransaction(params: {
+        deposit: U64Value;
+        metadata: Buffer | string;
+    }): SelfNominate {
+        const { deposit } = params;
+        const metadata = Buffer.from(params.metadata);
+        checkAmount(deposit);
+        checkBytes(metadata);
+        return new SelfNominate(U64.ensure(deposit), metadata, this.networkId);
+    }
+
+    public createReportDoubleVoteTransaction(params: {
+        message1: Buffer | string;
+        message2: Buffer | string;
+    }): ReportDoubleVote {
+        const message1 = Buffer.from(params.message1);
+        const message2 = Buffer.from(params.message2);
+        checkBytes(message1);
+        checkBytes(message2);
+        return new ReportDoubleVote(message1, message2, this.networkId);
+    }
+
+    public createChangeParamsTransaction(args: {
+        metadataSeq: U64Value;
+        params: (number | string)[];
+        approvals: any[];
+    }): ChangeParams {
+        const { metadataSeq, params, approvals } = args;
+        checkAmount(metadataSeq);
+        return new ChangeParams(
+            U64.ensure(metadataSeq),
+            params,
+            approvals,
+            this.networkId
+        );
     }
 }
 

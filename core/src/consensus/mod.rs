@@ -43,7 +43,7 @@ use ckey::{Address, Signature};
 use cnetwork::NetworkService;
 use cstate::{DoubleVoteHandler, StateDB, StateResult};
 use ctypes::errors::SyntaxError;
-use ctypes::transaction::{Action, StakeAction};
+use ctypes::transaction::Action;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockHash, CommonParams, Header};
 use primitives::{Bytes, H256};
@@ -322,24 +322,14 @@ pub trait CodeChainEngine: ConsensusEngine {
         tx: &UnverifiedTransaction,
         common_params: &CommonParams,
     ) -> Result<(), Error> {
-        if let Action::Custom {
-            bytes,
-            ..
+        if let Action::ReportDoubleVote {
+            message1,
+            message2,
         } = &tx.transaction().action
         {
-            let action = rlp::decode(bytes).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
-
             let handler =
                 self.stake_handler().ok_or_else(|| SyntaxError::InvalidCustomAction("no valid handler".to_string()))?;
-            if let StakeAction::ReportDoubleVote {
-                message1,
-                message2,
-            } = &action
-            {
-                handler.verify(message1, message2)?;
-            }
-
-            action.verify(common_params)?;
+            handler.verify(message1, message2)?;
         }
         tx.verify_with_params(common_params)?;
         Ok(())

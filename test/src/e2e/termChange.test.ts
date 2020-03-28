@@ -61,7 +61,7 @@ describe("Term change", function() {
     });
 
     async function changeTermSeconds(metadataSeq: number, termSeconds: number) {
-        const newParams = [
+        const params = [
             0x20, // maxExtraDataSize
             "tc", // networkID
             4194304, // maxBodySize
@@ -77,21 +77,23 @@ describe("Term change", function() {
             128, // maxCandidateMetadataSize
             0 // era
         ];
-        const changeParams: (number | string | (number | string)[])[] = [
+        const changeParams: [number, number, (number | string)[]] = [
             0xff,
             metadataSeq,
-            newParams
+            params
         ];
         const message = blake256(RLP.encode(changeParams).toString("hex"));
-        changeParams.push(approvalEncoded(message, aliceSecret));
-        changeParams.push(approvalEncoded(message, carolSecret));
+        const approvals = [];
+        approvals.push(approvalEncoded(message, aliceSecret));
+        approvals.push(approvalEncoded(message, carolSecret));
 
         {
             const hash = await node.rpc.mempool.sendSignedTransaction({
                 tx: node.testFramework.core
-                    .createCustomTransaction({
-                        handlerId: stakeActionHandlerId,
-                        bytes: RLP.encode(changeParams)
+                    .createChangeParamsTransaction({
+                        metadataSeq,
+                        params,
+                        approvals
                     })
                     .sign({
                         secret: faucetSecret,

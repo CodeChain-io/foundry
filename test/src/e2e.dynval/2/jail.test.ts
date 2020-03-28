@@ -131,10 +131,11 @@ describe("Jail state transition test", function() {
 
         await termWaiter.waitNodeUntilTerm(node, { target: 4, termPeriods: 2 });
 
-        const nomination = await stake.createSelfNominateTransaction(
-            node.testFramework,
-            10_000_000,
-            ""
+        const nomination = await node.testFramework.core.createSelfNominateTransaction(
+            {
+                deposit: 10_000_000,
+                metadata: ""
+            }
         );
         const hash = await node.rpc.mempool.sendSignedTransaction({
             tx: nomination
@@ -160,10 +161,11 @@ describe("Jail state transition test", function() {
         });
 
         const node = nodes[0];
-        const nomination = await stake.createSelfNominateTransaction(
-            node.testFramework,
-            10_000_000,
-            ""
+        const nomination = await node.testFramework.core.createSelfNominateTransaction(
+            {
+                deposit: 10_000_000,
+                metadata: ""
+            }
         );
         const hash = await node.rpc.mempool.sendSignedTransaction({
             tx: nomination
