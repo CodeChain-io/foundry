@@ -17,7 +17,7 @@
 use super::{Private, Public};
 use primitives::H512;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 pub use sodiumoxide::crypto::sign::SIGNATUREBYTES;
 use sodiumoxide::crypto::sign::{sign_detached, verify_detached, Signature};
 use std::fmt;
@@ -99,6 +99,15 @@ impl Serialize for Ed25519Signature {
         S: Serializer, {
         let h512_pubkey = H512::from_slice(self.as_ref());
         h512_pubkey.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Ed25519Signature {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>, {
+        let h512_signature = H512::deserialize(deserializer)?;
+        Ok(Self::from_slice(&h512_signature).expect("Bytes length was verified"))
     }
 }
 
