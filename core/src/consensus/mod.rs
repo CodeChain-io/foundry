@@ -341,7 +341,8 @@ pub trait CodeChainEngine: ConsensusEngine {
 
             action.verify(common_params)?;
         }
-        self.machine().verify_transaction_with_params(tx, common_params)
+        tx.verify_with_params(common_params)?;
+        Ok(())
     }
 }
 

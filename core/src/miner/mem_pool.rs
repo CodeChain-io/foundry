@@ -16,8 +16,8 @@
 
 use super::backup;
 use super::mem_pool_types::{
-    AccountDetails, CurrentQueue, FutureQueue, MemPoolInput, MemPoolItem, MemPoolMinFees, MemPoolStatus,
-    PoolingInstant, QueueTag, TransactionOrder, TransactionOrderWithTag, TxOrigin,
+    AccountDetails, CurrentQueue, FutureQueue, MemPoolInput, MemPoolItem, MemPoolStatus, PoolingInstant, QueueTag,
+    TransactionOrder, TransactionOrderWithTag, TxOrigin,
 };
 use super::TransactionImportResult;
 use crate::client::{AccountData, BlockChainTrait};
@@ -72,8 +72,6 @@ impl From<SyntaxError> for Error {
 }
 
 pub struct MemPool {
-    /// Fee threshold for transactions that can be imported to this pool
-    minimum_fees: MemPoolMinFees,
     /// A value which is used to check whether a new transaciton can replace a transaction in the memory pool with the same signer and seq.
     /// If the fee of the new transaction is `new_fee` and the fee of the transaction in the memory pool is `old_fee`,
     /// then `new_fee > old_fee + old_fee >> mem_pool_fee_bump_shift` should be satisfied to replace.
@@ -113,15 +111,8 @@ pub struct MemPool {
 
 impl MemPool {
     /// Create new instance of this Queue with specified limits
-    pub fn with_limits(
-        limit: usize,
-        memory_limit: usize,
-        fee_bump_shift: usize,
-        db: Arc<dyn KeyValueDB>,
-        minimum_fees: MemPoolMinFees,
-    ) -> Self {
+    pub fn with_limits(limit: usize, memory_limit: usize, fee_bump_shift: usize, db: Arc<dyn KeyValueDB>) -> Self {
         MemPool {
-            minimum_fees,
             fee_bump_shift,
             max_block_number_period_in_pool: DEFAULT_POOLING_PERIOD,
             current: CurrentQueue::new(),
@@ -700,23 +691,6 @@ impl MemPool {
         origin: TxOrigin,
         client_account: &AccountDetails,
     ) -> Result<(), Error> {
-        let action_min_fee = self.minimum_fees.min_cost(&tx.transaction().action);
-        if origin != TxOrigin::Local && tx.transaction().fee < action_min_fee {
-            ctrace!(
-                MEM_POOL,
-                "Dropping transaction below mempool defined minimum fee: {:?} (gp: {} < {})",
-                tx.hash(),
-                tx.transaction().fee,
-                action_min_fee
-            );
-
-            return Err(SyntaxError::InsufficientFee {
-                minimal: action_min_fee,
-                got: tx.transaction().fee,
-            }
-            .into())
-        }
-
         let full_pools_lowest = self.effective_minimum_fee();
         if origin != TxOrigin::Local && tx.transaction().fee < full_pools_lowest {
             ctrace!(
@@ -1042,7 +1016,7 @@ pub mod test {
         test_client.set_balance(default_addr, u64::max_value());
 
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
-        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db.clone(), Default::default());
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db.clone());
 
         let fetch_account = fetch_account_creator(&test_client);
 
@@ -1076,7 +1050,7 @@ pub mod test {
         inputs.push(create_mempool_input_with_pay(7u64, &keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
-        let mut mem_pool_recovered = MemPool::with_limits(8192, usize::max_value(), 3, db, Default::default());
+        let mut mem_pool_recovered = MemPool::with_limits(8192, usize::max_value(), 3, db);
         mem_pool_recovered.recover_from_db(&test_client);
 
         assert_eq!(mem_pool_recovered.first_seqs, mem_pool.first_seqs);
@@ -1105,122 +1079,9 @@ pub mod test {
         VerifiedTransaction::new_with_sign(tx, keypair.private())
     }
 
-    fn create_signed_pay_with_fee(seq: u64, fee: u64, keypair: &KeyPair) -> VerifiedTransaction {
-        let receiver = 1u64.into();
-        let tx = Transaction {
-            seq,
-            fee,
-            network_id: "tc".into(),
-            action: Action::Pay {
-                receiver,
-                quantity: 100_000,
-            },
-        };
-        VerifiedTransaction::new_with_sign(tx, keypair.private())
-    }
-
     fn create_mempool_input_with_pay(seq: u64, keypair: &KeyPair) -> MemPoolInput {
         let signed = create_signed_pay(seq, &keypair);
         MemPoolInput::new(signed, TxOrigin::Local)
-    }
-
-    fn abbreviated_mempool_add(
-        test_client: &TestBlockChainClient,
-        mem_pool: &mut MemPool,
-        txs: Vec<VerifiedTransaction>,
-        origin: TxOrigin,
-    ) -> Vec<Result<TransactionImportResult, Error>> {
-        let fetch_account = fetch_account_creator(test_client);
-
-        let inserted_block_number = 1;
-        let inserted_timestamp = 100;
-        let inputs: Vec<MemPoolInput> = txs.into_iter().map(|tx| MemPoolInput::new(tx, origin)).collect();
-        mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account)
-    }
-
-    #[test]
-    fn local_transactions_whose_fees_are_under_the_mem_pool_min_fee_should_not_be_rejected() {
-        let test_client = TestBlockChainClient::new();
-
-        // Set the pay transaction minimum fee
-        let fees = MemPoolMinFees::create_from_options(Some(150), None, None, None, None);
-
-        let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
-        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db, fees);
-        let keypair: KeyPair = Random.generate().unwrap();
-        let address = public_to_address(keypair.public());
-
-        test_client.set_balance(address, 1_000_000_000_000);
-
-        let txs = vec![
-            create_signed_pay_with_fee(0, 200, &keypair),
-            create_signed_pay_with_fee(1, 140, &keypair),
-            create_signed_pay_with_fee(2, 160, &keypair),
-        ];
-        let result = abbreviated_mempool_add(&test_client, &mut mem_pool, txs, TxOrigin::Local);
-        assert_eq!(
-            vec![
-                Ok(TransactionImportResult::Current),
-                Ok(TransactionImportResult::Current),
-                Ok(TransactionImportResult::Current)
-            ],
-            result
-        );
-
-        assert_eq!(
-            vec![
-                create_signed_pay_with_fee(0, 200, &keypair),
-                create_signed_pay_with_fee(1, 140, &keypair),
-                create_signed_pay_with_fee(2, 160, &keypair)
-            ],
-            mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
-        );
-
-        assert_eq!(Vec::<VerifiedTransaction>::default(), mem_pool.future_transactions());
-    }
-
-    #[test]
-    fn external_transactions_whose_fees_are_under_the_mem_pool_min_fee_are_rejected() {
-        let test_client = TestBlockChainClient::new();
-        // Set the pay transaction minimum fee
-        let fees = MemPoolMinFees::create_from_options(Some(150), None, None, None, None);
-
-        let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
-        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db, fees);
-        let keypair: KeyPair = Random.generate().unwrap();
-        let address = public_to_address(keypair.public());
-
-        test_client.set_balance(address, 1_000_000_000_000);
-
-        let txs = vec![
-            create_signed_pay_with_fee(0, 200, &keypair),
-            create_signed_pay_with_fee(1, 140, &keypair),
-            create_signed_pay_with_fee(1, 160, &keypair),
-            create_signed_pay_with_fee(2, 149, &keypair),
-        ];
-        let result = abbreviated_mempool_add(&test_client, &mut mem_pool, txs, TxOrigin::External);
-        assert_eq!(
-            vec![
-                Ok(TransactionImportResult::Current),
-                Err(Error::Syntax(SyntaxError::InsufficientFee {
-                    minimal: 150,
-                    got: 140,
-                })),
-                Ok(TransactionImportResult::Current),
-                Err(Error::Syntax(SyntaxError::InsufficientFee {
-                    minimal: 150,
-                    got: 149,
-                })),
-            ],
-            result
-        );
-
-        assert_eq!(
-            vec![create_signed_pay_with_fee(0, 200, &keypair), create_signed_pay_with_fee(1, 160, &keypair)],
-            mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
-        );
-
-        assert_eq!(Vec::<VerifiedTransaction>::default(), mem_pool.future_transactions());
     }
 
     #[test]
@@ -1229,7 +1090,7 @@ pub mod test {
         let test_client = TestBlockChainClient::new();
 
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
-        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db, Default::default());
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db);
 
         let fetch_account = fetch_account_creator(&test_client);
         let keypair: KeyPair = Random.generate().unwrap();

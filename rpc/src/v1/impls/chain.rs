@@ -158,27 +158,6 @@ where
         Ok(self.client.block(&BlockId::Hash(block_hash)).map(|block| block.transactions_count()))
     }
 
-    fn get_min_transaction_fee(&self, action_type: String, block_number: Option<u64>) -> Result<Option<u64>> {
-        if block_number == Some(0) {
-            return Ok(None)
-        }
-        // Unlike other RPCs, use the latest parameters if the block number is `null`.
-        let block_id = block_number.map(|n| (n - 1).into()).unwrap_or(BlockId::Latest);
-        if let Some(common_parameters) = self.client.common_params(block_id) {
-            Ok(match action_type.as_str() {
-                "pay" => Some(common_parameters.min_pay_transaction_cost()),
-                "createShard" => Some(common_parameters.min_create_shard_transaction_cost()),
-                "setShardOwners" => Some(common_parameters.min_set_shard_owners_transaction_cost()),
-                "setShardUsers" => Some(common_parameters.min_set_shard_users_transaction_cost()),
-                "custom" => Some(common_parameters.min_custom_transaction_cost()),
-
-                _ => None,
-            })
-        } else {
-            Ok(None)
-        }
-    }
-
     fn get_network_id(&self) -> Result<NetworkId> {
         Ok(self.client.network_id())
     }

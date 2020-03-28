@@ -817,7 +817,6 @@ describe("Staking", function() {
         // faucet: 20000, alice: 20000, bob: 10000, validator0: 50110, validator1: 110, validator2: 110, validator3: 110
 
         const blockNumber = await nodes[0].getBestBlockNumber();
-        const minCustomCost = Scheme.params.minCustomCost;
 
         const oldAliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString(),
@@ -925,7 +924,6 @@ describe("Staking", function() {
         // faucet: 20000, alice: 20000, bob: 10000, val0: 110 (delegated 50000 to val1), val1: 110, val2: 110, val3: 110
 
         const blockNumber = await nodes[0].getBestBlockNumber();
-        const minCustomCost = Scheme.params.minCustomCost;
 
         const oldAliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString(),
@@ -1076,7 +1074,6 @@ describe("Staking", function() {
         // faucet: 10000, alice: 20000, bob: 10000, val0: 110 (delegated 30000 to val1), val1: 30110, val2: 110, val3: 110
 
         const blockNumber = await nodes[0].getBestBlockNumber();
-        const minCustomCost = Scheme.params.minCustomCost;
 
         const oldAliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString(),

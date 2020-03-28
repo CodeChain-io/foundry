@@ -328,33 +328,6 @@ describe("solo - 1 node", function() {
         it("Users");
     });
 
-    [0, 9].forEach(function(fee) {
-        it(`Sending invalid transactions (low fee): ${fee}`, async function() {
-            const seq = (await node.rpc.chain.getSeq({
-                address: faucetAddress.toString(),
-                blockNumber: null
-            }))!;
-            const signed = node.testFramework.core
-                .createPayTransaction({
-                    recipient,
-                    quantity: 0
-                })
-                .sign({
-                    secret: faucetSecret,
-                    fee,
-                    seq
-                });
-            try {
-                await node.rpc.mempool.sendSignedTransaction({
-                    tx: signed.rlpBytes().toString("hex")
-                });
-                expect.fail();
-            } catch (e) {
-                expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
-            }
-        });
-    });
-
     afterEach(function() {
         if (this.currentTest!.state === "failed") {
             node.keepLogs();

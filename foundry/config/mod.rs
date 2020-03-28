@@ -16,7 +16,7 @@
 
 mod chain_type;
 
-use ccore::{MemPoolMinFees, MinerOptions, TimeGapParams};
+use ccore::{MinerOptions, TimeGapParams};
 use cidr::IpCidr;
 use cinformer::InformerConfig;
 use ckey::PlatformAddress;
@@ -73,14 +73,6 @@ impl Config {
             None => unreachable!(),
         };
 
-        let mem_pool_min_fees = MemPoolMinFees::create_from_options(
-            self.mining.min_pay_transaction_cost,
-            self.mining.min_create_shard_transaction_cost,
-            self.mining.min_set_shard_owners_transaction_cost,
-            self.mining.min_set_shard_users_transaction_cost,
-            self.mining.min_custom_transaction_cost,
-        );
-
         Ok(MinerOptions {
             mem_pool_size: self.mining.mem_pool_size.unwrap(),
             mem_pool_memory_limit: match self.mining.mem_pool_mem_limit.unwrap() {
@@ -93,7 +85,6 @@ impl Config {
             reseal_on_external_transaction,
             reseal_min_period: Duration::from_millis(self.mining.reseal_min_period.unwrap()),
             no_reseal_timer: self.mining.no_reseal_timer.unwrap(),
-            mem_pool_min_fees,
         })
     }
 
@@ -232,11 +223,6 @@ pub struct Mining {
     pub no_reseal_timer: Option<bool>,
     pub allowed_past_gap: Option<u64>,
     pub allowed_future_gap: Option<u64>,
-    pub min_pay_transaction_cost: Option<u64>,
-    pub min_create_shard_transaction_cost: Option<u64>,
-    pub min_set_shard_owners_transaction_cost: Option<u64>,
-    pub min_set_shard_users_transaction_cost: Option<u64>,
-    pub min_custom_transaction_cost: Option<u64>,
 }
 
 #[derive(Deserialize)]
@@ -418,21 +404,6 @@ impl Mining {
         }
         if other.no_reseal_timer.is_some() {
             self.no_reseal_timer = other.no_reseal_timer;
-        }
-        if other.min_pay_transaction_cost.is_some() {
-            self.min_pay_transaction_cost = other.min_pay_transaction_cost;
-        }
-        if other.min_create_shard_transaction_cost.is_some() {
-            self.min_create_shard_transaction_cost = other.min_create_shard_transaction_cost;
-        }
-        if other.min_set_shard_owners_transaction_cost.is_some() {
-            self.min_set_shard_owners_transaction_cost = other.min_set_shard_owners_transaction_cost;
-        }
-        if other.min_set_shard_users_transaction_cost.is_some() {
-            self.min_set_shard_users_transaction_cost = other.min_set_shard_users_transaction_cost;
-        }
-        if other.min_custom_transaction_cost.is_some() {
-            self.min_custom_transaction_cost = other.min_custom_transaction_cost;
         }
     }
 

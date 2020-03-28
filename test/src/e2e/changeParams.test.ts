@@ -69,13 +69,8 @@ describe("ChangeParams", function() {
 
     it("change", async function() {
         const newParams = [
-            0x20, // maxExtraDataSize
+            0x30, // maxExtraDataSize
             "tc", // networkID
-            11, // minPayCost
-            10, // minCreateShardCost
-            10, // minSetShardOwnersCost
-            10, // minSetShardUsersCost
-            10, // minCustomCost
             4194304, // maxBodySize
             16384, // snapshotPeriod
             0, // termSeconds
@@ -122,25 +117,14 @@ describe("ChangeParams", function() {
                 })
             ).be.true;
         }
-        try {
-            await node.sendPayTx({ fee: 10 });
-            expect.fail();
-        } catch (e) {
-            expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
-        }
         const params = await node.rpc.chain.getCommonParams({});
-        expect(+params!.minPayCost!).to.be.deep.equal(11);
+        expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x30);
     });
 
     it("cannot change the network id", async function() {
         const newParams = [
             0x20, // maxExtraDataSize
             "cc", // networkID
-            11, // minPayCost
-            10, // minCreateShardCost
-            10, // minSetShardOwnersCost
-            10, // minSetShardUsersCost
-            10, // minCustomCost
             4194304, // maxBodySize
             16384, // snapshotPeriod
             0, // termSeconds
@@ -189,18 +173,13 @@ describe("ChangeParams", function() {
         const params = await node.rpc.chain.getCommonParams({
             blockNumber: null
         });
-        expect(+params!.minPayCost!).to.be.deep.equal(10);
+        expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x20);
     });
 
     it("the parameter is applied from the next block", async function() {
         const newParams = [
-            0x20, // maxExtraDataSize
+            0x44, // maxExtraDataSize
             "tc", // networkID
-            11, // minPayCost
-            10, // minCreateShardCost
-            10, // minSetShardOwnersCost
-            10, // minSetShardUsersCost
-            10, // minCustomCost
             4194304, // maxBodySize
             16384, // snapshotPeriod
             0, // termSeconds
@@ -261,23 +240,14 @@ describe("ChangeParams", function() {
                 blockNumber + 1
             );
         }
-        try {
-            await node.sendPayTx({ fee: 10 });
-            expect.fail();
-        } catch (e) {
-            expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
-        }
+        const params = await node.rpc.chain.getCommonParams({});
+        expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x44);
     });
 
     it("the parameter changed twice in the same block", async function() {
         const newParams1 = [
-            0x20, // maxExtraDataSize
+            0x30, // maxExtraDataSize
             "tc", // networkID
-            11, // minPayCost
-            10, // minCreateShardCost
-            10, // minSetShardOwnersCost
-            10, // minSetShardUsersCost
-            10, // minCustomCost
             4194304, // maxBodySize
             16384, // snapshotPeriod
             0, // termSeconds
@@ -292,13 +262,8 @@ describe("ChangeParams", function() {
             0 // era
         ];
         const newParams2 = [
-            0x20, // maxExtraDataSize
+            0x40, // maxExtraDataSize
             "tc", // networkID
-            5, // minPayCost
-            10, // minCreateShardCost
-            10, // minSetShardOwnersCost
-            10, // minSetShardUsersCost
-            10, // minCustomCost
             4194304, // maxBodySize
             16384, // snapshotPeriod
             0, // termSeconds
@@ -389,23 +354,14 @@ describe("ChangeParams", function() {
                 transactionHash: `0x${pay.hash().toString()}`
             })
         ).be.true;
-        try {
-            await node.sendPayTx({ fee: 4 });
-            expect.fail();
-        } catch (e) {
-            expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
-        }
+        const params = await node.rpc.chain.getCommonParams({});
+        expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x40);
     });
 
     it("cannot reuse the same signature", async function() {
         const newParams1 = [
-            0x20, // maxExtraDataSize
+            0x30, // maxExtraDataSize
             "tc", // networkID
-            11, // minPayCost
-            10, // minCreateShardCost
-            10, // minSetShardOwnersCost
-            10, // minSetShardUsersCost
-            10, // minCustomCost
             4194304, // maxBodySize
             16384, // snapshotPeriod
             0, // termSeconds
@@ -420,13 +376,8 @@ describe("ChangeParams", function() {
             0 // era
         ];
         const newParams2 = [
-            0x20, // maxExtraDataSize
+            0x40, // maxExtraDataSize
             "tc", // networkID
-            5, // minPayCost
-            10, // minCreateShardCost
-            10, // minSetShardOwnersCost
-            10, // minSetShardUsersCost
-            10, // minCustomCost
             4194304, // maxBodySize
             16384, // snapshotPeriod
             0, // termSeconds
@@ -511,29 +462,14 @@ describe("ChangeParams", function() {
             );
         }
 
-        const pay = await node.sendPayTx({ fee: 5 });
-        expect(
-            await node.rpc.chain.containsTransaction({
-                transactionHash: "0x".concat(pay.hash().toString())
-            })
-        ).be.true;
-        try {
-            await node.sendPayTx({ fee: 4 });
-            expect.fail();
-        } catch (e) {
-            expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
-        }
+        const params = await node.rpc.chain.getCommonParams({});
+        expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x40);
     });
 
     it("cannot change params with insufficient stakes", async function() {
         const newParams = [
-            0x20, // maxExtraDataSize
+            0x30, // maxExtraDataSize
             "tc", // networkID
-            11, // minPayCost
-            10, // minCreateShardCost
-            10, // minSetShardOwnersCost
-            10, // minSetShardUsersCost
-            10, // minCustomCost
             4194304, // maxBodySize
             16384, // snapshotPeriod
             0, // termSeconds
@@ -604,13 +540,8 @@ describe("ChangeParams", function() {
 
     it("the amount of stakes not the number of stakeholders", async function() {
         const newParams = [
-            0x20, // maxExtraDataSize
+            0x30, // maxExtraDataSize
             "tc", // networkID
-            11, // minPayCost
-            10, // minCreateShardCost
-            10, // minSetShardOwnersCost
-            10, // minSetShardUsersCost
-            10, // minCustomCost
             4194304, // maxBodySize
             16384, // snapshotPeriod
             0, // termSeconds
@@ -654,13 +585,8 @@ describe("ChangeParams", function() {
 
     it("needs more than half to change params", async function() {
         const newParams = [
-            0x20, // maxExtraDataSize
+            0x30, // maxExtraDataSize
             "tc", // networkID
-            11, // minPayCost
-            10, // minCreateShardCost
-            10, // minSetShardOwnersCost
-            10, // minSetShardUsersCost
-            10, // minCustomCost
             4194304, // maxBodySize
             16384, // snapshotPeriod
             0, // termSeconds
@@ -740,24 +666,15 @@ describe("ChangeParams", function() {
                 await node.rpc.chain.getTransaction({ transactionHash: hash })
             ).not.be.null;
         }
-        try {
-            await node.sendPayTx({ fee: 10 });
-            expect.fail();
-        } catch (e) {
-            expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
-        }
+        const params = await node.rpc.chain.getCommonParams({});
+        expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x30);
     });
 
     describe("with stake parameters", async function() {
         it("change", async function() {
             const newParams = [
-                0x20, // maxExtraDataSize
+                0x30, // maxExtraDataSize
                 "tc", // networkID
-                11, // minPayCost
-                10, // minCreateShardCost
-                10, // minSetShardOwnersCost
-                10, // minSetShardUsersCost
-                10, // minCustomCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 0, // termSeconds
@@ -805,28 +722,14 @@ describe("ChangeParams", function() {
                 ).be.true;
             }
 
-            try {
-                await node.sendPayTx({ fee: 10 });
-                expect.fail();
-            } catch (e) {
-                expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
-            }
-
-            const params = await node.rpc.chain.getCommonParams({
-                blockNumber: null
-            });
-            expect(+params!.minPayCost!).to.be.deep.equal(11);
+            const params = await node.rpc.chain.getCommonParams({});
+            expect(+params!.maxExtraDataSize!).to.be.deep.equal(0x30);
         });
 
         it("nomination expiration cannot be zero", async function() {
             const newParams = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
-                10, // minPayCost
-                10, // minCreateShardCost
-                10, // minSetShardOwnersCost
-                10, // minSetShardUsersCost
-                10, // minCustomCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -877,11 +780,6 @@ describe("ChangeParams", function() {
             const newParams = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
-                10, // minPayCost
-                10, // minCreateShardCost
-                10, // minSetShardOwnersCost
-                10, // minSetShardUsersCost
-                10, // minCustomCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -932,11 +830,6 @@ describe("ChangeParams", function() {
             const newParams = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
-                10, // minPayCost
-                10, // minCreateShardCost
-                10, // minSetShardOwnersCost
-                10, // minSetShardUsersCost
-                10, // minCustomCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -987,11 +880,6 @@ describe("ChangeParams", function() {
             const newParams = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
-                10, // minPayCost
-                10, // minCreateShardCost
-                10, // minSetShardOwnersCost
-                10, // minSetShardUsersCost
-                10, // minCustomCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1042,11 +930,6 @@ describe("ChangeParams", function() {
             const newParams = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
-                10, // minPayCost
-                10, // minCreateShardCost
-                10, // minSetShardOwnersCost
-                10, // minSetShardUsersCost
-                10, // minCustomCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1097,11 +980,6 @@ describe("ChangeParams", function() {
             const newParams = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
-                10, // minPayCost
-                10, // minCreateShardCost
-                10, // minSetShardOwnersCost
-                10, // minSetShardUsersCost
-                10, // minCustomCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1152,11 +1030,6 @@ describe("ChangeParams", function() {
             const newParams = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
-                10, // minPayCost
-                10, // minCreateShardCost
-                10, // minSetShardOwnersCost
-                10, // minSetShardUsersCost
-                10, // minCustomCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1207,11 +1080,6 @@ describe("ChangeParams", function() {
             const newParams = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
-                10, // minPayCost
-                10, // minCreateShardCost
-                10, // minSetShardOwnersCost
-                10, // minSetShardUsersCost
-                10, // minCustomCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds
@@ -1262,11 +1130,6 @@ describe("ChangeParams", function() {
             const newParams = [
                 0x20, // maxExtraDataSize
                 "tc", // networkID
-                10, // minPayCost
-                10, // minCreateShardCost
-                10, // minSetShardOwnersCost
-                10, // minSetShardUsersCost
-                10, // minCustomCost
                 4194304, // maxBodySize
                 16384, // snapshotPeriod
                 100, // termSeconds

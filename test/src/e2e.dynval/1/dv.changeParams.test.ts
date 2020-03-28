@@ -176,7 +176,6 @@ describe("Change commonParams that doesn't affects validator set", function() {
         promiseExpect,
         overrideParams: {
             termSeconds: 10,
-            minPayCost: 10,
             maxCandidateMetadataSize: 128
         },
         validators: validators.slice(0, 3).map((signer, index) => ({
@@ -235,43 +234,6 @@ describe("Change commonParams that doesn't affects validator set", function() {
                     initialTermSeconds,
                     initialTermSeconds * 0.3
                 );
-        });
-    });
-
-    describe("Change minimum fee", async function() {
-        it("Change minimum fee of pay transaction", async function() {
-            const checkingNode = nodes[0];
-
-            this.slow(4_000);
-            this.timeout(6_000);
-
-            const changeTxHash = await changeParams(checkingNode, 1, {
-                ...initialParams,
-                minPayCost: 11
-            });
-
-            await checkingNode.waitForTx(changeTxHash);
-
-            const tx = checkingNode.testFramework.core
-                .createPayTransaction({
-                    recipient: validators[0].address,
-                    quantity: 100
-                })
-                .sign({
-                    secret: faucetSecret,
-                    seq: (await checkingNode.rpc.chain.getSeq({
-                        address: faucetAddress.toString()
-                    }))!,
-                    fee: 10
-                });
-            try {
-                await checkingNode.rpc.mempool.sendSignedTransaction({
-                    tx: tx.rlpBytes().toString("hex")
-                });
-                expect.fail();
-            } catch (e) {
-                expect(e).is.similarTo(ERROR.TOO_LOW_FEE);
-            }
         });
     });
 
