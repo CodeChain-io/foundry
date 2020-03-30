@@ -30,7 +30,7 @@ use crate::scheme::Scheme;
 use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
 use crate::types::{BlockId, TransactionId};
 use ckey::{public_to_address, Address, Ed25519Public as Public, Password, PlatformAddress};
-use cstate::{FindStakeHandler, TopLevelState};
+use cstate::{FindDoubleVoteHandler, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::transaction::{Action, IncompleteTransaction};
 use ctypes::{BlockHash, TxHash};
@@ -292,7 +292,7 @@ impl Miner {
 
     /// Prepares new block for sealing including top transactions from queue and seal it.
     fn prepare_and_seal_block<
-        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + FindStakeHandler + TermInfo,
+        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + FindDoubleVoteHandler + TermInfo,
     >(
         &self,
         parent_block_id: BlockId,
@@ -510,7 +510,8 @@ impl MinerService for Miner {
 
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock + FindStakeHandler + TermInfo, {
+        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock + FindDoubleVoteHandler + TermInfo,
+    {
         ctrace!(MINER, "update_sealing: preparing a block");
 
         let block = match self.prepare_and_seal_block(parent_block, chain) {

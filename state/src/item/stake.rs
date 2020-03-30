@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::{ActionData, StakeKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
 use ckey::{public_to_address, Address, Ed25519Public as Public};
-use cstate::{ActionData, StakeKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::RuntimeError;
 use ctypes::{CompactValidatorEntry, CompactValidatorSet};
 use primitives::{Bytes, H256};
@@ -27,7 +27,7 @@ use std::collections::{btree_map, HashMap, HashSet};
 use std::ops::Deref;
 use std::vec;
 
-pub fn get_account_key(address: &Address) -> H256 {
+pub fn get_stake_account_key(address: &Address) -> H256 {
     StakeKeyBuilder::new(2).append(&"Account").append(address).into_key()
 }
 
@@ -45,7 +45,7 @@ pub fn get_delegation_key(address: &Address) -> H256 {
 }
 
 pub type StakeQuantity = u64;
-pub type Deposit = u64;
+pub type DepositQuantity = u64;
 
 pub struct StakeAccount<'a> {
     pub address: &'a Address,
@@ -54,7 +54,7 @@ pub struct StakeAccount<'a> {
 
 impl<'a> StakeAccount<'a> {
     pub fn load_from_state(state: &TopLevelState, address: &'a Address) -> StateResult<StakeAccount<'a>> {
-        let account_key = get_account_key(address);
+        let account_key = get_stake_account_key(address);
         let action_data = state.action_data(&account_key)?;
 
         let balance = match action_data {
@@ -69,7 +69,7 @@ impl<'a> StakeAccount<'a> {
     }
 
     pub fn save_to_state(&self, state: &mut TopLevelState) -> StateResult<()> {
-        let account_key = get_account_key(self.address);
+        let account_key = get_stake_account_key(self.address);
         if self.balance != 0 {
             let rlp = rlp::encode(&self.balance);
             state.update_action_data(&account_key, rlp)?;
@@ -128,7 +128,6 @@ impl Stakeholders {
         Ok(result)
     }
 
-    #[cfg(test)]
     pub fn contains(&self, address: &Address) -> bool {
         self.0.contains(address)
     }
@@ -227,12 +226,12 @@ impl<'a> Delegation<'a> {
 pub struct Validator {
     weight: StakeQuantity,
     delegation: StakeQuantity,
-    deposit: Deposit,
+    deposit: DepositQuantity,
     pubkey: Public,
 }
 
 impl Validator {
-    pub fn new_for_test(delegation: StakeQuantity, deposit: Deposit, pubkey: Public) -> Self {
+    pub fn new_for_test(delegation: StakeQuantity, deposit: DepositQuantity, pubkey: Public) -> Self {
         Self {
             weight: delegation,
             delegation,
@@ -241,7 +240,7 @@ impl Validator {
         }
     }
 
-    fn new(delegation: StakeQuantity, deposit: Deposit, pubkey: Public) -> Self {
+    fn new(delegation: StakeQuantity, deposit: DepositQuantity, pubkey: Public) -> Self {
         Self {
             weight: delegation,
             delegation,
@@ -456,7 +455,7 @@ pub struct Candidates(Vec<Candidate>);
 #[derive(Clone, Debug, Eq, PartialEq, RlpEncodable, RlpDecodable)]
 pub struct Candidate {
     pub pubkey: Public,
-    pub deposit: Deposit,
+    pub deposit: DepositQuantity,
     pub nomination_ends_at: u64,
     pub metadata: Bytes,
 }
@@ -482,7 +481,7 @@ impl Candidates {
     // Sorted list of validators in ascending order of (delegation, deposit, priority).
     fn prepare_validators(
         state: &TopLevelState,
-        min_deposit: Deposit,
+        min_deposit: DepositQuantity,
         delegations: &HashMap<Address, StakeQuantity>,
     ) -> StateResult<Vec<Validator>> {
         let Candidates(candidates) = Self::load_from_state(state)?;
@@ -504,10 +503,10 @@ impl Candidates {
         self.0.iter().find(|c| public_to_address(&c.pubkey) == *account)
     }
 
-    #[cfg(test)]
     pub fn len(&self) -> usize {
         self.0.len()
     }
+
     pub fn is_empty(&self) -> bool {
         self.0.len() == 0
     }
@@ -517,7 +516,13 @@ impl Candidates {
         self.0.iter().position(|c| public_to_address(&c.pubkey) == *account)
     }
 
-    pub fn add_deposit(&mut self, pubkey: &Public, quantity: Deposit, nomination_ends_at: u64, metadata: Bytes) {
+    pub fn add_deposit(
+        &mut self,
+        pubkey: &Public,
+        quantity: DepositQuantity,
+        nomination_ends_at: u64,
+        metadata: Bytes,
+    ) {
         if let Some(index) = self.0.iter().position(|c| c.pubkey == *pubkey) {
             let candidate = &mut self.0[index];
             candidate.deposit += quantity;
@@ -590,7 +595,7 @@ pub struct Jail(BTreeMap<Address, Prisoner>);
 #[derive(Clone, Debug, Eq, PartialEq, RlpEncodable, RlpDecodable)]
 pub struct Prisoner {
     pub address: Address,
-    pub deposit: Deposit,
+    pub deposit: DepositQuantity,
     pub custody_until: u64,
     pub released_at: u64,
 }
@@ -779,10 +784,11 @@ where
     rlp.drain()
 }
 
+#[allow(clippy::implicit_hasher)] // XXX: Fix this clippy warning if it becomes a real problem.
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cstate::tests::helpers;
+    use crate::tests::helpers;
     use rand::{Rng, SeedableRng};
     use rand_xorshift::XorShiftRng;
 
@@ -871,7 +877,7 @@ mod tests {
         assert!(result.is_ok());
         account.save_to_state(&mut state).unwrap();
 
-        let data = state.action_data(&get_account_key(&address)).unwrap();
+        let data = state.action_data(&get_stake_account_key(&address)).unwrap();
         assert_eq!(data, None);
     }
 

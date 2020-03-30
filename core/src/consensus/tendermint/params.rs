@@ -16,8 +16,8 @@
 
 use super::types::View;
 use super::Step;
-use ckey::{Address, Ed25519Public as Public};
-use primitives::Bytes;
+use ckey::Address;
+use ctypes::Deposit;
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -29,14 +29,6 @@ pub struct TendermintParams {
     pub genesis_stakes: HashMap<Address, u64>,
     pub genesis_candidates: HashMap<Address, Deposit>,
     pub genesis_delegations: HashMap<Address, HashMap<Address, u64>>,
-}
-
-#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub struct Deposit {
-    pub pubkey: Public,
-    pub deposit: u64,
-    pub nomination_ends_at: u64,
-    pub metadata: Bytes,
 }
 
 impl From<cjson::scheme::TendermintParams> for TendermintParams {

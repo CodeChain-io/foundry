@@ -19,13 +19,13 @@ use super::super::traits::Engine;
 use ccore::{BlockId, EngineInfo, MinerService, StateInfo};
 use cjson::bytes::{Bytes, WithoutPrefix};
 use ckey::PlatformAddress;
-use cstate::{query_stake_state, FindStakeHandler};
+use cstate::{query_stake_state, FindDoubleVoteHandler};
 use jsonrpc_core::Result;
 use std::sync::Arc;
 
 pub struct EngineClient<C, M>
 where
-    C: EngineInfo + StateInfo + FindStakeHandler,
+    C: EngineInfo + StateInfo + FindDoubleVoteHandler,
     M: MinerService, {
     client: Arc<C>,
     miner: Arc<M>,
@@ -33,7 +33,7 @@ where
 
 impl<C, M> EngineClient<C, M>
 where
-    C: EngineInfo + StateInfo + FindStakeHandler,
+    C: EngineInfo + StateInfo + FindDoubleVoteHandler,
     M: MinerService,
 {
     pub fn new(client: Arc<C>, miner: Arc<M>) -> Self {
@@ -46,7 +46,7 @@ where
 
 impl<C, M> Engine for EngineClient<C, M>
 where
-    C: EngineInfo + StateInfo + FindStakeHandler + 'static,
+    C: EngineInfo + StateInfo + FindDoubleVoteHandler + 'static,
     M: MinerService + 'static,
 {
     fn get_coinbase(&self) -> Result<Option<PlatformAddress>> {

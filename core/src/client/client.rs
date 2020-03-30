@@ -37,7 +37,7 @@ use crate::MemPoolMinFees;
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress};
-use cstate::{FindStakeHandler, StakeHandler, StateDB, StateResult, TopLevelState, TopStateView};
+use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, StateResult, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
 use ctypes::transaction::ShardTransaction;
@@ -705,8 +705,8 @@ impl MiningBlockChainClient for Client {
     }
 }
 
-impl FindStakeHandler for Client {
-    fn stake_handler(&self) -> Option<&dyn StakeHandler> {
+impl FindDoubleVoteHandler for Client {
+    fn double_vote_handler(&self) -> Option<&dyn DoubleVoteHandler> {
         self.engine.stake_handler()
     }
 }
