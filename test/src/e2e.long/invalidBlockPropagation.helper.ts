@@ -23,6 +23,9 @@ import { Header } from "../helper/mock/cHeader";
 import CodeChain from "../helper/spawn";
 import { Address, H256, U256 } from "../primitives/src";
 
+const BLAKE_NULL_RLP: H256 = new H256(
+    "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
+);
 async function setup(): Promise<[Header, Block, Header]> {
     const temporaryNode = new CodeChain({
         argv: ["--force-sealing"]
@@ -55,6 +58,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         new U256(block0.number),
         authorPaddress.pubkey,
         Buffer.from(block0.extraData),
+        BLAKE_NULL_RLP,
         new H256(block0.transactionsRoot),
         new H256(block0.nextValidatorSetHash),
         new H256(block0.stateRoot),
@@ -67,6 +71,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         new U256(block1.number),
         author1.pubkey,
         Buffer.from(block1.extraData),
+        BLAKE_NULL_RLP,
         new H256(block1.transactionsRoot),
         new H256(block1.nextValidatorSetHash),
         new H256(block1.stateRoot),
@@ -79,6 +84,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         new U256(block2.number),
         author3.pubkey,
         Buffer.from(block2.extraData),
+        BLAKE_NULL_RLP,
         new H256(block2.transactionsRoot),
         new H256(block2.nextValidatorSetHash),
         new H256(block2.stateRoot),
@@ -114,6 +120,7 @@ async function testBody(
         tnumber?: U256;
         tauthor?: H256;
         textraData?: Buffer;
+        evidencesRoot?: H256;
         ttransactionRoot?: H256;
         tstateRoot?: H256;
         tnextValidatorSetHash?: H256;
@@ -125,6 +132,7 @@ async function testBody(
         textraData,
         tparent,
         tauthor,
+        evidencesRoot,
         ttransactionRoot,
         tstateRoot,
         tnextValidatorSetHash,
@@ -140,6 +148,7 @@ async function testBody(
         new U256(block1.number),
         author4.pubkey,
         Buffer.from(block1.extraData),
+        BLAKE_NULL_RLP,
         new H256(block1.transactionsRoot),
         new H256(block1.nextValidatorSetHash),
         new H256(block1.stateRoot),
@@ -157,6 +166,9 @@ async function testBody(
     }
     if (textraData != null) {
         header.setExtraData(textraData);
+    }
+    if (evidencesRoot != null) {
+        header.setEvidencesRoot(evidencesRoot);
     }
     if (ttransactionRoot != null) {
         header.setTransactionsRoot(ttransactionRoot);

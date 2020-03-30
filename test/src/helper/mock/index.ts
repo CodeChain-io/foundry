@@ -421,6 +421,9 @@ export class Mock {
         const transactionsRoot = new H256(
             "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
         );
+        const evidencesRoot = new H256(
+            "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
+        );
         const stateRoot = new H256(
             "09f943122bfbb85adda8209ba72514374f71826fd874e08855b64bc95498cb02"
         );
@@ -435,6 +438,7 @@ export class Mock {
             author,
             extraData,
             transactionsRoot,
+            evidencesRoot,
             stateRoot,
             nextValidatorSetHash,
             seal
@@ -454,6 +458,9 @@ export class Mock {
         const transactionsRoot = new H256(
             "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
         );
+        const evidencesRoot = new H256(
+            "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
+        );
         const stateRoot = new H256(
             "09f943122bfbb85adda8209ba72514374f71826fd874e08855b64bc95498cb02"
         );
@@ -468,6 +475,7 @@ export class Mock {
             author,
             extraData,
             transactionsRoot,
+            evidencesRoot,
             stateRoot,
             nextValidatorSetHash,
             seal
@@ -487,6 +495,9 @@ export class Mock {
         const transactionsRoot = new H256(
             "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
         );
+        const evidencesRoot = new H256(
+            "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
+        );
         const stateRoot = new H256(
             "09f943122bfbb85adda8209ba72514374f71826fd874e08855b64bc95498cb02"
         );
@@ -500,6 +511,7 @@ export class Mock {
             number,
             author,
             extraData,
+            evidencesRoot,
             transactionsRoot,
             stateRoot,
             nextValidatorSetHash,
@@ -604,7 +616,7 @@ export class Mock {
             const block: any = RLP.decode(message.message);
             const oldOn: Parameters<typeof digest>[0] = {
                 step: {
-                    height: readUIntRLP(block[0][5]),
+                    height: readUIntRLP(block[0][6]),
                     view: message.view,
                     step: TendermintStep.Propose
                 },
@@ -612,9 +624,9 @@ export class Mock {
             };
             if (verifyEd25519(digest(oldOn), signature, pub)) {
                 const newHeader = [
-                    ...block[0].slice(0, 6),
-                    new U64(readUIntRLP(block[0][6]) + 1).toEncodeObject(), // timestamp
-                    ...block[0].slice(7)
+                    ...block[0].slice(0, 7),
+                    new U64(readUIntRLP(block[0][7]) + 1).toEncodeObject(), // timestamp
+                    ...block[0].slice(8)
                 ];
                 const newDigest = digest({
                     ...oldOn,
