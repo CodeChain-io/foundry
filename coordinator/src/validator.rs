@@ -261,7 +261,11 @@ impl<'a> TransactionWithGas {
     }
 }
 pub enum VerifiedCrime {
-    DoubleVote, // Should import and use DoubleVote type defined in tendermint module?
+    DoubleVote {
+        height: u64,
+        author_index: usize,
+        criminal_index: usize,
+    },
 }
 
 pub struct TransactionExecutionOutcome {
