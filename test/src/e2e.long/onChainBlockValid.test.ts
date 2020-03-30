@@ -21,6 +21,9 @@ import { Mock } from "../helper/mock";
 import { Header } from "../helper/mock/cHeader";
 import CodeChain from "../helper/spawn";
 
+const BLAKE_NULL_RLP: H256 = new H256(
+    "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
+);
 describe("Test onChain block communication", async function() {
     let nodeA: CodeChain;
     let mock: Mock;
@@ -62,6 +65,7 @@ describe("Test onChain block communication", async function() {
             new U256(genesisBlock.number),
             author1PlatformAddr.pubkey,
             Buffer.from(genesisBlock.extraData),
+            BLAKE_NULL_RLP,
             new H256(genesisBlock.transactionsRoot),
             new H256(genesisBlock.stateRoot),
             new H256(genesisBlock.nextValidatorSetHash),
@@ -74,6 +78,7 @@ describe("Test onChain block communication", async function() {
             new U256(block1.number),
             author2PlatformAddr.pubkey,
             Buffer.from(block1.extraData),
+            BLAKE_NULL_RLP,
             new H256(block1.transactionsRoot),
             new H256(block1.stateRoot),
             new H256(block1.nextValidatorSetHash),
@@ -86,6 +91,7 @@ describe("Test onChain block communication", async function() {
             new U256(block2.number),
             author3PlatformAddr.pubkey,
             Buffer.from(block2.extraData),
+            BLAKE_NULL_RLP,
             new H256(block2.transactionsRoot),
             new H256(block2.stateRoot),
             new H256(block2.nextValidatorSetHash),

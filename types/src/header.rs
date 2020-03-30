@@ -47,6 +47,8 @@ pub struct Header {
     /// Block extra data.
     extra_data: Bytes,
 
+    /// Evidences root
+    evidenecs_root: H256,
     /// Transactions root.
     transactions_root: H256,
     /// State root.
@@ -73,6 +75,7 @@ impl Default for Header {
             author: Default::default(),
             extra_data: vec![],
 
+            evidenecs_root: BLAKE_NULL_RLP,
             transactions_root: BLAKE_NULL_RLP,
             state_root: BLAKE_NULL_RLP,
             next_validator_set_hash: BLAKE_NULL_RLP,
@@ -84,7 +87,7 @@ impl Default for Header {
     }
 }
 
-const SIZE_WITHOUT_SEAL: usize = 8;
+const SIZE_WITHOUT_SEAL: usize = 9;
 
 impl Header {
     /// Create a new, default-valued, header.
@@ -122,6 +125,11 @@ impl Header {
     /// Get the state root field of the header.
     pub fn state_root(&self) -> &H256 {
         &self.state_root
+    }
+
+    /// Get the evidences root field of the header.
+    pub fn evidences_root(&self) -> &H256 {
+        &self.evidenecs_root
     }
 
     /// Get the transactions root field of the header.
@@ -197,6 +205,11 @@ impl Header {
         self.state_root = a;
         self.note_dirty();
     }
+    /// Set the evidences root field of the header.
+    pub fn set_evidences_root(&mut self, a: H256) {
+        self.evidenecs_root = a;
+        self.note_dirty();
+    }
     /// Set the transactions root field of the header.
     pub fn set_transactions_root(&mut self, a: H256) {
         self.transactions_root = a;
@@ -251,6 +264,7 @@ impl Header {
         s.append(&self.parent_hash);
         s.append(&self.author);
         s.append(&self.state_root);
+        s.append(&self.evidenecs_root);
         s.append(&self.transactions_root);
         s.append(&self.next_validator_set_hash);
         s.append(&self.number);
@@ -299,11 +313,12 @@ impl Decodable for Header {
             parent_hash: r.val_at(0)?,
             author: r.val_at(1)?,
             state_root: r.val_at(2)?,
-            transactions_root: r.val_at(3)?,
-            next_validator_set_hash: r.val_at(4)?,
-            number: r.val_at(5)?,
-            timestamp: cmp::min(r.val_at::<U256>(6)?, u64::max_value().into()).as_u64(),
-            extra_data: r.val_at(7)?,
+            evidenecs_root: r.val_at(3)?,
+            transactions_root: r.val_at(4)?,
+            next_validator_set_hash: r.val_at(5)?,
+            number: r.val_at(6)?,
+            timestamp: cmp::min(r.val_at::<U256>(7)?, u64::max_value().into()).as_u64(),
+            extra_data: r.val_at(8)?,
             seal: vec![],
             hash: RefCell::new(Some(blake256(r.as_raw()))),
             bare_hash: RefCell::new(None),
