@@ -39,14 +39,14 @@ use crate::cache::{ShardCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
 use crate::{
-    Account, ActionData, FindStakeHandler, Metadata, MetadataAddress, Shard, ShardAddress, ShardLevelState, StateDB,
-    StateResult,
+    execute_stake_action, Account, ActionData, FindDoubleVoteHandler, Metadata, MetadataAddress, Shard, ShardAddress,
+    ShardLevelState, StateDB, StateResult,
 };
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, DatabaseError};
 use ckey::{public_to_address, Address, Ed25519Public as Public, NetworkId};
 use ctypes::errors::RuntimeError;
-use ctypes::transaction::{Action, ShardTransaction, Transaction};
+use ctypes::transaction::{Action, ShardTransaction, StakeAction, Transaction};
 use ctypes::util::unexpected::Mismatch;
 #[cfg(test)]
 use ctypes::Tracker;
@@ -230,7 +230,7 @@ impl TopLevelState {
 
     /// Execute a given tranasction, charging tranasction fee.
     /// This will change the state accordingly.
-    pub fn apply<C: FindStakeHandler>(
+    pub fn apply<C: FindDoubleVoteHandler>(
         &mut self,
         tx: &Transaction,
         signed_hash: &TxHash,
@@ -261,7 +261,7 @@ impl TopLevelState {
         result
     }
 
-    fn apply_internal<C: FindStakeHandler>(
+    fn apply_internal<C: FindDoubleVoteHandler>(
         &mut self,
         tx: &Transaction,
         signed_hash: &TxHash,
@@ -313,7 +313,7 @@ impl TopLevelState {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn apply_action<C: FindStakeHandler>(
+    fn apply_action<C: FindDoubleVoteHandler>(
         &mut self,
         action: &Action,
         network_id: NetworkId,
@@ -367,8 +367,16 @@ impl TopLevelState {
                 bytes,
                 ..
             } => {
-                let handler = client.stake_handler().expect("Unknown custom transaction applied!");
-                handler.execute(bytes, self, sender_address, sender_public)?;
+                let action = rlp::decode(&bytes).expect("Verification passed");
+                let handler = client.double_vote_handler().expect("Unknown custom transaction applied!");
+                if let StakeAction::ReportDoubleVote {
+                    message1,
+                    ..
+                } = &action
+                {
+                    handler.execute(message1, self, sender_address)?;
+                }
+                execute_stake_action(action, self, sender_address, sender_public)?;
                 return Ok(())
             }
         };

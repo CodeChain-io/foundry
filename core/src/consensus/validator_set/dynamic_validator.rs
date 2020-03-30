@@ -17,9 +17,9 @@
 use super::ValidatorSet;
 use crate::client::ConsensusClient;
 use crate::consensus::bit_set::BitSet;
-use crate::consensus::stake::{CurrentValidators, NextValidators, Validator};
 use crate::consensus::EngineError;
 use ckey::{public_to_address, Address, Ed25519Public as Public};
+use cstate::{CurrentValidators, NextValidators, Validator};
 use ctypes::util::unexpected::OutOfBounds;
 use ctypes::BlockHash;
 use parking_lot::RwLock;

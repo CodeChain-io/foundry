@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@ mod action;
 mod incomplete_transaction;
 mod partial_hashing;
 mod shard;
+mod stake;
 mod timelock;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod transaction;
@@ -26,5 +27,6 @@ pub use self::action::Action;
 pub use self::incomplete_transaction::IncompleteTransaction;
 pub use self::partial_hashing::{HashingError, PartialHashing};
 pub use self::shard::ShardTransaction;
+pub use self::stake::{Approval, StakeAction};
 pub use self::timelock::Timelock;
 pub use self::transaction::Transaction;

@@ -22,6 +22,8 @@ extern crate codechain_key as ckey;
 extern crate codechain_types as ctypes;
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate rlp_derive;
 
 mod cache;
 mod checkpoint;
@@ -43,7 +45,15 @@ pub use crate::item::action_data::ActionData;
 pub use crate::item::dummy_shard_text::{ShardText, ShardTextAddress};
 pub use crate::item::metadata::{Metadata, MetadataAddress};
 pub use crate::item::shard::{Shard, ShardAddress};
-pub use crate::stake::{query as query_stake_state, FindStakeHandler, StakeHandler, StakeKeyBuilder};
+pub use crate::item::stake::{
+    get_delegation_key, get_stake_account_key, Banned, Candidate, Candidates, CurrentValidators, Delegation, Jail,
+    NextValidators, Prisoner, ReleaseResult, StakeAccount, Stakeholders, Validator,
+};
+pub use crate::stake::{
+    ban, execute_stake_action, init_stake, jail, query as query_stake_state, release_jailed_prisoners,
+    revert_delegations, self_nominate, update_candidates, update_validator_weights, DoubleVoteHandler,
+    FindDoubleVoteHandler, StakeKeyBuilder,
+};
 pub use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
 
 use crate::cache::CacheableItem;
