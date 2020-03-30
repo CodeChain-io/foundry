@@ -156,7 +156,7 @@ impl<'x> OpenBlock<'x> {
             *self.header().author(),
             self.header().extra_data().clone(),
         );
-        let verified_crimes: Vec<_> = evidences.iter().map(|_e| VerifiedCrime::DoubleVote).collect();
+        let verified_crimes: Vec<VerifiedCrime> = evidences.iter().map(|e| e.into()).collect();
         self.block.evidences = evidences;
 
         if self.block.header.evidences_root() == &BLAKE_NULL_RLP {
