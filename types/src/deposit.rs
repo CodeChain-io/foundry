@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Kodebox, Inc.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,21 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#[macro_use]
-mod address;
+use ckey::Ed25519Public as Public;
+use primitives::Bytes;
 
-pub mod account;
-pub mod action_data;
-pub mod dummy_shard_text;
-pub mod metadata;
-pub mod shard;
-pub mod stake;
-
-#[derive(Clone, Copy)]
-#[repr(u8)]
-enum Prefix {
-    Account = b'C',
-    Shard = b'H',
-    Metadata = b'M',
-    ShardText = b'X',
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Deposit {
+    pub pubkey: Public,
+    pub deposit: u64,
+    pub nomination_ends_at: u64,
+    pub metadata: Bytes,
 }

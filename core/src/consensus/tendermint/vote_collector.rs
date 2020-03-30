@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::stake::StakeAction;
 use super::{ConsensusMessage, VoteStep};
 use crate::consensus::BitSet;
 use ckey::Signature;
+use ctypes::transaction::StakeAction;
 use ctypes::BlockHash;
 use rlp::{Encodable, RlpStream};
 use std::collections::{BTreeMap, HashMap};

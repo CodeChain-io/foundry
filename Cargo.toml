@@ -21,6 +21,7 @@ ccore = { package = "codechain-core", path = "core" }
 cdiscovery = { package = "codechain-discovery", path = "discovery" }
 codechain-logger = { path = "util/logger" }
 ckey = { package = "codechain-key", path = "key" }
+cstate = { package = "codechain-state", path = "state" }
 ctypes = { package = "codechain-types", path = "types" }
 ckeystore = { package = "codechain-keystore", path = "keystore" }
 cnetwork = { package = "codechain-network", path = "network" }

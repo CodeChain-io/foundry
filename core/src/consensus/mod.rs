@@ -41,9 +41,9 @@ use crate::views::HeaderView;
 use crate::Client;
 use ckey::{Address, Signature};
 use cnetwork::NetworkService;
-use cstate::{StakeHandler, StateDB, StateResult};
+use cstate::{DoubleVoteHandler, StateDB, StateResult};
 use ctypes::errors::SyntaxError;
-use ctypes::transaction::Action;
+use ctypes::transaction::{Action, StakeAction};
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockHash, CommonParams, Header};
 use primitives::{Bytes, H256};
@@ -233,7 +233,7 @@ pub trait ConsensusEngine: Sync + Send {
         true
     }
 
-    fn stake_handler(&self) -> Option<&dyn StakeHandler> {
+    fn stake_handler(&self) -> Option<&dyn DoubleVoteHandler> {
         None
     }
 
@@ -327,9 +327,19 @@ pub trait CodeChainEngine: ConsensusEngine {
             ..
         } = &tx.transaction().action
         {
+            let action = rlp::decode(bytes).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
+
             let handler =
                 self.stake_handler().ok_or_else(|| SyntaxError::InvalidCustomAction("no valid handler".to_string()))?;
-            handler.verify(bytes, common_params)?;
+            if let StakeAction::ReportDoubleVote {
+                message1,
+                message2,
+            } = &action
+            {
+                handler.verify(message1, message2)?;
+            }
+
+            action.verify(common_params)?;
         }
         self.machine().verify_transaction_with_params(tx, common_params)
     }

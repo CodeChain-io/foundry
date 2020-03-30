@@ -14,8 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::stake::{self, NextValidators};
-use super::super::{ConsensusEngine, EngineError, Seal};
+use super::super::{stake, ConsensusEngine, EngineError, Seal};
 use super::network::TendermintExtension;
 pub use super::params::{TendermintParams, TimeoutParams};
 use super::worker;
@@ -33,7 +32,10 @@ use crate::BlockId;
 use ckey::{public_to_address, Address};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::{StakeHandler, StateDB, StateResult, StateWithCache, TopLevelState, TopState, TopStateView};
+use cstate::{
+    init_stake, update_validator_weights, CurrentValidators, DoubleVoteHandler, NextValidators, StateDB, StateResult,
+    StateWithCache, TopLevelState, TopState, TopStateView,
+};
 use ctypes::{BlockHash, Header};
 use primitives::H256;
 use std::collections::HashSet;
@@ -118,8 +120,8 @@ impl ConsensusEngine for Tendermint {
 
     /// Block transformation functions, before the transactions.
     fn on_open_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
-        let mut current_validators = stake::CurrentValidators::load_from_state(block.state())?;
-        current_validators.update(stake::NextValidators::load_from_state(block.state())?.clone());
+        let mut current_validators = CurrentValidators::load_from_state(block.state())?;
+        current_validators.update(NextValidators::load_from_state(block.state())?.clone());
         current_validators.save_to_state(block.state_mut())?;
 
         Ok(())
@@ -136,7 +138,7 @@ impl ConsensusEngine for Tendermint {
         let metadata = block.state().metadata()?.expect("Metadata must exist");
 
         let author = *block.header().author();
-        stake::update_validator_weights(block.state_mut(), &author)?;
+        update_validator_weights(block.state_mut(), &author)?;
 
         let term = metadata.current_term_id();
         let term_seconds = match term {
@@ -154,7 +156,7 @@ impl ConsensusEngine for Tendermint {
             0 => Vec::new(),
             _ => {
                 let start_of_the_current_term = metadata.last_term_finished_block_num() + 1;
-                let validators = stake::NextValidators::load_from_state(block.state())?
+                let validators = NextValidators::load_from_state(block.state())?
                     .into_iter()
                     .map(|val| public_to_address(val.pubkey()))
                     .collect();
@@ -243,7 +245,7 @@ impl ConsensusEngine for Tendermint {
         parent_hash_of_new_header == prev_best_hash || grandparent_hash_of_new_header == prev_best_hash
     }
 
-    fn stake_handler(&self) -> Option<&dyn StakeHandler> {
+    fn stake_handler(&self) -> Option<&dyn DoubleVoteHandler> {
         Some(&*self.stake)
     }
 
@@ -266,7 +268,7 @@ impl ConsensusEngine for Tendermint {
 
     fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
         let mut state = TopLevelState::from_existing(db, root)?;
-        stake::init(
+        init_stake(
             &mut state,
             self.genesis_stakes.clone(),
             self.genesis_candidates.clone(),
