@@ -65,34 +65,39 @@ impl<'a> HeaderView<'a> {
         self.rlp.val_at(2).unwrap()
     }
 
+    /// Returns evidences root.
+    pub fn evidences_root(&self) -> H256 {
+        self.rlp.val_at(3).unwrap()
+    }
+
     /// Returns transactions root.
     pub fn transactions_root(&self) -> H256 {
-        self.rlp.val_at(3).unwrap()
+        self.rlp.val_at(4).unwrap()
     }
 
     /// Returns next validator set hash
     pub fn next_validator_set_hash(&self) -> H256 {
-        self.rlp.val_at(4).unwrap()
+        self.rlp.val_at(5).unwrap()
     }
 
     /// Returns block number.
     pub fn number(&self) -> BlockNumber {
-        self.rlp.val_at(5).unwrap()
+        self.rlp.val_at(6).unwrap()
     }
 
     /// Returns timestamp.
     pub fn timestamp(&self) -> u64 {
-        self.rlp.val_at(6).unwrap()
+        self.rlp.val_at(7).unwrap()
     }
 
     /// Returns block extra data.
     pub fn extra_data(&self) -> Bytes {
-        self.rlp.val_at(7).unwrap()
+        self.rlp.val_at(8).unwrap()
     }
 
     /// Returns a vector of post-RLP-encoded seal fields.
     pub fn seal(&self) -> Vec<Bytes> {
-        const SIZE_WITHOUT_SEAL: usize = 8;
+        const SIZE_WITHOUT_SEAL: usize = 9;
 
         let item_count = self.rlp.item_count().unwrap();
         let mut seal = Vec::with_capacity(item_count - SIZE_WITHOUT_SEAL);
