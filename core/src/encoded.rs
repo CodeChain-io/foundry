@@ -90,6 +90,11 @@ impl Header {
         self.view().state_root()
     }
 
+    /// Returns the evidence trie root.
+    pub fn evidences_root(&self) -> H256 {
+        self.view().evidences_root()
+    }
+
     /// Returns the transaction trie root.
     pub fn transactions_root(&self) -> H256 {
         self.view().transactions_root()

@@ -158,6 +158,13 @@ impl<'x> OpenBlock<'x> {
         );
         let verified_crimes: Vec<_> = evidences.iter().map(|_e| VerifiedCrime::DoubleVote).collect();
         self.block.evidences = evidences;
+
+        if self.block.header.evidences_root() == &BLAKE_NULL_RLP {
+            self.block.header.set_evidences_root(skewed_merkle_root(
+                BLAKE_NULL_RLP,
+                self.block.evidences.iter().map(Encodable::rlp_bytes),
+            ));
+        }
         coordinator.open_block(self.state_mut(), &pre_header, &verified_crimes);
     }
 
