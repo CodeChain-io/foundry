@@ -446,7 +446,7 @@ impl TopLevelState {
         Ok(())
     }
 
-    #[allow(dead_code)]
+    #[cfg(test)]
     fn module_state_mut(&mut self, storage_id: StorageId) -> StateResult<ModuleLevelState> {
         let module_root = self.module_root(storage_id)?.ok_or_else(|| RuntimeError::InvalidStorageId(storage_id))?;
         let module_cache = self.module_caches.entry(storage_id).or_default();
@@ -1168,5 +1168,300 @@ mod tests_tx {
 
         let shard_id = 3;
         check_top_level_state!(state, [(shard_text: (shard_id, TxHash::from(H256::random())))]);
+    }
+}
+
+#[cfg(test)]
+mod test_module_states {
+    use super::*;
+    use crate::tests::helpers::get_temp_state;
+
+    #[test]
+    fn create_module_states() {
+        let mut top_level_state = get_temp_state();
+        // create module with StorageId = 0
+        let module_count = 10;
+        let storage_id_range = 0..module_count;
+        storage_id_range.clone().for_each(|_| {
+            top_level_state.create_module().unwrap();
+        });
+        storage_id_range.for_each(|storage_id| {
+            top_level_state.module_state_mut(storage_id).unwrap();
+            assert!(top_level_state.module_state(storage_id).unwrap().is_some());
+        })
+    }
+
+    #[test]
+    fn commit() {
+        let mut top_level_state = get_temp_state();
+        let storage_id_0: StorageId = 0;
+        let storage_id_1: StorageId = 1;
+        top_level_state.create_module().unwrap();
+        top_level_state.create_module().unwrap();
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                set: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer")
+                ]
+            });
+            let state_with_id_1 = top_level_state.module_state_mut(storage_id_1).unwrap();
+            module_level!(state_with_id_1, {
+                set: [
+                    (key: "charlie" => datum_str: "Charlie is a physicist"),
+                    (key: "dave" => datum_str: "Dave is a singer")
+                ]
+            });
+        }
+        let (db, root) = top_level_state.commit_and_into_db().unwrap();
+        let mut top_level_state = TopLevelState::from_existing(db, root).unwrap();
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                check: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer"),
+                    (key: "charlie" => None),
+                    (key: "dave" => None)
+                ]
+            });
+            let state_with_id_1 = top_level_state.module_state_mut(storage_id_1).unwrap();
+            module_level!(state_with_id_1, {
+                check: [
+                    (key: "alice" => None),
+                    (key: "bob" => None),
+                    (key: "charlie" => datum_str: "Charlie is a physicist"),
+                    (key: "dave" => datum_str: "Dave is a singer")
+                ]
+            });
+        }
+    }
+
+    #[test]
+    fn without_commit() {
+        let mut top_level_state = get_temp_state();
+        let storage_id_0: StorageId = 0;
+        top_level_state.create_module().unwrap();
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                set: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer")
+                ]
+            });
+        }
+        let (state_db, root) = top_level_state.commit_and_into_db().unwrap();
+        let mut top_level_state = TopLevelState::from_existing(state_db.clone(&root), root).unwrap();
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                check: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer"),
+                    (key: "charlie" => None),
+                ]
+            });
+        }
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                set: [
+                    (key: "alice" => datum_str: "Alice became a software engineer"),
+                    (key: "bob" => datum_str: "Bob became a doctor"),
+                    (key: "charlie" => datum_str: "Charlie is a nurse"),
+                ]
+            });
+        }
+        let mut top_level_state = TopLevelState::from_existing(state_db.clone(&root), root).unwrap();
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                check: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer"),
+                    (key: "charlie" => None)
+                ]
+            });
+        }
+    }
+
+    #[test]
+    fn checkpoint_and_revert() {
+        let mut top_level_state = get_temp_state();
+        let storage_id_0: StorageId = 0;
+        top_level_state.create_module().unwrap();
+        // state1
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                set: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer")
+                ]
+            });
+        }
+        let checkpoint1 = 1;
+        StateWithCheckpoint::create_checkpoint(&mut top_level_state, checkpoint1);
+        // state2
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                set: [
+                    (key: "alice" => datum_str: "Alice became a software engineer"),
+                    (key: "bob" => datum_str: "Bob became a doctor")
+                ]
+            });
+        }
+        let checkpoint2 = 2;
+        StateWithCheckpoint::create_checkpoint(&mut top_level_state, checkpoint2);
+        // state3
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                set: [
+                    (key: "charlie" => datum_str: "Charlie is a nurse")
+                ]
+            });
+        }
+
+        //state3
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                check: [
+                    (key: "alice" => datum_str: "Alice became a software engineer"),
+                    (key: "bob" => datum_str: "Bob became a doctor"),
+                    (key: "charlie" => datum_str: "Charlie is a nurse")
+                ]
+            });
+        }
+
+        StateWithCheckpoint::revert_to_checkpoint(&mut top_level_state, checkpoint2);
+        //state2
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                check: [
+                    (key: "alice" => datum_str: "Alice became a software engineer"),
+                    (key: "bob" => datum_str: "Bob became a doctor"),
+                    (key: "charlie" => None)
+                ]
+            });
+        }
+
+        StateWithCheckpoint::revert_to_checkpoint(&mut top_level_state, checkpoint1);
+        //state1
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                check: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer"),
+                    (key: "charlie" => None)
+                ]
+            });
+        }
+    }
+
+    #[test]
+    fn checkpoint_discard_and_revert() {
+        let mut top_level_state = get_temp_state();
+        let storage_id_0: StorageId = 0;
+        top_level_state.create_module().unwrap();
+        // state1
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                set: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer")
+                ]
+            });
+        }
+        let checkpoint1 = 1;
+        StateWithCheckpoint::create_checkpoint(&mut top_level_state, checkpoint1);
+        // state2
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                set: [
+                    (key: "alice" => datum_str: "Alice became a software engineer"),
+                    (key: "bob" => datum_str: "Bob became a doctor")
+                ]
+            });
+        }
+        let checkpoint2 = 2;
+        StateWithCheckpoint::create_checkpoint(&mut top_level_state, checkpoint2);
+        // state3
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                set: [
+                    (key: "charlie" => datum_str: "Charlie is a nurse")
+                ]
+            });
+        }
+
+        //state3
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                check: [
+                    (key: "alice" => datum_str: "Alice became a software engineer"),
+                    (key: "bob" => datum_str: "Bob became a doctor"),
+                    (key: "charlie" => datum_str: "Charlie is a nurse")
+                ]
+            });
+        }
+
+        StateWithCheckpoint::discard_checkpoint(&mut top_level_state, checkpoint2);
+        StateWithCheckpoint::revert_to_checkpoint(&mut top_level_state, checkpoint1);
+        //state1
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                check: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer"),
+                    (key: "charlie" => None)
+                ]
+            });
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn commit_and_restore_do_not_preserve_checkpoints() {
+        let mut top_level_state = get_temp_state();
+        let storage_id_0: StorageId = 0;
+        top_level_state.create_module().unwrap();
+        // state1
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                set: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer")
+                ]
+            });
+        }
+        let checkpoint1 = 1;
+        StateWithCheckpoint::create_checkpoint(&mut top_level_state, checkpoint1);
+        // state2
+        {
+            let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
+            module_level!(state_with_id_0, {
+                set: [
+                    (key: "alice" => datum_str: "Alice became a software engineer"),
+                    (key: "bob" => datum_str: "Bob became a doctor")
+                ]
+            });
+        }
+        let (db, root) = top_level_state.commit_and_into_db().unwrap();
+        let mut top_level_state = TopLevelState::from_existing(db, root).unwrap();
+
+        StateWithCheckpoint::revert_to_checkpoint(&mut top_level_state, checkpoint1);
     }
 }
