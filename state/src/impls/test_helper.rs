@@ -104,8 +104,23 @@ macro_rules! set_top_level_state {
     ($state:expr, [(account: $addr:expr => seq: $seq:expr)]) => {
         assert_eq!(Ok(()), $state.set_seq(&$addr, $seq));
     };
+    ($state:expr, [(account: $addr:expr => seq++)]) => {
+        assert_eq!(Ok(()), $state.inc_seq(&$addr));
+    };
+    ($state:expr, [(account: $addr:expr => Kill)]) => {
+        $state.kill_account(&$addr);
+    };
+    ($state:expr, [(account: $addr:expr => balance: add $quantity:expr)]) => {
+        assert_eq!(Ok(()), $state.add_balance(&$addr, $quantity));
+    };
+    ($state:expr, [(account: $addr:expr => balance: sub $quantity:expr)]) => {
+        assert_eq!(Ok(()), $state.sub_balance(&$addr, $quantity));
+    };
+    ($state:expr, [(account: $from:expr => transfer: $to:expr, $quantity:expr)]) => {
+        assert_eq!(Ok(()), $state.transfer_balance(&$from, &$to, $quantity));
+    };
     // recursion
-    ($state:expr, [$head:tt, $($tail:tt),+]) => {
+    ($state:expr, [$head:tt, $($tail:tt),+ $(,)?]) => {
         set_top_level_state!($state, [$head]);
         set_top_level_state!($state, [$($tail),+]);
     };
@@ -113,16 +128,44 @@ macro_rules! set_top_level_state {
 
 macro_rules! check_top_level_state {
     // base cases
-    ($state:expr, [(account: $addr:expr => (seq: $seq:expr, balance: $balance:expr))]) => {
+    ($state:expr, [(account: $addr:expr => seq: $seq:expr)]) => {
         assert_eq!(Ok($seq), $state.seq(&$addr));
+    };
+    ($state:expr, [(account: $addr:expr => balance: $balance:expr)]) => {
         assert_eq!(Ok($balance), $state.balance(&$addr));
     };
     ($state:expr, [(account: $addr:expr)]) => {
-        check_top_level_state!($state, [(account: $addr => (seq: 0, balance: 0))]);
+        check_top_level_state!($state, [(account: $addr => seq: 0, balance: 0)]);
+    };
+    ($state:expr, [(account: $addr:expr => None)]) => {
+        assert_eq!(Ok(false), $state.account_exists(&$addr));
+        assert_eq!(Ok(false), $state.account_exists_and_not_null(&$addr));
+    };
+    ($state:expr, [(account: $addr:expr => Some)]) => {
+        assert_eq!(Ok(true), $state.account_exists(&$addr));
+        assert_eq!(Ok(true), $state.account_exists_and_not_null(&$addr));
+    };
+    ($state:expr, [(account: $addr:expr => $head:ident: $head_val:expr, $($tail:ident: $tail_val:expr),+)]) => {
+        check_top_level_state!($state, [(account: $addr => $head: $head_val)]);
+        check_top_level_state!($state, [(account: $addr => $($tail: $tail_val),+)]);
     };
     //recursion
-    ($state:expr, [$head:tt, $($tail:tt),+]) => {
+    ($state:expr, [$head:tt, $($tail:tt),+ $(,)?]) => {
         check_top_level_state!($state, [$head]);
         check_top_level_state!($state, [$($tail),+]);
+    }
+}
+
+macro_rules! top_level {
+    ($state:expr, {check: $content:tt}) => {
+        check_top_level_state!($state, $content);
+    };
+    ($state:expr, {set: $content:tt}) => {
+        set_top_level_state!($state, $content);
+    };
+    //recursion
+    ($state:expr, {$opl:ident: $contentl:tt, $($opr:ident: $contentr:tt),+ $(,)?}) => {
+        top_level!($state, {$opl: $contentl});
+        top_level!($state, {$($opr: $contentr),+});
     }
 }

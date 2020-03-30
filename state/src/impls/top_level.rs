@@ -592,19 +592,25 @@ mod tests_state {
 
         let mut state = {
             let mut state = get_temp_state();
-            assert_eq!(Ok(false), state.account_exists(&a));
-            assert_eq!(Ok(()), state.inc_seq(&a));
-            assert_eq!(Ok(1), state.seq(&a));
+            top_level!(state, {
+                check: [(account: a => None)],
+                set: [(account: a => seq++)],
+                check: [(account: a => seq: 1)],
+            });
             let root = state.commit();
             assert!(root.is_ok(), "{:?}", root);
             state
         };
-        assert_eq!(Ok(1), state.seq(&a));
-        assert_eq!(Ok(()), state.inc_seq(&a));
-        assert_eq!(Ok(2), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => seq: 1)],
+            set: [(account: a => seq++)],
+            check: [(account: a => seq: 2)],
+        });
         let root = state.commit();
         assert!(root.is_ok(), "{:?}", root);
-        assert_eq!(Ok(2), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => seq: 2)]
+        })
     }
 
     #[test]
@@ -613,17 +619,23 @@ mod tests_state {
 
         let mut state = {
             let mut state = get_temp_state();
-            assert_eq!(Ok(false), state.account_exists(&a));
-            assert_eq!(Ok(()), state.inc_seq(&a));
-            assert_eq!(Ok(1), state.seq(&a));
+            top_level!(state, {
+                check: [(account: a => None)],
+                set: [(account: a => seq++)],
+                check: [(account: a => seq: 1)],
+            });
             state
         };
-        assert_eq!(Ok(1), state.seq(&a));
-        assert_eq!(Ok(()), state.inc_seq(&a));
-        assert_eq!(Ok(2), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => seq: 1)],
+            set: [(account: a => seq++)],
+            check: [(account: a => seq: 2)],
+        });
         let root = state.commit();
         assert!(root.is_ok(), "{:?}", root);
-        assert_eq!(Ok(2), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => seq: 2)]
+        })
     }
 
     #[test]
@@ -631,12 +643,13 @@ mod tests_state {
         let a = Address::random();
 
         let original_state = get_temp_state();
-
-        assert_eq!(Ok(false), original_state.account_exists(&a));
-
+        top_level!(original_state, {
+            check: [(account: a => None)]
+        });
         let mut cloned_state = original_state.clone();
-
-        assert_eq!(Ok(()), cloned_state.inc_seq(&a));
+        top_level!(cloned_state, {
+            set: [(account: a => seq++)]
+        });
         let root = cloned_state.commit();
         assert!(root.is_ok(), "{:?}", root);
 
@@ -651,12 +664,18 @@ mod tests_state {
         let a = Address::default();
         let root = {
             let mut state = empty_top_state_with_metadata(db.clone(&H256::zero()), CommonParams::default_for_test());
-            assert_eq!(Ok(()), state.inc_seq(&a));
-            assert_eq!(Ok(()), state.add_balance(&a, 100));
-            assert_eq!(Ok(100), state.balance(&a));
+            top_level!(state, {
+                set: [
+                    (account: a => seq++),
+                    (account: a => balance: add 100)
+                ],
+                check: [(account: a => balance: 100)]
+            });
             let root = state.commit();
             assert!(root.is_ok(), "{:?}", root);
-            assert_eq!(Ok(100), state.balance(&a));
+            top_level!(state, {
+                check: [(account: a => balance: 100)]
+            });
 
             let mut transaction = memory_db.transaction();
             let records = state.journal_under(&mut transaction, 1);
@@ -665,13 +684,16 @@ mod tests_state {
             memory_db.write_buffered(transaction);
 
             assert!(root.is_ok(), "{:?}", root);
-            assert_eq!(Ok(100), state.balance(&a));
+            top_level!(state, {
+                check: [(account: a => balance: 100)]
+            });
             root.unwrap()
         };
 
         let state = TopLevelState::from_existing(db, root).unwrap();
-        assert_eq!(Ok(100), state.balance(&a));
-        assert_eq!(Ok(1), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => balance: 100, seq: 1)]
+        });
     }
 
     #[test]
@@ -682,12 +704,20 @@ mod tests_state {
         let a = Address::default();
         let root = {
             let mut state = empty_top_state_with_metadata(db.clone(&H256::zero()), CommonParams::default_for_test());
-            assert_eq!(Ok(()), state.inc_seq(&a));
-            assert_eq!(Ok(()), state.add_balance(&a, 69));
-            assert_eq!(Ok(69), state.balance(&a));
+            top_level!(state, {
+                set: [
+                    (account: a => seq++),
+                    (account: a => balance: add 69)
+                ],
+                check: [
+                    (account: a => balance: 69)
+                ]
+            });
             let root = state.commit();
             assert!(root.is_ok(), "{:?}", root);
-            assert_eq!(Ok(69), state.balance(&a));
+            top_level!(state, {
+                check: [(account: a => balance: 69)]
+            });
 
             let mut transaction = memory_db.transaction();
             let records = state.journal_under(&mut transaction, 1);
@@ -696,31 +726,31 @@ mod tests_state {
             memory_db.write_buffered(transaction);
 
             assert!(root.is_ok(), "{:?}", root);
-            assert_eq!(Ok(69), state.balance(&a));
+            top_level!(state, {
+                check: [(account: a => balance: 69)]
+            });
 
             db.override_state(&state);
             root.unwrap()
         };
 
         let state = TopLevelState::from_existing(db, root).unwrap();
-        assert_eq!(Ok(69), state.balance(&a));
-        assert_eq!(Ok(1), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => balance: 69, seq: 1)]
+        });
     }
 
     #[test]
     fn remove() {
         let a = Address::default();
         let mut state = get_temp_state();
-        assert_eq!(Ok(false), state.account_exists(&a));
-        assert_eq!(Ok(false), state.account_exists_and_not_null(&a));
-        assert_eq!(Ok(()), state.inc_seq(&a));
-        assert_eq!(Ok(true), state.account_exists(&a));
-        assert_eq!(Ok(true), state.account_exists_and_not_null(&a));
-        assert_eq!(Ok(1), state.seq(&a));
-        state.kill_account(&a);
-        assert_eq!(Ok(false), state.account_exists(&a));
-        assert_eq!(Ok(false), state.account_exists_and_not_null(&a));
-        assert_eq!(Ok(0), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => None)],
+            set: [(account: a => seq++)],
+            check: [(account: a => Some), (account: a => seq: 1)],
+            set: [(account: a => Kill)],
+            check: [(account: a => None), (account: a => seq: 0)],
+        });
     }
 
     #[test]
@@ -729,23 +759,28 @@ mod tests_state {
         let mut db = get_temp_state_db();
         let root = {
             let mut state = empty_top_state(db.clone(&H256::zero()));
-            assert_eq!(Ok(()), state.add_balance(&a, 0)); // create an empty account
+            top_level!(state, {
+                set: [(account: a => balance: add 0)] // create an empty account
+            });
             let root = state.commit();
             assert!(root.is_ok(), "{:?}", root);
 
-            assert_eq!(Ok(false), state.account_exists(&a));
-            assert_eq!(Ok(false), state.account_exists_and_not_null(&a));
+            top_level!(state, {
+                check: [(account: a => None)]
+            });
 
             db.override_state(&state);
 
             root.unwrap()
         };
         let state = TopLevelState::from_existing(db, root).unwrap();
-        assert_eq!(Ok(false), state.account_exists(&a));
-        assert_eq!(Ok(false), state.account_exists_and_not_null(&a));
+        top_level!(state, {
+            check: [(account: a => None)]
+        });
     }
 
     #[test]
+    #[allow(clippy::cognitive_complexity)]
     fn remove_from_database() {
         let a = Address::default();
         let memory_db = get_memory_db();
@@ -753,11 +788,14 @@ mod tests_state {
         let mut db = StateDB::new(jorunal.boxed_clone());
         let root = {
             let mut state = empty_top_state_with_metadata(db.clone(&H256::zero()), CommonParams::default_for_test());
-            assert_eq!(Ok(()), state.inc_seq(&a));
+            top_level!(state, {
+                set: [(account: a => seq++)]
+            });
             let root = state.commit();
             assert!(root.is_ok(), "{:?}", root);
-            assert_eq!(Ok(true), state.account_exists(&a));
-            assert_eq!(Ok(1), state.seq(&a));
+            top_level!(state, {
+                check: [(account: a => Some), (account: a => seq: 1)]
+            });
 
             let mut transaction = memory_db.transaction();
             let records = state.journal_under(&mut transaction, 1);
@@ -765,8 +803,9 @@ mod tests_state {
             assert_eq!(4, records.unwrap());
             memory_db.write_buffered(transaction);
 
-            assert_eq!(Ok(true), state.account_exists(&a));
-            assert_eq!(Ok(1), state.seq(&a));
+            top_level!(state, {
+                check: [(account: a => Some), (account: a => seq: 1)]
+            });
 
             db.override_state(&state);
 
@@ -775,13 +814,15 @@ mod tests_state {
 
         let root = {
             let mut state = TopLevelState::from_existing(db.clone(&root), root).unwrap();
-            assert_eq!(Ok(true), state.account_exists(&a));
-            assert_eq!(Ok(1), state.seq(&a));
-            state.kill_account(&a);
+            top_level!(state, {
+                check: [(account: a => Some), (account: a => seq: 1)],
+                set: [(account: a => Kill)],
+            });
             let root = state.commit();
             assert!(root.is_ok(), "{:?}", root);
-            assert_eq!(Ok(false), state.account_exists(&a));
-            assert_eq!(Ok(0), state.seq(&a));
+            top_level!(state, {
+                check: [(account: a => None), (account: a => seq: 0)]
+            });
 
             let mut transaction = memory_db.transaction();
             let records = state.journal_under(&mut transaction, 1);
@@ -789,8 +830,9 @@ mod tests_state {
             assert_eq!(1, records.unwrap());
             memory_db.write_buffered(transaction);
 
-            assert_eq!(Ok(false), state.account_exists(&a));
-            assert_eq!(Ok(0), state.seq(&a));
+            top_level!(state, {
+                check: [(account: a => None), (account: a => seq: 0)]
+            });
 
             db.override_state(&state);
 
@@ -798,8 +840,9 @@ mod tests_state {
         };
 
         let state = TopLevelState::from_existing(db, root).unwrap();
-        assert_eq!(Ok(false), state.account_exists(&a));
-        assert_eq!(Ok(0), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => None), (account: a => seq: 0)]
+        });
     }
 
     #[test]
@@ -807,53 +850,73 @@ mod tests_state {
         let mut state = get_temp_state();
         let a = Address::default();
         let b = 1u64.into();
-        assert_eq!(Ok(()), state.add_balance(&a, 100));
-        assert_eq!(Ok(100), state.balance(&a));
+        top_level!(state, {
+            set: [(account: a => balance: add 100)],
+            check: [(account: a => balance: 100)],
+        });
         let root = state.commit();
         assert!(root.is_ok(), "{:?}", root);
-        assert_eq!(Ok(100), state.balance(&a));
-        assert_eq!(Ok(()), state.sub_balance(&a, 42));
-        assert_eq!(Ok(100 - 42), state.balance(&a));
+        top_level!(state, {
+            check: [(account: a => balance: 100)],
+            set: [(account: a => balance: sub 42)],
+            check: [(account: a => balance: 100 - 42)],
+        });
         let root = state.commit();
         assert!(root.is_ok(), "{:?}", root);
-        assert_eq!(Ok(100 - 42), state.balance(&a));
-        assert_eq!(Ok(()), state.transfer_balance(&a, &b, 18));
-        assert_eq!(Ok(100 - 42 - 18), state.balance(&a));
-        assert_eq!(Ok(18), state.balance(&b));
+        top_level!(state, {
+            check: [(account: a => balance: 100 - 42)],
+            set: [(account: a => transfer: b, 18)],
+            check: [
+                (account: a => balance: 100 - 42 - 18),
+                (account: b => balance: 18),
+            ],
+        });
         let root = state.commit();
         assert!(root.is_ok(), "{:?}", root);
-        assert_eq!(Ok(100 - 42 - 18), state.balance(&a));
-        assert_eq!(Ok(18), state.balance(&b));
+        top_level!(state, {
+            check: [
+                (account: a => balance: 100 - 42 - 18),
+                (account: b => balance: 18),
+            ]
+        });
     }
 
     #[test]
     fn alter_seq() {
         let mut state = get_temp_state();
         let a = Address::default();
-        assert_eq!(Ok(()), state.inc_seq(&a));
-        assert_eq!(Ok(1), state.seq(&a));
-        assert_eq!(Ok(()), state.inc_seq(&a));
-        assert_eq!(Ok(2), state.seq(&a));
+        top_level!(state, {
+            set: [(account: a => seq++)],
+            check: [(account: a => seq: 1)],
+            set: [(account: a => seq++)],
+            check: [(account: a => seq: 2)],
+        });
         let root = state.commit();
         assert!(root.is_ok(), "{:?}", root);
-        assert_eq!(Ok(2), state.seq(&a));
-        assert_eq!(Ok(()), state.inc_seq(&a));
-        assert_eq!(Ok(3), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => seq: 2)],
+            set: [(account: a => seq++)],
+            check: [(account: a => seq: 3)],
+        });
         let root = state.commit();
         assert!(root.is_ok(), "{:?}", root);
-        assert_eq!(Ok(3), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => seq: 3)]
+        });
     }
 
     #[test]
     fn balance_seq() {
         let mut state = get_temp_state();
         let a = Address::default();
-        assert_eq!(Ok(0), state.balance(&a));
-        assert_eq!(Ok(0), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => balance: 0, seq: 0)]
+        });
         let root = state.commit();
         assert!(root.is_ok(), "{:?}", root);
-        assert_eq!(Ok(0), state.balance(&a));
-        assert_eq!(Ok(0), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => balance: 0, seq: 0)]
+        });
     }
 
     #[test]
@@ -869,15 +932,23 @@ mod tests_state {
         let mut state = get_temp_state();
         let a = Address::default();
         StateWithCheckpoint::create_checkpoint(&mut state, 0);
-        assert_eq!(Ok(()), state.add_balance(&a, 100));
-        assert_eq!(Ok(100), state.balance(&a));
+        top_level!(state, {
+            set: [(account: a => balance: add 100)],
+            check: [(account: a => balance: 100)]
+        });
         StateWithCheckpoint::discard_checkpoint(&mut state, 0);
-        assert_eq!(Ok(100), state.balance(&a));
+        top_level!(state, {
+            check: [(account: a => balance: 100)]
+        });
         StateWithCheckpoint::create_checkpoint(&mut state, 1);
-        assert_eq!(Ok(()), state.add_balance(&a, 1));
-        assert_eq!(Ok(100 + 1), state.balance(&a));
+        top_level!(state, {
+            set: [(account: a => balance: add 1)],
+            check: [(account: a => balance: 100 + 1)]
+        });
         StateWithCheckpoint::revert_to_checkpoint(&mut state, 1);
-        assert_eq!(Ok(100), state.balance(&a));
+        top_level!(state, {
+            check: [(account: a => balance: 100)]
+        });
     }
 
     #[test]
@@ -885,14 +956,22 @@ mod tests_state {
         let mut state = get_temp_state();
         let a = Address::default();
         StateWithCheckpoint::create_checkpoint(&mut state, 0);
-        assert_eq!(Ok(()), state.add_balance(&a, 100));
+        top_level!(state, {
+            set: [(account: a => balance: add 100)]
+        });
         StateWithCheckpoint::create_checkpoint(&mut state, 1);
-        assert_eq!(Ok(()), state.add_balance(&a, 120));
-        assert_eq!(Ok(100 + 120), state.balance(&a));
+        top_level!(state, {
+            set: [(account: a => balance: add 120)],
+            check: [(account: a => balance: 100 + 120)]
+        });
         StateWithCheckpoint::revert_to_checkpoint(&mut state, 1);
-        assert_eq!(Ok(100), state.balance(&a));
+        top_level!(state, {
+            check: [(account: a => balance: 100)]
+        });
         StateWithCheckpoint::revert_to_checkpoint(&mut state, 0);
-        assert_eq!(Ok(0), state.balance(&a));
+        top_level!(state, {
+            check: [(account: a => balance: 0)]
+        });
     }
 
     #[test]
@@ -900,18 +979,22 @@ mod tests_state {
         let mut state = get_temp_state();
         let a = Address::default();
         StateWithCheckpoint::create_checkpoint(&mut state, 0);
-        assert_eq!(Ok(()), state.add_balance(&a, 100));
+        top_level!(state, {
+            set: [(account: a => balance: add 100)]
+        });
         StateWithCheckpoint::create_checkpoint(&mut state, 1);
-        assert_eq!(Ok(()), state.add_balance(&a, 123));
-        assert_eq!(Ok(()), state.inc_seq(&a));
-        assert_eq!(Ok(100 + 123), state.balance(&a));
-        assert_eq!(Ok(1), state.seq(&a));
+        top_level!(state, {
+            set: [(account: a => balance: add 123), (account: a => seq++)],
+            check: [(account: a => balance: 100 + 123, seq: 1)]
+        });
         StateWithCheckpoint::discard_checkpoint(&mut state, 1);
-        assert_eq!(Ok(100 + 123), state.balance(&a));
-        assert_eq!(Ok(1), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => balance: 100 + 123, seq: 1)]
+        });
         StateWithCheckpoint::revert_to_checkpoint(&mut state, 0);
-        assert_eq!(Ok(0), state.balance(&a));
-        assert_eq!(Ok(0), state.seq(&a));
+        top_level!(state, {
+            check: [(account: a => balance: 0, seq: 0)]
+        });
     }
 }
 
@@ -946,7 +1029,7 @@ mod tests_tx {
         );
 
         check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 20))
+            (account: sender => seq: 0, balance: 20)
         ]);
     }
 
@@ -969,7 +1052,7 @@ mod tests_tx {
         );
 
         check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 4))
+            (account: sender => seq: 0, balance: 4)
         ]);
     }
 
@@ -985,8 +1068,8 @@ mod tests_tx {
         assert_eq!(Ok(()), state.apply(&tx, &H256::random().into(), &sender_public, &get_test_client(), 0, 0, 0));
 
         check_top_level_state!(state, [
-            (account: sender => (seq: 1, balance: 5)),
-            (account: receiver => (seq: 0, balance: 10))
+            (account: sender => seq: 1, balance: 5),
+            (account: receiver => seq: 0, balance: 10)
         ]);
     }
 
@@ -1012,8 +1095,8 @@ mod tests_tx {
         );
 
         check_top_level_state!(state, [
-            (account: sender => (seq: 0, balance: 20)),
-            (account: receiver => (seq: 0, balance: 0))
+            (account: sender => seq: 0, balance: 20),
+            (account: receiver => seq: 0, balance: 0)
         ]);
     }
 }
