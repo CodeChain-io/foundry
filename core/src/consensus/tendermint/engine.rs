@@ -33,7 +33,7 @@ use crate::BlockId;
 use ckey::{public_to_address, Address};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::{ActionHandler, StateDB, StateResult, StateWithCache, TopLevelState, TopState, TopStateView};
+use cstate::{StakeHandler, StateDB, StateResult, StateWithCache, TopLevelState, TopState, TopStateView};
 use ctypes::{BlockHash, Header};
 use primitives::H256;
 use std::collections::HashSet;
@@ -243,8 +243,8 @@ impl ConsensusEngine for Tendermint {
         parent_hash_of_new_header == prev_best_hash || grandparent_hash_of_new_header == prev_best_hash
     }
 
-    fn action_handlers(&self) -> &[Arc<dyn ActionHandler>] {
-        &self.action_handlers
+    fn stake_handler(&self) -> Option<&dyn StakeHandler> {
+        Some(&*self.stake)
     }
 
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {
@@ -266,6 +266,13 @@ impl ConsensusEngine for Tendermint {
 
     fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
         let mut state = TopLevelState::from_existing(db, root)?;
+        stake::init(
+            &mut state,
+            self.genesis_stakes.clone(),
+            self.genesis_candidates.clone(),
+            self.genesis_delegations.clone(),
+        )?;
+
         NextValidators::elect(&state)?.save_to_state(&mut state)?;
         Ok(state.commit_and_into_db()?)
     }

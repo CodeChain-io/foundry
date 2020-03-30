@@ -22,21 +22,18 @@ extern crate codechain_key as ckey;
 extern crate codechain_types as ctypes;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate rlp_derive;
 
-mod action_handler;
 mod cache;
 mod checkpoint;
 mod db;
 mod error;
 mod impls;
 mod item;
+mod stake;
 mod traits;
 
 pub mod tests;
 
-pub use crate::action_handler::{ActionDataKeyBuilder, ActionHandler, FindActionHandler, HitHandler};
 pub use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 pub use crate::db::StateDB;
 pub use crate::error::Error as StateError;
@@ -46,6 +43,7 @@ pub use crate::item::action_data::ActionData;
 pub use crate::item::dummy_shard_text::{ShardText, ShardTextAddress};
 pub use crate::item::metadata::{Metadata, MetadataAddress};
 pub use crate::item::shard::{Shard, ShardAddress};
+pub use crate::stake::{query as query_stake_state, FindStakeHandler, StakeHandler, StakeKeyBuilder};
 pub use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
 
 use crate::cache::CacheableItem;

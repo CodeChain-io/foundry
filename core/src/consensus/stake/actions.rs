@@ -26,7 +26,7 @@ use std::sync::Arc;
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
-enum ActionTag {
+enum StakeActionTag {
     TransferCCS = 1,
     DelegateCCS = 2,
     Revoke = 3,
@@ -36,23 +36,23 @@ enum ActionTag {
     ChangeParams = 0xFF,
 }
 
-impl Encodable for ActionTag {
+impl Encodable for StakeActionTag {
     fn rlp_append(&self, s: &mut RlpStream) {
         s.append_single_value(&(*self as u8));
     }
 }
 
-impl Decodable for ActionTag {
+impl Decodable for StakeActionTag {
     fn decode(rlp: &Rlp) -> Result<Self, DecoderError> {
         let tag = rlp.as_val()?;
         match tag {
-            1u8 => Ok(ActionTag::TransferCCS),
-            2 => Ok(ActionTag::DelegateCCS),
-            3 => Ok(ActionTag::Revoke),
-            4 => Ok(ActionTag::SelfNominate),
-            5 => Ok(ActionTag::ReportDoubleVote),
-            6 => Ok(ActionTag::Redelegate),
-            0xFF => Ok(ActionTag::ChangeParams),
+            1u8 => Ok(StakeActionTag::TransferCCS),
+            2 => Ok(StakeActionTag::DelegateCCS),
+            3 => Ok(StakeActionTag::Revoke),
+            4 => Ok(StakeActionTag::SelfNominate),
+            5 => Ok(StakeActionTag::ReportDoubleVote),
+            6 => Ok(StakeActionTag::Redelegate),
+            0xFF => Ok(StakeActionTag::ChangeParams),
             _ => Err(DecoderError::Custom("Unexpected ActionTag Value")),
         }
     }
@@ -75,7 +75,7 @@ impl Approval {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Action {
+pub enum StakeAction {
     TransferCCS {
         address: Address,
         quantity: u64,
@@ -102,14 +102,13 @@ pub enum Action {
         params: Box<CommonParams>,
         approvals: Vec<Approval>,
     },
-    // TODO: ConsensusMessage is tied to the Tendermint
     ReportDoubleVote {
-        message1: Box<ConsensusMessage>,
-        message2: Box<ConsensusMessage>,
+        message1: Bytes,
+        message2: Bytes,
     },
 }
 
-impl Action {
+impl StakeAction {
     pub fn verify(
         &self,
         current_params: &CommonParams,
@@ -117,19 +116,19 @@ impl Action {
         validators: Option<Arc<dyn ValidatorSet>>,
     ) -> Result<(), SyntaxError> {
         match self {
-            Action::TransferCCS {
+            StakeAction::TransferCCS {
                 ..
             } => {}
-            Action::DelegateCCS {
+            StakeAction::DelegateCCS {
                 ..
             } => {}
-            Action::Revoke {
+            StakeAction::Revoke {
                 ..
             } => {}
-            Action::Redelegate {
+            StakeAction::Redelegate {
                 ..
             } => {}
-            Action::SelfNominate {
+            StakeAction::SelfNominate {
                 metadata,
                 ..
             } => {
@@ -140,13 +139,13 @@ impl Action {
                     )))
                 }
             }
-            Action::ChangeParams {
+            StakeAction::ChangeParams {
                 metadata_seq,
                 params,
                 approvals,
             } => {
                 params.verify_change(current_params).map_err(SyntaxError::InvalidCustomAction)?;
-                let action = Action::ChangeParams {
+                let action = StakeAction::ChangeParams {
                     metadata_seq: *metadata_seq,
                     params: params.clone(),
                     approvals: vec![],
@@ -163,13 +162,17 @@ impl Action {
                     }
                 }
             }
-            Action::ReportDoubleVote {
+            StakeAction::ReportDoubleVote {
                 message1,
                 message2,
             } => {
                 if message1 == message2 {
                     return Err(SyntaxError::InvalidCustomAction(String::from("Messages are duplicated")))
                 }
+                let message1: ConsensusMessage =
+                    rlp::decode(&message1).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
+                let message2: ConsensusMessage =
+                    rlp::decode(&message2).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
                 if message1.round() != message2.round() {
                     return Err(SyntaxError::InvalidCustomAction(String::from(
                         "The messages are from two different voting rounds",
@@ -220,75 +223,72 @@ impl Action {
     }
 }
 
-impl Encodable for Action {
+impl Encodable for StakeAction {
     fn rlp_append(&self, s: &mut RlpStream) {
         match self {
-            Action::TransferCCS {
+            StakeAction::TransferCCS {
                 address,
                 quantity,
             } => {
-                s.begin_list(3).append(&ActionTag::TransferCCS).append(address).append(quantity);
+                s.begin_list(3).append(&StakeActionTag::TransferCCS).append(address).append(quantity);
             }
-            Action::DelegateCCS {
+            StakeAction::DelegateCCS {
                 address,
                 quantity,
             } => {
-                s.begin_list(3).append(&ActionTag::DelegateCCS).append(address).append(quantity);
+                s.begin_list(3).append(&StakeActionTag::DelegateCCS).append(address).append(quantity);
             }
-            Action::Revoke {
+            StakeAction::Revoke {
                 address,
                 quantity,
             } => {
-                s.begin_list(3).append(&ActionTag::Revoke).append(address).append(quantity);
+                s.begin_list(3).append(&StakeActionTag::Revoke).append(address).append(quantity);
             }
-            Action::Redelegate {
+            StakeAction::Redelegate {
                 prev_delegatee,
                 next_delegatee,
                 quantity,
             } => {
                 s.begin_list(4)
-                    .append(&ActionTag::Redelegate)
+                    .append(&StakeActionTag::Redelegate)
                     .append(prev_delegatee)
                     .append(next_delegatee)
                     .append(quantity);
             }
-            Action::SelfNominate {
+            StakeAction::SelfNominate {
                 deposit,
                 metadata,
             } => {
-                s.begin_list(3).append(&ActionTag::SelfNominate).append(deposit).append(metadata);
+                s.begin_list(3).append(&StakeActionTag::SelfNominate).append(deposit).append(metadata);
             }
-            Action::ChangeParams {
+            StakeAction::ChangeParams {
                 metadata_seq,
                 params,
                 approvals,
             } => {
                 s.begin_list(3 + approvals.len())
-                    .append(&ActionTag::ChangeParams)
+                    .append(&StakeActionTag::ChangeParams)
                     .append(metadata_seq)
                     .append(&**params);
                 for approval in approvals {
                     s.append(approval);
                 }
             }
-            Action::ReportDoubleVote {
+            StakeAction::ReportDoubleVote {
                 message1,
                 message2,
             } => {
-                s.begin_list(3)
-                    .append(&ActionTag::ReportDoubleVote)
-                    .append(message1.as_ref())
-                    .append(message2.as_ref());
+                s.begin_list(3).append(&StakeActionTag::ReportDoubleVote).append(message1).append(message2);
             }
         };
     }
 }
 
-impl Decodable for Action {
+impl Decodable for StakeAction {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let tag = rlp.val_at(0)?;
         match tag {
-            ActionTag::TransferCCS => {
+            StakeActionTag::TransferCCS => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
                     return Err(DecoderError::RlpInvalidLength {
@@ -296,12 +296,12 @@ impl Decodable for Action {
                         got: item_count,
                     })
                 }
-                Ok(Action::TransferCCS {
+                Ok(StakeAction::TransferCCS {
                     address: rlp.val_at(1)?,
                     quantity: rlp.val_at(2)?,
                 })
             }
-            ActionTag::DelegateCCS => {
+            StakeActionTag::DelegateCCS => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
                     return Err(DecoderError::RlpInvalidLength {
@@ -309,12 +309,12 @@ impl Decodable for Action {
                         got: item_count,
                     })
                 }
-                Ok(Action::DelegateCCS {
+                Ok(StakeAction::DelegateCCS {
                     address: rlp.val_at(1)?,
                     quantity: rlp.val_at(2)?,
                 })
             }
-            ActionTag::Revoke => {
+            StakeActionTag::Revoke => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
                     return Err(DecoderError::RlpInvalidLength {
@@ -322,12 +322,12 @@ impl Decodable for Action {
                         got: item_count,
                     })
                 }
-                Ok(Action::Revoke {
+                Ok(StakeAction::Revoke {
                     address: rlp.val_at(1)?,
                     quantity: rlp.val_at(2)?,
                 })
             }
-            ActionTag::Redelegate => {
+            StakeActionTag::Redelegate => {
                 let item_count = rlp.item_count()?;
                 if item_count != 4 {
                     return Err(DecoderError::RlpInvalidLength {
@@ -335,13 +335,13 @@ impl Decodable for Action {
                         got: item_count,
                     })
                 }
-                Ok(Action::Redelegate {
+                Ok(StakeAction::Redelegate {
                     prev_delegatee: rlp.val_at(1)?,
                     next_delegatee: rlp.val_at(2)?,
                     quantity: rlp.val_at(3)?,
                 })
             }
-            ActionTag::SelfNominate => {
+            StakeActionTag::SelfNominate => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
                     return Err(DecoderError::RlpInvalidLength {
@@ -349,12 +349,12 @@ impl Decodable for Action {
                         got: item_count,
                     })
                 }
-                Ok(Action::SelfNominate {
+                Ok(StakeAction::SelfNominate {
                     deposit: rlp.val_at(1)?,
                     metadata: rlp.val_at(2)?,
                 })
             }
-            ActionTag::ChangeParams => {
+            StakeActionTag::ChangeParams => {
                 let item_count = rlp.item_count()?;
                 if item_count < 4 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -365,13 +365,13 @@ impl Decodable for Action {
                 let metadata_seq = rlp.val_at(1)?;
                 let params = Box::new(rlp.val_at(2)?);
                 let approvals = (3..item_count).map(|i| rlp.val_at(i)).collect::<Result<_, _>>()?;
-                Ok(Action::ChangeParams {
+                Ok(StakeAction::ChangeParams {
                     metadata_seq,
                     params,
                     approvals,
                 })
             }
-            ActionTag::ReportDoubleVote => {
+            StakeActionTag::ReportDoubleVote => {
                 let item_count = rlp.item_count()?;
                 if item_count != 3 {
                     return Err(DecoderError::RlpIncorrectListLen {
@@ -379,9 +379,9 @@ impl Decodable for Action {
                         got: item_count,
                     })
                 }
-                let message1 = Box::new(rlp.val_at(1)?);
-                let message2 = Box::new(rlp.val_at(2)?);
-                Ok(Action::ReportDoubleVote {
+                let message1 = rlp.val_at(1)?;
+                let message2 = rlp.val_at(2)?;
+                Ok(StakeAction::ReportDoubleVote {
                     message1,
                     message2,
                 })
@@ -401,7 +401,7 @@ mod tests {
 
     #[test]
     fn decode_fail_if_change_params_have_no_signatures() {
-        let action = Action::ChangeParams {
+        let action = StakeAction::ChangeParams {
             metadata_seq: 3,
             params: CommonParams::default_for_test().into(),
             approvals: vec![],
@@ -411,13 +411,13 @@ mod tests {
                 expected: 4,
                 got: 3,
             }),
-            Rlp::new(&rlp::encode(&action)).as_val::<Action>()
+            Rlp::new(&rlp::encode(&action)).as_val::<StakeAction>()
         );
     }
 
     #[test]
     fn rlp_of_change_params() {
-        rlp_encode_and_decode_test!(Action::ChangeParams {
+        rlp_encode_and_decode_test!(StakeAction::ChangeParams {
             metadata_seq: 3,
             params: CommonParams::default_for_test().into(),
             approvals: vec![
@@ -497,9 +497,9 @@ mod tests {
             create_consensus_message(message_info1, &test_client, vote_step_twister, block_hash_twister);
         let consensus_message2 =
             create_consensus_message(message_info2, &test_client, vote_step_twister, block_hash_twister);
-        let action = Action::ReportDoubleVote {
-            message1: Box::new(consensus_message1),
-            message2: Box::new(consensus_message2),
+        let action = StakeAction::ReportDoubleVote {
+            message1: consensus_message1.rlp_bytes(),
+            message2: consensus_message2.rlp_bytes(),
         };
         let arced_client: Arc<dyn ConsensusClient> = Arc::new(test_client);
         validator_set.register_client(Arc::downgrade(&arced_client));

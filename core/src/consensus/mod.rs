@@ -41,7 +41,7 @@ use crate::views::HeaderView;
 use crate::Client;
 use ckey::{Address, Signature};
 use cnetwork::NetworkService;
-use cstate::{ActionHandler, StateDB, StateResult};
+use cstate::{StakeHandler, StateDB, StateResult};
 use ctypes::errors::SyntaxError;
 use ctypes::transaction::Action;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
@@ -233,12 +233,8 @@ pub trait ConsensusEngine: Sync + Send {
         true
     }
 
-    fn action_handlers(&self) -> &[Arc<dyn ActionHandler>] {
-        &[]
-    }
-
-    fn find_action_handler_for(&self, id: u64) -> Option<&dyn ActionHandler> {
-        self.action_handlers().iter().find(|handler| handler.handler_id() == id).map(AsRef::as_ref)
+    fn stake_handler(&self) -> Option<&dyn StakeHandler> {
+        None
     }
 
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError>;
@@ -327,13 +323,12 @@ pub trait CodeChainEngine: ConsensusEngine {
         common_params: &CommonParams,
     ) -> Result<(), Error> {
         if let Action::Custom {
-            handler_id,
             bytes,
+            ..
         } = &tx.transaction().action
         {
-            let handler = self
-                .find_action_handler_for(*handler_id)
-                .ok_or_else(|| SyntaxError::InvalidCustomAction(format!("{} is an invalid handler id", handler_id)))?;
+            let handler =
+                self.stake_handler().ok_or_else(|| SyntaxError::InvalidCustomAction("no valid handler".to_string()))?;
             handler.verify(bytes, common_params)?;
         }
         self.machine().verify_transaction_with_params(tx, common_params)

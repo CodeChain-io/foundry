@@ -25,10 +25,9 @@ use ccore::{
 use cdb::AsHashDB;
 use cnetwork::{Api, EventSender, IntoSocketAddr, NetworkExtension, NodeId};
 use codechain_crypto::BLAKE_NULL_RLP;
-use cstate::{FindActionHandler, TopLevelState, TopStateView};
+use cstate::{TopLevelState, TopStateView};
 use ctimer::TimerToken;
 use ctypes::header::{Header, Seal};
-use ctypes::transaction::Action;
 use ctypes::{BlockHash, BlockNumber, ShardId};
 use kvdb::DBTransaction;
 use merkle_trie::snapshot::{ChunkDecompressor, Restore as SnapshotRestore};
@@ -927,21 +926,6 @@ impl Extension {
                         hashes.len()
                     );
                     return false
-                }
-                for body in bodies {
-                    for tx in body {
-                        let is_valid = match &tx.transaction().action {
-                            Action::Custom {
-                                handler_id,
-                                ..
-                            } => self.client.find_action_handler_for(*handler_id).is_some(),
-                            _ => true,
-                        };
-                        if !is_valid {
-                            cwarn!(SYNC, "Received transaction has some invalid actions");
-                            return false
-                        }
-                    }
                 }
                 true
             }

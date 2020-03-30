@@ -21,7 +21,7 @@ mod mem_pool_types;
 mod miner;
 
 use ckey::{public_to_address, Address, Ed25519Public as Public, Password, PlatformAddress};
-use cstate::{FindActionHandler, TopStateView};
+use cstate::{FindStakeHandler, TopStateView};
 use ctypes::transaction::IncompleteTransaction;
 use ctypes::{BlockHash, TxHash};
 use primitives::Bytes;
@@ -76,7 +76,7 @@ pub trait MinerService: Send + Sync {
     /// New chain head event. Restart mining operation.
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: AccountData + BlockChainTrait + BlockProducer + ImportBlock + EngineInfo + FindActionHandler + TermInfo;
+        C: AccountData + BlockChainTrait + BlockProducer + ImportBlock + EngineInfo + FindStakeHandler + TermInfo;
 
     /// Imports transactions to mem pool.
     fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(

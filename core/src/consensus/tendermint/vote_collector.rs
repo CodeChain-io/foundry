@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::stake::Action;
+use super::stake::StakeAction;
 use super::{ConsensusMessage, VoteStep};
 use crate::consensus::BitSet;
 use ckey::Signature;
@@ -44,10 +44,10 @@ pub struct DoubleVote {
 }
 
 impl DoubleVote {
-    pub fn to_action(&self) -> Action {
-        Action::ReportDoubleVote {
-            message1: Box::new(self.vote_one.clone()),
-            message2: Box::new(self.vote_two.clone()),
+    pub fn to_action(&self) -> StakeAction {
+        StakeAction::ReportDoubleVote {
+            message1: self.vote_one.rlp_bytes(),
+            message2: self.vote_two.rlp_bytes(),
         }
     }
 }
