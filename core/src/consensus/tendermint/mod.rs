@@ -35,10 +35,11 @@ use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::DynamicValidator;
 use crate::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::ChainNotify;
+use ckey::Address;
 use crossbeam_channel as crossbeam;
-use cstate::ActionHandler;
 use ctimer::TimerToken;
 use parking_lot::RwLock;
+use std::collections::HashMap;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Weak};
 use std::thread::JoinHandle;
@@ -66,13 +67,15 @@ pub struct Tendermint {
     validators: Arc<dyn ValidatorSet>,
     /// codechain machine descriptor
     machine: Arc<CodeChainMachine>,
-    /// Action handlers for this consensus method
-    action_handlers: Vec<Arc<dyn ActionHandler>>,
     /// stake object to register client data later
     stake: Arc<stake::Stake>,
     /// Chain notify
     chain_notify: Arc<TendermintChainNotify>,
     has_signer: AtomicBool,
+    /// Tokens distributed at genesis.
+    genesis_stakes: HashMap<Address, u64>,
+    genesis_candidates: HashMap<Address, Deposit>,
+    genesis_delegations: HashMap<Address, HashMap<Address, u64>>,
 }
 
 impl Drop for Tendermint {
@@ -88,11 +91,10 @@ impl Tendermint {
     /// Create a new instance of Tendermint engine
     pub fn new(our_params: TendermintParams, machine: CodeChainMachine) -> Arc<Self> {
         let validators = Arc::new(DynamicValidator::default());
-        let stake = Arc::new(stake::Stake::new(
-            our_params.genesis_stakes,
-            our_params.genesis_candidates,
-            our_params.genesis_delegations,
-        ));
+        let stake = Arc::new(stake::Stake::default());
+        let genesis_stakes = our_params.genesis_stakes;
+        let genesis_candidates = our_params.genesis_candidates;
+        let genesis_delegations = our_params.genesis_delegations;
         let timeouts = our_params.timeouts;
         let machine = Arc::new(machine);
 
@@ -104,7 +106,6 @@ impl Tendermint {
             inner,
             quit_tendermint,
         ) = worker::spawn(Arc::clone(&validators));
-        let action_handlers: Vec<Arc<dyn ActionHandler>> = vec![stake.clone()];
         let chain_notify = Arc::new(TendermintChainNotify::new(inner.clone()));
 
         Arc::new(Tendermint {
@@ -118,10 +119,12 @@ impl Tendermint {
             inner,
             validators,
             machine,
-            action_handlers,
             stake,
             chain_notify,
             has_signer: false.into(),
+            genesis_stakes,
+            genesis_candidates,
+            genesis_delegations,
         })
     }
 
@@ -134,7 +137,7 @@ const SEAL_FIELDS: usize = 4;
 
 #[cfg(test)]
 mod tests {
-    use ckey::{Address, Ed25519Private as Private};
+    use ckey::Ed25519Private as Private;
     use ctypes::Header;
 
     use super::super::BitSet;

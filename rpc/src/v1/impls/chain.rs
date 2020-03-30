@@ -21,7 +21,7 @@ use ccore::{AccountData, BlockId, EngineInfo, ExecuteClient, MiningBlockChainCli
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{public_to_address, NetworkId, PlatformAddress};
-use cstate::FindActionHandler;
+use cstate::FindStakeHandler;
 use ctypes::transaction::Action;
 use ctypes::{BlockHash, BlockNumber, ShardId, TxHash};
 use jsonrpc_core::Result;
@@ -53,7 +53,7 @@ where
         + AccountData
         + ExecuteClient
         + EngineInfo
-        + FindActionHandler
+        + FindStakeHandler
         + TermInfo
         + 'static,
 {

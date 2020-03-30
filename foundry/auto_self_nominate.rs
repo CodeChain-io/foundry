@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::config::load_config;
-use ccore::stake::Action::SelfNominate;
+use ccore::stake::StakeAction::SelfNominate;
 use ccore::stake::{Banned, Candidates, Jail, CUSTOM_ACTION_HANDLER_ID};
 use ccore::{AccountProvider, AccountProviderError, BlockId, ConsensusClient, Encodable, UnverifiedTransaction};
 use ckey::PlatformAddress;

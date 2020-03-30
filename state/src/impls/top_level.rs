@@ -39,7 +39,7 @@ use crate::cache::{ShardCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::traits::{ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
 use crate::{
-    Account, ActionData, FindActionHandler, Metadata, MetadataAddress, Shard, ShardAddress, ShardLevelState, StateDB,
+    Account, ActionData, FindStakeHandler, Metadata, MetadataAddress, Shard, ShardAddress, ShardLevelState, StateDB,
     StateResult,
 };
 use ccrypto::BLAKE_NULL_RLP;
@@ -230,7 +230,7 @@ impl TopLevelState {
 
     /// Execute a given tranasction, charging tranasction fee.
     /// This will change the state accordingly.
-    pub fn apply<C: FindActionHandler>(
+    pub fn apply<C: FindStakeHandler>(
         &mut self,
         tx: &Transaction,
         signed_hash: &TxHash,
@@ -261,7 +261,7 @@ impl TopLevelState {
         result
     }
 
-    fn apply_internal<C: FindActionHandler>(
+    fn apply_internal<C: FindStakeHandler>(
         &mut self,
         tx: &Transaction,
         signed_hash: &TxHash,
@@ -313,7 +313,7 @@ impl TopLevelState {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn apply_action<C: FindActionHandler>(
+    fn apply_action<C: FindStakeHandler>(
         &mut self,
         action: &Action,
         network_id: NetworkId,
@@ -364,10 +364,10 @@ impl TopLevelState {
                 return Ok(())
             }
             Action::Custom {
-                handler_id,
                 bytes,
+                ..
             } => {
-                let handler = client.find_action_handler_for(*handler_id).expect("Unknown custom parsel applied!");
+                let handler = client.stake_handler().expect("Unknown custom transaction applied!");
                 handler.execute(bytes, self, sender_address, sender_public)?;
                 return Ok(())
             }

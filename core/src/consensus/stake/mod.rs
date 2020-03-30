@@ -19,10 +19,10 @@ mod actions;
 
 use crate::client::ConsensusClient;
 use ckey::{public_to_address, Address, Ed25519Public as Public};
-use cstate::{ActionHandler, StateResult, TopLevelState, TopState, TopStateView};
+use cstate::{StakeHandler, StateResult, TopLevelState, TopState, TopStateView};
 use ctypes::errors::{RuntimeError, SyntaxError};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{CommonParams, Header};
+use ctypes::CommonParams;
 use parking_lot::RwLock;
 use primitives::Bytes;
 use rlp::{Decodable, Rlp};
@@ -31,124 +31,27 @@ use std::sync::{Arc, Weak};
 
 pub use self::action_data::{Banned, Candidates, CurrentValidators, Jail, NextValidators, Validator};
 use self::action_data::{Delegation, ReleaseResult, StakeAccount, Stakeholders};
-pub use self::actions::{Action, Approval};
+pub use self::actions::{Approval, StakeAction};
 use super::tendermint::Deposit;
 use super::ValidatorSet;
+use crate::consensus::ConsensusMessage;
 
 pub const CUSTOM_ACTION_HANDLER_ID: u64 = 2;
 
+#[derive(Default)]
 pub struct Stake {
-    genesis_stakes: HashMap<Address, u64>,
-    genesis_candidates: HashMap<Address, Deposit>,
-    genesis_delegations: HashMap<Address, HashMap<Address, u64>>,
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
     validators: RwLock<Option<Weak<dyn ValidatorSet>>>,
 }
 
 impl Stake {
-    pub fn new(
-        genesis_stakes: HashMap<Address, u64>,
-        genesis_candidates: HashMap<Address, Deposit>,
-        genesis_delegations: HashMap<Address, HashMap<Address, u64>>,
-    ) -> Stake {
-        Stake {
-            genesis_stakes,
-            genesis_candidates,
-            genesis_delegations,
-            client: Default::default(),
-            validators: Default::default(),
-        }
-    }
     pub fn register_resources(&self, client: Weak<dyn ConsensusClient>, validators: Weak<dyn ValidatorSet>) {
         *self.client.write() = Some(Weak::clone(&client));
         *self.validators.write() = Some(Weak::clone(&validators));
     }
 }
 
-impl ActionHandler for Stake {
-    fn name(&self) -> &'static str {
-        "stake handler"
-    }
-
-    fn handler_id(&self) -> u64 {
-        CUSTOM_ACTION_HANDLER_ID
-    }
-
-    fn init(&self, state: &mut TopLevelState) -> StateResult<()> {
-        let mut genesis_stakes = self.genesis_stakes.clone();
-        for (delegator, delegation) in &self.genesis_delegations {
-            let stake = genesis_stakes.entry(*delegator).or_default();
-            let total_delegation = delegation.values().sum();
-            if *stake < total_delegation {
-                cerror!(STATE, "{} has insufficient stakes to delegate", delegator);
-                return Err(RuntimeError::InsufficientStakes(Mismatch {
-                    expected: total_delegation,
-                    found: *stake,
-                })
-                .into())
-            }
-            for delegatee in delegation.keys() {
-                if !self.genesis_candidates.contains_key(delegatee) {
-                    return Err(
-                        RuntimeError::FailedToHandleCustomAction("Can delegate to who is a candidate".into()).into()
-                    )
-                }
-            }
-            *stake -= total_delegation;
-        }
-
-        let mut stakeholders = Stakeholders::load_from_state(state)?;
-        for (address, amount) in &genesis_stakes {
-            let account = StakeAccount {
-                address,
-                balance: *amount,
-            };
-            account.save_to_state(state)?;
-            stakeholders.update_by_increased_balance(&account);
-        }
-        stakeholders.save_to_state(state)?;
-
-        for (address, deposit) in &self.genesis_candidates {
-            let balance = state.balance(address).unwrap_or_default();
-            if balance < deposit.deposit {
-                cerror!(STATE, "{} has insufficient balance to become the candidate", address);
-                return Err(RuntimeError::InsufficientBalance {
-                    address: *address,
-                    balance,
-                    cost: deposit.deposit,
-                }
-                .into())
-            }
-            state.sub_balance(address, deposit.deposit).unwrap();
-        }
-
-        let mut candidates = Candidates::default();
-        {
-            let mut values: Vec<_> = self.genesis_candidates.values().collect();
-            values.sort_unstable(); // The insertion order of candidates is important.
-
-            for candidate in values {
-                candidates.add_deposit(
-                    &candidate.pubkey,
-                    candidate.deposit,
-                    candidate.nomination_ends_at,
-                    candidate.metadata.clone(),
-                );
-            }
-        }
-        candidates.save_to_state(state)?;
-
-        for (delegator, delegations) in &self.genesis_delegations {
-            let mut delegation = Delegation::load_from_state(state, &delegator)?;
-            for (delegatee, amount) in delegations {
-                delegation.add_quantity(*delegatee, *amount)?;
-            }
-            delegation.save_to_state(state)?;
-        }
-
-        Ok(())
-    }
-
+impl StakeHandler for Stake {
     fn execute(
         &self,
         bytes: &[u8],
@@ -156,26 +59,26 @@ impl ActionHandler for Stake {
         sender_address: &Address,
         sender_public: &Public,
     ) -> StateResult<()> {
-        let action = Action::decode(&Rlp::new(bytes)).expect("Verification passed");
+        let action = StakeAction::decode(&Rlp::new(bytes)).expect("Verification passed");
         match action {
-            Action::TransferCCS {
+            StakeAction::TransferCCS {
                 address,
                 quantity,
             } => transfer_ccs(state, sender_address, &address, quantity),
-            Action::DelegateCCS {
+            StakeAction::DelegateCCS {
                 address,
                 quantity,
             } => delegate_ccs(state, sender_address, &address, quantity),
-            Action::Revoke {
+            StakeAction::Revoke {
                 address,
                 quantity,
             } => revoke(state, sender_address, &address, quantity),
-            Action::Redelegate {
+            StakeAction::Redelegate {
                 prev_delegatee,
                 next_delegatee,
                 quantity,
             } => redelegate(state, sender_address, &prev_delegatee, &next_delegatee, quantity),
-            Action::SelfNominate {
+            StakeAction::SelfNominate {
                 deposit,
                 metadata,
             } => {
@@ -188,15 +91,17 @@ impl ActionHandler for Stake {
                 };
                 self_nominate(state, sender_address, sender_public, deposit, current_term, nomination_ends_at, metadata)
             }
-            Action::ChangeParams {
+            StakeAction::ChangeParams {
                 metadata_seq,
                 params,
                 approvals,
             } => change_params(state, metadata_seq, *params, &approvals),
-            Action::ReportDoubleVote {
+            StakeAction::ReportDoubleVote {
                 message1,
                 ..
             } => {
+                let message1: ConsensusMessage =
+                    rlp::decode(&message1).map_err(|err| RuntimeError::FailedToHandleCustomAction(err.to_string()))?;
                 let validator_set =
                     self.validators.read().as_ref().and_then(Weak::upgrade).expect("ValidatorSet must be initialized");
                 let client = self.client.read().as_ref().and_then(Weak::upgrade).expect("Client must be initialized");
@@ -211,14 +116,10 @@ impl ActionHandler for Stake {
 
     fn verify(&self, bytes: &[u8], current_params: &CommonParams) -> Result<(), SyntaxError> {
         let action =
-            Action::decode(&Rlp::new(bytes)).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
+            StakeAction::decode(&Rlp::new(bytes)).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
         let client: Option<Arc<dyn ConsensusClient>> = self.client.read().as_ref().and_then(Weak::upgrade);
         let validators: Option<Arc<dyn ValidatorSet>> = self.validators.read().as_ref().and_then(Weak::upgrade);
         action.verify(current_params, client, validators)
-    }
-
-    fn on_close_block(&self, _state: &mut TopLevelState, _header: &Header) -> StateResult<()> {
-        Ok(())
     }
 }
 
@@ -556,6 +457,84 @@ fn revert_delegations(state: &mut TopLevelState, reverted_delegatees: &[Address]
     Ok(())
 }
 
+pub(super) fn init(
+    state: &mut TopLevelState,
+    genesis_stakes: HashMap<Address, u64>,
+    genesis_candidates: HashMap<Address, Deposit>,
+    genesis_delegations: HashMap<Address, HashMap<Address, u64>>,
+) -> StateResult<()> {
+    let mut genesis_stakes = genesis_stakes;
+    for (delegator, delegation) in &genesis_delegations {
+        let stake = genesis_stakes.entry(*delegator).or_default();
+        let total_delegation = delegation.values().sum();
+        if *stake < total_delegation {
+            cerror!(STATE, "{} has insufficient stakes to delegate", delegator);
+            return Err(RuntimeError::InsufficientStakes(Mismatch {
+                expected: total_delegation,
+                found: *stake,
+            })
+            .into())
+        }
+        for delegatee in delegation.keys() {
+            if !genesis_candidates.contains_key(delegatee) {
+                return Err(RuntimeError::FailedToHandleCustomAction("Can delegate to who is a candidate".into()).into())
+            }
+        }
+        *stake -= total_delegation;
+    }
+
+    let mut stakeholders = Stakeholders::load_from_state(state)?;
+    for (address, amount) in &genesis_stakes {
+        let account = StakeAccount {
+            address,
+            balance: *amount,
+        };
+        account.save_to_state(state)?;
+        stakeholders.update_by_increased_balance(&account);
+    }
+    stakeholders.save_to_state(state)?;
+
+    for (address, deposit) in &genesis_candidates {
+        let balance = state.balance(address).unwrap_or_default();
+        if balance < deposit.deposit {
+            cerror!(STATE, "{} has insufficient balance to become the candidate", address);
+            return Err(RuntimeError::InsufficientBalance {
+                address: *address,
+                balance,
+                cost: deposit.deposit,
+            }
+            .into())
+        }
+        state.sub_balance(address, deposit.deposit).unwrap();
+    }
+
+    let mut candidates = Candidates::default();
+    {
+        let mut values: Vec<_> = genesis_candidates.values().collect();
+        values.sort_unstable(); // The insertion order of candidates is important.
+
+        for candidate in values {
+            candidates.add_deposit(
+                &candidate.pubkey,
+                candidate.deposit,
+                candidate.nomination_ends_at,
+                candidate.metadata.clone(),
+            );
+        }
+    }
+    candidates.save_to_state(state)?;
+
+    for (delegator, delegations) in &genesis_delegations {
+        let mut delegation = Delegation::load_from_state(state, &delegator)?;
+        for (delegatee, amount) in delegations {
+            delegation.add_quantity(*delegatee, *amount)?;
+        }
+        delegation.save_to_state(state)?;
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::action_data::get_account_key;
@@ -581,12 +560,12 @@ mod tests {
         let address2 = Address::random();
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(address1, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
         let account1 = StakeAccount::load_from_state(&state, &address1).unwrap();
         assert_eq!(account1.balance, 100);
@@ -606,12 +585,12 @@ mod tests {
         let address2 = Address::random();
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(address1, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
         let result = transfer_ccs(&mut state, &address1, &address2, 10);
         assert_eq!(result, Ok(()));
@@ -634,12 +613,12 @@ mod tests {
         let address2 = Address::random();
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(address1, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
         let result = transfer_ccs(&mut state, &address1, &address2, 100);
         assert_eq!(result, Ok(()));
@@ -665,20 +644,20 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: delegatee,
             quantity: 40,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert_eq!(result, Ok(()));
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
@@ -708,20 +687,20 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: delegatee,
             quantity: 100,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert_eq!(result, Ok(()));
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
@@ -752,19 +731,19 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: delegatee,
             quantity: 40,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_err());
     }
 
@@ -776,20 +755,20 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: delegatee,
             quantity: 200,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_err());
     }
 
@@ -801,26 +780,26 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: delegatee,
             quantity: 50,
         };
-        stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
+        Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
 
-        let action = Action::TransferCCS {
+        let action = StakeAction::TransferCCS {
             address: delegatee,
             quantity: 50,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_ok());
     }
 
@@ -832,26 +811,26 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: delegatee,
             quantity: 50,
         };
-        stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
+        Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
 
-        let action = Action::TransferCCS {
+        let action = StakeAction::TransferCCS {
             address: delegatee,
             quantity: 100,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_err());
     }
 
@@ -863,27 +842,27 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: delegatee,
             quantity: 50,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_ok());
 
-        let action = Action::Revoke {
+        let action = StakeAction::Revoke {
             address: delegatee,
             quantity: 20,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert_eq!(Ok(()), result);
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
@@ -901,27 +880,27 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: delegatee,
             quantity: 50,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_ok());
 
-        let action = Action::Revoke {
+        let action = StakeAction::Revoke {
             address: delegatee,
             quantity: 70,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_err());
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
@@ -939,27 +918,27 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegatee, 100);
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &delegatee, &delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: delegatee,
             quantity: 50,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_ok());
 
-        let action = Action::Revoke {
+        let action = StakeAction::Revoke {
             address: delegatee,
             quantity: 50,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert_eq!(Ok(()), result);
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
@@ -977,28 +956,28 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
         self_nominate(&mut state, &next_delegatee, &next_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: prev_delegatee,
             quantity: 50,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_ok());
 
-        let action = Action::Redelegate {
+        let action = StakeAction::Redelegate {
             prev_delegatee,
             next_delegatee,
             quantity: 20,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert_eq!(Ok(()), result);
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
@@ -1019,28 +998,28 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
         self_nominate(&mut state, &next_delegatee, &next_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: prev_delegatee,
             quantity: 50,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_ok());
 
-        let action = Action::Redelegate {
+        let action = StakeAction::Redelegate {
             prev_delegatee,
             next_delegatee,
             quantity: 70,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_err());
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
@@ -1061,28 +1040,28 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
         self_nominate(&mut state, &next_delegatee, &next_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: prev_delegatee,
             quantity: 50,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_ok());
 
-        let action = Action::Redelegate {
+        let action = StakeAction::Redelegate {
             prev_delegatee,
             next_delegatee,
             quantity: 50,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert_eq!(Ok(()), result);
 
         let delegator_account = StakeAccount::load_from_state(&state, &delegator).unwrap();
@@ -1103,28 +1082,28 @@ mod tests {
         let delegator = public_to_address(&delegator_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: prev_delegatee,
             quantity: 40,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_ok());
 
-        let action = Action::Redelegate {
+        let action = StakeAction::Redelegate {
             prev_delegatee,
             next_delegatee,
             quantity: 50,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_err());
     }
 
@@ -1142,25 +1121,25 @@ mod tests {
         let mut state = helpers::get_temp_state();
         state.add_balance(&criminal, 1000).unwrap();
 
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
         self_nominate(&mut state, &criminal, &criminal_pubkey, 100, 0, 10, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: criminal,
             quantity: 40,
         };
-        stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
-        let action = Action::DelegateCCS {
+        Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
+        let action = StakeAction::DelegateCCS {
             address: prev_delegatee,
             quantity: 40,
         };
-        stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
+        Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
 
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 2);
@@ -1173,12 +1152,12 @@ mod tests {
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 1);
 
-        let action = Action::Redelegate {
+        let action = StakeAction::Redelegate {
             prev_delegatee,
             next_delegatee: criminal,
             quantity: 40,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_err());
     }
 
@@ -1194,22 +1173,22 @@ mod tests {
         let mut state = helpers::get_temp_state();
         state.add_balance(&jail_address, 1000).unwrap();
 
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
         self_nominate(&mut state, &prev_delegatee, &prev_delegatee_pubkey, 0, 0, 10, b"".to_vec()).unwrap();
 
         let deposit = 200;
         self_nominate(&mut state, &jail_address, &jail_pubkey, deposit, 0, 5, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: prev_delegatee,
             quantity: 40,
         };
-        stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
+        Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
 
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 2);
@@ -1222,12 +1201,12 @@ mod tests {
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 1);
 
-        let action = Action::Redelegate {
+        let action = StakeAction::Redelegate {
             prev_delegatee,
             next_delegatee: jail_address,
             quantity: 40,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_err());
     }
 
@@ -1239,10 +1218,9 @@ mod tests {
         let mut state = helpers::get_temp_state();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(Default::default(), Default::default(), Default::default());
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
-        // TODO: change with stake.execute()
+        // TODO: change with stake::execute()
         let result = self_nominate(&mut state, &address, &address_pubkey, 0, 0, 5, b"metadata1".to_vec());
         assert_eq!(result, Ok(()));
 
@@ -1299,10 +1277,9 @@ mod tests {
         let mut state = helpers::get_temp_state();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(Default::default(), Default::default(), Default::default());
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
-        // TODO: change with stake.execute()
+        // TODO: change with stake::execute()
         let result = self_nominate(&mut state, &address, &address_pubkey, 2000, 0, 5, b"".to_vec());
         assert!(result.is_err(), "Cannot self-nominate without a sufficient balance");
     }
@@ -1324,10 +1301,9 @@ mod tests {
         increase_term_id_until(&mut state, 29);
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(Default::default(), Default::default(), Default::default());
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
-        // TODO: change with stake.execute()
+        // TODO: change with stake::execute()
         self_nominate(&mut state, &address, &address_pubkey, 200, 0, 30, b"".to_vec()).unwrap();
 
         let result = on_term_close(&mut state, pseudo_term_to_block_num_calculator(29), &[]);
@@ -1365,21 +1341,21 @@ mod tests {
         increase_term_id_until(&mut state, 29);
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
-        // TODO: change with stake.execute()
+        // TODO: change with stake::execute()
         self_nominate(&mut state, &address, &address_pubkey, 0, 0, 30, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address,
             quantity: 40,
         };
-        stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
+        Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
 
         let result = on_term_close(&mut state, pseudo_term_to_block_num_calculator(29), &[]);
         assert_eq!(result, Ok(()));
@@ -1406,10 +1382,9 @@ mod tests {
         let mut state = helpers::get_temp_state();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(Default::default(), Default::default(), Default::default());
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
-        // TODO: change with stake.execute()
+        // TODO: change with stake::execute()
         let deposit = 200;
         self_nominate(&mut state, &address, &address_pubkey, deposit, 0, 5, b"".to_vec()).unwrap();
 
@@ -1444,10 +1419,9 @@ mod tests {
         let mut state = metadata_for_election();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(Default::default(), Default::default(), Default::default());
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
-        // TODO: change with stake.execute()
+        // TODO: change with stake::execute()
         let deposit = 200;
         let nominate_expire = 5;
         let custody_until = 10;
@@ -1483,10 +1457,9 @@ mod tests {
         let mut state = metadata_for_election();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(Default::default(), Default::default(), Default::default());
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
-        // TODO: change with stake.execute()
+        // TODO: change with stake::execute()
         let deposit = 200;
         let nominate_expire = 5;
         let custody_until = 10;
@@ -1537,10 +1510,9 @@ mod tests {
         let mut state = metadata_for_election();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = Stake::new(Default::default(), Default::default(), Default::default());
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
-        // TODO: change with stake.execute()
+        // TODO: change with stake::execute()
         let deposit = 200;
         let nominate_expire = 5;
         let custody_until = 10;
@@ -1579,14 +1551,14 @@ mod tests {
         let mut state = metadata_for_election();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
-        // TODO: change with stake.execute()
+        // TODO: change with stake::execute()
         let deposit = 200;
         let nominate_expire = 5;
         let custody_until = 10;
@@ -1595,21 +1567,21 @@ mod tests {
         jail(&mut state, &[address], custody_until, released_at).unwrap();
 
         for current_term in 0..=released_at {
-            let action = Action::DelegateCCS {
+            let action = StakeAction::DelegateCCS {
                 address,
                 quantity: 1,
             };
-            let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+            let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
             assert_ne!(Ok(()), result);
 
             on_term_close(&mut state, pseudo_term_to_block_num_calculator(current_term), &[]).unwrap();
         }
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address,
             quantity: 1,
         };
-        let result = stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
+        let result = Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey);
         assert!(result.is_err());
     }
 
@@ -1623,25 +1595,25 @@ mod tests {
         let mut state = metadata_for_election();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
-        // TODO: change with stake.execute()
+        // TODO: change with stake::execute()
         let deposit = 200;
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
         self_nominate(&mut state, &address, &address_pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address,
             quantity: 40,
         };
-        stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
+        Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
 
         jail(&mut state, &[address], custody_until, released_at).unwrap();
 
@@ -1666,24 +1638,24 @@ mod tests {
         let mut state = metadata_for_election();
         state.add_balance(&address, 1000).unwrap();
 
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
-        // TODO: change with stake.execute()
+        // TODO: change with stake::execute()
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
         self_nominate(&mut state, &address, &address_pubkey, 0, 0, nominate_expire, b"".to_vec()).unwrap();
 
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address,
             quantity: 40,
         };
-        stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
+        Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
 
         jail(&mut state, &[address], custody_until, released_at).unwrap();
 
@@ -1722,20 +1694,20 @@ mod tests {
         let mut state = helpers::get_temp_state();
         state.add_balance(&criminal, 1000).unwrap();
 
-        let stake = {
+        let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
             genesis_stakes.insert(delegator, 100);
-            Stake::new(genesis_stakes, Default::default(), Default::default())
+            genesis_stakes
         };
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
         let deposit = 100;
         self_nominate(&mut state, &criminal, &criminal_pubkey, deposit, 0, 10, b"".to_vec()).unwrap();
-        let action = Action::DelegateCCS {
+        let action = StakeAction::DelegateCCS {
             address: criminal,
             quantity: 40,
         };
-        stake.execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
+        Stake::default().execute(&action.rlp_bytes(), &mut state, &delegator, &delegator_pubkey).unwrap();
 
         assert_eq!(Ok(()), ban(&mut state, &informant, criminal));
 
@@ -1762,8 +1734,7 @@ mod tests {
         let criminal = public_to_address(&criminal_pubkey);
 
         let mut state = helpers::get_temp_state();
-        let stake = Stake::new(Default::default(), Default::default(), Default::default());
-        stake.init(&mut state).unwrap();
+        super::init(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
         assert_eq!(Ok(()), state.add_balance(&criminal, 100));
 
         let deposit = 10;

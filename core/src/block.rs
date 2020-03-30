@@ -22,7 +22,7 @@ use crate::stake;
 use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Address;
-use cstate::{FindActionHandler, StateDB, StateError, StateWithCache, TopLevelState};
+use cstate::{FindStakeHandler, StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
@@ -147,7 +147,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Push a transaction into the block.
-    pub fn push_transaction<C: FindActionHandler>(
+    pub fn push_transaction<C: FindStakeHandler>(
         &mut self,
         tx: VerifiedTransaction,
         h: Option<TxHash>,
@@ -188,7 +188,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Push transactions onto the block.
-    pub fn push_transactions<C: FindActionHandler>(
+    pub fn push_transactions<C: FindStakeHandler>(
         &mut self,
         transactions: &[VerifiedTransaction],
         client: &C,
@@ -214,13 +214,6 @@ impl<'x> OpenBlock<'x> {
         if let Err(e) = self.engine.on_close_block(&mut self.block) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
-        }
-        let header = self.block.header().clone();
-        for handler in self.engine.action_handlers() {
-            handler.on_close_block(self.block.state_mut(), &header).map_err(|e| {
-                warn!("Encountered error in {}::on_close_block", handler.name());
-                e
-            })?;
         }
         let state_root = self.block.state.commit().map_err(|e| {
             warn!("Encountered error on state commit: {}", e);
@@ -359,7 +352,7 @@ impl<'x> IsBlock for ClosedBlock {
 }
 
 /// Enact the block given by block header, transactions and uncles
-pub fn enact<C: EngineInfo + FindActionHandler + TermInfo>(
+pub fn enact<C: EngineInfo + FindStakeHandler + TermInfo>(
     header: &Header,
     transactions: &[VerifiedTransaction],
     engine: &dyn CodeChainEngine,

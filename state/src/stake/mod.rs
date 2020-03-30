@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,22 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod hit;
-
 use super::TopStateView;
 use crate::{StateResult, TopLevelState};
 use ccrypto::blake256;
 use ckey::{Address, Ed25519Public as Public};
 use ctypes::errors::SyntaxError;
-use ctypes::{CommonParams, Header};
+use ctypes::CommonParams;
 use primitives::H256;
 use rlp::{Encodable, RlpStream};
 use std::convert::From;
 
-pub trait ActionHandler: Send + Sync {
-    fn name(&self) -> &'static str;
-    fn handler_id(&self) -> u64;
-    fn init(&self, state: &mut TopLevelState) -> StateResult<()>;
+pub trait StakeHandler: Send + Sync {
     fn execute(
         &self,
         bytes: &[u8],
@@ -38,49 +33,46 @@ pub trait ActionHandler: Send + Sync {
         sender_pubkey: &Public,
     ) -> StateResult<()>;
     fn verify(&self, bytes: &[u8], common_params: &CommonParams) -> Result<(), SyntaxError>;
-
-    fn query(&self, key_fragment: &[u8], state: &TopLevelState) -> StateResult<Option<Vec<u8>>> {
-        let key = ActionDataKeyBuilder::key_from_fragment(self.handler_id(), key_fragment);
-        let some_action_data = state.action_data(&key)?.map(Vec::from);
-        Ok(some_action_data)
-    }
-
-    fn on_close_block(&self, state: &mut TopLevelState, header: &Header) -> StateResult<()>;
 }
 
-pub trait FindActionHandler {
-    fn find_action_handler_for(&self, _id: u64) -> Option<&dyn ActionHandler> {
+pub fn query(key_fragment: &[u8], state: &TopLevelState) -> StateResult<Option<Vec<u8>>> {
+    let key = StakeKeyBuilder::key_from_fragment(key_fragment);
+    let some_action_data = state.action_data(&key)?.map(Vec::from);
+    Ok(some_action_data)
+}
+
+pub trait FindStakeHandler {
+    fn stake_handler(&self) -> Option<&dyn StakeHandler> {
         None
     }
 }
 
-pub struct ActionDataKeyBuilder {
+pub struct StakeKeyBuilder {
     rlp: RlpStream,
 }
 
-impl ActionDataKeyBuilder {
-    fn prepare(handler_id: u64) -> ActionDataKeyBuilder {
-        let mut rlp = RlpStream::new_list(3);
-        rlp.append(&"ActionData");
-        rlp.append(&handler_id);
-        ActionDataKeyBuilder {
+impl StakeKeyBuilder {
+    fn prepare() -> StakeKeyBuilder {
+        let mut rlp = RlpStream::new_list(2);
+        rlp.append(&"Stake");
+        StakeKeyBuilder {
             rlp,
         }
     }
 
-    pub fn key_from_fragment(handler_id: u64, key_fragment: &[u8]) -> H256 {
-        let mut builder = Self::prepare(handler_id);
+    pub fn key_from_fragment(key_fragment: &[u8]) -> H256 {
+        let mut builder = Self::prepare();
         builder.rlp.append_raw(&key_fragment, 1);
         builder.into_key()
     }
 
-    pub fn new(handler_id: u64, fragment_length: usize) -> ActionDataKeyBuilder {
-        let mut builder = Self::prepare(handler_id);
+    pub fn new(fragment_length: usize) -> StakeKeyBuilder {
+        let mut builder = Self::prepare();
         builder.rlp.begin_list(fragment_length);
         builder
     }
 
-    pub fn append<E>(mut self, e: &E) -> ActionDataKeyBuilder
+    pub fn append<E>(mut self, e: &E) -> StakeKeyBuilder
     where
         E: Encodable, {
         self.rlp.append(e);
@@ -92,20 +84,17 @@ impl ActionDataKeyBuilder {
     }
 }
 
-pub use self::hit::HitHandler;
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn action_data_key_builder_raw_fragment_and_list_are_same() {
-        let key1 =
-            ActionDataKeyBuilder::new(1, 3).append(&"key").append(&"fragment").append(&"has trailing list").into_key();
+        let key1 = StakeKeyBuilder::new(3).append(&"key").append(&"fragment").append(&"has trailing list").into_key();
 
         let mut rlp = RlpStream::new_list(3);
         rlp.append(&"key").append(&"fragment").append(&"has trailing list");
-        let key2 = ActionDataKeyBuilder::key_from_fragment(1, rlp.as_raw());
+        let key2 = StakeKeyBuilder::key_from_fragment(rlp.as_raw());
         assert_eq!(key1, key2);
     }
 }

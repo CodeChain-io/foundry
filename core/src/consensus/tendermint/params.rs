@@ -31,7 +31,7 @@ pub struct TendermintParams {
     pub genesis_delegations: HashMap<Address, HashMap<Address, u64>>,
 }
 
-#[derive(Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Deposit {
     pub pubkey: Public,
     pub deposit: u64,

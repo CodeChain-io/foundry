@@ -37,7 +37,7 @@ use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions, Veri
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress};
-use cstate::{FindActionHandler, StateResult, TopLevelState, TopStateView};
+use cstate::{FindStakeHandler, StateResult, TopLevelState, TopStateView};
 use ctypes::header::Header;
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, TxHash};
@@ -246,7 +246,7 @@ pub trait BlockProducer {
 }
 
 /// Extended client interface used for mining
-pub trait MiningBlockChainClient: BlockChainClient + BlockProducer + FindActionHandler {
+pub trait MiningBlockChainClient: BlockChainClient + BlockProducer + FindStakeHandler {
     /// Returns malicious users who sent failing transactions.
     fn get_malicious_users(&self) -> Vec<Address>;
 

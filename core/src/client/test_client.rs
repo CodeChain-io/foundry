@@ -51,7 +51,7 @@ use ckey::{
     Generator, KeyPairTrait, NetworkId, PlatformAddress, Random,
 };
 use cstate::tests::helpers::empty_top_state_with_metadata;
-use cstate::{FindActionHandler, StateDB, TopLevelState};
+use cstate::{FindStakeHandler, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::header::Header;
 use ctypes::transaction::{Action, Transaction};
@@ -574,7 +574,7 @@ impl TimeoutHandler for TestBlockChainClient {
     fn on_timeout(&self, _token: TimerToken) {}
 }
 
-impl FindActionHandler for TestBlockChainClient {}
+impl FindStakeHandler for TestBlockChainClient {}
 
 impl super::EngineClient for TestBlockChainClient {
     fn update_sealing(&self, parent_block: BlockId, allow_empty_block: bool) {
