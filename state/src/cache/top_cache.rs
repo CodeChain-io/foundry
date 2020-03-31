@@ -47,24 +47,28 @@ impl TopCache {
     pub fn checkpoint(&mut self) {
         self.account.checkpoint();
         self.metadata.checkpoint();
+        self.module.checkpoint();
         self.action_data.checkpoint();
     }
 
     pub fn discard_checkpoint(&mut self) {
         self.account.discard_checkpoint();
         self.metadata.discard_checkpoint();
+        self.module.discard_checkpoint();
         self.action_data.discard_checkpoint();
     }
 
     pub fn revert_to_checkpoint(&mut self) {
         self.account.revert_to_checkpoint();
         self.metadata.revert_to_checkpoint();
+        self.module.revert_to_checkpoint();
         self.action_data.revert_to_checkpoint();
     }
 
     pub fn commit<'db>(&mut self, trie: &mut (dyn TrieMut + 'db)) -> TrieResult<()> {
         self.account.commit(trie)?;
         self.metadata.commit(trie)?;
+        self.module.commit(trie)?;
         self.action_data.commit(trie)?;
         Ok(())
     }

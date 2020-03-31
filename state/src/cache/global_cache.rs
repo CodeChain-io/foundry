@@ -84,6 +84,7 @@ impl GlobalCache {
         Self::drain_cacheable_into_lru_cache(top_cache.cached_accounts(), &mut self.account);
         Self::drain_cacheable_into_lru_cache(top_cache.cached_metadata(), &mut self.metadata);
         Self::drain_cacheable_into_lru_cache(top_cache.cached_action_data(), &mut self.action_data);
+        Self::drain_cacheable_into_lru_cache(top_cache.cached_modules(), &mut self.module);
 
         let mut cached_module_data: Vec<_> =
             module_caches.iter().flat_map(|(_, module_cache)| module_cache.cached_module_datum().into_iter()).collect();
