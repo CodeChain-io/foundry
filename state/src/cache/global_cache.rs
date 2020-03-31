@@ -119,6 +119,7 @@ impl GlobalCache {
         Self::drain_cacheable_into_lru_cache(top_cache.cached_metadata(), &mut self.metadata);
         Self::drain_cacheable_into_lru_cache(top_cache.cached_shards(), &mut self.shard);
         Self::drain_cacheable_into_lru_cache(top_cache.cached_action_data(), &mut self.action_data);
+        Self::drain_cacheable_into_lru_cache(top_cache.cached_modules(), &mut self.module);
 
         let mut cached_shard_texts: Vec<_> =
             shard_caches.iter().flat_map(|(_, shard_cache)| shard_cache.cached_shard_text().into_iter()).collect();

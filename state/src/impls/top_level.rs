@@ -550,7 +550,7 @@ impl TopLevelState {
     #[allow(dead_code)]
     fn module_state_mut(&mut self, storage_id: StorageId) -> StateResult<ModuleLevelState> {
         let module_root = self.module_root(storage_id)?.ok_or_else(|| RuntimeError::InvalidStorageId(storage_id))?;
-        let module_cache = self.module_caches.get_mut(&storage_id).expect("storage id is verified");
+        let module_cache = self.module_caches.entry(storage_id).or_default();
         Ok(ModuleLevelState::from_existing(storage_id, &mut self.db, module_root, module_cache)?)
     }
 

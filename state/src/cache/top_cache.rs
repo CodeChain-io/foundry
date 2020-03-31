@@ -51,6 +51,7 @@ impl TopCache {
         self.account.checkpoint();
         self.metadata.checkpoint();
         self.shard.checkpoint();
+        self.module.checkpoint();
         self.action_data.checkpoint();
     }
 
@@ -58,6 +59,7 @@ impl TopCache {
         self.account.discard_checkpoint();
         self.metadata.discard_checkpoint();
         self.shard.discard_checkpoint();
+        self.module.discard_checkpoint();
         self.action_data.discard_checkpoint();
     }
 
@@ -65,6 +67,7 @@ impl TopCache {
         self.account.revert_to_checkpoint();
         self.metadata.revert_to_checkpoint();
         self.shard.revert_to_checkpoint();
+        self.module.revert_to_checkpoint();
         self.action_data.revert_to_checkpoint();
     }
 
@@ -72,6 +75,7 @@ impl TopCache {
         self.account.commit(trie)?;
         self.metadata.commit(trie)?;
         self.shard.commit(trie)?;
+        self.module.commit(trie)?;
         self.action_data.commit(trie)?;
         Ok(())
     }
