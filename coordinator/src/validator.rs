@@ -1,5 +1,5 @@
 use super::context::SubStorageAccess;
-use ckey::Ed25519Public as Public;
+use ckey::Address;
 use ctypes::{CompactValidatorSet, TxHash};
 
 /// A `Validator` receives requests from the underlying consensus engine
@@ -49,13 +49,13 @@ pub struct Header {
     /// Block number.
     number: u64,
     /// Block author.
-    author: Public,
+    author: Address,
     /// Block extra data.
     extra_data: Bytes,
 }
 
 impl Header {
-    pub fn new(timestamp: u64, number: u64, author: Public, extra_data: Bytes) -> Self {
+    pub fn new(timestamp: u64, number: u64, author: Address, extra_data: Bytes) -> Self {
         Self {
             timestamp,
             number,
