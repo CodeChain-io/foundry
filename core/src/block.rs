@@ -21,12 +21,11 @@ use ckey::Ed25519Public as Public;
 use coordinator::context::StorageAccess;
 use coordinator::engine::BlockExecutor;
 use coordinator::types::Event;
-use coordinator::{Header as PreHeader, Transaction};
-use cstate::{NextValidators, StateDB, StateError, StateWithCache, TopLevelState};
-use ctypes::errors::HistoryError;
+use coordinator::{Header as PreHeader, Transaction, TransactionWithMetadata};
+use cstate::{CurrentValidatorSet, NextValidatorSet, StateDB, StateError, StateWithCache, TopLevelState, TopState};
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::TxHash;
+use ctypes::{CompactValidatorSet, ConsensusParams, TxHash};
 use merkle_trie::skewed_merkle_root;
 use parking_lot::{Mutex, MutexGuard};
 use primitives::{Bytes, H256};
@@ -187,23 +186,22 @@ impl OpenBlock {
         block_executor.open_block(storage, &pre_header, &verified_crimes).map_err(From::from)
     }
 
-    /// Push a transaction into the block.
-    pub fn push_transaction(&mut self, tx: Transaction) -> Result<(), Error> {
-        if self.block.transactions_set.contains(&tx.hash()) {
-            return Err(HistoryError::TransactionAlreadyImported.into())
+    pub fn execute_transactions(
+        &mut self,
+        block_executor: &dyn BlockExecutor,
+        mut transactions: Vec<Transaction>,
+    ) -> Result<(), Error> {
+        // TODO: Handle erroneous transactions
+        let transaction_results = block_executor
+            .execute_transactions(&transactions)
+            .map_err(|_| Error::Other(String::from("Rejected while executing transactions")))?;
+        self.block.transactions.append(&mut transactions);
+        // TODO: How to do this without copy?
+        let mut tx_events: HashMap<TxHash, Vec<Event>> = HashMap::new();
+        for (tx, result) in transactions.into_iter().zip(transaction_results.into_iter()) {
+            tx_events.insert(tx.hash(), result.events);
         }
-
-        let hash = tx.hash();
-        self.block.transactions_set.insert(hash);
-        self.block.transactions.push(tx);
-        Ok(())
-    }
-
-    /// Push transactions onto the block.
-    pub fn push_transactions(&mut self, transactions: &[Transaction]) -> Result<(), Error> {
-        for tx in transactions {
-            self.push_transaction(tx.clone())?;
-        }
+        self.block.tx_events = tx_events;
         Ok(())
     }
 
@@ -215,17 +213,39 @@ impl OpenBlock {
         self.block.header.set_seal(header.seal().to_vec());
     }
 
+    pub fn prepare_block_from_transactions<'a>(
+        &mut self,
+        block_executor: &dyn BlockExecutor,
+        mut transactions: impl Iterator<Item = &'a TransactionWithMetadata> + 'a,
+    ) {
+        let proposed_txs = block_executor.prepare_block(&mut transactions);
+        self.block.transactions.append(&mut proposed_txs.iter().map(|(tx, _)| (*tx).clone()).collect());
+        self.block.tx_events = proposed_txs.into_iter().map(|(tx, outcome)| (tx.hash(), outcome.events)).collect();
+    }
+
     /// Turn this into a `ClosedBlock`.
-    pub fn close(mut self) -> Result<ClosedBlock, Error> {
-        let state_root = self.block.state().commit().map_err(|e| {
+    pub fn close(mut self, block_executor: &dyn BlockExecutor) -> Result<ClosedBlock, Error> {
+        let block_outcome = block_executor.close_block()?;
+
+        self.block.block_events = block_outcome.events;
+        let updated_validator_set = block_outcome.updated_validator_set;
+        let next_validator_set_hash = match updated_validator_set {
+            Some(ref set) => set.hash(),
+            None => NextValidatorSet::load_from_state(&self.block.state())?.create_compact_validator_set().hash(),
+        };
+        let updated_consensus_params = block_outcome.updated_consensus_params;
+        if let Err(e) = self.update_next_block_state(updated_validator_set, updated_consensus_params) {
+            warn!("Encountered error on closing the block: {}", e);
+            return Err(e)
+        }
+
+        let state_root = self.block.state.lock().commit().map_err(|e| {
             warn!("Encountered error on state commit: {}", e);
             e
         })?;
         self.block.header.set_state_root(state_root);
 
-        let vset_raw = NextValidators::load_from_state(&*self.block.state())?;
-        let vset = vset_raw.create_compact_validator_set();
-        self.block.header.set_next_validator_set_hash(vset.hash());
+        self.block.header.set_next_validator_set_hash(next_validator_set_hash);
 
         if self.block.header.transactions_root() == &BLAKE_NULL_RLP {
             self.block.header.set_transactions_root(skewed_merkle_root(
@@ -268,11 +288,40 @@ impl OpenBlock {
     pub fn inner_mut(&mut self) -> &mut ExecutedBlock {
         &mut self.block
     }
+
+    fn state(&self) -> MutexGuard<TopLevelState> {
+        self.block.state()
+    }
+
+    // called on open_block
+    fn update_current_validator_set(&mut self) -> Result<(), Error> {
+        let mut current_validators = CurrentValidatorSet::load_from_state(&self.state())?;
+        current_validators.update(NextValidatorSet::load_from_state(&self.state())?);
+        current_validators.save_to_state(&mut self.state())?;
+
+        Ok(())
+    }
+
+    // called on close_block
+    fn update_next_block_state(
+        &mut self,
+        updated_validator_set: Option<CompactValidatorSet>,
+        updated_consensus_params: Option<ConsensusParams>,
+    ) -> Result<(), Error> {
+        let state = &mut self.block.state();
+
+        if let Some(set) = updated_validator_set {
+            let validators = NextValidatorSet::from_compact_validator_set(set);
+            validators.save_to_state(state)?;
+        }
+
+        if let Some(params) = updated_consensus_params {
+            state.update_consensus_params(params)?;
+        }
+        Ok(())
+    }
 }
 
-/// Just like `OpenBlock`, except that we've applied `Engine::on_close_block`, finished up the non-seal header fields.
-///
-/// There is no function available to push a transaction.
 #[derive(Clone)]
 pub struct ClosedBlock {
     block: ExecutedBlock,
@@ -361,13 +410,16 @@ pub fn enact(
     evidences: Vec<Evidence>,
     transactions: &[Transaction],
     engine: &dyn ConsensusEngine,
+    block_executor: &dyn BlockExecutor,
     db: StateDB,
     parent: &Header,
 ) -> Result<ClosedBlock, Error> {
     let mut b = OpenBlock::try_new(engine, db, parent, Public::default(), evidences, vec![])?;
 
     b.populate_from(header);
-    b.push_transactions(transactions)?;
+    b.update_current_validator_set()?;
 
-    b.close()
+    b.open(block_executor, engine)?;
+    b.execute_transactions(block_executor, transactions.to_vec())?;
+    b.close(block_executor)
 }

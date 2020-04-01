@@ -258,7 +258,15 @@ impl Importer {
         // Enact Verified Block
         let db = client.state_db().read().clone(&parent.state_root());
 
-        let enact_result = enact(&block.header, block.evidences.clone(), &block.transactions, engine, db, &parent);
+        let enact_result = enact(
+            &block.header,
+            block.evidences.clone(),
+            &block.transactions,
+            engine,
+            &*self.block_executor,
+            db,
+            &parent,
+        );
         let closed_block = enact_result.map_err(|e| {
             cwarn!(CLIENT, "Block import failed for #{} ({})\nError: {:?}", header.number(), header.hash(), e);
         })?;
