@@ -20,8 +20,9 @@ use primitives::Bytes;
 use rlp::RlpStream;
 
 pub fn create_test_block(header: &Header) -> Bytes {
-    let mut rlp = RlpStream::new_list(2);
+    let mut rlp = RlpStream::new_list(3);
     rlp.append(header);
+    rlp.append_raw(&rlp::EMPTY_LIST_RLP, 1); // evidences
     rlp.append_raw(&rlp::EMPTY_LIST_RLP, 1);
     rlp.out()
 }

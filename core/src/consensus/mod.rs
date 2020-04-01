@@ -19,7 +19,7 @@ mod null_engine;
 pub(crate) mod signer;
 mod solo;
 pub mod stake;
-mod tendermint;
+pub(crate) mod tendermint;
 mod validator_set;
 
 pub use self::null_engine::NullEngine;
@@ -35,7 +35,7 @@ use crate::account_provider::AccountProvider;
 use crate::block::{ClosedBlock, ExecutedBlock};
 use crate::client::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::client::ConsensusClient;
-use crate::consensus::tendermint::Evidence;
+pub use crate::consensus::tendermint::Evidence;
 use crate::error::Error;
 use crate::transaction::UnverifiedTransaction;
 use crate::views::HeaderView;

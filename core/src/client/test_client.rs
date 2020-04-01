@@ -217,8 +217,9 @@ impl TestBlockChainClient {
             transactions.push(signed);
         }
         header.set_transactions_root(skewed_merkle_root(BLAKE_NULL_RLP, transactions.iter().map(Encodable::rlp_bytes)));
-        let mut rlp = RlpStream::new_list(2);
+        let mut rlp = RlpStream::new_list(3);
         rlp.append(&header);
+        rlp.append_raw(&RlpStream::new_list(0).out(), 1); // evidences
         rlp.append_list(&transactions);
         self.import_block(rlp.as_raw().to_vec()).unwrap()
     }
@@ -523,8 +524,10 @@ impl BlockChainClient for TestBlockChainClient {
     fn block_body(&self, id: &BlockId) -> Option<encoded::Body> {
         self.block_hash(id).and_then(|hash| {
             self.blocks.read().get(&hash).map(|r| {
-                let mut stream = RlpStream::new_list(1);
-                stream.append_raw(Rlp::new(r).at(1).unwrap().as_raw(), 1);
+                let mut stream = RlpStream::new_list(2);
+                let rlp = Rlp::new(r);
+                stream.append_raw(rlp.at(1).unwrap().as_raw(), 1); // evidences
+                stream.append_raw(rlp.at(2).unwrap().as_raw(), 1); // transactions
                 encoded::Body::new(stream.out())
             })
         })

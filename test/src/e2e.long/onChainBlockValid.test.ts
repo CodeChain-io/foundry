@@ -126,7 +126,24 @@ describe("Test onChain block communication", async function() {
                 // [[]] => Some(EmptyValidatorSet)
                 [header2.toEncodeObject(), [[]]]
             ],
-            [[], []],
+            [
+                [
+                    [
+                        /* evidences */
+                    ],
+                    [
+                        /* transactions */
+                    ]
+                ],
+                [
+                    [
+                        /* evidences */
+                    ],
+                    [
+                        /* transactions */
+                    ]
+                ]
+            ],
             header2.hashing()
         );
 
