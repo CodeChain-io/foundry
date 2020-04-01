@@ -94,7 +94,7 @@ impl Header {
         self.view().transactions_root()
     }
 
-    /// Returns the transaction trie root.
+    /// Returns next validator set hash
     pub fn next_validator_set_hash(&self) -> H256 {
         self.view().next_validator_set_hash()
     }
