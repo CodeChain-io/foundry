@@ -40,12 +40,6 @@ pub fn query(key_fragment: &[u8], state: &TopLevelState) -> StateResult<Option<V
     Ok(some_action_data)
 }
 
-pub trait FindDoubleVoteHandler {
-    fn double_vote_handler(&self) -> Option<&dyn DoubleVoteHandler> {
-        None
-    }
-}
-
 pub struct StakeKeyBuilder {
     rlp: RlpStream,
 }

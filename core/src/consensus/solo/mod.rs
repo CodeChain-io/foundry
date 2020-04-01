@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::stake;
 use super::{ConsensusEngine, Seal};
 use crate::block::ExecutedBlock;
 use crate::client::snapshot_notify::NotifySender;
@@ -22,7 +21,6 @@ use crate::client::ConsensusClient;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Ed25519Public as Public;
-use cstate::DoubleVoteHandler;
 use ctypes::transaction::Action;
 use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
@@ -32,7 +30,6 @@ use std::sync::{Arc, Weak};
 pub struct Solo {
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
     snapshot_notify_sender: Arc<RwLock<Option<NotifySender>>>,
-    stake: stake::Stake,
 }
 
 impl Solo {
@@ -41,7 +38,6 @@ impl Solo {
         Solo {
             client: Default::default(),
             snapshot_notify_sender: Arc::new(RwLock::new(None)),
-            stake: stake::Stake::default(),
         }
     }
 }
@@ -77,10 +73,6 @@ impl ConsensusEngine for Solo {
         if let Some(sender) = self.snapshot_notify_sender.read().as_ref() {
             sender.notify(block_hash)
         }
-    }
-
-    fn stake_handler(&self) -> Option<&dyn DoubleVoteHandler> {
-        Some(&self.stake)
     }
 
     fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Public>>, EngineError> {

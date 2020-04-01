@@ -30,7 +30,7 @@ use crate::views::HeaderView;
 use ckey::{verify, Ed25519Public as Public};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::{CurrentValidators, DoubleVoteHandler, Jail, NextValidators, TopStateView};
+use cstate::{CurrentValidators, NextValidators, TopStateView};
 use ctypes::transaction::Action;
 use ctypes::{util::unexpected::OutOfBounds, BlockHash, BlockId, CompactValidatorSet, Header, SyncHeader};
 use std::iter::Iterator;
@@ -211,13 +211,11 @@ impl ConsensusEngine for Tendermint {
             (current_term + custody_period, current_term + release_period)
         };
 
-        let released_addresses = Jail::load_from_state(block.state())?.released_addresses(current_term);
-
         Ok(vec![
             Action::CloseTerm {
                 inactive_validators: vec![],
                 next_validators: next_validators.into(),
-                released_addresses,
+                released_addresses: vec![],
                 custody_until,
                 kick_at,
             },
@@ -227,7 +225,6 @@ impl ConsensusEngine for Tendermint {
 
     fn register_client(&self, client: Weak<dyn ConsensusClient>) {
         *self.client.write() = Some(Weak::clone(&client));
-        self.stake.register_resources(client, Arc::downgrade(&self.validators));
     }
 
     fn fetch_evidences(&self) -> Vec<Evidence> {
@@ -308,10 +305,6 @@ impl ConsensusEngine for Tendermint {
         prev_best_hash: BlockHash,
     ) -> bool {
         parent_hash_of_new_header == prev_best_hash || grandparent_hash_of_new_header == prev_best_hash
-    }
-
-    fn stake_handler(&self) -> Option<&dyn DoubleVoteHandler> {
-        Some(&*self.stake)
     }
 
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Public>>, EngineError> {

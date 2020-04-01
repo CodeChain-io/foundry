@@ -28,7 +28,7 @@ use crate::scheme::Scheme;
 use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
 use crate::types::TransactionId;
 use ckey::{Ed25519Private as Private, Ed25519Public as Public, Password, PlatformAddress};
-use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
+use cstate::{TopLevelState, TopStateView};
 use ctypes::errors::HistoryError;
 use ctypes::transaction::{IncompleteTransaction, Transaction};
 use ctypes::{BlockHash, BlockId, TransactionIndex, TxHash};
@@ -258,9 +258,7 @@ impl Miner {
     }
 
     /// Prepares new block for sealing including top transactions from queue and seal it.
-    fn prepare_and_seal_block<
-        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + FindDoubleVoteHandler + TermInfo,
-    >(
+    fn prepare_and_seal_block<C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + TermInfo>(
         &self,
         parent_block_id: BlockId,
         chain: &C,
@@ -340,7 +338,7 @@ impl Miner {
             let start = Instant::now();
             let transaction_index = tx_count as TransactionIndex;
             // Check whether transaction type is allowed for sender
-            let result = open_block.push_transaction(tx, chain, parent_header.number(), transaction_index);
+            let result = open_block.push_transaction(tx, parent_header.number(), transaction_index);
 
             match result {
                 // already have transaction - ignore
@@ -387,7 +385,7 @@ impl Miner {
                 let tx = VerifiedTransaction::new_with_sign(tx, &tx_signer);
                 // TODO: The current code can insert more transactions than size limit.
                 // It should be fixed to pre-calculate the maximum size of the close transactions and prevent the size overflow.
-                open_block.push_transaction(tx, chain, parent_header.number(), transaction_index)?;
+                open_block.push_transaction(tx, parent_header.number(), transaction_index)?;
             }
         }
         let block = open_block.close()?;
@@ -493,8 +491,7 @@ impl MinerService for Miner {
 
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock + FindDoubleVoteHandler + TermInfo,
-    {
+        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock + TermInfo, {
         ctrace!(MINER, "update_sealing: preparing a block");
 
         let block = match self.prepare_and_seal_block(parent_block, chain) {
