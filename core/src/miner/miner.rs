@@ -24,16 +24,15 @@ use crate::error::Error;
 use crate::scheme::Scheme;
 use crate::transaction::PendingVerifiedTransactions;
 use crate::types::{BlockId, TransactionId};
-use ckey::{public_to_address, Address, Ed25519Public as Public};
+use ckey::Address;
 use coordinator::validator::{Transaction, TxOrigin};
+use coordinator::Coordinator;
 use cstate::TopLevelState;
 use ctypes::errors::HistoryError;
 use ctypes::{BlockHash, TxHash};
 use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
-use std::borrow::Borrow;
-use std::collections::HashSet;
 use std::ops::Range;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -194,25 +193,21 @@ impl Miner {
         parent_block_id: BlockId,
         chain: &C,
     ) -> Result<Option<ClosedBlock>, Error> {
-        let (transactions, mut open_block, block_number) = {
+        let (transactions, mut open_block) = {
             ctrace!(MINER, "prepare_block: No existing work - making new block");
             let params = self.params.read().clone();
             let open_block = chain.prepare_open_block(parent_block_id, params.author, params.extra_data);
-            let (block_number, parent_hash) = {
-                let header = open_block.block().header();
-                let block_number = header.number();
-                let parent_hash = *header.parent_hash();
-                (block_number, parent_hash)
-            };
+            let header = open_block.block().header();
+            let parent_hash = *header.parent_hash();
             let max_body_size = chain.common_params(parent_hash.into()).unwrap().max_body_size();
             const DEFAULT_RANGE: Range<u64> = 0..::std::u64::MAX;
 
             // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock
             let mem_pool = self.mem_pool.read();
             // TODO: Create a gas_limit parameter and use it
-            let transactions = mem_pool.top_transactions(max_body_size, max_body_size, DEFAULT_RANGE);
+            let transactions = mem_pool.top_transactions(max_body_size, max_body_size, DEFAULT_RANGE).transactions;
 
-            (transactions, open_block, block_number)
+            (transactions, open_block)
         };
 
         let parent_header = {
@@ -223,70 +218,20 @@ impl Miner {
         assert!(self.engine.seals_internally(), "If a signer is not prepared, prepare_block should not be called");
         let seal = self.engine.generate_seal(None, &parent_header.decode());
         if let Some(seal_bytes) = seal.seal_fields() {
-            open_block.seal(self.engine.borrow(), seal_bytes).expect("Sealing always success");
+            open_block.seal(seal_bytes).expect("Sealing always success");
         } else {
             return Ok(None)
         }
         self.engine.on_open_block(open_block.inner_mut())?;
 
-        let mut invalid_transactions = Vec::new();
+        let evidences = self.engine.fetch_evidences();
 
-        let mut tx_count: usize = 0;
-        let tx_total = transactions.len();
-        let mut invalid_tx_users = HashSet::new();
+        let coordinator = Coordinator {};
 
-        for tx in transactions {
-            let signer_public = tx.signer_public();
-            let signer_address = public_to_address(&signer_public);
-            if self.malicious_users.read().contains(&signer_address) {
-                invalid_transactions.push(tx.hash());
-                continue
-            }
-            if invalid_tx_users.contains(&signer_public) {
-                // The previous transaction has failed
-                continue
-            }
-
-            let hash = tx.hash();
-            let start = Instant::now();
-            // Check whether transaction type is allowed for sender
-            let result = open_block.push_transaction(tx, chain, parent_header.number(), parent_header.timestamp());
-
-            match result {
-                // already have transaction - ignore
-                Err(Error::History(HistoryError::TransactionAlreadyImported)) => {}
-                Err(e) => {
-                    invalid_tx_users.insert(signer_public);
-                    invalid_transactions.push(hash);
-                    cinfo!(
-                        MINER,
-                        "Error adding transaction to block: number={}. tx_hash={:?}, Error: {:?}",
-                        block_number,
-                        hash,
-                        e
-                    );
-                }
-                Ok(()) => {
-                    let took = start.elapsed();
-                    ctrace!(MINER, "Adding transaction {:?} took {:?}", hash, took);
-                    tx_count += 1;
-                } // imported ok
-            }
-        }
-        cdebug!(MINER, "Pushed {}/{} transactions", tx_count, tx_total);
-
-        let block = open_block.close()?;
-
-        let fetch_seq = |p: &Public| {
-            let address = public_to_address(p);
-            chain.latest_seq(&address)
-        };
-
-        {
-            let mut mem_pool = self.mem_pool.write();
-            mem_pool.remove(&invalid_transactions);
-        }
-        Ok(Some(block))
+        open_block.open(&coordinator, evidences);
+        open_block.execute_transactions(&coordinator, transactions);
+        let closed_block = open_block.close(&coordinator)?;
+        Ok(Some(closed_block))
     }
 
     /// Attempts to perform internal sealing (one that does not require work) and handles the result depending on the type of Seal.
