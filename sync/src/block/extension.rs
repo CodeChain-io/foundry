@@ -20,11 +20,12 @@ use crate::snapshot::snapshot_path;
 use ccore::encoded::Header as EncodedHeader;
 use ccore::{
     Block, BlockChainClient, BlockChainTrait, BlockImportError, BlockStatus, ChainNotify, Client, EngineInfo, Evidence,
-    ImportBlock, ImportError, StateInfo, UnverifiedTransaction,
+    ImportBlock, ImportError, StateInfo,
 };
 use cdb::AsHashDB;
 use cnetwork::{Api, EventSender, IntoSocketAddr, NetworkExtension, NodeId};
 use codechain_crypto::BLAKE_NULL_RLP;
+use coordinator::Transaction;
 use cstate::{TopLevelState, TopStateView};
 use ctimer::TimerToken;
 use ctypes::header::Seal;
@@ -1092,7 +1093,7 @@ impl Extension {
         }
     }
 
-    fn import_blocks(&mut self, blocks: Vec<(BlockHash, Vec<Evidence>, Vec<UnverifiedTransaction>)>) {
+    fn import_blocks(&mut self, blocks: Vec<(BlockHash, Vec<Evidence>, Vec<Transaction>)>) {
         let mut imported = Vec::new();
         let mut remains = Vec::new();
         let mut error_target = None;
@@ -1147,7 +1148,7 @@ impl Extension {
         self.body_downloader.remove_targets(&imported);
     }
 
-    fn on_body_response(&mut self, hashes: Vec<BlockHash>, bodies: Vec<(Vec<Evidence>, Vec<UnverifiedTransaction>)>) {
+    fn on_body_response(&mut self, hashes: Vec<BlockHash>, bodies: Vec<(Vec<Evidence>, Vec<Transaction>)>) {
         ctrace!(SYNC, "Received body response with length({}) {:?}", hashes.len(), hashes);
 
         match &self.state {

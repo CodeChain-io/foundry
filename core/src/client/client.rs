@@ -29,9 +29,7 @@ use crate::event::EventSource;
 use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
 use crate::service::ClientIoMessage;
-use crate::transaction::{
-    LocalizedTransaction, PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction,
-};
+use crate::transaction::{LocalizedTransaction, PendingTransactions};
 use crate::types::{BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
@@ -39,6 +37,7 @@ use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::context::{ChainHistoryAccess, StateHistoryAccess, StorageAccess};
 use coordinator::engine::{BlockExecutor, Initializer};
 use coordinator::types::Event;
+use coordinator::Transaction;
 use cstate::{StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header, StorageId, SyncHeader, TxHash};
@@ -199,7 +198,7 @@ impl Client {
     pub fn import_queued_transactions(&self, transactions: &[Bytes]) -> usize {
         ctrace!(EXTERNAL_TX, "Importing queued");
         self.queue_transactions.fetch_sub(transactions.len(), AtomicOrdering::SeqCst);
-        let transactions: Vec<UnverifiedTransaction> =
+        let transactions: Vec<Transaction> =
             transactions.iter().filter_map(|bytes| Rlp::new(bytes).as_val().ok()).collect();
         let results = self.miner.import_external_transactions(self, transactions);
         results.len()
@@ -520,7 +519,7 @@ impl BlockChainClient for Client {
     }
 
     /// Import own transaction
-    fn queue_own_transaction(&self, transaction: VerifiedTransaction) -> Result<(), Error> {
+    fn queue_own_transaction(&self, transaction: Transaction) -> Result<(), Error> {
         self.miner.import_own_transaction(self, transaction)?;
         Ok(())
     }
@@ -547,7 +546,7 @@ impl BlockChainClient for Client {
         self.miner.delete_all_pending_transactions();
     }
 
-    fn pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
+    fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions {
         let size_limit = self
             .consensus_params(BlockId::Latest)
             .expect("Common params of the latest block always exists")

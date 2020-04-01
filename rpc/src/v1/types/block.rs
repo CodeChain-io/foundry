@@ -45,12 +45,11 @@ impl Block {
         let block_number = block.header.number();
         let block_hash = block.header.hash();
         let transactions =
-            block.transactions.into_iter().enumerate().map(|(transaction_index, signed)| LocalizedTransaction {
-                signed,
+            block.transactions.into_iter().enumerate().map(|(transaction_index, tx)| LocalizedTransaction {
+                tx,
                 block_number,
                 block_hash,
                 transaction_index: transaction_index as TransactionIndex,
-                cached_signer_public: None,
             });
         Block {
             parent_hash: *block.header.parent_hash(),

@@ -63,8 +63,6 @@ pub use crate::miner::{Miner, MinerOptions, MinerService};
 pub use crate::peer_db::PeerDb;
 pub use crate::scheme::Scheme;
 pub use crate::service::ClientService;
-pub use crate::transaction::{
-    LocalizedTransaction, PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction,
-};
+pub use crate::transaction::{LocalizedTransaction, PendingTransactions};
 pub use crate::types::{BlockStatus, TransactionId};
 pub use rlp::Encodable;

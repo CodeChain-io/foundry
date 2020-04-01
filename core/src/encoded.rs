@@ -24,11 +24,11 @@
 //! decoded object where parts like the hash can be saved.
 
 use crate::block::Block as FullBlock;
-use crate::transaction::UnverifiedTransaction;
 use crate::views;
 use crate::Evidence;
 use ccrypto::blake256;
 use ckey::Ed25519Public as Public;
+use coordinator::Transaction;
 use ctypes::{BlockHash, BlockNumber, Header as FullHeader, TxHash};
 use primitives::H256;
 use rlp::Rlp;
@@ -160,7 +160,7 @@ impl Body {
     }
 
     /// Fully decode this block body.
-    pub fn decode(&self) -> Vec<UnverifiedTransaction> {
+    pub fn decode(&self) -> Vec<Transaction> {
         self.view().transactions()
     }
 
@@ -189,18 +189,13 @@ impl Body {
     }
 
     /// Get a vector of all transactions.
-    pub fn transactions(&self) -> Vec<UnverifiedTransaction> {
+    pub fn transactions(&self) -> Vec<Transaction> {
         self.view().transactions()
     }
 
     /// Number of transactions in the block.
     pub fn transactions_count(&self) -> usize {
         self.view().transactions_count()
-    }
-
-    /// A view over each transaction in the block.
-    pub fn transaction_views(&self) -> Vec<views::TransactionView<'_>> {
-        self.view().transaction_views()
     }
 
     /// The hash of each transaction in the block.
@@ -319,18 +314,13 @@ impl Block {
     }
 
     /// Get a vector of all transactions.
-    pub fn transactions(&self) -> Vec<UnverifiedTransaction> {
+    pub fn transactions(&self) -> Vec<Transaction> {
         self.view().transactions()
     }
 
     /// Number of transactions in the block.
     pub fn transactions_count(&self) -> usize {
         self.view().tranasctions_count()
-    }
-
-    /// A view over each transaction in the block.
-    pub fn transaction_views(&self) -> Vec<views::TransactionView<'_>> {
-        self.view().transaction_views()
     }
 
     /// The hash of each transaction in the block.

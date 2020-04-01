@@ -15,12 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::backup;
-use super::mem_pool_types::{MemPoolItem, PoolingInstant, TransactionPool};
-use super::TransactionImportResult;
-use crate::transaction::{PendingVerifiedTransactions, VerifiedTransaction};
+use super::mem_pool_types::{PoolingInstant, TransactionPool};
+use crate::miner::mem_pool_types::MemPoolItem;
+use crate::transaction::PendingTransactions;
 use crate::Error as CoreError;
 use coordinator::engine::TxFilter;
-use coordinator::TxOrigin;
+use coordinator::{Transaction, TxOrigin};
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use ctypes::TxHash;
 use kvdb::{DBTransaction, KeyValueDB};
@@ -115,14 +115,13 @@ impl MemPool {
                     mem_usage += item.mem_usage;
                     !item.origin.is_local() && (mem_usage > self.queue_memory_limit || count > self.queue_count_limit)
                 })
-                .cloned()
+                .map(|tx| tx.hash())
                 .collect()
         } else {
             vec![]
         };
 
-        for item in to_drop {
-            let hash = item.hash();
+        for hash in to_drop {
             backup::remove_item(batch, &hash);
             self.transaction_pool.remove(&hash);
         }
@@ -144,18 +143,16 @@ impl MemPool {
     /// otherwise it might open up an attack vector.
     pub fn add(
         &mut self,
-        transactions: Vec<VerifiedTransaction>,
+        transactions: Vec<Transaction>,
         origin: TxOrigin,
         inserted_block_number: PoolingInstant,
         inserted_timestamp: u64,
-    ) -> Vec<Result<TransactionImportResult, Error>> {
+    ) -> Vec<Result<(), Error>> {
         ctrace!(MEM_POOL, "add() called, time: {}, timestamp: {}", inserted_block_number, inserted_timestamp);
         let mut insert_results = Vec::new();
         let mut batch = backup::backup_batch_with_capacity(transactions.len());
 
         for tx in transactions {
-            let hash = tx.hash();
-
             if let Err(e) = self.verify_transaction(&tx) {
                 insert_results.push(Err(e));
                 continue
@@ -163,21 +160,25 @@ impl MemPool {
 
             let id = self.next_transaction_id;
             self.next_transaction_id += 1;
-            let item = MemPoolItem::new(tx, origin, inserted_block_number, inserted_timestamp, id);
 
-            backup::backup_item(&mut batch, *hash, &item);
-            self.transaction_pool.insert(item);
-
-            insert_results.push(Ok(()));
+            let hash = tx.hash();
+            let tx = MemPoolItem::new(tx, origin, inserted_block_number, inserted_timestamp, id);
+            if self.transaction_pool.contains(&hash) {
+                // This transaction is already in the pool.
+                insert_results.push(Err(HistoryError::TransactionAlreadyImported.into()));
+            } else {
+                backup::backup_item(&mut batch, *hash, &tx);
+                self.transaction_pool.insert(tx);
+                insert_results.push(Ok(hash));
+            }
         }
-
         self.enforce_limit(&mut batch);
 
         self.db.write(batch).expect("Low level database error. Some issue with disk?");
         insert_results
             .into_iter()
             .map(|v| match v {
-                Ok(_) => Ok(TransactionImportResult::Current),
+                Ok(_) => Ok(()),
                 Err(e) => Err(e),
             })
             .collect()
@@ -228,7 +229,7 @@ impl MemPool {
     /// Verify signed transaction with its content.
     /// This function can return errors: InsufficientFee, InsufficientBalance,
     /// TransactionAlreadyImported, Old, TooCheapToReplace
-    fn verify_transaction(&self, tx: &VerifiedTransaction) -> Result<(), Error> {
+    fn verify_transaction(&self, tx: &Transaction) -> Result<(), Error> {
         if self.transaction_pool.contains(&tx.hash()) {
             ctrace!(MEM_POOL, "Dropping already imported transaction: {:?}", tx.hash());
             return Err(HistoryError::TransactionAlreadyImported.into())
@@ -240,7 +241,7 @@ impl MemPool {
     /// Returns top transactions whose timestamp are in the given range from the pool ordered by priority.
     // FIXME: current_timestamp should be `u64`, not `Option<u64>`.
     // FIXME: if range_contains becomes stable, use range.contains instead of inequality.
-    pub fn pending_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions {
+    pub fn pending_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingTransactions {
         let mut current_size: usize = 0;
         let items: Vec<_> = self
             .transaction_pool
@@ -257,7 +258,7 @@ impl MemPool {
 
         let last_timestamp = items.iter().map(|t| t.inserted_timestamp).max();
 
-        PendingVerifiedTransactions {
+        PendingTransactions {
             transactions: items.into_iter().map(|t| t.tx.clone()).collect(),
             last_timestamp,
         }
@@ -271,114 +272,102 @@ impl MemPool {
 
 #[cfg(test)]
 pub mod test {
-    use crate::transaction::UnverifiedTransaction;
-    use std::cmp::Ordering;
-
-    use ckey::{Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
-    use ctypes::transaction::Transaction;
-
-    use super::backup::MemPoolItemProjection;
-    use super::*;
+    use crate::miner::mem_pool::MemPool;
     use coordinator::test_coordinator::TestCoordinator;
-    use rlp::{rlp_encode_and_decode_test, Rlp};
-    use std::convert::TryInto;
+    use coordinator::{Transaction, TxOrigin};
+    use rand::Rng;
+    use std::sync::Arc;
 
-    #[test]
-    fn origin_ordering() {
-        assert_eq!(TxOrigin::Local.cmp(&TxOrigin::External), Ordering::Less);
-        assert_eq!(TxOrigin::External.cmp(&TxOrigin::Local), Ordering::Greater);
+    fn create_random_transaction() -> Transaction {
+        //FIXME: change this random to be reproducible
+        let body_length = rand::thread_rng().gen_range(50, 200);
+        let random_bytes = (0..body_length).map(|_| rand::random::<u8>()).collect();
+        Transaction::new("Sample".to_string(), random_bytes)
     }
 
     #[test]
-    fn txorigin_encode_and_decode() {
-        rlp_encode_and_decode_test!(TxOrigin::External);
+    fn remove_all() {
+        let validator = Arc::new(TestCoordinator::default());
+        let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db, validator);
+
+        let inserted_block_number = 1;
+        let inserted_timestamp = 100;
+        let origin = TxOrigin::External;
+
+        let transactions: Vec<_> = (0..10).map(|_| create_random_transaction()).collect();
+
+        let add_result = mem_pool.add(transactions.clone(), origin, inserted_block_number, inserted_timestamp);
+        assert!(add_result.iter().all(|r| r.is_ok()));
+
+        mem_pool.remove_all();
+        assert!(transactions.iter().all(|tx| { !mem_pool.transaction_pool.contains(&tx.hash()) }));
+        assert_eq!(mem_pool.transaction_pool.len(), 0);
+        assert_eq!(mem_pool.transaction_pool.count, 0);
+        assert_eq!(mem_pool.transaction_pool.mem_usage, 0);
     }
 
     #[test]
-    fn signed_transaction_encode_and_decode() {
-        let keypair: KeyPair = Random.generate().unwrap();
-        let tx = Transaction {
-            network_id: "tc".into(),
-        };
-        let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
+    fn add_and_remove_transactions() {
+        let validator = Arc::new(TestCoordinator::default());
+        let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db, validator);
 
-        let rlp = rlp::encode(&signed);
-        let encoded = Rlp::new(&rlp);
-        let decoded: UnverifiedTransaction = encoded.as_val().unwrap();
-        let result = decoded.try_into().unwrap();
+        let inserted_block_number = 1;
+        let inserted_timestamp = 100;
+        let origin = TxOrigin::External;
 
-        assert_eq!(signed, result);
-    }
+        let transactions: Vec<_> = (0..10).map(|_| create_random_transaction()).collect();
 
-    #[test]
-    fn mempool_item_encode_and_decode() {
-        let keypair: KeyPair = Random.generate().unwrap();
-        let tx = Transaction {
-            network_id: "tc".into(),
-        };
-        let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
-        let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0);
+        let add_result = mem_pool.add(transactions.clone(), origin, inserted_block_number, inserted_timestamp);
+        assert!(add_result.iter().all(|r| r.is_ok()));
 
-        let rlp = rlp::encode(&item);
-        let encoded = Rlp::new(&rlp);
-        let decoded: MemPoolItemProjection = encoded.as_val().unwrap();
-        let result = decoded.try_into().unwrap();
+        let (to_remove, to_keep) = transactions.split_at(5);
 
-        assert_eq!(item, result);
+        let to_remove_hashes: Vec<_> = to_remove.iter().map(|tx| tx.hash()).collect();
+        let to_keep_hashes: Vec<_> = to_keep.iter().map(|tx| tx.hash()).collect();
+        mem_pool.remove(&to_remove_hashes, inserted_block_number, inserted_timestamp);
+
+        assert!(to_keep_hashes.iter().all(|hash| { mem_pool.transaction_pool.contains(hash) }));
+        assert!(to_remove_hashes.iter().all(|hash| { !mem_pool.transaction_pool.contains(hash) }));
+
+        let count: usize = 5;
+        let mem_usage: usize = to_keep.iter().map(|tx| tx.size()).sum();
+
+        assert_eq!(mem_pool.transaction_pool.count, count);
+        assert_eq!(mem_pool.transaction_pool.mem_usage, mem_usage);
     }
 
     #[test]
     fn db_backup_and_recover() {
-        //setup test_client
-        let keypair: KeyPair = Random.generate().unwrap();
-
+        let validator = Arc::new(TestCoordinator::default());
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
-        let coordinator = Arc::new(TestCoordinator::default());
-        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db.clone(), coordinator.clone());
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db.clone(), validator.clone());
 
         let inserted_block_number = 1;
         let inserted_timestamp = 100;
-        let mut inputs: Vec<VerifiedTransaction> = Vec::new();
+        let origin = TxOrigin::External;
 
-        inputs.push(create_signed_pay(&keypair));
-        inputs.push(create_signed_pay(&keypair));
-        inputs.push(create_signed_pay(&keypair));
-        mem_pool.add(inputs, TxOrigin::Local, inserted_block_number, inserted_timestamp);
+        let transactions: Vec<_> = (0..10).map(|_| create_random_transaction()).collect();
 
-        let inserted_block_number = 11;
+        let add_result = mem_pool.add(transactions, origin, inserted_block_number, inserted_timestamp);
+        assert!(add_result.iter().all(|r| r.is_ok()));
+
+        let inserted_block_number = 2;
         let inserted_timestamp = 200;
-        let mut inputs: Vec<_> = Vec::new();
-        inputs.push(create_signed_pay(&keypair));
-        inputs.push(create_signed_pay(&keypair));
-        mem_pool.add(inputs, TxOrigin::Local, inserted_block_number, inserted_timestamp);
+        let origin = TxOrigin::Local;
 
-        let inserted_block_number = 20;
-        let inserted_timestamp = 300;
-        let mut inputs: Vec<_> = Vec::new();
-        inputs.push(create_signed_pay(&keypair));
-        inputs.push(create_signed_pay(&keypair));
-        inputs.push(create_signed_pay(&keypair));
-        mem_pool.add(inputs, TxOrigin::Local, inserted_block_number, inserted_timestamp);
+        let transactions: Vec<_> = (0..10).map(|_| create_random_transaction()).collect();
 
-        let inserted_block_number = 21;
-        let inserted_timestamp = 400;
-        let mut inputs: Vec<_> = Vec::new();
-        inputs.push(create_signed_pay(&keypair));
-        mem_pool.add(inputs, TxOrigin::Local, inserted_block_number, inserted_timestamp);
+        let add_result = mem_pool.add(transactions, origin, inserted_block_number, inserted_timestamp);
+        assert!(add_result.iter().all(|r| r.is_ok()));
 
-        let mut mem_pool_recovered = MemPool::with_limits(8192, usize::max_value(), db, coordinator);
+        let mut mem_pool_recovered = MemPool::with_limits(8192, usize::max_value(), db, validator);
         mem_pool_recovered.recover_from_db();
 
-        assert_eq!(mem_pool_recovered.next_transaction_id, mem_pool.next_transaction_id);
+        assert_eq!(mem_pool_recovered.transaction_pool, mem_pool.transaction_pool);
         assert_eq!(mem_pool_recovered.queue_count_limit, mem_pool.queue_count_limit);
         assert_eq!(mem_pool_recovered.queue_memory_limit, mem_pool.queue_memory_limit);
-        assert_eq!(mem_pool_recovered.transaction_pool, mem_pool.transaction_pool);
-    }
-
-    fn create_signed_pay(keypair: &KeyPair) -> VerifiedTransaction {
-        let tx = Transaction {
-            network_id: "tc".into(),
-        };
-        VerifiedTransaction::new_with_sign(tx, keypair.private())
+        assert_eq!(mem_pool_recovered.next_transaction_id, mem_pool.next_transaction_id);
     }
 }

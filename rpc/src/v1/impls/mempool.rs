@@ -17,12 +17,12 @@
 use super::super::errors;
 use super::super::traits::Mempool;
 use super::super::types::PendingTransactions;
-use ccore::{BlockChainClient, EngineInfo, UnverifiedTransaction, VerifiedTransaction};
+use ccore::{BlockChainClient, EngineInfo};
 use cjson::bytes::Bytes;
+use coordinator::Transaction;
 use ctypes::TxHash;
 use jsonrpc_core::Result;
 use rlp::Rlp;
-use std::convert::TryInto;
 use std::sync::Arc;
 
 pub struct MempoolClient<C> {
@@ -45,10 +45,9 @@ where
         Rlp::new(&raw.into_vec())
             .as_val()
             .map_err(|e| errors::rlp(&e))
-            .and_then(|tx: UnverifiedTransaction| tx.try_into().map_err(errors::transaction_core))
-            .and_then(|signed: VerifiedTransaction| {
-                let hash = signed.hash();
-                match self.client.queue_own_transaction(signed) {
+            .and_then(|tx: Transaction| {
+                let hash = tx.hash();
+                match self.client.queue_own_transaction(tx) {
                     Ok(_) => Ok(hash),
                     Err(e) => Err(errors::transaction_core(e)),
                 }
