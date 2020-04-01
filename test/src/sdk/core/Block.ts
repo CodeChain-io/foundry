@@ -161,6 +161,7 @@ export class Block {
 
         const encoded: Buffer = RLP.encode([
             blockHeader,
+            [], // evidences
             transactions.map(tx => tx.toEncodeObject())
         ]);
 

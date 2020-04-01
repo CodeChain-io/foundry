@@ -216,8 +216,9 @@ impl Scheme {
     pub fn genesis_block(&self) -> Bytes {
         let empty_list = RlpStream::new_list(0).out();
         let header = self.genesis_header();
-        let mut ret = RlpStream::new_list(2);
+        let mut ret = RlpStream::new_list(3);
         ret.append(&header);
+        ret.append_raw(&empty_list, 1); // evidences
         ret.append_raw(&empty_list, 1);
         ret.out()
     }

@@ -391,10 +391,11 @@ pub trait BlockProvider: HeaderProvider + BodyProvider + InvoiceProvider {
         let header = self.block_header_data(hash)?;
         let body = self.block_body(hash)?;
 
-        let mut block = RlpStream::new_list(2);
+        let mut block = RlpStream::new_list(3);
         let body_rlp = body.rlp();
         block.append_raw(header.rlp().as_raw(), 1);
-        block.append_raw(body_rlp.at(0).unwrap().as_raw(), 1);
+        block.append_raw(body_rlp.at(0).unwrap().as_raw(), 1); // evidences
+        block.append_raw(body_rlp.at(1).unwrap().as_raw(), 1); // transactions
         let encoded_block = encoded::Block::new(block.out());
         debug_assert_eq!(*hash, encoded_block.hash());
         Some(encoded_block)

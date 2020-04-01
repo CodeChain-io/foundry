@@ -120,8 +120,10 @@ impl BodyDB {
 
     /// Create a block body from a block.
     pub fn block_to_body(block: &BlockView<'_>) -> Bytes {
-        let mut body = RlpStream::new_list(1);
-        body.append_raw(block.rlp().at(1).unwrap().as_raw(), 1);
+        let mut body = RlpStream::new_list(2);
+        let rlp = block.rlp();
+        body.append_raw(rlp.at(1).unwrap().as_raw(), 1); // evidences
+        body.append_raw(rlp.at(2).unwrap().as_raw(), 1); // transactions
         body.out()
     }
 }
