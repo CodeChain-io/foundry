@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::TransactionView;
-use crate::transaction::{LocalizedTransaction, UnverifiedTransaction};
+use crate::transaction::LocalizedTransaction;
 use crate::Evidence;
 use ccrypto::blake256;
+use coordinator::Transaction;
 use ctypes::{BlockHash, BlockNumber, TransactionIndex, TxHash};
 use rlp::Rlp;
 
@@ -57,7 +57,7 @@ impl<'a> BodyView<'a> {
     }
 
     /// Return List of transactions in given block.
-    pub fn transactions(&self) -> Vec<UnverifiedTransaction> {
+    pub fn transactions(&self) -> Vec<Transaction> {
         self.rlp.list_at(1).unwrap()
     }
 
@@ -70,12 +70,11 @@ impl<'a> BodyView<'a> {
         self.transactions()
             .into_iter()
             .enumerate()
-            .map(|(transaction_index, signed)| LocalizedTransaction {
-                signed,
+            .map(|(transaction_index, tx)| LocalizedTransaction {
+                tx,
                 block_hash: *block_hash,
                 block_number,
                 transaction_index: transaction_index as TransactionIndex,
-                cached_signer_public: None,
             })
             .collect()
     }
@@ -85,18 +84,13 @@ impl<'a> BodyView<'a> {
         self.rlp.at(1).unwrap().item_count().unwrap()
     }
 
-    /// Return List of transactions in given block.
-    pub fn transaction_views(&self) -> Vec<TransactionView<'a>> {
-        self.rlp.at(1).unwrap().iter().map(TransactionView::new_from_rlp).collect()
-    }
-
     /// Return transaction hashes.
     pub fn transaction_hashes(&self) -> Vec<TxHash> {
         self.rlp.at(1).unwrap().iter().map(|rlp| blake256(rlp.as_raw()).into()).collect()
     }
 
     /// Returns transaction at given index without deserializing unnecessary data.
-    pub fn transaction_at(&self, index: TransactionIndex) -> Option<UnverifiedTransaction> {
+    pub fn transaction_at(&self, index: TransactionIndex) -> Option<Transaction> {
         self.rlp.at(1).unwrap().iter().nth(index as usize).map(|rlp| rlp.as_val().unwrap())
     }
 
@@ -107,12 +101,11 @@ impl<'a> BodyView<'a> {
         block_number: BlockNumber,
         transaction_index: TransactionIndex,
     ) -> Option<LocalizedTransaction> {
-        self.transaction_at(transaction_index).map(|signed| LocalizedTransaction {
-            signed,
+        self.transaction_at(transaction_index).map(|tx| LocalizedTransaction {
+            tx,
             block_hash: *block_hash,
             block_number,
             transaction_index,
-            cached_signer_public: None,
         })
     }
 }

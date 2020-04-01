@@ -14,8 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::transaction::VerifiedTransaction;
-use coordinator::TxOrigin;
+use coordinator::{Transaction, TxOrigin};
 use ctypes::{BlockNumber, TxHash};
 use std::collections::HashMap;
 
@@ -26,7 +25,7 @@ pub type PoolingInstant = BlockNumber;
 #[derive(Clone, Eq, PartialEq, Debug, RlpEncodable)]
 pub struct MemPoolItem {
     /// Transaction.
-    pub tx: VerifiedTransaction,
+    pub tx: Transaction,
     /// Transaction origin.
     pub origin: TxOrigin,
     /// Insertion time
@@ -42,7 +41,7 @@ pub struct MemPoolItem {
 
 impl MemPoolItem {
     pub fn new(
-        tx: VerifiedTransaction,
+        tx: Transaction,
         origin: TxOrigin,
         inserted_block_number: PoolingInstant,
         inserted_timestamp: u64,

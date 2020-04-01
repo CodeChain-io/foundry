@@ -14,22 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ccore::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
-use cjson::uint::Uint;
-use ckey::{NetworkId, Signature};
-use ctypes::{BlockHash, TransactionIndex, TxHash};
+use ccore::{LocalizedTransaction, PendingTransactions as PendingVerifiedTransactions};
+use coordinator::Transaction as ValidatorTransaction;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Transaction {
-    pub block_number: Option<u64>,
-    pub block_hash: Option<BlockHash>,
-    pub transaction_index: Option<TransactionIndex>,
-    pub result: Option<bool>,
-    pub network_id: NetworkId,
-    pub hash: TxHash,
-    pub sig: Signature,
-}
+pub struct Transaction {}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -39,41 +29,19 @@ pub struct PendingTransactions {
 }
 
 impl From<PendingVerifiedTransactions> for PendingTransactions {
-    fn from(p: PendingVerifiedTransactions) -> Self {
-        let transactions = p.transactions.into_iter().map(From::from).collect();
-        Self {
-            transactions,
-            last_timestamp: p.last_timestamp,
-        }
+    fn from(_tx: PendingVerifiedTransactions) -> Self {
+        unimplemented!()
     }
 }
 
 impl From<LocalizedTransaction> for Transaction {
-    fn from(p: LocalizedTransaction) -> Self {
-        let sig = p.unverified_tx().signature();
-        Self {
-            block_number: Some(p.block_number),
-            block_hash: Some(p.block_hash),
-            transaction_index: Some(p.transaction_index),
-            result: Some(true),
-            network_id: p.unverified_tx().transaction().network_id,
-            hash: p.unverified_tx().hash(),
-            sig,
-        }
+    fn from(_p: LocalizedTransaction) -> Self {
+        unimplemented!()
     }
 }
 
-impl From<VerifiedTransaction> for Transaction {
-    fn from(p: VerifiedTransaction) -> Self {
-        let sig = p.signature();
-        Self {
-            block_number: None,
-            block_hash: None,
-            transaction_index: None,
-            result: None,
-            network_id: p.transaction().network_id,
-            hash: p.hash(),
-            sig,
-        }
+impl From<ValidatorTransaction> for Transaction {
+    fn from(_tx: ValidatorTransaction) -> Self {
+        unimplemented!()
     }
 }

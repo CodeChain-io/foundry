@@ -40,21 +40,19 @@ use crate::consensus::EngineError;
 use crate::db::{COL_STATE, NUM_COLUMNS};
 use crate::encoded;
 use crate::error::{BlockImportError, Error as GenericError};
-use crate::miner::{Miner, MinerService, TransactionImportResult};
+use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
-use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
 use crate::types::{TransactionId, VerificationQueueInfo as QueueInfo};
+use crate::{LocalizedTransaction, PendingTransactions};
 use ccrypto::BLAKE_NULL_RLP;
-use ckey::{
-    Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public, Generator, KeyPairTrait, NetworkId,
-    PlatformAddress, Random,
-};
+use ckey::{Ed25519Private as Private, Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::test_coordinator::TestCoordinator;
 use coordinator::types::Event;
+use coordinator::Transaction;
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{NextValidators, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
-use ctypes::transaction::{Transaction, Validator};
+use ctypes::transaction::Validator;
 use ctypes::Header;
 use ctypes::{
     BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header as BlockHeader, SyncHeader, TxHash,
@@ -63,6 +61,7 @@ use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
 use parking_lot::RwLock;
 use primitives::{Bytes, H256};
+use rand::Rng;
 use rlp::{Encodable, Rlp, RlpStream};
 use std::collections::HashMap;
 use std::mem;
@@ -189,13 +188,8 @@ impl TestBlockChainClient {
         }
         let mut transactions = Vec::with_capacity(transaction_length);
         for _ in 0..transaction_length {
-            let keypair: KeyPair = Random.generate().unwrap();
-            // Update seqs value
-            let tx = Transaction {
-                network_id: NetworkId::default(),
-            };
-            let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
-            transactions.push(signed);
+            let tx = Self::random_transaction();
+            transactions.push(tx);
         }
         header.set_transactions_root(skewed_merkle_root(BLAKE_NULL_RLP, transactions.iter().map(Encodable::rlp_bytes)));
         let mut rlp = RlpStream::new_list(3);
@@ -258,15 +252,10 @@ impl TestBlockChainClient {
 
     /// Inserts a transaction to miners mem pool.
     pub fn insert_transaction_to_pool(&self) -> TxHash {
-        let keypair: KeyPair = Random.generate().unwrap();
-        let tx = Transaction {
-            network_id: NetworkId::default(),
-        };
-        let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
-        let hash = signed.transaction().hash();
-        let res = self.miner.import_external_transactions(self, vec![signed.into()]);
-        let res = res.into_iter().next().unwrap().expect("Successful import");
-        assert_eq!(res, TransactionImportResult::Current);
+        let tx = Self::random_transaction();
+        let hash = tx.hash();
+        let res = self.miner.import_external_transactions(self, vec![tx]);
+        res.into_iter().next().unwrap().expect("Successful import");
         hash
     }
 
@@ -288,6 +277,13 @@ impl TestBlockChainClient {
             pubkeys.into_iter().map(|pubkey| Validator::new(0, 0, pubkey, 0, 0)).collect::<Vec<_>>().into();
 
         self.validators = fixed_validators
+    }
+
+    fn random_transaction() -> Transaction {
+        //FIXME: change this random to be reproducible
+        let body_length = rand::thread_rng().gen_range(50, 200);
+        let random_bytes = (0..body_length).map(|_| rand::random::<u8>()).collect();
+        Transaction::new("Sample".to_string(), random_bytes)
     }
 }
 
@@ -425,7 +421,7 @@ impl BlockChainClient for TestBlockChainClient {
         }
     }
 
-    fn queue_own_transaction(&self, transaction: VerifiedTransaction) -> Result<(), GenericError> {
+    fn queue_own_transaction(&self, transaction: Transaction) -> Result<(), GenericError> {
         self.miner.import_own_transaction(self, transaction)?;
         Ok(())
     }
@@ -440,7 +436,7 @@ impl BlockChainClient for TestBlockChainClient {
         self.miner.delete_all_pending_transactions();
     }
 
-    fn pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
+    fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions {
         let size_limit = self
             .consensus_params(BlockId::Latest)
             .expect("Common params of the latest block always exists")

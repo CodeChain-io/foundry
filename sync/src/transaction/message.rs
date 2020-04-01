@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ccore::UnverifiedTransaction;
+use coordinator::Transaction;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 #[derive(Debug, PartialEq)]
 pub enum Message {
-    Transactions(Vec<UnverifiedTransaction>),
+    Transactions(Vec<Transaction>),
 }
 
 impl Encodable for Message {
@@ -63,11 +63,8 @@ impl Decodable for Message {
 
 #[cfg(test)]
 mod tests {
-    use ccore::UnverifiedTransaction;
-    use ckey::{Ed25519Public as Public, Signature};
-    use ctypes::transaction::Transaction;
-
-    use super::Message;
+    use super::*;
+    use rlp::rlp_encode_and_decode_test;
 
     /// For a type that does not have PartialEq, uses Debug instead.
     fn assert_eq_by_debug<T: std::fmt::Debug>(a: &T, b: &T) {
@@ -84,17 +81,7 @@ mod tests {
 
     #[test]
     fn transactions_message_rlp_with_tx() {
-        let tx = UnverifiedTransaction::new(
-            Transaction {
-                network_id: "tc".into(),
-            },
-            Signature::default(),
-            Public::random(),
-        );
-
-        let message = Message::Transactions(vec![tx]);
-        let encoded = rlp::encode(&message);
-        let decoded: Message = rlp::decode(&encoded).unwrap();
-        assert_eq_by_debug(&message, &decoded);
+        let tx = Transaction::new("sample".to_string(), vec![1, 2, 3, 4, 5]);
+        rlp_encode_and_decode_test!(Message::Transactions(vec![tx]));
     }
 }

@@ -15,8 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::message::Message;
-use ccore::{BlockChainClient, UnverifiedTransaction};
+use ccore::BlockChainClient;
 use cnetwork::{Api, NetworkExtension, NodeId};
+use coordinator::Transaction;
 use ctimer::TimerToken;
 use ctypes::TxHash;
 use never_type::Never;
@@ -115,7 +116,7 @@ impl NetworkExtension<Never> for Extension {
                     if let Some(peer) = self.peers.get_mut(token) {
                         let transactions: Vec<_> = transactions
                             .iter()
-                            .map(UnverifiedTransaction::hash)
+                            .map(Transaction::hash)
                             .filter(|tx_hash| !peer.contains(tx_hash))
                             .collect();
                         for unverified in transactions.iter() {
@@ -149,15 +150,11 @@ impl Extension {
             return
         }
         for (token, peer) in &mut self.peers {
-            let unsent: Vec<_> = transactions
-                .iter()
-                .filter(|tx| !peer.contains(&tx.hash()))
-                .map(|signed| UnverifiedTransaction::from(signed.clone()))
-                .collect();
+            let unsent: Vec<_> = transactions.iter().filter(|tx| !peer.contains(&tx.hash())).cloned().collect();
             if unsent.is_empty() {
                 continue
             }
-            let unsent_hashes = unsent.iter().map(UnverifiedTransaction::hash).collect::<Vec<_>>();
+            let unsent_hashes = unsent.iter().map(Transaction::hash).collect::<Vec<_>>();
             for h in unsent_hashes.iter() {
                 peer.push(*h);
             }
