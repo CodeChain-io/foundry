@@ -15,18 +15,18 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::mem_pool::{Error as MemPoolError, MemPool};
-use super::{MinerService, TransactionImportResult};
+use super::MinerService;
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::block::{ClosedBlock, IsBlock};
 use crate::client::{BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo};
 use crate::consensus::{ConsensusEngine, EngineType};
 use crate::error::Error;
 use crate::scheme::Scheme;
-use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
+use crate::transaction::PendingTransactions;
 use crate::types::TransactionId;
 use ckey::Ed25519Public as Public;
 use coordinator::engine::{BlockExecutor, TxFilter};
-use coordinator::TxOrigin;
+use coordinator::{Transaction, TxOrigin};
 use cstate::TopLevelState;
 use ctypes::errors::HistoryError;
 use ctypes::{BlockHash, BlockId};
@@ -34,7 +34,6 @@ use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
 use std::borrow::Borrow;
-use std::convert::TryInto;
 use std::ops::Range;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -189,10 +188,10 @@ impl Miner {
     fn add_transactions_to_pool<C: BlockChainTrait + EngineInfo>(
         &self,
         client: &C,
-        transactions: Vec<UnverifiedTransaction>,
+        transactions: Vec<Transaction>,
         origin: TxOrigin,
         mem_pool: &mut MemPool,
-    ) -> Vec<Result<TransactionImportResult, Error>> {
+    ) -> Vec<Result<(), Error>> {
         let current_block_number = client.chain_info().best_block_number;
         let current_timestamp = client.chain_info().best_block_timestamp;
         let mut inserted = Vec::with_capacity(transactions.len());
@@ -207,11 +206,6 @@ impl Miner {
                     cdebug!(MINER, "Rejected transaction {:?}: already in the blockchain", hash);
                     return Err(HistoryError::TransactionAlreadyImported.into())
                 }
-                let tx: VerifiedTransaction =
-                    tx.verify_basic().map_err(From::from).and_then(|_| tx.try_into()).map_err(|e: Error| {
-                        cdebug!(MINER, "Rejected transaction {:?} with error {:?}", hash, e);
-                        e
-                    })?;
 
                 to_insert.push(tx);
                 tx_hashes.push(hash);
@@ -229,10 +223,10 @@ impl Miner {
                 Err(e) => Err(e),
                 Ok(()) => {
                     let idx = insertion_results_index;
-                    let result = insertion_results[idx].clone().map_err(MemPoolError::into_core_error)?;
+                    insertion_results[idx].clone().map_err(MemPoolError::into_core_error)?;
                     inserted.push(tx_hashes[idx]);
                     insertion_results_index += 1;
-                    Ok(result)
+                    Ok(())
                 }
             })
             .collect()
@@ -447,8 +441,8 @@ impl MinerService for Miner {
     fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
         &self,
         client: &C,
-        transactions: Vec<UnverifiedTransaction>,
-    ) -> Vec<Result<TransactionImportResult, Error>> {
+        transactions: Vec<Transaction>,
+    ) -> Vec<Result<(), Error>> {
         ctrace!(EXTERNAL_TX, "Importing external transactions");
         let results = {
             let mut mem_pool = self.mem_pool.write();
@@ -472,8 +466,8 @@ impl MinerService for Miner {
     fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo>(
         &self,
         chain: &C,
-        tx: VerifiedTransaction,
-    ) -> Result<TransactionImportResult, Error> {
+        tx: Transaction,
+    ) -> Result<(), Error> {
         ctrace!(OWN_TX, "Importing transaction: {:?}", tx);
 
         let imported = {
@@ -481,7 +475,7 @@ impl MinerService for Miner {
             let mut mem_pool = self.mem_pool.write();
             // We need to re-validate transactions
             let import = self
-                .add_transactions_to_pool(chain, vec![tx.into()], TxOrigin::Local, &mut mem_pool)
+                .add_transactions_to_pool(chain, vec![tx], TxOrigin::Local, &mut mem_pool)
                 .pop()
                 .expect("one result returned per added transaction; one added => one result; qed");
 
@@ -514,7 +508,7 @@ impl MinerService for Miner {
         imported
     }
 
-    fn pending_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions {
+    fn pending_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingTransactions {
         self.mem_pool.read().pending_transactions(size_limit, range)
     }
 
@@ -543,59 +537,48 @@ impl MinerService for Miner {
 
 #[cfg(test)]
 pub mod test {
-    use cio::IoService;
-    use ckey::{Ed25519Private as Private, Signature};
-    use coordinator::test_coordinator::TestCoordinator;
-    use ctimer::TimerLoop;
-    use ctypes::transaction::Transaction;
-
     use super::super::super::client::ClientConfig;
     use super::super::super::service::ClientIoMessage;
-    use super::super::super::transaction::{UnverifiedTransaction, VerifiedTransaction};
     use super::*;
     use crate::client::Client;
     use crate::db::NUM_COLUMNS;
+    use cio::IoService;
+    use coordinator::test_coordinator::TestCoordinator;
+    use ctimer::TimerLoop;
 
     #[test]
     fn check_add_transactions_result_idx() {
+        let test_coordinator = Arc::new(TestCoordinator::default());
         let db = Arc::new(kvdb_memorydb::create(NUM_COLUMNS.unwrap()));
         let scheme = Scheme::new_test();
-        let coordinator = Arc::new(TestCoordinator::default());
-        let miner = Arc::new(Miner::with_scheme_for_test(&scheme, db.clone(), coordinator.clone()));
+        let miner = Arc::new(Miner::with_scheme_for_test(&scheme, db.clone(), test_coordinator.clone()));
 
-        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db.clone(), coordinator);
-        let client = generate_test_client(db, Arc::clone(&miner), &scheme).unwrap();
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db.clone(), test_coordinator.clone());
+        let client = generate_test_client(db, Arc::clone(&miner), &scheme, test_coordinator).unwrap();
 
-        let private = Private::random();
-        let transaction1: UnverifiedTransaction = VerifiedTransaction::new_with_sign(
-            Transaction {
-                network_id: "tc".into(),
-            },
-            &private,
-        )
-        .into();
-
-        // Invalid signature transaction which will be rejected before mem_pool.add
-        let transaction2 = UnverifiedTransaction::new(
-            Transaction {
-                network_id: "tc".into(),
-            },
-            Signature::random(),
-            Public::random(),
-        );
+        let transaction1 = Transaction::new("sample".to_string(), vec![1, 2, 3, 4, 5]);
+        let transaction2 = Transaction::new("sample".to_string(), vec![5, 4, 3, 2, 1]);
 
         let transactions = vec![transaction1.clone(), transaction2, transaction1];
-        miner.add_transactions_to_pool(client.as_ref(), transactions, TxOrigin::Local, &mut mem_pool);
+        let add_results = miner.add_transactions_to_pool(client.as_ref(), transactions, TxOrigin::Local, &mut mem_pool);
+
+        assert!(add_results[0].is_ok());
+        assert!(add_results[1].is_ok());
+        assert!(add_results[2].is_err());
     }
 
-    fn generate_test_client(db: Arc<dyn KeyValueDB>, miner: Arc<Miner>, scheme: &Scheme) -> Result<Arc<Client>, Error> {
+    fn generate_test_client(
+        db: Arc<dyn KeyValueDB>,
+        miner: Arc<Miner>,
+        scheme: &Scheme,
+        coordinator: Arc<TestCoordinator>,
+    ) -> Result<Arc<Client>, Error> {
         let timer_loop = TimerLoop::new(2);
 
         let client_config: ClientConfig = Default::default();
         let reseal_timer = timer_loop.new_timer_with_name("Client reseal timer");
         let io_service = IoService::<ClientIoMessage>::start("Client")?;
 
-        let coordinator = Arc::new(TestCoordinator::default());
         Client::try_new(&client_config, scheme, db, miner, coordinator, io_service.channel(), reseal_timer)
     }
 }

@@ -16,15 +16,14 @@
 
 use crate::consensus::{ConsensusEngine, Evidence};
 use crate::error::{BlockError, Error};
-use crate::transaction::VerifiedTransaction;
 use crate::views::BlockView;
 use ccrypto::BLAKE_NULL_RLP;
+use coordinator::Transaction;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockNumber, ConsensusParams, Header};
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
 use rlp::Rlp;
-use std::convert::TryInto;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Preprocessed block data gathered in `verify_block_seal` call
@@ -34,7 +33,7 @@ pub struct PreverifiedBlock {
     /// Populated block evidences
     pub evidences: Vec<Evidence>,
     /// Populated block transactions
-    pub transactions: Vec<VerifiedTransaction>,
+    pub transactions: Vec<Transaction>,
     /// Block bytes
     pub bytes: Bytes,
 }
@@ -149,7 +148,7 @@ fn verify_transactions_root(
 /// Returns a `PreverifiedBlock` structure populated with transactions
 pub fn verify_block_seal(header: Header, bytes: Bytes) -> Result<PreverifiedBlock, Error> {
     let view = BlockView::new(&bytes);
-    let transactions: Vec<_> = view.transactions().into_iter().map(TryInto::try_into).collect::<Result<_, _>>()?;
+    let transactions: Vec<_> = view.transactions();
     let evidences = view.evidences();
     Ok(PreverifiedBlock {
         header,

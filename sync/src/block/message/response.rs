@@ -15,14 +15,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::MessageID;
-use ccore::{Evidence, UnverifiedTransaction};
+use ccore::Evidence;
+use coordinator::Transaction;
 use ctypes::SyncHeader;
 use rlp::{DecoderError, Encodable, Rlp, RlpStream};
 
 #[derive(Debug)]
 pub enum ResponseMessage {
     Headers(Vec<SyncHeader>),
-    Bodies(Vec<(Vec<Evidence>, Vec<UnverifiedTransaction>)>),
+    Bodies(Vec<(Vec<Evidence>, Vec<Transaction>)>),
     StateChunk(Vec<Vec<u8>>),
 }
 
@@ -115,14 +116,10 @@ impl ResponseMessage {
 
 #[cfg(test)]
 mod tests {
-    use super::SyncHeader;
-    use ccore::UnverifiedTransaction;
-    use ckey::{Ed25519Public as Public, Signature};
-    use ctypes::transaction::Transaction;
+    use super::*;
+    use coordinator::Transaction;
     use ctypes::Header;
     use rlp::{Encodable, Rlp};
-
-    use super::{MessageID, ResponseMessage};
 
     pub fn decode_bytes(id: MessageID, bytes: &[u8]) -> ResponseMessage {
         let rlp = Rlp::new(bytes);
@@ -150,13 +147,7 @@ mod tests {
         let message = ResponseMessage::Bodies(vec![(vec![], vec![])]);
         assert_eq_by_debug(&message, &decode_bytes(message.message_id(), message.rlp_bytes().as_ref()));
 
-        let tx = UnverifiedTransaction::new(
-            Transaction {
-                network_id: "tc".into(),
-            },
-            Signature::default(),
-            Public::random(),
-        );
+        let tx = Transaction::new("sample".to_string(), vec![1, 2, 3, 4, 5]);
 
         let message = ResponseMessage::Bodies(vec![(vec![], vec![tx])]);
         assert_eq_by_debug(&message, &decode_bytes(message.message_id(), message.rlp_bytes().as_ref()));

@@ -29,6 +29,13 @@ pub struct Transaction {
 }
 
 impl Transaction {
+    pub fn new(tx_type: String, body: Bytes) -> Self {
+        Self {
+            tx_type,
+            body,
+        }
+    }
+
     pub fn tx_type(&self) -> &str {
         &self.tx_type
     }
@@ -140,7 +147,6 @@ pub struct TransactionWithMetadata {
 }
 
 impl<'a> TransactionWithMetadata {
-    #[allow(dead_code)]
     pub fn new(
         tx: Transaction,
         origin: TxOrigin,
@@ -161,7 +167,6 @@ impl<'a> TransactionWithMetadata {
         self.tx.size()
     }
 
-    #[allow(dead_code)]
     pub fn hash(&self) -> TxHash {
         self.tx.hash()
     }

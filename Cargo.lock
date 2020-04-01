@@ -666,6 +666,7 @@ dependencies = [
  "codechain-state",
  "codechain-timer",
  "codechain-types",
+ "coordinator",
  "kvdb",
  "log 0.4.8",
  "merkle-trie",
