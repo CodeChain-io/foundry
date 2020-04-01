@@ -51,7 +51,7 @@ use ckey::{
 };
 use coordinator::types::Event;
 use cstate::tests::helpers::empty_top_state_with_metadata;
-use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState};
+use cstate::{NextValidators, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::transaction::{Action, Transaction, Validator};
 use ctypes::Header;
@@ -316,11 +316,7 @@ impl TestBlockChainClient {
         let fixed_validators: NextValidators =
             pubkeys.into_iter().map(|pubkey| Validator::new(0, 0, pubkey, 0, 0)).collect::<Vec<_>>().into();
 
-        self.validators = fixed_validators;
-    }
-
-    pub fn get_validators(&self) -> &NextValidators {
-        &self.validators
+        self.validators = fixed_validators
     }
 }
 
@@ -568,8 +564,6 @@ impl TimeoutHandler for TestBlockChainClient {
     fn on_timeout(&self, _token: TimerToken) {}
 }
 
-impl FindDoubleVoteHandler for TestBlockChainClient {}
-
 impl super::EngineClient for TestBlockChainClient {
     fn update_sealing(&self, parent_block: BlockId, allow_empty_block: bool) {
         self.miner.update_sealing(self, parent_block, allow_empty_block)
@@ -628,12 +622,11 @@ impl TermInfo for TestBlockChainClient {
 impl StateInfo for TestBlockChainClient {
     fn state_at(&self, _id: BlockId) -> Option<TopLevelState> {
         let statedb = StateDB::new_with_memorydb();
-        let mut top_state = empty_top_state_with_metadata(
+        let top_state = empty_top_state_with_metadata(
             statedb,
             CommonParams::default_for_test(),
             ConsensusParams::default_for_test(),
         );
-        let _ = self.validators.save_to_state(&mut top_state);
 
         Some(top_state)
     }

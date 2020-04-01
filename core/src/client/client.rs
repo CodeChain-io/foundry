@@ -39,7 +39,7 @@ use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::context::{ChainHistoryAccess, StateHistoryAccess, StorageAccess};
 use coordinator::types::Event;
-use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
+use cstate::{StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header, StorageId, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
@@ -663,12 +663,6 @@ impl BlockProducer for Client {
 }
 
 impl MiningBlockChainClient for Client {}
-
-impl FindDoubleVoteHandler for Client {
-    fn double_vote_handler(&self) -> Option<&dyn DoubleVoteHandler> {
-        self.engine.stake_handler()
-    }
-}
 
 impl SnapshotClient for Client {
     fn notify_snapshot(&self, id: BlockId) {
