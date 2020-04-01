@@ -43,8 +43,8 @@ use crate::stake::{
 };
 use crate::traits::{ModuleStateView, StateWithCache, TopState, TopStateView};
 use crate::{
-    Account, ActionData, CurrentValidators, FindDoubleVoteHandler, Metadata, MetadataAddress, Module, ModuleAddress,
-    ModuleLevelState, NextValidators, StateDB, StateResult,
+    Account, ActionData, CurrentValidators, Metadata, MetadataAddress, Module, ModuleAddress, ModuleLevelState,
+    NextValidators, StateDB, StateResult,
 };
 use cdb::{AsHashDB, DatabaseError};
 use ckey::Ed25519Public as Public;
@@ -287,16 +287,15 @@ impl TopLevelState {
 
     /// Execute a given tranasction, charging tranasction fee.
     /// This will change the state accordingly.
-    pub fn apply<C: FindDoubleVoteHandler>(
+    pub fn apply(
         &mut self,
         tx: &Transaction,
         sender_public: &Public,
-        client: &C,
         parent_block_number: BlockNumber,
         transaction_index: TransactionIndex,
     ) -> StateResult<()> {
         StateWithCheckpoint::create_checkpoint(self, FEE_CHECKPOINT);
-        let result = self.apply_internal(tx, sender_public, client, parent_block_number, transaction_index);
+        let result = self.apply_internal(tx, sender_public, parent_block_number, transaction_index);
         match result {
             Ok(()) => {
                 StateWithCheckpoint::discard_checkpoint(self, FEE_CHECKPOINT);
@@ -308,11 +307,10 @@ impl TopLevelState {
         result
     }
 
-    fn apply_internal<C: FindDoubleVoteHandler>(
+    fn apply_internal(
         &mut self,
         tx: &Transaction,
         sender: &Public,
-        client: &C,
         parent_block_number: BlockNumber,
         transaction_index: TransactionIndex,
     ) -> StateResult<()> {
@@ -333,7 +331,7 @@ impl TopLevelState {
 
         // The failed transaction also must pay the fee and increase seq.
         StateWithCheckpoint::create_checkpoint(self, ACTION_CHECKPOINT);
-        let result = self.apply_action(&tx.action, sender, client, parent_block_number, transaction_index);
+        let result = self.apply_action(&tx.action, sender, parent_block_number, transaction_index);
         match &result {
             Ok(()) => {
                 StateWithCheckpoint::discard_checkpoint(self, ACTION_CHECKPOINT);
@@ -346,11 +344,10 @@ impl TopLevelState {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn apply_action<C: FindDoubleVoteHandler>(
+    fn apply_action(
         &mut self,
         action: &Action,
         sender: &Public,
-        client: &C,
         parent_block_number: BlockNumber,
         transaction_index: TransactionIndex,
     ) -> StateResult<()> {
@@ -406,11 +403,9 @@ impl TopLevelState {
                 approvals,
             } => change_params(self, *metadata_seq, **params, &approvals),
             Action::ReportDoubleVote {
-                message1,
                 ..
             } => {
-                let handler = client.double_vote_handler().expect("Unknown custom transaction applied!");
-                handler.execute(message1, self, sender)
+                unimplemented!();
             }
             Action::UpdateValidators {
                 validators,

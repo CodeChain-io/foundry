@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::client::{EngineInfo, TermInfo};
 use crate::consensus::{ConsensusEngine, Evidence};
 use crate::error::{BlockError, Error};
 use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Ed25519Public as Public;
 use coordinator::types::Event;
-use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, StateError, StateWithCache, TopLevelState};
+use cstate::{NextValidators, StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
@@ -158,10 +157,9 @@ impl OpenBlock {
     }
 
     /// Push a transaction into the block.
-    pub fn push_transaction<C: FindDoubleVoteHandler>(
+    pub fn push_transaction(
         &mut self,
         tx: VerifiedTransaction,
-        client: &C,
         parent_block_number: BlockNumber,
         transaction_index: TransactionIndex,
     ) -> Result<(), Error> {
@@ -173,7 +171,6 @@ impl OpenBlock {
         let error = match self.block.state.apply(
             &tx.transaction(),
             &tx.signer_public(),
-            client,
             parent_block_number,
             transaction_index,
         ) {
@@ -192,14 +189,13 @@ impl OpenBlock {
     }
 
     /// Push transactions onto the block.
-    pub fn push_transactions<C: FindDoubleVoteHandler>(
+    pub fn push_transactions(
         &mut self,
         transactions: &[VerifiedTransaction],
-        client: &C,
         parent_block_number: BlockNumber,
     ) -> Result<(), Error> {
         for (index, tx) in transactions.iter().enumerate() {
-            self.push_transaction(tx.clone(), client, parent_block_number, index as TransactionIndex)?;
+            self.push_transaction(tx.clone(), parent_block_number, index as TransactionIndex)?;
         }
         Ok(())
     }
@@ -313,11 +309,6 @@ pub trait IsBlock {
         &self.block().transactions
     }
 
-    /// Get all information on receipts in this block.
-    fn invoices(&self) -> &[Invoice] {
-        &self.block().invoices
-    }
-
     /// Get all information on evidences in this block.
     fn evidences(&self) -> &[Evidence] {
         &self.block().evidences
@@ -358,19 +349,18 @@ impl IsBlock for ClosedBlock {
 }
 
 /// Enact the block given by block header, transactions and uncles
-pub fn enact<C: EngineInfo + FindDoubleVoteHandler + TermInfo>(
+pub fn enact(
     header: &Header,
     evidences: Vec<Evidence>,
     transactions: &[VerifiedTransaction],
     engine: &dyn ConsensusEngine,
-    client: &C,
     db: StateDB,
     parent: &Header,
 ) -> Result<ClosedBlock, Error> {
     let mut b = OpenBlock::try_new(engine, db, parent, Public::default(), evidences, vec![])?;
 
     b.populate_from(header);
-    b.push_transactions(transactions, client, parent.number())?;
+    b.push_transactions(transactions, parent.number())?;
 
     b.close()
 }

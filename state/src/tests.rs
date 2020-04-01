@@ -16,7 +16,7 @@
 
 pub mod helpers {
     use crate::impls::TopLevelState;
-    use crate::{FindDoubleVoteHandler, Metadata, MetadataAddress, StateDB};
+    use crate::{Metadata, MetadataAddress, StateDB};
     use cdb::AsHashDB;
     use ctypes::{CommonParams, ConsensusParams};
     use kvdb::KeyValueDB;
@@ -25,8 +25,6 @@ pub mod helpers {
     use rlp::Encodable;
     use std::sync::Arc;
     pub struct TestClient {}
-
-    impl FindDoubleVoteHandler for TestClient {}
 
     pub fn get_memory_db() -> Arc<dyn KeyValueDB> {
         Arc::new(kvdb_memorydb::create(1))
