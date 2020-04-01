@@ -18,14 +18,14 @@ use super::backup;
 use super::mem_pool_types::TransactionPool;
 use crate::transaction::PendingTransactions;
 use crate::Error as CoreError;
-use coordinator::engine::{TxFilter, FilteredTxs};
+use coordinator::engine::{FilteredTxs, TxFilter};
+use coordinator::types::ErrorCode;
 use coordinator::{Transaction, TransactionWithMetadata, TxOrigin};
 use ctypes::errors::{HistoryError, SyntaxError};
 use ctypes::{BlockNumber, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use std::ops::Range;
 use std::sync::Arc;
-use coordinator::types::ErrorCode;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Error {
@@ -105,7 +105,11 @@ impl MemPool {
             let FilteredTxs {
                 invalid,
                 low_priority,
-            } = self.tx_filter.filter_transactions(&mut transactions, Some(self.queue_memory_limit), Some(self.queue_count_limit));
+            } = self.tx_filter.filter_transactions(
+                &mut transactions,
+                Some(self.queue_memory_limit),
+                Some(self.queue_count_limit),
+            );
             invalid.into_iter().map(|tx| tx.hash()).chain(low_priority.into_iter().map(|tx| tx.hash())).collect()
         } else {
             vec![]
@@ -200,6 +204,10 @@ impl MemPool {
         }
 
         self.next_transaction_id = max_insertion_id + 1;
+    }
+
+    pub fn all_pending_transactions_with_metadata(&self) -> impl Iterator<Item = &TransactionWithMetadata> {
+        self.transaction_pool.pool.values()
     }
 
     /// Removes invalid transaction identified by hash from pool.
