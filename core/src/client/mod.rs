@@ -38,7 +38,7 @@ use crate::types::{BlockStatus, TransactionId, VerificationQueueInfo as BlockQue
 use cdb::DatabaseError;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::types::Event;
-use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
+use cstate::{TopLevelState, TopStateView};
 use ctypes::{
     BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ConsensusParams, Header, SyncHeader, TxHash,
 };
@@ -241,7 +241,7 @@ pub trait BlockProducer {
 }
 
 /// Extended client interface used for mining
-pub trait MiningBlockChainClient: BlockChainClient + BlockProducer + FindDoubleVoteHandler {}
+pub trait MiningBlockChainClient: BlockChainClient + BlockProducer {}
 
 /// Provides methods to access database.
 pub trait DatabaseClient {
