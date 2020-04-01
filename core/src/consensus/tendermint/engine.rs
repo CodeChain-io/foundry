@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::{stake, ConsensusEngine, EngineError, Seal};
+use super::super::{ConsensusEngine, EngineError, Seal};
 use super::network::TendermintExtension;
 pub use super::params::{TendermintParams, TimeoutParams};
 use super::worker;
@@ -33,8 +33,8 @@ use ckey::{public_to_address, Address};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{
-    init_stake, update_validator_weights, CurrentValidators, DoubleVoteHandler, NextValidators, StateDB, StateResult,
-    StateWithCache, TopLevelState, TopState, TopStateView,
+    init_stake, update_validator_weights, CurrentValidators, NextValidators, StateDB, StateResult, StateWithCache,
+    TopLevelState, TopState, TopStateView,
 };
 use ctypes::{BlockHash, Header};
 use primitives::H256;
@@ -123,7 +123,6 @@ impl ConsensusEngine for Tendermint {
         let parent_hash = *block.header().parent_hash();
         let parent = client.block_header(&parent_hash.into()).expect("Parent header must exist").decode();
         let parent_common_params = client.common_params(parent_hash.into()).expect("CommonParams of parent must exist");
-        let block_number = block.header().number();
 
         let metadata = block.state().metadata()?.expect("Metadata must exist");
 
@@ -154,8 +153,6 @@ impl ConsensusEngine for Tendermint {
             }
         };
 
-        stake::on_term_close(block.state_mut(), block_number, &inactive_validators)?;
-
         let state = block.state_mut();
         let validators = NextValidators::elect(&state)?;
         validators.save_to_state(state)?;
@@ -166,7 +163,6 @@ impl ConsensusEngine for Tendermint {
 
     fn register_client(&self, client: Weak<dyn ConsensusClient>) {
         *self.client.write() = Some(Weak::clone(&client));
-        self.stake.register_resources(client, Arc::downgrade(&self.validators));
     }
 
     fn fetch_evidences(&self) -> Vec<Evidence> {
@@ -247,10 +243,6 @@ impl ConsensusEngine for Tendermint {
         prev_best_hash: BlockHash,
     ) -> bool {
         parent_hash_of_new_header == prev_best_hash || grandparent_hash_of_new_header == prev_best_hash
-    }
-
-    fn stake_handler(&self) -> Option<&dyn DoubleVoteHandler> {
-        Some(&*self.stake)
     }
 
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {

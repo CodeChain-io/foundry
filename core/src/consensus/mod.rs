@@ -18,7 +18,6 @@ mod bit_set;
 mod null_engine;
 pub(crate) mod signer;
 mod solo;
-pub mod stake;
 mod tendermint;
 mod validator_set;
 
@@ -39,7 +38,6 @@ use crate::views::HeaderView;
 use crate::Client;
 use ckey::{Address, Signature};
 use cnetwork::NetworkService;
-use cstate::{DoubleVoteHandler, StateDB, StateResult};
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockHash, Header};
 use primitives::{Bytes, H256};
@@ -213,10 +211,6 @@ pub trait ConsensusEngine: Sync + Send {
         _previous_best_hash: BlockHash,
     ) -> bool {
         true
-    }
-
-    fn stake_handler(&self) -> Option<&dyn DoubleVoteHandler> {
-        None
     }
 
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError>;
