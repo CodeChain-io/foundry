@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::mem_pool_types::MemPoolItem;
 use crate::db as dblib;
 use crate::error::Error;
-use crate::transaction::UnverifiedTransaction;
-use coordinator::TxOrigin;
+use crate::miner::mem_pool_types::MemPoolItem;
+use coordinator::{Transaction, TxOrigin};
 use ctypes::BlockNumber;
 use kvdb::{DBTransaction, KeyValueDB};
 use primitives::H256;
@@ -31,7 +30,7 @@ pub type PoolingInstant = BlockNumber;
 #[derive(Clone, Eq, PartialEq, Debug, RlpEncodable, RlpDecodable)]
 pub struct MemPoolItemProjection {
     /// Transaction.
-    pub tx: UnverifiedTransaction,
+    pub tx: Transaction,
     /// Transaction origin.
     pub origin: TxOrigin,
     /// Insertion time
@@ -45,9 +44,8 @@ pub struct MemPoolItemProjection {
 impl TryFrom<MemPoolItemProjection> for MemPoolItem {
     type Error = Error;
     fn try_from(mem_pool: MemPoolItemProjection) -> Result<Self, Error> {
-        let verified_tx = mem_pool.tx.try_into()?;
         Ok(MemPoolItem::new(
-            verified_tx,
+            mem_pool.tx,
             mem_pool.origin,
             mem_pool.inserted_block_number,
             mem_pool.inserted_timestamp,

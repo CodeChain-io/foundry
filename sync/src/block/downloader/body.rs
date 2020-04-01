@@ -15,7 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::message::RequestMessage;
-use ccore::{Evidence, UnverifiedTransaction};
+use ccore::Evidence;
+use coordinator::Transaction;
 use ctypes::BlockHash;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
@@ -27,7 +28,7 @@ enum State {
     Downloading,
     Downloaded {
         evidences: Vec<Evidence>,
-        transactions: Vec<UnverifiedTransaction>,
+        transactions: Vec<Transaction>,
     },
     Drained,
 }
@@ -66,7 +67,7 @@ impl BodyDownloader {
         }
     }
 
-    pub fn import_bodies(&mut self, hashes: Vec<BlockHash>, bodies: Vec<(Vec<Evidence>, Vec<UnverifiedTransaction>)>) {
+    pub fn import_bodies(&mut self, hashes: Vec<BlockHash>, bodies: Vec<(Vec<Evidence>, Vec<Transaction>)>) {
         assert_eq!(hashes.len(), bodies.len());
         for (hash, (evidences, transactions)) in hashes.into_iter().zip(bodies) {
             if let Some(state) = self.states.get_mut(&hash) {
@@ -116,7 +117,7 @@ impl BodyDownloader {
         }
     }
 
-    pub fn drain(&mut self) -> Vec<(BlockHash, Vec<Evidence>, Vec<UnverifiedTransaction>)> {
+    pub fn drain(&mut self) -> Vec<(BlockHash, Vec<Evidence>, Vec<Transaction>)> {
         let mut result = Vec::new();
         for hash in &self.targets {
             let entry = self.states.entry(*hash);
@@ -142,11 +143,7 @@ impl BodyDownloader {
         result
     }
 
-    pub fn re_request(
-        &mut self,
-        hash: BlockHash,
-        remains: Vec<(BlockHash, Vec<Evidence>, Vec<UnverifiedTransaction>)>,
-    ) {
+    pub fn re_request(&mut self, hash: BlockHash, remains: Vec<(BlockHash, Vec<Evidence>, Vec<Transaction>)>) {
         #[inline]
         fn insert(states: &mut HashMap<BlockHash, State>, hash: BlockHash, state: State) {
             let old = states.insert(hash, state);

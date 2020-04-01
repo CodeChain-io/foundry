@@ -16,13 +16,12 @@
 
 use crate::consensus::{ConsensusEngine, Evidence, TendermintSealView};
 use crate::error::{BlockError, Error};
-use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Ed25519Public as Public;
 use coordinator::context::StorageAccess;
 use coordinator::engine::BlockExecutor;
 use coordinator::types::Event;
-use coordinator::Header as PreHeader;
+use coordinator::{Header as PreHeader, Transaction};
 use cstate::{NextValidators, StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
@@ -43,7 +42,7 @@ pub struct Block {
     /// The evidences in this block
     pub evidences: Vec<Evidence>,
     /// The transactions in this block.
-    pub transactions: Vec<UnverifiedTransaction>,
+    pub transactions: Vec<Transaction>,
 }
 
 impl Block {
@@ -94,7 +93,7 @@ pub struct ExecutedBlock {
     header: Header,
     state: Arc<Mutex<TopLevelState>>,
     evidences: Vec<Evidence>,
-    transactions: Vec<VerifiedTransaction>,
+    transactions: Vec<Transaction>,
     tx_events: HashMap<TxHash, Vec<Event>>,
     block_events: Vec<Event>,
     transactions_set: HashSet<TxHash>,
@@ -118,7 +117,7 @@ impl ExecutedBlock {
         self.state.lock()
     }
 
-    pub fn transactions(&self) -> &[VerifiedTransaction] {
+    pub fn transactions(&self) -> &[Transaction] {
         &self.transactions
     }
 
@@ -189,7 +188,7 @@ impl OpenBlock {
     }
 
     /// Push a transaction into the block.
-    pub fn push_transaction(&mut self, tx: VerifiedTransaction) -> Result<(), Error> {
+    pub fn push_transaction(&mut self, tx: Transaction) -> Result<(), Error> {
         if self.block.transactions_set.contains(&tx.hash()) {
             return Err(HistoryError::TransactionAlreadyImported.into())
         }
@@ -201,7 +200,7 @@ impl OpenBlock {
     }
 
     /// Push transactions onto the block.
-    pub fn push_transactions(&mut self, transactions: &[VerifiedTransaction]) -> Result<(), Error> {
+    pub fn push_transactions(&mut self, transactions: &[Transaction]) -> Result<(), Error> {
         for tx in transactions {
             self.push_transaction(tx.clone())?;
         }
@@ -303,7 +302,7 @@ pub trait IsBlock {
         Block {
             header: self.header().clone(),
             evidences: self.evidences().to_vec(),
-            transactions: self.transactions().iter().cloned().map(Into::into).collect(),
+            transactions: self.transactions().to_vec(),
         }
     }
 
@@ -313,7 +312,7 @@ pub trait IsBlock {
     }
 
     /// Get all information on transactions in this block.
-    fn transactions(&self) -> &[VerifiedTransaction] {
+    fn transactions(&self) -> &[Transaction] {
         &self.block().transactions
     }
 
@@ -360,7 +359,7 @@ impl IsBlock for ClosedBlock {
 pub fn enact(
     header: &Header,
     evidences: Vec<Evidence>,
-    transactions: &[VerifiedTransaction],
+    transactions: &[Transaction],
     engine: &dyn ConsensusEngine,
     db: StateDB,
     parent: &Header,

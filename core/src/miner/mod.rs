@@ -31,7 +31,8 @@ use crate::account_provider::Error as AccountProviderError;
 use crate::client::{BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo};
 use crate::consensus::EngineType;
 use crate::error::Error;
-use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
+use crate::PendingTransactions;
+use coordinator::Transaction;
 
 /// Miner client API
 pub trait MinerService: Send + Sync {
@@ -76,18 +77,18 @@ pub trait MinerService: Send + Sync {
     fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
         &self,
         client: &C,
-        transactions: Vec<UnverifiedTransaction>,
-    ) -> Vec<Result<TransactionImportResult, Error>>;
+        transactions: Vec<Transaction>,
+    ) -> Vec<Result<(), Error>>;
 
     /// Imports own (node owner) transaction to mem pool.
     fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo>(
         &self,
         chain: &C,
-        tx: VerifiedTransaction,
-    ) -> Result<TransactionImportResult, Error>;
+        tx: Transaction,
+    ) -> Result<(), Error>;
 
     /// Get a list of all pending transactions in the mem pool.
-    fn pending_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions;
+    fn pending_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingTransactions;
 
     /// Get a count of all pending transactions.
     fn count_pending_transactions(&self, range: Range<u64>) -> usize;
@@ -97,13 +98,4 @@ pub trait MinerService: Send + Sync {
 
     /// Stop sealing.
     fn stop_sealing(&self);
-}
-
-/// Represents the result of importing tranasction.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum TransactionImportResult {
-    /// Tranasction was imported to current queue.
-    Current,
-    /// Transaction was imported to future queue.
-    Future,
 }
