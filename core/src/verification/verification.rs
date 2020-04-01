@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::consensus::ConsensusEngine;
+use crate::consensus::{ConsensusEngine, Evidence};
 use crate::error::{BlockError, Error};
 use crate::views::BlockView;
 use ccrypto::BLAKE_NULL_RLP;
@@ -30,6 +30,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub struct PreverifiedBlock {
     /// Populated block header
     pub header: Header,
+    /// Populated block evidences
+    pub evidences: Vec<Evidence>,
     /// Populated block transactions
     pub transactions: Vec<Transaction>,
     /// Block bytes
@@ -144,9 +146,14 @@ fn verify_transactions_root(
 /// Still operates on a individual block
 /// Returns a `PreverifiedBlock` structure populated with transactions
 pub fn verify_block_seal(header: Header, bytes: Bytes) -> Result<PreverifiedBlock, Error> {
-    let transactions = BlockView::new(&bytes).transactions();
+    let (evidences, transactions) = {
+        let v = BlockView::new(&bytes);
+        (v.evidences(), v.transactions())
+    };
+
     Ok(PreverifiedBlock {
         header,
+        evidences,
         transactions,
         bytes,
     })

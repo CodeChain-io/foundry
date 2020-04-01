@@ -26,6 +26,7 @@
 use crate::block::Block as FullBlock;
 use crate::transaction::UnverifiedTransaction;
 use crate::views;
+use crate::Evidence;
 use ccrypto::blake256;
 use ckey::Address;
 use ctypes::{BlockHash, BlockNumber, Header as FullHeader, TxHash};
@@ -156,6 +157,16 @@ impl Body {
 
 // forwarders to borrowed view.
 impl Body {
+    /// Get a vector of all evidences
+    pub fn evidences(&self) -> Vec<Evidence> {
+        self.view().evidences()
+    }
+
+    ///Number of evidences in the block
+    pub fn evidences_count(&self) -> usize {
+        self.view().evidences_count()
+    }
+
     /// Get a vector of all transactions.
     pub fn transactions(&self) -> Vec<UnverifiedTransaction> {
         self.view().transactions()
@@ -276,6 +287,16 @@ impl Block {
 
 // forwarders to body view.
 impl Block {
+    /// Get a vector of all evidences
+    pub fn evidences(&self) -> Vec<Evidence> {
+        self.view().evidences()
+    }
+
+    ///Number of evidences in the block
+    pub fn evidences_count(&self) -> usize {
+        self.view().evidences_count()
+    }
+
     /// Get a vector of all transactions.
     pub fn transactions(&self) -> Vec<UnverifiedTransaction> {
         self.view().transactions()

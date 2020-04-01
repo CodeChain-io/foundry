@@ -14,37 +14,38 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::invoice::Invoice;
-use crate::client::{EngineInfo, TermInfo};
-use crate::consensus::ConsensusEngine;
+use crate::consensus::{ConsensusEngine, Evidence};
 use crate::error::{BlockError, Error};
-use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Address;
-use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, StateError, StateWithCache, TopLevelState};
-use ctypes::errors::HistoryError;
+use coordinator::validator::{Event, Header as PreHeader, Transaction, Validator, VerifiedCrime};
+use coordinator::Coordinator;
+use cstate::{StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{BlockNumber, TxHash};
+use ctypes::TxHash;
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 /// A block, encoded as it is on the block chain.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Block {
     /// The header of this block
     pub header: Header,
+    /// The evidences in this block
+    pub evidences: Vec<Evidence>,
     /// The transactions in this block.
-    pub transactions: Vec<UnverifiedTransaction>,
+    pub transactions: Vec<Transaction>,
 }
 
 impl Block {
     /// Get the RLP-encoding of the block with or without the seal.
     pub fn rlp_bytes(&self, seal: &Seal) -> Bytes {
-        let mut block_rlp = RlpStream::new_list(2);
+        let mut block_rlp = RlpStream::new_list(3);
         self.header.stream_rlp(&mut block_rlp, seal);
+        block_rlp.append_list(&self.evidences);
         block_rlp.append_list(&self.transactions);
         block_rlp.out()
     }
@@ -67,15 +68,16 @@ impl Decodable for Block {
             })
         }
         let item_count = rlp.item_count()?;
-        if rlp.item_count()? != 2 {
+        if rlp.item_count()? != 3 {
             return Err(DecoderError::RlpIncorrectListLen {
-                expected: 2,
+                expected: 3,
                 got: item_count,
             })
         }
         Ok(Block {
             header: rlp.val_at(0)?,
-            transactions: rlp.list_at(1)?,
+            evidences: rlp.list_at(1)?,
+            transactions: rlp.list_at(2)?,
         })
     }
 }
@@ -85,9 +87,10 @@ impl Decodable for Block {
 pub struct ExecutedBlock {
     header: Header,
     state: TopLevelState,
-    transactions: Vec<VerifiedTransaction>,
-    invoices: Vec<Invoice>,
-    transactions_set: HashSet<TxHash>,
+    evidences: Vec<Evidence>,
+    transactions: Vec<Transaction>,
+    tx_events: HashMap<TxHash, Vec<Event>>,
+    block_events: Vec<Event>,
 }
 
 impl ExecutedBlock {
@@ -95,9 +98,10 @@ impl ExecutedBlock {
         ExecutedBlock {
             header: parent.generate_child(),
             state,
+            evidences: Default::default(),
             transactions: Default::default(),
-            invoices: Default::default(),
-            transactions_set: Default::default(),
+            tx_events: Default::default(),
+            block_events: Default::default(),
         }
     }
 
@@ -106,7 +110,7 @@ impl ExecutedBlock {
         &mut self.state
     }
 
-    pub fn transactions(&self) -> &[VerifiedTransaction] {
+    pub fn transactions(&self) -> &[Transaction] {
         &self.transactions
     }
 
@@ -145,82 +149,52 @@ impl<'x> OpenBlock<'x> {
         Ok(r)
     }
 
-    /// Push a transaction into the block.
-    pub fn push_transaction<C: FindDoubleVoteHandler>(
-        &mut self,
-        tx: VerifiedTransaction,
-        client: &C,
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-    ) -> Result<(), Error> {
-        if self.block.transactions_set.contains(&tx.hash()) {
-            return Err(HistoryError::TransactionAlreadyImported.into())
-        }
-
-        let hash = tx.hash();
-        let error = match self.block.state.apply(
-            &tx.transaction(),
-            &tx.signer_public(),
-            client,
-            parent_block_number,
-            parent_block_timestamp,
-            self.block.header.timestamp(),
-        ) {
-            Ok(()) => {
-                self.block.transactions_set.insert(hash);
-                self.block.transactions.push(tx);
-                None
-            }
-            Err(err) => Some(err),
-        };
-        self.block.invoices.push(Invoice {
-            hash,
-            error: error.clone().map(|err| err.to_string()),
-        });
-
-        match error {
-            None => Ok(()),
-            Some(err) => Err(err.into()),
-        }
+    pub fn open(&mut self, coordinator: &Coordinator, evidences: Vec<Evidence>) {
+        let pre_header = PreHeader::new(
+            self.header().timestamp(),
+            self.header().number(),
+            *self.header().author(),
+            self.header().extra_data().clone(),
+        );
+        let verified_crimes: Vec<_> = evidences.iter().map(|_e| VerifiedCrime::DoubleVote).collect();
+        self.block.evidences = evidences;
+        coordinator.open_block(self.state_mut(), &pre_header, &verified_crimes);
     }
 
-    /// Push transactions onto the block.
-    pub fn push_transactions<C: FindDoubleVoteHandler>(
-        &mut self,
-        transactions: &[VerifiedTransaction],
-        client: &C,
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-    ) -> Result<(), Error> {
-        for tx in transactions {
-            self.push_transaction(tx.clone(), client, parent_block_number, parent_block_timestamp)?;
-        }
-        Ok(())
-    }
-
-    /// Populate self from a header.
-    fn populate_from(&mut self, header: &Header) {
-        self.block.header.set_timestamp(header.timestamp());
-        self.block.header.set_author(*header.author());
-        self.block.header.set_extra_data(header.extra_data().clone());
-        self.block.header.set_seal(header.seal().to_vec());
+    pub fn execute_transactions(&mut self, coordinator: &Coordinator, mut transactions: Vec<Transaction>) {
+        coordinator.execute_transactions(self.state_mut(), &transactions);
+        self.block.transactions.append(&mut transactions);
     }
 
     /// Turn this into a `ClosedBlock`.
-    pub fn close(mut self) -> Result<ClosedBlock, Error> {
+    pub fn close(mut self, coordinator: &Coordinator) -> Result<ClosedBlock, Error> {
+        let block_outcome = coordinator.close_block(self.state_mut());
+        if !block_outcome.is_success {
+            return Err(Error::Other("The application rejected the block".to_string()))
+        }
+
+        // TODO: How to do this without copy?
+        let mut tx_events: HashMap<TxHash, Vec<Event>> = HashMap::new();
+        for (tx, result) in self.transactions().iter().zip(block_outcome.transaction_results.iter()) {
+            tx_events.insert(tx.hash(), result.events.clone());
+        }
+        let block_events = block_outcome.events.clone();
+        self.block.tx_events = tx_events;
+        self.block.block_events = block_events;
+
+        let next_validator_set = block_outcome.updated_consensus_params.validators;
         if let Err(e) = self.engine.on_close_block(&mut self.block) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
         }
+
         let state_root = self.block.state.commit().map_err(|e| {
             warn!("Encountered error on state commit: {}", e);
             e
         })?;
         self.block.header.set_state_root(state_root);
 
-        let vset_raw = NextValidators::load_from_state(self.block.state())?;
-        let vset = vset_raw.create_compact_validator_set();
-        self.block.header.set_next_validator_set_hash(vset.hash());
+        self.block.header.set_next_validator_set_hash(next_validator_set.hash());
 
         if self.block.header.transactions_root() == &BLAKE_NULL_RLP {
             self.block.header.set_transactions_root(skewed_merkle_root(
@@ -238,6 +212,14 @@ impl<'x> OpenBlock<'x> {
         })
     }
 
+    /// Populate self from a header.
+    fn populate_from(&mut self, header: &Header) {
+        self.block.header.set_timestamp(header.timestamp());
+        self.block.header.set_author(*header.author());
+        self.block.header.set_extra_data(header.extra_data().clone());
+        self.block.header.set_seal(header.seal().to_vec());
+    }
+
     /// Alter the timestamp of the block.
     pub fn set_timestamp(&mut self, timestamp: u64) {
         self.block.header.set_timestamp(timestamp);
@@ -246,8 +228,8 @@ impl<'x> OpenBlock<'x> {
     /// Provide a valid seal
     ///
     /// NOTE: This does not check the validity of `seal` with the engine.
-    pub fn seal(&mut self, engine: &dyn ConsensusEngine, seal: Vec<Bytes>) -> Result<(), BlockError> {
-        let expected_seal_fields = engine.seal_fields(self.header());
+    pub fn seal(&mut self, seal: Vec<Bytes>) -> Result<(), BlockError> {
+        let expected_seal_fields = self.engine.seal_fields(self.header());
         if seal.len() != expected_seal_fields {
             return Err(BlockError::InvalidSealArity(Mismatch {
                 expected: expected_seal_fields,
@@ -260,6 +242,10 @@ impl<'x> OpenBlock<'x> {
 
     pub fn inner_mut(&mut self) -> &mut ExecutedBlock {
         &mut self.block
+    }
+
+    fn state_mut(&mut self) -> &mut TopLevelState {
+        &mut self.block.state
     }
 }
 
@@ -280,6 +266,7 @@ impl ClosedBlock {
     pub fn rlp_bytes(&self) -> Bytes {
         let mut block_rlp = RlpStream::new_list(2);
         self.block.header.stream_rlp(&mut block_rlp, &Seal::With);
+        block_rlp.append_list(&self.block.evidences);
         block_rlp.append_list(&self.block.transactions);
         block_rlp.out()
     }
@@ -293,7 +280,8 @@ pub trait IsBlock {
     fn to_base(&self) -> Block {
         Block {
             header: self.header().clone(),
-            transactions: self.transactions().iter().cloned().map(Into::into).collect(),
+            evidences: self.evidences().to_vec(),
+            transactions: self.transactions().to_vec(),
         }
     }
 
@@ -302,19 +290,29 @@ pub trait IsBlock {
         &self.block().header
     }
 
-    /// Get all information on transactions in this block.
-    fn transactions(&self) -> &[VerifiedTransaction] {
-        &self.block().transactions
+    /// Get all information on evidences in this block.
+    fn evidences(&self) -> &[Evidence] {
+        &self.block().evidences
     }
 
-    /// Get all information on receipts in this block.
-    fn invoices(&self) -> &[Invoice] {
-        &self.block().invoices
+    /// Get all information on transactions in this block.
+    fn transactions(&self) -> &[Transaction] {
+        &self.block().transactions
     }
 
     /// Get the final state associated with this object's block.
     fn state(&self) -> &TopLevelState {
         &self.block().state
+    }
+
+    /// Get the events of each transaction in this block
+    fn tx_events(&self) -> &HashMap<TxHash, Vec<Event>> {
+        &self.block().tx_events
+    }
+
+    /// Get the events emitted by this block
+    fn block_events(&self) -> &Vec<Event> {
+        &self.block().block_events
     }
 }
 
@@ -337,11 +335,12 @@ impl<'x> IsBlock for ClosedBlock {
 }
 
 /// Enact the block given by block header, transactions and uncles
-pub fn enact<C: EngineInfo + FindDoubleVoteHandler + TermInfo>(
+pub fn enact(
     header: &Header,
-    transactions: &[VerifiedTransaction],
+    transactions: &[Transaction],
+    evidences: &[Evidence],
     engine: &dyn ConsensusEngine,
-    client: &C,
+    coordinator: &Coordinator,
     db: StateDB,
     parent: &Header,
 ) -> Result<ClosedBlock, Error> {
@@ -349,7 +348,8 @@ pub fn enact<C: EngineInfo + FindDoubleVoteHandler + TermInfo>(
 
     b.populate_from(header);
     engine.on_open_block(b.inner_mut())?;
-    b.push_transactions(transactions, client, parent.number(), parent.timestamp())?;
 
-    b.close()
+    b.open(coordinator, evidences.to_vec());
+    b.execute_transactions(coordinator, transactions.to_vec());
+    b.close(coordinator)
 }

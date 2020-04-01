@@ -27,6 +27,7 @@ use crate::verification::queue::{BlockQueue, HeaderQueue};
 use crate::verification::{PreverifiedBlock, Verifier};
 use crate::views::{BlockView, HeaderView};
 use cio::IoChannel;
+use coordinator::Coordinator;
 use ctypes::header::{Header, Seal};
 use ctypes::BlockHash;
 use kvdb::DBTransaction;
@@ -234,8 +235,10 @@ impl Importer {
 
         // Enact Verified Block
         let db = client.state_db().read().clone(&parent.state_root());
+        let coordinator = Coordinator {};
 
-        let enact_result = enact(&block.header, &block.transactions, engine, client, db, &parent);
+        let enact_result =
+            enact(&block.header, &block.transactions, &block.evidences, engine, &coordinator, db, &parent);
         let closed_block = enact_result.map_err(|e| {
             cwarn!(CLIENT, "Block import failed for #{} ({})\nError: {:?}", header.number(), header.hash(), e);
         })?;
