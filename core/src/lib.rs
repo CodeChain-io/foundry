@@ -55,7 +55,6 @@ pub use crate::client::{
     ImportBlock, SnapshotClient, StateInfo, TermInfo, TestBlockChainClient,
 };
 pub use crate::consensus::signer::EngineSigner;
-pub use crate::consensus::stake;
 pub use crate::consensus::{EngineType, Evidence, TimeGapParams};
 pub use crate::db::{COL_STATE, NUM_COLUMNS};
 pub use crate::error::{BlockImportError, Error, ImportError};

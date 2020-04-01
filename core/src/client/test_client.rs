@@ -267,11 +267,7 @@ impl TestBlockChainClient {
             pubkeys.into_iter().map(|pubkey| Validator::new_for_test(0, 0, pubkey)).collect(),
         );
 
-        self.validators = fixed_validators;
-    }
-
-    pub fn get_validators(&self) -> &NextValidators {
-        &self.validators
+        self.validators = fixed_validators
     }
 
     fn sample_transaction() -> Transaction {
@@ -530,8 +526,7 @@ impl TermInfo for TestBlockChainClient {
 impl StateInfo for TestBlockChainClient {
     fn state_at(&self, _id: BlockId) -> Option<TopLevelState> {
         let statedb = StateDB::new_with_memorydb();
-        let mut top_state = empty_top_state_with_metadata(statedb, CommonParams::default_for_test());
-        let _ = self.validators.save_to_state(&mut top_state);
+        let top_state = empty_top_state_with_metadata(statedb, CommonParams::default_for_test());
 
         Some(top_state)
     }

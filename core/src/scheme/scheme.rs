@@ -87,7 +87,7 @@ impl Scheme {
     fn engine(engine_scheme: cjson::scheme::Engine) -> Arc<dyn ConsensusEngine> {
         match engine_scheme {
             cjson::scheme::Engine::Null => Arc::new(NullEngine::default()),
-            cjson::scheme::Engine::Solo(solo) => Arc::new(Solo::new(solo.params.into())),
+            cjson::scheme::Engine::Solo(_solo) => Arc::new(Solo::new()),
             cjson::scheme::Engine::Tendermint(tendermint) => Tendermint::new(tendermint.params.into()),
         }
     }

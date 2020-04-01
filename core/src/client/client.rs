@@ -34,7 +34,7 @@ use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress};
 use coordinator::validator::Transaction;
-use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
+use cstate::{StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
 use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
@@ -597,12 +597,6 @@ impl BlockProducer for Client {
             author,
             extra_data,
         ).expect("OpenBlock::new only fails if parent state root invalid; state root of best block's header is never invalid; qed")
-    }
-}
-
-impl FindDoubleVoteHandler for Client {
-    fn double_vote_handler(&self) -> Option<&dyn DoubleVoteHandler> {
-        self.engine.stake_handler()
     }
 }
 

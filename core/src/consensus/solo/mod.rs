@@ -14,10 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod params;
-
-use self::params::SoloParams;
-use super::stake;
 use super::{ConsensusEngine, Seal};
 use crate::block::ExecutedBlock;
 use crate::client::snapshot_notify::NotifySender;
@@ -25,31 +21,24 @@ use crate::client::ConsensusClient;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
-use cstate::{init_stake, DoubleVoteHandler, StateDB, StateResult, StateWithCache, TopLevelState};
+use cstate::{init_stake, StateDB, StateResult, StateWithCache, TopLevelState};
 use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
 use primitives::H256;
-use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 
 /// A consensus engine which does not provide any consensus mechanism.
 pub struct Solo {
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
     snapshot_notify_sender: Arc<RwLock<Option<NotifySender>>>,
-    genesis_stakes: HashMap<Address, u64>,
-    stake: stake::Stake,
 }
 
 impl Solo {
     /// Returns new instance of Solo over the given state machine.
-    pub fn new(params: SoloParams) -> Self {
-        let genesis_stakes = params.genesis_stakes;
-
+    pub fn new() -> Self {
         Solo {
             client: Default::default(),
             snapshot_notify_sender: Arc::new(RwLock::new(None)),
-            genesis_stakes,
-            stake: stake::Stake::default(),
         }
     }
 
@@ -81,7 +70,7 @@ impl ConsensusEngine for Solo {
         if term_seconds == 0 {
             return Ok(())
         }
-        let last_term_finished_block_num = {
+        let _last_term_finished_block_num = {
             let header = block.header();
             let current_term_period = header.timestamp() / term_seconds;
             let parent_term_period = parent.timestamp() / term_seconds;
@@ -91,7 +80,6 @@ impl ConsensusEngine for Solo {
             header.number()
         };
 
-        stake::on_term_close(block.state_mut(), last_term_finished_block_num, &[])?;
         Ok(())
     }
 
@@ -109,10 +97,6 @@ impl ConsensusEngine for Solo {
         if let Some(sender) = self.snapshot_notify_sender.read().as_ref() {
             sender.notify(block_hash)
         }
-    }
-
-    fn stake_handler(&self) -> Option<&dyn DoubleVoteHandler> {
-        Some(&self.stake)
     }
 
     fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {
