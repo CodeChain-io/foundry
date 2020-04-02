@@ -21,7 +21,6 @@ extern crate serde_derive;
 #[macro_use]
 extern crate codechain_logger as clogger;
 
-mod auto_self_nominate;
 mod config;
 mod constants;
 mod dummy_network_service;
