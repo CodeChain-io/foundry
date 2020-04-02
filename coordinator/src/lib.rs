@@ -30,7 +30,7 @@ impl validator::Validator for Coordinator {
         unimplemented!()
     }
 
-    fn check_transaction(&self, transaction: &Transaction) -> bool {
+    fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode> {
         unimplemented!()
     }
 
