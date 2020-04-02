@@ -17,6 +17,8 @@
 #[derive(Clone)]
 pub enum EventTags {
     PeerAdded,
+    ColdBlockGenerationNumerical(u64),
+    ColdBlockGenerationHash(String),
 }
 
 #[derive(Serialize)]

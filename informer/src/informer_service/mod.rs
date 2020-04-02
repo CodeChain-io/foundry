@@ -16,4 +16,4 @@
 
 mod informer_service_handler;
 
-pub use informer_service_handler::InformerService;
+pub use informer_service_handler::{ColdEvents, InformerService};

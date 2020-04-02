@@ -15,9 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{EventTags, Events, Params, Sink};
-use futures::Future;
-use jsonrpc_core::futures;
+use jsonrpc_core::futures::Future;
 
+#[derive(Clone)]
 enum ConnectionState {
     Connected,
 }
@@ -44,6 +44,19 @@ impl Connection {
                 let event = EventTags::PeerAdded;
                 cinfo!(INFORMER, "The event is successfully added to user's interested events");
                 self.interested_events.push(event);
+            }
+            "BlockGeneration_by_number" => {
+                let cold_event = EventTags::ColdBlockGenerationNumerical(
+                    // FIXME: Handle Unvalid block number
+                    params[1].as_str().parse().unwrap(),
+                );
+                cinfo!(INFORMER, "The event is successfully added to user's interested events");
+                self.interested_events.push(cold_event);
+            }
+            "BlockGeneration_by_hash" => {
+                let cold_event = EventTags::ColdBlockGenerationHash(params[1].clone());
+                cinfo!(INFORMER, "The event is successfully added to user's interested events");
+                self.interested_events.push(cold_event);
             }
             _ => {
                 cinfo!(INFORMER, "invalid Event: the event is not supported");
