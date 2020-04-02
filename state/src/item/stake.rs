@@ -240,7 +240,7 @@ impl Validator {
         }
     }
 
-    fn new(delegation: StakeQuantity, deposit: DepositQuantity, pubkey: Public) -> Self {
+    pub fn new(delegation: StakeQuantity, deposit: DepositQuantity, pubkey: Public) -> Self {
         Self {
             weight: delegation,
             delegation,
@@ -265,7 +265,7 @@ impl Validator {
 #[derive(Debug)]
 pub struct NextValidators(Vec<Validator>);
 impl NextValidators {
-    pub fn from_vector_to_test(vec: Vec<Validator>) -> Self {
+    pub fn from_vector(vec: Vec<Validator>) -> Self {
         Self(vec)
     }
 
