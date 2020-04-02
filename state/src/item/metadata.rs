@@ -26,7 +26,6 @@ pub struct Metadata {
     current_term_id: u64,
     seq: u64,
     params: CommonParams,
-    term_params: CommonParams,
     consensus_params: ConsensusParams,
 }
 
@@ -39,7 +38,6 @@ impl Metadata {
             seq: 0,
             params,
             consensus_params,
-            term_params: params,
         }
     }
 
@@ -67,14 +65,6 @@ impl Metadata {
 
     pub fn set_params(&mut self, params: CommonParams) {
         self.params = params;
-    }
-
-    pub fn term_params(&self) -> &CommonParams {
-        &self.term_params
-    }
-
-    pub fn update_term_params(&mut self) {
-        self.term_params = self.params;
     }
 
     pub fn consensus_params(&self) -> &ConsensusParams {
@@ -112,14 +102,13 @@ const PREFIX: u8 = super::Prefix::Metadata as u8;
 
 impl Encodable for Metadata {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(8)
+        s.begin_list(7)
             .append(&PREFIX)
             .append(&self.number_of_modules)
             .append(&self.last_term_finished_block_num)
             .append(&self.current_term_id)
             .append(&self.seq)
             .append(&self.params)
-            .append(&self.term_params)
             .append(&self.consensus_params);
     }
 }
@@ -127,10 +116,10 @@ impl Encodable for Metadata {
 impl Decodable for Metadata {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
-        if item_count != 8 {
+        if item_count != 7 {
             return Err(DecoderError::RlpInvalidLength {
                 got: item_count,
-                expected: 8,
+                expected: 7,
             })
         }
 
@@ -146,9 +135,7 @@ impl Decodable for Metadata {
         let seq = rlp.val_at(4)?;
         let params = rlp.val_at(5)?;
 
-        let term_params = rlp.val_at(6)?;
-
-        let consensus_params = rlp.val_at(7)?;
+        let consensus_params = rlp.val_at(6)?;
 
         Ok(Self {
             number_of_modules,
@@ -156,7 +143,6 @@ impl Decodable for Metadata {
             current_term_id,
             seq,
             params,
-            term_params,
             consensus_params,
         })
     }
@@ -222,7 +208,6 @@ mod tests {
             current_term_id: 0,
             seq: 3,
             params: CommonParams::default_for_test(),
-            term_params: CommonParams::default_for_test(),
             consensus_params: ConsensusParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);
@@ -236,7 +221,6 @@ mod tests {
             current_term_id: 0,
             seq: 0,
             params: CommonParams::default_for_test(),
-            term_params: CommonParams::default_for_test(),
             consensus_params: ConsensusParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);
@@ -250,7 +234,6 @@ mod tests {
             current_term_id: 100,
             seq: 3,
             params: CommonParams::default_for_test(),
-            term_params: CommonParams::default_for_test(),
             consensus_params: ConsensusParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);

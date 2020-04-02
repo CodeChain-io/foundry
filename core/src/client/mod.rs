@@ -97,7 +97,6 @@ pub trait ConsensusClient: BlockChainClient + EngineClient + EngineInfo + TermIn
 pub trait TermInfo {
     fn last_term_finished_block_num(&self, id: BlockId) -> Option<BlockNumber>;
     fn current_term_id(&self, id: BlockId) -> Option<u64>;
-    fn term_common_params(&self, id: BlockId) -> Option<CommonParams>;
 }
 
 /// State information to be used during client query

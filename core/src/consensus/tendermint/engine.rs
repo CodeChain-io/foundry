@@ -33,7 +33,7 @@ use ckey::Address;
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{update_validator_weights, CurrentValidators, NextValidators, TopState, TopStateView};
-use ctypes::{BlockHash, Header};
+use ctypes::{BlockHash, ConsensusParams, Header};
 use std::sync::atomic::Ordering as AtomicOrdering;
 use std::sync::{Arc, Weak};
 
@@ -111,36 +111,19 @@ impl ConsensusEngine for Tendermint {
         Ok(())
     }
 
-    fn on_close_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
-        let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
-
-        let parent_hash = *block.header().parent_hash();
-        let parent = client.block_header(&parent_hash.into()).expect("Parent header must exist").decode();
-        let parent_consensus_params =
-            client.consensus_params(parent_hash.into()).expect("ConsensusParams of parent must exist");
-
-        let metadata = block.state().metadata()?.expect("Metadata must exist");
-
+    fn on_close_block(
+        &self,
+        block: &mut ExecutedBlock,
+        updated_consensus_params: ConsensusParams,
+    ) -> Result<(), Error> {
         let author = *block.header().author();
         update_validator_weights(block.state_mut(), &author)?;
-
-        let term = metadata.current_term_id();
-        let term_seconds = match term {
-            0 => parent_consensus_params.term_seconds(),
-            _ => {
-                let parent_term_common_params = client.term_common_params(parent_hash.into());
-                parent_term_common_params.expect("TermCommonParams should exist").term_seconds()
-            }
-        };
-        if !is_term_changed(block.header(), &parent, term_seconds) {
-            return Ok(())
-        }
 
         let state = block.state_mut();
         let validators = NextValidators::elect(&state)?;
         validators.save_to_state(state)?;
 
-        state.update_term_params()?;
+        state.update_consensus_params(updated_consensus_params)?;
         Ok(())
     }
 
@@ -244,19 +227,4 @@ impl ConsensusEngine for Tendermint {
         let block_hash = header.hash();
         Ok(Some(self.validators.next_addresses(&block_hash)))
     }
-}
-
-pub(super) fn is_term_changed(header: &Header, parent: &Header, term_seconds: u64) -> bool {
-    // Because the genesis block has a fixed generation time, the first block should not change the term.
-    if header.number() == 1 {
-        return false
-    }
-    if term_seconds == 0 {
-        return false
-    }
-
-    let current_term_period = header.timestamp() / term_seconds;
-    let parent_term_period = parent.timestamp() / term_seconds;
-
-    current_term_period != parent_term_period
 }

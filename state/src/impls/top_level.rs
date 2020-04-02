@@ -606,12 +606,6 @@ impl TopState for TopLevelState {
         Ok(())
     }
 
-    fn update_term_params(&mut self) -> StateResult<()> {
-        let mut metadata = self.get_metadata_mut()?;
-        metadata.update_term_params();
-        Ok(())
-    }
-
     fn update_consensus_params(&mut self, consensus_params: ConsensusParams) -> StateResult<()> {
         let mut metadata = self.get_metadata_mut()?;
         metadata.set_consensus_params(consensus_params);
