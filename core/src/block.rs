@@ -190,8 +190,9 @@ impl<'x> OpenBlock<'x> {
         self.block.block_events = block_events;
 
         let updated_validator_set = block_outcome.updated_validator_set;
+        let next_validator_set_hash = updated_validator_set.hash();
         let updated_consensus_params = block_outcome.updated_consensus_params;
-        if let Err(e) = self.engine.on_close_block(&mut self.block, updated_consensus_params) {
+        if let Err(e) = self.engine.on_close_block(&mut self.block, updated_validator_set, updated_consensus_params) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
         }
@@ -202,7 +203,7 @@ impl<'x> OpenBlock<'x> {
         })?;
         self.block.header.set_state_root(state_root);
 
-        self.block.header.set_next_validator_set_hash(updated_validator_set.hash());
+        self.block.header.set_next_validator_set_hash(next_validator_set_hash);
 
         if self.block.header.transactions_root() == &BLAKE_NULL_RLP {
             self.block.header.set_transactions_root(skewed_merkle_root(

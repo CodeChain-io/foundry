@@ -39,7 +39,7 @@ use crate::Client;
 use ckey::{Address, Signature};
 use cnetwork::NetworkService;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
-use ctypes::{BlockHash, ConsensusParams, Header};
+use ctypes::{BlockHash, CompactValidatorSet, ConsensusParams, Header};
 use primitives::Bytes;
 use std::fmt;
 use std::sync::{Arc, Weak};
@@ -167,6 +167,7 @@ pub trait ConsensusEngine: Sync + Send {
     fn on_close_block(
         &self,
         _block: &mut ExecutedBlock,
+        _updated_validator_set: CompactValidatorSet,
         _updated_consensus_params: ConsensusParams,
     ) -> Result<(), Error> {
         Ok(())
