@@ -433,10 +433,7 @@ impl TopLevelState {
             Action::ChangeNextValidators {
                 validators,
             } => NextValidators::from(validators.clone()).save_to_state(self),
-            Action::Elect => {
-                NextValidators::elect(self)?.save_to_state(self)?;
-                self.update_term_params()
-            }
+            Action::Elect => NextValidators::elect(self)?.save_to_state(self),
         }
     }
 
@@ -600,12 +597,6 @@ impl TopState for TopLevelState {
 
         metadata.set_params(params);
         metadata.increase_seq();
-        Ok(())
-    }
-
-    fn update_term_params(&mut self) -> StateResult<()> {
-        let mut metadata = self.get_metadata_mut()?;
-        metadata.update_term_params();
         Ok(())
     }
 
