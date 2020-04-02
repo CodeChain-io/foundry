@@ -23,7 +23,7 @@ use cdb::{AsHashDB, HashDB};
 use ckey::Ed25519Public as Public;
 use cstate::{Metadata, MetadataAddress, StateDB};
 use ctypes::errors::SyntaxError;
-use ctypes::{BlockHash, CommonParams, Header};
+use ctypes::{BlockHash, CommonParams, ConsensusParams, Header};
 use merkle_trie::{TrieFactory, TrieMut};
 use parking_lot::RwLock;
 use primitives::{Bytes, H256};
@@ -60,6 +60,9 @@ pub struct Scheme {
     /// May be prepopulated if we know this in advance.
     state_root_memo: RwLock<H256>,
 
+    /// Genesis consensus parameters
+    genesis_consensus_params: ConsensusParams,
+
     /// Genesis state as plain old data.
     genesis_params: CommonParams,
 }
@@ -90,9 +93,14 @@ impl Scheme {
         }
     }
 
-    fn initialize_state(&self, db: StateDB, genesis_params: CommonParams) -> Result<StateDB, Error> {
+    fn initialize_state(
+        &self,
+        db: StateDB,
+        genesis_params: CommonParams,
+        genesis_consensus_params: ConsensusParams,
+    ) -> Result<StateDB, Error> {
         let root = BLAKE_NULL_RLP;
-        let (db, root) = self.initialize_modules(db, root, genesis_params)?;
+        let (db, root) = self.initialize_modules(db, root, genesis_params, genesis_consensus_params)?;
 
         *self.state_root_memo.write() = root;
         Ok(db)
@@ -103,9 +111,10 @@ impl Scheme {
         mut db: DB,
         mut root: H256,
         genesis_params: CommonParams,
+        genesis_consensus_params: ConsensusParams,
     ) -> Result<(DB, H256), Error> {
         // Here we need module initialization
-        let global_metadata = Metadata::new(genesis_params);
+        let global_metadata = Metadata::new(genesis_params, genesis_consensus_params);
         {
             let mut t = TrieFactory::from_existing(db.as_hashdb_mut(), &mut root)?;
             let address = MetadataAddress::new();
@@ -135,7 +144,7 @@ impl Scheme {
             return Ok(db)
         }
 
-        Ok(self.initialize_state(db, self.genesis_params())?)
+        Ok(self.initialize_state(db, self.genesis_params(), self.genesis_consensus_params())?)
     }
 
     /// Return the state root for the genesis state, memoising accordingly.
@@ -171,6 +180,11 @@ impl Scheme {
     /// Get common blockchain parameters.
     pub fn genesis_params(&self) -> CommonParams {
         self.genesis_params
+    }
+
+    /// Get consensus critical parameters
+    pub fn genesis_consensus_params(&self) -> ConsensusParams {
+        self.genesis_consensus_params
     }
 
     /// Get the header of the genesis block.
@@ -209,6 +223,7 @@ impl Scheme {
 fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
     let g = Genesis::from(s.genesis);
     let GenericSeal(seal_rlp) = g.seal.into();
+    let consensus_params = ConsensusParams::from(s.params.clone());
     let params = CommonParams::from(s.params);
     params.verify().map_err(|reason| Error::Syntax(SyntaxError::InvalidCustomAction(reason)))?;
     let engine = Scheme::engine(s.engine);
@@ -225,6 +240,7 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
         extra_data: g.extra_data,
         seal_rlp,
         state_root_memo: RwLock::new(Default::default()), // will be overwritten right after.
+        genesis_consensus_params: consensus_params,
         genesis_params: params,
     };
 
@@ -233,7 +249,7 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
         Some(root) => *s.state_root_memo.get_mut() = root,
         None => {
             let db = StateDB::new_with_memorydb();
-            let _ = s.initialize_state(db, s.genesis_params())?;
+            let _ = s.initialize_state(db, s.genesis_params(), s.genesis_consensus_params())?;
         }
     }
 

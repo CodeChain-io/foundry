@@ -209,10 +209,10 @@ impl Importer {
             );
         })?;
 
-        let common_params = client.common_params(parent.hash().into()).unwrap();
+        let consensus_params = client.consensus_params(parent.hash().into()).unwrap();
 
         // Verify Block Family
-        self.verifier.verify_block_family(&block.bytes, header, &parent, engine, &common_params).map_err(|e| {
+        self.verifier.verify_block_family(&block.bytes, header, &parent, engine, &consensus_params).map_err(|e| {
             cwarn!(
                 CLIENT,
                 "Stage 3 block verification failed for #{} ({})\nError: {:?}",

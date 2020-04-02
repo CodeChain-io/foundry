@@ -16,7 +16,7 @@
 
 use crate::{Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, StateDB, StateResult};
 use ckey::Ed25519Public as Public;
-use ctypes::{CommonParams, StorageId};
+use ctypes::{CommonParams, ConsensusParams, StorageId};
 use merkle_trie::Result as TrieResult;
 use primitives::{Bytes, H256};
 
@@ -100,6 +100,7 @@ pub trait TopState {
 
     fn update_params(&mut self, metadata_seq: u64, params: CommonParams) -> StateResult<()>;
     fn update_term_params(&mut self) -> StateResult<()>;
+    fn update_consensus_params(&mut self, consensus_params: ConsensusParams) -> StateResult<()>;
 }
 
 pub trait StateWithCache {

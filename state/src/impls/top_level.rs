@@ -52,7 +52,7 @@ use coordinator::context::StorageAccess;
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, Transaction};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{BlockNumber, CommonParams, StorageId, TransactionIndex, TransactionLocation};
+use ctypes::{BlockNumber, CommonParams, ConsensusParams, StorageId, TransactionIndex, TransactionLocation};
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use primitives::{Bytes, H256};
@@ -611,6 +611,12 @@ impl TopState for TopLevelState {
     fn update_term_params(&mut self) -> StateResult<()> {
         let mut metadata = self.get_metadata_mut()?;
         metadata.update_term_params();
+        Ok(())
+    }
+
+    fn update_consensus_params(&mut self, consensus_params: ConsensusParams) -> StateResult<()> {
+        let mut metadata = self.get_metadata_mut()?;
+        metadata.set_consensus_params(consensus_params);
         Ok(())
     }
 }

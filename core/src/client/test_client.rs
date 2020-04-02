@@ -54,7 +54,9 @@ use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::transaction::{Action, Transaction, Validator};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, Header as BlockHeader, SyncHeader, TxHash};
+use ctypes::{
+    BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header as BlockHeader, SyncHeader, TxHash,
+};
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
 use parking_lot::RwLock;
@@ -496,10 +498,10 @@ impl BlockChainClient for TestBlockChainClient {
 
     fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
         let size_limit = self
-            .common_params(BlockId::Latest)
+            .consensus_params(BlockId::Latest)
             .expect("Common params of the latest block always exists")
             .max_body_size();
-        self.miner.ready_transactions(size_limit, range)
+        self.miner.ready_transactions(size_limit as usize, range)
     }
 
     fn future_pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
@@ -585,6 +587,10 @@ impl EngineInfo for TestBlockChainClient {
         Some(self.scheme.genesis_params())
     }
 
+    fn consensus_params(&self, _block_id: BlockId) -> Option<ConsensusParams> {
+        Some(self.scheme.genesis_consensus_params())
+    }
+
     fn metadata_seq(&self, _block_id: BlockId) -> Option<u64> {
         unimplemented!()
     }
@@ -617,7 +623,11 @@ impl TermInfo for TestBlockChainClient {
 impl StateInfo for TestBlockChainClient {
     fn state_at(&self, _id: BlockId) -> Option<TopLevelState> {
         let statedb = StateDB::new_with_memorydb();
-        let mut top_state = empty_top_state_with_metadata(statedb, CommonParams::default_for_test());
+        let mut top_state = empty_top_state_with_metadata(
+            statedb,
+            CommonParams::default_for_test(),
+            ConsensusParams::default_for_test(),
+        );
         let _ = self.validators.save_to_state(&mut top_state);
 
         Some(top_state)
