@@ -204,6 +204,10 @@ impl<'a> Delegation<'a> {
 #[derive(Debug)]
 pub struct NextValidators(Vec<Validator>);
 impl NextValidators {
+    pub fn from_vector(vec: Vec<Validator>) -> Self {
+        Self(vec)
+    }
+
     pub fn load_from_state(state: &TopLevelState) -> StateResult<Self> {
         let key = &*NEXT_VALIDATORS_KEY;
         let validators = state.action_data(&key)?.map(|data| decode_list(&data)).unwrap_or_default();

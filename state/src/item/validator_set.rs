@@ -18,7 +18,7 @@ use super::stake::{CurrentValidators, NextValidators};
 use crate::{StateResult, TopLevelState};
 use ckey::Ed25519Public as Public;
 use ctypes::transaction::Validator;
-use ctypes::{CompactValidatorEntry, CompactValidatorSet};
+use ctypes::{BlockNumber, CompactValidatorEntry, CompactValidatorSet, TransactionIndex};
 use std::ops::Deref;
 
 // Validator information just enough for the host
@@ -32,12 +32,34 @@ impl SimpleValidator {
     pub fn pubkey(&self) -> &Public {
         self.0.pubkey()
     }
+
+    pub fn deposit(&self) -> u64 {
+        self.0.deposit()
+    }
+
+    pub fn nominated_at_block_number(&self) -> BlockNumber {
+        self.0.nominated_at_block_number()
+    }
+
+    pub fn nominated_at_transaction_index(&self) -> TransactionIndex {
+        self.0.nominated_at_transaction_index()
+    }
 }
 
 // TODO: implementation will be changed as we move NextValidators into a separate module
 pub struct NextValidatorSet(NextValidators);
 
 impl NextValidatorSet {
+    // Validator::close_block will return validator_set
+    // The host should update its next validators from the information
+    pub fn from_compact_validator_set(validators: CompactValidatorSet) -> Self {
+        let validators: Vec<_> = validators
+            .iter()
+            .map(|entry| Validator::new(entry.delegation, entry.delegation, entry.public_key, 0, 0))
+            .collect();
+        Self(NextValidators::from_vector(validators))
+    }
+
     pub fn create_compact_validator_set(&self) -> CompactValidatorSet {
         self.0.create_compact_validator_set()
     }
