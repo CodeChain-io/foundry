@@ -275,7 +275,7 @@ impl Miner {
                 let parent_hash = *header.parent_hash();
                 (block_number, parent_hash)
             };
-            let max_body_size = chain.common_params(parent_hash.into()).unwrap().max_body_size();
+            let max_body_size = chain.consensus_params(parent_hash.into()).unwrap().max_body_size() as usize;
             const DEFAULT_RANGE: Range<u64> = 0..u64::MAX;
 
             // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock

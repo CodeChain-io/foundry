@@ -90,7 +90,7 @@ mod tests {
     use crate::tests::helpers;
     use crate::{NextValidators, TopLevelState, TopState, TopStateView};
     use ckey::Ed25519Public as Public;
-    use ctypes::{CommonParams, TransactionLocation};
+    use ctypes::{CommonParams, ConsensusParams, TransactionLocation};
     use std::collections::HashMap;
 
     #[test]
@@ -105,7 +105,7 @@ mod tests {
 
     fn metadata_for_election() -> TopLevelState {
         let mut params = CommonParams::default_for_test();
-        let mut state = helpers::get_temp_state_with_metadata(params);
+        let mut state = helpers::get_temp_state_with_metadata(params, ConsensusParams::default_for_test());
         state.metadata().unwrap().unwrap().set_params(CommonParams::default_for_test());
         params.set_dynamic_validator_params_for_test(30, 10, 3, 20, 30, 4, 1000, 10000, 100);
         assert_eq!(Ok(()), state.update_params(0, params));
