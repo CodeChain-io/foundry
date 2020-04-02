@@ -623,13 +623,6 @@ impl TermInfo for Client {
             .map(|state| state.metadata().unwrap().expect("Metadata always exist"))
             .map(|metadata| metadata.current_term_id())
     }
-
-    fn term_common_params(&self, id: BlockId) -> Option<CommonParams> {
-        let state = self.state_at(id)?;
-        let metadata = state.metadata().unwrap().expect("Metadata always exist");
-
-        Some(*metadata.term_params())
-    }
 }
 
 impl AccountData for Client {
