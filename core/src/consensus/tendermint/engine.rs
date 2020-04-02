@@ -181,13 +181,14 @@ impl ConsensusEngine for Tendermint {
 
         let parent_hash = *block.header().parent_hash();
         let parent = client.block_header(&parent_hash.into()).expect("Parent header must exist").decode();
-        let parent_common_params = client.common_params(parent_hash.into()).expect("CommonParams of parent must exist");
+        let parent_consensus_params =
+            client.consensus_params(parent_hash.into()).expect("ConsensusParams of parent must exist");
 
         let metadata = block.state().metadata()?.expect("Metadata must exist");
 
         let term = metadata.current_term_id();
         let term_seconds = match term {
-            0 => parent_common_params.term_seconds(),
+            0 => parent_consensus_params.term_seconds(),
             _ => {
                 let parent_term_common_params = client.term_common_params(parent_hash.into());
                 parent_term_common_params.expect("TermCommonParams should exist").term_seconds()

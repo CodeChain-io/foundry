@@ -40,7 +40,7 @@ use coordinator::context::{ChainHistoryAccess, StateHistoryAccess, StorageAccess
 use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, StorageId, SyncHeader, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, StorageId, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::Bytes;
@@ -316,7 +316,7 @@ impl StateHistoryAccess for Client {
 
 impl EngineInfo for Client {
     fn network_id(&self) -> NetworkId {
-        self.common_params(BlockId::Earliest).expect("Genesis state must exist").network_id()
+        self.consensus_params(BlockId::Earliest).expect("Genesis state must exist").network_id()
     }
 
     fn common_params(&self, block_id: BlockId) -> Option<CommonParams> {
@@ -326,6 +326,16 @@ impl EngineInfo for Client {
                 .unwrap_or_else(|err| unreachable!("Unexpected failure. Maybe DB was corrupted: {:?}", err))
                 .unwrap()
                 .params()
+        })
+    }
+
+    fn consensus_params(&self, block_id: BlockId) -> Option<ConsensusParams> {
+        self.state_info(block_id.into()).map(|state| {
+            *state
+                .metadata()
+                .unwrap_or_else(|err| unreachable!("Unexpected failure. Maybe DB was corrupted: {:?}", err))
+                .unwrap()
+                .consensus_params()
         })
     }
 
@@ -536,10 +546,10 @@ impl BlockChainClient for Client {
 
     fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
         let size_limit = self
-            .common_params(BlockId::Latest)
+            .consensus_params(BlockId::Latest)
             .expect("Common params of the latest block always exists")
             .max_body_size();
-        self.miner.ready_transactions(size_limit, range)
+        self.miner.ready_transactions(size_limit as usize, range)
     }
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {
