@@ -177,29 +177,9 @@ impl ConsensusEngine for Tendermint {
     }
 
     fn close_block_actions(&self, block: &ExecutedBlock) -> Result<Vec<Action>, Error> {
-        let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
-
-        let parent_hash = *block.header().parent_hash();
-        let parent = client.block_header(&parent_hash.into()).expect("Parent header must exist").decode();
-        let parent_consensus_params =
-            client.consensus_params(parent_hash.into()).expect("ConsensusParams of parent must exist");
-
         let metadata = block.state().metadata()?.expect("Metadata must exist");
 
-        let term = metadata.current_term_id();
-        let term_seconds = match term {
-            0 => parent_consensus_params.term_seconds(),
-            _ => {
-                let parent_term_common_params = client.term_common_params(parent_hash.into());
-                parent_term_common_params.expect("TermCommonParams should exist").term_seconds()
-            }
-        };
         let next_validators = NextValidators::update_weight(block.state(), block.header().author())?;
-        if !is_term_changed(block.header(), &parent, term_seconds) {
-            return Ok(vec![Action::ChangeNextValidators {
-                validators: next_validators.into(),
-            }])
-        }
 
         let current_term = metadata.current_term_id();
         let (custody_until, kick_at) = {
@@ -372,19 +352,4 @@ impl ConsensusEngine for Tendermint {
 
         Ok(())
     }
-}
-
-pub(super) fn is_term_changed(header: &Header, parent: &Header, term_seconds: u64) -> bool {
-    // Because the genesis block has a fixed generation time, the first block should not change the term.
-    if header.number() == 1 {
-        return false
-    }
-    if term_seconds == 0 {
-        return false
-    }
-
-    let current_term_period = header.timestamp() / term_seconds;
-    let parent_term_period = parent.timestamp() / term_seconds;
-
-    current_term_period != parent_term_period
 }

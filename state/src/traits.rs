@@ -99,7 +99,6 @@ pub trait TopState {
     fn remove_action_data(&mut self, key: &H256);
 
     fn update_params(&mut self, metadata_seq: u64, params: CommonParams) -> StateResult<()>;
-    fn update_term_params(&mut self) -> StateResult<()>;
     fn update_consensus_params(&mut self, consensus_params: ConsensusParams) -> StateResult<()>;
 }
 
