@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::auto_self_nominate::AutoSelfNomination;
 use crate::config::{self, load_config};
 use crate::constants::{DEFAULT_DB_PATH, DEFAULT_KEYS_PATH};
 use crate::dummy_network_service::DummyNetworkService;
 use crate::json::PasswordFile;
 use crate::rpc::{rpc_http_start, rpc_ipc_start, rpc_ws_start, setup_rpc_server};
 use crate::rpc_apis::ApiDependencies;
-use ccore::{snapshot_notify, ConsensusClient, EngineClient};
+use ccore::{snapshot_notify, EngineClient};
 use ccore::{
     AccountProvider, AccountProviderError, ChainNotify, ClientConfig, ClientService, EngineInfo, EngineType, Miner,
     MinerService, PeerDb, Scheme, NUM_COLUMNS,
@@ -77,11 +76,6 @@ fn network_start(
     Ok(service)
 }
 
-fn self_nominate_start(c: Arc<dyn ConsensusClient>, matches: &ArgMatches, ap: Arc<AccountProvider>, address: Address) {
-    let auto_self_nominate = AutoSelfNomination::new(c, ap, address);
-    auto_self_nominate.send_self_nominate_transaction(matches);
-}
-
 fn discovery_start(
     service: &NetworkService,
     cfg: &config::Network,
@@ -123,7 +117,7 @@ fn new_miner(
     ap: Arc<AccountProvider>,
     db: Arc<dyn KeyValueDB>,
 ) -> Result<Arc<Miner>, String> {
-    let miner = Miner::new(config.miner_options()?, scheme, ap, db);
+    let miner = Miner::new(config.miner_options()?, scheme, db);
 
     match miner.engine_type() {
         EngineType::PBFT => match &config.mining.engine_signer {
@@ -262,7 +256,7 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
 
     let miner = new_miner(&config, &scheme, ap.clone(), Arc::clone(&db))?;
     let client = client_start(&client_config, &timer_loop, db, &scheme, miner.clone())?;
-    miner.recover_from_db(client.client().as_ref());
+    miner.recover_from_db();
 
     // FIXME: unbound would cause memory leak.
     // FIXME: The full queue should be handled.
@@ -335,12 +329,6 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
             Arc::new(DummyNetworkService::new())
         }
     };
-    if config.mining.self_nomination_enable {
-        let c = client.client();
-        let address = miner.get_author_address();
-        let accountp = ap.clone();
-        self_nominate_start(c, matches, accountp, address);
-    }
 
     let informer_server = {
         if !config.informer.disable.unwrap() {
