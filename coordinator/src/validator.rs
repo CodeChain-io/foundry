@@ -1,7 +1,7 @@
 use super::context::SubStorageAccess;
 use ccrypto::blake256;
 use ckey::Address;
-use ctypes::{CompactValidatorSet, TxHash};
+use ctypes::{CompactValidatorSet, ConsensusParams, TxHash};
 use primitives::Bytes;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 /// A `Validator` receives requests from the underlying consensus engine
@@ -37,32 +37,6 @@ impl Decodable for Event {
             value: rlp.val_at(1)?,
         })
     }
-}
-
-pub struct ConsensusParams {
-    /// Validators' public keys with their voting powers.
-    pub validators: CompactValidatorSet,
-    // Note: This code is copied from json/src/tendermint.rs
-    /// Propose step timeout in milliseconds.
-    pub timeout_propose: u64,
-    /// Propose step timeout delta in milliseconds.
-    pub timeout_propose_delta: u64,
-    /// Prevote step timeout in milliseconds.
-    pub timeout_prevote: u64,
-    /// Prevote step timeout delta in milliseconds.
-    pub timeout_prevote_delta: u64,
-    /// Precommit step timeout in milliseconds.
-    pub timeout_precommit: u64,
-    /// Precommit step timeout delta in milliseconds.
-    pub timeout_precommit_delta: u64,
-    /// Commit step timeout in milliseconds.
-    pub timeout_commit: u64,
-    /// Reward per block.
-    pub block_reward: u64,
-    /// allowed past time gap in milliseconds.
-    pub allowed_past_timegap: u64,
-    /// allowed future time gap in milliseconds.
-    pub allowed_future_timegap: u64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -274,6 +248,7 @@ pub struct TransactionExecutionOutcome {
 
 pub struct BlockOutcome {
     pub is_success: bool,
+    pub updated_validator_set: CompactValidatorSet,
     pub updated_consensus_params: ConsensusParams,
     pub transaction_results: Vec<TransactionExecutionOutcome>,
     pub events: Vec<Event>,
@@ -282,7 +257,7 @@ pub struct BlockOutcome {
 pub type ErrorCode = i64;
 
 pub trait Validator {
-    fn initialize_chain(&self) -> ConsensusParams;
+    fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams);
     fn open_block(&self, context: &mut dyn SubStorageAccess, header: &Header, verified_crime: &[VerifiedCrime]);
     fn execute_transactions(&self, context: &mut dyn SubStorageAccess, transactions: &[Transaction]);
     fn close_block(&self, context: &mut dyn SubStorageAccess) -> BlockOutcome;
