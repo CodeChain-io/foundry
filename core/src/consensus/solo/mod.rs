@@ -21,7 +21,7 @@ use crate::client::ConsensusClient;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
-use ctypes::{BlockHash, Header};
+use ctypes::{BlockHash, ConsensusParams, Header};
 use parking_lot::RwLock;
 use std::sync::{Arc, Weak};
 
@@ -58,7 +58,11 @@ impl ConsensusEngine for Solo {
         Seal::Solo
     }
 
-    fn on_close_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
+    fn on_close_block(
+        &self,
+        block: &mut ExecutedBlock,
+        _updated_consensus_params: ConsensusParams,
+    ) -> Result<(), Error> {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
 
         let parent_hash = *block.header().parent_hash();

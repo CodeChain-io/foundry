@@ -190,7 +190,8 @@ impl<'x> OpenBlock<'x> {
         self.block.block_events = block_events;
 
         let updated_validator_set = block_outcome.updated_validator_set;
-        if let Err(e) = self.engine.on_close_block(&mut self.block) {
+        let updated_consensus_params = block_outcome.updated_consensus_params;
+        if let Err(e) = self.engine.on_close_block(&mut self.block, updated_consensus_params) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
         }
