@@ -13,9 +13,11 @@ kvdb = "0.1"
 lazy_static = "1.2"
 crossbeam-channel = "0.3"
 parking_lot = "0.6.0"
-primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
 rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
 cinfo_courier = { package = "codechain_informer_courier", path = "../informer_courier" }
+ccore = { package = "codechain-core", path = "../core" }
+crpc = { package = "codechain-rpc", path = "../rpc" }
+tokio = { version = "0.2.13", features = ["full"] }
 serde = "1.0"
 log = "0.4.6"
 serde_json = "1.0"

@@ -250,19 +250,6 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
         panic_hook::set_with_email_alarm(email_alarm);
     }
 
-    // FIXME: unbound would cause memory leak.
-    // FIXME: The full queue should be handled.
-    // This will be fixed soon.
-    let (informer_connection_sender, informer_connection_receiver) = unbounded();
-    let informer_event_sender = {
-        if !config.informer.disable.unwrap() {
-            let (service, event_sender) = InformerService::new(informer_connection_receiver);
-            service.run_service();
-            event_sender
-        } else {
-            InformerEventSender::null_notifier()
-        }
-    };
     let pf = load_password_file(&config.operating.password_path)?;
     let base_path = config.operating.base_path.as_ref().unwrap().clone();
     let keys_path =
@@ -276,6 +263,20 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
     let miner = new_miner(&config, &scheme, ap.clone(), Arc::clone(&db))?;
     let client = client_start(&client_config, &timer_loop, db, &scheme, miner.clone())?;
     miner.recover_from_db(client.client().as_ref());
+
+    // FIXME: unbound would cause memory leak.
+    // FIXME: The full queue should be handled.
+    // This will be fixed soon.
+    let (informer_connection_sender, informer_connection_receiver) = unbounded();
+    let informer_event_sender = {
+        if !config.informer.disable.unwrap() {
+            let (service, event_sender) = InformerService::new(informer_connection_receiver, client.client());
+            service.run_service();
+            event_sender
+        } else {
+            InformerEventSender::null_notifier()
+        }
+    };
 
     let mut _maybe_sync = None;
     let mut maybe_sync_sender = None;
