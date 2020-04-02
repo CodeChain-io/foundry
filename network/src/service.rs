@@ -20,7 +20,7 @@ use crate::filters::{FilterEntry, FiltersControl};
 use crate::routing_table::RoutingTable;
 use crate::{p2p, Api, ManagingPeerdb, NetworkExtension, SocketAddr};
 use cidr::IpCidr;
-use cinformer::InformerEventSender;
+use cinfo_courier::InformerEventSender;
 use cio::{IoError, IoService};
 use ckey::{NetworkId, X25519Public as Public};
 use crossbeam_channel::Sender;

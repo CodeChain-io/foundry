@@ -14,6 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod informer_service_handler;
+#[derive(Clone)]
+pub enum EventTags {
+    PeerAdded,
+}
 
-pub use informer_service_handler::InformerService;
+#[derive(Serialize)]
+pub enum Events {
+    PeerAdded(String, String, usize),
+}

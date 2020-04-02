@@ -71,6 +71,7 @@ members = [
     "network",
     "rpc",
     "informer",
+    "informer_courier",
     "sync",
     "types",
 ]

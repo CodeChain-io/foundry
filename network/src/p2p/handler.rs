@@ -25,7 +25,7 @@ use crate::session::Session;
 use crate::stream::Stream;
 use crate::{FiltersControl, NodeId, RoutingTable, SocketAddr};
 use ccrypto::error::SymmError;
-use cinformer::{Events as InformerEvents, InformerEventSender};
+use cinfo_courier::{Events as InformerEvents, InformerEventSender};
 use cio::{IoChannel, IoContext, IoHandler, IoHandlerResult, IoManager, StreamToken, TimerToken};
 use ckey::NetworkId;
 use finally_block::finally;

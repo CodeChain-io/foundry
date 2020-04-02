@@ -404,6 +404,7 @@ version = "0.1.0"
 dependencies = [
  "cidr",
  "codechain-logger",
+ "codechain_informer_courier",
  "crossbeam-channel",
  "jsonrpc-core",
  "jsonrpc-derive",
@@ -516,11 +517,11 @@ version = "0.1.0"
 dependencies = [
  "cidr",
  "codechain-crypto",
- "codechain-informer",
  "codechain-io",
  "codechain-key",
  "codechain-logger",
  "codechain-timer",
+ "codechain_informer_courier",
  "crossbeam-channel",
  "finally-block",
  "kvdb",
@@ -643,6 +644,16 @@ dependencies = [
  "rand 0.6.1",
  "rlp",
  "rlp_derive",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
+
+[[package]]
+name = "codechain_informer_courier"
+version = "0.1.0"
+dependencies = [
+ "crossbeam-channel",
  "serde",
  "serde_derive",
  "serde_json",

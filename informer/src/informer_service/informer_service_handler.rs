@@ -14,20 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{informer_notify, Connection, InformerEventSender};
+use crate::{informer_notify, Connection, EventTags, Events, InformerEventSender};
 use crossbeam::Receiver;
 use crossbeam_channel as crossbeam;
 use std::thread::spawn;
-
-#[derive(Clone)]
-pub enum EventTags {
-    PeerAdded,
-}
-
-#[derive(Serialize)]
-pub enum Events {
-    PeerAdded(String, String, usize),
-}
 
 pub struct InformerService {
     connections: Vec<Connection>,
