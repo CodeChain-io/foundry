@@ -38,7 +38,7 @@ use coordinator::validator::{Event, Transaction};
 use cstate::{StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
-use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, ConsensusParams, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::Bytes;
@@ -297,7 +297,7 @@ impl StateInfo for Client {
 
 impl EngineInfo for Client {
     fn network_id(&self) -> NetworkId {
-        self.common_params(BlockId::Earliest).expect("Genesis state must exist").network_id()
+        self.consensus_params(BlockId::Earliest).expect("Genesis state must exist").network_id()
     }
 
     fn common_params(&self, block_id: BlockId) -> Option<CommonParams> {
@@ -307,6 +307,16 @@ impl EngineInfo for Client {
                 .unwrap_or_else(|err| unreachable!("Unexpected failure. Maybe DB was corrupted: {:?}", err))
                 .unwrap()
                 .params()
+        })
+    }
+
+    fn consensus_params(&self, block_id: BlockId) -> Option<ConsensusParams> {
+        self.state_info(block_id.into()).map(|state| {
+            *state
+                .metadata()
+                .unwrap_or_else(|err| unreachable!("Unexpected failure. Maybe DB was corrupted: {:?}", err))
+                .unwrap()
+                .consensus_params()
         })
     }
 
@@ -515,7 +525,8 @@ impl BlockChainClient for Client {
     }
 
     fn ready_transactions(&self, range: Range<u64>) -> PendingTransactions {
-        let params = self.common_params(BlockId::Latest).expect("Common params of the latest block always exists");
+        let params =
+            self.consensus_params(BlockId::Latest).expect("Consensus params of the latest block always exists");
 
         self.importer.miner.ready_transactions(params.max_body_size(), params.max_body_size(), range)
     }

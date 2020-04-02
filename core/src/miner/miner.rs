@@ -199,7 +199,7 @@ impl Miner {
             let open_block = chain.prepare_open_block(parent_block_id, params.author, params.extra_data);
             let header = open_block.block().header();
             let parent_hash = *header.parent_hash();
-            let max_body_size = chain.common_params(parent_hash.into()).unwrap().max_body_size();
+            let max_body_size = chain.consensus_params(parent_hash.into()).unwrap().max_body_size();
             const DEFAULT_RANGE: Range<u64> = 0..::std::u64::MAX;
 
             // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock

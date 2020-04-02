@@ -18,7 +18,7 @@ pub mod helpers {
     use crate::impls::TopLevelState;
     use crate::{FindDoubleVoteHandler, Metadata, MetadataAddress, StateDB};
     use cdb::AsHashDB;
-    use ctypes::CommonParams;
+    use ctypes::{CommonParams, ConsensusParams};
     use kvdb::KeyValueDB;
     use merkle_trie::{TrieFactory, TrieMut};
     use primitives::H256;
@@ -37,12 +37,12 @@ pub mod helpers {
     }
 
     pub fn get_temp_state() -> TopLevelState {
-        get_temp_state_with_metadata(CommonParams::default_for_test())
+        get_temp_state_with_metadata(CommonParams::default_for_test(), ConsensusParams::default_for_test())
     }
 
-    pub fn get_temp_state_with_metadata(params: CommonParams) -> TopLevelState {
+    pub fn get_temp_state_with_metadata(params: CommonParams, consensus_params: ConsensusParams) -> TopLevelState {
         let state_db = get_temp_state_db();
-        empty_top_state_with_metadata(state_db, params)
+        empty_top_state_with_metadata(state_db, params, consensus_params)
     }
 
     pub fn get_test_client() -> TestClient {
@@ -61,12 +61,16 @@ pub mod helpers {
 
     /// Creates new state with empty state root
     /// Used for tests.
-    pub fn empty_top_state_with_metadata(mut db: StateDB, params: CommonParams) -> TopLevelState {
+    pub fn empty_top_state_with_metadata(
+        mut db: StateDB,
+        params: CommonParams,
+        consensus_params: ConsensusParams,
+    ) -> TopLevelState {
         let mut root = H256::new();
         // init trie and reset root too null
         {
             let mut t = TrieFactory::create(db.as_hashdb_mut(), &mut root);
-            t.insert(&*MetadataAddress::new(), &Metadata::new(params).rlp_bytes()).unwrap();
+            t.insert(&*MetadataAddress::new(), &Metadata::new(params, consensus_params).rlp_bytes()).unwrap();
         }
 
         TopLevelState::from_existing(db, root).expect("The empty trie root was initialized")
