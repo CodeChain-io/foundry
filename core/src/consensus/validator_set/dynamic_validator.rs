@@ -19,8 +19,7 @@ use crate::client::ConsensusClient;
 use crate::consensus::bit_set::BitSet;
 use crate::consensus::EngineError;
 use ckey::Ed25519Public as Public;
-use cstate::{CurrentValidators, NextValidators};
-use ctypes::transaction::Validator;
+use cstate::{CurrentValidatorSet, NextValidatorSet, SimpleValidator};
 use ctypes::util::unexpected::OutOfBounds;
 use ctypes::BlockHash;
 use parking_lot::RwLock;
@@ -47,21 +46,21 @@ impl WeightOrderedValidators {
 }
 
 impl DynamicValidator {
-    fn next_validators(&self, hash: BlockHash) -> Vec<Validator> {
+    fn next_validators(&self, hash: BlockHash) -> Vec<SimpleValidator> {
         let client: Arc<dyn ConsensusClient> =
             self.client.read().as_ref().and_then(Weak::upgrade).expect("Client is not initialized");
         let block_id = hash.into();
         let state = client.state_at(block_id).expect("The next validators must be called on the confirmed block");
-        let validators = NextValidators::load_from_state(&state).unwrap();
+        let validators = NextValidatorSet::load_from_state(&state).unwrap();
         validators.into()
     }
 
-    fn current_validators(&self, hash: BlockHash) -> Vec<Validator> {
+    fn current_validators(&self, hash: BlockHash) -> Vec<SimpleValidator> {
         let client: Arc<dyn ConsensusClient> =
             self.client.read().as_ref().and_then(Weak::upgrade).expect("Client is not initialized");
         let block_id = hash.into();
         let state = client.state_at(block_id).expect("The current validators must be called on the confirmed block");
-        let validators = CurrentValidators::load_from_state(&state).unwrap();
+        let validators = CurrentValidatorSet::load_from_state(&state).unwrap();
         validators.into()
     }
 
@@ -97,7 +96,7 @@ impl DynamicValidator {
 
     pub fn check_enough_votes_with_current(&self, hash: &BlockHash, votes: &BitSet) -> Result<(), EngineError> {
         let validators = self.current_validators(*hash);
-        let mut voted_delegation = 0u64;
+        let mut voted_weight = 0u64;
         let n_validators = validators.len();
         for index in votes.true_index_iter() {
             assert!(index < n_validators);
@@ -107,17 +106,17 @@ impl DynamicValidator {
                     index,
                 }
             })?;
-            voted_delegation += validator.delegation();
+            voted_weight += validator.weight();
         }
-        let total_delegation: u64 = validators.iter().map(|v| v.delegation()).sum();
-        if voted_delegation * 3 > total_delegation * 2 {
+        let total_weight: u64 = validators.iter().map(|v| v.weight()).sum();
+        if voted_weight * 3 > total_weight * 2 {
             Ok(())
         } else {
-            let threshold = total_delegation as usize * 2 / 3;
+            let threshold = total_weight as usize * 2 / 3;
             Err(EngineError::BadSealFieldSize(OutOfBounds {
                 min: Some(threshold),
-                max: Some(total_delegation as usize),
-                found: voted_delegation as usize,
+                max: Some(total_weight as usize),
+                found: voted_weight as usize,
             }))
         }
     }
@@ -152,7 +151,7 @@ impl ValidatorSet for DynamicValidator {
 
     fn check_enough_votes(&self, parent: &BlockHash, votes: &BitSet) -> Result<(), EngineError> {
         let validators = self.next_validators(*parent);
-        let mut voted_delegation = 0u64;
+        let mut voted_weight = 0u64;
         let n_validators = validators.len();
         for index in votes.true_index_iter() {
             assert!(index < n_validators);
@@ -162,17 +161,17 @@ impl ValidatorSet for DynamicValidator {
                     index,
                 }
             })?;
-            voted_delegation += validator.delegation();
+            voted_weight += validator.weight();
         }
-        let total_delegation: u64 = validators.iter().map(Validator::delegation).sum();
-        if voted_delegation * 3 > total_delegation * 2 {
+        let total_weight: u64 = validators.iter().map(SimpleValidator::weight).sum();
+        if voted_weight * 3 > total_weight * 2 {
             Ok(())
         } else {
-            let threshold = total_delegation as usize * 2 / 3;
+            let threshold = total_weight as usize * 2 / 3;
             Err(EngineError::BadSealFieldSize(OutOfBounds {
                 min: Some(threshold),
-                max: Some(total_delegation as usize),
-                found: voted_delegation as usize,
+                max: Some(total_weight as usize),
+                found: voted_weight as usize,
             }))
         }
     }

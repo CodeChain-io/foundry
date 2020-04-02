@@ -50,12 +50,12 @@ use coordinator::test_coordinator::TestCoordinator;
 use coordinator::types::Event;
 use coordinator::Transaction;
 use cstate::tests::helpers::empty_top_state_with_metadata;
-use cstate::{NextValidators, StateDB, TopLevelState};
+use cstate::{NextValidatorSet, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
-use ctypes::transaction::Validator;
 use ctypes::Header;
 use ctypes::{
-    BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header as BlockHeader, SyncHeader, TxHash,
+    BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorEntry, CompactValidatorSet, ConsensusParams,
+    Header as BlockHeader, SyncHeader, TxHash,
 };
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
@@ -98,7 +98,7 @@ pub struct TestBlockChainClient {
     /// Fixed validator keys
     pub validator_keys: RwLock<HashMap<Public, Private>>,
     /// Fixed validators
-    pub validators: NextValidators,
+    pub validators: NextValidatorSet,
 }
 
 impl Default for TestBlockChainClient {
@@ -146,7 +146,7 @@ impl TestBlockChainClient {
             history: RwLock::new(None),
             term_id: Some(1),
             validator_keys: RwLock::new(HashMap::new()),
-            validators: vec![].into(),
+            validators: NextValidatorSet::from_compact_validator_set(CompactValidatorSet::new(Vec::new())),
         };
 
         // insert genesis hash.
@@ -273,8 +273,18 @@ impl TestBlockChainClient {
             self.validator_keys.write().insert(public, private);
             pubkeys.push(public);
         }
-        let fixed_validators: NextValidators =
-            pubkeys.into_iter().map(|pubkey| Validator::new(0, 0, pubkey, 0, 0)).collect::<Vec<_>>().into();
+
+        let compact_validator_set = CompactValidatorSet::new(
+            pubkeys
+                .into_iter()
+                .map(|public_key| CompactValidatorEntry {
+                    public_key,
+                    delegation: 0,
+                })
+                .collect(),
+        );
+
+        let fixed_validators: NextValidatorSet = NextValidatorSet::from_compact_validator_set(compact_validator_set);
 
         self.validators = fixed_validators
     }
