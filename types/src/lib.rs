@@ -21,6 +21,7 @@ extern crate rlp_derive;
 
 mod block_hash;
 mod common_params;
+mod consensus_params;
 mod deposit;
 mod tx_hash;
 mod validator_set;
@@ -35,6 +36,7 @@ pub type StorageId = u16;
 
 pub use block_hash::BlockHash;
 pub use common_params::CommonParams;
+pub use consensus_params::ConsensusParams;
 pub use deposit::Deposit;
 pub use header::Header;
 pub use tx_hash::TxHash;
