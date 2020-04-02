@@ -32,8 +32,8 @@ use crate::BlockId;
 use ckey::Address;
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::{update_validator_weights, CurrentValidatorSet, NextValidatorSet, TopState, TopStateView};
-use ctypes::{BlockHash, ConsensusParams, Header};
+use cstate::{CurrentValidatorSet, NextValidatorSet, TopState};
+use ctypes::{BlockHash, CompactValidatorSet, ConsensusParams, Header};
 use std::sync::atomic::Ordering as AtomicOrdering;
 use std::sync::{Arc, Weak};
 
@@ -114,13 +114,13 @@ impl ConsensusEngine for Tendermint {
     fn on_close_block(
         &self,
         block: &mut ExecutedBlock,
+        updated_validator_set: CompactValidatorSet,
         updated_consensus_params: ConsensusParams,
     ) -> Result<(), Error> {
-        let author = *block.header().author();
-        update_validator_weights(block.state_mut(), &author)?;
-
         let state = block.state_mut();
-        // TODO: update next validator set using the return of Validator::close_block
+
+        let validators = NextValidatorSet::from_compact_validator_set(updated_validator_set);
+        validators.save_to_state(state)?;
 
         state.update_consensus_params(updated_consensus_params)?;
         Ok(())
