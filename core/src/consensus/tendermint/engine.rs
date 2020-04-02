@@ -32,7 +32,7 @@ use crate::BlockId;
 use ckey::Address;
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::{update_validator_weights, CurrentValidators, NextValidators, TopState, TopStateView};
+use cstate::{update_validator_weights, CurrentValidatorSet, NextValidatorSet, TopState, TopStateView};
 use ctypes::{BlockHash, ConsensusParams, Header};
 use std::sync::atomic::Ordering as AtomicOrdering;
 use std::sync::{Arc, Weak};
@@ -104,8 +104,8 @@ impl ConsensusEngine for Tendermint {
 
     /// Block transformation functions, before the transactions.
     fn on_open_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
-        let mut current_validators = CurrentValidators::load_from_state(block.state())?;
-        current_validators.update(NextValidators::load_from_state(block.state())?.clone());
+        let mut current_validators = CurrentValidatorSet::load_from_state(block.state())?;
+        current_validators.update(NextValidatorSet::load_from_state(block.state())?);
         current_validators.save_to_state(block.state_mut())?;
 
         Ok(())
@@ -120,8 +120,7 @@ impl ConsensusEngine for Tendermint {
         update_validator_weights(block.state_mut(), &author)?;
 
         let state = block.state_mut();
-        let validators = NextValidators::elect(&state)?;
-        validators.save_to_state(state)?;
+        // TODO: update next validator set using the return of Validator::close_block
 
         state.update_consensus_params(updated_consensus_params)?;
         Ok(())
