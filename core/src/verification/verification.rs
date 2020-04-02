@@ -20,7 +20,7 @@ use crate::views::BlockView;
 use ccrypto::BLAKE_NULL_RLP;
 use coordinator::validator::Transaction;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
-use ctypes::{BlockNumber, CommonParams, Header};
+use ctypes::{BlockNumber, ConsensusParams, Header};
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
 use rlp::Rlp;
@@ -68,11 +68,15 @@ pub fn verify_header_with_engine(header: &Header, engine: &dyn ConsensusEngine) 
     Ok(())
 }
 
-pub fn verify_block_with_params(header: &Header, bytes: &[u8], common_params: &CommonParams) -> Result<(), Error> {
-    verify_header_with_params(&header, common_params)?;
+pub fn verify_block_with_params(
+    header: &Header,
+    bytes: &[u8],
+    consensus_params: &ConsensusParams,
+) -> Result<(), Error> {
+    verify_header_with_params(&header, consensus_params)?;
 
     let body_rlp = Rlp::new(bytes).at(1).expect("verify_block_basic already checked it");
-    if body_rlp.as_raw().len() > common_params.max_body_size() {
+    if body_rlp.as_raw().len() > consensus_params.max_body_size() {
         return Err(BlockError::BodySizeIsTooBig.into())
     }
     Ok(())
@@ -114,8 +118,8 @@ pub fn verify_header_basic(header: &Header) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn verify_header_with_params(header: &Header, common_params: &CommonParams) -> Result<(), Error> {
-    let max_extra_data_size = common_params.max_extra_data_size();
+pub fn verify_header_with_params(header: &Header, consensus_params: &ConsensusParams) -> Result<(), Error> {
+    let max_extra_data_size = consensus_params.max_extra_data_size();
     if header.extra_data().len() > max_extra_data_size {
         return Err(From::from(BlockError::ExtraDataOutOfBounds(OutOfBounds {
             min: None,
@@ -165,9 +169,9 @@ pub fn verify_block_family(
     header: &Header,
     parent: &Header,
     engine: &dyn ConsensusEngine,
-    common_params: &CommonParams,
+    consensus_params: &ConsensusParams,
 ) -> Result<(), Error> {
-    verify_block_with_params(header, block, common_params)?;
+    verify_block_with_params(header, block, consensus_params)?;
 
     // TODO: verify timestamp
     verify_parent(&header, &parent)?;

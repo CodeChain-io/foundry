@@ -52,7 +52,7 @@ use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState, Validator};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::header::Header;
-use ctypes::{BlockHash, BlockNumber, CommonParams, Header as BlockHeader, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, ConsensusParams, Header as BlockHeader, TxHash};
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
 use parking_lot::RwLock;
@@ -421,7 +421,8 @@ impl BlockChainClient for TestBlockChainClient {
     }
 
     fn ready_transactions(&self, range: Range<u64>) -> PendingTransactions {
-        let params = self.common_params(BlockId::Latest).expect("Common params of the latest block always exists");
+        let params =
+            self.consensus_params(BlockId::Latest).expect("Consensus params of the latest block always exists");
         self.miner.ready_transactions(params.max_body_size(), params.max_body_size(), range)
     }
 
@@ -502,6 +503,10 @@ impl EngineInfo for TestBlockChainClient {
         Some(self.scheme.genesis_params())
     }
 
+    fn consensus_params(&self, _block_id: BlockId) -> Option<ConsensusParams> {
+        Some(self.scheme.genesis_consensus_params())
+    }
+
     fn metadata_seq(&self, _block_id: BlockId) -> Option<u64> {
         unimplemented!()
     }
@@ -530,7 +535,11 @@ impl TermInfo for TestBlockChainClient {
 impl StateInfo for TestBlockChainClient {
     fn state_at(&self, _id: BlockId) -> Option<TopLevelState> {
         let statedb = StateDB::new_with_memorydb();
-        let top_state = empty_top_state_with_metadata(statedb, CommonParams::default_for_test());
+        let top_state = empty_top_state_with_metadata(
+            statedb,
+            CommonParams::default_for_test(),
+            ConsensusParams::default_for_test(),
+        );
 
         Some(top_state)
     }

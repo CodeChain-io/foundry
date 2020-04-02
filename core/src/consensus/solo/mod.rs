@@ -63,8 +63,9 @@ impl ConsensusEngine for Solo {
 
         let parent_hash = *block.header().parent_hash();
         let parent = client.block_header(&parent_hash.into()).expect("Parent header must exist");
-        let parent_common_params = client.common_params(parent_hash.into()).expect("CommonParams of parent must exist");
-        let term_seconds = parent_common_params.term_seconds();
+        let parent_consensus_params =
+            client.consensus_params(parent_hash.into()).expect("ConsensusParams of parent must exist");
+        let term_seconds = parent_consensus_params.term_seconds();
         if term_seconds == 0 {
             return Ok(())
         }

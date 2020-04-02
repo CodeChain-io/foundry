@@ -17,7 +17,7 @@
 use super::verification;
 use crate::consensus::ConsensusEngine;
 use crate::error::Error;
-use ctypes::{CommonParams, Header};
+use ctypes::{ConsensusParams, Header};
 
 /// Should be used to verify blocks.
 pub struct Verifier;
@@ -30,9 +30,9 @@ impl Verifier {
         header: &Header,
         parent: &Header,
         engine: &dyn ConsensusEngine,
-        common_params: &CommonParams,
+        consensus_params: &ConsensusParams,
     ) -> Result<(), Error> {
-        verification::verify_block_family(block, header, parent, engine, common_params)
+        verification::verify_block_family(block, header, parent, engine, consensus_params)
     }
 
     /// Do a final verification check for an enacted header vs its expected counterpart.
