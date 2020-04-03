@@ -127,7 +127,7 @@ fn new_miner(
 
     match miner.engine_type() {
         EngineType::PBFT => match &config.mining.engine_signer {
-            Some(ref engine_signer) => match miner.set_author((*engine_signer).into_address()) {
+            Some(ref engine_signer) => match miner.set_author(ap, (*engine_signer).into_address()) {
                 Err(AccountProviderError::NotUnlocked) => {
                     return Err(
                         format!("The account {} is not unlocked. The key file should exist in the keys_path directory, and the account's password should exist in the password_path file.", engine_signer)
@@ -143,7 +143,7 @@ fn new_miner(
             None => (),
         },
         EngineType::Solo => miner
-            .set_author(config.mining.author.map_or(Address::default(), PlatformAddress::into_address))
+            .set_author(ap, config.mining.author.map_or(Address::default(), PlatformAddress::into_address))
             .expect("set_author never fails when Solo is used"),
     }
 

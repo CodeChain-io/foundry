@@ -16,7 +16,7 @@
 
 use super::mem_pool::{Error as MemPoolError, MemPool};
 use super::{MinerService, MinerStatus};
-use crate::account_provider::Error as AccountProviderError;
+use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::block::{ClosedBlock, IsBlock};
 use crate::client::{BlockChainClient, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, TermInfo};
 use crate::consensus::{ConsensusEngine, EngineType};
@@ -267,9 +267,16 @@ impl MinerService for Miner {
         self.params.read().clone()
     }
 
-    fn set_author(&self, _address: Address) -> Result<(), AccountProviderError> {
-        // need to change engine signer logic
-        todo!()
+    fn set_author(&self, ap: Arc<AccountProvider>, address: Address) -> Result<(), AccountProviderError> {
+        self.params.write().author = address;
+
+        if self.engine_type().need_signer_key() {
+            ap.get_unlocked_account(&address)?.sign(&Default::default())?;
+            self.engine.set_signer(ap, address);
+            Ok(())
+        } else {
+            Ok(())
+        }
     }
 
     fn get_author_address(&self) -> Address {
