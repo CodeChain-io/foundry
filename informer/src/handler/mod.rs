@@ -17,5 +17,5 @@
 mod rpc_ws_handler;
 mod subscription;
 
-pub use rpc_ws_handler::{Handler, InformerConfig};
+pub use rpc_ws_handler::{Handler, InformerConfig, Registration};
 pub use subscription::Subscription;
