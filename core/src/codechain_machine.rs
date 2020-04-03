@@ -21,25 +21,13 @@ use crate::error::Error;
 use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ckey::Address;
 use cstate::{StateError, TopState, TopStateView};
-use ctypes::{CommonParams, Header};
+use ctypes::Header;
 use std::convert::TryInto;
 
-pub struct CodeChainMachine {
-    params: CommonParams,
-}
+#[derive(Default)]
+pub struct CodeChainMachine {}
 
 impl CodeChainMachine {
-    pub fn new(params: CommonParams) -> Self {
-        CodeChainMachine {
-            params,
-        }
-    }
-
-    /// Get the general parameters of the chain.
-    pub fn genesis_common_params(&self) -> &CommonParams {
-        &self.params
-    }
-
     /// Verify a particular transaction's seal is valid.
     pub fn verify_transaction_seal(p: UnverifiedTransaction, _header: &Header) -> Result<VerifiedTransaction, Error> {
         Ok(p.try_into()?)
