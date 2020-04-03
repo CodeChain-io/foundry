@@ -604,8 +604,12 @@ impl MinerService for Miner {
                     seq
                 })
                 .unwrap_or_else(|| {
+                    let size_limit = client
+                        .common_params(BlockId::Latest)
+                        .expect("Common params of the latest block always exists")
+                        .max_body_size();
                     const DEFAULT_RANGE: Range<u64> = 0..::std::u64::MAX;
-                    get_next_seq(self.ready_transactions(DEFAULT_RANGE).transactions, &[address])
+                    get_next_seq(self.ready_transactions(size_limit, DEFAULT_RANGE).transactions, &[address])
                         .map(|seq| {
                             cdebug!(RPC, "There are ready transactions for {}", platform_address);
                             seq
@@ -626,10 +630,8 @@ impl MinerService for Miner {
         Ok((hash, seq))
     }
 
-    fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
-        // FIXME: Update the body size when the common params are updated
-        let max_body_size = self.engine.machine().genesis_common_params().max_body_size();
-        self.mem_pool.read().top_transactions(max_body_size, range)
+    fn ready_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions {
+        self.mem_pool.read().top_transactions(size_limit, range)
     }
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {
