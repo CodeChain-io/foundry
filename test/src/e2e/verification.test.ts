@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,12 +16,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import {
-    aliceAddress,
-    faucetAccountId,
-    faucetAddress,
-    faucetSecret
-} from "../helper/constants";
+import { faucetAddress, faucetSecret } from "../helper/constants";
 import { ERROR } from "../helper/error";
 import CodeChain from "../helper/spawn";
 import * as RLP from "rlp";

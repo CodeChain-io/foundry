@@ -16,7 +16,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { aliceAddress, aliceSecret, bobAddress } from "../helper/constants";
+import { aliceAddress, bobAddress } from "../helper/constants";
 import CodeChain from "../helper/spawn";
 
 describe("reward2", function() {

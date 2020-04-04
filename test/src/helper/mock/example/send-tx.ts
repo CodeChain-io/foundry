@@ -1,4 +1,4 @@
-import * as SDK from "codechain-sdk";
+import * as SDK from "../../../sdk";
 import { Mock } from "..";
 
 async function sendTransaction() {

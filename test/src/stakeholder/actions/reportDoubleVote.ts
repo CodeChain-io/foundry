@@ -1,4 +1,3 @@
-import { blake256, H512 } from "foundry-primitives";
 import * as RLP from "rlp";
 
 import {

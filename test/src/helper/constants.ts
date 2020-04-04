@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -111,5 +111,4 @@ export const validator3Address = SDK.Core.classes.Address.fromAccountId(
     { networkId: "tc" }
 ); // tccq8ce67j2vr69jmenfeqj8pratyss2478hswel8gr
 
-export const hitActionHandlerId = 1;
 export const stakeActionHandlerId = 2;

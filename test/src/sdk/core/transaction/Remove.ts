@@ -1,5 +1,3 @@
-import * as _ from "lodash";
-
 import { signEd25519 } from "../../utils";
 import { H256 } from "../classes";
 import { Transaction } from "../Transaction";
