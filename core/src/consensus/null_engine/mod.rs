@@ -23,10 +23,6 @@ use ckey::Address;
 pub struct NullEngine;
 
 impl ConsensusEngine for NullEngine {
-    fn name(&self) -> &str {
-        "NullEngine"
-    }
-
     fn seals_internally(&self) -> bool {
         true
     }

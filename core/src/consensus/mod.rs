@@ -112,9 +112,6 @@ impl EngineType {
 
 /// A consensus mechanism for the chain.
 pub trait ConsensusEngine: Sync + Send {
-    /// The name of this engine.
-    fn name(&self) -> &str;
-
     /// The number of additional header fields required for this engine.
     fn seal_fields(&self, _header: &Header) -> usize {
         0
@@ -170,9 +167,6 @@ pub trait ConsensusEngine: Sync + Send {
 
     /// Called when the step is not changed in time
     fn on_timeout(&self, _token: usize) {}
-
-    /// Stops any services that the may hold the Engine and makes it safe to drop.
-    fn stop(&self) {}
 
     /// Block transformation functions, before the transactions.
     fn on_open_block(&self, _block: &mut ExecutedBlock) -> Result<(), Error> {
