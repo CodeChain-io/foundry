@@ -152,7 +152,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_containsTransaction](#chain_containstransaction)
  * [chain_getSeq](#chain_getseq)
  * [chain_getBalance](#chain_getbalance)
- * [chain_getGenesisAccounts](#chain_getgenesisaccounts)
  * [chain_getNumberOfShards](#chain_getnumberofshards)
  * [chain_getShardIdByHash](#chain_getshardidbyhash)
  * [chain_getShardRoot](#chain_getshardroot)
@@ -161,8 +160,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_getMinTransactionFee](#chain_getmintransactionfee)
  * [chain_getCommonParams](#chain_getcommonparams)
  * [chain_getTermMetadata](#chain_gettermmetadata)
- * [chain_executeTransaction](#chain_executetransaction)
- * [chain_executeVM](#chain_executevm)
  * [chain_getNetworkId](#chain_getnetworkid)
  * [chain_getPossibleAuthors](#chain_getpossibleauthors)
 ***
@@ -177,7 +174,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [mempool_getRegisteredImmuneAccounts](#mempool_getregisteredimmuneaccounts)
  * [mempool_getMachineMinimumFees](#mempool_getmachineminimumfees)
 ***
- * [engine_getCoinbase](#engine_getcoinbase)
  * [engine_getRecommendedConfirmation](#engine_getrecommendedconfirmation)
  * [engine_getCustomActionData](#engine_getcustomactiondata)
 ***
@@ -709,36 +705,6 @@ Errors: `KVDB Error`, `Invalid Params`, `Invalid NetworkId`
 
 [Back to **List of methods**](#list-of-methods)
 
-## chain_getGenesisAccounts
-Gets the platform account in the genesis block.
-
-### Params
-No parameters
-
-### Returns
-`PlatformAddress[]` - It returns the array of the platform address
-
-Errors: `KVDB Error`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getGenesisAccounts", "params": [], "id": 37}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result": ["cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7"],
-  "id":37
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
 ## chain_getNumberOfShards
 Gets the number of shards, at the state of the given blockNumber.
 
@@ -1026,73 +992,6 @@ It returns null if the block number parameter is larger than the current best bl
   "jsonrpc":"2.0",
   "result":43,
   "id":7
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_executeTransaction
-Executes the transactions and returns whether the execution is successful.
-
-### Params
- 1. transaction: `UnsignedTransaction`
- 2. sender: `PlatformAddress`
-
-### Returns
- `null` | `string`
-
-Errors: `Invalid RLP`, `Execution Failed`, `Invalid Params`, `Invalid NetworkId`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_executeTransaction", "params": [{"type":"assetMint","data":{"networkId":"cc","shardId":0,"metadata":"{\"name\":\"Gold\",\"description\":\"An asset example\",\"icon_url\":\"https://gold.image/\"}","output":{"lockScriptHash":"0xf42a65ea518ba236c08b261c34af0521fa3cd1aa505e1c18980919cb8945f8f3","parameters":[],"quantity":10000},"approver":null,"nonce":0}}, "cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7"], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":null,
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_executeVM
-Execute the inputs of the transaction in the CodeChain VM, and return the results. This does not run the VM on burns.
-
-### Params
- 1. transaction: `Transaction`
- 2. parameters: `number[][][]` - Provide parameters of outputs as an array.
- 3. indices: `number[]` - Provide indices of inputs to run in VM.
-
-* The length of `parameters` and `indices` must be equal.
-
-### Returns
-`("unlocked"|"burnt"|"failed"|"invalid")[]`
-
-Errors: `Transfer Only`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_executeVM", "params": [{"type":"assetTransfer","data":{"networkId":"tc","burns":[],"inputs":[{"prevOut":{"transactionHash":"0x56774a7e53abd17d70789af6d6f89b4ac23048c07430d1fbe7a8fe0688ecd250","index":0,"assetType":"0x53000000ec7f404207fc5f6bfaad91ed3bf4532b94f508fbea86223409eb189c","quantity":"0x64"},"timelock":null,"lockScript":[53,1,148,17,34,255,128],"unlockScript":[50,65,57,113,98,163,242,125,128,229,140,240,213,154,218,70,232,138,150,84,215,67,109,128,156,81,100,57,53,194,83,70,149,63,53,138,140,11,7,42,34,206,32,244,60,3,191,57,24,132,44,10,175,13,218,20,62,152,175,40,8,240,76,185,246,37,0,50,1,3,50,64,179,217,97,169,96,174,90,169,141,98,170,45,70,139,251,168,8,238,200,83,24,49,115,158,81,199,69,29,229,191,88,173,232,249,178,39,56,223,68,148,75,92,15,236,37,56,88,197,38,111,93,69,232,65,2,247,239,134,191,115,159,238,196,201]}],"outputs":[{"lockScriptHash":"0x5f5960a7bca6ceeeb0c97bc717562914e7a1de04","parameters":[[170,45,255,58,152,57,253,189,84,170,233,14,217,172,65,78,188,106,99,109]],"assetType":"0x53000000ec7f404207fc5f6bfaad91ed3bf4532b94f508fbea86223409eb189c","quantity":"0x64"}]}}, [[[123,110,101,117,85,125,64,83,80,25,37,104,84,81,160,50,198,212,89,125]]], [0]], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":[
-    "unlocked"
-  ],
-  "id":null
 }
 ```
 
@@ -1516,62 +1415,6 @@ curl \
   "id":null
 }
 
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## engine_getCoinbase
-Gets coinbase's account id.
-
-### Params
-No parameters
-
-### Returns
-`PlatformAddress` | `null`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "engine_getCoinbase", "params": [], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":"cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7",
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## engine_getRecommendedConfirmation
-Gets the recommended minimum confirmations.
-
-### Params
-No parameters
-
-### Returns
-`number`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "engine_getRecommendedConfirmation", "params": [], "id": 411}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result": 6,
-  "id":411
-}
 ```
 
 [Back to **List of methods**](#list-of-methods)

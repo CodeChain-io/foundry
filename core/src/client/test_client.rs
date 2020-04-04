@@ -394,10 +394,6 @@ impl BlockChainTrait for TestBlockChainClient {
         }
     }
 
-    fn genesis_accounts(&self) -> Vec<PlatformAddress> {
-        unimplemented!()
-    }
-
     fn block_header(&self, id: &BlockId) -> Option<encoded::Header> {
         self.block_hash(id)
             .and_then(|hash| self.blocks.read().get(&hash).map(|r| Rlp::new(r).at(0).unwrap().as_raw().to_vec()))
@@ -602,10 +598,6 @@ impl EngineInfo for TestBlockChainClient {
     }
 
     fn metadata_seq(&self, _block_id: BlockId) -> Option<u64> {
-        unimplemented!()
-    }
-
-    fn recommended_confirmation(&self) -> u32 {
         unimplemented!()
     }
 

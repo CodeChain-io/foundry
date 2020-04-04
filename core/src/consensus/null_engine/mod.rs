@@ -50,10 +50,6 @@ impl ConsensusEngine for NullEngine {
         EngineType::Solo
     }
 
-    fn recommended_confirmation(&self) -> u32 {
-        1
-    }
-
     fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {
         Ok(None)
     }

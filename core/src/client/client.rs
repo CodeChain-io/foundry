@@ -17,8 +17,8 @@
 use super::importer::Importer;
 use super::{
     AccountData, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify, ClientConfig,
-    DatabaseClient, EngineClient, EngineInfo, ExecuteClient, ImportBlock, ImportResult, MiningBlockChainClient, Shard,
-    StateInfo, StateOrBlock,
+    DatabaseClient, EngineClient, EngineInfo, ImportBlock, ImportResult, MiningBlockChainClient, Shard, StateInfo,
+    StateOrBlock,
 };
 use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock};
 use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, InvoiceProvider, TransactionAddress};
@@ -36,10 +36,9 @@ use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress};
-use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, StateResult, TopLevelState, TopStateView};
+use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
-use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
@@ -68,8 +67,6 @@ pub struct Client {
 
     /// Count of pending transactions in the queue
     queue_transactions: AtomicUsize,
-
-    genesis_accounts: Vec<Address>,
 
     importer: Importer,
 
@@ -106,7 +103,6 @@ impl Client {
         let engine = scheme.engine.clone();
 
         let importer = Importer::try_new(config, engine.clone(), message_channel.clone(), miner)?;
-        let genesis_accounts = scheme.genesis_accounts();
 
         let client = Arc::new(Client {
             engine,
@@ -116,7 +112,6 @@ impl Client {
             state_db: RwLock::new(state_db),
             notify: RwLock::new(Vec::new()),
             queue_transactions: AtomicUsize::new(0),
-            genesis_accounts,
             importer,
             reseal_timer,
         });
@@ -293,19 +288,6 @@ impl DatabaseClient for Client {
     }
 }
 
-impl ExecuteClient for Client {
-    fn execute_transaction(&self, transaction: &ShardTransaction, sender: &Address) -> StateResult<()> {
-        let mut state = Client::state_at(&self, BlockId::Latest).expect("Latest state MUST exist");
-        state.apply_shard_transaction(
-            transaction,
-            sender,
-            &[],
-            self.best_block_header().number(),
-            self.best_block_header().timestamp(),
-        )
-    }
-}
-
 impl StateInfo for Client {
     fn state_at(&self, id: BlockId) -> Option<TopLevelState> {
         self.block_header(&id).and_then(|header| {
@@ -338,10 +320,6 @@ impl EngineInfo for Client {
                 .unwrap()
                 .seq()
         })
-    }
-
-    fn recommended_confirmation(&self) -> u32 {
-        self.engine().recommended_confirmation()
     }
 
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>, EngineError> {
@@ -394,11 +372,6 @@ impl ConsensusClient for Client {}
 impl BlockChainTrait for Client {
     fn chain_info(&self) -> BlockChainInfo {
         self.block_chain().chain_info()
-    }
-
-    fn genesis_accounts(&self) -> Vec<PlatformAddress> {
-        let network_id = self.network_id();
-        self.genesis_accounts.iter().map(|addr| PlatformAddress::new_v1(network_id, *addr)).collect()
     }
 
     fn block_header(&self, id: &BlockId) -> Option<encoded::Header> {

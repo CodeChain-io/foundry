@@ -16,54 +16,33 @@
 
 use super::super::errors;
 use super::super::traits::Engine;
-use ccore::{BlockId, EngineInfo, MinerService, StateInfo};
+use ccore::{BlockId, EngineInfo, StateInfo};
 use cjson::bytes::{Bytes, WithoutPrefix};
-use ckey::PlatformAddress;
 use cstate::{query_stake_state, FindDoubleVoteHandler};
 use jsonrpc_core::Result;
 use std::sync::Arc;
 
-pub struct EngineClient<C, M>
+pub struct EngineClient<C>
 where
-    C: EngineInfo + StateInfo + FindDoubleVoteHandler,
-    M: MinerService, {
+    C: EngineInfo + StateInfo + FindDoubleVoteHandler, {
     client: Arc<C>,
-    miner: Arc<M>,
 }
 
-impl<C, M> EngineClient<C, M>
+impl<C> EngineClient<C>
 where
     C: EngineInfo + StateInfo + FindDoubleVoteHandler,
-    M: MinerService,
 {
-    pub fn new(client: Arc<C>, miner: Arc<M>) -> Self {
+    pub fn new(client: Arc<C>) -> Self {
         Self {
             client,
-            miner,
         }
     }
 }
 
-impl<C, M> Engine for EngineClient<C, M>
+impl<C> Engine for EngineClient<C>
 where
     C: EngineInfo + StateInfo + FindDoubleVoteHandler + 'static,
-    M: MinerService + 'static,
 {
-    fn get_coinbase(&self) -> Result<Option<PlatformAddress>> {
-        let author = self.miner.authoring_params().author;
-        if author.is_zero() {
-            Ok(None)
-        } else {
-            // XXX: What should we do if the network id has been changed
-            let network_id = self.client.network_id();
-            Ok(Some(PlatformAddress::new_v1(network_id, author)))
-        }
-    }
-
-    fn get_recommended_confirmation(&self) -> Result<u32> {
-        Ok(self.client.recommended_confirmation())
-    }
-
     fn get_custom_action_data(
         &self,
         _handler_id: u64,

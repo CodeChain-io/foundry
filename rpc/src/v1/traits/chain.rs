@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::types::{Block, BlockNumberAndHash, Transaction, UnsignedTransaction};
+use super::super::types::{Block, BlockNumberAndHash, Transaction};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress};
@@ -36,9 +36,6 @@ pub trait Chain {
     #[rpc(name = "chain_containsTransaction")]
     fn contains_transaction(&self, transaction_hash: TxHash) -> Result<bool>;
 
-    #[rpc(name = "chain_containTransaction")]
-    fn contain_transaction(&self, transaction_hash: TxHash) -> Result<bool>;
-
     /// Gets seq with given account.
     #[rpc(name = "chain_getSeq")]
     fn get_seq(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<u64>>;
@@ -46,10 +43,6 @@ pub trait Chain {
     /// Gets balance with given account.
     #[rpc(name = "chain_getBalance")]
     fn get_balance(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<Uint>>;
-
-    /// Gets the genesis accounts
-    #[rpc(name = "chain_getGenesisAccounts")]
-    fn get_genesis_accounts(&self) -> Result<Vec<PlatformAddress>>;
 
     /// Gets the number of shards
     #[rpc(name = "chain_getNumberOfShards")]
@@ -114,8 +107,4 @@ pub trait Chain {
     /// Return the valid block authors
     #[rpc(name = "chain_getPossibleAuthors")]
     fn get_possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>>;
-
-    /// Execute Transactions
-    #[rpc(name = "chain_executeTransaction")]
-    fn execute_transaction(&self, tx: UnsignedTransaction, sender: PlatformAddress) -> Result<Option<String>>;
 }
