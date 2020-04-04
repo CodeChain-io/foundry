@@ -12,7 +12,6 @@ import {
 } from "foundry-primitives";
 
 import { Block } from "./Block";
-import { Script } from "./Script";
 import { SignedTransaction } from "./SignedTransaction";
 import { Transaction } from "./Transaction";
 import { ChangeParams } from "./transaction/ChangeParams";
@@ -58,7 +57,6 @@ export class Core {
         SelfNominate,
         ReportDoubleVote,
         // Script
-        Script,
         Address
     };
 
