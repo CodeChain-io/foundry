@@ -16,28 +16,26 @@
 
 use super::super::errors;
 use super::super::traits::Chain;
-use super::super::types::{Block, BlockNumberAndHash, Transaction, UnsignedTransaction};
-use ccore::{AccountData, BlockId, EngineInfo, ExecuteClient, MiningBlockChainClient, Shard, TermInfo};
+use super::super::types::{Block, BlockNumberAndHash, Transaction};
+use ccore::{AccountData, BlockId, EngineInfo, MiningBlockChainClient, Shard, TermInfo};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{public_to_address, NetworkId, PlatformAddress};
 use cstate::FindDoubleVoteHandler;
-use ctypes::transaction::Action;
 use ctypes::{BlockHash, BlockNumber, ShardId, TxHash};
 use jsonrpc_core::Result;
 use primitives::H256;
-use std::convert::TryFrom;
 use std::sync::Arc;
 
 pub struct ChainClient<C>
 where
-    C: MiningBlockChainClient + Shard + ExecuteClient + EngineInfo, {
+    C: MiningBlockChainClient + Shard + EngineInfo, {
     client: Arc<C>,
 }
 
 impl<C> ChainClient<C>
 where
-    C: MiningBlockChainClient + Shard + AccountData + ExecuteClient + EngineInfo,
+    C: MiningBlockChainClient + Shard + AccountData + EngineInfo,
 {
     pub fn new(client: Arc<C>) -> Self {
         ChainClient {
@@ -48,14 +46,7 @@ where
 
 impl<C> Chain for ChainClient<C>
 where
-    C: MiningBlockChainClient
-        + Shard
-        + AccountData
-        + ExecuteClient
-        + EngineInfo
-        + FindDoubleVoteHandler
-        + TermInfo
-        + 'static,
+    C: MiningBlockChainClient + Shard + AccountData + EngineInfo + FindDoubleVoteHandler + TermInfo + 'static,
 {
     fn get_transaction(&self, transaction_hash: TxHash) -> Result<Option<Transaction>> {
         let id = transaction_hash.into();
@@ -74,10 +65,6 @@ where
         Ok(self.client.transaction_block(&transaction_hash.into()).is_some())
     }
 
-    fn contain_transaction(&self, transaction_hash: TxHash) -> Result<bool> {
-        self.contains_transaction(transaction_hash)
-    }
-
     fn get_seq(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<u64>> {
         let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
         let address = address.try_address().map_err(errors::core)?;
@@ -88,10 +75,6 @@ where
         let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
         let address = aaddress.try_address().map_err(errors::core)?;
         Ok(self.client.balance(address, block_id.into()).map(Into::into))
-    }
-
-    fn get_genesis_accounts(&self) -> Result<Vec<PlatformAddress>> {
-        Ok(self.client.genesis_accounts())
     }
 
     fn get_number_of_shards(&self, block_number: Option<u64>) -> Result<Option<ShardId>> {
@@ -187,19 +170,5 @@ where
 
     fn get_possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>> {
         Ok(self.client.possible_authors(block_number).map_err(errors::core)?)
-    }
-
-    fn execute_transaction(&self, tx: UnsignedTransaction, sender: PlatformAddress) -> Result<Option<String>> {
-        let sender_address = sender.try_address().map_err(errors::core)?;
-        let action = Action::try_from(tx.action).map_err(errors::conversion)?;
-        if let Some(transaction) = action.shard_transaction() {
-            let result = self.client.execute_transaction(&transaction, sender_address);
-            match result {
-                Ok(()) => Ok(None),
-                Err(err) => Ok(Some(err.to_string())),
-            }
-        } else {
-            Err(errors::shard_transaction_only())
-        }
     }
 }

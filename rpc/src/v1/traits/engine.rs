@@ -15,19 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use cjson::bytes::{Bytes, WithoutPrefix};
-use ckey::PlatformAddress;
 use jsonrpc_core::Result;
 
 #[rpc(server)]
 pub trait Engine {
-    /// Gets coinbase's account id
-    #[rpc(name = "engine_getCoinbase")]
-    fn get_coinbase(&self) -> Result<Option<PlatformAddress>>;
-
-    /// Gets the recommended minimum confirmations
-    #[rpc(name = "engine_getRecommendedConfirmation")]
-    fn get_recommended_confirmation(&self) -> Result<u32>;
-
     /// Gets custom action data for given custom action handler id and rlp encoded key.
     #[rpc(name = "engine_getCustomActionData")]
     fn get_custom_action_data(

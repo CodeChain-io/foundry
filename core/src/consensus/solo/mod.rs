@@ -103,10 +103,6 @@ impl ConsensusEngine for Solo {
         *self.client.write() = Some(Weak::clone(&client));
     }
 
-    fn recommended_confirmation(&self) -> u32 {
-        1
-    }
-
     fn register_snapshot_notify_sender(&self, sender: NotifySender) {
         let mut guard = self.snapshot_notify_sender.write();
         assert!(guard.is_none(), "snapshot_notify_sender is registered twice");

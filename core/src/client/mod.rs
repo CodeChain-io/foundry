@@ -37,9 +37,8 @@ use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions, Veri
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress};
-use cstate::{FindDoubleVoteHandler, StateResult, TopLevelState, TopStateView};
+use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
 use ctypes::header::Header;
-use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, TxHash};
 use kvdb::KeyValueDB;
 use primitives::{Bytes, H256};
@@ -50,8 +49,6 @@ use std::sync::Arc;
 pub trait BlockChainTrait {
     /// Get blockchain information.
     fn chain_info(&self) -> BlockChainInfo;
-    /// Get genesis accounts
-    fn genesis_accounts(&self) -> Vec<PlatformAddress>;
 
     /// Get raw block header data by block id.
     fn block_header(&self, id: &BlockId) -> Option<encoded::Header>;
@@ -76,7 +73,6 @@ pub trait EngineInfo: Send + Sync {
     fn network_id(&self) -> NetworkId;
     fn common_params(&self, block_id: BlockId) -> Option<CommonParams>;
     fn metadata_seq(&self, block_id: BlockId) -> Option<u64>;
-    fn recommended_confirmation(&self) -> u32;
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>, EngineError>;
 }
 
@@ -266,10 +262,6 @@ pub trait MiningBlockChainClient: BlockChainClient + BlockProducer + FindDoubleV
 /// Provides methods to access database.
 pub trait DatabaseClient {
     fn database(&self) -> Arc<dyn KeyValueDB>;
-}
-
-pub trait ExecuteClient {
-    fn execute_transaction(&self, transaction: &ShardTransaction, sender: &Address) -> StateResult<()>;
 }
 
 pub trait StateInfo {

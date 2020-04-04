@@ -204,8 +204,6 @@ pub trait ConsensusEngine: Sync + Send {
         transactions.map(|tx| tx.transaction().fee).sum()
     }
 
-    fn recommended_confirmation(&self) -> u32;
-
     fn register_chain_notify(&self, _: &Client) {}
 
     fn complete_register(&self) {}

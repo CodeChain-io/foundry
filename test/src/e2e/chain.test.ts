@@ -143,25 +143,6 @@ describe("chain", function() {
         });
     });
 
-    it("getGenesisAccounts", async function() {
-        // FIXME: Add an API to SDK
-        const accounts = await node.rpc.chain.getGenesisAccounts();
-        const expected = [
-            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqyca3rwt",
-            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgfrhflv",
-            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvxf40sk",
-            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqszkma5z",
-            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5duemmc",
-            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqcuzl32l",
-            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqungah99",
-            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqc2ul2h",
-            "tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u",
-            "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg"
-        ];
-        expect(accounts.length).to.equal(expected.length);
-        expect(accounts).to.include.members(expected);
-    });
-
     it("getPendingTransactions", async function() {
         const pending = await node.rpc.mempool.getPendingTransactions();
         expect(pending.transactions.length).to.equal(0);

@@ -209,10 +209,6 @@ impl ConsensusEngine for Tendermint {
         self.external_params_initializer.send(time_gap_params).unwrap();
     }
 
-    fn recommended_confirmation(&self) -> u32 {
-        1
-    }
-
     fn register_chain_notify(&self, client: &Client) {
         client.add_notify(Arc::downgrade(&self.chain_notify) as Weak<dyn ChainNotify>);
     }

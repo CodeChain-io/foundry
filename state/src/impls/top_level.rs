@@ -471,7 +471,7 @@ impl TopLevelState {
         )
     }
 
-    pub fn apply_shard_transaction(
+    fn apply_shard_transaction(
         &mut self,
         transaction: &ShardTransaction,
         sender: &Address,
