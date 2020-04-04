@@ -66,6 +66,7 @@ pub struct Scheme {
     /// Genesis state as plain old data.
     genesis_accounts: PodAccounts,
     genesis_shards: PodShards,
+    genesis_params: CommonParams,
 }
 
 // helper for formatting errors.
@@ -85,14 +86,14 @@ macro_rules! load_bundled {
 
 impl Scheme {
     // create an instance of an CodeChain state machine, minus consensus logic.
-    fn machine(_engine_scheme: &cjson::scheme::Engine, params: CommonParams) -> CodeChainMachine {
-        CodeChainMachine::new(params)
+    fn machine(_engine_scheme: &cjson::scheme::Engine) -> CodeChainMachine {
+        Default::default()
     }
 
     /// Convert engine scheme into a arc'd Engine of the right underlying type.
     /// TODO avoid this hard-coded nastiness - use dynamic-linked plugin framework instead.
-    fn engine(engine_scheme: cjson::scheme::Engine, params: CommonParams) -> Arc<dyn CodeChainEngine> {
-        let machine = Self::machine(&engine_scheme, params);
+    fn engine(engine_scheme: cjson::scheme::Engine) -> Arc<dyn CodeChainEngine> {
+        let machine = Self::machine(&engine_scheme);
 
         match engine_scheme {
             cjson::scheme::Engine::Null => Arc::new(NullEngine::new(machine)),
@@ -234,7 +235,7 @@ impl Scheme {
 
     /// Get common blockchain parameters.
     pub fn genesis_params(&self) -> CommonParams {
-        *self.engine.machine().genesis_common_params()
+        self.genesis_params
     }
 
     /// Get the header of the genesis block.
@@ -278,7 +279,7 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
     let GenericSeal(seal_rlp) = g.seal.into();
     let params = CommonParams::from(s.params);
     params.verify().map_err(|reason| Error::Syntax(SyntaxError::InvalidCustomAction(reason)))?;
-    let engine = Scheme::engine(s.engine, params);
+    let engine = Scheme::engine(s.engine);
 
     let mut s = Scheme {
         name: s.name.clone(),
@@ -294,6 +295,7 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
         state_root_memo: RwLock::new(Default::default()), // will be overwritten right after.
         genesis_accounts: s.accounts.into(),
         genesis_shards: s.shards.into(),
+        genesis_params: params,
     };
 
     // use memoized state root if provided.

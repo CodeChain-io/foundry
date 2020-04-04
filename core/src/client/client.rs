@@ -548,7 +548,11 @@ impl BlockChainClient for Client {
     }
 
     fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
-        self.importer.miner.ready_transactions(range)
+        let size_limit = self
+            .common_params(BlockId::Latest)
+            .expect("Common params of the latest block always exists")
+            .max_body_size();
+        self.importer.miner.ready_transactions(size_limit, range)
     }
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {

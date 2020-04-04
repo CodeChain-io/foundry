@@ -513,7 +513,11 @@ impl BlockChainClient for TestBlockChainClient {
     }
 
     fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
-        self.miner.ready_transactions(range)
+        let size_limit = self
+            .common_params(BlockId::Latest)
+            .expect("Common params of the latest block always exists")
+            .max_body_size();
+        self.miner.ready_transactions(size_limit, range)
     }
 
     fn future_pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
@@ -590,11 +594,11 @@ impl super::EngineClient for TestBlockChainClient {
 
 impl EngineInfo for TestBlockChainClient {
     fn network_id(&self) -> NetworkId {
-        self.scheme.engine.machine().genesis_common_params().network_id()
+        self.scheme.genesis_params().network_id()
     }
 
     fn common_params(&self, _block_id: BlockId) -> Option<CommonParams> {
-        Some(*self.scheme.engine.machine().genesis_common_params())
+        Some(self.scheme.genesis_params())
     }
 
     fn metadata_seq(&self, _block_id: BlockId) -> Option<u64> {
