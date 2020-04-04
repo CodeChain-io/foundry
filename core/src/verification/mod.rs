@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018, 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -26,8 +26,6 @@ pub use self::noop_verifier::NoopVerifier;
 pub use self::queue::{BlockQueue, Config as QueueConfig};
 pub use self::verification::*;
 pub use self::verifier::Verifier;
-
-use crate::client::BlockChainTrait;
 
 /// Verifier type.
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -58,7 +56,7 @@ impl Default for VerifierType {
 }
 
 /// Create a new verifier based on type.
-pub fn new<C: BlockChainTrait>(v: VerifierType) -> Box<dyn Verifier<C>> {
+pub fn new(v: VerifierType) -> Box<dyn Verifier> {
     match v {
         VerifierType::Canon | VerifierType::CanonNoSeal => Box::new(CanonVerifier),
         VerifierType::Noop => Box::new(NoopVerifier),

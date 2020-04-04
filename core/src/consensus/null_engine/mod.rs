@@ -15,31 +15,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::ConsensusEngine;
-use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
 use ckey::Address;
 
 /// An engine which does not provide any consensus mechanism and does not seal blocks.
-pub struct NullEngine {
-    machine: CodeChainMachine,
-}
-
-impl NullEngine {
-    /// Returns new instance of NullEngine with default VM Factory
-    pub fn new(machine: CodeChainMachine) -> Self {
-        NullEngine {
-            machine,
-        }
-    }
-}
+#[derive(Default)]
+pub struct NullEngine;
 
 impl ConsensusEngine for NullEngine {
     fn name(&self) -> &str {
         "NullEngine"
-    }
-
-    fn machine(&self) -> &CodeChainMachine {
-        &self.machine
     }
 
     fn seals_internally(&self) -> bool {

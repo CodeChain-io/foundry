@@ -14,9 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::blockchain::BlockProvider;
-use crate::client::BlockChainTrait;
-use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::CodeChainEngine;
 use crate::error::{BlockError, Error};
 use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
@@ -27,6 +24,7 @@ use ctypes::{BlockNumber, CommonParams, Header};
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
 use rlp::Rlp;
+use std::convert::TryInto;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Preprocessed block data gathered in `verify_block_seal` call
@@ -165,15 +163,8 @@ pub fn verify_block_seal(
     if check_seal {
         engine.verify_block_seal(&header)?;
     }
-    // Verify transactions.
-    let mut transactions = Vec::new();
-    {
-        let v = BlockView::new(&bytes);
-        for t in v.transactions() {
-            let signed = CodeChainMachine::verify_transaction_seal(t, &header)?;
-            transactions.push(signed);
-        }
-    }
+    let transactions: Vec<_> =
+        BlockView::new(&bytes).transactions().into_iter().map(TryInto::try_into).collect::<Result<_, _>>()?;
     Ok(PreverifiedBlock {
         header,
         transactions,
@@ -181,28 +172,12 @@ pub fn verify_block_seal(
     })
 }
 
-/// Parameters for full verification of block family
-pub struct FullFamilyParams<'a, C: BlockChainTrait> {
-    /// Serialized block bytes
-    pub block_bytes: &'a [u8],
-
-    /// Signed transactions
-    pub transactions: &'a [VerifiedTransaction],
-
-    /// Block provider to use during verification
-    pub block_provider: &'a dyn BlockProvider,
-
-    /// Engine client to use during verification
-    pub client: &'a C,
-}
-
 /// Phase 3 verification. Check block information against parent and uncles.
-pub fn verify_block_family<C: BlockChainTrait>(
+pub fn verify_block_family(
     block: &[u8],
     header: &Header,
     parent: &Header,
     engine: &dyn CodeChainEngine,
-    do_full: Option<FullFamilyParams<'_, C>>,
     common_params: &CommonParams,
 ) -> Result<(), Error> {
     verify_block_with_params(header, block, engine, common_params)?;
@@ -210,15 +185,6 @@ pub fn verify_block_family<C: BlockChainTrait>(
     // TODO: verify timestamp
     verify_parent(&header, &parent)?;
     engine.verify_block_family(&header, &parent)?;
-
-    let params = match do_full {
-        Some(x) => x,
-        None => return Ok(()),
-    };
-
-    for tx in params.transactions {
-        engine.machine().verify_transaction(tx, header, params.client, true)?;
-    }
 
     Ok(())
 }

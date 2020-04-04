@@ -22,7 +22,6 @@ use crate::block::{ClosedBlock, IsBlock};
 use crate::client::{
     AccountData, BlockChainTrait, BlockProducer, Client, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo,
 };
-use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{CodeChainEngine, EngineType};
 use crate::error::Error;
 use crate::scheme::Scheme;
@@ -167,7 +166,6 @@ impl Miner {
         mem_pool: &mut MemPool,
     ) -> Vec<Result<TransactionImportResult, Error>> {
         let best_header = client.best_block_header().decode();
-        let fake_header = best_header.generate_child();
         let current_block_number = client.chain_info().best_block_number;
         let current_timestamp = client.chain_info().best_block_timestamp;
         let mut inserted = Vec::with_capacity(transactions.len());
@@ -204,14 +202,14 @@ impl Miner {
                     return Err(HistoryError::TransactionAlreadyImported.into())
                 }
                 let immune_users = self.immune_users.read();
-                let tx = tx
+                let tx: VerifiedTransaction = tx
                     .verify_basic()
                     .map_err(From::from)
                     .and_then(|_| {
                         let common_params = client.common_params(best_header.hash().into()).unwrap();
                         self.engine.verify_transaction_with_params(&tx, &common_params)
                     })
-                    .and_then(|_| CodeChainMachine::verify_transaction_seal(tx, &fake_header))
+                    .and_then(|_| Ok(tx.try_into()?))
                     .map_err(|e| {
                         match e {
                             Error::Syntax(_) if !origin.is_local() && !immune_users.contains(&signer_address) => {
@@ -222,17 +220,6 @@ impl Miner {
                         cdebug!(MINER, "Rejected transaction {:?} with error {:?}", hash, e);
                         e
                     })?;
-
-                // This check goes here because verify_transaction takes Verified parameter
-                self.engine.machine().verify_transaction(&tx, &fake_header, client, false).map_err(|e| {
-                    match e {
-                        Error::Syntax(_) if !origin.is_local() && !immune_users.contains(&signer_address) => {
-                            self.malicious_users.write().insert(signer_address);
-                        }
-                        _ => {}
-                    }
-                    e
-                })?;
 
                 let tx_hash = tx.hash();
 
@@ -338,9 +325,7 @@ impl Miner {
             let start = Instant::now();
             // Check whether transaction type is allowed for sender
             let result =
-                self.engine.machine().verify_transaction(&tx, open_block.header(), chain, true).and_then(|_| {
-                    open_block.push_transaction(tx, None, chain, parent_header.number(), parent_header.timestamp())
-                });
+                open_block.push_transaction(tx, None, chain, parent_header.number(), parent_header.timestamp());
 
             match result {
                 // already have transaction - ignore

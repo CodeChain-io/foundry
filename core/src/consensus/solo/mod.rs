@@ -22,7 +22,6 @@ use super::{ConsensusEngine, Seal};
 use crate::block::ExecutedBlock;
 use crate::client::snapshot_notify::NotifySender;
 use crate::client::ConsensusClient;
-use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
@@ -36,7 +35,6 @@ use std::sync::{Arc, Weak};
 /// A consensus engine which does not provide any consensus mechanism.
 pub struct Solo {
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
-    machine: CodeChainMachine,
     snapshot_notify_sender: Arc<RwLock<Option<NotifySender>>>,
     genesis_stakes: HashMap<Address, u64>,
     stake: stake::Stake,
@@ -44,12 +42,11 @@ pub struct Solo {
 
 impl Solo {
     /// Returns new instance of Solo over the given state machine.
-    pub fn new(params: SoloParams, machine: CodeChainMachine) -> Self {
+    pub fn new(params: SoloParams) -> Self {
         let genesis_stakes = params.genesis_stakes;
 
         Solo {
             client: Default::default(),
-            machine,
             snapshot_notify_sender: Arc::new(RwLock::new(None)),
             genesis_stakes,
             stake: stake::Stake::default(),
@@ -64,10 +61,6 @@ impl Solo {
 impl ConsensusEngine for Solo {
     fn name(&self) -> &str {
         "Solo"
-    }
-
-    fn machine(&self) -> &CodeChainMachine {
-        &self.machine
     }
 
     fn seals_internally(&self) -> bool {
