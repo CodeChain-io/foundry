@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import * as RLP from "rlp";
 import { blake256, getPublicFromPrivate, signEd25519 } from "../../utils";
 import { Address, H256 } from "../classes";

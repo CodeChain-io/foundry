@@ -1,4 +1,4 @@
-import { H160Value, U64, U64Value } from "foundry-primitives";
+import { U64 } from "foundry-primitives";
 
 export type NetworkId = string;
 

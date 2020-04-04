@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -35,10 +35,6 @@ import { PromiseExpect } from "../helper/promise";
 import { Signer } from "../helper/spawn";
 import CodeChain from "../helper/spawn";
 import { findNode, setTermTestTimeout, withNodes } from "./setup";
-import { ReportDoubleVote } from "../sdk/core/transaction/ReportDoubleVote";
-
-const HANDLER_ID = 2;
-const REPORT_DOUBLE_VOTE_ACTION_ID = 5;
 
 type MessageData = {
     height: number;
