@@ -1,9 +1,11 @@
+import { expect } from "chai";
 import { Address, H256, U64 } from "foundry-primitives";
+import "mocha";
 import { Pay } from "../Pay";
 
 import { fromJSONToTransaction } from "../json";
 
-test("rlp", () => {
+it("rlp", () => {
     const t = new Pay(
         Address.fromAccountId("0x0000000000000000000000000000000000000000", {
             networkId: "tc"
@@ -13,7 +15,7 @@ test("rlp", () => {
     );
     t.setFee(0);
     t.setSeq(0);
-    expect(t.rlpBytes()).toEqual(
+    expect(t.rlpBytes()).deep.equal(
         Buffer.from([
             221,
             128,
@@ -49,7 +51,7 @@ test("rlp", () => {
     );
 });
 
-test("hash", () => {
+it("hash", () => {
     const t = new Pay(
         Address.fromAccountId("0x0000000000000000000000000000000000000000", {
             networkId: "tc"
@@ -59,14 +61,12 @@ test("hash", () => {
     );
     t.setFee(0);
     t.setSeq(0);
-    expect(t.unsignedHash()).toEqual(
-        new H256(
-            "3b578bebb32cae770ab1094d572a4721b624fc101bb88fbc580eeb2931f65665"
-        )
+    expect(t.unsignedHash().value).equal(
+        "3b578bebb32cae770ab1094d572a4721b624fc101bb88fbc580eeb2931f65665"
     );
 });
 
-test("sign", () => {
+it("sign", () => {
     const pay = new Pay(
         Address.fromAccountId("0x0000000000000000000000000000000000000000", {
             networkId: "tc"
@@ -76,16 +76,16 @@ test("sign", () => {
     );
     const signed = pay.sign({
         secret:
-            "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd",
+            "9af28f6fd6a1170dbee2cb8c34abab0408e6d811d212cdcde23f72473eb0d97ad7a6d266837c1c591383b90d835068b9ed58dd3bcebd6e285911f58e40ce413c",
         seq: 0,
         fee: 0
     });
-    expect(signed.signature()).toBe(
-        "3f9bcff484bd5f1d5549f912f9eeaf8c2fe349b257bde2b61fb1036013d4e44c204a4215d26cb879eaad2028fe1a7898e4cf9a5d979eb383e0a384140d6e04c101"
+    expect(signed.signature()).equal(
+        "463ffba7f7f1527d66e9769204bbfec902e6bfaa8cfc9c161aad72bd6db25a1b97c78364fbade7ff6fa1a36e1da9205b646cdcefe82636f756bead33aa1e8a04"
     );
 });
 
-test("signed hash", () => {
+it("signed hash", () => {
     const pay = new Pay(
         Address.fromAccountId("0x0000000000000000000000000000000000000000", {
             networkId: "tc"
@@ -95,18 +95,16 @@ test("signed hash", () => {
     );
     const signed = pay.sign({
         secret:
-            "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd",
+            "9af28f6fd6a1170dbee2cb8c34abab0408e6d811d212cdcde23f72473eb0d97ad7a6d266837c1c591383b90d835068b9ed58dd3bcebd6e285911f58e40ce413c",
         seq: 0,
         fee: 0
     });
-    expect(signed.hash()).toEqual(
-        new H256(
-            "6547527d42f407352b8d23470322e09261d6dee6fda43c10aa2f59aafa70ba4b"
-        )
+    expect(signed.hash().value).equal(
+        "21b9c5dda38bee928e6619f7b7266bfee120aadb62ed4f7eceb2893f2ee7c76e"
     );
 });
 
-test("toJSON", () => {
+it("toJSON", () => {
     const p = new Pay(
         Address.fromAccountId("0x0000000000000000000000000000000000000000", {
             networkId: "tc"
@@ -116,5 +114,5 @@ test("toJSON", () => {
     );
     p.setFee(33);
     p.setSeq(44);
-    expect(fromJSONToTransaction(p.toJSON())).toEqual(p);
+    expect(fromJSONToTransaction(p.toJSON())).deep.equal(p);
 });

@@ -55,7 +55,9 @@ export class SignedTransaction {
         this._signature = signature.startsWith("0x")
             ? signature.substr(2)
             : signature;
-        this.signerPublic = signerPublic;
+        this.signerPublic = signerPublic.startsWith("0x")
+            ? signerPublic.substr(2)
+            : signerPublic;
         this.blockNumber = blockNumber === undefined ? null : blockNumber;
         this.blockHash = blockHash || null;
         this.transactionIndex =

@@ -1,5 +1,5 @@
-import * as SDK from "../../../sdk";
 import { Mock } from "..";
+import * as SDK from "../../../sdk";
 
 async function sendTransaction() {
     const mock = new Mock("0.0.0.0", 3485, "tc");
@@ -12,7 +12,7 @@ async function sendTransaction() {
     });
     const ACCOUNT_SECRET =
         process.env.ACCOUNT_SECRET ||
-        "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd";
+        "9af28f6fd6a1170dbee2cb8c34abab0408e6d811d212cdcde23f72473eb0d97ad7a6d266837c1c591383b90d835068b9ed58dd3bcebd6e285911f58e40ce413c";
     const unsigned = sdk.core.createPayTransaction({
         recipient: "tccqruq09sfgax77nj4gukjcuq69uzeyv0jcs7vzngg",
         amount: 10000
