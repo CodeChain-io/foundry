@@ -34,7 +34,6 @@ use crate::account_provider::AccountProvider;
 use crate::block::{ClosedBlock, ExecutedBlock};
 use crate::client::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::client::ConsensusClient;
-use crate::codechain_machine::CodeChainMachine;
 use crate::error::Error;
 use crate::transaction::UnverifiedTransaction;
 use crate::views::HeaderView;
@@ -115,9 +114,6 @@ impl EngineType {
 pub trait ConsensusEngine: Sync + Send {
     /// The name of this engine.
     fn name(&self) -> &str;
-
-    /// Get access to the underlying state machine.
-    fn machine(&self) -> &CodeChainMachine;
 
     /// The number of additional header fields required for this engine.
     fn seal_fields(&self, _header: &Header) -> usize {

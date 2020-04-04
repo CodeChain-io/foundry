@@ -18,7 +18,6 @@ use super::pod_state::{PodAccounts, PodShards};
 use super::seal::Generic as GenericSeal;
 use super::Genesis;
 use crate::blockchain::HeaderProvider;
-use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::{CodeChainEngine, NullEngine, Solo, Tendermint};
 use crate::error::{Error, SchemeError};
 use ccrypto::{blake256, BLAKE_NULL_RLP};
@@ -85,20 +84,13 @@ macro_rules! load_bundled {
 }
 
 impl Scheme {
-    // create an instance of an CodeChain state machine, minus consensus logic.
-    fn machine(_engine_scheme: &cjson::scheme::Engine) -> CodeChainMachine {
-        Default::default()
-    }
-
     /// Convert engine scheme into a arc'd Engine of the right underlying type.
     /// TODO avoid this hard-coded nastiness - use dynamic-linked plugin framework instead.
     fn engine(engine_scheme: cjson::scheme::Engine) -> Arc<dyn CodeChainEngine> {
-        let machine = Self::machine(&engine_scheme);
-
         match engine_scheme {
-            cjson::scheme::Engine::Null => Arc::new(NullEngine::new(machine)),
-            cjson::scheme::Engine::Solo(solo) => Arc::new(Solo::new(solo.params.into(), machine)),
-            cjson::scheme::Engine::Tendermint(tendermint) => Tendermint::new(tendermint.params.into(), machine),
+            cjson::scheme::Engine::Null => Arc::new(NullEngine::default()),
+            cjson::scheme::Engine::Solo(solo) => Arc::new(Solo::new(solo.params.into())),
+            cjson::scheme::Engine::Tendermint(tendermint) => Tendermint::new(tendermint.params.into()),
         }
     }
 

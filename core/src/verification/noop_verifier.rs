@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,8 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{verification, Verifier};
-use crate::client::BlockChainTrait;
+use super::Verifier;
 use crate::consensus::CodeChainEngine;
 use crate::error::Error;
 use ctypes::{CommonParams, Header};
@@ -23,14 +22,13 @@ use ctypes::{CommonParams, Header};
 /// A no-op verifier -- this will verify everything it's given immediately.
 pub struct NoopVerifier;
 
-impl<C: BlockChainTrait> Verifier<C> for NoopVerifier {
+impl Verifier for NoopVerifier {
     fn verify_block_family(
         &self,
         _block: &[u8],
         _: &Header,
         _t: &Header,
         _: &dyn CodeChainEngine,
-        _: Option<verification::FullFamilyParams<'_, C>>,
         _common_params: &CommonParams,
     ) -> Result<(), Error> {
         Ok(())
