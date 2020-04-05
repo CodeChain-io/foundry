@@ -59,10 +59,6 @@ pub trait TopStateView {
         Ok(*self.metadata()?.expect("Metadata must exist").number_of_shards())
     }
 
-    fn shard_id_by_hash(&self, tx_hash: &TxHash) -> TrieResult<Option<ShardId>> {
-        Ok(self.metadata()?.and_then(|metadata| metadata.shard_id_by_hash(tx_hash)))
-    }
-
     fn shard(&self, shard_id: ShardId) -> TrieResult<Option<Shard>>;
     fn shard_state<'db>(&'db self, shard_id: ShardId) -> TrieResult<Option<Box<dyn ShardStateView + 'db>>>;
 
@@ -141,7 +137,6 @@ pub trait TopState {
     /// Increment the seq of account `a` by 1.
     fn inc_seq(&mut self, a: &Address) -> TrieResult<()>;
 
-    fn create_shard(&mut self, fee_payer: &Address, tx_hash: TxHash, users: Vec<Address>) -> StateResult<()>;
     fn change_shard_owners(&mut self, shard_id: ShardId, owners: &[Address], sender: &Address) -> StateResult<()>;
     fn change_shard_users(&mut self, shard_id: ShardId, users: &[Address], sender: &Address) -> StateResult<()>;
 

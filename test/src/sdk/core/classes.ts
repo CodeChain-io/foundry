@@ -9,7 +9,6 @@ export { Block } from "./Block";
 export { Transaction } from "./Transaction";
 export { SignedTransaction } from "./SignedTransaction";
 
-export { CreateShard } from "./transaction/CreateShard";
 export { Pay } from "./transaction/Pay";
 export { Remove } from "./transaction/Remove";
 export { SetShardOwners } from "./transaction/SetShardOwners";

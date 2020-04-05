@@ -265,8 +265,9 @@ mod tests {
             unsigned: Transaction {
                 seq: 0,
                 fee: 10,
-                action: Action::CreateShard {
-                    users: vec![Address::random(), Address::random()]
+                action: Action::Pay {
+                    receiver: Address::random(),
+                    quantity: 100,
                 },
                 network_id: "tc".into(),
             },
@@ -287,24 +288,6 @@ mod tests {
                 action: Action::Pay {
                     receiver: Address::random(),
                     quantity: 300,
-                },
-            },
-            sig: Signature::default(),
-            hash: H256::default().into(),
-            signer_public: Public::random(),
-        })
-        .compute_hash());
-    }
-
-    #[test]
-    fn encode_and_decode_create_shard_transaction() {
-        rlp_encode_and_decode_test!(UnverifiedTransaction(SignedTransaction {
-            unsigned: Transaction {
-                seq: 30,
-                fee: 40,
-                network_id: "tc".into(),
-                action: Action::CreateShard {
-                    users: vec![]
                 },
             },
             sig: Signature::default(),
