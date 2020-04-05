@@ -77,10 +77,6 @@ pub trait TopStateView {
         Ok(self.shard(shard_id)?.map(|shard| shard.owners().to_vec()))
     }
 
-    fn shard_users(&self, shard_id: ShardId) -> TrieResult<Option<Vec<Address>>> {
-        Ok(self.shard(shard_id)?.map(|shard| shard.users().to_vec()))
-    }
-
     fn action_data(&self, key: &H256) -> TrieResult<Option<ActionData>>;
 
     fn shard_text(&self, shard_id: ShardId, tx_hash: TxHash) -> TrieResult<Option<ShardText>> {
@@ -116,7 +112,6 @@ pub trait ShardState {
         tx_hash: TxHash,
         transaction: &ShardTransaction,
         sender: &Address,
-        shard_owners: &[Address],
         approvers: &[Address],
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
@@ -138,11 +133,9 @@ pub trait TopState {
     fn inc_seq(&mut self, a: &Address) -> TrieResult<()>;
 
     fn change_shard_owners(&mut self, shard_id: ShardId, owners: &[Address], sender: &Address) -> StateResult<()>;
-    fn change_shard_users(&mut self, shard_id: ShardId, users: &[Address], sender: &Address) -> StateResult<()>;
 
     fn set_shard_root(&mut self, shard_id: ShardId, new_root: H256) -> StateResult<()>;
     fn set_shard_owners(&mut self, shard_id: ShardId, new_owners: Vec<Address>) -> StateResult<()>;
-    fn set_shard_users(&mut self, shard_id: ShardId, new_users: Vec<Address>) -> StateResult<()>;
 
     fn create_module(&mut self) -> StateResult<()>;
     fn set_module_root(&mut self, storage_id: StorageId, new_root: H256) -> StateResult<()>;

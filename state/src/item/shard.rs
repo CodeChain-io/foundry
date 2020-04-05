@@ -25,15 +25,13 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 pub struct Shard {
     root: H256,
     owners: Vec<Address>,
-    users: Vec<Address>,
 }
 
 impl Shard {
-    pub fn new(shard_root: H256, owners: Vec<Address>, users: Vec<Address>) -> Self {
+    pub fn new(shard_root: H256, owners: Vec<Address>) -> Self {
         Self {
             root: shard_root,
             owners,
-            users,
         }
     }
 
@@ -54,19 +52,11 @@ impl Shard {
         debug_assert_ne!(Vec::<Address>::new(), owners);
         self.owners = owners;
     }
-
-    pub fn users(&self) -> &[Address] {
-        &self.users
-    }
-
-    pub fn set_users(&mut self, users: Vec<Address>) {
-        self.users = users;
-    }
 }
 
 impl Default for Shard {
     fn default() -> Self {
-        Self::new(BLAKE_NULL_RLP, vec![], vec![])
+        Self::new(BLAKE_NULL_RLP, vec![])
     }
 }
 
@@ -82,16 +72,16 @@ const PREFIX: u8 = super::Prefix::Shard as u8;
 
 impl Encodable for Shard {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(4).append(&PREFIX).append(&self.root).append_list(&self.owners).append_list(&self.users);
+        s.begin_list(3).append(&PREFIX).append(&self.root).append_list(&self.owners);
     }
 }
 
 impl Decodable for Shard {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
-        if item_count != 4 {
+        if item_count != 3 {
             return Err(DecoderError::RlpInvalidLength {
-                expected: 4,
+                expected: 3,
                 got: item_count,
             })
         }
@@ -103,7 +93,6 @@ impl Decodable for Shard {
         Ok(Self {
             root: rlp.val_at(1)?,
             owners: rlp.list_at(2)?,
-            users: rlp.list_at(3)?,
         })
     }
 }

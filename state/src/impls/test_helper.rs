@@ -45,15 +45,6 @@ macro_rules! set_shard_owners {
     };
 }
 
-macro_rules! set_shard_users {
-    ($users:expr) => {
-        $crate::ctypes::transaction::Action::SetShardUsers {
-            shard_id: $crate::impls::test_helper::SHARD_ID,
-            users: $users,
-        }
-    };
-}
-
 macro_rules! transaction {
     (fee: $fee:expr, $action:expr) => {
         transaction!(seq: 0, fee: $fee, $action)
@@ -92,16 +83,10 @@ macro_rules! set_top_level_state {
         assert_eq!(Ok(()), $state.transfer_balance(&$from, &$to, $quantity));
     };
     ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*])]) => {
-        set_top_level_state!($state, [(shard: $shard_id => owners: [$($owner),*], users: Vec::new())]);
+        set_top_level_state!($state, [(shard: $shard_id => owners: vec![$($owner),*])]);
     };
-    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*], users: [$($user:expr),*])]) => {
-        set_top_level_state!($state, [(shard: $shard_id => owners: [$($owner),*], users: vec![$($user),*])]);
-    };
-    ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*], users: $users:expr)]) => {
-        set_top_level_state!($state, [(shard: $shard_id => owners: vec![$($owner),*], users: $users)]);
-    };
-    ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr, users: $users:expr)]) => {
-        assert_eq!(Ok(()), $state.create_shard_level_state($shard_id, $owners, $users));
+    ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr)]) => {
+        assert_eq!(Ok(()), $state.create_shard_level_state($shard_id, $owners));
     };
     ($state:expr, [(metadata: shards: $number_of_shards:expr)]) => {
         assert_eq!(Ok(()), $state.set_number_of_shards($number_of_shards));
@@ -141,9 +126,6 @@ macro_rules! check_top_level_state {
     };
     ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr)]) => {
         assert_eq!(Ok(Some($owners)), $state.shard_owners($shard_id));
-    };
-    ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr, users: $users:expr)]) => {
-        assert_eq!(Ok(Some($users)), $state.shard_users($shard_id));
     };
     ($state:expr, [(shard: $shard_id:expr)]) => {
         assert_eq!(Ok(None), $state.shard_root($shard_id));

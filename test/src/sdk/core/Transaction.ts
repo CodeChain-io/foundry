@@ -12,7 +12,6 @@ import { ReportDoubleVoteActionJSON } from "./transaction/ReportDoubleVote";
 import { RevokeActionJSON } from "./transaction/Revoke";
 import { SelfNominateActionJSON } from "./transaction/SelfNominate";
 import { SetShardOwnersActionJSON } from "./transaction/SetShardOwners";
-import { SetShardUsersActionJSON } from "./transaction/SetShardUsers";
 import { StoreActionJSON } from "./transaction/Store";
 import { TransferCCSActionJSON } from "./transaction/TransferCCS";
 import { NetworkId } from "./types";
@@ -20,7 +19,6 @@ import { NetworkId } from "./types";
 type ActionJSON =
     | PayActionJSON
     | SetShardOwnersActionJSON
-    | SetShardUsersActionJSON
     | StoreActionJSON
     | RemoveActionJSON
     | TransferCCSActionJSON

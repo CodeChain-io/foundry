@@ -21,7 +21,6 @@ use ckey::PlatformAddress;
 pub struct Shard {
     pub seq: Option<Uint>,
     pub owners: Vec<PlatformAddress>,
-    pub users: Option<Vec<PlatformAddress>>,
 }
 
 #[cfg(test)]
@@ -41,7 +40,6 @@ mod tests {
             Shard {
                 seq: Some(0.into()),
                 owners: vec![PlatformAddress::from_str("tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u").unwrap()],
-                users: None,
             },
             shard
         );
@@ -51,15 +49,13 @@ mod tests {
     fn shard_with_non_zero_seq_deserialization() {
         let s = r#"{
             "seq": 100,
-            "owners": ["tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u"],
-            "users": ["tccq8txq9uafdg8y2de9m2tdkhsfsj3m9nluq94hyan"]
+            "owners": ["tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u"]
         }"#;
         let shard: Shard = serde_json::from_str(s).unwrap();
         assert_eq!(
             Shard {
                 seq: Some(100.into()),
                 owners: vec![PlatformAddress::from_str("tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u").unwrap()],
-                users: Some(vec![PlatformAddress::from_str("tccq8txq9uafdg8y2de9m2tdkhsfsj3m9nluq94hyan").unwrap()]),
             },
             shard
         );
@@ -83,7 +79,6 @@ mod tests {
             Shard {
                 seq: None,
                 owners: vec![PlatformAddress::from_str("tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u").unwrap()],
-                users: None,
             },
             shard
         );

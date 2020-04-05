@@ -35,11 +35,6 @@ pub enum Action {
         shard_id: ShardId,
         owners: Vec<PlatformAddress>,
     },
-    #[serde(rename_all = "camelCase")]
-    SetShardUsers {
-        shard_id: ShardId,
-        users: Vec<PlatformAddress>,
-    },
     ShardStore {
         network_id: NetworkId,
         shard_id: ShardId,
@@ -95,13 +90,6 @@ impl Action {
             } => Action::SetShardOwners {
                 shard_id,
                 owners: owners.into_iter().map(|owner| PlatformAddress::new_v1(network_id, owner)).collect(),
-            },
-            ActionType::SetShardUsers {
-                shard_id,
-                users,
-            } => Action::SetShardUsers {
-                shard_id,
-                users: users.into_iter().map(|user| PlatformAddress::new_v1(network_id, user)).collect(),
             },
             ActionType::ShardStore {
                 network_id,
@@ -188,16 +176,6 @@ impl TryFrom<Action> for ActionType {
                 ActionType::SetShardOwners {
                     shard_id,
                     owners: owners?,
-                }
-            }
-            Action::SetShardUsers {
-                shard_id,
-                users,
-            } => {
-                let users: Result<_, _> = users.into_iter().map(PlatformAddress::try_into_address).collect();
-                ActionType::SetShardUsers {
-                    shard_id,
-                    users: users?,
                 }
             }
             Action::ShardStore {

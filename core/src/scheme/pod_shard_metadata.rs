@@ -20,7 +20,6 @@ use std::fmt;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PodShardMetadata {
     pub owners: Vec<Address>,
-    pub users: Vec<Address>,
     pub seq: u64,
 }
 
@@ -29,13 +28,12 @@ impl From<cjson::scheme::Shard> for PodShardMetadata {
         Self {
             seq: s.seq.map(Into::into).unwrap_or(0),
             owners: s.owners.into_iter().map(PlatformAddress::into_address).collect(),
-            users: s.users.unwrap_or_else(Vec::new).into_iter().map(PlatformAddress::into_address).collect(),
         }
     }
 }
 
 impl fmt::Display for PodShardMetadata {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "(#seq={}; owners={:#?}; users={:#?})", self.seq, self.owners, self.users)
+        write!(f, "(#seq={}; owners={:#?})", self.seq, self.owners)
     }
 }

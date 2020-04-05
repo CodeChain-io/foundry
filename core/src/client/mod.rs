@@ -153,7 +153,6 @@ pub trait Shard {
     fn shard_root(&self, shard_id: ShardId, state: StateOrBlock) -> Option<H256>;
 
     fn shard_owners(&self, shard_id: ShardId, state: StateOrBlock) -> Option<Vec<Address>>;
-    fn shard_users(&self, shard_id: ShardId, state: StateOrBlock) -> Option<Vec<Address>>;
 }
 
 /// Provides methods to import block into blockchain

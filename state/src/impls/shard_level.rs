@@ -92,7 +92,6 @@ impl<'db> ShardLevelState<'db> {
         tx_hash: TxHash,
         transaction: &ShardTransaction,
         _sender: &Address,
-        _shard_users: &[Address],
         _approvers: &[Address],
         _parent_block_number: BlockNumber,
         _parent_block_timestamp: u64,
@@ -160,7 +159,6 @@ impl<'db> ShardState for ShardLevelState<'db> {
         tx_hash: TxHash,
         transaction: &ShardTransaction,
         sender: &Address,
-        shard_users: &[Address],
         approvers: &[Address],
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
@@ -168,15 +166,8 @@ impl<'db> ShardState for ShardLevelState<'db> {
         ctrace!(TX, "Execute InnerTx {:?}", transaction);
 
         self.create_checkpoint(TRANSACTION_CHECKPOINT);
-        let result = self.apply_internal(
-            tx_hash,
-            transaction,
-            sender,
-            shard_users,
-            approvers,
-            parent_block_number,
-            parent_block_timestamp,
-        );
+        let result =
+            self.apply_internal(tx_hash, transaction, sender, approvers, parent_block_number, parent_block_timestamp);
         match result {
             Ok(_) => {
                 self.discard_checkpoint(TRANSACTION_CHECKPOINT);
@@ -240,7 +231,7 @@ mod tests {
 
         let tx_hash = TxHash::from(H256::random());
 
-        assert_eq!(Ok(()), state.apply(tx_hash, &store_shard_text, &sender, &[sender], &[], 0, 0));
+        assert_eq!(Ok(()), state.apply(tx_hash, &store_shard_text, &sender, &[sender], 0, 0));
 
         check_shard_level_state!(state, [
             (text: (tx_hash) => { content: &content })

@@ -134,8 +134,7 @@ impl Scheme {
             if owners.is_empty() {
                 return Err(SyntaxError::EmptyShardOwners(*shard_id).into())
             }
-            let users = shard.users.clone();
-            shards.push((ShardAddress::new(*shard_id), Shard::new(shard_root, owners, users)));
+            shards.push((ShardAddress::new(*shard_id), Shard::new(shard_root, owners)));
         }
 
         debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<ShardId>());
