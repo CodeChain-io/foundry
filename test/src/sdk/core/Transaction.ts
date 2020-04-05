@@ -4,7 +4,6 @@ import * as RLP from "rlp";
 import { blake256, getPublicFromPrivate, signEd25519 } from "../utils";
 import { SignedTransaction } from "./SignedTransaction";
 import { ChangeParamsActionJSON } from "./transaction/ChangeParams";
-import { CreateShardActionJSON } from "./transaction/CreateShard";
 import { DelegateCCSActionJSON } from "./transaction/DelegateCCS";
 import { PayActionJSON } from "./transaction/Pay";
 import { RedelegateActionJSON } from "./transaction/Redelegate";
@@ -22,7 +21,6 @@ type ActionJSON =
     | PayActionJSON
     | SetShardOwnersActionJSON
     | SetShardUsersActionJSON
-    | CreateShardActionJSON
     | StoreActionJSON
     | RemoveActionJSON
     | TransferCCSActionJSON

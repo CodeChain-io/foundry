@@ -1,7 +1,6 @@
 import { Address, H256, SignedTransaction, Transaction, U64 } from "../classes";
 import { SignedTransactionJSON } from "../SignedTransaction";
 import { ChangeParams } from "./ChangeParams";
-import { CreateShard } from "./CreateShard";
 import { DelegateCCS } from "./DelegateCCS";
 import { Pay } from "./Pay";
 import { Redelegate } from "./Redelegate";
@@ -22,11 +21,6 @@ export function fromJSONToTransaction(result: any): Transaction {
             const receiver = Address.ensure(action.receiver);
             const quantity = new U64(action.quantity);
             tx = new Pay(receiver, quantity, networkId);
-            break;
-        }
-        case "createShard": {
-            const users = action.users.map(Address.ensure);
-            tx = new CreateShard({ users }, networkId);
             break;
         }
         case "setShardOwners": {

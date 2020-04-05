@@ -617,11 +617,6 @@ impl Shard for Client {
         state.number_of_shards().ok()
     }
 
-    fn shard_id_by_hash(&self, create_shard_tx_hash: &TxHash, state: StateOrBlock) -> Option<u16> {
-        let state = self.state_info(state)?;
-        state.shard_id_by_hash(&create_shard_tx_hash).ok()?
-    }
-
     fn shard_root(&self, shard_id: ShardId, state: StateOrBlock) -> Option<H256> {
         let state = self.state_info(state)?;
         state.shard_root(shard_id).ok()?

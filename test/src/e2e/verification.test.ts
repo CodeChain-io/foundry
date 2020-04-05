@@ -144,8 +144,6 @@ describe("solo - 1 node", function() {
         [
             { actionType: 2, actionLength: 2 }, // Pay
             { actionType: 2, actionLength: 4 },
-            { actionType: 4, actionLength: 1 }, // CreateShard
-            { actionType: 4, actionLength: 3 },
             { actionType: 5, actionLength: 2 }, // SetShardOwners
             { actionType: 5, actionLength: 4 },
             { actionType: 6, actionLength: 2 }, // SetShardUsers

@@ -161,7 +161,6 @@ impl<'x> OpenBlock<'x> {
         let hash = tx.hash();
         let error = match self.block.state.apply(
             &tx.transaction(),
-            &hash,
             &tx.signer_public(),
             client,
             parent_block_number,

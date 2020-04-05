@@ -26,7 +26,6 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 #[repr(u8)]
 enum ActionTag {
     Pay = 0x02,
-    CreateShard = 0x04,
     SetShardOwners = 0x05,
     SetShardUsers = 0x06,
     ShardStore = 0x19,
@@ -50,7 +49,6 @@ impl Decodable for ActionTag {
         let tag = rlp.as_val()?;
         match tag {
             0x02u8 => Ok(Self::Pay),
-            0x04 => Ok(Self::CreateShard),
             0x05 => Ok(Self::SetShardOwners),
             0x06 => Ok(Self::SetShardUsers),
             0x19 => Ok(Self::ShardStore),
@@ -72,9 +70,6 @@ pub enum Action {
         receiver: Address,
         /// Transferred quantity.
         quantity: u64,
-    },
-    CreateShard {
-        users: Vec<Address>,
     },
     SetShardOwners {
         shard_id: ShardId,
@@ -248,13 +243,6 @@ impl Encodable for Action {
                 s.append(receiver);
                 s.append(quantity);
             }
-            Action::CreateShard {
-                users,
-            } => {
-                s.begin_list(2);
-                s.append(&ActionTag::CreateShard);
-                s.append_list(users);
-            }
             Action::SetShardOwners {
                 shard_id,
                 owners,
@@ -356,18 +344,6 @@ impl Decodable for Action {
                 Ok(Action::Pay {
                     receiver: rlp.val_at(1)?,
                     quantity: rlp.val_at(2)?,
-                })
-            }
-            ActionTag::CreateShard => {
-                let item_count = rlp.item_count()?;
-                if item_count != 2 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 2,
-                    })
-                }
-                Ok(Action::CreateShard {
-                    users: rlp.list_at(1)?,
                 })
             }
             ActionTag::SetShardOwners => {

@@ -15,7 +15,6 @@ import { Block } from "./Block";
 import { SignedTransaction } from "./SignedTransaction";
 import { Transaction } from "./Transaction";
 import { ChangeParams } from "./transaction/ChangeParams";
-import { CreateShard } from "./transaction/CreateShard";
 import { DelegateCCS } from "./transaction/DelegateCCS";
 import { Pay } from "./transaction/Pay";
 import { Redelegate } from "./transaction/Redelegate";
@@ -45,7 +44,6 @@ export class Core {
         SignedTransaction,
         // Transaction
         Pay,
-        CreateShard,
         SetShardOwners,
         SetShardUsers,
         Store,
@@ -89,21 +87,6 @@ export class Core {
         return new Pay(
             Address.ensure(recipient),
             U64.ensure(quantity),
-            this.networkId
-        );
-    }
-
-    /**
-     * Creates CreateShard type which can create new shard
-     */
-    public createCreateShardTransaction(params: {
-        users: Array<AddressValue>;
-    }): CreateShard {
-        const { users } = params;
-        return new CreateShard(
-            {
-                users: users.map(Address.ensure)
-            },
             this.networkId
         );
     }

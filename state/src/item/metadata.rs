@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::CacheableItem;
-use ctypes::{CommonParams, ShardId, StorageId, TxHash};
+use ctypes::{CommonParams, ShardId, StorageId};
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -23,8 +23,6 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 pub struct Metadata {
     number_of_shards: ShardId,
     number_of_modules: StorageId,
-    number_of_initial_shards: ShardId,
-    hashes: Vec<TxHash>,
     last_term_finished_block_num: u64,
     current_term_id: u64,
     seq: u64,
@@ -37,8 +35,6 @@ impl Metadata {
         Self {
             number_of_shards,
             number_of_modules: 0,
-            number_of_initial_shards: number_of_shards,
-            hashes: vec![],
             last_term_finished_block_num: 0,
             current_term_id: 0,
             seq: 0,
@@ -51,13 +47,6 @@ impl Metadata {
         &self.number_of_shards
     }
 
-    pub fn add_shard(&mut self, tx_hash: TxHash) -> ShardId {
-        let r = self.number_of_shards;
-        self.number_of_shards += 1;
-        self.hashes.push(tx_hash);
-        r
-    }
-
     pub fn add_module(&mut self) -> StorageId {
         let r = self.number_of_modules;
         self.number_of_modules += 1;
@@ -67,19 +56,7 @@ impl Metadata {
     #[cfg(test)]
     pub fn set_number_of_shards(&mut self, number_of_shards: ShardId) {
         assert!(self.number_of_shards <= number_of_shards);
-        assert_eq!(0, self.hashes.len());
         self.number_of_shards = number_of_shards;
-        self.number_of_initial_shards = number_of_shards;
-    }
-
-    pub fn shard_id_by_hash(&self, tx_hash: &TxHash) -> Option<ShardId> {
-        debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<::ctypes::ShardId>());
-        assert!(self.hashes.len() < ::std::u16::MAX as usize);
-        self.hashes.iter().enumerate().find(|(_index, hash)| tx_hash == *hash).map(|(index, _)| {
-            let index = index as ShardId + self.number_of_initial_shards;
-            assert!(index < self.number_of_shards);
-            index
-        })
     }
 
     pub fn seq(&self) -> u64 {
@@ -133,12 +110,10 @@ const PREFIX: u8 = super::Prefix::Metadata as u8;
 
 impl Encodable for Metadata {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(10)
+        s.begin_list(8)
             .append(&PREFIX)
             .append(&self.number_of_shards)
             .append(&self.number_of_modules)
-            .append(&self.number_of_initial_shards)
-            .append_list(&self.hashes)
             .append(&self.last_term_finished_block_num)
             .append(&self.current_term_id)
             .append(&self.seq)
@@ -150,10 +125,10 @@ impl Encodable for Metadata {
 impl Decodable for Metadata {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
-        if item_count != 10 {
+        if item_count != 8 {
             return Err(DecoderError::RlpInvalidLength {
                 got: item_count,
-                expected: 10,
+                expected: 8,
             })
         }
 
@@ -164,21 +139,17 @@ impl Decodable for Metadata {
         }
         let number_of_shards = rlp.val_at(1)?;
         let number_of_modules = rlp.val_at(2)?;
-        let number_of_initial_shards = rlp.val_at(3)?;
-        let hashes = rlp.list_at(4)?;
 
-        let last_term_finished_block_num = rlp.val_at(5)?;
-        let current_term_id = rlp.val_at(6)?;
-        let seq = rlp.val_at(7)?;
-        let params = rlp.val_at(8)?;
+        let last_term_finished_block_num = rlp.val_at(3)?;
+        let current_term_id = rlp.val_at(4)?;
+        let seq = rlp.val_at(5)?;
+        let params = rlp.val_at(6)?;
 
-        let term_params = rlp.val_at(9)?;
+        let term_params = rlp.val_at(7)?;
 
         Ok(Self {
             number_of_shards,
             number_of_modules,
-            number_of_initial_shards,
-            hashes,
             last_term_finished_block_num,
             current_term_id,
             seq,
@@ -245,8 +216,6 @@ mod tests {
         let metadata = Metadata {
             number_of_shards: 10,
             number_of_modules: 7,
-            number_of_initial_shards: 1,
-            hashes: vec![],
             last_term_finished_block_num: 0,
             current_term_id: 0,
             seq: 3,
@@ -261,8 +230,6 @@ mod tests {
         let metadata = Metadata {
             number_of_shards: 10,
             number_of_modules: 7,
-            number_of_initial_shards: 1,
-            hashes: vec![],
             last_term_finished_block_num: 0,
             current_term_id: 0,
             seq: 0,
@@ -277,8 +244,6 @@ mod tests {
         let metadata = Metadata {
             number_of_shards: 10,
             number_of_modules: 7,
-            number_of_initial_shards: 1,
-            hashes: vec![],
             last_term_finished_block_num: 1,
             current_term_id: 100,
             seq: 3,
