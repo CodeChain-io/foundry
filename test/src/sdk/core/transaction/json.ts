@@ -9,7 +9,6 @@ import { ReportDoubleVote } from "./ReportDoubleVote";
 import { Revoke } from "./Revoke";
 import { SelfNominate } from "./SelfNominate";
 import { SetShardOwners } from "./SetShardOwners";
-import { SetShardUsers } from "./SetShardUsers";
 import { Store } from "./Store";
 import { TransferCCS } from "./TransferCCS";
 
@@ -30,18 +29,6 @@ export function fromJSONToTransaction(result: any): Transaction {
                 {
                     shardId,
                     owners
-                },
-                networkId
-            );
-            break;
-        }
-        case "setShardUsers": {
-            const shardId = action.shardId;
-            const users = action.users.map(Address.ensure);
-            tx = new SetShardUsers(
-                {
-                    shardId,
-                    users
                 },
                 networkId
             );

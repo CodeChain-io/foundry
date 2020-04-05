@@ -100,8 +100,7 @@
     "shards": {
         "0": {
             "seq": 0,
-            "owners": ["tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f"],
-            "users": []
+            "owners": ["tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f"]
         }
     }
 }
