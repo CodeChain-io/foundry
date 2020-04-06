@@ -28,6 +28,7 @@ use crate::scheme::Scheme;
 use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
 use crate::types::TransactionId;
 use ckey::{Ed25519Private as Private, Ed25519Public as Public, Password, PlatformAddress};
+use coordinator::engine::{BlockExecutor, TxFilter};
 use cstate::{TopLevelState, TopStateView};
 use ctypes::errors::HistoryError;
 use ctypes::transaction::{IncompleteTransaction, Transaction};
@@ -93,6 +94,8 @@ pub struct Miner {
     sealing_enabled: AtomicBool,
 
     accounts: Arc<AccountProvider>,
+
+    _block_executor: Arc<dyn BlockExecutor>,
 }
 
 struct Params {
@@ -139,24 +142,30 @@ impl NextAllowedReseal {
 }
 
 impl Miner {
-    pub fn new(
+    pub fn new<C: 'static + BlockExecutor + TxFilter>(
         options: MinerOptions,
         scheme: &Scheme,
         accounts: Arc<AccountProvider>,
         db: Arc<dyn KeyValueDB>,
+        block_executor: Arc<C>,
     ) -> Arc<Self> {
-        Arc::new(Self::new_raw(options, scheme, accounts, db))
+        Arc::new(Self::new_raw(options, scheme, accounts, db, block_executor))
     }
 
-    pub fn with_scheme_for_test(scheme: &Scheme, db: Arc<dyn KeyValueDB>) -> Self {
-        Self::new_raw(Default::default(), scheme, AccountProvider::transient_provider(), db)
+    pub fn with_scheme_for_test<C: 'static + BlockExecutor + TxFilter>(
+        scheme: &Scheme,
+        db: Arc<dyn KeyValueDB>,
+        coordinator: Arc<C>,
+    ) -> Self {
+        Self::new_raw(Default::default(), scheme, AccountProvider::transient_provider(), db, coordinator)
     }
 
-    fn new_raw(
+    fn new_raw<C: 'static + BlockExecutor + TxFilter>(
         options: MinerOptions,
         scheme: &Scheme,
         accounts: Arc<AccountProvider>,
         db: Arc<dyn KeyValueDB>,
+        coordinator: Arc<C>,
     ) -> Self {
         let mem_limit = options.mem_pool_memory_limit.unwrap_or_else(usize::max_value);
         let mem_pool = Arc::new(RwLock::new(MemPool::with_limits(
@@ -164,6 +173,7 @@ impl Miner {
             mem_limit,
             options.mem_pool_fee_bump_shift,
             db,
+            coordinator.clone(),
         )));
 
         Self {
@@ -174,6 +184,7 @@ impl Miner {
             options,
             sealing_enabled: AtomicBool::new(true),
             accounts,
+            _block_executor: coordinator,
         }
     }
 
@@ -703,6 +714,7 @@ fn get_next_seq(transactions: impl IntoIterator<Item = VerifiedTransaction>, pub
 pub mod test {
     use cio::IoService;
     use ckey::{Ed25519Private as Private, Signature};
+    use coordinator::test_coordinator::TestCoordinator;
     use ctimer::TimerLoop;
     use ctypes::transaction::{Action, Transaction};
 
@@ -717,9 +729,10 @@ pub mod test {
     fn check_add_transactions_result_idx() {
         let db = Arc::new(kvdb_memorydb::create(NUM_COLUMNS.unwrap()));
         let scheme = Scheme::new_test();
-        let miner = Arc::new(Miner::with_scheme_for_test(&scheme, db.clone()));
+        let coordinator = Arc::new(TestCoordinator::default());
+        let miner = Arc::new(Miner::with_scheme_for_test(&scheme, db.clone(), coordinator.clone()));
 
-        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db.clone());
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db.clone(), coordinator);
         let client = generate_test_client(db, Arc::clone(&miner), &scheme).unwrap();
 
         let private = Private::random();
@@ -763,6 +776,7 @@ pub mod test {
         let reseal_timer = timer_loop.new_timer_with_name("Client reseal timer");
         let io_service = IoService::<ClientIoMessage>::start("Client")?;
 
-        Client::try_new(&client_config, scheme, db, miner, io_service.channel(), reseal_timer)
+        let coordinator = Arc::new(TestCoordinator::default());
+        Client::try_new(&client_config, scheme, db, miner, coordinator, io_service.channel(), reseal_timer)
     }
 }
