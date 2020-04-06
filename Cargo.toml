@@ -50,6 +50,7 @@ serde_json = "1.0"
 tokio-core = "0.1.17"
 toml = "0.4"
 cidr = "0.0.4"
+cbasesandbox = {package = "codechain-basesandbox", path = "basesandbox"}
 
 [build-dependencies]
 vergen = "2"
@@ -74,4 +75,5 @@ members = [
     "informer_courier",
     "sync",
     "types",
+    "basesandbox",
 ]
