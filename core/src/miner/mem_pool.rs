@@ -274,7 +274,6 @@ pub mod test {
     use crate::transaction::UnverifiedTransaction;
     use std::cmp::Ordering;
 
-    use crate::client::TestBlockChainClient;
     use ckey::{Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
     use ctypes::transaction::Transaction;
 
@@ -331,11 +330,7 @@ pub mod test {
     #[test]
     fn db_backup_and_recover() {
         //setup test_client
-        let test_client = TestBlockChainClient::new();
         let keypair: KeyPair = Random.generate().unwrap();
-        let default_addr = keypair.public();
-        test_client.set_seq(*default_addr, 4u64);
-        test_client.set_balance(*default_addr, u64::max_value());
 
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
         let coordinator = Arc::new(TestCoordinator::default());
