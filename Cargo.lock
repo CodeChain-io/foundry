@@ -446,7 +446,7 @@ name = "codechain-io"
 version = "1.9.0"
 dependencies = [
  "codechain-logger",
- "crossbeam",
+ "crossbeam 0.5.0",
  "log 0.4.8",
  "mio",
  "parking_lot 0.6.4",
