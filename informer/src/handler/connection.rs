@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{EventTags, Events, Params, Sink};
+use crate::{ColdEvents, EventTags, Events, Params, Sink};
 use jsonrpc_core::futures::Future;
 
 #[derive(Clone)]
@@ -64,10 +64,25 @@ impl Connection {
         }
     }
 
+    pub fn cold_notify(&self, event: &ColdEvents) {
+        let json_object = serde_json::to_value(event).expect("event has no non-string key").as_object_mut().cloned();
+        let params = Params::Map(json_object.expect("Event is serialized as object"));
+        match self.status {
+            // FIXME : We should use `.await` instead of wait. The standard Future is not supported by the current paritytech/jsonrpc crate.
+            ConnectionState::Connected => match self.sink.notify(params).wait() {
+                Ok(_) => {}
+                Err(_) => {
+                    cinfo!(INFORMER, "Subscription has ended, finishing.");
+                }
+            },
+        }
+    }
+
     pub fn notify_client(&self, event: &Events) {
         let json_object = serde_json::to_value(event).expect("json format is not valid").as_object_mut().cloned();
         let params = Params::Map(json_object.expect("Event is serialized as object"));
         match self.status {
+            // FIXME : We should use `.await` instead of wait. The standard Future is not supported by the current paritytech/jsonrpc crate.
             ConnectionState::Connected => match self.sink.notify(params).wait() {
                 Ok(_) => {}
                 Err(_) => {
