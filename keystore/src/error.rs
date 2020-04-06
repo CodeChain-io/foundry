@@ -31,12 +31,8 @@ pub enum Error {
     InvalidSecret,
     /// Invalid Account.
     InvalidAccount,
-    /// Invalid Message.
-    InvalidMessage,
     /// Invalid Key File
     InvalidKeyFile(String),
-    /// Account creation failed.
-    CreationFailed,
     /// Account already exists.
     AlreadyExists,
     /// `ckeys` error
@@ -54,9 +50,7 @@ impl fmt::Display for Error {
             Error::InvalidPassword => "Invalid password".into(),
             Error::InvalidSecret => "Invalid secret".into(),
             Error::InvalidAccount => "Invalid account".into(),
-            Error::InvalidMessage => "Invalid message".into(),
             Error::InvalidKeyFile(ref reason) => format!("Invalid key file: {}", reason),
-            Error::CreationFailed => "Account creation failed".into(),
             Error::AlreadyExists => "Account already exists".into(),
             Error::CKey(ref err) => err.to_string(),
             Error::CCrypto(ref err) => err.to_string(),

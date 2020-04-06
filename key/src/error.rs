@@ -20,16 +20,10 @@ use std::fmt;
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
-    InvalidPublic,
     InvalidSecret,
-    InvalidMessage,
     InvalidSignature,
     InvalidNetworkId(NetworkId),
     InvalidPlatformAddressVersion(u8),
-    InvalidChecksum,
-    InvalidPrivate,
-    InvalidAddress,
-    FailedKeyGeneration,
     Bech32MissingSeparator,
     Bech32InvalidChecksum,
     Bech32InvalidLength,
@@ -43,18 +37,12 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let msg = match *self {
-            Error::InvalidPublic => "Invalid Public".into(),
             Error::InvalidSecret => "Invalid Secret".into(),
-            Error::InvalidMessage => "Invalid Message".into(),
             Error::InvalidSignature => "Invalid Signature".into(),
             Error::InvalidNetworkId(network_id) => format!("{} is an invalid network id", network_id),
             Error::InvalidPlatformAddressVersion(version) => {
                 format!("{} is an invalid platform address version", version)
             }
-            Error::InvalidChecksum => "Invalid Checksum".into(),
-            Error::InvalidPrivate => "Invalid Private".into(),
-            Error::InvalidAddress => "Invalid Address".into(),
-            Error::FailedKeyGeneration => "Key generation failed".into(),
             Error::Bech32MissingSeparator => "Missing human-readable separator".into(),
             Error::Bech32InvalidChecksum => "Invalid checksum".into(),
             Error::Bech32InvalidLength => "Invalid Length".into(),
