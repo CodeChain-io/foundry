@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub mod domain_socket;
+pub mod intra;
 
 pub trait IpcSend: Send {
     /// It might block until counterparty's recv(). Even if not, the order is still guaranteed.
