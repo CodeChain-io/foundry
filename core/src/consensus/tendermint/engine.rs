@@ -23,7 +23,6 @@ use crate::account_provider::AccountProvider;
 use crate::block::*;
 use crate::client::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::client::{Client, ConsensusClient};
-use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::tendermint::params::TimeGapParams;
 use crate::consensus::EngineType;
 use crate::error::Error;
@@ -46,10 +45,6 @@ use std::sync::{Arc, Weak};
 impl ConsensusEngine for Tendermint {
     fn name(&self) -> &str {
         "Tendermint"
-    }
-
-    fn machine(&self) -> &CodeChainMachine {
-        &self.machine.as_ref()
     }
 
     /// (consensus view, proposal signature, authority signatures)

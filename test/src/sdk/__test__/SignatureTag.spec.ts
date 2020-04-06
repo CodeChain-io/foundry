@@ -1,8 +1,9 @@
+import { expect } from "chai";
 import * as _ from "lodash";
-
+import "mocha";
 import { encodeSignatureTag } from "../utils";
 
-test.each([
+([
     ["all", "all", [0b00000011]],
     ["all", [], [0b00000001]],
     ["all", [0], [0b00000001, 0b00000101]],
@@ -35,43 +36,47 @@ test.each([
         _.range(504), // [0, 1, 2, ..., 503]
         [..._.times(63, _.constant(0b11111111)), 0b11111100]
     ]
-])(`{ input: %p, output: %p }`, (input, output, expected) => {
-    expect(encodeSignatureTag({ input, output })).toEqual(
-        Buffer.from(expected)
-    );
-});
+] as ["all" | "single", "all" | number[], number[]][]).forEach(
+    ([input, output, expected]) => {
+        it(`{ input: ${input}, output: ${output} }`, function() {
+            expect(encodeSignatureTag({ input, output })).deep.equal(
+                Buffer.from(expected)
+            );
+        });
+    }
+);
 
 describe("Invalid signature tag", () => {
-    test("Out of range", () => {
+    it("Out of range", () => {
         expect(() =>
             encodeSignatureTag({ input: "all", output: [0, -1] })
-        ).toThrow("-1");
+        ).throw("-1");
         expect(() =>
             encodeSignatureTag({ input: "all", output: [0, 504] })
-        ).toThrow("504");
+        ).throw("504");
     });
 
-    test("Invalid type", () => {
+    it("Invalid type", () => {
         expect(() =>
             encodeSignatureTag({
                 input: "all",
                 output: "invalid_string" as any
             })
-        ).toThrow("invalid_string");
+        ).throw("invalid_string");
         expect(() =>
             encodeSignatureTag({
                 input: "invalid_string" as any,
                 output: "all"
             })
-        ).toThrow("invalid_string");
+        ).throw("invalid_string");
     });
 
-    test("Invalid output", () => {
+    it("Invalid output", () => {
         expect(() =>
             encodeSignatureTag({ input: "all", output: ["0" as any] })
-        ).toThrow("0");
+        ).throw("0");
         expect(() =>
             encodeSignatureTag({ input: "all", output: [null as any] })
-        ).toThrow("null");
+        ).throw("null");
     });
 });

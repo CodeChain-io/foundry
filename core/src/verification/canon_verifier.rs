@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,6 @@
 
 use super::verification;
 use super::Verifier;
-use crate::client::BlockChainTrait;
 use crate::consensus::CodeChainEngine;
 use crate::error::Error;
 use ctypes::{CommonParams, Header};
@@ -24,17 +23,16 @@ use ctypes::{CommonParams, Header};
 /// A canonial verifier -- this does full verification.
 pub struct CanonVerifier;
 
-impl<C: BlockChainTrait> Verifier<C> for CanonVerifier {
+impl Verifier for CanonVerifier {
     fn verify_block_family(
         &self,
         block: &[u8],
         header: &Header,
         parent: &Header,
         engine: &dyn CodeChainEngine,
-        do_full: Option<verification::FullFamilyParams<'_, C>>,
         common_params: &CommonParams,
     ) -> Result<(), Error> {
-        verification::verify_block_family(block, header, parent, engine, do_full, common_params)
+        verification::verify_block_family(block, header, parent, engine, common_params)
     }
 
     fn verify_block_final(&self, expected: &Header, got: &Header) -> Result<(), Error> {

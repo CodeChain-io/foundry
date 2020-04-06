@@ -1,5 +1,4 @@
 import { Address, H160, H256 } from "foundry-primitives";
-import * as _ from "lodash";
 import * as RLP from "rlp";
 import { blake160, blake256 } from "../utils";
 import { Transaction, TransactionJSON } from "./Transaction";
@@ -56,7 +55,9 @@ export class SignedTransaction {
         this._signature = signature.startsWith("0x")
             ? signature.substr(2)
             : signature;
-        this.signerPublic = signerPublic;
+        this.signerPublic = signerPublic.startsWith("0x")
+            ? signerPublic.substr(2)
+            : signerPublic;
         this.blockNumber = blockNumber === undefined ? null : blockNumber;
         this.blockHash = blockHash || null;
         this.transactionIndex =

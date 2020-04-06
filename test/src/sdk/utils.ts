@@ -14,7 +14,6 @@ import {
     toHex as _toHex,
     verifyEd25519 as _verifyEd25519
 } from "foundry-primitives";
-import * as _ from "lodash";
 
 /**
  * Converts buffer to hexadecimal string.

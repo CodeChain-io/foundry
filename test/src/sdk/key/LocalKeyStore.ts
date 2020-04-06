@@ -1,5 +1,4 @@
 import { CCKey } from "foundry-keystore";
-import * as _ from "lodash";
 import { KeyStore } from "./KeyStore";
 
 export class LocalKeyStore implements KeyStore {

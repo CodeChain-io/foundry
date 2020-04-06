@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,16 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::verification;
-use crate::client::BlockChainTrait;
 use crate::consensus::CodeChainEngine;
 use crate::error::Error;
 use ctypes::{CommonParams, Header};
 
 /// Should be used to verify blocks.
-pub trait Verifier<C>: Send + Sync
-where
-    C: BlockChainTrait, {
+pub trait Verifier: Send + Sync {
     /// Verify a block relative to its parent and uncles.
     fn verify_block_family(
         &self,
@@ -31,7 +27,6 @@ where
         header: &Header,
         parent: &Header,
         engine: &dyn CodeChainEngine,
-        do_full: Option<verification::FullFamilyParams<'_, C>>,
         common_params: &CommonParams,
     ) -> Result<(), Error>;
 

@@ -27,7 +27,6 @@ import {
     carolSecret,
     faucetAddress,
     faucetSecret,
-    stakeActionHandlerId,
     validator0Address
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";

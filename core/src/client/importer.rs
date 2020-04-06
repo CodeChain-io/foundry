@@ -42,7 +42,7 @@ pub struct Importer {
     pub import_lock: Mutex<()>, // FIXME Maybe wrap the whole `Importer` instead?
 
     /// Used to verify blocks
-    pub verifier: Box<dyn Verifier<Client>>,
+    pub verifier: Box<dyn Verifier>,
 
     /// Queue containing pending blocks
     pub block_queue: BlockQueue,
@@ -218,29 +218,15 @@ impl Importer {
         let common_params = client.common_params(parent.hash().into()).unwrap();
 
         // Verify Block Family
-        self.verifier
-            .verify_block_family(
-                &block.bytes,
-                header,
-                &parent,
-                engine,
-                Some(verification::FullFamilyParams {
-                    block_bytes: &block.bytes,
-                    transactions: &block.transactions,
-                    block_provider: &*chain,
-                    client,
-                }),
-                &common_params,
-            )
-            .map_err(|e| {
-                cwarn!(
-                    CLIENT,
-                    "Stage 3 block verification failed for #{} ({})\nError: {:?}",
-                    header.number(),
-                    header.hash(),
-                    e
-                );
-            })?;
+        self.verifier.verify_block_family(&block.bytes, header, &parent, engine, &common_params).map_err(|e| {
+            cwarn!(
+                CLIENT,
+                "Stage 3 block verification failed for #{} ({})\nError: {:?}",
+                header.number(),
+                header.hash(),
+                e
+            );
+        })?;
 
         self.verifier.verify_block_external(header, engine).map_err(|e| {
             cwarn!(
