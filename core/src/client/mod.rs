@@ -100,35 +100,6 @@ pub trait TermInfo {
     fn current_term_id(&self, id: BlockId) -> Option<u64>;
 }
 
-/// Provides methods to access account info
-pub trait AccountData {
-    /// Attempt to get address seq at given block.
-    /// May not fail on BlockId::Latest.
-    fn seq(&self, pubkey: &Public, id: BlockId) -> Option<u64>;
-
-    /// Get address seq at the latest block's state.
-    fn latest_seq(&self, pubkey: &Public) -> u64 {
-        self.seq(pubkey, BlockId::Latest).expect(
-            "seq will return Some when given BlockId::Latest. seq was given BlockId::Latest. \
-             Therefore seq has returned Some; qed",
-        )
-    }
-
-    /// Get address balance at the given block's state.
-    ///
-    /// May not return None if given BlockId::Latest.
-    /// Returns None if and only if the block's root hash has been pruned from the DB.
-    fn balance(&self, pubkey: &Public, state: StateOrBlock) -> Option<u64>;
-
-    /// Get address balance at the latest block's state.
-    fn latest_balance(&self, pubkey: &Public) -> u64 {
-        self.balance(pubkey, BlockId::Latest.into()).expect(
-            "balance will return Some if given BlockId::Latest. balance was given BlockId::Latest \
-             Therefore balance has returned Some; qed",
-        )
-    }
-}
-
 /// State information to be used during client query
 pub enum StateOrBlock {
     /// State to be used, may be pending
@@ -179,7 +150,7 @@ pub trait ImportBlock {
 }
 
 /// Blockchain database client. Owns and manages a blockchain and a block queue.
-pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + ImportBlock {
+pub trait BlockChainClient: Sync + Send + BlockChainTrait + ImportBlock {
     /// Get block queue information.
     fn queue_info(&self) -> BlockQueueInfo;
 

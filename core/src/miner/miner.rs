@@ -18,9 +18,7 @@ use super::mem_pool::{Error as MemPoolError, MemPool};
 use super::{MinerService, TransactionImportResult};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::block::{ClosedBlock, IsBlock};
-use crate::client::{
-    AccountData, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo,
-};
+use crate::client::{BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo};
 use crate::consensus::{ConsensusEngine, EngineType};
 use crate::error::Error;
 use crate::scheme::Scheme;
@@ -188,7 +186,7 @@ impl Miner {
         &self.options
     }
 
-    fn add_transactions_to_pool<C: AccountData + BlockChainTrait + EngineInfo>(
+    fn add_transactions_to_pool<C: BlockChainTrait + EngineInfo>(
         &self,
         client: &C,
         transactions: Vec<UnverifiedTransaction>,
@@ -246,7 +244,7 @@ impl Miner {
     }
 
     /// Prepares new block for sealing including top transactions from queue and seal it.
-    fn prepare_and_seal_block<C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + TermInfo>(
+    fn prepare_and_seal_block<C: BlockChainTrait + BlockProducer + EngineInfo + TermInfo>(
         &self,
         parent_block_id: BlockId,
         chain: &C,
@@ -390,7 +388,7 @@ impl MinerService for Miner {
 
     fn chain_new_blocks<C>(&self, chain: &C, _imported: &[BlockHash], _invalid: &[BlockHash], _enacted: &[BlockHash])
     where
-        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock, {
+        C: BlockChainTrait + BlockProducer + EngineInfo + ImportBlock, {
         ctrace!(MINER, "chain_new_blocks");
 
         chain.set_min_timer();
@@ -402,7 +400,7 @@ impl MinerService for Miner {
 
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock + TermInfo, {
+        C: BlockChainTrait + BlockProducer + EngineInfo + ImportBlock + TermInfo, {
         ctrace!(MINER, "update_sealing: preparing a block");
 
         let block = match self.prepare_and_seal_block(parent_block, chain) {
