@@ -213,7 +213,7 @@ impl MemPool {
         let unordered_transactions: Vec<_> =
             self.transaction_pool.pool.values().filter(|tx| range.contains(&tx.inserted_timestamp)).collect();
         let ordered_transactions = self.coordinator.fetch_transactions_for_block(&unordered_transactions);
-        let chosen_transactions = ordered_transactions
+        let chosen_transactions: Vec<_> = ordered_transactions
             .iter()
             .take_while(|tx_with_gas| {
                 let size = tx_with_gas.size();
@@ -222,11 +222,17 @@ impl MemPool {
                 current_gas += gas;
                 current_gas < gas_limit && current_size < size_limit
             })
-            .map(|tx_with_gas| tx_with_gas.tx.clone())
             .collect();
+
+        let last_timestamp =
+            chosen_transactions.iter().map(|tx_with_gas| tx_with_gas.tx_with_metadata.inserted_timestamp).max();
+
         PendingTransactions {
-            transactions: chosen_transactions,
-            last_timestamp: None, // FIXME: calculate last_timestamp,
+            transactions: chosen_transactions
+                .iter()
+                .map(|tx_with_gas| tx_with_gas.tx_with_metadata.tx.clone())
+                .collect(),
+            last_timestamp,
         }
     }
 
