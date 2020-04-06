@@ -47,8 +47,8 @@ use crate::Error;
 use crate::{LocalizedTransaction, PendingTransactions};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::{Address, Ed25519Private as Private, Ed25519Public as Public, NetworkId, PlatformAddress};
+use coordinator::test_coordinator::TestCoordinator;
 use coordinator::validator::{Event, Transaction};
-use coordinator::Coordinator;
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{FindDoubleVoteHandler, NextValidatorSet, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
@@ -61,6 +61,7 @@ use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
 use parking_lot::RwLock;
 use primitives::{Bytes, H256};
+use rand::Rng;
 use rlp::{Encodable, Rlp, RlpStream};
 use std::collections::HashMap;
 use std::mem;
@@ -139,7 +140,7 @@ impl TestBlockChainClient {
             last_hash: RwLock::new(genesis_hash),
             storage: RwLock::new(HashMap::new()),
             queue_size: AtomicUsize::new(0),
-            miner: Arc::new(Miner::with_scheme_for_test(&scheme, db, Arc::new(Coordinator {}))),
+            miner: Arc::new(Miner::with_scheme_for_test(&scheme, db, Arc::new(TestCoordinator::default()))),
             scheme,
             latest_block_timestamp: RwLock::new(10_000_000),
             history: RwLock::new(None),
@@ -187,7 +188,7 @@ impl TestBlockChainClient {
         }
         let mut transactions = Vec::with_capacity(transaction_length);
         for _ in 0..transaction_length {
-            let tx = Self::sample_transaction();
+            let tx = Self::random_transaction();
             transactions.push(tx);
         }
         header.set_transactions_root(skewed_merkle_root(BLAKE_NULL_RLP, transactions.iter().map(Encodable::rlp_bytes)));
@@ -250,7 +251,11 @@ impl TestBlockChainClient {
 
     /// Inserts a transaction to miners mem pool.
     pub fn insert_transaction_to_pool(&self) -> TxHash {
-        unimplemented!()
+        let tx = Self::random_transaction();
+        let hash = tx.hash();
+        let res = self.miner.import_external_transactions(self, vec![tx]);
+        res.into_iter().next().unwrap().expect("Successful import");
+        hash
     }
 
     /// Set reported history size.
@@ -283,8 +288,11 @@ impl TestBlockChainClient {
         self.validators = fixed_validators
     }
 
-    fn sample_transaction() -> Transaction {
-        unimplemented!()
+    fn random_transaction() -> Transaction {
+        //FIXME: change this random to be reproducible
+        let body_length = rand::thread_rng().gen_range(50, 200);
+        let random_bytes = (0..body_length).map(|_| rand::random::<u8>()).collect();
+        Transaction::new("Sample".to_string(), random_bytes)
     }
 }
 
