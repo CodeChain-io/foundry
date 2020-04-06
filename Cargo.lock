@@ -338,6 +338,7 @@ dependencies = [
  "hex",
  "nix",
  "once_cell",
+ "parking_lot 0.6.4",
  "primitives",
  "serde",
  "serde_cbor",
