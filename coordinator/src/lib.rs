@@ -4,6 +4,7 @@ use ctypes::{CompactValidatorSet, ConsensusParams};
 use validator::*;
 
 pub mod context;
+pub mod test_coordinator;
 pub mod validator;
 
 /// The `Coordinator` encapsulates all the logic for a Foundry application.
