@@ -27,6 +27,7 @@ use crate::verification::queue::{BlockQueue, HeaderQueue};
 use crate::verification::{PreverifiedBlock, Verifier};
 use crate::views::{BlockView, HeaderView};
 use cio::IoChannel;
+use coordinator::engine::BlockExecutor;
 use ctypes::header::{Header, Seal};
 use ctypes::{BlockHash, BlockId, SyncHeader};
 use kvdb::DBTransaction;
@@ -53,6 +54,9 @@ pub struct Importer {
     /// Handles block sealing
     miner: Arc<Miner>,
 
+    /// Validator used to execute transactions
+    pub block_executor: Arc<dyn BlockExecutor>,
+
     /// CodeChain engine to be used during import
     pub engine: Arc<dyn ConsensusEngine>,
 }
@@ -63,6 +67,7 @@ impl Importer {
         engine: Arc<dyn ConsensusEngine>,
         message_channel: IoChannel<ClientIoMessage>,
         miner: Arc<Miner>,
+        block_executor: Arc<dyn BlockExecutor>,
     ) -> Result<Importer, Error> {
         let block_queue = BlockQueue::new(&config.queue, engine.clone(), message_channel.clone());
 
@@ -74,6 +79,7 @@ impl Importer {
             block_queue,
             header_queue,
             miner,
+            block_executor,
             engine,
         })
     }
