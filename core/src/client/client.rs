@@ -16,9 +16,8 @@
 
 use super::importer::{Importer, VerifiedHeader};
 use super::{
-    AccountData, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify, ClientConfig,
-    DatabaseClient, EngineClient, EngineInfo, ImportBlock, ImportResult, MiningBlockChainClient, StateInfo,
-    StateOrBlock,
+    BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify, ClientConfig, DatabaseClient,
+    EngineClient, EngineInfo, ImportBlock, ImportResult, MiningBlockChainClient, StateInfo, StateOrBlock,
 };
 use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock};
 use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, EventProvider, HeaderProvider, TransactionAddress};
@@ -617,17 +616,6 @@ impl TermInfo for Client {
         self.state_at(id)
             .map(|state| state.metadata().unwrap().expect("Metadata always exist"))
             .map(|metadata| metadata.current_term_id())
-    }
-}
-
-impl AccountData for Client {
-    fn seq(&self, pubkey: &Public, id: BlockId) -> Option<u64> {
-        self.state_at(id).and_then(|s| s.seq(pubkey).ok())
-    }
-
-    fn balance(&self, pubkey: &Public, state: StateOrBlock) -> Option<u64> {
-        let state = self.state_info(state)?;
-        state.balance(pubkey).ok()
     }
 }
 

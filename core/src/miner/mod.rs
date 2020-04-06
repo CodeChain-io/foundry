@@ -28,9 +28,7 @@ use std::ops::Range;
 
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};
 use crate::account_provider::Error as AccountProviderError;
-use crate::client::{
-    AccountData, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo,
-};
+use crate::client::{BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo};
 use crate::consensus::EngineType;
 use crate::error::Error;
 use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
@@ -64,7 +62,7 @@ pub trait MinerService: Send + Sync {
     /// Called when blocks are imported to chain, updates transactions queue.
     fn chain_new_blocks<C>(&self, chain: &C, imported: &[BlockHash], invalid: &[BlockHash], enacted: &[BlockHash])
     where
-        C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock;
+        C: BlockChainTrait + BlockProducer + EngineInfo + ImportBlock;
 
     /// Get the type of consensus engine.
     fn engine_type(&self) -> EngineType;
@@ -72,7 +70,7 @@ pub trait MinerService: Send + Sync {
     /// New chain head event. Restart mining operation.
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: AccountData + BlockChainTrait + BlockProducer + ImportBlock + EngineInfo + TermInfo;
+        C: BlockChainTrait + BlockProducer + ImportBlock + EngineInfo + TermInfo;
 
     /// Imports transactions to mem pool.
     fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
