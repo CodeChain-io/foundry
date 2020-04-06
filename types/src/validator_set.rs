@@ -26,7 +26,7 @@ pub struct CompactValidatorEntry {
 }
 
 // It will be hashed in the header.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Default)]
 pub struct CompactValidatorSet(Vec<CompactValidatorEntry>);
 impl CompactValidatorSet {
     pub fn new(x: Vec<CompactValidatorEntry>) -> Self {
