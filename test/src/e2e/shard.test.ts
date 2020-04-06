@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -20,9 +20,7 @@ chai.use(chaiAsPromised);
 import "mocha";
 import {
     aliceAddress,
-    aliceSecret,
     bobAddress,
-    bobSecret,
     faucetAddress,
     faucetSecret
 } from "../helper/constants";

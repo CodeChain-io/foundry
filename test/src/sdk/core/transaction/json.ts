@@ -1,12 +1,4 @@
-import {
-    Address,
-    H160,
-    H256,
-    H512,
-    SignedTransaction,
-    Transaction,
-    U64
-} from "../classes";
+import { Address, H256, SignedTransaction, Transaction, U64 } from "../classes";
 import { SignedTransactionJSON } from "../SignedTransaction";
 import { ChangeParams } from "./ChangeParams";
 import { CreateShard } from "./CreateShard";

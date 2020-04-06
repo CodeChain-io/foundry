@@ -1,12 +1,13 @@
-import { Address, H256, U64 } from "foundry-primitives";
-
+import { expect } from "chai";
+import { Address, H512, U64 } from "foundry-primitives";
+import "mocha";
 import { getAccountIdFromPrivate } from "../../utils";
 import { Pay } from "../classes";
 import { fromJSONToSignedTransaction } from "../transaction/json";
 
-test("toJSON", () => {
-    const secret = new H256(
-        "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"
+it("toJSON", () => {
+    const secret = new H512(
+        "9af28f6fd6a1170dbee2cb8c34abab0408e6d811d212cdcde23f72473eb0d97ad7a6d266837c1c591383b90d835068b9ed58dd3bcebd6e285911f58e40ce413c"
     );
     const pay = new Pay(
         Address.fromAccountId("0x0000000000000000000000000000000000000000", {
@@ -20,12 +21,12 @@ test("toJSON", () => {
         fee: 33,
         seq: 33
     });
-    expect(fromJSONToSignedTransaction(p.toJSON())).toEqual(p);
+    expect(fromJSONToSignedTransaction(p.toJSON())).deep.equal(p);
 });
 
-test("getSignerAccountId", () => {
-    const secret = new H256(
-        "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"
+it("getSignerAccountId", () => {
+    const secret = new H512(
+        "9af28f6fd6a1170dbee2cb8c34abab0408e6d811d212cdcde23f72473eb0d97ad7a6d266837c1c591383b90d835068b9ed58dd3bcebd6e285911f58e40ce413c"
     );
     const signerAccountId = Address.fromAccountId(
         getAccountIdFromPrivate(secret.value),
@@ -43,12 +44,12 @@ test("getSignerAccountId", () => {
         fee: 33,
         seq: 44
     });
-    expect(p.getSignerAccountId()).toEqual(signerAccountId);
+    expect(p.getSignerAccountId().value).equal(signerAccountId.value);
 });
 
-test("getSignerAddress", () => {
-    const secret = new H256(
-        "ede1d4ccb4ec9a8bbbae9a13db3f4a7b56ea04189be86ac3a6a439d9a0a1addd"
+it("getSignerAddress", () => {
+    const secret = new H512(
+        "9af28f6fd6a1170dbee2cb8c34abab0408e6d811d212cdcde23f72473eb0d97ad7a6d266837c1c591383b90d835068b9ed58dd3bcebd6e285911f58e40ce413c"
     );
     const signerAccountId = Address.fromAccountId(
         getAccountIdFromPrivate(secret.value),
@@ -69,5 +70,7 @@ test("getSignerAddress", () => {
         fee: 33,
         seq: 44
     });
-    expect(p.getSignerAddress({ networkId: "tc" })).toEqual(signerAddress);
+    expect(p.getSignerAddress({ networkId: "tc" }).value).equal(
+        signerAddress.value
+    );
 });

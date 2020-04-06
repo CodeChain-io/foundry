@@ -1,5 +1,4 @@
 import RPC from "foundry-rpc";
-import { SDK } from "../sdk";
 import { Address } from "../sdk/core/classes";
 
 export interface TermMetadata {

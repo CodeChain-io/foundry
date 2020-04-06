@@ -1,9 +1,7 @@
-import { Address, AddressValue, H256, U64Value } from "foundry-primitives";
+import { Address, AddressValue, U64Value } from "foundry-primitives";
 
 import { SignedTransaction, Transaction, U64 } from "../core/classes";
 import { NetworkId } from "../core/types";
-import { SignatureTag } from "../utils";
-
 import { KeyStore } from "./KeyStore";
 import { LocalKeyStore } from "./LocalKeyStore";
 import { MemoryKeyStore } from "./MemoryKeyStore";
