@@ -55,6 +55,9 @@ pub struct Importer {
     /// Handles block sealing
     pub miner: Arc<Miner>,
 
+    /// Coordinator used to execute transactions
+    pub coordinator: Arc<Coordinator>,
+
     /// CodeChain engine to be used during import
     pub engine: Arc<dyn ConsensusEngine>,
 }
@@ -65,6 +68,7 @@ impl Importer {
         engine: Arc<dyn ConsensusEngine>,
         message_channel: IoChannel<ClientIoMessage>,
         miner: Arc<Miner>,
+        coordinator: Arc<Coordinator>,
     ) -> Result<Importer, Error> {
         let block_queue = BlockQueue::new(&config.queue, engine.clone(), message_channel.clone());
 
@@ -76,6 +80,7 @@ impl Importer {
             block_queue,
             header_queue,
             miner,
+            coordinator,
             engine,
         })
     }
@@ -252,10 +257,10 @@ impl Importer {
 
         // Enact Verified Block
         let db = client.state_db().read().clone(&parent.state_root());
-        let coordinator = Coordinator {};
+        let coordinator = &self.coordinator;
 
         let enact_result =
-            enact(&block.header, &block.transactions, &block.evidences, engine, &coordinator, db, &parent);
+            enact(&block.header, &block.transactions, &block.evidences, engine, coordinator, db, &parent);
         let closed_block = enact_result.map_err(|e| {
             cwarn!(CLIENT, "Block import failed for #{} ({})\nError: {:?}", header.number(), header.hash(), e);
         })?;

@@ -17,6 +17,7 @@ edition = "2018"
 [dependencies]
 app_dirs = "^1.2.1"
 clap = { version = "2", features = ["yaml"] }
+coordinator = { path = "coordinator" }
 ccore = { package = "codechain-core", path = "core" }
 cdiscovery = { package = "codechain-discovery", path = "discovery" }
 codechain-logger = { path = "util/logger" }
