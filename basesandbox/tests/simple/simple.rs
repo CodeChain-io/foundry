@@ -14,5 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub mod execution;
-pub mod ipc;
+extern crate codechain_basesandbox as cbsb;
+use cbsb::execution::executee;
+use cbsb::ipc::domain_socket::DomainSocket;
+use cbsb::ipc::{IpcRecv, IpcSend};
+use std::time::Duration;
+
+#[cfg(all(unix, target_arch = "x86_64"))]
+fn main() -> Result<(), String> {
+    let args = std::env::args().collect();
+    let ctx = executee::start::<DomainSocket>(args);
+    let r = ctx.ipc.as_ref().unwrap().recv(Some(Duration::from_millis(100))).unwrap();
+    assert_eq!(r, b"Hello?\0");
+    ctx.ipc.as_ref().unwrap().send(b"I'm here!\0");
+    ctx.terminate();
+    Ok(())
+}
