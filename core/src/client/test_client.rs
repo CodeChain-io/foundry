@@ -48,6 +48,7 @@ use crate::{LocalizedTransaction, PendingTransactions};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::{Address, Ed25519Private as Private, Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::validator::{Event, Transaction};
+use coordinator::Coordinator;
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{FindDoubleVoteHandler, NextValidatorSet, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
@@ -138,7 +139,7 @@ impl TestBlockChainClient {
             last_hash: RwLock::new(genesis_hash),
             storage: RwLock::new(HashMap::new()),
             queue_size: AtomicUsize::new(0),
-            miner: Arc::new(Miner::with_scheme_for_test(&scheme, db)),
+            miner: Arc::new(Miner::with_scheme_for_test(&scheme, db, Arc::new(Coordinator {}))),
             scheme,
             latest_block_timestamp: RwLock::new(10_000_000),
             history: RwLock::new(None),

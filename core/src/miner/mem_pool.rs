@@ -58,7 +58,8 @@ impl From<SyntaxError> for Error {
 }
 
 pub struct MemPool {
-    coordinator: Coordinator,
+    /// Coordinator used for checking incoming transactions and fetching transactions
+    coordinator: Arc<Coordinator>,
     /// list of all transactions in the pool
     transaction_pool: TransactionPool,
     /// The count(number) limit of each queue
@@ -73,9 +74,14 @@ pub struct MemPool {
 
 impl MemPool {
     /// Create new instance of this Queue with specified limits
-    pub fn with_limits(limit: usize, memory_limit: usize, db: Arc<dyn KeyValueDB>) -> Self {
+    pub fn with_limits(
+        limit: usize,
+        memory_limit: usize,
+        db: Arc<dyn KeyValueDB>,
+        coordinator: Arc<Coordinator>,
+    ) -> Self {
         MemPool {
-            coordinator: Coordinator {},
+            coordinator,
             transaction_pool: TransactionPool::new(),
             queue_count_limit: limit,
             queue_memory_limit: memory_limit,

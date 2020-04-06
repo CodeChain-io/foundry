@@ -90,20 +90,27 @@ pub struct Miner {
     engine: Arc<dyn ConsensusEngine>,
     options: MinerOptions,
     sealing_enabled: AtomicBool,
+    coordinator: Arc<Coordinator>,
 }
 
 impl Miner {
-    pub fn new(options: MinerOptions, scheme: &Scheme, db: Arc<dyn KeyValueDB>) -> Arc<Self> {
-        Arc::new(Self::new_raw(options, scheme, db))
+    pub fn new(
+        options: MinerOptions,
+        scheme: &Scheme,
+        db: Arc<dyn KeyValueDB>,
+        coordinator: Arc<Coordinator>,
+    ) -> Arc<Self> {
+        Arc::new(Self::new_raw(options, scheme, db, coordinator))
     }
 
-    pub fn with_scheme_for_test(scheme: &Scheme, db: Arc<dyn KeyValueDB>) -> Self {
-        Self::new_raw(Default::default(), scheme, db)
+    pub fn with_scheme_for_test(scheme: &Scheme, db: Arc<dyn KeyValueDB>, coordinator: Arc<Coordinator>) -> Self {
+        Self::new_raw(Default::default(), scheme, db, coordinator)
     }
 
-    fn new_raw(options: MinerOptions, scheme: &Scheme, db: Arc<dyn KeyValueDB>) -> Self {
+    fn new_raw(options: MinerOptions, scheme: &Scheme, db: Arc<dyn KeyValueDB>, coordinator: Arc<Coordinator>) -> Self {
         let mem_limit = options.mem_pool_memory_limit.unwrap_or_else(usize::max_value);
-        let mem_pool = Arc::new(RwLock::new(MemPool::with_limits(options.mem_pool_size, mem_limit, db)));
+        let mem_pool =
+            Arc::new(RwLock::new(MemPool::with_limits(options.mem_pool_size, mem_limit, db, coordinator.clone())));
 
         Self {
             mem_pool,
@@ -113,6 +120,7 @@ impl Miner {
             engine: scheme.engine.clone(),
             options,
             sealing_enabled: AtomicBool::new(true),
+            coordinator,
         }
     }
 
@@ -226,11 +234,11 @@ impl Miner {
 
         let evidences = self.engine.fetch_evidences();
 
-        let coordinator = Coordinator {};
+        let coordinator = &self.coordinator;
 
         open_block.open(&coordinator, evidences);
-        open_block.execute_transactions(&coordinator, transactions);
-        let closed_block = open_block.close(&coordinator)?;
+        open_block.execute_transactions(coordinator, transactions);
+        let closed_block = open_block.close(coordinator)?;
         Ok(Some(closed_block))
     }
 
