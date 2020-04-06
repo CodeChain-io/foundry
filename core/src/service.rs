@@ -19,6 +19,7 @@ use crate::error::Error;
 use crate::miner::Miner;
 use crate::scheme::Scheme;
 use cio::{IoContext, IoHandler, IoHandlerResult, IoService};
+use coordinator::Coordinator;
 use ctimer::TimerApi;
 use ctypes::{BlockHash, BlockId};
 use kvdb::KeyValueDB;
@@ -37,11 +38,12 @@ impl ClientService {
         scheme: &Scheme,
         db: Arc<dyn KeyValueDB>,
         miner: Arc<Miner>,
+        coordinator: Arc<Coordinator>,
         reseal_timer: TimerApi,
     ) -> Result<ClientService, Error> {
         let io_service = IoService::<ClientIoMessage>::start("Client")?;
 
-        let client = Client::try_new(config, &scheme, db, miner, io_service.channel(), reseal_timer)?;
+        let client = Client::try_new(config, &scheme, db, miner, coordinator, io_service.channel(), reseal_timer)?;
 
         let client_io = Arc::new(ClientIoHandler {
             client: client.clone(),

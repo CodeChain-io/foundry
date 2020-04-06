@@ -49,6 +49,7 @@ use ckey::{
     Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public, Generator, KeyPairTrait, NetworkId,
     PlatformAddress, Random,
 };
+use coordinator::test_coordinator::TestCoordinator;
 use coordinator::types::Event;
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{NextValidators, StateDB, TopLevelState};
@@ -146,7 +147,7 @@ impl TestBlockChainClient {
             seqs: RwLock::new(HashMap::new()),
             storage: RwLock::new(HashMap::new()),
             queue_size: AtomicUsize::new(0),
-            miner: Arc::new(Miner::with_scheme_for_test(&scheme, db)),
+            miner: Arc::new(Miner::with_scheme_for_test(&scheme, db, Arc::new(TestCoordinator::default()))),
             scheme,
             latest_block_timestamp: RwLock::new(10_000_000),
             history: RwLock::new(None),
