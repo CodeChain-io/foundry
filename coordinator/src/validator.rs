@@ -213,25 +213,26 @@ impl Decodable for TransactionWithMetadata {
     }
 }
 
-pub struct TransactionWithGas {
-    pub tx: Transaction,
+// TransactionWithGas will be returned by fetch_transactions_for_block
+pub struct TransactionWithGas<'a> {
+    pub tx_with_metadata: &'a TransactionWithMetadata,
     pub gas: usize,
 }
 
-impl<'a> TransactionWithGas {
-    fn new(tx: Transaction, gas: usize) -> Self {
+impl<'a> TransactionWithGas<'a> {
+    fn new(tx_with_metadata: &'a TransactionWithMetadata, gas: usize) -> Self {
         Self {
-            tx,
+            tx_with_metadata,
             gas,
         }
     }
 
     pub fn size(&self) -> usize {
-        self.tx.size()
+        self.tx_with_metadata.size()
     }
 
     pub fn hash(&self) -> TxHash {
-        self.tx.hash()
+        self.tx_with_metadata.hash()
     }
 }
 pub enum VerifiedCrime {
@@ -265,7 +266,7 @@ pub trait Validator {
     fn fetch_transactions_for_block<'a>(
         &self,
         transactions: &'a [&'a TransactionWithMetadata],
-    ) -> Vec<&'a TransactionWithGas>;
+    ) -> Vec<TransactionWithGas<'a>>;
     fn remove_transactions<'a>(
         &self,
         transactions: &'a [&'a TransactionWithMetadata],
