@@ -28,7 +28,7 @@ use std::ops::Range;
 
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};
 use crate::account_provider::Error as AccountProviderError;
-use crate::client::{AccountData, BlockChainClient, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, TermInfo};
+use crate::client::{BlockChainClient, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, TermInfo};
 use crate::consensus::EngineType;
 use crate::error::Error;
 use crate::transaction::PendingVerifiedTransactions;
@@ -72,7 +72,7 @@ pub trait MinerService: Send + Sync {
     /// New chain head event. Restart mining operation.
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: AccountData + BlockChainTrait + BlockProducer + ImportBlock + EngineInfo + TermInfo;
+        C: BlockChainTrait + BlockProducer + ImportBlock + EngineInfo + TermInfo;
 
     /// Imports transactions to mem pool.
     fn import_external_transactions<C: BlockChainClient + BlockProducer + EngineInfo + TermInfo>(

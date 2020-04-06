@@ -33,8 +33,8 @@
 use crate::block::{Block, ClosedBlock, OpenBlock};
 use crate::blockchain_info::BlockChainInfo;
 use crate::client::{
-    AccountData, BlockChainClient, BlockChainTrait, BlockProducer, BlockStatus, ConsensusClient, EngineInfo,
-    ImportBlock, ImportResult, StateInfo, StateOrBlock, TermInfo,
+    BlockChainClient, BlockChainTrait, BlockProducer, BlockStatus, ConsensusClient, EngineInfo, ImportBlock,
+    ImportResult, StateInfo, TermInfo,
 };
 use crate::consensus::EngineError;
 use crate::db::{COL_STATE, NUM_COLUMNS};
@@ -76,10 +76,6 @@ pub struct TestBlockChainClient {
     pub last_hash: RwLock<BlockHash>,
     /// Extra data do set for each block
     pub extra_data: Bytes,
-    /// Balances.
-    pub balances: RwLock<HashMap<Address, u64>>,
-    /// Seqs.
-    pub seqs: RwLock<HashMap<Address, u64>>,
     /// Storage.
     pub storage: RwLock<HashMap<(Address, H256), H256>>,
     /// Block queue size.
@@ -137,8 +133,6 @@ impl TestBlockChainClient {
             genesis_hash,
             extra_data,
             last_hash: RwLock::new(genesis_hash),
-            balances: RwLock::new(HashMap::new()),
-            seqs: RwLock::new(HashMap::new()),
             storage: RwLock::new(HashMap::new()),
             queue_size: AtomicUsize::new(0),
             miner: Arc::new(Miner::with_scheme_for_test(&scheme, db)),
@@ -154,16 +148,6 @@ impl TestBlockChainClient {
         client.blocks.get_mut().insert(genesis_hash, genesis_block);
         client.numbers.get_mut().insert(0, genesis_hash);
         client
-    }
-
-    /// Set the balance of account `address` to `balance`.
-    pub fn set_balance(&self, address: Address, balance: u64) {
-        self.balances.write().insert(address, balance);
-    }
-
-    /// Set seq of account `address` to `seq`.
-    pub fn set_seq(&self, address: Address, seq: u64) {
-        self.seqs.write().insert(address, seq);
     }
 
     /// Set storage `position` to `value` for account `address`.
@@ -312,24 +296,6 @@ impl BlockProducer for TestBlockChainClient {
         // TODO [todr] Override timestamp for predictability (set_timestamp_now kind of sucks)
         open_block.set_timestamp(*self.latest_block_timestamp.read());
         open_block
-    }
-}
-
-impl AccountData for TestBlockChainClient {
-    fn seq(&self, address: &Address, id: BlockId) -> Option<u64> {
-        match id {
-            BlockId::Latest => Some(self.seqs.read().get(address).cloned().unwrap_or(0)),
-            _ => None,
-        }
-    }
-
-    fn balance(&self, address: &Address, state: StateOrBlock) -> Option<u64> {
-        match state {
-            StateOrBlock::Block(BlockId::Latest) | StateOrBlock::State(_) => {
-                Some(self.balances.read().get(address).cloned().unwrap_or(0))
-            }
-            _ => None,
-        }
     }
 }
 
