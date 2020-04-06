@@ -524,15 +524,15 @@ impl super::EngineClient for TestBlockChainClient {
 
 impl EngineInfo for TestBlockChainClient {
     fn network_id(&self) -> NetworkId {
-        self.scheme.genesis_params().network_id()
+        unimplemented!()
     }
 
     fn common_params(&self, _block_id: BlockId) -> Option<CommonParams> {
-        Some(self.scheme.genesis_params())
+        unimplemented!()
     }
 
     fn consensus_params(&self, _block_id: BlockId) -> Option<ConsensusParams> {
-        Some(self.scheme.genesis_consensus_params())
+        unimplemented!()
     }
 
     fn metadata_seq(&self, _block_id: BlockId) -> Option<u64> {

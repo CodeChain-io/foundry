@@ -17,17 +17,14 @@
 use super::seal::Generic as GenericSeal;
 use super::Genesis;
 use crate::consensus::{ConsensusEngine, NullEngine, Solo, Tendermint};
-use crate::error::{Error, SchemeError};
+use crate::error::Error;
 use ccrypto::BLAKE_NULL_RLP;
-use cdb::{AsHashDB, HashDB};
+use cdb::HashDB;
 use ckey::Ed25519Public as Public;
-use cstate::{Metadata, MetadataAddress, StateDB};
-use ctypes::errors::SyntaxError;
-use ctypes::{BlockHash, CommonParams, ConsensusParams, Header};
-use merkle_trie::{TrieFactory, TrieMut};
+use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
 use primitives::{Bytes, H256};
-use rlp::{Encodable, Rlp, RlpStream};
+use rlp::{Rlp, RlpStream};
 use std::io::Read;
 use std::sync::Arc;
 
@@ -59,12 +56,6 @@ pub struct Scheme {
 
     /// May be prepopulated if we know this in advance.
     state_root_memo: RwLock<H256>,
-
-    /// Genesis consensus parameters
-    genesis_consensus_params: ConsensusParams,
-
-    /// Genesis state as plain old data.
-    genesis_params: CommonParams,
 }
 
 // helper for formatting errors.
@@ -93,58 +84,11 @@ impl Scheme {
         }
     }
 
-    fn initialize_state(
-        &self,
-        db: StateDB,
-        genesis_params: CommonParams,
-        genesis_consensus_params: ConsensusParams,
-    ) -> Result<StateDB, Error> {
-        let root = BLAKE_NULL_RLP;
-        let (db, root) = self.initialize_modules(db, root, genesis_params, genesis_consensus_params)?;
-
-        *self.state_root_memo.write() = root;
-        Ok(db)
-    }
-
-    fn initialize_modules<DB: AsHashDB>(
-        &self,
-        mut db: DB,
-        mut root: H256,
-        genesis_params: CommonParams,
-        genesis_consensus_params: ConsensusParams,
-    ) -> Result<(DB, H256), Error> {
-        // Here we need module initialization
-        let global_metadata = Metadata::new(genesis_params, genesis_consensus_params);
-        {
-            let mut t = TrieFactory::from_existing(db.as_hashdb_mut(), &mut root)?;
-            let address = MetadataAddress::new();
-
-            let r = t.insert(address.as_ref(), &global_metadata.rlp_bytes());
-            debug_assert_eq!(Ok(None), r);
-            r?;
-        }
-
-        Ok((db, root))
-    }
-
     pub fn check_genesis_root(&self, db: &dyn HashDB) -> bool {
         if db.is_empty() {
             return true
         }
         db.contains(&self.state_root())
-    }
-
-    /// Ensure that the given state DB has the trie nodes in for the genesis state.
-    pub fn ensure_genesis_state(&self, db: StateDB) -> Result<StateDB, Error> {
-        if !self.check_genesis_root(db.as_hashdb()) {
-            return Err(SchemeError::InvalidState.into())
-        }
-
-        if db.as_hashdb().contains(&self.state_root()) {
-            return Ok(db)
-        }
-
-        Ok(self.initialize_state(db, self.genesis_params(), self.genesis_consensus_params())?)
     }
 
     /// Return the state root for the genesis state, memoising accordingly.
@@ -175,16 +119,6 @@ impl Scheme {
     /// work).
     pub fn new_test_tendermint() -> Self {
         load_bundled!("tendermint")
-    }
-
-    /// Get common blockchain parameters.
-    pub fn genesis_params(&self) -> CommonParams {
-        self.genesis_params
-    }
-
-    /// Get consensus critical parameters
-    pub fn genesis_consensus_params(&self) -> ConsensusParams {
-        self.genesis_consensus_params
     }
 
     /// Get the header of the genesis block.
@@ -223,9 +157,6 @@ impl Scheme {
 fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
     let g = Genesis::from(s.genesis);
     let GenericSeal(seal_rlp) = g.seal.into();
-    let consensus_params = ConsensusParams::from(s.params.clone());
-    let params = CommonParams::from(s.params);
-    params.verify().map_err(|reason| Error::Syntax(SyntaxError::InvalidCustomAction(reason)))?;
     let engine = Scheme::engine(s.engine);
 
     let mut s = Scheme {
@@ -240,17 +171,11 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
         extra_data: g.extra_data,
         seal_rlp,
         state_root_memo: RwLock::new(Default::default()), // will be overwritten right after.
-        genesis_consensus_params: consensus_params,
-        genesis_params: params,
     };
 
     // use memoized state root if provided.
-    match g.state_root {
-        Some(root) => *s.state_root_memo.get_mut() = root,
-        None => {
-            let db = StateDB::new_with_memorydb();
-            let _ = s.initialize_state(db, s.genesis_params(), s.genesis_consensus_params())?;
-        }
+    if let Some(root) = g.state_root {
+        *s.state_root_memo.get_mut() = root;
     }
 
     Ok(s)
