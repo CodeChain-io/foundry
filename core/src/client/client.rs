@@ -38,6 +38,7 @@ use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::context::{ChainHistoryAccess, StateHistoryAccess, StorageAccess};
+use coordinator::engine::{BlockExecutor, Initializer};
 use coordinator::types::Event;
 use cstate::{StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
@@ -80,11 +81,12 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn try_new(
+    pub fn try_new<C: 'static + Initializer + BlockExecutor>(
         config: &ClientConfig,
         scheme: &Scheme,
         db: Arc<dyn KeyValueDB>,
         miner: Arc<Miner>,
+        coordinator: Arc<C>,
         message_channel: IoChannel<ClientIoMessage>,
         reseal_timer: TimerApi,
     ) -> Result<Arc<Client>, Error> {
@@ -106,7 +108,8 @@ impl Client {
 
         let engine = scheme.engine.clone();
 
-        let importer = Importer::try_new(config, engine.clone(), message_channel.clone(), Arc::clone(&miner))?;
+        let importer =
+            Importer::try_new(config, engine.clone(), message_channel.clone(), Arc::clone(&miner), coordinator)?;
 
         let client = Arc::new(Client {
             engine,

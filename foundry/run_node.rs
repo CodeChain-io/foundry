@@ -33,6 +33,7 @@ use ckeystore::KeyStore;
 use clap::ArgMatches;
 use clogger::{EmailAlarm, LoggerConfig};
 use cnetwork::{Filters, ManagingPeerdb, NetworkConfig, NetworkControl, NetworkService, RoutingTable, SocketAddr};
+use coordinator::Coordinator;
 use crossbeam::unbounded;
 use crossbeam_channel as crossbeam;
 use csync::snapshot::Service as SnapshotService;
@@ -101,10 +102,11 @@ fn client_start(
     db: Arc<dyn KeyValueDB>,
     scheme: &Scheme,
     miner: Arc<Miner>,
+    coordinator: Arc<Coordinator>,
 ) -> Result<ClientService, String> {
     cinfo!(CLIENT, "Starting client");
     let reseal_timer = timer_loop.new_timer_with_name("Client reseal timer");
-    let service = ClientService::start(client_config, &scheme, db, miner, reseal_timer.clone())
+    let service = ClientService::start(client_config, &scheme, db, miner, coordinator, reseal_timer.clone())
         .map_err(|e| format!("Client service error: {}", e))?;
     reseal_timer.set_handler(Arc::downgrade(&service.client()));
 
@@ -116,8 +118,9 @@ fn new_miner(
     scheme: &Scheme,
     ap: Arc<AccountProvider>,
     db: Arc<dyn KeyValueDB>,
+    coordinator: Arc<Coordinator>,
 ) -> Result<Arc<Miner>, String> {
-    let miner = Miner::new(config.miner_options()?, scheme, ap, db);
+    let miner = Miner::new(config.miner_options()?, scheme, ap, db, coordinator);
 
     match miner.engine_type() {
         EngineType::PBFT => match &config.mining.engine_signer {
@@ -189,6 +192,10 @@ fn unlock_accounts(ap: &AccountProvider, pf: &PasswordFile) -> Result<(), String
     Ok(())
 }
 
+fn prepare_coordinator() -> Arc<Coordinator> {
+    unimplemented!()
+}
+
 pub fn open_db(cfg: &config::Operating, client_config: &ClientConfig) -> Result<Arc<dyn KeyValueDB>, String> {
     let base_path = cfg.base_path.as_ref().unwrap().clone();
     let db_path = cfg.db_path.as_ref().map(String::clone).unwrap_or_else(|| base_path + "/" + DEFAULT_DB_PATH);
@@ -220,6 +227,8 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
         None => return Err("chain is not specified".to_string()),
     };
     scheme.engine.register_time_gap_config_to_worker(time_gap_params);
+
+    let coordinator = prepare_coordinator();
 
     let instance_id = config.operating.instance_id.unwrap_or(
         SystemTime::now()
@@ -254,8 +263,8 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
     let client_config: ClientConfig = Default::default();
     let db = open_db(&config.operating, &client_config)?;
 
-    let miner = new_miner(&config, &scheme, ap.clone(), Arc::clone(&db))?;
-    let client = client_start(&client_config, &timer_loop, db, &scheme, miner.clone())?;
+    let miner = new_miner(&config, &scheme, ap.clone(), Arc::clone(&db), coordinator.clone())?;
+    let client = client_start(&client_config, &timer_loop, db, &scheme, miner.clone(), coordinator)?;
     miner.recover_from_db(client.client().as_ref());
 
     // FIXME: unbound would cause memory leak.

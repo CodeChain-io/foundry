@@ -25,6 +25,7 @@ use crate::miner::fetch_account_creator;
 use crate::transaction::{PendingVerifiedTransactions, VerifiedTransaction};
 use crate::Error as CoreError;
 use ckey::Ed25519Public as Public;
+use coordinator::engine::TxFilter;
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use ctypes::{BlockId, BlockNumber, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
@@ -87,6 +88,8 @@ pub struct MemPool {
     future: FutureQueue,
     /// All transactions managed by pool indexed by public and seq
     by_signer_public: Table<Public, u64, TransactionOrderWithTag>,
+    /// Coordinator used for checking incoming transactions and fetching transactions
+    _tx_filter: Arc<dyn TxFilter>,
     /// The count(number) limit of each queue
     queue_count_limit: usize,
     /// The memory limit of each queue
@@ -111,8 +114,15 @@ pub struct MemPool {
 
 impl MemPool {
     /// Create new instance of this Queue with specified limits
-    pub fn with_limits(limit: usize, memory_limit: usize, fee_bump_shift: usize, db: Arc<dyn KeyValueDB>) -> Self {
+    pub fn with_limits(
+        limit: usize,
+        memory_limit: usize,
+        fee_bump_shift: usize,
+        db: Arc<dyn KeyValueDB>,
+        tx_filter: Arc<dyn TxFilter>,
+    ) -> Self {
         MemPool {
+            _tx_filter: tx_filter,
             fee_bump_shift,
             max_block_number_period_in_pool: DEFAULT_POOLING_PERIOD,
             current: CurrentQueue::new(),
@@ -916,6 +926,7 @@ pub mod test {
 
     use super::backup::MemPoolItemProjection;
     use super::*;
+    use coordinator::test_coordinator::TestCoordinator;
     use rlp::{rlp_encode_and_decode_test, Rlp};
     use std::convert::TryInto;
 
@@ -1007,7 +1018,8 @@ pub mod test {
         test_client.set_balance(*default_addr, u64::max_value());
 
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
-        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db.clone());
+        let coordinator = Arc::new(TestCoordinator::default());
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db.clone(), coordinator.clone());
 
         let fetch_account = fetch_account_creator(&test_client, BlockId::Latest);
         let inserted_block_number = 1;
@@ -1040,7 +1052,7 @@ pub mod test {
         inputs.push(create_mempool_input_with_pay(7u64, &keypair));
         mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
 
-        let mut mem_pool_recovered = MemPool::with_limits(8192, usize::max_value(), 3, db);
+        let mut mem_pool_recovered = MemPool::with_limits(8192, usize::max_value(), 3, db, coordinator);
         mem_pool_recovered.recover_from_db(&test_client);
 
         assert_eq!(mem_pool_recovered.first_seqs, mem_pool.first_seqs);
@@ -1080,7 +1092,8 @@ pub mod test {
         let test_client = TestBlockChainClient::new();
 
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
-        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db);
+        let coordinator = Arc::new(TestCoordinator::default());
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db, coordinator);
 
         let fetch_account = fetch_account_creator(&test_client, BlockId::Latest);
         let keypair: KeyPair = Random.generate().unwrap();
