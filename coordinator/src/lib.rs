@@ -16,6 +16,7 @@
 
 pub mod context;
 mod header;
+pub mod test_coordinator;
 mod traits;
 mod transaction;
 mod types;
