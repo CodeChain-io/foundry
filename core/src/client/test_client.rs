@@ -33,8 +33,8 @@
 use crate::block::{Block, ClosedBlock, OpenBlock};
 use crate::blockchain_info::BlockChainInfo;
 use crate::client::{
-    AccountData, BlockChainClient, BlockChainTrait, BlockProducer, BlockStatus, ConsensusClient, EngineInfo,
-    ImportBlock, ImportResult, MiningBlockChainClient, StateInfo, StateOrBlock, TermInfo,
+    BlockChainClient, BlockChainTrait, BlockProducer, BlockStatus, ConsensusClient, EngineInfo, ImportBlock,
+    ImportResult, MiningBlockChainClient, StateInfo, TermInfo,
 };
 use crate::consensus::EngineError;
 use crate::db::{COL_STATE, NUM_COLUMNS};
@@ -82,10 +82,6 @@ pub struct TestBlockChainClient {
     pub last_hash: RwLock<BlockHash>,
     /// Extra data do set for each block
     pub extra_data: Bytes,
-    /// Balances.
-    pub balances: RwLock<HashMap<Public, u64>>,
-    /// Seqs.
-    pub seqs: RwLock<HashMap<Public, u64>>,
     /// Storage.
     pub storage: RwLock<HashMap<(Public, H256), H256>>,
     /// Block queue size.
@@ -143,8 +139,6 @@ impl TestBlockChainClient {
             genesis_hash,
             extra_data,
             last_hash: RwLock::new(genesis_hash),
-            balances: RwLock::new(HashMap::new()),
-            seqs: RwLock::new(HashMap::new()),
             storage: RwLock::new(HashMap::new()),
             queue_size: AtomicUsize::new(0),
             miner: Arc::new(Miner::with_scheme_for_test(&scheme, db, Arc::new(TestCoordinator::default()))),
@@ -160,16 +154,6 @@ impl TestBlockChainClient {
         client.blocks.get_mut().insert(genesis_hash, genesis_block);
         client.numbers.get_mut().insert(0, genesis_hash);
         client
-    }
-
-    /// Set the balance of account `address` to `balance`.
-    pub fn set_balance(&self, pubkey: Public, balance: u64) {
-        self.balances.write().insert(pubkey, balance);
-    }
-
-    /// Set seq of account `address` to `seq`.
-    pub fn set_seq(&self, pubkey: Public, seq: u64) {
-        self.seqs.write().insert(pubkey, seq);
     }
 
     /// Set storage `position` to `value` for account `address`.
@@ -207,7 +191,6 @@ impl TestBlockChainClient {
         for _ in 0..transaction_length {
             let keypair: KeyPair = Random.generate().unwrap();
             // Update seqs value
-            self.seqs.write().insert(*keypair.public(), 0);
             let tx = Transaction {
                 network_id: NetworkId::default(),
             };
@@ -280,7 +263,6 @@ impl TestBlockChainClient {
             network_id: NetworkId::default(),
         };
         let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
-        self.set_balance(signed.signer_public(), 10_000_000_000_000_000_000);
         let hash = signed.transaction().hash();
         let res = self.miner.import_external_transactions(self, vec![signed.into()]);
         let res = res.into_iter().next().unwrap().expect("Successful import");
@@ -331,30 +313,6 @@ impl BlockProducer for TestBlockChainClient {
 }
 
 impl MiningBlockChainClient for TestBlockChainClient {}
-
-impl AccountData for TestBlockChainClient {
-    fn seq(&self, pubkey: &Public, id: BlockId) -> Option<u64> {
-        match id {
-            BlockId::Latest => Some(self.seqs.read().get(pubkey).cloned().unwrap_or(0)),
-            BlockId::Hash(hash) if hash == *self.last_hash.read() => {
-                Some(self.seqs.read().get(pubkey).cloned().unwrap_or(0))
-            }
-            _ => None,
-        }
-    }
-
-    fn balance(&self, pubkey: &Public, state: StateOrBlock) -> Option<u64> {
-        match state {
-            StateOrBlock::Block(BlockId::Latest) | StateOrBlock::State(_) => {
-                Some(self.balances.read().get(pubkey).cloned().unwrap_or(0))
-            }
-            StateOrBlock::Block(BlockId::Hash(hash)) if hash == *self.last_hash.read() => {
-                Some(self.balances.read().get(pubkey).cloned().unwrap_or(0))
-            }
-            _ => None,
-        }
-    }
-}
 
 impl BlockChainTrait for TestBlockChainClient {
     fn chain_info(&self) -> BlockChainInfo {
