@@ -14,5 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub mod execution;
-pub mod ipc;
+use crate::ipc::*;
+
+// Interface for the sandboxee written in Rust
+pub struct Context<T: Ipc> {
+    /// ipc will be given with Some, but module may take it
+    /// However, the ipc must be return back here before the module terminates
+    pub ipc: Option<T>,
+}
+
+pub fn start<T: Ipc>(mut args: Vec<String>) -> Context<T> {
+    let ipc = T::new(hex::decode(args.remove(1)).unwrap());
+    ipc.send(b"#INIT\0");
+    Context {
+        ipc: Some(ipc),
+    }
+}
+
+impl<T: Ipc> Context<T> {
+    pub fn terminate(self) {
+        self.ipc.unwrap().send(b"#TERMINATE\0");
+    }
+}
