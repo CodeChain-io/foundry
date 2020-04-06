@@ -15,7 +15,7 @@ pub mod validator;
 pub struct Coordinator {}
 
 impl validator::Validator for Coordinator {
-    fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams) {
+    fn initialize_chain(&self, app_state: String) -> (CompactValidatorSet, ConsensusParams) {
         unimplemented!()
     }
 
