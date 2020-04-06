@@ -31,6 +31,7 @@ use crate::scheme::Scheme;
 use crate::service::ClientIoMessage;
 use crate::transaction::{LocalizedTransaction, PendingTransactions};
 use crate::types::{BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
+use ccrypto::BLAKE_NULL_RLP;
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
@@ -38,13 +39,14 @@ use coordinator::context::{ChainHistoryAccess, MemPoolAccess, StateHistoryAccess
 use coordinator::engine::{BlockExecutor, Initializer};
 use coordinator::types::Event;
 use coordinator::Transaction;
-use cstate::{StateDB, TopLevelState, TopStateView};
+use cstate::{Metadata, MetadataAddress, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header, StorageId, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
+use merkle_trie::{TrieFactory, TrieMut};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use primitives::Bytes;
-use rlp::Rlp;
+use primitives::{Bytes, H256};
+use rlp::{Encodable, Rlp};
 use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
 use std::sync::{Arc, Weak};
@@ -94,8 +96,7 @@ impl Client {
             return Err(SchemeError::InvalidState.into())
         }
         if state_db.is_empty() {
-            // Sets the correct state root.
-            state_db = scheme.ensure_genesis_state(state_db)?;
+            state_db = Self::initialize_state(state_db, &*coordinator)?;
             let mut batch = DBTransaction::new();
             state_db.journal_under(&mut batch, 0, *scheme.genesis_header().hash())?;
             db.write(batch)?;
@@ -232,6 +233,44 @@ impl Client {
         let enacted = self.importer.extract_enacted(vec![update_result]);
         self.miner.chain_new_blocks(self, &[], &[], &enacted);
         self.new_blocks(&[], &[], &enacted);
+    }
+
+    fn initialize_state(db: StateDB, coordinator: &impl Initializer) -> Result<StateDB, Error> {
+        let root = BLAKE_NULL_RLP;
+        let state = Arc::new(Mutex::new(TopLevelState::from_existing(db.clone(&root), root)?));
+        let storage = Arc::clone(&state) as Arc<Mutex<dyn StorageAccess>>;
+
+        let (validators, consensus_params) = coordinator.initialize_chain(storage);
+
+        let state_mut = &mut state.lock();
+
+        let validator_set = NextValidatorSet::from_compact_validator_set(validators);
+        validator_set.save_to_state(state_mut)?;
+
+        let root = state_mut.commit()?;
+
+        let db = Self::initialize_modules(db, root, consensus_params)?;
+
+        Ok(db)
+    }
+
+    fn initialize_modules(
+        mut db: StateDB,
+        mut root: H256,
+        genesis_consensus_params: ConsensusParams,
+    ) -> Result<StateDB, Error> {
+        // TODO: remove CommonParams
+        let genesis_params = CommonParams::default();
+        let global_metadata = Metadata::new(genesis_params, genesis_consensus_params);
+        {
+            let mut t = TrieFactory::from_existing(db.as_hashdb_mut(), &mut root)?;
+            let address = MetadataAddress::new();
+
+            let r = t.insert(&*address, &global_metadata.rlp_bytes());
+            debug_assert_eq!(Ok(None), r);
+            r?;
+        }
+        Ok(db)
     }
 
     fn block_number_ref(&self, id: &BlockId) -> Option<BlockNumber> {

@@ -230,29 +230,6 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
 
     let coordinator = prepare_coordinator();
 
-    let instance_id = config.operating.instance_id.unwrap_or(
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Current time should be later than unix epoch")
-            .subsec_nanos() as usize,
-    );
-    let email_alarm = if !config.email_alarm.disable.unwrap() {
-        let to = config.email_alarm.to.clone().ok_or_else(|| "email-alarm-to is not specified".to_string())?;
-        let sendgrid_key = config
-            .email_alarm
-            .sendgrid_key
-            .clone()
-            .ok_or_else(|| "email-alarm-sendgrid-key is not specified".to_string())?;
-        Some(EmailAlarm::new(to, sendgrid_key, scheme.genesis_params().network_id().to_string()))
-    } else {
-        None
-    };
-    clogger::init(&LoggerConfig::new(instance_id), email_alarm.clone())
-        .expect("Logger must be successfully initialized");
-    if let Some(email_alarm) = email_alarm {
-        panic_hook::set_with_email_alarm(email_alarm);
-    }
-
     let pf = load_password_file(&config.operating.password_path)?;
     let base_path = config.operating.base_path.as_ref().unwrap().clone();
     let keys_path =
@@ -266,6 +243,29 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
     let miner = new_miner(&config, &scheme, ap.clone(), Arc::clone(&db), coordinator.clone())?;
     let client = client_start(&client_config, &timer_loop, db, &scheme, miner.clone(), coordinator)?;
     miner.recover_from_db();
+
+    let instance_id = config.operating.instance_id.unwrap_or(
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("Current time should be later than unix epoch")
+            .subsec_nanos() as usize,
+    );
+    let email_alarm = if !config.email_alarm.disable.unwrap() {
+        let to = config.email_alarm.to.clone().ok_or_else(|| "email-alarm-to is not specified".to_string())?;
+        let sendgrid_key = config
+            .email_alarm
+            .sendgrid_key
+            .clone()
+            .ok_or_else(|| "email-alarm-sendgrid-key is not specified".to_string())?;
+        Some(EmailAlarm::new(to, sendgrid_key, client.client().network_id().to_string()))
+    } else {
+        None
+    };
+    clogger::init(&LoggerConfig::new(instance_id), email_alarm.clone())
+        .expect("Logger must be successfully initialized");
+    if let Some(email_alarm) = email_alarm {
+        panic_hook::set_with_email_alarm(email_alarm);
+    }
 
     // FIXME: unbound would cause memory leak.
     // FIXME: The full queue should be handled.
