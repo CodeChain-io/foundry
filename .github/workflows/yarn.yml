@@ -1,6 +1,6 @@
 on: [push, pull_request]
 
-name: yarn-lint
+name: yarn
 
 jobs:
   lint:
@@ -14,3 +14,14 @@ jobs:
         run: yarn
       - working-directory: ./test
         run: yarn lint
+  test:
+    name: Actions - test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - working-directory: ./test
+        run: yarn
+      - working-directory: ./test
+        run: yarn test-sdk

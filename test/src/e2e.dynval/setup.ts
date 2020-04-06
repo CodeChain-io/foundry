@@ -28,7 +28,6 @@ import {
     bobSecret,
     faucetAddress,
     faucetSecret,
-    stakeActionHandlerId,
     validator0Address,
     validator1Address,
     validator2Address

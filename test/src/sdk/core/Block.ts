@@ -1,4 +1,4 @@
-import { Address, H256, U256 } from "foundry-primitives";
+import { Address, H256 } from "foundry-primitives";
 import * as RLP from "rlp";
 import { SignedTransaction, SignedTransactionJSON } from "./SignedTransaction";
 import { fromJSONToSignedTransaction } from "./transaction/json";

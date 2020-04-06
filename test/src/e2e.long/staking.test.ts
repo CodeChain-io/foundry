@@ -35,7 +35,6 @@ import { PromiseExpect, wait } from "../helper/promise";
 import CodeChain from "../helper/spawn";
 import { toHex } from "../sdk/utils";
 import * as RLP from "rlp";
-import * as Scheme from "../scheme/tendermint-int.json";
 
 describe("Staking", function() {
     this.timeout(60_000);
