@@ -16,6 +16,4 @@ export { SetShardOwners } from "./transaction/SetShardOwners";
 export { SetShardUsers } from "./transaction/SetShardUsers";
 export { Store } from "./transaction/Store";
 
-export { Script } from "./Script";
-
 export { Address, AddressValue } from "foundry-primitives";

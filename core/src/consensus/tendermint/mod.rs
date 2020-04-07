@@ -31,7 +31,6 @@ pub use self::params::{TendermintParams, TimeGapParams, TimeoutParams};
 pub use self::types::{Height, Step, View};
 pub use super::{stake, ValidatorSet};
 use crate::client::ConsensusClient;
-use crate::codechain_machine::CodeChainMachine;
 use crate::consensus::DynamicValidator;
 use crate::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::ChainNotify;
@@ -66,8 +65,6 @@ pub struct Tendermint {
     quit_tendermint: crossbeam::Sender<()>,
     inner: crossbeam::Sender<worker::Event>,
     validators: Arc<dyn ValidatorSet>,
-    /// codechain machine descriptor
-    machine: Arc<CodeChainMachine>,
     /// stake object to register client data later
     stake: Arc<stake::Stake>,
     /// Chain notify
@@ -90,14 +87,13 @@ impl Drop for Tendermint {
 
 impl Tendermint {
     /// Create a new instance of Tendermint engine
-    pub fn new(our_params: TendermintParams, machine: CodeChainMachine) -> Arc<Self> {
+    pub fn new(our_params: TendermintParams) -> Arc<Self> {
         let validators = Arc::new(DynamicValidator::default());
         let stake = Arc::new(stake::Stake::default());
         let genesis_stakes = our_params.genesis_stakes;
         let genesis_candidates = our_params.genesis_candidates;
         let genesis_delegations = our_params.genesis_delegations;
         let timeouts = our_params.timeouts;
-        let machine = Arc::new(machine);
 
         let (
             join,
@@ -119,7 +115,6 @@ impl Tendermint {
             quit_tendermint,
             inner,
             validators,
-            machine,
             stake,
             chain_notify,
             has_signer: false.into(),

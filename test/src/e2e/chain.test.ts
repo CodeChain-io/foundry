@@ -25,9 +25,7 @@ import {
     invalidAddress
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
-import { Address } from "../sdk/core/classes";
 import { H160, H256, H512, U64 } from "../sdk/core/classes";
-import * as RLP from "rlp";
 
 describe("chain", function() {
     const invalidH160 = H160.zero();

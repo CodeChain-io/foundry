@@ -18,11 +18,9 @@ import { expect } from "chai";
 import "mocha";
 import {
     aliceAddress,
-    aliceSecret,
     bobAddress,
     carolAddress,
     daveAddress,
-    faucetAccountId,
     faucetAddress
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";

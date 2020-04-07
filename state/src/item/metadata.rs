@@ -15,13 +15,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::CacheableItem;
-use ctypes::{CommonParams, ShardId, TxHash};
+use ctypes::{CommonParams, ShardId, StorageId, TxHash};
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Metadata {
     number_of_shards: ShardId,
+    number_of_modules: StorageId,
     number_of_initial_shards: ShardId,
     hashes: Vec<TxHash>,
     last_term_finished_block_num: u64,
@@ -35,6 +36,7 @@ impl Metadata {
     pub fn new(number_of_shards: ShardId, params: CommonParams) -> Self {
         Self {
             number_of_shards,
+            number_of_modules: 0,
             number_of_initial_shards: number_of_shards,
             hashes: vec![],
             last_term_finished_block_num: 0,
@@ -53,6 +55,12 @@ impl Metadata {
         let r = self.number_of_shards;
         self.number_of_shards += 1;
         self.hashes.push(tx_hash);
+        r
+    }
+
+    pub fn add_module(&mut self) -> StorageId {
+        let r = self.number_of_modules;
+        self.number_of_modules += 1;
         r
     }
 
@@ -125,9 +133,10 @@ const PREFIX: u8 = super::Prefix::Metadata as u8;
 
 impl Encodable for Metadata {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(9)
+        s.begin_list(10)
             .append(&PREFIX)
             .append(&self.number_of_shards)
+            .append(&self.number_of_modules)
             .append(&self.number_of_initial_shards)
             .append_list(&self.hashes)
             .append(&self.last_term_finished_block_num)
@@ -141,10 +150,10 @@ impl Encodable for Metadata {
 impl Decodable for Metadata {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
-        if item_count != 9 {
+        if item_count != 10 {
             return Err(DecoderError::RlpInvalidLength {
                 got: item_count,
-                expected: 9,
+                expected: 10,
             })
         }
 
@@ -154,18 +163,20 @@ impl Decodable for Metadata {
             return Err(DecoderError::Custom("Unexpected prefix"))
         }
         let number_of_shards = rlp.val_at(1)?;
-        let number_of_initial_shards = rlp.val_at(2)?;
-        let hashes = rlp.list_at(3)?;
+        let number_of_modules = rlp.val_at(2)?;
+        let number_of_initial_shards = rlp.val_at(3)?;
+        let hashes = rlp.list_at(4)?;
 
-        let last_term_finished_block_num = rlp.val_at(4)?;
-        let current_term_id = rlp.val_at(5)?;
-        let seq = rlp.val_at(6)?;
-        let params = rlp.val_at(7)?;
+        let last_term_finished_block_num = rlp.val_at(5)?;
+        let current_term_id = rlp.val_at(6)?;
+        let seq = rlp.val_at(7)?;
+        let params = rlp.val_at(8)?;
 
-        let term_params = rlp.val_at(8)?;
+        let term_params = rlp.val_at(9)?;
 
         Ok(Self {
             number_of_shards,
+            number_of_modules,
             number_of_initial_shards,
             hashes,
             last_term_finished_block_num,
@@ -233,6 +244,7 @@ mod tests {
     fn metadata_without_term_with_seq() {
         let metadata = Metadata {
             number_of_shards: 10,
+            number_of_modules: 7,
             number_of_initial_shards: 1,
             hashes: vec![],
             last_term_finished_block_num: 0,
@@ -248,6 +260,7 @@ mod tests {
     fn metadata_with_term_without_seq() {
         let metadata = Metadata {
             number_of_shards: 10,
+            number_of_modules: 7,
             number_of_initial_shards: 1,
             hashes: vec![],
             last_term_finished_block_num: 0,
@@ -263,6 +276,7 @@ mod tests {
     fn metadata_with_term_and_seq() {
         let metadata = Metadata {
             number_of_shards: 10,
+            number_of_modules: 7,
             number_of_initial_shards: 1,
             hashes: vec![],
             last_term_finished_block_num: 1,
