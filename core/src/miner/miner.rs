@@ -468,14 +468,50 @@ impl MinerService for Miner {
 
 #[cfg(test)]
 pub mod test {
+    use cio::IoService;
+    use coordinator::test_coordinator::TestCoordinator;
+    use coordinator::validator::Transaction;
+    use ctimer::TimerLoop;
+
+    use super::super::super::client::ClientConfig;
+    use super::super::super::service::ClientIoMessage;
+    use super::*;
+    use crate::client::Client;
+    use crate::db::NUM_COLUMNS;
+
     #[test]
     fn check_add_transactions_result_idx() {
-        todo!()
-        //TODO: Write test after implementing a mockup coordinator
+        let test_coordinator = Arc::new(TestCoordinator::default());
+        let db = Arc::new(kvdb_memorydb::create(NUM_COLUMNS.unwrap()));
+        let scheme = Scheme::new_test();
+        let miner = Arc::new(Miner::with_scheme_for_test(&scheme, db.clone(), test_coordinator.clone()));
+
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db.clone(), test_coordinator.clone());
+        let client = generate_test_client(db, Arc::clone(&miner), &scheme, test_coordinator).unwrap();
+
+        let transaction1 = Transaction::new("sample".to_string(), vec![1, 2, 3, 4, 5]);
+        let transaction2 = Transaction::new("sample".to_string(), vec![5, 4, 3, 2, 1]);
+
+        let transactions = vec![transaction1.clone(), transaction2, transaction1];
+        let add_results = miner.add_transactions_to_pool(client.as_ref(), transactions, TxOrigin::Local, &mut mem_pool);
+
+        assert!(add_results[0].is_ok());
+        assert!(add_results[1].is_ok());
+        assert!(add_results[2].is_err());
     }
 
-    fn generate_test_client(db: Arc<dyn KeyValueDB>, miner: Arc<Miner>, scheme: &Scheme) -> Result<Arc<Client>, Error> {
-        todo!()
-        //TODO: Write test after implementing a mockup coordinator
+    fn generate_test_client(
+        db: Arc<dyn KeyValueDB>,
+        miner: Arc<Miner>,
+        scheme: &Scheme,
+        coordinator: Arc<TestCoordinator>,
+    ) -> Result<Arc<Client>, Error> {
+        let timer_loop = TimerLoop::new(2);
+
+        let client_config: ClientConfig = Default::default();
+        let reseal_timer = timer_loop.new_timer_with_name("Client reseal timer");
+        let io_service = IoService::<ClientIoMessage>::start("Client")?;
+
+        Client::try_new(&client_config, scheme, db, miner, coordinator, io_service.channel(), reseal_timer)
     }
 }
