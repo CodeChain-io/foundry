@@ -269,15 +269,103 @@ impl MemPool {
 
 #[cfg(test)]
 pub mod test {
+    use coordinator::test_coordinator::TestCoordinator;
+    use coordinator::validator::Transaction;
+    use rand::Rng;
+    use std::sync::Arc;
+
+    use super::*;
+
+    fn create_random_transaction() -> Transaction {
+        //FIXME: change this random to be reproducible
+        let body_length = rand::thread_rng().gen_range(50, 200);
+        let random_bytes = (0..body_length).map(|_| rand::random::<u8>()).collect();
+        Transaction::new("Sample".to_string(), random_bytes)
+    }
+
+    #[test]
+    fn remove_all() {
+        let validator = Arc::new(TestCoordinator::default());
+        let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db, validator);
+
+        let inserted_block_number = 1;
+        let inserted_timestamp = 100;
+        let origin = TxOrigin::External;
+
+        let transactions: Vec<_> = (0..10).map(|_| create_random_transaction()).collect();
+
+        let add_result = mem_pool.add(transactions.clone(), origin, inserted_block_number, inserted_timestamp);
+        assert!(add_result.iter().all(|r| r.is_ok()));
+
+        mem_pool.remove_all();
+        assert!(transactions.iter().all(|tx| { !mem_pool.transaction_pool.contains(&tx.hash()) }));
+        assert_eq!(mem_pool.transaction_pool.len(), 0);
+        assert_eq!(mem_pool.transaction_pool.count, 0);
+        assert_eq!(mem_pool.transaction_pool.mem_usage, 0);
+    }
+
     #[test]
     fn add_and_remove_transactions() {
-        //TODO: Write test after implementing a mockup coordinator
-        todo!()
+        let validator = Arc::new(TestCoordinator::default());
+        let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db, validator);
+
+        let inserted_block_number = 1;
+        let inserted_timestamp = 100;
+        let origin = TxOrigin::External;
+
+        let transactions: Vec<_> = (0..10).map(|_| create_random_transaction()).collect();
+
+        let add_result = mem_pool.add(transactions.clone(), origin, inserted_block_number, inserted_timestamp);
+        assert!(add_result.iter().all(|r| r.is_ok()));
+
+        let (to_remove, to_keep) = transactions.split_at(5);
+
+        let to_remove_hashes: Vec<_> = to_remove.iter().map(|tx| tx.hash()).collect();
+        let to_keep_hashes: Vec<_> = to_keep.iter().map(|tx| tx.hash()).collect();
+        mem_pool.remove(&to_remove_hashes);
+
+        assert!(to_keep_hashes.iter().all(|hash| { mem_pool.transaction_pool.contains(hash) }));
+        assert!(to_remove_hashes.iter().all(|hash| { !mem_pool.transaction_pool.contains(hash) }));
+
+        let count: usize = 5;
+        let mem_usage: usize = to_keep.iter().map(|tx| tx.size()).sum();
+
+        assert_eq!(mem_pool.transaction_pool.count, count);
+        assert_eq!(mem_pool.transaction_pool.mem_usage, mem_usage);
     }
 
     #[test]
     fn db_backup_and_recover() {
-        //TODO: Write test after implementing a mockup coordinato
-        todo!()
+        let validator = Arc::new(TestCoordinator::default());
+        let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db.clone(), validator.clone());
+
+        let inserted_block_number = 1;
+        let inserted_timestamp = 100;
+        let origin = TxOrigin::External;
+
+        let transactions: Vec<_> = (0..10).map(|_| create_random_transaction()).collect();
+
+        let add_result = mem_pool.add(transactions, origin, inserted_block_number, inserted_timestamp);
+        assert!(add_result.iter().all(|r| r.is_ok()));
+
+        let inserted_block_number = 2;
+        let inserted_timestamp = 200;
+        let origin = TxOrigin::Local;
+
+        let transactions: Vec<_> = (0..10).map(|_| create_random_transaction()).collect();
+
+        let add_result = mem_pool.add(transactions, origin, inserted_block_number, inserted_timestamp);
+        assert!(add_result.iter().all(|r| r.is_ok()));
+
+        let mut mem_pool_recovered = MemPool::with_limits(8192, usize::max_value(), db, validator);
+        mem_pool_recovered.recover_from_db();
+
+        assert_eq!(mem_pool_recovered.transaction_pool, mem_pool.transaction_pool);
+        assert_eq!(mem_pool_recovered.queue_count_limit, mem_pool.queue_count_limit);
+        assert_eq!(mem_pool_recovered.queue_memory_limit, mem_pool.queue_memory_limit);
+        assert_eq!(mem_pool_recovered.next_transaction_id, mem_pool.next_transaction_id);
     }
 }
