@@ -19,7 +19,6 @@ use super::mem_pool_types::{MemPoolStatus, PoolingInstant, TransactionPool};
 use crate::transaction::PendingTransactions;
 use crate::Error as CoreError;
 use coordinator::validator::{ErrorCode, Transaction, TransactionWithMetadata, TxOrigin, Validator};
-use coordinator::Coordinator;
 use ctypes::errors::{HistoryError, SyntaxError};
 use ctypes::TxHash;
 use kvdb::{DBTransaction, KeyValueDB};
@@ -59,7 +58,7 @@ impl From<SyntaxError> for Error {
 
 pub struct MemPool {
     /// Coordinator used for checking incoming transactions and fetching transactions
-    coordinator: Arc<Coordinator>,
+    validator: Arc<dyn Validator>,
     /// list of all transactions in the pool
     transaction_pool: TransactionPool,
     /// The count(number) limit of each queue
@@ -78,10 +77,10 @@ impl MemPool {
         limit: usize,
         memory_limit: usize,
         db: Arc<dyn KeyValueDB>,
-        coordinator: Arc<Coordinator>,
+        validator: Arc<dyn Validator>,
     ) -> Self {
         MemPool {
-            coordinator,
+            validator,
             transaction_pool: TransactionPool::new(),
             queue_count_limit: limit,
             queue_memory_limit: memory_limit,
@@ -99,7 +98,7 @@ impl MemPool {
     fn enforce_limit(&mut self, batch: &mut DBTransaction) {
         let to_drop: Vec<TxHash> = {
             let transactions: Vec<_> = self.transaction_pool.pool.values().collect();
-            let (invalid, low_priority) = self.coordinator.remove_transactions(
+            let (invalid, low_priority) = self.validator.remove_transactions(
                 &transactions,
                 Some(self.queue_memory_limit),
                 Some(self.queue_count_limit),
@@ -143,7 +142,7 @@ impl MemPool {
             self.next_transaction_id += 1;
 
             let hash = tx.hash();
-            match self.coordinator.check_transaction(&tx) {
+            match self.validator.check_transaction(&tx) {
                 Ok(()) => {
                     let tx = TransactionWithMetadata::new(tx, origin, inserted_block_number, inserted_timestamp, id);
                     if self.transaction_pool.contains(&hash) {
@@ -212,7 +211,7 @@ impl MemPool {
         let mut current_size: usize = 0;
         let unordered_transactions: Vec<_> =
             self.transaction_pool.pool.values().filter(|tx| range.contains(&tx.inserted_timestamp)).collect();
-        let ordered_transactions = self.coordinator.fetch_transactions_for_block(&unordered_transactions);
+        let ordered_transactions = self.validator.fetch_transactions_for_block(&unordered_transactions);
         let chosen_transactions: Vec<_> = ordered_transactions
             .iter()
             .take_while(|tx_with_gas| {
@@ -250,7 +249,7 @@ impl MemPool {
         let mut batch = backup::backup_batch_with_capacity(self.transaction_pool.count);
         let to_be_removed: Vec<TxHash> = {
             let transactions: Vec<_> = self.transaction_pool.pool.values().collect();
-            let (invalid, low_priority) = self.coordinator.remove_transactions(&transactions, None, None);
+            let (invalid, low_priority) = self.validator.remove_transactions(&transactions, None, None);
             let transactions_to_be_removed = [invalid, low_priority].concat();
             transactions_to_be_removed.iter().map(|tx| tx.hash()).collect()
         };

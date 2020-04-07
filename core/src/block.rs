@@ -19,7 +19,6 @@ use crate::error::{BlockError, Error};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Address;
 use coordinator::validator::{Event, Header as PreHeader, Transaction, Validator, VerifiedCrime};
-use coordinator::Coordinator;
 use cstate::{StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
@@ -149,7 +148,7 @@ impl<'x> OpenBlock<'x> {
         Ok(r)
     }
 
-    pub fn open(&mut self, coordinator: &Coordinator, evidences: Vec<Evidence>) {
+    pub fn open(&mut self, validator: &dyn Validator, evidences: Vec<Evidence>) {
         let pre_header = PreHeader::new(
             self.header().timestamp(),
             self.header().number(),
@@ -165,17 +164,17 @@ impl<'x> OpenBlock<'x> {
                 self.block.evidences.iter().map(Encodable::rlp_bytes),
             ));
         }
-        coordinator.open_block(self.state_mut(), &pre_header, &verified_crimes);
+        validator.open_block(self.state_mut(), &pre_header, &verified_crimes);
     }
 
-    pub fn execute_transactions(&mut self, coordinator: &Coordinator, mut transactions: Vec<Transaction>) {
-        coordinator.execute_transactions(self.state_mut(), &transactions);
+    pub fn execute_transactions(&mut self, validator: &dyn Validator, mut transactions: Vec<Transaction>) {
+        validator.execute_transactions(self.state_mut(), &transactions);
         self.block.transactions.append(&mut transactions);
     }
 
     /// Turn this into a `ClosedBlock`.
-    pub fn close(mut self, coordinator: &Coordinator) -> Result<ClosedBlock, Error> {
-        let block_outcome = coordinator.close_block(self.state_mut());
+    pub fn close(mut self, validator: &dyn Validator) -> Result<ClosedBlock, Error> {
+        let block_outcome = validator.close_block(self.state_mut());
         if !block_outcome.is_success {
             return Err(Error::Other("The application rejected the block".to_string()))
         }
@@ -349,7 +348,7 @@ pub fn enact(
     transactions: &[Transaction],
     evidences: &[Evidence],
     engine: &dyn ConsensusEngine,
-    coordinator: &Coordinator,
+    validator: &dyn Validator,
     db: StateDB,
     parent: &Header,
 ) -> Result<ClosedBlock, Error> {
@@ -358,7 +357,7 @@ pub fn enact(
     b.populate_from(header);
     engine.on_open_block(b.inner_mut())?;
 
-    b.open(coordinator, evidences.to_vec());
-    b.execute_transactions(coordinator, transactions.to_vec());
-    b.close(coordinator)
+    b.open(validator, evidences.to_vec());
+    b.execute_transactions(validator, transactions.to_vec());
+    b.close(validator)
 }
