@@ -20,6 +20,7 @@ use super::connection::{
 use super::listener::Listener;
 use super::{NegotiationMessage, NetworkMessage};
 use crate::client::Client;
+use crate::p2p::connection::Error as P2PConnectionError;
 use crate::session::Session;
 use crate::stream::Stream;
 use crate::{FiltersControl, NodeId, RoutingTable, SocketAddr};
@@ -670,7 +671,13 @@ impl IoHandler<Message> for Handler {
                             io.update_registration(stream_token);
                         }
                     });
-                    match con.receive()? {
+                    let received = con.receive();
+                    if let Err(P2PConnectionError::IoError(ioerr)) = &received {
+                        if ioerr.kind() == std::io::ErrorKind::ConnectionAborted {
+                            io.deregister_stream(stream_token);
+                        }
+                    };
+                    match received? {
                         Some(NetworkMessage::Extension(msg)) => {
                             let remote_node_id = *self.remote_node_ids.read().get(&stream_token).unwrap_or_else(|| {
                                 unreachable!("Node id for {}:{} must exist", stream_token, con.peer_addr())
@@ -739,7 +746,13 @@ impl IoHandler<Message> for Handler {
                             io.update_registration(stream_token);
                         }
                     });
-                    match con.receive()? {
+                    let received = con.receive();
+                    if let Err(P2PConnectionError::IoError(ioerr)) = &received {
+                        if ioerr.kind() == std::io::ErrorKind::ConnectionAborted {
+                            io.deregister_stream(stream_token);
+                        }
+                    };
+                    match received? {
                         Some(NetworkMessage::Extension(msg)) => {
                             let remote_node_id = *self.remote_node_ids.read().get(&stream_token).unwrap_or_else(|| {
                                 unreachable!("Node id for {}:{} must exist", stream_token, con.peer_addr())
@@ -784,7 +797,13 @@ impl IoHandler<Message> for Handler {
                             io.update_registration(stream_token);
                         }
                     });
-                    match con.receive()? {
+                    let received = con.receive();
+                    if let Err(P2PConnectionError::IoError(ioerr)) = &received {
+                        if ioerr.kind() == std::io::ErrorKind::ConnectionAborted {
+                            io.deregister_stream(stream_token);
+                        }
+                    };
+                    match received? {
                         Some(OutgoingMessage::Sync1 {
                             initiator_pub_key,
                             network_id,
@@ -879,7 +898,13 @@ impl IoHandler<Message> for Handler {
                         }
                     });
                     let from = *con.peer_addr();
-                    match con.receive()? {
+                    let received = con.receive();
+                    if let Err(P2PConnectionError::IoError(ioerr)) = &received {
+                        if ioerr.kind() == std::io::ErrorKind::ConnectionAborted {
+                            io.deregister_stream(stream_token);
+                        }
+                    };
+                    match received? {
                         Some(IncomingMessage::Ack {
                             recipient_pub_key,
                             encrypted_nonce,
