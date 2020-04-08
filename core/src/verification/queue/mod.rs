@@ -66,8 +66,6 @@ pub struct VerificationQueue<K: Kind> {
     processing: RwLock<HashSet<BlockHash>>, // hash to block number
     deleting: Arc<AtomicBool>,
     ready_signal: Arc<QueueSignal>,
-    #[allow(dead_code)]
-    empty: Arc<SCondvar>,
     more_to_verify: Arc<SCondvar>,
     verifier_handles: Vec<JoinHandle<()>>,
     max_queue_size: usize,
@@ -133,7 +131,6 @@ impl<K: Kind> VerificationQueue<K> {
                 verified: AtomicUsize::new(0),
             },
             check_seal,
-            empty_mutex: SMutex::new(()),
             more_to_verify_mutex: SMutex::new(()),
         });
         let deleting = Arc::new(AtomicBool::new(false));
@@ -179,7 +176,6 @@ impl<K: Kind> VerificationQueue<K> {
             processing: RwLock::new(HashSet::new()),
             deleting,
             ready_signal,
-            empty,
             more_to_verify,
             verifier_handles,
             max_queue_size: cmp::max(config.max_queue_size, MIN_QUEUE_LIMIT),
@@ -491,8 +487,6 @@ struct Verification<K: Kind> {
     bad: Mutex<HashSet<BlockHash>>,
     sizes: Sizes,
     check_seal: bool,
-    #[allow(dead_code)]
-    empty_mutex: SMutex<()>,
     more_to_verify_mutex: SMutex<()>,
 }
 
