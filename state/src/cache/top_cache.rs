@@ -116,11 +116,6 @@ impl TopCache {
         self.module.get_mut(a, db)
     }
 
-    #[allow(dead_code)]
-    pub fn remove_shard(&self, address: &ShardAddress) {
-        self.shard.remove(address)
-    }
-
     pub fn action_data(&self, a: &H256, db: &dyn Trie) -> TrieResult<Option<ActionData>> {
         self.action_data.get(a, db)
     }
