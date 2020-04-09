@@ -39,7 +39,7 @@ use cdb::DatabaseError;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ConsensusParams, SyncHeader, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ConsensusParams, SyncHeader};
 use kvdb::KeyValueDB;
 use primitives::Bytes;
 use std::ops::Range;
@@ -221,9 +221,6 @@ pub trait BlockChainClient: Sync + Send + AccountData + BlockChainTrait + Import
 
     /// Get transaction with given hash.
     fn transaction(&self, id: &TransactionId) -> Option<LocalizedTransaction>;
-
-    /// Get invoice with given hash.
-    fn error_hint(&self, hash: &TxHash) -> Option<String>;
 }
 
 /// Result of import block operation.

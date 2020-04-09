@@ -20,6 +20,7 @@ use crate::blockchain::{BodyProvider, ChainUpdateResult, HeaderProvider};
 use crate::client::EngineInfo;
 use crate::consensus::ConsensusEngine;
 use crate::error::Error;
+use crate::event::{EventSource, EventsWithSource};
 use crate::miner::{Miner, MinerService};
 use crate::service::ClientIoMessage;
 use crate::verification::queue::{BlockQueue, HeaderQueue};
@@ -159,15 +160,31 @@ impl Importer {
 
         let chain = client.block_chain();
 
-        // Commit results
-        let invoices = block.invoices().to_owned();
+        let mut events: Vec<EventsWithSource> = block
+            .tx_events()
+            .iter()
+            .map(|(tx_hash, events)| {
+                let source = EventSource::Transaction(*tx_hash);
+                EventsWithSource {
+                    source,
+                    events: events.clone(),
+                }
+            })
+            .collect();
+
+        let block_events = EventsWithSource {
+            source: EventSource::Block(block.header().hash()),
+            events: block.block_events().clone(),
+        };
+
+        events.push(block_events);
 
         assert_eq!(hash, BlockView::new(block_data).header_view().hash());
 
         let mut batch = DBTransaction::new();
 
         block.state().journal_under(&mut batch, number).expect("DB commit failed");
-        let update_result = chain.insert_block(&mut batch, block_data, invoices, self.engine.borrow());
+        let update_result = chain.insert_block(&mut batch, block_data, events, self.engine.borrow());
 
         // Final commit to the DB
         client.db().write_buffered(batch);

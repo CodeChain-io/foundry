@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::invoice::Invoice;
 use crate::client::{EngineInfo, TermInfo};
 use crate::consensus::{ConsensusEngine, Evidence};
 use crate::error::{BlockError, Error};
 use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Ed25519Public as Public;
+use coordinator::types::Event;
 use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
@@ -29,7 +29,7 @@ use ctypes::{BlockNumber, TransactionIndex, TxHash};
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 /// A block, encoded as it is on the block chain.
 #[derive(Debug, Clone)]
@@ -91,7 +91,8 @@ pub struct ExecutedBlock {
     state: TopLevelState,
     evidences: Vec<Evidence>,
     transactions: Vec<VerifiedTransaction>,
-    invoices: Vec<Invoice>,
+    tx_events: HashMap<TxHash, Vec<Event>>,
+    block_events: Vec<Event>,
     transactions_set: HashSet<TxHash>,
 }
 
@@ -102,7 +103,8 @@ impl ExecutedBlock {
             state,
             evidences: Default::default(),
             transactions: Default::default(),
-            invoices: Default::default(),
+            tx_events: Default::default(),
+            block_events: Default::default(),
             transactions_set: Default::default(),
         }
     }
@@ -182,10 +184,6 @@ impl OpenBlock {
             }
             Err(err) => Some(err),
         };
-        self.block.invoices.push(Invoice {
-            hash,
-            error: error.clone().map(|err| err.to_string()),
-        });
 
         match error {
             None => Ok(()),
@@ -236,6 +234,8 @@ impl OpenBlock {
             self.block.header.transactions_root(),
             &skewed_merkle_root(BLAKE_NULL_RLP, self.block.transactions.iter().map(Encodable::rlp_bytes),)
         );
+
+        // FIXME: update tx events and block event
 
         Ok(ClosedBlock {
             block: self.block,
@@ -326,6 +326,16 @@ pub trait IsBlock {
     /// Get the final state associated with this object's block.
     fn state(&self) -> &TopLevelState {
         &self.block().state
+    }
+
+    /// Get the events of each transaction in this block
+    fn tx_events(&self) -> &HashMap<TxHash, Vec<Event>> {
+        &self.block().tx_events
+    }
+
+    /// Get the events emitted by this block
+    fn block_events(&self) -> &Vec<Event> {
+        &self.block().block_events
     }
 }
 
