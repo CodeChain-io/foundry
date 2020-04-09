@@ -42,12 +42,7 @@ impl ApiDependencies {
                     .to_delegate(),
             );
         }
-        handler.extend_with(EngineClient::new(Arc::clone(&self.client)).to_delegate());
         handler.extend_with(NetClient::new(Arc::clone(&self.network_control)).to_delegate());
-        handler.extend_with(
-            AccountClient::new(Arc::clone(&self.account_provider), Arc::clone(&self.client), Arc::clone(&self.miner))
-                .to_delegate(),
-        );
     }
 }
 
