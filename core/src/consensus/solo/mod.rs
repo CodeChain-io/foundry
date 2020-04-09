@@ -16,7 +16,6 @@
 
 mod params;
 
-use self::params::SoloParams;
 use super::stake;
 use super::{ConsensusEngine, Seal};
 use crate::block::ExecutedBlock;
@@ -25,31 +24,25 @@ use crate::client::ConsensusClient;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Ed25519Public as Public;
-use cstate::{init_stake, DoubleVoteHandler, StateDB, StateResult, StateWithCache, TopLevelState};
+use cstate::DoubleVoteHandler;
 use ctypes::transaction::Action;
 use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
-use primitives::H256;
-use std::collections::HashMap;
 use std::sync::{Arc, Weak};
 
 /// A consensus engine which does not provide any consensus mechanism.
 pub struct Solo {
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
     snapshot_notify_sender: Arc<RwLock<Option<NotifySender>>>,
-    genesis_stakes: HashMap<Public, u64>,
     stake: stake::Stake,
 }
 
 impl Solo {
     /// Returns new instance of Solo over the given state machine.
-    pub fn new(params: SoloParams) -> Self {
-        let genesis_stakes = params.genesis_stakes;
-
+    pub fn new() -> Self {
         Solo {
             client: Default::default(),
             snapshot_notify_sender: Arc::new(RwLock::new(None)),
-            genesis_stakes,
             stake: stake::Stake::default(),
         }
     }
@@ -94,12 +87,6 @@ impl ConsensusEngine for Solo {
 
     fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Public>>, EngineError> {
         Ok(None)
-    }
-
-    fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
-        let mut top_level = TopLevelState::from_existing(db, root)?;
-        init_stake(&mut top_level, self.genesis_stakes.clone(), Default::default(), Default::default())?;
-        Ok(top_level.commit_and_into_db()?)
     }
 
     fn current_validator_set(

@@ -35,11 +35,5 @@
         "timestamp": "0x00",
         "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "extraData": "0x"
-    },
-    "accounts": {
-        "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0": {
-            "balance": "18000000000000000000",
-            "seq": "0"
-        }
     }
 }
