@@ -2,20 +2,41 @@ use super::context::SubStorageAccess;
 use ccrypto::blake256;
 use ckey::Address;
 use ctypes::{CompactValidatorSet, TxHash};
+use primitives::Bytes;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
-
 /// A `Validator` receives requests from the underlying consensus engine
 /// and performs validation of blocks and Txes.
 ///
 ///
 
-pub type Bytes = Vec<u8>;
-
 pub type VoteWeight = u64;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Event {
-    pub key: &'static str,
+    pub key: String,
     pub value: Bytes,
+}
+
+impl Encodable for Event {
+    fn rlp_append(&self, s: &mut RlpStream) {
+        s.begin_list(2).append(&self.key).append(&self.value);
+    }
+}
+
+impl Decodable for Event {
+    fn decode(rlp: &Rlp) -> Result<Self, rlp::DecoderError> {
+        let item_count = rlp.item_count()?;
+        if item_count != 2 {
+            return Err(DecoderError::RlpIncorrectListLen {
+                expected: 2,
+                got: item_count,
+            })
+        }
+        Ok(Self {
+            key: rlp.val_at(0)?,
+            value: rlp.val_at(1)?,
+        })
+    }
 }
 
 pub struct ConsensusParams {
@@ -278,6 +299,15 @@ pub trait Validator {
 mod tests {
     use super::*;
     use rlp::rlp_encode_and_decode_test;
+
+    #[test]
+    fn encode_and_decode_events() {
+        let event = Event {
+            key: "test key".to_string(),
+            value: vec![0, 1, 2, 3, 4, 5],
+        };
+        rlp_encode_and_decode_test!(event);
+    }
 
     #[test]
     fn encode_and_decode_transaction() {
