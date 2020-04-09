@@ -15,5 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 mod informer_service_handler;
+mod rate_limiter;
 
 pub use informer_service_handler::{ColdEvents, InformerService};
+pub use rate_limiter::RateLimiter;
