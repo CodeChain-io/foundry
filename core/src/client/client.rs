@@ -35,6 +35,7 @@ use ccrypto::BLAKE_NULL_RLP;
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress};
+use coordinator::context::MemPoolAccess;
 use coordinator::traits::{BlockExecutor, Initializer};
 use coordinator::types::{Event, Transaction};
 use cstate::{Metadata, MetadataAddress, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopStateView};
@@ -536,6 +537,12 @@ impl ImportBlock for Client {
             }
             Err(err) => unreachable!("Reseal min timer should not fail but failed with {:?}", err),
         }
+    }
+}
+
+impl MemPoolAccess for Client {
+    fn inject_transactions(&self, transactions: Vec<Transaction>) -> Vec<Result<(), String>> {
+        transactions.into_iter().map(|tx| self.queue_own_transaction(tx).map_err(|e| format!("{}", e))).collect()
     }
 }
 
