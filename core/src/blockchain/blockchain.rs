@@ -16,18 +16,19 @@
 
 use super::block_info::BestBlockChanged;
 use super::body_db::{BodyDB, BodyProvider};
+use super::event_db::{EventDB, EventProvider};
 use super::extras::{BlockDetails, TransactionAddress};
 use super::headerchain::{HeaderChain, HeaderProvider};
-use super::invoice_db::{InvoiceDB, InvoiceProvider};
 use super::route::tree_route;
 use super::update_result::ChainUpdateResult;
 use crate::blockchain_info::BlockChainInfo;
 use crate::consensus::ConsensusEngine;
 use crate::db;
 use crate::encoded;
-use crate::invoice::Invoice;
+use crate::event::{EventSource, EventsWithSource};
 use crate::transaction::LocalizedTransaction;
 use crate::views::{BlockView, HeaderView};
+use coordinator::types::Event;
 use ctypes::{BlockHash, BlockNumber, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::RwLock;
@@ -49,7 +50,7 @@ pub struct BlockChain {
 
     headerchain: HeaderChain,
     body_db: BodyDB,
-    invoice_db: InvoiceDB,
+    event_db: EventDB,
 
     pending_best_block_hash: RwLock<Option<BlockHash>>,
     pending_best_proposal_block_hash: RwLock<Option<BlockHash>>,
@@ -84,7 +85,7 @@ impl BlockChain {
 
             headerchain: HeaderChain::new(&genesis_block.header_view(), db.clone()),
             body_db: BodyDB::new(&genesis_block, db.clone()),
-            invoice_db: InvoiceDB::new(db.clone()),
+            event_db: EventDB::new(db.clone()),
 
             pending_best_block_hash: RwLock::new(None),
             pending_best_proposal_block_hash: RwLock::new(None),
@@ -149,7 +150,7 @@ impl BlockChain {
         &self,
         batch: &mut DBTransaction,
         bytes: &[u8],
-        invoices: Vec<Invoice>,
+        events_with_sources: Vec<EventsWithSource>,
         engine: &dyn ConsensusEngine,
     ) -> ChainUpdateResult {
         // create views onto rlp
@@ -172,8 +173,8 @@ impl BlockChain {
         self.headerchain.insert_header(batch, &new_header, engine);
         self.body_db.insert_body(batch, &new_block);
         self.body_db.update_best_block(batch, &best_block_changed);
-        for invoice in invoices {
-            self.invoice_db.insert_invoice(batch, invoice.hash, invoice.error);
+        for events_with_source in events_with_sources {
+            self.event_db.insert_events(batch, events_with_source.source, events_with_source.events);
         }
 
         if let Some(best_block_hash) = best_block_changed.new_best_hash() {
@@ -194,7 +195,7 @@ impl BlockChain {
         ctrace!(BLOCKCHAIN, "Committing.");
         self.headerchain.commit();
         self.body_db.commit();
-        // NOTE: There are no commit for InvoiceDB
+        // NOTE: There are no commit for EventDB
 
         let mut best_block_hash = self.best_block_hash.write();
         let mut pending_best_block_hash = self.pending_best_block_hash.write();
@@ -379,7 +380,7 @@ impl BlockChain {
 }
 
 /// Interface for querying blocks by hash and by number.
-pub trait BlockProvider: HeaderProvider + BodyProvider + InvoiceProvider {
+pub trait BlockProvider: HeaderProvider + BodyProvider + EventProvider {
     /// Returns true if the given block is known
     /// (though not necessarily a part of the canon chain).
     fn is_known(&self, hash: &BlockHash) -> bool {
@@ -454,14 +455,13 @@ impl BodyProvider for BlockChain {
     }
 }
 
-impl InvoiceProvider for BlockChain {
-    /// Returns true if invoices for given hash is known
-    fn is_known_error_hint(&self, hash: &TxHash) -> bool {
-        self.invoice_db.is_known_error_hint(hash)
+impl EventProvider for BlockChain {
+    fn is_known_source(&self, source: &EventSource) -> bool {
+        self.event_db.is_known_source(source)
     }
 
-    fn error_hint(&self, hash: &TxHash) -> Option<String> {
-        self.invoice_db.error_hint(hash)
+    fn events(&self, source: &EventSource) -> Vec<Event> {
+        self.event_db.events(source)
     }
 }
 

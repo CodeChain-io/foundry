@@ -21,7 +21,7 @@ use super::{
     StateOrBlock,
 };
 use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock};
-use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, InvoiceProvider, TransactionAddress};
+use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, HeaderProvider, TransactionAddress};
 use crate::client::{ConsensusClient, SnapshotClient, TermInfo};
 use crate::consensus::{ConsensusEngine, EngineError};
 use crate::encoded;
@@ -40,7 +40,7 @@ use coordinator::context::{ChainHistoryAccess, StateHistoryAccess, StorageAccess
 use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, StorageId, SyncHeader, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, StorageId, SyncHeader};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::Bytes;
@@ -595,11 +595,6 @@ impl BlockChainClient for Client {
     fn transaction(&self, id: &TransactionId) -> Option<LocalizedTransaction> {
         let chain = self.block_chain();
         self.transaction_address(id).and_then(|pubkey| chain.transaction(&pubkey))
-    }
-
-    fn error_hint(&self, hash: &TxHash) -> Option<String> {
-        let chain = self.block_chain();
-        chain.error_hint(hash)
     }
 }
 
