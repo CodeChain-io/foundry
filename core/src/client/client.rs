@@ -28,7 +28,7 @@ use crate::error::{BlockImportError, Error, ImportError, SchemeError};
 use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
 use crate::service::ClientIoMessage;
-use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions};
+use crate::transaction::{LocalizedTransaction, PendingTransactions};
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
@@ -513,7 +513,7 @@ impl BlockChainClient for Client {
         self.importer.miner.delete_all_pending_transactions();
     }
 
-    fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
+    fn ready_transactions(&self, range: Range<u64>) -> PendingTransactions {
         let params = self.common_params(BlockId::Latest).expect("Common params of the latest block always exists");
 
         self.importer.miner.ready_transactions(params.max_body_size(), params.max_body_size(), range)

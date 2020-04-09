@@ -16,7 +16,7 @@
 
 use super::{HeaderView, TransactionView};
 use crate::consensus::Evidence;
-use crate::transaction::{LocalizedTransaction, UnverifiedTransaction};
+use crate::transaction::LocalizedTransaction;
 use ccrypto::blake256;
 use coordinator::validator::Transaction;
 use ctypes::{BlockHash, Header, TxHash};
@@ -88,12 +88,11 @@ impl<'a> BlockView<'a> {
         self.transactions()
             .into_iter()
             .enumerate()
-            .map(|(transaction_index, signed)| LocalizedTransaction {
-                signed,
+            .map(|(transaction_index, tx)| LocalizedTransaction {
+                tx,
                 block_hash,
                 block_number,
                 transaction_index,
-                cached_signer_public: None,
             })
             .collect()
     }
@@ -114,7 +113,7 @@ impl<'a> BlockView<'a> {
     }
 
     /// Returns transaction at given index without deserializing unnecessary data.
-    pub fn transaction_at(&self, index: usize) -> Option<UnverifiedTransaction> {
+    pub fn transaction_at(&self, index: usize) -> Option<Transaction> {
         self.rlp.at(2).unwrap().iter().nth(index).map(|rlp| rlp.as_val().unwrap())
     }
 
@@ -123,12 +122,11 @@ impl<'a> BlockView<'a> {
         let header = self.header_view();
         let block_hash = header.hash();
         let block_number = header.number();
-        self.transaction_at(transaction_index).map(|signed| LocalizedTransaction {
-            signed,
+        self.transaction_at(transaction_index).map(|tx| LocalizedTransaction {
+            tx,
             block_hash,
             block_number,
             transaction_index,
-            cached_signer_public: None,
         })
     }
 }

@@ -31,7 +31,7 @@ use crate::account_provider::Error as AccountProviderError;
 use crate::client::{BlockChainClient, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, TermInfo};
 use crate::consensus::EngineType;
 use crate::error::Error;
-use crate::transaction::PendingVerifiedTransactions;
+use crate::transaction::PendingTransactions;
 use crate::BlockId;
 use coordinator::validator::Transaction;
 
@@ -89,8 +89,7 @@ pub trait MinerService: Send + Sync {
     ) -> Result<(), Error>;
 
     /// Get a list of all pending transactions in the mem pool.
-    fn ready_transactions(&self, gas_limit: usize, size_limit: usize, range: Range<u64>)
-        -> PendingVerifiedTransactions;
+    fn ready_transactions(&self, gas_limit: usize, size_limit: usize, range: Range<u64>) -> PendingTransactions;
 
     /// Get a count of all pending transactions in the mem pool.
     fn count_pending_transactions(&self, range: Range<u64>) -> usize;

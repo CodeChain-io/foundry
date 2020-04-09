@@ -44,7 +44,7 @@ use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
 use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
 use crate::Error;
-use crate::{LocalizedTransaction, PendingVerifiedTransactions};
+use crate::{LocalizedTransaction, PendingTransactions};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::{Address, Ed25519Private as Private, Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::validator::Transaction;
@@ -424,7 +424,7 @@ impl BlockChainClient for TestBlockChainClient {
         self.miner.delete_all_pending_transactions();
     }
 
-    fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
+    fn ready_transactions(&self, range: Range<u64>) -> PendingTransactions {
         let params = self.common_params(BlockId::Latest).expect("Common params of the latest block always exists");
         self.miner.ready_transactions(params.max_body_size(), params.max_body_size(), range)
     }
