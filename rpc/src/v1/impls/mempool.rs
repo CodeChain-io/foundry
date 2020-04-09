@@ -17,7 +17,7 @@
 use super::super::errors;
 use super::super::traits::Mempool;
 use super::super::types::PendingTransactions;
-use ccore::{BlockChainClient, EngineInfo, MiningBlockChainClient, UnverifiedTransaction, VerifiedTransaction};
+use ccore::{BlockChainClient, EngineInfo, UnverifiedTransaction, VerifiedTransaction};
 use cjson::bytes::Bytes;
 use ctypes::TxHash;
 use jsonrpc_core::Result;
@@ -39,7 +39,7 @@ impl<C> MempoolClient<C> {
 
 impl<C> Mempool for MempoolClient<C>
 where
-    C: BlockChainClient + MiningBlockChainClient + EngineInfo + 'static,
+    C: BlockChainClient + EngineInfo + 'static,
 {
     fn send_signed_transaction(&self, raw: Bytes) -> Result<TxHash> {
         Rlp::new(&raw.into_vec())
@@ -54,10 +54,6 @@ where
                 }
             })
             .map(Into::into)
-    }
-
-    fn get_error_hint(&self, transaction_hash: TxHash) -> Result<Option<String>> {
-        Ok(self.client.error_hint(&transaction_hash))
     }
 
     fn delete_all_pending_transactions(&self) -> Result<()> {

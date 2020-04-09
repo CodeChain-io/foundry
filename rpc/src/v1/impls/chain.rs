@@ -17,24 +17,22 @@
 use super::super::errors;
 use super::super::traits::Chain;
 use super::super::types::{Block, BlockNumberAndHash, Transaction, ValidatorSet};
-use ccore::{AccountData, EngineInfo, MiningBlockChainClient, TermInfo};
+use ccore::{BlockChainClient, EngineInfo, TermInfo};
 use cjson::scheme::Params;
-use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress};
-use cstate::FindDoubleVoteHandler;
 use ctypes::{BlockHash, BlockId, BlockNumber, TxHash};
 use jsonrpc_core::Result;
 use std::sync::Arc;
 
 pub struct ChainClient<C>
 where
-    C: MiningBlockChainClient + EngineInfo, {
+    C: BlockChainClient + EngineInfo, {
     client: Arc<C>,
 }
 
 impl<C> ChainClient<C>
 where
-    C: MiningBlockChainClient + AccountData + EngineInfo,
+    C: BlockChainClient + EngineInfo,
 {
     pub fn new(client: Arc<C>) -> Self {
         ChainClient {
@@ -45,7 +43,7 @@ where
 
 impl<C> Chain for ChainClient<C>
 where
-    C: MiningBlockChainClient + AccountData + EngineInfo + FindDoubleVoteHandler + TermInfo + 'static,
+    C: BlockChainClient + EngineInfo + TermInfo + 'static,
 {
     fn get_transaction(&self, transaction_hash: TxHash) -> Result<Option<Transaction>> {
         let id = transaction_hash.into();
@@ -54,18 +52,6 @@ where
 
     fn contains_transaction(&self, transaction_hash: TxHash) -> Result<bool> {
         Ok(self.client.transaction_block(&transaction_hash.into()).is_some())
-    }
-
-    fn get_seq(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<u64>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        let pubkey = address.try_pubkey().map_err(errors::core)?;
-        Ok(self.client.seq(pubkey, block_id))
-    }
-
-    fn get_balance(&self, aaddress: PlatformAddress, block_number: Option<u64>) -> Result<Option<Uint>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        let pubkey = aaddress.try_pubkey().map_err(errors::core)?;
-        Ok(self.client.balance(pubkey, block_id.into()).map(Into::into))
     }
 
     fn get_best_block_number(&self) -> Result<BlockNumber> {

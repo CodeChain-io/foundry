@@ -16,7 +16,6 @@
 
 use super::super::types::{Block, BlockNumberAndHash, Transaction, ValidatorSet};
 use cjson::scheme::Params;
-use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress};
 use ctypes::{BlockHash, BlockNumber, TxHash};
 use jsonrpc_core::Result;
@@ -30,14 +29,6 @@ pub trait Chain {
     /// Query whether the chain has the transaction with given transaction hash.
     #[rpc(name = "chain_containsTransaction")]
     fn contains_transaction(&self, transaction_hash: TxHash) -> Result<bool>;
-
-    /// Gets seq with given account.
-    #[rpc(name = "chain_getSeq")]
-    fn get_seq(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<u64>>;
-
-    /// Gets balance with given account.
-    #[rpc(name = "chain_getBalance")]
-    fn get_balance(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<Uint>>;
 
     /// Gets number of best block.
     #[rpc(name = "chain_getBestBlockNumber")]
