@@ -29,17 +29,11 @@ use crate::consensus::EngineType;
 use crate::error::Error;
 use crate::views::HeaderView;
 use crate::BlockId;
-use ckey::{public_to_address, Address};
+use ckey::Address;
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::{
-    init_stake, update_validator_weights, CurrentValidators, NextValidators, StateDB, StateResult, StateWithCache,
-    TopLevelState, TopState, TopStateView,
-};
+use cstate::{update_validator_weights, CurrentValidators, NextValidators, TopState, TopStateView};
 use ctypes::{BlockHash, Header};
-use primitives::H256;
-use std::collections::HashSet;
-use std::iter::Iterator;
 use std::sync::atomic::Ordering as AtomicOrdering;
 use std::sync::{Arc, Weak};
 
@@ -140,18 +134,6 @@ impl ConsensusEngine for Tendermint {
         if !is_term_changed(block.header(), &parent, term_seconds) {
             return Ok(())
         }
-
-        let inactive_validators = match term {
-            0 => Vec::new(),
-            _ => {
-                let start_of_the_current_term = metadata.last_term_finished_block_num() + 1;
-                let validators = NextValidators::load_from_state(block.state())?
-                    .into_iter()
-                    .map(|val| public_to_address(val.pubkey()))
-                    .collect();
-                inactive_validators(&*client, start_of_the_current_term, block.header(), validators)
-            }
-        };
 
         let state = block.state_mut();
         let validators = NextValidators::elect(&state)?;
@@ -261,19 +243,6 @@ impl ConsensusEngine for Tendermint {
         let block_hash = header.hash();
         Ok(Some(self.validators.next_addresses(&block_hash)))
     }
-
-    fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
-        let mut state = TopLevelState::from_existing(db, root)?;
-        init_stake(
-            &mut state,
-            self.genesis_stakes.clone(),
-            self.genesis_candidates.clone(),
-            self.genesis_delegations.clone(),
-        )?;
-
-        NextValidators::elect(&state)?.save_to_state(&mut state)?;
-        Ok(state.commit_and_into_db()?)
-    }
 }
 
 pub(super) fn is_term_changed(header: &Header, parent: &Header, term_seconds: u64) -> bool {
@@ -289,21 +258,4 @@ pub(super) fn is_term_changed(header: &Header, parent: &Header, term_seconds: u6
     let parent_term_period = parent.timestamp() / term_seconds;
 
     current_term_period != parent_term_period
-}
-
-fn inactive_validators(
-    client: &dyn ConsensusClient,
-    start_of_the_current_term: u64,
-    current_block: &Header,
-    mut validators: HashSet<Address>,
-) -> Vec<Address> {
-    validators.remove(current_block.author());
-    let hash = *current_block.parent_hash();
-    let mut header = client.block_header(&hash.into()).expect("Header of the parent must exist");
-    while start_of_the_current_term <= header.number() {
-        validators.remove(&header.author());
-        header = client.block_header(&header.parent_hash().into()).expect("Header of the parent must exist");
-    }
-
-    validators.into_iter().collect()
 }

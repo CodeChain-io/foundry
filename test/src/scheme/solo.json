@@ -36,10 +36,5 @@
         "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "extraData": "0x"
     },
-    "accounts": {
-        "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg": {
-            "balance": "18000000000000000000",
-            "seq": "0"
-        }
-    }
+    "appState": ""
 }
