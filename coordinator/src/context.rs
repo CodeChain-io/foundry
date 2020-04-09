@@ -14,13 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::Transaction;
 pub use ctypes::StorageId;
 
-/// A `Context` provides the interface against the system services such as DB access,
-pub trait Context: SubStorageAccess {}
+/// A `Context` provides the interface against the system services such as moulde substorage access,
+/// mempool access
+pub trait Context: SubStorageAccess + MemPoolAccess {}
 
 pub type Key = dyn AsRef<[u8]>;
 pub type Value = Vec<u8>;
+
 pub trait SubStorageAccess {
     fn get(&self, storage_id: StorageId, key: &Key) -> Option<Value>;
     fn set(&mut self, storage_id: StorageId, key: &Key, value: Value);
@@ -33,4 +36,8 @@ pub trait SubStorageAccess {
     fn revert_to_the_checkpoint(&mut self);
     /// Merge last checkpoint with the previous
     fn discard_checkpoint(&mut self);
+}
+
+pub trait MemPoolAccess {
+    fn inject_transactions(&self, txs: Vec<Transaction>) -> Vec<Result<(), String>>;
 }
