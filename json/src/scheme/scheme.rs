@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{Accounts, Engine, Genesis, Params};
+use super::{Engine, Genesis, Params};
 use serde_json::Error;
 use std::io::Read;
 
@@ -32,8 +32,7 @@ pub struct Scheme {
     pub params: Params,
     /// Genesis header.
     pub genesis: Genesis,
-    /// Genesis state.
-    pub accounts: Accounts,
+
     /// Boot nodes.
     pub nodes: Option<Vec<String>>,
 }
@@ -122,14 +121,7 @@ mod tests {
             },
             "nodes": [
             "enode://b1217cbaa440e35ed471157123fe468e19e8b5ad5bedb4b1fdbcbdab6fb2f5ed3e95dd9c24a22a79fdb2352204cea207df27d92bfd21bfd41545e8b16f637499@104.44.138.37:30303"
-            ],
-            "accounts": {
-                "fjjh0001AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEtc0": { "balance": "1", "seq": "1048576" },
-                "fjjh0002AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAItc0": { "balance": "1", "seq": "1048576" },
-                "fjjh0003AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMtc0": { "balance": "1", "seq": "1048576" },
-                "fjjh0004AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQtc0": { "balance": "1", "seq": "1048576" },
-                "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0": { "balance": "1606938044258990275541962092341162602522202993782792835301376", "seq": "1048576" }
-            }
+            ]
         }"#;
         let _deserialized: Scheme = serde_json::from_str(s).unwrap();
         // TODO: validate all fields

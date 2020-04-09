@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::pod_state::PodAccounts;
 use super::seal::Generic as GenericSeal;
 use super::Genesis;
 use crate::consensus::{CodeChainEngine, NullEngine, Solo, Tendermint};
@@ -22,7 +21,7 @@ use crate::error::{Error, SchemeError};
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, HashDB};
 use ckey::Ed25519Public as Public;
-use cstate::{Metadata, MetadataAddress, StateDB, StateResult};
+use cstate::{Metadata, MetadataAddress, StateDB};
 use ctypes::errors::SyntaxError;
 use ctypes::{BlockHash, CommonParams, Header};
 use merkle_trie::{TrieFactory, TrieMut};
@@ -62,7 +61,6 @@ pub struct Scheme {
     state_root_memo: RwLock<H256>,
 
     /// Genesis state as plain old data.
-    genesis_accounts: PodAccounts,
     genesis_params: CommonParams,
 }
 
@@ -87,34 +85,17 @@ impl Scheme {
     fn engine(engine_scheme: cjson::scheme::Engine) -> Arc<dyn CodeChainEngine> {
         match engine_scheme {
             cjson::scheme::Engine::Null => Arc::new(NullEngine::default()),
-            cjson::scheme::Engine::Solo(solo) => Arc::new(Solo::new(solo.params.into())),
+            cjson::scheme::Engine::Solo(_) => Arc::new(Solo::new()),
             cjson::scheme::Engine::Tendermint(tendermint) => Tendermint::new(tendermint.params.into()),
         }
     }
 
     fn initialize_state(&self, db: StateDB, genesis_params: CommonParams) -> Result<StateDB, Error> {
         let root = BLAKE_NULL_RLP;
-        let (db, root) = self.initialize_accounts(db, root)?;
         let (db, root) = self.initialize_modules(db, root, genesis_params)?;
-        let (db, root) = self.engine.initialize_genesis_state(db, root)?;
 
         *self.state_root_memo.write() = root;
         Ok(db)
-    }
-
-    fn initialize_accounts<DB: AsHashDB>(&self, mut db: DB, mut root: H256) -> StateResult<(DB, H256)> {
-        // basic accounts in scheme.
-        {
-            let mut t = TrieFactory::create(db.as_hashdb_mut(), &mut root);
-
-            for (pubkey, account) in &*self.genesis_accounts {
-                let r = t.insert(pubkey.as_ref(), &account.rlp_bytes());
-                debug_assert_eq!(Ok(None), r);
-                r?;
-            }
-        }
-
-        Ok((db, root))
     }
 
     fn initialize_modules<DB: AsHashDB>(
@@ -222,10 +203,6 @@ impl Scheme {
         ret.append_raw(&empty_list, 1);
         ret.out()
     }
-
-    pub fn genesis_accounts(&self) -> Vec<Public> {
-        self.genesis_accounts.keys().cloned().collect()
-    }
 }
 
 /// Load from JSON object.
@@ -248,7 +225,6 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
         extra_data: g.extra_data,
         seal_rlp,
         state_root_memo: RwLock::new(Default::default()), // will be overwritten right after.
-        genesis_accounts: s.accounts.into(),
         genesis_params: params,
     };
 
