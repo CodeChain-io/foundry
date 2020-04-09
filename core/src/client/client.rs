@@ -34,7 +34,7 @@ use crate::types::{BlockStatus, TransactionId, VerificationQueueInfo as BlockQue
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
-use coordinator::context::{ChainHistoryAccess, StateHistoryAccess, StorageAccess};
+use coordinator::context::{ChainHistoryAccess, MemPoolAccess, StateHistoryAccess, StorageAccess};
 use coordinator::engine::{BlockExecutor, Initializer};
 use coordinator::types::Event;
 use coordinator::Transaction;
@@ -510,6 +510,18 @@ impl ImportBlock for Client {
             }
             Err(err) => unreachable!("Reseal min timer should not fail but failed with {:?}", err),
         }
+    }
+}
+
+impl MemPoolAccess for Client {
+    fn inject_transactions(&self, transactions: Vec<Transaction>) -> Vec<Result<TxHash, String>> {
+        transactions
+            .into_iter()
+            .map(|tx| {
+                let hash = tx.hash();
+                self.queue_own_transaction(tx).map_err(|e| format!("{}", e)).map(|_| hash)
+            })
+            .collect()
     }
 }
 
