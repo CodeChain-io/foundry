@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{informer_notify, Connection, EventTags, Events, InformerEventSender};
+use crate::{informer_notify, Connection, EventTags, Events, InformerEventSender, RateLimiter};
 use ccore::{BlockChainTrait, BlockId, Client, EngineInfo};
 use crossbeam::Receiver;
 use crossbeam_channel as crossbeam;
@@ -116,12 +116,14 @@ impl InformerService {
 
 pub struct BlockCreatedEventGenerator {
     client: Arc<Client>,
+    rate_limiter: RateLimiter,
 }
 
 impl BlockCreatedEventGenerator {
     pub fn new(client: Arc<Client>) -> Self {
         Self {
             client,
+            rate_limiter: RateLimiter::new(100),
         }
     }
 
@@ -133,6 +135,7 @@ impl BlockCreatedEventGenerator {
                 if best_block_number >= current_block_number {
                     let event = self.gen(current_block_number);
                     connection.cold_notify(&event);
+                    self.rate_limiter.acquire_ticket().await;
                     current_block_number += 1;
                 } else {
                     tokio::time::delay_for(Duration::from_millis(500)).await;
