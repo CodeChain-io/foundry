@@ -33,7 +33,7 @@ use crate::blockchain_info::BlockChainInfo;
 use crate::consensus::EngineError;
 use crate::encoded;
 use crate::error::BlockImportError;
-use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions};
+use crate::transaction::{LocalizedTransaction, PendingTransactions};
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use crate::Error;
 use cdb::DatabaseError;
@@ -163,7 +163,7 @@ pub trait BlockChainClient: Sync + Send + BlockChainTrait + ImportBlock {
     fn delete_all_pending_transactions(&self);
 
     /// List all transactions that are allowed into the next block.
-    fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions;
+    fn ready_transactions(&self, range: Range<u64>) -> PendingTransactions;
 
     /// Get the count of all pending transactions currently in the mem_pool.
     fn count_pending_transactions(&self, range: Range<u64>) -> usize;

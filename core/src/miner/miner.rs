@@ -22,7 +22,7 @@ use crate::client::{BlockChainClient, BlockChainTrait, BlockProducer, EngineInfo
 use crate::consensus::{ConsensusEngine, EngineType};
 use crate::error::Error;
 use crate::scheme::Scheme;
-use crate::transaction::PendingVerifiedTransactions;
+use crate::transaction::PendingTransactions;
 use crate::types::{BlockId, TransactionId};
 use ckey::Address;
 use coordinator::validator::{Transaction, TxOrigin};
@@ -424,12 +424,7 @@ impl MinerService for Miner {
         imported
     }
 
-    fn ready_transactions(
-        &self,
-        gas_limit: usize,
-        size_limit: usize,
-        range: Range<u64>,
-    ) -> PendingVerifiedTransactions {
+    fn ready_transactions(&self, gas_limit: usize, size_limit: usize, range: Range<u64>) -> PendingTransactions {
         // TODO: Create a gas_limit parameter and use it.
         self.mem_pool.read().top_transactions(gas_limit, size_limit, range)
     }

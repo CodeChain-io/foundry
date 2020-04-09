@@ -16,7 +16,7 @@
 
 use super::backup;
 use super::mem_pool_types::{MemPoolStatus, PoolingInstant, TransactionPool};
-use crate::transaction::PendingVerifiedTransactions;
+use crate::transaction::PendingTransactions;
 use crate::Error as CoreError;
 use coordinator::validator::{ErrorCode, Transaction, TransactionWithMetadata, TxOrigin, Validator};
 use coordinator::Coordinator;
@@ -201,12 +201,7 @@ impl MemPool {
         self.transaction_pool.clear();
     }
 
-    pub fn top_transactions(
-        &self,
-        gas_limit: usize,
-        size_limit: usize,
-        range: Range<u64>,
-    ) -> PendingVerifiedTransactions {
+    pub fn top_transactions(&self, gas_limit: usize, size_limit: usize, range: Range<u64>) -> PendingTransactions {
         let mut current_gas: usize = 0;
         let mut current_size: usize = 0;
         let unordered_transactions: Vec<_> =
@@ -223,7 +218,7 @@ impl MemPool {
             })
             .map(|tx_with_gas| tx_with_gas.tx.clone())
             .collect();
-        PendingVerifiedTransactions {
+        PendingTransactions {
             transactions: chosen_transactions,
             last_timestamp: None, // FIXME: calculate last_timestamp,
         }

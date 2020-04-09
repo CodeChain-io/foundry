@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::Action;
-use ccore::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
+use ccore::{LocalizedTransaction, PendingTransactions, VerifiedTransaction};
 use cjson::uint::Uint;
 use ckey::{NetworkId, Signature};
 use ctypes::{BlockHash, TxHash};
@@ -42,8 +42,8 @@ pub struct PendingTransactions {
     last_timestamp: Option<u64>,
 }
 
-impl From<PendingVerifiedTransactions> for PendingTransactions {
-    fn from(p: PendingVerifiedTransactions) -> Self {
+impl From<PendingTransactions> for PendingTransactions {
+    fn from(p: PendingTransactions) -> Self {
         let transactions = p.transactions.into_iter().map(From::from).collect();
         Self {
             transactions,
