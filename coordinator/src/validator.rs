@@ -54,19 +54,37 @@ pub struct Header {
     extra_data: Bytes,
 }
 
+impl Header {
+    pub fn new(timestamp: u64, number: u64, author: Public, extra_data: Bytes) -> Self {
+        Self {
+            timestamp,
+            number,
+            author,
+            extra_data,
+        }
+    }
+}
+
 /// A decoded transaction.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Transaction {
     tx_type: String,
     body: Bytes,
 }
 
 impl Transaction {
-    fn tx_type(&self) -> &str {
+    pub fn new(tx_type: String, body: Bytes) -> Self {
+        Self {
+            tx_type,
+            body,
+        }
+    }
+    pub fn tx_type(&self) -> &str {
         &self.tx_type
     }
 
-    fn body<T: 'static>(&self) -> Option<&T> {
-        unimplemented!()
+    pub fn body(&self) -> &Bytes {
+        &self.body
     }
 
     pub fn size(&self) -> usize {
@@ -87,6 +105,7 @@ pub enum TxOrigin {
     External,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransactionWithMetadata {
     pub tx: Transaction,
     pub origin: TxOrigin,
@@ -159,15 +178,19 @@ pub struct BlockOutcome {
 }
 
 pub trait Validator {
-    fn initialize_chain(&mut self) -> ConsensusParams;
+    fn initialize_chain(&self) -> ConsensusParams;
     fn open_block(&self, context: &mut dyn SubStorageAccess, header: &Header, evidences: &[Evidence]);
     fn execute_transactions(&self, context: &mut dyn SubStorageAccess, transactions: &[Transaction]);
     fn close_block(&self, context: &mut dyn SubStorageAccess) -> BlockOutcome;
-    fn check_transaction(&mut self, transaction: &Transaction) -> bool;
-    fn fetch_transactions_for_block(&self, transactions: Vec<&TransactionWithMetadata>) -> Vec<&TransactionWithGas>;
-    fn remove_transactions(
-        &mut self,
-        transactions: &[TransactionWithMetadata],
-        size: Option<usize>,
-    ) -> (Vec<&TransactionWithMetadata>, Vec<&TransactionWithMetadata>);
+    fn check_transaction(&self, transaction: &Transaction) -> bool;
+    fn fetch_transactions_for_block<'a>(
+        &self,
+        transactions: &'a [&'a TransactionWithMetadata],
+    ) -> Vec<&'a TransactionWithGas>;
+    fn remove_transactions<'a>(
+        &self,
+        transactions: &'a [&'a TransactionWithMetadata],
+        memory_limit: Option<usize>,
+        size_limit: Option<usize>,
+    ) -> (Vec<&'a TransactionWithMetadata>, Vec<&'a TransactionWithMetadata>);
 }

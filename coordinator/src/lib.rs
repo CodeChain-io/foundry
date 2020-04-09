@@ -14,7 +14,7 @@ pub mod validator;
 pub struct Coordinator {}
 
 impl validator::Validator for Coordinator {
-    fn initialize_chain(&mut self) -> ConsensusParams {
+    fn initialize_chain(&self) -> ConsensusParams {
         unimplemented!()
     }
 
@@ -30,19 +30,23 @@ impl validator::Validator for Coordinator {
         unimplemented!()
     }
 
-    fn check_transaction(&mut self, transaction: &Transaction) -> bool {
+    fn check_transaction(&self, transaction: &Transaction) -> bool {
         unimplemented!()
     }
 
-    fn fetch_transactions_for_block(&self, transactions: Vec<&TransactionWithMetadata>) -> Vec<&TransactionWithGas> {
+    fn fetch_transactions_for_block<'a>(
+        &self,
+        transactions: &'a [&'a TransactionWithMetadata],
+    ) -> Vec<&'a TransactionWithGas> {
         unimplemented!()
     }
 
-    fn remove_transactions(
-        &mut self,
-        transactions: &[TransactionWithMetadata],
-        size: Option<usize>,
-    ) -> (Vec<&TransactionWithMetadata>, Vec<&TransactionWithMetadata>) {
+    fn remove_transactions<'a>(
+        &self,
+        transactions: &'a [&'a TransactionWithMetadata],
+        memory_limit: Option<usize>,
+        size_limit: Option<usize>,
+    ) -> (Vec<&'a TransactionWithMetadata>, Vec<&'a TransactionWithMetadata>) {
         unimplemented!()
     }
 }
