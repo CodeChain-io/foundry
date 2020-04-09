@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::pod_state::PodAccounts;
 use super::seal::Generic as GenericSeal;
 use super::Genesis;
 use crate::consensus::{ConsensusEngine, NullEngine, Solo, Tendermint};
@@ -62,8 +61,9 @@ pub struct Scheme {
     state_root_memo: RwLock<H256>,
 
     /// Genesis state as plain old data.
-    genesis_accounts: PodAccounts,
     genesis_params: CommonParams,
+    /// Application initial state
+    pub app_state: String,
 }
 
 // helper for formatting errors.
@@ -94,27 +94,10 @@ impl Scheme {
 
     fn initialize_state(&self, db: StateDB, genesis_params: CommonParams) -> Result<StateDB, Error> {
         let root = BLAKE_NULL_RLP;
-        let (db, root) = self.initialize_accounts(db, root)?;
         let (db, root) = self.initialize_modules(db, root, genesis_params)?;
-        let (db, root) = self.engine.initialize_genesis_state(db, root)?;
 
         *self.state_root_memo.write() = root;
         Ok(db)
-    }
-
-    fn initialize_accounts<DB: AsHashDB>(&self, mut db: DB, mut root: H256) -> StateResult<(DB, H256)> {
-        // basic accounts in scheme.
-        {
-            let mut t = TrieFactory::create(db.as_hashdb_mut(), &mut root);
-
-            for (address, account) in &*self.genesis_accounts {
-                let r = t.insert(&**address, &account.rlp_bytes());
-                debug_assert_eq!(Ok(None), r);
-                r?;
-            }
-        }
-
-        Ok((db, root))
     }
 
     fn initialize_modules<DB: AsHashDB>(
@@ -221,10 +204,6 @@ impl Scheme {
         ret.append_raw(&empty_list, 1);
         ret.out()
     }
-
-    pub fn genesis_accounts(&self) -> Vec<Address> {
-        self.genesis_accounts.keys().cloned().collect()
-    }
 }
 
 /// Load from JSON object.
@@ -247,8 +226,9 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
         extra_data: g.extra_data,
         seal_rlp,
         state_root_memo: RwLock::new(Default::default()), // will be overwritten right after.
-        genesis_accounts: s.accounts.into(),
         genesis_params: params,
+
+        app_state: s.app_state,
     };
 
     // use memoized state root if provided.

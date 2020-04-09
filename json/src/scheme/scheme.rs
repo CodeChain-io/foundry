@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{Accounts, Engine, Genesis, Params};
+use super::{Engine, Genesis, Params};
 use serde_json::Error;
 use std::io::Read;
 
@@ -32,8 +32,9 @@ pub struct Scheme {
     pub params: Params,
     /// Genesis header.
     pub genesis: Genesis,
-    /// Genesis state.
-    pub accounts: Accounts,
+
+    // Application initial state
+    pub app_state: String,
     /// Boot nodes.
     pub nodes: Option<Vec<String>>,
 }
@@ -123,13 +124,7 @@ mod tests {
             "nodes": [
             "enode://b1217cbaa440e35ed471157123fe468e19e8b5ad5bedb4b1fdbcbdab6fb2f5ed3e95dd9c24a22a79fdb2352204cea207df27d92bfd21bfd41545e8b16f637499@104.44.138.37:30303"
             ],
-            "accounts": {
-                "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqyca3rwt": { "balance": "1", "seq": "1048576" },
-                "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgfrhflv": { "balance": "1", "seq": "1048576" },
-                "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvxf40sk": { "balance": "1", "seq": "1048576" },
-                "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqszkma5z": { "balance": "1", "seq": "1048576" },
-                "tccq8txq9uafdg8y2de9m2tdkhsfsj3m9nluq94hyan": { "balance": "1606938044258990275541962092341162602522202993782792835301376", "seq": "1048576" }
-            }
+            "appState": ""
         }"#;
         let _deserialized: Scheme = serde_json::from_str(s).unwrap();
         // TODO: validate all fields

@@ -1,51 +1,40 @@
 {
-  "name": "Solo",
-  "engine": {
-    "solo": {
-      "params": {
-          "genesisStakes": {
-              "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": 40000,
-              "tccq8snvxt5vfwthja7z7880dgs63x4njw2n5e5zm4h": 30000,
-              "tccq9ew456esykkxd7et2e0gwlwa6kkg2f4fg4q3t2m": 20000,
-              "tccq8z49d959veeeznkatpplf2rd8u98q9nz5zfqlpz": 10000
-          }
-      }
-    }
-  },
-  "params": {
-    "maxExtraDataSize": "0x20",
-    "networkID": "tc",
-    "maxBodySize": 4194304,
-    "snapshotPeriod": 16384,
-    "termSeconds": 0,
-    "nominationExpiration": 100,
-    "custodyPeriod": 100,
-    "releasePeriod": 200,
-    "maxNumOfValidators": 10,
-    "minNumOfValidators": 1,
-    "delegationThreshold": 100,
-    "minDeposit": 100,
-    "maxCandidateMetadataSize": 500
-  },
-    "genesis": {
-    "seal": {
-      "generic": "0x0"
+    "name": "Solo",
+    "engine": {
+        "solo": {
+            "params": {
+                "genesisStakes": {
+                    "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": 40000,
+                    "tccq8snvxt5vfwthja7z7880dgs63x4njw2n5e5zm4h": 30000,
+                    "tccq9ew456esykkxd7et2e0gwlwa6kkg2f4fg4q3t2m": 20000,
+                    "tccq8z49d959veeeznkatpplf2rd8u98q9nz5zfqlpz": 10000
+                }
+            }
+        }
     },
-    "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3",
-    "timestamp": "0x00",
-    "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "extraData": "0x"
-  },
-  "accounts": {
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqyca3rwt": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgfrhflv": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvxf40sk": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqszkma5z": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5duemmc": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqcuzl32l": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqungah99": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqc2ul2h": { "balance": "1000000" },
-    "tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u": { "balance": "1000000" },
-    "tccq9h7vnl68frvqapzv3tujrxtxtwqdnxw6yamrrgd": { "balance": "10000000000000000000", "seq": "0" }
-  }
+    "params": {
+        "maxExtraDataSize": "0x20",
+        "networkID": "tc",
+        "maxBodySize": 4194304,
+        "snapshotPeriod": 16384,
+        "termSeconds": 0,
+        "nominationExpiration": 100,
+        "custodyPeriod": 100,
+        "releasePeriod": 200,
+        "maxNumOfValidators": 10,
+        "minNumOfValidators": 1,
+        "delegationThreshold": 100,
+        "minDeposit": 100,
+        "maxCandidateMetadataSize": 500
+    },
+    "genesis": {
+        "seal": {
+            "generic": "0x0"
+        },
+        "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3",
+        "timestamp": "0x00",
+        "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "extraData": "0x"
+    },
+    "appState": ""
 }

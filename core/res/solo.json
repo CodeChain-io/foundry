@@ -14,8 +14,8 @@
   "params": {
     "maxExtraDataSize": "0x20",
     "networkID": "tc",
-    "minPayCost" : 10,
-    "minCustomCost" : 10,
+    "minPayCost": 10,
+    "minCustomCost": 10,
     "maxBodySize": 4194304,
     "snapshotPeriod": 16384,
     "termSeconds": 0,
@@ -37,16 +37,5 @@
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "extraData": "0x"
   },
-  "accounts": {
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqyca3rwt": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgfrhflv": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvxf40sk": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqszkma5z": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5duemmc": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqcuzl32l": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqungah99": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqc2ul2h": { "balance": "1000000" },
-    "tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u": { "balance": "1000000" },
-    "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg": { "balance": "10000000000000000000", "seq": "0" }
-  }
+  "appState": ""
 }

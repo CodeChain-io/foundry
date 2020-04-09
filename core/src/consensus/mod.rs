@@ -40,7 +40,7 @@ use ckey::{Address, Signature};
 use cnetwork::NetworkService;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockHash, Header};
-use primitives::{Bytes, H256};
+use primitives::Bytes;
 use std::fmt;
 use std::sync::{Arc, Weak};
 
@@ -214,10 +214,6 @@ pub trait ConsensusEngine: Sync + Send {
     }
 
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError>;
-
-    fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
-        Ok((db, root))
-    }
 }
 
 /// Voting errors.

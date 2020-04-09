@@ -21,10 +21,8 @@ use crate::client::ConsensusClient;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
-use cstate::{init_stake, StateDB, StateResult, StateWithCache, TopLevelState};
 use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
-use primitives::H256;
 use std::sync::{Arc, Weak};
 
 /// A consensus engine which does not provide any consensus mechanism.
@@ -101,12 +99,6 @@ impl ConsensusEngine for Solo {
 
     fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {
         Ok(None)
-    }
-
-    fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
-        let mut top_level = TopLevelState::from_existing(db, root)?;
-        init_stake(&mut top_level, self.genesis_stakes.clone(), Default::default(), Default::default())?;
-        Ok(top_level.commit_and_into_db()?)
     }
 }
 
