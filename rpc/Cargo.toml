@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 cidr = "0.0.4"
+coordinator = { path = "../coordinator" }
 codechain-core = { path = "../core" }
 codechain-json = { path = "../json" }
 codechain-key = { path = "../key" }

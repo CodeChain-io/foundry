@@ -51,8 +51,8 @@ pub use crate::block::Block;
 pub use crate::client::snapshot_notify;
 pub use crate::client::ConsensusClient;
 pub use crate::client::{
-    AccountData, BlockChainClient, BlockChainTrait, ChainNotify, Client, ClientConfig, DatabaseClient, EngineClient,
-    EngineInfo, ImportBlock, MiningBlockChainClient, SnapshotClient, StateInfo, TermInfo, TestBlockChainClient,
+    BlockChainClient, BlockChainTrait, ChainNotify, Client, ClientConfig, DatabaseClient, EngineClient, EngineInfo,
+    ImportBlock, MiningBlockChainClient, SnapshotClient, StateInfo, TermInfo, TestBlockChainClient,
 };
 pub use crate::consensus::signer::EngineSigner;
 pub use crate::consensus::stake;

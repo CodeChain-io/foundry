@@ -25,10 +25,6 @@ pub trait Mempool {
     #[rpc(name = "mempool_sendSignedTransaction")]
     fn send_signed_transaction(&self, raw: Bytes) -> Result<TxHash>;
 
-    /// Gets a hint to find out why the transaction failed.
-    #[rpc(name = "mempool_getErrorHint")]
-    fn get_error_hint(&self, transaction_hash: TxHash) -> Result<Option<String>>;
-
     /// Deletes all pending transactions in the mem pool, including future queue.
     #[rpc(name = "mempool_deleteAllPendingTransactions")]
     fn delete_all_pending_transactions(&self) -> Result<()>;
