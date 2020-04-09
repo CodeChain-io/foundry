@@ -18,7 +18,7 @@ impl validator::Validator for Coordinator {
         unimplemented!()
     }
 
-    fn open_block(&self, context: &mut dyn SubStorageAccess, header: &Header, evidences: &[Evidence]) {
+    fn open_block(&self, context: &mut dyn SubStorageAccess, header: &Header, verified_crime: &[VerifiedCrime]) {
         unimplemented!()
     }
 
