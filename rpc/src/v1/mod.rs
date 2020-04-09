@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#[allow(unused)]
 mod errors;
 mod impls;
 mod traits;
+#[allow(unused)]
 mod types;
 
 pub use self::impls::*;

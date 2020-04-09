@@ -17,13 +17,12 @@
 use super::super::errors;
 use super::super::traits::Mempool;
 use super::super::types::PendingTransactions;
-use ccore::{BlockChainClient, EngineInfo, MiningBlockChainClient, UnverifiedTransaction, VerifiedTransaction};
+use ccore::{BlockChainClient, EngineInfo};
 use cjson::bytes::Bytes;
-use ckey::{Address, PlatformAddress};
+use coordinator::validator::Transaction;
 use ctypes::TxHash;
 use jsonrpc_core::Result;
 use rlp::Rlp;
-use std::convert::TryInto;
 use std::sync::Arc;
 
 pub struct MempoolClient<C> {
@@ -46,10 +45,9 @@ where
         Rlp::new(&raw.into_vec())
             .as_val()
             .map_err(|e| errors::rlp(&e))
-            .and_then(|tx: UnverifiedTransaction| tx.try_into().map_err(errors::transaction_core))
-            .and_then(|signed: VerifiedTransaction| {
-                let hash = signed.hash();
-                match self.client.queue_own_transaction(signed) {
+            .and_then(|tx: Transaction| {
+                let hash = tx.hash();
+                match self.client.queue_own_transaction(tx) {
                     Ok(_) => Ok(hash),
                     Err(e) => Err(errors::transaction_core(e)),
                 }
@@ -57,71 +55,16 @@ where
             .map(Into::into)
     }
 
-    fn get_error_hint(&self, transaction_hash: TxHash) -> Result<Option<String>> {
-        Ok(self.client.error_hint(&transaction_hash))
-    }
-
     fn delete_all_pending_transactions(&self) -> Result<()> {
         self.client.delete_all_pending_transactions();
         Ok(())
     }
 
-    fn get_pending_transactions(
-        &self,
-        from: Option<u64>,
-        to: Option<u64>,
-        future_included: Option<bool>,
-    ) -> Result<PendingTransactions> {
-        if future_included.unwrap_or(false) {
-            Ok(self.client.future_pending_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)).into())
-        } else {
-            Ok(self.client.ready_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)).into())
-        }
+    fn get_pending_transactions(&self, from: Option<u64>, to: Option<u64>) -> Result<PendingTransactions> {
+        Ok(self.client.ready_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)).into())
     }
 
-    fn get_pending_transactions_count(
-        &self,
-        from: Option<u64>,
-        to: Option<u64>,
-        future_included: Option<bool>,
-    ) -> Result<usize> {
-        if future_included.unwrap_or(false) {
-            Ok(self.client.future_included_count_pending_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)))
-        } else {
-            Ok(self.client.count_pending_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)))
-        }
-    }
-
-    fn get_banned_accounts(&self) -> Result<Vec<PlatformAddress>> {
-        let malicious_user_vec = self.client.get_malicious_users();
-        let network_id = self.client.network_id();
-        Ok(malicious_user_vec.into_iter().map(|address| PlatformAddress::new_v1(network_id, address)).collect())
-    }
-
-    fn unban_accounts(&self, prisoner_list: Vec<PlatformAddress>) -> Result<()> {
-        let prisoner_vec: Vec<Address> = prisoner_list.into_iter().map(PlatformAddress::into_address).collect();
-
-        self.client.release_malicious_users(prisoner_vec);
-        Ok(())
-    }
-
-    fn ban_accounts(&self, prisoner_list: Vec<PlatformAddress>) -> Result<()> {
-        let prisoner_vec: Vec<Address> = prisoner_list.into_iter().map(PlatformAddress::into_address).collect();
-
-        self.client.imprison_malicious_users(prisoner_vec);
-        Ok(())
-    }
-
-    fn get_immune_accounts(&self) -> Result<Vec<PlatformAddress>> {
-        let immune_user_vec = self.client.get_immune_users();
-        let network_id = self.client.network_id();
-        Ok(immune_user_vec.into_iter().map(|address| PlatformAddress::new_v1(network_id, address)).collect())
-    }
-
-    fn register_immune_accounts(&self, immune_user_list: Vec<PlatformAddress>) -> Result<()> {
-        let immune_user_vec: Vec<Address> = immune_user_list.into_iter().map(PlatformAddress::into_address).collect();
-
-        self.client.register_immune_users(immune_user_vec);
-        Ok(())
+    fn get_pending_transactions_count(&self, from: Option<u64>, to: Option<u64>) -> Result<usize> {
+        Ok(self.client.count_pending_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)))
     }
 }

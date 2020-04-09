@@ -599,6 +599,7 @@ dependencies = [
  "codechain-state",
  "codechain-sync",
  "codechain-types",
+ "coordinator",
  "jsonrpc-core",
  "jsonrpc-derive",
  "jsonrpc-http-server",

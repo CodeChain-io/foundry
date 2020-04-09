@@ -16,7 +16,6 @@
 
 use super::super::types::PendingTransactions;
 use cjson::bytes::Bytes;
-use ckey::PlatformAddress;
 use ctypes::TxHash;
 use jsonrpc_core::Result;
 
@@ -26,44 +25,15 @@ pub trait Mempool {
     #[rpc(name = "mempool_sendSignedTransaction")]
     fn send_signed_transaction(&self, raw: Bytes) -> Result<TxHash>;
 
-    /// Gets a hint to find out why the transaction failed.
-    #[rpc(name = "mempool_getErrorHint")]
-    fn get_error_hint(&self, transaction_hash: TxHash) -> Result<Option<String>>;
-
     /// Deletes all pending transactions in the mem pool, including future queue.
     #[rpc(name = "mempool_deleteAllPendingTransactions")]
     fn delete_all_pending_transactions(&self) -> Result<()>;
 
     /// Gets transactions in the current mem pool. future_included is set to check whether append future queue or not.
     #[rpc(name = "mempool_getPendingTransactions")]
-    fn get_pending_transactions(
-        &self,
-        from: Option<u64>,
-        to: Option<u64>,
-        future_included: Option<bool>,
-    ) -> Result<PendingTransactions>;
+    fn get_pending_transactions(&self, from: Option<u64>, to: Option<u64>) -> Result<PendingTransactions>;
 
     /// Gets the count of transactions in the current mem pool.
     #[rpc(name = "mempool_getPendingTransactionsCount")]
-    fn get_pending_transactions_count(
-        &self,
-        from: Option<u64>,
-        to: Option<u64>,
-        future_included: Option<bool>,
-    ) -> Result<usize>;
-
-    #[rpc(name = "mempool_getBannedAccounts")]
-    fn get_banned_accounts(&self) -> Result<Vec<PlatformAddress>>;
-
-    #[rpc(name = "mempool_unbanAccounts")]
-    fn unban_accounts(&self, prisoner_list: Vec<PlatformAddress>) -> Result<()>;
-
-    #[rpc(name = "mempool_banAccounts")]
-    fn ban_accounts(&self, prisoner_list: Vec<PlatformAddress>) -> Result<()>;
-
-    #[rpc(name = "mempool_getImmuneAccounts")]
-    fn get_immune_accounts(&self) -> Result<Vec<PlatformAddress>>;
-
-    #[rpc(name = "mempool_registerImmuneAccounts")]
-    fn register_immune_accounts(&self, immune_user_list: Vec<PlatformAddress>) -> Result<()>;
+    fn get_pending_transactions_count(&self, from: Option<u64>, to: Option<u64>) -> Result<usize>;
 }
