@@ -30,14 +30,9 @@ use crate::views::HeaderView;
 use ckey::{verify, Ed25519Public as Public};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::{
-    init_stake, CurrentValidators, DoubleVoteHandler, Jail, NextValidators, StateDB, StateResult, StateWithCache,
-    TopLevelState, TopStateView,
-};
+use cstate::{CurrentValidators, DoubleVoteHandler, Jail, NextValidators, TopStateView};
 use ctypes::transaction::Action;
 use ctypes::{util::unexpected::OutOfBounds, BlockHash, BlockId, CompactValidatorSet, Header, SyncHeader};
-use primitives::H256;
-use std::collections::HashSet;
 use std::iter::Iterator;
 use std::sync::atomic::Ordering as AtomicOrdering;
 use std::sync::{Arc, Weak};
@@ -205,15 +200,6 @@ impl ConsensusEngine for Tendermint {
             }])
         }
 
-        let inactive_validators = match term {
-            0 => Vec::new(),
-            _ => {
-                let start_of_the_current_term = metadata.last_term_finished_block_num() + 1;
-                let validators = next_validators.iter().map(|val| *val.pubkey()).collect();
-                inactive_validators(&*client, start_of_the_current_term, block.header(), validators)
-            }
-        };
-
         let current_term = metadata.current_term_id();
         let (custody_until, kick_at) = {
             let params = metadata.params();
@@ -228,7 +214,7 @@ impl ConsensusEngine for Tendermint {
 
         Ok(vec![
             Action::CloseTerm {
-                inactive_validators,
+                inactive_validators: vec![],
                 next_validators: next_validators.into(),
                 released_addresses,
                 custody_until,
@@ -344,19 +330,6 @@ impl ConsensusEngine for Tendermint {
         Ok(Some(self.validators.next_validators(&block_hash)))
     }
 
-    fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
-        let mut state = TopLevelState::from_existing(db, root)?;
-        init_stake(
-            &mut state,
-            self.genesis_stakes.clone(),
-            self.genesis_candidates.clone(),
-            self.genesis_delegations.clone(),
-        )?;
-
-        NextValidators::elect(&state)?.save_to_state(&mut state)?;
-        Ok(state.commit_and_into_db()?)
-    }
-
     fn current_validator_set(&self, block_number: Option<u64>) -> Result<Option<CompactValidatorSet>, EngineError> {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
         let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
@@ -420,21 +393,4 @@ pub(super) fn is_term_changed(header: &Header, parent: &Header, term_seconds: u6
     let parent_term_period = parent.timestamp() / term_seconds;
 
     current_term_period != parent_term_period
-}
-
-fn inactive_validators(
-    client: &dyn ConsensusClient,
-    start_of_the_current_term: u64,
-    current_block: &Header,
-    mut validators: HashSet<Public>,
-) -> Vec<Public> {
-    validators.remove(current_block.author());
-    let hash = *current_block.parent_hash();
-    let mut header = client.block_header(&hash.into()).expect("Header of the parent must exist");
-    while start_of_the_current_term <= header.number() {
-        validators.remove(&header.author());
-        header = client.block_header(&header.parent_hash().into()).expect("Header of the parent must exist");
-    }
-
-    validators.into_iter().collect()
 }

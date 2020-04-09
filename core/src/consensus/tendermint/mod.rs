@@ -36,12 +36,9 @@ use crate::client::ConsensusClient;
 use crate::consensus::DynamicValidator;
 use crate::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::ChainNotify;
-use ckey::Ed25519Public as Public;
 use crossbeam_channel as crossbeam;
 use ctimer::TimerToken;
-use ctypes::Deposit;
 use parking_lot::RwLock;
-use std::collections::HashMap;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Weak};
 use std::thread::JoinHandle;
@@ -72,10 +69,6 @@ pub struct Tendermint {
     /// Chain notify
     chain_notify: Arc<TendermintChainNotify>,
     has_signer: AtomicBool,
-    /// Tokens distributed at genesis.
-    genesis_stakes: HashMap<Public, u64>,
-    genesis_candidates: HashMap<Public, Deposit>,
-    genesis_delegations: HashMap<Public, HashMap<Public, u64>>,
 }
 
 impl Drop for Tendermint {
@@ -92,9 +85,6 @@ impl Tendermint {
     pub fn new(our_params: TendermintParams) -> Arc<Self> {
         let validators = Arc::new(DynamicValidator::default());
         let stake = Arc::new(stake::Stake::default());
-        let genesis_stakes = our_params.genesis_stakes;
-        let genesis_candidates = our_params.genesis_candidates;
-        let genesis_delegations = our_params.genesis_delegations;
         let timeouts = our_params.timeouts;
 
         let (
@@ -120,9 +110,6 @@ impl Tendermint {
             stake,
             chain_notify,
             has_signer: false.into(),
-            genesis_stakes,
-            genesis_candidates,
-            genesis_delegations,
         })
     }
 
@@ -135,7 +122,7 @@ const SEAL_FIELDS: usize = 4;
 
 #[cfg(test)]
 mod tests {
-    use ckey::Ed25519Private as Private;
+    use ckey::{Ed25519Private as Private, Ed25519Public as Public};
     use ctypes::Header;
 
     use super::super::BitSet;
