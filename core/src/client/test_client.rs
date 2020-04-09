@@ -553,10 +553,6 @@ impl BlockChainClient for TestBlockChainClient {
     fn transaction(&self, _id: &TransactionId) -> Option<LocalizedTransaction> {
         unimplemented!();
     }
-
-    fn error_hint(&self, _hash: &TxHash) -> Option<String> {
-        unimplemented!();
-    }
 }
 
 impl TimeoutHandler for TestBlockChainClient {
