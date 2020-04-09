@@ -724,9 +724,11 @@ dependencies = [
 name = "coordinator"
 version = "0.1.0"
 dependencies = [
+ "codechain-crypto",
  "codechain-key",
  "codechain-types",
  "primitives",
+ "rlp",
 ]
 
 [[package]]
