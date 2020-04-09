@@ -33,7 +33,7 @@ mod db;
 mod db_version;
 pub mod encoded;
 mod error;
-mod invoice;
+mod event;
 mod miner;
 mod peer_db;
 mod scheme;
