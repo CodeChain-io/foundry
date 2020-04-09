@@ -239,7 +239,7 @@ impl<'a> TransactionWithGas {
         self.tx.hash()
     }
 }
-pub enum Evidence {
+pub enum VerifiedCrime {
     DoubleVote, // Should import and use DoubleVote type defined in tendermint module?
 }
 
@@ -258,7 +258,7 @@ pub type ErrorCode = i64;
 
 pub trait Validator {
     fn initialize_chain(&self) -> ConsensusParams;
-    fn open_block(&self, context: &mut dyn SubStorageAccess, header: &Header, evidences: &[Evidence]);
+    fn open_block(&self, context: &mut dyn SubStorageAccess, header: &Header, verified_crime: &[VerifiedCrime]);
     fn execute_transactions(&self, context: &mut dyn SubStorageAccess, transactions: &[Transaction]);
     fn close_block(&self, context: &mut dyn SubStorageAccess) -> BlockOutcome;
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
