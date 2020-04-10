@@ -20,11 +20,12 @@ use super::connection::{
 use super::listener::Listener;
 use super::{NegotiationMessage, NetworkMessage};
 use crate::client::Client;
+use crate::p2p::connection::Error as P2PConnectionError;
 use crate::session::Session;
 use crate::stream::Stream;
 use crate::{FiltersControl, NodeId, RoutingTable, SocketAddr};
 use ccrypto::error::SymmError;
-use cinformer::{Events as InformerEvents, InformerEventSender};
+use cinfo_courier::{Events as InformerEvents, InformerEventSender};
 use cio::{IoChannel, IoContext, IoHandler, IoHandlerResult, IoManager, StreamToken, TimerToken};
 use ckey::NetworkId;
 use finally_block::finally;
@@ -670,7 +671,13 @@ impl IoHandler<Message> for Handler {
                             io.update_registration(stream_token);
                         }
                     });
-                    match con.receive()? {
+                    let received = con.receive();
+                    if let Err(P2PConnectionError::IoError(ioerr)) = &received {
+                        if ioerr.kind() == std::io::ErrorKind::ConnectionAborted {
+                            io.deregister_stream(stream_token);
+                        }
+                    };
+                    match received? {
                         Some(NetworkMessage::Extension(msg)) => {
                             let remote_node_id = *self.remote_node_ids.read().get(&stream_token).unwrap_or_else(|| {
                                 unreachable!("Node id for {}:{} must exist", stream_token, con.peer_addr())
@@ -739,7 +746,13 @@ impl IoHandler<Message> for Handler {
                             io.update_registration(stream_token);
                         }
                     });
-                    match con.receive()? {
+                    let received = con.receive();
+                    if let Err(P2PConnectionError::IoError(ioerr)) = &received {
+                        if ioerr.kind() == std::io::ErrorKind::ConnectionAborted {
+                            io.deregister_stream(stream_token);
+                        }
+                    };
+                    match received? {
                         Some(NetworkMessage::Extension(msg)) => {
                             let remote_node_id = *self.remote_node_ids.read().get(&stream_token).unwrap_or_else(|| {
                                 unreachable!("Node id for {}:{} must exist", stream_token, con.peer_addr())
@@ -784,7 +797,13 @@ impl IoHandler<Message> for Handler {
                             io.update_registration(stream_token);
                         }
                     });
-                    match con.receive()? {
+                    let received = con.receive();
+                    if let Err(P2PConnectionError::IoError(ioerr)) = &received {
+                        if ioerr.kind() == std::io::ErrorKind::ConnectionAborted {
+                            io.deregister_stream(stream_token);
+                        }
+                    };
+                    match received? {
                         Some(OutgoingMessage::Sync1 {
                             initiator_pub_key,
                             network_id,
@@ -879,7 +898,13 @@ impl IoHandler<Message> for Handler {
                         }
                     });
                     let from = *con.peer_addr();
-                    match con.receive()? {
+                    let received = con.receive();
+                    if let Err(P2PConnectionError::IoError(ioerr)) = &received {
+                        if ioerr.kind() == std::io::ErrorKind::ConnectionAborted {
+                            io.deregister_stream(stream_token);
+                        }
+                    };
+                    match received? {
                         Some(IncomingMessage::Ack {
                             recipient_pub_key,
                             encrypted_nonce,
@@ -916,32 +941,56 @@ impl IoHandler<Message> for Handler {
         Ok(())
     }
 
-    fn stream_writable(&self, _io: &IoContext<Message>, stream: StreamToken) -> IoHandlerResult<()> {
+    fn stream_writable(&self, io: &IoContext<Message>, stream: StreamToken) -> IoHandlerResult<()> {
         match stream {
             FIRST_INBOUND..=LAST_INBOUND => {
                 if let Some(con) = self.inbound_connections.write().get_mut(&stream) {
-                    con.flush()?;
+                    let flush_result = con.flush();
+                    if let Err(P2PConnectionError::IoError(io_error)) = &flush_result {
+                        if io_error.kind() == std::io::ErrorKind::BrokenPipe {
+                            io.deregister_stream(stream);
+                        }
+                    }
+                    flush_result?;
                 } else {
                     cdebug!(NETWORK, "Invalid inbound token({}) on write", stream);
                 }
             }
             FIRST_OUTBOUND..=LAST_OUTBOUND => {
                 if let Some(con) = self.outbound_connections.write().get_mut(&stream) {
-                    con.flush()?;
+                    let flush_result = con.flush();
+                    if let Err(P2PConnectionError::IoError(io_error)) = &flush_result {
+                        if io_error.kind() == std::io::ErrorKind::BrokenPipe {
+                            io.deregister_stream(stream);
+                        }
+                    }
+                    flush_result?;
                 } else {
                     cdebug!(NETWORK, "Invalid outbound token({}) on write", stream);
                 }
             }
             FIRST_INCOMING..=LAST_INCOMING => {
                 if let Some(con) = self.incoming_connections.write().get_mut(&stream) {
-                    con.flush()?;
+                    let flush_result = con.flush();
+                    if let Err(P2PConnectionError::IoError(io_error)) = &flush_result {
+                        if io_error.kind() == std::io::ErrorKind::BrokenPipe {
+                            io.deregister_stream(stream);
+                        }
+                    }
+                    flush_result?;
                 } else {
                     cdebug!(NETWORK, "Invalid incoming token({}) on write", stream);
                 }
             }
             FIRST_OUTGOING..=LAST_OUTGOING => {
                 if let Some(con) = self.outgoing_connections.write().get_mut(&stream) {
-                    con.flush()?;
+                    let flush_result = con.flush();
+                    if let Err(P2PConnectionError::IoError(io_error)) = &flush_result {
+                        if io_error.kind() == std::io::ErrorKind::BrokenPipe {
+                            io.deregister_stream(stream);
+                        }
+                    }
+                    flush_result?;
                 } else {
                     cdebug!(NETWORK, "Invalid outgoing token({}) on write", stream);
                 }

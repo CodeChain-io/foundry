@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 #[macro_use]
 extern crate codechain_logger as clogger;
 #[macro_use]
@@ -27,8 +26,9 @@ pub mod handler;
 mod informer_service;
 pub mod rpc_server;
 
+pub use cinfo_courier::{informer_notify, EventTags, Events, InformerEventSender};
 pub use handler::{Connection, InformerConfig};
-pub use informer_service::{informer_notify, EventTags, Events, InformerEventSender, InformerService};
+pub use informer_service::{ColdEvents, InformerService, RateLimiter};
 pub use jsonrpc_core;
 pub use jsonrpc_core::{Compatibility, Error, ErrorCode, MetaIoHandler, Metadata, Middleware, Params, Value};
 pub use jsonrpc_pubsub::{PubSubHandler, PubSubMetadata, Session, Sink, Subscriber, SubscriptionId};

@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{EventTags, Events, Params, Sink};
-use futures::Future;
-use jsonrpc_core::futures;
+use crate::{ColdEvents, EventTags, Events, Params, Sink};
+use jsonrpc_core::futures::Future;
 
+#[derive(Clone)]
 enum ConnectionState {
     Connected,
 }
@@ -45,9 +45,36 @@ impl Connection {
                 cinfo!(INFORMER, "The event is successfully added to user's interested events");
                 self.interested_events.push(event);
             }
+            "BlockGeneration_by_number" => {
+                let cold_event = EventTags::ColdBlockGenerationNumerical(
+                    // FIXME: Handle Unvalid block number
+                    params[1].as_str().parse().unwrap(),
+                );
+                cinfo!(INFORMER, "The event is successfully added to user's interested events");
+                self.interested_events.push(cold_event);
+            }
+            "BlockGeneration_by_hash" => {
+                let cold_event = EventTags::ColdBlockGenerationHash(params[1].clone());
+                cinfo!(INFORMER, "The event is successfully added to user's interested events");
+                self.interested_events.push(cold_event);
+            }
             _ => {
                 cinfo!(INFORMER, "invalid Event: the event is not supported");
             }
+        }
+    }
+
+    pub fn cold_notify(&self, event: &ColdEvents) {
+        let json_object = serde_json::to_value(event).expect("event has no non-string key").as_object_mut().cloned();
+        let params = Params::Map(json_object.expect("Event is serialized as object"));
+        match self.status {
+            // FIXME : We should use `.await` instead of wait. The standard Future is not supported by the current paritytech/jsonrpc crate.
+            ConnectionState::Connected => match self.sink.notify(params).wait() {
+                Ok(_) => {}
+                Err(_) => {
+                    cinfo!(INFORMER, "Subscription has ended, finishing.");
+                }
+            },
         }
     }
 
@@ -55,6 +82,7 @@ impl Connection {
         let json_object = serde_json::to_value(event).expect("json format is not valid").as_object_mut().cloned();
         let params = Params::Map(json_object.expect("Event is serialized as object"));
         match self.status {
+            // FIXME : We should use `.await` instead of wait. The standard Future is not supported by the current paritytech/jsonrpc crate.
             ConnectionState::Connected => match self.sink.notify(params).wait() {
                 Ok(_) => {}
                 Err(_) => {

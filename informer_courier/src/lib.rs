@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod errors;
-mod impls;
-mod traits;
-mod types;
+#[macro_use]
+extern crate serde_derive;
 
-pub use self::impls::*;
-pub use self::traits::*;
-pub use self::types::Block;
+mod event_types;
+pub mod informer_notify;
+
+pub use event_types::{EventTags, Events};
+pub use informer_notify::InformerEventSender;

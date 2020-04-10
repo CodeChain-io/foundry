@@ -9,7 +9,7 @@ ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io
 cio = { package = "codechain-io", path = "../util/io" }
 ckey = { package = "codechain-key", path = "../key" }
 codechain-logger = { path = "../util/logger" }
-cinformer = {package = "codechain-informer", path = "../informer"}
+cinfo_courier = { package = "codechain_informer_courier", path = "../informer_courier" }
 ctimer = { package = "codechain-timer", path = "../util/timer" }
 crossbeam-channel = "0.3"
 finally-block = "0.1"
