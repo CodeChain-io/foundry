@@ -623,19 +623,14 @@ dependencies = [
  "codechain-timer",
  "codechain-types",
  "kvdb",
- "kvdb-memorydb",
  "log 0.4.8",
  "merkle-trie",
  "never-type",
- "parking_lot 0.6.4",
  "primitives",
  "rand 0.6.1",
  "rlp",
  "snap",
- "tempfile",
- "time",
  "token-generator",
- "trie-standardmap",
 ]
 
 [[package]]
@@ -3357,16 +3352,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7aabe75941d914b72bf3e5d3932ed92ce0664d49d8432305a8b547c37227724"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "trie-standardmap"
-version = "0.3.0"
-source = "git+https://github.com/CodeChain-io/trie-standardmap.git#190b7a3b43adc063e0d7c5043afc1ff9d981c870"
-dependencies = [
- "codechain-crypto",
- "primitives",
- "rlp",
 ]
 
 [[package]]
