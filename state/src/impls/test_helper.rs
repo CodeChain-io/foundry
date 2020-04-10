@@ -148,8 +148,8 @@ macro_rules! check_top_level_state {
     ($state:expr, [(shard: $shard_id:expr)]) => {
         assert_eq!(Ok(None), $state.shard_root($shard_id));
     };
-    ($state:expr, [(shard_text: ($shard_id:expr, $tracker:expr))]) => {
-        assert_eq!(Ok(None), $state.shard_text($shard_id, $tracker));
+    ($state:expr, [(shard_text: ($shard_id:expr, $tx_hash:expr))]) => {
+        assert_eq!(Ok(None), $state.shard_text($shard_id, $tx_hash));
     };
     //recursion
     ($state:expr, [$head:tt, $($tail:tt),+ $(,)?]) => {
@@ -160,10 +160,10 @@ macro_rules! check_top_level_state {
 
 macro_rules! check_shard_level_state {
     // base cases
-    ($state:expr, [(text: ($tracker:expr) => { content: $content: expr})]) => {
-        let stored_text = $state.text($tracker)
-            .expect(&format!("Cannot read Text from {}:{}", $state.shard_id(), $tracker))
-            .expect(&format!("Text for {}:{} not exist", $state.shard_id(), $tracker));
+    ($state:expr, [(text: ($tx_hash:expr) => { content: $content: expr})]) => {
+        let stored_text = $state.text($tx_hash)
+            .expect(&format!("Cannot read Text from {}:{}", $state.shard_id(), $tx_hash))
+            .expect(&format!("Text for {}:{} not exist", $state.shard_id(), $tx_hash));
         assert_eq!($content, stored_text.content());
     };
     // recursion

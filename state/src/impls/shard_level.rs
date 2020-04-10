@@ -22,7 +22,7 @@ use ccrypto::BLAKE_NULL_RLP;
 use cdb::AsHashDB;
 use ckey::Address;
 use ctypes::transaction::ShardTransaction;
-use ctypes::{BlockNumber, ShardId, Tracker};
+use ctypes::{BlockNumber, ShardId, TxHash};
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use primitives::H256;
 use std::cell::RefCell;
@@ -89,6 +89,7 @@ impl<'db> ShardLevelState<'db> {
 
     fn apply_internal(
         &mut self,
+        tx_hash: TxHash,
         transaction: &ShardTransaction,
         _sender: &Address,
         _shard_users: &[Address],
@@ -103,13 +104,13 @@ impl<'db> ShardLevelState<'db> {
                 ..
             } => {
                 assert_eq!(*shard_id, self.shard_id);
-                self.store_text(transaction.tracker(), content.to_string())
+                self.store_text(tx_hash, content.to_string())
             }
         }
     }
 
-    fn store_text(&self, tracker: Tracker, content: String) -> StateResult<()> {
-        self.cache.create_shard_text(&ShardTextAddress::new(tracker, self.shard_id), || ShardText::new(&content))?;
+    fn store_text(&self, tx_hash: TxHash, content: String) -> StateResult<()> {
+        self.cache.create_shard_text(&ShardTextAddress::new(tx_hash, self.shard_id), || ShardText::new(&content))?;
         Ok(())
     }
 
@@ -120,10 +121,10 @@ impl<'db> ShardLevelState<'db> {
 }
 
 impl<'db> ShardStateView for ShardLevelState<'db> {
-    fn text(&self, tracker: Tracker) -> Result<Option<ShardText>, TrieError> {
+    fn text(&self, tx_hash: TxHash) -> Result<Option<ShardText>, TrieError> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.cache.shard_text(&ShardTextAddress::new(tracker, self.shard_id), &trie)
+        self.cache.shard_text(&ShardTextAddress::new(tx_hash, self.shard_id), &trie)
     }
 }
 
@@ -156,6 +157,7 @@ const TRANSACTION_CHECKPOINT: CheckpointId = 456;
 impl<'db> ShardState for ShardLevelState<'db> {
     fn apply(
         &mut self,
+        tx_hash: TxHash,
         transaction: &ShardTransaction,
         sender: &Address,
         shard_users: &[Address],
@@ -163,10 +165,11 @@ impl<'db> ShardState for ShardLevelState<'db> {
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
     ) -> StateResult<()> {
-        ctrace!(TX, "Execute InnerTx {:?}(InnerTxHash:{:?})", transaction, transaction.tracker());
+        ctrace!(TX, "Execute InnerTx {:?}", transaction);
 
         self.create_checkpoint(TRANSACTION_CHECKPOINT);
         let result = self.apply_internal(
+            tx_hash,
             transaction,
             sender,
             shard_users,
@@ -195,10 +198,10 @@ pub struct ReadOnlyShardLevelState<'db> {
 }
 
 impl<'db> ShardStateView for ReadOnlyShardLevelState<'db> {
-    fn text(&self, tracker: Tracker) -> Result<Option<ShardText>, TrieError> {
+    fn text(&self, tx_hash: TxHash) -> Result<Option<ShardText>, TrieError> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.cache.shard_text(&ShardTextAddress::new(tracker, self.shard_id), &trie)
+        self.cache.shard_text(&ShardTextAddress::new(tx_hash, self.shard_id), &trie)
     }
 }
 
@@ -235,12 +238,12 @@ mod tests {
             content: content.clone(),
         };
 
-        let store_shard_text_tracker = store_shard_text.tracker();
+        let tx_hash = TxHash::from(H256::random());
 
-        assert_eq!(Ok(()), state.apply(&store_shard_text, &sender, &[sender], &[], 0, 0));
+        assert_eq!(Ok(()), state.apply(tx_hash, &store_shard_text, &sender, &[sender], &[], 0, 0));
 
         check_shard_level_state!(state, [
-            (text: (store_shard_text_tracker) => { content: &content })
+            (text: (tx_hash) => { content: &content })
         ]);
     }
 }
