@@ -144,8 +144,6 @@ describe("solo - 1 node", function() {
         [
             { actionType: 2, actionLength: 2 }, // Pay
             { actionType: 2, actionLength: 4 },
-            { actionType: 5, actionLength: 2 }, // SetShardOwners
-            { actionType: 5, actionLength: 4 },
             { actionType: 0x19, actionLength: 3 }, // ShardStore
             { actionType: 0x19, actionLength: 5 }
         ].forEach(function(params: {
@@ -241,44 +239,6 @@ describe("solo - 1 node", function() {
                 }
             });
         });
-    });
-
-    describe("Sending invalid transactions over the limits (in action 5: SetShardOwners)", function() {
-        let encoded: any[];
-        beforeEach(async function() {
-            const seq = (await node.rpc.chain.getSeq({
-                address: faucetAddress.toString(),
-                blockNumber: null
-            }))!;
-            const account = await node.createaddress();
-            const signed = node.testFramework.core
-                .createSetShardOwnersTransaction({
-                    shardId: 0,
-                    owners: [account]
-                })
-                .sign({
-                    secret: faucetSecret,
-                    fee: 10,
-                    seq
-                });
-            encoded = signed.toEncodeObject();
-        });
-
-        [65536, 100000].forEach(function(shardId) {
-            it(`shardId: ${shardId}`, async function() {
-                encoded[3][1] = shardId;
-                try {
-                    await node.sendSignedTransactionWithRlpBytes(
-                        RLP.encode(encoded)
-                    );
-                    expect.fail();
-                } catch (e) {
-                    expect(e).is.similarTo(ERROR.INVALID_RLP_TOO_BIG);
-                }
-            });
-        });
-
-        it("Owners");
     });
 
     afterEach(function() {

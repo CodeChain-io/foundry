@@ -154,7 +154,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_getBalance](#chain_getbalance)
  * [chain_getNumberOfShards](#chain_getnumberofshards)
  * [chain_getShardRoot](#chain_getshardroot)
- * [chain_getShardOwners](#chain_getshardowners)
  * [chain_getMinTransactionFee](#chain_getmintransactionfee)
  * [chain_getCommonParams](#chain_getcommonparams)
  * [chain_getTermMetadata](#chain_gettermmetadata)
@@ -758,37 +757,6 @@ Errors: `KVDB Error`, `Invalid Params`
 {
   "jsonrpc":"2.0",
   "result":"0xf3841adc1615bfeabb801dda23585c1722b80d810df084a5f2198e92285d4bfd",
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_getShardOwners
-Gets the owners of shard, at the state of the given blockNumber.
-
-### Params
- 1. shard id: `number`
- 2. block number: `number` | `null`
-
-### Returns
-`PlatformAddress`[] | `null` - the owners of the shard
-
-Errors: `KVDB Error`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getShardOwners", "params": [1, null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":["cccqzn9jjm3j6qg69smd7cn0eup4w7z2yu9myd6c4d7"],
   "id":null
 }
 ```

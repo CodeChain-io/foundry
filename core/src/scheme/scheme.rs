@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::pod_state::{PodAccounts, PodShards};
+use super::pod_state::PodAccounts;
 use super::seal::Generic as GenericSeal;
 use super::Genesis;
 use crate::blockchain::HeaderProvider;
@@ -64,7 +64,7 @@ pub struct Scheme {
 
     /// Genesis state as plain old data.
     genesis_accounts: PodAccounts,
-    genesis_shards: PodShards,
+    genesis_shards: ShardId,
     genesis_params: CommonParams,
 }
 
@@ -125,26 +125,14 @@ impl Scheme {
         mut root: H256,
         genesis_params: CommonParams,
     ) -> Result<(DB, H256), Error> {
-        let mut shards = Vec::<(ShardAddress, Shard)>::with_capacity(self.genesis_shards.len());
-
-        // Initialize shard-level tries
-        for (shard_id, shard) in &*self.genesis_shards {
-            let shard_root = BLAKE_NULL_RLP;
-            let owners = shard.owners.clone();
-            if owners.is_empty() {
-                return Err(SyntaxError::EmptyShardOwners(*shard_id).into())
-            }
-            shards.push((ShardAddress::new(*shard_id), Shard::new(shard_root, owners)));
-        }
-
         debug_assert_eq!(::std::mem::size_of::<u16>(), ::std::mem::size_of::<ShardId>());
-        debug_assert!(shards.len() <= ::std::u16::MAX as usize, "{} <= {}", shards.len(), ::std::u16::MAX as usize);
-        let global_metadata = Metadata::new(shards.len() as ShardId, genesis_params);
+        let global_metadata = Metadata::new(self.genesis_shards as ShardId, genesis_params);
 
         // Initialize shards
-        for (address, shard) in shards.into_iter() {
+        for shard_id in 0..self.genesis_shards {
             let mut t = TrieFactory::from_existing(db.as_hashdb_mut(), &mut root)?;
-            let r = t.insert(&*address, &shard.rlp_bytes());
+            let address = ShardAddress::new(shard_id);
+            let r = t.insert(&*address, &Shard::new(BLAKE_NULL_RLP).rlp_bytes());
             debug_assert_eq!(Ok(None), r);
             r?;
         }

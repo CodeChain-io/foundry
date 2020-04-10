@@ -16,7 +16,6 @@
 
 use crate::CacheableItem;
 use ccrypto::BLAKE_NULL_RLP;
-use ckey::Address;
 use ctypes::ShardId;
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -24,14 +23,12 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 #[derive(Clone, Debug)]
 pub struct Shard {
     root: H256,
-    owners: Vec<Address>,
 }
 
 impl Shard {
-    pub fn new(shard_root: H256, owners: Vec<Address>) -> Self {
+    pub fn new(shard_root: H256) -> Self {
         Self {
             root: shard_root,
-            owners,
         }
     }
 
@@ -42,21 +39,11 @@ impl Shard {
     pub fn set_root(&mut self, root: H256) {
         self.root = root;
     }
-
-    pub fn owners(&self) -> &[Address] {
-        debug_assert_ne!(Vec::<Address>::new(), self.owners);
-        &self.owners
-    }
-
-    pub fn set_owners(&mut self, owners: Vec<Address>) {
-        debug_assert_ne!(Vec::<Address>::new(), owners);
-        self.owners = owners;
-    }
 }
 
 impl Default for Shard {
     fn default() -> Self {
-        Self::new(BLAKE_NULL_RLP, vec![])
+        Self::new(BLAKE_NULL_RLP)
     }
 }
 
@@ -72,16 +59,16 @@ const PREFIX: u8 = super::Prefix::Shard as u8;
 
 impl Encodable for Shard {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(3).append(&PREFIX).append(&self.root).append_list(&self.owners);
+        s.begin_list(2).append(&PREFIX).append(&self.root);
     }
 }
 
 impl Decodable for Shard {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
-        if item_count != 3 {
+        if item_count != 2 {
             return Err(DecoderError::RlpInvalidLength {
-                expected: 3,
+                expected: 2,
                 got: item_count,
             })
         }
@@ -92,7 +79,6 @@ impl Decodable for Shard {
         }
         Ok(Self {
             root: rlp.val_at(1)?,
-            owners: rlp.list_at(2)?,
         })
     }
 }

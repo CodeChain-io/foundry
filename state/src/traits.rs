@@ -73,10 +73,6 @@ pub trait TopStateView {
         Ok(self.module(storage_id)?.map(|module| *module.root()))
     }
 
-    fn shard_owners(&self, shard_id: ShardId) -> TrieResult<Option<Vec<Address>>> {
-        Ok(self.shard(shard_id)?.map(|shard| shard.owners().to_vec()))
-    }
-
     fn action_data(&self, key: &H256) -> TrieResult<Option<ActionData>>;
 
     fn shard_text(&self, shard_id: ShardId, tx_hash: TxHash) -> TrieResult<Option<ShardText>> {
@@ -132,10 +128,7 @@ pub trait TopState {
     /// Increment the seq of account `a` by 1.
     fn inc_seq(&mut self, a: &Address) -> TrieResult<()>;
 
-    fn change_shard_owners(&mut self, shard_id: ShardId, owners: &[Address], sender: &Address) -> StateResult<()>;
-
     fn set_shard_root(&mut self, shard_id: ShardId, new_root: H256) -> StateResult<()>;
-    fn set_shard_owners(&mut self, shard_id: ShardId, new_owners: Vec<Address>) -> StateResult<()>;
 
     fn create_module(&mut self) -> StateResult<()>;
     fn set_module_root(&mut self, storage_id: StorageId, new_root: H256) -> StateResult<()>;
