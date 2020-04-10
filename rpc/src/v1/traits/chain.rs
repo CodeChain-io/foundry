@@ -18,9 +18,8 @@ use super::super::types::{Block, BlockNumberAndHash, Transaction};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress};
-use ctypes::{BlockHash, BlockNumber, ShardId, TxHash};
+use ctypes::{BlockHash, BlockNumber, TxHash};
 use jsonrpc_core::Result;
-use primitives::H256;
 
 #[rpc(server)]
 pub trait Chain {
@@ -43,14 +42,6 @@ pub trait Chain {
     /// Gets balance with given account.
     #[rpc(name = "chain_getBalance")]
     fn get_balance(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<Uint>>;
-
-    /// Gets the number of shards
-    #[rpc(name = "chain_getNumberOfShards")]
-    fn get_number_of_shards(&self, block_number: Option<u64>) -> Result<Option<ShardId>>;
-
-    /// Gets shard root
-    #[rpc(name = "chain_getShardRoot")]
-    fn get_shard_root(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<H256>>;
 
     /// Gets number of best block.
     #[rpc(name = "chain_getBestBlockNumber")]

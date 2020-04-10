@@ -152,7 +152,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_containsTransaction](#chain_containstransaction)
  * [chain_getSeq](#chain_getseq)
  * [chain_getBalance](#chain_getbalance)
- * [chain_getNumberOfShards](#chain_getnumberofshards)
  * [chain_getShardRoot](#chain_getshardroot)
  * [chain_getMinTransactionFee](#chain_getmintransactionfee)
  * [chain_getCommonParams](#chain_getcommonparams)
@@ -696,67 +695,6 @@ Errors: `KVDB Error`, `Invalid Params`, `Invalid NetworkId`
 {
   "jsonrpc":"2.0",
   "result":"0xe8d4a50dd0",
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_getNumberOfShards
-Gets the number of shards, at the state of the given blockNumber.
-
-### Params
- 1. block number: `number` | `null`
-
-### Returns
-`number` - the number of shards
-
-Errors: `KVDB Error`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getNumberOfShards", "params": [null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":3,
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_getShardRoot
-Gets the root of shard, at the state of the given blockNumber.
-
-### Params
- 1. shard id: `number`
- 2. block number: `number` | `null`
-
-### Returns
-`null` | `H256` - the root of shard
-
-Errors: `KVDB Error`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getShardRoot", "params": [1, null], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":"0xf3841adc1615bfeabb801dda23585c1722b80d810df084a5f2198e92285d4bfd",
   "id":null
 }
 ```
