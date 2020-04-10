@@ -200,10 +200,6 @@ pub trait ConsensusEngine: Sync + Send {
 
     fn register_time_gap_config_to_worker(&self, _time_gap_params: TimeGapParams) {}
 
-    fn block_fee(&self, transactions: Box<dyn Iterator<Item = UnverifiedTransaction>>) -> u64 {
-        transactions.map(|tx| tx.transaction().fee).sum()
-    }
-
     fn register_chain_notify(&self, _: &Client) {}
 
     fn complete_register(&self) {}
