@@ -14,7 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub struct TxMetadata {}
+use coordinator::validator::TxOrigin;
+use ctypes::TxHash;
+use std::collections::HashMap;
+
+pub struct TxMetadata {
+    pub mem_usage: usize,
+    pub gas: usize,
+    pub origin: TxOrigin,
+    pub insertion_id: u64,
+    pub custom_metadata: HashMap<&'static str, String>,
+    pub tx_hash: TxHash,
+}
 
 #[derive(Debug)]
 // Error which cannot be handled by orderer

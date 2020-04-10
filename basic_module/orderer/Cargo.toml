@@ -3,3 +3,7 @@
  version = "0.1.0"
  authors = ["CodeChain Team <hi@codechain.io>"]
  edition = "2018"
+
+[dependencies]
+coordinator = { path = "../../coordinator" }
+ctypes = { package = "codechain-types", path = "../../types" }
