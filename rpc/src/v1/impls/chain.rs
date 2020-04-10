@@ -22,9 +22,8 @@ use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{public_to_address, NetworkId, PlatformAddress};
 use cstate::FindDoubleVoteHandler;
-use ctypes::{BlockHash, BlockNumber, ShardId, TxHash};
+use ctypes::{BlockHash, BlockNumber, TxHash};
 use jsonrpc_core::Result;
-use primitives::H256;
 use std::sync::Arc;
 
 pub struct ChainClient<C>
@@ -75,16 +74,6 @@ where
         let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
         let address = aaddress.try_address().map_err(errors::core)?;
         Ok(self.client.balance(address, block_id.into()).map(Into::into))
-    }
-
-    fn get_number_of_shards(&self, block_number: Option<u64>) -> Result<Option<ShardId>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        Ok(self.client.number_of_shards(block_id.into()))
-    }
-
-    fn get_shard_root(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<H256>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        Ok(self.client.shard_root(shard_id, block_id.into()))
     }
 
     fn get_best_block_number(&self) -> Result<BlockNumber> {
