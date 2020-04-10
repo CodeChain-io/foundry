@@ -15,8 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::Action;
-use super::ShardTransaction;
-use crate::{Tracker, TxHash};
+use crate::TxHash;
 use ccrypto::blake256;
 use ckey::NetworkId;
 use rlp::RlpStream;
@@ -48,10 +47,5 @@ impl Transaction {
         let mut stream = RlpStream::new();
         self.rlp_append_unsigned(&mut stream);
         blake256(stream.as_raw()).into()
-    }
-
-    pub fn tracker(&self) -> Option<Tracker> {
-        let shard_tx: Option<ShardTransaction> = self.action.clone().into();
-        shard_tx.map(|t| t.tracker())
     }
 }

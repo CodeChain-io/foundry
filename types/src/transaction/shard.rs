@@ -16,8 +16,7 @@
 
 use super::{HashingError, PartialHashing};
 use crate::util::tag::Tag;
-use crate::{ShardId, Tracker};
-use ccrypto::blake256;
+use crate::ShardId;
 use ckey::NetworkId;
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -33,10 +32,6 @@ pub enum ShardTransaction {
 }
 
 impl ShardTransaction {
-    pub fn tracker(&self) -> Tracker {
-        blake256(&*self.rlp_bytes()).into()
-    }
-
     pub fn network_id(&self) -> NetworkId {
         match self {
             ShardTransaction::ShardStore {

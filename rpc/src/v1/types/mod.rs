@@ -20,7 +20,7 @@ mod transaction;
 mod unsigned_transaction;
 mod work;
 
-pub use self::action::{Action, ActionWithTracker};
+pub use self::action::Action;
 pub use self::block::Block;
 pub use self::block::BlockNumberAndHash;
 pub use self::transaction::{PendingTransactions, Transaction};

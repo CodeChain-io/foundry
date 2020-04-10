@@ -16,7 +16,7 @@
 
 use crate::errors::SyntaxError;
 use crate::transaction::{Approval, ShardTransaction};
-use crate::{CommonParams, ShardId, Tracker};
+use crate::{CommonParams, ShardId};
 use ccrypto::Blake;
 use ckey::{verify, Address, NetworkId};
 use primitives::{Bytes, H256};
@@ -134,10 +134,6 @@ impl Action {
             } => self.clone().into(),
             _ => None,
         }
-    }
-
-    pub fn tracker(&self) -> Option<Tracker> {
-        self.shard_transaction().map(|tx| tx.tracker())
     }
 
     pub fn verify(&self) -> Result<(), SyntaxError> {

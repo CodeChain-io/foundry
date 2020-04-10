@@ -49,8 +49,6 @@ use ckey::{public_to_address, Address, Ed25519Public as Public, NetworkId};
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, ShardTransaction, Transaction};
 use ctypes::util::unexpected::Mismatch;
-#[cfg(test)]
-use ctypes::Tracker;
 use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, TxHash};
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
@@ -364,7 +362,7 @@ impl TopLevelState {
         &mut self,
         action: &Action,
         network_id: NetworkId,
-        _tx_hash: TxHash,
+        tx_hash: TxHash,
         signed_hash: &TxHash,
         sender_address: &Address,
         sender_public: &Public,
@@ -463,6 +461,7 @@ impl TopLevelState {
             }
         };
         self.apply_shard_transaction(
+            tx_hash,
             &transaction,
             sender_address,
             &approvers,
@@ -473,6 +472,7 @@ impl TopLevelState {
 
     fn apply_shard_transaction(
         &mut self,
+        tx_hash: TxHash,
         transaction: &ShardTransaction,
         sender: &Address,
         approvers: &[Address],
@@ -481,6 +481,7 @@ impl TopLevelState {
     ) -> StateResult<()> {
         for shard_id in transaction.related_shards() {
             self.apply_shard_transaction_to_shard(
+                tx_hash,
                 transaction,
                 shard_id,
                 sender,
@@ -494,6 +495,7 @@ impl TopLevelState {
 
     fn apply_shard_transaction_to_shard(
         &mut self,
+        tx_hash: TxHash,
         transaction: &ShardTransaction,
         shard_id: ShardId,
         sender: &Address,
@@ -507,6 +509,7 @@ impl TopLevelState {
         let shard_cache = self.shard_caches.entry(shard_id).or_default();
         let mut shard_level_state = ShardLevelState::from_existing(shard_id, &mut self.db, shard_root, shard_cache)?;
         shard_level_state.apply(
+            tx_hash,
             &transaction,
             sender,
             &shard_users,
@@ -1347,7 +1350,7 @@ mod tests_tx {
         let state = get_temp_state();
 
         let shard_id = 3;
-        check_top_level_state!(state, [(shard_text: (shard_id, Tracker::from(H256::random())))]);
+        check_top_level_state!(state, [(shard_text: (shard_id, TxHash::from(H256::random())))]);
     }
 
     #[test]
@@ -1470,7 +1473,7 @@ mod tests_tx {
         check_top_level_state!(state, [
             (account: sender => seq: 1, balance: 20 - 5),
             (shard: 0 => owners: vec![sender], users: vec![]),
-            (shard_text: (invalid_shard_id, Tracker::from(H256::random())))
+            (shard_text: (invalid_shard_id, TxHash::from(H256::random())))
         ]);
     }
 
