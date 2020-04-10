@@ -77,5 +77,6 @@ members = [
     "types",
     "module",
     "module-macros",
-    "coordinator"
+    "coordinator",
+    "basic_module/orderer"
 ]
