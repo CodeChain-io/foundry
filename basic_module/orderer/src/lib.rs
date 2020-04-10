@@ -17,3 +17,9 @@
 mod core;
 mod impls;
 mod types;
+
+use ckey::Address;
+// This will be replaced with imported Account handler
+fn get_seq(_address: &Address) -> u64 {
+    unimplemented!()
+}
