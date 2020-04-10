@@ -22,7 +22,6 @@ import { Remove } from "./transaction/Remove";
 import { ReportDoubleVote } from "./transaction/ReportDoubleVote";
 import { Revoke } from "./transaction/Revoke";
 import { SelfNominate } from "./transaction/SelfNominate";
-import { SetShardOwners } from "./transaction/SetShardOwners";
 import { Store } from "./transaction/Store";
 import { TransferCCS } from "./transaction/TransferCCS";
 import { NetworkId } from "./types";
@@ -43,7 +42,6 @@ export class Core {
         SignedTransaction,
         // Transaction
         Pay,
-        SetShardOwners,
         Store,
         Remove,
         DelegateCCS,
@@ -85,22 +83,6 @@ export class Core {
         return new Pay(
             Address.ensure(recipient),
             U64.ensure(quantity),
-            this.networkId
-        );
-    }
-
-    public createSetShardOwnersTransaction(params: {
-        shardId: number;
-        owners: Array<AddressValue>;
-    }): SetShardOwners {
-        const { shardId, owners } = params;
-        checkShardId(shardId);
-        checkOwners(owners);
-        return new SetShardOwners(
-            {
-                shardId,
-                owners: owners.map(Address.ensure)
-            },
             this.networkId
         );
     }

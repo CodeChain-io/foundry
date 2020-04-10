@@ -52,10 +52,6 @@ pub trait Chain {
     #[rpc(name = "chain_getShardRoot")]
     fn get_shard_root(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<H256>>;
 
-    /// Gets shard owners
-    #[rpc(name = "chain_getShardOwners")]
-    fn get_shard_owners(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>>;
-
     /// Gets number of best block.
     #[rpc(name = "chain_getBestBlockNumber")]
     fn get_best_block_number(&self) -> Result<BlockNumber>;

@@ -87,14 +87,6 @@ where
         Ok(self.client.shard_root(shard_id, block_id.into()))
     }
 
-    fn get_shard_owners(&self, shard_id: ShardId, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        Ok(self.client.shard_owners(shard_id, block_id.into()).map(|owners| {
-            let network_id = self.client.network_id();
-            owners.into_iter().map(|owner| PlatformAddress::new_v1(network_id, owner)).collect()
-        }))
-    }
-
     fn get_best_block_number(&self) -> Result<BlockNumber> {
         Ok(self.client.chain_info().best_block_number)
     }

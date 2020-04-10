@@ -11,14 +11,12 @@ import { RemoveActionJSON } from "./transaction/Remove";
 import { ReportDoubleVoteActionJSON } from "./transaction/ReportDoubleVote";
 import { RevokeActionJSON } from "./transaction/Revoke";
 import { SelfNominateActionJSON } from "./transaction/SelfNominate";
-import { SetShardOwnersActionJSON } from "./transaction/SetShardOwners";
 import { StoreActionJSON } from "./transaction/Store";
 import { TransferCCSActionJSON } from "./transaction/TransferCCS";
 import { NetworkId } from "./types";
 
 type ActionJSON =
     | PayActionJSON
-    | SetShardOwnersActionJSON
     | StoreActionJSON
     | RemoveActionJSON
     | TransferCCSActionJSON

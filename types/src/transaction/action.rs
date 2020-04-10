@@ -26,7 +26,6 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 #[repr(u8)]
 enum ActionTag {
     Pay = 0x02,
-    SetShardOwners = 0x05,
     ShardStore = 0x19,
     TransferCCS = 0x21,
     DelegateCCS = 0x22,
@@ -48,7 +47,6 @@ impl Decodable for ActionTag {
         let tag = rlp.as_val()?;
         match tag {
             0x02u8 => Ok(Self::Pay),
-            0x05 => Ok(Self::SetShardOwners),
             0x19 => Ok(Self::ShardStore),
             0x21 => Ok(Self::TransferCCS),
             0x22 => Ok(Self::DelegateCCS),
@@ -68,10 +66,6 @@ pub enum Action {
         receiver: Address,
         /// Transferred quantity.
         quantity: u64,
-    },
-    SetShardOwners {
-        shard_id: ShardId,
-        owners: Vec<Address>,
     },
     ShardStore {
         network_id: NetworkId,
@@ -237,15 +231,6 @@ impl Encodable for Action {
                 s.append(receiver);
                 s.append(quantity);
             }
-            Action::SetShardOwners {
-                shard_id,
-                owners,
-            } => {
-                s.begin_list(3);
-                s.append(&ActionTag::SetShardOwners);
-                s.append(shard_id);
-                s.append_list(owners);
-            }
             Action::ShardStore {
                 shard_id,
                 content,
@@ -329,19 +314,6 @@ impl Decodable for Action {
                 Ok(Action::Pay {
                     receiver: rlp.val_at(1)?,
                     quantity: rlp.val_at(2)?,
-                })
-            }
-            ActionTag::SetShardOwners => {
-                let item_count = rlp.item_count()?;
-                if item_count != 3 {
-                    return Err(DecoderError::RlpIncorrectListLen {
-                        got: item_count,
-                        expected: 3,
-                    })
-                }
-                Ok(Action::SetShardOwners {
-                    shard_id: rlp.val_at(1)?,
-                    owners: rlp.list_at(2)?,
                 })
             }
             ActionTag::ShardStore => {
@@ -471,14 +443,6 @@ mod tests {
         rlp_encode_and_decode_test!(Action::Pay {
             receiver: Address::random(),
             quantity: 300,
-        });
-    }
-
-    #[test]
-    fn encode_and_decode_set_shard_owners() {
-        rlp_encode_and_decode_test!(Action::SetShardOwners {
-            shard_id: 1,
-            owners: vec![Address::random(), Address::random()],
         });
     }
 

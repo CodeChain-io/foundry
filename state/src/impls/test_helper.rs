@@ -30,21 +30,6 @@ macro_rules! pay {
     };
 }
 
-macro_rules! set_shard_owners {
-    (shard_id: $shard_id:expr, $owners:expr) => {
-        $crate::ctypes::transaction::Action::SetShardOwners {
-            shard_id: $shard_id,
-            owners: $owners,
-        }
-    };
-    ($owners:expr) => {
-        $crate::ctypes::transaction::Action::SetShardOwners {
-            shard_id: $crate::impls::test_helper::SHARD_ID,
-            owners: $owners,
-        }
-    };
-}
-
 macro_rules! transaction {
     (fee: $fee:expr, $action:expr) => {
         transaction!(seq: 0, fee: $fee, $action)
@@ -123,9 +108,6 @@ macro_rules! check_top_level_state {
     };
     ($state:expr, [(shard: $shard_id:expr => owners: [$($owner:expr),*])]) => {
         check_top_level_state!($state, [(shard: $shard_id => owners: vec![$($owner,)*])]);
-    };
-    ($state:expr, [(shard: $shard_id:expr => owners: $owners:expr)]) => {
-        assert_eq!(Ok(Some($owners)), $state.shard_owners($shard_id));
     };
     ($state:expr, [(shard: $shard_id:expr)]) => {
         assert_eq!(Ok(None), $state.shard_root($shard_id));

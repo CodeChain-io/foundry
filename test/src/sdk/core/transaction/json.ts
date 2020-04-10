@@ -8,7 +8,6 @@ import { Remove } from "./Remove";
 import { ReportDoubleVote } from "./ReportDoubleVote";
 import { Revoke } from "./Revoke";
 import { SelfNominate } from "./SelfNominate";
-import { SetShardOwners } from "./SetShardOwners";
 import { Store } from "./Store";
 import { TransferCCS } from "./TransferCCS";
 
@@ -20,18 +19,6 @@ export function fromJSONToTransaction(result: any): Transaction {
             const receiver = Address.ensure(action.receiver);
             const quantity = new U64(action.quantity);
             tx = new Pay(receiver, quantity, networkId);
-            break;
-        }
-        case "setShardOwners": {
-            const shardId = action.shardId;
-            const owners = action.owners.map(Address.ensure);
-            tx = new SetShardOwners(
-                {
-                    shardId,
-                    owners
-                },
-                networkId
-            );
             break;
         }
         case "store": {
