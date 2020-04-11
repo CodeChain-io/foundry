@@ -1,13 +1,12 @@
 use super::context::SubStorageAccess;
 use ckey::Ed25519Public as Public;
 use ctypes::{CompactValidatorSet, TxHash};
+use primitives::Bytes;
 
 /// A `Validator` receives requests from the underlying consensus engine
 /// and performs validation of blocks and Txes.
 ///
 ///
-
-pub type Bytes = Vec<u8>;
 
 pub type VoteWeight = u64;
 
