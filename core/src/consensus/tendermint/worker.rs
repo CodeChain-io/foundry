@@ -1434,7 +1434,7 @@ impl Worker {
             network_id,
             action: double.to_action(),
         };
-        let signature = match self.signer.sign_ed25519(*tx.hash()) {
+        let signature = match self.signer.sign(*tx.hash()) {
             Ok(signature) => signature,
             Err(e) => {
                 cerror!(ENGINE, "Found double vote, but could not sign the message: {}", e);
