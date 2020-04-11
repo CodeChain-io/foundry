@@ -21,25 +21,25 @@ pub struct ConsensusParams {
     pub validators: CompactValidatorSet,
     // Note: This code is copied from json/src/tendermint.rs
     /// Propose step timeout in milliseconds.
-    pub timeout_propose: Option<u64>,
+    pub timeout_propose: u64,
     /// Propose step timeout delta in milliseconds.
-    pub timeout_propose_delta: Option<u64>,
+    pub timeout_propose_delta: u64,
     /// Prevote step timeout in milliseconds.
-    pub timeout_prevote: Option<u64>,
+    pub timeout_prevote: u64,
     /// Prevote step timeout delta in milliseconds.
-    pub timeout_prevote_delta: Option<u64>,
+    pub timeout_prevote_delta: u64,
     /// Precommit step timeout in milliseconds.
-    pub timeout_precommit: Option<u64>,
+    pub timeout_precommit: u64,
     /// Precommit step timeout delta in milliseconds.
-    pub timeout_precommit_delta: Option<u64>,
+    pub timeout_precommit_delta: u64,
     /// Commit step timeout in milliseconds.
-    pub timeout_commit: Option<u64>,
+    pub timeout_commit: u64,
     /// Reward per block.
-    pub block_reward: Option<u64>,
+    pub block_reward: u64,
     /// allowed past time gap in milliseconds.
-    pub allowed_past_timegap: Option<u64>,
+    pub allowed_past_timegap: u64,
     /// allowed future time gap in milliseconds.
-    pub allowed_future_timegap: Option<u64>,
+    pub allowed_future_timegap: u64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
