@@ -54,9 +54,9 @@ pub struct Builder<C: context::Context> {
 }
 
 impl<C: context::Context> Builder<C> {
-    fn create<CTX: context::Context>(ctx: CTX) -> Builder<CTX> {
+    fn new(context: C) -> Self {
         Builder {
-            context: ctx,
+            context,
         }
     }
 
