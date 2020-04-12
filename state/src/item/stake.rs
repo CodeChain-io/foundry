@@ -17,6 +17,7 @@
 use crate::{ActionData, StakeKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
 use ckey::{public_to_address, Address, Ed25519Public as Public};
 use ctypes::errors::RuntimeError;
+use ctypes::transaction::Validator;
 use ctypes::{CompactValidatorEntry, CompactValidatorSet};
 use primitives::{Bytes, H256};
 use rlp::{decode_list, encode_list, Decodable, Encodable, Rlp, RlpStream};
@@ -222,46 +223,6 @@ impl<'a> Delegation<'a> {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, RlpDecodable, RlpEncodable)]
-pub struct Validator {
-    weight: StakeQuantity,
-    delegation: StakeQuantity,
-    deposit: DepositQuantity,
-    pubkey: Public,
-}
-
-impl Validator {
-    pub fn new_for_test(delegation: StakeQuantity, deposit: DepositQuantity, pubkey: Public) -> Self {
-        Self {
-            weight: delegation,
-            delegation,
-            deposit,
-            pubkey,
-        }
-    }
-
-    fn new(delegation: StakeQuantity, deposit: DepositQuantity, pubkey: Public) -> Self {
-        Self {
-            weight: delegation,
-            delegation,
-            deposit,
-            pubkey,
-        }
-    }
-
-    fn reset(&mut self) {
-        self.weight = self.delegation;
-    }
-
-    pub fn pubkey(&self) -> &Public {
-        &self.pubkey
-    }
-
-    pub fn delegation(&self) -> StakeQuantity {
-        self.delegation
-    }
-}
-
 #[derive(Debug)]
 pub struct NextValidators(Vec<Validator>);
 impl NextValidators {
@@ -309,7 +270,7 @@ impl NextValidators {
 
         let banned = Banned::load_from_state(&state)?;
         for validator in &validators {
-            let address = public_to_address(&validator.pubkey);
+            let address = public_to_address(validator.pubkey());
             assert!(!banned.is_banned(&address), "{} is banned address", address);
         }
 
@@ -327,7 +288,7 @@ impl NextValidators {
         }
         // Step 4 & 5
         let (minimum, rest) = validators.split_at(min_num_of_validators.min(validators.len()));
-        let over_threshold = rest.iter().filter(|c| c.delegation >= delegation_threshold);
+        let over_threshold = rest.iter().filter(|c| c.delegation() >= delegation_threshold);
 
         let mut result: Vec<_> = minimum.iter().chain(over_threshold).cloned().collect();
         result.reverse(); // Ascending order of (delegation, deposit, priority)
@@ -346,41 +307,31 @@ impl NextValidators {
 
     pub fn update_weight(&mut self, block_author: &Address) {
         let min_delegation = self.min_delegation();
-        for Validator {
-            weight,
-            pubkey,
-            ..
-        } in self.0.iter_mut().rev()
-        {
-            if public_to_address(pubkey) == *block_author {
+        for validator in self.0.iter_mut().rev() {
+            if public_to_address(validator.pubkey()) == *block_author {
                 // block author
-                *weight = weight.saturating_sub(min_delegation);
+                validator.set_weight(validator.weight().saturating_sub(min_delegation));
                 break
             }
             // neglecting validators
-            *weight = weight.saturating_sub(min_delegation * 2);
+            validator.set_weight(validator.weight().saturating_sub(min_delegation * 2));
         }
-        if self.0.iter().all(|validator| validator.weight == 0) {
+        if self.0.iter().all(|validator| validator.weight() == 0) {
             self.0.iter_mut().for_each(Validator::reset);
         }
         self.0.sort_unstable();
     }
 
     pub fn remove(&mut self, target: &Address) {
-        self.0.retain(
-            |Validator {
-                 pubkey,
-                 ..
-             }| public_to_address(pubkey) != *target,
-        );
+        self.0.retain(|validator| public_to_address(validator.pubkey()) != *target);
     }
 
     pub fn delegation(&self, pubkey: &Public) -> Option<StakeQuantity> {
-        self.0.iter().find(|validator| validator.pubkey == *pubkey).map(|&validator| validator.delegation)
+        self.0.iter().find(|validator| *validator.pubkey() == *pubkey).map(|&validator| validator.delegation())
     }
 
     fn min_delegation(&self) -> StakeQuantity {
-        self.0.iter().map(|&validator| validator.delegation).min().expect("There must be at least one validators")
+        self.0.iter().map(|&validator| validator.delegation()).min().expect("There must be at least one validators")
     }
 }
 
@@ -432,7 +383,7 @@ impl CurrentValidators {
     }
 
     pub fn addresses(&self) -> Vec<Address> {
-        self.0.iter().rev().map(|v| public_to_address(&v.pubkey)).collect()
+        self.0.iter().rev().map(|v| public_to_address(v.pubkey())).collect()
     }
 }
 
@@ -495,7 +446,7 @@ impl Candidates {
         // Candidates are sorted in low priority: low index, high priority: high index
         // so stable sorting with the key (delegation, deposit) preserves its priority order.
         // ascending order of (delegation, deposit, priority)
-        result.sort_by_key(|v| (v.delegation, v.deposit));
+        result.sort_by_key(|v| (v.delegation(), v.deposit()));
         Ok(result)
     }
 
@@ -549,7 +500,7 @@ impl Candidates {
         banned: &Banned,
     ) {
         let to_renew: HashSet<_> = (validators.iter())
-            .map(|validator| validator.pubkey)
+            .map(|validator| validator.pubkey())
             .filter(|pubkey| !inactive_validators.contains(&public_to_address(pubkey)))
             .collect();
 
@@ -1691,17 +1642,8 @@ mod tests {
         }
         candidates.save_to_state(&mut state).unwrap();
 
-        let dummy_validators = NextValidators(
-            pubkeys[0..5]
-                .iter()
-                .map(|pubkey| Validator {
-                    pubkey: *pubkey,
-                    deposit: 0,
-                    delegation: 0,
-                    weight: 0,
-                })
-                .collect(),
-        );
+        let dummy_validators =
+            NextValidators(pubkeys[0..5].iter().map(|pubkey| Validator::new(0, 0, *pubkey)).collect());
         let dummy_banned = Banned::load_from_state(&state).unwrap();
         candidates.renew_candidates(&dummy_validators, 0, &[], &dummy_banned);
 

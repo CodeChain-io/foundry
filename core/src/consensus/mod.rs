@@ -164,8 +164,8 @@ pub trait ConsensusEngine: Sync + Send {
     fn on_timeout(&self, _token: usize) {}
 
     /// Block transformation functions, before the transactions.
-    fn on_open_block(&self, _block: &mut ExecutedBlock) -> Result<(), Error> {
-        Ok(())
+    fn open_block_action(&self, _block: &ExecutedBlock) -> Result<Option<Action>, Error> {
+        Ok(None)
     }
 
     /// Block transformation functions, after the transactions.

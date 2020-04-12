@@ -348,7 +348,6 @@ pub fn enact<C: EngineInfo + FindDoubleVoteHandler + TermInfo>(
     let mut b = OpenBlock::try_new(engine, db, parent, Address::default(), vec![])?;
 
     b.populate_from(header);
-    engine.on_open_block(b.inner_mut())?;
     b.push_transactions(transactions, client, parent.number(), parent.timestamp())?;
 
     b.close()

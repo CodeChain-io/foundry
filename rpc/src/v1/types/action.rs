@@ -67,6 +67,7 @@ pub enum Action {
         message1: Bytes,
         message2: Bytes,
     },
+    UpdateValidators,
 }
 
 impl Action {
@@ -141,6 +142,9 @@ impl Action {
                 message1,
                 message2,
             },
+            ActionType::UpdateValidators {
+                ..
+            } => Action::UpdateValidators, // TODO: Implement serialization
         }
     }
 }
@@ -218,6 +222,7 @@ impl TryFrom<Action> for ActionType {
                 message1,
                 message2,
             },
+            Action::UpdateValidators => unreachable!("No reason to get UpdateValidators from RPCs"),
         })
     }
 }

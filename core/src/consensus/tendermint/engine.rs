@@ -32,9 +32,10 @@ use ckey::{public_to_address, Address};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{
-    init_stake, update_validator_weights, CurrentValidators, DoubleVoteHandler, NextValidators, StateDB, StateResult,
-    StateWithCache, TopLevelState, TopState, TopStateView,
+    init_stake, update_validator_weights, DoubleVoteHandler, NextValidators, StateDB, StateResult, StateWithCache,
+    TopLevelState, TopState, TopStateView,
 };
+use ctypes::transaction::Action;
 use ctypes::{BlockHash, Header};
 use primitives::H256;
 use std::collections::HashSet;
@@ -108,12 +109,10 @@ impl ConsensusEngine for Tendermint {
     }
 
     /// Block transformation functions, before the transactions.
-    fn on_open_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
-        let mut current_validators = CurrentValidators::load_from_state(block.state())?;
-        current_validators.update(NextValidators::load_from_state(block.state())?.clone());
-        current_validators.save_to_state(block.state_mut())?;
-
-        Ok(())
+    fn open_block_action(&self, block: &ExecutedBlock) -> Result<Option<Action>, Error> {
+        Ok(Some(Action::UpdateValidators {
+            validators: NextValidators::load_from_state(block.state())?.into(),
+        }))
     }
 
     fn on_close_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
