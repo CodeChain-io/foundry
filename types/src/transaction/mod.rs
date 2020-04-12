@@ -22,6 +22,7 @@ mod shard;
 mod timelock;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod transaction;
+mod validator;
 
 pub use self::action::Action;
 pub use self::approval::Approval;
@@ -30,3 +31,4 @@ pub use self::partial_hashing::{HashingError, PartialHashing};
 pub use self::shard::ShardTransaction;
 pub use self::timelock::Timelock;
 pub use self::transaction::Transaction;
+pub use self::validator::Validator;
