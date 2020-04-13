@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -36,9 +36,11 @@ pub struct HeaderDownloader {
 
     seq: U256,
     best_hash: BlockHash,
+    /// The last header we downloaded from this peer.
     pivot: BlockHash,
     request_time: Option<Instant>,
     downloaded: HashMap<BlockHash, Header>,
+    /// Headers that are importing now.
     queued: HashMap<BlockHash, Header>,
     trial: usize,
 }
