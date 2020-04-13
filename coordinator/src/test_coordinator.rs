@@ -1,5 +1,6 @@
 use super::context::SubStorageAccess;
-use super::validator::*;
+use super::traits::{BlockExecutor, Initializer, TxFilter};
+use super::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use std::sync::atomic::{AtomicUsize, Ordering};
 

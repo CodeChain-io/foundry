@@ -18,7 +18,8 @@ use super::backup;
 use super::mem_pool_types::{MemPoolStatus, PoolingInstant, TransactionPool};
 use crate::transaction::PendingTransactions;
 use crate::Error as CoreError;
-use coordinator::validator::{ErrorCode, Transaction, TransactionWithMetadata, TxFilter, TxOrigin};
+use coordinator::traits::TxFilter;
+use coordinator::types::{ErrorCode, Transaction, TransactionWithMetadata, TxOrigin};
 use ctypes::errors::{HistoryError, SyntaxError};
 use ctypes::TxHash;
 use kvdb::{DBTransaction, KeyValueDB};
@@ -270,7 +271,7 @@ impl MemPool {
 #[cfg(test)]
 pub mod test {
     use coordinator::test_coordinator::TestCoordinator;
-    use coordinator::validator::Transaction;
+    use coordinator::types::Transaction;
     use rand::Rng;
     use std::sync::Arc;
 

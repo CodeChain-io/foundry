@@ -28,7 +28,7 @@ use crate::views;
 use crate::Evidence;
 use ccrypto::blake256;
 use ckey::Address;
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 use ctypes::{BlockHash, BlockNumber, Header as FullHeader, TxHash};
 use primitives::H256;
 use rlp::Rlp;

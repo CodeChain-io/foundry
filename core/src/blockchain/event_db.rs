@@ -16,7 +16,7 @@
 
 use crate::db::{self, CacheUpdatePolicy, Readable, Writable};
 use crate::event::{EventSource, Events};
-use coordinator::validator::Event;
+use coordinator::types::Event;
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::RwLock;
 use std::collections::HashMap;

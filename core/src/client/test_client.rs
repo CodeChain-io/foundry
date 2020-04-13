@@ -48,7 +48,7 @@ use crate::{LocalizedTransaction, PendingTransactions};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::{Address, Ed25519Private as Private, Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::test_coordinator::TestCoordinator;
-use coordinator::validator::{Event, Transaction};
+use coordinator::types::{Event, Transaction};
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{FindDoubleVoteHandler, NextValidatorSet, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};

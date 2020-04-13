@@ -38,7 +38,7 @@ use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as
 use crate::Error;
 use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress};
-use coordinator::validator::{Event, Transaction};
+use coordinator::types::{Event, Transaction};
 use cstate::{TopLevelState, TopStateView};
 use ctypes::header::Header;
 use ctypes::{BlockHash, BlockNumber, CommonParams, ConsensusParams, TxHash};

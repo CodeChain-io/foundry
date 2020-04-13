@@ -17,7 +17,7 @@
 use crate::transaction::LocalizedTransaction;
 use crate::Evidence;
 use ccrypto::blake256;
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 use ctypes::{BlockHash, BlockNumber, TxHash};
 use rlp::Rlp;
 
