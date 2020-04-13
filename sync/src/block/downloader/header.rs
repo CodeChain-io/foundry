@@ -15,9 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::message::RequestMessage;
-use ccore::encoded::Header;
 use ccore::{BlockChainClient, BlockId};
-use ctypes::BlockHash;
+use ctypes::{BlockHash, Header};
 use primitives::U256;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -104,7 +103,7 @@ impl HeaderDownloader {
             Some(header) => header.clone(),
             None => match self.downloaded.get(&self.pivot) {
                 Some(header) => header.clone(),
-                None => self.client.block_header(&BlockId::Hash(self.pivot)).unwrap(),
+                None => self.client.block_header(&BlockId::Hash(self.pivot)).unwrap().decode(),
             },
         }
     }
@@ -164,7 +163,7 @@ impl HeaderDownloader {
             );
         } else if first_header_number == pivot_header.number() {
             if pivot_header.number() != 0 {
-                self.pivot = pivot_header.parent_hash();
+                self.pivot = *pivot_header.parent_hash();
             }
         } else {
             cerror!(
