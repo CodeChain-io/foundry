@@ -18,12 +18,12 @@ use super::super::errors::ConversionError;
 use cjson::uint::Uint;
 use ckey::{Error as KeyError, NetworkId, PlatformAddress};
 use ctypes::transaction::{Action as ActionType, Approval};
-use ctypes::{ShardId, Tracker};
+use ctypes::ShardId;
 use primitives::Bytes;
 use rlp::Encodable;
 use std::convert::TryFrom;
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum Action {
     Pay {
@@ -82,74 +82,13 @@ pub enum Action {
     },
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase", tag = "type")]
-pub enum ActionWithTracker {
-    Pay {
-        receiver: PlatformAddress,
-        quantity: Uint,
-    },
-    CreateShard {
-        users: Vec<PlatformAddress>,
-    },
-    #[serde(rename_all = "camelCase")]
-    SetShardOwners {
-        shard_id: ShardId,
-        owners: Vec<PlatformAddress>,
-    },
-    #[serde(rename_all = "camelCase")]
-    SetShardUsers {
-        shard_id: ShardId,
-        users: Vec<PlatformAddress>,
-    },
-    ShardStore {
-        network_id: NetworkId,
-        shard_id: ShardId,
-        content: String,
-        tracker: Tracker,
-    },
-    TransferCCS {
-        address: PlatformAddress,
-        quantity: Uint,
-    },
-    DelegateCCS {
-        address: PlatformAddress,
-        quantity: Uint,
-    },
-    Revoke {
-        address: PlatformAddress,
-        quantity: Uint,
-    },
-    #[serde(rename_all = "camelCase")]
-    Redelegate {
-        prev_delegatee: PlatformAddress,
-        next_delegatee: PlatformAddress,
-        quantity: Uint,
-    },
-    SelfNominate {
-        deposit: Uint,
-        metadata: Bytes,
-    },
-    #[serde(rename_all = "camelCase")]
-    ChangeParams {
-        metadata_seq: Uint,
-        params: Bytes,
-        approvals: Vec<Approval>,
-    },
-    ReportDoubleVote {
-        message1: Bytes,
-        message2: Bytes,
-    },
-}
-
-impl ActionWithTracker {
+impl Action {
     pub fn from_core(from: ActionType, network_id: NetworkId) -> Self {
-        let tracker = from.tracker();
         match from {
             ActionType::Pay {
                 receiver,
                 quantity,
-            } => ActionWithTracker::Pay {
+            } => Action::Pay {
                 receiver: PlatformAddress::new_v1(network_id, receiver),
                 quantity: quantity.into(),
             },
@@ -157,21 +96,21 @@ impl ActionWithTracker {
                 users,
             } => {
                 let users = users.into_iter().map(|user| PlatformAddress::new_v1(network_id, user)).collect();
-                ActionWithTracker::CreateShard {
+                Action::CreateShard {
                     users,
                 }
             }
             ActionType::SetShardOwners {
                 shard_id,
                 owners,
-            } => ActionWithTracker::SetShardOwners {
+            } => Action::SetShardOwners {
                 shard_id,
                 owners: owners.into_iter().map(|owner| PlatformAddress::new_v1(network_id, owner)).collect(),
             },
             ActionType::SetShardUsers {
                 shard_id,
                 users,
-            } => ActionWithTracker::SetShardUsers {
+            } => Action::SetShardUsers {
                 shard_id,
                 users: users.into_iter().map(|user| PlatformAddress::new_v1(network_id, user)).collect(),
             },
@@ -179,30 +118,29 @@ impl ActionWithTracker {
                 network_id,
                 shard_id,
                 content,
-            } => ActionWithTracker::ShardStore {
+            } => Action::ShardStore {
                 network_id,
                 shard_id,
                 content,
-                tracker: tracker.unwrap(),
             },
             ActionType::TransferCCS {
                 address,
                 quantity,
-            } => ActionWithTracker::TransferCCS {
+            } => Action::TransferCCS {
                 address: PlatformAddress::new_v1(network_id, address),
                 quantity: quantity.into(),
             },
             ActionType::DelegateCCS {
                 address,
                 quantity,
-            } => ActionWithTracker::DelegateCCS {
+            } => Action::DelegateCCS {
                 address: PlatformAddress::new_v1(network_id, address),
                 quantity: quantity.into(),
             },
             ActionType::Revoke {
                 address,
                 quantity,
-            } => ActionWithTracker::Revoke {
+            } => Action::Revoke {
                 address: PlatformAddress::new_v1(network_id, address),
                 quantity: quantity.into(),
             },
@@ -210,7 +148,7 @@ impl ActionWithTracker {
                 prev_delegatee,
                 next_delegatee,
                 quantity,
-            } => ActionWithTracker::Redelegate {
+            } => Action::Redelegate {
                 prev_delegatee: PlatformAddress::new_v1(network_id, prev_delegatee),
                 next_delegatee: PlatformAddress::new_v1(network_id, next_delegatee),
                 quantity: quantity.into(),
@@ -218,7 +156,7 @@ impl ActionWithTracker {
             ActionType::SelfNominate {
                 deposit,
                 metadata,
-            } => ActionWithTracker::SelfNominate {
+            } => Action::SelfNominate {
                 deposit: deposit.into(),
                 metadata,
             },
@@ -226,7 +164,7 @@ impl ActionWithTracker {
                 metadata_seq,
                 params,
                 approvals,
-            } => ActionWithTracker::ChangeParams {
+            } => Action::ChangeParams {
                 metadata_seq: metadata_seq.into(),
                 params: params.rlp_bytes(),
                 approvals,
@@ -234,7 +172,7 @@ impl ActionWithTracker {
             ActionType::ReportDoubleVote {
                 message1,
                 message2,
-            } => ActionWithTracker::ReportDoubleVote {
+            } => Action::ReportDoubleVote {
                 message1,
                 message2,
             },

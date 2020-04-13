@@ -19,7 +19,7 @@ use crate::{
 };
 use ckey::Address;
 use ctypes::transaction::ShardTransaction;
-use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, Tracker, TxHash};
+use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, TxHash};
 use merkle_trie::Result as TrieResult;
 use primitives::{Bytes, H256};
 
@@ -87,10 +87,10 @@ pub trait TopStateView {
 
     fn action_data(&self, key: &H256) -> TrieResult<Option<ActionData>>;
 
-    fn shard_text(&self, shard_id: ShardId, tracker: Tracker) -> TrieResult<Option<ShardText>> {
+    fn shard_text(&self, shard_id: ShardId, tx_hash: TxHash) -> TrieResult<Option<ShardText>> {
         match self.shard_state(shard_id)? {
             None => Ok(None),
-            Some(state) => state.text(tracker),
+            Some(state) => state.text(tx_hash),
         }
     }
 
@@ -104,7 +104,7 @@ pub trait TopStateView {
 
 pub trait ShardStateView {
     /// Get shard text.
-    fn text(&self, tracker: Tracker) -> TrieResult<Option<ShardText>>;
+    fn text(&self, hash: TxHash) -> TrieResult<Option<ShardText>>;
 }
 
 pub trait ModuleStateView {
@@ -117,6 +117,7 @@ pub trait ModuleStateView {
 pub trait ShardState {
     fn apply(
         &mut self,
+        tx_hash: TxHash,
         transaction: &ShardTransaction,
         sender: &Address,
         shard_owners: &[Address],

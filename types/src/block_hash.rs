@@ -67,12 +67,12 @@ mod tests {
         let block_hash = BlockHash(h256);
 
         let mut hasher_of_h256 = DefaultHasher::new();
-        let mut hasher_of_tracker = DefaultHasher::new();
+        let mut hasher_of_block_hash = DefaultHasher::new();
 
         h256.hash(&mut hasher_of_h256);
-        block_hash.hash(&mut hasher_of_tracker);
+        block_hash.hash(&mut hasher_of_block_hash);
 
-        assert_eq!(hasher_of_h256.finish(), hasher_of_tracker.finish());
+        assert_eq!(hasher_of_h256.finish(), hasher_of_block_hash.finish());
     }
 
     #[test]
