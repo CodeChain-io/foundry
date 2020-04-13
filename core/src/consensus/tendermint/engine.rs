@@ -43,10 +43,6 @@ use std::sync::atomic::Ordering as AtomicOrdering;
 use std::sync::{Arc, Weak};
 
 impl ConsensusEngine for Tendermint {
-    fn name(&self) -> &str {
-        "Tendermint"
-    }
-
     /// (consensus view, proposal signature, authority signatures)
     fn seal_fields(&self, _header: &Header) -> usize {
         SEAL_FIELDS
@@ -110,8 +106,6 @@ impl ConsensusEngine for Tendermint {
     fn on_timeout(&self, token: usize) {
         self.inner.send(worker::Event::OnTimeout(token)).unwrap();
     }
-
-    fn stop(&self) {}
 
     /// Block transformation functions, before the transactions.
     fn on_open_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {

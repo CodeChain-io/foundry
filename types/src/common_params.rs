@@ -167,7 +167,6 @@ impl From<Params> for CommonParams {
 
 impl From<CommonParams> for Params {
     fn from(p: CommonParams) -> Params {
-        #[allow(deprecated)]
         let mut result: Params = Params {
             max_extra_data_size: p.max_extra_data_size().into(),
             network_id: p.network_id(),
@@ -307,7 +306,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::cognitive_complexity)]
     fn params_from_json_with_stake_params() {
         let s = r#"{
             "maxExtraDataSize": "0x20",
@@ -346,7 +344,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::cognitive_complexity)]
     fn params_from_json_with_era() {
         let s = r#"{
             "maxExtraDataSize": "0x20",

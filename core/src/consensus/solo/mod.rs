@@ -59,10 +59,6 @@ impl Solo {
 }
 
 impl ConsensusEngine for Solo {
-    fn name(&self) -> &str {
-        "Solo"
-    }
-
     fn seals_internally(&self) -> bool {
         true
     }
