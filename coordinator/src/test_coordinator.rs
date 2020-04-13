@@ -22,11 +22,13 @@ impl Default for TestCoordinator {
     }
 }
 
-impl Validator for TestCoordinator {
+impl Initializer for TestCoordinator {
     fn initialize_chain(&self, _app_state: String) -> (CompactValidatorSet, ConsensusParams) {
         (self.validator_set.clone(), self.consensus_params)
     }
+}
 
+impl BlockExecutor for TestCoordinator {
     fn open_block(&self, _context: &mut dyn SubStorageAccess, _header: &Header, _verified_crime: &[VerifiedCrime]) {
         self.body_count.store(0, Ordering::SeqCst);
         self.body_size.store(0, Ordering::SeqCst);
@@ -52,7 +54,9 @@ impl Validator for TestCoordinator {
             events: Vec::new(),
         }
     }
+}
 
+impl TxFilter for TestCoordinator {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode> {
         if transaction.size() > self.consensus_params.max_body_size() {
             Err(1)

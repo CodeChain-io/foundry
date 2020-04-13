@@ -25,7 +25,7 @@ use crate::scheme::Scheme;
 use crate::transaction::PendingTransactions;
 use crate::types::{BlockId, TransactionId};
 use ckey::Address;
-use coordinator::validator::{Transaction, TxOrigin, Validator};
+use coordinator::validator::{BlockExecutor, Transaction, TxFilter, TxOrigin};
 use cstate::TopLevelState;
 use ctypes::errors::HistoryError;
 use ctypes::{BlockHash, TxHash};
@@ -89,27 +89,36 @@ pub struct Miner {
     engine: Arc<dyn ConsensusEngine>,
     options: MinerOptions,
     sealing_enabled: AtomicBool,
-    validator: Arc<dyn Validator>,
+    block_executor: Arc<dyn BlockExecutor>,
 }
 
 impl Miner {
-    pub fn new(
+    pub fn new<C: 'static + BlockExecutor + TxFilter>(
         options: MinerOptions,
         scheme: &Scheme,
         db: Arc<dyn KeyValueDB>,
-        validator: Arc<dyn Validator>,
+        coordinator: Arc<C>,
     ) -> Arc<Self> {
-        Arc::new(Self::new_raw(options, scheme, db, validator))
+        Arc::new(Self::new_raw(options, scheme, db, coordinator))
     }
 
-    pub fn with_scheme_for_test(scheme: &Scheme, db: Arc<dyn KeyValueDB>, validator: Arc<dyn Validator>) -> Self {
-        Self::new_raw(Default::default(), scheme, db, validator)
+    pub fn with_scheme_for_test<C: 'static + BlockExecutor + TxFilter>(
+        scheme: &Scheme,
+        db: Arc<dyn KeyValueDB>,
+        coordinator: Arc<C>,
+    ) -> Self {
+        Self::new_raw(Default::default(), scheme, db, coordinator)
     }
 
-    fn new_raw(options: MinerOptions, scheme: &Scheme, db: Arc<dyn KeyValueDB>, validator: Arc<dyn Validator>) -> Self {
+    fn new_raw<C: 'static + BlockExecutor + TxFilter>(
+        options: MinerOptions,
+        scheme: &Scheme,
+        db: Arc<dyn KeyValueDB>,
+        coordinator: Arc<C>,
+    ) -> Self {
         let mem_limit = options.mem_pool_memory_limit.unwrap_or_else(usize::max_value);
         let mem_pool =
-            Arc::new(RwLock::new(MemPool::with_limits(options.mem_pool_size, mem_limit, db, validator.clone())));
+            Arc::new(RwLock::new(MemPool::with_limits(options.mem_pool_size, mem_limit, db, coordinator.clone())));
 
         Self {
             mem_pool,
@@ -119,7 +128,7 @@ impl Miner {
             engine: scheme.engine.clone(),
             options,
             sealing_enabled: AtomicBool::new(true),
-            validator,
+            block_executor: coordinator,
         }
     }
 
@@ -233,11 +242,11 @@ impl Miner {
 
         let evidences = self.engine.fetch_evidences();
 
-        let validator = &*self.validator;
+        let block_executor = &*self.block_executor;
 
-        open_block.open(validator, evidences);
-        open_block.execute_transactions(validator, transactions);
-        let closed_block = open_block.close(validator)?;
+        open_block.open(block_executor, evidences);
+        open_block.execute_transactions(block_executor, transactions);
+        let closed_block = open_block.close(block_executor)?;
         Ok(Some(closed_block))
     }
 

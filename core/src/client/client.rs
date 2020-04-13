@@ -35,7 +35,7 @@ use ccrypto::BLAKE_NULL_RLP;
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Address, NetworkId, PlatformAddress};
-use coordinator::validator::{Event, Transaction, Validator};
+use coordinator::validator::{BlockExecutor, Event, Initializer, Transaction};
 use cstate::{Metadata, MetadataAddress, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
@@ -76,12 +76,12 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn try_new(
+    pub fn try_new<C: 'static + Initializer + BlockExecutor>(
         config: &ClientConfig,
         scheme: &Scheme,
         db: Arc<dyn KeyValueDB>,
         miner: Arc<Miner>,
-        validator: Arc<dyn Validator>,
+        coordinator: Arc<C>,
         message_channel: IoChannel<ClientIoMessage>,
         reseal_timer: TimerApi,
     ) -> Result<Arc<Client>, Error> {
@@ -91,7 +91,7 @@ impl Client {
             return Err(SchemeError::InvalidState.into())
         }
         if state_db.is_empty() {
-            let (validators, consensus_params) = validator.initialize_chain(scheme.app_state.clone());
+            let (validators, consensus_params) = coordinator.initialize_chain(scheme.app_state.clone());
             state_db = Self::initialize_state(state_db, consensus_params, validators)?;
             let mut batch = DBTransaction::new();
             state_db.journal_under(&mut batch, 0, *scheme.genesis_header().hash())?;
@@ -103,7 +103,7 @@ impl Client {
 
         let engine = scheme.engine.clone();
 
-        let importer = Importer::try_new(config, engine.clone(), message_channel.clone(), miner, validator)?;
+        let importer = Importer::try_new(config, engine.clone(), message_channel.clone(), miner, coordinator)?;
 
         let client = Arc::new(Client {
             engine,
