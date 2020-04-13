@@ -28,7 +28,7 @@ use crate::verification::queue::{BlockQueue, HeaderQueue};
 use crate::verification::{PreverifiedBlock, Verifier};
 use crate::views::{BlockView, HeaderView};
 use cio::IoChannel;
-use coordinator::validator::Validator;
+use coordinator::validator::BlockExecutor;
 use ctypes::header::{Header, Seal};
 use ctypes::BlockHash;
 use kvdb::DBTransaction;
@@ -55,8 +55,8 @@ pub struct Importer {
     /// Handles block sealing
     pub miner: Arc<Miner>,
 
-    /// Validator used to execute transactions
-    pub validator: Arc<dyn Validator>,
+    /// Coordinator used to execute transactions
+    pub block_executor: Arc<dyn BlockExecutor>,
 
     /// CodeChain engine to be used during import
     pub engine: Arc<dyn ConsensusEngine>,
@@ -68,7 +68,7 @@ impl Importer {
         engine: Arc<dyn ConsensusEngine>,
         message_channel: IoChannel<ClientIoMessage>,
         miner: Arc<Miner>,
-        validator: Arc<dyn Validator>,
+        block_executor: Arc<dyn BlockExecutor>,
     ) -> Result<Importer, Error> {
         let block_queue = BlockQueue::new(&config.queue, engine.clone(), message_channel.clone());
 
@@ -80,7 +80,7 @@ impl Importer {
             block_queue,
             header_queue,
             miner,
-            validator,
+            block_executor,
             engine,
         })
     }
@@ -257,9 +257,10 @@ impl Importer {
 
         // Enact Verified Block
         let db = client.state_db().read().clone(&parent.state_root());
-        let validator = &*self.validator;
+        let block_executor = &*self.block_executor;
 
-        let enact_result = enact(&block.header, &block.transactions, &block.evidences, engine, validator, db, &parent);
+        let enact_result =
+            enact(&block.header, &block.transactions, &block.evidences, engine, block_executor, db, &parent);
         let closed_block = enact_result.map_err(|e| {
             cwarn!(CLIENT, "Block import failed for #{} ({})\nError: {:?}", header.number(), header.hash(), e);
         })?;

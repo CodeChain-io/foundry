@@ -257,11 +257,17 @@ pub struct BlockOutcome {
 
 pub type ErrorCode = i64;
 
-pub trait Validator: Send + Sync {
+pub trait Initializer: Send + Sync {
     fn initialize_chain(&self, app_state: String) -> (CompactValidatorSet, ConsensusParams);
+}
+
+pub trait BlockExecutor: Send + Sync {
     fn open_block(&self, context: &mut dyn SubStorageAccess, header: &Header, verified_crime: &[VerifiedCrime]);
     fn execute_transactions(&self, context: &mut dyn SubStorageAccess, transactions: &[Transaction]);
     fn close_block(&self, context: &mut dyn SubStorageAccess) -> BlockOutcome;
+}
+
+pub trait TxFilter: Send + Sync {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
     fn fetch_transactions_for_block<'a>(
         &self,
