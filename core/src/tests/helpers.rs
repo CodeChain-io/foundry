@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::scheme::Scheme;
-use crate::transaction::VerifiedTransaction;
 use ctypes::{BlockHash, Header};
 use primitives::Bytes;
 use rlp::RlpStream;
@@ -24,18 +23,6 @@ pub fn create_test_block(header: &Header) -> Bytes {
     let mut rlp = RlpStream::new_list(2);
     rlp.append(header);
     rlp.append_raw(&rlp::EMPTY_LIST_RLP, 1);
-    rlp.out()
-}
-
-#[allow(dead_code)]
-pub fn create_test_block_with_data(header: &Header, txs: &[VerifiedTransaction], uncles: &[Header]) -> Bytes {
-    let mut rlp = RlpStream::new_list(3);
-    rlp.append(header);
-    rlp.begin_list(txs.len());
-    for t in txs {
-        rlp.append_raw(&rlp::encode(t), 1);
-    }
-    rlp.append_list(&uncles);
     rlp.out()
 }
 
