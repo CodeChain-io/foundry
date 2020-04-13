@@ -17,7 +17,7 @@
 use super::{ConsensusMessage, VoteStep};
 use crate::consensus::BitSet;
 use ckey::Signature;
-use coordinator::validator::VerifiedCrime;
+use coordinator::types::VerifiedCrime;
 use ctypes::BlockHash;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::collections::{BTreeMap, HashMap};

@@ -18,7 +18,7 @@ use crate::consensus::{ConsensusEngine, Evidence};
 use crate::error::{BlockError, Error};
 use crate::views::BlockView;
 use ccrypto::BLAKE_NULL_RLP;
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockNumber, ConsensusParams, Header};
 use merkle_trie::skewed_merkle_root;

@@ -16,7 +16,7 @@
 
 use super::super::message::RequestMessage;
 use ccore::Evidence;
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 use ctypes::BlockHash;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;

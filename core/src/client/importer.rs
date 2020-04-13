@@ -28,7 +28,7 @@ use crate::verification::queue::{BlockQueue, HeaderQueue};
 use crate::verification::{PreverifiedBlock, Verifier};
 use crate::views::{BlockView, HeaderView};
 use cio::IoChannel;
-use coordinator::validator::BlockExecutor;
+use coordinator::traits::BlockExecutor;
 use ctypes::header::{Header, Seal};
 use ctypes::BlockHash;
 use kvdb::DBTransaction;

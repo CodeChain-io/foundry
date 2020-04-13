@@ -17,7 +17,7 @@
 use super::message::Message;
 use ccore::BlockChainClient;
 use cnetwork::{Api, NetworkExtension, NodeId};
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 use ctimer::TimerToken;
 use ctypes::TxHash;
 use never_type::Never;

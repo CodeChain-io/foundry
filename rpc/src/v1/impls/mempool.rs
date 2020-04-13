@@ -19,7 +19,7 @@ use super::super::traits::Mempool;
 use super::super::types::PendingTransactions;
 use ccore::{BlockChainClient, EngineInfo};
 use cjson::bytes::Bytes;
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 use ctypes::TxHash;
 use jsonrpc_core::Result;
 use rlp::Rlp;

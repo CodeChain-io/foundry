@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 use ctypes::{BlockHash, BlockNumber};
 
 pub struct PendingTransactions {

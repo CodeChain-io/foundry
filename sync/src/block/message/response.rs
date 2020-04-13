@@ -16,7 +16,7 @@
 
 use super::MessageID;
 use ccore::Evidence;
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 use ctypes::Header;
 use rlp::{DecoderError, Encodable, Rlp, RlpStream};
 
@@ -116,7 +116,7 @@ impl ResponseMessage {
 
 #[cfg(test)]
 mod tests {
-    use coordinator::validator::Transaction;
+    use coordinator::types::Transaction;
     use ctypes::Header;
     use rlp::{Encodable, Rlp};
 

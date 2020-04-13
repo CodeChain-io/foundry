@@ -1,11 +1,13 @@
 #![allow(dead_code, unused_variables)]
+use self::traits::{BlockExecutor, Initializer, TxFilter};
+use self::types::*;
 use context::SubStorageAccess;
 use ctypes::{CompactValidatorSet, ConsensusParams};
-use validator::*;
 
 pub mod context;
 pub mod test_coordinator;
-pub mod validator;
+pub mod traits;
+pub mod types;
 
 /// The `Coordinator` encapsulates all the logic for a Foundry application.
 ///

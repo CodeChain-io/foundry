@@ -34,7 +34,7 @@ use crate::consensus::EngineType;
 use crate::error::Error;
 use crate::transaction::PendingTransactions;
 use crate::BlockId;
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 
 /// Miner client API
 pub trait MinerService: Send + Sync {

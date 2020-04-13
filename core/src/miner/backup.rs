@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::db as dblib;
-use coordinator::validator::TransactionWithMetadata;
+use coordinator::types::TransactionWithMetadata;
 use kvdb::{DBTransaction, KeyValueDB};
 use primitives::H256;
 use rlp::Encodable;

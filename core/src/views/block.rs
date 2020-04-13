@@ -18,7 +18,7 @@ use super::{HeaderView, TransactionView};
 use crate::consensus::Evidence;
 use crate::transaction::LocalizedTransaction;
 use ccrypto::blake256;
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 use ctypes::{BlockHash, Header, TxHash};
 use rlp::Rlp;
 

@@ -25,7 +25,7 @@ use ccore::{
 use cdb::AsHashDB;
 use cnetwork::{Api, EventSender, IntoSocketAddr, NetworkExtension, NodeId};
 use codechain_crypto::BLAKE_NULL_RLP;
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 use cstate::{TopLevelState, TopStateView};
 use ctimer::TimerToken;
 use ctypes::header::{Header, Seal};

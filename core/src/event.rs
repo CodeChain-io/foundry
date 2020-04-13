@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::db::Key;
-use coordinator::validator::Event;
+use coordinator::types::Event;
 use ctypes::{BlockHash, TxHash};
 use primitives::H256;
 use rlp::{Decodable, Encodable, Rlp, RlpStream};

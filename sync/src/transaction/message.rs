@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use coordinator::validator::Transaction;
+use coordinator::types::Transaction;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 #[derive(Debug, PartialEq)]
@@ -63,7 +63,7 @@ impl Decodable for Message {
 
 #[cfg(test)]
 mod tests {
-    use coordinator::validator::Transaction;
+    use coordinator::types::Transaction;
     use rlp::rlp_encode_and_decode_test;
 
     use super::Message;

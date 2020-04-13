@@ -28,7 +28,7 @@ use crate::encoded;
 use crate::event::{EventSource, EventsWithSource};
 use crate::transaction::LocalizedTransaction;
 use crate::views::{BlockView, HeaderView};
-use coordinator::validator::Event;
+use coordinator::types::Event;
 use ctypes::{BlockHash, BlockNumber, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::RwLock;

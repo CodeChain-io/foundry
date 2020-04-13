@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use ccore::{LocalizedTransaction, PendingTransactions as PendingVerifiedTransactions};
-use coordinator::validator::Transaction as ValidatorTransaction;
+use coordinator::types::Transaction as ValidatorTransaction;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
