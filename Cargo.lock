@@ -2059,6 +2059,11 @@ dependencies = [
 [[package]]
 name = "orderer"
 version = "0.1.0"
+dependencies = [
+ "codechain-key",
+ "codechain-types",
+ "coordinator",
+]
 
 [[package]]
 name = "owning_ref"
