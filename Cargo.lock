@@ -1220,6 +1220,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+ "staking",
  "tokio-core",
  "toml 0.4.6",
  "vergen",
@@ -3177,6 +3178,10 @@ name = "stable_deref_trait"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "15132e0e364248108c5e2c02e3ab539be8d6f5d52a01ca9bbf27ed657316f02b"
+
+[[package]]
+name = "staking"
+version = "0.1.0"
 
 [[package]]
 name = "stream-cipher"

@@ -49,6 +49,7 @@ rustc-serialize = "0.3"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
+staking = { path = "basic_module/staking" }
 tokio-core = "0.1.17"
 toml = "0.4"
 cidr = "0.0.4"
@@ -81,5 +82,6 @@ members = [
     "module-macros",
     "coordinator",
     "basesandbox",
-    "basic_module/account"
+    "basic_module/account",
+    "basic_module/staking"
 ]
