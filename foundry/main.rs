@@ -28,10 +28,8 @@ mod json;
 mod rpc;
 mod rpc_apis;
 mod run_node;
-mod subcommand;
 
 use crate::run_node::run_node;
-use crate::subcommand::run_subcommand;
 use app_dirs::AppInfo;
 use clap::load_yaml;
 
@@ -55,8 +53,6 @@ fn run() -> Result<(), String> {
     let version = env!("CARGO_PKG_VERSION");
     let matches = clap::App::from_yaml(yaml).version(version).get_matches();
 
-    match matches.subcommand {
-        Some(_) => run_subcommand(&matches),
-        None => run_node(&matches),
-    }
+    // TODO: Need to remove `subcommand` completely
+    run_node(&matches)
 }
