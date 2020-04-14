@@ -79,7 +79,7 @@ impl TxFilter for TestCoordinator {
             .collect()
     }
 
-    fn remove_transactions<'a>(
+    fn filter_transactions<'a>(
         &self,
         transactions: &'a [&'a TransactionWithMetadata],
         memory_limit: Option<usize>,
