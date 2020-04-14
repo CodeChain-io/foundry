@@ -973,20 +973,19 @@ impl Extension {
             },
             State::Full => {
                 let (mut completed, peer_is_caught_up) = if let Some(peer) = self.header_downloaders.get_mut(from) {
-                    let encoded: Vec<_> = headers.iter().map(|h| EncodedHeader::new(h.rlp_bytes().to_vec())).collect();
-                    peer.import_headers(&encoded);
+                    peer.import_headers(&headers);
                     (peer.downloaded(), peer.is_caught_up())
                 } else {
                     (Vec::new(), true)
                 };
-                completed.sort_unstable_by_key(EncodedHeader::number);
+                completed.sort_unstable_by_key(Header::number);
 
                 let mut exists = Vec::new();
                 let mut queued = Vec::new();
 
                 for header in completed {
                     let hash = header.hash();
-                    match self.client.import_header(header.clone().into_inner()) {
+                    match self.client.import_header(header.rlp_bytes()) {
                         Err(BlockImportError::Import(ImportError::AlreadyInChain)) => exists.push(hash),
                         Err(BlockImportError::Import(ImportError::AlreadyQueued)) => queued.push(hash),
                         // FIXME: handle import errors

@@ -1,4 +1,4 @@
-// Copyright 2018 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::message::RequestMessage;
-use ccore::encoded::Header;
 use ccore::{BlockChainClient, BlockId};
-use ctypes::BlockHash;
+use ctypes::{BlockHash, Header};
 use primitives::U256;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -36,9 +35,11 @@ pub struct HeaderDownloader {
 
     seq: U256,
     best_hash: BlockHash,
+    /// The last header we downloaded from this peer.
     pivot: BlockHash,
     request_time: Option<Instant>,
     downloaded: HashMap<BlockHash, Header>,
+    /// Headers that are importing now.
     queued: HashMap<BlockHash, Header>,
     trial: usize,
 }
@@ -102,7 +103,7 @@ impl HeaderDownloader {
             Some(header) => header.clone(),
             None => match self.downloaded.get(&self.pivot) {
                 Some(header) => header.clone(),
-                None => self.client.block_header(&BlockId::Hash(self.pivot)).unwrap(),
+                None => self.client.block_header(&BlockId::Hash(self.pivot)).unwrap().decode(),
             },
         }
     }
@@ -162,7 +163,7 @@ impl HeaderDownloader {
             );
         } else if first_header_number == pivot_header.number() {
             if pivot_header.number() != 0 {
-                self.pivot = pivot_header.parent_hash();
+                self.pivot = *pivot_header.parent_hash();
             }
         } else {
             cerror!(
