@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::ActionWithTracker;
+use super::Action;
 use ccore::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
 use cjson::uint::Uint;
 use ckey::{NetworkId, Signature};
@@ -30,7 +30,7 @@ pub struct Transaction {
     pub seq: u64,
     pub fee: Uint,
     pub network_id: NetworkId,
-    pub action: ActionWithTracker,
+    pub action: Action,
     pub hash: TxHash,
     pub sig: Signature,
 }
@@ -63,7 +63,7 @@ impl From<LocalizedTransaction> for Transaction {
             seq: p.unverified_tx().transaction().seq,
             fee: p.unverified_tx().transaction().fee.into(),
             network_id: p.unverified_tx().transaction().network_id,
-            action: ActionWithTracker::from_core(
+            action: Action::from_core(
                 p.unverified_tx().transaction().action.clone(),
                 p.unverified_tx().transaction().network_id,
             ),
@@ -84,7 +84,7 @@ impl From<VerifiedTransaction> for Transaction {
             seq: p.transaction().seq,
             fee: p.transaction().fee.into(),
             network_id: p.transaction().network_id,
-            action: ActionWithTracker::from_core(p.transaction().action.clone(), p.transaction().network_id),
+            action: Action::from_core(p.transaction().action.clone(), p.transaction().network_id),
             hash: p.hash(),
             sig,
         }

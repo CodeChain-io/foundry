@@ -16,7 +16,7 @@
 
 use crate::CacheableItem;
 use ccrypto::Blake;
-use ctypes::{ShardId, Tracker};
+use ctypes::{ShardId, TxHash};
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -54,10 +54,10 @@ pub struct ShardTextAddress(H256);
 impl_address!(SHARD, ShardTextAddress, PREFIX);
 
 impl ShardTextAddress {
-    pub fn new(tracker: Tracker, shard_id: ShardId) -> Self {
+    pub fn new(tx_hash: TxHash, shard_id: ShardId) -> Self {
         let index = ::std::u64::MAX;
 
-        Self::from_hash_with_shard_id(*tracker, index, shard_id)
+        Self::from_hash_with_shard_id(*tx_hash, index, shard_id)
     }
 }
 
