@@ -50,21 +50,8 @@ impl EngineSigner {
         cinfo!(ENGINE, "Setting Engine signer to {} (retaining)", address);
     }
 
-    /// Sign a consensus message hash.
-    pub fn sign(&self, hash: H256) -> Result<Signature, AccountProviderError> {
-        let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
-        let result = match &self.decrypted_account {
-            Some(account) => account.sign(&hash)?,
-            None => {
-                let account = self.account_provider.get_unlocked_account(&address)?;
-                account.sign(&hash)?
-            }
-        };
-        Ok(result)
-    }
-
     /// Sign a message hash with Ed25519.
-    pub fn sign_ed25519(&self, hash: H256) -> Result<Signature, AccountProviderError> {
+    pub fn sign(&self, hash: H256) -> Result<Signature, AccountProviderError> {
         let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
         let result = match &self.decrypted_account {
             Some(account) => account.sign(&hash)?,
