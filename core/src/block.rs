@@ -219,11 +219,6 @@ impl<'x> OpenBlock<'x> {
         })?;
         self.block.header.set_state_root(state_root);
 
-        /*
-        FIXME: NextValidators entry doesn't exist in the state during static-validator-set-mode.
-        It doesn't cause a direct error since we use unwrap_or_default() here, but should be aware of such problem.
-        Remove this comment after we completely omit static-validator-set-mode.
-        */
         let vset_raw = NextValidators::load_from_state(self.block.state())?;
         let vset = vset_raw.create_compact_validator_set();
         self.block.header.set_next_validator_set_hash(vset.hash());
