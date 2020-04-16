@@ -14,26 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate lazy_static;
+use crate::error::Insufficient;
+use crate::types::{Public, StakeQuantity};
+use std::fmt::{Display, Formatter, Result as FormatResult};
 
-use coordinator::context::SubStorageAccess;
-
-mod error;
-mod runtime_error;
-mod state;
-mod types;
-
-pub fn substorage() -> Box<dyn SubStorageAccess> {
-    unimplemented!()
+#[derive(Debug)]
+pub enum Error {
+    InsufficientStakes(Insufficient<StakeQuantity>),
+    DelegateeNotFoundInCandidates(Public),
 }
 
-pub fn deserialize<T: serde::de::DeserializeOwned>(buffer: Vec<u8>) -> T {
-    serde_cbor::from_slice(&buffer).unwrap()
-}
-
-pub fn serialize<T: serde::ser::Serialize>(data: T) -> Vec<u8> {
-    serde_cbor::to_vec(&data).unwrap()
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
+        match self {
+            Error::InsufficientStakes(insufficient) => write!(f, "Insufficient stakes: {}", insufficient),
+            Error::DelegateeNotFoundInCandidates(delegatee) => {
+                write!(f, "Delegatee {:?} is not in Candidates", delegatee)
+            }
+        }
+    }
 }
