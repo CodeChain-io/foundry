@@ -24,7 +24,7 @@ use crate::miner::{Miner, MinerService};
 use crate::service::ClientIoMessage;
 use crate::types::BlockId;
 use crate::verification::queue::{BlockQueue, HeaderQueue};
-use crate::verification::{self, PreverifiedBlock, Verifier};
+use crate::verification::{PreverifiedBlock, Verifier};
 use crate::views::{BlockView, HeaderView};
 use cio::IoChannel;
 use ctypes::header::{Header, Seal};
@@ -36,14 +36,13 @@ use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::iter::FromIterator;
 use std::sync::Arc;
-use verification::CanonVerifier;
 
 pub struct Importer {
     /// Lock used during block import
     pub import_lock: Mutex<()>, // FIXME Maybe wrap the whole `Importer` instead?
 
     /// Used to verify blocks
-    pub verifier: Box<dyn Verifier>,
+    pub verifier: Verifier,
 
     /// Queue containing pending blocks
     pub block_queue: BlockQueue,
@@ -71,7 +70,7 @@ impl Importer {
 
         Ok(Importer {
             import_lock: Mutex::new(()),
-            verifier: Box::new(CanonVerifier),
+            verifier: Verifier,
             block_queue,
             header_queue,
             miner,
