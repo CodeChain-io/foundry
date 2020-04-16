@@ -985,7 +985,7 @@ impl Extension {
 
                 for header in completed {
                     let hash = header.hash();
-                    match self.client.import_header(header.rlp_bytes()) {
+                    match self.client.import_header(header) {
                         Err(BlockImportError::Import(ImportError::AlreadyInChain)) => exists.push(hash),
                         Err(BlockImportError::Import(ImportError::AlreadyQueued)) => queued.push(hash),
                         // FIXME: handle import errors
