@@ -328,7 +328,7 @@ pub fn get_temp_state_db() -> StateDB {
 }
 
 impl BlockProducer for TestBlockChainClient {
-    fn prepare_open_block(&self, _parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock<'_> {
+    fn prepare_open_block(&self, _parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock {
         let engine = &*self.scheme.engine;
         let genesis_header = self.scheme.genesis_header();
         let db = get_temp_state_db();
