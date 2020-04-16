@@ -68,11 +68,7 @@ pub trait Kind: 'static + Sized + Send + Sync {
     fn create(input: Self::Input, engine: &dyn CodeChainEngine) -> Result<Self::Unverified, Error>;
 
     /// Attempt to verify the `Unverified` item using the given engine.
-    fn verify(
-        unverified: Self::Unverified,
-        engine: &dyn CodeChainEngine,
-        check_seal: bool,
-    ) -> Result<Self::Verified, Error>;
+    fn verify(unverified: Self::Unverified) -> Result<Self::Verified, Error>;
 
     fn signal() -> ClientIoMessage;
 }
@@ -117,16 +113,8 @@ pub mod headers {
             Ok(input)
         }
 
-        fn verify(
-            un: Self::Unverified,
-            engine: &dyn CodeChainEngine,
-            check_seal: bool,
-        ) -> Result<Self::Verified, Error> {
-            if check_seal {
-                engine.verify_block_seal(&un).map(|_| un)
-            } else {
-                Ok(un)
-            }
+        fn verify(un: Self::Unverified) -> Result<Self::Verified, Error> {
+            Ok(un)
         }
 
         fn signal() -> ClientIoMessage {
@@ -172,13 +160,9 @@ pub mod blocks {
             }
         }
 
-        fn verify(
-            un: Self::Unverified,
-            engine: &dyn CodeChainEngine,
-            check_seal: bool,
-        ) -> Result<Self::Verified, Error> {
+        fn verify(un: Self::Unverified) -> Result<Self::Verified, Error> {
             let hash = un.hash();
-            match verify_block_seal(un.header, un.bytes, engine, check_seal) {
+            match verify_block_seal(un.header, un.bytes) {
                 Ok(verified) => Ok(verified),
                 Err(e) => {
                     cwarn!(CLIENT, "Stage 2 block verification failed for {}: {:?}", hash, e);

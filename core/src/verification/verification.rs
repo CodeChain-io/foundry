@@ -154,15 +154,7 @@ fn verify_transactions_root(
 /// Phase 2 verification. Perform costly checks such as transaction signatures and block nonce for ethash.
 /// Still operates on a individual block
 /// Returns a `PreverifiedBlock` structure populated with transactions
-pub fn verify_block_seal(
-    header: Header,
-    bytes: Bytes,
-    engine: &dyn CodeChainEngine,
-    check_seal: bool,
-) -> Result<PreverifiedBlock, Error> {
-    if check_seal {
-        engine.verify_block_seal(&header)?;
-    }
+pub fn verify_block_seal(header: Header, bytes: Bytes) -> Result<PreverifiedBlock, Error> {
     let transactions: Vec<_> =
         BlockView::new(&bytes).transactions().into_iter().map(TryInto::try_into).collect::<Result<_, _>>()?;
     Ok(PreverifiedBlock {
