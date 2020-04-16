@@ -324,8 +324,7 @@ impl Miner {
             let hash = tx.hash();
             let start = Instant::now();
             // Check whether transaction type is allowed for sender
-            let result =
-                open_block.push_transaction(tx, None, chain, parent_header.number(), parent_header.timestamp());
+            let result = open_block.push_transaction(tx, chain, parent_header.number(), parent_header.timestamp());
 
             match result {
                 // already have transaction - ignore
