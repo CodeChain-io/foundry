@@ -149,7 +149,7 @@ impl TestBlockChainClient {
             history: RwLock::new(None),
             term_id: Some(1),
             validator_keys: RwLock::new(HashMap::new()),
-            validators: NextValidators::from_vector_to_test(vec![]),
+            validators: vec![].into(),
         };
 
         // insert genesis hash.
@@ -310,9 +310,8 @@ impl TestBlockChainClient {
             self.validator_keys.write().insert(public, private);
             pubkeys.push(public);
         }
-        let fixed_validators: NextValidators = NextValidators::from_vector_to_test(
-            pubkeys.into_iter().map(|pubkey| Validator::new(0, 0, pubkey)).collect(),
-        );
+        let fixed_validators: NextValidators =
+            pubkeys.into_iter().map(|pubkey| Validator::new(0, 0, pubkey)).collect::<Vec<_>>().into();
 
         self.validators = fixed_validators;
     }

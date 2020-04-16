@@ -37,11 +37,14 @@
 
 use crate::cache::{ModuleCache, ShardCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
-use crate::stake::{change_params, delegate_ccs, redelegate, revoke, transfer_ccs};
+use crate::stake::{
+    change_params, close_term, delegate_ccs, jail, redelegate, release_jailed_prisoners, revoke, self_nominate,
+    transfer_ccs,
+};
 use crate::traits::{ModuleStateView, ShardState, ShardStateView, StateWithCache, TopState, TopStateView};
 use crate::{
-    self_nominate, Account, ActionData, CurrentValidators, FindDoubleVoteHandler, Metadata, MetadataAddress, Module,
-    ModuleAddress, ModuleLevelState, NextValidators, Shard, ShardAddress, ShardLevelState, StateDB, StateResult,
+    Account, ActionData, CurrentValidators, FindDoubleVoteHandler, Metadata, MetadataAddress, Module, ModuleAddress,
+    ModuleLevelState, NextValidators, Shard, ShardAddress, ShardLevelState, StateDB, StateResult,
 };
 use cdb::{AsHashDB, DatabaseError};
 use ckey::{public_to_address, Address, Ed25519Public as Public, NetworkId};
@@ -444,6 +447,25 @@ impl TopLevelState {
                 current_validators.update(validators.clone());
                 current_validators.save_to_state(self)?;
                 return Ok(())
+            }
+            Action::CloseTerm {
+                inactive_validators,
+                next_validators,
+                released_addresses,
+                custody_until,
+                kick_at,
+            } => {
+                close_term(self, next_validators, inactive_validators)?;
+                release_jailed_prisoners(self, released_addresses)?;
+                jail(self, inactive_validators, *custody_until, *kick_at)?;
+                return self.increase_term_id(parent_block_number + 1)
+            }
+            Action::ChangeNextValidators {
+                validators,
+            } => return NextValidators::from(validators.clone()).save_to_state(self),
+            Action::Elect => {
+                NextValidators::elect(self)?.save_to_state(self)?;
+                return self.update_term_params()
             }
         };
         self.apply_shard_transaction(

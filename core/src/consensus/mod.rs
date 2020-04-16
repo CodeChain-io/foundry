@@ -169,8 +169,8 @@ pub trait ConsensusEngine: Sync + Send {
     }
 
     /// Block transformation functions, after the transactions.
-    fn on_close_block(&self, _block: &mut ExecutedBlock) -> Result<(), Error> {
-        Ok(())
+    fn close_block_actions(&self, _block: &ExecutedBlock) -> Result<Vec<Action>, Error> {
+        Ok(vec![])
     }
 
     /// Add Client which can be used for sealing, potentially querying the state and sending messages.
