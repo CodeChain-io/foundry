@@ -445,7 +445,7 @@ impl ImportBlock for Client {
         self.importer.force_update_best_block(hash, self)
     }
 
-    fn import_closed_block(&self, block: &ClosedBlock) -> ImportResult {
+    fn import_generated_block(&self, block: &ClosedBlock) -> ImportResult {
         let h = block.header().hash();
         let update_result = {
             // scope for self.import_lock
