@@ -16,10 +16,28 @@
 
 pub use fkey::{sign, verify, Ed25519Private as Private, Ed25519Public as Public, Signature};
 pub use ftypes::Header;
+use std::fmt;
+use std::str;
 
 pub type Bytes = Vec<u8>;
 pub type StakeQuantity = u64;
 pub type DepositQuantity = u64;
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy)]
+pub struct NetworkId([u8; 2]);
+
+impl fmt::Display for NetworkId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let s = str::from_utf8(&self.0).expect("network_id a valid utf8 string");
+        write!(f, "{}", s)
+    }
+}
+
+impl Default for NetworkId {
+    fn default() -> Self {
+        NetworkId([116, 99])
+    }
+}
 
 #[derive(Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize, Clone)]
 pub struct Validator {
@@ -73,4 +91,10 @@ pub enum ReleaseResult {
     NotExists,
     InCustody,
     Released(Prisoner),
+}
+
+#[derive(Serialize)]
+pub struct Approval {
+    pub signature: Signature,
+    pub signer_public: Public,
 }
