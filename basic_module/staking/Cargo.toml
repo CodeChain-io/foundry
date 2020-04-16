@@ -5,9 +5,12 @@ authors = ["CodeChain Team <hi@codechain.io>"]
 edition = "2018"
 
 [dependencies]
+ccrypto = { package ="codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
 coordinator = { path = "../../coordinator" }
 fkey = { path = "../../key", package = "codechain-key" }
 ftypes = { path = "../../types", package = "codechain-types" }
+lazy_static = "1.4"
+parking_lot = "0.6.0"
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
 serde = { version = "1.0", features = ["derive"] }
 serde_cbor = "0.11.1"
