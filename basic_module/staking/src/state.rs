@@ -22,7 +22,7 @@ use serde::{de::DeserializeOwned, ser::Serialize};
 use std::cmp::{max, Ordering};
 use std::collections::{
     btree_map::{self, Entry},
-    BTreeMap, BTreeSet, HashMap, HashSet,
+    btree_set, BTreeMap, BTreeSet, HashMap, HashSet,
 };
 use std::ops::Deref;
 
@@ -86,6 +86,23 @@ impl Metadata {
 
     pub fn save(self) {
         write_with_key(METADATA_KEY, self)
+    }
+
+    pub fn update_params(&mut self, metadata_seq: u64, new_params: Params) -> Result<(), Error> {
+        if self.seq != metadata_seq {
+            Err(Error::InvalidMetadataSeq(Mismatch {
+                found: metadata_seq,
+                expected: self.seq,
+            }))
+        } else {
+            self.params = new_params;
+            self.seq += 1;
+            Ok(())
+        }
+    }
+
+    pub fn update_term_params(&mut self) {
+        self.term_params = self.params;
     }
 }
 
@@ -228,6 +245,10 @@ impl Stakeholders {
         if account.balance == 0 && delegation.sum() == 0 {
             self.0.remove(account.public);
         }
+    }
+
+    pub fn iter(&self) -> btree_set::Iter<'_, Public> {
+        self.0.iter()
     }
 }
 
@@ -536,4 +557,16 @@ impl Banned {
     pub fn is_banned(&self, public: &Public) -> bool {
         self.0.contains(public)
     }
+}
+
+pub fn get_stakes() -> HashMap<Public, u64> {
+    let stakeholders = Stakeholders::load();
+    stakeholders
+        .iter()
+        .map(|stakeholder| {
+            let account = StakeAccount::load(stakeholder);
+            let delegation = Delegation::load(stakeholder);
+            (*stakeholder, account.balance + delegation.sum())
+        })
+        .collect()
 }
