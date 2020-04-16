@@ -474,7 +474,7 @@ impl ImportBlock for TestBlockChainClient {
         unimplemented!()
     }
 
-    fn import_closed_block(&self, _block: &ClosedBlock) -> ImportResult {
+    fn import_generated_block(&self, _block: &ClosedBlock) -> ImportResult {
         Ok(H256::default().into())
     }
 

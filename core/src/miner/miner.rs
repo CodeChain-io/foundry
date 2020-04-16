@@ -379,7 +379,7 @@ impl Miner {
             self.engine.proposal_generated(&block);
         }
 
-        chain.import_closed_block(&block).is_ok()
+        chain.import_generated_block(&block).is_ok()
     }
 
     /// Are we allowed to do a non-mandatory reseal?
