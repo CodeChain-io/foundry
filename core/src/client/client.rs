@@ -416,12 +416,9 @@ impl ImportBlock for Client {
         Ok(self.importer.block_queue.import(unverified)?)
     }
 
-    fn import_header(&self, bytes: Bytes) -> Result<BlockHash, BlockImportError> {
-        let unverified = encoded::Header::new(bytes).decode();
-        {
-            if self.block_chain().is_known_header(&unverified.hash()) {
-                return Err(BlockImportError::Import(ImportError::AlreadyInChain))
-            }
+    fn import_header(&self, unverified: Header) -> Result<BlockHash, BlockImportError> {
+        if self.block_chain().is_known_header(&unverified.hash()) {
+            return Err(BlockImportError::Import(ImportError::AlreadyInChain))
         }
         Ok(self.importer.header_queue.import(unverified)?)
     }
