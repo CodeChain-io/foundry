@@ -118,7 +118,7 @@ impl ExecutedBlock {
 /// Block that is ready for transactions to be added.
 pub struct OpenBlock<'x> {
     block: ExecutedBlock,
-    engine: &'x dyn CodeChainEngine,
+    _engine: &'x dyn CodeChainEngine,
 }
 
 impl<'x> OpenBlock<'x> {
@@ -133,7 +133,7 @@ impl<'x> OpenBlock<'x> {
         let state = TopLevelState::from_existing(db, *parent.state_root()).map_err(StateError::from)?;
         let mut r = OpenBlock {
             block: ExecutedBlock::new(state, parent),
-            engine,
+            _engine: engine,
         };
 
         r.block.header.set_author(author);
@@ -208,10 +208,6 @@ impl<'x> OpenBlock<'x> {
 
     /// Turn this into a `ClosedBlock`.
     pub fn close(mut self) -> Result<ClosedBlock, Error> {
-        if let Err(e) = self.engine.on_close_block(&mut self.block) {
-            warn!("Encountered error on closing the block: {}", e);
-            return Err(e)
-        }
         let state_root = self.block.state.commit().map_err(|e| {
             warn!("Encountered error on state commit: {}", e);
             e

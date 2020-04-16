@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{
-    Banned, Candidates, Delegation, Jail, NextValidators, ReleaseResult, StakeAccount, Stakeholders, StateResult,
-    TopLevelState, TopState, TopStateView,
-};
+use crate::item::stake::{Delegation, ReleaseResult, StakeAccount, Stakeholders};
+use crate::{Banned, Candidates, Jail, NextValidators, StateResult, TopLevelState, TopState, TopStateView};
 use ckey::{public_to_address, Address, Ed25519Public as Public};
 use ctypes::errors::RuntimeError;
-use ctypes::transaction::Approval;
+use ctypes::transaction::{Approval, Validator};
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{CommonParams, Deposit};
 use primitives::Bytes;
@@ -291,15 +289,19 @@ fn get_stakes(state: &TopLevelState) -> StateResult<HashMap<Address, u64>> {
     Ok(result)
 }
 
-pub fn release_jailed_prisoners(state: &mut TopLevelState, current_term: u64) -> StateResult<Vec<Address>> {
+pub fn release_jailed_prisoners(state: &mut TopLevelState, released: &[Address]) -> StateResult<()> {
+    if released.is_empty() {
+        return Ok(())
+    }
+
     let mut jailed = Jail::load_from_state(&state)?;
-    let released = jailed.drain_released_prisoners(current_term);
-    for prisoner in &released {
+    for address in released {
+        let prisoner = jailed.remove(address).unwrap();
         state.add_balance(&prisoner.address, prisoner.deposit)?;
         ctrace!(ENGINE, "on_term_close::released. prisoner: {}, deposit: {}", prisoner.address, prisoner.deposit);
     }
     jailed.save_to_state(state)?;
-    Ok(released.into_iter().map(|p| p.address).collect())
+    revert_delegations(state, released)
 }
 
 pub fn jail(state: &mut TopLevelState, addresses: &[Address], custody_until: u64, kick_at: u64) -> StateResult<()> {
@@ -382,25 +384,19 @@ pub fn revert_delegations(state: &mut TopLevelState, reverted_delegatees: &[Addr
     Ok(())
 }
 
-pub fn update_validator_weights(state: &mut TopLevelState, block_author: &Address) -> StateResult<()> {
-    let mut validators = NextValidators::load_from_state(state)?;
-    validators.update_weight(block_author);
-    validators.save_to_state(state)
-}
-
 pub fn update_candidates(
     state: &mut TopLevelState,
     current_term: u64,
     nomination_expiration: u64,
+    next_validators: &[Validator],
     inactive_validators: &[Address],
-) -> StateResult<Vec<Address>> {
+) -> StateResult<()> {
     let banned = Banned::load_from_state(state)?;
 
     let mut candidates = Candidates::load_from_state(state)?;
     let nomination_ends_at = current_term + nomination_expiration;
 
-    let current_validators = NextValidators::load_from_state(state)?;
-    candidates.renew_candidates(&current_validators, nomination_ends_at, &inactive_validators, &banned);
+    candidates.renew_candidates(next_validators, nomination_ends_at, &inactive_validators, &banned);
 
     let expired = candidates.drain_expired_candidates(current_term);
     for candidate in &expired {
@@ -409,17 +405,33 @@ pub fn update_candidates(
         ctrace!(ENGINE, "on_term_close::expired. candidate: {}, deposit: {}", address, candidate.deposit);
     }
     candidates.save_to_state(state)?;
-    Ok(expired.into_iter().map(|c| public_to_address(&c.pubkey)).collect())
+    let expired: Vec<_> = expired.into_iter().map(|c| public_to_address(&c.pubkey)).collect();
+    revert_delegations(state, &expired)
+}
+
+pub fn close_term(
+    state: &mut TopLevelState,
+    next_validators: &[Validator],
+    inactive_validators: &[Address],
+) -> StateResult<()> {
+    let metadata = state.metadata()?.expect("The metadata must exist");
+    let current_term = metadata.current_term_id();
+    ctrace!(ENGINE, "on_term_close. current_term: {}", current_term);
+
+    let metadata = metadata.params();
+    let nomination_expiration = metadata.nomination_expiration();
+    assert_ne!(0, nomination_expiration);
+
+    update_candidates(state, current_term, nomination_expiration, next_validators, inactive_validators)?;
+    NextValidators::from(next_validators.to_vec()).save_to_state(state)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::item::stake::{Banned, Candidate, Candidates, Delegation, Jail, Prisoner, StakeAccount, Stakeholders};
     use crate::tests::helpers;
-    use crate::{
-        get_delegation_key, get_stake_account_key, init_stake, Banned, Candidate, Candidates, Delegation, Jail,
-        Prisoner, StakeAccount, Stakeholders, TopStateView,
-    };
+    use crate::{get_delegation_key, get_stake_account_key, init_stake, TopStateView};
     use std::collections::HashMap;
 
     #[test]
