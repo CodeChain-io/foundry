@@ -114,12 +114,7 @@ impl QueueSignal {
 }
 
 impl<K: Kind> VerificationQueue<K> {
-    pub fn new(
-        config: &Config,
-        engine: Arc<dyn CodeChainEngine>,
-        message_channel: IoChannel<ClientIoMessage>,
-        check_seal: bool,
-    ) -> Self {
+    pub fn new(config: &Config, engine: Arc<dyn CodeChainEngine>, message_channel: IoChannel<ClientIoMessage>) -> Self {
         let verification = Arc::new(Verification {
             unverified: Mutex::new(VecDeque::new()),
             verifying: Mutex::new(VecDeque::new()),
@@ -130,7 +125,6 @@ impl<K: Kind> VerificationQueue<K> {
                 verifying: AtomicUsize::new(0),
                 verified: AtomicUsize::new(0),
             },
-            check_seal,
             more_to_verify_mutex: SMutex::new(()),
         });
         let deleting = Arc::new(AtomicBool::new(false));
@@ -486,7 +480,6 @@ struct Verification<K: Kind> {
     verified: Mutex<VecDeque<K::Verified>>,
     bad: Mutex<HashSet<BlockHash>>,
     sizes: Sizes,
-    check_seal: bool,
     more_to_verify_mutex: SMutex<()>,
 }
 
@@ -513,7 +506,7 @@ mod tests {
         let engine = scheme.engine;
 
         let config = Config::default();
-        BlockQueue::new(&config, engine, IoChannel::disconnected(), true)
+        BlockQueue::new(&config, engine, IoChannel::disconnected())
     }
 
     #[test]
@@ -523,7 +516,7 @@ mod tests {
         let engine = scheme.engine;
 
         let config = Config::default();
-        let _ = BlockQueue::new(&config, engine, IoChannel::disconnected(), true);
+        let _ = BlockQueue::new(&config, engine, IoChannel::disconnected());
     }
 
     #[test]
