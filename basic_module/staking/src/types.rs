@@ -77,7 +77,7 @@ pub struct Candidate {
     pub metadata: Bytes,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Prisoner {
     pub pubkey: Public,
     pub deposit: DepositQuantity,

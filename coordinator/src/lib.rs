@@ -22,7 +22,7 @@ mod transaction;
 pub mod types;
 
 use self::context::{Context, StorageAccess};
-use self::header::Header;
+pub use self::header::Header;
 use self::traits::{BlockExecutor, Initializer, TxFilter};
 use self::transaction::{Transaction, TransactionWithMetadata};
 use self::types::{BlockOutcome, ErrorCode, VerifiedCrime};

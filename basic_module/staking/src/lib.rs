@@ -17,7 +17,12 @@
 #[macro_use]
 extern crate serde_derive;
 
+mod check;
+mod core;
 mod error;
+mod execute;
+mod impls;
+mod imported;
 mod runtime_error;
 mod state;
 mod syntax_error;
@@ -26,6 +31,7 @@ mod types;
 
 use crate::types::NetworkId;
 use coordinator::context::{ChainHistoryAccess, SubStateHistoryAccess, SubStorageAccess};
+use imported::{AccountManager, AccountView};
 use lazy_static::lazy_static;
 use parking_lot::Mutex;
 
@@ -52,6 +58,14 @@ fn check_network_id(network_id: NetworkId) -> bool {
     }
     *saved_network_id = Some(network_id);
     true
+}
+
+fn account_manager() -> Box<dyn AccountManager> {
+    unimplemented!()
+}
+
+fn account_viewer() -> Box<dyn AccountView> {
+    unimplemented!()
 }
 
 fn chain_history_manager() -> Box<dyn ChainHistoryAccess> {

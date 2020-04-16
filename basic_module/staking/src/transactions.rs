@@ -85,3 +85,11 @@ pub enum UserAction {
         message2: Bytes,
     },
 }
+
+impl UserAction {
+    pub fn min_fee(&self) -> u64 {
+        // Where can we initialize the min fee
+        // We need both consensus-defined minimum fee and machine-defined minimum fee
+        unimplemented!()
+    }
+}
