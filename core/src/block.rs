@@ -149,7 +149,6 @@ impl<'x> OpenBlock<'x> {
     pub fn push_transaction<C: FindDoubleVoteHandler>(
         &mut self,
         tx: VerifiedTransaction,
-        h: Option<TxHash>,
         client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
@@ -168,7 +167,7 @@ impl<'x> OpenBlock<'x> {
             self.block.header.timestamp(),
         ) {
             Ok(()) => {
-                self.block.transactions_set.insert(h.unwrap_or(hash));
+                self.block.transactions_set.insert(hash);
                 self.block.transactions.push(tx);
                 None
             }
@@ -194,7 +193,7 @@ impl<'x> OpenBlock<'x> {
         parent_block_timestamp: u64,
     ) -> Result<(), Error> {
         for tx in transactions {
-            self.push_transaction(tx.clone(), None, client, parent_block_number, parent_block_timestamp)?;
+            self.push_transaction(tx.clone(), client, parent_block_number, parent_block_timestamp)?;
         }
         Ok(())
     }
