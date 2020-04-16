@@ -2985,6 +2985,9 @@ name = "serde"
 version = "1.0.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e707fbbf255b8fc8c3b99abb91e7257a622caeb20a9818cbadbeeede4e0932ff"
+dependencies = [
+ "serde_derive",
+]
 
 [[package]]
 name = "serde_cbor"
@@ -2998,13 +3001,13 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.53"
+version = "1.0.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7149ef7af607b09e0e7df38b1fd74264f08a29a67f604d5cb09d3fbdb1e256bc"
+checksum = "ac5d00fc561ba2724df6758a17de23df5914f20e41cb00f94d5b7ae42fffaff8"
 dependencies = [
- "proc-macro2 0.3.8",
- "quote 0.5.2",
- "syn 0.13.11",
+ "proc-macro2 1.0.10",
+ "quote 1.0.3",
+ "syn 1.0.18",
 ]
 
 [[package]]
@@ -3184,6 +3187,17 @@ checksum = "15132e0e364248108c5e2c02e3ab539be8d6f5d52a01ca9bbf27ed657316f02b"
 [[package]]
 name = "staking"
 version = "0.1.0"
+dependencies = [
+ "codechain-crypto",
+ "codechain-key",
+ "codechain-types",
+ "coordinator",
+ "lazy_static 1.4.0",
+ "primitives",
+ "serde",
+ "serde_cbor",
+ "serde_derive",
+]
 
 [[package]]
 name = "stream-cipher"

@@ -14,26 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate lazy_static;
+use crate::types::{NetworkId, Signature};
+use std::fmt;
 
-use coordinator::context::SubStorageAccess;
-
-mod error;
-mod runtime_error;
-mod state;
-mod types;
-
-pub fn substorage() -> Box<dyn SubStorageAccess> {
-    unimplemented!()
+#[derive(Debug)]
+pub enum Error {
+    InvalidSignature(Signature),
+    InvalidNetworkId(NetworkId),
 }
 
-pub fn deserialize<T: serde::de::DeserializeOwned>(buffer: Vec<u8>) -> T {
-    serde_cbor::from_slice(&buffer).unwrap()
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::InvalidNetworkId(network_id) => write!(f, "{} is an invalid network id", network_id),
+            Error::InvalidSignature(sig) => write!(f, "Signature {:?} is invalid", sig),
+        }
+    }
 }
 
-pub fn serialize<T: serde::ser::Serialize>(data: T) -> Vec<u8> {
-    serde_cbor::to_vec(&data).unwrap()
+impl Error {
+    pub fn code(&self) -> i64 {
+        match self {
+            Error::InvalidSignature(_) => -1,
+            Error::InvalidNetworkId(_) => -2,
+        }
+    }
 }
