@@ -15,10 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use ckey::Ed25519Public as Public;
+use ctypes::BlockHash;
 use primitives::Bytes;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Header {
+    /// Parent hash.
+    parent_hash: BlockHash,
     /// Block timestamp.
     timestamp: u64,
     /// Block number.
@@ -31,12 +34,29 @@ pub struct Header {
 
 impl Header {
     #[allow(dead_code)]
-    pub fn new(timestamp: u64, number: u64, author: Public, extra_data: Bytes) -> Self {
+    pub fn new(parent_hash: BlockHash, timestamp: u64, number: u64, author: Public, extra_data: Bytes) -> Self {
         Self {
+            parent_hash,
             timestamp,
             number,
             author,
             extra_data,
         }
+    }
+
+    pub fn parent_hash(&self) -> &BlockHash {
+        &self.parent_hash
+    }
+
+    pub fn timestamp(&self) -> u64 {
+        self.timestamp
+    }
+
+    pub fn number(&self) -> u64 {
+        self.number
+    }
+
+    pub fn author(&self) -> &Public {
+        &self.author
     }
 }
