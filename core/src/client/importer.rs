@@ -36,6 +36,7 @@ use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::iter::FromIterator;
 use std::sync::Arc;
+use verification::CanonVerifier;
 
 pub struct Importer {
     /// Lock used during block import
@@ -70,7 +71,7 @@ impl Importer {
 
         Ok(Importer {
             import_lock: Mutex::new(()),
-            verifier: verification::new(config.verifier_type),
+            verifier: Box::new(CanonVerifier),
             block_queue,
             header_queue,
             miner,
