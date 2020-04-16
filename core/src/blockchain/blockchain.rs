@@ -112,7 +112,7 @@ impl BlockChain {
         let header = block.header_view();
         let hash = header.hash();
 
-        ctrace!(BLOCKCHAIN, "Inserting bootstrap block #{}({}) to the blockchain.", header.number(), hash);
+        ctrace!(BLOCKCHAIN, "Inserting floating block #{}({}) to the blockchain.", header.number(), hash);
 
         if self.is_known(&hash) {
             cdebug!(BLOCKCHAIN, "Block #{}({}) is already known.", header.number(), hash);
