@@ -208,7 +208,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Turn this into a `ClosedBlock`.
-    fn close_impl(&mut self) -> Result<(), Error> {
+    pub fn close(mut self) -> Result<ClosedBlock, Error> {
         if let Err(e) = self.engine.on_close_block(&mut self.block) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
@@ -222,13 +222,6 @@ impl<'x> OpenBlock<'x> {
         let vset_raw = NextValidators::load_from_state(self.block.state())?;
         let vset = vset_raw.create_compact_validator_set();
         self.block.header.set_next_validator_set_hash(vset.hash());
-
-        Ok(())
-    }
-
-    /// Turn this into a `ClosedBlock`.
-    pub fn close(mut self) -> Result<ClosedBlock, Error> {
-        self.close_impl()?;
 
         if self.block.header.transactions_root() == &BLAKE_NULL_RLP {
             self.block.header.set_transactions_root(skewed_merkle_root(
