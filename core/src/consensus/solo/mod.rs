@@ -130,17 +130,12 @@ impl ConsensusEngine for Solo {
 mod tests {
     use crate::scheme::Scheme;
     use ctypes::Header;
-    use primitives::H520;
 
     #[test]
     fn fail_to_verify() {
         let engine = Scheme::new_test_solo().engine;
-        let mut header: Header = Header::default();
+        let header: Header = Header::default();
 
         assert!(engine.verify_header_basic(&header).is_ok());
-
-        header.set_seal(vec![::rlp::encode(&H520::default())]);
-
-        assert!(engine.verify_block_seal(&header).is_ok());
     }
 }

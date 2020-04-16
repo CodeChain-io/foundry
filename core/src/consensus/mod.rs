@@ -144,11 +144,6 @@ pub trait ConsensusEngine: Sync + Send {
         Ok(())
     }
 
-    /// Phase 2 verification. Perform costly checks such as transaction signatures. Returns either a null `Ok` or a general error detailing the problem with import.
-    fn verify_block_seal(&self, _header: &Header) -> Result<(), Error> {
-        Ok(())
-    }
-
     /// Phase 3 verification. Check block information against parent. Returns either a null `Ok` or a general error detailing the problem with import.
     /// The verification must be conducted only with the two headers' information because it does not guarantee whether the two corresponding bodies have been imported.
     fn verify_block_family(&self, _header: &Header, _parent: &Header) -> Result<(), Error> {

@@ -185,7 +185,7 @@ impl<K: Kind> VerificationQueue<K> {
 
     fn verify(
         verification: &Verification<K>,
-        engine: &dyn CodeChainEngine,
+        _engine: &dyn CodeChainEngine,
         ready_signal: &QueueSignal,
         empty: &SCondvar,
         more_to_verify: &SCondvar,
@@ -232,7 +232,7 @@ impl<K: Kind> VerificationQueue<K> {
             };
 
             let hash = item.hash();
-            let is_ready = match K::verify(item, engine, verification.check_seal) {
+            let is_ready = match K::verify(item) {
                 Ok(verified) => {
                     let mut verifying = verification.verifying.lock();
                     let mut idx = None;
