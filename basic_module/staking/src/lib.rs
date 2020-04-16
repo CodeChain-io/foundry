@@ -20,8 +20,14 @@ extern crate serde_derive;
 extern crate lazy_static;
 
 use coordinator::context::SubStorageAccess;
+use imported::{AccountManager, AccountView, FeeManager};
 
+mod check;
+mod core;
 mod error;
+mod execute;
+mod impls;
+mod imported;
 mod runtime_error;
 mod state;
 mod syntax_error;
@@ -46,4 +52,16 @@ lazy_static! {
 
 fn check_network_id(network_id: types::NetworkId) -> bool {
     *NETWORK_ID == network_id
+}
+
+pub fn account_manager() -> Box<dyn AccountManager> {
+    unimplemented!()
+}
+
+pub fn account_viewer() -> Box<dyn AccountView> {
+    unimplemented!()
+}
+
+pub fn fee_manager() -> Box<dyn FeeManager> {
+    unimplemented!()
 }

@@ -17,6 +17,7 @@
 pub use fkey::{sign, verify, Ed25519Private as Private, Ed25519Public as Public, Signature};
 pub use ftypes::Header;
 use std::fmt;
+use std::ops::Add;
 use std::str;
 
 pub type Bytes = Vec<u8>;
@@ -79,7 +80,7 @@ pub struct Candidate {
     pub metadata: Bytes,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Prisoner {
     pub pubkey: Public,
     pub deposit: DepositQuantity,
@@ -97,4 +98,21 @@ pub enum ReleaseResult {
 pub struct Approval {
     pub signature: Signature,
     pub signer_public: Public,
+}
+
+#[derive(Default, Serialize, Clone, Copy)]
+pub struct ResultantFee {
+    pub additional_fee: u64,
+    pub min_fee: u64,
+}
+
+impl Add for ResultantFee {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self {
+            additional_fee: self.additional_fee + other.additional_fee,
+            min_fee: self.min_fee + other.min_fee,
+        }
+    }
 }
