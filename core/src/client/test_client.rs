@@ -462,7 +462,7 @@ impl ImportBlock for TestBlockChainClient {
         unimplemented!()
     }
 
-    fn import_trusted_header(&self, _header: &Header) -> Result<BlockHash, BlockImportError> {
+    fn import_trusted_header(&self, _header: Header) -> Result<BlockHash, BlockImportError> {
         unimplemented!()
     }
 

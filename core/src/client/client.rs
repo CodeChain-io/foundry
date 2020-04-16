@@ -423,12 +423,12 @@ impl ImportBlock for Client {
         Ok(self.importer.header_queue.import(unverified)?)
     }
 
-    fn import_trusted_header(&self, header: &Header) -> Result<BlockHash, BlockImportError> {
+    fn import_trusted_header(&self, header: Header) -> Result<BlockHash, BlockImportError> {
         if self.block_chain().is_known_header(&header.hash()) {
             return Err(BlockImportError::Import(ImportError::AlreadyInChain))
         }
         let import_lock = self.importer.import_lock.lock();
-        self.importer.import_trusted_header(header, self, &import_lock);
+        self.importer.import_trusted_header(&header, self, &import_lock);
         Ok(header.hash())
     }
 
