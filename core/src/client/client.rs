@@ -152,7 +152,7 @@ impl Client {
 
     /// This is triggered by a message coming from a header queue when the header is ready for insertion
     pub fn import_verified_headers(&self) -> usize {
-        self.importer.import_verified_headers(self)
+        self.importer.import_verified_headers_from_queue(self)
     }
 
     /// This is triggered by a message coming from a block queue when the block is ready for insertion
@@ -455,7 +455,7 @@ impl ImportBlock for Client {
             let block_data = block.rlp_bytes();
             let header = block.header();
 
-            self.importer.import_headers(vec![header], self, &import_lock);
+            self.importer.import_verified_headers(vec![header], self, &import_lock);
 
             let update_result = self.importer.commit_block(block, header, &block_data, self);
             cinfo!(CLIENT, "Imported closed block #{} ({})", number, h);
