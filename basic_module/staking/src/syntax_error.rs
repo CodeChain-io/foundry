@@ -14,32 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#[macro_use]
-extern crate serde_derive;
+use crate::types::{NetworkId, Signature};
+use std::fmt;
 
-mod error;
-mod runtime_error;
-mod state;
-mod types;
-
-use coordinator::context::{ChainHistoryAccess, SubStateHistoryAccess, SubStorageAccess};
-
-fn substorage() -> Box<dyn SubStorageAccess> {
-    unimplemented!()
+#[derive(Debug)]
+pub enum Error {
+    InvalidSignature(Signature),
+    InvalidNetworkId(NetworkId),
 }
 
-fn deserialize<T: serde::de::DeserializeOwned>(buffer: Vec<u8>) -> T {
-    serde_cbor::from_slice(&buffer).unwrap()
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::InvalidNetworkId(network_id) => write!(f, "{} is an invalid network id", network_id),
+            Error::InvalidSignature(sig) => write!(f, "Signature {:?} is invalid", sig),
+        }
+    }
 }
 
-fn serialize<T: serde::ser::Serialize>(data: T) -> Vec<u8> {
-    serde_cbor::to_vec(&data).unwrap()
-}
-
-fn chain_history_manager() -> Box<dyn ChainHistoryAccess> {
-    unimplemented!()
-}
-
-fn state_history_manager() -> Box<dyn SubStateHistoryAccess> {
-    unimplemented!()
+impl Error {
+    pub fn code(&self) -> i64 {
+        match self {
+            Error::InvalidSignature(_) => -1,
+            Error::InvalidNetworkId(_) => -2,
+        }
+    }
 }
