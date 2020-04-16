@@ -116,15 +116,14 @@ impl ExecutedBlock {
 }
 
 /// Block that is ready for transactions to be added.
-pub struct OpenBlock<'x> {
+pub struct OpenBlock {
     block: ExecutedBlock,
-    _engine: &'x dyn CodeChainEngine,
 }
 
-impl<'x> OpenBlock<'x> {
+impl OpenBlock {
     /// Create a new `OpenBlock` ready for transaction pushing.
     pub fn try_new(
-        engine: &'x dyn CodeChainEngine,
+        engine: &dyn CodeChainEngine,
         db: StateDB,
         parent: &Header,
         author: Address,
@@ -133,7 +132,6 @@ impl<'x> OpenBlock<'x> {
         let state = TopLevelState::from_existing(db, *parent.state_root()).map_err(StateError::from)?;
         let mut r = OpenBlock {
             block: ExecutedBlock::new(state, parent),
-            _engine: engine,
         };
 
         r.block.header.set_author(author);
@@ -320,13 +318,13 @@ impl IsBlock for ExecutedBlock {
     }
 }
 
-impl<'x> IsBlock for OpenBlock<'x> {
+impl IsBlock for OpenBlock {
     fn block(&self) -> &ExecutedBlock {
         &self.block
     }
 }
 
-impl<'x> IsBlock for ClosedBlock {
+impl IsBlock for ClosedBlock {
     fn block(&self) -> &ExecutedBlock {
         &self.block
     }
