@@ -64,15 +64,9 @@ impl Importer {
         message_channel: IoChannel<ClientIoMessage>,
         miner: Arc<Miner>,
     ) -> Result<Importer, Error> {
-        let block_queue = BlockQueue::new(
-            &config.queue,
-            engine.clone(),
-            message_channel.clone(),
-            config.verifier_type.verifying_seal(),
-        );
+        let block_queue = BlockQueue::new(&config.queue, engine.clone(), message_channel.clone());
 
-        let header_queue =
-            HeaderQueue::new(&config.queue, engine.clone(), message_channel, config.verifier_type.verifying_seal());
+        let header_queue = HeaderQueue::new(&config.queue, engine.clone(), message_channel);
 
         Ok(Importer {
             import_lock: Mutex::new(()),
