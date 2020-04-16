@@ -24,6 +24,8 @@ use coordinator::context::SubStorageAccess;
 mod error;
 mod runtime_error;
 mod state;
+mod syntax_error;
+mod transactions;
 mod types;
 
 pub fn substorage() -> Box<dyn SubStorageAccess> {
@@ -36,4 +38,12 @@ pub fn deserialize<T: serde::de::DeserializeOwned>(buffer: Vec<u8>) -> T {
 
 pub fn serialize<T: serde::ser::Serialize>(data: T) -> Vec<u8> {
     serde_cbor::to_vec(&data).unwrap()
+}
+
+lazy_static! {
+    static ref NETWORK_ID: types::NetworkId = Default::default();
+}
+
+fn check_network_id(network_id: types::NetworkId) -> bool {
+    *NETWORK_ID == network_id
 }
