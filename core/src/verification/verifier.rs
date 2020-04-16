@@ -14,24 +14,34 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use super::verification;
 use crate::consensus::CodeChainEngine;
 use crate::error::Error;
 use ctypes::{CommonParams, Header};
 
 /// Should be used to verify blocks.
-pub trait Verifier: Send + Sync {
+pub struct Verifier;
+
+impl Verifier {
     /// Verify a block relative to its parent and uncles.
-    fn verify_block_family(
+    pub fn verify_block_family(
         &self,
         block: &[u8],
         header: &Header,
         parent: &Header,
         engine: &dyn CodeChainEngine,
         common_params: &CommonParams,
-    ) -> Result<(), Error>;
+    ) -> Result<(), Error> {
+        verification::verify_block_family(block, header, parent, engine, common_params)
+    }
 
     /// Do a final verification check for an enacted header vs its expected counterpart.
-    fn verify_block_final(&self, expected: &Header, got: &Header) -> Result<(), Error>;
+    pub fn verify_block_final(&self, expected: &Header, got: &Header) -> Result<(), Error> {
+        verification::verify_block_final(expected, got)
+    }
+
     /// Verify a block, inspecting external state.
-    fn verify_block_external(&self, header: &Header, engine: &dyn CodeChainEngine) -> Result<(), Error>;
+    pub fn verify_block_external(&self, header: &Header, engine: &dyn CodeChainEngine) -> Result<(), Error> {
+        engine.verify_block_external(header)
+    }
 }
