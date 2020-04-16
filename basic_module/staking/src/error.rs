@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::runtime_error::Error as RuntimeError;
+use crate::syntax_error::Error as SyntaxError;
 use std::fmt::{Display, Formatter, Result as FormatResult};
 
 #[derive(Debug)]
@@ -49,10 +50,17 @@ impl<T: Display> Display for Insufficient<T> {
 #[derive(Debug)]
 pub enum Error {
     Runtime(RuntimeError),
+    Syntax(SyntaxError),
 }
 
 impl From<RuntimeError> for Error {
     fn from(error: RuntimeError) -> Error {
         Error::Runtime(error)
+    }
+}
+
+impl From<SyntaxError> for Error {
+    fn from(error: SyntaxError) -> Error {
+        Error::Syntax(error)
     }
 }

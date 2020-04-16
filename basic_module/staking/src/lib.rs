@@ -20,9 +20,14 @@ extern crate serde_derive;
 mod error;
 mod runtime_error;
 mod state;
+mod syntax_error;
+mod transactions;
 mod types;
 
+use crate::types::NetworkId;
 use coordinator::context::{ChainHistoryAccess, SubStateHistoryAccess, SubStorageAccess};
+use lazy_static::lazy_static;
+use parking_lot::Mutex;
 
 fn substorage() -> Box<dyn SubStorageAccess> {
     unimplemented!()
@@ -34,6 +39,19 @@ fn deserialize<T: serde::de::DeserializeOwned>(buffer: Vec<u8>) -> T {
 
 fn serialize<T: serde::ser::Serialize>(data: T) -> Vec<u8> {
     serde_cbor::to_vec(&data).unwrap()
+}
+
+lazy_static! {
+    static ref NETWORK_ID: Mutex<Option<NetworkId>> = Default::default();
+}
+
+fn check_network_id(network_id: NetworkId) -> bool {
+    let mut saved_network_id = NETWORK_ID.lock();
+    if let Some(saved_network_id) = *saved_network_id {
+        return saved_network_id == network_id
+    }
+    *saved_network_id = Some(network_id);
+    true
 }
 
 fn chain_history_manager() -> Box<dyn ChainHistoryAccess> {

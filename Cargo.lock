@@ -2938,9 +2938,12 @@ checksum = "15132e0e364248108c5e2c02e3ab539be8d6f5d52a01ca9bbf27ed657316f02b"
 name = "staking"
 version = "0.1.0"
 dependencies = [
+ "codechain-crypto",
  "codechain-key",
  "codechain-types",
  "coordinator",
+ "lazy_static 1.4.0",
+ "parking_lot 0.6.4",
  "primitives",
  "serde",
  "serde_cbor",
