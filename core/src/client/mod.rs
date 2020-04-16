@@ -163,7 +163,7 @@ pub trait ImportBlock {
 
     /// Import a trusted header into the blockchain
     /// Trusted header doesn't go through any verifications and doesn't update the best header
-    fn import_trusted_header(&self, header: &Header) -> Result<BlockHash, BlockImportError>;
+    fn import_trusted_header(&self, header: Header) -> Result<BlockHash, BlockImportError>;
 
     /// Import a trusted block into the blockchain
     /// Trusted block doesn't go through any verifications and doesn't update the best block

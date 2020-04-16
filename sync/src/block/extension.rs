@@ -848,7 +848,7 @@ impl Extension {
             match response {
                 ResponseMessage::Headers(headers) => {
                     self.dismiss_request(from, id);
-                    self.on_header_response(from, &headers)
+                    self.on_header_response(from, headers)
                 }
                 ResponseMessage::Bodies(bodies) => {
                     self.check_sync_variable();
@@ -938,17 +938,29 @@ impl Extension {
         }
     }
 
-    fn on_header_response(&mut self, from: &NodeId, headers: &[Header]) {
+    fn on_header_response(&mut self, from: &NodeId, mut headers: Vec<Header>) {
         ctrace!(SYNC, "Received header response from({}) with length({})", from, headers.len());
         match self.state {
-            State::SnapshotHeader(hash, _) => match headers {
-                [parent, header] if header.hash() == hash => {
+            State::SnapshotHeader(hash, _) => {
+                if headers.len() != 2 || headers[1].hash() != hash {
+                    cdebug!(
+                        SYNC,
+                        "Peer {} responded with a invalid response. requested hash: {}, response length: {}",
+                        from,
+                        hash,
+                        headers.len()
+                    )
+                } else {
+                    let header = headers.pop().expect("headers.len() == 2");
+                    let header_hash = header.hash();
+                    let parent = headers.pop().expect("headers.len() == 1");
+                    let parent_hash = parent.hash();
                     match self.client.import_trusted_header(parent) {
                         Ok(_)
                         | Err(BlockImportError::Import(ImportError::AlreadyInChain))
                         | Err(BlockImportError::Import(ImportError::AlreadyQueued)) => {}
                         Err(err) => {
-                            cwarn!(SYNC, "Cannot import header({}): {:?}", parent.hash(), err);
+                            cwarn!(SYNC, "Cannot import header({}): {:?}", parent_hash, err);
                             return
                         }
                     }
@@ -957,20 +969,13 @@ impl Extension {
                         | Err(BlockImportError::Import(ImportError::AlreadyInChain))
                         | Err(BlockImportError::Import(ImportError::AlreadyQueued)) => {}
                         Err(err) => {
-                            cwarn!(SYNC, "Cannot import header({}): {:?}", header.hash(), err);
+                            cwarn!(SYNC, "Cannot import header({}): {:?}", header_hash, err);
                             return
                         }
                     }
                     self.move_state();
                 }
-                _ => cdebug!(
-                    SYNC,
-                    "Peer {} responded with a invalid response. requested hash: {}, response length: {}",
-                    from,
-                    hash,
-                    headers.len()
-                ),
-            },
+            }
             State::Full => {
                 let (mut completed, peer_is_caught_up) = if let Some(peer) = self.header_downloaders.get_mut(from) {
                     peer.import_headers(&headers);
