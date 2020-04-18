@@ -779,6 +779,8 @@ describe("Staking", function() {
     });
 
     it("get fee in proportion to holding stakes", async function() {
+        const oldBlockNumber = await nodes[0].getBestBlockNumber();
+
         // faucet: 70000, alice: 20000, bob: 10000, validator0: 110, validator1: 110, validator2: 110, validator3: 110
         const fee = 1000;
         const hash = await sendStakeToken({
@@ -801,7 +803,7 @@ describe("Staking", function() {
 
         const oldAliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString(),
-            blockNumber: blockNumber - 1
+            blockNumber: oldBlockNumber
         }))!;
         const aliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString()
@@ -810,7 +812,7 @@ describe("Staking", function() {
 
         const oldBobBalance = +(await nodes[0].rpc.chain.getBalance({
             address: bobAddress.toString(),
-            blockNumber: blockNumber - 1
+            blockNumber: oldBlockNumber
         }))!;
         const bobBalance = +(await nodes[0].rpc.chain.getBalance({
             address: bobAddress.toString()
@@ -819,7 +821,7 @@ describe("Staking", function() {
 
         const oldFaucetBalance = +(await nodes[0].rpc.chain.getBalance({
             address: faucetAddress.toString(),
-            blockNumber: blockNumber - 1
+            blockNumber: oldBlockNumber
         }))!;
         const faucetBalance = +(await nodes[0].rpc.chain.getBalance({
             address: faucetAddress.toString()
@@ -831,7 +833,7 @@ describe("Staking", function() {
         }))!.author;
         const oldValidator0Balance = +(await nodes[0].rpc.chain.getBalance({
             address: validator0Address.toString(),
-            blockNumber: blockNumber - 1
+            blockNumber: oldBlockNumber
         }))!;
         const validator0Balance = +(await nodes[0].rpc.chain.getBalance({
             address: validator0Address.toString()
@@ -843,7 +845,7 @@ describe("Staking", function() {
             expect(validator0Balance).to.be.deep.equal(oldValidator0Balance);
             const oldAuthorBalance = +(await nodes[0].rpc.chain.getBalance({
                 address: author.toString(),
-                blockNumber: blockNumber - 1
+                blockNumber: oldBlockNumber
             }))!;
             const authorBalance = (await nodes[0].rpc.chain.getBalance({
                 address: author.toString()
@@ -885,6 +887,7 @@ describe("Staking", function() {
         ) {
             await wait(500);
         }
+        const oldBlockNumber = await nodes[0].getBestBlockNumber();
 
         // faucet: 20000, alice: 20000, bob: 10000, val0: 50110, val1: 110, val2: 110, val3: 110
         const hash2 = await delegateToken({
@@ -908,7 +911,7 @@ describe("Staking", function() {
 
         const oldAliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString(),
-            blockNumber: blockNumber - 1
+            blockNumber: oldBlockNumber
         }))!;
         const aliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString()
@@ -917,7 +920,7 @@ describe("Staking", function() {
 
         const oldBobBalance = +(await nodes[0].rpc.chain.getBalance({
             address: bobAddress.toString(),
-            blockNumber: blockNumber - 1
+            blockNumber: oldBlockNumber
         }))!;
         const bobBalance = +(await nodes[0].rpc.chain.getBalance({
             address: bobAddress.toString()
@@ -926,7 +929,7 @@ describe("Staking", function() {
 
         const oldFaucetBalance = +(await nodes[0].rpc.chain.getBalance({
             address: faucetAddress.toString(),
-            blockNumber: blockNumber - 1
+            blockNumber: oldBlockNumber
         }))!;
         const faucetBalance = +(await nodes[0].rpc.chain.getBalance({
             address: faucetAddress.toString()
@@ -938,7 +941,7 @@ describe("Staking", function() {
         }))!.author;
         const oldValidator0Balance = +(await nodes[0].rpc.chain.getBalance({
             address: validator0Address.toString(),
-            blockNumber: blockNumber - 1
+            blockNumber: oldBlockNumber
         }))!;
         const validator0Balance = +(await nodes[0].rpc.chain.getBalance({
             address: validator0Address.toString()
@@ -954,7 +957,7 @@ describe("Staking", function() {
 
             const oldValidator1Balance = +(await nodes[0].rpc.chain.getBalance({
                 address: validator1Address.toString(),
-                blockNumber: blockNumber - 1
+                blockNumber: oldBlockNumber
             }))!;
             const validator1Balance = +(await nodes[0].rpc.chain.getBalance({
                 address: validator1Address.toString()
@@ -970,7 +973,7 @@ describe("Staking", function() {
 
                 const oldAuthorBalance = +(await nodes[0].rpc.chain.getBalance({
                     address: author.toString(),
-                    blockNumber: blockNumber - 1
+                    blockNumber: oldBlockNumber
                 }))!;
                 const authorBalance = +(await nodes[0].rpc.chain.getBalance({
                     address: author.toString()
@@ -1036,6 +1039,8 @@ describe("Staking", function() {
             await wait(500);
         }
 
+        const oldBlockNumber = await nodes[0].getBestBlockNumber();
+
         // faucet: 10000, alice: 20000, bob: 10000, val0: 30110, val1: 30110, val2: 110, val3: 110
         const hash3 = await delegateToken({
             senderAddress: validator0Address,
@@ -1058,7 +1063,7 @@ describe("Staking", function() {
 
         const oldAliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString(),
-            blockNumber: blockNumber - 1
+            blockNumber: oldBlockNumber
         }))!;
         const aliceBalance = +(await nodes[0].rpc.chain.getBalance({
             address: aliceAddress.toString()
@@ -1068,7 +1073,7 @@ describe("Staking", function() {
 
         const oldBobBalance = +(await nodes[0].rpc.chain.getBalance({
             address: bobAddress.toString(),
-            blockNumber: blockNumber - 1
+            blockNumber: oldBlockNumber
         }))!;
         const bobBalance = +(await nodes[0].rpc.chain.getBalance({
             address: bobAddress.toString()
@@ -1076,7 +1081,7 @@ describe("Staking", function() {
         expect(bobBalance).to.be.deep.equal(oldBobBalance);
         const oldFaucetBalance = +(await nodes[0].rpc.chain.getBalance({
             address: faucetAddress.toString(),
-            blockNumber: blockNumber - 1
+            blockNumber: oldBlockNumber
         }))!;
         const faucetBalance = +(await nodes[0].rpc.chain.getBalance({
             address: faucetAddress.toString()
@@ -1087,7 +1092,7 @@ describe("Staking", function() {
         }))!.author;
         const oldValidator0Balance = +(await nodes[0].rpc.chain.getBalance({
             address: validator0Address.toString(),
-            blockNumber: blockNumber - 1
+            blockNumber: oldBlockNumber
         }))!;
         const validator0Balance = +(await nodes[0].rpc.chain.getBalance({
             address: validator0Address.toString()
@@ -1103,7 +1108,7 @@ describe("Staking", function() {
 
             const oldValidator1Balance = +(await nodes[0].rpc.chain.getBalance({
                 address: validator1Address.toString(),
-                blockNumber: blockNumber - 1
+                blockNumber: oldBlockNumber
             }))!;
             const validator1Balance = +(await nodes[0].rpc.chain.getBalance({
                 address: validator1Address.toString()
@@ -1119,7 +1124,7 @@ describe("Staking", function() {
 
                 const oldAuthorBalance = +(await nodes[0].rpc.chain.getBalance({
                     address: author.toString(),
-                    blockNumber: blockNumber - 1
+                    blockNumber: oldBlockNumber
                 }))!;
                 const authorBalance = +(await nodes[0].rpc.chain.getBalance({
                     address: author.toString()
