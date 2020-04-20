@@ -148,15 +148,24 @@ describe("Shutdown test", function() {
             }
 
             await termWaiter.waitForTermPeriods(1, 0.5);
-            // Revival
-            await Promise.all(getAlphaBetas().nodes.map(node => node.start()));
-            await fullyConnect(nodes, promiseExpect);
+            // Revive alphas
+            await Promise.all(getAlphas().nodes.map(node => node.start()));
+            await fullyConnect(
+                [getObserver().node, ...getAlphas().nodes],
+                promiseExpect
+            );
 
             // Wait for it should close the term
-            await getObserver().node.waitBlockNumber(lastBlockNumberOfTerm + 1);
+            await getObserver().node.waitForTermChange(2);
+            const firstBlockNumberOfTheNextTerm = await getObserver().node.getBestBlockNumber();
+
+            // Revive betas
+            await Promise.all(getBetas().nodes.map(node => node.start()));
+            await fullyConnect(nodes, promiseExpect);
+
             const termMetadata = await stake.getTermMetadata(
                 getObserver().node.rpc,
-                lastBlockNumberOfTerm + 1
+                firstBlockNumberOfTheNextTerm
             );
             expect(termMetadata).is.not.null;
             expect(termMetadata!.currentTermId).is.equals(2);
