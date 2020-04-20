@@ -22,14 +22,14 @@ enum ConnectionState {
     Connected,
 }
 
-pub struct Connection {
+pub struct Subscription {
     status: ConnectionState,
     pub subscription_id: u64,
     pub interested_events: Vec<EventTags>,
     sink: Sink,
 }
 
-impl Connection {
+impl Subscription {
     pub fn new(sink: Sink, sub_id: u64) -> Self {
         Self {
             status: ConnectionState::Connected,
