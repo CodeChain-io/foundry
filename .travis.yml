@@ -1,3 +1,7 @@
+branches:
+  except:
+    - mold
+
 language: rust
 rust:
   - 1.43.0
