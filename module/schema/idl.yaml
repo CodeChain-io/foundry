@@ -1,0 +1,189 @@
+#@ ident = "([_a-z]+|[_A-Z]+)(-([_a-z0-9]+|[_A-Z0-9]+))*"
+#@ name = "^{}$".format(ident)
+#@ qname = "^{id}(:{id})+$".format(id=ident)
+#@ moduleName = "^:{}$".format(ident)
+
+#@yaml/text-templated-strings
+---
+$schema: http://json-schema.org/draft-07/schema
+
+$ref: '#module'
+
+definitions:
+  name:
+    $id: '#name'
+    type: string
+    pattern: (@= name @)
+  qname:
+    $id: '#qname'
+    type: string
+    pattern: (@= qname @)
+  primitive:
+    $id: '#primitive'
+    enum:
+      - bool
+      - i8
+      - i16
+      - i32
+      - i64
+      - u8
+      - u16
+      - u32
+      - u64
+      - string
+      - nil
+  userDefined:
+    $id: '#userDefined'
+    oneOf:
+      - $ref: '#name'
+      - $ref: '#qname'
+  type:
+    $id: '#type'
+    type: string
+    oneOf:
+      - $ref: '#primitive'
+      - $ref: '#userDefined'
+  module:
+    $id: '#module'
+    type: object
+    patternProperties:
+      (@= name @):
+        oneOf:
+          - $ref: '#struct'
+          - $ref: '#enum'
+          - $ref: '#list'
+          - $ref: '#array'
+          - $ref: '#tuple'
+          - $ref: '#map'
+          - $ref: '#service'
+      (@= moduleName @):
+        $ref: '#module'
+      additionalProperties: false
+  struct:
+    $id: '#struct'
+    properties:
+      doc:
+        type: string
+      type:
+        const: struct
+      fields:
+        type: array
+        items:
+          type: object
+          properties:
+            name:
+              $ref: '#name'
+            type:
+              $ref: '#type'
+          required: [name, type]
+          additionalProperties: false
+      required: [type, fields]
+      additionalProperties: false
+  enum:
+    $id: '#enum'
+    type: object
+    properties:
+      doc:
+        type: string
+      type:
+        const: enum
+      variants:
+        oneOf:
+          - type: array
+            items:
+              $ref: '#name'
+          - type: object
+            patternProperties:
+              (@= name @):
+                $ref: '#type'
+    required: [type, variants]
+    additionalProperties: false
+  list:
+    $id: '#list'
+    type: object
+    properties:
+      doc:
+        type: string
+      type:
+        const: list
+      items:
+        $ref: '#type'
+    required: [type, items]
+    additionalProperties: false
+  array:
+    $id: '#array'
+    type: object
+    properties:
+      doc:
+        type: string
+      type:
+        const: array
+      items:
+        $ref: '#type'
+      size:
+        type: integer
+        minimum: 0
+    required: [type, items, size]
+    additionalProperties: false
+  tuple:
+    $id: '#tuple'
+    type: object
+    properties:
+      doc:
+        type: string
+      type:
+        const: tuple
+      items:
+        $ref: '#type'
+    required: [type, items]
+    additionalProperties: false
+  map:
+    $id: map
+    type: object
+    properties:
+      doc:
+        type: string
+      type:
+        const: tuple
+      keys:
+        enum: 
+          - i8,
+          - i16
+          - i32
+          - i64
+          - u8
+          - u16
+          - u32
+          - u64
+          - string
+      values:
+        $ref: '#type'
+      required: [type, keys, values]
+  service:
+    type: object
+    properties:
+      extends:
+        type: array
+        items:
+          $ref: '#userDefined'
+      methods:
+        type: object
+        patternProperties:
+          (@= name @):
+            type: object
+            properties:
+              accepts:
+                (@= name @):
+                  type: array
+                  items:
+                    - $ref: '#name'
+                    - $ref: '#type'
+              returns:
+                $ref: '#type'
+              throws:
+                $ref: '#type'
+              overloaded:
+                $ref: '#name'
+            additionalProperties: false
+      required: [methods]
+      additionalProperties: false
