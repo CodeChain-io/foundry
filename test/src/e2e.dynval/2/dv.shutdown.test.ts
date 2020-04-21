@@ -220,7 +220,7 @@ describe("Shutdown test", function() {
             ]
         });
 
-        it("only a term closer should be a validator after a complete shutdown", async function() {
+        it.skip("only a term closer should be a validator after a complete shutdown", async function() {
             const termWaiter = setTermTestTimeout(this, {
                 terms: 2
             });
