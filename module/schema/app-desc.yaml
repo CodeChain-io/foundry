@@ -1,0 +1,149 @@
+#@ ident = "([_a-z]+|[_A-Z]+)(-([_a-z0-9]+|[_A-Z0-9]+))*"
+#@ name = '^{}$'.format(ident)
+#@ qname = '^{id}:{id}$'.format(id=ident)
+#@ path = '^(/{})+$'.format(ident)
+#@ backRef = '^{}<[1-9][0-9]*$'.format(ident)
+#@ hash = '[a-f0-9]{256}'
+
+#@yaml/text-templated-strings
+---
+$schema: http://json-schema.org/draft-07/schema
+
+type: object
+properties:
+  modules:
+    type: object
+    patternProperties:
+      (@= hash @):
+        type: object
+        properties:
+          name:
+            $ref: '#name'
+          init:
+            $ref: '#map'
+        required:
+          - name
+        additionalProperties: false
+    additionalProperties: false
+
+  exports:
+    patternProperties:
+      (@= name @):
+        type: object
+        patternProperties:
+          (@= name @):
+            type: object
+            patternProperties:
+              (@= name @):
+                $ref: '#map'
+            minProperties: 1
+            maxProperties: 1
+            additionalProperties: false
+        additionalProperties: false
+    additionalProperties: false
+
+  imports:
+    patternProperties:
+      (@= name @):
+        type: object
+        patternProperties:
+          (@= name @):
+            $ref: '#ref'
+        additionalProperties: false
+    additionalProperties: false
+
+  schema:
+    type: array
+    items:
+      type: object
+      properties:
+        fragment:
+          $ref: '#qname'
+        at:
+          $ref: '#path'
+        params:
+          type: object
+          patternProperties:
+            (@= name @):
+              $ref: '#backRef'
+        resolver:
+          $ref: '#ref'
+      required:
+        - fragement
+        - at
+        - resolver
+      additionalProperties: false
+
+  operations:
+    type: object
+    patternProperties:
+      (@= ident @):   #! external name
+        type: object
+        properties:
+          export:     #! one of the exports
+            $ref: '#ref'
+          method:     #! method
+            $ref: '#ident'
+          paramsOverrides:
+            type: object
+            patternProperties:
+              (@= name @):
+                $ref: '#value'
+        required:
+          - export
+          - method
+        additionalProperties: false
+    additionalProperties: false
+                
+  config:
+    type: object
+    patternProperties:
+      (@= name @):
+        type: object
+        properties:
+          default:
+            $ref: '#value'
+          doc:
+            type: string
+        addtionalProperties: false
+    additionalProperties: false
+
+definitions:
+  name:
+    $id: '#name'
+    pattern: (@= name @)
+  qname:
+    $id: '#qname'
+    pattern: (@= qname @)    
+  ref:
+    $id: '#ref'
+    type:
+      oneOf:
+        - $ref: '#name'
+        - $ref: '#qname'
+  path:
+    $id: '#path'
+    pattern: (@= path @)
+  backRef:
+    $id: '#backRef'
+    pattern: (@= backRef @)    
+  map:
+    $id: '#map'
+    type: object
+    patternProperties:
+      (@= name @):
+      $ref: '#value'
+    additionalProperties: false
+  value:
+    $id: '#value'
+    oneOf:
+      - type: integer
+      - type: string
+      - type: boolean
+      - type: array
+        items:
+          $ref: '#value'
+      - $ref: '#map'
+      - type: 'null'
+
+additionalProperties: false
