@@ -157,9 +157,6 @@ pub enum TransactionImportResult {
     Future,
 }
 
-#[cfg(all(feature = "nightly", test))]
-mod mem_pool_benches;
-
 fn fetch_account_creator<'c>(client: &'c dyn AccountData) -> impl Fn(&Public) -> AccountDetails + 'c {
     move |public: &Public| {
         let address = public_to_address(public);
