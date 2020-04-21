@@ -108,6 +108,3 @@ pub struct MinerStatus {
     /// Number of transactions in queue with state `pending` (ready to be included in block)
     pub transactions_in_pending_queue: usize,
 }
-
-#[cfg(all(feature = "nightly", test))]
-mod mem_pool_benches;
