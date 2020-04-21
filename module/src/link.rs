@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crossbeam_channel::{Receiver, Sender};
+use intertrait::CastFrom;
 use linkme::distributed_slice;
 use once_cell::sync;
 use std::collections::HashMap;
@@ -27,12 +27,12 @@ type Result<T> = std::result::Result<T, Error>;
 ///
 /// [`Linker`]: ./trait.Linker.html
 #[distributed_slice]
-static LINKER_CTORS: [fn() -> Arc<dyn Linker>] = [..];
+pub static LINKERS: [fn() -> Arc<dyn Linker>] = [..];
 
 /// Returns a `Linker` with the given `id`.
 pub fn linker(id: &str) -> Option<Arc<dyn Linker>> {
     static MAP: sync::Lazy<HashMap<&'static str, Arc<dyn Linker>>> = sync::Lazy::new(|| {
-        LINKER_CTORS
+        LINKERS
             .iter()
             .map(|new| {
                 let linker = new();
@@ -67,40 +67,61 @@ pub trait Linkable: Send + Sync {
     ///
     /// [`Port`]: ./trait.Port.html
     /// [`Linker`]: ./trait.Linker.html
-    fn new_port(&mut self) -> Arc<dyn Port>;
+    fn new_port(&mut self) -> Box<dyn Port>;
 }
 
 /// A port represents an endpoint of a link between two [`Linkable`]s.
 ///
-/// Before linking two ports, each may be set up with its [`send`] and [`receive`] methods.
+/// Before linking two ports, each may be set up with its [`export`] and [`import`] methods.
 /// This trait is just the basic protocol and every `Port` it supposed to implement additional
 /// traits for its supported link types.
 ///
 /// [`Linkable`]: ./trait.Linkable.html
-/// [`send`]: ./trait.Port.html#tymnethod.send
-/// [`receive`]: ./trait.Port.html#tymnethod.receive
-pub trait Port: 'static {
-    /// Sets to send a list of handles to the other end on link.
-    ///
-    /// `desc` is encoded in `CBOR`.
-    fn send(&mut self, desc: &[u8]) -> &mut dyn Port;
+/// [`export`]: ./trait.Port.html#tymnethod.export
+/// [`import`]: ./trait.Port.html#tymnethod.import
+pub trait Port: CastFrom {
+    /// Sets to send a list of handles represented by the `ids` to the other end on link
+    /// creation. The `ids` are indices into a list of service objects created when the module
+    /// owning this port is loaded into a sandbox.CBOR map fed
+    /// to the constructor function.
+    fn export(&mut self, ids: &[usize]);
 
     /// Sets to which slots the handles received from the other end are to be assigned.
     ///
     /// This way, a module can't assign to an arbitrary slot in the other end.
     /// Only to the slots set by the host.
-    fn receive(&mut self, slots: &[&str]) -> &mut dyn Port;
+    fn import(&mut self, slots: &[&str]);
 
-    /// Sets the common `Sender` and `Receiver` to link two `BasePort`s.
+    /// Returns the [`Receiver`] for placing messages into the [`Linkable`] this `Port` is
+    /// created from. This method is used to implement the base link, which is required
+    /// for the minimum interoperability among [`Linkable`]s.
     ///
-    /// This method is to support the base link, which is required for the minimum
-    /// interoperability among [`Linkable`]s. Upon a call to this method, `Port` needs
-    /// to send and receive handles as configured with [`send`] and [`receive`].
+    /// [`Receiver`]: ./trait.Receiver.html
+    /// [`Linkable`]: ./trait.Linkable.html
+    fn receiver(&self) -> Arc<dyn Receiver>;
+
+    /// Links with another [`Linkable`] by passing in a [`Receiver`] taken from the [`Linkable`]
+    /// in the opposite side. This method is to support the base link, which is required
+    /// for the minimum interoperability among [`Linkable`]s. Upon a call to this method,
+    /// `Port`s need to send and receive handles as configured with [`export`] and [`import`].
     ///
     /// [`Linkable`]: ./trait.Linkable.html
-    /// [`send`]: #tymethod.send
-    /// [`receive`]: #tymethod.receive
-    fn link(&mut self, sender: Sender<Box<dyn AsRef<[u8]>>>, receiver: Receiver<Box<dyn AsRef<[u8]>>>);
+    /// [`export`]: #tymethod.export
+    /// [`import`]: #tymethod.import
+    fn link(&mut self, receiver: Arc<dyn Receiver>);
+}
+
+/// An endpoint implemented by a [`Linkable`] for receiving incoming calls
+/// from another [`Linkable`].
+///
+/// [`Linkable`]: ./trait.Linkable.html
+pub trait Receiver: Send + Sync {
+    /// Places the given message (`[u8]`) and returns immediately.
+    /// The `message` is typed `Box<dyn AsRef<[u8]>>` to allow for zero copy sending
+    /// as much as possible. The intention is to wrap various types as they are if they
+    /// can be converted into a `&[u8]` to pass into this method. The `Box` is dropped
+    /// when done with the data, and the underlying data will also be dropped then.
+    fn receive(&mut self, message: Box<dyn AsRef<[u8]>>);
 }
 
 #[derive(Debug, Error)]

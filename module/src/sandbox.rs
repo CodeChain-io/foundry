@@ -16,6 +16,8 @@
 
 use crate::link::Linkable;
 use linkme::distributed_slice;
+use once_cell::sync;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::path::Path;
 use std::sync::Arc;
@@ -25,6 +27,20 @@ type Result<'a, T> = std::result::Result<T, Error<'a>>;
 
 #[distributed_slice]
 pub static SANDBOXERS: [fn() -> Arc<dyn Sandboxer>] = [..];
+
+/// Returns a `Sandboxer` with the given `id`.
+pub fn sandboxer(id: &str) -> Option<Arc<dyn Sandboxer>> {
+    static MAP: sync::Lazy<HashMap<&'static str, Arc<dyn Sandboxer>>> = sync::Lazy::new(|| {
+        SANDBOXERS
+            .iter()
+            .map(|new| {
+                let sandboxer = new();
+                (sandboxer.id(), sandboxer)
+            })
+            .collect()
+    });
+    MAP.get(id).map(Arc::clone)
+}
 
 /// An entity that can sandbox modules of types it supports.
 ///
@@ -42,6 +58,13 @@ pub trait Sandboxer: Send + Sync {
     /// The corresponding module must have been imported into the module repository
     /// configured for the current Foundry host. That is why this method accepts a `path`
     /// to identify a module.
+    ///
+    /// The `init` serves as configuration parameters for the module-wide initialization,
+    /// and must be CBOR encoded. The `exports` instruct how to instantiate an ordered list
+    /// of service objects to be exported via links. Each item in the `exports` designates
+    /// a call on a module's constructor function, where the first element is name
+    /// of a constructor function, and the second element is arguments to the constructor
+    /// function encoded in CBOR.
     ///
     /// [`Sandbox`]: ./trait.Sandbox.html
     fn load(&self, path: &dyn AsRef<Path>, init: &[u8], exports: &[(&str, &[u8])]) -> Result<Arc<dyn Sandbox>>;
