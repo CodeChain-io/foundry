@@ -31,7 +31,7 @@ pub fn sandboxer(id: &str) -> Option<Arc<dyn Sandboxer>> {
 /// An entity that can sandbox modules of types it supports.
 ///
 /// A `Sandboxer` is thread-safe.
-pub trait Sandboxer {
+pub trait Sandboxer: Send + Sync {
     /// Returns the identifier string for this provider.
     fn id(&self) -> &'static str;
 

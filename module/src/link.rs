@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -107,7 +106,7 @@ pub trait Receiver {
     /// as much as possible. The intention is to wrap various types as they are if they
     /// can be converted into a `&[u8]` to pass into this method. The `Box` is dropped
     /// when done with the data, and the underlying data will also be dropped then.
-    fn receive(message: Box<dyn AsRef<[u8]>>);
+    fn receive(&mut self, message: Box<dyn AsRef<[u8]>>);
 }
 
 #[derive(Debug, Error)]
