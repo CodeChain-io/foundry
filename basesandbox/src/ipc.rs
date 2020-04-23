@@ -16,6 +16,8 @@
 
 pub mod domain_socket;
 pub mod intra;
+use once_cell::sync::OnceCell;
+use std::sync::Mutex;
 
 pub trait IpcSend: Send {
     /// It might block until counterparty's recv(). Even if not, the order is still guaranteed.
@@ -62,8 +64,12 @@ pub trait Ipc: IpcSend + IpcRecv {
 /// Most of IPC depends on a system-wide name, which looks quite vulnerable for
 /// possible attack. Rather, generating a random name would be more secure.
 pub fn generate_random_name() -> String {
+    static MONOTONIC: OnceCell<Mutex<u64>> = OnceCell::new();
+    let mut mono = MONOTONIC.get_or_init(|| Mutex::new(0)).lock().unwrap();
+    *mono += 1;
+    let mono = *mono;
     let pid = std::process::id();
     let time = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap();
-    let hash = ccrypto::blake256(format!("{:?}{}", time, pid));
+    let hash = ccrypto::blake256(format!("{:?}{}{}", time, pid, mono));
     format!("{:?}", hash)[0..16].to_string()
 }
