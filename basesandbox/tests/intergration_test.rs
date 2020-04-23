@@ -24,7 +24,6 @@ use cbsb::ipc::intra::Intra;
 use cbsb::ipc::Ipc;
 use cbsb::ipc::{IpcRecv, IpcSend};
 use std::sync::Arc;
-#[cfg(target_os = "linux")]
 use std::thread;
 
 // CI server is really slow for this. Usually 10 is ok.
@@ -106,4 +105,38 @@ fn execute_simple_intra_complicated() {
 
     ctx1.terminate();
     ctx2.terminate();
+}
+
+#[test]
+fn execute_simple_intra_massive() {
+    let name = cbsb::ipc::generate_random_name();
+    executor::add_function_pool(name.clone(), Arc::new(simple_thread));
+
+    let mut threads = Vec::new();
+    for _ in 0..32 {
+        let name = name.clone();
+        threads.push(thread::spawn(move || {
+            let mut ctxs = Vec::new();
+            for _ in 0..32 {
+                ctxs.push(executor::execute::<Intra, executor::PlainThread>(&name).unwrap());
+            }
+
+            for ctx in &ctxs {
+                ctx.ipc.send(b"Hello?\0");
+            }
+
+            for ctx in &ctxs {
+                let r = ctx.ipc.recv(Some(TIMEOUT)).unwrap();
+                assert_eq!(r, b"I'm here!\0");
+            }
+
+            while let Some(x) = ctxs.pop() {
+                x.terminate();
+            }
+        }))
+    }
+
+    while let Some(x) = threads.pop() {
+        x.join().unwrap();
+    }
 }
