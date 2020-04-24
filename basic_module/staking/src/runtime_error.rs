@@ -29,6 +29,7 @@ pub enum Error {
     InvalidMetadataSeq(Mismatch<u64>),
     InvalidSeq(Mismatch<u64>),
     InsufficientFee(Insufficient<u64>),
+    InvalidValidators,
 }
 
 impl Display for Error {
@@ -45,6 +46,7 @@ impl Display for Error {
             Error::InvalidMetadataSeq(mismatch) => write!(f, "Metatdata sequence mismatched. {}", mismatch),
             Error::InvalidSeq(mismatch) => write!(f, "Seq of the transaction mismatched. {}", mismatch),
             Error::InsufficientFee(insufficient) => write!(f, "Insufficient fee: {}", insufficient),
+            Error::InvalidValidators => write!(f, "Next validators do not match with the state's"),
         }
     }
 }

@@ -104,6 +104,12 @@ impl Metadata {
     pub fn update_term_params(&mut self) {
         self.term_params = self.params;
     }
+
+    pub fn increase_term_id(&mut self, last_term_finished_block_num: u64) {
+        assert!(self.last_term_finished_block_num < last_term_finished_block_num);
+        self.last_term_finished_block_num = last_term_finished_block_num;
+        self.current_term_id += 1;
+    }
 }
 
 pub struct StakeAccount<'a> {
@@ -252,6 +258,7 @@ impl Stakeholders {
     }
 }
 
+#[derive(Serialize, PartialEq, Eq)]
 pub struct NextValidators(Vec<Validator>);
 impl NextValidators {
     pub fn load() -> Self {
@@ -343,6 +350,12 @@ impl Deref for NextValidators {
 impl From<NextValidators> for Vec<Validator> {
     fn from(val: NextValidators) -> Self {
         val.0
+    }
+}
+
+impl From<Vec<Validator>> for NextValidators {
+    fn from(val: Vec<Validator>) -> Self {
+        Self(val)
     }
 }
 

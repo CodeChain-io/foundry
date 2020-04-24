@@ -16,7 +16,7 @@
 
 use crate::check_network_id;
 use crate::syntax_error::Error;
-use crate::transactions::{SignedTransaction, Transaction};
+use crate::transactions::{SignedTransaction, UserTransaction};
 
 pub fn check(signed_tx: &SignedTransaction) -> Result<(), Error> {
     if !signed_tx.verify() {
@@ -26,7 +26,7 @@ pub fn check(signed_tx: &SignedTransaction) -> Result<(), Error> {
     }
 }
 
-fn check_inner(tx: &Transaction) -> Result<(), Error> {
+fn check_inner(tx: &UserTransaction) -> Result<(), Error> {
     if !check_network_id(tx.network_id) {
         Err(Error::InvalidNetworkId(tx.network_id))
     } else {
