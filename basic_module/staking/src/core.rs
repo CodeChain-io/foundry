@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::state::{Banned, Params};
-use crate::transactions::SignedTransaction;
+use crate::transactions::Transaction;
 use crate::types::Validator;
 use coordinator::types::{ExecuteTransactionError, HeaderError, TransactionExecutionOutcome, VerifiedCrime};
 use coordinator::Header;
@@ -26,9 +26,9 @@ pub trait Abci {
     fn open_block(&self, header: &Header, verified_crime: &[VerifiedCrime]) -> Result<(), HeaderError>;
     fn execute_transactions(
         &self,
-        transactions: Vec<SignedTransaction>,
+        transactions: Vec<Transaction>,
     ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError>;
-    fn check_transaction(&self, transaction: &SignedTransaction) -> Result<(), i64>;
+    fn check_transaction(&self, transaction: &Transaction) -> Result<(), i64>;
 }
 
 pub trait StakingView {
