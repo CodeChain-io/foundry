@@ -14,11 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::state::Params;
-use crate::types::{Approval, DepositQuantity, NetworkId, StakeQuantity};
+use crate::state::{NextValidators, Params};
+use crate::types::{Approval, DepositQuantity, NetworkId, StakeQuantity, Validator};
 use ccrypto::blake256;
 use fkey::{verify, Ed25519Public as Public, Signature};
 use primitives::{Bytes, H256};
+
+pub enum Transaction {
+    #[allow(dead_code)]
+    User(SignedTransaction),
+    Auto(AutoAction),
+}
 
 pub struct SignedTransaction {
     pub signature: Signature,
@@ -83,6 +89,23 @@ pub enum UserAction {
     ReportDoubleVote {
         message1: Bytes,
         message2: Bytes,
+    },
+}
+
+pub enum AutoAction {
+    UpdateValidators {
+        validators: NextValidators,
+    },
+    CloseTerm {
+        inactive_validators: Vec<Public>,
+        next_validators: NextValidators,
+        released_addresses: Vec<Public>,
+        custody_until: u64,
+        kick_at: u64,
+    },
+    Elect,
+    ChangeNextValidators {
+        validators: Vec<Validator>,
     },
 }
 
