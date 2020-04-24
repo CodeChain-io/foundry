@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
-use super::{Crypto, Uuid, Version, H160};
+use super::{Crypto, Uuid, Version, H256};
 use serde::{Serialize, Serializer};
 use std::io::{Read, Write};
 
@@ -49,7 +49,7 @@ pub struct KeyFile {
     pub id: Uuid,
     pub version: Version,
     pub crypto: Crypto,
-    pub address: Option<H160>,
+    pub pubkey: Option<H256>,
     pub meta: Option<String>,
 }
 
@@ -76,7 +76,7 @@ mod tests {
     fn basic_keyfile() {
         let json = r#"
 		{
-			"address": "6edddfc6349aff20bc6467ccf276c5b52487f7a8",
+			"pubkey": "0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0",
 			"crypto": {
 				"cipher": "aes-128-ctr",
 				"ciphertext": "7203da0676d141b138cd7f8e1a4365f59cc1aa6978dc5443f364ca943d7cb4bc",
@@ -101,7 +101,7 @@ mod tests {
         let expected = KeyFile {
             id: Uuid::from_str("8777d9f6-7860-4b9b-88b7-0b57ee6b3a73").unwrap(),
             version: Version::V3,
-            address: Some("6edddfc6349aff20bc6467ccf276c5b52487f7a8".into()),
+            pubkey: Some("0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0".into()),
             crypto: Crypto {
                 cipher: Cipher::Aes128Ctr(Aes128Ctr {
                     iv: "b5a7ec855ec9e2c405371356855fec83".into(),
@@ -127,7 +127,7 @@ mod tests {
     fn ignore_name_field() {
         let json = r#"
 		{
-			"address": "6edddfc6349aff20bc6467ccf276c5b52487f7a8",
+			"pubkey": "0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0",
 			"crypto": {
 				"cipher": "aes-128-ctr",
 				"ciphertext": "7203da0676d141b138cd7f8e1a4365f59cc1aa6978dc5443f364ca943d7cb4bc",
@@ -153,7 +153,7 @@ mod tests {
         let expected = KeyFile {
             id: Uuid::from_str("8777d9f6-7860-4b9b-88b7-0b57ee6b3a73").unwrap(),
             version: Version::V3,
-            address: Some("6edddfc6349aff20bc6467ccf276c5b52487f7a8".into()),
+            pubkey: Some("0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0".into()),
             crypto: Crypto {
                 cipher: Cipher::Aes128Ctr(Aes128Ctr {
                     iv: "b5a7ec855ec9e2c405371356855fec83".into(),
@@ -203,7 +203,7 @@ mod tests {
         let expected = KeyFile {
             id: Uuid::from_str("8777d9f6-7860-4b9b-88b7-0b57ee6b3a73").unwrap(),
             version: Version::V3,
-            address: None,
+            pubkey: None,
             crypto: Crypto {
                 cipher: Cipher::Aes128Ctr(Aes128Ctr {
                     iv: "b5a7ec855ec9e2c405371356855fec83".into(),
@@ -229,7 +229,7 @@ mod tests {
     fn capital_crypto_is_not_allowed() {
         const JSON: &str = r#"
 		{
-			"address": "6edddfc6349aff20bc6467ccf276c5b52487f7a8",
+			"pubkey": "0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0",
 			"Crypto": {
 				"cipher": "aes-128-ctr",
 				"ciphertext": "7203da0676d141b138cd7f8e1a4365f59cc1aa6978dc5443f364ca943d7cb4bc",
@@ -261,7 +261,7 @@ mod tests {
         let file = KeyFile {
             id: "8777d9f6-7860-4b9b-88b7-0b57ee6b3a73".into(),
             version: Version::V3,
-            address: Some("6edddfc6349aff20bc6467ccf276c5b52487f7a8".into()),
+            pubkey: Some("0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0".into()),
             crypto: Crypto {
                 cipher: Cipher::Aes128Ctr(Aes128Ctr {
                     iv: "b5a7ec855ec9e2c405371356855fec83".into(),

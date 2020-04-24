@@ -252,7 +252,7 @@ impl From<LocalizedTransaction> for Transaction {
 
 #[cfg(test)]
 mod tests {
-    use ckey::{Address, Signature};
+    use ckey::{Ed25519Public as Public, Signature};
     use ctypes::transaction::Action;
     use primitives::H256;
     use rlp::rlp_encode_and_decode_test;
@@ -266,7 +266,7 @@ mod tests {
                 seq: 0,
                 fee: 10,
                 action: Action::Pay {
-                    receiver: Address::random(),
+                    receiver: Public::random(),
                     quantity: 100,
                 },
                 network_id: "tc".into(),
@@ -286,7 +286,7 @@ mod tests {
                 fee: 40,
                 network_id: "tc".into(),
                 action: Action::Pay {
-                    receiver: Address::random(),
+                    receiver: Public::random(),
                     quantity: 300,
                 },
             },

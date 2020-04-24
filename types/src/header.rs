@@ -16,7 +16,7 @@
 
 use crate::{BlockHash, BlockNumber};
 use ccrypto::{blake256, BLAKE_NULL_RLP};
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use primitives::{Bytes, H256, U256};
 use rlp::*;
 use std::cell::RefCell;
@@ -42,7 +42,7 @@ pub struct Header {
     /// Block number.
     number: BlockNumber,
     /// Block author.
-    author: Address,
+    author: Public,
 
     /// Block extra data.
     extra_data: Bytes,
@@ -105,7 +105,7 @@ impl Header {
         self.number
     }
     /// Get the author field of the header.
-    pub fn author(&self) -> &Address {
+    pub fn author(&self) -> &Public {
         &self.author
     }
 
@@ -178,7 +178,7 @@ impl Header {
         self.note_dirty();
     }
     /// Set the author field of the header.
-    pub fn set_author(&mut self, a: Address) {
+    pub fn set_author(&mut self, a: Public) {
         if a != self.author {
             self.author = a;
             self.note_dirty();

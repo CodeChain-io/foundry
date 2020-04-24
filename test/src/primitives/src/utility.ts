@@ -1,6 +1,4 @@
 import BigNumber from "bignumber.js";
-import { blake160 } from "./hash";
-import { getPublicFromPrivate } from "./key/key";
 
 /**
  * @hidden
@@ -26,25 +24,6 @@ export const toHex = (buffer: Buffer): string => {
  */
 export const toArray = (hex: string): Uint8Array => {
     return Uint8Array.from(Buffer.from(hex, "hex"));
-};
-
-/**
- * Gets account id from private key.
- * @param priv 32 byte hexadecimal string of private key
- * @returns 20 byte hexadecimal string of account id
- */
-export const getAccountIdFromPrivate = (priv: string): string => {
-    const publicKey = getPublicFromPrivate(priv);
-    return getAccountIdFromPublic(publicKey);
-};
-
-/**
- * Gets account id from the given public key.
- * @param publicKey 64 byte hexadecimal string of uncompressed public key
- * @returns 20 byte hexadecimal string of account id
- */
-export const getAccountIdFromPublic = (publicKey: string): string => {
-    return blake160(publicKey);
 };
 
 /**

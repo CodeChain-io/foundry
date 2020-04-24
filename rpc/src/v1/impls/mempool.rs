@@ -19,7 +19,7 @@ use super::super::traits::Mempool;
 use super::super::types::PendingTransactions;
 use ccore::{BlockChainClient, EngineInfo, MiningBlockChainClient, UnverifiedTransaction, VerifiedTransaction};
 use cjson::bytes::Bytes;
-use ckey::{Address, PlatformAddress};
+use ckey::{Ed25519Public as Public, PlatformAddress};
 use ctypes::TxHash;
 use jsonrpc_core::Result;
 use rlp::Rlp;
@@ -99,14 +99,14 @@ where
     }
 
     fn unban_accounts(&self, prisoner_list: Vec<PlatformAddress>) -> Result<()> {
-        let prisoner_vec: Vec<Address> = prisoner_list.into_iter().map(PlatformAddress::into_address).collect();
+        let prisoner_vec: Vec<Public> = prisoner_list.into_iter().map(PlatformAddress::into_pubkey).collect();
 
         self.client.release_malicious_users(prisoner_vec);
         Ok(())
     }
 
     fn ban_accounts(&self, prisoner_list: Vec<PlatformAddress>) -> Result<()> {
-        let prisoner_vec: Vec<Address> = prisoner_list.into_iter().map(PlatformAddress::into_address).collect();
+        let prisoner_vec: Vec<Public> = prisoner_list.into_iter().map(PlatformAddress::into_pubkey).collect();
 
         self.client.imprison_malicious_users(prisoner_vec);
         Ok(())
@@ -119,7 +119,7 @@ where
     }
 
     fn register_immune_accounts(&self, immune_user_list: Vec<PlatformAddress>) -> Result<()> {
-        let immune_user_vec: Vec<Address> = immune_user_list.into_iter().map(PlatformAddress::into_address).collect();
+        let immune_user_vec: Vec<Public> = immune_user_list.into_iter().map(PlatformAddress::into_pubkey).collect();
 
         self.client.register_immune_users(immune_user_vec);
         Ok(())

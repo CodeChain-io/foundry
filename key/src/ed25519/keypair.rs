@@ -16,16 +16,8 @@
 
 use super::private::Private;
 use super::public::Public;
-use crate::Address;
 use crate::KeyPairTrait;
-use crypto::Blake;
-use primitives::H160;
-use rustc_hex::ToHex;
 use std::fmt;
-
-pub fn public_to_address(public: &Public) -> Address {
-    H160::blake(public).into()
-}
 
 #[derive(Debug, Clone, PartialEq)]
 /// Ed25519 key pair
@@ -39,7 +31,7 @@ impl fmt::Display for KeyPair {
         // Note: libsodium sign module does not support debug printing for secret values
         writeln!(f, "secret:  {:?}", self.private)?;
         writeln!(f, "public:  {:?}", self.public)?;
-        write!(f, "address: {}", self.address().to_hex())
+        Ok(())
     }
 }
 
@@ -72,10 +64,6 @@ impl KeyPairTrait for KeyPair {
 }
 
 impl KeyPair {
-    pub fn address(&self) -> Address {
-        public_to_address(&self.public)
-    }
-
     pub fn get_private(self) -> Private {
         self.private
     }

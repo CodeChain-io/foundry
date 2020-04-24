@@ -1,8 +1,6 @@
 import BigNumber from "bignumber.js";
 import {
     generatePrivateKey,
-    getAccountIdFromPrivate,
-    getAccountIdFromPublic,
     getPublicFromPrivate,
     toHex,
     toLocaleString
@@ -23,17 +21,10 @@ import { expect } from "chai";
     });
 });
 
-it("getAccountIdFromPrivate", () => {
+it("getPublicFromPrivate", () => {
     const priv = generatePrivateKey();
-    const accountId = getAccountIdFromPrivate(priv);
-    expect(/^[0-9a-fA-F]{40}$/.test(accountId)).true;
-});
-
-it("getAccountIdFromPublic", () => {
-    const priv = generatePrivateKey();
-    const pub = getPublicFromPrivate(priv);
-    const accountId = getAccountIdFromPublic(pub);
-    expect(/^[0-9a-fA-F]{40}$/.test(accountId)).true;
+    const pubkey = getPublicFromPrivate(priv);
+    expect(/^[0-9a-fA-F]{64}$/.test(pubkey)).true;
 });
 
 it("toLocaleString", () => {

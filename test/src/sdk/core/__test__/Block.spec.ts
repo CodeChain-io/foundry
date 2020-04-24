@@ -9,9 +9,12 @@ it("toJSON", () => {
         "9af28f6fd6a1170dbee2cb8c34abab0408e6d811d212cdcde23f72473eb0d97ad7a6d266837c1c591383b90d835068b9ed58dd3bcebd6e285911f58e40ce413c"
     );
     const pay = new Pay(
-        Address.fromAccountId("0x2222222222222222222222222222222222222222", {
-            networkId: "tc"
-        }),
+        Address.fromPublic(
+            "0x2222222222222222222222222222222222222222222222222222222222222222",
+            {
+                networkId: "tc"
+            }
+        ),
         new U64(11),
         "tc"
     );
@@ -27,8 +30,8 @@ it("toJSON", () => {
         ),
         timestamp: 1,
         number: 2,
-        author: Address.fromAccountId(
-            "1111111111111111111111111111111111111111",
+        author: Address.fromPublic(
+            "1111111111111111111111111111111111111111111111111111111111111111",
             { networkId: "tc" }
         ),
         extraData: [],

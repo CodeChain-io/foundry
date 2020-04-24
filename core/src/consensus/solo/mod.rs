@@ -24,7 +24,7 @@ use crate::client::snapshot_notify::NotifySender;
 use crate::client::ConsensusClient;
 use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use cstate::{init_stake, DoubleVoteHandler, StateDB, StateResult, StateWithCache, TopLevelState};
 use ctypes::transaction::Action;
 use ctypes::{BlockHash, Header};
@@ -37,7 +37,7 @@ use std::sync::{Arc, Weak};
 pub struct Solo {
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
     snapshot_notify_sender: Arc<RwLock<Option<NotifySender>>>,
-    genesis_stakes: HashMap<Address, u64>,
+    genesis_stakes: HashMap<Public, u64>,
     stake: stake::Stake,
 }
 
@@ -118,7 +118,7 @@ impl ConsensusEngine for Solo {
         Some(&self.stake)
     }
 
-    fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {
+    fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Public>>, EngineError> {
         Ok(None)
     }
 

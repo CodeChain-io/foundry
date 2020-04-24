@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{ActionData, StakeKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
-use ckey::{public_to_address, Address, Ed25519Public as Public};
+use ckey::Ed25519Public as Public;
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::Validator;
 use ctypes::{CompactValidatorEntry, CompactValidatorSet};
@@ -28,8 +28,8 @@ use std::collections::{btree_map, HashMap, HashSet};
 use std::ops::Deref;
 use std::vec;
 
-pub fn get_stake_account_key(address: &Address) -> H256 {
-    StakeKeyBuilder::new(2).append(&"Account").append(address).into_key()
+pub fn get_stake_account_key(pubkey: &Public) -> H256 {
+    StakeKeyBuilder::new(2).append(&"Account").append(pubkey).into_key()
 }
 
 lazy_static! {
@@ -41,21 +41,21 @@ lazy_static! {
     pub static ref CURRENT_VALIDATORS_KEY: H256 = StakeKeyBuilder::new(1).append(&"CurrentValidators").into_key();
 }
 
-pub fn get_delegation_key(address: &Address) -> H256 {
-    StakeKeyBuilder::new(2).append(&"Delegation").append(address).into_key()
+pub fn get_delegation_key(pubkey: &Public) -> H256 {
+    StakeKeyBuilder::new(2).append(&"Delegation").append(pubkey).into_key()
 }
 
 pub type StakeQuantity = u64;
 pub type DepositQuantity = u64;
 
 pub struct StakeAccount<'a> {
-    pub address: &'a Address,
+    pub pubkey: &'a Public,
     pub balance: StakeQuantity,
 }
 
 impl<'a> StakeAccount<'a> {
-    pub fn load_from_state(state: &TopLevelState, address: &'a Address) -> StateResult<StakeAccount<'a>> {
-        let account_key = get_stake_account_key(address);
+    pub fn load_from_state(state: &TopLevelState, pubkey: &'a Public) -> StateResult<StakeAccount<'a>> {
+        let account_key = get_stake_account_key(pubkey);
         let action_data = state.action_data(&account_key)?;
 
         let balance = match action_data {
@@ -64,13 +64,13 @@ impl<'a> StakeAccount<'a> {
         };
 
         Ok(StakeAccount {
-            address,
+            pubkey,
             balance,
         })
     }
 
     pub fn save_to_state(&self, state: &mut TopLevelState) -> StateResult<()> {
-        let account_key = get_stake_account_key(self.address);
+        let account_key = get_stake_account_key(self.pubkey);
         if self.balance != 0 {
             let rlp = rlp::encode(&self.balance);
             state.update_action_data(&account_key, rlp)?;
@@ -83,7 +83,7 @@ impl<'a> StakeAccount<'a> {
     pub fn subtract_balance(&mut self, amount: u64) -> Result<(), RuntimeError> {
         if self.balance < amount {
             return Err(RuntimeError::InsufficientBalance {
-                address: *self.address,
+                pubkey: *self.pubkey,
                 cost: amount,
                 balance: self.balance,
             })
@@ -98,13 +98,13 @@ impl<'a> StakeAccount<'a> {
     }
 }
 
-pub struct Stakeholders(BTreeSet<Address>);
+pub struct Stakeholders(BTreeSet<Public>);
 
 impl Stakeholders {
     pub fn load_from_state(state: &TopLevelState) -> StateResult<Stakeholders> {
         let action_data = state.action_data(&*STAKEHOLDER_ADDRESSES_KEY)?;
-        let addresses = decode_set(action_data.as_ref());
-        Ok(Stakeholders(addresses))
+        let pubkeys = decode_set(action_data.as_ref());
+        Ok(Stakeholders(pubkeys))
     }
 
     pub fn save_to_state(&self, state: &mut TopLevelState) -> StateResult<()> {
@@ -117,7 +117,7 @@ impl Stakeholders {
         Ok(())
     }
 
-    fn delegatees(state: &TopLevelState) -> StateResult<HashMap<Address, u64>> {
+    fn delegatees(state: &TopLevelState) -> StateResult<HashMap<Public, u64>> {
         let stakeholders = Stakeholders::load_from_state(state)?;
         let mut result = HashMap::new();
         for stakeholder in stakeholders.iter() {
@@ -130,35 +130,35 @@ impl Stakeholders {
     }
 
     #[allow(dead_code)]
-    pub fn contains(&self, address: &Address) -> bool {
-        self.0.contains(address)
+    pub fn contains(&self, pubkey: &Public) -> bool {
+        self.0.contains(pubkey)
     }
 
     pub fn update_by_increased_balance(&mut self, account: &StakeAccount<'_>) {
         if account.balance > 0 {
-            self.0.insert(*account.address);
+            self.0.insert(*account.pubkey);
         }
     }
 
     pub fn update_by_decreased_balance(&mut self, account: &StakeAccount<'_>, delegation: &Delegation<'_>) {
-        assert!(account.address == delegation.delegator);
+        assert!(account.pubkey == delegation.delegator);
         if account.balance == 0 && delegation.sum() == 0 {
-            self.0.remove(account.address);
+            self.0.remove(account.pubkey);
         }
     }
 
-    pub fn iter(&self) -> btree_set::Iter<'_, Address> {
+    pub fn iter(&self) -> btree_set::Iter<'_, Public> {
         self.0.iter()
     }
 }
 
 pub struct Delegation<'a> {
-    pub delegator: &'a Address,
-    delegatees: BTreeMap<Address, StakeQuantity>,
+    pub delegator: &'a Public,
+    delegatees: BTreeMap<Public, StakeQuantity>,
 }
 
 impl<'a> Delegation<'a> {
-    pub fn load_from_state(state: &TopLevelState, delegator: &'a Address) -> StateResult<Delegation<'a>> {
+    pub fn load_from_state(state: &TopLevelState, delegator: &'a Public) -> StateResult<Delegation<'a>> {
         let key = get_delegation_key(delegator);
         let action_data = state.action_data(&key)?;
         let delegatees = decode_map(action_data.as_ref());
@@ -180,7 +180,7 @@ impl<'a> Delegation<'a> {
         Ok(())
     }
 
-    pub fn add_quantity(&mut self, delegatee: Address, quantity: StakeQuantity) -> StateResult<()> {
+    pub fn add_quantity(&mut self, delegatee: Public, quantity: StakeQuantity) -> StateResult<()> {
         if quantity == 0 {
             return Ok(())
         }
@@ -188,7 +188,7 @@ impl<'a> Delegation<'a> {
         Ok(())
     }
 
-    pub fn subtract_quantity(&mut self, delegatee: Address, quantity: StakeQuantity) -> StateResult<()> {
+    pub fn subtract_quantity(&mut self, delegatee: Public, quantity: StakeQuantity) -> StateResult<()> {
         if quantity == 0 {
             return Ok(())
         }
@@ -211,11 +211,11 @@ impl<'a> Delegation<'a> {
             .into())
     }
 
-    pub fn get_quantity(&self, delegatee: &Address) -> StakeQuantity {
+    pub fn get_quantity(&self, delegatee: &Public) -> StakeQuantity {
         self.delegatees.get(delegatee).cloned().unwrap_or(0)
     }
 
-    pub fn iter(&self) -> btree_map::Iter<'_, Address, StakeQuantity> {
+    pub fn iter(&self) -> btree_map::Iter<'_, Public, StakeQuantity> {
         self.delegatees.iter()
     }
 
@@ -267,8 +267,7 @@ impl NextValidators {
 
         let banned = Banned::load_from_state(&state)?;
         for validator in &validators {
-            let address = public_to_address(validator.pubkey());
-            assert!(!banned.is_banned(&address), "{} is banned address", address);
+            assert!(!banned.is_banned(validator.pubkey()), "{:?} is banned public key", validator.pubkey());
         }
 
         // Step 3
@@ -302,11 +301,11 @@ impl NextValidators {
         Ok(())
     }
 
-    pub fn update_weight(state: &TopLevelState, block_author: &Address) -> StateResult<Self> {
+    pub fn update_weight(state: &TopLevelState, block_author: &Public) -> StateResult<Self> {
         let mut validators = Self::load_from_state(state)?;
         let min_delegation = validators.min_delegation();
         for validator in validators.0.iter_mut().rev() {
-            if public_to_address(validator.pubkey()) == *block_author {
+            if *validator.pubkey() == *block_author {
                 // block author
                 validator.set_weight(validator.weight().saturating_sub(min_delegation));
                 break
@@ -321,8 +320,8 @@ impl NextValidators {
         Ok(validators)
     }
 
-    pub fn remove(&mut self, target: &Address) {
-        self.0.retain(|validator| public_to_address(validator.pubkey()) != *target);
+    pub fn remove(&mut self, target: &Public) {
+        self.0.retain(|v| *target != *v.pubkey());
     }
 
     pub fn delegation(&self, pubkey: &Public) -> Option<StakeQuantity> {
@@ -387,8 +386,8 @@ impl CurrentValidators {
         self.0 = validators;
     }
 
-    pub fn addresses(&self) -> Vec<Address> {
-        self.0.iter().rev().map(|v| public_to_address(v.pubkey())).collect()
+    pub fn pubkeys(&self) -> Vec<Public> {
+        self.0.iter().rev().map(|v| *v.pubkey()).collect()
     }
 }
 
@@ -438,13 +437,12 @@ impl Candidates {
     fn prepare_validators(
         state: &TopLevelState,
         min_deposit: DepositQuantity,
-        delegations: &HashMap<Address, StakeQuantity>,
+        delegations: &HashMap<Public, StakeQuantity>,
     ) -> StateResult<Vec<Validator>> {
         let Candidates(candidates) = Self::load_from_state(state)?;
         let mut result = Vec::new();
         for candidate in candidates.into_iter().filter(|c| c.deposit >= min_deposit) {
-            let address = public_to_address(&candidate.pubkey);
-            if let Some(delegation) = delegations.get(&address).cloned() {
+            if let Some(delegation) = delegations.get(&candidate.pubkey).cloned() {
                 result.push(Validator::new(delegation, candidate.deposit, candidate.pubkey));
             }
         }
@@ -455,8 +453,8 @@ impl Candidates {
         Ok(result)
     }
 
-    pub fn get_candidate(&self, account: &Address) -> Option<&Candidate> {
-        self.0.iter().find(|c| public_to_address(&c.pubkey) == *account)
+    pub fn get_candidate(&self, account: &Public) -> Option<&Candidate> {
+        self.0.iter().find(|c| c.pubkey == *account)
     }
 
     pub fn len(&self) -> usize {
@@ -468,8 +466,8 @@ impl Candidates {
     }
 
     #[cfg(test)]
-    pub fn get_index(&self, account: &Address) -> Option<usize> {
-        self.0.iter().position(|c| public_to_address(&c.pubkey) == *account)
+    pub fn get_index(&self, account: &Public) -> Option<usize> {
+        self.0.iter().position(|c| c.pubkey == *account)
     }
 
     pub fn add_deposit(
@@ -494,30 +492,29 @@ impl Candidates {
                 metadata,
             });
         };
-        self.reprioritize(&[public_to_address(pubkey)]);
+        self.reprioritize(&[*pubkey]);
     }
 
     pub fn renew_candidates(
         &mut self,
         validators: &[Validator],
         nomination_ends_at: u64,
-        inactive_validators: &[Address],
+        inactive_validators: &[Public],
         banned: &Banned,
     ) {
-        let to_renew: HashSet<_> = validators
-            .iter()
-            .map(|validator| validator.pubkey())
-            .filter(|pubkey| !inactive_validators.contains(&public_to_address(pubkey)))
+        let to_renew: HashSet<_> = (validators.iter())
+            .map(|validator| *validator.pubkey())
+            .filter(|pubkey| !inactive_validators.contains(pubkey))
             .collect();
 
         for candidate in self.0.iter_mut().filter(|c| to_renew.contains(&c.pubkey)) {
-            let address = public_to_address(&candidate.pubkey);
-            assert!(!banned.is_banned(&address), "{} is banned address", address);
+            let pubkey = candidate.pubkey;
+            assert!(!banned.is_banned(&pubkey), "{:?} is banned public key", pubkey);
             candidate.nomination_ends_at = nomination_ends_at;
         }
 
         let to_reprioritize: Vec<_> =
-            self.0.iter().filter(|c| to_renew.contains(&c.pubkey)).map(|c| public_to_address(&c.pubkey)).collect();
+            self.0.iter().filter(|c| to_renew.contains(&c.pubkey)).map(|c| c.pubkey).collect();
 
         self.reprioritize(&to_reprioritize);
     }
@@ -528,20 +525,19 @@ impl Candidates {
         expired
     }
 
-    pub fn remove(&mut self, address: &Address) -> Option<Candidate> {
-        if let Some(index) = self.0.iter().position(|c| public_to_address(&c.pubkey) == *address) {
+    pub fn remove(&mut self, pubkey: &Public) -> Option<Candidate> {
+        if let Some(index) = self.0.iter().position(|c| c.pubkey == *pubkey) {
             Some(self.0.remove(index))
         } else {
             None
         }
     }
 
-    fn reprioritize(&mut self, targets: &[Address]) {
+    fn reprioritize(&mut self, targets: &[Public]) {
         let mut renewed = Vec::new();
         for target in targets {
-            let position = (self.0.iter())
-                .position(|c| public_to_address(&c.pubkey) == *target)
-                .expect("Reprioritize target should be a candidate");
+            let position =
+                (self.0.iter()).position(|c| c.pubkey == *target).expect("Reprioritize target should be a candidate");
             renewed.push(self.0.remove(position));
         }
         self.0.append(&mut renewed);
@@ -549,10 +545,10 @@ impl Candidates {
 }
 
 #[derive(Clone)]
-pub struct Jail(BTreeMap<Address, Prisoner>);
+pub struct Jail(BTreeMap<Public, Prisoner>);
 #[derive(Clone, Debug, Eq, PartialEq, RlpEncodable, RlpDecodable)]
 pub struct Prisoner {
-    pub address: Address,
+    pub pubkey: Public,
     pub deposit: DepositQuantity,
     pub custody_until: u64,
     pub released_at: u64,
@@ -569,7 +565,7 @@ impl Jail {
     pub fn load_from_state(state: &TopLevelState) -> StateResult<Jail> {
         let key = *JAIL_KEY;
         let prisoner = state.action_data(&key)?.map(|data| decode_list::<Prisoner>(&data)).unwrap_or_default();
-        let indexed = prisoner.into_iter().map(|c| (c.address, c)).collect();
+        let indexed = prisoner.into_iter().map(|c| (c.pubkey, c)).collect();
         Ok(Jail(indexed))
     }
 
@@ -584,8 +580,8 @@ impl Jail {
         Ok(())
     }
 
-    pub fn get_prisoner(&self, address: &Address) -> Option<&Prisoner> {
-        self.0.get(address)
+    pub fn get_prisoner(&self, pubkey: &Public) -> Option<&Prisoner> {
+        self.0.get(pubkey)
     }
 
     #[cfg(test)]
@@ -598,21 +594,21 @@ impl Jail {
 
     pub fn add(&mut self, candidate: Candidate, custody_until: u64, released_at: u64) {
         assert!(custody_until <= released_at);
-        let address = public_to_address(&candidate.pubkey);
-        self.0.insert(address, Prisoner {
-            address,
+        let pubkey = candidate.pubkey;
+        self.0.insert(pubkey, Prisoner {
+            pubkey,
             deposit: candidate.deposit,
             custody_until,
             released_at,
         });
     }
 
-    pub fn remove(&mut self, address: &Address) -> Option<Prisoner> {
-        self.0.remove(address)
+    pub fn remove(&mut self, pubkey: &Public) -> Option<Prisoner> {
+        self.0.remove(pubkey)
     }
 
-    pub fn try_release(&mut self, address: &Address, term_index: u64) -> ReleaseResult {
-        match self.0.entry(*address) {
+    pub fn try_release(&mut self, pubkey: &Public, term_index: u64) -> ReleaseResult {
+        match self.0.entry(*pubkey) {
             Entry::Occupied(entry) => {
                 if entry.get().custody_until < term_index {
                     ReleaseResult::Released(entry.remove())
@@ -624,12 +620,12 @@ impl Jail {
         }
     }
 
-    pub fn released_addresses(self, term_index: u64) -> Vec<Address> {
-        self.0.values().filter(|c| c.released_at <= term_index).map(|c| c.address).collect()
+    pub fn released_addresses(self, term_index: u64) -> Vec<Public> {
+        self.0.values().filter(|c| c.released_at <= term_index).map(|c| c.pubkey).collect()
     }
 }
 
-pub struct Banned(BTreeSet<Address>);
+pub struct Banned(BTreeSet<Public>);
 impl Banned {
     pub fn load_from_state(state: &TopLevelState) -> StateResult<Banned> {
         let key = *BANNED_KEY;
@@ -648,12 +644,12 @@ impl Banned {
         Ok(())
     }
 
-    pub fn add(&mut self, address: Address) {
-        self.0.insert(address);
+    pub fn add(&mut self, pubkey: Public) {
+        self.0.insert(pubkey);
     }
 
-    pub fn is_banned(&self, address: &Address) -> bool {
-        self.0.contains(address)
+    pub fn is_banned(&self, pubkey: &Public) -> bool {
+        self.0.contains(pubkey)
     }
 }
 
@@ -755,84 +751,84 @@ mod tests {
     #[test]
     fn default_balance_is_zero() {
         let state = helpers::get_temp_state();
-        let address = Address::random();
-        let account = StakeAccount::load_from_state(&state, &address).unwrap();
-        assert_eq!(account.address, &address);
+        let pubkey = Public::random();
+        let account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
+        assert_eq!(account.pubkey, &pubkey);
         assert_eq!(account.balance, 0);
     }
 
     #[test]
     fn balance_add() {
         let mut state = helpers::get_temp_state();
-        let address = Address::random();
+        let pubkey = Public::random();
         {
-            let mut account = StakeAccount::load_from_state(&state, &address).unwrap();
+            let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
             account.add_balance(100).unwrap();
             account.save_to_state(&mut state).unwrap();
         }
-        let account = StakeAccount::load_from_state(&state, &address).unwrap();
+        let account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
         assert_eq!(account.balance, 100);
     }
 
     #[test]
     fn balance_subtract_error_on_low() {
         let mut state = helpers::get_temp_state();
-        let address = Address::random();
+        let pubkey = Public::random();
         {
-            let mut account = StakeAccount::load_from_state(&state, &address).unwrap();
+            let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
             account.add_balance(100).unwrap();
             account.save_to_state(&mut state).unwrap();
         }
         {
-            let mut account = StakeAccount::load_from_state(&state, &address).unwrap();
+            let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
             let result = account.subtract_balance(110);
             assert!(result.is_err());
             assert_eq!(
                 result,
                 Err(RuntimeError::InsufficientBalance {
-                    address,
+                    pubkey,
                     cost: 110,
                     balance: 100,
                 })
             );
         }
-        let account = StakeAccount::load_from_state(&state, &address).unwrap();
+        let account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
         assert_eq!(account.balance, 100);
     }
 
     #[test]
     fn balance_subtract() {
         let mut state = helpers::get_temp_state();
-        let address = Address::random();
+        let pubkey = Public::random();
 
-        let mut account = StakeAccount::load_from_state(&state, &address).unwrap();
+        let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
         account.add_balance(100).unwrap();
         account.save_to_state(&mut state).unwrap();
 
-        let mut account = StakeAccount::load_from_state(&state, &address).unwrap();
+        let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
         let result = account.subtract_balance(90);
         assert!(result.is_ok());
         account.save_to_state(&mut state).unwrap();
 
-        let account = StakeAccount::load_from_state(&state, &address).unwrap();
+        let account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
         assert_eq!(account.balance, 10);
     }
 
     #[test]
     fn balance_subtract_all_should_remove_entry_from_db() {
         let mut state = helpers::get_temp_state();
-        let address = Address::random();
+        let pubkey = Public::random();
 
-        let mut account = StakeAccount::load_from_state(&state, &address).unwrap();
+        let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
         account.add_balance(100).unwrap();
         account.save_to_state(&mut state).unwrap();
 
-        let mut account = StakeAccount::load_from_state(&state, &address).unwrap();
+        let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
         let result = account.subtract_balance(100);
         assert!(result.is_ok());
         account.save_to_state(&mut state).unwrap();
 
-        let data = state.action_data(&get_stake_account_key(&address)).unwrap();
+        let data = state.action_data(&get_stake_account_key(&pubkey)).unwrap();
         assert_eq!(data, None);
     }
 
@@ -840,11 +836,11 @@ mod tests {
     fn stakeholders_track() {
         let mut rng = rng();
         let mut state = helpers::get_temp_state();
-        let addresses: Vec<_> = (1..100).map(|_| Address::random()).collect();
-        let accounts: Vec<_> = addresses
+        let pubkeys: Vec<_> = (1..100).map(Public::from).collect();
+        let accounts: Vec<_> = pubkeys
             .iter()
-            .map(|address| StakeAccount {
-                address,
+            .map(|pubkey| StakeAccount {
+                pubkey,
                 balance: rng.gen_range(1, 100),
             })
             .collect();
@@ -856,18 +852,18 @@ mod tests {
         stakeholders.save_to_state(&mut state).unwrap();
 
         let stakeholders = Stakeholders::load_from_state(&state).unwrap();
-        assert!(addresses.iter().all(|address| stakeholders.contains(address)));
+        assert!(pubkeys.iter().all(|pubkey| stakeholders.contains(pubkey)));
     }
 
     #[test]
     fn stakeholders_untrack() {
         let mut rng = rng();
         let mut state = helpers::get_temp_state();
-        let addresses: Vec<_> = (1..100).map(|_| Address::random()).collect();
-        let mut accounts: Vec<_> = addresses
+        let pubkeys: Vec<_> = (1..100).map(Public::from).collect();
+        let mut accounts: Vec<_> = pubkeys
             .iter()
-            .map(|address| StakeAccount {
-                address,
+            .map(|pubkey| StakeAccount {
+                pubkey,
                 balance: rng.gen_range(1, 100),
             })
             .collect();
@@ -883,14 +879,14 @@ mod tests {
             if rand::random() {
                 account.balance = 0;
             }
-            let delegation = Delegation::load_from_state(&state, account.address).unwrap();
+            let delegation = Delegation::load_from_state(&state, account.pubkey).unwrap();
             stakeholders.update_by_decreased_balance(account, &delegation);
         }
         stakeholders.save_to_state(&mut state).unwrap();
 
         let stakeholders = Stakeholders::load_from_state(&state).unwrap();
         for account in &accounts {
-            let tracked = stakeholders.contains(account.address);
+            let tracked = stakeholders.contains(account.pubkey);
             let has_balance = account.balance > 0;
             assert!(tracked && has_balance || !tracked && !has_balance);
         }
@@ -899,11 +895,11 @@ mod tests {
     #[test]
     fn stakeholders_doesnt_untrack_if_delegation_exists() {
         let mut state = helpers::get_temp_state();
-        let addresses: Vec<_> = (1..100).map(|_| Address::random()).collect();
-        let mut accounts: Vec<_> = addresses
+        let pubkeys: Vec<_> = (1..100).map(Public::from).collect();
+        let mut accounts: Vec<_> = pubkeys
             .iter()
-            .map(|address| StakeAccount {
-                address,
+            .map(|pubkey| StakeAccount {
+                pubkey,
                 balance: 100,
             })
             .collect();
@@ -917,8 +913,8 @@ mod tests {
         let mut stakeholders = Stakeholders::load_from_state(&state).unwrap();
         for account in &mut accounts {
             // like self-delegate
-            let mut delegation = Delegation::load_from_state(&state, account.address).unwrap();
-            delegation.add_quantity(*account.address, account.balance).unwrap();
+            let mut delegation = Delegation::load_from_state(&state, account.pubkey).unwrap();
+            delegation.add_quantity(*account.pubkey, account.balance).unwrap();
             account.balance = 0;
             stakeholders.update_by_decreased_balance(account, &delegation);
         }
@@ -926,7 +922,7 @@ mod tests {
 
         let stakeholders = Stakeholders::load_from_state(&state).unwrap();
         for account in &accounts {
-            assert!(stakeholders.contains(account.address));
+            assert!(stakeholders.contains(account.pubkey));
         }
     }
 
@@ -934,7 +930,7 @@ mod tests {
     fn initial_delegation_is_empty() {
         let state = helpers::get_temp_state();
 
-        let delegatee = Address::random();
+        let delegatee = Public::random();
         let delegation = Delegation::load_from_state(&state, &delegatee).unwrap();
         assert_eq!(delegation.delegator, &delegatee);
         assert_eq!(delegation.iter().count(), 0);
@@ -946,10 +942,10 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
-        let delegator = Address::random();
-        let delegatees: Vec<_> = (0..10).map(|_| Address::random()).collect();
-        let delegation_amount: HashMap<&Address, StakeQuantity> =
-            delegatees.iter().map(|address| (address, rng.gen_range(0, 100))).collect();
+        let delegator = Public::random();
+        let delegatees: Vec<_> = (0..10).map(Public::from).collect();
+        let delegation_amount: HashMap<&Public, StakeQuantity> =
+            delegatees.iter().map(|pubkey| (pubkey, rng.gen_range(0, 100))).collect();
 
         // Do delegate
         let mut delegation = Delegation::load_from_state(&state, &delegator).unwrap();
@@ -971,9 +967,9 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
-        let delegator = Address::random();
-        let delegatee1 = Address::random();
-        let delegatee2 = Address::random();
+        let delegator = Public::random();
+        let delegatee1 = Public::random();
+        let delegatee2 = Public::random();
 
         // Do delegate
         let mut delegation = Delegation::load_from_state(&state, &delegator).unwrap();
@@ -991,8 +987,8 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
-        let delegator = Address::random();
-        let delegatee = Address::random();
+        let delegator = Public::random();
+        let delegatee = Public::random();
 
         let mut delegation = Delegation::load_from_state(&state, &delegator).unwrap();
         delegation.add_quantity(delegatee, 100).unwrap();
@@ -1013,8 +1009,8 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
-        let delegator = Address::random();
-        let delegatee = Address::random();
+        let delegator = Public::random();
+        let delegatee = Public::random();
 
         let mut delegation = Delegation::load_from_state(&state, &delegator).unwrap();
         delegation.add_quantity(delegatee, 100).unwrap();
@@ -1030,8 +1026,8 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
-        let delegator = Address::random();
-        let delegatee = Address::random();
+        let delegator = Public::random();
+        let delegatee = Public::random();
 
         // Do delegate
         let mut delegation = Delegation::load_from_state(&state, &delegator).unwrap();
@@ -1047,8 +1043,8 @@ mod tests {
         let mut state = helpers::get_temp_state();
 
         // Prepare
-        let delegator = Address::random();
-        let delegatee = Address::random();
+        let delegator = Public::random();
+        let delegatee = Public::random();
 
         let mut delegation = Delegation::load_from_state(&state, &delegator).unwrap();
         delegation.add_quantity(delegatee, 100).unwrap();
@@ -1070,7 +1066,6 @@ mod tests {
 
         // Prepare
         let pubkey = Public::random();
-        let account = public_to_address(&pubkey);
         let deposits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
         for deposit in deposits.iter() {
@@ -1081,7 +1076,7 @@ mod tests {
 
         // Assert
         let candidates = Candidates::load_from_state(&state).unwrap();
-        let candidate = candidates.get_candidate(&account);
+        let candidate = candidates.get_candidate(&pubkey);
         assert_ne!(candidate, None);
         assert_eq!(candidate.unwrap().deposit, 55);
     }
@@ -1092,7 +1087,6 @@ mod tests {
 
         // Prepare
         let pubkey = Public::random();
-        let account = public_to_address(&pubkey);
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
         candidates.add_deposit(&pubkey, 10, 0, b"metadata".to_vec());
@@ -1100,7 +1094,7 @@ mod tests {
 
         // Assert
         let candidates = Candidates::load_from_state(&state).unwrap();
-        let candidate = candidates.get_candidate(&account);
+        let candidate = candidates.get_candidate(&pubkey);
         assert_ne!(candidate, None);
         assert_eq!(&candidate.unwrap().metadata, b"metadata");
     }
@@ -1111,7 +1105,6 @@ mod tests {
 
         // Prepare
         let pubkey = Public::random();
-        let account = public_to_address(&pubkey);
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
         candidates.add_deposit(&pubkey, 10, 0, b"metadata".to_vec());
@@ -1123,7 +1116,7 @@ mod tests {
 
         // Assert
         let candidates = Candidates::load_from_state(&state).unwrap();
-        let candidate = candidates.get_candidate(&account);
+        let candidate = candidates.get_candidate(&pubkey);
         assert_ne!(candidate, None);
         assert_eq!(&candidate.unwrap().metadata, b"metadata-updated");
     }
@@ -1134,14 +1127,13 @@ mod tests {
 
         // Prepare
         let pubkey = Public::random();
-        let account = public_to_address(&pubkey);
         let mut candidates = Candidates::load_from_state(&state).unwrap();
         candidates.add_deposit(&pubkey, 0, 10, b"".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         // Assert
         let candidates = Candidates::load_from_state(&state).unwrap();
-        let candidate = candidates.get_candidate(&account);
+        let candidate = candidates.get_candidate(&pubkey);
         assert_ne!(candidate, None);
         assert_eq!(candidate.unwrap().deposit, 0);
         assert_eq!(candidate.unwrap().nomination_ends_at, 10, "Can be a candidate with 0 deposit");
@@ -1153,7 +1145,6 @@ mod tests {
 
         // Prepare
         let pubkey = Public::random();
-        let account = public_to_address(&pubkey);
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
         candidates.add_deposit(&pubkey, 10, 0, b"metadata".to_vec());
@@ -1165,7 +1156,7 @@ mod tests {
 
         // Assert
         let candidates = Candidates::load_from_state(&state).unwrap();
-        let candidate = candidates.get_candidate(&account);
+        let candidate = candidates.get_candidate(&pubkey);
         assert_ne!(candidate, None);
         assert_eq!(&candidate.unwrap().metadata, b"metadata-updated");
     }
@@ -1176,7 +1167,6 @@ mod tests {
 
         // Prepare
         let pubkey = Public::random();
-        let account = public_to_address(&pubkey);
         let deposit_and_nomination_ends_at = [(10, 11), (20, 22), (30, 33), (0, 44)];
 
         for (deposit, nomination_ends_at) in &deposit_and_nomination_ends_at {
@@ -1187,7 +1177,7 @@ mod tests {
 
         // Assert
         let candidates = Candidates::load_from_state(&state).unwrap();
-        let candidate = candidates.get_candidate(&account);
+        let candidate = candidates.get_candidate(&pubkey);
         assert_ne!(candidate, None);
         assert_eq!(candidate.unwrap().deposit, 60);
         assert_eq!(
@@ -1258,14 +1248,8 @@ mod tests {
         assert_eq!(expired, prepared_expired);
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 2);
-        assert_eq!(
-            candidates.get_candidate(&public_to_address(&candidates_prepared[2].pubkey)),
-            Some(&candidates_prepared[2])
-        );
-        assert_eq!(
-            candidates.get_candidate(&public_to_address(&candidates_prepared[3].pubkey)),
-            Some(&candidates_prepared[3])
-        );
+        assert_eq!(candidates.get_candidate(&candidates_prepared[2].pubkey), Some(&candidates_prepared[2]));
+        assert_eq!(candidates.get_candidate(&candidates_prepared[3].pubkey), Some(&candidates_prepared[3]));
     }
 
     #[test]
@@ -1338,7 +1322,6 @@ mod tests {
 
         // Prepare
         let pubkey = 1.into();
-        let address = public_to_address(&pubkey);
         let mut jail = Jail::load_from_state(&state).unwrap();
         jail.add(
             Candidate {
@@ -1353,10 +1336,10 @@ mod tests {
         jail.save_to_state(&mut state).unwrap();
 
         let mut jail = Jail::load_from_state(&state).unwrap();
-        let freed = jail.try_release(&Address::from(1000), 5);
+        let freed = jail.try_release(&Public::from(1000), 5);
         assert_eq!(freed, ReleaseResult::NotExists);
         assert_eq!(jail.len(), 1);
-        assert_ne!(jail.get_prisoner(&address), None);
+        assert_ne!(jail.get_prisoner(&pubkey), None);
     }
 
     #[test]
@@ -1365,7 +1348,6 @@ mod tests {
 
         // Prepare
         let pubkey = 1.into();
-        let address = public_to_address(&pubkey);
         let mut jail = Jail::load_from_state(&state).unwrap();
         jail.add(
             Candidate {
@@ -1380,10 +1362,10 @@ mod tests {
         jail.save_to_state(&mut state).unwrap();
 
         let mut jail = Jail::load_from_state(&state).unwrap();
-        let released = jail.try_release(&address, 10);
+        let released = jail.try_release(&pubkey, 10);
         assert_eq!(released, ReleaseResult::InCustody);
         assert_eq!(jail.len(), 1);
-        assert_ne!(jail.get_prisoner(&address), None);
+        assert_ne!(jail.get_prisoner(&pubkey), None);
     }
 
     #[test]
@@ -1392,7 +1374,6 @@ mod tests {
 
         // Prepare
         let pubkey = 1.into();
-        let address = public_to_address(&pubkey);
         let mut jail = Jail::load_from_state(&state).unwrap();
         jail.add(
             Candidate {
@@ -1407,21 +1388,21 @@ mod tests {
         jail.save_to_state(&mut state).unwrap();
 
         let mut jail = Jail::load_from_state(&state).unwrap();
-        let released = jail.try_release(&address, 11);
+        let released = jail.try_release(&pubkey, 11);
         jail.save_to_state(&mut state).unwrap();
 
         // Assert
         assert_eq!(
             released,
             ReleaseResult::Released(Prisoner {
-                address,
+                pubkey,
                 deposit: 100,
                 custody_until: 10,
                 released_at: 20,
             })
         );
         assert_eq!(jail.len(), 0);
-        assert_eq!(jail.get_prisoner(&address), None);
+        assert_eq!(jail.get_prisoner(&pubkey), None);
 
         let result = state.action_data(&*JAIL_KEY).unwrap();
         assert_eq!(result, None, "Should clean the state if all prisoners are released");
@@ -1433,8 +1414,6 @@ mod tests {
 
         let pubkey1 = 1.into();
         let pubkey2 = 2.into();
-        let address1 = public_to_address(&pubkey1);
-        let address2 = public_to_address(&pubkey2);
 
         // Prepare
         let mut jail = Jail::load_from_state(&state).unwrap();
@@ -1469,8 +1448,8 @@ mod tests {
         // Assert
         assert_eq!(released, Vec::new());
         assert_eq!(jail.len(), 2);
-        assert_ne!(jail.get_prisoner(&address1), None);
-        assert_ne!(jail.get_prisoner(&address2), None);
+        assert_ne!(jail.get_prisoner(&pubkey1), None);
+        assert_ne!(jail.get_prisoner(&pubkey2), None);
     }
 
     #[test]
@@ -1479,8 +1458,6 @@ mod tests {
 
         let pubkey1 = 1.into();
         let pubkey2 = 2.into();
-        let address1 = public_to_address(&pubkey1);
-        let address2 = public_to_address(&pubkey2);
 
         // Prepare
         let mut jail = Jail::load_from_state(&state).unwrap();
@@ -1518,14 +1495,14 @@ mod tests {
 
         // Assert
         assert_eq!(released, vec![Prisoner {
-            address: address1,
+            pubkey: pubkey1,
             deposit: 100,
             custody_until: 10,
             released_at: 20,
         }]);
         assert_eq!(jail.len(), 1);
-        assert_eq!(jail.get_prisoner(&address1), None);
-        assert_ne!(jail.get_prisoner(&address2), None);
+        assert_eq!(jail.get_prisoner(&pubkey1), None);
+        assert_ne!(jail.get_prisoner(&pubkey2), None);
     }
 
     #[test]
@@ -1534,8 +1511,6 @@ mod tests {
 
         let pubkey1 = 1.into();
         let pubkey2 = 2.into();
-        let address1 = public_to_address(&pubkey1);
-        let address2 = public_to_address(&pubkey2);
 
         // Prepare
         let mut jail = Jail::load_from_state(&state).unwrap();
@@ -1574,21 +1549,21 @@ mod tests {
         // Assert
         assert_eq!(released, vec![
             Prisoner {
-                address: address1,
+                pubkey: pubkey1,
                 deposit: 100,
                 custody_until: 10,
                 released_at: 20,
             },
             Prisoner {
-                address: address2,
+                pubkey: pubkey2,
                 deposit: 200,
                 custody_until: 15,
                 released_at: 25,
             }
         ]);
         assert_eq!(jail.len(), 0);
-        assert_eq!(jail.get_prisoner(&address1), None);
-        assert_eq!(jail.get_prisoner(&address2), None);
+        assert_eq!(jail.get_prisoner(&pubkey1), None);
+        assert_eq!(jail.get_prisoner(&pubkey2), None);
 
         let result = state.action_data(&*JAIL_KEY).unwrap();
         assert_eq!(result, None, "Should clean the state if all prisoners are released");
@@ -1608,15 +1583,15 @@ mod tests {
     fn added_to_ban_is_banned() {
         let mut state = helpers::get_temp_state();
 
-        let address = Address::from(1);
-        let innocent = Address::from(2);
+        let pubkey = Public::from(1);
+        let innocent = Public::from(2);
 
         let mut banned = Banned::load_from_state(&state).unwrap();
-        banned.add(address);
+        banned.add(pubkey);
         banned.save_to_state(&mut state).unwrap();
 
         let banned = Banned::load_from_state(&state).unwrap();
-        assert!(banned.is_banned(&address));
+        assert!(banned.is_banned(&pubkey));
         assert!(!banned.is_banned(&innocent));
     }
 
@@ -1639,7 +1614,7 @@ mod tests {
         candidates.save_to_state(&mut state).unwrap();
 
         let candidates = Candidates::load_from_state(&state).unwrap();
-        let results: Vec<_> = pubkeys.iter().map(|pubkey| candidates.get_index(&public_to_address(&pubkey))).collect();
+        let results: Vec<_> = pubkeys.iter().map(|pubkey| candidates.get_index(&pubkey)).collect();
         // TODO assert!(results.is_sorted(), "Should be sorted in the insertion order");
         for i in 0..results.len() - 1 {
             assert!(results[i] < results[i + 1], "Should be sorted in the insertion order");
@@ -1661,8 +1636,7 @@ mod tests {
         let dummy_banned = Banned::load_from_state(&state).unwrap();
         candidates.renew_candidates(&dummy_validators, 0, &[], &dummy_banned);
 
-        let indexes: Vec<_> =
-            pubkeys.iter().map(|pubkey| candidates.get_index(&public_to_address(pubkey)).unwrap()).collect();
+        let indexes: Vec<_> = pubkeys.iter().map(|pubkey| candidates.get_index(pubkey).unwrap()).collect();
         assert_eq!(indexes, vec![5, 6, 7, 8, 9, 0, 1, 2, 3, 4]);
     }
 }

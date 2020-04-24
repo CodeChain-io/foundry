@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ckey::{Address, PlatformAddress};
+use ckey::{Ed25519Public as Public, PlatformAddress};
 use std::collections::HashMap;
 
 /// Params for a null engine.
 #[derive(Clone, Default)]
 pub struct SoloParams {
-    pub genesis_stakes: HashMap<Address, u64>,
+    pub genesis_stakes: HashMap<Public, u64>,
 }
 
 impl From<cjson::scheme::SoloParams> for SoloParams {
@@ -30,7 +30,7 @@ impl From<cjson::scheme::SoloParams> for SoloParams {
                 .genesis_stakes
                 .unwrap_or_default()
                 .into_iter()
-                .map(|(pa, amount)| (PlatformAddress::into_address(pa), amount))
+                .map(|(pa, amount)| (PlatformAddress::into_pubkey(pa), amount))
                 .collect(),
         }
     }

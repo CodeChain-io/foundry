@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
-use ckey::{Address, Ed25519Public as Public, Signature};
+use ckey::{Ed25519Public as Public, Signature};
 use ckeystore::DecryptedAccount;
 use primitives::H256;
 use std::sync::Arc;
@@ -23,7 +23,7 @@ use std::sync::Arc;
 /// Everything that an Engine needs to sign messages.
 pub struct EngineSigner {
     account_provider: Arc<AccountProvider>,
-    signer: Option<(Address, Public)>,
+    signer: Option<Public>,
     decrypted_account: Option<DecryptedAccount>,
 }
 
@@ -39,24 +39,23 @@ impl Default for EngineSigner {
 
 impl EngineSigner {
     // TODO: remove decrypted_account after some timeout
-    pub fn set_to_keep_decrypted_account(&mut self, ap: Arc<AccountProvider>, address: Address) {
+    pub fn set_to_keep_decrypted_account(&mut self, ap: Arc<AccountProvider>, pubkey: Public) {
         let account =
-            ap.get_unlocked_account(&address).expect("The address must be registered in AccountProvider").disclose();
-        let public = account.public().expect("Cannot get public from account");
+            ap.get_unlocked_account(&pubkey).expect("The pubkey must be registered in AccountProvider").disclose();
 
         self.account_provider = ap;
-        self.signer = Some((address, public));
+        self.signer = Some(pubkey);
         self.decrypted_account = Some(account);
-        cinfo!(ENGINE, "Setting Engine signer to {} (retaining)", address);
+        cinfo!(ENGINE, "Setting Engine signer to {:?} (retaining)", pubkey);
     }
 
     /// Sign a message hash with Ed25519.
     pub fn sign(&self, hash: H256) -> Result<Signature, AccountProviderError> {
-        let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
+        let pubkey = self.signer.unwrap_or_else(Default::default);
         let result = match &self.decrypted_account {
             Some(account) => account.sign(&hash)?,
             None => {
-                let account = self.account_provider.get_unlocked_account(&address)?;
+                let account = self.account_provider.get_unlocked_account(&pubkey)?;
                 account.sign(&hash)?
             }
         };
@@ -65,16 +64,11 @@ impl EngineSigner {
 
     /// Public Key of signer.
     pub fn public(&self) -> Option<&Public> {
-        self.signer.as_ref().map(|(_address, public)| public)
+        self.signer.as_ref()
     }
 
-    /// Address of signer.
-    pub fn address(&self) -> Option<&Address> {
-        self.signer.as_ref().map(|(address, _)| address)
-    }
-
-    /// Check if the given address is the signing address.
-    pub fn is_address(&self, a: &Address) -> bool {
-        self.signer.map_or(false, |(address, _public)| *a == address)
+    /// Check if the given pubkey is the signing address.
+    pub fn is_signer(&self, pubkey: &Public) -> bool {
+        self.signer.map_or(false, |signer| *pubkey == signer)
     }
 }

@@ -34,7 +34,7 @@ use crate::client::ConsensusClient;
 use crate::consensus::DynamicValidator;
 use crate::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::ChainNotify;
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use crossbeam_channel as crossbeam;
 use ctimer::TimerToken;
 use ctypes::Deposit;
@@ -71,9 +71,9 @@ pub struct Tendermint {
     chain_notify: Arc<TendermintChainNotify>,
     has_signer: AtomicBool,
     /// Tokens distributed at genesis.
-    genesis_stakes: HashMap<Address, u64>,
-    genesis_candidates: HashMap<Address, Deposit>,
-    genesis_delegations: HashMap<Address, HashMap<Address, u64>>,
+    genesis_stakes: HashMap<Public, u64>,
+    genesis_candidates: HashMap<Public, Deposit>,
+    genesis_delegations: HashMap<Public, HashMap<Public, u64>>,
 }
 
 impl Drop for Tendermint {
@@ -159,7 +159,7 @@ mod tests {
         (scheme, tap, test_client)
     }
 
-    fn insert_and_unlock(tap: &Arc<AccountProvider>, acc: &str) -> Address {
+    fn insert_and_unlock(tap: &Arc<AccountProvider>, acc: &str) -> Public {
         let addr = tap.insert_account(Private::random(), &acc.into()).unwrap();
         tap.unlock_account_permanently(addr, acc.into()).unwrap();
         addr

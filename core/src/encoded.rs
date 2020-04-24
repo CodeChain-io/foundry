@@ -27,7 +27,7 @@ use crate::block::Block as FullBlock;
 use crate::transaction::UnverifiedTransaction;
 use crate::views;
 use ccrypto::blake256;
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use ctypes::{BlockHash, BlockNumber, Header as FullHeader, TxHash};
 use primitives::H256;
 use rlp::Rlp;
@@ -80,7 +80,7 @@ impl Header {
     }
 
     /// Returns the author.
-    pub fn author(&self) -> Address {
+    pub fn author(&self) -> Public {
         self.view().author()
     }
 
@@ -239,7 +239,7 @@ impl Block {
     }
 
     /// Returns the author.
-    pub fn author(&self) -> Address {
+    pub fn author(&self) -> Public {
         self.header_view().author()
     }
 

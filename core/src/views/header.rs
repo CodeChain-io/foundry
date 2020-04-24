@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use ccrypto::blake256;
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use ctypes::{BlockHash, BlockNumber};
 use primitives::{Bytes, H256};
 use rlp::Rlp;
@@ -56,7 +56,7 @@ impl<'a> HeaderView<'a> {
     }
 
     /// Returns author.
-    pub fn author(&self) -> Address {
+    pub fn author(&self) -> Public {
         self.rlp.val_at(1).unwrap()
     }
 
