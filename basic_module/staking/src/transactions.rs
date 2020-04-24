@@ -14,15 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::state::Params;
-use crate::types::{verify, Approval, Bytes, DepositQuantity, NetworkId, Public, Signature, StakeQuantity};
+use crate::state::{NextValidators, Params};
+use crate::types::{verify, Approval, Bytes, DepositQuantity, NetworkId, Public, Signature, StakeQuantity, Validator};
 use codechain_crypto::blake256;
 use primitives::H256;
+
+#[allow(dead_code)]
+pub enum Transaction {
+    User(SignedTransaction),
+    Auto(AutoAction),
+}
 
 pub struct SignedTransaction {
     pub signature: Signature,
     pub signer_public: Public,
-    pub tx: Transaction,
+    pub tx: UserTransaction,
 }
 
 impl SignedTransaction {
@@ -33,17 +39,17 @@ impl SignedTransaction {
 }
 
 #[derive(Serialize)]
-pub struct Transaction {
+pub struct UserTransaction {
     /// Seq
     pub seq: u64,
     /// Quantity of CCC to be paid as a cost for distributing this transaction to the network.
     pub fee: u64,
     // Network id
     pub network_id: NetworkId,
-    pub action: Action,
+    pub action: UserAction,
 }
 
-impl Transaction {
+impl UserTransaction {
     pub fn hash(&self) -> H256 {
         let serialized = serde_cbor::to_vec(&self).unwrap();
         blake256(serialized)
@@ -52,7 +58,7 @@ impl Transaction {
 
 #[allow(dead_code)]
 #[derive(Serialize)]
-pub enum Action {
+pub enum UserAction {
     TransferCCS {
         receiver_public: Public,
         quantity: StakeQuantity,
@@ -85,7 +91,24 @@ pub enum Action {
     },
 }
 
-impl Action {
+pub enum AutoAction {
+    UpdateValidators {
+        validators: NextValidators,
+    },
+    CloseTerm {
+        inactive_validators: Vec<Public>,
+        next_validators: NextValidators,
+        released_addresses: Vec<Public>,
+        custody_until: u64,
+        kick_at: u64,
+    },
+    Elect,
+    ChangeNextValidators {
+        validators: Vec<Validator>,
+    },
+}
+
+impl UserAction {
     pub fn min_fee(&self) -> u64 {
         // Where can we initialize the min fee
         // We need both consensus-defined minimum fee and machine-defined minimum fee

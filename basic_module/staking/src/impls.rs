@@ -19,10 +19,10 @@ use crate::core::{
     Abci, ExecuteTransactionError, HeaderError, StakingView, TransactionExecutionOutcome, VerifiedCrime,
 };
 use crate::error::Error;
-use crate::execute::apply_internal;
+use crate::execute::{apply_internal, execute_auto_action};
 use crate::fee_manager;
 use crate::state::{get_stakes, Banned, CurrentValidators, Metadata, Params};
-use crate::transactions::SignedTransaction;
+use crate::transactions::{SignedTransaction, Transaction};
 use crate::types::{Header, Public, ResultantFee, Validator};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -39,20 +39,24 @@ impl Abci for ABCIHandle {
 
     fn execute_transactions(
         &self,
-        transactions: Vec<SignedTransaction>,
+        transactions: Vec<Transaction>,
     ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError> {
         let results: Result<Vec<_>, _> = transactions
             .into_iter()
-            .map(|signed_tx| {
-                check(&signed_tx).map_err(Error::Syntax).and({
+            .map(|tx| match tx {
+                Transaction::User(signed_tx) => check(&signed_tx).map_err(Error::Syntax).and({
                     let SignedTransaction {
                         tx,
                         signer_public,
                         ..
                     } = signed_tx;
-                    apply_internal(tx, &signer_public, self.executing_block_header.borrow().number())
+                    apply_internal(tx, &signer_public).map_err(Error::Runtime)
+                }),
+                Transaction::Auto(auto_action) => {
+                    execute_auto_action(auto_action, self.executing_block_header.borrow().number())
+                        .map(|execution_result| (execution_result, Default::default()))
                         .map_err(Error::Runtime)
-                })
+                }
             })
             .collect();
 
@@ -70,8 +74,11 @@ impl Abci for ABCIHandle {
             .map_err(|_| ())
     }
 
-    fn check_transaction(&self, transaction: &SignedTransaction) -> Result<(), i64> {
-        check(transaction).map_err(|err| err.code())
+    fn check_transaction(&self, transaction: &Transaction) -> Result<(), i64> {
+        match transaction {
+            Transaction::User(signed_tx) => check(signed_tx).map_err(|err| err.code()),
+            Transaction::Auto(_) => Ok(()),
+        }
     }
 }
 

@@ -18,7 +18,7 @@ use crate::core::TransactionExecutionOutcome;
 use crate::error::{Insufficient, Mismatch};
 use crate::runtime_error::Error;
 use crate::state::*;
-use crate::transactions::{Action, Transaction};
+use crate::transactions::{AutoAction, UserAction, UserTransaction};
 use crate::types::{Approval, Bytes, Public, ReleaseResult, ResultantFee, StakeQuantity};
 use crate::{account_manager, account_viewer, substorage};
 
@@ -40,11 +40,10 @@ fn check_before_fee_imposition(sender_public: &Public, fee: u64, seq: u64, min_f
 }
 
 pub fn apply_internal(
-    tx: Transaction,
+    tx: UserTransaction,
     sender_public: &Public,
-    current_block_number: u64,
 ) -> Result<(TransactionExecutionOutcome, ResultantFee), Error> {
-    let Transaction {
+    let UserTransaction {
         action,
         fee,
         seq,
@@ -67,7 +66,7 @@ pub fn apply_internal(
     })?;
     account_manager.increment_sequence(&sender_public);
 
-    let result = execute(&sender_public, action, current_block_number);
+    let result = execute_user_action(&sender_public, action);
     match result {
         Ok(_) => substorage.discard_checkpoint(),
         Err(_) => substorage.revert_to_the_checkpoint(),
@@ -81,41 +80,74 @@ pub fn apply_internal(
     })
 }
 
-fn execute(
-    sender_public: &Public,
-    action: Action,
-    current_block_number: u64,
-) -> Result<TransactionExecutionOutcome, Error> {
+fn execute_user_action(sender_public: &Public, action: UserAction) -> Result<TransactionExecutionOutcome, Error> {
     match action {
-        Action::TransferCCS {
+        UserAction::TransferCCS {
             receiver_public,
             quantity,
         } => transfer_ccs(sender_public, &receiver_public, quantity),
-        Action::DelegateCCS {
+        UserAction::DelegateCCS {
             delegatee_public,
             quantity,
         } => delegate_ccs(sender_public, &delegatee_public, quantity),
-        Action::Revoke {
+        UserAction::Revoke {
             delegatee_public,
             quantity,
         } => revoke(sender_public, &delegatee_public, quantity),
-        Action::Redelegate {
+        UserAction::Redelegate {
             prev_delegatee,
             next_delegatee,
             quantity,
         } => redelegate(sender_public, &prev_delegatee, &next_delegatee, quantity),
-        Action::SelfNominate {
+        UserAction::SelfNominate {
             deposit,
             metadata,
         } => self_nominate(sender_public, deposit, metadata),
-        Action::ChangeParams {
+        UserAction::ChangeParams {
             metadata_seq,
             params,
             approvals,
         } => change_params(metadata_seq, params, approvals),
-        Action::ReportDoubleVote {
+        UserAction::ReportDoubleVote {
             ..
         } => unimplemented!(),
+    }
+}
+
+pub fn execute_auto_action(
+    action: AutoAction,
+    current_block_number: u64,
+) -> Result<TransactionExecutionOutcome, Error> {
+    match action {
+        AutoAction::UpdateValidators {
+            validators,
+        } => update_validators(validators),
+        AutoAction::CloseTerm {
+            inactive_validators,
+            next_validators,
+            released_addresses,
+            custody_until,
+            kick_at,
+        } => {
+            close_term(next_validators, &inactive_validators)?;
+            release_jailed_prisoners(&released_addresses)?;
+            jail(&inactive_validators, custody_until, kick_at);
+            increase_term_id(current_block_number);
+            Ok(Default::default())
+        }
+        AutoAction::Elect => {
+            NextValidators::elect().save();
+            let mut metadata = Metadata::load();
+            metadata.update_term_params();
+            metadata.save();
+            Ok(Default::default())
+        }
+        AutoAction::ChangeNextValidators {
+            validators,
+        } => {
+            NextValidators::from(validators).save();
+            Ok(Default::default())
+        }
     }
 }
 
@@ -263,4 +295,104 @@ pub fn change_params(
 
     metadata.save();
     Ok(Default::default())
+}
+
+fn update_validators(validators: NextValidators) -> Result<TransactionExecutionOutcome, Error> {
+    let next_validators_in_state = NextValidators::load();
+    if validators != next_validators_in_state {
+        return Err(Error::InvalidValidators)
+    }
+    let mut current_validators = CurrentValidators::load();
+    current_validators.update(validators.into());
+    current_validators.save();
+    Ok(Default::default())
+}
+
+fn close_term(next_validators: NextValidators, inactive_validators: &[Public]) -> Result<(), Error> {
+    let metadata = Metadata::load();
+    let current_term_id = metadata.current_term_id;
+    let nomination_expiration = metadata.params.nomination_expiration;
+    assert_ne!(0, nomination_expiration);
+
+    update_candidates(current_term_id, nomination_expiration, &next_validators, inactive_validators)?;
+    next_validators.save();
+    Ok(())
+}
+
+fn update_candidates(
+    current_term: u64,
+    nomination_expiration: u64,
+    next_validators: &NextValidators,
+    inactive_validators: &[Public],
+) -> Result<(), Error> {
+    let banned = Banned::load();
+    let mut candidates = Candidates::load();
+    let nomination_ends_at = current_term + nomination_expiration;
+
+    candidates.renew_candidates(next_validators, nomination_ends_at, inactive_validators, &banned);
+
+    let expired = candidates.drain_expired_candidates(current_term);
+
+    let account_manager = account_manager();
+    for candidate in &expired {
+        account_manager.add_balance(&candidate.pubkey, candidate.deposit);
+    }
+    candidates.save();
+    let expired: Vec<_> = expired.into_iter().map(|c| c.pubkey).collect();
+    revert_delegations(&expired)?;
+    Ok(())
+}
+
+fn revert_delegations(reverted_delegatees: &[Public]) -> Result<(), Error> {
+    let stakeholders = Stakeholders::load();
+    for stakeholder in stakeholders.iter() {
+        let mut delegator = StakeAccount::load(stakeholder);
+        let mut delegation = Delegation::load(stakeholder);
+
+        for delegatee in reverted_delegatees {
+            let quantity = delegation.get_quantity(delegatee);
+            if quantity > 0 {
+                delegation.sub_quantity(*delegatee, quantity)?;
+                delegator.add_balance(quantity)?;
+            }
+        }
+        delegation.save();
+        delegator.save();
+    }
+    Ok(())
+}
+
+fn release_jailed_prisoners(released: &[Public]) -> Result<(), Error> {
+    if released.is_empty() {
+        return Ok(())
+    }
+
+    let mut jailed = Jail::load();
+    let account_manager = account_manager();
+    for public in released {
+        let prisoner = jailed.remove(public).unwrap();
+        account_manager.add_balance(&public, prisoner.deposit);
+    }
+    jailed.save();
+    revert_delegations(released)?;
+    Ok(())
+}
+
+fn jail(publics: &[Public], custody_until: u64, kick_at: u64) {
+    let mut candidates = Candidates::load();
+    let mut jail = Jail::load();
+
+    for public in publics {
+        let candidate = candidates.remove(public).expect("There should be a candidate to jail");
+        jail.add(candidate, custody_until, kick_at);
+    }
+
+    jail.save();
+    candidates.save();
+}
+
+fn increase_term_id(last_term_finished_block_num: u64) {
+    let mut metadata = Metadata::load();
+    metadata.increase_term_id(last_term_finished_block_num);
+    metadata.save();
 }
