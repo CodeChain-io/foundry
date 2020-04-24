@@ -23,14 +23,14 @@ pub use self::actions::{
 use super::TopStateView;
 use crate::{StateResult, TopLevelState};
 use ccrypto::blake256;
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use ctypes::errors::SyntaxError;
 use primitives::H256;
 use rlp::{Encodable, RlpStream};
 use std::convert::From;
 
 pub trait DoubleVoteHandler: Send + Sync {
-    fn execute(&self, message1: &[u8], state: &mut TopLevelState, fee_payer: &Address) -> StateResult<()>;
+    fn execute(&self, message1: &[u8], state: &mut TopLevelState, fee_payer: &Public) -> StateResult<()>;
     fn verify(&self, message1: &[u8], message2: &[u8]) -> Result<(), SyntaxError>;
 }
 
@@ -89,7 +89,7 @@ mod tests {
     use crate::item::stake::{Candidate, Candidates, Delegation, Jail, StakeAccount};
     use crate::tests::helpers;
     use crate::{NextValidators, TopLevelState, TopState, TopStateView};
-    use ckey::{public_to_address, Ed25519Public as Public};
+    use ckey::Ed25519Public as Public;
     use ctypes::CommonParams;
     use std::collections::HashMap;
 
@@ -122,17 +122,16 @@ mod tests {
 
     #[test]
     fn self_nominate_returns_deposits_after_expiration() {
-        let address_pubkey = Public::random();
-        let address = public_to_address(&address_pubkey);
+        let pubkey = Public::random();
 
         let mut state = metadata_for_election();
         increase_term_id_until(&mut state, 29);
-        state.add_balance(&address, 1000).unwrap();
+        state.add_balance(&pubkey, 1000).unwrap();
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
         // TODO: change with stake::execute()
-        self_nominate(&mut state, &address, &address_pubkey, 200, 0, 30, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &pubkey, 200, 0, 30, b"".to_vec()).unwrap();
 
         let next_validators = Vec::from(NextValidators::load_from_state(&state).unwrap());
         close_term(&mut state, &next_validators, &[]).unwrap();
@@ -143,12 +142,12 @@ mod tests {
 
         state.increase_term_id(pseudo_term_to_block_num_calculator(29)).unwrap();
 
-        assert_eq!(state.balance(&address).unwrap(), 800, "Should keep nomination before expiration");
+        assert_eq!(state.balance(&pubkey).unwrap(), 800, "Should keep nomination before expiration");
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(
-            candidates.get_candidate(&address),
+            candidates.get_candidate(&pubkey),
             Some(&Candidate {
-                pubkey: address_pubkey,
+                pubkey,
                 deposit: 200,
                 nomination_ends_at: 30,
                 metadata: b"".to_vec(),
@@ -165,20 +164,19 @@ mod tests {
 
         state.increase_term_id(pseudo_term_to_block_num_calculator(30)).unwrap();
 
-        assert_eq!(state.balance(&address).unwrap(), 1000, "Return deposit after expiration");
+        assert_eq!(state.balance(&pubkey).unwrap(), 1000, "Return deposit after expiration");
         let candidates = Candidates::load_from_state(&state).unwrap();
-        assert_eq!(candidates.get_candidate(&address), None, "Removed from candidates after expiration");
+        assert_eq!(candidates.get_candidate(&pubkey), None, "Removed from candidates after expiration");
     }
 
     #[test]
     fn self_nominate_reverts_delegations_after_expiration() {
-        let address_pubkey = Public::random();
-        let address = public_to_address(&address_pubkey);
-        let delegator = public_to_address(&address_pubkey);
+        let pubkey = Public::random();
+        let delegator = Public::random();
 
         let mut state = metadata_for_election();
         increase_term_id_until(&mut state, 29);
-        state.add_balance(&address, 1000).unwrap();
+        state.add_balance(&delegator, 1000).unwrap();
 
         let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
@@ -188,10 +186,10 @@ mod tests {
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
         // TODO: change with stake::execute()
-        self_nominate(&mut state, &address, &address_pubkey, 0, 0, 30, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &pubkey, 0, 0, 30, b"".to_vec()).unwrap();
 
         let quantity = 40;
-        delegate_ccs(&mut state, &delegator, &address, quantity).unwrap();
+        delegate_ccs(&mut state, &delegator, &pubkey, quantity).unwrap();
 
         let next_validators = Vec::from(NextValidators::load_from_state(&state).unwrap());
         close_term(&mut state, &next_validators, &[]).unwrap();
@@ -205,7 +203,7 @@ mod tests {
         let account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         assert_eq!(account.balance, 100 - 40);
         let delegation = Delegation::load_from_state(&state, &delegator).unwrap();
-        assert_eq!(delegation.get_quantity(&address), 40, "Should keep delegation before expiration");
+        assert_eq!(delegation.get_quantity(&pubkey), 40, "Should keep delegation before expiration");
 
         let next_validators = Vec::from(NextValidators::load_from_state(&state).unwrap());
         close_term(&mut state, &next_validators, &[]).unwrap();
@@ -219,16 +217,15 @@ mod tests {
         let account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         assert_eq!(account.balance, 100);
         let delegation = Delegation::load_from_state(&state, &delegator).unwrap();
-        assert_eq!(delegation.get_quantity(&address), 0, "Should revert before expiration");
+        assert_eq!(delegation.get_quantity(&pubkey), 0, "Should revert before expiration");
     }
 
     #[test]
     fn cannot_self_nominate_while_custody() {
-        let address_pubkey = Public::random();
-        let address = public_to_address(&address_pubkey);
+        let pubkey = Public::random();
 
         let mut state = metadata_for_election();
-        state.add_balance(&address, 1000).unwrap();
+        state.add_balance(&pubkey, 1000).unwrap();
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
@@ -237,19 +234,12 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &address, &address_pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
-        jail(&mut state, &[address], custody_until, released_at).unwrap();
+        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
+        jail(&mut state, &[pubkey], custody_until, released_at).unwrap();
 
         for current_term in 0..=custody_until {
-            let result = self_nominate(
-                &mut state,
-                &address,
-                &address_pubkey,
-                0,
-                current_term,
-                current_term + nominate_expire,
-                b"".to_vec(),
-            );
+            let result =
+                self_nominate(&mut state, &pubkey, 0, current_term, current_term + nominate_expire, b"".to_vec());
             assert!(
                 result.is_err(),
                 "Shouldn't nominate while current_term({}) <= custody_until({})",
@@ -269,11 +259,10 @@ mod tests {
 
     #[test]
     fn can_self_nominate_after_custody() {
-        let address_pubkey = Public::random();
-        let address = public_to_address(&address_pubkey);
+        let pubkey = Public::random();
 
         let mut state = metadata_for_election();
-        state.add_balance(&address, 1000).unwrap();
+        state.add_balance(&pubkey, 1000).unwrap();
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
@@ -282,9 +271,8 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &address, &address_pubkey, deposit, 0, nominate_expire, b"metadata-before".to_vec())
-            .unwrap();
-        jail(&mut state, &[address], custody_until, released_at).unwrap();
+        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, b"metadata-before".to_vec()).unwrap();
+        jail(&mut state, &[pubkey], custody_until, released_at).unwrap();
         for current_term in 0..=custody_until {
             let next_validators = Vec::from(NextValidators::load_from_state(&state).unwrap());
             close_term(&mut state, &next_validators, &[]).unwrap();
@@ -300,8 +288,7 @@ mod tests {
         let additional_deposit = 123;
         let result = self_nominate(
             &mut state,
-            &address,
-            &address_pubkey,
+            &pubkey,
             additional_deposit,
             current_term,
             current_term + nominate_expire,
@@ -311,29 +298,28 @@ mod tests {
 
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(
-            candidates.get_candidate(&address),
+            candidates.get_candidate(&pubkey),
             Some(&Candidate {
                 deposit: deposit + additional_deposit,
                 nomination_ends_at: current_term + nominate_expire,
-                pubkey: address_pubkey,
+                pubkey,
                 metadata: "metadata-after".into()
             }),
             "The prisoner is become a candidate",
         );
 
         let jail = Jail::load_from_state(&state).unwrap();
-        assert_eq!(jail.get_prisoner(&address), None, "The prisoner is removed");
+        assert_eq!(jail.get_prisoner(&pubkey), None, "The prisoner is removed");
 
-        assert_eq!(state.balance(&address).unwrap(), 1000 - deposit - additional_deposit, "Deposit is accumulated");
+        assert_eq!(state.balance(&pubkey).unwrap(), 1000 - deposit - additional_deposit, "Deposit is accumulated");
     }
 
     #[test]
     fn jail_released_after() {
-        let address_pubkey = Public::random();
-        let address = public_to_address(&address_pubkey);
+        let pubkey = Public::random();
 
         let mut state = metadata_for_election();
-        state.add_balance(&address, 1000).unwrap();
+        state.add_balance(&pubkey, 1000).unwrap();
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
@@ -342,8 +328,8 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &address, &address_pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
-        jail(&mut state, &[address], custody_until, released_at).unwrap();
+        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
+        jail(&mut state, &[pubkey], custody_until, released_at).unwrap();
 
         for current_term in 0..released_at {
             let next_validators = Vec::from(NextValidators::load_from_state(&state).unwrap());
@@ -356,10 +342,10 @@ mod tests {
             state.increase_term_id(pseudo_term_to_block_num_calculator(current_term)).unwrap();
 
             let candidates = Candidates::load_from_state(&state).unwrap();
-            assert_eq!(candidates.get_candidate(&address), None);
+            assert_eq!(candidates.get_candidate(&pubkey), None);
 
             let jail = Jail::load_from_state(&state).unwrap();
-            assert!(jail.get_prisoner(&address).is_some());
+            assert!(jail.get_prisoner(&pubkey).is_some());
         }
 
         let next_validators = Vec::from(NextValidators::load_from_state(&state).unwrap());
@@ -372,23 +358,21 @@ mod tests {
         state.increase_term_id(pseudo_term_to_block_num_calculator(released_at)).unwrap();
 
         let candidates = Candidates::load_from_state(&state).unwrap();
-        assert_eq!(candidates.get_candidate(&address), None, "A prisoner should not become a candidate");
+        assert_eq!(candidates.get_candidate(&pubkey), None, "A prisoner should not become a candidate");
 
         let jail = Jail::load_from_state(&state).unwrap();
-        assert_eq!(jail.get_prisoner(&address), None, "A prisoner should be released");
+        assert_eq!(jail.get_prisoner(&pubkey), None, "A prisoner should be released");
 
-        assert_eq!(state.balance(&address).unwrap(), 1000, "Balance should be restored after being released");
+        assert_eq!(state.balance(&pubkey).unwrap(), 1000, "Balance should be restored after being released");
     }
 
     #[test]
     fn cannot_delegate_until_released() {
-        let address_pubkey = Public::random();
-        let delegator_pubkey = Public::random();
-        let address = public_to_address(&address_pubkey);
-        let delegator = public_to_address(&delegator_pubkey);
+        let pubkey = Public::random();
+        let delegator = Public::random();
 
         let mut state = metadata_for_election();
-        state.add_balance(&address, 1000).unwrap();
+        state.add_balance(&pubkey, 1000).unwrap();
 
         let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
@@ -402,12 +386,12 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &address, &address_pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
-        jail(&mut state, &[address], custody_until, released_at).unwrap();
+        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
+        jail(&mut state, &[pubkey], custody_until, released_at).unwrap();
 
         for current_term in 0..=released_at {
             let quantity = 1;
-            delegate_ccs(&mut state, &delegator, &address, quantity).unwrap_err();
+            delegate_ccs(&mut state, &delegator, &pubkey, quantity).unwrap_err();
 
             let next_validators = Vec::from(NextValidators::load_from_state(&state).unwrap());
             close_term(&mut state, &next_validators, &[]).unwrap();
@@ -420,18 +404,16 @@ mod tests {
         }
 
         let quantity = 1;
-        delegate_ccs(&mut state, &delegator, &address, quantity).unwrap_err();
+        delegate_ccs(&mut state, &delegator, &pubkey, quantity).unwrap_err();
     }
 
     #[test]
     fn kick_reverts_delegations() {
-        let address_pubkey = Public::random();
-        let delegator_pubkey = Public::random();
-        let address = public_to_address(&address_pubkey);
-        let delegator = public_to_address(&delegator_pubkey);
+        let pubkey = Public::random();
+        let delegator = Public::random();
 
         let mut state = metadata_for_election();
-        state.add_balance(&address, 1000).unwrap();
+        state.add_balance(&pubkey, 1000).unwrap();
 
         let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
@@ -445,12 +427,12 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &address, &address_pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
 
         let quantity = 40;
-        delegate_ccs(&mut state, &delegator, &address, quantity).unwrap();
+        delegate_ccs(&mut state, &delegator, &pubkey, quantity).unwrap();
 
-        jail(&mut state, &[address], custody_until, released_at).unwrap();
+        jail(&mut state, &[pubkey], custody_until, released_at).unwrap();
 
         for current_term in 0..=released_at {
             let next_validators = Vec::from(NextValidators::load_from_state(&state).unwrap());
@@ -464,7 +446,7 @@ mod tests {
         }
 
         let delegation = Delegation::load_from_state(&state, &delegator).unwrap();
-        assert_eq!(delegation.get_quantity(&address), 0, "Delegation should be reverted");
+        assert_eq!(delegation.get_quantity(&pubkey), 0, "Delegation should be reverted");
 
         let account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         assert_eq!(account.balance, 100, "Delegation should be reverted");
@@ -472,13 +454,11 @@ mod tests {
 
     #[test]
     fn self_nomination_before_kick_preserves_delegations() {
-        let address_pubkey = Public::random();
-        let delegator_pubkey = Public::random();
-        let address = public_to_address(&address_pubkey);
-        let delegator = public_to_address(&delegator_pubkey);
+        let pubkey = Public::random();
+        let delegator = Public::random();
 
         let mut state = metadata_for_election();
-        state.add_balance(&address, 1000).unwrap();
+        state.add_balance(&pubkey, 1000).unwrap();
 
         let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
@@ -491,12 +471,12 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &address, &address_pubkey, 0, 0, nominate_expire, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &pubkey, 0, 0, nominate_expire, b"".to_vec()).unwrap();
 
         let quantity = 40;
-        delegate_ccs(&mut state, &delegator, &address, quantity).unwrap();
+        delegate_ccs(&mut state, &delegator, &pubkey, quantity).unwrap();
 
-        jail(&mut state, &[address], custody_until, released_at).unwrap();
+        jail(&mut state, &[pubkey], custody_until, released_at).unwrap();
 
         for current_term in 0..custody_until {
             let next_validators = Vec::from(NextValidators::load_from_state(&state).unwrap());
@@ -510,19 +490,11 @@ mod tests {
         }
 
         let current_term = custody_until + 1;
-        let result = self_nominate(
-            &mut state,
-            &address,
-            &address_pubkey,
-            0,
-            current_term,
-            current_term + nominate_expire,
-            b"".to_vec(),
-        );
+        let result = self_nominate(&mut state, &pubkey, 0, current_term, current_term + nominate_expire, b"".to_vec());
         assert!(result.is_ok());
 
         let delegation = Delegation::load_from_state(&state, &delegator).unwrap();
-        assert_eq!(delegation.get_quantity(&address), 40, "Delegation should be preserved");
+        assert_eq!(delegation.get_quantity(&pubkey), 40, "Delegation should be preserved");
 
         let account = StakeAccount::load_from_state(&state, &delegator).unwrap();
         assert_eq!(account.balance, 100 - 40, "Delegation should be preserved");

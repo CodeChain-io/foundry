@@ -20,7 +20,7 @@ use super::super::types::{Block, BlockNumberAndHash, Transaction};
 use ccore::{AccountData, BlockId, EngineInfo, MiningBlockChainClient, Shard, TermInfo};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
-use ckey::{public_to_address, NetworkId, PlatformAddress};
+use ckey::{NetworkId, PlatformAddress};
 use cstate::FindDoubleVoteHandler;
 use ctypes::{BlockHash, BlockNumber, TxHash};
 use jsonrpc_core::Result;
@@ -54,10 +54,10 @@ where
 
     fn get_transaction_signer(&self, transaction_hash: TxHash) -> Result<Option<PlatformAddress>> {
         let id = transaction_hash.into();
-        Ok(self.client.transaction(&id).map(|mut tx| {
-            let address = public_to_address(&tx.signer());
-            PlatformAddress::new_v1(tx.unverified_tx().transaction().network_id, address)
-        }))
+        Ok(self
+            .client
+            .transaction(&id)
+            .map(|mut tx| PlatformAddress::new_v1(tx.unverified_tx().transaction().network_id, tx.signer())))
     }
 
     fn contains_transaction(&self, transaction_hash: TxHash) -> Result<bool> {
@@ -66,14 +66,14 @@ where
 
     fn get_seq(&self, address: PlatformAddress, block_number: Option<u64>) -> Result<Option<u64>> {
         let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        let address = address.try_address().map_err(errors::core)?;
-        Ok(self.client.seq(address, block_id))
+        let pubkey = address.try_pubkey().map_err(errors::core)?;
+        Ok(self.client.seq(pubkey, block_id))
     }
 
     fn get_balance(&self, aaddress: PlatformAddress, block_number: Option<u64>) -> Result<Option<Uint>> {
         let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        let address = aaddress.try_address().map_err(errors::core)?;
-        Ok(self.client.balance(address, block_id.into()).map(Into::into))
+        let pubkey = aaddress.try_pubkey().map_err(errors::core)?;
+        Ok(self.client.balance(pubkey, block_id.into()).map(Into::into))
     }
 
     fn get_best_block_number(&self) -> Result<BlockNumber> {

@@ -66,7 +66,7 @@ mod tests {
     use rlp::rlp_encode_and_decode_test;
 
     use ccore::UnverifiedTransaction;
-    use ckey::{Address, Ed25519Public as Public, Signature};
+    use ckey::{Ed25519Public as Public, Signature};
     use ctypes::transaction::{Action, Transaction};
 
     use super::Message;
@@ -83,7 +83,7 @@ mod tests {
                 seq: 0,
                 fee: 10,
                 action: Action::Pay {
-                    receiver: Address::random(),
+                    receiver: Public::random(),
                     quantity: 30,
                 },
                 network_id: "tc".into(),

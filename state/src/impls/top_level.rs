@@ -47,7 +47,7 @@ use crate::{
     ModuleLevelState, NextValidators, Shard, ShardAddress, ShardLevelState, StateDB, StateResult,
 };
 use cdb::{AsHashDB, DatabaseError};
-use ckey::{public_to_address, Address, Ed25519Public as Public, NetworkId};
+use ckey::{Ed25519Public as Public, NetworkId};
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, ShardTransaction, Transaction};
 use ctypes::util::unexpected::Mismatch;
@@ -94,7 +94,7 @@ impl TopStateView for TopLevelState {
     /// Check caches for required data
     /// First searches for account in the local, then the shared cache.
     /// Populates local cache if nothing found.
-    fn account(&self, a: &Address) -> TrieResult<Option<Account>> {
+    fn account(&self, a: &Public) -> TrieResult<Option<Account>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.top_cache.account(&a, &trie)
@@ -309,14 +309,13 @@ impl TopLevelState {
     fn apply_internal<C: FindDoubleVoteHandler>(
         &mut self,
         tx: &Transaction,
-        sender_public: &Public,
+        sender: &Public,
         client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
         current_block_timestamp: u64,
     ) -> StateResult<()> {
-        let sender_address = public_to_address(sender_public);
-        let seq = self.seq(&sender_address)?;
+        let seq = self.seq(sender)?;
 
         if tx.seq != seq {
             return Err(RuntimeError::InvalidSeq(Mismatch {
@@ -328,8 +327,8 @@ impl TopLevelState {
 
         let fee = tx.fee;
 
-        self.inc_seq(&sender_address)?;
-        self.sub_balance(&sender_address, fee)?;
+        self.inc_seq(sender)?;
+        self.sub_balance(sender, fee)?;
 
         // The failed transaction also must pay the fee and increase seq.
         self.create_checkpoint(ACTION_CHECKPOINT);
@@ -337,8 +336,7 @@ impl TopLevelState {
             &tx.action,
             tx.network_id,
             tx.hash(),
-            &sender_address,
-            sender_public,
+            sender,
             client,
             parent_block_number,
             parent_block_timestamp,
@@ -361,8 +359,7 @@ impl TopLevelState {
         action: &Action,
         network_id: NetworkId,
         tx_hash: TxHash,
-        sender_address: &Address,
-        sender_public: &Public,
+        sender: &Public,
         client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
@@ -382,26 +379,26 @@ impl TopLevelState {
                 receiver,
                 quantity,
             } => {
-                self.transfer_balance(sender_address, receiver, *quantity)?;
+                self.transfer_balance(sender, receiver, *quantity)?;
                 return Ok(())
             }
             Action::TransferCCS {
                 address,
                 quantity,
-            } => return transfer_ccs(self, sender_address, &address, *quantity),
+            } => return transfer_ccs(self, sender, &address, *quantity),
             Action::DelegateCCS {
                 address,
                 quantity,
-            } => return delegate_ccs(self, sender_address, &address, *quantity),
+            } => return delegate_ccs(self, sender, &address, *quantity),
             Action::Revoke {
                 address,
                 quantity,
-            } => return revoke(self, sender_address, address, *quantity),
+            } => return revoke(self, sender, address, *quantity),
             Action::Redelegate {
                 prev_delegatee,
                 next_delegatee,
                 quantity,
-            } => return redelegate(self, sender_address, prev_delegatee, next_delegatee, *quantity),
+            } => return redelegate(self, sender, prev_delegatee, next_delegatee, *quantity),
             Action::SelfNominate {
                 deposit,
                 metadata,
@@ -413,15 +410,7 @@ impl TopLevelState {
                     let nomination_ends_at = current_term + expiration;
                     (current_term, nomination_ends_at)
                 };
-                return self_nominate(
-                    self,
-                    sender_address,
-                    sender_public,
-                    *deposit,
-                    current_term,
-                    nomination_ends_at,
-                    metadata.clone(),
-                )
+                return self_nominate(self, sender, *deposit, current_term, nomination_ends_at, metadata.clone())
             }
             Action::ChangeParams {
                 metadata_seq,
@@ -433,7 +422,7 @@ impl TopLevelState {
                 ..
             } => {
                 let handler = client.double_vote_handler().expect("Unknown custom transaction applied!");
-                handler.execute(message1, self, sender_address)?;
+                handler.execute(message1, self, sender)?;
                 return Ok(())
             }
             Action::UpdateValidators {
@@ -471,7 +460,7 @@ impl TopLevelState {
         self.apply_shard_transaction(
             tx_hash,
             &transaction,
-            sender_address,
+            sender,
             &approvers,
             parent_block_number,
             parent_block_timestamp,
@@ -482,8 +471,8 @@ impl TopLevelState {
         &mut self,
         tx_hash: TxHash,
         transaction: &ShardTransaction,
-        sender: &Address,
-        approvers: &[Address],
+        sender: &Public,
+        approvers: &[Public],
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
     ) -> StateResult<()> {
@@ -506,8 +495,8 @@ impl TopLevelState {
         tx_hash: TxHash,
         transaction: &ShardTransaction,
         shard_id: ShardId,
-        sender: &Address,
-        approvers: &[Address],
+        sender: &Public,
+        approvers: &[Public],
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
     ) -> StateResult<()> {
@@ -536,7 +525,7 @@ impl TopLevelState {
         Ok(ModuleLevelState::from_existing(storage_id, &mut self.db, module_root, module_cache)?)
     }
 
-    fn get_account_mut(&self, a: &Address) -> TrieResult<RefMut<'_, Account>> {
+    fn get_account_mut(&self, a: &Public) -> TrieResult<RefMut<'_, Account>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.top_cache.account_mut(&a, &trie)
@@ -589,7 +578,7 @@ impl TopLevelState {
     }
 
     #[cfg(test)]
-    fn set_balance(&mut self, a: &Address, balance: u64) -> TrieResult<()> {
+    fn set_balance(&mut self, a: &Public, balance: u64) -> TrieResult<()> {
         self.get_account_mut(a)?.set_balance(balance);
         Ok(())
     }
@@ -611,27 +600,27 @@ impl Clone for TopLevelState {
 }
 
 impl TopState for TopLevelState {
-    fn kill_account(&mut self, account: &Address) {
+    fn kill_account(&mut self, account: &Public) {
         self.top_cache.remove_account(account);
     }
 
-    fn add_balance(&mut self, a: &Address, incr: u64) -> TrieResult<()> {
-        ctrace!(STATE, "add_balance({}, {}): {}", a, incr, self.balance(a)?);
+    fn add_balance(&mut self, a: &Public, incr: u64) -> TrieResult<()> {
+        ctrace!(STATE, "add_balance({:?}, {}): {}", a, incr, self.balance(a)?);
         if incr != 0 {
             self.get_account_mut(a)?.add_balance(incr);
         }
         Ok(())
     }
 
-    fn sub_balance(&mut self, a: &Address, decr: u64) -> StateResult<()> {
-        ctrace!(STATE, "sub_balance({}, {}): {}", a, decr, self.balance(a)?);
+    fn sub_balance(&mut self, a: &Public, decr: u64) -> StateResult<()> {
+        ctrace!(STATE, "sub_balance({:?}, {}): {}", a, decr, self.balance(a)?);
         if decr == 0 {
             return Ok(())
         }
         let balance = self.balance(a)?;
         if balance < decr {
             return Err(RuntimeError::InsufficientBalance {
-                address: *a,
+                pubkey: *a,
                 cost: decr,
                 balance,
             }
@@ -641,13 +630,13 @@ impl TopState for TopLevelState {
         Ok(())
     }
 
-    fn transfer_balance(&mut self, from: &Address, to: &Address, by: u64) -> StateResult<()> {
+    fn transfer_balance(&mut self, from: &Public, to: &Public, by: u64) -> StateResult<()> {
         self.sub_balance(from, by)?;
         self.add_balance(to, by)?;
         Ok(())
     }
 
-    fn inc_seq(&mut self, a: &Address) -> TrieResult<()> {
+    fn inc_seq(&mut self, a: &Public) -> TrieResult<()> {
         self.get_account_mut(a)?.inc_seq();
         Ok(())
     }
@@ -725,7 +714,7 @@ mod tests_state {
 
     #[test]
     fn work_when_cloned() {
-        let a = Address::default();
+        let a = Public::default();
 
         let mut state = {
             let mut state = get_temp_state();
@@ -752,7 +741,7 @@ mod tests_state {
 
     #[test]
     fn work_when_cloned_even_not_committed() {
-        let a = Address::default();
+        let a = Public::default();
 
         let mut state = {
             let mut state = get_temp_state();
@@ -777,7 +766,7 @@ mod tests_state {
 
     #[test]
     fn state_is_not_synchronized_when_cloned() {
-        let a = Address::random();
+        let a = Public::random();
 
         let original_state = get_temp_state();
         top_level!(original_state, {
@@ -798,7 +787,7 @@ mod tests_state {
         let memory_db = get_memory_db();
         let jorunal = new_journaldb(Arc::clone(&memory_db), Algorithm::Archive, Some(0));
         let db = StateDB::new(jorunal.boxed_clone());
-        let a = Address::default();
+        let a = Public::default();
         let root = {
             let mut state = empty_top_state_with_metadata(db.clone(&H256::zero()), CommonParams::default_for_test());
             top_level!(state, {
@@ -838,7 +827,7 @@ mod tests_state {
         let memory_db = get_memory_db();
         let jorunal = new_journaldb(Arc::clone(&memory_db), Algorithm::Archive, Some(0));
         let mut db = StateDB::new(jorunal.boxed_clone());
-        let a = Address::default();
+        let a = Public::default();
         let root = {
             let mut state = empty_top_state_with_metadata(db.clone(&H256::zero()), CommonParams::default_for_test());
             top_level!(state, {
@@ -879,7 +868,7 @@ mod tests_state {
 
     #[test]
     fn remove() {
-        let a = Address::default();
+        let a = Public::default();
         let mut state = get_temp_state();
         top_level!(state, {
             check: [(account: a => None)],
@@ -892,7 +881,7 @@ mod tests_state {
 
     #[test]
     fn empty_account_is_not_created() {
-        let a = Address::default();
+        let a = Public::default();
         let mut db = get_temp_state_db();
         let root = {
             let mut state = empty_top_state(db.clone(&H256::zero()));
@@ -919,7 +908,7 @@ mod tests_state {
     #[test]
     #[allow(clippy::cognitive_complexity)]
     fn remove_from_database() {
-        let a = Address::default();
+        let a = Public::default();
         let memory_db = get_memory_db();
         let jorunal = new_journaldb(Arc::clone(&memory_db), Algorithm::Archive, Some(0));
         let mut db = StateDB::new(jorunal.boxed_clone());
@@ -985,7 +974,7 @@ mod tests_state {
     #[test]
     fn alter_balance() {
         let mut state = get_temp_state();
-        let a = Address::default();
+        let a = Public::default();
         let b = 1u64.into();
         top_level!(state, {
             set: [(account: a => balance: add 100)],
@@ -1021,7 +1010,7 @@ mod tests_state {
     #[test]
     fn alter_seq() {
         let mut state = get_temp_state();
-        let a = Address::default();
+        let a = Public::default();
         top_level!(state, {
             set: [(account: a => seq++)],
             check: [(account: a => seq: 1)],
@@ -1045,7 +1034,7 @@ mod tests_state {
     #[test]
     fn balance_seq() {
         let mut state = get_temp_state();
-        let a = Address::default();
+        let a = Public::default();
         top_level!(state, {
             check: [(account: a => balance: 0, seq: 0)]
         });
@@ -1059,15 +1048,15 @@ mod tests_state {
     #[test]
     fn ensure_cached() {
         let mut state = get_temp_state();
-        let a = Address::default();
+        let a = Public::default();
         state.get_account_mut(&a).unwrap();
-        assert_eq!(Ok(H256::from("f176a4b3b32331d40362e5d49e8237738aee46ea4bbff4091e97b5c65fedd5db")), state.commit());
+        assert_eq!(Ok(H256::from("00f286cd9d2e09f0881b802a33af986e58039506c3e84e0e76d7fa58d6c0adfe")), state.commit());
     }
 
     #[test]
     fn checkpoint_basic() {
         let mut state = get_temp_state();
-        let a = Address::default();
+        let a = Public::default();
         state.create_checkpoint(0);
         top_level!(state, {
             set: [(account: a => balance: add 100)],
@@ -1091,7 +1080,7 @@ mod tests_state {
     #[test]
     fn checkpoint_nested() {
         let mut state = get_temp_state();
-        let a = Address::default();
+        let a = Public::default();
         state.create_checkpoint(0);
         top_level!(state, {
             set: [(account: a => balance: add 100)]
@@ -1114,7 +1103,7 @@ mod tests_state {
     #[test]
     fn checkpoint_discard() {
         let mut state = get_temp_state();
-        let a = Address::default();
+        let a = Public::default();
         state.create_checkpoint(0);
         top_level!(state, {
             set: [(account: a => balance: add 100)]
@@ -1144,25 +1133,25 @@ mod tests_tx {
     use crate::tests::helpers::{get_temp_state, get_test_client};
     use crate::StateError;
 
-    fn address() -> (Address, Public) {
+    fn random_pubkey() -> Public {
         let keypair: KeyPair = Random.generate().unwrap();
-        (keypair.address(), *keypair.public())
+        *keypair.public()
     }
 
     #[test]
     fn apply_error_for_invalid_seq() {
         let mut state = get_temp_state();
 
-        let (sender, sender_public) = address();
+        let sender = random_pubkey();
         set_top_level_state!(state, [(account: sender => balance: 20)]);
 
-        let tx = transaction!(seq: 2, fee: 5, pay!(address().0, 10));
+        let tx = transaction!(seq: 2, fee: 5, pay!(random_pubkey(), 10));
         assert_eq!(
             Err(StateError::Runtime(RuntimeError::InvalidSeq(Mismatch {
                 expected: 0,
                 found: 2
             }))),
-            state.apply(&tx, &sender_public, &get_test_client(), 0, 0, 0)
+            state.apply(&tx, &sender, &get_test_client(), 0, 0, 0)
         );
 
         check_top_level_state!(state, [
@@ -1174,18 +1163,18 @@ mod tests_tx {
     fn apply_error_for_not_enough_cash() {
         let mut state = get_temp_state();
 
-        let (sender, sender_public) = address();
+        let sender = random_pubkey();
         set_top_level_state!(state, [(account: sender => balance: 4)]);
 
-        let tx = transaction!(fee: 5, pay!(address().0, 10));
+        let tx = transaction!(fee: 5, pay!(random_pubkey(), 10));
         assert_eq!(
             Err(RuntimeError::InsufficientBalance {
-                address: sender,
+                pubkey: sender,
                 balance: 4,
                 cost: 5,
             }
             .into()),
-            state.apply(&tx, &sender_public, &get_test_client(), 0, 0, 0)
+            state.apply(&tx, &sender, &get_test_client(), 0, 0, 0)
         );
 
         check_top_level_state!(state, [
@@ -1197,12 +1186,12 @@ mod tests_tx {
     fn apply_pay() {
         let mut state = get_temp_state();
 
-        let (sender, sender_public) = address();
+        let sender = random_pubkey();
         set_top_level_state!(state, [(account: sender => balance: 20)]);
 
         let receiver = 1u64.into();
         let tx = transaction!(fee: 5, pay!(receiver, 10));
-        assert_eq!(Ok(()), state.apply(&tx, &sender_public, &get_test_client(), 0, 0, 0));
+        assert_eq!(Ok(()), state.apply(&tx, &sender, &get_test_client(), 0, 0, 0));
 
         check_top_level_state!(state, [
             (account: sender => seq: 1, balance: 5),
@@ -1213,7 +1202,7 @@ mod tests_tx {
     #[test]
     fn apply_error_for_action_failure() {
         let mut state = get_temp_state();
-        let (sender, sender_public) = address();
+        let sender = random_pubkey();
         set_top_level_state!(state, [
             (account: sender => balance: 20)
         ]);
@@ -1223,12 +1212,12 @@ mod tests_tx {
 
         assert_eq!(
             Err(RuntimeError::InsufficientBalance {
-                address: sender,
+                pubkey: sender,
                 balance: 15,
                 cost: 30,
             }
             .into()),
-            state.apply(&tx, &sender_public, &get_test_client(), 0, 0, 0)
+            state.apply(&tx, &sender, &get_test_client(), 0, 0, 0)
         );
 
         check_top_level_state!(state, [

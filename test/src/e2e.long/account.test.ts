@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -52,11 +52,11 @@ describe("account", function() {
         it(`Scenario #2: importRaw ${testSize} accounts`, async function() {
             for (let i = 0; i < testSize; i++) {
                 const randomSecret = node.testFramework.util.generatePrivateKey();
-                const account = node.testFramework.util.getAccountIdFromPrivate(
+                const pubkey = node.testFramework.util.getPublicFromPrivate(
                     randomSecret
                 );
-                const address = node.testFramework.core.classes.Address.fromAccountId(
-                    account,
+                const address = node.testFramework.core.classes.Address.fromPublic(
+                    pubkey,
                     { networkId: "tc" }
                 );
                 const randomPassphrase = makeRandomPassphrase();
@@ -110,11 +110,11 @@ describe("account", function() {
                     case Action.ImportRaw:
                         {
                             const secret = node.testFramework.util.generatePrivateKey();
-                            const account = node.testFramework.util.getAccountIdFromPrivate(
+                            const pubkey = node.testFramework.util.getPublicFromPrivate(
                                 secret
                             );
-                            const address = node.testFramework.core.classes.Address.fromAccountId(
-                                account,
+                            const address = node.testFramework.core.classes.Address.fromPublic(
+                                pubkey,
                                 { networkId: "tc" }
                             ).toString();
                             const passphrase = makeRandomPassphrase();

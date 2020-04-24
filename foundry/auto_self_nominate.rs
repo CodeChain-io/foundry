@@ -17,7 +17,7 @@
 use crate::config::load_config;
 use ccore::{AccountProvider, AccountProviderError, BlockId, ConsensusClient, Encodable, UnverifiedTransaction};
 use ckey::PlatformAddress;
-use ckey::{Address, Ed25519Public as Public, Signature};
+use ckey::{Ed25519Public as Public, Signature};
 use ckeystore::DecryptedAccount;
 use clap::ArgMatches;
 use cstate::{Banned, Candidates, Jail};
@@ -33,41 +33,38 @@ const NEED_NOMINATION_UNDER_TERM_LEFT: u64 = 3;
 #[derive(Clone)]
 struct SelfSigner {
     account_provider: Arc<AccountProvider>,
-    signer: Option<(Address, Public)>,
+    signer: Option<Public>,
     decrypted_account: Option<DecryptedAccount>,
 }
 impl SelfSigner {
-    pub fn new(ap: Arc<AccountProvider>, address: Address) -> Self {
+    pub fn new(ap: Arc<AccountProvider>, pubkey: Public) -> Self {
         let public = {
-            let account = ap.get_unlocked_account(&address).expect("The address must be registered in AccountProvider");
+            let account =
+                ap.get_unlocked_account(&pubkey).expect("The public key must be registered in AccountProvider");
             account.public().expect("Cannot get public from account")
         };
         Self {
             account_provider: ap,
-            signer: Some((address, public)),
+            signer: Some(public),
             decrypted_account: None,
         }
     }
 
     pub fn sign_ed25519(&self, hash: H256) -> Result<Signature, AccountProviderError> {
-        let address = self.signer.map(|(address, _public)| address).unwrap_or_else(Default::default);
+        let pubkey = self.signer.unwrap_or_else(Default::default);
         let result = match &self.decrypted_account {
             Some(account) => account.sign(&hash)?,
             None => {
-                let account = self.account_provider.get_unlocked_account(&address)?;
+                let account = self.account_provider.get_unlocked_account(&pubkey)?;
                 account.sign(&hash)?
             }
         };
         Ok(result)
     }
 
-    pub fn address(&self) -> Option<&Address> {
-        self.signer.as_ref().map(|(address, _)| address)
-    }
-
     /// Public Key of signer.
-    pub fn public(&self) -> Option<&Public> {
-        self.signer.as_ref().map(|(_address, public)| public)
+    pub fn pubkey(&self) -> Option<&Public> {
+        self.signer.as_ref()
     }
 }
 
@@ -77,10 +74,10 @@ pub struct AutoSelfNomination {
 }
 
 impl AutoSelfNomination {
-    pub fn new(client: Arc<dyn ConsensusClient>, ap: Arc<AccountProvider>, address: Address) -> Arc<Self> {
+    pub fn new(client: Arc<dyn ConsensusClient>, ap: Arc<AccountProvider>, pubkey: Public) -> Arc<Self> {
         Arc::new(Self {
             client,
-            signer: SelfSigner::new(ap, address),
+            signer: SelfSigner::new(ap, pubkey),
         })
     }
 
@@ -116,18 +113,18 @@ impl AutoSelfNomination {
     ) {
         let metabytes = metadata.rlp_bytes();
         let mut dep = targetdep;
-        let address = account_address.address();
+        let pubkey = account_address.pubkey();
         let block_id = BlockId::Latest;
         let state = client.state_at(block_id).unwrap();
         let current_term = client.current_term_id(block_id).unwrap();
         let banned = Banned::load_from_state(&state).unwrap();
-        if banned.is_banned(address) {
+        if banned.is_banned(pubkey) {
             cwarn!(ENGINE, "Account is banned");
             return
         }
         let jailed = Jail::load_from_state(&state).unwrap();
-        if jailed.get_prisoner(&address).is_some() {
-            let prisoner = jailed.get_prisoner(&address).unwrap();
+        if jailed.get_prisoner(&pubkey).is_some() {
+            let prisoner = jailed.get_prisoner(&pubkey).unwrap();
 
             if prisoner.custody_until <= (current_term) {
                 cwarn!(ENGINE, "Account is still in custody");
@@ -135,8 +132,8 @@ impl AutoSelfNomination {
             }
         }
         let candidate = Candidates::load_from_state(&state).unwrap();
-        if candidate.get_candidate(&address).is_some() {
-            let candidate_need_nomination = candidate.get_candidate(&address).unwrap();
+        if candidate.get_candidate(&pubkey).is_some() {
+            let candidate_need_nomination = candidate.get_candidate(&pubkey).unwrap();
             if candidate_need_nomination.nomination_ends_at + NEED_NOMINATION_UNDER_TERM_LEFT <= current_term {
                 cdebug!(
                     ENGINE,
@@ -163,8 +160,8 @@ impl AutoSelfNomination {
         metadata: Bytes,
     ) {
         let network_id = client.network_id();
-        let seq = match signer.address() {
-            Some(address) => client.latest_seq(address),
+        let seq = match signer.pubkey() {
+            Some(pubkey) => client.latest_seq(pubkey),
             None => {
                 cwarn!(ENGINE, "Signer was not assigned");
                 return
@@ -188,7 +185,7 @@ impl AutoSelfNomination {
                 return
             }
         };
-        let signer_public = *signer.public().expect("Signer must be initialized");
+        let signer_public = *signer.pubkey().expect("Signer must be initialized");
         let unverified = UnverifiedTransaction::new(tx, signature, signer_public);
         let signed = unverified.try_into().expect("secret is valid so it's recoverable");
 

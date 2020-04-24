@@ -20,7 +20,7 @@ use crate::traits::{ShardState, ShardStateView};
 use crate::{ShardText, ShardTextAddress, StateDB, StateResult};
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::AsHashDB;
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, ShardId, TxHash};
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
@@ -91,8 +91,8 @@ impl<'db> ShardLevelState<'db> {
         &mut self,
         tx_hash: TxHash,
         transaction: &ShardTransaction,
-        _sender: &Address,
-        _approvers: &[Address],
+        _sender: &Public,
+        _approvers: &[Public],
         _parent_block_number: BlockNumber,
         _parent_block_timestamp: u64,
     ) -> StateResult<()> {
@@ -158,8 +158,8 @@ impl<'db> ShardState for ShardLevelState<'db> {
         &mut self,
         tx_hash: TxHash,
         transaction: &ShardTransaction,
-        sender: &Address,
-        approvers: &[Address],
+        sender: &Public,
+        approvers: &[Public],
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
     ) -> StateResult<()> {
@@ -202,8 +202,8 @@ mod tests {
     use super::*;
     use crate::tests::helpers::get_temp_state_db;
 
-    fn address() -> Address {
-        Address::random()
+    fn random_pubkey() -> Public {
+        Public::random()
     }
 
     fn get_temp_shard_state<'d>(
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn store_shard_text() {
-        let sender = address();
+        let sender = random_pubkey();
         let mut state_db = RefCell::new(get_temp_state_db());
         let mut shard_cache = ShardCache::default();
         let mut state = get_temp_shard_state(&mut state_db, SHARD_ID, &mut shard_cache);

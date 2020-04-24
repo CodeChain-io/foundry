@@ -1,6 +1,6 @@
 import * as RLP from "rlp";
-import { Address, H160, H256 } from "../../primitives/src";
-import { blake160, blake256 } from "../utils";
+import { Address, H256 } from "../../primitives/src";
+import { blake256 } from "../utils";
 import { Transaction, TransactionJSON } from "./Transaction";
 import { NetworkId } from "./types";
 
@@ -98,21 +98,12 @@ export class SignedTransaction {
     }
 
     /**
-     * Get the account ID of a tx's signer.
-     * @returns An account ID.
-     * @deprecated
-     */
-    public getSignerAccountId(): H160 {
-        return new H160(blake160(this.signerPublic));
-    }
-
-    /**
      * Get the platform address of a tx's signer.
      * @returns A address.
      * @deprecated
      */
     public getSignerAddress(params: { networkId: NetworkId }): Address {
-        return Address.fromAccountId(this.getSignerAccountId(), params);
+        return Address.fromPublic(this.getSignerPublic(), params);
     }
 
     /**

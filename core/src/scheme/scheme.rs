@@ -21,7 +21,7 @@ use crate::consensus::{CodeChainEngine, NullEngine, Solo, Tendermint};
 use crate::error::{Error, SchemeError};
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{AsHashDB, HashDB};
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use cstate::{Metadata, MetadataAddress, Shard, ShardAddress, StateDB, StateResult};
 use ctypes::errors::SyntaxError;
 use ctypes::{BlockHash, CommonParams, Header, ShardId};
@@ -48,7 +48,7 @@ pub struct Scheme {
     /// The genesis block's parent hash field.
     pub parent_hash: BlockHash,
     /// The genesis block's author field.
-    pub author: Address,
+    pub author: Public,
     /// The genesis block's timestamp field.
     pub timestamp: u64,
     /// Transactions root of the genesis block. Should be BLAKE_NULL_RLP.
@@ -108,8 +108,8 @@ impl Scheme {
         {
             let mut t = TrieFactory::create(db.as_hashdb_mut(), &mut root);
 
-            for (address, account) in &*self.genesis_accounts {
-                let r = t.insert(&**address, &account.rlp_bytes());
+            for (pubkey, account) in &*self.genesis_accounts {
+                let r = t.insert(pubkey.as_ref(), &account.rlp_bytes());
                 debug_assert_eq!(Ok(None), r);
                 r?;
             }
@@ -233,7 +233,7 @@ impl Scheme {
         ret.out()
     }
 
-    pub fn genesis_accounts(&self) -> Vec<Address> {
+    pub fn genesis_accounts(&self) -> Vec<Public> {
         self.genesis_accounts.keys().cloned().collect()
     }
 }

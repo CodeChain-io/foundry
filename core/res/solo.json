@@ -4,9 +4,9 @@
     "solo": {
       "params": {
         "genesisStakes": {
-          "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg": 70000,
-          "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": 20000,
-          "tccq8snvxt5vfwthja7z7880dgs63x4njw2n5e5zm4h": 10000
+          "tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3": 70000,
+          "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu": 20000,
+          "tccqyaty0ad0jdy7865m06yl7fff5444dpdzhckreqxqjx440m7tkkegtwfee5": 10000
         }
       }
     }
@@ -35,22 +35,22 @@
     "seal": {
       "generic": "0x0"
     },
-    "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3",
+    "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3e2f0d",
     "timestamp": "0x00",
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "extraData": "0x"
   },
   "accounts": {
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqyca3rwt": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqgfrhflv": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvxf40sk": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqszkma5z": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5duemmc": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqcuzl32l": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqungah99": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpqc2ul2h": { "balance": "1000000" },
-    "tccq8vapdlstar6ghmqgczp6j2e83njsqq0tsvaxm9u": { "balance": "1000000" },
-    "tccqxphelyu2n73ekpewrsyj0256wjhn2aqds9xrrrg": { "balance": "10000000000000000000", "seq": "0" }
+    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqzzut2uq": { "balance": "1000000", "seq": "0" },
+    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqy7ng0qh": { "balance": "1000000", "seq": "0" },
+    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxdkfvn6": { "balance": "1000000", "seq": "0" },
+    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg0dw93s": { "balance": "1000000", "seq": "0" },
+    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq2ug0xza": { "balance": "1000000" },
+    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvq8vr72": { "balance": "1000000" },
+    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqwnzdqd8": { "balance": "1000000" },
+    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsycz367": { "balance": "1000000" },
+    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqjharjfn": { "balance": "1000000" },
+    "tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3": { "balance": "10000000000000000000", "seq": "0" }
   },
   "shards": 1
 }

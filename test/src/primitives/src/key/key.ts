@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import nacl = require("tweetnacl");
 import { toArray, toHex } from "../utility";
 

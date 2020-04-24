@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -92,8 +92,8 @@ describe("Nomination", function() {
                 currentValidators.map(validator => validator.pubkey.toString())
             ).not.to.includes(alice.publicKey);
             expect(
-                banned.map(ban => ban.getAccountId().toString())
-            ).not.to.includes(alice.accountId);
+                banned.map(ban => ban.getPubKey().toString())
+            ).not.to.includes(alice.publicKey);
             expect(
                 candidates.map(candidate => candidate.pubkey.toString())
             ).not.to.includes(alice.publicKey);

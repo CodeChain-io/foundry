@@ -1,9 +1,7 @@
 import { Buffer } from "buffer";
 import * as _ from "lodash";
 
-import { blake160 } from "../hash";
 import { toHex } from "../utility";
-import { H160 } from "../value/H160";
 import { H256, H256Value } from "../value/H256";
 
 import { decode, encode, fromWords, toWords } from "./bech32";
@@ -20,30 +18,13 @@ export type AddressValue = Address | string;
  */
 export class Address {
     public static fromPublic(
-        publicKey: H256Value,
-        options: { networkId: string; version?: number }
-    ): Address {
-        if (!H256.check(publicKey)) {
-            throw Error(
-                `Invalid public key for creating Address: ${publicKey}`
-            );
-        }
-        return Address.fromAccountId(
-            getAccountIdFromPublic(H256.ensure(publicKey).value),
-            options
-        );
-    }
-
-    public static fromAccountId(
-        accountId: H160 | string,
+        pubkey: H256Value,
         options: { networkId: string; version?: number }
     ) {
         const { networkId, version = 1 } = options;
 
-        if (!H160.check(accountId)) {
-            throw Error(
-                `Invalid accountId for creating Address: "${accountId}"`
-            );
+        if (!H256.check(pubkey)) {
+            throw Error(`Invalid public key for creating Address: "${pubkey}"`);
         }
         if (version !== 1) {
             throw Error(`Unsupported version for Address: "${version}"`);
@@ -55,14 +36,11 @@ export class Address {
         const words = toWords(
             Buffer.from(
                 _.padStart(version.toString(16), 2, "0") +
-                    H160.ensure(accountId).value,
+                    H256.ensure(pubkey).value,
                 "hex"
             )
         );
-        return new Address(
-            H160.ensure(accountId),
-            encode(networkId + "c", words)
-        );
+        return new Address(H256.ensure(pubkey), encode(networkId + "c", words));
     }
 
     public static fromString(address: string) {
@@ -80,8 +58,8 @@ export class Address {
             throw Error(`Unsupported version for Address: ${version}`);
         }
 
-        const accountId = toHex(Buffer.from(bytes.slice(1)));
-        return new Address(new H160(accountId), address);
+        const pubkey = toHex(Buffer.from(bytes.slice(1)));
+        return new Address(new H256(pubkey), address);
     }
 
     public static check(address: any): boolean {
@@ -100,29 +78,29 @@ export class Address {
         }
     }
 
-    public static ensureAccount(address: Address | H160 | string): H160 {
+    public static ensureAccount(address: Address | H256 | string): H256 {
         if (address instanceof Address) {
             // FIXME: verify network id
-            return address.getAccountId();
-        } else if (address instanceof H160) {
+            return address.getPubKey();
+        } else if (address instanceof H256) {
             return address;
         } else if (address.match(`^(0x)?[a-fA-F0-9]{40}$`)) {
-            return new H160(address);
+            return new H256(address);
         } else {
-            return Address.fromString(address).getAccountId();
+            return Address.fromString(address).getPubKey();
         }
     }
 
     private static checkString(value: string): boolean {
         // FIXME: verify checksum
-        return /^.{2}c[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{40}$/.test(value);
+        return /^.{2}c[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{59}$/.test(value);
     }
 
-    public readonly accountId: H160;
+    public readonly pubkey: H256;
     public readonly value: string;
 
-    private constructor(accountId: H160, address: string) {
-        this.accountId = accountId;
+    private constructor(pubkey: H256, address: string) {
+        this.pubkey = pubkey;
         this.value = address;
     }
 
@@ -130,17 +108,7 @@ export class Address {
         return this.value;
     }
 
-    public getAccountId(): H160 {
-        return this.accountId;
+    public getPubKey(): H256 {
+        return this.pubkey;
     }
-}
-
-function getAccountIdFromPublic(publicKey: string): string {
-    if (typeof publicKey !== "string") {
-        throw Error(
-            `Unexpected parameter for getAccountIdFromPublic: ${publicKey}`
-        );
-    }
-    // FIXME: Check 512-bit hexstring
-    return blake160(publicKey);
 }

@@ -100,8 +100,8 @@ describe("Auto Self Nomination", function() {
                 currentValidators.map(validator => validator.pubkey.toString())
             ).not.to.includes(alice.publicKey);
             expect(
-                banned.map(ban => ban.getAccountId().toString())
-            ).not.to.includes(alice.accountId);
+                banned.map(ban => ban.getPubKey().toString())
+            ).not.to.includes(alice.publicKey);
             expect(
                 candidates.map(candidate => candidate.pubkey.toString())
             ).not.to.includes(alice.publicKey);

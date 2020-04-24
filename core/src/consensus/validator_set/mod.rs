@@ -17,7 +17,7 @@
 use super::BitSet;
 use crate::client::ConsensusClient;
 use crate::consensus::EngineError;
-use ckey::{Address, Ed25519Public as Public};
+use ckey::Ed25519Public as Public;
 use ctypes::BlockHash;
 use std::sync::Weak;
 
@@ -31,19 +31,13 @@ pub trait ValidatorSet: Send + Sync {
     /// using underlying, default call mechanism.
     fn contains(&self, parent: &BlockHash, public: &Public) -> bool;
 
-    /// Checks if a given address is a validator.
-    fn contains_address(&self, parent: &BlockHash, address: &Address) -> bool;
-
     /// Draws a validator from index modulo number of validators.
     fn get(&self, parent: &BlockHash, index: usize) -> Public;
 
     /// Draws a validator from nonce modulo number of validators.
     fn get_index(&self, parent: &BlockHash, public: &Public) -> Option<usize>;
 
-    /// Draws a validator index from validator address.
-    fn get_index_by_address(&self, parent: &BlockHash, address: &Address) -> Option<usize>;
-
-    fn next_block_proposer(&self, parent: &BlockHash, view: u64) -> Address;
+    fn next_block_proposer(&self, parent: &BlockHash, view: u64) -> Public;
 
     /// Returns the current number of validators.
     fn count(&self, parent: &BlockHash) -> usize;
@@ -53,7 +47,7 @@ pub trait ValidatorSet: Send + Sync {
     /// Allows blockchain state access.
     fn register_client(&self, _client: Weak<dyn ConsensusClient>) {}
 
-    fn current_addresses(&self, _hash: &BlockHash) -> Vec<Address>;
+    fn current_validators(&self, _hash: &BlockHash) -> Vec<Public>;
 
-    fn next_addresses(&self, _hash: &BlockHash) -> Vec<Address>;
+    fn next_validators(&self, _hash: &BlockHash) -> Vec<Public>;
 }

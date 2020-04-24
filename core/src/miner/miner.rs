@@ -27,7 +27,7 @@ use crate::error::Error;
 use crate::scheme::Scheme;
 use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
 use crate::types::{BlockId, TransactionId};
-use ckey::{public_to_address, Address, Ed25519Private as Private, Ed25519Public as Public, Password, PlatformAddress};
+use ckey::{Ed25519Private as Private, Ed25519Public as Public, Password, PlatformAddress};
 use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
 use ctypes::errors::HistoryError;
 use ctypes::transaction::{IncompleteTransaction, Transaction};
@@ -83,7 +83,7 @@ impl Default for MinerOptions {
 
 #[derive(Debug, Default, Clone)]
 pub struct AuthoringParams {
-    pub author: Address,
+    pub author: Public,
     pub extra_data: Bytes,
 }
 
@@ -100,8 +100,8 @@ pub struct Miner {
     sealing_enabled: AtomicBool,
 
     accounts: Arc<AccountProvider>,
-    malicious_users: RwLock<HashSet<Address>>,
-    immune_users: RwLock<HashSet<Address>>,
+    malicious_users: RwLock<HashSet<Public>>,
+    immune_users: RwLock<HashSet<Public>>,
 }
 
 impl Miner {
@@ -179,18 +179,17 @@ impl Miner {
                 let hash = tx.hash();
                 // FIXME: Refactoring is needed. recover_public is calling in verify_transaction_unordered.
                 let signer_public = tx.signer_public();
-                let signer_address = public_to_address(&signer_public);
                 if default_origin.is_local() {
-                    self.immune_users.write().insert(signer_address);
+                    self.immune_users.write().insert(signer_public);
                 }
 
-                let origin = if self.accounts.has_public(&signer_public).unwrap_or_default() {
+                let origin = if self.accounts.has_account(&signer_public).unwrap_or_default() {
                     TxOrigin::Local
                 } else {
                     default_origin
                 };
 
-                if self.malicious_users.read().contains(&signer_address) {
+                if self.malicious_users.read().contains(&signer_public) {
                     // FIXME: just to skip, think about another way.
                     return Ok(())
                 }
@@ -209,8 +208,8 @@ impl Miner {
                     .and_then(|_| Ok(tx.try_into()?))
                     .map_err(|e| {
                         match e {
-                            Error::Syntax(_) if !origin.is_local() && !immune_users.contains(&signer_address) => {
-                                self.malicious_users.write().insert(signer_address);
+                            Error::Syntax(_) if !origin.is_local() && !immune_users.contains(&signer_public) => {
+                                self.malicious_users.write().insert(signer_public);
                             }
                             _ => {}
                         }
@@ -289,7 +288,7 @@ impl Miner {
                     // TODO: This generates a new random account to make the transaction.
                     // It should use the block signer.
                     let tx_signer = Private::random();
-                    let seq = open_block.state().seq(&public_to_address(&tx_signer.public_key()))?;
+                    let seq = open_block.state().seq(&tx_signer.public_key())?;
                     let tx = Transaction {
                         network_id: chain.network_id(),
                         action,
@@ -332,8 +331,7 @@ impl Miner {
 
         for tx in transactions {
             let signer_public = tx.signer_public();
-            let signer_address = public_to_address(&signer_public);
-            if self.malicious_users.read().contains(&signer_address) {
+            if self.malicious_users.read().contains(&signer_public) {
                 invalid_transactions.push(tx.hash());
                 continue
             }
@@ -379,9 +377,7 @@ impl Miner {
             // TODO: This generates a new random account to make the transaction.
             // It should use the block signer.
             let tx_signer = block_tx_signer.unwrap_or_else(Private::random);
-            let mut seq = block_tx_seq
-                .map(Ok)
-                .unwrap_or_else(|| open_block.state().seq(&public_to_address(&tx_signer.public_key())))?;
+            let mut seq = block_tx_seq.map(Ok).unwrap_or_else(|| open_block.state().seq(&tx_signer.public_key()))?;
             for action in actions {
                 let tx = Transaction {
                     network_id: chain.network_id(),
@@ -398,10 +394,7 @@ impl Miner {
         }
         let block = open_block.close()?;
 
-        let fetch_seq = |p: &Public| {
-            let address = public_to_address(p);
-            chain.latest_seq(&address)
-        };
+        let fetch_seq = |p: &Public| chain.latest_seq(p);
 
         {
             let mut mem_pool = self.mem_pool.write();
@@ -449,19 +442,19 @@ impl MinerService for Miner {
         self.params.read().clone()
     }
 
-    fn set_author(&self, address: Address) -> Result<(), AccountProviderError> {
-        self.params.write().author = address;
+    fn set_author(&self, pubkey: Public) -> Result<(), AccountProviderError> {
+        self.params.write().author = pubkey;
 
         if self.engine_type().need_signer_key() {
-            ctrace!(MINER, "Set author to {:?}", address);
+            ctrace!(MINER, "Set author to {:?}", pubkey);
             // Sign test message
-            self.accounts.get_unlocked_account(&address)?.sign(&Default::default())?;
-            self.engine.set_signer(Arc::clone(&self.accounts), address);
+            self.accounts.get_unlocked_account(&pubkey)?.sign(&Default::default())?;
+            self.engine.set_signer(Arc::clone(&self.accounts), pubkey);
         }
         Ok(())
     }
 
-    fn get_author_address(&self) -> Address {
+    fn get_author(&self) -> Public {
         self.params.read().author
     }
 
@@ -619,10 +612,10 @@ impl MinerService for Miner {
         passphrase: Option<Password>,
         seq: Option<u64>,
     ) -> Result<(TxHash, u64), Error> {
-        let address = platform_address.try_into_address()?;
+        let pubkey = platform_address.try_into_pubkey()?;
         let seq = match seq {
             Some(seq) => seq,
-            None => get_next_seq(self.future_transactions(), &[address])
+            None => get_next_seq(self.future_transactions(), &[pubkey])
                 .map(|seq| {
                     cwarn!(RPC, "There are future transactions for {}", platform_address);
                     seq
@@ -633,17 +626,17 @@ impl MinerService for Miner {
                         .expect("Common params of the latest block always exists")
                         .max_body_size();
                     const DEFAULT_RANGE: Range<u64> = 0..::std::u64::MAX;
-                    get_next_seq(self.ready_transactions(size_limit, DEFAULT_RANGE).transactions, &[address])
+                    get_next_seq(self.ready_transactions(size_limit, DEFAULT_RANGE).transactions, &[pubkey])
                         .map(|seq| {
                             cdebug!(RPC, "There are ready transactions for {}", platform_address);
                             seq
                         })
-                        .unwrap_or_else(|| client.latest_seq(&address))
+                        .unwrap_or_else(|| client.latest_seq(&pubkey))
                 }),
         };
         let tx = tx.complete(seq);
         let tx_hash = tx.hash();
-        let account = account_provider.get_account(&address, passphrase.as_ref())?;
+        let account = account_provider.get_account(&pubkey, passphrase.as_ref())?;
         let sig = account.sign(&tx_hash)?;
         let signer_public = account.public()?;
         let unverified = UnverifiedTransaction::new(tx, sig, signer_public);
@@ -693,41 +686,39 @@ impl MinerService for Miner {
         self.sealing_enabled.store(false, Ordering::Relaxed);
     }
 
-    fn get_malicious_users(&self) -> Vec<Address> {
+    fn get_malicious_users(&self) -> Vec<Public> {
         Vec::from_iter(self.malicious_users.read().iter().map(Clone::clone))
     }
 
-    fn release_malicious_users(&self, prisoner_vec: Vec<Address>) {
+    fn release_malicious_users(&self, prisoners: Vec<Public>) {
         let mut malicious_users = self.malicious_users.write();
-        for address in prisoner_vec {
-            malicious_users.remove(&address);
+        for prisoner in &prisoners {
+            malicious_users.remove(prisoner);
         }
     }
 
-    fn imprison_malicious_users(&self, prisoner_vec: Vec<Address>) {
+    fn imprison_malicious_users(&self, prisoners: Vec<Public>) {
         let mut malicious_users = self.malicious_users.write();
-        for address in prisoner_vec {
-            malicious_users.insert(address);
+        for prisoner in prisoners {
+            malicious_users.insert(prisoner);
         }
     }
 
-    fn get_immune_users(&self) -> Vec<Address> {
+    fn get_immune_users(&self) -> Vec<Public> {
         Vec::from_iter(self.immune_users.read().iter().map(Clone::clone))
     }
 
-    fn register_immune_users(&self, immune_user_vec: Vec<Address>) {
-        let mut immune_users = self.immune_users.write();
-        for address in immune_user_vec {
-            immune_users.insert(address);
+    fn register_immune_users(&self, immune_users: Vec<Public>) {
+        let mut immune_users_lock = self.immune_users.write();
+        for user in immune_users {
+            immune_users_lock.insert(user);
         }
     }
 }
 
-fn get_next_seq(transactions: impl IntoIterator<Item = VerifiedTransaction>, addresses: &[Address]) -> Option<u64> {
-    let mut txes = transactions
-        .into_iter()
-        .filter(|tx| addresses.contains(&public_to_address(&tx.signer_public())))
-        .map(|tx| tx.transaction().seq);
+fn get_next_seq(transactions: impl IntoIterator<Item = VerifiedTransaction>, pubkeys: &[Public]) -> Option<u64> {
+    let mut txes =
+        transactions.into_iter().filter(|tx| pubkeys.contains(&tx.signer_public())).map(|tx| tx.transaction().seq);
     if let Some(first) = txes.next() {
         Some(txes.fold(first, std::cmp::max) + 1)
     } else {
@@ -765,7 +756,7 @@ pub mod test {
                 fee: 40,
                 network_id: "tc".into(),
                 action: Action::Pay {
-                    receiver: public_to_address(&Public::random()),
+                    receiver: Public::random(),
                     quantity: 100,
                 },
             },
@@ -780,7 +771,7 @@ pub mod test {
                 fee: 40,
                 network_id: "tc".into(),
                 action: Action::Pay {
-                    receiver: public_to_address(&Public::random()),
+                    receiver: Public::random(),
                     quantity: 100,
                 },
             },

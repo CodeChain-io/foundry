@@ -24,7 +24,7 @@ use crate::client::{AccountData, BlockChainTrait};
 use crate::miner::fetch_account_creator;
 use crate::transaction::{PendingVerifiedTransactions, VerifiedTransaction};
 use crate::Error as CoreError;
-use ckey::{public_to_address, Ed25519Public as Public};
+use ckey::Ed25519Public as Public;
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use ctypes::{BlockNumber, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
@@ -718,7 +718,7 @@ impl MemPool {
             );
 
             return Err(RuntimeError::InsufficientBalance {
-                address: public_to_address(&tx.signer_public()),
+                pubkey: tx.signer_public(),
                 cost: tx.transaction().fee,
                 balance: client_account.balance,
             }
@@ -1000,9 +1000,9 @@ pub mod test {
         //setup test_client
         let test_client = TestBlockChainClient::new();
         let keypair: KeyPair = Random.generate().unwrap();
-        let default_addr = public_to_address(keypair.public());
-        test_client.set_seq(default_addr, 4u64);
-        test_client.set_balance(default_addr, u64::max_value());
+        let default_addr = keypair.public();
+        test_client.set_seq(*default_addr, 4u64);
+        test_client.set_balance(*default_addr, u64::max_value());
 
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db.clone());
@@ -1083,10 +1083,9 @@ pub mod test {
 
         let fetch_account = fetch_account_creator(&test_client);
         let keypair: KeyPair = Random.generate().unwrap();
-        let address = public_to_address(keypair.public());
-        println!("! {}", address);
-        test_client.set_balance(address, 1_000_000_000_000);
-        assert_eq!(1_000_000_000_000, test_client.latest_balance(&address));
+        let pubkey = keypair.public();
+        test_client.set_balance(*pubkey, 1_000_000_000_000);
+        assert_eq!(1_000_000_000_000, test_client.latest_balance(&pubkey));
 
         let inserted_block_number = 1;
         let inserted_timestamp = 100;
@@ -1114,10 +1113,7 @@ pub mod test {
 
         let best_block_number = test_client.chain_info().best_block_number;
         let best_block_timestamp = test_client.chain_info().best_block_timestamp;
-        let fetch_seq = |p: &Public| -> u64 {
-            let address = public_to_address(p);
-            test_client.latest_seq(&address)
-        };
+        let fetch_seq = |p: &Public| -> u64 { test_client.latest_seq(&p) };
         mem_pool.remove(&[create_signed_pay(1, &keypair).hash()], &fetch_seq, best_block_number, best_block_timestamp);
 
         assert_eq!(

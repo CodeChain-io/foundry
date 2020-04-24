@@ -9,7 +9,6 @@ import {
     blake256,
     blake256WithKey,
     generatePrivateKey,
-    getAccountIdFromPrivate,
     getPublicFromPrivate,
     ripemd160,
     signEd25519,
@@ -30,7 +29,6 @@ class SDK {
         signEd25519,
         verifyEd25519,
         generatePrivateKey,
-        getAccountIdFromPrivate,
         getPublicFromPrivate
     };
 

@@ -24,7 +24,7 @@ export class Pay extends Transaction {
     protected actionToEncodeObject(): any[] {
         return [
             2,
-            this.receiver.getAccountId().toEncodeObject(),
+            this.receiver.getPubKey().toEncodeObject(),
             this.quantity.toEncodeObject()
         ];
     }
