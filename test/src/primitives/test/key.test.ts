@@ -3,30 +3,32 @@ import {
     getPublicFromPrivate,
     signEd25519,
     verifyEd25519
-} from "..";
+} from "../src";
+import "mocha";
+import { expect } from "chai";
 
-test("generatePrivateKey", () => {
+it("generatePrivateKey", () => {
     const priv = generatePrivateKey();
-    expect(/^[0-9a-fA-F]{128}$/.test(priv)).toBe(true);
+    expect(/^[0-9a-fA-F]{128}$/.test(priv)).true;
 });
 
-test("getPublicFromPrivate", () => {
+it("getPublicFromPrivate", () => {
     const priv = generatePrivateKey();
     const pub = getPublicFromPrivate(priv);
-    expect(/^[0-9a-fA-F]{64}$/.test(pub)).toBe(true);
+    expect(/^[0-9a-fA-F]{64}$/.test(pub)).true;
 });
 
-test("sign & verify ECDSA", () => {
+it("sign & verify ECDSA", () => {
     const msg =
         "0000000000000000000000000000000000000000000000000000000000000000";
     const priv = generatePrivateKey();
     const pub = getPublicFromPrivate(priv);
     const sig = signEd25519(msg, priv);
-    expect(verifyEd25519(msg, sig, pub)).toBe(true);
+    expect(verifyEd25519(msg, sig, pub)).true;
 });
 
 // Examples are generated from Ed25519 signature in pysodium
-describe.each([
+[
     [
         "2730417b940503dfc8dddfe5dfdbfc029b269fec9bc0170a156bcfe30f5afda8",
         "36e13e2debaa6702fd9d5b6804e9c7890735f00a588aa06b7cd832368297b2fddb688c1df2093113bfc6dc1c61984be8dec0e5fa97587ec611f4dcd04182d89a",
@@ -52,10 +54,14 @@ describe.each([
         "01ed6bd345d313f35f7b6c50efe991f4a7248e5eece900f8886b60fba5a2b437851b578d9cc0b6ffb256c3f41a7f9fa56915180b03bd2228bbbf1a38a0cfce8c",
         "70400fe11c2e10f3ae1d805c2083268afecaf3864a050f14af8d26023be194dbf66175dd621d592dbabb4f291fe460b4748ef88454b354d4516dc50a0b16b703"
     ]
-])("verify Ed25519 with example: %p", (msg, priv, sigStr) => {
-    const pub = getPublicFromPrivate(priv);
+].forEach(args => {
+    const [msg, priv, sigStr] = args;
 
-    test("verify", () => {
-        expect(verifyEd25519(msg, sigStr, pub)).toBe(true);
+    describe(`verify Ed25519 with example: ${msg} ${priv} ${sigStr}`, () => {
+        const pub = getPublicFromPrivate(priv);
+
+        it("verify", () => {
+            expect(verifyEd25519(msg, sigStr, pub)).true;
+        });
     });
 });
