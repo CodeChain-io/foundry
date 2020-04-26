@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { Address, H512, U64 } from "foundry-primitives";
 import "mocha";
+import { Address, H512, U64 } from "../../../primitives/src";
 import { getAccountIdFromPrivate } from "../../utils";
 import { Pay } from "../classes";
 import { fromJSONToSignedTransaction } from "../transaction/json";

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { H256 } from "foundry-primitives/lib";
+import { H256 } from "../primitives/src";
 import "mocha";
 import { createTestSuite } from "./invalidBlockPropagation.helper";
 
