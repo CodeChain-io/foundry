@@ -22,7 +22,7 @@ import {
     Address,
     signEd25519,
     U64
-} from "foundry-primitives/lib";
+} from "../primitives/src";
 import RPC from "foundry-rpc";
 import "mocha";
 import * as RLP from "rlp";

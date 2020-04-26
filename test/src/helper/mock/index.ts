@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+import * as RLP from "rlp";
 import {
     blake256,
     Ed25519Signature,
@@ -23,8 +24,7 @@ import {
     U256,
     U64,
     verifyEd25519
-} from "foundry-primitives";
-import * as RLP from "rlp";
+} from "../../primitives/src";
 import { SignedTransaction } from "../../sdk/core/SignedTransaction";
 import { readUIntRLP } from "../rlp";
 import {

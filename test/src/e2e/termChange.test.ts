@@ -25,7 +25,7 @@ import {
     validator0Address
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
-import { H256 } from "foundry-primitives";
+import { H256 } from "../primitives/src";
 import { blake256, getPublicFromPrivate } from "../sdk/utils";
 import * as RLP from "rlp";
 

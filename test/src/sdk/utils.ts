@@ -13,7 +13,7 @@ import {
     signEd25519 as _signEd25519,
     toHex as _toHex,
     verifyEd25519 as _verifyEd25519
-} from "foundry-primitives";
+} from "../primitives/src";
 
 /**
  * Converts buffer to hexadecimal string.

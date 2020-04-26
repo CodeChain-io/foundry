@@ -1,4 +1,4 @@
-import { Address } from "foundry-primitives";
+import { Address } from "../../primitives/src";
 
 export interface TextJSON {
     content: string;

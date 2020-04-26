@@ -9,8 +9,7 @@ import {
     U256,
     U64,
     U64Value
-} from "foundry-primitives";
-
+} from "../../primitives/src";
 import { Block } from "./Block";
 import { SignedTransaction } from "./SignedTransaction";
 import { Transaction } from "./Transaction";
