@@ -149,7 +149,6 @@ impl<'x> OpenBlock<'x> {
     pub fn push_transaction<C: FindDoubleVoteHandler>(
         &mut self,
         tx: VerifiedTransaction,
-        h: Option<TxHash>,
         client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
@@ -168,7 +167,7 @@ impl<'x> OpenBlock<'x> {
             self.block.header.timestamp(),
         ) {
             Ok(()) => {
-                self.block.transactions_set.insert(h.unwrap_or(hash));
+                self.block.transactions_set.insert(hash);
                 self.block.transactions.push(tx);
                 None
             }
@@ -194,7 +193,7 @@ impl<'x> OpenBlock<'x> {
         parent_block_timestamp: u64,
     ) -> Result<(), Error> {
         for tx in transactions {
-            self.push_transaction(tx.clone(), None, client, parent_block_number, parent_block_timestamp)?;
+            self.push_transaction(tx.clone(), client, parent_block_number, parent_block_timestamp)?;
         }
         Ok(())
     }
@@ -208,7 +207,7 @@ impl<'x> OpenBlock<'x> {
     }
 
     /// Turn this into a `ClosedBlock`.
-    fn close_impl(&mut self) -> Result<(), Error> {
+    pub fn close(mut self) -> Result<ClosedBlock, Error> {
         if let Err(e) = self.engine.on_close_block(&mut self.block) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
@@ -222,13 +221,6 @@ impl<'x> OpenBlock<'x> {
         let vset_raw = NextValidators::load_from_state(self.block.state())?;
         let vset = vset_raw.create_compact_validator_set();
         self.block.header.set_next_validator_set_hash(vset.hash());
-
-        Ok(())
-    }
-
-    /// Turn this into a `ClosedBlock`.
-    pub fn close(mut self) -> Result<ClosedBlock, Error> {
-        self.close_impl()?;
 
         if self.block.header.transactions_root() == &BLAKE_NULL_RLP {
             self.block.header.set_transactions_root(skewed_merkle_root(

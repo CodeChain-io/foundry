@@ -1,5 +1,4 @@
-import { Address, AddressValue, U64Value } from "foundry-primitives";
-
+import { Address, AddressValue, U64Value } from "../../primitives/src";
 import { SignedTransaction, Transaction, U64 } from "../core/classes";
 import { NetworkId } from "../core/types";
 import { KeyStore } from "./KeyStore";

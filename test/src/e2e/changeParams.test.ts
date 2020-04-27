@@ -17,7 +17,7 @@
 import * as chai from "chai";
 import { expect } from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { H256, Address } from "foundry-primitives";
+import { H256, Address } from "../primitives/src";
 import "mocha";
 import {
     aliceAddress,

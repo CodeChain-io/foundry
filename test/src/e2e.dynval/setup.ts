@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import {
-    blake256,
-    getPublicFromPrivate,
-    H256,
-    U64Value
-} from "foundry-primitives/lib";
 import RPC from "foundry-rpc";
 import { Context, Suite } from "mocha";
 import * as RLP from "rlp";
@@ -34,6 +28,12 @@ import {
 } from "../helper/constants";
 import { PromiseExpect, wait } from "../helper/promise";
 import CodeChain, { Signer } from "../helper/spawn";
+import {
+    blake256,
+    getPublicFromPrivate,
+    H256,
+    U64Value
+} from "../primitives/src";
 import { SDK } from "../sdk";
 import * as stake from "../stakeholder";
 
