@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { Address } from "foundry-primitives/lib";
+import { Address } from "../primitives/src";
 import "mocha";
 import {
     aliceAddress,

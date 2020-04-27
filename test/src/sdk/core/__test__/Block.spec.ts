@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { Address, H256, H512, U64 } from "foundry-primitives";
 import "mocha";
+import { Address, H256, H512, U64 } from "../../../primitives/src";
 import { Block } from "../Block";
 import { Pay } from "../transaction/Pay";
 

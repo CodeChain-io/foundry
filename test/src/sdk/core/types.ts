@@ -1,4 +1,4 @@
-import { U64 } from "foundry-primitives";
+import { U64 } from "../../primitives/src";
 
 export type NetworkId = string;
 

@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H256 } from "foundry-primitives/lib";
+import { H256 } from "../../primitives/src";
 import "mocha";
 import * as stake from "../../stakeholder";
 

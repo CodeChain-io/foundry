@@ -15,13 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { Address, H160, H256, U256 } from "foundry-primitives";
 import { Block } from "foundry-rpc";
 import "mocha";
 import Test = Mocha.Test;
 import { Mock } from "../helper/mock/";
 import { Header } from "../helper/mock/cHeader";
 import CodeChain from "../helper/spawn";
+import { Address, H160, H256, U256 } from "../primitives/src";
 
 async function setup(): Promise<[Header, Block, Header]> {
     const temporaryNode = new CodeChain({
