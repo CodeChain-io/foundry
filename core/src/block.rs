@@ -175,11 +175,7 @@ impl<'x> OpenBlock<'x> {
 
     /// Turn this into a `ClosedBlock`.
     pub fn close(mut self, block_executor: &dyn BlockExecutor) -> Result<ClosedBlock, Error> {
-        let block_outcome = block_executor.close_block(self.state_mut());
-        if !block_outcome.is_success {
-            return Err(Error::Other("The application rejected the block".to_string()))
-        }
-
+        let block_outcome = block_executor.close_block(self.state_mut())?;
         // TODO: How to do this without copy?
         let mut tx_events: HashMap<TxHash, Vec<Event>> = HashMap::new();
         for (tx, result) in self.transactions().iter().zip(block_outcome.transaction_results.iter()) {

@@ -57,18 +57,20 @@ impl BlockExecutor for TestCoordinator {
         self.body_size.fetch_add(body_size, Ordering::SeqCst);
     }
 
-    fn close_block(&self, context: &mut dyn StorageAccess) -> BlockOutcome {
-        let is_success = self.body_size.load(Ordering::SeqCst) > self.consensus_params.max_body_size();
-        BlockOutcome {
-            is_success,
-            updated_validator_set: Some(self.validator_set.clone()),
-            updated_consensus_params: Some(self.consensus_params),
-            transaction_results: (0..self.body_count.load(Ordering::SeqCst))
-                .map(|_| TransactionExecutionOutcome {
-                    events: Vec::new(),
-                })
-                .collect(),
-            events: Vec::new(),
+    fn close_block(&self, context: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError> {
+        if self.body_size.load(Ordering::SeqCst) > self.consensus_params.max_body_size() {
+            Ok(BlockOutcome {
+                updated_validator_set: Some(self.validator_set.clone()),
+                updated_consensus_params: Some(self.consensus_params),
+                transaction_results: (0..self.body_count.load(Ordering::SeqCst))
+                    .map(|_| TransactionExecutionOutcome {
+                        events: Vec::new(),
+                    })
+                    .collect(),
+                events: Vec::new(),
+            })
+        } else {
+            Err(String::from("Block size exceeds the maximum value"))
         }
     }
 }
