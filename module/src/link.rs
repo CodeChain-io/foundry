@@ -16,7 +16,7 @@
 
 mod base;
 
-use intertrait::CastFrom;
+use intertrait::CastFromSync;
 use linkme::distributed_slice;
 use once_cell::sync;
 use std::collections::HashMap;
@@ -81,7 +81,7 @@ pub trait Linkable: Send + Sync {
 /// [`Linkable`]: ./trait.Linkable.html
 /// [`export`]: ./trait.Port.html#tymnethod.export
 /// [`import`]: ./trait.Port.html#tymnethod.import
-pub trait Port: CastFrom {
+pub trait Port: CastFromSync {
     /// Sets to send a list of handles represented by the `ids` to the other end on link
     /// creation. The `ids` are indices into a list of service objects created when the module
     /// owning this port is loaded into a sandbox.CBOR map fed
