@@ -22,6 +22,7 @@ import * as getPort from "get-port";
 import * as mkdirp from "mkdirp";
 import { ncp } from "ncp";
 import { createInterface as createReadline, ReadLine } from "readline";
+import * as WebSocket from "ws";
 import { SDK } from "../sdk";
 import {
     Address,
@@ -83,6 +84,7 @@ export default class CodeChain {
     private _port?: number;
     private _rpcPort?: number;
     private _rpc?: RPC;
+    private _informerPort?: number;
     private process: ProcessState;
     private restarts: number;
     private _keepLogs: boolean;
@@ -132,6 +134,9 @@ export default class CodeChain {
     }
     public get port(): number {
         return this._port!;
+    }
+    public get informerPort(): number {
+        return this._informerPort!;
     }
     public get secretKey(): number {
         return 1 + this.id;
@@ -245,9 +250,12 @@ export default class CodeChain {
                 `target/${useDebugBuild ? "debug" : "release"}/foundry`,
                 [
                     ...baseArgs,
-                    "--no-informer",
                     "--chain",
                     this.chain,
+                    "--informer-interface",
+                    "127.0.0.1",
+                    "--informer-port",
+                    this.informerPort.toString(),
                     "--db-path",
                     this.dbPath,
                     "--snapshot-path",
@@ -780,9 +788,12 @@ export default class CodeChain {
             }
         }
     }
-
+    public informerClient(): WebSocket {
+        return new WebSocket(`ws://localhost:${this.informerPort}`);
+    }
     private async initialize_port() {
         this._port = await getPort({ port: this.id + 3486 });
         this._rpcPort = await getPort({ port: this.id + 8081 });
+        this._informerPort = await getPort({ port: this.id + 7070 });
     }
 }
