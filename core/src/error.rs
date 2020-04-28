@@ -86,8 +86,6 @@ pub enum BlockError {
     InvalidTransactionsRoot(Mismatch<H256>),
     /// Next validator set hash header field is invalid.
     InvalidNextValidatorSetHash(Mismatch<H256>),
-    /// Proof-of-work aspect of seal is invalid.
-    InvalidProofOfWork,
     /// Some low-level aspect of the seal is incorrect.
     InvalidSeal,
     /// Timestamp header field is invalid.
@@ -136,7 +134,6 @@ impl fmt::Display for BlockError {
             InvalidStateRoot(mis) => format!("Invalid state root in header: {}", mis),
             InvalidTransactionsRoot(mis) => format!("Invalid transactions root in header: {}", mis),
             InvalidNextValidatorSetHash(mis) => format!("Invalid next validator set hash in header: {}", mis),
-            InvalidProofOfWork => "Invalid proof of work.".into(),
             InvalidSeal => "Block has invalid seal.".into(),
             InvalidTimestamp(oob) => format!("Invalid timestamp in header: {}", oob),
             TemporarilyInvalid(oob) => format!("Future timestamp in header: {}", oob),
