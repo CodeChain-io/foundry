@@ -245,7 +245,7 @@ impl Miner {
 
         let block_executor = &*self.block_executor;
 
-        open_block.open(block_executor, evidences);
+        open_block.open(block_executor, evidences)?;
         open_block.execute_transactions(block_executor, transactions)?;
         let closed_block = open_block.close(block_executor)?;
         Ok(Some(closed_block))

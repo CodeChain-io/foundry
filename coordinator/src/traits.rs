@@ -22,7 +22,12 @@ pub trait Initializer: Send + Sync {
     fn initialize_chain(&self, app_state: String) -> (CompactValidatorSet, ConsensusParams);
 }
 pub trait BlockExecutor: Send + Sync {
-    fn open_block(&self, context: &mut dyn StorageAccess, header: &Header, verified_crime: &[VerifiedCrime]);
+    fn open_block(
+        &self,
+        context: &mut dyn StorageAccess,
+        header: &Header,
+        verified_crime: &[VerifiedCrime],
+    ) -> Result<(), HeaderError>;
     fn execute_transactions(
         &self,
         context: &mut dyn StorageAccess,

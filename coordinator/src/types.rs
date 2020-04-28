@@ -256,6 +256,7 @@ pub struct TransactionExecutionOutcome {
     pub events: Vec<Event>,
 }
 
+pub type HeaderError = String;
 pub type ExecuteTransactionError = ();
 pub type CloseBlockError = String;
 

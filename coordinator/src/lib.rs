@@ -40,7 +40,12 @@ impl Initializer for Coordinator {
 }
 
 impl BlockExecutor for Coordinator {
-    fn open_block(&self, context: &mut dyn StorageAccess, header: &Header, verified_crime: &[VerifiedCrime]) {
+    fn open_block(
+        &self,
+        context: &mut dyn StorageAccess,
+        header: &Header,
+        verified_crime: &[VerifiedCrime],
+    ) -> Result<(), HeaderError> {
         unimplemented!()
     }
 

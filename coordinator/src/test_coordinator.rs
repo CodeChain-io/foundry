@@ -46,9 +46,15 @@ impl Initializer for TestCoordinator {
 }
 
 impl BlockExecutor for TestCoordinator {
-    fn open_block(&self, _context: &mut dyn StorageAccess, _header: &Header, _verified_crime: &[VerifiedCrime]) {
+    fn open_block(
+        &self,
+        _context: &mut dyn StorageAccess,
+        _header: &Header,
+        _verified_crime: &[VerifiedCrime],
+    ) -> Result<(), HeaderError> {
         self.body_count.store(0, Ordering::SeqCst);
         self.body_size.store(0, Ordering::SeqCst);
+        Ok(())
     }
 
     fn execute_transactions(

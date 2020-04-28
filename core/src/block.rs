@@ -149,7 +149,7 @@ impl<'x> OpenBlock<'x> {
         Ok(r)
     }
 
-    pub fn open(&mut self, block_executor: &dyn BlockExecutor, evidences: Vec<Evidence>) {
+    pub fn open(&mut self, block_executor: &dyn BlockExecutor, evidences: Vec<Evidence>) -> Result<(), Error> {
         let pre_header = PreHeader::new(
             self.header().timestamp(),
             self.header().number(),
@@ -165,7 +165,7 @@ impl<'x> OpenBlock<'x> {
                 self.block.evidences.iter().map(Encodable::rlp_bytes),
             ));
         }
-        block_executor.open_block(self.state_mut(), &pre_header, &verified_crimes);
+        block_executor.open_block(self.state_mut(), &pre_header, &verified_crimes).map_err(From::from)
     }
 
     pub fn execute_transactions(
@@ -366,7 +366,7 @@ pub fn enact(
     b.populate_from(header);
     engine.on_open_block(b.inner_mut())?;
 
-    b.open(block_executor, evidences.to_vec());
+    b.open(block_executor, evidences.to_vec())?;
     b.execute_transactions(block_executor, transactions.to_vec())?;
     b.close(block_executor)
 }
