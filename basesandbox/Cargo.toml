@@ -16,5 +16,5 @@ serde_derive = "1.0"
 once_cell = "1.3.1"
 
 [[bin]]
-path = "./tests/simple.rs"
+path = "./tests/simple/simple.rs"
 name = "test_simple_rs"
