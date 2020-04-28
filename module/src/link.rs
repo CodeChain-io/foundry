@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use intertrait::CastFrom;
+use intertrait::CastFromSync;
 use linkme::distributed_slice;
 use once_cell::sync;
 use thiserror::Error;
@@ -64,7 +64,7 @@ pub trait Linkable: Send + Sync {
 /// [`Linkable`]: ./trait.Linkable.html
 /// [`send`]: ./trait.Port.html#tymnethod.send
 /// [`receive`]: ./trait.Port.html#tymnethod.receive
-pub trait Port: CastFrom {
+pub trait Port: CastFromSync {
     /// Sets to send a list of handles represented by the `ids` to the other end on link
     /// creation. The `ids` are indices into a list of service objects created when the module
     /// owning this port is loaded into a sandbox.CBOR map fed
@@ -86,8 +86,10 @@ pub trait Port: CastFrom {
     fn receiver(&self) -> Arc<dyn Receiver>;
 
     /// Links with another [`Linkable`] by passing in a [`Receiver`] taken from the [`Linkable`]
-    /// in the opposite side. This method is to support the base link, which is required
-    /// for the minimum interoperability among [`Linkable`]s. Upon a call to this method,
+    /// in the opposite side.
+    ///
+    /// This method is to support the base link, which is required for the minimum
+    /// interoperability among [`Linkable`]s. Upon a call to this method,
     /// `Port`s need to send and receive handles as configured with [`export`] and [`import`].
     ///
     /// [`Linkable`]: ./trait.Linkable.html
