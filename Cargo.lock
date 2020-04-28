@@ -1415,9 +1415,9 @@ checksum = "141340095b15ed7491bd3d4ced9d20cebfb826174b6bb03386381f62b01e3d77"
 
 [[package]]
 name = "intertrait"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8034463dcfb688db21fdecb735a49a5f1ee500f025d44cd8f0b246f94cf32022"
+checksum = "30d9578379642ca20c09a50fca1f3725973f85cbe97c1c95484d2f2ef03b9ed2"
 dependencies = [
  "intertrait-macros",
  "linkme",
@@ -1426,13 +1426,13 @@ dependencies = [
 
 [[package]]
 name = "intertrait-macros"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "183aab39cf5e4b02d7526b770e35fd15f5f55bfd98a5370cb095800cb774998a"
+checksum = "edcd598472aef1b4757a561542738aecc80598224eba75a2d9c5294bc3334b1e"
 dependencies = [
  "proc-macro2 1.0.10",
  "quote 1.0.7",
- "syn 1.0.17",
+ "syn 1.0.21",
  "uuid 0.8.1",
 ]
 
@@ -1471,7 +1471,7 @@ dependencies = [
  "proc-macro-crate",
  "proc-macro2 1.0.10",
  "quote 1.0.7",
- "syn 1.0.17",
+ "syn 1.0.21",
 ]
 
 [[package]]
@@ -1702,7 +1702,7 @@ checksum = "46ec32551b60388ecb60b0b1f9419b0eca6349bb6e60907e57fb4f3524803cc4"
 dependencies = [
  "proc-macro2 1.0.10",
  "quote 1.0.7",
- "syn 1.0.17",
+ "syn 1.0.21",
 ]
 
 [[package]]
@@ -1916,7 +1916,7 @@ version = "0.1.0"
 dependencies = [
  "proc-macro2 1.0.10",
  "quote 1.0.7",
- "syn 1.0.17",
+ "syn 1.0.21",
 ]
 
 [[package]]
@@ -2842,7 +2842,7 @@ checksum = "818fbf6bfa9a42d3bfcaca148547aa00c7b915bec71d1757aa2d44ca68771984"
 dependencies = [
  "proc-macro2 1.0.10",
  "quote 1.0.7",
- "syn 1.0.17",
+ "syn 1.0.21",
 ]
 
 [[package]]
@@ -3081,9 +3081,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.17"
+version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0df0eb663f387145cab623dea85b09c2c5b4b0aef44e945d928e682fce71bb03"
+checksum = "4696caa4048ac7ce2bcd2e484b3cef88c1004e41b8e945a277e2c25dc0b72060"
 dependencies = [
  "proc-macro2 1.0.10",
  "quote 1.0.7",
@@ -3197,7 +3197,7 @@ checksum = "bd80fc12f73063ac132ac92aceea36734f04a1d93c1240c6944e23a3b8841793"
 dependencies = [
  "proc-macro2 1.0.10",
  "quote 1.0.7",
- "syn 1.0.17",
+ "syn 1.0.21",
 ]
 
 [[package]]
@@ -3367,7 +3367,7 @@ checksum = "f0c3acc6aa564495a0f2e1d59fab677cd7f81a19994cfc7f3ad0e64301560389"
 dependencies = [
  "proc-macro2 1.0.10",
  "quote 1.0.7",
- "syn 1.0.17",
+ "syn 1.0.21",
 ]
 
 [[package]]
