@@ -53,21 +53,37 @@ pub trait Sandboxer: Send + Sync {
     fn supported_module_types(&self) -> &'static [&'static str];
 
     /// Loads the module in the given `path` into a [`Sandbox`] and pass the given
-    /// `init` and `exports` to the module for initialization.
+    /// `id_map`, `init`, and `exports` to the module for initialization.
     ///
     /// The corresponding module must have been imported into the module repository
     /// configured for the current Foundry host. That is why this method accepts a `path`
     /// to identify a module.
     ///
+    /// The `id_map` is for assigning compact integer IDs to the services and types
+    /// and their methods and fields. The zero-based index of each is its ID.
+    /// The outer slice contains fully qualified names of services/types, and the nested
+    /// is those of fields/methods for each service or type.
+    ///
+    /// The map is to assist efficient implementation of base links, where the costly
+    /// name lookups are performed only once, and their IDs are used instead to identify
+    /// services, types, methods, and fields.
+    ///
     /// The `init` serves as configuration parameters for the module-wide initialization,
-    /// and must be CBOR encoded. The `exports` instruct how to instantiate an ordered list
-    /// of service objects to be exported via links. Each item in the `exports` designates
-    /// a call on a module's constructor function, where the first element is name
-    /// of a constructor function, and the second element is arguments to the constructor
-    /// function encoded in CBOR.
+    /// and must be CBOR encoded.
+    ///
+    /// And the `exports` instruct how to instantiate an ordered list of service objects
+    /// to be exported via links. Each item in the `exports` designates a call on a module's
+    /// constructor service, where the first element is name of a constructor function,
+    /// and the second element is arguments to the constructor function encoded in CBOR.
     ///
     /// [`Sandbox`]: ./trait.Sandbox.html
-    fn load(&self, path: &dyn AsRef<Path>, init: &[u8], exports: &[(&str, &[u8])]) -> Result<Arc<dyn Sandbox>>;
+    fn load<'a>(
+        &self,
+        path: &'a dyn AsRef<Path>,
+        id_map: &[(&str, &[&str])],
+        init: &[u8],
+        exports: &[(&str, &[u8])],
+    ) -> Result<'a, Box<dyn Sandbox>>;
 }
 
 /// A sandbox instance hosting an instantiated module.
