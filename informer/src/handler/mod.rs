@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod connection;
 mod rpc_ws_handler;
+mod subscription;
 
-pub use connection::Connection;
-pub use rpc_ws_handler::{Handler, InformerConfig};
+pub use rpc_ws_handler::{Handler, InformerConfig, Registration};
+pub use subscription::Subscription;

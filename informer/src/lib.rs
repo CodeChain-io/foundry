@@ -27,7 +27,7 @@ mod informer_service;
 pub mod rpc_server;
 
 pub use cinfo_courier::{informer_notify, EventTags, Events, InformerEventSender};
-pub use handler::{Connection, InformerConfig};
+pub use handler::{InformerConfig, Registration, Subscription};
 pub use informer_service::{ColdEvents, InformerService, RateLimiter};
 pub use jsonrpc_core;
 pub use jsonrpc_core::{Compatibility, Error, ErrorCode, MetaIoHandler, Metadata, Middleware, Params, Value};

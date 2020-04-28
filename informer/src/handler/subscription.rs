@@ -14,28 +14,33 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{ColdEvents, EventTags, Events, Params, Sink};
+use crate::{ColdEvents, EventTags, Events, Params, Sink, SubscriptionId};
 use jsonrpc_core::futures::Future;
+use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
 
 #[derive(Clone)]
 enum ConnectionState {
     Connected,
 }
 
-pub struct Connection {
+#[derive(Clone)]
+pub struct Subscription {
     status: ConnectionState,
-    pub subscription_id: u64,
+    pub subscription_id: SubscriptionId,
     pub interested_events: Vec<EventTags>,
     sink: Sink,
+    pub is_subscribing: Arc<AtomicBool>,
 }
 
-impl Connection {
-    pub fn new(sink: Sink, sub_id: u64) -> Self {
+impl Subscription {
+    pub fn new(sink: Sink, sub_id: SubscriptionId) -> Self {
         Self {
             status: ConnectionState::Connected,
             subscription_id: sub_id,
             interested_events: Vec::new(),
             sink,
+            is_subscribing: Arc::new(AtomicBool::new(true)),
         }
     }
     pub fn add_events(&mut self, params: Vec<String>) {

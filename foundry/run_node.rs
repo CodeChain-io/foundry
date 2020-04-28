@@ -267,10 +267,10 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
     // FIXME: unbound would cause memory leak.
     // FIXME: The full queue should be handled.
     // This will be fixed soon.
-    let (informer_connection_sender, informer_connection_receiver) = unbounded();
+    let (informer_sub_sender, informer_sub_receiver) = unbounded();
     let informer_event_sender = {
         if !config.informer.disable.unwrap() {
-            let (service, event_sender) = InformerService::new(informer_connection_receiver, client.client());
+            let (service, event_sender) = InformerService::new(informer_sub_receiver, client.client());
             service.run_service();
             event_sender
         } else {
@@ -346,7 +346,7 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
         if !config.informer.disable.unwrap() {
             let io: PubSubHandler<Arc<Session>> = PubSubHandler::new(MetaIoHandler::default());
             let mut informer_handler = Handler::new(io);
-            informer_handler.event_subscription(informer_connection_sender);
+            informer_handler.event_subscription(informer_sub_sender);
 
             Some(informer_handler.start_ws(config.informer_config())?)
         } else {
