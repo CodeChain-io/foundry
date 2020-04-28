@@ -48,7 +48,7 @@ impl BlockExecutor for Coordinator {
         unimplemented!()
     }
 
-    fn close_block(&self, context: &mut dyn StorageAccess) -> BlockOutcome {
+    fn close_block(&self, context: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError> {
         unimplemented!()
     }
 }
