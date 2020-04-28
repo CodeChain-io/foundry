@@ -51,10 +51,19 @@ impl BlockExecutor for TestCoordinator {
         self.body_size.store(0, Ordering::SeqCst);
     }
 
-    fn execute_transactions(&self, _context: &mut dyn StorageAccess, transactions: &[Transaction]) {
+    fn execute_transactions(
+        &self,
+        _context: &mut dyn StorageAccess,
+        transactions: &[Transaction],
+    ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError> {
         self.body_count.fetch_add(transactions.len(), Ordering::SeqCst);
         let body_size: usize = transactions.iter().map(|tx| tx.size()).sum();
         self.body_size.fetch_add(body_size, Ordering::SeqCst);
+        Ok((0..self.body_count.load(Ordering::SeqCst))
+            .map(|_| TransactionExecutionOutcome {
+                events: Vec::new(),
+            })
+            .collect())
     }
 
     fn close_block(&self, context: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError> {
@@ -62,11 +71,7 @@ impl BlockExecutor for TestCoordinator {
             Ok(BlockOutcome {
                 updated_validator_set: Some(self.validator_set.clone()),
                 updated_consensus_params: Some(self.consensus_params),
-                transaction_results: (0..self.body_count.load(Ordering::SeqCst))
-                    .map(|_| TransactionExecutionOutcome {
-                        events: Vec::new(),
-                    })
-                    .collect(),
+
                 events: Vec::new(),
             })
         } else {

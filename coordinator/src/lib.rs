@@ -44,7 +44,11 @@ impl BlockExecutor for Coordinator {
         unimplemented!()
     }
 
-    fn execute_transactions(&self, context: &mut dyn StorageAccess, transactions: &[Transaction]) {
+    fn execute_transactions(
+        &self,
+        context: &mut dyn StorageAccess,
+        transactions: &[Transaction],
+    ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError> {
         unimplemented!()
     }
 

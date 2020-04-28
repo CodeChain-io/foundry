@@ -256,12 +256,12 @@ pub struct TransactionExecutionOutcome {
     pub events: Vec<Event>,
 }
 
+pub type ExecuteTransactionError = ();
 pub type CloseBlockError = String;
 
 pub struct BlockOutcome {
     pub updated_validator_set: Option<CompactValidatorSet>,
     pub updated_consensus_params: Option<ConsensusParams>,
-    pub transaction_results: Vec<TransactionExecutionOutcome>,
     pub events: Vec<Event>,
 }
 

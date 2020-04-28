@@ -23,7 +23,11 @@ pub trait Initializer: Send + Sync {
 }
 pub trait BlockExecutor: Send + Sync {
     fn open_block(&self, context: &mut dyn StorageAccess, header: &Header, verified_crime: &[VerifiedCrime]);
-    fn execute_transactions(&self, context: &mut dyn StorageAccess, transactions: &[Transaction]);
+    fn execute_transactions(
+        &self,
+        context: &mut dyn StorageAccess,
+        transactions: &[Transaction],
+    ) -> Result<Vec<TransactionExecutionOutcome>, ()>;
     fn close_block(&self, context: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError>;
 }
 
