@@ -191,9 +191,7 @@ impl<'x> OpenBlock<'x> {
     pub fn close(mut self, block_executor: &dyn BlockExecutor) -> Result<ClosedBlock, Error> {
         let block_outcome = block_executor.close_block(self.state_mut())?;
 
-        let block_events = block_outcome.events.clone();
-        self.block.block_events = block_events;
-
+        self.block.block_events = block_outcome.events;
         let updated_validator_set = block_outcome.updated_validator_set;
         let next_validator_set_hash = match updated_validator_set {
             Some(ref set) => set.hash(),
