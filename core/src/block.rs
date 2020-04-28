@@ -168,21 +168,30 @@ impl<'x> OpenBlock<'x> {
         block_executor.open_block(self.state_mut(), &pre_header, &verified_crimes);
     }
 
-    pub fn execute_transactions(&mut self, block_executor: &dyn BlockExecutor, mut transactions: Vec<Transaction>) {
-        block_executor.execute_transactions(self.state_mut(), &transactions);
+    pub fn execute_transactions(
+        &mut self,
+        block_executor: &dyn BlockExecutor,
+        mut transactions: Vec<Transaction>,
+    ) -> Result<(), Error> {
+        // TODO: Handle erroneous transactions
+        let transaction_results = block_executor
+            .execute_transactions(self.state_mut(), &transactions)
+            .map_err(|_| Error::Other(String::from("Rejected while executing transactions")))?;
         self.block.transactions.append(&mut transactions);
+        // TODO: How to do this without copy?
+        let mut tx_events: HashMap<TxHash, Vec<Event>> = HashMap::new();
+        for (tx, result) in transactions.into_iter().zip(transaction_results.into_iter()) {
+            tx_events.insert(tx.hash(), result.events);
+        }
+        self.block.tx_events = tx_events;
+        Ok(())
     }
 
     /// Turn this into a `ClosedBlock`.
     pub fn close(mut self, block_executor: &dyn BlockExecutor) -> Result<ClosedBlock, Error> {
         let block_outcome = block_executor.close_block(self.state_mut())?;
-        // TODO: How to do this without copy?
-        let mut tx_events: HashMap<TxHash, Vec<Event>> = HashMap::new();
-        for (tx, result) in self.transactions().iter().zip(block_outcome.transaction_results.iter()) {
-            tx_events.insert(tx.hash(), result.events.clone());
-        }
+
         let block_events = block_outcome.events.clone();
-        self.block.tx_events = tx_events;
         self.block.block_events = block_events;
 
         let updated_validator_set = block_outcome.updated_validator_set;
@@ -358,6 +367,6 @@ pub fn enact(
     engine.on_open_block(b.inner_mut())?;
 
     b.open(block_executor, evidences.to_vec());
-    b.execute_transactions(block_executor, transactions.to_vec());
+    b.execute_transactions(block_executor, transactions.to_vec())?;
     b.close(block_executor)
 }
