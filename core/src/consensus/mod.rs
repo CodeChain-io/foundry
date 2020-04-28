@@ -167,8 +167,8 @@ pub trait ConsensusEngine: Sync + Send {
     fn on_close_block(
         &self,
         _block: &mut ExecutedBlock,
-        _updated_validator_set: CompactValidatorSet,
-        _updated_consensus_params: ConsensusParams,
+        _updated_validator_set: Option<CompactValidatorSet>,
+        _updated_consensus_params: Option<ConsensusParams>,
     ) -> Result<(), Error> {
         Ok(())
     }

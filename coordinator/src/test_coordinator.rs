@@ -61,8 +61,8 @@ impl BlockExecutor for TestCoordinator {
         let is_success = self.body_size.load(Ordering::SeqCst) > self.consensus_params.max_body_size();
         BlockOutcome {
             is_success,
-            updated_validator_set: self.validator_set.clone(),
-            updated_consensus_params: self.consensus_params,
+            updated_validator_set: Some(self.validator_set.clone()),
+            updated_consensus_params: Some(self.consensus_params),
             transaction_results: (0..self.body_count.load(Ordering::SeqCst))
                 .map(|_| TransactionExecutionOutcome {
                     events: Vec::new(),

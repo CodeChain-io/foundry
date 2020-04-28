@@ -258,8 +258,8 @@ pub struct TransactionExecutionOutcome {
 
 pub struct BlockOutcome {
     pub is_success: bool,
-    pub updated_validator_set: CompactValidatorSet,
-    pub updated_consensus_params: ConsensusParams,
+    pub updated_validator_set: Option<CompactValidatorSet>,
+    pub updated_consensus_params: Option<ConsensusParams>,
     pub transaction_results: Vec<TransactionExecutionOutcome>,
     pub events: Vec<Event>,
 }
