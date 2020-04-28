@@ -20,7 +20,7 @@ use ccrypto::BLAKE_NULL_RLP;
 use ckey::Address;
 use coordinator::traits::BlockExecutor;
 use coordinator::types::{Event, Header as PreHeader, Transaction, VerifiedCrime};
-use cstate::{StateDB, StateError, StateWithCache, TopLevelState};
+use cstate::{NextValidatorSet, StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
 use ctypes::TxHash;
@@ -190,7 +190,10 @@ impl<'x> OpenBlock<'x> {
         self.block.block_events = block_events;
 
         let updated_validator_set = block_outcome.updated_validator_set;
-        let next_validator_set_hash = updated_validator_set.hash();
+        let next_validator_set_hash = match updated_validator_set {
+            Some(ref set) => set.hash(),
+            None => NextValidatorSet::load_from_state(self.block.state())?.create_compact_validator_set().hash(),
+        };
         let updated_consensus_params = block_outcome.updated_consensus_params;
         if let Err(e) = self.engine.on_close_block(&mut self.block, updated_validator_set, updated_consensus_params) {
             warn!("Encountered error on closing the block: {}", e);

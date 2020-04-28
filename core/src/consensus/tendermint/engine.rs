@@ -114,15 +114,19 @@ impl ConsensusEngine for Tendermint {
     fn on_close_block(
         &self,
         block: &mut ExecutedBlock,
-        updated_validator_set: CompactValidatorSet,
-        updated_consensus_params: ConsensusParams,
+        updated_validator_set: Option<CompactValidatorSet>,
+        updated_consensus_params: Option<ConsensusParams>,
     ) -> Result<(), Error> {
         let state = block.state_mut();
 
-        let validators = NextValidatorSet::from_compact_validator_set(updated_validator_set);
-        validators.save_to_state(state)?;
+        if let Some(set) = updated_validator_set {
+            let validators = NextValidatorSet::from_compact_validator_set(set);
+            validators.save_to_state(state)?;
+        }
 
-        state.update_consensus_params(updated_consensus_params)?;
+        if let Some(params) = updated_consensus_params {
+            state.update_consensus_params(params)?;
+        }
         Ok(())
     }
 
