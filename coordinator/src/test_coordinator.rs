@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::context::SubStorageAccess;
+use super::context::StorageAccess;
 use super::traits::{BlockExecutor, Initializer, TxFilter};
 use super::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
@@ -46,18 +46,18 @@ impl Initializer for TestCoordinator {
 }
 
 impl BlockExecutor for TestCoordinator {
-    fn open_block(&self, _context: &mut dyn SubStorageAccess, _header: &Header, _verified_crime: &[VerifiedCrime]) {
+    fn open_block(&self, _context: &mut dyn StorageAccess, _header: &Header, _verified_crime: &[VerifiedCrime]) {
         self.body_count.store(0, Ordering::SeqCst);
         self.body_size.store(0, Ordering::SeqCst);
     }
 
-    fn execute_transactions(&self, _context: &mut dyn SubStorageAccess, transactions: &[Transaction]) {
+    fn execute_transactions(&self, _context: &mut dyn StorageAccess, transactions: &[Transaction]) {
         self.body_count.fetch_add(transactions.len(), Ordering::SeqCst);
         let body_size: usize = transactions.iter().map(|tx| tx.size()).sum();
         self.body_size.fetch_add(body_size, Ordering::SeqCst);
     }
 
-    fn close_block(&self, context: &mut dyn SubStorageAccess) -> BlockOutcome {
+    fn close_block(&self, context: &mut dyn StorageAccess) -> BlockOutcome {
         let is_success = self.body_size.load(Ordering::SeqCst) > self.consensus_params.max_body_size();
         BlockOutcome {
             is_success,

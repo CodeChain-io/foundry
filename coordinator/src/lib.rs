@@ -17,7 +17,7 @@
 #![allow(dead_code, unused_variables)]
 use self::traits::{BlockExecutor, Initializer, TxFilter};
 use self::types::*;
-use context::SubStorageAccess;
+use context::StorageAccess;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 
 pub mod context;
@@ -40,15 +40,15 @@ impl Initializer for Coordinator {
 }
 
 impl BlockExecutor for Coordinator {
-    fn open_block(&self, context: &mut dyn SubStorageAccess, header: &Header, verified_crime: &[VerifiedCrime]) {
+    fn open_block(&self, context: &mut dyn StorageAccess, header: &Header, verified_crime: &[VerifiedCrime]) {
         unimplemented!()
     }
 
-    fn execute_transactions(&self, context: &mut dyn SubStorageAccess, transactions: &[Transaction]) {
+    fn execute_transactions(&self, context: &mut dyn StorageAccess, transactions: &[Transaction]) {
         unimplemented!()
     }
 
-    fn close_block(&self, context: &mut dyn SubStorageAccess) -> BlockOutcome {
+    fn close_block(&self, context: &mut dyn StorageAccess) -> BlockOutcome {
         unimplemented!()
     }
 }

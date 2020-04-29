@@ -45,7 +45,7 @@ use crate::{
 };
 use cdb::{AsHashDB, DatabaseError};
 use ckey::{public_to_address, Address, Ed25519Public as Public, NetworkId};
-use coordinator::context::{Key as DbCxtKey, SubStorageAccess, Value as DbCxtValue};
+use coordinator::context::{Key as DbCxtKey, StorageAccess, Value as DbCxtValue};
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, Transaction};
 use ctypes::util::unexpected::Mismatch;
@@ -131,11 +131,11 @@ impl TopStateView for TopLevelState {
 
 macro_rules! panic_at {
     ($method: literal, $e: expr) => {
-        panic!("SubStorageAccess {} method failed with {}", $method, $e);
+        panic!("StorageAccess {} method failed with {}", $method, $e);
     };
 }
 
-impl SubStorageAccess for TopLevelState {
+impl StorageAccess for TopLevelState {
     fn get(&self, storage_id: StorageId, key: &DbCxtKey) -> Option<DbCxtValue> {
         match self.module_state(storage_id) {
             Ok(state) => match state?.get_datum(key) {
