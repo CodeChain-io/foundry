@@ -55,7 +55,7 @@ impl_address!(SHARD, ShardTextAddress, PREFIX);
 
 impl ShardTextAddress {
     pub fn new(tx_hash: TxHash, shard_id: ShardId) -> Self {
-        let index = ::std::u64::MAX;
+        let index = u64::MAX;
 
         Self::from_hash_with_shard_id(*tx_hash, index, shard_id)
     }
