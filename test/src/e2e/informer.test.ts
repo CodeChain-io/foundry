@@ -95,6 +95,62 @@ describe("Informer", function() {
                 await wait(500);
             }
         });
+        it("De-registration", async function() {
+            const subscription = nodeA.informerClient();
+            subscription.once("open", () => {
+                subscription.send(
+                    JSON.stringify({
+                        jsonrpc: "2.0",
+                        id: 1,
+                        method: "register",
+                        params: ["PeerAdded"]
+                    })
+                );
+            });
+
+            let json: any;
+            let subscribtionId: string;
+            await promiseExpect.shouldFulfill(
+                "on message",
+                new Promise(resolve => {
+                    subscription.addEventListener("message", a => {
+                        subscription.once("message", message => {
+                            json = JSON.parse(message);
+                            subscribtionId = json.result;
+                            expect(isFinite(json.result)).to.be.true;
+                        });
+                        subscription.once("message", message => {
+                            json = JSON.parse(message);
+                            expect(json.result).to.include("true");
+                        });
+                        resolve();
+                    });
+                })
+            );
+
+            await nodeA.rpc.net.connect({
+                address: address.toString(),
+                port: nodeB.port
+            });
+            while (
+                !(await nodeA.rpc.net.isConnected({
+                    address: address.toString(),
+                    port: nodeB.port
+                }))
+            ) {
+                await wait(500);
+            }
+            subscription.once("open", () => {
+                subscription.send(
+                    JSON.stringify({
+                        jsonrpc: "2.0",
+                        id: 1,
+                        method: "deregister",
+                        params: [subscribtionId]
+                    })
+                );
+            });
+        });
     });
 
     afterEach(function() {
