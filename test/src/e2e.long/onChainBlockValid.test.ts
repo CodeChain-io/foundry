@@ -28,17 +28,6 @@ describe("Test onChain block communication", async function() {
     let soloBlock1: Header;
     let soloBlock2: Header;
 
-    let VALID_PARENT = new H256(
-        "ff8324bd3b0232e4fd1799496ae422ee0896cc7a8a64a2885052e320b4ba9535"
-    );
-    let VALID_AUTHOR = new H160("7777777777777777777777777777777777777777");
-    let VALID_TRANSACTIONS_ROOT = new H256(
-        "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
-    );
-    let VALID_STATEROOT = new H256(
-        "2f6b19afc38f6f1464af20dde08d8bebd6a6aec0a95aaf7ef2fb729c3b88dc5b"
-    );
-
     before(async function() {
         const node = new CodeChain({
             argv: ["--force-sealing"]
@@ -102,11 +91,6 @@ describe("Test onChain block communication", async function() {
             new H256(block2.nextValidatorSetHash),
             block2.seal
         );
-
-        VALID_PARENT = new H256(block1.parentHash);
-        VALID_AUTHOR = author2PlatformAddr.accountId;
-        VALID_TRANSACTIONS_ROOT = new H256(block1.transactionsRoot);
-        VALID_STATEROOT = new H256(block1.stateRoot);
 
         nodeA = new CodeChain();
         await nodeA.start();
