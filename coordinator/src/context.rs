@@ -24,7 +24,23 @@ pub trait Context: SubStorageAccess + MemPoolAccess {}
 pub type Key = dyn AsRef<[u8]>;
 pub type Value = Vec<u8>;
 
+// Interface between each module and the coordinator
 pub trait SubStorageAccess {
+    fn get(&self, key: &Key) -> Option<Value>;
+    fn set(&self, key: &Key, value: Value);
+    fn has(&self, key: &Key) -> bool;
+    fn remove(&self, key: &Key);
+
+    /// Create a recoverable checkpoint of this state
+    fn create_checkpoint(&self);
+    /// Revert to the last checkpoint and discard it
+    fn revert_to_the_checkpoint(&self);
+    /// Merge last checkpoint with the previous
+    fn discard_checkpoint(&self);
+}
+
+// Interface between host and the coordinator
+pub trait StorageAccess {
     fn get(&self, storage_id: StorageId, key: &Key) -> Option<Value>;
     fn set(&mut self, storage_id: StorageId, key: &Key, value: Value);
     fn has(&self, storage_id: StorageId, key: &Key) -> bool;

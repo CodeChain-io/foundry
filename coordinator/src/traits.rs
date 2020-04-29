@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::context::SubStorageAccess;
+use super::context::StorageAccess;
 use super::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 
@@ -22,9 +22,9 @@ pub trait Initializer: Send + Sync {
     fn initialize_chain(&self, app_state: String) -> (CompactValidatorSet, ConsensusParams);
 }
 pub trait BlockExecutor: Send + Sync {
-    fn open_block(&self, context: &mut dyn SubStorageAccess, header: &Header, verified_crime: &[VerifiedCrime]);
-    fn execute_transactions(&self, context: &mut dyn SubStorageAccess, transactions: &[Transaction]);
-    fn close_block(&self, context: &mut dyn SubStorageAccess) -> BlockOutcome;
+    fn open_block(&self, context: &mut dyn StorageAccess, header: &Header, verified_crime: &[VerifiedCrime]);
+    fn execute_transactions(&self, context: &mut dyn StorageAccess, transactions: &[Transaction]);
+    fn close_block(&self, context: &mut dyn StorageAccess) -> BlockOutcome;
 }
 
 pub trait TxFilter: Send + Sync {
