@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::{stake, ConsensusEngine, EngineError, Seal};
+use super::super::{ConsensusEngine, EngineError, Seal};
 use super::network::TendermintExtension;
 pub use super::params::{TendermintParams, TimeoutParams};
 use super::worker;
@@ -32,9 +32,10 @@ use ckey::{public_to_address, Address};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{
-    init_stake, update_validator_weights, CurrentValidators, DoubleVoteHandler, NextValidators, StateDB, StateResult,
-    StateWithCache, TopLevelState, TopState, TopStateView,
+    init_stake, DoubleVoteHandler, Jail, NextValidators, StateDB, StateResult, StateWithCache, TopLevelState,
+    TopStateView,
 };
+use ctypes::transaction::Action;
 use ctypes::{BlockHash, Header};
 use primitives::H256;
 use std::collections::HashSet;
@@ -108,26 +109,20 @@ impl ConsensusEngine for Tendermint {
     }
 
     /// Block transformation functions, before the transactions.
-    fn on_open_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
-        let mut current_validators = CurrentValidators::load_from_state(block.state())?;
-        current_validators.update(NextValidators::load_from_state(block.state())?.clone());
-        current_validators.save_to_state(block.state_mut())?;
-
-        Ok(())
+    fn open_block_action(&self, block: &ExecutedBlock) -> Result<Option<Action>, Error> {
+        Ok(Some(Action::UpdateValidators {
+            validators: NextValidators::load_from_state(block.state())?.into(),
+        }))
     }
 
-    fn on_close_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
+    fn close_block_actions(&self, block: &ExecutedBlock) -> Result<Vec<Action>, Error> {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
 
         let parent_hash = *block.header().parent_hash();
         let parent = client.block_header(&parent_hash.into()).expect("Parent header must exist").decode();
         let parent_common_params = client.common_params(parent_hash.into()).expect("CommonParams of parent must exist");
-        let block_number = block.header().number();
 
         let metadata = block.state().metadata()?.expect("Metadata must exist");
-
-        let author = *block.header().author();
-        update_validator_weights(block.state_mut(), &author)?;
 
         let term = metadata.current_term_id();
         let term_seconds = match term {
@@ -137,30 +132,44 @@ impl ConsensusEngine for Tendermint {
                 parent_term_common_params.expect("TermCommonParams should exist").term_seconds()
             }
         };
+        let next_validators = NextValidators::update_weight(block.state(), block.header().author())?;
         if !is_term_changed(block.header(), &parent, term_seconds) {
-            return Ok(())
+            return Ok(vec![Action::ChangeNextValidators {
+                validators: next_validators.into(),
+            }])
         }
 
         let inactive_validators = match term {
             0 => Vec::new(),
             _ => {
                 let start_of_the_current_term = metadata.last_term_finished_block_num() + 1;
-                let validators = NextValidators::load_from_state(block.state())?
-                    .into_iter()
-                    .map(|val| public_to_address(val.pubkey()))
-                    .collect();
+                let validators = next_validators.iter().map(|val| public_to_address(val.pubkey())).collect();
                 inactive_validators(&*client, start_of_the_current_term, block.header(), validators)
             }
         };
 
-        stake::on_term_close(block.state_mut(), block_number, &inactive_validators)?;
+        let current_term = metadata.current_term_id();
+        let (custody_until, kick_at) = {
+            let params = metadata.params();
+            let custody_period = params.custody_period();
+            assert_ne!(0, custody_period);
+            let release_period = params.release_period();
+            assert_ne!(0, release_period);
+            (current_term + custody_period, current_term + release_period)
+        };
 
-        let state = block.state_mut();
-        let validators = NextValidators::elect(&state)?;
-        validators.save_to_state(state)?;
+        let released_addresses = Jail::load_from_state(block.state())?.released_addresses(current_term);
 
-        state.update_term_params()?;
-        Ok(())
+        Ok(vec![
+            Action::CloseTerm {
+                inactive_validators,
+                next_validators: next_validators.into(),
+                released_addresses,
+                custody_until,
+                kick_at,
+            },
+            Action::Elect {},
+        ])
     }
 
     fn register_client(&self, client: Weak<dyn ConsensusClient>) {

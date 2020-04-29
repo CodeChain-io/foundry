@@ -27,14 +27,15 @@ use crate::error::Error;
 use crate::scheme::Scheme;
 use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
 use crate::types::{BlockId, TransactionId};
-use ckey::{public_to_address, Address, Ed25519Public as Public, Password, PlatformAddress};
-use cstate::{FindDoubleVoteHandler, TopLevelState};
+use ckey::{public_to_address, Address, Ed25519Private as Private, Ed25519Public as Public, Password, PlatformAddress};
+use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
 use ctypes::errors::HistoryError;
-use ctypes::transaction::IncompleteTransaction;
+use ctypes::transaction::{IncompleteTransaction, Transaction};
 use ctypes::{BlockHash, TxHash};
 use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
+use rlp::Encodable;
 use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::convert::TryInto;
@@ -265,7 +266,7 @@ impl Miner {
         parent_block_id: BlockId,
         chain: &C,
     ) -> Result<Option<ClosedBlock>, Error> {
-        let (transactions, mut open_block, block_number) = {
+        let (transactions, mut open_block, block_number, block_tx_signer, block_tx_seq) = {
             ctrace!(MINER, "prepare_block: No existing work - making new block");
             let params = self.params.read().clone();
             let open_block = chain.prepare_open_block(parent_block_id, params.author, params.extra_data);
@@ -280,9 +281,34 @@ impl Miner {
 
             // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock
             let mem_pool = self.mem_pool.read();
-            let transactions = mem_pool.top_transactions(max_body_size, DEFAULT_RANGE).transactions;
 
-            (transactions, open_block, block_number)
+            let mut transactions = Vec::default();
+            let (block_tx_signer, block_tx_seq) =
+                if let Some(action) = self.engine.open_block_action(open_block.block())? {
+                    ctrace!(MINER, "Enqueue a transaction to open block");
+                    // TODO: This generates a new random account to make the transaction.
+                    // It should use the block signer.
+                    let tx_signer = Private::random();
+                    let seq = open_block.state().seq(&public_to_address(&tx_signer.public_key()))?;
+                    let tx = Transaction {
+                        network_id: chain.network_id(),
+                        action,
+                        seq,
+                        fee: 0,
+                    };
+                    let verified_tx = VerifiedTransaction::new_with_sign(tx, &tx_signer);
+                    transactions.push(verified_tx);
+                    (Some(tx_signer), Some(seq + 1))
+                } else {
+                    (None, None)
+                };
+            let open_transaction_size = transactions.iter().map(|tx| tx.rlp_bytes().len()).sum();
+            assert!(max_body_size > open_transaction_size);
+            let mut pending_transactions =
+                mem_pool.top_transactions(max_body_size - open_transaction_size, DEFAULT_RANGE).transactions;
+            transactions.append(&mut pending_transactions);
+
+            (transactions, open_block, block_number, block_tx_signer, block_tx_seq)
         };
 
         let parent_header = {
@@ -297,7 +323,6 @@ impl Miner {
         } else {
             return Ok(None)
         }
-        self.engine.on_open_block(open_block.inner_mut())?;
 
         let mut invalid_transactions = Vec::new();
 
@@ -345,6 +370,32 @@ impl Miner {
         }
         cdebug!(MINER, "Pushed {}/{} transactions", tx_count, tx_total);
 
+        let actions = self.engine.close_block_actions(open_block.block()).map_err(|e| {
+            warn!("Encountered error on closing the block: {}", e);
+            e
+        })?;
+        if !actions.is_empty() {
+            ctrace!(MINER, "Enqueue {} transactions to close block", actions.len());
+            // TODO: This generates a new random account to make the transaction.
+            // It should use the block signer.
+            let tx_signer = block_tx_signer.unwrap_or_else(Private::random);
+            let mut seq = block_tx_seq
+                .map(Ok)
+                .unwrap_or_else(|| open_block.state().seq(&public_to_address(&tx_signer.public_key())))?;
+            for action in actions {
+                let tx = Transaction {
+                    network_id: chain.network_id(),
+                    action,
+                    seq,
+                    fee: 0,
+                };
+                seq += 1;
+                let tx = VerifiedTransaction::new_with_sign(tx, &tx_signer);
+                // TODO: The current code can insert more transactions than size limit.
+                // It should be fixed to pre-calculate the maximum size of the close transactions and prevent the size overflow.
+                open_block.push_transaction(tx, chain, parent_header.number(), parent_header.timestamp())?;
+            }
+        }
         let block = open_block.close()?;
 
         let fetch_seq = |p: &Public| {

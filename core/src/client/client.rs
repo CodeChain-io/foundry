@@ -620,7 +620,7 @@ impl Shard for Client {
 }
 
 impl BlockProducer for Client {
-    fn prepare_open_block(&self, parent_block_id: BlockId, author: Address, extra_data: Bytes) -> OpenBlock<'_> {
+    fn prepare_open_block(&self, parent_block_id: BlockId, author: Address, extra_data: Bytes) -> OpenBlock {
         let engine = &*self.engine;
         let chain = self.block_chain();
         let parent_hash = self.block_hash(&parent_block_id).expect("parent exist always");

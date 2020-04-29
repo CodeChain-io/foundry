@@ -164,13 +164,13 @@ pub trait ConsensusEngine: Sync + Send {
     fn on_timeout(&self, _token: usize) {}
 
     /// Block transformation functions, before the transactions.
-    fn on_open_block(&self, _block: &mut ExecutedBlock) -> Result<(), Error> {
-        Ok(())
+    fn open_block_action(&self, _block: &ExecutedBlock) -> Result<Option<Action>, Error> {
+        Ok(None)
     }
 
     /// Block transformation functions, after the transactions.
-    fn on_close_block(&self, _block: &mut ExecutedBlock) -> Result<(), Error> {
-        Ok(())
+    fn close_block_actions(&self, _block: &ExecutedBlock) -> Result<Vec<Action>, Error> {
+        Ok(vec![])
     }
 
     /// Add Client which can be used for sealing, potentially querying the state and sending messages.

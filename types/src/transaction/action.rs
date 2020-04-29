@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::errors::SyntaxError;
-use crate::transaction::{Approval, ShardTransaction};
+use crate::transaction::{Approval, ShardTransaction, Validator};
 use crate::{CommonParams, ShardId};
 use ccrypto::Blake;
 use ckey::{verify, Address, NetworkId};
@@ -33,6 +33,10 @@ enum ActionTag {
     SelfNominate = 0x24,
     ReportDoubleVote = 0x25,
     Redelegate = 0x26,
+    UpdateValidators = 0x30,
+    CloseTerm = 0x31,
+    ChangeNextValidators = 0x32,
+    Elect = 0x33,
     ChangeParams = 0xFF,
 }
 
@@ -54,6 +58,10 @@ impl Decodable for ActionTag {
             0x24 => Ok(Self::SelfNominate),
             0x25 => Ok(Self::ReportDoubleVote),
             0x26 => Ok(Self::Redelegate),
+            0x30 => Ok(Self::UpdateValidators),
+            0x31 => Ok(Self::CloseTerm),
+            0x32 => Ok(Self::ChangeNextValidators),
+            0x33 => Ok(Self::Elect),
             0xFF => Ok(Self::ChangeParams),
             _ => Err(DecoderError::Custom("Unexpected action prefix")),
         }
@@ -102,6 +110,20 @@ pub enum Action {
         message1: Bytes,
         message2: Bytes,
     },
+    UpdateValidators {
+        validators: Vec<Validator>,
+    },
+    CloseTerm {
+        inactive_validators: Vec<Address>,
+        next_validators: Vec<Validator>,
+        released_addresses: Vec<Address>,
+        custody_until: u64,
+        kick_at: u64,
+    },
+    ChangeNextValidators {
+        validators: Vec<Validator>,
+    },
+    Elect,
 }
 
 impl Action {
@@ -296,6 +318,40 @@ impl Encodable for Action {
             } => {
                 s.begin_list(3).append(&ActionTag::ReportDoubleVote).append(message1).append(message2);
             }
+            Action::UpdateValidators {
+                validators,
+            } => {
+                let s = s.begin_list(validators.len() + 1).append(&ActionTag::UpdateValidators);
+                for validator in validators {
+                    s.append(validator);
+                }
+            }
+            Action::CloseTerm {
+                inactive_validators,
+                next_validators,
+                released_addresses,
+                custody_until,
+                kick_at,
+            } => {
+                s.begin_list(6)
+                    .append(&ActionTag::CloseTerm)
+                    .append_list(inactive_validators)
+                    .append_list(next_validators)
+                    .append_list(released_addresses)
+                    .append(custody_until)
+                    .append(kick_at);
+            }
+            Action::ChangeNextValidators {
+                validators,
+            } => {
+                s.begin_list(1 + validators.len()).append(&ActionTag::ChangeNextValidators);
+                for validator in validators {
+                    s.append(validator);
+                }
+            }
+            Action::Elect => {
+                s.begin_list(1).append(&ActionTag::Elect);
+            }
         }
     }
 }
@@ -428,6 +484,63 @@ impl Decodable for Action {
                     message2,
                 })
             }
+            ActionTag::UpdateValidators => {
+                let item_count = rlp.item_count()?;
+                if item_count < 1 {
+                    return Err(DecoderError::RlpIncorrectListLen {
+                        expected: 1,
+                        got: item_count,
+                    })
+                }
+                let validators = rlp.iter().skip(1).map(|rlp| rlp.as_val()).collect::<Result<_, _>>()?;
+                Ok(Action::UpdateValidators {
+                    validators,
+                })
+            }
+            ActionTag::CloseTerm => {
+                let item_count = rlp.item_count()?;
+                if item_count != 6 {
+                    return Err(DecoderError::RlpIncorrectListLen {
+                        expected: 6,
+                        got: item_count,
+                    })
+                }
+                let inactive_validators = rlp.list_at(1)?;
+                let next_validators = rlp.list_at(2)?;
+                let released_addresses = rlp.list_at(3)?;
+                let custody_until = rlp.val_at(4)?;
+                let kick_at = rlp.val_at(5)?;
+                Ok(Action::CloseTerm {
+                    inactive_validators,
+                    next_validators,
+                    released_addresses,
+                    custody_until,
+                    kick_at,
+                })
+            }
+            ActionTag::ChangeNextValidators => {
+                let item_count = rlp.item_count()?;
+                if item_count < 1 {
+                    return Err(DecoderError::RlpIncorrectListLen {
+                        expected: 1,
+                        got: item_count,
+                    })
+                }
+                let validators = rlp.iter().skip(1).map(|rlp| rlp.as_val()).collect::<Result<_, _>>()?;
+                Ok(Action::ChangeNextValidators {
+                    validators,
+                })
+            }
+            ActionTag::Elect => {
+                let item_count = rlp.item_count()?;
+                if item_count != 1 {
+                    return Err(DecoderError::RlpIncorrectListLen {
+                        expected: 1,
+                        got: item_count,
+                    })
+                }
+                Ok(Action::Elect)
+            }
         }
     }
 }
@@ -456,6 +569,36 @@ mod tests {
                 Approval::new(Signature::random(), Public::random()),
             ],
         });
+    }
+
+    #[test]
+    fn rlp_of_update_validators() {
+        rlp_encode_and_decode_test!(Action::UpdateValidators {
+            validators: vec![Validator::new(1, 2, Public::random()), Validator::new(3, 4, Public::random())],
+        });
+    }
+
+    #[test]
+    fn rlp_of_close_term() {
+        rlp_encode_and_decode_test!(Action::CloseTerm {
+            inactive_validators: vec![Address::random(), Address::random(), Address::random()],
+            next_validators: vec![],
+            released_addresses: vec![Address::random(), Address::random()],
+            custody_until: 17,
+            kick_at: 31,
+        });
+    }
+
+    #[test]
+    fn rlp_of_change_next_validators() {
+        rlp_encode_and_decode_test!(Action::ChangeNextValidators {
+            validators: vec![],
+        });
+    }
+
+    #[test]
+    fn rlp_of_elect() {
+        rlp_encode_and_decode_test!(Action::Elect);
     }
 
     #[test]

@@ -50,10 +50,10 @@ use ckey::{
     Generator, KeyPairTrait, NetworkId, PlatformAddress, Random,
 };
 use cstate::tests::helpers::empty_top_state_with_metadata;
-use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState, Validator};
+use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::header::Header;
-use ctypes::transaction::{Action, Transaction};
+use ctypes::transaction::{Action, Transaction, Validator};
 use ctypes::{BlockHash, BlockNumber, CommonParams, Header as BlockHeader, TxHash};
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
@@ -149,7 +149,7 @@ impl TestBlockChainClient {
             history: RwLock::new(None),
             term_id: Some(1),
             validator_keys: RwLock::new(HashMap::new()),
-            validators: NextValidators::from_vector_to_test(vec![]),
+            validators: vec![].into(),
         };
 
         // insert genesis hash.
@@ -310,9 +310,8 @@ impl TestBlockChainClient {
             self.validator_keys.write().insert(public, private);
             pubkeys.push(public);
         }
-        let fixed_validators: NextValidators = NextValidators::from_vector_to_test(
-            pubkeys.into_iter().map(|pubkey| Validator::new_for_test(0, 0, pubkey)).collect(),
-        );
+        let fixed_validators: NextValidators =
+            pubkeys.into_iter().map(|pubkey| Validator::new(0, 0, pubkey)).collect::<Vec<_>>().into();
 
         self.validators = fixed_validators;
     }
@@ -329,7 +328,7 @@ pub fn get_temp_state_db() -> StateDB {
 }
 
 impl BlockProducer for TestBlockChainClient {
-    fn prepare_open_block(&self, _parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock<'_> {
+    fn prepare_open_block(&self, _parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock {
         let engine = &*self.scheme.engine;
         let genesis_header = self.scheme.genesis_header();
         let db = get_temp_state_db();

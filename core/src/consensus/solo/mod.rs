@@ -26,6 +26,7 @@ use crate::consensus::{EngineError, EngineType};
 use crate::error::Error;
 use ckey::Address;
 use cstate::{init_stake, DoubleVoteHandler, StateDB, StateResult, StateWithCache, TopLevelState};
+use ctypes::transaction::Action;
 use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
 use primitives::H256;
@@ -71,7 +72,7 @@ impl ConsensusEngine for Solo {
         Seal::Solo
     }
 
-    fn on_close_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
+    fn close_block_actions(&self, block: &ExecutedBlock) -> Result<Vec<Action>, Error> {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
 
         let parent_hash = *block.header().parent_hash();
@@ -79,20 +80,22 @@ impl ConsensusEngine for Solo {
         let parent_common_params = client.common_params(parent_hash.into()).expect("CommonParams of parent must exist");
         let term_seconds = parent_common_params.term_seconds();
         if term_seconds == 0 {
-            return Ok(())
+            return Ok(vec![])
         }
-        let last_term_finished_block_num = {
-            let header = block.header();
-            let current_term_period = header.timestamp() / term_seconds;
-            let parent_term_period = parent.timestamp() / term_seconds;
-            if current_term_period == parent_term_period {
-                return Ok(())
-            }
-            header.number()
-        };
+        let header = block.header();
+        let current_term_period = header.timestamp() / term_seconds;
+        let parent_term_period = parent.timestamp() / term_seconds;
+        if current_term_period == parent_term_period {
+            return Ok(vec![])
+        }
 
-        stake::on_term_close(block.state_mut(), last_term_finished_block_num, &[])?;
-        Ok(())
+        Ok(vec![Action::CloseTerm {
+            next_validators: vec![],
+            inactive_validators: vec![],
+            released_addresses: vec![],
+            custody_until: 0,
+            kick_at: 0,
+        }])
     }
 
     fn register_client(&self, client: Weak<dyn ConsensusClient>) {

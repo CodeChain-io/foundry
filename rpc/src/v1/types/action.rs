@@ -67,6 +67,10 @@ pub enum Action {
         message1: Bytes,
         message2: Bytes,
     },
+    UpdateValidators,
+    CloseTerm,
+    ChangeNextValidators,
+    Elect,
 }
 
 impl Action {
@@ -141,6 +145,18 @@ impl Action {
                 message1,
                 message2,
             },
+            ActionType::UpdateValidators {
+                ..
+            } => Action::UpdateValidators, // TODO: Implement serialization
+            ActionType::CloseTerm {
+                ..
+            } => Action::CloseTerm, // TODO: Implement serialization
+            ActionType::ChangeNextValidators {
+                ..
+            } => Action::ChangeNextValidators, // TODO: Implement serialization
+            ActionType::Elect {
+                ..
+            } => Action::Elect, // TODO: Implement serialization
         }
     }
 }
@@ -218,6 +234,10 @@ impl TryFrom<Action> for ActionType {
                 message1,
                 message2,
             },
+            Action::UpdateValidators => unreachable!("No reason to get UpdateValidators from RPCs"),
+            Action::CloseTerm => unreachable!("No reason to get CloseTerm from RPCs"),
+            Action::ChangeNextValidators => unreachable!("No reason to get ChangeNextValidators from RPCs"),
+            Action::Elect => unreachable!("No reason to get Elect from RPCs"),
         })
     }
 }

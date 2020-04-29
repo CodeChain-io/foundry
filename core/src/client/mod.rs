@@ -236,7 +236,7 @@ pub type ImportResult = Result<BlockHash, DatabaseError>;
 /// Provides methods used for sealing new state
 pub trait BlockProducer {
     /// Returns OpenBlock prepared for closing.
-    fn prepare_open_block(&self, parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock<'_>;
+    fn prepare_open_block(&self, parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock;
 }
 
 /// Extended client interface used for mining
