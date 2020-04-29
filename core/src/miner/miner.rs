@@ -276,7 +276,7 @@ impl Miner {
                 (block_number, parent_hash)
             };
             let max_body_size = chain.common_params(parent_hash.into()).unwrap().max_body_size();
-            const DEFAULT_RANGE: Range<u64> = 0..::std::u64::MAX;
+            const DEFAULT_RANGE: Range<u64> = 0..u64::MAX;
 
             // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock
             let mem_pool = self.mem_pool.read();
@@ -625,7 +625,7 @@ impl MinerService for Miner {
                         .common_params(BlockId::Latest)
                         .expect("Common params of the latest block always exists")
                         .max_body_size();
-                    const DEFAULT_RANGE: Range<u64> = 0..::std::u64::MAX;
+                    const DEFAULT_RANGE: Range<u64> = 0..u64::MAX;
                     get_next_seq(self.ready_transactions(size_limit, DEFAULT_RANGE).transactions, &[pubkey])
                         .map(|seq| {
                             cdebug!(RPC, "There are ready transactions for {}", platform_address);
