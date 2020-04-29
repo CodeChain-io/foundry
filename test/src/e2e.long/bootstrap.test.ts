@@ -69,6 +69,7 @@ describe("bootstrap", function() {
 
         afterEach(async function() {
             this.timeout(5_000 + 3_000 * NUM_NODES);
+            promiseExpect.checkFulfilled();
 
             if (this.currentTest!.state === "failed") {
                 bootstrap.keepLogs();
