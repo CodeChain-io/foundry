@@ -70,18 +70,18 @@ mod tests {
                         "timeoutPrecommit": 10000,
                         "timeoutCommit": 10000,
                         "genesisStakes": {
-                          "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde": {
+                          "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0": {
                             "stake": 100,
                             "delegations": {
-                              "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu": 10
+                              "4cnj73b1X2_K3XI_PJSXAQHZG0BD-VO4-TnhS3WEOy8Ym7UmT1Utc0": 10
                             }
                           },
-                          "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu": {
+                          "4cnj73b1X2_K3XI_PJSXAQHZG0BD-VO4-TnhS3WEOy8Ym7UmT1Utc0": {
                             "stake": 100
                           }
                         },
                         "genesisCandidates": {
-                          "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu": {
+                          "4cnj73b1X2_K3XI_PJSXAQHZG0BD-VO4-TnhS3WEOy8Ym7UmT1Utc0": {
                             "pubkey": "0x6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375",
                             "deposit": 20,
                             "nominationEndsAt": 100,
@@ -118,7 +118,7 @@ mod tests {
                         ]
                     }
                 },
-                "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3e2f0d",
+                "author": "fjjh0000AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtc0",
                 "timestamp": "0x00",
                 "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
             },
@@ -126,11 +126,11 @@ mod tests {
             "enode://b1217cbaa440e35ed471157123fe468e19e8b5ad5bedb4b1fdbcbdab6fb2f5ed3e95dd9c24a22a79fdb2352204cea207df27d92bfd21bfd41545e8b16f637499@104.44.138.37:30303"
             ],
             "accounts": {
-                "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqzzut2uq": { "balance": "1", "seq": "1048576" },
-                "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqy7ng0qh": { "balance": "1", "seq": "1048576" },
-                "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxdkfvn6": { "balance": "1", "seq": "1048576" },
-                "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg0dw93s": { "balance": "1", "seq": "1048576" },
-                "tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3": { "balance": "1606938044258990275541962092341162602522202993782792835301376", "seq": "1048576" }
+                "fjjh0001AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEtc0": { "balance": "1", "seq": "1048576" },
+                "fjjh0002AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAItc0": { "balance": "1", "seq": "1048576" },
+                "fjjh0003AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMtc0": { "balance": "1", "seq": "1048576" },
+                "fjjh0004AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQtc0": { "balance": "1", "seq": "1048576" },
+                "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0": { "balance": "1606938044258990275541962092341162602522202993782792835301376", "seq": "1048576" }
             },
             "shards": 1
         }"#;

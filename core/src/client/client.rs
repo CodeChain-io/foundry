@@ -325,11 +325,11 @@ impl EngineInfo for Client {
         let network_id = self.network_id();
         if block_number == Some(0) {
             let genesis_author = self.block_header(&0.into()).expect("genesis block").author();
-            return Ok(Some(vec![PlatformAddress::new_v1(network_id, genesis_author)]))
+            return Ok(Some(vec![PlatformAddress::new_v0(network_id, genesis_author)]))
         }
         let pubkeys = self.engine().possible_authors(block_number)?;
         Ok(pubkeys
-            .map(|pubkeys| pubkeys.into_iter().map(|pubkey| PlatformAddress::new_v1(network_id, pubkey)).collect()))
+            .map(|pubkeys| pubkeys.into_iter().map(|pubkey| PlatformAddress::new_v0(network_id, pubkey)).collect()))
     }
 }
 

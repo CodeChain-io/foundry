@@ -22,9 +22,9 @@ describe("fromString", () => {
     const pubkey =
         "7b5e0ee8644c6f585fc297364143280a458445085fc297364143280a45844502";
     const mainnetAddress =
-        "cccq9a4urhgv3xx7kzlc2tnvs2r9q9ytpz9pp0u99ekg9pjszj9s3zsylgj724";
+        "ur5hx1u1e14O6GRMb1hfwpc2QUMoCkWERQhfwpc2QUMoCkWERQIcc0";
     const testnetAddress =
-        "tccq9a4urhgv3xx7kzlc2tnvs2r9q9ytpz9pp0u99ekg9pjszj9s3zsyh46wgr";
+        "sc5hx1u1e14O6GRMb1hfwpc2QUMoCkWERQhfwpc2QUMoCkWERQItc0";
 
     it("mainnet", () => {
         const address = Address.fromString(mainnetAddress);
@@ -38,7 +38,7 @@ describe("fromString", () => {
 
     it("Invalid checksum", () => {
         const invalidChecksumAddress =
-            "cccq9a4urhgv3xx7kzlc2tnvs2r9q9ytpz9pp0u99ekg9pjszj9s3zsylgqqqq";
+            "sc5hz1u1e14O6GRMb1hfwpc2QUMoCkWERQhfwpc2QUMoCkWERQIcc0";
         try {
             Address.fromString(invalidChecksumAddress);
             expect.fail();
@@ -55,7 +55,7 @@ describe("fromPublic", () => {
     it("mainnet", () => {
         const address = Address.fromPublic(pubkey, { networkId: "cc" });
         expect(address.toString()).equal(
-            "cccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncp4q748"
+            "2xsv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwcc0"
         );
         expect(address.pubkey).deep.equal(new H256(pubkey));
     });
@@ -63,7 +63,7 @@ describe("fromPublic", () => {
     it("testnet", () => {
         const address = Address.fromPublic(pubkey, { networkId: "tc" });
         expect(address.toString()).equal(
-            "tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3"
+            "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0"
         );
         expect(address.pubkey).deep.equal(new H256(pubkey));
     });

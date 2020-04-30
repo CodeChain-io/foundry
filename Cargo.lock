@@ -143,10 +143,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "bech32"
-version = "0.2.2"
+name = "base64"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1955ebdd52d5c5f1fb4f94e97aa241c2ce5729d200b3c34fc71ac6ff7a7cc556"
+checksum = "7d5ca2cd0adc3f48f9e9ea5a6bbdf9ccc0bfade884847e484d452414c7ccffb3"
 
 [[package]]
 name = "bitflags"
@@ -468,7 +468,7 @@ dependencies = [
 name = "codechain-key"
 version = "0.1.0"
 dependencies = [
- "bech32",
+ "base64 0.12.0",
  "codechain-crypto",
  "lazy_static 1.4.0",
  "never-type",
@@ -2467,7 +2467,7 @@ version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab52e462d1e15891441aeefadff68bdea005174328ce3da0a314f2ad313ec837"
 dependencies = [
- "base64",
+ "base64 0.9.1",
  "bytes 0.4.12",
  "encoding_rs",
  "futures",

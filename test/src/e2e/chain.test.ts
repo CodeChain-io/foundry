@@ -54,7 +54,7 @@ describe("chain", function() {
         expect(
             await node.rpc.chain.getPossibleAuthors({ blockNumber: 0 })
         ).deep.equal([
-            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3e2f0d"
+            "fjjh0000AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtc0"
         ]);
     });
 
@@ -152,8 +152,7 @@ describe("chain", function() {
 
     it("sendPayTx, getTransaction", async function() {
         const tx = node.testFramework.core.createPayTransaction({
-            recipient:
-                "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu",
+            recipient: "nxcmkryvIAwv6UL9vpFDMj7SZNDjnnsyHKM8eL-nipJXbgDcnr0tc0",
             quantity: 0
         });
         const seq = (await node.rpc.chain.getSeq({
@@ -184,8 +183,7 @@ describe("chain", function() {
 
     it("sendPayTx, getTransactionSigner", async function() {
         const tx = node.testFramework.core.createPayTransaction({
-            recipient:
-                "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu",
+            recipient: "nxcmkryvIAwv6UL9vpFDMj7SZNDjnnsyHKM8eL-nipJXbgDcnr0tc0",
             quantity: 0
         });
         const seq = (await node.rpc.chain.getSeq({

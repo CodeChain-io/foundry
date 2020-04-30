@@ -56,7 +56,7 @@ impl Block {
             parent_hash: *block.header.parent_hash(),
             timestamp: block.header.timestamp(),
             number: block.header.number(),
-            author: PlatformAddress::new_v1(network_id, *block.header.author()),
+            author: PlatformAddress::new_v0(network_id, *block.header.author()),
 
             extra_data: block.header.extra_data().clone(),
 

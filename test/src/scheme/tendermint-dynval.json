@@ -11,38 +11,38 @@
                 "timeoutPrecommitDelta": 100,
                 "timeoutCommit": 100,
                 "genesisStakes": {
-                    "tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3": {
+                    "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0": {
                         "stake": 70000,
                         "delegations": {
-                            "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde": 104,
-                            "tccqyz88auzcwhvq57r0l3tenh6j2vde79w8hpzv2h9gzs55kq07ae7vdca0jm": 103,
-                            "tccqyjs940xyyr8ngv7gheup7fj2ln6xfa64a05q06u5x4jdpdfu9eyuansncp": 102,
-                            "tccq85snuc3l5g4aeqjah8um6yvc5rnwqgp7a345eaeedznjrcued94umjdq57": 101
+                            "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0": 104,
+                            "szff1322BHP3gsOuwFPDf-K8zvqSmNz4rj3CJirlQKFKWA_3c-Ytc0": 103,
+                            "qwfj0xwkJQLV5iEGeaGeRfPA-TJX56Mnuq9fQD9coasmhanhck4tc0": 102,
+                            "dbqtds3w6QnzEf0RXuQS7c_N6IzFBzcBAfdjWme5y0U5DxzLS14tc0": 101
                         }
                     },
-                    "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu": { "stake": 20000 },
-                    "tccqyaty0ad0jdy7865m06yl7fff5444dpdzhckreqxqjx440m7tkkegtwfee5": { "stake": 10000 }
+                    "4cnj73b1X2_K3XI_PJSXAQHZG0BD-VO4-TnhS3WEOy8Ym7UmT1Utc0": { "stake": 20000 },
+                    "fys3db1kOrI_rXyaTx9U2_RP-SlNK1q0LRXxYeQGBI1av35drZQtc0": { "stake": 10000 }
                 },
                 "genesisCandidates": {
-                    "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde": {
+                    "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0": {
                         "pubkey": "0x0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0",
                         "deposit": 100,
                         "nominationEndsAt": 100,
                         "metadata": "validator 0"
                     },
-                    "tccqyz88auzcwhvq57r0l3tenh6j2vde79w8hpzv2h9gzs55kq07ae7vdca0jm": {
+                    "szff1322BHP3gsOuwFPDf-K8zvqSmNz4rj3CJirlQKFKWA_3c-Ytc0": {
                         "pubkey": "0x0473f782c3aec053c37fe2bccefa9298dcf8ae3dc2262ae540a14a580ff773e6",
                         "deposit": 100,
                         "nominationEndsAt": 100,
                         "metadata": "validator 1"
                     },
-                    "tccqyjs940xyyr8ngv7gheup7fj2ln6xfa64a05q06u5x4jdpdfu9eyuansncp": {
+                    "qwfj0xwkJQLV5iEGeaGeRfPA-TJX56Mnuq9fQD9coasmhanhck4tc0": {
                         "pubkey": "0x2502d5e6210679a19e45f3c0f93257e7a327baaf5f403f5ca1ab2685a9e1724e",
                         "deposit": 100,
                         "nominationEndsAt": 100,
                         "metadata": "validator 2"
                     },
-                    "tccq85snuc3l5g4aeqjah8um6yvc5rnwqgp7a345eaeedznjrcued94umjdq57": {
+                    "dbqtds3w6QnzEf0RXuQS7c_N6IzFBzcBAfdjWme5y0U5DxzLS14tc0": {
                         "pubkey": "0xe909f311fd115ee412edcfcde88cc507370101f7635a67b9cb45390f1ccb4b5e",
                         "deposit": 100,
                         "nominationEndsAt": 100,
@@ -77,28 +77,26 @@
                 ]
             }
         },
-        "author": "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde",
+        "author": "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0",
         "timestamp": "0x00",
         "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "extraData": "0x"
     },
     "accounts": {
-        "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqzzut2uq": { "balance": "1000000" },
-        "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqy7ng0qh": { "balance": "1000000" },
-        "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxdkfvn6": { "balance": "1000000" },
-        "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg0dw93s": { "balance": "1000000" },
-        "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq2ug0xza": { "balance": "1000000" },
-        "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvq8vr72": { "balance": "1000000" },
-        "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqwnzdqd8": { "balance": "1000000" },
-        "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsycz367": { "balance": "1000000" },
-        "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqjharjfn": { "balance": "1000000" },
-        "tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3": {
-            "balance": "10000000000000000000"
-        },
-        "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde": { "balance": 104 },
-        "tccqyz88auzcwhvq57r0l3tenh6j2vde79w8hpzv2h9gzs55kq07ae7vdca0jm": { "balance": 103 },
-        "tccqyjs940xyyr8ngv7gheup7fj2ln6xfa64a05q06u5x4jdpdfu9eyuansncp": { "balance": 102 },
-        "tccq85snuc3l5g4aeqjah8um6yvc5rnwqgp7a345eaeedznjrcued94umjdq57": { "balance": 101 }
+        "fjjh0001AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEtc0": { "balance": "1000000" },
+        "fjjh0002AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAItc0": { "balance": "1000000" },
+        "fjjh0003AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMtc0": { "balance": "1000000" },
+        "fjjh0004AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQtc0": { "balance": "1000000" },
+        "fjjh0005AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUtc0": { "balance": "1000000" },
+        "fjjh0006AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYtc0": { "balance": "1000000" },
+        "fjjh0007AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAActc0": { "balance": "1000000" },
+        "fjjh0008AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgtc0": { "balance": "1000000" },
+        "fjjh0009AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAktc0": { "balance": "1000000" },
+        "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0": { "balance": "10000000000000000000" },
+        "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0": { "balance": 104 },
+        "szff1322BHP3gsOuwFPDf-K8zvqSmNz4rj3CJirlQKFKWA_3c-Ytc0": { "balance": 103 },
+        "qwfj0xwkJQLV5iEGeaGeRfPA-TJX56Mnuq9fQD9coasmhanhck4tc0": { "balance": 102 },
+        "dbqtds3w6QnzEf0RXuQS7c_N6IzFBzcBAfdjWme5y0U5DxzLS14tc0": { "balance": 101 }
     },
     "shards": 1
 }

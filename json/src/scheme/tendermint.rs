@@ -78,7 +78,7 @@ mod tests {
         let s = r#"{
             "params": {
                 "genesisCandidates": {
-                    "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu": {
+                    "4cnj73b1X2_K3XI_PJSXAQHZG0BD-VO4-TnhS3WEOy8Ym7UmT1Utc0": {
                         "pubkey": "0x5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08",
                         "deposit": 300,
                         "nominationEndsAt": 100,
@@ -86,17 +86,17 @@ mod tests {
                     }
                 },
                 "genesisStakes": {
-                    "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde": {
+                    "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0": {
                         "stake": 100,
                         "delegations": {
-                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqzzut2uq": 1,
-                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqy7ng0qh": 2,
-                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxdkfvn6": 3,
-                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg0dw93s": 4,
-                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq2ug0xza": 5,
-                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvq8vr72": 6,
-                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqwnzdqd8": 7,
-                            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsycz367": 8
+                            "fjjh0001AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEtc0": 1,
+                            "fjjh0002AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAItc0": 2,
+                            "fjjh0003AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMtc0": 3,
+                            "fjjh0004AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQtc0": 4,
+                            "fjjh0005AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUtc0": 5,
+                            "fjjh0006AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYtc0": 6,
+                            "fjjh0007AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAActc0": 7,
+                            "fjjh0008AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgtc0": 8
                         }
                     }
                 }
@@ -107,36 +107,32 @@ mod tests {
 
         assert_eq!(
             deserialized.params.genesis_candidates,
-            [(
-                PlatformAddress::from_str("tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu").unwrap(),
-                Deposit {
-                    pubkey: Public::from_str("5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08")
-                        .unwrap(),
-                    deposit: 300,
-                    nomination_ends_at: 100,
-                    metadata: "alice".to_string(),
-                }
-            )]
+            [(PlatformAddress::from_str("4cnj73b1X2_K3XI_PJSXAQHZG0BD-VO4-TnhS3WEOy8Ym7UmT1Utc0").unwrap(), Deposit {
+                pubkey: Public::from_str("5d05595160b7924e5ecf3f2628b440e601f3a531e92fa81571a70e6c695b2d08").unwrap(),
+                deposit: 300,
+                nomination_ends_at: 100,
+                metadata: "alice".to_string(),
+            })]
             .iter()
             .cloned()
             .collect()
         );
 
         let expected_delegations = [
-            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqzzut2uq").unwrap(), 1),
-            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqy7ng0qh").unwrap(), 2),
-            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxdkfvn6").unwrap(), 3),
-            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg0dw93s").unwrap(), 4),
-            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq2ug0xza").unwrap(), 5),
-            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvq8vr72").unwrap(), 6),
-            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqwnzdqd8").unwrap(), 7),
-            (PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsycz367").unwrap(), 8),
+            (PlatformAddress::from_str("fjjh0001AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEtc0").unwrap(), 1),
+            (PlatformAddress::from_str("fjjh0002AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAItc0").unwrap(), 2),
+            (PlatformAddress::from_str("fjjh0003AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMtc0").unwrap(), 3),
+            (PlatformAddress::from_str("fjjh0004AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQtc0").unwrap(), 4),
+            (PlatformAddress::from_str("fjjh0005AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUtc0").unwrap(), 5),
+            (PlatformAddress::from_str("fjjh0006AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYtc0").unwrap(), 6),
+            (PlatformAddress::from_str("fjjh0007AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAActc0").unwrap(), 7),
+            (PlatformAddress::from_str("fjjh0008AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgtc0").unwrap(), 8),
         ]
         .iter()
         .cloned()
         .collect();
         let expected_genesis_stakes = [(
-            PlatformAddress::from_str("tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde").unwrap(),
+            PlatformAddress::from_str("rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0").unwrap(),
             StakeAccount {
                 stake: 100,
                 delegations: Some(expected_delegations),
