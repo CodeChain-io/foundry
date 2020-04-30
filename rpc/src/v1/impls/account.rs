@@ -56,7 +56,7 @@ where
         self.account_provider
             .get_list()
             .map(|addresses| {
-                addresses.into_iter().map(|pubkey| PlatformAddress::new_v1(self.client.network_id(), pubkey)).collect()
+                addresses.into_iter().map(|pubkey| PlatformAddress::new_v0(self.client.network_id(), pubkey)).collect()
             })
             .map_err(account_provider)
     }
@@ -64,7 +64,7 @@ where
     fn create_account(&self, passphrase: Option<Password>) -> Result<PlatformAddress> {
         let pubkey =
             self.account_provider.new_account_and_public(&passphrase.unwrap_or_default()).map_err(account_provider)?;
-        Ok(PlatformAddress::new_v1(self.client.network_id(), pubkey))
+        Ok(PlatformAddress::new_v0(self.client.network_id(), pubkey))
     }
 
     fn create_account_from_secret(&self, secret: H512, passphrase: Option<Password>) -> Result<PlatformAddress> {
@@ -73,7 +73,7 @@ where
                 Private::from_slice(&secret).ok_or_else(|| Error::invalid_params("Invalid secret"))?,
                 &passphrase.unwrap_or_default(),
             )
-            .map(|pubkey| PlatformAddress::new_v1(self.client.network_id(), pubkey))
+            .map(|pubkey| PlatformAddress::new_v0(self.client.network_id(), pubkey))
             .map_err(account_provider)
     }
 

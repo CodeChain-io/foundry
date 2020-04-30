@@ -57,7 +57,7 @@ where
         Ok(self
             .client
             .transaction(&id)
-            .map(|mut tx| PlatformAddress::new_v1(tx.unverified_tx().transaction().network_id, tx.signer())))
+            .map(|mut tx| PlatformAddress::new_v0(tx.unverified_tx().transaction().network_id, tx.signer())))
     }
 
     fn contains_transaction(&self, transaction_hash: TxHash) -> Result<bool> {

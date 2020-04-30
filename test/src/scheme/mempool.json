@@ -4,10 +4,10 @@
     "solo": {
       "params": {
           "genesisStakes": {
-              "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu": 40000,
-              "tccqyaty0ad0jdy7865m06yl7fff5444dpdzhckreqxqjx440m7tkkegtwfee5": 30000,
-              "tccq85rcqvyakdvce5x3fa797lfq8hvle7q23zshwudyseguqgkaf0qcy2clnj": 20000,
-              "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu": 10000
+              "4cnj73b1X2_K3XI_PJSXAQHZG0BD-VO4-TnhS3WEOy8Ym7UmT1Utc0": 40000,
+              "fys3db1kOrI_rXyaTx9U2_RP-SlNK1q0LRXxYeQGBI1av35drZQtc0": 30000,
+              "whxw3vrh6DwBhO2azGaGinvi--kB7s_nwFRFC7uNJDKOARbqXgwtc0": 20000,
+              "nxcmkryvIAwv6UL9vpFDMj7SZNDjnnsyHKM8eL-nipJXbgDcnr0tc0": 10000
           }
       }
     }
@@ -31,22 +31,22 @@
     "seal": {
       "generic": "0x0"
     },
-    "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3e2f0d",
+    "author": "fjjh0000AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtc0",
     "timestamp": "0x00",
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "extraData": "0x"
   },
   "accounts": {
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqzzut2uq": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqy7ng0qh": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxdkfvn6": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg0dw93s": { "balance": "1000000", "seq": "0" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq2ug0xza": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqvq8vr72": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqwnzdqd8": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqsycz367": { "balance": "1000000" },
-    "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqjharjfn": { "balance": "1000000" },
-    "tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3": { "balance": "10000000000000000000", "seq": "0" }
+    "fjjh0001AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEtc0": { "balance": "1000000", "seq": "0" },
+    "fjjh0002AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAItc0": { "balance": "1000000", "seq": "0" },
+    "fjjh0003AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMtc0": { "balance": "1000000", "seq": "0" },
+    "fjjh0004AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQtc0": { "balance": "1000000", "seq": "0" },
+    "fjjh0005AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUtc0": { "balance": "1000000" },
+    "fjjh0006AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYtc0": { "balance": "1000000" },
+    "fjjh0007AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAActc0": { "balance": "1000000" },
+    "fjjh0008AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgtc0": { "balance": "1000000" },
+    "fjjh0009AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAktc0": { "balance": "1000000" },
+    "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0": { "balance": "10000000000000000000", "seq": "0" }
   },
   "shards": 1
 }

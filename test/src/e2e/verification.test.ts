@@ -22,8 +22,7 @@ import CodeChain from "../helper/spawn";
 import * as RLP from "rlp";
 
 describe("solo - 1 node", function() {
-    const recipient =
-        "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu";
+    const recipient = "nxcmkryvIAwv6UL9vpFDMj7SZNDjnnsyHKM8eL-nipJXbgDcnr0tc0";
 
     let node: CodeChain;
     before(async function() {

@@ -55,7 +55,7 @@ impl From<u64> for Public {
 impl FromStr for Public {
     type Err = crate::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let for_slice = H256::from_str(s).map_err(|e| crate::Error::Custom(format!("{:?}", e)))?;
+        let for_slice = H256::from_str(s).map_err(|_| crate::Error::InvalidPublic(s.to_string()))?;
         Ok(PublicKey::from_slice(&for_slice).expect("H256 has length 32").into())
     }
 }

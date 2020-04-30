@@ -57,7 +57,7 @@ fn convert(
 
             let private = get_private(input)?;
             let public = private_to_public(private)?;
-            let account_id = PlatformAddress::new_v1(network_id, public);
+            let account_id = PlatformAddress::new_v0(network_id, public);
             Ok(account_id.to_string())
         }
         ("public", "public") => {
@@ -68,7 +68,7 @@ fn convert(
             let network_id = get_network_id()?;
 
             let public = get_public(input)?;
-            let account_id = PlatformAddress::new_v1(network_id, public);
+            let account_id = PlatformAddress::new_v0(network_id, public);
             Ok(account_id.to_string())
         }
         ("accountId", "accountId") => {
@@ -110,7 +110,7 @@ mod tests {
 
     const PRIVATE_KEY: &str = "c5240ff5244a3bcd705998600cd40b1b6033c44337294da04c8a7545e1b87fedc8e8c897db2cb53dae2ed6114542057c1a164603f41ee6036d273303c9bad650";
     const PUBLIC_KEY: &str = "c8e8c897db2cb53dae2ed6114542057c1a164603f41ee6036d273303c9bad650";
-    const ACCOUNT_ID: &str = "tccq8yw3jyhmvkt20dw9mtpz32zq47p59jxq06paesrd5nnxq7fhtt9qtysy3e";
+    const ACCOUNT_ID: &str = "x4d468cnyOjIl9sstT2uLtYRRUIFfBoWRgP0HuYDbSczA8m61lAtc0";
 
     fn get_test_network_id() -> Result<NetworkId, String> {
         Ok(NetworkId::from("tc"))

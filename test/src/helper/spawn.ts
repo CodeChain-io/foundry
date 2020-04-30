@@ -538,7 +538,7 @@ export default class CodeChain {
     }): SignedTransaction {
         const {
             seq,
-            recipient = "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu",
+            recipient = "nxcmkryvIAwv6UL9vpFDMj7SZNDjnnsyHKM8eL-nipJXbgDcnr0tc0",
             quantity = 0,
             secret = faucetSecret,
             fee = 10 + this.id

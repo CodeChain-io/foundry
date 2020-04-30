@@ -95,7 +95,7 @@ where
     fn get_banned_accounts(&self) -> Result<Vec<PlatformAddress>> {
         let malicious_user_vec = self.client.get_malicious_users();
         let network_id = self.client.network_id();
-        Ok(malicious_user_vec.into_iter().map(|address| PlatformAddress::new_v1(network_id, address)).collect())
+        Ok(malicious_user_vec.into_iter().map(|address| PlatformAddress::new_v0(network_id, address)).collect())
     }
 
     fn unban_accounts(&self, prisoner_list: Vec<PlatformAddress>) -> Result<()> {
@@ -115,7 +115,7 @@ where
     fn get_immune_accounts(&self) -> Result<Vec<PlatformAddress>> {
         let immune_user_vec = self.client.get_immune_users();
         let network_id = self.client.network_id();
-        Ok(immune_user_vec.into_iter().map(|address| PlatformAddress::new_v1(network_id, address)).collect())
+        Ok(immune_user_vec.into_iter().map(|address| PlatformAddress::new_v0(network_id, address)).collect())
     }
 
     fn register_immune_accounts(&self, immune_user_list: Vec<PlatformAddress>) -> Result<()> {
