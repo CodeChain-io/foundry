@@ -36,6 +36,6 @@ impl<T: Ipc> Context<T> {
     pub fn terminate(self) {
         let ipc = self.ipc.unwrap();
         ipc.send(b"#TERMINATE\0");
-        assert_eq!(ipc.recv(Some(std::time::Duration::from_millis(200))).unwrap(), b"#TERMINATE\0");
+        assert_eq!(ipc.recv(Some(std::time::Duration::from_millis(1000))).unwrap(), b"#TERMINATE\0");
     }
 }

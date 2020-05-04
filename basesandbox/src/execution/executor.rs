@@ -46,7 +46,7 @@ impl Executor for Executable {
         // However a malicous excutee might send a signal arbitrarily before the termination.
         // For that, we have a timeout for the wait.
         for _ in 0..10 {
-            std::thread::sleep(std::time::Duration::from_millis(50));
+            std::thread::sleep(std::time::Duration::from_millis(100));
             if self.child.try_wait().unwrap().is_some() {
                 return // successful
             }
@@ -118,7 +118,7 @@ pub fn execute<T: Ipc + 'static, E: Executor>(path: &str) -> Result<Context<T, E
         executor: Executor::new(path, &args),
     };
     let ipc = ipc.join().unwrap();
-    let ping = ipc.recv(Some(Duration::from_millis(200))).unwrap();
+    let ping = ipc.recv(Some(Duration::from_millis(1000))).unwrap();
     assert_eq!(ping, b"#INIT\0");
     Ok(Context {
         ipc,
@@ -130,7 +130,7 @@ impl<T: Ipc, E: Executor> Context<T, E> {
     /// Call this when you're sure that the excutee is ready to teminate; i.e.
     /// it will call excutee::terminate() asap.
     pub fn terminate(self) {
-        let signal = self.ipc.recv(Some(Duration::from_millis(200))).unwrap();
+        let signal = self.ipc.recv(Some(Duration::from_millis(1000))).unwrap();
         assert_eq!(signal, b"#TERMINATE\0");
         self.ipc.send(b"#TERMINATE\0");
     }
