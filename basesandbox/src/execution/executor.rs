@@ -21,7 +21,7 @@ use std::process::Command;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
-pub trait Executor {
+pub trait Executor: Send {
     fn new(path: &str, args: &[&str]) -> Self;
     fn join(&mut self);
 }
