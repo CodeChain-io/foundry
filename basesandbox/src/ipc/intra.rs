@@ -20,7 +20,7 @@ use once_cell::sync::OnceCell;
 use std::collections::hash_map::HashMap;
 use std::sync::Mutex;
 
-type RegisteredIpcEnds = (Sender<Vec<u8>>, Receiver<Vec<u8>>);
+type RegisteredIpcEnds = (bool, Sender<Vec<u8>>, Receiver<Vec<u8>>);
 
 static POOL: OnceCell<Mutex<HashMap<String, RegisteredIpcEnds>>> = OnceCell::new();
 fn get_pool_raw() -> &'static Mutex<HashMap<String, RegisteredIpcEnds>> {
@@ -114,8 +114,8 @@ impl Ipc for Intra {
         let (send1, recv1) = bounded(256);
         let (send2, recv2) = bounded(256);
 
-        add_ends(key_server.clone(), (send1, recv2));
-        add_ends(key_client.clone(), (send2, recv1));
+        add_ends(key_server.clone(), (true, send1, recv2));
+        add_ends(key_client.clone(), (false, send2, recv1));
 
         (serde_cbor::to_vec(&key_server).unwrap(), serde_cbor::to_vec(&key_client).unwrap())
     }
@@ -125,7 +125,23 @@ impl Ipc for Intra {
 
     fn new(data: Vec<u8>) -> Self {
         let key: String = serde_cbor::from_slice(&data).unwrap();
-        let (send, recv) = take_ends(&key);
+        let (am_i_server, send, recv) = take_ends(&key);
+
+        // Handshake
+        let timeout = std::time::Duration::from_millis(100);
+        if am_i_server {
+            let x = recv.recv_timeout(timeout).unwrap();
+            assert_eq!(x, b"hey");
+            send.send(b"hello".to_vec()).unwrap();
+            let x = recv.recv_timeout(timeout).unwrap();
+            assert_eq!(x, b"hi");
+        } else {
+            send.send(b"hey".to_vec()).unwrap();
+            let x = recv.recv().unwrap();
+            assert_eq!(x, b"hello");
+            send.send(b"hi".to_vec()).unwrap();
+        }
+
         Intra {
             send: IntraSend(send.clone()),
             recv: IntraRecv(recv, send),
