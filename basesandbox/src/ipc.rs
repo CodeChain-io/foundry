@@ -16,6 +16,7 @@
 
 pub mod domain_socket;
 pub mod intra;
+pub mod multiplex;
 use once_cell::sync::OnceCell;
 use std::sync::Mutex;
 
