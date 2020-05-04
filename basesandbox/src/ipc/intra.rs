@@ -20,7 +20,13 @@ use once_cell::sync::OnceCell;
 use std::collections::hash_map::HashMap;
 use std::sync::Mutex;
 
-type RegisteredIpcEnds = (bool, Sender<Vec<u8>>, Receiver<Vec<u8>>);
+struct RegisteredIpcEnds {
+    is_server: bool,
+    send: Sender<Vec<u8>>,
+    recv: Receiver<Vec<u8>>,
+    /// One copy of Counterparty's Send end
+    send_for_termination: Sender<Vec<u8>>,
+}
 
 static POOL: OnceCell<Mutex<HashMap<String, RegisteredIpcEnds>>> = OnceCell::new();
 fn get_pool_raw() -> &'static Mutex<HashMap<String, RegisteredIpcEnds>> {
@@ -111,11 +117,21 @@ impl Ipc for Intra {
         let key_server = generate_random_name();
         let key_client = generate_random_name();
 
-        let (send1, recv1) = bounded(256);
-        let (send2, recv2) = bounded(256);
+        let (send_server, recv_client) = bounded(256);
+        let (send_client, recv_server) = bounded(256);
 
-        add_ends(key_server.clone(), (true, send1, recv2));
-        add_ends(key_client.clone(), (false, send2, recv1));
+        add_ends(key_server.clone(), RegisteredIpcEnds {
+            is_server: true,
+            send: send_server.clone(),
+            recv: recv_server,
+            send_for_termination: send_client.clone(),
+        });
+        add_ends(key_client.clone(), RegisteredIpcEnds {
+            is_server: false,
+            send: send_client,
+            recv: recv_client,
+            send_for_termination: send_server,
+        });
 
         (serde_cbor::to_vec(&key_server).unwrap(), serde_cbor::to_vec(&key_client).unwrap())
     }
@@ -125,11 +141,16 @@ impl Ipc for Intra {
 
     fn new(data: Vec<u8>) -> Self {
         let key: String = serde_cbor::from_slice(&data).unwrap();
-        let (am_i_server, send, recv) = take_ends(&key);
+        let RegisteredIpcEnds {
+            is_server,
+            send,
+            recv,
+            send_for_termination,
+        } = take_ends(&key);
 
         // Handshake
-        let timeout = std::time::Duration::from_millis(100);
-        if am_i_server {
+        let timeout = std::time::Duration::from_millis(1000);
+        if is_server {
             let x = recv.recv_timeout(timeout).unwrap();
             assert_eq!(x, b"hey");
             send.send(b"hello".to_vec()).unwrap();
@@ -143,8 +164,8 @@ impl Ipc for Intra {
         }
 
         Intra {
-            send: IntraSend(send.clone()),
-            recv: IntraRecv(recv, send),
+            send: IntraSend(send),
+            recv: IntraRecv(recv, send_for_termination),
         }
     }
 
