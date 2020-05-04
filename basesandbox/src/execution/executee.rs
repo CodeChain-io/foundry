@@ -32,7 +32,10 @@ pub fn start<T: Ipc>(mut args: Vec<String>) -> Context<T> {
 }
 
 impl<T: Ipc> Context<T> {
+    /// Tell the executor that I will exit asap after this byebye handshake.
     pub fn terminate(self) {
-        self.ipc.unwrap().send(b"#TERMINATE\0");
+        let ipc = self.ipc.unwrap();
+        ipc.send(b"#TERMINATE\0");
+        assert_eq!(ipc.recv(Some(std::time::Duration::from_millis(200))).unwrap(), b"#TERMINATE\0");
     }
 }
