@@ -48,6 +48,8 @@ pub trait Ipc: IpcSend + IpcRecv {
     /// Generate two configurations
     /// which will be feeded to Ipc::new(),
     /// for both two ends in two different processes, to initialize each IPC end.
+    /// Note that both sides' new() must be called concurrently; they will be completed only if
+    /// both run at the same time.
     fn arguments_for_both_ends() -> (Vec<u8>, Vec<u8>);
 
     type SendHalf: IpcSend;
