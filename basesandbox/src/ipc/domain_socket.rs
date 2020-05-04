@@ -98,8 +98,8 @@ impl Ipc for DomainSocket {
         let address_server = format!("{}/{}", std::env::temp_dir().to_str().unwrap(), generate_random_name());
         let address_client = format!("{}/{}", std::env::temp_dir().to_str().unwrap(), generate_random_name());
         (
-            serde_cbor::to_vec(&(&address_server, &address_client)).unwrap(),
-            serde_cbor::to_vec(&(&address_client, &address_server)).unwrap(),
+            serde_cbor::to_vec(&(true, &address_server, &address_client)).unwrap(),
+            serde_cbor::to_vec(&(false, &address_client, &address_server)).unwrap(),
         )
     }
 
@@ -107,7 +107,7 @@ impl Ipc for DomainSocket {
     type RecvHalf = DomainSocketRecv;
 
     fn new(data: Vec<u8>) -> Self {
-        let (address_src, address_dst): (String, String) = serde_cbor::from_slice(&data).unwrap();
+        let (am_i_server, address_src, address_dst): (bool, String, String) = serde_cbor::from_slice(&data).unwrap();
         let socket = UnixDatagram::bind(&address_src).unwrap();
         let mut success = false;
 
@@ -119,6 +119,27 @@ impl Ipc for DomainSocket {
             std::thread::sleep(std::time::Duration::from_millis(10));
         }
         assert!(success, "Failed to establish domain socket");
+
+        // Handshake
+        if am_i_server {
+            socket.set_read_timeout(Some(std::time::Duration::from_millis(100))).unwrap();
+            let mut buf = [0 as u8; 32];
+            let count = socket.recv(&mut buf).unwrap();
+            assert_eq!(count, 3);
+            assert_eq!(&buf[0..3], b"hey");
+            socket.send(b"hello").unwrap();
+            let count = socket.recv(&mut buf).unwrap();
+            assert_eq!(count, 2);
+            assert_eq!(&buf[0..2], b"hi");
+        } else {
+            socket.send(b"hey").unwrap();
+            socket.set_read_timeout(Some(std::time::Duration::from_millis(100))).unwrap();
+            let mut buf = [0 as u8; 32];
+            let count = socket.recv(&mut buf).unwrap();
+            assert_eq!(count, 5);
+            assert_eq!(&buf[0..5], b"hello");
+            socket.send(b"hi").unwrap();
+        }
 
         let socket = Arc::new(SocketInternal(socket, address_src));
         DomainSocket {
