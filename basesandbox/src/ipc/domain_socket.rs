@@ -24,7 +24,6 @@ struct SocketInternal(UnixDatagram, String);
 
 impl Drop for SocketInternal {
     fn drop(&mut self) {
-        self.0.shutdown(std::net::Shutdown::Both).unwrap();
         std::fs::remove_file(&self.1).unwrap();
     }
 }
