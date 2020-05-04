@@ -18,7 +18,6 @@ extern crate codechain_basesandbox as cbsb;
 
 use cbsb::execution::executee;
 use cbsb::execution::executor;
-#[cfg(target_os = "linux")]
 use cbsb::ipc::domain_socket::DomainSocket;
 use cbsb::ipc::intra::Intra;
 use cbsb::ipc::Ipc;
@@ -45,7 +44,6 @@ fn simple_executor<I: Ipc, E: executor::Executor>(path: &str) {
     ctx.terminate();
 }
 
-#[cfg(target_os = "linux")]
 #[test]
 fn execute_simple_rust() {
     simple_executor::<DomainSocket, executor::Executable>("./../target/debug/test_simple_rs");
@@ -60,7 +58,6 @@ fn execute_simple_intra() {
     simple_executor::<Intra, executor::PlainThread>(&name);
 }
 
-#[cfg(target_os = "linux")]
 #[test]
 fn execute_simple_multiple() {
     let name_source = cbsb::ipc::generate_random_name();
