@@ -17,7 +17,6 @@
 use super::*;
 use std::cell::RefCell;
 use std::os::unix::net::UnixDatagram;
-use std::path::Path;
 use std::sync::Arc;
 
 // TODO: Use stream instead of datagram.
@@ -31,18 +30,16 @@ impl Drop for SocketInternal {
 }
 
 pub struct DomainSocketSend {
-    address_dst: String,
     socket: Arc<SocketInternal>,
 }
 
 impl IpcSend for DomainSocketSend {
     fn send(&self, data: &[u8]) {
-        assert_eq!(self.socket.0.send_to(data, &self.address_dst).unwrap(), data.len());
+        assert_eq!(self.socket.0.send(data).unwrap(), data.len());
     }
 }
 
 pub struct DomainSocketRecv {
-    address_dst: String,
     socket: Arc<SocketInternal>,
     buffer: RefCell<Vec<u8>>,
 }
@@ -52,16 +49,11 @@ impl IpcRecv for DomainSocketRecv {
 
     fn recv(&self, timeout: Option<std::time::Duration>) -> Result<Vec<u8>, RecvError> {
         self.socket.0.set_read_timeout(timeout).unwrap();
-        let (count, address) = self.socket.0.recv_from(&mut self.buffer.borrow_mut()).unwrap();
+        let count = self.socket.0.recv(&mut self.buffer.borrow_mut()).unwrap();
         assert!(count < self.buffer.borrow().len(), "Unix datagram got data larger than the buffer.");
         if count == 0 {
             return Err(RecvError::Termination)
         }
-        assert_eq!(
-            address.as_pathname().unwrap(),
-            Path::new(&self.address_dst),
-            "Unix datagram received packet from an unexpected sender."
-        );
         Ok(self.buffer.borrow()[0..count].to_vec())
     }
 
@@ -116,14 +108,24 @@ impl Ipc for DomainSocket {
 
     fn new(data: Vec<u8>) -> Self {
         let (address_src, address_dst): (String, String) = serde_cbor::from_slice(&data).unwrap();
-        let socket = Arc::new(SocketInternal(UnixDatagram::bind(&address_src).unwrap(), address_src));
+        let socket = UnixDatagram::bind(&address_src).unwrap();
+        let mut success = false;
+
+        for _ in 0..100 {
+            if socket.connect(&address_dst).is_ok() {
+                success = true;
+                break
+            }
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        assert!(success, "Failed to establish domain socket");
+
+        let socket = Arc::new(SocketInternal(socket, address_src));
         DomainSocket {
             send: DomainSocketSend {
-                address_dst: address_dst.clone(),
                 socket: socket.clone(),
             },
             recv: DomainSocketRecv {
-                address_dst,
                 socket,
                 buffer: RefCell::new(vec![0; 1024 * 8 + 1]),
             },
