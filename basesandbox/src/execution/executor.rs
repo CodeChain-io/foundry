@@ -109,14 +109,15 @@ pub struct Context<T: Ipc, E: Executor> {
 }
 
 /// id must be unique for each instance.
-pub fn execute<T: Ipc, E: Executor>(path: &str) -> Result<Context<T, E>, String> {
+pub fn execute<T: Ipc + 'static, E: Executor>(path: &str) -> Result<Context<T, E>, String> {
     let (config_server, config_client) = T::arguments_for_both_ends();
-    let ipc = T::new(config_server);
+    let ipc = std::thread::spawn(move || T::new(config_server));
     let config_client = hex::encode(&config_client);
     let args: Vec<&str> = vec![&config_client];
     let child = ExecutorDropper {
         executor: Executor::new(path, &args),
     };
+    let ipc = ipc.join().unwrap();
     let ping = ipc.recv(Some(Duration::from_millis(200))).unwrap();
     assert_eq!(ping, b"#INIT\0");
     Ok(Context {

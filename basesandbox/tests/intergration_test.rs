@@ -36,7 +36,7 @@ fn simple_thread(args: Vec<String>) {
     ctx.terminate();
 }
 
-fn simple_executor<I: Ipc, E: executor::Executor>(path: &str) {
+fn simple_executor<I: Ipc + 'static, E: executor::Executor>(path: &str) {
     let ctx = executor::execute::<I, E>(path).unwrap();
     ctx.ipc.send(b"Hello?\0");
     let r = ctx.ipc.recv(Some(TIMEOUT)).unwrap();
