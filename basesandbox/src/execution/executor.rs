@@ -66,7 +66,7 @@ fn get_function_pool(key: &str) -> ThreadAsProcesss {
 }
 
 pub fn add_function_pool(key: String, f: ThreadAsProcesss) {
-    POOL.get_or_init(|| RwLock::new(HashMap::new())).write().unwrap().insert(key, f);
+    assert!(POOL.get_or_init(|| RwLock::new(HashMap::new())).write().unwrap().insert(key, f).is_none());
 }
 
 pub struct PlainThread {
