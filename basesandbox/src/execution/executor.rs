@@ -130,7 +130,8 @@ impl<T: Ipc, E: Executor> Context<T, E> {
     /// Call this when you're sure that the excutee is ready to teminate; i.e.
     /// it will call excutee::terminate() asap.
     pub fn terminate(self) {
-        let ping = self.ipc.recv(Some(Duration::from_millis(200))).unwrap();
-        assert_eq!(ping, b"#TERMINATE\0");
+        let signal = self.ipc.recv(Some(Duration::from_millis(200))).unwrap();
+        assert_eq!(signal, b"#TERMINATE\0");
+        self.ipc.send(b"#TERMINATE\0");
     }
 }
