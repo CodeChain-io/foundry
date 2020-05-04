@@ -21,8 +21,8 @@ use cbsb::execution::executor;
 use cbsb::ipc::domain_socket::DomainSocket;
 use cbsb::ipc::intra::Intra;
 use cbsb::ipc::Ipc;
-use cbsb::ipc::{IpcRecv, IpcSend};
-use std::sync::Arc;
+use cbsb::ipc::{IpcRecv, IpcSend, Terminate};
+use std::sync::{Arc, Barrier};
 use std::thread;
 
 // CI server is really slow for this. Usually 10 is ok.
@@ -136,4 +136,44 @@ fn execute_simple_intra_massive() {
     while let Some(x) = threads.pop() {
         x.join().unwrap();
     }
+}
+
+#[test]
+fn terminator_socket() {
+    let (c1, c2) = DomainSocket::arguments_for_both_ends();
+    let d1 = thread::spawn(|| DomainSocket::new(c1));
+    let d2 = DomainSocket::new(c2);
+    let d1 = d1.join().unwrap();
+    let terminator = d1.create_terminator();
+    let barrier = Arc::new(Barrier::new(2));
+    let barrier_ = barrier.clone();
+    let t = thread::spawn(move || {
+        assert_eq!(d1.recv(None).unwrap(), vec![1, 2, 3]);
+        barrier_.wait();
+        assert_eq!(d1.recv(None).unwrap_err(), cbsb::ipc::RecvError::Termination)
+    });
+    d2.send(&[1, 2, 3]);
+    barrier.wait();
+    terminator.terminate();
+    t.join().unwrap();
+}
+
+#[test]
+fn terminator_intra() {
+    let (c1, c2) = Intra::arguments_for_both_ends();
+    let d1 = thread::spawn(|| Intra::new(c1));
+    let d2 = Intra::new(c2);
+    let d1 = d1.join().unwrap();
+    let terminator = d1.create_terminator();
+    let barrier = Arc::new(Barrier::new(2));
+    let barrier_ = barrier.clone();
+    let t = thread::spawn(move || {
+        assert_eq!(d1.recv(None).unwrap(), vec![1, 2, 3]);
+        barrier_.wait();
+        assert_eq!(d1.recv(None).unwrap_err(), cbsb::ipc::RecvError::Termination)
+    });
+    d2.send(&[1, 2, 3]);
+    barrier.wait();
+    terminator.terminate();
+    t.join().unwrap();
 }
