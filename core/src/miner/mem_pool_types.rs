@@ -18,6 +18,7 @@ use coordinator::types::TransactionWithMetadata;
 use ctypes::{BlockNumber, TxHash};
 use std::collections::HashMap;
 
+/// Point in time when transaction was inserted
 pub type PoolingInstant = BlockNumber;
 
 #[derive(Debug, PartialEq)]
