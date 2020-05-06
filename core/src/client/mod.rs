@@ -38,7 +38,7 @@ use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as
 use cdb::DatabaseError;
 use ckey::{Address, NetworkId, PlatformAddress};
 use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
-use ctypes::header::Header;
+use ctypes::Header;
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, TxHash};
 use kvdb::KeyValueDB;
 use primitives::{Bytes, H256};
