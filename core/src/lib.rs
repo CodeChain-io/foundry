@@ -66,5 +66,5 @@ pub use crate::service::ClientService;
 pub use crate::transaction::{
     LocalizedTransaction, PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction,
 };
-pub use crate::types::{BlockId, BlockStatus, TransactionId};
+pub use crate::types::{BlockStatus, TransactionId};
 pub use rlp::Encodable;
