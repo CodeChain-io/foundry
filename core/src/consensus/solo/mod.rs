@@ -53,10 +53,6 @@ impl Solo {
             stake: stake::Stake::default(),
         }
     }
-
-    fn client(&self) -> Option<Arc<dyn ConsensusClient>> {
-        self.client.read().as_ref()?.upgrade()
-    }
 }
 
 impl ConsensusEngine for Solo {
@@ -72,30 +68,8 @@ impl ConsensusEngine for Solo {
         Seal::Solo
     }
 
-    fn close_block_actions(&self, block: &ExecutedBlock) -> Result<Vec<Action>, Error> {
-        let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
-
-        let parent_hash = *block.header().parent_hash();
-        let parent = client.block_header(&parent_hash.into()).expect("Parent header must exist");
-        let parent_common_params = client.common_params(parent_hash.into()).expect("CommonParams of parent must exist");
-        let term_seconds = parent_common_params.term_seconds();
-        if term_seconds == 0 {
-            return Ok(vec![])
-        }
-        let header = block.header();
-        let current_term_period = header.timestamp() / term_seconds;
-        let parent_term_period = parent.timestamp() / term_seconds;
-        if current_term_period == parent_term_period {
-            return Ok(vec![])
-        }
-
-        Ok(vec![Action::CloseTerm {
-            next_validators: vec![],
-            inactive_validators: vec![],
-            released_addresses: vec![],
-            custody_until: 0,
-            kick_at: 0,
-        }])
+    fn close_block_actions(&self, _block: &ExecutedBlock) -> Result<Vec<Action>, Error> {
+        Ok(vec![])
     }
 
     fn register_client(&self, client: Weak<dyn ConsensusClient>) {
