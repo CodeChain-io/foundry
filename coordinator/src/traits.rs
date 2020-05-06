@@ -33,15 +33,16 @@ pub trait BlockExecutor: Send + Sync {
         context: &mut dyn StorageAccess,
         transactions: &[Transaction],
     ) -> Result<Vec<TransactionExecutionOutcome>, ()>;
+    fn prepare_block<'a>(
+        &self,
+        context: &mut dyn StorageAccess,
+        transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+    ) -> Vec<&'a Transaction>;
     fn close_block(&self, context: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError>;
 }
 
 pub trait TxFilter: Send + Sync {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
-    fn fetch_transactions_for_block<'a>(
-        &self,
-        transactions: &'a [&'a TransactionWithMetadata],
-    ) -> Vec<TransactionWithGas<'a>>;
     fn filter_transactions<'a>(
         &self,
         transactions: &'a [&'a TransactionWithMetadata],

@@ -222,28 +222,6 @@ impl Decodable for TransactionWithMetadata {
     }
 }
 
-// TransactionWithGas will be returned by fetch_transactions_for_block
-pub struct TransactionWithGas<'a> {
-    pub tx_with_metadata: &'a TransactionWithMetadata,
-    pub gas: usize,
-}
-
-impl<'a> TransactionWithGas<'a> {
-    fn new(tx_with_metadata: &'a TransactionWithMetadata, gas: usize) -> Self {
-        Self {
-            tx_with_metadata,
-            gas,
-        }
-    }
-
-    pub fn size(&self) -> usize {
-        self.tx_with_metadata.size()
-    }
-
-    pub fn hash(&self) -> TxHash {
-        self.tx_with_metadata.hash()
-    }
-}
 pub enum VerifiedCrime {
     DoubleVote {
         height: u64,

@@ -211,21 +211,10 @@ impl Miner {
         parent_block_id: BlockId,
         chain: &C,
     ) -> Result<Option<ClosedBlock>, Error> {
-        let (transactions, mut open_block) = {
+        let mut open_block = {
             ctrace!(MINER, "prepare_block: No existing work - making new block");
             let params = self.params.read().clone();
-            let open_block = chain.prepare_open_block(parent_block_id, params.author, params.extra_data);
-            let header = open_block.block().header();
-            let parent_hash = *header.parent_hash();
-            let max_body_size = chain.consensus_params(parent_hash.into()).unwrap().max_body_size();
-            const DEFAULT_RANGE: Range<u64> = 0..::std::u64::MAX;
-
-            // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock
-            let mem_pool = self.mem_pool.read();
-            // TODO: Create a gas_limit parameter and use it
-            let transactions = mem_pool.top_transactions(max_body_size, max_body_size, DEFAULT_RANGE).transactions;
-
-            (transactions, open_block)
+            chain.prepare_open_block(parent_block_id, params.author, params.extra_data)
         };
 
         let parent_header = {
@@ -246,7 +235,12 @@ impl Miner {
         let block_executor = &*self.block_executor;
 
         open_block.open(block_executor, evidences)?;
-        open_block.execute_transactions(block_executor, transactions)?;
+        {
+            // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock
+            let mem_pool = self.mem_pool.read();
+            let transactions = mem_pool.all_pending_transactions_with_metadata();
+            open_block.prepare_block_from_transactions(block_executor, transactions);
+        }
         let closed_block = open_block.close(block_executor)?;
         Ok(Some(closed_block))
     }
