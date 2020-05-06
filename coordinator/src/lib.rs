@@ -57,6 +57,14 @@ impl BlockExecutor for Coordinator {
         unimplemented!()
     }
 
+    fn prepare_block<'a>(
+        &self,
+        context: &mut dyn StorageAccess,
+        transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+    ) -> Vec<&'a Transaction> {
+        unimplemented!()
+    }
+
     fn close_block(&self, context: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError> {
         unimplemented!()
     }
@@ -64,13 +72,6 @@ impl BlockExecutor for Coordinator {
 
 impl TxFilter for Coordinator {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode> {
-        unimplemented!()
-    }
-
-    fn fetch_transactions_for_block<'a>(
-        &self,
-        transactions: &'a [&'a TransactionWithMetadata],
-    ) -> Vec<TransactionWithGas<'a>> {
         unimplemented!()
     }
 

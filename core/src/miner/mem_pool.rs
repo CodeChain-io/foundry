@@ -23,6 +23,7 @@ use coordinator::types::{ErrorCode, Transaction, TransactionWithMetadata, TxOrig
 use ctypes::errors::{HistoryError, SyntaxError};
 use ctypes::TxHash;
 use kvdb::{DBTransaction, KeyValueDB};
+use std::iter::Iterator;
 use std::ops::{Deref, Range};
 use std::sync::Arc;
 
@@ -216,33 +217,8 @@ impl MemPool {
         }
     }
 
-    pub fn top_transactions(&self, gas_limit: usize, size_limit: usize, range: Range<u64>) -> PendingTransactions {
-        let mut current_gas: usize = 0;
-        let mut current_size: usize = 0;
-        let unordered_transactions: Vec<_> =
-            self.transaction_pool.pool.values().filter(|tx| range.contains(&tx.inserted_timestamp)).collect();
-        let ordered_transactions = self.tx_filter.fetch_transactions_for_block(&unordered_transactions);
-        let chosen_transactions: Vec<_> = ordered_transactions
-            .iter()
-            .take_while(|tx_with_gas| {
-                let size = tx_with_gas.size();
-                let gas = tx_with_gas.gas;
-                current_size += size;
-                current_gas += gas;
-                current_gas < gas_limit && current_size < size_limit
-            })
-            .collect();
-
-        let last_timestamp =
-            chosen_transactions.iter().map(|tx_with_gas| tx_with_gas.tx_with_metadata.inserted_timestamp).max();
-
-        PendingTransactions {
-            transactions: chosen_transactions
-                .iter()
-                .map(|tx_with_gas| tx_with_gas.tx_with_metadata.tx.clone())
-                .collect(),
-            last_timestamp,
-        }
+    pub fn all_pending_transactions_with_metadata(&self) -> impl Iterator<Item = &TransactionWithMetadata> {
+        self.transaction_pool.pool.values()
     }
 
     pub fn remove(&mut self, tx_hashes: &[TxHash]) {

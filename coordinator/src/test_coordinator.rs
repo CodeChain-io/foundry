@@ -72,6 +72,14 @@ impl BlockExecutor for TestCoordinator {
             .collect())
     }
 
+    fn prepare_block<'a>(
+        &self,
+        context: &mut dyn StorageAccess,
+        transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+    ) -> Vec<&'a Transaction> {
+        transactions.map(|tx_with_metadata| &tx_with_metadata.tx).collect()
+    }
+
     fn close_block(&self, context: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError> {
         if self.body_size.load(Ordering::SeqCst) > self.consensus_params.max_body_size() {
             Ok(BlockOutcome {
@@ -93,19 +101,6 @@ impl TxFilter for TestCoordinator {
         } else {
             Ok(())
         }
-    }
-
-    fn fetch_transactions_for_block<'a>(
-        &self,
-        transactions: &'a [&'a TransactionWithMetadata],
-    ) -> Vec<TransactionWithGas<'a>> {
-        transactions
-            .iter()
-            .map(|tx_with_metadata| TransactionWithGas {
-                tx_with_metadata,
-                gas: 0,
-            })
-            .collect()
     }
 
     fn filter_transactions<'a>(
