@@ -1,4 +1,4 @@
-// Copyright 2018-2020 Kodebox, Inc.
+// Copyright 2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,32 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate rlp_derive;
+use crate::{BlockHash, BlockNumber};
 
-mod block_hash;
-mod block_id;
-mod common_params;
-mod deposit;
-mod tx_hash;
-mod validator_set;
+/// Uniquely identifies block.
+#[derive(Debug, PartialEq, Copy, Clone, Hash, Eq)]
+pub enum BlockId {
+    /// Block's blake256.
+    /// Querying by hash is always faster.
+    Hash(BlockHash),
+    /// Block number within canon blockchain.
+    Number(BlockNumber),
+    /// Earliest block (genesis).
+    Earliest,
+    /// Latest mined block.
+    Latest,
+    /// Parent of latest mined block.
+    ParentOfLatest,
+}
 
-pub mod errors;
-pub mod header;
-pub mod transaction;
-pub mod util;
+impl From<BlockHash> for BlockId {
+    fn from(hash: BlockHash) -> Self {
+        BlockId::Hash(hash)
+    }
+}
 
-pub type BlockNumber = u64;
-pub type ShardId = u16;
-pub type StorageId = u16;
-
-pub use block_hash::BlockHash;
-pub use block_id::BlockId;
-pub use common_params::CommonParams;
-pub use deposit::Deposit;
-pub use header::Header;
-pub use tx_hash::TxHash;
-pub use validator_set::CompactValidatorEntry;
-pub use validator_set::CompactValidatorSet;
+impl From<BlockNumber> for BlockId {
+    fn from(number: BlockNumber) -> Self {
+        BlockId::Number(number)
+    }
+}

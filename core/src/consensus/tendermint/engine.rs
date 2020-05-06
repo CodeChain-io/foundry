@@ -27,7 +27,6 @@ use crate::consensus::tendermint::params::TimeGapParams;
 use crate::consensus::EngineType;
 use crate::error::Error;
 use crate::views::HeaderView;
-use crate::BlockId;
 use ckey::Ed25519Public as Public;
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
@@ -36,7 +35,7 @@ use cstate::{
     TopStateView,
 };
 use ctypes::transaction::Action;
-use ctypes::{BlockHash, Header};
+use ctypes::{BlockHash, BlockId, Header};
 use primitives::H256;
 use std::collections::HashSet;
 use std::iter::Iterator;

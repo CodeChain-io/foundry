@@ -17,12 +17,12 @@
 use super::super::errors;
 use super::super::traits::Chain;
 use super::super::types::{Block, BlockNumberAndHash, Transaction};
-use ccore::{AccountData, BlockId, EngineInfo, MiningBlockChainClient, Shard, TermInfo};
+use ccore::{AccountData, EngineInfo, MiningBlockChainClient, Shard, TermInfo};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress};
 use cstate::FindDoubleVoteHandler;
-use ctypes::{BlockHash, BlockNumber, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, TxHash};
 use jsonrpc_core::Result;
 use std::sync::Arc;
 

@@ -19,7 +19,7 @@ use super::message::{Message, RequestMessage, ResponseMessage};
 use crate::snapshot::snapshot_path;
 use ccore::encoded::Header as EncodedHeader;
 use ccore::{
-    Block, BlockChainClient, BlockChainTrait, BlockId, BlockImportError, BlockStatus, ChainNotify, Client, ImportBlock,
+    Block, BlockChainClient, BlockChainTrait, BlockImportError, BlockStatus, ChainNotify, Client, ImportBlock,
     ImportError, StateInfo, UnverifiedTransaction,
 };
 use cdb::AsHashDB;
@@ -28,7 +28,7 @@ use codechain_crypto::BLAKE_NULL_RLP;
 use cstate::{TopLevelState, TopStateView};
 use ctimer::TimerToken;
 use ctypes::header::{Header, Seal};
-use ctypes::{BlockHash, BlockNumber, ShardId};
+use ctypes::{BlockHash, BlockId, BlockNumber, ShardId};
 use kvdb::DBTransaction;
 use merkle_trie::snapshot::{ChunkDecompressor, Restore as SnapshotRestore};
 use merkle_trie::{skewed_merkle_root, Trie, TrieFactory};
