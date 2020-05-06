@@ -52,8 +52,8 @@ use ckey::{
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
-use ctypes::header::Header;
 use ctypes::transaction::{Action, Transaction, Validator};
+use ctypes::Header;
 use ctypes::{BlockHash, BlockNumber, CommonParams, Header as BlockHeader, TxHash};
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
