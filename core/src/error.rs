@@ -109,7 +109,6 @@ pub enum BlockError {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SchemeError {
-    InvalidCommonParams,
     InvalidState,
 }
 
@@ -117,7 +116,6 @@ impl fmt::Display for SchemeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use self::SchemeError::*;
         let msg: String = match self {
-            InvalidCommonParams => "Common params are not matched with gensis block".into(),
             InvalidState => "Genesis state is not same with spec".into(),
         };
         f.write_fmt(format_args!("Scheme file error ({})", msg))
