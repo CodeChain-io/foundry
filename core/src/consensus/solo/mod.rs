@@ -39,10 +39,6 @@ impl Solo {
             snapshot_notify_sender: Arc::new(RwLock::new(None)),
         }
     }
-
-    fn client(&self) -> Option<Arc<dyn ConsensusClient>> {
-        self.client.read().as_ref()?.upgrade()
-    }
 }
 
 impl ConsensusEngine for Solo {
@@ -60,30 +56,10 @@ impl ConsensusEngine for Solo {
 
     fn on_close_block(
         &self,
-        block: &mut ExecutedBlock,
+        _block: &mut ExecutedBlock,
         _updated_validator_set: Option<CompactValidatorSet>,
         _updated_consensus_params: Option<ConsensusParams>,
     ) -> Result<(), Error> {
-        let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
-
-        let parent_hash = *block.header().parent_hash();
-        let parent = client.block_header(&parent_hash.into()).expect("Parent header must exist");
-        let parent_consensus_params =
-            client.consensus_params(parent_hash.into()).expect("ConsensusParams of parent must exist");
-        let term_seconds = parent_consensus_params.term_seconds();
-        if term_seconds == 0 {
-            return Ok(())
-        }
-        let _last_term_finished_block_num = {
-            let header = block.header();
-            let current_term_period = header.timestamp() / term_seconds;
-            let parent_term_period = parent.timestamp() / term_seconds;
-            if current_term_period == parent_term_period {
-                return Ok(())
-            }
-            header.number()
-        };
-
         Ok(())
     }
 
