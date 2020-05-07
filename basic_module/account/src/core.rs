@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::error::Error;
 use crate::types::SignedTransaction;
 pub use ckey::{Ed25519Private as Private, Ed25519Public as Public, Error as KeyError, Password, Signature};
 pub use coordinator::context::SubStorageAccess;
@@ -25,4 +26,14 @@ pub trait CheckTxHandler {
 
 pub trait TransactionExecutor {
     fn execute_transactions(&self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionExecutionOutcome>, ()>;
+}
+
+pub trait AccountManager {
+    fn add_balance(&self, account_id: &Public, val: u64);
+
+    fn sub_balance(&self, account_id: &Public, val: u64) -> Result<(), Error>;
+
+    fn set_balance(&self, account_id: &Public, val: u64);
+
+    fn increment_sequence(&self, account_id: &Public);
 }
