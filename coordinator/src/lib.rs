@@ -21,6 +21,7 @@ use context::StorageAccess;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 
 pub mod context;
+mod graphql_server;
 pub mod test_coordinator;
 pub mod traits;
 pub mod types;
