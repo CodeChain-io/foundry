@@ -1,7 +1,6 @@
 export { Address, AddressValue } from "./address/address";
 
 export { H128, H128Value } from "./value/H128";
-export { H160, H160Value } from "./value/H160";
 export { H256, H256Value } from "./value/H256";
 export { H512, H512Value } from "./value/H512";
 

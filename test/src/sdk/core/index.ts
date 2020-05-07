@@ -2,7 +2,6 @@ import {
     Address,
     AddressValue,
     H128,
-    H160,
     H256,
     H256Value,
     H512,
@@ -29,7 +28,6 @@ export class Core {
     public static classes = {
         // Data
         H128,
-        H160,
         H256,
         H512,
         U256,
