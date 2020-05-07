@@ -95,3 +95,20 @@ impl AccountManager for Manager {
         context.set(address, account.to_vec());
     }
 }
+
+#[allow(dead_code)]
+pub struct View {}
+
+impl AccountView for View {
+    fn is_active(&self, address: &Public) -> bool {
+        get_balance_internally(address) != 0 || get_sequence_internally(address) != 0
+    }
+
+    fn get_balance(&self, address: &Public) -> u64 {
+        get_balance_internally(address)
+    }
+
+    fn get_sequence(&self, address: &Public) -> u64 {
+        get_sequence_internally(address)
+    }
+}
