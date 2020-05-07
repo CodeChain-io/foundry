@@ -14,8 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#[macro_use]
-extern crate serde_derive;
+use ckey::{NetworkId, Signature};
+use std::fmt;
 
-mod error;
-mod types;
+#[allow(dead_code)]
+#[derive(Debug)]
+pub enum Error {
+    InvalidValue(u64, u64),
+    InvalidSignature(Signature),
+    InvalidNetworkId(NetworkId),
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let msg: String = match *self {
+            Error::InvalidValue(balance, value) => {
+                format!("Invalid Value. The balance {} is smaller than this value {}", balance, value)
+            }
+            Error::InvalidNetworkId(network_id) => format!("{} is an invalid network id", network_id),
+            Error::InvalidSignature(sig) => format!("Signature {:?} is invalid", sig),
+        };
+
+        msg.fmt(f)
+    }
+}
