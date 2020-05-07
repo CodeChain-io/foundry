@@ -19,7 +19,7 @@ mod header;
 pub mod test_coordinator;
 mod traits;
 mod transaction;
-mod types;
+pub mod types;
 
 use self::context::{Context, StorageAccess};
 use self::header::Header;
