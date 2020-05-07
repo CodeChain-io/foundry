@@ -1842,6 +1842,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "module_account"
+version = "0.1.0"
+
+[[package]]
 name = "my_internet_ip"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
