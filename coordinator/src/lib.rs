@@ -17,6 +17,7 @@
 mod app_desc;
 pub mod context;
 pub mod engine;
+mod graphql_server;
 mod header;
 mod linkable;
 pub mod module;

@@ -27,6 +27,17 @@ handlebars = "3.3"
 anyhow = "1"
 serde_cbor = "0.11.1"
 intertrait = "0.2.0"
+actix-web = "2.0"
+actix-cors = "0.2.0"
+queryst = "1"
+juniper = { version = "0.14.2", features = ["expose-test-schema", "serde_json"] }
 
 [dev-dependencies]
 unindent = "0.1.6"
+serde_json = "1.0"
+actix-rt = "1.1.1"
+actix-http = "1.0.1"
+async-graphql = "1.11.3"
+futures = "0.3.5"
+starwars = { version = "0.1.0",  git = "https://github.com/async-graphql/examples.git" }
+tokio = "0.2.20"
