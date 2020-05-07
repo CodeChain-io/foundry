@@ -32,11 +32,11 @@ use import::{
     get_previous_validators, get_stakes, is_term_changed, last_term_finished_block_num, Banned, ChainHistoryAccess,
 };
 use num_rational::Ratio;
+use parking_lot::Mutex;
 use primitives::Bytes;
 use std::collections::{hash_map, BTreeMap, HashMap};
 use std::convert::{From, TryFrom};
 use std::mem;
-use parking_lot::Mutex;
 
 pub use ckey::{Ed25519Public as Public, NetworkId};
 pub use ctypes::{BlockHash, BlockNumber, CommonParams, Header};

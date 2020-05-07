@@ -14,7 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::error::Error;
 use crate::types::Transaction;
+use coordinator::context::SubStorageAccess;
+use coordinator::types::{BlockOutcome, VerifiedCrime};
+use ctypes::Header;
 
 pub trait FeeManager {
     fn accumulate_block_fee(&self, total_additional_fee: u64, total_min_fee: u64);
@@ -24,4 +28,16 @@ pub trait TransactionHandler {
     fn create_distribute_fee_transaction(&self) -> Transaction;
 
     fn create_distribute_rewards_transaction(&self) -> Transaction;
+}
+
+pub trait BlockExecutor {
+    fn open_block(&self, context: &mut dyn SubStorageAccess, header: &Header, verified_crime: &[VerifiedCrime]);
+
+    fn execute_transactions(
+        &self,
+        context: &mut dyn SubStorageAccess,
+        transactions: &[Transaction],
+    ) -> Result<(), Error>;
+
+    fn close_block(&self, context: &mut dyn SubStorageAccess) -> BlockOutcome;
 }
