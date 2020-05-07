@@ -32,8 +32,8 @@ export class Redelegate extends Transaction {
     protected actionToEncodeObject(): any[] {
         return [
             0x26,
-            this.prevDelegator.getAccountId().toEncodeObject(),
-            this.nextDelegator.getAccountId().toEncodeObject(),
+            this.prevDelegator.getPubKey().toEncodeObject(),
+            this.nextDelegator.getPubKey().toEncodeObject(),
             this.quantity.toEncodeObject()
         ];
     }

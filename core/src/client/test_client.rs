@@ -46,8 +46,8 @@ use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions, Veri
 use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::{
-    public_to_address, Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public,
-    Generator, KeyPairTrait, NetworkId, PlatformAddress, Random,
+    Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public, Generator, KeyPairTrait, NetworkId,
+    PlatformAddress, Random,
 };
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState};
@@ -79,11 +79,11 @@ pub struct TestBlockChainClient {
     /// Extra data do set for each block
     pub extra_data: Bytes,
     /// Balances.
-    pub balances: RwLock<HashMap<Address, u64>>,
+    pub balances: RwLock<HashMap<Public, u64>>,
     /// Seqs.
-    pub seqs: RwLock<HashMap<Address, u64>>,
+    pub seqs: RwLock<HashMap<Public, u64>>,
     /// Storage.
-    pub storage: RwLock<HashMap<(Address, H256), H256>>,
+    pub storage: RwLock<HashMap<(Public, H256), H256>>,
     /// Block queue size.
     pub queue_size: AtomicUsize,
     /// Miner
@@ -159,18 +159,18 @@ impl TestBlockChainClient {
     }
 
     /// Set the balance of account `address` to `balance`.
-    pub fn set_balance(&self, address: Address, balance: u64) {
-        self.balances.write().insert(address, balance);
+    pub fn set_balance(&self, pubkey: Public, balance: u64) {
+        self.balances.write().insert(pubkey, balance);
     }
 
     /// Set seq of account `address` to `seq`.
-    pub fn set_seq(&self, address: Address, seq: u64) {
-        self.seqs.write().insert(address, seq);
+    pub fn set_seq(&self, pubkey: Public, seq: u64) {
+        self.seqs.write().insert(pubkey, seq);
     }
 
     /// Set storage `position` to `value` for account `address`.
-    pub fn set_storage(&self, address: Address, position: H256, value: H256) {
-        self.storage.write().insert((address, position), value);
+    pub fn set_storage(&self, pubkey: Public, position: H256, value: H256) {
+        self.storage.write().insert((pubkey, position), value);
     }
 
     /// Set block queue size for testing
@@ -191,7 +191,7 @@ impl TestBlockChainClient {
         }
     }
     /// Add a block to test client with designated author.
-    pub fn add_block_with_author(&self, author: Option<Address>, n: usize, transaction_length: usize) -> BlockHash {
+    pub fn add_block_with_author(&self, author: Option<Public>, n: usize, transaction_length: usize) -> BlockHash {
         let mut header = BlockHeader::new();
         header.set_parent_hash(*self.last_hash.read());
         header.set_number(n as BlockNumber);
@@ -203,13 +203,13 @@ impl TestBlockChainClient {
         for _ in 0..transaction_length {
             let keypair: KeyPair = Random.generate().unwrap();
             // Update seqs value
-            self.seqs.write().insert(keypair.address(), 0);
+            self.seqs.write().insert(*keypair.public(), 0);
             let tx = Transaction {
                 seq: 0,
                 fee: 10,
                 network_id: NetworkId::default(),
                 action: Action::Pay {
-                    receiver: Address::random(),
+                    receiver: Public::random(),
                     quantity: 0,
                 },
             };
@@ -282,13 +282,12 @@ impl TestBlockChainClient {
             fee: 10,
             network_id: NetworkId::default(),
             action: Action::Pay {
-                receiver: Address::random(),
+                receiver: Public::random(),
                 quantity: 0,
             },
         };
         let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
-        let sender_address = public_to_address(&signed.signer_public());
-        self.set_balance(sender_address, 10_000_000_000_000_000_000);
+        self.set_balance(signed.signer_public(), 10_000_000_000_000_000_000);
         let hash = signed.transaction().hash();
         let res = self.miner.import_external_transactions(self, vec![signed.into()]);
         let res = res.into_iter().next().unwrap().expect("Successful import");
@@ -328,7 +327,7 @@ pub fn get_temp_state_db() -> StateDB {
 }
 
 impl BlockProducer for TestBlockChainClient {
-    fn prepare_open_block(&self, _parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock {
+    fn prepare_open_block(&self, _parent_block: BlockId, author: Public, extra_data: Bytes) -> OpenBlock {
         let engine = &*self.scheme.engine;
         let genesis_header = self.scheme.genesis_header();
         let db = get_temp_state_db();
@@ -342,39 +341,39 @@ impl BlockProducer for TestBlockChainClient {
 }
 
 impl MiningBlockChainClient for TestBlockChainClient {
-    fn get_malicious_users(&self) -> Vec<Address> {
+    fn get_malicious_users(&self) -> Vec<Public> {
         self.miner.get_malicious_users()
     }
 
-    fn release_malicious_users(&self, prisoner_vec: Vec<Address>) {
+    fn release_malicious_users(&self, prisoner_vec: Vec<Public>) {
         self.miner.release_malicious_users(prisoner_vec)
     }
 
-    fn imprison_malicious_users(&self, prisoner_vec: Vec<Address>) {
+    fn imprison_malicious_users(&self, prisoner_vec: Vec<Public>) {
         self.miner.imprison_malicious_users(prisoner_vec)
     }
 
-    fn get_immune_users(&self) -> Vec<Address> {
+    fn get_immune_users(&self) -> Vec<Public> {
         self.miner.get_immune_users()
     }
 
-    fn register_immune_users(&self, immune_user_vec: Vec<Address>) {
+    fn register_immune_users(&self, immune_user_vec: Vec<Public>) {
         self.miner.register_immune_users(immune_user_vec)
     }
 }
 
 impl AccountData for TestBlockChainClient {
-    fn seq(&self, address: &Address, id: BlockId) -> Option<u64> {
+    fn seq(&self, pubkey: &Public, id: BlockId) -> Option<u64> {
         match id {
-            BlockId::Latest => Some(self.seqs.read().get(address).cloned().unwrap_or(0)),
+            BlockId::Latest => Some(self.seqs.read().get(pubkey).cloned().unwrap_or(0)),
             _ => None,
         }
     }
 
-    fn balance(&self, address: &Address, state: StateOrBlock) -> Option<u64> {
+    fn balance(&self, pubkey: &Public, state: StateOrBlock) -> Option<u64> {
         match state {
             StateOrBlock::Block(BlockId::Latest) | StateOrBlock::State(_) => {
-                Some(self.balances.read().get(address).cloned().unwrap_or(0))
+                Some(self.balances.read().get(pubkey).cloned().unwrap_or(0))
             }
             _ => None,
         }

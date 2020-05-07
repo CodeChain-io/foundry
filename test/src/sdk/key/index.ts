@@ -66,9 +66,10 @@ export class Key {
                 `Expected keyStore param to be a KeyStore instance but found ${keyStore}`
             );
         }
-        const accountId = await keyStore.createKey({ passphrase });
+        const key = await keyStore.createKey({ passphrase });
+        const pubkey = await keyStore.getPublicKey({ key, passphrase });
         const { networkId } = this;
-        return Address.fromAccountId(accountId, { networkId });
+        return Address.fromPublic(pubkey!, { networkId });
     }
 
     /**
@@ -125,19 +126,19 @@ export class Key {
         }
         tx.setFee(fee);
         tx.setSeq(seq);
-        const accountId = Address.ensure(account).getAccountId();
+        const pubkey = Address.ensure(account).getPubKey();
         const signerPublic = await keyStore.getPublicKey({
-            key: accountId.value,
+            key: pubkey.value,
             passphrase
         });
         if (signerPublic === null) {
             throw Error(
-                `The account ${accountId.value} is not found in the Keystore`
+                `The account ${pubkey.value} is not found in the Keystore`
             );
         }
 
         const sig = await keyStore.sign({
-            key: accountId.value,
+            key: pubkey.value,
             message: tx.unsignedHash().value,
             passphrase
         });

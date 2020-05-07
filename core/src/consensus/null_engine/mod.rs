@@ -16,7 +16,7 @@
 
 use super::ConsensusEngine;
 use crate::consensus::{EngineError, EngineType};
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 
 /// An engine which does not provide any consensus mechanism and does not seal blocks.
 #[derive(Default)]
@@ -31,7 +31,7 @@ impl ConsensusEngine for NullEngine {
         EngineType::Solo
     }
 
-    fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {
+    fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Public>>, EngineError> {
         Ok(None)
     }
 }

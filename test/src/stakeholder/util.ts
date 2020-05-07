@@ -37,8 +37,8 @@ export function decodeH512(buffer: Buffer): H512 {
 }
 
 export function decodeaddress(sdk: SDK, buffer: Buffer): Address {
-    const accountId = buffer.toString("hex");
-    return Address.fromAccountId(accountId, {
+    const pubkey = buffer.toString("hex");
+    return Address.fromPublic(pubkey, {
         networkId: sdk.networkId
     });
 }

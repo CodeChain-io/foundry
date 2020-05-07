@@ -16,36 +16,36 @@
 
 use crate::accounts_dir::{DiskKeyFileManager, KeyDirectory, KeyFileManager};
 use crate::Error;
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use std::collections::HashSet;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::Path;
 
 /// Import an account from a file.
-pub fn import_account(path: &Path, dst: &dyn KeyDirectory) -> Result<Address, Error> {
+pub fn import_account(path: &Path, dst: &dyn KeyDirectory) -> Result<Public, Error> {
     let key_manager = DiskKeyFileManager;
-    let existing_accounts = dst.load()?.into_iter().map(|a| a.address).collect::<HashSet<_>>();
+    let existing_accounts = dst.load()?.into_iter().map(|a| a.pubkey).collect::<HashSet<_>>();
     let filename = path.file_name().and_then(OsStr::to_str).map(ToOwned::to_owned);
     let account = fs::File::open(&path).map_err(Into::into).and_then(|file| key_manager.read(filename, file))?;
 
-    let address = account.address;
-    if !existing_accounts.contains(&address) {
+    let pubkey = account.pubkey;
+    if !existing_accounts.contains(&pubkey) {
         dst.insert(account)?;
     }
-    Ok(address)
+    Ok(pubkey)
 }
 
 /// Import all accounts from one directory to the other.
-pub fn import_accounts(src: &dyn KeyDirectory, dst: &dyn KeyDirectory) -> Result<Vec<Address>, Error> {
+pub fn import_accounts(src: &dyn KeyDirectory, dst: &dyn KeyDirectory) -> Result<Vec<Public>, Error> {
     let accounts = src.load()?;
-    let existing_accounts = dst.load()?.into_iter().map(|a| a.address).collect::<HashSet<_>>();
+    let existing_accounts = dst.load()?.into_iter().map(|a| a.pubkey).collect::<HashSet<_>>();
 
     accounts
         .into_iter()
-        .filter(|a| !existing_accounts.contains(&a.address))
+        .filter(|a| !existing_accounts.contains(&a.pubkey))
         .map(|a| {
-            let address = a.address;
+            let address = a.pubkey;
             dst.insert(a)?;
             Ok(address)
         })

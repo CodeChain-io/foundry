@@ -24,7 +24,7 @@ export class Revoke extends Transaction {
     protected actionToEncodeObject(): any[] {
         return [
             0x23,
-            this.address.getAccountId().toEncodeObject(),
+            this.address.getPubKey().toEncodeObject(),
             this.quantity.toEncodeObject()
         ];
     }

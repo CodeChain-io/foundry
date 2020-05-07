@@ -18,6 +18,7 @@
 //! Single account in the system.
 
 use crate::CacheableItem;
+use ckey::Ed25519Public as Public;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::fmt;
 
@@ -88,7 +89,7 @@ impl Default for Account {
 }
 
 impl CacheableItem for Account {
-    type Address = ckey::Address;
+    type Address = Public;
 
     /// Check if account has zero seq, balance.
     fn is_null(&self) -> bool {

@@ -17,7 +17,6 @@
 
 //! Lenient hash json deserialization for test json files.
 
-use ckey::Address as CoreAddress;
 use primitives::{H256 as Hash256, H520 as Hash520};
 use rustc_hex::ToHex;
 use serde::de::{Error, Visitor};
@@ -94,7 +93,6 @@ macro_rules! impl_hash {
     };
 }
 
-impl_hash!(Address, CoreAddress);
 impl_hash!(H256, Hash256);
 impl_hash!(H520, Hash520);
 

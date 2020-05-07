@@ -17,7 +17,7 @@
 use crate::{
     Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, Shard, ShardText, StateDB, StateResult,
 };
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use ctypes::transaction::ShardTransaction;
 use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, TxHash};
 use merkle_trie::Result as TrieResult;
@@ -27,29 +27,29 @@ pub trait TopStateView {
     /// Check caches for required data
     /// First searches for account in the local, then the shared cache.
     /// Populates local cache if nothing found.
-    fn account(&self, a: &Address) -> TrieResult<Option<Account>>;
+    fn account(&self, a: &Public) -> TrieResult<Option<Account>>;
 
     /// Get the seq of account `a`.
-    fn seq(&self, a: &Address) -> TrieResult<u64> {
+    fn seq(&self, a: &Public) -> TrieResult<u64> {
         Ok(self.account(a)?.map_or(0, |account| account.seq()))
     }
 
     /// Get the balance of account `a`.
-    fn balance(&self, a: &Address) -> TrieResult<u64> {
+    fn balance(&self, a: &Public) -> TrieResult<u64> {
         Ok(self.account(a)?.map_or(0, |account| account.balance()))
     }
 
-    fn account_exists(&self, a: &Address) -> TrieResult<bool> {
+    fn account_exists(&self, a: &Public) -> TrieResult<bool> {
         // Bloom filter does not contain empty accounts, so it is important here to
         // check if account exists in the database directly before EIP-161 is in effect.
         Ok(self.account(a)?.is_some())
     }
 
-    fn account_exists_and_not_null(&self, a: &Address) -> TrieResult<bool> {
+    fn account_exists_and_not_null(&self, a: &Public) -> TrieResult<bool> {
         Ok(self.account(a)?.map(|a| !a.is_null()).unwrap_or(false))
     }
 
-    fn account_exists_and_has_seq(&self, a: &Address) -> TrieResult<bool> {
+    fn account_exists_and_has_seq(&self, a: &Public) -> TrieResult<bool> {
         Ok(self.account(a)?.map(|a| a.seq() != 0).unwrap_or(false))
     }
 
@@ -107,8 +107,8 @@ pub trait ShardState {
         &mut self,
         tx_hash: TxHash,
         transaction: &ShardTransaction,
-        sender: &Address,
-        approvers: &[Address],
+        sender: &Public,
+        approvers: &[Public],
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
     ) -> StateResult<()>;
@@ -116,17 +116,17 @@ pub trait ShardState {
 
 pub trait TopState {
     /// Remove an existing account.
-    fn kill_account(&mut self, account: &Address);
+    fn kill_account(&mut self, account: &Public);
 
     /// Add `incr` to the balance of account `a`.
-    fn add_balance(&mut self, a: &Address, incr: u64) -> TrieResult<()>;
+    fn add_balance(&mut self, a: &Public, incr: u64) -> TrieResult<()>;
     /// Subtract `decr` from the balance of account `a`.
-    fn sub_balance(&mut self, a: &Address, decr: u64) -> StateResult<()>;
+    fn sub_balance(&mut self, a: &Public, decr: u64) -> StateResult<()>;
     /// Subtracts `by` from the balance of `from` and adds it to that of `to`.
-    fn transfer_balance(&mut self, from: &Address, to: &Address, by: u64) -> StateResult<()>;
+    fn transfer_balance(&mut self, from: &Public, to: &Public, by: u64) -> StateResult<()>;
 
     /// Increment the seq of account `a` by 1.
-    fn inc_seq(&mut self, a: &Address) -> TrieResult<()>;
+    fn inc_seq(&mut self, a: &Public) -> TrieResult<()>;
 
     fn set_shard_root(&mut self, shard_id: ShardId, new_root: H256) -> StateResult<()>;
 

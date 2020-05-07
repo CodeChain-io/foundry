@@ -1,10 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import {
-    getAccountIdFromPublic,
-    getPublicFromPrivate,
-    verifyEd25519
-} from "../../utils";
+import { getPublicFromPrivate, verifyEd25519 } from "../../utils";
 import { LocalKeyStore } from "../LocalKeyStore";
 
 it("createKey", async () => {
@@ -32,16 +28,17 @@ it("getKeyList", async () => {
 });
 
 it("exportRawKey", async () => {
+    const passphrase = "satoshi";
     const store = await LocalKeyStore.createForTest();
-    const key = await store.createKey({ passphrase: "satoshi" });
+    const key = await store.createKey({ passphrase });
     const privateKey = await store.exportRawKey({
         key,
-        passphrase: "satoshi"
+        passphrase
     });
 
     const publicKey = getPublicFromPrivate(privateKey);
-    const accountId = getAccountIdFromPublic(publicKey);
-    expect(accountId).equal(key);
+    const storedKey = await store.getPublicKey({ key, passphrase });
+    expect(publicKey).equal(storedKey);
 });
 
 it("sign", async () => {

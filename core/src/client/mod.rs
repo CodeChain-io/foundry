@@ -36,7 +36,7 @@ use crate::error::{BlockImportError, Error as GenericError};
 use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::DatabaseError;
-use ckey::{Address, NetworkId, PlatformAddress};
+use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
 use ctypes::Header;
 use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, TxHash};
@@ -101,11 +101,11 @@ pub trait TermInfo {
 pub trait AccountData {
     /// Attempt to get address seq at given block.
     /// May not fail on BlockId::Latest.
-    fn seq(&self, address: &Address, id: BlockId) -> Option<u64>;
+    fn seq(&self, pubkey: &Public, id: BlockId) -> Option<u64>;
 
     /// Get address seq at the latest block's state.
-    fn latest_seq(&self, address: &Address) -> u64 {
-        self.seq(address, BlockId::Latest).expect(
+    fn latest_seq(&self, pubkey: &Public) -> u64 {
+        self.seq(pubkey, BlockId::Latest).expect(
             "seq will return Some when given BlockId::Latest. seq was given BlockId::Latest. \
              Therefore seq has returned Some; qed",
         )
@@ -115,11 +115,11 @@ pub trait AccountData {
     ///
     /// May not return None if given BlockId::Latest.
     /// Returns None if and only if the block's root hash has been pruned from the DB.
-    fn balance(&self, address: &Address, state: StateOrBlock) -> Option<u64>;
+    fn balance(&self, pubkey: &Public, state: StateOrBlock) -> Option<u64>;
 
     /// Get address balance at the latest block's state.
-    fn latest_balance(&self, address: &Address) -> u64 {
-        self.balance(address, BlockId::Latest.into()).expect(
+    fn latest_balance(&self, pubkey: &Public) -> u64 {
+        self.balance(pubkey, BlockId::Latest.into()).expect(
             "balance will return Some if given BlockId::Latest. balance was given BlockId::Latest \
              Therefore balance has returned Some; qed",
         )
@@ -236,25 +236,25 @@ pub type ImportResult = Result<BlockHash, DatabaseError>;
 /// Provides methods used for sealing new state
 pub trait BlockProducer {
     /// Returns OpenBlock prepared for closing.
-    fn prepare_open_block(&self, parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock;
+    fn prepare_open_block(&self, parent_block: BlockId, author: Public, extra_data: Bytes) -> OpenBlock;
 }
 
 /// Extended client interface used for mining
 pub trait MiningBlockChainClient: BlockChainClient + BlockProducer + FindDoubleVoteHandler {
     /// Returns malicious users who sent failing transactions.
-    fn get_malicious_users(&self) -> Vec<Address>;
+    fn get_malicious_users(&self) -> Vec<Public>;
 
     /// Release designated users from the malicious user list.
-    fn release_malicious_users(&self, prisoner_vec: Vec<Address>);
+    fn release_malicious_users(&self, prisoner_vec: Vec<Public>);
 
     /// Append designated users to the malicious user list.
-    fn imprison_malicious_users(&self, prisoner_vec: Vec<Address>);
+    fn imprison_malicious_users(&self, prisoner_vec: Vec<Public>);
 
     /// Returns users immune from getting banned.
-    fn get_immune_users(&self) -> Vec<Address>;
+    fn get_immune_users(&self) -> Vec<Public>;
 
     /// Append designated users to the immune user list.
-    fn register_immune_users(&self, immune_user_vec: Vec<Address>);
+    fn register_immune_users(&self, immune_user_vec: Vec<Public>);
 }
 
 /// Provides methods to access database.

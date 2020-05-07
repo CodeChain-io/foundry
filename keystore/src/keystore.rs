@@ -21,7 +21,7 @@ use crate::json::{self, OpaqueKeyFile, Uuid};
 use crate::random::Random;
 use crate::{Error, SecretStore, SimpleSecretStore};
 use ccrypto::KEY_ITERATIONS;
-use ckey::{Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, KeyPairTrait, Password};
+use ckey::{Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public, KeyPairTrait, Password};
 use parking_lot::{Mutex, RwLock};
 use std::collections::BTreeMap;
 use std::mem;
@@ -58,47 +58,42 @@ impl KeyStore {
 }
 
 impl SimpleSecretStore for KeyStore {
-    fn insert_account(&self, secret: Private, password: &Password) -> Result<Address, Error> {
+    fn insert_account(&self, secret: Private, password: &Password) -> Result<Public, Error> {
         let keypair = KeyPair::from_private(secret.clone());
-        if self.has_account(&keypair.address())? {
+        if self.has_account(keypair.public())? {
             Err(Error::AlreadyExists)
         } else {
             self.store.insert_account(secret, password)
         }
     }
 
-    fn accounts(&self) -> Result<Vec<Address>, Error> {
+    fn accounts(&self) -> Result<Vec<Public>, Error> {
         self.store.accounts()
     }
 
-    fn has_account(&self, account: &Address) -> Result<bool, Error> {
+    fn has_account(&self, account: &Public) -> Result<bool, Error> {
         self.store.has_account(account)
     }
 
-    fn remove_account(&self, account: &Address) -> Result<(), Error> {
+    fn remove_account(&self, account: &Public) -> Result<(), Error> {
         self.store.remove_account(account)
     }
 
-    fn change_password(
-        &self,
-        account: &Address,
-        old_password: &Password,
-        new_password: &Password,
-    ) -> Result<(), Error> {
+    fn change_password(&self, account: &Public, old_password: &Password, new_password: &Password) -> Result<(), Error> {
         self.store.change_password(account, old_password, new_password)
     }
 
-    fn export_account(&self, account: &Address, password: &Password) -> Result<OpaqueKeyFile, Error> {
+    fn export_account(&self, account: &Public, password: &Password) -> Result<OpaqueKeyFile, Error> {
         self.store.export_account(account, password)
     }
 
-    fn decrypt_account(&self, account: &Address, password: &Password) -> Result<DecryptedAccount, Error> {
+    fn decrypt_account(&self, account: &Public, password: &Password) -> Result<DecryptedAccount, Error> {
         self.store.decrypt_account(account, password)
     }
 }
 
 impl SecretStore for KeyStore {
-    fn import_wallet(&self, json: &[u8], password: &Password, gen_id: bool) -> Result<Address, Error> {
+    fn import_wallet(&self, json: &[u8], password: &Password, gen_id: bool) -> Result<Public, Error> {
         let json_keyfile =
             json::KeyFile::load(json).map_err(|err| Error::InvalidKeyFile(format!("Invalid JSON format: {}", err)))?;
         let mut safe_account = SafeAccount::from_file(json_keyfile, None, Some(password))?;
@@ -108,11 +103,11 @@ impl SecretStore for KeyStore {
         }
 
         let secret = safe_account.crypto.secret(password).map_err(|_| Error::InvalidPassword)?;
-        safe_account.address = KeyPair::from_private(secret).address();
+        safe_account.pubkey = *KeyPair::from_private(secret).public();
         self.store.import(safe_account)
     }
 
-    fn test_password(&self, account: &Address, password: &Password) -> Result<bool, Error> {
+    fn test_password(&self, account: &Public, password: &Password) -> Result<bool, Error> {
         match self.store.get_verified_account(account, password) {
             Ok(_) => Ok(true),
             Err(Error::InvalidPassword) => Ok(false),
@@ -123,7 +118,7 @@ impl SecretStore for KeyStore {
     fn copy_account(
         &self,
         new_store: &dyn SimpleSecretStore,
-        account: &Address,
+        account: &Public,
         password: &Password,
         new_password: &Password,
     ) -> Result<(), Error> {
@@ -132,17 +127,17 @@ impl SecretStore for KeyStore {
         Ok(())
     }
 
-    fn uuid(&self, account: &Address) -> Result<Uuid, Error> {
+    fn uuid(&self, account: &Public) -> Result<Uuid, Error> {
         let account = self.store.get_safe_account(account)?;
         Ok(account.id.into())
     }
 
-    fn meta(&self, account: &Address) -> Result<String, Error> {
+    fn meta(&self, account: &Public) -> Result<String, Error> {
         let account = self.store.get_safe_account(account)?;
         Ok(account.meta)
     }
 
-    fn set_meta(&self, account_ref: &Address, meta: String) -> Result<(), Error> {
+    fn set_meta(&self, account_ref: &Public, meta: String) -> Result<(), Error> {
         let old = self.store.get_safe_account(account_ref)?;
         let mut safe_account = old.clone();
         safe_account.meta = meta;
@@ -156,12 +151,12 @@ impl SecretStore for KeyStore {
     }
 }
 
-/// Similar to `KeyStore` but may store many accounts (with different passwords) for the same `Address`
+/// Similar to `KeyStore` but may store many accounts (with different passwords) for the same `Public`
 pub struct KeyMultiStore {
     dir: Box<dyn KeyDirectory>,
     iterations: u32,
     // order lock: cache
-    cache: RwLock<BTreeMap<Address, Vec<SafeAccount>>>,
+    cache: RwLock<BTreeMap<Public, Vec<SafeAccount>>>,
     timestamp: Mutex<Timestamp>,
 }
 
@@ -224,7 +219,7 @@ impl KeyMultiStore {
 
         let mut new_accounts = BTreeMap::new();
         for account in self.dir.load()? {
-            let account_ref = account.address;
+            let account_ref = account.pubkey;
             new_accounts.entry(account_ref).or_insert_with(Vec::new).push(account);
         }
 
@@ -232,7 +227,7 @@ impl KeyMultiStore {
         Ok(())
     }
 
-    fn get_safe_accounts(&self, account: &Address) -> Result<Vec<SafeAccount>, Error> {
+    fn get_safe_accounts(&self, account: &Public) -> Result<Vec<SafeAccount>, Error> {
         let from_cache = |account| {
             let cache = self.cache.read();
 
@@ -258,12 +253,12 @@ impl KeyMultiStore {
         result
     }
 
-    fn get_safe_account(&self, account: &Address) -> Result<SafeAccount, Error> {
+    fn get_safe_account(&self, account: &Public) -> Result<SafeAccount, Error> {
         let accounts = self.get_safe_accounts(account)?;
         Ok(accounts[0].clone())
     }
 
-    fn get_verified_account(&self, account: &Address, password: &Password) -> Result<VerifiedAccount, Error> {
+    fn get_verified_account(&self, account: &Public, password: &Password) -> Result<VerifiedAccount, Error> {
         for account in self.get_safe_accounts(account)?.into_iter() {
             match account.crypto.secret(password) {
                 Ok(secret) => {
@@ -279,19 +274,19 @@ impl KeyMultiStore {
         Err(Error::InvalidPassword)
     }
 
-    fn import(&self, account: SafeAccount) -> Result<Address, Error> {
+    fn import(&self, account: SafeAccount) -> Result<Public, Error> {
         // save to file
         let account = self.dir.insert(account)?;
 
         // update cache
-        let account_ref = account.address;
+        let account_ref = account.pubkey;
         let mut cache = self.cache.write();
         cache.entry(account_ref).or_insert_with(Vec::new).push(account);
 
         Ok(account_ref)
     }
 
-    fn update(&self, account_ref: &Address, old: &SafeAccount, new: SafeAccount) -> Result<(), Error> {
+    fn update(&self, account_ref: &Public, old: &SafeAccount, new: SafeAccount) -> Result<(), Error> {
         // save to file
         let account = self.dir.update(new)?;
 
@@ -305,7 +300,7 @@ impl KeyMultiStore {
         Ok(())
     }
 
-    fn remove_safe_account(&self, account_ref: &Address, account: &SafeAccount) -> Result<(), Error> {
+    fn remove_safe_account(&self, account_ref: &Public, account: &SafeAccount) -> Result<(), Error> {
         // Remove from dir
         self.dir.remove(&account)?;
 
@@ -331,19 +326,19 @@ impl KeyMultiStore {
 }
 
 impl SimpleSecretStore for KeyMultiStore {
-    fn insert_account(&self, secret: Private, password: &Password) -> Result<Address, Error> {
+    fn insert_account(&self, secret: Private, password: &Password) -> Result<Public, Error> {
         let keypair = KeyPair::from_private(secret);
         let id: [u8; 16] = Random::random();
         let account = SafeAccount::create(&keypair, id, password, self.iterations, "{}".to_string())?;
         self.import(account)
     }
 
-    fn accounts(&self) -> Result<Vec<Address>, Error> {
+    fn accounts(&self) -> Result<Vec<Public>, Error> {
         self.reload_if_changed()?;
         Ok(self.cache.read().keys().cloned().collect())
     }
 
-    fn has_account(&self, account: &Address) -> Result<bool, Error> {
+    fn has_account(&self, account: &Public) -> Result<bool, Error> {
         match self.get_safe_accounts(account) {
             Ok(_) => Ok(true),
             Err(Error::InvalidAccount) => Ok(false),
@@ -351,7 +346,7 @@ impl SimpleSecretStore for KeyMultiStore {
         }
     }
 
-    fn remove_account(&self, account_ref: &Address) -> Result<(), Error> {
+    fn remove_account(&self, account_ref: &Public) -> Result<(), Error> {
         let accounts = self.get_safe_accounts(account_ref)?;
 
         for account in accounts {
@@ -363,7 +358,7 @@ impl SimpleSecretStore for KeyMultiStore {
 
     fn change_password(
         &self,
-        account_ref: &Address,
+        account_ref: &Public,
         old_password: &Password,
         new_password: &Password,
     ) -> Result<(), Error> {
@@ -385,11 +380,11 @@ impl SimpleSecretStore for KeyMultiStore {
         }
     }
 
-    fn export_account(&self, account_ref: &Address, password: &Password) -> Result<OpaqueKeyFile, Error> {
+    fn export_account(&self, account_ref: &Public, password: &Password) -> Result<OpaqueKeyFile, Error> {
         Ok(self.get_verified_account(account_ref, password)?.account.into())
     }
 
-    fn decrypt_account(&self, account: &Address, password: &Password) -> Result<DecryptedAccount, Error> {
+    fn decrypt_account(&self, account: &Public, password: &Password) -> Result<DecryptedAccount, Error> {
         Ok(DecryptedAccount::new(self.get_verified_account(account, password)?.secret))
     }
 }
@@ -426,11 +421,9 @@ mod tests {
 
         // when
         let private_key = keypair.private();
-        let keypair_address = keypair.address();
         let address = store.insert_account(private_key.clone(), &"test".into()).unwrap();
 
         // then
-        assert_eq!(address, keypair_address);
         assert_eq!(Some(true), store.has_account(&address).ok(), "Should contain account.");
         assert_eq!(store.accounts().unwrap().len(), 1, "Should have one account.");
     }

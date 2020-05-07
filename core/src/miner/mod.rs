@@ -20,7 +20,7 @@ mod mem_pool_types;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod miner;
 
-use ckey::{public_to_address, Address, Ed25519Public as Public, Password, PlatformAddress};
+use ckey::{Ed25519Public as Public, Password, PlatformAddress};
 use cstate::{FindDoubleVoteHandler, TopStateView};
 use ctypes::transaction::IncompleteTransaction;
 use ctypes::{BlockHash, TxHash};
@@ -50,10 +50,10 @@ pub trait MinerService: Send + Sync {
     fn authoring_params(&self) -> AuthoringParams;
 
     /// Set the author that we will seal blocks as.
-    fn set_author(&self, author: Address) -> Result<(), AccountProviderError>;
+    fn set_author(&self, author: Public) -> Result<(), AccountProviderError>;
 
     ///Get the address of block author.
-    fn get_author_address(&self) -> Address;
+    fn get_author(&self) -> Public;
 
     /// Set the extra_data that we will seal blocks with.
     fn set_extra_data(&self, extra_data: Bytes);
@@ -124,19 +124,19 @@ pub trait MinerService: Send + Sync {
     fn stop_sealing(&self);
 
     /// Get malicious users
-    fn get_malicious_users(&self) -> Vec<Address>;
+    fn get_malicious_users(&self) -> Vec<Public>;
 
     /// Release target malicious users from malicious user set.
-    fn release_malicious_users(&self, prisoner_vec: Vec<Address>);
+    fn release_malicious_users(&self, prisoner_vec: Vec<Public>);
 
     /// Imprison target malicious users to malicious user set.
-    fn imprison_malicious_users(&self, prisoner_vec: Vec<Address>);
+    fn imprison_malicious_users(&self, prisoner_vec: Vec<Public>);
 
     /// Get ban-immune users.
-    fn get_immune_users(&self) -> Vec<Address>;
+    fn get_immune_users(&self) -> Vec<Public>;
 
     /// Register users to ban-immune users.
-    fn register_immune_users(&self, immune_user_vec: Vec<Address>);
+    fn register_immune_users(&self, immune_user_vec: Vec<Public>);
 }
 
 /// Mining status
@@ -158,11 +158,8 @@ pub enum TransactionImportResult {
 }
 
 fn fetch_account_creator<'c>(client: &'c dyn AccountData) -> impl Fn(&Public) -> AccountDetails + 'c {
-    move |public: &Public| {
-        let address = public_to_address(public);
-        AccountDetails {
-            seq: client.latest_seq(&address),
-            balance: client.latest_balance(&address),
-        }
+    move |pubkey: &Public| AccountDetails {
+        seq: client.latest_seq(&pubkey),
+        balance: client.latest_balance(&pubkey),
     }
 }

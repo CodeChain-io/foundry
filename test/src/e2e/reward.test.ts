@@ -28,7 +28,6 @@ import CodeChain from "../helper/spawn";
 describe("Reward = 50, 1 miner", function() {
     // FIXME: Change Number to U64
     const MIN_FEE_PAY = 10;
-    const BLOCK_REWARD = 50;
     const FAUCET_INITIAL_CCS = 18000000000000000000;
 
     let node: CodeChain;

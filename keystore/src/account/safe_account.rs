@@ -18,7 +18,7 @@
 use super::crypto::Crypto;
 use crate::account::Version;
 use crate::{json, DecryptedAccount, Error};
-use ckey::{Address, Ed25519KeyPair as KeyPair, KeyPairTrait, Password};
+use ckey::{Ed25519KeyPair as KeyPair, Ed25519Public as Public, KeyPairTrait, Password};
 
 /// Account representation.
 #[derive(Debug, PartialEq, Clone)]
@@ -27,8 +27,8 @@ pub struct SafeAccount {
     pub id: [u8; 16],
     /// Account version
     pub version: Version,
-    /// Account address
-    pub address: Address,
+    /// Account public key
+    pub pubkey: Public,
     /// Account private key derivation definition.
     pub crypto: Crypto,
     /// Account filename
@@ -39,10 +39,12 @@ pub struct SafeAccount {
 
 impl From<SafeAccount> for json::KeyFile {
     fn from(account: SafeAccount) -> Self {
+        let mut pubkey: [u8; 32] = [0; 32];
+        pubkey.copy_from_slice(account.pubkey.as_ref());
         Self {
             id: From::from(account.id),
             version: account.version.into(),
-            address: Some(account.address.into()),
+            pubkey: Some(pubkey.into()),
             crypto: account.crypto.into(),
             meta: Some(account.meta),
         }
@@ -62,7 +64,7 @@ impl SafeAccount {
             id,
             version: Version::V3,
             crypto: Crypto::with_secret(keypair.private(), password, iterations)?,
-            address: keypair.address(),
+            pubkey: *keypair.public(),
             filename: None,
             meta,
         })
@@ -77,25 +79,27 @@ impl SafeAccount {
         password: Option<&Password>,
     ) -> Result<Self, Error> {
         let crypto = Crypto::from(json.crypto);
-        let address = match (json.address, password) {
-            (Some(address), Some(password)) => {
-                let address = address.into();
-                let decrypted_address = crypto.address(password)?;
-                if decrypted_address != address {
+        let pubkey = match (json.pubkey, password) {
+            (Some(raw_pubkey), Some(password)) => {
+                let pubkey = Public::from_slice(raw_pubkey.as_ref()).ok_or(Error::InvalidSecret)?;
+                let decrypted_pubkey = crypto.pubkey(password)?;
+                if decrypted_pubkey != pubkey {
                     Err(Error::InvalidKeyFile("Address field is invalid".to_string()))
                 } else {
-                    Ok(address)
+                    Ok(pubkey)
                 }
             }
-            (None, Some(password)) => crypto.address(password),
-            (Some(address), None) => Ok(address.into()),
-            (None, None) => Err(Error::InvalidKeyFile("Cannot create account if address is not given".to_string())),
+            (None, Some(password)) => crypto.pubkey(password),
+            (Some(pubkey), None) => Ok(Public::from_slice(pubkey.as_ref()).ok_or(Error::InvalidSecret)?),
+            (None, None) => {
+                Err(Error::InvalidKeyFile("Cannot create account if a public key is not given".to_string()))
+            }
         }?;
 
         Ok(SafeAccount {
             id: json.id.into(),
             version: json.version.into(),
-            address,
+            pubkey,
             crypto,
             filename,
             meta: json.meta.unwrap_or_else(|| "{}".to_string()),
@@ -114,7 +118,7 @@ impl SafeAccount {
             id: self.id,
             version: self.version,
             crypto: Crypto::with_secret(&secret, new_password, iterations)?,
-            address: self.address,
+            pubkey: self.pubkey,
             filename: self.filename.clone(),
             meta: self.meta.clone(),
         };
@@ -170,12 +174,12 @@ mod tests {
 
     #[test]
     fn from_file() {
-        let address = "6edddfc6349aff20bc6467ccf276c5b52487f7a8";
+        let pubkey = "0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0";
         let meta = "{\"a\": \"b\"}";
         let expected = KeyFile {
             id: Uuid::from_str("8777d9f6-7860-4b9b-88b7-0b57ee6b3a73").unwrap(),
             version: json::Version::V3,
-            address: Some(address.into()),
+            pubkey: Some(pubkey.into()),
             crypto: Crypto {
                 cipher: Cipher::Aes128Ctr(Aes128Ctr {
                     iv: "b5a7ec855ec9e2c405371356855fec83".into(),
@@ -194,7 +198,7 @@ mod tests {
         };
 
         let safe_account = SafeAccount::from_file(expected, None, None).unwrap();
-        assert_eq!(Address::from_str(address), Ok(safe_account.address));
+        assert_eq!(Public::from_str(pubkey), Ok(safe_account.pubkey));
         assert_eq!(meta, safe_account.meta);
     }
 }

@@ -56,18 +56,15 @@ where
         self.account_provider
             .get_list()
             .map(|addresses| {
-                addresses
-                    .into_iter()
-                    .map(|address| PlatformAddress::new_v1(self.client.network_id(), address))
-                    .collect()
+                addresses.into_iter().map(|pubkey| PlatformAddress::new_v1(self.client.network_id(), pubkey)).collect()
             })
             .map_err(account_provider)
     }
 
     fn create_account(&self, passphrase: Option<Password>) -> Result<PlatformAddress> {
-        let (address, _) =
+        let pubkey =
             self.account_provider.new_account_and_public(&passphrase.unwrap_or_default()).map_err(account_provider)?;
-        Ok(PlatformAddress::new_v1(self.client.network_id(), address))
+        Ok(PlatformAddress::new_v1(self.client.network_id(), pubkey))
     }
 
     fn create_account_from_secret(&self, secret: H512, passphrase: Option<Password>) -> Result<PlatformAddress> {
@@ -76,14 +73,14 @@ where
                 Private::from_slice(&secret).ok_or_else(|| Error::invalid_params("Invalid secret"))?,
                 &passphrase.unwrap_or_default(),
             )
-            .map(|address| PlatformAddress::new_v1(self.client.network_id(), address))
+            .map(|pubkey| PlatformAddress::new_v1(self.client.network_id(), pubkey))
             .map_err(account_provider)
     }
 
     fn sign(&self, message_digest: H256, address: PlatformAddress, passphrase: Option<Password>) -> Result<Signature> {
-        let address = address.try_into_address().map_err(errors::core)?;
+        let pubkey = address.try_into_pubkey().map_err(errors::core)?;
         self.account_provider
-            .get_account(&address, passphrase.as_ref())
+            .get_account(&pubkey, passphrase.as_ref())
             .and_then(|account| Ok(account.sign(&message_digest)?))
             .map_err(account_provider)
     }
@@ -120,7 +117,7 @@ where
 
     fn change_password(&self, address: PlatformAddress, old_password: Password, new_password: Password) -> Result<()> {
         self.account_provider
-            .change_password(address.into_address(), &old_password, &new_password)
+            .change_password(address.into_pubkey(), &old_password, &new_password)
             .map_err(account_provider)
     }
 
@@ -128,23 +125,23 @@ where
         const DEFAULT_DURATION: u64 = 300;
         match duration {
             Some(0) => {
-                let address = address.try_into_address().map_err(errors::core)?;
+                let pubkey = address.try_into_pubkey().map_err(errors::core)?;
                 self.account_provider
-                    .unlock_account_permanently(address, password)
+                    .unlock_account_permanently(pubkey, password)
                     .map_err(Into::into)
                     .map_err(account_provider)?
             }
             Some(secs) => {
-                let address = address.try_into_address().map_err(errors::core)?;
+                let pubkey = address.try_into_pubkey().map_err(errors::core)?;
                 self.account_provider
-                    .unlock_account_timed(address, password, Duration::from_secs(secs))
+                    .unlock_account_timed(pubkey, password, Duration::from_secs(secs))
                     .map_err(Into::into)
                     .map_err(account_provider)?
             }
             None => {
-                let address = address.try_into_address().map_err(errors::core)?;
+                let pubkey = address.try_into_pubkey().map_err(errors::core)?;
                 self.account_provider
-                    .unlock_account_timed(address, password, Duration::from_secs(DEFAULT_DURATION))
+                    .unlock_account_timed(pubkey, password, Duration::from_secs(DEFAULT_DURATION))
                     .map_err(Into::into)
                     .map_err(account_provider)?
             }

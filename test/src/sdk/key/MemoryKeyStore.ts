@@ -1,8 +1,8 @@
 import * as _ from "lodash";
 
 import {
+    blake160,
     generatePrivateKey,
-    getAccountIdFromPublic,
     getPublicFromPrivate,
     signEd25519
 } from "../utils";
@@ -16,7 +16,7 @@ export class MemoryKeyStore implements KeyStore {
     private privateKeyMap: { [key: string]: string } = {};
     private passphraseMap: { [key: string]: string } = {};
     private publicKeyMap: { [key: string]: string } = {};
-    private mappingKeyMaker: (value: string) => string = getAccountIdFromPublic;
+    private mappingKeyMaker: (value: string) => string = blake160;
 
     public getKeyList(): Promise<string[]> {
         return Promise.resolve(_.keys(this.privateKeyMap));

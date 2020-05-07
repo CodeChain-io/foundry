@@ -70,7 +70,7 @@ export class Store extends Transaction {
         return [
             8,
             content,
-            certifier.getAccountId().toEncodeObject(),
+            certifier.getPubKey().toEncodeObject(),
             `0x${signature}`
         ];
     }

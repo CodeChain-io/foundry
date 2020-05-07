@@ -20,7 +20,7 @@ use crate::consensus::CodeChainEngine;
 use crate::error::{BlockError, Error};
 use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ccrypto::BLAKE_NULL_RLP;
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
@@ -126,7 +126,7 @@ impl OpenBlock {
         engine: &dyn CodeChainEngine,
         db: StateDB,
         parent: &Header,
-        author: Address,
+        author: Public,
         extra_data: Bytes,
     ) -> Result<Self, Error> {
         let state = TopLevelState::from_existing(db, *parent.state_root()).map_err(StateError::from)?;
@@ -339,7 +339,7 @@ pub fn enact<C: EngineInfo + FindDoubleVoteHandler + TermInfo>(
     db: StateDB,
     parent: &Header,
 ) -> Result<ClosedBlock, Error> {
-    let mut b = OpenBlock::try_new(engine, db, parent, Address::default(), vec![])?;
+    let mut b = OpenBlock::try_new(engine, db, parent, Public::default(), vec![])?;
 
     b.populate_from(header);
     b.push_transactions(transactions, client, parent.number(), parent.timestamp())?;
