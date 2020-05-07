@@ -14,8 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{Account, ActionData, CacheableItem, Metadata, Module, ModuleDatum, StateDB, StateResult};
-use ckey::Ed25519Public as Public;
+use crate::{ActionData, Metadata, Module, ModuleDatum, StateDB, StateResult};
 use ctypes::{CommonParams, ConsensusParams, StorageId};
 use merkle_trie::Result as TrieResult;
 use primitives::{Bytes, H256};
@@ -24,32 +23,7 @@ pub trait TopStateView {
     /// Check caches for required data
     /// First searches for account in the local, then the shared cache.
     /// Populates local cache if nothing found.
-    fn account(&self, a: &Public) -> TrieResult<Option<Account>>;
-
     /// Get the seq of account `a`.
-    fn seq(&self, a: &Public) -> TrieResult<u64> {
-        Ok(self.account(a)?.map_or(0, |account| account.seq()))
-    }
-
-    /// Get the balance of account `a`.
-    fn balance(&self, a: &Public) -> TrieResult<u64> {
-        Ok(self.account(a)?.map_or(0, |account| account.balance()))
-    }
-
-    fn account_exists(&self, a: &Public) -> TrieResult<bool> {
-        // Bloom filter does not contain empty accounts, so it is important here to
-        // check if account exists in the database directly before EIP-161 is in effect.
-        Ok(self.account(a)?.is_some())
-    }
-
-    fn account_exists_and_not_null(&self, a: &Public) -> TrieResult<bool> {
-        Ok(self.account(a)?.map(|a| !a.is_null()).unwrap_or(false))
-    }
-
-    fn account_exists_and_has_seq(&self, a: &Public) -> TrieResult<bool> {
-        Ok(self.account(a)?.map(|a| a.seq() != 0).unwrap_or(false))
-    }
-
     fn metadata(&self) -> TrieResult<Option<Metadata>>;
 
     fn module(&self, storage_id: StorageId) -> TrieResult<Option<Module>>;
@@ -77,19 +51,6 @@ pub trait ModuleStateView {
 }
 
 pub trait TopState {
-    /// Remove an existing account.
-    fn kill_account(&mut self, account: &Public);
-
-    /// Add `incr` to the balance of account `a`.
-    fn add_balance(&mut self, a: &Public, incr: u64) -> TrieResult<()>;
-    /// Subtract `decr` from the balance of account `a`.
-    fn sub_balance(&mut self, a: &Public, decr: u64) -> StateResult<()>;
-    /// Subtracts `by` from the balance of `from` and adds it to that of `to`.
-    fn transfer_balance(&mut self, from: &Public, to: &Public, by: u64) -> StateResult<()>;
-
-    /// Increment the seq of account `a` by 1.
-    fn inc_seq(&mut self, a: &Public) -> TrieResult<()>;
-
     fn create_module(&mut self) -> StateResult<()>;
     fn set_module_root(&mut self, storage_id: StorageId, new_root: H256) -> StateResult<()>;
 
