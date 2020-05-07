@@ -14,9 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::error::Error;
 use crate::get_context;
 use crate::types::Account;
 use ckey::Ed25519Public as Public;
+
+pub fn add_balance(account_id: &Public, val: u64) {
+    if val == 0 {
+        return
+    }
+
+    let context = get_context();
+    let mut account: Account = get_account(account_id);
+
+    account.balance += val;
+    context.set(account_id, account.to_vec());
+}
+
+pub fn sub_balance(account_id: &Public, val: u64) -> Result<(), Error> {
+    let context = get_context();
+    let mut account: Account = get_account(account_id);
+
+    if account.balance < val {
+        return Err(Error::InvalidValue(account.balance, val))
+    }
+
+    account.balance -= val;
+    context.set(account_id, account.to_vec());
+    Ok(())
+}
 
 pub fn get_sequence(account_id: &Public) -> u64 {
     get_account(account_id).sequence

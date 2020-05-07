@@ -15,10 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::check;
-use crate::core::CheckTxHandler;
-use crate::internal::get_sequence;
+use crate::core::{CheckTxHandler, TransactionExecutor};
+use crate::internal::{add_balance, get_sequence, sub_balance};
 use crate::types::{Action, SignedTransaction};
-pub use coordinator::types::ErrorCode;
+use coordinator::types::{ErrorCode, TransactionExecutionOutcome};
 
 #[allow(dead_code)]
 pub struct Handler {}
@@ -37,5 +37,27 @@ impl CheckTxHandler for Handler {
         }
 
         Ok(())
+    }
+}
+
+#[allow(dead_code)]
+pub struct Executor {}
+
+impl TransactionExecutor for Executor {
+    fn execute_transactions(&self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionExecutionOutcome>, ()> {
+        for signed_tx in transactions {
+            let Action::Pay {
+                sender,
+                receiver,
+                quantity,
+            } = signed_tx.tx.action;
+
+            if !check(signed_tx) || sub_balance(&receiver, quantity).is_err() {
+                return Err(())
+            }
+            add_balance(&sender, signed_tx.tx.fee + quantity);
+        }
+
+        Ok(vec![])
     }
 }
