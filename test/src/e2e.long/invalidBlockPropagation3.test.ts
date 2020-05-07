@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { H160 } from "../primitives/src";
+import { H256 } from "../primitives/src";
 import "mocha";
 import { createTestSuite } from "./invalidBlockPropagation.helper";
 
-const INVALID_AUTHOR = new H160("0xffffffffffffffffffffffffffffffffffffffff");
+const INVALID_AUTHOR = new H256(
+    "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+);
 const params = {
     tauthor: INVALID_AUTHOR
 };

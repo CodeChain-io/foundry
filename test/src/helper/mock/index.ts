@@ -18,7 +18,6 @@ import {
     blake256,
     Ed25519Signature,
     getPublicFromPrivate,
-    H160,
     H256,
     signEd25519,
     U256,
@@ -372,7 +371,9 @@ export class Mock {
         );
         const timestamp = new U256(0);
         const number = new U256(0);
-        const author = new H160("0000000000000000000000000000000000000000");
+        const author = new H256(
+            "0000000000000000000000000000000000000000000000000000000000000000"
+        );
         const extraData = Buffer.from([
             23,
             108,
@@ -436,7 +437,9 @@ export class Mock {
         const parentHash = parent;
         const timestamp = new U256(1537509963);
         const number = new U256(1);
-        const author = new H160("7777777777777777777777777777777777777777");
+        const author = new H256(
+            "7777777777777777777777777777777777777777777777777777777777777777"
+        );
         const extraData = Buffer.alloc(0);
         const transactionsRoot = new H256(
             "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
@@ -467,7 +470,9 @@ export class Mock {
         const parentHash = parent;
         const timestamp = new U256(1537944287);
         const number = new U256(2);
-        const author = new H160("6666666666666666666666666666666666666666");
+        const author = new H256(
+            "6666666666666666666666666666666666666666666666666666666666666666"
+        );
         const extraData = Buffer.alloc(0);
         const transactionsRoot = new H256(
             "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
