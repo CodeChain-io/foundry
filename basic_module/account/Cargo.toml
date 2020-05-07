@@ -7,6 +7,9 @@ edition = "2018"
 [dependencies]
 ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
 ckey = {package = "codechain-key", path = "../../key" }
+coordinator = {package = "coordinator", path = "../../coordinator" }
+lazy_static = "1.2"
+parking_lot = "0.6.0"
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
 serde = "1.0"
 serde_cbor = "0.11.1"

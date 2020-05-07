@@ -1853,6 +1853,9 @@ version = "0.1.0"
 dependencies = [
  "codechain-crypto",
  "codechain-key",
+ "coordinator",
+ "lazy_static 1.4.0",
+ "parking_lot 0.6.4",
  "primitives",
  "serde",
  "serde_cbor",

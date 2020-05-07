@@ -16,6 +16,40 @@
 
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate lazy_static;
 
+mod core;
 mod error;
+mod impls;
+mod internal;
 mod types;
+
+use crate::types::SignedTransaction;
+use ckey::{verify, NetworkId};
+use coordinator::context::Context;
+use parking_lot::Mutex;
+
+lazy_static! {
+    static ref NETWORK_ID: Mutex<Option<NetworkId>> = Mutex::new(None);
+}
+
+pub fn get_context() -> &'static mut dyn Context {
+    // This function should be implemented after the context has been formatted.
+    unimplemented!();
+}
+
+pub fn check(signed_tx: &SignedTransaction) -> bool {
+    let signature = signed_tx.signature;
+    let network_id = signed_tx.tx.network_id;
+
+    check_network_id(network_id) && verify(&signature, &signed_tx.tx.hash(), &signed_tx.signer_public)
+}
+
+fn check_network_id(network_id: NetworkId) -> bool {
+    let mut saved_network_id = NETWORK_ID.lock();
+    if saved_network_id.is_none() {
+        *saved_network_id = Some(network_id);
+    }
+    *saved_network_id == Some(network_id)
+}

@@ -65,7 +65,6 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    #[allow(dead_code)]
     pub fn hash(&self) -> H256 {
         let serialized = serde_cbor::to_vec(&self).unwrap();
         blake256(serialized)
@@ -79,7 +78,6 @@ pub struct SignedTransaction {
     pub tx: Transaction,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub enum Action {
     Pay {
@@ -90,7 +88,6 @@ pub enum Action {
 }
 
 impl Action {
-    #[allow(dead_code)]
     pub fn min_fee(&self) -> u64 {
         // Where can we initialize the min fee
         // We need both consensus-defined minimum fee and machine-defined minimum fee
