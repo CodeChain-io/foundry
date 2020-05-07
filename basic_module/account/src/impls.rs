@@ -14,10 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::check;
-use crate::core::{CheckTxHandler, TransactionExecutor};
-use crate::internal::{add_balance, get_sequence, sub_balance};
+use crate::core::{AccountManager, CheckTxHandler, TransactionExecutor};
+use crate::error::Error;
+use crate::internal::{add_balance, get_account, get_sequence, sub_balance};
 use crate::types::{Action, SignedTransaction};
+use crate::{check, get_context};
+use ckey::Ed25519Public as Public;
 use coordinator::types::{ErrorCode, TransactionExecutionOutcome};
 
 #[allow(dead_code)]
@@ -59,5 +61,34 @@ impl TransactionExecutor for Executor {
         }
 
         Ok(vec![])
+    }
+}
+
+#[allow(dead_code)]
+pub struct Manager {}
+
+impl AccountManager for Manager {
+    fn add_balance(&self, account_id: &Public, val: u64) {
+        add_balance(account_id, val)
+    }
+
+    fn sub_balance(&self, account_id: &Public, val: u64) -> Result<(), Error> {
+        sub_balance(account_id, val)
+    }
+
+    fn set_balance(&self, account_id: &Public, val: u64) {
+        let context = get_context();
+        let mut account = get_account(account_id);
+
+        account.balance = val;
+        context.set(account_id, account.to_vec());
+    }
+
+    fn increment_sequence(&self, account_id: &Public) {
+        let context = get_context();
+        let mut account = get_account(account_id);
+
+        account.sequence += 1;
+        context.set(account_id, account.to_vec());
     }
 }
