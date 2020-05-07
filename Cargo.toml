@@ -81,4 +81,5 @@ members = [
     "module-macros",
     "coordinator",
     "basesandbox",
+    "basic_module/account"
 ]

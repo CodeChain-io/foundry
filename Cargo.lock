@@ -2025,6 +2025,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "module_account"
+version = "0.1.0"
+dependencies = [
+ "bech32",
+ "codechain-crypto",
+ "codechain-key",
+ "coordinator",
+ "lazy_static 1.4.0",
+ "libc",
+ "log 0.4.8",
+ "matches",
+ "never-type",
+ "parking_lot 0.6.4",
+ "primitives",
+ "rand 0.6.1",
+ "rand_xorshift",
+ "rlp",
+ "rlp_derive",
+ "rustc-hex 1.0.0",
+ "rustc-serialize",
+ "serde",
+ "serde_cbor",
+ "serde_derive",
+ "serde_json",
+ "smallvec 0.4.5",
+ "sodiumoxide",
+ "tempdir",
+ "time",
+]
+
+[[package]]
 name = "my_internet_ip"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
