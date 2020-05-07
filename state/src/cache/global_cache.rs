@@ -17,13 +17,12 @@
 use super::lru_cache::LruCache;
 use super::{ModuleCache, TopCache};
 use crate::CacheableItem;
-use crate::{Account, ActionData, Metadata, Module, ModuleDatum};
+use crate::{ActionData, Metadata, Module, ModuleDatum};
 use ctypes::StorageId;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Clone)]
 pub struct GlobalCache {
-    account: LruCache<Account>,
     metadata: LruCache<Metadata>,
     module: LruCache<Module>,
     action_data: LruCache<ActionData>,
@@ -32,9 +31,8 @@ pub struct GlobalCache {
 }
 
 impl GlobalCache {
-    pub fn new(account: usize, module: usize, action_data: usize, module_data: usize) -> Self {
+    pub fn new(_account: usize, module: usize, action_data: usize, module_data: usize) -> Self {
         Self {
-            account: LruCache::new(account),
             metadata: LruCache::new(1),
             module: LruCache::new(module),
             action_data: LruCache::new(action_data),
@@ -44,12 +42,7 @@ impl GlobalCache {
     }
 
     pub fn top_cache(&self) -> TopCache {
-        TopCache::new(
-            self.account.cloned_iter(),
-            self.metadata.cloned_iter(),
-            self.module.cloned_iter(),
-            self.action_data.cloned_iter(),
-        )
+        TopCache::new(self.metadata.cloned_iter(), self.module.cloned_iter(), self.action_data.cloned_iter())
     }
 
     fn module_cache(&self, storage_id: StorageId) -> ModuleCache {
@@ -81,7 +74,6 @@ impl GlobalCache {
     pub fn override_cache(&mut self, top_cache: &TopCache, module_caches: &HashMap<StorageId, ModuleCache>) {
         self.clear();
 
-        Self::drain_cacheable_into_lru_cache(top_cache.cached_accounts(), &mut self.account);
         Self::drain_cacheable_into_lru_cache(top_cache.cached_metadata(), &mut self.metadata);
         Self::drain_cacheable_into_lru_cache(top_cache.cached_action_data(), &mut self.action_data);
         Self::drain_cacheable_into_lru_cache(top_cache.cached_modules(), &mut self.module);
@@ -94,7 +86,6 @@ impl GlobalCache {
     }
 
     pub fn clear(&mut self) {
-        self.account.clear();
         self.metadata.clear();
         self.module.clear();
         self.action_data.clear();

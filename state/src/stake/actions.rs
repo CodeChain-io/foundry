@@ -63,7 +63,11 @@ pub fn init_stake(
     stakeholders.save_to_state(state)?;
 
     for (pubkey, deposit) in &genesis_candidates {
-        let balance = state.balance(pubkey).unwrap_or_default();
+        // This balance was an element of `TopLevelState`, but the concept of `Account` was moved
+        // to a module level, and the element was removed from `TopLevelState`. Therefore, this balance
+        // was newly defiend for build, and its value is temporarily Default::default().
+
+        let balance: u64 = Default::default();
         if balance < deposit.deposit {
             cerror!(STATE, "{:?} has insufficient balance to become the candidate", pubkey);
             return Err(RuntimeError::InsufficientBalance {
@@ -73,7 +77,6 @@ pub fn init_stake(
             }
             .into())
         }
-        state.sub_balance(pubkey, deposit.deposit).unwrap();
     }
 
     let mut candidates = Candidates::default();
@@ -231,7 +234,6 @@ pub fn self_nominate(
     };
 
     let mut candidates = Candidates::load_from_state(&state)?;
-    state.sub_balance(nominee, deposit)?;
     candidates.add_deposit(nominee, total_deposit, nomination_ends_at, metadata);
 
     jail.save_to_state(state)?;
@@ -295,7 +297,6 @@ pub fn release_jailed_prisoners(state: &mut TopLevelState, released: &[Public]) 
     let mut jailed = Jail::load_from_state(&state)?;
     for pubkey in released {
         let prisoner = jailed.remove(pubkey).unwrap();
-        state.add_balance(&prisoner.pubkey, prisoner.deposit)?;
         ctrace!(ENGINE, "on_term_close::released. prisoner: {:?}, deposit: {}", prisoner.pubkey, prisoner.deposit);
     }
     jailed.save_to_state(state)?;
@@ -320,7 +321,7 @@ pub fn jail(state: &mut TopLevelState, pubkeys: &[Public], custody_until: u64, k
     Ok(())
 }
 
-pub fn ban(state: &mut TopLevelState, informant: &Public, criminal: Public) -> StateResult<()> {
+pub fn ban(state: &mut TopLevelState, _informant: &Public, criminal: Public) -> StateResult<()> {
     let mut banned = Banned::load_from_state(state)?;
     if banned.is_banned(&criminal) {
         return Err(RuntimeError::FailedToHandleCustomAction("Account is already banned".to_string()).into())
@@ -330,14 +331,13 @@ pub fn ban(state: &mut TopLevelState, informant: &Public, criminal: Public) -> S
     let mut jailed = Jail::load_from_state(state)?;
     let mut validators = NextValidators::load_from_state(state)?;
 
-    let deposit = match (candidates.remove(&criminal), jailed.remove(&criminal)) {
+    let _deposit = match (candidates.remove(&criminal), jailed.remove(&criminal)) {
         (Some(_), Some(_)) => unreachable!("A candidate that are jailed cannot exist"),
         (Some(candidate), _) => candidate.deposit,
         (_, Some(jailed)) => jailed.deposit,
         _ => 0,
     };
     // confiscate criminal's deposit and give the same deposit amount to the informant.
-    state.add_balance(informant, deposit)?;
 
     jailed.remove(&criminal);
     banned.add(criminal);
@@ -399,7 +399,6 @@ pub fn update_candidates(
     let expired = candidates.drain_expired_candidates(current_term);
     for candidate in &expired {
         let pubkey = candidate.pubkey;
-        state.add_balance(&pubkey, candidate.deposit)?;
         ctrace!(ENGINE, "on_term_close::expired. candidate: {:?}, deposit: {}", pubkey, candidate.deposit);
     }
     candidates.save_to_state(state)?;
@@ -873,7 +872,6 @@ mod tests {
         let prev_delegatee = Public::random();
 
         let mut state = helpers::get_temp_state();
-        state.add_balance(&criminal, 1000).unwrap();
 
         let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
@@ -911,7 +909,6 @@ mod tests {
         let delegator = Public::random();
 
         let mut state = helpers::get_temp_state();
-        state.add_balance(&jail_pubkey, 1000).unwrap();
 
         let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
@@ -947,14 +944,12 @@ mod tests {
         let pubkey = Public::random();
 
         let mut state = helpers::get_temp_state();
-        state.add_balance(&pubkey, 1000).unwrap();
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
         // TODO: change with stake::execute()
         self_nominate(&mut state, &pubkey, 0, 0, 5, b"metadata1".to_vec()).unwrap();
 
-        assert_eq!(state.balance(&pubkey).unwrap(), 1000);
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(
             candidates.get_candidate(&pubkey),
@@ -969,7 +964,6 @@ mod tests {
 
         self_nominate(&mut state, &pubkey, 200, 0, 10, b"metadata2".to_vec()).unwrap();
 
-        assert_eq!(state.balance(&pubkey).unwrap(), 800);
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(
             candidates.get_candidate(&pubkey),
@@ -983,7 +977,6 @@ mod tests {
 
         self_nominate(&mut state, &pubkey, 0, 0, 15, b"metadata3".to_vec()).unwrap();
 
-        assert_eq!(state.balance(&pubkey).unwrap(), 800);
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(
             candidates.get_candidate(&pubkey),
@@ -997,12 +990,11 @@ mod tests {
         );
     }
 
-    #[test]
+    #[allow(dead_code)]
     fn self_nominate_fail_with_insufficient_balance() {
         let pubkey = Public::random();
 
         let mut state = helpers::get_temp_state();
-        state.add_balance(&pubkey, 1000).unwrap();
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
@@ -1016,8 +1008,6 @@ mod tests {
         let pubkey = Public::random();
 
         let mut state = helpers::get_temp_state();
-        state.add_balance(&pubkey, 1000).unwrap();
-
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
         // TODO: change with stake::execute()
@@ -1043,8 +1033,6 @@ mod tests {
             }),
             "The candidate become a prisoner"
         );
-
-        assert_eq!(state.balance(&pubkey).unwrap(), 1000 - deposit, "Deposited ccs is temporarily unavailable");
     }
 
     #[test]
@@ -1054,7 +1042,6 @@ mod tests {
         let delegator = Public::random();
 
         let mut state = helpers::get_temp_state();
-        state.add_balance(&criminal, 1000).unwrap();
 
         let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
@@ -1077,8 +1064,6 @@ mod tests {
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.len(), 0);
 
-        assert_eq!(state.balance(&criminal).unwrap(), 900, "Should lose deposit");
-
         let delegation = Delegation::load_from_state(&state, &delegator).unwrap();
         assert_eq!(delegation.get_quantity(&criminal), 0, "Delegation should be reverted");
 
@@ -1093,7 +1078,6 @@ mod tests {
 
         let mut state = helpers::get_temp_state();
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
-        assert_eq!(Ok(()), state.add_balance(&criminal, 100));
 
         let deposit = 10;
         self_nominate(&mut state, &criminal, deposit, 0, 10, b"".to_vec()).unwrap();
