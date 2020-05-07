@@ -14,11 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::types::Transaction;
+use crate::types::{SignedTransaction, Transaction};
 pub use ckey::{Ed25519Private as Private, Ed25519Public as Public, Error as KeyError, Password, Signature};
 pub use coordinator::context::SubStorageAccess;
 pub use coordinator::types::{ErrorCode, TransactionExecutionOutcome};
 
 pub trait CheckTxHandler {
     fn check_transaction(&self, tx: &Transaction) -> Result<(), ErrorCode>;
+}
+
+pub trait TransactionExecutor {
+    fn execute_transactions(&self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionExecutionOutcome>, ()>;
 }
