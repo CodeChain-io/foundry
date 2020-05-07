@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::types::Transaction;
+
 pub trait FeeManager {
     fn accumulate_block_fee(&self, total_additional_fee: u64, total_min_fee: u64);
+}
+
+pub trait TransactionHandler {
+    fn create_distribute_fee_transaction(&self) -> Transaction;
+
+    fn create_distribute_rewards_transaction(&self) -> Transaction;
 }
