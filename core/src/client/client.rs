@@ -36,11 +36,11 @@ use crate::types::{BlockStatus, TransactionId, VerificationQueueInfo as BlockQue
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
-use coordinator::context::ChainHistoryAccess;
+use coordinator::context::{ChainHistoryAccess, Key as DbKey, StateHistoryAccess, StorageAccess, Value as DbValue};
 use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, SyncHeader, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, StorageId, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::Bytes;
@@ -298,6 +298,19 @@ impl StateInfo for Client {
             let root = header.state_root();
             TopLevelState::from_existing(self.state_db.read().clone(&root), root).ok()
         })
+    }
+}
+
+// NOTE: The minimum requirement to implement this trait is the object be "StateInfo"
+impl StateHistoryAccess for Client {
+    fn get_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &DbKey) -> Option<DbValue> {
+        let block_id = block_number.unwrap_or(BlockId::Latest);
+        self.state_at(block_id).and_then(|state| state.get(storage_id, key))
+    }
+
+    fn has_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &DbKey) -> bool {
+        let block_id = block_number.unwrap_or(BlockId::Latest);
+        self.state_at(block_id).map(|state| state.has(storage_id, key)).unwrap_or(false)
     }
 }
 
