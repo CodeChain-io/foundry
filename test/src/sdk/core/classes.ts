@@ -1,5 +1,4 @@
 import { H128, H128Value } from "../../primitives/src";
-export { H160, H160Value } from "../../primitives/src";
 export { H256, H256Value } from "../../primitives/src";
 export { H512, H512Value } from "../../primitives/src";
 export { U64, U64Value } from "../../primitives/src";

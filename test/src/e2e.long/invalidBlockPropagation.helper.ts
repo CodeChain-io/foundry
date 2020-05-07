@@ -21,7 +21,7 @@ import Test = Mocha.Test;
 import { Mock } from "../helper/mock/";
 import { Header } from "../helper/mock/cHeader";
 import CodeChain from "../helper/spawn";
-import { Address, H160, H256, U256 } from "../primitives/src";
+import { Address, H256, U256 } from "../primitives/src";
 
 async function setup(): Promise<[Header, Block, Header]> {
     const temporaryNode = new CodeChain({
@@ -112,7 +112,7 @@ async function testBody(
         tparent?: H256;
         ttimeStamp?: U256;
         tnumber?: U256;
-        tauthor?: H160;
+        tauthor?: H256;
         textraData?: Buffer;
         ttransactionRoot?: H256;
         tstateRoot?: H256;
