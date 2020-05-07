@@ -65,7 +65,9 @@ pub struct Terminator(Arc<SocketInternal>);
 
 impl Terminate for Terminator {
     fn terminate(&self) {
-        (self.0).0.shutdown(std::net::Shutdown::Both).unwrap();
+        if let Err(e) = (self.0).0.shutdown(std::net::Shutdown::Both) {
+            assert_eq!(e.kind(), std::io::ErrorKind::NotConnected);
+        }
     }
 }
 
