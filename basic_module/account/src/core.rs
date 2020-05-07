@@ -22,3 +22,7 @@ pub use coordinator::types::{ErrorCode, TransactionExecutionOutcome};
 pub trait CheckTxHandler {
     fn check_transaction(&self, tx: &SignedTransaction) -> Result<(), ErrorCode>;
 }
+
+pub trait TransactionExecutor {
+    fn execute_transactions(&self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionExecutionOutcome>, ()>;
+}
