@@ -164,7 +164,7 @@ impl AutoSelfNomination {
     ) {
         let network_id = client.network_id();
         let seq = match signer.address() {
-            Some(address) => client.latest_seq(address),
+            Some(_address) => Default::default(),
             None => {
                 cwarn!(ENGINE, "Signer was not assigned");
                 return

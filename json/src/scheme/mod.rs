@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod account;
 mod engine;
 mod genesis;
 mod params;
@@ -22,15 +21,12 @@ mod params;
 mod scheme;
 mod seal;
 mod solo;
-mod state;
 mod tendermint;
 
-pub use self::account::Account;
 pub use self::engine::Engine;
 pub use self::genesis::Genesis;
 pub use self::params::Params;
 pub use self::scheme::Scheme;
 pub use self::seal::{Seal, TendermintSeal};
 pub use self::solo::{Solo, SoloParams};
-pub use self::state::Accounts;
 pub use self::tendermint::{StakeAccount, Tendermint, TendermintParams};
