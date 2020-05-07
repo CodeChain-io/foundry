@@ -112,3 +112,16 @@ impl AccountView for View {
         get_sequence_internally(address)
     }
 }
+
+#[allow(dead_code)]
+pub struct SigManager {}
+
+impl SignatureManager for SigManager {
+    fn verify(&self, signature: &Signature, message: &[u8], public: &Public) -> bool {
+        verify_ed25519(signature, message, public)
+    }
+
+    fn sign(&self, message: &[u8], private: &Private) -> Signature {
+        sign_ed25519(message, private)
+    }
+}
