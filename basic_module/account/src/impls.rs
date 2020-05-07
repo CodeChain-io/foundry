@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::core::{AccountManager, CheckTxHandler, TransactionExecutor};
+use crate::core::{AccountManager, AccountView, CheckTxHandler, TransactionExecutor};
 use crate::error::Error;
-use crate::internal::{add_balance, get_account, get_sequence, sub_balance};
+use crate::internal::{add_balance, get_account, get_balance, get_sequence, sub_balance};
 use crate::types::{Action, SignedTransaction};
 use crate::{check, get_context};
 use ckey::Ed25519Public as Public;
@@ -90,5 +90,22 @@ impl AccountManager for Manager {
 
         account.sequence += 1;
         context.set(account_id, account.to_vec());
+    }
+}
+
+#[allow(dead_code)]
+pub struct View {}
+
+impl AccountView for View {
+    fn is_active(&self, account_id: &Public) -> bool {
+        get_balance(account_id) != 0 || get_sequence(account_id) != 0
+    }
+
+    fn get_balance(&self, account_id: &Public) -> u64 {
+        get_balance(account_id)
+    }
+
+    fn get_sequence(&self, account_id: &Public) -> u64 {
+        get_sequence(account_id)
     }
 }

@@ -48,6 +48,10 @@ pub fn get_sequence(account_id: &Public) -> u64 {
     get_account(account_id).sequence
 }
 
+pub fn get_balance(account_id: &Public) -> u64 {
+    get_account(account_id).balance
+}
+
 pub fn get_account(account_id: &Public) -> Account {
     get_context().get(account_id).map(|account| account.into()).unwrap_or_default()
 }
