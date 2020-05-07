@@ -22,7 +22,7 @@ import { similar } from "../helper/chai-similar";
 import { Mock } from "../helper/mock";
 import { Header } from "../helper/mock/cHeader";
 import CodeChain from "../helper/spawn";
-import { Address, H160, H256, U256 } from "../primitives/src";
+import { Address, H256, U256 } from "../primitives/src";
 
 chai.use(similar);
 
@@ -65,7 +65,7 @@ describe("Test onChain header communication", async function() {
             new H256(genesisBlock.parentHash),
             new U256(genesisBlock.timestamp),
             new U256(genesisBlock.number),
-            author1PlatformAddr.accountId,
+            author1PlatformAddr.pubkey,
             Buffer.from(genesisBlock.extraData),
             new H256(genesisBlock.transactionsRoot),
             new H256(genesisBlock.stateRoot),
@@ -77,7 +77,7 @@ describe("Test onChain header communication", async function() {
             soloGenesisBlock.hashing(),
             new U256(block1.timestamp),
             new U256(block1.number),
-            author2PlatformAddr.accountId,
+            author2PlatformAddr.pubkey,
             Buffer.from(block1.extraData),
             new H256(block1.transactionsRoot),
             new H256(block1.stateRoot),
@@ -89,7 +89,7 @@ describe("Test onChain header communication", async function() {
             soloBlock1.hashing(),
             new U256(block2.timestamp),
             new U256(block2.number),
-            author3PlatformAddr.accountId,
+            author3PlatformAddr.pubkey,
             Buffer.from(block2.extraData),
             new H256(block2.transactionsRoot),
             new H256(block2.stateRoot),
