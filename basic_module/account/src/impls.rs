@@ -66,3 +66,32 @@ impl TransactionExecutor for Executor {
         Ok(vec![])
     }
 }
+
+#[allow(dead_code)]
+pub struct Manager {}
+
+impl AccountManager for Manager {
+    fn add_balance(&self, address: &Public, val: u64) {
+        add_balance_internalliy(address, val)
+    }
+
+    fn sub_balance(&self, address: &Public, val: u64) -> Result<(), Error> {
+        sub_balance_internalliy(address, val)
+    }
+
+    fn set_balance(&self, address: &Public, val: u64) {
+        let context = get_context();
+        let mut account = get_account(address);
+
+        account.balance = val;
+        context.set(address, account.to_vec());
+    }
+
+    fn increment_sequence(&self, address: &Public) {
+        let context = get_context();
+        let mut account = get_account(address);
+
+        account.sequence += 1;
+        context.set(address, account.to_vec());
+    }
+}
