@@ -37,3 +37,11 @@ pub trait AccountManager {
 
     fn increment_sequence(&self, address: &Public);
 }
+
+pub trait AccountView {
+    fn is_active(&self, address: &Public) -> bool;
+
+    fn get_balance(&self, address: &Public) -> u64;
+
+    fn get_sequence(&self, address: &Public) -> u64;
+}
