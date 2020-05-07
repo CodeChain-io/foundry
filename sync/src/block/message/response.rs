@@ -114,7 +114,7 @@ mod tests {
     use rlp::{Encodable, Rlp};
 
     use ccore::UnverifiedTransaction;
-    use ckey::{Address, Ed25519Public as Public, Signature};
+    use ckey::{Ed25519Public as Public, Signature};
     use ctypes::transaction::{Action, Transaction};
     use ctypes::Header;
 
@@ -146,7 +146,7 @@ mod tests {
                 seq: 0,
                 fee: 10,
                 action: Action::Pay {
-                    receiver: Address::random(),
+                    receiver: Public::random(),
                     quantity: 64,
                 },
                 network_id: "tc".into(),

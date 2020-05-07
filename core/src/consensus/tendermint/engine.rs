@@ -28,7 +28,7 @@ use crate::consensus::EngineType;
 use crate::error::Error;
 use crate::views::HeaderView;
 use crate::BlockId;
-use ckey::{public_to_address, Address};
+use ckey::Ed25519Public as Public;
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{
@@ -143,7 +143,7 @@ impl ConsensusEngine for Tendermint {
             0 => Vec::new(),
             _ => {
                 let start_of_the_current_term = metadata.last_term_finished_block_num() + 1;
-                let validators = next_validators.iter().map(|val| public_to_address(val.pubkey())).collect();
+                let validators = next_validators.iter().map(|val| *val.pubkey()).collect();
                 inactive_validators(&*client, start_of_the_current_term, block.header(), validators)
             }
         };
@@ -189,12 +189,12 @@ impl ConsensusEngine for Tendermint {
         receiver.recv().unwrap()
     }
 
-    fn set_signer(&self, ap: Arc<AccountProvider>, address: Address) {
+    fn set_signer(&self, ap: Arc<AccountProvider>, pubkey: Public) {
         self.has_signer.store(true, AtomicOrdering::SeqCst);
         self.inner
             .send(worker::Event::SetSigner {
                 ap,
-                address,
+                pubkey,
             })
             .unwrap();
     }
@@ -243,7 +243,7 @@ impl ConsensusEngine for Tendermint {
         Some(&*self.stake)
     }
 
-    fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {
+    fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Public>>, EngineError> {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
         let header = match block_number {
             None => {
@@ -257,7 +257,7 @@ impl ConsensusEngine for Tendermint {
             }
         };
         let block_hash = header.hash();
-        Ok(Some(self.validators.next_addresses(&block_hash)))
+        Ok(Some(self.validators.next_validators(&block_hash)))
     }
 
     fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
@@ -293,8 +293,8 @@ fn inactive_validators(
     client: &dyn ConsensusClient,
     start_of_the_current_term: u64,
     current_block: &Header,
-    mut validators: HashSet<Address>,
-) -> Vec<Address> {
+    mut validators: HashSet<Public>,
+) -> Vec<Public> {
     validators.remove(current_block.author());
     let hash = *current_block.parent_hash();
     let mut header = client.block_header(&hash.into()).expect("Header of the parent must exist");

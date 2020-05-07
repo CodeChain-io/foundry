@@ -24,7 +24,7 @@ export class DelegateCCS extends Transaction {
     protected actionToEncodeObject(): any[] {
         return [
             0x22,
-            this.address.getAccountId().toEncodeObject(),
+            this.address.getPubKey().toEncodeObject(),
             this.quantity.toEncodeObject()
         ];
     }

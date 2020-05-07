@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -32,9 +32,9 @@ describe("account unlock", function() {
 
     it(`unlock 1 second ${unlockTestSize} times and check working well with sign`, async function() {
         const secret = node.testFramework.util.generatePrivateKey();
-        const account = node.testFramework.util.getAccountIdFromPrivate(secret);
-        const address = node.testFramework.core.classes.Address.fromAccountId(
-            account,
+        const pubkey = node.testFramework.util.getPublicFromPrivate(secret);
+        const address = node.testFramework.core.classes.Address.fromPublic(
+            pubkey,
             { networkId: "tc" }
         );
         const passphrase = makeRandomPassphrase();

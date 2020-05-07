@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::client::ConsensusClient;
-use ckey::{public_to_address, Address};
+use ckey::Ed25519Public as Public;
 use cstate::{ban, DoubleVoteHandler, StateResult, TopLevelState};
 use ctypes::errors::{RuntimeError, SyntaxError};
 use parking_lot::RwLock;
@@ -38,14 +38,14 @@ impl Stake {
 }
 
 impl DoubleVoteHandler for Stake {
-    fn execute(&self, message1: &[u8], state: &mut TopLevelState, sender_address: &Address) -> StateResult<()> {
+    fn execute(&self, message1: &[u8], state: &mut TopLevelState, sender: &Public) -> StateResult<()> {
         let message1: ConsensusMessage =
             rlp::decode(message1).map_err(|err| RuntimeError::FailedToHandleCustomAction(err.to_string()))?;
         let validators =
             self.validators.read().as_ref().and_then(Weak::upgrade).expect("ValidatorSet must be initialized");
         let client = self.client.read().as_ref().and_then(Weak::upgrade).expect("Client must be initialized");
 
-        execute_report_double_vote(message1, state, sender_address, &*client, &*validators)?;
+        execute_report_double_vote(message1, state, sender, &*client, &*validators)?;
         Ok(())
     }
 
@@ -67,14 +67,14 @@ impl DoubleVoteHandler for Stake {
 fn execute_report_double_vote(
     message1: ConsensusMessage,
     state: &mut TopLevelState,
-    sender_address: &Address,
+    sender: &Public,
     client: &dyn ConsensusClient,
     validators: &dyn ValidatorSet,
 ) -> StateResult<()> {
     let parent_hash = client.block_header(&(message1.height() - 1).into()).expect("Parent header verified").hash();
     let malicious_user_public = validators.get(&parent_hash, message1.signer_index());
 
-    ban(state, sender_address, public_to_address(&malicious_user_public))
+    ban(state, sender, malicious_user_public)
 }
 
 pub fn verify_report_double_vote(

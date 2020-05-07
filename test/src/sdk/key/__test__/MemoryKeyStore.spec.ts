@@ -1,10 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import {
-    getAccountIdFromPublic,
-    getPublicFromPrivate,
-    verifyEd25519
-} from "../../utils";
+import { getPublicFromPrivate, verifyEd25519 } from "../../utils";
 import { MemoryKeyStore } from "../MemoryKeyStore";
 
 it("createKey", async () => {
@@ -40,8 +36,8 @@ it("exportRawKey", async () => {
     });
 
     const publicKey = getPublicFromPrivate(privateKey);
-    const accountId = getAccountIdFromPublic(publicKey);
-    expect(accountId).equal(key);
+    const storedPubKey = await store.getPublicKey({ key });
+    expect(publicKey).equal(storedPubKey);
 });
 
 it("sign", async () => {

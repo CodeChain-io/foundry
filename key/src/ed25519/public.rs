@@ -23,6 +23,13 @@ use std::str::FromStr;
 #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct Public(pub(crate) PublicKey);
 
+impl Default for Public {
+    fn default() -> Self {
+        const ZERO: [u8; 32] = [0; 32];
+        Self::from_slice(&ZERO).unwrap()
+    }
+}
+
 impl Public {
     pub fn random() -> Self {
         let (public, _) = gen_keypair();

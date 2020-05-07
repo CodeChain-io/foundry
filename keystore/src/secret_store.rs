@@ -32,52 +32,51 @@
 
 use crate::json::{OpaqueKeyFile, Uuid};
 use crate::{DecryptedAccount, Error};
-use ckey::{Address, Ed25519Private as Private, Password};
+use ckey::{Ed25519Private as Private, Ed25519Public as Public, Password};
 use std::path::PathBuf;
 
 /// Simple Secret Store API
 pub trait SimpleSecretStore: Send + Sync {
     /// Inserts new accounts to the store with given password.
-    fn insert_account(&self, secret: Private, password: &Password) -> Result<Address, Error>;
+    fn insert_account(&self, secret: Private, password: &Password) -> Result<Public, Error>;
     /// Returns all accounts in this secret store.
-    fn accounts(&self) -> Result<Vec<Address>, Error>;
+    fn accounts(&self) -> Result<Vec<Public>, Error>;
     /// Check existance of account
-    fn has_account(&self, account: &Address) -> Result<bool, Error>;
+    fn has_account(&self, account: &Public) -> Result<bool, Error>;
     /// Entirely removes account from the store and underlying storage.
-    fn remove_account(&self, account: &Address) -> Result<(), Error>;
+    fn remove_account(&self, account: &Public) -> Result<(), Error>;
     /// Changes accounts password.
-    fn change_password(&self, account: &Address, old_password: &Password, new_password: &Password)
-        -> Result<(), Error>;
+    fn change_password(&self, account: &Public, old_password: &Password, new_password: &Password) -> Result<(), Error>;
     /// Exports key details for account.
-    fn export_account(&self, account: &Address, password: &Password) -> Result<OpaqueKeyFile, Error>;
+    fn export_account(&self, account: &Public, password: &Password) -> Result<OpaqueKeyFile, Error>;
     /// Returns a raw opaque Account that can be later used to sign a message.
-    fn decrypt_account(&self, account: &Address, password: &Password) -> Result<DecryptedAccount, Error>;
+    fn decrypt_account(&self, account: &Public, password: &Password) -> Result<DecryptedAccount, Error>;
 }
 
 /// Secret Store API
 pub trait SecretStore: SimpleSecretStore {
     /// Imports existing JSON wallet
-    fn import_wallet(&self, json: &[u8], password: &Password, gen_id: bool) -> Result<Address, Error>;
+    fn import_wallet(&self, json: &[u8], password: &Password, gen_id: bool) -> Result<Public, Error>;
 
     /// Checks if password matches given account.
-    fn test_password(&self, account: &Address, password: &Password) -> Result<bool, Error>;
+    fn test_password(&self, account: &Public, password: &Password) -> Result<bool, Error>;
 
     /// Copies account between stores.
     fn copy_account(
         &self,
         new_store: &dyn SimpleSecretStore,
-        account: &Address,
+        account: &Public,
         password: &Password,
         new_password: &Password,
     ) -> Result<(), Error>;
 
     /// Returns uuid of an account.
-    fn uuid(&self, account: &Address) -> Result<Uuid, Error>;
+    fn uuid(&self, account: &Public) -> Result<Uuid, Error>;
     /// Returns account's metadata.
-    fn meta(&self, account: &Address) -> Result<String, Error>;
+    fn meta(&self, account: &Public) -> Result<String, Error>;
 
     /// Modifies account name.
-    fn set_meta(&self, account: &Address, meta: String) -> Result<(), Error>;
+    fn set_meta(&self, account: &Public, meta: String) -> Result<(), Error>;
 
     /// Returns local path of the store.
     fn local_path(&self) -> PathBuf;

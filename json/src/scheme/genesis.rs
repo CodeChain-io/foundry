@@ -64,7 +64,7 @@ mod tests {
                     ]
                 }
             },
-            "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3",
+            "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3e2f0d",
             "timestamp": "0x07",
             "parentHash": "0x9000000000000000000000000000000000000000000000000000000000000000",
             "extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
@@ -80,7 +80,7 @@ mod tests {
                     H520(Core520::from("0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")),
                 ]
             }),
-            author: Some(PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3").unwrap()),
+            author: Some(PlatformAddress::from_str("tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3e2f0d").unwrap()),
             timestamp: Some(0x07.into()),
             parent_hash: Some(H256(Core256::from("0x9000000000000000000000000000000000000000000000000000000000000000"))),
             transactions_root: None,

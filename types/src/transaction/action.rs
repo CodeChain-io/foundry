@@ -18,7 +18,7 @@ use crate::errors::SyntaxError;
 use crate::transaction::{Approval, ShardTransaction, Validator};
 use crate::{CommonParams, ShardId};
 use ccrypto::Blake;
-use ckey::{verify, Address, NetworkId};
+use ckey::{verify, Ed25519Public as Public, NetworkId};
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -71,7 +71,7 @@ impl Decodable for ActionTag {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
     Pay {
-        receiver: Address,
+        receiver: Public,
         /// Transferred quantity.
         quantity: u64,
     },
@@ -81,20 +81,20 @@ pub enum Action {
         content: String,
     },
     TransferCCS {
-        address: Address,
+        address: Public,
         quantity: u64,
     },
     DelegateCCS {
-        address: Address,
+        address: Public,
         quantity: u64,
     },
     Revoke {
-        address: Address,
+        address: Public,
         quantity: u64,
     },
     Redelegate {
-        prev_delegatee: Address,
-        next_delegatee: Address,
+        prev_delegatee: Public,
+        next_delegatee: Public,
         quantity: u64,
     },
     SelfNominate {
@@ -114,9 +114,9 @@ pub enum Action {
         validators: Vec<Validator>,
     },
     CloseTerm {
-        inactive_validators: Vec<Address>,
+        inactive_validators: Vec<Public>,
         next_validators: Vec<Validator>,
-        released_addresses: Vec<Address>,
+        released_addresses: Vec<Public>,
         custody_until: u64,
         kick_at: u64,
     },
@@ -554,7 +554,7 @@ mod tests {
     #[test]
     fn encode_and_decode_pay_action() {
         rlp_encode_and_decode_test!(Action::Pay {
-            receiver: Address::random(),
+            receiver: Public::random(),
             quantity: 300,
         });
     }
@@ -581,9 +581,9 @@ mod tests {
     #[test]
     fn rlp_of_close_term() {
         rlp_encode_and_decode_test!(Action::CloseTerm {
-            inactive_validators: vec![Address::random(), Address::random(), Address::random()],
+            inactive_validators: vec![Public::random(), Public::random(), Public::random()],
             next_validators: vec![],
-            released_addresses: vec![Address::random(), Address::random()],
+            released_addresses: vec![Public::random(), Public::random()],
             custody_until: 17,
             kick_at: 31,
         });

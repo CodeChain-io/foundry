@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -64,7 +64,6 @@ export class ProcessStateError extends Error {
 export interface Signer {
     privateKey: string;
     publicKey: string;
-    accountId: string;
     address: Address;
 }
 export default class CodeChain {
@@ -539,7 +538,7 @@ export default class CodeChain {
     }): SignedTransaction {
         const {
             seq,
-            recipient = "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
+            recipient = "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu",
             quantity = 0,
             secret = faucetSecret,
             fee = 10 + this.id

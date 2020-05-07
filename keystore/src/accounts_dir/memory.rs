@@ -16,14 +16,15 @@
 
 use super::KeyDirectory;
 use crate::{Error, SafeAccount};
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use parking_lot::RwLock;
 use std::collections::HashMap;
+use std::convert::TryInto;
 
 /// Accounts in-memory storage.
 #[derive(Default)]
 pub struct MemoryDirectory {
-    accounts: RwLock<HashMap<Address, Vec<SafeAccount>>>,
+    accounts: RwLock<HashMap<Public, Vec<SafeAccount>>>,
 }
 
 impl KeyDirectory for MemoryDirectory {
@@ -33,7 +34,7 @@ impl KeyDirectory for MemoryDirectory {
 
     fn update(&self, account: SafeAccount) -> Result<SafeAccount, Error> {
         let mut lock = self.accounts.write();
-        let accounts = lock.entry(account.address).or_insert_with(Vec::new);
+        let accounts = lock.entry(account.pubkey).or_insert_with(Vec::new);
         // If the filename is the same we just need to replace the entry
         accounts.retain(|acc| acc.filename != account.filename);
         accounts.push(account.clone());
@@ -42,14 +43,14 @@ impl KeyDirectory for MemoryDirectory {
 
     fn insert(&self, account: SafeAccount) -> Result<SafeAccount, Error> {
         let mut lock = self.accounts.write();
-        let accounts = lock.entry(account.address).or_insert_with(Vec::new);
+        let accounts = lock.entry(account.pubkey).or_insert_with(Vec::new);
         accounts.push(account.clone());
         Ok(account)
     }
 
     fn remove(&self, account: &SafeAccount) -> Result<(), Error> {
         let mut accounts = self.accounts.write();
-        let is_empty = if let Some(accounts) = accounts.get_mut(&account.address) {
+        let is_empty = if let Some(accounts) = accounts.get_mut(&account.pubkey) {
             if let Some(position) = accounts.iter().position(|acc| acc == account) {
                 accounts.remove(position);
             }
@@ -58,7 +59,7 @@ impl KeyDirectory for MemoryDirectory {
             false
         };
         if is_empty {
-            accounts.remove(&account.address);
+            accounts.remove(&account.pubkey);
         }
         Ok(())
     }
@@ -67,7 +68,11 @@ impl KeyDirectory for MemoryDirectory {
         let mut val = 0u64;
         let accounts = self.accounts.read();
         for acc in accounts.keys() {
-            val ^= acc.low_u64()
+            let bytes = acc.as_ref();
+            val ^= u64::from_be_bytes(bytes[0..8].try_into().unwrap());
+            val ^= u64::from_be_bytes(bytes[8..16].try_into().unwrap());
+            val ^= u64::from_be_bytes(bytes[16..24].try_into().unwrap());
+            val ^= u64::from_be_bytes(bytes[24..32].try_into().unwrap());
         }
         Ok(val)
     }

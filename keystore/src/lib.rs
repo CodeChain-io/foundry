@@ -42,7 +42,6 @@ extern crate serde_derive;
 extern crate matches;
 
 pub mod accounts_dir;
-pub mod ckeys;
 
 mod account;
 mod json;

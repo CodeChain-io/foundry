@@ -1,4 +1,4 @@
-// Copyright 2019 Kodebox, Inc.
+// Copyright 2019-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -71,9 +71,7 @@ describe("Jail state transition test", function() {
             nodes[0].rpc,
             nodes[0].testFramework
         );
-        return banned.some(
-            b => b.getAccountId().toString() === entity.accountId
-        );
+        return banned.some(b => b.getPubKey().toString() === entity.publicKey);
     }
 
     async function isPrisoner(
