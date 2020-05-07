@@ -33,7 +33,7 @@ pub enum Seal {
 
 /// A block header.
 /// Note : you must modify /core/src/views/header.rs too when you modify this.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Header {
     /// Parent hash.
     parent_hash: BlockHash,
