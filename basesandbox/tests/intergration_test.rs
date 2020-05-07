@@ -20,6 +20,7 @@ use cbsb::execution::executee;
 use cbsb::execution::executor;
 use cbsb::ipc::domain_socket::DomainSocket;
 use cbsb::ipc::intra::Intra;
+use cbsb::ipc::multiplex::{Forward, Multiplexer};
 use cbsb::ipc::Ipc;
 use cbsb::ipc::{IpcRecv, IpcSend, Terminate};
 use std::sync::{Arc, Barrier};
@@ -176,4 +177,54 @@ fn terminator_intra() {
     barrier.wait();
     terminator.terminate();
     t.join().unwrap();
+}
+
+struct TestForward;
+
+impl Forward for TestForward {
+    fn forward(data: &[u8]) -> usize {
+        if data[0] == b'0' {
+            0
+        } else {
+            1
+        }
+    }
+}
+
+#[test]
+fn multiplexer() {
+    let (c1, c2) = DomainSocket::arguments_for_both_ends();
+    let d1 = thread::spawn(|| DomainSocket::new(c1));
+    let d2 = DomainSocket::new(c2);
+    let d1 = d1.join().unwrap();
+
+    let (s1, r1) = d1.split();
+    let (s2, r2) = d2.split();
+
+    let (mut multiplexed1, multiplxer1) = Multiplexer::create::<TestForward, _, _>(s1, r1, 2, 100);
+    let (mut multiplexed2, multiplxer2) = Multiplexer::create::<TestForward, _, _>(s2, r2, 2, 100);
+
+    // multiplxed channel 1
+    let (s1_1, r1_1) = multiplexed1.pop().unwrap();
+    let (s2_1, r2_1) = multiplexed2.pop().unwrap();
+
+    // multiplxed channel 0
+    let (s1_2, r1_2) = multiplexed1.pop().unwrap();
+    let (s2_2, r2_2) = multiplexed2.pop().unwrap();
+
+    s1_1.send(b"11".to_vec()).unwrap();
+    assert_eq!(r2_1.recv().unwrap(), b"11");
+
+    s2_1.send(b"12".to_vec()).unwrap();
+    assert_eq!(r1_1.recv().unwrap(), b"12");
+
+    s2_2.send(b"03".to_vec()).unwrap();
+    assert_eq!(r1_2.recv().unwrap(), b"03");
+
+    s1_2.send(b"04".to_vec()).unwrap();
+    assert_eq!(r2_2.recv().unwrap(), b"04");
+
+    // we have to drop the multiplexer itself first
+    drop(multiplxer1);
+    drop(multiplxer2);
 }
