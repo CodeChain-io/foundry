@@ -38,11 +38,8 @@
 use crate::cache::{ModuleCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::traits::{ModuleStateView, StateWithCache, TopState, TopStateView};
-use crate::{
-    Account, ActionData, Metadata, MetadataAddress, Module, ModuleAddress, ModuleLevelState, StateDB, StateResult,
-};
+use crate::{ActionData, Metadata, MetadataAddress, Module, ModuleAddress, ModuleLevelState, StateDB, StateResult};
 use cdb::{AsHashDB, DatabaseError};
-use ckey::Ed25519Public as Public;
 use coordinator::context::StorageAccess;
 use ctypes::errors::RuntimeError;
 use ctypes::util::unexpected::Mismatch;
@@ -88,12 +85,6 @@ impl TopStateView for TopLevelState {
     /// Check caches for required data
     /// First searches for account in the local, then the shared cache.
     /// Populates local cache if nothing found.
-    fn account(&self, a: &Public) -> TrieResult<Option<Account>> {
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.top_cache.account(&a, &trie)
-    }
-
     fn metadata(&self) -> TrieResult<Option<Metadata>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
@@ -294,12 +285,6 @@ impl TopLevelState {
         Ok(ModuleLevelState::from_existing(storage_id, &mut self.db, module_root, module_cache)?)
     }
 
-    fn get_account_mut(&self, a: &Public) -> TrieResult<RefMut<'_, Account>> {
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.top_cache.account_mut(&a, &trie)
-    }
-
     fn get_metadata_mut(&self) -> TrieResult<RefMut<'_, Metadata>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
@@ -352,47 +337,6 @@ impl Clone for TopLevelState {
 }
 
 impl TopState for TopLevelState {
-    fn kill_account(&mut self, account: &Public) {
-        self.top_cache.remove_account(account);
-    }
-
-    fn add_balance(&mut self, a: &Public, incr: u64) -> TrieResult<()> {
-        ctrace!(STATE, "add_balance({:?}, {}): {}", a, incr, self.balance(a)?);
-        if incr != 0 {
-            self.get_account_mut(a)?.add_balance(incr);
-        }
-        Ok(())
-    }
-
-    fn sub_balance(&mut self, a: &Public, decr: u64) -> StateResult<()> {
-        ctrace!(STATE, "sub_balance({:?}, {}): {}", a, decr, self.balance(a)?);
-        if decr == 0 {
-            return Ok(())
-        }
-        let balance = self.balance(a)?;
-        if balance < decr {
-            return Err(RuntimeError::InsufficientBalance {
-                pubkey: *a,
-                cost: decr,
-                balance,
-            }
-            .into())
-        }
-        self.get_account_mut(a)?.sub_balance(decr);
-        Ok(())
-    }
-
-    fn transfer_balance(&mut self, from: &Public, to: &Public, by: u64) -> StateResult<()> {
-        self.sub_balance(from, by)?;
-        self.add_balance(to, by)?;
-        Ok(())
-    }
-
-    fn inc_seq(&mut self, a: &Public) -> TrieResult<()> {
-        self.get_account_mut(a)?.inc_seq();
-        Ok(())
-    }
-
     fn create_module(&mut self) -> StateResult<()> {
         let storage_id = {
             let mut metadata = self.get_metadata_mut()?;

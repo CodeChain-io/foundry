@@ -15,15 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::WriteBack;
-use crate::{Account, ActionData, Metadata, MetadataAddress, Module, ModuleAddress};
-use ckey::Ed25519Public as Public;
+use crate::{ActionData, Metadata, MetadataAddress, Module, ModuleAddress};
 use merkle_trie::{Result as TrieResult, Trie, TrieMut};
 use primitives::H256;
 use std::cell::RefMut;
 
 #[derive(Clone)]
 pub struct TopCache {
-    account: WriteBack<Account>,
     metadata: WriteBack<Metadata>,
     module: WriteBack<Module>,
     action_data: WriteBack<ActionData>,
@@ -31,13 +29,11 @@ pub struct TopCache {
 
 impl TopCache {
     pub fn new(
-        accounts: impl Iterator<Item = (Public, Account)>,
         metadata: impl Iterator<Item = (MetadataAddress, Metadata)>,
         modules: impl Iterator<Item = (ModuleAddress, Module)>,
         action_data: impl Iterator<Item = (H256, ActionData)>,
     ) -> Self {
         Self {
-            account: WriteBack::new_with_iter(accounts),
             metadata: WriteBack::new_with_iter(metadata),
             module: WriteBack::new_with_iter(modules),
             action_data: WriteBack::new_with_iter(action_data),
@@ -45,44 +41,28 @@ impl TopCache {
     }
 
     pub fn checkpoint(&mut self) {
-        self.account.checkpoint();
         self.metadata.checkpoint();
         self.module.checkpoint();
         self.action_data.checkpoint();
     }
 
     pub fn discard_checkpoint(&mut self) {
-        self.account.discard_checkpoint();
         self.metadata.discard_checkpoint();
         self.module.discard_checkpoint();
         self.action_data.discard_checkpoint();
     }
 
     pub fn revert_to_checkpoint(&mut self) {
-        self.account.revert_to_checkpoint();
         self.metadata.revert_to_checkpoint();
         self.module.revert_to_checkpoint();
         self.action_data.revert_to_checkpoint();
     }
 
     pub fn commit<'db>(&mut self, trie: &mut (dyn TrieMut + 'db)) -> TrieResult<()> {
-        self.account.commit(trie)?;
         self.metadata.commit(trie)?;
         self.module.commit(trie)?;
         self.action_data.commit(trie)?;
         Ok(())
-    }
-
-    pub fn account(&self, a: &Public, db: &dyn Trie) -> TrieResult<Option<Account>> {
-        self.account.get(a, db)
-    }
-
-    pub fn account_mut(&self, a: &Public, db: &dyn Trie) -> TrieResult<RefMut<'_, Account>> {
-        self.account.get_mut(a, db)
-    }
-
-    pub fn remove_account(&self, pubkey: &Public) {
-        self.account.remove(pubkey)
     }
 
     pub fn metadata(&self, a: &MetadataAddress, db: &dyn Trie) -> TrieResult<Option<Metadata>> {
@@ -111,10 +91,6 @@ impl TopCache {
 
     pub fn remove_action_data(&self, address: &H256) {
         self.action_data.remove(address)
-    }
-
-    pub fn cached_accounts(&self) -> Vec<(Public, Option<Account>)> {
-        self.account.items_sorted_by_touched()
     }
 
     pub fn cached_metadata(&self) -> Vec<(MetadataAddress, Option<Metadata>)> {

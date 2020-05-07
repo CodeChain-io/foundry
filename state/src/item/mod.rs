@@ -17,7 +17,6 @@
 #[macro_use]
 mod address;
 
-pub mod account;
 pub mod action_data;
 pub mod metadata;
 pub mod module;
@@ -28,7 +27,6 @@ pub mod validator_set;
 #[derive(Clone, Copy)]
 #[repr(u8)]
 enum Prefix {
-    Account = b'C',
     Metadata = b'M',
     ModuleDatum = b'S',
     Module = b'U',

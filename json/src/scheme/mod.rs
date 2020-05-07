@@ -14,21 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod account;
 mod engine;
 mod genesis;
 mod params;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod scheme;
 mod seal;
-mod state;
 mod tendermint;
 
-pub use self::account::Account;
 pub use self::engine::Engine;
 pub use self::genesis::Genesis;
 pub use self::params::Params;
 pub use self::scheme::Scheme;
 pub use self::seal::{Seal, TendermintSeal};
-pub use self::state::Accounts;
 pub use self::tendermint::{StakeAccount, Tendermint, TendermintParams};
