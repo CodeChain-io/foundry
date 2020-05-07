@@ -74,5 +74,6 @@ members = [
     "informer_courier",
     "sync",
     "types",
-    "coordinator"
+    "coordinator",
+    "basic_module/account"
 ]
