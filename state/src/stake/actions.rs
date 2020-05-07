@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::item::stake::{Delegation, StakeAccount, Stakeholders};
-use crate::{Banned, Candidates, Jail, NextValidators, StateResult, TopLevelState, TopState, TopStateView};
+use crate::{Banned, Candidates, Jail, NextValidators, StateResult, TopLevelState};
 use ckey::Ed25519Public as Public;
 use ctypes::errors::RuntimeError;
 use ctypes::util::unexpected::Mismatch;
@@ -61,7 +61,11 @@ pub fn init_stake(
     stakeholders.save_to_state(state)?;
 
     for (pubkey, deposit) in &genesis_candidates {
-        let balance = state.balance(pubkey).unwrap_or_default();
+        // This balance was an element of `TopLevelState`, but the concept of `Account` was moved
+        // to a module level, and the element was removed from `TopLevelState`. Therefore, this balance
+        // was newly defiend for build, and its value is temporarily Default::default().
+
+        let balance: u64 = Default::default();
         if balance < deposit.deposit {
             cerror!(STATE, "{:?} has insufficient balance to become the candidate", pubkey);
             return Err(RuntimeError::InsufficientBalance {
@@ -71,7 +75,6 @@ pub fn init_stake(
             }
             .into())
         }
-        state.sub_balance(pubkey, deposit.deposit).unwrap();
     }
 
     let mut candidates = Candidates::default();
@@ -109,7 +112,7 @@ pub fn init_stake(
     Ok(())
 }
 
-pub fn ban(state: &mut TopLevelState, informant: &Public, criminal: Public) -> StateResult<()> {
+pub fn ban(state: &mut TopLevelState, _informant: &Public, criminal: Public) -> StateResult<()> {
     let mut banned = Banned::load_from_state(state)?;
     if banned.is_banned(&criminal) {
         return Err(RuntimeError::FailedToHandleCustomAction("Account is already banned".to_string()).into())
@@ -119,14 +122,13 @@ pub fn ban(state: &mut TopLevelState, informant: &Public, criminal: Public) -> S
     let mut jailed = Jail::load_from_state(state)?;
     let mut validators = NextValidators::load_from_state(state)?;
 
-    let deposit = match (candidates.remove(&criminal), jailed.remove(&criminal)) {
+    let _deposit = match (candidates.remove(&criminal), jailed.remove(&criminal)) {
         (Some(_), Some(_)) => unreachable!("A candidate that are jailed cannot exist"),
         (Some(candidate), _) => candidate.deposit,
         (_, Some(jailed)) => jailed.deposit,
         _ => 0,
     };
     // confiscate criminal's deposit and give the same deposit amount to the informant.
-    state.add_balance(informant, deposit)?;
 
     jailed.remove(&criminal);
     banned.add(criminal);
