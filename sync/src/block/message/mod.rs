@@ -58,7 +58,7 @@ impl Decodable for MessageID {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum Message {
     Status {
         seq: U256,
@@ -156,23 +156,34 @@ impl Decodable for Message {
 
 #[cfg(test)]
 mod tests {
-    use primitives::H256;
-    use rlp::rlp_encode_and_decode_test;
-
     use super::*;
+    use primitives::H256;
+
+    /// For a type that does not have PartialEq, uses Debug instead.
+    fn assert_eq_by_debug<T: std::fmt::Debug>(a: &T, b: &T) {
+        assert_eq!(format!("{:?}", a), format!("{:?}", b));
+    }
 
     #[test]
     fn status_message_rlp() {
-        rlp_encode_and_decode_test!(Message::Status {
+        let status_message = Message::Status {
             seq: U256::zero(),
             best_hash: H256::default().into(),
             genesis_hash: H256::default().into(),
-        });
+        };
+        let encoded = rlp::encode(&status_message);
+        let decoded: Message = rlp::decode(&encoded).unwrap();
+
+        assert_eq_by_debug(&status_message, &decoded)
     }
 
     #[test]
     fn request_bodies_message_rlp() {
         let request_id = 10;
-        rlp_encode_and_decode_test!(Message::Request(request_id, RequestMessage::Bodies(vec![])));
+        let message = Message::Request(request_id, RequestMessage::Bodies(vec![]));
+        let encoded = rlp::encode(&message);
+        let decoded: Message = rlp::decode(&encoded).unwrap();
+
+        assert_eq_by_debug(&message, &decoded)
     }
 }
