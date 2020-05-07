@@ -1,11 +1,10 @@
 import * as _ from "lodash";
-import { H128, H160, H256, H512 } from "../src";
+import { H128, H256, H512 } from "../src";
 import "mocha";
 import { expect } from "chai";
 
 ([
     [H128, "H128", 16],
-    [H160, "H160", 20],
     [H256, "H256", 32],
     [H512, "H512", 64]
 ] as [any, string, number][]).forEach(args => {
