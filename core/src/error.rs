@@ -18,7 +18,7 @@ use crate::account_provider::Error as AccountProviderError;
 use crate::consensus::EngineError;
 use cdb::DatabaseError;
 use cio::IoError;
-use ckey::{Address, Error as KeyError};
+use ckey::{Ed25519Public as Public, Error as KeyError};
 use cstate::StateError;
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
@@ -100,7 +100,7 @@ pub enum BlockError {
     /// Block number isn't sensible.
     RidiculousNumber(OutOfBounds<BlockNumber>),
     /// Too many transactions from a particular address.
-    TooManyTransactions(Address),
+    TooManyTransactions(Public),
     /// Parent given is unknown.
     UnknownParent(BlockHash),
     /// Body size limit is exceeded.
@@ -139,7 +139,7 @@ impl fmt::Display for BlockError {
             InvalidNumber(mis) => format!("Invalid number in header: {}", mis),
             RidiculousNumber(oob) => format!("Implausible block number. {}", oob),
             UnknownParent(hash) => format!("Unknown parent: {}", hash),
-            TooManyTransactions(address) => format!("Too many transactions from: {}", address),
+            TooManyTransactions(pubkey) => format!("Too many transactions from: {:?}", pubkey),
             BodySizeIsTooBig => "Block's body size is too big".to_string(),
         };
 

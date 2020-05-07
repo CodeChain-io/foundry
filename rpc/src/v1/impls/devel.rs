@@ -22,7 +22,7 @@ use ccore::{
     VerifiedTransaction, COL_STATE,
 };
 use cjson::bytes::Bytes;
-use ckey::{Address, Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
+use ckey::{Ed25519KeyPair as KeyPair, Ed25519Public as Public, Generator, KeyPairTrait, Random};
 use cnetwork::{unbounded_event_callback, EventSender, IntoSocketAddr};
 use csync::BlockSyncEvent;
 use ctypes::transaction::{Action, Transaction};
@@ -133,20 +133,20 @@ where
         // NOTE: Assuming solo network
         let genesis_keypair: KeyPair = Random.generate().unwrap();
 
-        let base_seq = self.client.seq(&genesis_keypair.address(), BlockId::Latest).unwrap();
+        let base_seq = self.client.seq(genesis_keypair.public(), BlockId::Latest).unwrap();
 
         // Helper macros
         macro_rules! pay_tx {
-            ($seq:expr, $address:expr) => {
-                pay_tx!($seq, $address, 1)
+            ($seq:expr, $pubkey:expr) => {
+                pay_tx!($seq, $pubkey, 1)
             };
-            ($seq:expr, $address:expr, $quantity: expr) => {
+            ($seq:expr, $pubkey:expr, $quantity: expr) => {
                 Transaction {
                     seq: $seq,
                     fee: 0,
                     network_id,
                     action: Action::Pay {
-                        receiver: $address,
+                        receiver: $pubkey,
                         quantity: $quantity,
                     },
                 }
@@ -170,8 +170,8 @@ where
         let transactions = {
             let mut transactions = Vec::with_capacity(count as usize);
             for i in 0..count {
-                let address = Address::random();
-                let tx = sign_tx(pay_tx!(base_seq + i, address), &genesis_keypair);
+                let pubkey = Public::random();
+                let tx = sign_tx(pay_tx!(base_seq + i, pubkey), &genesis_keypair);
                 transactions.push(tx);
             }
             transactions

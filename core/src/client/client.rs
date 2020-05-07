@@ -35,7 +35,7 @@ use crate::transaction::{
 use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
-use ckey::{Address, NetworkId, PlatformAddress};
+use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
@@ -327,10 +327,9 @@ impl EngineInfo for Client {
             let genesis_author = self.block_header(&0.into()).expect("genesis block").author();
             return Ok(Some(vec![PlatformAddress::new_v1(network_id, genesis_author)]))
         }
-        let addresses = self.engine().possible_authors(block_number)?;
-        Ok(addresses.map(|addresses| {
-            addresses.into_iter().map(|address| PlatformAddress::new_v1(network_id, address)).collect()
-        }))
+        let pubkeys = self.engine().possible_authors(block_number)?;
+        Ok(pubkeys
+            .map(|pubkeys| pubkeys.into_iter().map(|pubkey| PlatformAddress::new_v1(network_id, pubkey)).collect()))
     }
 }
 
@@ -566,7 +565,7 @@ impl BlockChainClient for Client {
 
     fn transaction(&self, id: &TransactionId) -> Option<LocalizedTransaction> {
         let chain = self.block_chain();
-        self.transaction_address(id).and_then(|address| chain.transaction(&address))
+        self.transaction_address(id).and_then(|pubkey| chain.transaction(&pubkey))
     }
 
     fn error_hint(&self, hash: &TxHash) -> Option<String> {
@@ -597,13 +596,13 @@ impl TermInfo for Client {
 }
 
 impl AccountData for Client {
-    fn seq(&self, address: &Address, id: BlockId) -> Option<u64> {
-        self.state_at(id).and_then(|s| s.seq(address).ok())
+    fn seq(&self, pubkey: &Public, id: BlockId) -> Option<u64> {
+        self.state_at(id).and_then(|s| s.seq(pubkey).ok())
     }
 
-    fn balance(&self, address: &Address, state: StateOrBlock) -> Option<u64> {
+    fn balance(&self, pubkey: &Public, state: StateOrBlock) -> Option<u64> {
         let state = self.state_info(state)?;
-        state.balance(address).ok()
+        state.balance(pubkey).ok()
     }
 }
 
@@ -620,7 +619,7 @@ impl Shard for Client {
 }
 
 impl BlockProducer for Client {
-    fn prepare_open_block(&self, parent_block_id: BlockId, author: Address, extra_data: Bytes) -> OpenBlock {
+    fn prepare_open_block(&self, parent_block_id: BlockId, author: Public, extra_data: Bytes) -> OpenBlock {
         let engine = &*self.engine;
         let chain = self.block_chain();
         let parent_hash = self.block_hash(&parent_block_id).expect("parent exist always");
@@ -637,23 +636,23 @@ impl BlockProducer for Client {
 }
 
 impl MiningBlockChainClient for Client {
-    fn get_malicious_users(&self) -> Vec<Address> {
+    fn get_malicious_users(&self) -> Vec<Public> {
         self.importer.miner.get_malicious_users()
     }
 
-    fn release_malicious_users(&self, prisoner_vec: Vec<Address>) {
+    fn release_malicious_users(&self, prisoner_vec: Vec<Public>) {
         self.importer.miner.release_malicious_users(prisoner_vec)
     }
 
-    fn imprison_malicious_users(&self, prisoner_vec: Vec<Address>) {
+    fn imprison_malicious_users(&self, prisoner_vec: Vec<Public>) {
         self.importer.miner.imprison_malicious_users(prisoner_vec)
     }
 
-    fn get_immune_users(&self) -> Vec<Address> {
+    fn get_immune_users(&self) -> Vec<Public> {
         self.importer.miner.get_immune_users()
     }
 
-    fn register_immune_users(&self, immune_user_vec: Vec<Address>) {
+    fn register_immune_users(&self, immune_user_vec: Vec<Public>) {
         self.importer.miner.register_immune_users(immune_user_vec)
     }
 }

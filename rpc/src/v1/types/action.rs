@@ -169,7 +169,7 @@ impl TryFrom<Action> for ActionType {
                 receiver,
                 quantity,
             } => ActionType::Pay {
-                receiver: receiver.try_into_address()?,
+                receiver: receiver.try_into_pubkey()?,
                 quantity: quantity.into(),
             },
             Action::ShardStore {
@@ -185,21 +185,21 @@ impl TryFrom<Action> for ActionType {
                 address,
                 quantity,
             } => ActionType::TransferCCS {
-                address: address.try_into_address()?,
+                address: address.try_into_pubkey()?,
                 quantity: quantity.into(),
             },
             Action::DelegateCCS {
                 address,
                 quantity,
             } => ActionType::DelegateCCS {
-                address: address.try_into_address()?,
+                address: address.try_into_pubkey()?,
                 quantity: quantity.into(),
             },
             Action::Revoke {
                 address,
                 quantity,
             } => ActionType::Revoke {
-                address: address.try_into_address()?,
+                address: address.try_into_pubkey()?,
                 quantity: quantity.into(),
             },
             Action::Redelegate {
@@ -207,8 +207,8 @@ impl TryFrom<Action> for ActionType {
                 next_delegatee,
                 quantity,
             } => ActionType::Redelegate {
-                prev_delegatee: prev_delegatee.try_into_address()?,
-                next_delegatee: next_delegatee.try_into_address()?,
+                prev_delegatee: prev_delegatee.try_into_pubkey()?,
+                next_delegatee: next_delegatee.try_into_pubkey()?,
                 quantity: quantity.into(),
             },
             Action::SelfNominate {

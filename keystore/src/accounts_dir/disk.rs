@@ -232,7 +232,7 @@ where
         let to_remove = self
             .files_content()?
             .into_iter()
-            .find(|&(_, ref acc)| acc.id == account.id && acc.address == account.address);
+            .find(|&(_, ref acc)| acc.id == account.id && acc.pubkey == account.pubkey);
 
         // remove it
         match to_remove {

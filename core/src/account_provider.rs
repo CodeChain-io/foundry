@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use ckey::{
-    public_to_address, Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public,
-    Error as KeyError, Generator, Password, Random,
+    Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public, Error as KeyError, Generator,
+    Password, Random,
 };
 use ckeystore::accounts_dir::MemoryDirectory;
 use ckeystore::{DecryptedAccount, Error as KeystoreError, KeyStore, SecretStore, SimpleSecretStore};
@@ -85,7 +85,7 @@ impl fmt::Display for Error {
 
 pub struct AccountProvider {
     /// Unlocked account data.
-    unlocked: RwLock<HashMap<Address, UnlockedPassword>>,
+    unlocked: RwLock<HashMap<Public, UnlockedPassword>>,
     keystore: KeyStore,
 }
 
@@ -105,71 +105,60 @@ impl AccountProvider {
         })
     }
 
-    pub fn new_account_and_public(&self, password: &Password) -> Result<(Address, Public), Error> {
+    pub fn new_account_and_public(&self, password: &Password) -> Result<Public, Error> {
         let acc: KeyPair = Random.generate().expect("ed25519 context has generation capabilities; qed");
-        self.insert_account_internal(acc.get_private(), password)
+        self.insert_account(acc.get_private(), password)
     }
 
-    pub fn insert_account(&self, private: Private, password: &Password) -> Result<Address, Error> {
-        self.insert_account_internal(private, password).map(|(addr, _)| addr)
-    }
-
-    fn insert_account_internal(&self, private: Private, password: &Password) -> Result<(Address, Public), Error> {
+    pub fn insert_account(&self, private: Private, password: &Password) -> Result<Public, Error> {
         let public = private.public_key();
-        let address = public_to_address(&public);
         self.keystore.insert_account(private, password)?;
-        Ok((address, public))
+        Ok(public)
     }
 
-    pub fn remove_account(&self, address: Address) -> Result<(), Error> {
-        self.keystore.remove_account(&address)?;
+    pub fn remove_account(&self, pubkey: Public) -> Result<(), Error> {
+        self.keystore.remove_account(&pubkey)?;
         Ok(())
     }
 
-    pub fn has_account(&self, address: &Address) -> Result<bool, Error> {
-        let has = self.keystore.has_account(address)?;
+    pub fn has_account(&self, pubkey: &Public) -> Result<bool, Error> {
+        let has = self.keystore.has_account(pubkey)?;
         Ok(has)
     }
 
-    pub fn has_public(&self, public: &Public) -> Result<bool, Error> {
-        let address = public_to_address(public);
-        let has = self.keystore.has_account(&address)?;
-        Ok(has)
+    pub fn get_list(&self) -> Result<Vec<Public>, Error> {
+        let publics = self.keystore.accounts()?;
+        Ok(publics)
     }
 
-    pub fn get_list(&self) -> Result<Vec<Address>, Error> {
-        let addresses = self.keystore.accounts()?;
-        Ok(addresses)
-    }
-
-    pub fn import_wallet(&self, json: &[u8], password: &Password) -> Result<Address, Error> {
+    pub fn import_wallet(&self, json: &[u8], password: &Password) -> Result<Public, Error> {
         Ok(self.keystore.import_wallet(json, password, false)?)
     }
 
     pub fn change_password(
         &self,
-        address: Address,
+        pubkey: Public,
         old_password: &Password,
         new_password: &Password,
     ) -> Result<(), Error> {
-        self.keystore.change_password(&address, &old_password, &new_password)?;
+        self.keystore.change_password(&pubkey, &old_password, &new_password)?;
         Ok(())
     }
 
     /// Unlocks account permanently.
-    pub fn unlock_account_permanently(&self, account: Address, password: Password) -> Result<(), KeystoreError> {
+    pub fn unlock_account_permanently(&self, account: Public, password: Password) -> Result<(), KeystoreError> {
         self.unlock_account(account, password, Unlock::Perm)
     }
 
     /// Unlocks account temporarily (for one signing).
-    pub fn unlock_account_temporarily(&self, account: Address, password: Password) -> Result<(), KeystoreError> {
+    pub fn unlock_account_temporarily(&self, account: Public, password: Password) -> Result<(), KeystoreError> {
         self.unlock_account(account, password, Unlock::OneTime)
     }
 
     /// Unlocks account temporarily with a timeout.
     pub fn unlock_account_timed(
         &self,
-        account: Address,
+        account: Public,
         password: Password,
         duration: Duration,
     ) -> Result<(), KeystoreError> {
@@ -177,16 +166,16 @@ impl AccountProvider {
     }
 
     /// Helper method used for unlocking accounts.
-    fn unlock_account(&self, address: Address, password: Password, unlock: Unlock) -> Result<(), KeystoreError> {
+    fn unlock_account(&self, pubkey: Public, password: Password, unlock: Unlock) -> Result<(), KeystoreError> {
         // check if account is already unlocked permanently, if it is, do nothing
         let mut unlocked = self.unlocked.write();
-        if let Some(data) = unlocked.get(&address) {
+        if let Some(data) = unlocked.get(&pubkey) {
             if let Unlock::Perm = data.unlock {
                 return Ok(())
             }
         }
 
-        if !self.keystore.test_password(&address, &password)? {
+        if !self.keystore.test_password(&pubkey, &password)? {
             return Err(KeystoreError::InvalidPassword)
         }
 
@@ -195,35 +184,35 @@ impl AccountProvider {
             password,
         };
 
-        unlocked.insert(address, unlocked_account);
+        unlocked.insert(pubkey, unlocked_account);
         Ok(())
     }
 
-    pub fn get_unlocked_account(&self, address: &Address) -> Result<ScopedAccount<'_>, Error> {
+    pub fn get_unlocked_account(&self, pubkey: &Public) -> Result<ScopedAccount<'_>, Error> {
         let mut unlocked = self.unlocked.write();
-        let data = unlocked.get(address).ok_or(Error::NotUnlocked)?.clone();
+        let data = unlocked.get(pubkey).ok_or(Error::NotUnlocked)?.clone();
         if let Unlock::OneTime = data.unlock {
-            unlocked.remove(address).expect("data exists: so key must exist: qed");
+            unlocked.remove(pubkey).expect("data exists: so key must exist: qed");
         }
         if let Unlock::Timed(ref end) = data.unlock {
             if Instant::now() > *end {
-                unlocked.remove(address).expect("data exists: so key must exist: qed");
+                unlocked.remove(pubkey).expect("data exists: so key must exist: qed");
                 return Err(Error::NotUnlocked)
             }
         }
 
-        let decrypted = self.decrypt_account(address, &data.password)?;
+        let decrypted = self.decrypt_account(pubkey, &data.password)?;
         Ok(ScopedAccount::from(decrypted))
     }
 
-    fn decrypt_account(&self, address: &Address, password: &Password) -> Result<DecryptedAccount, KeystoreError> {
-        self.keystore.decrypt_account(address, password)
+    fn decrypt_account(&self, pubkey: &Public, password: &Password) -> Result<DecryptedAccount, KeystoreError> {
+        self.keystore.decrypt_account(pubkey, password)
     }
 
-    pub fn get_account(&self, address: &Address, password: Option<&Password>) -> Result<ScopedAccount<'_>, Error> {
+    pub fn get_account(&self, pubkey: &Public, password: Option<&Password>) -> Result<ScopedAccount<'_>, Error> {
         match password {
-            Some(password) => Ok(ScopedAccount::from(self.decrypt_account(address, password)?)),
-            None => self.get_unlocked_account(address),
+            Some(password) => Ok(ScopedAccount::from(self.decrypt_account(pubkey, password)?)),
+            None => self.get_unlocked_account(pubkey),
         }
     }
 }
@@ -266,10 +255,10 @@ mod tests {
         let kp: KeyPair = Random.generate().unwrap();
         let ap = AccountProvider::transient_provider();
         assert!(ap.insert_account(kp.private().clone(), &"test".into()).is_ok());
-        assert!(ap.unlock_account_temporarily(kp.address(), "test1".into()).is_err());
-        assert!(ap.unlock_account_temporarily(kp.address(), "test".into()).is_ok());
-        assert!(ap.get_account(&kp.address(), None).is_ok());
-        assert!(ap.get_account(&kp.address(), None).is_err());
+        assert!(ap.unlock_account_temporarily(*kp.public(), "test1".into()).is_err());
+        assert!(ap.unlock_account_temporarily(*kp.public(), "test".into()).is_ok());
+        assert!(ap.get_account(&kp.public(), None).is_ok());
+        assert!(ap.get_account(&kp.public(), None).is_err());
     }
 
     #[test]
@@ -277,12 +266,12 @@ mod tests {
         let kp: KeyPair = Random.generate().unwrap();
         let ap = AccountProvider::transient_provider();
         assert!(ap.insert_account(kp.private().clone(), &"test".into()).is_ok());
-        assert!(ap.unlock_account_permanently(kp.address(), "test1".into()).is_err());
-        assert!(ap.unlock_account_permanently(kp.address(), "test".into()).is_ok());
-        assert!(ap.get_account(&kp.address(), None).is_ok());
-        assert!(ap.get_account(&kp.address(), None).is_ok());
-        assert!(ap.unlock_account_temporarily(kp.address(), "test".into()).is_ok());
-        assert!(ap.get_account(&kp.address(), None).is_ok());
-        assert!(ap.get_account(&kp.address(), None).is_ok());
+        assert!(ap.unlock_account_permanently(*kp.public(), "test1".into()).is_err());
+        assert!(ap.unlock_account_permanently(*kp.public(), "test".into()).is_ok());
+        assert!(ap.get_account(&kp.public(), None).is_ok());
+        assert!(ap.get_account(&kp.public(), None).is_ok());
+        assert!(ap.unlock_account_temporarily(*kp.public(), "test".into()).is_ok());
+        assert!(ap.get_account(&kp.public(), None).is_ok());
+        assert!(ap.get_account(&kp.public(), None).is_ok());
     }
 }

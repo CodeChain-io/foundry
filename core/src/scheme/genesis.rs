@@ -16,7 +16,7 @@
 
 use super::seal::Seal;
 use ccrypto::BLAKE_NULL_RLP;
-use ckey::{Address, PlatformAddress};
+use ckey::{Ed25519Public as Public, PlatformAddress};
 use ctypes::BlockHash;
 use primitives::{Bytes, H256};
 
@@ -25,7 +25,7 @@ pub struct Genesis {
     /// Seal.
     pub seal: Seal,
     /// Author.
-    pub author: Address,
+    pub author: Public,
     /// Timestamp.
     pub timestamp: u64,
     /// Parent hash.
@@ -44,7 +44,7 @@ impl From<cjson::scheme::Genesis> for Genesis {
     fn from(g: cjson::scheme::Genesis) -> Self {
         Genesis {
             seal: From::from(g.seal),
-            author: g.author.map_or_else(Address::default, PlatformAddress::into_address),
+            author: g.author.map_or_else(Public::default, PlatformAddress::into_pubkey),
             timestamp: g.timestamp.map_or(0, Into::into),
             parent_hash: g.parent_hash.map_or_else(H256::zero, Into::into).into(),
             transactions_root: g.transactions_root.map_or_else(|| BLAKE_NULL_RLP, Into::into),

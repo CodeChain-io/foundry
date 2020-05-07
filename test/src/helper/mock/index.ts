@@ -263,7 +263,8 @@ export class Mock {
         const best = bestBlockHash;
         const genesis = this.p2psocket.getGenesisHash();
         const seq = new U256(0);
-        this.sendStatus(seq, best, genesis);
+        await this.sendStatus(seq, best, genesis);
+        await this.waitHeaderRequest();
         await this.sendBlockHeaderResponse(header);
         if (this.log) {
             console.log("Send header response");
@@ -288,6 +289,7 @@ export class Mock {
         const genesis = this.p2psocket.getGenesisHash();
         const seq = new U256(0);
         await this.sendStatus(seq, best, genesis);
+        await this.waitHeaderRequest();
         await this.sendBlockHeaderResponse(header.map(h => h.toEncodeObject()));
         if (this.log) {
             console.log("Send header response");

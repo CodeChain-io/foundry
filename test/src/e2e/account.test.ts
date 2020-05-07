@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -46,10 +46,10 @@ describe("account", function() {
             });
 
             it("Ok", async function() {
-                const account = node.testFramework.util.getAccountIdFromPrivate(
+                const account = node.testFramework.util.getPublicFromPrivate(
                     randomSecret
                 );
-                const address = node.testFramework.core.classes.Address.fromAccountId(
+                const address = node.testFramework.core.classes.Address.fromPublic(
                     account,
                     { networkId: "tc" }
                 );
