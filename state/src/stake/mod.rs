@@ -127,7 +127,6 @@ mod tests {
 
         let mut state = metadata_for_election();
         increase_term_id_until(&mut state, 29);
-        state.add_balance(&pubkey, 1000).unwrap();
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
@@ -143,7 +142,6 @@ mod tests {
 
         state.increase_term_id(pseudo_term_to_block_num_calculator(29)).unwrap();
 
-        assert_eq!(state.balance(&pubkey).unwrap(), 800, "Should keep nomination before expiration");
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(
             candidates.get_candidate(&pubkey),
@@ -165,7 +163,6 @@ mod tests {
 
         state.increase_term_id(pseudo_term_to_block_num_calculator(30)).unwrap();
 
-        assert_eq!(state.balance(&pubkey).unwrap(), 1000, "Return deposit after expiration");
         let candidates = Candidates::load_from_state(&state).unwrap();
         assert_eq!(candidates.get_candidate(&pubkey), None, "Removed from candidates after expiration");
     }
@@ -177,7 +174,6 @@ mod tests {
 
         let mut state = metadata_for_election();
         increase_term_id_until(&mut state, 29);
-        state.add_balance(&delegator, 1000).unwrap();
 
         let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
@@ -226,7 +222,6 @@ mod tests {
         let pubkey = Public::random();
 
         let mut state = metadata_for_election();
-        state.add_balance(&pubkey, 1000).unwrap();
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
@@ -263,7 +258,6 @@ mod tests {
         let pubkey = Public::random();
 
         let mut state = metadata_for_election();
-        state.add_balance(&pubkey, 1000).unwrap();
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
@@ -311,8 +305,6 @@ mod tests {
 
         let jail = Jail::load_from_state(&state).unwrap();
         assert_eq!(jail.get_prisoner(&pubkey), None, "The prisoner is removed");
-
-        assert_eq!(state.balance(&pubkey).unwrap(), 1000 - deposit - additional_deposit, "Deposit is accumulated");
     }
 
     #[test]
@@ -320,7 +312,6 @@ mod tests {
         let pubkey = Public::random();
 
         let mut state = metadata_for_election();
-        state.add_balance(&pubkey, 1000).unwrap();
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
@@ -363,8 +354,6 @@ mod tests {
 
         let jail = Jail::load_from_state(&state).unwrap();
         assert_eq!(jail.get_prisoner(&pubkey), None, "A prisoner should be released");
-
-        assert_eq!(state.balance(&pubkey).unwrap(), 1000, "Balance should be restored after being released");
     }
 
     #[test]
@@ -373,7 +362,6 @@ mod tests {
         let delegator = Public::random();
 
         let mut state = metadata_for_election();
-        state.add_balance(&pubkey, 1000).unwrap();
 
         let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
@@ -414,7 +402,6 @@ mod tests {
         let delegator = Public::random();
 
         let mut state = metadata_for_election();
-        state.add_balance(&pubkey, 1000).unwrap();
 
         let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();
@@ -459,7 +446,6 @@ mod tests {
         let delegator = Public::random();
 
         let mut state = metadata_for_election();
-        state.add_balance(&pubkey, 1000).unwrap();
 
         let genesis_stakes = {
             let mut genesis_stakes = HashMap::new();

@@ -43,7 +43,7 @@ use crate::stake::{
 };
 use crate::traits::{ModuleStateView, StateWithCache, TopState, TopStateView};
 use crate::{
-    Account, ActionData, CurrentValidators, FindDoubleVoteHandler, Metadata, MetadataAddress, Module, ModuleAddress,
+    ActionData, CurrentValidators, FindDoubleVoteHandler, Metadata, MetadataAddress, Module, ModuleAddress,
     ModuleLevelState, NextValidators, StateDB, StateResult,
 };
 use cdb::{AsHashDB, DatabaseError};
@@ -94,12 +94,6 @@ impl TopStateView for TopLevelState {
     /// Check caches for required data
     /// First searches for account in the local, then the shared cache.
     /// Populates local cache if nothing found.
-    fn account(&self, a: &Public) -> TrieResult<Option<Account>> {
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.top_cache.account(&a, &trie)
-    }
-
     fn metadata(&self) -> TrieResult<Option<Metadata>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
@@ -325,7 +319,7 @@ impl TopLevelState {
         parent_block_timestamp: u64,
         current_block_timestamp: u64,
     ) -> StateResult<()> {
-        let seq = self.seq(sender)?;
+        let seq = Default::default();
 
         if tx.seq != seq {
             return Err(RuntimeError::InvalidSeq(Mismatch {
@@ -335,10 +329,7 @@ impl TopLevelState {
             .into())
         }
 
-        let fee = tx.fee;
-
-        self.inc_seq(sender)?;
-        self.sub_balance(sender, fee)?;
+        let _fee = tx.fee;
 
         // The failed transaction also must pay the fee and increase seq.
         StateWithCheckpoint::create_checkpoint(self, ACTION_CHECKPOINT);
@@ -377,12 +368,9 @@ impl TopLevelState {
     ) -> StateResult<()> {
         match action {
             Action::Pay {
-                receiver,
-                quantity,
-            } => {
-                self.transfer_balance(sender, receiver, *quantity)?;
-                Ok(())
-            }
+                receiver: _,
+                quantity: _,
+            } => Ok(()),
             Action::TransferCCS {
                 address,
                 quantity,
@@ -474,12 +462,6 @@ impl TopLevelState {
         Ok(ModuleLevelState::from_existing(storage_id, &mut self.db, module_root, module_cache)?)
     }
 
-    fn get_account_mut(&self, a: &Public) -> TrieResult<RefMut<'_, Account>> {
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.top_cache.account_mut(&a, &trie)
-    }
-
     fn get_metadata_mut(&self) -> TrieResult<RefMut<'_, Metadata>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
@@ -515,13 +497,6 @@ impl TopLevelState {
     pub fn root(&self) -> H256 {
         self.root
     }
-
-    #[cfg(test)]
-    #[allow(unused)]
-    fn set_balance(&mut self, a: &Public, balance: u64) -> TrieResult<()> {
-        self.get_account_mut(a)?.set_balance(balance);
-        Ok(())
-    }
 }
 
 // TODO: cloning for `State` shouldn't be possible in general; Remove this and use
@@ -539,47 +514,6 @@ impl Clone for TopLevelState {
 }
 
 impl TopState for TopLevelState {
-    fn kill_account(&mut self, account: &Public) {
-        self.top_cache.remove_account(account);
-    }
-
-    fn add_balance(&mut self, a: &Public, incr: u64) -> TrieResult<()> {
-        ctrace!(STATE, "add_balance({:?}, {}): {}", a, incr, self.balance(a)?);
-        if incr != 0 {
-            self.get_account_mut(a)?.add_balance(incr);
-        }
-        Ok(())
-    }
-
-    fn sub_balance(&mut self, a: &Public, decr: u64) -> StateResult<()> {
-        ctrace!(STATE, "sub_balance({:?}, {}): {}", a, decr, self.balance(a)?);
-        if decr == 0 {
-            return Ok(())
-        }
-        let balance = self.balance(a)?;
-        if balance < decr {
-            return Err(RuntimeError::InsufficientBalance {
-                pubkey: *a,
-                cost: decr,
-                balance,
-            }
-            .into())
-        }
-        self.get_account_mut(a)?.sub_balance(decr);
-        Ok(())
-    }
-
-    fn transfer_balance(&mut self, from: &Public, to: &Public, by: u64) -> StateResult<()> {
-        self.sub_balance(from, by)?;
-        self.add_balance(to, by)?;
-        Ok(())
-    }
-
-    fn inc_seq(&mut self, a: &Public) -> TrieResult<()> {
-        self.get_account_mut(a)?.inc_seq();
-        Ok(())
-    }
-
     fn create_module(&mut self) -> StateResult<()> {
         let storage_id = {
             let mut metadata = self.get_metadata_mut()?;
@@ -631,6 +565,207 @@ impl TopState for TopLevelState {
         let mut metadata = self.get_metadata_mut()?;
         metadata.set_consensus_params(consensus_params);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests_state {
+    use std::sync::Arc;
+
+    use cdb::{new_journaldb, Algorithm};
+
+    use super::*;
+    use crate::tests::helpers::{empty_top_state_with_metadata, get_memory_db, get_temp_state};
+
+    #[test]
+    fn work_when_cloned() {
+        let mut original_state = get_temp_state();
+        let storage_id: StorageId = 0;
+        original_state.create_module().unwrap();
+        let original_module_state = original_state.module_state_mut(storage_id).unwrap();
+        module_level!(original_module_state, {
+            set: [
+                (key: "alice" => datum_str: "Alice is a doctor"),
+                (key: "bob" => datum_str: "Bob is a software engineer")
+            ],
+            check: [
+                (key: "alice" => datum_str: "Alice is a doctor"),
+                (key: "bob" => datum_str: "Bob is a software engineer")
+            ]
+        });
+        let original_root = original_state.commit();
+        assert!(original_root.is_ok(), "{:?}", original_root);
+
+        let mut cloned_state = original_state.clone();
+        cloned_state.create_module().unwrap();
+        let cloned_module_state = cloned_state.module_state_mut(storage_id).unwrap();
+        module_level!(cloned_module_state, {
+            check: [
+                (key: "alice" => datum_str: "Alice is a doctor"),
+                (key: "bob" => datum_str: "Bob is a software engineer")
+            ]
+        });
+        let cloned_root = cloned_state.commit();
+        assert!(cloned_root.is_ok(), "{:?}", cloned_root);
+    }
+
+    #[test]
+    fn work_when_cloned_even_not_committed() {
+        let mut original_state = get_temp_state();
+        let storage_id: StorageId = 0;
+        original_state.create_module().unwrap();
+        let original_module_state = original_state.module_state_mut(storage_id).unwrap();
+        module_level!(original_module_state, {
+            set: [
+                (key: "alice" => datum_str: "Alice is a doctor"),
+                (key: "bob" => datum_str: "Bob is a software engineer")
+            ],
+            check: [
+                (key: "alice" => datum_str: "Alice is a doctor"),
+                (key: "bob" => datum_str: "Bob is a software engineer")
+            ]
+        });
+
+        let mut cloned_state = original_state.clone();
+        cloned_state.create_module().unwrap();
+        let cloned_module_state = cloned_state.module_state_mut(storage_id).unwrap();
+        module_level!(cloned_module_state, {
+            check: [
+                (key: "alice" => datum_str: "Alice is a doctor"),
+                (key: "bob" => datum_str: "Bob is a software engineer")
+            ]
+        });
+        let cloned_root = cloned_state.commit();
+        assert!(cloned_root.is_ok(), "{:?}", cloned_root);
+    }
+
+    #[test]
+    fn state_is_not_synchronized_when_cloned() {
+        let mut original_state = get_temp_state();
+        let storage_id: StorageId = 0;
+        original_state.create_module().unwrap();
+        let mut cloned_state = original_state.clone();
+        let original_module_state = original_state.module_state_mut(storage_id).unwrap();
+        module_level!(original_module_state, {
+            check: [
+                (key: "alice" => None),
+                (key: "bob" => None)
+            ]
+        });
+
+        cloned_state.create_module().unwrap();
+        let cloned_module_state = cloned_state.module_state_mut(storage_id).unwrap();
+        module_level!(original_module_state, {
+            set: [
+                (key: "alice" => datum_str: "Alice is a doctor"),
+                (key: "bob" => datum_str: "Bob is a software engineer")
+            ]
+        });
+
+        assert_ne!(original_module_state.get_datum(b"alice"), cloned_module_state.get_datum(b"alice"))
+    }
+
+    #[test]
+    fn get_from_database() {
+        let memory_db = get_memory_db();
+        let jorunal = new_journaldb(Arc::clone(&memory_db), Algorithm::Archive, Some(0));
+        let db = StateDB::new(jorunal.boxed_clone());
+        let storage_id: StorageId = 0;
+
+        let root = {
+            let mut state = empty_top_state_with_metadata(
+                db.clone(&H256::zero()),
+                CommonParams::default_for_test(),
+                ConsensusParams::default_for_test(),
+            );
+            state.create_module().unwrap();
+            let state_with_id = state.module_state_mut(storage_id).unwrap();
+
+            module_level!(state_with_id, {
+                set: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer")
+                ],
+                check: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer")
+                ]
+            });
+            let root = state.commit();
+            assert!(root.is_ok(), "{:?}", root);
+
+            let mut transaction = memory_db.transaction();
+            let records = state.journal_under(&mut transaction, 1);
+            assert!(records.is_ok(), "{:?}", records);
+            memory_db.write_buffered(transaction);
+
+            assert!(root.is_ok(), "{:?}", root);
+            root.unwrap()
+        };
+
+        let mut state = TopLevelState::from_existing(db, root).unwrap();
+        state.create_module().unwrap();
+        let state_with_id = state.module_state_mut(storage_id).unwrap();
+
+        module_level!(state_with_id, {
+            check: [
+                (key: "alice" => datum_str: "Alice is a doctor"),
+                (key: "bob" => datum_str: "Bob is a software engineer")
+            ]
+        });
+    }
+
+    #[test]
+    fn get_from_cache() {
+        let memory_db = get_memory_db();
+        let jorunal = new_journaldb(Arc::clone(&memory_db), Algorithm::Archive, Some(0));
+        let mut db = StateDB::new(jorunal.boxed_clone());
+        let storage_id: StorageId = 0;
+
+        let root = {
+            let mut state = empty_top_state_with_metadata(
+                db.clone(&H256::zero()),
+                CommonParams::default_for_test(),
+                ConsensusParams::default_for_test(),
+            );
+            state.create_module().unwrap();
+            let state_with_id = state.module_state_mut(storage_id).unwrap();
+
+            module_level!(state_with_id, {
+                set: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer")
+                ],
+                check: [
+                    (key: "alice" => datum_str: "Alice is a doctor"),
+                    (key: "bob" => datum_str: "Bob is a software engineer")
+                ]
+            });
+
+            let root = state.commit();
+            assert!(root.is_ok(), "{:?}", root);
+
+            let mut transaction = memory_db.transaction();
+            let records = state.journal_under(&mut transaction, 1);
+            assert!(records.is_ok(), "{:?}", records);
+            memory_db.write_buffered(transaction);
+
+            assert!(root.is_ok(), "{:?}", root);
+
+            db.override_state(&state);
+            root.unwrap()
+        };
+
+        let mut state = TopLevelState::from_existing(db, root).unwrap();
+        state.create_module().unwrap();
+        let state_with_id = state.module_state_mut(storage_id).unwrap();
+
+        module_level!(state_with_id, {
+            check: [
+                (key: "alice" => datum_str: "Alice is a doctor"),
+                (key: "bob" => datum_str: "Bob is a software engineer")
+            ]
+        });
     }
 }
 
