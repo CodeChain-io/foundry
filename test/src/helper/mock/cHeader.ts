@@ -79,7 +79,7 @@ export class Header {
     private transactionsRoot: H256;
     private stateRoot: H256;
     private nextValidatorSetHash: H256;
-    private seal: number[][];
+    private seal: any[];
     private hash: null | H256;
     private bareHash: null | H256;
 
@@ -92,7 +92,7 @@ export class Header {
         transactionsRoot: H256,
         stateRoot: H256,
         nextValidatorSetHash: H256,
-        seal: number[][],
+        seal: any[],
         hash?: H256,
         bareHash?: H256
     ) {
@@ -141,7 +141,7 @@ export class Header {
         this.nextValidatorSetHash = root;
     }
 
-    public setSeal(seal: number[][]) {
+    public setSeal(seal: any[]) {
         this.seal = seal;
     }
 
@@ -163,7 +163,7 @@ export class Header {
             this.number.toEncodeObject(),
             this.timestamp.toEncodeObject(),
             this.extraData
-        ].concat(this.seal.map(seal => Buffer.of(...seal)));
+        ].concat(this.seal);
     }
 
     public rlpBytes(): Buffer {
