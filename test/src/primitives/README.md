@@ -39,7 +39,7 @@ import { blake256, H256 } from "foundry-primitives";
 
 ## Classes
 
-- H128, H160, H256, H512
+- H128, H256, H512
 - U64, U128, U256
 - Address
 
