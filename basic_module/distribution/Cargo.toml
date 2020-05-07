@@ -1,0 +1,18 @@
+[package]
+name = "module_distribution"
+version = "0.1.0"
+authors = ["CodeChain Team <hi@codechain.io>"]
+edition = "2018"
+
+[dependencies]
+primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
+coordinator = {package = "coordinator", path = "../../coordinator" }
+ckey = { package = "codechain-key", path = "../../key" }
+ctypes = { package = "codechain-types", path = "../../types"}
+rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
+ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
+num-rational = "0.2.1"
+serde_cbor = "0.11.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_derive = "1.0.105"
+lazy_static = "1.4"
