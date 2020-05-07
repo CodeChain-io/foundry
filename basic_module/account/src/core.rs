@@ -45,3 +45,9 @@ pub trait AccountView {
 
     fn get_sequence(&self, address: &Public) -> u64;
 }
+
+pub trait SignatureManager {
+    fn verify(&self, signature: &Signature, message: &[u8], public: &Public) -> bool;
+
+    fn sign(&self, message: &[u8], private: &Private) -> Signature;
+}
