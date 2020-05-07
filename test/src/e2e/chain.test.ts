@@ -25,10 +25,9 @@ import {
     invalidAddress
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
-import { H160, H256, H512, U64 } from "../sdk/core/classes";
+import { H256, H512, U64 } from "../sdk/core/classes";
 
 describe("chain", function() {
-    const invalidH160 = H160.zero();
     const invalidH256 = H256.zero();
 
     let node: CodeChain;
