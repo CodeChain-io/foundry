@@ -14,18 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod chain_history_access;
-mod mem_pool_access;
-mod state_history_access;
-mod storage_access;
-mod sub_storage_access;
+use ctypes::{BlockId, StorageId};
 
-pub use chain_history_access::ChainHistoryAccess;
-pub use mem_pool_access::MemPoolAccess;
-pub use state_history_access::{StateHistoryAccess, SubStateHistoryAccess};
-pub use storage_access::StorageAccess;
-pub use sub_storage_access::SubStorageAccess;
+pub type Key = dyn AsRef<[u8]>;
+pub type Value = Vec<u8>;
 
-/// A `Context` provides the interface against the system services such as moulde substorage access,
-/// mempool access
-pub trait Context: SubStorageAccess + MemPoolAccess + StateHistoryAccess {}
+// Interface observable from modules
+pub trait SubStateHistoryAccess {
+    fn get_at(&self, block_number: Option<BlockId>, key: &Key) -> Option<Value>;
+    fn has_at(&self, block_number: Option<BlockId>, key: &Key) -> bool;
+}
+
+// Host side internal trait
+pub trait StateHistoryAccess {
+    fn get_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &Key) -> Option<Value>;
+    fn has_at(&self, storgae_id: StorageId, block_number: Option<BlockId>, key: &Key) -> bool;
+}
