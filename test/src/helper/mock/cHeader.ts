@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-import { H160, H256, U256 } from "../../primitives/src";
+import { H256, U256 } from "../../primitives/src";
 import { blake256 } from "../../sdk/utils";
 
 const RLP = require("rlp");
@@ -25,7 +25,7 @@ export class Header {
     public static fromBytes(bytes: Buffer): Header {
         const decodedmsg = RLP.decode(bytes);
         const parentHash = new H256(decodedmsg[0].toString("hex"));
-        const author = new H160(decodedmsg[1].toString("hex"));
+        const author = new H256(decodedmsg[1].toString("hex"));
         const stateRoot = new H256(decodedmsg[2].toString("hex"));
         const transactionsRoot = new H256(decodedmsg[3].toString("hex"));
         const nextValidatorSetHash = new H256(decodedmsg[4].toString("hex"));
@@ -55,7 +55,7 @@ export class Header {
     private parentHash: H256;
     private timestamp: U256;
     private number: U256;
-    private author: H160;
+    private author: H256;
     private extraData: Buffer;
     private transactionsRoot: H256;
     private stateRoot: H256;
@@ -68,7 +68,7 @@ export class Header {
         parentHash: H256,
         timestamp: U256,
         number: U256,
-        author: H160,
+        author: H256,
         extraData: Buffer,
         transactionsRoot: H256,
         stateRoot: H256,
@@ -102,7 +102,7 @@ export class Header {
         this.number = number;
     }
 
-    public setAuthor(author: H160) {
+    public setAuthor(author: H256) {
         this.author = author;
     }
 
@@ -141,7 +141,9 @@ export class Header {
             ),
             new U256(0),
             new U256(0),
-            new H160("0000000000000000000000000000000000000000"),
+            new H256(
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            ),
             Buffer.alloc(0),
             BLAKE_NULL_RLP,
             BLAKE_NULL_RLP,
