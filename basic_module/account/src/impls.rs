@@ -24,6 +24,7 @@ use crate::{check, get_context, Action, SignedTransaction};
 use coordinator::context::SubStorageAccess;
 pub use coordinator::types::ErrorCode;
 use ckey::{sign as sign_ed25519, verify as verify_ed25519};
+pub use coordinator::types::TransactionExecutionOutcome;
 
 #[allow(dead_code)]
 pub struct Handler {}
@@ -34,5 +35,34 @@ impl CheckTxHandler for Handler {
             return Err(-1)
         }
         Ok(())
+    }
+}
+
+#[allow(dead_code)]
+pub struct Executor {}
+
+impl TransactionExecutor for Executor {
+    fn execute_transactions(
+        &self,
+        transactions: &[SignedTransaction],
+    ) -> Result<Vec<TransactionExecutionOutcome>, ()> {
+        let mut total_additional_fee: u64 = 0;
+        let mut total_min_fee: u64 = 0;
+
+        for signed_tx in transactions {
+            total_additional_fee += signed_tx.tx.fee - signed_tx.tx.action.min_fee();
+            total_min_fee += signed_tx.tx.action.min_fee();
+
+            // FIXME: Suitable error handling is needed
+            if !check(signature_manager(), signed_tx) || !sub_balance_internalliy(&signed_tx.tx.action.receiver, *signed_Tx.tx.action.quantity).is_ok() {
+                return
+            }
+            add_balance_internalliy(&sender, signed_tx.tx.fee + quantity);
+        }
+
+        let fee_manager = fee_manager();
+        fee_manager.accumulate_block_fee(total_additional_fee, total_min_fee);
+
+        Ok(vec![])
     }
 }
