@@ -999,23 +999,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "distribution"
-version = "0.1.0"
-dependencies = [
- "codechain-crypto",
- "codechain-key",
- "codechain-types",
- "coordinator",
- "lazy_static 1.4.0",
- "num-rational",
- "primitives",
- "rlp",
- "serde",
- "serde_cbor",
- "serde_derive",
-]
-
-[[package]]
 name = "dtoa"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1230,6 +1213,7 @@ dependencies = [
  "kvdb-rocksdb",
  "log 0.4.8",
  "module_account",
+ "module_distribution",
  "never-type",
  "panic_hook",
  "parking_lot 0.6.4",
@@ -2108,6 +2092,24 @@ dependencies = [
  "sodiumoxide",
  "tempdir",
  "time",
+]
+
+[[package]]
+name = "module_distribution"
+version = "0.1.0"
+dependencies = [
+ "codechain-crypto",
+ "codechain-key",
+ "codechain-types",
+ "coordinator",
+ "lazy_static 1.4.0",
+ "num-rational",
+ "parking_lot 0.6.4",
+ "primitives",
+ "rlp",
+ "serde",
+ "serde_cbor",
+ "serde_derive",
 ]
 
 [[package]]
