@@ -19,8 +19,8 @@ use ctypes::TxHash;
 pub use ctypes::{BlockId, Header, StorageId};
 
 /// A `Context` provides the interface against the system services such as moulde substorage access,
-/// mempool access
-pub trait Context: SubStorageAccess + MemPoolAccess {}
+/// mempool access and state history access.
+pub trait Context: SubStorageAccess + MemPoolAccess + StateHistoryAccess {}
 
 pub type Key = dyn AsRef<[u8]>;
 pub type Value = Vec<u8>;
@@ -61,4 +61,16 @@ pub trait MemPoolAccess {
 
 pub trait ChainHistoryAccess {
     fn get_block_header(&self, block_id: BlockId) -> Option<Header>;
+}
+
+// Interface observable from modules
+pub trait SubStateHistoryAccess {
+    fn get_at(&self, block_number: Option<BlockId>, key: &Key) -> Option<Value>;
+    fn has_at(&self, block_number: Option<BlockId>, key: &Key) -> bool;
+}
+
+// Host side internal trait
+pub trait StateHistoryAccess {
+    fn get_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &Key) -> Option<Value>;
+    fn has_at(&self, storgae_id: StorageId, block_number: Option<BlockId>, key: &Key) -> bool;
 }
