@@ -52,6 +52,25 @@ export class Header {
 
         return header;
     }
+
+    public static default(): Header {
+        return new Header(
+            new H256(
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            ),
+            new U256(0),
+            new U256(0),
+            new H256(
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            ),
+            Buffer.alloc(0),
+            BLAKE_NULL_RLP,
+            BLAKE_NULL_RLP,
+            BLAKE_NULL_RLP,
+            []
+        );
+    }
+
     private parentHash: H256;
     private timestamp: U256;
     private number: U256;
@@ -132,24 +151,6 @@ export class Header {
 
     public getBareHash(): H256 | null {
         return this.bareHash;
-    }
-
-    public default(): Header {
-        return new Header(
-            new H256(
-                "0000000000000000000000000000000000000000000000000000000000000000"
-            ),
-            new U256(0),
-            new U256(0),
-            new H256(
-                "0000000000000000000000000000000000000000000000000000000000000000"
-            ),
-            Buffer.alloc(0),
-            BLAKE_NULL_RLP,
-            BLAKE_NULL_RLP,
-            BLAKE_NULL_RLP,
-            []
-        );
     }
 
     public toEncodeObject(): Array<any> {
