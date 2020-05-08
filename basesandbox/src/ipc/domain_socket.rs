@@ -120,6 +120,8 @@ impl Ipc for DomainSocket {
             std::thread::sleep(std::time::Duration::from_millis(10));
         }
         assert!(success, "Failed to establish domain socket");
+        socket.set_write_timeout(None).unwrap();
+        socket.set_nonblocking(false).unwrap();
 
         // Handshake
         if am_i_server {

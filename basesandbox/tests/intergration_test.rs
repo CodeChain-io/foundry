@@ -181,6 +181,37 @@ fn terminator_intra() {
     t.join().unwrap();
 }
 
+/// DomainSocket send must be a blocking operation; if not then this bursting traffic
+/// will make the send() cause the "Resource temporarily unavailable" error.
+#[test]
+fn socket_must_block() {
+    let n = 200;
+    let packet_size = 3000;
+    let (d1, d2) = setup_ipc::<DomainSocket>();
+    let terminator = d1.create_terminator();
+    let barrier = Arc::new(Barrier::new(2));
+    let barrier_ = barrier.clone();
+    let t = thread::spawn(move || {
+        for i in 0..n {
+            let r = d1.recv(None).unwrap();
+            assert!(r.iter().all(|&x| x == (i % 256) as u8));
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        barrier_.wait();
+        assert_eq!(d1.recv(None).unwrap_err(), cbsb::ipc::RecvError::Termination);
+    });
+    for i in 0..n {
+        let mut data = Vec::<u8>::with_capacity(packet_size);
+        for _ in 0..packet_size {
+            data.push((i % 256) as u8);
+        }
+        d2.send(&data);
+    }
+    barrier.wait();
+    terminator.terminate();
+    t.join().unwrap();
+}
+
 struct TestForward;
 
 impl Forward for TestForward {
