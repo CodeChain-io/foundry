@@ -375,15 +375,6 @@ impl MemPoolInput {
 }
 
 #[derive(Debug)]
-/// Current status of the pool
-pub struct MemPoolStatus {
-    /// Number of pending transactions (ready to go to block)
-    pub pending: usize,
-    /// Number of future transactions (waiting for transactions with lower seqs first)
-    pub future: usize,
-}
-
-#[derive(Debug)]
 /// Details of account
 pub struct AccountDetails {
     /// Most recent account seq

@@ -16,8 +16,8 @@
 
 use super::backup;
 use super::mem_pool_types::{
-    AccountDetails, CurrentQueue, FutureQueue, MemPoolInput, MemPoolItem, MemPoolStatus, PoolingInstant, QueueTag,
-    TransactionOrder, TransactionOrderWithTag, TxOrigin,
+    AccountDetails, CurrentQueue, FutureQueue, MemPoolInput, MemPoolItem, PoolingInstant, QueueTag, TransactionOrder,
+    TransactionOrderWithTag, TxOrigin,
 };
 use super::TransactionImportResult;
 use crate::client::{AccountData, BlockChainTrait};
@@ -207,12 +207,9 @@ impl MemPool {
         }
     }
 
-    /// Returns current status for this pool
-    pub fn status(&self) -> MemPoolStatus {
-        MemPoolStatus {
-            pending: self.current.len(),
-            future: self.future.len(),
-        }
+    /// Returns the number of transactions in the pool
+    pub fn num_pending_transactions(&self) -> usize {
+        self.current.len()
     }
 
     /// Add signed transaction to pool to be verified and imported.

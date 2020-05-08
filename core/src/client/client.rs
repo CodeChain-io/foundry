@@ -555,7 +555,7 @@ impl BlockChainClient for Client {
     }
 
     fn is_pending_queue_empty(&self) -> bool {
-        self.miner.status().transactions_in_pending_queue == 0
+        self.miner.num_pending_transactions() == 0
     }
 
     fn block_number(&self, id: &BlockId) -> Option<BlockNumber> {

@@ -16,7 +16,7 @@
 
 use super::mem_pool::{Error as MemPoolError, MemPool};
 use super::mem_pool_types::{MemPoolInput, TxOrigin};
-use super::{fetch_account_creator, MinerService, MinerStatus, TransactionImportResult};
+use super::{fetch_account_creator, MinerService, TransactionImportResult};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::block::{ClosedBlock, IsBlock};
 use crate::client::{
@@ -438,12 +438,8 @@ impl Miner {
 impl MinerService for Miner {
     type State = TopLevelState;
 
-    fn status(&self) -> MinerStatus {
-        let status = self.mem_pool.read().status();
-        MinerStatus {
-            transactions_in_pending_queue: status.pending,
-            transactions_in_future_queue: status.future,
-        }
+    fn num_pending_transactions(&self) -> usize {
+        self.mem_pool.read().num_pending_transactions()
     }
 
     fn authoring_params(&self) -> AuthoringParams {
@@ -592,10 +588,10 @@ impl MinerService for Miner {
 
             match import {
                 Ok(_) => {
-                    ctrace!(OWN_TX, "Status: {:?}", mem_pool.status());
+                    ctrace!(OWN_TX, "Number of pending transactions: {:?}", mem_pool.num_pending_transactions());
                 }
                 Err(ref e) => {
-                    ctrace!(OWN_TX, "Status: {:?}", mem_pool.status());
+                    ctrace!(OWN_TX, "Number of pending transactions: {:?}", mem_pool.num_pending_transactions());
                     cwarn!(OWN_TX, "Error importing transaction: {:?}", e);
                 }
             }
