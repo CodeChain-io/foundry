@@ -437,10 +437,6 @@ impl BlockChainClient for TestBlockChainClient {
         self.miner.import_external_transactions(self, transactions);
     }
 
-    fn delete_all_pending_transactions(&self) {
-        self.miner.delete_all_pending_transactions();
-    }
-
     fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions {
         self.miner.pending_transactions(range)
     }
@@ -449,7 +445,11 @@ impl BlockChainClient for TestBlockChainClient {
         self.miner.count_pending_transactions(range)
     }
 
-    fn is_pending_queue_empty(&self) -> bool {
+    fn delete_all_pending_transactions(&self) {
+        self.miner.delete_all_pending_transactions();
+    }
+
+    fn is_mem_pool_empty(&self) -> bool {
         self.miner.num_pending_transactions() == 0
     }
 

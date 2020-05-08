@@ -153,23 +153,23 @@ pub trait BlockChainClient: Sync + Send + BlockChainTrait + ImportBlock {
     /// Get block queue information.
     fn queue_info(&self) -> BlockQueueInfo;
 
-    /// Queue own transaction for importing
+    /// Queue own transaction to mem_pool for importing
     fn queue_own_transaction(&self, transaction: Transaction) -> Result<(), Error>;
 
-    /// Queue transactions for importing.
+    /// Queue transactions to mem_pool for importing.
     fn queue_transactions(&self, transactions: Vec<Bytes>);
 
-    /// Delete all pending transactions.
-    fn delete_all_pending_transactions(&self);
-
-    /// List all transactions in the mem_pool
+    /// List all transactions in the mem_pool a.k.a pending transactions
     fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions;
 
     /// Get the count of all pending transactions.
     fn count_pending_transactions(&self, range: Range<u64>) -> usize;
 
-    /// Check there are transactions which are allowed into the next block.
-    fn is_pending_queue_empty(&self) -> bool;
+    /// Delete all pending transactions.
+    fn delete_all_pending_transactions(&self);
+
+    /// Check whether there is any pending transactions or not.
+    fn is_mem_pool_empty(&self) -> bool;
 
     /// Look up the block number for the given block ID.
     fn block_number(&self, id: &BlockId) -> Option<BlockNumber>;
