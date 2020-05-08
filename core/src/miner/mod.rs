@@ -89,10 +89,10 @@ pub trait MinerService: Send + Sync {
         tx: Transaction,
     ) -> Result<(), Error>;
 
-    /// Get a list of all pending transactions in the mem pool.
-    fn ready_transactions(&self, gas_limit: usize, size_limit: usize, range: Range<u64>) -> PendingTransactions;
+    /// Get a list of all transactions in the mem pool.
+    fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions;
 
-    /// Get a count of all pending transactions in the mem pool.
+    /// Get a count of all pending transactions.
     fn count_pending_transactions(&self, range: Range<u64>) -> usize;
 
     /// Start sealing.

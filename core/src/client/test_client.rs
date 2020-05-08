@@ -441,10 +441,8 @@ impl BlockChainClient for TestBlockChainClient {
         self.miner.delete_all_pending_transactions();
     }
 
-    fn ready_transactions(&self, range: Range<u64>) -> PendingTransactions {
-        let params =
-            self.consensus_params(BlockId::Latest).expect("Consensus params of the latest block always exists");
-        self.miner.ready_transactions(params.max_body_size(), params.max_body_size(), range)
+    fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions {
+        self.miner.pending_transactions(range)
     }
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {

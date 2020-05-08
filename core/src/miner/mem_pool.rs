@@ -207,6 +207,17 @@ impl MemPool {
         self.transaction_pool.clear();
     }
 
+    pub fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions {
+        let tx_with_metadatas: Vec<_> =
+            self.transaction_pool.pool.values().filter(|tx| range.contains(&tx.inserted_timestamp)).collect();
+        let last_timestamp = tx_with_metadatas.iter().map(|tx_with_metadata| tx_with_metadata.inserted_timestamp).max();
+
+        PendingTransactions {
+            transactions: tx_with_metadatas.into_iter().map(|tx_with_metadata| tx_with_metadata.tx.clone()).collect(),
+            last_timestamp,
+        }
+    }
+
     pub fn top_transactions(&self, gas_limit: usize, size_limit: usize, range: Range<u64>) -> PendingTransactions {
         let mut current_gas: usize = 0;
         let mut current_size: usize = 0;

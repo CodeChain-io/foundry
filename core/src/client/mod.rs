@@ -162,10 +162,10 @@ pub trait BlockChainClient: Sync + Send + BlockChainTrait + ImportBlock {
     /// Delete all pending transactions.
     fn delete_all_pending_transactions(&self);
 
-    /// List all transactions that are allowed into the next block.
-    fn ready_transactions(&self, range: Range<u64>) -> PendingTransactions;
+    /// List all transactions in the mem_pool
+    fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions;
 
-    /// Get the count of all pending transactions currently in the mem_pool.
+    /// Get the count of all pending transactions.
     fn count_pending_transactions(&self, range: Range<u64>) -> usize;
 
     /// Check there are transactions which are allowed into the next block.
