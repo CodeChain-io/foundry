@@ -42,8 +42,8 @@ pub trait MinerService: Send + Sync {
     /// Type representing chain state
     type State: TopStateView + 'static;
 
-    /// Returns miner's status.
-    fn status(&self) -> MinerStatus;
+    /// Returns the number of pending transactions.
+    fn num_pending_transactions(&self) -> usize;
 
     /// Get current authoring parameters.
     fn authoring_params(&self) -> AuthoringParams;
@@ -121,15 +121,6 @@ pub trait MinerService: Send + Sync {
 
     /// Stop sealing.
     fn stop_sealing(&self);
-}
-
-/// Mining status
-#[derive(Debug)]
-pub struct MinerStatus {
-    /// Number of transactions in queue with state `pending` (ready to be included in block)
-    pub transactions_in_pending_queue: usize,
-    /// Number of transactions in queue with state `future` (not yet ready to be included in block)
-    pub transactions_in_future_queue: usize,
 }
 
 /// Represents the result of importing tranasction.
