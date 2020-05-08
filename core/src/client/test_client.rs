@@ -490,19 +490,19 @@ impl BlockChainClient for TestBlockChainClient {
         self.miner.delete_all_pending_transactions();
     }
 
-    fn ready_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
+    fn pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
         let size_limit = self
             .consensus_params(BlockId::Latest)
             .expect("Common params of the latest block always exists")
             .max_body_size();
-        self.miner.ready_transactions(size_limit as usize, range)
+        self.miner.pending_transactions(size_limit as usize, range)
     }
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {
         self.miner.count_pending_transactions(range)
     }
 
-    fn is_pending_queue_empty(&self) -> bool {
+    fn is_mem_pool_empty(&self) -> bool {
         self.miner.num_pending_transactions() == 0
     }
 
