@@ -16,6 +16,7 @@
 
 use crate::Transaction;
 pub use ctypes::StorageId;
+use ctypes::TxHash;
 
 /// A `Context` provides the interface against the system services such as moulde substorage access,
 /// mempool access
@@ -55,5 +56,5 @@ pub trait StorageAccess {
 }
 
 pub trait MemPoolAccess {
-    fn inject_transactions(&self, txs: Vec<Transaction>) -> Vec<Result<(), String>>;
+    fn inject_transactions(&self, txs: Vec<Transaction>) -> Vec<Result<TxHash, String>>;
 }

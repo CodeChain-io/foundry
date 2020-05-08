@@ -541,8 +541,15 @@ impl ImportBlock for Client {
 }
 
 impl MemPoolAccess for Client {
-    fn inject_transactions(&self, transactions: Vec<Transaction>) -> Vec<Result<(), String>> {
-        transactions.into_iter().map(|tx| self.queue_own_transaction(tx).map_err(|e| format!("{}", e))).collect()
+    fn inject_transactions(&self, transactions: Vec<Transaction>) -> Vec<Result<TxHash, String>> {
+        transactions
+            .into_iter()
+            .map(|tx| {
+                // FIXME: tx_hash is calculated even if failed to queue
+                let tx_hash = tx.hash();
+                self.queue_own_transaction(tx).map(|_| tx_hash).map_err(|e| format!("{}", e))
+            })
+            .collect()
     }
 }
 
