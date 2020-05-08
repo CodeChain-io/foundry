@@ -139,12 +139,17 @@ fn execute_simple_intra_massive() {
     }
 }
 
+fn setup_ipc<I: Ipc + 'static>() -> (I, I) {
+    let (c1, c2) = I::arguments_for_both_ends();
+    let d1 = thread::spawn(|| I::new(c1));
+    let d2 = I::new(c2);
+    let d1 = d1.join().unwrap();
+    (d1, d2)
+}
+
 #[test]
 fn terminator_socket() {
-    let (c1, c2) = DomainSocket::arguments_for_both_ends();
-    let d1 = thread::spawn(|| DomainSocket::new(c1));
-    let d2 = DomainSocket::new(c2);
-    let d1 = d1.join().unwrap();
+    let (d1, d2) = setup_ipc::<DomainSocket>();
     let terminator = d1.create_terminator();
     let barrier = Arc::new(Barrier::new(2));
     let barrier_ = barrier.clone();
@@ -161,10 +166,7 @@ fn terminator_socket() {
 
 #[test]
 fn terminator_intra() {
-    let (c1, c2) = Intra::arguments_for_both_ends();
-    let d1 = thread::spawn(|| Intra::new(c1));
-    let d2 = Intra::new(c2);
-    let d1 = d1.join().unwrap();
+    let (d1, d2) = setup_ipc::<Intra>();
     let terminator = d1.create_terminator();
     let barrier = Arc::new(Barrier::new(2));
     let barrier_ = barrier.clone();
