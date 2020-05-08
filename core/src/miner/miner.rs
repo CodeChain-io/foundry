@@ -448,9 +448,8 @@ impl MinerService for Miner {
         imported
     }
 
-    fn ready_transactions(&self, gas_limit: usize, size_limit: usize, range: Range<u64>) -> PendingTransactions {
-        // TODO: Create a gas_limit parameter and use it.
-        self.mem_pool.read().top_transactions(gas_limit, size_limit, range)
+    fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions {
+        self.mem_pool.read().pending_transactions(range)
     }
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {
