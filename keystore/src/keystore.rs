@@ -223,7 +223,7 @@ impl KeyMultiStore {
             new_accounts.entry(account_ref).or_insert_with(Vec::new).push(account);
         }
 
-        mem::replace(&mut *cache, new_accounts);
+        drop(mem::replace(&mut *cache, new_accounts));
         Ok(())
     }
 
