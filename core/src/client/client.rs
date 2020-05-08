@@ -319,7 +319,7 @@ impl TimeoutHandler for Client {
         match token {
             RESEAL_MIN_TIMER_TOKEN => {
                 // Checking self.pending_transactions() for efficiency
-                if !self.engine().engine_type().ignore_reseal_min_period() && !self.is_pending_queue_empty() {
+                if !self.engine().engine_type().ignore_reseal_min_period() && !self.is_mem_pool_empty() {
                     self.update_sealing(BlockId::Latest, false);
                 }
             }
@@ -580,10 +580,6 @@ impl BlockChainClient for Client {
         }
     }
 
-    fn delete_all_pending_transactions(&self) {
-        self.importer.miner.delete_all_pending_transactions();
-    }
-
     fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions {
         self.importer.miner.pending_transactions(range)
     }
@@ -592,7 +588,11 @@ impl BlockChainClient for Client {
         self.importer.miner.count_pending_transactions(range)
     }
 
-    fn is_pending_queue_empty(&self) -> bool {
+    fn delete_all_pending_transactions(&self) {
+        self.importer.miner.delete_all_pending_transactions();
+    }
+
+    fn is_mem_pool_empty(&self) -> bool {
         self.importer.miner.num_pending_transactions() == 0
     }
 
