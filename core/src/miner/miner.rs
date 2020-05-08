@@ -288,7 +288,7 @@ impl Miner {
             let open_transaction_size = transactions.iter().map(|tx| tx.rlp_bytes().len()).sum();
             assert!(max_body_size > open_transaction_size);
             let mut pending_transactions =
-                mem_pool.top_transactions(max_body_size - open_transaction_size, DEFAULT_RANGE).transactions;
+                mem_pool.pending_transactions(max_body_size - open_transaction_size, DEFAULT_RANGE).transactions;
             transactions.append(&mut pending_transactions);
 
             (transactions, open_block, block_number, block_tx_signer)
@@ -561,8 +561,8 @@ impl MinerService for Miner {
         imported
     }
 
-    fn ready_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions {
-        self.mem_pool.read().top_transactions(size_limit, range)
+    fn pending_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions {
+        self.mem_pool.read().pending_transactions(size_limit, range)
     }
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {

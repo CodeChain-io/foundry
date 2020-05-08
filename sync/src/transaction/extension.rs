@@ -143,7 +143,7 @@ impl NetworkExtension<Never> for Extension {
 
 impl Extension {
     fn random_broadcast(&mut self) {
-        let transactions = self.client.ready_transactions(0..u64::MAX).transactions;
+        let transactions = self.client.pending_transactions(0..u64::MAX).transactions;
         if transactions.is_empty() {
             ctrace!(SYNC_TX, "No transactions to propagate");
             return
