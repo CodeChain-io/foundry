@@ -41,8 +41,8 @@ pub trait MinerService: Send + Sync {
     /// Type representing chain state
     type State: TopStateView + 'static;
 
-    /// Returns miner's status.
-    fn status(&self) -> MinerStatus;
+    /// Returns the number of pending transactions.
+    fn num_pending_transactions(&self) -> usize;
 
     /// Get current authoring parameters.
     fn authoring_params(&self) -> AuthoringParams;
