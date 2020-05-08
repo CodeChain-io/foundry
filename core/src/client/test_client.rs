@@ -437,7 +437,7 @@ impl ImportBlock for TestBlockChainClient {
         }
         let len = self.numbers.read().len();
         if number == len {
-            mem::replace(&mut *self.last_hash.write(), h);
+            let _ = mem::replace(&mut *self.last_hash.write(), h);
             self.blocks.write().insert(h, b);
             self.numbers.write().insert(number, h);
             let mut parent_hash = *header.parent_hash();
