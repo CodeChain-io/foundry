@@ -240,7 +240,7 @@ impl MemPool {
     /// Returns top transactions whose timestamp are in the given range from the pool ordered by priority.
     // FIXME: current_timestamp should be `u64`, not `Option<u64>`.
     // FIXME: if range_contains becomes stable, use range.contains instead of inequality.
-    pub fn top_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions {
+    pub fn pending_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions {
         let mut current_size: usize = 0;
         let items: Vec<_> = self
             .transaction_pool
