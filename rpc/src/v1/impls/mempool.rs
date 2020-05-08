@@ -62,7 +62,7 @@ where
     }
 
     fn get_pending_transactions(&self, from: Option<u64>, to: Option<u64>) -> Result<PendingTransactions> {
-        Ok(self.client.ready_transactions(from.unwrap_or(0)..to.unwrap_or(u64::MAX)).into())
+        Ok(self.client.pending_transactions(from.unwrap_or(0)..to.unwrap_or(u64::MAX)).into())
     }
 
     fn get_pending_transactions_count(&self, from: Option<u64>, to: Option<u64>) -> Result<usize> {
