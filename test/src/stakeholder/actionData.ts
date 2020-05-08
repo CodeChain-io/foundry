@@ -1,12 +1,12 @@
 // FIXME: The SDK doesn't export addressValue.
 // In the import statement below uses "foundry-primitives" which is installed by the SDK.
 // We should use the SDK's addressValue when the SDK is updated.
-import { AddressValue } from "foundry-primitives";
 import RPC from "foundry-rpc";
+import { AddressValue } from "../primitives/src";
 import { SDK } from "../sdk";
 import { Address, H512, U64 } from "../sdk/core/classes";
 
-import { toHex } from "foundry-primitives/lib";
+import { toHex } from "../primitives/src";
 import { HANDLER_ID } from "./index";
 import { decodeaddress, decodeH256, decodeU64, isArrayOf } from "./util";
 
@@ -23,7 +23,7 @@ export async function getUndelegatedCCS(
             RLP.encode([
                 "Account",
                 Address.ensure(address)
-                    .getAccountId()
+                    .getPubKey()
                     .toEncodeObject()
             ])
         )}`,
@@ -70,7 +70,7 @@ export async function getDelegations(
     const data = await rpc.engine.getCustomActionData({
         handlerId: HANDLER_ID,
         bytes: `0x${toHex(
-            RLP.encode(["Delegation", delegator.accountId.toEncodeObject()])
+            RLP.encode(["Delegation", delegator.pubkey.toEncodeObject()])
         )}`,
         blockNumber
     });

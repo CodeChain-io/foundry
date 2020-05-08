@@ -69,18 +69,18 @@ mod tests {
                         "timeoutPrecommit": 10000,
                         "timeoutCommit": 10000,
                         "genesisStakes": {
-                          "tccq8qlwpt7xcs9lec3c8tyt3kqxlgsus8q4qp3m6ft": {
+                          "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde": {
                             "stake": 100,
                             "delegations": {
-                              "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": 10
+                              "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu": 10
                             }
                           },
-                          "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": {
+                          "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu": {
                             "stake": 100
                           }
                         },
                         "genesisCandidates": {
-                          "tccq9qvruafmf9vegjhkl0ruunkwp0d4lc8fgxknzh5": {
+                          "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu": {
                             "pubkey": "0x6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375",
                             "deposit": 20,
                             "nominationEndsAt": 100,
@@ -117,7 +117,7 @@ mod tests {
                         ]
                     }
                 },
-                "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3",
+                "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3e2f0d",
                 "timestamp": "0x00",
                 "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
             },

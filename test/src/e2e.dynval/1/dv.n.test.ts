@@ -23,7 +23,7 @@ import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
 import { PromiseExpect } from "../../helper/promise";
 import { findNode, setTermTestTimeout, withNodes } from "../setup";
-import { H256 } from "foundry-primitives/lib";
+import { H256 } from "../../primitives/src";
 
 describe("Dynamic Validator N -> N", function() {
     const promiseExpect = new PromiseExpect();

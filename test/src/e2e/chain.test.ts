@@ -25,10 +25,9 @@ import {
     invalidAddress
 } from "../helper/constants";
 import CodeChain from "../helper/spawn";
-import { H160, H256, H512, U64 } from "../sdk/core/classes";
+import { H256, H512, U64 } from "../sdk/core/classes";
 
 describe("chain", function() {
-    const invalidH160 = H160.zero();
     const invalidH256 = H256.zero();
 
     let node: CodeChain;
@@ -53,7 +52,9 @@ describe("chain", function() {
     it("getPossibleAuthors of the genesis block", async function() {
         expect(
             await node.rpc.chain.getPossibleAuthors({ blockNumber: 0 })
-        ).deep.equal(["tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3"]);
+        ).deep.equal([
+            "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3e2f0d"
+        ]);
     });
 
     it("getBestBlockId", async function() {
@@ -150,7 +151,8 @@ describe("chain", function() {
 
     it("sendPayTx, getTransaction", async function() {
         const tx = node.testFramework.core.createPayTransaction({
-            recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
+            recipient:
+                "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu",
             quantity: 0
         });
         const seq = (await node.rpc.chain.getSeq({
@@ -181,7 +183,8 @@ describe("chain", function() {
 
     it("sendPayTx, getTransactionSigner", async function() {
         const tx = node.testFramework.core.createPayTransaction({
-            recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
+            recipient:
+                "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu",
             quantity: 0
         });
         const seq = (await node.rpc.chain.getSeq({

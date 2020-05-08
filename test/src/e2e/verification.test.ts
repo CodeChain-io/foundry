@@ -22,7 +22,8 @@ import CodeChain from "../helper/spawn";
 import * as RLP from "rlp";
 
 describe("solo - 1 node", function() {
-    const recipient = "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw";
+    const recipient =
+        "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu";
 
     let node: CodeChain;
     before(async function() {
@@ -215,7 +216,7 @@ describe("solo - 1 node", function() {
             encoded = signed.toEncodeObject();
         });
 
-        ["0x1" + "0".repeat(40), "0x" + "f".repeat(38)].forEach(function(
+        ["0x1" + "0".repeat(64), "0x" + "f".repeat(62)].forEach(function(
             recipient
         ) {
             it(`recipient: ${recipient}`, async function() {
@@ -226,9 +227,7 @@ describe("solo - 1 node", function() {
                     );
                     expect.fail();
                 } catch (e) {
-                    if (recipient.length < 42)
-                        expect(e).is.similarTo(ERROR.INVALID_RLP_TOO_SHORT);
-                    else expect(e).is.similarTo(ERROR.INVALID_RLP_TOO_BIG);
+                    expect(e).is.similarTo(ERROR.INVALID_RLP_INVALID_LENGTH);
                 }
             });
         });

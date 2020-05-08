@@ -24,7 +24,7 @@ export class TransferCCS extends Transaction {
     protected actionToEncodeObject(): any[] {
         return [
             0x21,
-            this.address.getAccountId().toEncodeObject(),
+            this.address.getPubKey().toEncodeObject(),
             this.quantity.toEncodeObject()
         ];
     }

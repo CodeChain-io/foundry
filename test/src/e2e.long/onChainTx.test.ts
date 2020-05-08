@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -83,7 +83,8 @@ describe("Test onChain transaction communication", function() {
 
         const ACCOUNT_SECRET = process.env.ACCOUNT_SECRET || faucetSecret;
         const tx = sdk.core.createPayTransaction({
-            recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
+            recipient:
+                "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu",
             quantity: 10000
         });
         const signed = tx.sign({
@@ -122,7 +123,8 @@ describe("Test onChain transaction communication", function() {
                 const ACCOUNT_SECRET =
                     process.env.ACCOUNT_SECRET || faucetSecret;
                 const tx = sdk.core.createPayTransaction({
-                    recipient: "tccqxv9y4cw0jwphhu65tn4605wadyd2sxu5yezqghw",
+                    recipient:
+                        "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu",
                     quantity: 10000
                 });
                 const signedTransaction = tx.sign({

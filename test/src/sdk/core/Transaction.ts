@@ -1,6 +1,5 @@
-import { H256, H512, H512Value, U64, U64Value } from "foundry-primitives";
-
 import * as RLP from "rlp";
+import { H256, H512, H512Value, U64, U64Value } from "../../primitives/src";
 import { blake256, getPublicFromPrivate, signEd25519 } from "../utils";
 import { SignedTransaction } from "./SignedTransaction";
 import { ChangeParamsActionJSON } from "./transaction/ChangeParams";

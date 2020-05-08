@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{
-    start_ws, Connection, Error, ErrorCode, Params, PubSubHandler, Rng, Session, Subscriber, SubscriptionId, Value,
+    start_ws, Error, ErrorCode, Params, PubSubHandler, Rng, Session, Subscriber, Subscription, SubscriptionId, Value,
     WsError, WsServer,
 };
 use crossbeam::Sender;
@@ -23,6 +23,12 @@ use crossbeam_channel as crossbeam;
 use jsonrpc_core::{futures, BoxFuture};
 use std::io;
 use std::sync::Arc;
+
+#[derive(Clone)]
+pub enum Registration {
+    Register(Subscription),
+    Deregister(SubscriptionId),
+}
 
 pub struct InformerConfig {
     pub interface: String,
@@ -58,7 +64,9 @@ impl Handler {
             },
         }
     }
-    pub fn event_subscription(&mut self, sender: Sender<Connection>) {
+    pub fn event_subscription(&mut self, sender: Sender<Registration>) {
+        let register_sender = sender;
+        let deregister_sender = register_sender.clone();
         self.handler.add_subscription(
             "register",
             ("register", move |params: Params, _, subscriber: Subscriber| {
@@ -86,18 +94,25 @@ impl Handler {
                         return
                     }
                 };
-                let mut rng = rand::thread_rng();
-                let sub_id = rng.gen();
+                let sub_id = Handler::next_id();
                 let sink = subscriber.assign_id(SubscriptionId::Number(sub_id)).expect("Connection is alive");
-                let mut connection = Connection::new(sink, sub_id);
-                connection.add_events(all_params);
-                sender.send(connection).unwrap();
+                let mut subscription = Subscription::new(sink, SubscriptionId::Number(sub_id));
+                subscription.add_events(all_params);
+                let register = Registration::Register(subscription);
+                register_sender.send(register).expect("The subscription channel is not full and also it is connected");
             }),
-            // FIXME: We need another channel to remove connections form informer Service after Deregister
-            ("deregister", |_id: SubscriptionId, _meta| -> BoxFuture<Value> {
+            ("deregister", move |id: SubscriptionId, _meta| -> BoxFuture<Value> {
                 cinfo!(INFORMER, "Closing subscription");
+                let deregister = Registration::Deregister(id);
+                deregister_sender
+                    .send(deregister)
+                    .expect("The subscription cancellation channel is not full and also it is connected");
                 Box::new(futures::future::ok(Value::Bool(true)))
             }),
         );
+    }
+    fn next_id() -> u64 {
+        let mut rng = rand::thread_rng();
+        rng.gen()
     }
 }

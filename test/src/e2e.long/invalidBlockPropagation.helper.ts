@@ -15,13 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { Address, H160, H256, U256 } from "foundry-primitives";
 import { Block } from "foundry-rpc";
 import "mocha";
 import Test = Mocha.Test;
 import { Mock } from "../helper/mock/";
 import { Header } from "../helper/mock/cHeader";
 import CodeChain from "../helper/spawn";
+import { Address, H256, U256 } from "../primitives/src";
 
 async function setup(): Promise<[Header, Block, Header]> {
     const temporaryNode = new CodeChain({
@@ -53,7 +53,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         new H256(block0.parentHash),
         new U256(block0.timestamp),
         new U256(block0.number),
-        authorPaddress.accountId,
+        authorPaddress.pubkey,
         Buffer.from(block0.extraData),
         new H256(block0.transactionsRoot),
         new H256(block0.nextValidatorSetHash),
@@ -65,7 +65,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         header0.hashing(),
         new U256(block1.timestamp),
         new U256(block1.number),
-        author1.accountId,
+        author1.pubkey,
         Buffer.from(block1.extraData),
         new H256(block1.transactionsRoot),
         new H256(block1.nextValidatorSetHash),
@@ -77,7 +77,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         header1.hashing(),
         new U256(block2.timestamp),
         new U256(block2.number),
-        author3.accountId,
+        author3.pubkey,
         Buffer.from(block2.extraData),
         new H256(block2.transactionsRoot),
         new H256(block2.nextValidatorSetHash),
@@ -112,7 +112,7 @@ async function testBody(
         tparent?: H256;
         ttimeStamp?: U256;
         tnumber?: U256;
-        tauthor?: H160;
+        tauthor?: H256;
         textraData?: Buffer;
         ttransactionRoot?: H256;
         tstateRoot?: H256;
@@ -138,7 +138,7 @@ async function testBody(
         header0.hashing(),
         new U256(block1.timestamp),
         new U256(block1.number),
-        author4.accountId,
+        author4.pubkey,
         Buffer.from(block1.extraData),
         new H256(block1.transactionsRoot),
         new H256(block1.nextValidatorSetHash),

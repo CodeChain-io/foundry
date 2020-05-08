@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { U64 } from "foundry-primitives";
+import { U64 } from "../primitives/src";
+import { H256 } from "../primitives/src/value/H256";
+import { U256 } from "../primitives/src/value/U256";
 
 export const $else = Symbol("else");
 
@@ -131,6 +133,12 @@ function deepCompare(actual: any, expected: any): boolean {
     if (expected instanceof U64) {
         return expected.isEqualTo(actual);
     }
+    if (expected instanceof U256) {
+        return expected.isEqualTo(actual);
+    }
+    if (expected instanceof H256) {
+        return expected.isEqualTo(actual);
+    }
     if (expected instanceof RegExp) {
         return expected.test(actual);
     }
@@ -199,6 +207,12 @@ function normalize(value: any): any {
             result.push(normalize(x));
         }
         return result;
+    } else if (value instanceof U64) {
+        return value.toString(10);
+    } else if (value instanceof U256) {
+        return value.toString(10);
+    } else if (value instanceof H256) {
+        return value.toString();
     } else if (typeof value === "object") {
         const result: { [key: string]: any } = {};
         for (const key of Object.keys(value)) {

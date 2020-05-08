@@ -14,11 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{informer_notify, Connection, EventTags, Events, InformerEventSender, RateLimiter};
+use crate::{
+    informer_notify, EventTags, Events, InformerEventSender, RateLimiter, Registration, Subscription, SubscriptionId,
+};
 use ccore::{BlockChainTrait, BlockId, Client, EngineInfo};
 use crossbeam::Receiver;
 use crossbeam_channel as crossbeam;
 use crpc::v1::Block as RPCBlock;
+use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -31,21 +34,21 @@ pub enum ColdEvents {
 }
 
 pub struct InformerService {
-    connections: Vec<Arc<Connection>>,
+    subscriptions: Vec<Arc<Subscription>>,
     client: Arc<Client>,
     event_receiver: Receiver<Events>,
-    connection_receiver: Receiver<Connection>,
+    subscription_receiver: Receiver<Registration>,
 }
 
 impl InformerService {
-    pub fn new(connection_receiver: Receiver<Connection>, client: Arc<Client>) -> (Self, InformerEventSender) {
+    pub fn new(subscription_receiver: Receiver<Registration>, client: Arc<Client>) -> (Self, InformerEventSender) {
         let (sender, event_receiver) = informer_notify::create();
         (
             Self {
-                connections: Vec::new(),
+                subscriptions: Vec::new(),
                 client,
                 event_receiver,
-                connection_receiver,
+                subscription_receiver,
             },
             sender,
         )
@@ -54,11 +57,11 @@ impl InformerService {
     pub fn run_service(mut self) {
         cinfo!(INFORMER, "Informer service is started");
         let event_rcv = self.event_receiver.clone();
-        let connection_rcv = self.connection_receiver.clone();
+        let subscriptions_rcv = self.subscription_receiver.clone();
         thread::spawn(move || {
             let mut select = crossbeam::Select::new();
             let event_index = select.recv(&event_rcv);
-            let connection_index = select.recv(&connection_rcv);
+            let subscription_index = select.recv(&subscriptions_rcv);
             let rt = Runtime::new().unwrap();
             loop {
                 match select.ready() {
@@ -68,20 +71,34 @@ impl InformerService {
                             self.notify_client(event);
                         }
                     }
-                    index if index == connection_index => {
-                        if let Ok(connection) = connection_rcv.recv() {
-                            cinfo!(INFORMER, "A new connection is added");
-                            let received_connection = Arc::new(connection);
-                            self.add_new_connection(Arc::clone(&received_connection));
-                            let client = Arc::clone(&self.client);
-                            rt.spawn(async move {
-                                for interested_events in &received_connection.interested_events {
-                                    if let EventTags::ColdBlockGenerationNumerical(value) = interested_events {
-                                        let cold_generator = BlockCreatedEventGenerator::new(Arc::clone(&client));
-                                        cold_generator.run(Arc::clone(&received_connection), *value);
+                    index if index == subscription_index => {
+                        if let Ok(subscription) = subscriptions_rcv.recv() {
+                            match subscription {
+                                Registration::Register(subscribe) => {
+                                    cinfo!(INFORMER, "A new subscription is added");
+                                    let new_subscription = Arc::new(subscribe);
+                                    self.add_new_subscription(Arc::clone(&new_subscription));
+                                    let client = Arc::clone(&self.client);
+                                    rt.spawn(async move {
+                                        for interested_events in &new_subscription.interested_events {
+                                            if let EventTags::ColdBlockGenerationNumerical(value) = interested_events {
+                                                let cold_generator =
+                                                    BlockCreatedEventGenerator::new(Arc::clone(&client));
+                                                cold_generator.run(Arc::clone(&new_subscription), *value);
+                                            }
+                                        }
+                                    });
+                                }
+                                Registration::Deregister(sub_id) => {
+                                    if self
+                                        .subscriptions
+                                        .iter()
+                                        .any(|subscription| subscription.subscription_id == sub_id.clone())
+                                    {
+                                        self.remove_subscription(sub_id);
                                     }
                                 }
-                            });
+                            }
                         }
                     }
                     _ => {
@@ -92,8 +109,22 @@ impl InformerService {
         });
     }
 
-    pub fn add_new_connection(&mut self, connection: Arc<Connection>) {
-        self.connections.push(connection);
+    pub fn add_new_subscription(&mut self, subscription: Arc<Subscription>) {
+        self.subscriptions.push(subscription);
+    }
+
+    pub fn remove_subscription(&mut self, sub_id: SubscriptionId) {
+        let index = self
+            .subscriptions
+            .iter()
+            .position(|subscription| subscription.subscription_id == sub_id)
+            .expect("The index optionality is already checked while receiving the subscription ID ");
+        let removed_subscription = self.subscriptions.remove(index);
+        removed_subscription.is_subscribing.store(false, SeqCst);
+        let subscription_id = &removed_subscription.subscription_id;
+        if let SubscriptionId::Number(value) = subscription_id {
+            cinfo!(INFORMER, "The Subscription {} would no longer supported", value);
+        }
     }
 
     fn compare_event_types(tag: &EventTags, event: &Events) -> bool {
@@ -104,10 +135,10 @@ impl InformerService {
     }
 
     pub fn notify_client(&self, popup_event: Events) {
-        for connection in &self.connections {
-            for interested_event in connection.interested_events.clone() {
+        for subscription in &self.subscriptions {
+            for interested_event in subscription.interested_events.clone() {
                 if InformerService::compare_event_types(&interested_event, &popup_event) {
-                    connection.notify_client(&popup_event);
+                    subscription.notify_client(&popup_event);
                 }
             }
         }
@@ -127,14 +158,18 @@ impl BlockCreatedEventGenerator {
         }
     }
 
-    pub fn run(mut self, connection: Arc<Connection>, from_block_number: u64) -> tokio::task::JoinHandle<()> {
+    pub fn run(mut self, subscription: Arc<Subscription>, from_block_number: u64) -> tokio::task::JoinHandle<()> {
         let mut current_block_number = from_block_number;
         task::spawn(async move {
             loop {
+                if !subscription.is_subscribing.load(SeqCst) {
+                    cinfo!(INFORMER, "Cold event supports is Stopped");
+                    break
+                }
                 let best_block_number = self.client.best_block_header().number();
                 if best_block_number >= current_block_number {
                     let event = self.gen(current_block_number);
-                    connection.cold_notify(&event);
+                    subscription.cold_notify(&event);
                     self.rate_limiter.acquire_ticket().await;
                     current_block_number += 1;
                 } else {

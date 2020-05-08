@@ -18,7 +18,7 @@
 use crate::account::{Aes128Ctr, Cipher, Kdf, Pbkdf2, Prf};
 use crate::random::Random;
 use crate::{json, Error};
-use ckey::{public_to_address, Address, Ed25519Private as Private, Password};
+use ckey::{Ed25519Private as Private, Ed25519Public as Public, Password};
 use smallvec::SmallVec;
 use std::num::NonZeroU32;
 use std::str;
@@ -123,9 +123,8 @@ impl Crypto {
         }
     }
 
-    pub fn address(&self, password: &Password) -> Result<Address, Error> {
-        let private = self.secret(password)?;
-        Ok(public_to_address(&private.public_key()))
+    pub fn pubkey(&self, password: &Password) -> Result<Public, Error> {
+        Ok(self.secret(password)?.public_key())
     }
 
     /// Try to decrypt and return result as is

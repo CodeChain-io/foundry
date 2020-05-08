@@ -18,7 +18,7 @@ use super::ValidatorSet;
 use crate::client::ConsensusClient;
 use crate::consensus::bit_set::BitSet;
 use crate::consensus::EngineError;
-use ckey::{public_to_address, Address, Ed25519Public as Public};
+use ckey::Ed25519Public as Public;
 use cstate::{CurrentValidatorSet, NextValidatorSet, SimpleValidator};
 use ctypes::util::unexpected::OutOfBounds;
 use ctypes::BlockHash;
@@ -53,13 +53,9 @@ impl DynamicValidator {
         validators
     }
 
-    fn validators_pubkey(&self, hash: BlockHash) -> Vec<Public> {
+    fn validators(&self, hash: BlockHash) -> Vec<Public> {
         let validators = self.next_validators(hash);
         validators.into_iter().map(|val| *val.pubkey()).collect()
-    }
-
-    fn current_validators_pubkey(&self, hash: BlockHash) -> Vec<Public> {
-        self.current_validators(hash).into_iter().map(|val| *val.pubkey()).collect()
     }
 
     pub fn proposer_index(&self, parent: BlockHash, proposed_view: usize) -> usize {
@@ -69,9 +65,9 @@ impl DynamicValidator {
     }
 
     pub fn get_current(&self, hash: &BlockHash, index: usize) -> Public {
-        let validators = self.current_validators_pubkey(*hash);
+        let validators = self.current_validators(*hash);
         let n_validators = validators.len();
-        *validators.get(index % n_validators).unwrap()
+        *validators.get(index % n_validators).unwrap().pubkey()
     }
 
     pub fn check_enough_votes_with_current(&self, hash: &BlockHash, votes: &BitSet) -> Result<(), EngineError> {
@@ -104,42 +100,29 @@ impl DynamicValidator {
 
 impl ValidatorSet for DynamicValidator {
     fn contains(&self, parent: &BlockHash, public: &Public) -> bool {
-        self.validators_pubkey(*parent).into_iter().any(|pubkey| pubkey == *public)
-    }
-
-    fn contains_address(&self, parent: &BlockHash, address: &Address) -> bool {
-        self.validators_pubkey(*parent).into_iter().any(|pubkey| public_to_address(&pubkey) == *address)
+        self.validators(*parent).into_iter().any(|pubkey| pubkey == *public)
     }
 
     fn get(&self, parent: &BlockHash, index: usize) -> Public {
-        let validators = self.validators_pubkey(*parent);
+        let validators = self.validators(*parent);
         let n_validators = validators.len();
         assert_ne!(0, n_validators);
         *validators.get(index % n_validators).unwrap()
     }
 
     fn get_index(&self, parent: &BlockHash, public: &Public) -> Option<usize> {
-        self.validators_pubkey(*parent)
+        self.validators(*parent)
             .into_iter()
             .enumerate()
             .find(|(_index, pubkey)| pubkey == public)
             .map(|(index, _)| index)
     }
 
-    fn get_index_by_address(&self, parent: &BlockHash, address: &Address) -> Option<usize> {
-        let validators = self.validators_pubkey(*parent);
-        validators
-            .into_iter()
-            .enumerate()
-            .find(|(_index, pubkey)| public_to_address(pubkey) == *address)
-            .map(|(index, _)| index)
-    }
-
-    fn next_block_proposer(&self, parent: &BlockHash, view: u64) -> Address {
-        let validators = self.validators_pubkey(*parent);
+    fn next_block_proposer(&self, parent: &BlockHash, view: u64) -> Public {
+        let validators = self.validators(*parent);
         let n_validators = validators.len();
         let index = view as usize % n_validators;
-        public_to_address(validators.get(index).unwrap())
+        *validators.get(index).unwrap()
     }
 
     fn count(&self, parent: &BlockHash) -> usize {
@@ -180,24 +163,21 @@ impl ValidatorSet for DynamicValidator {
         *client_lock = Some(client);
     }
 
-    fn current_addresses(&self, hash: &BlockHash) -> Vec<Address> {
-        self.current_validators_pubkey(*hash).iter().map(public_to_address).collect()
+    fn current_validators(&self, hash: &BlockHash) -> Vec<Public> {
+        DynamicValidator::current_validators(self, *hash).into_iter().map(|v| *v.pubkey()).collect()
     }
 
-    fn next_addresses(&self, hash: &BlockHash) -> Vec<Address> {
-        self.validators_pubkey(*hash).iter().map(public_to_address).collect()
+    fn next_validators(&self, hash: &BlockHash) -> Vec<Public> {
+        self.validators(*hash)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-    use std::sync::Arc;
-
-    use ckey::Ed25519Public as Public;
-
     use super::*;
     use crate::client::{ConsensusClient, TestBlockChainClient};
+    use std::str::FromStr;
+    use std::sync::Arc;
 
     #[test]
     fn validator_set() {

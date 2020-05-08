@@ -18,7 +18,7 @@ use crate::account_provider::Error as AccountProviderError;
 use crate::consensus::EngineError;
 use cdb::DatabaseError;
 use cio::IoError;
-use ckey::{Address, Error as KeyError};
+use ckey::{Ed25519Public as Public, Error as KeyError};
 use coordinator::types::CloseBlockError;
 use cstate::StateError;
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
@@ -87,8 +87,6 @@ pub enum BlockError {
     InvalidTransactionsRoot(Mismatch<H256>),
     /// Next validator set hash header field is invalid.
     InvalidNextValidatorSetHash(Mismatch<H256>),
-    /// Proof-of-work aspect of seal is invalid.
-    InvalidProofOfWork,
     /// Some low-level aspect of the seal is incorrect.
     InvalidSeal,
     /// Timestamp header field is invalid.
@@ -103,7 +101,7 @@ pub enum BlockError {
     /// Block number isn't sensible.
     RidiculousNumber(OutOfBounds<BlockNumber>),
     /// Too many transactions from a particular address.
-    TooManyTransactions(Address),
+    TooManyTransactions(Public),
     /// Parent given is unknown.
     UnknownParent(BlockHash),
     /// Body size limit is exceeded.
@@ -137,7 +135,6 @@ impl fmt::Display for BlockError {
             InvalidStateRoot(mis) => format!("Invalid state root in header: {}", mis),
             InvalidTransactionsRoot(mis) => format!("Invalid transactions root in header: {}", mis),
             InvalidNextValidatorSetHash(mis) => format!("Invalid next validator set hash in header: {}", mis),
-            InvalidProofOfWork => "Invalid proof of work.".into(),
             InvalidSeal => "Block has invalid seal.".into(),
             InvalidTimestamp(oob) => format!("Invalid timestamp in header: {}", oob),
             TemporarilyInvalid(oob) => format!("Future timestamp in header: {}", oob),
@@ -145,7 +142,7 @@ impl fmt::Display for BlockError {
             InvalidNumber(mis) => format!("Invalid number in header: {}", mis),
             RidiculousNumber(oob) => format!("Implausible block number. {}", oob),
             UnknownParent(hash) => format!("Unknown parent: {}", hash),
-            TooManyTransactions(address) => format!("Too many transactions from: {}", address),
+            TooManyTransactions(pubkey) => format!("Too many transactions from: {:?}", pubkey),
             BodySizeIsTooBig => "Block's body size is too big".to_string(),
         };
 

@@ -17,13 +17,12 @@
 use crate::config::ChainType;
 use ckey::hex::ToHex;
 use ckey::{
-    public_to_address, Address, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public,
-    KeyPairTrait, NetworkId, PlatformAddress,
+    Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public, KeyPairTrait, NetworkId,
+    PlatformAddress,
 };
 use clap::ArgMatches;
 use primitives::remove_0x_prefix;
 use std::io::stdin;
-use std::ops::Deref;
 use std::str::FromStr;
 
 pub fn run_convert_command(matches: &ArgMatches<'_>) -> Result<(), String> {
@@ -53,57 +52,28 @@ fn convert(
             let public = private_to_public(private)?;
             Ok(public.as_ref().to_hex())
         }
-        ("private", "address") => {
-            let private = get_private(input)?;
-            let public = private_to_public(private)?;
-            let address = public_to_address(&public);
-            Ok(format!("{:x}", address.deref()))
-        }
         ("private", "accountId") => {
             let network_id = get_network_id()?;
 
             let private = get_private(input)?;
             let public = private_to_public(private)?;
-            let address = public_to_address(&public);
-            let account_id = PlatformAddress::new_v1(network_id, address);
+            let account_id = PlatformAddress::new_v1(network_id, public);
             Ok(account_id.to_string())
         }
         ("public", "public") => {
             let public = get_public(input)?;
             Ok(public.as_ref().to_hex())
         }
-        ("public", "address") => {
-            let public = get_public(input)?;
-            let address = public_to_address(&public);
-            Ok(format!("{:x}", address.deref()))
-        }
         ("public", "accountId") => {
             let network_id = get_network_id()?;
 
             let public = get_public(input)?;
-            let address = public_to_address(&public);
-            let account_id = PlatformAddress::new_v1(network_id, address);
-            Ok(account_id.to_string())
-        }
-        ("address", "address") => {
-            let address = get_address(input)?;
-            Ok(format!("{:x}", address.deref()))
-        }
-        ("address", "accountId") => {
-            let network_id = get_network_id()?;
-
-            let address = get_address(input)?;
-            let account_id = PlatformAddress::new_v1(network_id, address);
+            let account_id = PlatformAddress::new_v1(network_id, public);
             Ok(account_id.to_string())
         }
         ("accountId", "accountId") => {
             let account_id = get_account_id(input)?;
             Ok(account_id.to_string())
-        }
-        ("accountId", "address") => {
-            let account_id = get_account_id(input)?;
-            let address = account_id.into_address();
-            Ok(format!("{:x}", address.deref()))
         }
         (..) => Err(format!("Cannot convert from {} to {}", from, to)),
     }
@@ -115,10 +85,6 @@ fn get_public(input: &str) -> Result<Public, String> {
 
 fn get_private(input: &str) -> Result<Private, String> {
     Private::from_str(remove_0x_prefix(input)).map_err(|e| format!("Error on reading private key: {}", e))
-}
-
-fn get_address(input: &str) -> Result<Address, String> {
-    Address::from_str(input).map_err(|e| format!("Error on reading address: {}", e))
 }
 
 fn get_account_id(input: &str) -> Result<PlatformAddress, String> {
@@ -144,8 +110,7 @@ mod tests {
 
     const PRIVATE_KEY: &str = "c5240ff5244a3bcd705998600cd40b1b6033c44337294da04c8a7545e1b87fedc8e8c897db2cb53dae2ed6114542057c1a164603f41ee6036d273303c9bad650";
     const PUBLIC_KEY: &str = "c8e8c897db2cb53dae2ed6114542057c1a164603f41ee6036d273303c9bad650";
-    const ADDRESS: &str = "a6f4cb03c82244c6678de539e4a66c35a2e7ab78";
-    const ACCOUNT_ID: &str = "tccqxn0fjcreq3yf3n83hjnne9xds669eat0qhh2fwv";
+    const ACCOUNT_ID: &str = "tccq8yw3jyhmvkt20dw9mtpz32zq47p59jxq06paesrd5nnxq7fhtt9qtysy3e";
 
     fn get_test_network_id() -> Result<NetworkId, String> {
         Ok(NetworkId::from("tc"))
@@ -172,16 +137,6 @@ mod tests {
     }
 
     #[test]
-    fn test_private_to_address() {
-        let result = convert("private", "address", PRIVATE_KEY, get_test_network_id);
-        assert_eq!(result, Ok(ADDRESS.to_string()));
-
-        let prefixed = format!("0x{}", PRIVATE_KEY);
-        let result = convert("private", "address", &prefixed, get_test_network_id);
-        assert_eq!(result, Ok(ADDRESS.to_string()));
-    }
-
-    #[test]
     fn test_private_to_account_id() {
         let result = convert("private", "accountId", PRIVATE_KEY, get_test_network_id);
         assert_eq!(result, Ok(ACCOUNT_ID.to_string()));
@@ -202,16 +157,6 @@ mod tests {
     }
 
     #[test]
-    fn test_public_to_address() {
-        let result = convert("public", "address", PUBLIC_KEY, get_test_network_id);
-        assert_eq!(result, Ok(ADDRESS.to_string()));
-
-        let prefixed = format!("0x{}", PUBLIC_KEY);
-        let result = convert("public", "address", &prefixed, get_test_network_id);
-        assert_eq!(result, Ok(ADDRESS.to_string()));
-    }
-
-    #[test]
     fn test_public_to_account_id() {
         let result = convert("public", "accountId", PUBLIC_KEY, get_test_network_id);
         assert_eq!(result, Ok(ACCOUNT_ID.to_string()));
@@ -222,34 +167,8 @@ mod tests {
     }
 
     #[test]
-    fn test_address_to_address() {
-        let result = convert("address", "address", ADDRESS, get_test_network_id);
-        assert_eq!(result, Ok(ADDRESS.to_string()));
-
-        let prefixed = format!("0x{}", ADDRESS);
-        let result = convert("address", "address", &prefixed, get_test_network_id);
-        assert_eq!(result, Ok(ADDRESS.to_string()));
-    }
-
-    #[test]
-    fn test_address_to_account_id() {
-        let result = convert("address", "accountId", ADDRESS, get_test_network_id);
-        assert_eq!(result, Ok(ACCOUNT_ID.to_string()));
-
-        let prefixed = format!("0x{}", ADDRESS);
-        let result = convert("address", "accountId", &prefixed, get_test_network_id);
-        assert_eq!(result, Ok(ACCOUNT_ID.to_string()));
-    }
-
-    #[test]
     fn test_account_id_to_account_id() {
         let result = convert("accountId", "accountId", ACCOUNT_ID, get_test_network_id);
         assert_eq!(result, Ok(ACCOUNT_ID.to_string()));
-    }
-
-    #[test]
-    fn test_account_id_to_address() {
-        let result = convert("accountId", "address", ACCOUNT_ID, get_test_network_id);
-        assert_eq!(result, Ok(ADDRESS.to_string()));
     }
 }

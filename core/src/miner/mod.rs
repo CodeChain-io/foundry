@@ -20,7 +20,7 @@ mod mem_pool_types;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod miner;
 
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use cstate::TopStateView;
 use ctypes::BlockHash;
 use primitives::Bytes;
@@ -48,10 +48,10 @@ pub trait MinerService: Send + Sync {
     fn authoring_params(&self) -> AuthoringParams;
 
     /// Set the author that we will seal blocks as.
-    fn set_author(&self, ap: Arc<AccountProvider>, author: Address) -> Result<(), AccountProviderError>;
+    fn set_author(&self, ap: Arc<AccountProvider>, author: Public) -> Result<(), AccountProviderError>;
 
     ///Get the address that sealed the block.
-    fn get_author_address(&self) -> Address;
+    fn get_author(&self) -> Public;
 
     /// Set the extra_data that we will seal blocks with.
     fn set_extra_data(&self, extra_data: Bytes);

@@ -13,18 +13,17 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+import * as RLP from "rlp";
 import {
     blake256,
     Ed25519Signature,
     getPublicFromPrivate,
-    H160,
     H256,
     signEd25519,
     U256,
     U64,
     verifyEd25519
-} from "foundry-primitives";
-import * as RLP from "rlp";
+} from "../../primitives/src";
 import { SignedTransaction } from "../../sdk/core/SignedTransaction";
 import { readUIntRLP } from "../rlp";
 import {
@@ -263,7 +262,8 @@ export class Mock {
         const best = bestBlockHash;
         const genesis = this.p2psocket.getGenesisHash();
         const seq = new U256(0);
-        this.sendStatus(seq, best, genesis);
+        await this.sendStatus(seq, best, genesis);
+        await this.waitHeaderRequest();
         await this.sendBlockHeaderResponse(header);
         if (this.log) {
             console.log("Send header response");
@@ -288,6 +288,7 @@ export class Mock {
         const genesis = this.p2psocket.getGenesisHash();
         const seq = new U256(0);
         await this.sendStatus(seq, best, genesis);
+        await this.waitHeaderRequest();
         await this.sendBlockHeaderResponse(header.map(h => h.toEncodeObject()));
         if (this.log) {
             console.log("Send header response");
@@ -370,7 +371,9 @@ export class Mock {
         );
         const timestamp = new U256(0);
         const number = new U256(0);
-        const author = new H160("0000000000000000000000000000000000000000");
+        const author = new H256(
+            "0000000000000000000000000000000000000000000000000000000000000000"
+        );
         const extraData = Buffer.from([
             23,
             108,
@@ -434,7 +437,9 @@ export class Mock {
         const parentHash = parent;
         const timestamp = new U256(1537509963);
         const number = new U256(1);
-        const author = new H160("7777777777777777777777777777777777777777");
+        const author = new H256(
+            "7777777777777777777777777777777777777777777777777777777777777777"
+        );
         const extraData = Buffer.alloc(0);
         const transactionsRoot = new H256(
             "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
@@ -465,7 +470,9 @@ export class Mock {
         const parentHash = parent;
         const timestamp = new U256(1537944287);
         const number = new U256(2);
-        const author = new H160("6666666666666666666666666666666666666666");
+        const author = new H256(
+            "6666666666666666666666666666666666666666666666666666666666666666"
+        );
         const extraData = Buffer.alloc(0);
         const transactionsRoot = new H256(
             "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"

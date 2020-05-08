@@ -11,36 +11,36 @@
         "timeoutPrecommitDelta": 5000,
         "timeoutCommit": 10000,
         "genesisStakes": {
-          "tccq8zjtcf7d27l55hgthudmhx0g7zd6dw9rg9c77t5": {
+          "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde": {
             "stake": 100,
             "delegations": {
-              "tccq8zjtcf7d27l55hgthudmhx0g7zd6dw9rg9c77t5": 9,
-              "tccq9a6jxr90f0zf99sedck0jnklus4sf4yey0wrn0l": 8,
-              "tccq9tfhmdvnwg0r6mvp6q399mffr8w46dmys2ft4tr": 7,
-              "tccq8ce67j2vr69jmenfeqj8pratyss2478hswel8gr": 6
+              "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde": 9,
+              "tccqyz88auzcwhvq57r0l3tenh6j2vde79w8hpzv2h9gzs55kq07ae7vdca0jm": 8,
+              "tccqyjs940xyyr8ngv7gheup7fj2ln6xfa64a05q06u5x4jdpdfu9eyuansncp": 7,
+              "tccq85snuc3l5g4aeqjah8um6yvc5rnwqgp7a345eaeedznjrcued94umjdq57": 6
             }
           }
         },
         "genesisCandidates": {
-          "tccq8zjtcf7d27l55hgthudmhx0g7zd6dw9rg9c77t5": {
+          "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde": {
             "pubkey": "0x5f6fcadd723f3c94970101d91b4043f953b8f939e14b75843b2f189bb5264f55",
             "deposit": 20,
             "nominationEndsAt": 100,
             "metadata": "validator 0"
           },
-          "tccq9a6jxr90f0zf99sedck0jnklus4sf4yey0wrn0l": {
+          "tccqyz88auzcwhvq57r0l3tenh6j2vde79w8hpzv2h9gzs55kq07ae7vdca0jm": {
             "pubkey": "0x3ab23fad7c9a4f1f54dbf44ff9294d2b5ab42d15f161e406048d5abf7e5dad94",
             "deposit": 20,
             "nominationEndsAt": 100,
             "metadata": "validator 1"
           },
-          "tccq9tfhmdvnwg0r6mvp6q399mffr8w46dmys2ft4tr": {
+          "tccqyjs940xyyr8ngv7gheup7fj2ln6xfa64a05q06u5x4jdpdfu9eyuansncp": {
             "pubkey": "0xe83c0184ed9acc66868a7be2fbe901eecfe7c054450bbb8d24328e0116ea5e0c",
             "deposit": 20,
             "nominationEndsAt": 100,
             "metadata": "validator 2"
           },
-          "tccq8ce67j2vr69jmenfeqj8pratyss2478hswel8gr": {
+          "tccq85snuc3l5g4aeqjah8um6yvc5rnwqgp7a345eaeedznjrcued94umjdq57": {
             "pubkey": "0x200c2fe942fdbe9143323ed264d0e39e7b321ca33c78bfa78a92576e00dc9ebd",
             "deposit": 20,
             "nominationEndsAt": 100,
@@ -77,7 +77,7 @@
         ]
       }
     },
-    "author": "tccq8qlwpt7xcs9lec3c8tyt3kqxlgsus8q4qp3m6ft",
+    "author": "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde",
     "timestamp": "0x00",
     "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "extraData": "0x"

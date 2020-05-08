@@ -4,10 +4,10 @@
         "solo": {
             "params": {
                 "genesisStakes": {
-                    "tccqx0xyvalakl59psh34wlph0xlf5c2l3a3syrjauu": 40000,
-                    "tccq86dg0p4f2f06jtqrdu3dvavm5pjfacarypp0ka3": 30000,
-                    "tccqyd43tc2qfqj3w363k688rgpptrnws0c8gyuqv6k": 20000,
-                    "tccqxa6967paq7wl3fl4s8g87ncsgptqmzw2u22kph0": 10000
+                    "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu": 40000,
+                    "tccqyaty0ad0jdy7865m06yl7fff5444dpdzhckreqxqjx440m7tkkegtwfee5": 30000,
+                    "tccq85rcqvyakdvce5x3fa797lfq8hvle7q23zshwudyseguqgkaf0qcy2clnj": 20000,
+                    "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu": 10000
                 }
             }
         }
@@ -31,7 +31,7 @@
         "seal": {
             "generic": "0x0"
         },
-        "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3",
+        "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3e2f0d",
         "timestamp": "0x00",
         "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "extraData": "0x"

@@ -61,6 +61,10 @@ pub enum Action {
         message1: Bytes,
         message2: Bytes,
     },
+    UpdateValidators,
+    CloseTerm,
+    ChangeNextValidators,
+    Elect,
 }
 
 impl Action {
@@ -126,6 +130,18 @@ impl Action {
                 message1,
                 message2,
             },
+            ActionType::UpdateValidators {
+                ..
+            } => Action::UpdateValidators, // TODO: Implement serialization
+            ActionType::CloseTerm {
+                ..
+            } => Action::CloseTerm, // TODO: Implement serialization
+            ActionType::ChangeNextValidators {
+                ..
+            } => Action::ChangeNextValidators, // TODO: Implement serialization
+            ActionType::Elect {
+                ..
+            } => Action::Elect, // TODO: Implement serialization
         }
     }
 }
@@ -138,28 +154,28 @@ impl TryFrom<Action> for ActionType {
                 receiver,
                 quantity,
             } => ActionType::Pay {
-                receiver: receiver.try_into_address()?,
+                receiver: receiver.try_into_pubkey()?,
                 quantity: quantity.into(),
             },
             Action::TransferCCS {
                 address,
                 quantity,
             } => ActionType::TransferCCS {
-                address: address.try_into_address()?,
+                address: address.try_into_pubkey()?,
                 quantity: quantity.into(),
             },
             Action::DelegateCCS {
                 address,
                 quantity,
             } => ActionType::DelegateCCS {
-                address: address.try_into_address()?,
+                address: address.try_into_pubkey()?,
                 quantity: quantity.into(),
             },
             Action::Revoke {
                 address,
                 quantity,
             } => ActionType::Revoke {
-                address: address.try_into_address()?,
+                address: address.try_into_pubkey()?,
                 quantity: quantity.into(),
             },
             Action::Redelegate {
@@ -167,8 +183,8 @@ impl TryFrom<Action> for ActionType {
                 next_delegatee,
                 quantity,
             } => ActionType::Redelegate {
-                prev_delegatee: prev_delegatee.try_into_address()?,
-                next_delegatee: next_delegatee.try_into_address()?,
+                prev_delegatee: prev_delegatee.try_into_pubkey()?,
+                next_delegatee: next_delegatee.try_into_pubkey()?,
                 quantity: quantity.into(),
             },
             Action::SelfNominate {
@@ -194,6 +210,10 @@ impl TryFrom<Action> for ActionType {
                 message1,
                 message2,
             },
+            Action::UpdateValidators => unreachable!("No reason to get UpdateValidators from RPCs"),
+            Action::CloseTerm => unreachable!("No reason to get CloseTerm from RPCs"),
+            Action::ChangeNextValidators => unreachable!("No reason to get ChangeNextValidators from RPCs"),
+            Action::Elect => unreachable!("No reason to get Elect from RPCs"),
         })
     }
 }

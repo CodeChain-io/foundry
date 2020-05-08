@@ -38,7 +38,7 @@ use crate::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::types::BlockStatus;
 use crate::views::BlockView;
 use crate::BlockId;
-use ckey::{public_to_address, verify, Address, Signature};
+use ckey::{verify, Ed25519Public as Public, Signature};
 use cnetwork::{EventSender, NodeId};
 use crossbeam_channel as crossbeam;
 use ctypes::util::unexpected::Mismatch;
@@ -138,7 +138,7 @@ pub enum Event {
     },
     SetSigner {
         ap: Arc<AccountProvider>,
-        address: Address,
+        pubkey: Public,
     },
     Restore(crossbeam::Sender<()>),
     ProposalBlock {
@@ -337,9 +337,9 @@ impl Worker {
                             }
                             Ok(Event::SetSigner {
                                 ap,
-                                address,
+                                pubkey,
                             }) => {
-                                inner.set_signer(ap, address);
+                                inner.set_signer(ap, pubkey);
                             }
                             Ok(Event::Restore(result)) => {
                                 inner.restore();
@@ -461,7 +461,7 @@ impl Worker {
     }
 
     /// Find the designated for the given view.
-    fn view_proposer(&self, prev_block_hash: &BlockHash, view: View) -> Address {
+    fn view_proposer(&self, prev_block_hash: &BlockHash, view: View) -> Public {
         self.validators.next_block_proposer(prev_block_hash, view)
     }
 
@@ -520,15 +520,15 @@ impl Worker {
         }
     }
 
-    /// Check if address is a proposer for given view.
-    fn check_view_proposer(&self, parent: &BlockHash, view: View, address: &Address) -> Result<(), EngineError> {
+    /// Check if pubkey is a proposer for given view.
+    fn check_view_proposer(&self, parent: &BlockHash, view: View, pubkey: &Public) -> Result<(), EngineError> {
         let proposer = self.view_proposer(parent, view);
-        if proposer == *address {
+        if proposer == *pubkey {
             Ok(())
         } else {
             Err(EngineError::NotProposer(Mismatch {
                 expected: proposer,
-                found: *address,
+                found: *pubkey,
             }))
         }
     }
@@ -536,15 +536,15 @@ impl Worker {
     /// Check if current signer is the current proposer.
     fn is_signer_proposer(&self, bh: &BlockHash) -> bool {
         let proposer = self.view_proposer(bh, self.view);
-        self.signer.is_address(&proposer)
+        self.signer.is_signer(&proposer)
     }
 
     fn is_step(&self, message: &ConsensusMessage) -> bool {
         message.on.step.is_step(self.height, self.view, self.step.to_step())
     }
 
-    fn is_authority(&self, prev_hash: &BlockHash, address: &Address) -> bool {
-        self.validators.contains_address(&prev_hash, address)
+    fn is_authority(&self, prev_hash: &BlockHash, pubkey: &Public) -> bool {
+        self.validators.contains(&prev_hash, pubkey)
     }
 
     fn has_enough_any_votes(&self) -> bool {
@@ -1221,8 +1221,7 @@ impl Worker {
         for (bitset_index, signature) in seal_view.signatures()? {
             let public = self.validators.get_current(header.parent_hash(), bitset_index);
             if !verify(&signature, &precommit_vote_on.hash(), &public) {
-                let address = public_to_address(&public);
-                return Err(EngineError::BlockNotAuthorized(address.to_owned()).into())
+                return Err(EngineError::BlockNotAuthorized(public).into())
             }
             assert!(!voted_validators.is_set(bitset_index), "Double vote");
             voted_validators.set(bitset_index);
@@ -1387,20 +1386,18 @@ impl Worker {
                 })
             }
 
-            let sender_public = self.validators.get(&prev_block_hash, signer_index);
+            let sender = self.validators.get(&prev_block_hash, signer_index);
 
-            if !message.verify(&sender_public) {
+            if !message.verify(&sender) {
                 return Err(EngineError::MessageWithInvalidSignature {
                     height: prev_height,
                     signer_index,
-                    address: public_to_address(&sender_public),
+                    pubkey: sender,
                 })
             }
 
-            let sender = public_to_address(&sender_public);
-
             if message.on.step > self.vote_step() {
-                ctrace!(ENGINE, "Ignore future message {:?} from {}.", message, sender);
+                ctrace!(ENGINE, "Ignore future message {:?} from {:?}.", message, sender);
                 return Ok(())
             }
 
@@ -1419,7 +1416,7 @@ impl Worker {
             if message.on.step == current_vote_step {
                 let vote_index = self
                     .validators
-                    .get_index(&prev_block_hash, &sender_public)
+                    .get_index(&prev_block_hash, &sender)
                     .expect("is_authority already checked the existence");
                 self.votes_received.set(vote_index);
             }
@@ -1429,7 +1426,7 @@ impl Worker {
                 self.evidences.insert_double_vote(double_vote);
                 return Err(EngineError::DoubleVote(sender))
             }
-            ctrace!(ENGINE, "Handling a valid {:?} from {}.", message, sender);
+            ctrace!(ENGINE, "Handling a valid {:?} from {:?}.", message, sender);
             self.handle_valid_message(&message, is_restoring);
         }
         Ok(())
@@ -1486,8 +1483,8 @@ impl Worker {
             .unwrap();
     }
 
-    fn set_signer(&mut self, ap: Arc<AccountProvider>, address: Address) {
-        self.signer.set_to_keep_decrypted_account(ap, address);
+    fn set_signer(&mut self, ap: Arc<AccountProvider>, pubkey: Public) {
+        self.signer.set_to_keep_decrypted_account(ap, pubkey);
     }
 
     fn vote_on_block_hash(&mut self, block_hash: Option<BlockHash>) -> Result<Option<ConsensusMessage>, Error> {
@@ -2092,15 +2089,15 @@ impl Worker {
                 return None
             }
 
-            let sender_public = self.validators.get(&prev_block_hash, signer_index);
+            let sender = self.validators.get(&prev_block_hash, signer_index);
 
-            if !vote.verify(&sender_public) {
+            if !vote.verify(&sender) {
                 cwarn!(
                     ENGINE,
-                    "Invalid commit message-{} received: invalid signature signer_index: {} address: {}",
+                    "Invalid commit message-{} received: invalid signature signer_index: {} pubkey: {:?}",
                     commit_height,
                     signer_index,
-                    public_to_address(&sender_public)
+                    sender
                 );
                 return None
             }

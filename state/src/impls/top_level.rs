@@ -37,14 +37,17 @@
 
 use crate::cache::{ModuleCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
-use crate::stake::{change_params, delegate_ccs, redelegate, revoke, transfer_ccs};
+use crate::stake::{
+    change_params, close_term, delegate_ccs, jail, redelegate, release_jailed_prisoners, revoke, self_nominate,
+    transfer_ccs,
+};
 use crate::traits::{ModuleStateView, StateWithCache, TopState, TopStateView};
 use crate::{
-    self_nominate, Account, ActionData, FindDoubleVoteHandler, Metadata, MetadataAddress, Module, ModuleAddress,
-    ModuleLevelState, StateDB, StateResult,
+    Account, ActionData, CurrentValidators, FindDoubleVoteHandler, Metadata, MetadataAddress, Module, ModuleAddress,
+    ModuleLevelState, NextValidators, StateDB, StateResult,
 };
 use cdb::{AsHashDB, DatabaseError};
-use ckey::{public_to_address, Address, Ed25519Public as Public, NetworkId};
+use ckey::{Ed25519Public as Public, NetworkId};
 use coordinator::context::{Key as DbCxtKey, StorageAccess, Value as DbCxtValue};
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, Transaction};
@@ -91,7 +94,7 @@ impl TopStateView for TopLevelState {
     /// Check caches for required data
     /// First searches for account in the local, then the shared cache.
     /// Populates local cache if nothing found.
-    fn account(&self, a: &Address) -> TrieResult<Option<Account>> {
+    fn account(&self, a: &Public) -> TrieResult<Option<Account>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.top_cache.account(&a, &trie)
@@ -316,14 +319,13 @@ impl TopLevelState {
     fn apply_internal<C: FindDoubleVoteHandler>(
         &mut self,
         tx: &Transaction,
-        sender_public: &Public,
+        sender: &Public,
         client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
         current_block_timestamp: u64,
     ) -> StateResult<()> {
-        let sender_address = public_to_address(sender_public);
-        let seq = self.seq(&sender_address)?;
+        let seq = self.seq(sender)?;
 
         if tx.seq != seq {
             return Err(RuntimeError::InvalidSeq(Mismatch {
@@ -335,8 +337,8 @@ impl TopLevelState {
 
         let fee = tx.fee;
 
-        self.inc_seq(&sender_address)?;
-        self.sub_balance(&sender_address, fee)?;
+        self.inc_seq(sender)?;
+        self.sub_balance(sender, fee)?;
 
         // The failed transaction also must pay the fee and increase seq.
         StateWithCheckpoint::create_checkpoint(self, ACTION_CHECKPOINT);
@@ -344,8 +346,7 @@ impl TopLevelState {
             &tx.action,
             tx.network_id,
             tx.hash(),
-            &sender_address,
-            sender_public,
+            sender,
             client,
             parent_block_number,
             parent_block_timestamp,
@@ -368,10 +369,9 @@ impl TopLevelState {
         action: &Action,
         _network_id: NetworkId,
         _tx_hash: TxHash,
-        sender_address: &Address,
-        sender_public: &Public,
+        sender: &Public,
         client: &C,
-        _parent_block_number: BlockNumber,
+        parent_block_number: BlockNumber,
         _parent_block_timestamp: u64,
         _current_block_timestamp: u64,
     ) -> StateResult<()> {
@@ -380,26 +380,26 @@ impl TopLevelState {
                 receiver,
                 quantity,
             } => {
-                self.transfer_balance(sender_address, receiver, *quantity)?;
+                self.transfer_balance(sender, receiver, *quantity)?;
                 Ok(())
             }
             Action::TransferCCS {
                 address,
                 quantity,
-            } => transfer_ccs(self, sender_address, &address, *quantity),
+            } => transfer_ccs(self, sender, &address, *quantity),
             Action::DelegateCCS {
                 address,
                 quantity,
-            } => delegate_ccs(self, sender_address, &address, *quantity),
+            } => delegate_ccs(self, sender, &address, *quantity),
             Action::Revoke {
                 address,
                 quantity,
-            } => revoke(self, sender_address, address, *quantity),
+            } => revoke(self, sender, address, *quantity),
             Action::Redelegate {
                 prev_delegatee,
                 next_delegatee,
                 quantity,
-            } => redelegate(self, sender_address, prev_delegatee, next_delegatee, *quantity),
+            } => redelegate(self, sender, prev_delegatee, next_delegatee, *quantity),
             Action::SelfNominate {
                 deposit,
                 metadata,
@@ -411,15 +411,7 @@ impl TopLevelState {
                     let nomination_ends_at = current_term + expiration;
                     (current_term, nomination_ends_at)
                 };
-                self_nominate(
-                    self,
-                    sender_address,
-                    sender_public,
-                    *deposit,
-                    current_term,
-                    nomination_ends_at,
-                    metadata.clone(),
-                )
+                self_nominate(self, sender, *deposit, current_term, nomination_ends_at, metadata.clone())
             }
             Action::ChangeParams {
                 metadata_seq,
@@ -431,9 +423,37 @@ impl TopLevelState {
                 ..
             } => {
                 let handler = client.double_vote_handler().expect("Unknown custom transaction applied!");
-                handler.execute(message1, self, sender_address)?;
+                handler.execute(message1, self, sender)?;
                 Ok(())
             }
+            Action::UpdateValidators {
+                validators,
+            } => {
+                let next_validators_in_state = NextValidators::load_from_state(self)?;
+                if validators != &Vec::from(next_validators_in_state) {
+                    return Err(RuntimeError::InvalidValidators.into())
+                }
+                let mut current_validators = CurrentValidators::load_from_state(self)?;
+                current_validators.update(validators.clone());
+                current_validators.save_to_state(self)?;
+                Ok(())
+            }
+            Action::CloseTerm {
+                inactive_validators,
+                next_validators,
+                released_addresses,
+                custody_until,
+                kick_at,
+            } => {
+                close_term(self, next_validators, inactive_validators)?;
+                release_jailed_prisoners(self, released_addresses)?;
+                jail(self, inactive_validators, *custody_until, *kick_at)?;
+                self.increase_term_id(parent_block_number + 1)
+            }
+            Action::ChangeNextValidators {
+                validators,
+            } => NextValidators::from(validators.clone()).save_to_state(self),
+            Action::Elect => NextValidators::elect(self)?.save_to_state(self),
         }
     }
 
@@ -454,7 +474,7 @@ impl TopLevelState {
         Ok(ModuleLevelState::from_existing(storage_id, &mut self.db, module_root, module_cache)?)
     }
 
-    fn get_account_mut(&self, a: &Address) -> TrieResult<RefMut<'_, Account>> {
+    fn get_account_mut(&self, a: &Public) -> TrieResult<RefMut<'_, Account>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.top_cache.account_mut(&a, &trie)
@@ -498,7 +518,7 @@ impl TopLevelState {
 
     #[cfg(test)]
     #[allow(unused)]
-    fn set_balance(&mut self, a: &Address, balance: u64) -> TrieResult<()> {
+    fn set_balance(&mut self, a: &Public, balance: u64) -> TrieResult<()> {
         self.get_account_mut(a)?.set_balance(balance);
         Ok(())
     }
@@ -519,27 +539,27 @@ impl Clone for TopLevelState {
 }
 
 impl TopState for TopLevelState {
-    fn kill_account(&mut self, account: &Address) {
+    fn kill_account(&mut self, account: &Public) {
         self.top_cache.remove_account(account);
     }
 
-    fn add_balance(&mut self, a: &Address, incr: u64) -> TrieResult<()> {
-        ctrace!(STATE, "add_balance({}, {}): {}", a, incr, self.balance(a)?);
+    fn add_balance(&mut self, a: &Public, incr: u64) -> TrieResult<()> {
+        ctrace!(STATE, "add_balance({:?}, {}): {}", a, incr, self.balance(a)?);
         if incr != 0 {
             self.get_account_mut(a)?.add_balance(incr);
         }
         Ok(())
     }
 
-    fn sub_balance(&mut self, a: &Address, decr: u64) -> StateResult<()> {
-        ctrace!(STATE, "sub_balance({}, {}): {}", a, decr, self.balance(a)?);
+    fn sub_balance(&mut self, a: &Public, decr: u64) -> StateResult<()> {
+        ctrace!(STATE, "sub_balance({:?}, {}): {}", a, decr, self.balance(a)?);
         if decr == 0 {
             return Ok(())
         }
         let balance = self.balance(a)?;
         if balance < decr {
             return Err(RuntimeError::InsufficientBalance {
-                address: *a,
+                pubkey: *a,
                 cost: decr,
                 balance,
             }
@@ -549,13 +569,13 @@ impl TopState for TopLevelState {
         Ok(())
     }
 
-    fn transfer_balance(&mut self, from: &Address, to: &Address, by: u64) -> StateResult<()> {
+    fn transfer_balance(&mut self, from: &Public, to: &Public, by: u64) -> StateResult<()> {
         self.sub_balance(from, by)?;
         self.add_balance(to, by)?;
         Ok(())
     }
 
-    fn inc_seq(&mut self, a: &Address) -> TrieResult<()> {
+    fn inc_seq(&mut self, a: &Public) -> TrieResult<()> {
         self.get_account_mut(a)?.inc_seq();
         Ok(())
     }

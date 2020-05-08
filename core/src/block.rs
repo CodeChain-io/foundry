@@ -17,13 +17,13 @@
 use crate::consensus::{ConsensusEngine, Evidence};
 use crate::error::{BlockError, Error};
 use ccrypto::BLAKE_NULL_RLP;
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use coordinator::traits::BlockExecutor;
 use coordinator::types::{Event, Header as PreHeader, Transaction, VerifiedCrime};
-use cstate::{NextValidatorSet, StateDB, StateError, StateWithCache, TopLevelState};
+use cstate::{CurrentValidatorSet, NextValidatorSet, StateDB, StateError, StateWithCache, TopLevelState, TopState};
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::TxHash;
+use ctypes::{CompactValidatorSet, ConsensusParams, TxHash};
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -120,24 +120,22 @@ impl ExecutedBlock {
 }
 
 /// Block that is ready for transactions to be added.
-pub struct OpenBlock<'x> {
+pub struct OpenBlock {
     block: ExecutedBlock,
-    engine: &'x dyn ConsensusEngine,
 }
 
-impl<'x> OpenBlock<'x> {
+impl OpenBlock {
     /// Create a new `OpenBlock` ready for transaction pushing.
     pub fn try_new(
-        engine: &'x dyn ConsensusEngine,
+        engine: &dyn ConsensusEngine,
         db: StateDB,
         parent: &Header,
-        author: Address,
+        author: Public,
         extra_data: Bytes,
     ) -> Result<Self, Error> {
         let state = TopLevelState::from_existing(db, *parent.state_root()).map_err(StateError::from)?;
         let mut r = OpenBlock {
             block: ExecutedBlock::new(state, parent),
-            engine,
         };
 
         r.block.header.set_author(author);
@@ -198,7 +196,7 @@ impl<'x> OpenBlock<'x> {
             None => NextValidatorSet::load_from_state(self.block.state())?.create_compact_validator_set().hash(),
         };
         let updated_consensus_params = block_outcome.updated_consensus_params;
-        if let Err(e) = self.engine.on_close_block(&mut self.block, updated_validator_set, updated_consensus_params) {
+        if let Err(e) = self.update_next_block_state(updated_validator_set, updated_consensus_params) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
         }
@@ -243,8 +241,8 @@ impl<'x> OpenBlock<'x> {
     /// Provide a valid seal
     ///
     /// NOTE: This does not check the validity of `seal` with the engine.
-    pub fn seal(&mut self, seal: Vec<Bytes>) -> Result<(), BlockError> {
-        let expected_seal_fields = self.engine.seal_fields(self.header());
+    pub fn seal(&mut self, engine: &dyn ConsensusEngine, seal: Vec<Bytes>) -> Result<(), BlockError> {
+        let expected_seal_fields = engine.seal_fields(self.header());
         if seal.len() != expected_seal_fields {
             return Err(BlockError::InvalidSealArity(Mismatch {
                 expected: expected_seal_fields,
@@ -259,14 +257,43 @@ impl<'x> OpenBlock<'x> {
         &mut self.block
     }
 
+    fn state(&self) -> &TopLevelState {
+        self.block.state()
+    }
+
     fn state_mut(&mut self) -> &mut TopLevelState {
         &mut self.block.state
     }
+
+    // called on open_block
+    fn update_current_validator_set(&mut self) -> Result<(), Error> {
+        let mut current_validators = CurrentValidatorSet::load_from_state(self.state())?;
+        current_validators.update(NextValidatorSet::load_from_state(self.state())?);
+        current_validators.save_to_state(self.state_mut())?;
+
+        Ok(())
+    }
+
+    // called on close_block
+    fn update_next_block_state(
+        &mut self,
+        updated_validator_set: Option<CompactValidatorSet>,
+        updated_consensus_params: Option<ConsensusParams>,
+    ) -> Result<(), Error> {
+        let state = self.block.state_mut();
+
+        if let Some(set) = updated_validator_set {
+            let validators = NextValidatorSet::from_compact_validator_set(set);
+            validators.save_to_state(state)?;
+        }
+
+        if let Some(params) = updated_consensus_params {
+            state.update_consensus_params(params)?;
+        }
+        Ok(())
+    }
 }
 
-/// Just like `OpenBlock`, except that we've applied `Engine::on_close_block`, finished up the non-seal header fields.
-///
-/// There is no function available to push a transaction.
 #[derive(Clone)]
 pub struct ClosedBlock {
     block: ExecutedBlock,
@@ -337,13 +364,13 @@ impl IsBlock for ExecutedBlock {
     }
 }
 
-impl<'x> IsBlock for OpenBlock<'x> {
+impl IsBlock for OpenBlock {
     fn block(&self) -> &ExecutedBlock {
         &self.block
     }
 }
 
-impl<'x> IsBlock for ClosedBlock {
+impl IsBlock for ClosedBlock {
     fn block(&self) -> &ExecutedBlock {
         &self.block
     }
@@ -359,10 +386,10 @@ pub fn enact(
     db: StateDB,
     parent: &Header,
 ) -> Result<ClosedBlock, Error> {
-    let mut b = OpenBlock::try_new(engine, db, parent, Address::default(), vec![])?;
+    let mut b = OpenBlock::try_new(engine, db, parent, Public::default(), vec![])?;
 
     b.populate_from(header);
-    engine.on_open_block(b.inner_mut())?;
+    b.update_current_validator_set()?;
 
     b.open(block_executor, evidences.to_vec())?;
     b.execute_transactions(block_executor, transactions.to_vec())?;

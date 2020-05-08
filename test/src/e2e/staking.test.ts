@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H256, Address } from "foundry-primitives/lib";
+import { H256, Address } from "../primitives/src";
 import "mocha";
 import {
     aliceAddress,
@@ -79,7 +79,7 @@ describe("Staking", function() {
                         bytes: `0x${toHex(
                             RLP.encode([
                                 "Account",
-                                addr.accountId.toEncodeObject()
+                                addr.pubkey.toEncodeObject()
                             ])
                         )}`
                     })
@@ -116,7 +116,7 @@ describe("Staking", function() {
                         bytes: `0x${toHex(
                             RLP.encode([
                                 "Delegation",
-                                addr.accountId.toEncodeObject()
+                                addr.pubkey.toEncodeObject()
                             ])
                         )}`
                     })
@@ -285,10 +285,10 @@ describe("Staking", function() {
             toHex(
                 RLP.encode(
                     [
-                        aliceAddress.accountId.toEncodeObject(),
-                        bobAddress.accountId.toEncodeObject(),
-                        carolAddress.accountId.toEncodeObject(),
-                        daveAddress.accountId.toEncodeObject()
+                        aliceAddress.pubkey.toEncodeObject(),
+                        bobAddress.pubkey.toEncodeObject(),
+                        carolAddress.pubkey.toEncodeObject(),
+                        daveAddress.pubkey.toEncodeObject()
                     ].sort()
                 )
             )
@@ -317,11 +317,11 @@ describe("Staking", function() {
             toHex(
                 RLP.encode(
                     [
-                        aliceAddress.accountId.toEncodeObject(),
-                        carolAddress.accountId.toEncodeObject(),
-                        validator0Address.accountId.toEncodeObject(),
-                        daveAddress.accountId.toEncodeObject(),
-                        bobAddress.accountId.toEncodeObject()
+                        aliceAddress.pubkey.toEncodeObject(),
+                        carolAddress.pubkey.toEncodeObject(),
+                        validator0Address.pubkey.toEncodeObject(),
+                        daveAddress.pubkey.toEncodeObject(),
+                        bobAddress.pubkey.toEncodeObject()
                     ].sort()
                 )
             )
@@ -350,10 +350,10 @@ describe("Staking", function() {
             toHex(
                 RLP.encode(
                     [
-                        carolAddress.accountId.toEncodeObject(),
-                        validator0Address.accountId.toEncodeObject(),
-                        daveAddress.accountId.toEncodeObject(),
-                        bobAddress.accountId.toEncodeObject()
+                        carolAddress.pubkey.toEncodeObject(),
+                        validator0Address.pubkey.toEncodeObject(),
+                        daveAddress.pubkey.toEncodeObject(),
+                        bobAddress.pubkey.toEncodeObject()
                     ].sort()
                 )
             )
@@ -392,9 +392,7 @@ describe("Staking", function() {
             null,
             null,
             toHex(
-                RLP.encode([
-                    [validator0Address.accountId.toEncodeObject(), 100]
-                ])
+                RLP.encode([[validator0Address.pubkey.toEncodeObject(), 100]])
             ),
             null,
             null,
@@ -434,9 +432,7 @@ describe("Staking", function() {
             null,
             null,
             toHex(
-                RLP.encode([
-                    [validator0Address.accountId.toEncodeObject(), 40000]
-                ])
+                RLP.encode([[validator0Address.pubkey.toEncodeObject(), 40000]])
             ),
             null,
             null,
@@ -483,7 +479,7 @@ describe("Staking", function() {
             null,
             null,
             toHex(
-                RLP.encode([[validator0Address.accountId.toEncodeObject(), 50]])
+                RLP.encode([[validator0Address.pubkey.toEncodeObject(), 50]])
             ),
             null,
             null,
@@ -546,9 +542,7 @@ describe("Staking", function() {
             null,
             null,
             toHex(
-                RLP.encode([
-                    [validator0Address.accountId.toEncodeObject(), 100]
-                ])
+                RLP.encode([[validator0Address.pubkey.toEncodeObject(), 100]])
             ),
             null,
             null,
@@ -699,9 +693,7 @@ describe("Staking", function() {
         expect(delegations).to.be.deep.equal([
             null,
             toHex(
-                RLP.encode([
-                    [validator1Address.accountId.toEncodeObject(), 20000]
-                ])
+                RLP.encode([[validator1Address.pubkey.toEncodeObject(), 20000]])
             ),
             null,
             null,
@@ -814,9 +806,7 @@ describe("Staking", function() {
         expect(delegations).to.be.deep.equal([
             null,
             toHex(
-                RLP.encode([
-                    [validator1Address.accountId.toEncodeObject(), 20000]
-                ])
+                RLP.encode([[validator1Address.pubkey.toEncodeObject(), 20000]])
             ),
             null,
             null,

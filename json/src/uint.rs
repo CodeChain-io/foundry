@@ -193,7 +193,7 @@ mod test {
             Uint(U256::from(0)),
             Uint(U256::from(0)),
             Uint(U256::from(0)),
-            ::std::u64::MAX.into(),
+            u64::MAX.into(),
         ]);
     }
 
@@ -204,7 +204,7 @@ mod test {
 
     #[test]
     fn uint_serialization() {
-        let v: Vec<Uint> = vec![0.into(), 1.into(), 100.into(), ::std::u64::MAX.into()];
+        let v: Vec<Uint> = vec![0.into(), 1.into(), 100.into(), u64::MAX.into()];
         let serialized = serde_json::to_string(&v).unwrap();
         assert_eq!(r#"["0x0","0x1","0x64","0xffffffffffffffff"]"#, serialized);
     }

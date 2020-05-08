@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -75,11 +75,9 @@ import CodeChain from "../helper/spawn";
 
     for (let i = 0; i < numTransactions; i++) {
         const value = makeRandomH256();
-        const accountId = nodes[0].testFramework.util.getAccountIdFromPrivate(
-            value
-        );
-        const recipient = nodes[0].testFramework.core.classes.Address.fromAccountId(
-            accountId,
+        const pubkey = nodes[0].testFramework.util.getPublicFromPrivate(value);
+        const recipient = nodes[0].testFramework.core.classes.Address.fromPublic(
+            pubkey,
             { networkId: "tc" }
         );
         const transaction = nodes[0].testFramework.core

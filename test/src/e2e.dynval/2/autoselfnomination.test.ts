@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { expect } from "chai";
-import { H256 } from "foundry-primitives/lib";
+import { H256 } from "../../primitives/src";
 import "mocha";
 import * as stake from "../../stakeholder";
 
@@ -100,8 +100,8 @@ describe("Auto Self Nomination", function() {
                 currentValidators.map(validator => validator.pubkey.toString())
             ).not.to.includes(alice.publicKey);
             expect(
-                banned.map(ban => ban.getAccountId().toString())
-            ).not.to.includes(alice.accountId);
+                banned.map(ban => ban.getPubKey().toString())
+            ).not.to.includes(alice.publicKey);
             expect(
                 candidates.map(candidate => candidate.pubkey.toString())
             ).not.to.includes(alice.publicKey);
