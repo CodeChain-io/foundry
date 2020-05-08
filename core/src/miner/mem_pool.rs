@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::backup;
-use super::mem_pool_types::{MemPoolStatus, PoolingInstant, TransactionPool};
+use super::mem_pool_types::{PoolingInstant, TransactionPool};
 use crate::transaction::PendingTransactions;
 use crate::Error as CoreError;
 use coordinator::traits::TxFilter;
@@ -118,11 +118,9 @@ impl MemPool {
         self.queue_count_limit
     }
 
-    /// Returns current status for this pool
-    pub fn status(&self) -> MemPoolStatus {
-        MemPoolStatus {
-            pending: self.transaction_pool.len(),
-        }
+    /// Returns the number of transactions in the pool
+    pub fn num_pending_transactions(&self) -> usize {
+        self.transaction_pool.len()
     }
 
     /// Add signed transaction to pool to be verified and imported.

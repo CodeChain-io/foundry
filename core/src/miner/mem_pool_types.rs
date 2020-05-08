@@ -68,10 +68,3 @@ impl TransactionPool {
         }
     }
 }
-
-#[derive(Debug)]
-/// Current status of the pool
-pub struct MemPoolStatus {
-    /// Number of pending transactions (ready to go to block)
-    pub pending: usize,
-}
