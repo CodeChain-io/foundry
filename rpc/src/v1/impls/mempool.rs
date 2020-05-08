@@ -73,9 +73,9 @@ where
         future_included: Option<bool>,
     ) -> Result<PendingTransactions> {
         if future_included.unwrap_or(false) {
-            Ok(self.client.future_pending_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)).into())
+            Ok(self.client.future_pending_transactions(from.unwrap_or(0)..to.unwrap_or(u64::MAX)).into())
         } else {
-            Ok(self.client.ready_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)).into())
+            Ok(self.client.ready_transactions(from.unwrap_or(0)..to.unwrap_or(u64::MAX)).into())
         }
     }
 
@@ -86,9 +86,9 @@ where
         future_included: Option<bool>,
     ) -> Result<usize> {
         if future_included.unwrap_or(false) {
-            Ok(self.client.future_included_count_pending_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)))
+            Ok(self.client.future_included_count_pending_transactions(from.unwrap_or(0)..to.unwrap_or(u64::MAX)))
         } else {
-            Ok(self.client.count_pending_transactions(from.unwrap_or(0)..to.unwrap_or(::std::u64::MAX)))
+            Ok(self.client.count_pending_transactions(from.unwrap_or(0)..to.unwrap_or(u64::MAX)))
         }
     }
 

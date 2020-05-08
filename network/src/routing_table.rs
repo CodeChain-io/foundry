@@ -671,14 +671,14 @@ mod tests {
     #[test]
     fn encrypt_and_decrypt_u64_max() {
         let secret = SharedSecret::random();
-        let nonce = ::std::u64::MAX.into();
+        let nonce = u64::MAX.into();
         encrypt_and_decrypt(secret, nonce);
     }
 
     #[test]
     fn encrypt_and_decrypt_u128_max() {
         let secret = SharedSecret::random();
-        let nonce = ::std::u128::MAX;
+        let nonce = u128::MAX;
         encrypt_and_decrypt(secret, nonce);
     }
 }
