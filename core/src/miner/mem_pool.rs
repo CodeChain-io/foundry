@@ -1106,7 +1106,7 @@ pub mod test {
 
         assert_eq!(
             vec![create_signed_pay(0, &keypair), create_signed_pay(1, &keypair), create_signed_pay(2, &keypair),],
-            mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
+            mem_pool.top_transactions(usize::MAX, 0..u64::MAX).transactions
         );
 
         assert_eq!(Vec::<VerifiedTransaction>::default(), mem_pool.future_transactions());
@@ -1118,7 +1118,7 @@ pub mod test {
 
         assert_eq!(
             vec![create_signed_pay(0, &keypair),],
-            mem_pool.top_transactions(std::usize::MAX, 0..std::u64::MAX).transactions
+            mem_pool.top_transactions(usize::MAX, 0..u64::MAX).transactions
         );
 
         assert_eq!(vec![create_signed_pay(2, &keypair),], mem_pool.future_transactions());
