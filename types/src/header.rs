@@ -43,6 +43,8 @@ pub struct Header {
     number: BlockNumber,
     /// Block author.
     author: Public,
+    /// Validators who submitted tendermint Commit for last block.
+    last_committed_validators: Vec<Public>,
 
     /// Block extra data.
     extra_data: Bytes,
@@ -73,6 +75,7 @@ impl Default for Header {
             timestamp: 0,
             number: 0,
             author: Default::default(),
+            last_committed_validators: Default::default(),
             extra_data: vec![],
 
             evidenecs_root: BLAKE_NULL_RLP,
@@ -87,7 +90,7 @@ impl Default for Header {
     }
 }
 
-const SIZE_WITHOUT_SEAL: usize = 9;
+const SIZE_WITHOUT_SEAL: usize = 10;
 
 impl Header {
     /// Create a new, default-valued, header.
@@ -110,6 +113,10 @@ impl Header {
     /// Get the author field of the header.
     pub fn author(&self) -> &Public {
         &self.author
+    }
+    /// Get the last_committed_validators field of the header.
+    pub fn last_committed_validators(&self) -> &[Public] {
+        &self.last_committed_validators
     }
 
     /// Get the extra data field of the header.
@@ -269,6 +276,7 @@ impl Header {
         s.append(&self.next_validator_set_hash);
         s.append(&self.number);
         s.append(&self.timestamp);
+        s.append_list(&self.last_committed_validators);
         s.append(&self.extra_data);
         if let Seal::With = with_seal {
             for b in &self.seal {
@@ -318,7 +326,8 @@ impl Decodable for Header {
             next_validator_set_hash: r.val_at(5)?,
             number: r.val_at(6)?,
             timestamp: cmp::min(r.val_at::<U256>(7)?, u64::max_value().into()).as_u64(),
-            extra_data: r.val_at(8)?,
+            last_committed_validators: r.list_at(8)?,
+            extra_data: r.val_at(9)?,
             seal: vec![],
             hash: RefCell::new(Some(blake256(r.as_raw()))),
             bare_hash: RefCell::new(None),

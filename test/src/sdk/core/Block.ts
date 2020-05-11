@@ -11,6 +11,7 @@ export interface BlockData {
     timestamp: number;
     number: number;
     author: Address;
+    lastCommittedValidators: string[];
     extraData: number[];
     transactionsRoot: H256;
     stateRoot: H256;
@@ -24,6 +25,7 @@ export interface BlockJSON {
     timestamp: number;
     number: number;
     author: string;
+    lastCommittedValidators: string[];
     extraData: number[];
     transactionsRoot: string;
     stateRoot: string;
@@ -42,6 +44,7 @@ export class Block {
             timestamp,
             number,
             author,
+            lastCommittedValidators,
             extraData,
             transactionsRoot,
             stateRoot,
@@ -55,6 +58,7 @@ export class Block {
             timestamp,
             number,
             author: Address.fromString(author),
+            lastCommittedValidators,
             extraData,
             transactionsRoot: new H256(transactionsRoot),
             stateRoot: new H256(stateRoot),
@@ -68,6 +72,7 @@ export class Block {
     public timestamp: number;
     public number: number;
     public author: Address;
+    public lastCommittedValidators: string[];
     public extraData: number[];
     public transactionsRoot: H256;
     public stateRoot: H256;
@@ -82,6 +87,7 @@ export class Block {
             timestamp,
             number,
             author,
+            lastCommittedValidators,
             extraData,
             transactionsRoot,
             stateRoot,
@@ -94,6 +100,7 @@ export class Block {
         this.timestamp = timestamp;
         this.number = number;
         this.author = author;
+        this.lastCommittedValidators = lastCommittedValidators;
         this.extraData = extraData;
         this.transactionsRoot = transactionsRoot;
         this.stateRoot = stateRoot;
@@ -109,6 +116,7 @@ export class Block {
             timestamp,
             number,
             author,
+            lastCommittedValidators,
             extraData,
             transactionsRoot,
             stateRoot,
@@ -122,6 +130,7 @@ export class Block {
             timestamp,
             number,
             author: author.toString(),
+            lastCommittedValidators: [...lastCommittedValidators],
             extraData: [...extraData],
             transactionsRoot: transactionsRoot.toJSON(),
             stateRoot: stateRoot.toJSON(),
@@ -138,6 +147,7 @@ export class Block {
             timestamp,
             number,
             author,
+            lastCommittedValidators,
             extraData,
             transactionsRoot,
             stateRoot,
@@ -154,6 +164,7 @@ export class Block {
         blockHeader.push(nextValidatorSetHash.toEncodeObject());
         blockHeader.push(number);
         blockHeader.push(timestamp);
+        blockHeader.push(lastCommittedValidators);
         blockHeader.push(`0x${Buffer.from(extraData).toString("hex")}`);
         blockHeader.push(
             ...seal.map(s => `0x${Buffer.from(s).toString("hex")}`)

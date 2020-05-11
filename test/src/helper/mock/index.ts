@@ -384,6 +384,7 @@ export class Mock {
         const author = new H256(
             "0000000000000000000000000000000000000000000000000000000000000000"
         );
+        const lastCommittedValidators: string[] = [];
         const extraData = Buffer.from([
             23,
             108,
@@ -436,6 +437,7 @@ export class Mock {
             timestamp,
             number,
             author,
+            lastCommittedValidators,
             extraData,
             transactionsRoot,
             evidencesRoot,
@@ -454,6 +456,7 @@ export class Mock {
         const author = new H256(
             "7777777777777777777777777777777777777777777777777777777777777777"
         );
+        const lastCommittedValidators: string[] = [];
         const extraData = Buffer.alloc(0);
         const transactionsRoot = new H256(
             "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
@@ -473,6 +476,7 @@ export class Mock {
             timestamp,
             number,
             author,
+            lastCommittedValidators,
             extraData,
             transactionsRoot,
             evidencesRoot,
@@ -491,6 +495,7 @@ export class Mock {
         const author = new H256(
             "6666666666666666666666666666666666666666666666666666666666666666"
         );
+        const lastCommittedValidators: string[] = [];
         const extraData = Buffer.alloc(0);
         const transactionsRoot = new H256(
             "45b0cfc220ceec5b7c1c62c4d4193d38e4eba48e8815729ce75f9c0ab0e4c1c0"
@@ -510,6 +515,7 @@ export class Mock {
             timestamp,
             number,
             author,
+            lastCommittedValidators,
             extraData,
             evidencesRoot,
             transactionsRoot,
