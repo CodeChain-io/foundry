@@ -18,13 +18,14 @@ extern crate codechain_basesandbox as cbsb;
 
 use cbsb::execution::executee;
 use cbsb::execution::executor;
-use cbsb::ipc::domain_socket::DomainSocket;
 use cbsb::ipc::intra::Intra;
 use cbsb::ipc::multiplex::{Forward, Multiplexer};
 use cbsb::ipc::Ipc;
 use cbsb::ipc::{IpcRecv, IpcSend, Terminate};
 use std::sync::{Arc, Barrier};
 use std::thread;
+
+type IpcScheme = cbsb::ipc::servo_channel::ServoChannel;
 
 // CI server is really slow for this. Usually 10 is ok.
 const TIMEOUT: std::time::Duration = std::time::Duration::from_millis(10000);
@@ -47,7 +48,7 @@ fn simple_executor<I: Ipc + 'static, E: executor::Executor>(path: &str) {
 
 #[test]
 fn execute_simple_rust() {
-    simple_executor::<DomainSocket, executor::Executable>("./../target/debug/test_simple_rs");
+    simple_executor::<IpcScheme, executor::Executable>("./../target/debug/test_simple_rs");
 }
 
 #[test]
@@ -64,12 +65,9 @@ fn execute_simple_multiple() {
     let name_source = cbsb::ipc::generate_random_name();
     executor::add_function_pool(name_source.clone(), Arc::new(simple_thread));
 
-    let t1 =
-        thread::spawn(|| simple_executor::<DomainSocket, executor::Executable>("./../target/debug/test_simple_rs"));
-    let t2 =
-        thread::spawn(|| simple_executor::<DomainSocket, executor::Executable>("./../target/debug/test_simple_rs"));
-    let t3 =
-        thread::spawn(|| simple_executor::<DomainSocket, executor::Executable>("./../target/debug/test_simple_rs"));
+    let t1 = thread::spawn(|| simple_executor::<IpcScheme, executor::Executable>("./../target/debug/test_simple_rs"));
+    let t2 = thread::spawn(|| simple_executor::<IpcScheme, executor::Executable>("./../target/debug/test_simple_rs"));
+    let t3 = thread::spawn(|| simple_executor::<IpcScheme, executor::Executable>("./../target/debug/test_simple_rs"));
 
     let name = name_source.clone();
     let t4 = thread::spawn(move || simple_executor::<Intra, executor::PlainThread>(&name));
@@ -149,7 +147,7 @@ fn setup_ipc<I: Ipc + 'static>() -> (I, I) {
 
 #[test]
 fn terminator_socket() {
-    let (d1, d2) = setup_ipc::<DomainSocket>();
+    let (d1, d2) = setup_ipc::<IpcScheme>();
     let terminator = d1.create_terminator();
     let barrier = Arc::new(Barrier::new(2));
     let barrier_ = barrier.clone();
@@ -187,7 +185,7 @@ fn terminator_intra() {
 fn socket_must_block() {
     let n = 200;
     let packet_size = 3000;
-    let (d1, d2) = setup_ipc::<DomainSocket>();
+    let (d1, d2) = setup_ipc::<IpcScheme>();
     let terminator = d1.create_terminator();
     let barrier = Arc::new(Barrier::new(2));
     let barrier_ = barrier.clone();
@@ -226,9 +224,9 @@ impl Forward for TestForward {
 
 #[test]
 fn multiplexer() {
-    let (c1, c2) = DomainSocket::arguments_for_both_ends();
-    let d1 = thread::spawn(|| DomainSocket::new(c1));
-    let d2 = DomainSocket::new(c2);
+    let (c1, c2) = IpcScheme::arguments_for_both_ends();
+    let d1 = thread::spawn(|| IpcScheme::new(c1));
+    let d2 = IpcScheme::new(c2);
     let d1 = d1.join().unwrap();
 
     let (s1, r1) = d1.split();
