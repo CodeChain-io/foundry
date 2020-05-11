@@ -56,15 +56,24 @@ pub struct Header {
     number: u64,
     /// Block author.
     author: Public,
+    /// Validators who submitted tendermint Commit for last block.
+    last_committed_validators: Vec<Public>,
     /// Block extra data.
     extra_data: Bytes,
 }
 
 impl Header {
-    pub fn new(timestamp: u64, number: u64, author: Public, extra_data: Bytes) -> Self {
+    pub fn new(
+        timestamp: u64,
+        number: u64,
+        author: Public,
+        last_committed_validators: Vec<Public>,
+        extra_data: Bytes,
+    ) -> Self {
         Self {
             timestamp,
             number,
+            last_committed_validators,
             author,
             extra_data,
         }

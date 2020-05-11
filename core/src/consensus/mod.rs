@@ -24,7 +24,8 @@ mod validator_set;
 pub use self::null_engine::NullEngine;
 pub use self::solo::Solo;
 pub use self::tendermint::{
-    ConsensusMessage, Evidence, Height, Step, Tendermint, TendermintParams, TimeGapParams, View, VoteOn, VoteStep,
+    ConsensusMessage, Evidence, Height, Step, Tendermint, TendermintParams, TendermintSealView, TimeGapParams, View,
+    VoteOn, VoteStep,
 };
 pub use self::validator_set::{DynamicValidator, ValidatorSet};
 
