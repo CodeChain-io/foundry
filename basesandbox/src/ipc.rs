@@ -17,6 +17,7 @@
 pub mod domain_socket;
 pub mod intra;
 pub mod multiplex;
+pub mod servo_channel;
 use once_cell::sync::OnceCell;
 use std::sync::Mutex;
 

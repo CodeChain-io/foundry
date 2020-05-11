@@ -161,6 +161,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1955ebdd52d5c5f1fb4f94e97aa241c2ce5729d200b3c34fc71ac6ff7a7cc556"
 
 [[package]]
+name = "bincode"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5753e2a71534719bf3f4e57006c3a4f0d2c672a4b676eec84161f763eca87dbf"
+dependencies = [
+ "byteorder",
+ "serde",
+]
+
+[[package]]
 name = "bitflags"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -232,9 +242,9 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 
 [[package]]
 name = "byteorder"
-version = "1.2.7"
+version = "1.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94f88df23a25417badc922ab0f5716cc1330e87f71ddd9203b3a3ccd9cedf75d"
+checksum = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
 
 [[package]]
 name = "bytes"
@@ -342,6 +352,7 @@ dependencies = [
  "codechain-crypto",
  "crossbeam 0.7.3",
  "hex",
+ "ipc-channel",
  "nix",
  "once_cell",
  "primitives",
@@ -1549,6 +1560,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b2b3ea6ff95e175473f8ffe6a7eb7c00d054240321b84c57051175fe3c1e075e"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "ipc-channel"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3698b8affd5656032a074a7d40b3c2a29b71971f3e1ff6042b9d40724e20d97c"
+dependencies = [
+ "bincode",
+ "crossbeam-channel 0.4.2",
+ "fnv",
+ "lazy_static 1.4.0",
+ "libc",
+ "mio",
+ "rand 0.7.2",
+ "serde",
+ "tempfile",
+ "uuid 0.8.1",
 ]
 
 [[package]]
