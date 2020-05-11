@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::consensus::{ConsensusEngine, Evidence};
+use crate::consensus::{ConsensusEngine, Evidence, TendermintSealView};
 use crate::error::{BlockError, Error};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Ed25519Public as Public;
@@ -148,11 +148,28 @@ impl OpenBlock {
         Ok(r)
     }
 
-    pub fn open(&mut self, block_executor: &dyn BlockExecutor, evidences: Vec<Evidence>) -> Result<(), Error> {
+    pub fn open(
+        &mut self,
+        block_executor: &dyn BlockExecutor,
+        engine: &dyn ConsensusEngine,
+        evidences: Vec<Evidence>,
+    ) -> Result<(), Error> {
+        let last_committed_validators = {
+            let validator_bitset = TendermintSealView::new(self.header().seal())
+                .bitset()
+                .map_err(|_| Error::Block(BlockError::InvalidSeal))?;
+            let possible_authors = engine.possible_authors(None)?.expect("Tendermint must have possible authors");
+            let committed_validators_result: Result<Vec<_>, _> = validator_bitset
+                .true_index_iter()
+                .map(|index| possible_authors.get(index).map(Clone::clone).ok_or(Error::Block(BlockError::InvalidSeal)))
+                .collect();
+            committed_validators_result?
+        };
         let pre_header = PreHeader::new(
             self.header().timestamp(),
             self.header().number(),
             *self.header().author(),
+            last_committed_validators,
             self.header().extra_data().clone(),
         );
         let verified_crimes: Vec<VerifiedCrime> = evidences.iter().map(|e| e.into()).collect();
@@ -402,7 +419,7 @@ pub fn enact(
     b.populate_from(header);
     b.update_current_validator_set()?;
 
-    b.open(block_executor, evidences.to_vec())?;
+    b.open(block_executor, engine, evidences.to_vec())?;
     b.execute_transactions(block_executor, transactions.to_vec())?;
     b.close(block_executor)
 }

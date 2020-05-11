@@ -234,7 +234,7 @@ impl Miner {
 
         let block_executor = &*self.block_executor;
 
-        open_block.open(block_executor, evidences)?;
+        open_block.open(block_executor, self.engine.borrow(), evidences)?;
         {
             // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock
             let mem_pool = self.mem_pool.read();
