@@ -18,7 +18,7 @@ use super::super::errors;
 use super::super::traits::Devel;
 use super::super::types::TPSTestSetting;
 use ccore::{
-    BlockId, DatabaseClient, EngineClient, EngineInfo, MinerService, MiningBlockChainClient, SnapshotClient, TermInfo,
+    DatabaseClient, EngineClient, EngineInfo, MinerService, MiningBlockChainClient, SnapshotClient, TermInfo,
     VerifiedTransaction, COL_STATE,
 };
 use cjson::bytes::Bytes;
@@ -26,7 +26,7 @@ use ckey::{Ed25519KeyPair as KeyPair, Ed25519Public as Public, Generator, KeyPai
 use cnetwork::{unbounded_event_callback, EventSender, IntoSocketAddr};
 use csync::BlockSyncEvent;
 use ctypes::transaction::{Action, Transaction};
-use ctypes::BlockHash;
+use ctypes::{BlockHash, BlockId};
 use jsonrpc_core::Result;
 use kvdb::KeyValueDB;
 use primitives::H256;

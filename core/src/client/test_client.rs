@@ -43,7 +43,7 @@ use crate::error::{BlockImportError, Error as GenericError};
 use crate::miner::{Miner, MinerService, TransactionImportResult};
 use crate::scheme::Scheme;
 use crate::transaction::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
-use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
+use crate::types::{TransactionId, VerificationQueueInfo as QueueInfo};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::{
     Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public, Generator, KeyPairTrait, NetworkId,
@@ -54,7 +54,7 @@ use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::transaction::{Action, Transaction, Validator};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockNumber, CommonParams, Header as BlockHeader, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, Header as BlockHeader, TxHash};
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
 use parking_lot::RwLock;

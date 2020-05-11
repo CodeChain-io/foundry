@@ -16,9 +16,10 @@
 
 use super::super::errors;
 use super::super::traits::Engine;
-use ccore::{BlockId, EngineInfo, StateInfo};
+use ccore::{EngineInfo, StateInfo};
 use cjson::bytes::{Bytes, WithoutPrefix};
 use cstate::{query_stake_state, FindDoubleVoteHandler};
+use ctypes::BlockId;
 use jsonrpc_core::Result;
 use std::sync::Arc;
 

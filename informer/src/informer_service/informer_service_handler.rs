@@ -17,10 +17,11 @@
 use crate::{
     informer_notify, EventTags, Events, InformerEventSender, RateLimiter, Registration, Subscription, SubscriptionId,
 };
-use ccore::{BlockChainTrait, BlockId, Client, EngineInfo};
+use ccore::{BlockChainTrait, Client, EngineInfo};
 use crossbeam::Receiver;
 use crossbeam_channel as crossbeam;
 use crpc::v1::Block as RPCBlock;
+use ctypes::BlockId;
 use std::sync::atomic::Ordering::SeqCst;
 use std::sync::Arc;
 use std::thread;

@@ -15,10 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use ccore::snapshot_notify::{NotifyReceiverSource, ReceiverCanceller};
-use ccore::{BlockChainClient, BlockChainTrait, BlockId, Client};
+use ccore::{BlockChainClient, BlockChainTrait, Client};
 use cdb::{AsHashDB, HashDB};
 use cstate::{StateDB, TopLevelState, TopStateView};
-use ctypes::BlockHash;
+use ctypes::{BlockHash, BlockId};
 use merkle_trie::snapshot::{ChunkCompressor, Error as SnapshotError, Snapshot};
 use primitives::H256;
 use std::fs;

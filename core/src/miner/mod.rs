@@ -23,7 +23,7 @@ mod miner;
 use ckey::{Ed25519Public as Public, Password, PlatformAddress};
 use cstate::{FindDoubleVoteHandler, TopStateView};
 use ctypes::transaction::IncompleteTransaction;
-use ctypes::{BlockHash, TxHash};
+use ctypes::{BlockHash, BlockId, TxHash};
 use primitives::Bytes;
 use std::ops::Range;
 
@@ -36,7 +36,6 @@ use crate::client::{
 use crate::consensus::EngineType;
 use crate::error::Error;
 use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
-use crate::BlockId;
 
 /// Miner client API
 pub trait MinerService: Send + Sync {

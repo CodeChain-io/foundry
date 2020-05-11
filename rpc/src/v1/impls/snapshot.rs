@@ -17,8 +17,8 @@
 use super::super::errors;
 use super::super::traits::Snapshot;
 use super::super::types::BlockNumberAndHash;
-use ccore::{BlockChainClient, BlockId};
-use ctypes::BlockHash;
+use ccore::BlockChainClient;
+use ctypes::{BlockHash, BlockId};
 use jsonrpc_core::Result;
 use primitives::H256;
 use std::fs;

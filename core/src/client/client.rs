@@ -32,14 +32,14 @@ use crate::service::ClientIoMessage;
 use crate::transaction::{
     LocalizedTransaction, PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction,
 };
-use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
+use crate::types::{BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockNumber, CommonParams, ShardId, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ShardId, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::{Bytes, H256};

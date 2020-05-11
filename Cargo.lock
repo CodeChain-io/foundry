@@ -418,6 +418,7 @@ dependencies = [
  "codechain-core",
  "codechain-logger",
  "codechain-rpc",
+ "codechain-types",
  "codechain_informer_courier",
  "crossbeam-channel",
  "jsonrpc-core",

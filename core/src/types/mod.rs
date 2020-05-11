@@ -15,9 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 mod block_status;
-mod ids;
+mod transaction_id;
 mod verification_queue_info;
 
 pub use self::block_status::BlockStatus;
-pub use self::ids::{BlockId, TransactionId};
+pub use self::transaction_id::TransactionId;
 pub use self::verification_queue_info::VerificationQueueInfo;
