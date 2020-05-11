@@ -32,7 +32,8 @@ export class Header {
         const nextValidatorSetHash = new H256(decodedmsg[5].toString("hex"));
         const number = new U256(parseInt(decodedmsg[6].toString("hex"), 16));
         const timestamp = new U256(parseInt(decodedmsg[7].toString("hex"), 16));
-        const extraData = decodedmsg[8];
+        const lastCommittedValidators: string[] = decodedmsg[8];
+        const extraData = decodedmsg[9];
 
         // Be careful of the order! Three roots have same types, so mistake on the order will not be catched by typechecker.
         const header = new Header(
@@ -40,6 +41,7 @@ export class Header {
             timestamp,
             number,
             author,
+            lastCommittedValidators,
             extraData,
             evidencesRoot,
             transactionsRoot,
@@ -65,6 +67,7 @@ export class Header {
             new H256(
                 "0000000000000000000000000000000000000000000000000000000000000000"
             ),
+            [],
             Buffer.alloc(0),
             BLAKE_NULL_RLP,
             BLAKE_NULL_RLP,
@@ -78,6 +81,7 @@ export class Header {
     private timestamp: U256;
     private number: U256;
     private author: H256;
+    private lastCommittedValidators: string[];
     private extraData: Buffer;
     private evidencesRoot: H256;
     private transactionsRoot: H256;
@@ -92,6 +96,7 @@ export class Header {
         timestamp: U256,
         number: U256,
         author: H256,
+        lastCommittedValidators: string[],
         extraData: Buffer,
         evidencesRoot: H256,
         transactionsRoot: H256,
@@ -105,6 +110,7 @@ export class Header {
         this.timestamp = timestamp;
         this.number = number;
         this.author = author;
+        this.lastCommittedValidators = lastCommittedValidators;
         this.extraData = extraData;
         this.evidencesRoot = evidencesRoot;
         this.transactionsRoot = transactionsRoot;
@@ -177,6 +183,7 @@ export class Header {
             this.nextValidatorSetHash.toEncodeObject(),
             this.number.toEncodeObject(),
             this.timestamp.toEncodeObject(),
+            this.lastCommittedValidators,
             this.extraData
         ].concat(this.seal);
     }

@@ -64,6 +64,7 @@ describe("Test onChain block communication", async function() {
             new U256(genesisBlock.timestamp),
             new U256(genesisBlock.number),
             author1PlatformAddr.pubkey,
+            [], // lastCommittedValidators
             Buffer.from(genesisBlock.extraData),
             BLAKE_NULL_RLP,
             new H256(genesisBlock.transactionsRoot),
@@ -77,6 +78,7 @@ describe("Test onChain block communication", async function() {
             new U256(block1.timestamp),
             new U256(block1.number),
             author2PlatformAddr.pubkey,
+            [], // lastCommittedValidators
             Buffer.from(block1.extraData),
             BLAKE_NULL_RLP,
             new H256(block1.transactionsRoot),
@@ -90,6 +92,7 @@ describe("Test onChain block communication", async function() {
             new U256(block2.timestamp),
             new U256(block2.number),
             author3PlatformAddr.pubkey,
+            [], // lastCommittedValidators
             Buffer.from(block2.extraData),
             BLAKE_NULL_RLP,
             new H256(block2.transactionsRoot),
