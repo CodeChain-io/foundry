@@ -921,6 +921,26 @@ impl Extension {
                     }
                 }
 
+                // This code does not check the first header.
+                // We will recheck the validator set hash in verify_header_familly
+                for neighbors in headers.windows(3) {
+                    let grand_parent: &SyncHeader = &neighbors[0];
+                    let child: &SyncHeader = &neighbors[2];
+
+                    if grand_parent.number() == 0 {
+                        continue
+                    }
+
+                    let parent_validator_hash = grand_parent.next_validator_set_hash();
+                    let parent_validator =
+                        child.prev_validator_set().expect("Currently all child should have validator_set");
+                    if parent_validator_hash != &parent_validator.hash() {
+                        cwarn!(SYNC, "Received headers have invalid validator set:\n  grand parent: (height: {}, hash: {}, next_validator_set_hash: {}),\n  child: (height: {}, hash: {}, hash(validator_set): {})", grand_parent.number(), grand_parent.hash(), parent_validator_hash,
+                               child.number(), child.hash(), parent_validator.hash());
+                        return false
+                    }
+                }
+
                 headers.first().map(|header| header.number()) == Some(*start_number)
             }
             (RequestMessage::Bodies(hashes), ResponseMessage::Bodies(bodies)) => {
