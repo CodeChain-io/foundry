@@ -23,6 +23,7 @@ mod block_hash;
 mod block_id;
 mod common_params;
 mod deposit;
+mod sync_header;
 mod tx_hash;
 mod validator_set;
 
@@ -40,6 +41,7 @@ pub use block_id::BlockId;
 pub use common_params::CommonParams;
 pub use deposit::Deposit;
 pub use header::Header;
+pub use sync_header::SyncHeader;
 pub use tx_hash::TxHash;
 pub use validator_set::CompactValidatorEntry;
 pub use validator_set::CompactValidatorSet;
