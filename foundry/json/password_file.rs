@@ -42,22 +42,22 @@ mod tests {
         let json = r#"
 		[
             {
-                "address": "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu",
+                "address": "4cnj73b1X2_K3XI_PJSXAQHZG0BD-VO4-TnhS3WEOy8Ym7UmT1Utc0",
                 "password": "mypass1"
             },
             {
-                "address": "tccqyaty0ad0jdy7865m06yl7fff5444dpdzhckreqxqjx440m7tkkegtwfee5",
+                "address": "fys3db1kOrI_rXyaTx9U2_RP-SlNK1q0LRXxYeQGBI1av35drZQtc0",
                 "password": "mypass2"
             }
 		]"#;
 
         let expected = PasswordFile(vec![
             PasswordEntry {
-                address: "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu".into(),
+                address: "4cnj73b1X2_K3XI_PJSXAQHZG0BD-VO4-TnhS3WEOy8Ym7UmT1Utc0".into(),
                 password: "mypass1".into(),
             },
             PasswordEntry {
-                address: "tccqyaty0ad0jdy7865m06yl7fff5444dpdzhckreqxqjx440m7tkkegtwfee5".into(),
+                address: "fys3db1kOrI_rXyaTx9U2_RP-SlNK1q0LRXxYeQGBI1av35drZQtc0".into(),
                 password: "mypass2".into(),
             },
         ]);

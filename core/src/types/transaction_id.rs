@@ -14,35 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ctypes::{BlockHash, BlockNumber, TxHash};
+use ctypes::{BlockId, TxHash};
 
-/// Uniquely identifies block.
-#[derive(Debug, PartialEq, Copy, Clone, Hash, Eq)]
-pub enum BlockId {
-    /// Block's blake256.
-    /// Querying by hash is always faster.
-    Hash(BlockHash),
-    /// Block number within canon blockchain.
-    Number(BlockNumber),
-    /// Earliest block (genesis).
-    Earliest,
-    /// Latest mined block.
-    Latest,
-    /// Parent of latest mined block.
-    ParentOfLatest,
-}
-
-impl From<BlockHash> for BlockId {
-    fn from(hash: BlockHash) -> Self {
-        BlockId::Hash(hash)
-    }
-}
-
-impl From<BlockNumber> for BlockId {
-    fn from(number: BlockNumber) -> Self {
-        BlockId::Number(number)
-    }
-}
 /// Uniquely identifies transaction.
 #[derive(Debug, PartialEq, Clone, Hash, Eq)]
 pub enum TransactionId {

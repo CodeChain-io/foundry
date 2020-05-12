@@ -63,5 +63,5 @@ pub use crate::peer_db::PeerDb;
 pub use crate::scheme::Scheme;
 pub use crate::service::ClientService;
 pub use crate::transaction::{LocalizedTransaction, PendingTransactions};
-pub use crate::types::{BlockId, BlockStatus, TransactionId};
+pub use crate::types::{BlockStatus, TransactionId};
 pub use rlp::Encodable;

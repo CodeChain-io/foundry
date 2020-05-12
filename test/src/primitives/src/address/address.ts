@@ -1,10 +1,8 @@
-import { Buffer } from "buffer";
+import * as Base64 from "crypto-js/enc-base64";
+import * as Hex from "crypto-js/enc-hex";
 import * as _ from "lodash";
-
-import { toHex } from "../utility";
 import { H256, H256Value } from "../value/H256";
-
-import { decode, encode, fromWords, toWords } from "./bech32";
+import { calculate as calculateChecksum } from "./checksum";
 
 export type AddressValue = Address | string;
 
@@ -21,45 +19,70 @@ export class Address {
         pubkey: H256Value,
         options: { networkId: string; version?: number }
     ) {
-        const { networkId, version = 1 } = options;
+        const { networkId, version = 0 } = options;
 
         if (!H256.check(pubkey)) {
             throw Error(`Invalid public key for creating Address: "${pubkey}"`);
         }
-        if (version !== 1) {
+        if (version !== 0) {
             throw Error(`Unsupported version for Address: "${version}"`);
         }
         if (typeof networkId !== "string" || networkId.length !== 2) {
             throw Error(`Unsupported networkId for Address: "${networkId}"`);
         }
 
-        const words = toWords(
-            Buffer.from(
-                _.padStart(version.toString(16), 2, "0") +
-                    H256.ensure(pubkey).value,
-                "hex"
-            )
+        const original = H256.ensure(pubkey).value;
+        const hex = Hex.parse(original);
+        const base64Encoded = Base64.stringify(hex);
+        const base64EncodedWithoutPad = base64Encoded.substr(
+            0,
+            base64Encoded.length - 1
         );
-        return new Address(H256.ensure(pubkey), encode(networkId + "c", words));
+        const base64urlEncoded = base64EncodedWithoutPad
+            .replace(/\//g, "_")
+            .replace(/\+/g, "-");
+
+        const checksum = calculateChecksum(
+            H256.ensure(pubkey),
+            networkId,
+            version
+        );
+        return new Address(
+            H256.ensure(pubkey),
+            checksum + base64urlEncoded + networkId + version.toString(16)
+        );
     }
 
     public static fromString(address: string) {
         if (typeof address !== "string") {
             throw Error(`Expected Address string but found: "${address}"`);
-        } else if (address.charAt(2) !== "c") {
-            throw Error(`Unknown prefix for Address: ${address}`);
         }
-
-        const { words } = decode(address, address.substr(0, 3));
-        const bytes = fromWords(words);
-        const version = bytes[0];
-
-        if (version !== 1) {
+        const version = parseInt(address.substr(address.length - 1, 1), 16);
+        if (version !== 0) {
             throw Error(`Unsupported version for Address: ${version}`);
         }
 
-        const pubkey = toHex(Buffer.from(bytes.slice(1)));
-        return new Address(new H256(pubkey), address);
+        const base64urlEncodedWithoutPad = address.substr(8, 43);
+        const base64Encoded =
+            base64urlEncodedWithoutPad.replace(/_/g, "/").replace(/-/g, "+") +
+            "=";
+        const decoded = Base64.parse(base64Encoded);
+        const pubkey = new H256(Hex.stringify(decoded));
+
+        const networkId = address.substr(8 + 43, 2);
+        const receivedChecksum = address.substr(0, 8);
+        const calculatedChecksum = calculateChecksum(
+            pubkey,
+            networkId,
+            version
+        );
+        if (receivedChecksum !== calculatedChecksum) {
+            throw Error(
+                `The invalid checksum. ${calculatedChecksum} expected but ${receivedChecksum} received`
+            );
+        }
+
+        return new Address(pubkey, address);
     }
 
     public static check(address: any): boolean {
@@ -93,7 +116,9 @@ export class Address {
 
     private static checkString(value: string): boolean {
         // FIXME: verify checksum
-        return /^.{2}c[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{59}$/.test(value);
+        return /^[0123456789bcdefghjkmnpqrstuvwxyz]{8}[A-Za-z0-9\-_]{43}[a-z]{2}[0-9a-f]$/.test(
+            value
+        );
     }
 
     public readonly pubkey: H256;

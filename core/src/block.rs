@@ -30,7 +30,7 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::collections::HashMap;
 
 /// A block, encoded as it is on the block chain.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Block {
     /// The header of this block
     pub header: Header,

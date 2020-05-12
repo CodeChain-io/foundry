@@ -30,7 +30,7 @@ use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
 use crate::service::ClientIoMessage;
 use crate::transaction::{LocalizedTransaction, PendingTransactions};
-use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
+use crate::types::{BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
@@ -41,7 +41,7 @@ use coordinator::types::{Event, Transaction};
 use cstate::{Metadata, MetadataAddress, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
-use ctypes::{BlockHash, BlockNumber, CommonParams, CompactValidatorSet, ConsensusParams, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ConsensusParams, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use merkle_trie::{TrieFactory, TrieMut};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
@@ -382,11 +382,11 @@ impl EngineInfo for Client {
         let network_id = self.network_id();
         if block_number == Some(0) {
             let genesis_author = self.block_header(&0.into()).expect("genesis block").author();
-            return Ok(Some(vec![PlatformAddress::new_v1(network_id, genesis_author)]))
+            return Ok(Some(vec![PlatformAddress::new_v0(network_id, genesis_author)]))
         }
         let pubkeys = self.engine().possible_authors(block_number)?;
         Ok(pubkeys
-            .map(|pubkeys| pubkeys.into_iter().map(|pubkey| PlatformAddress::new_v1(network_id, pubkey)).collect()))
+            .map(|pubkeys| pubkeys.into_iter().map(|pubkey| PlatformAddress::new_v0(network_id, pubkey)).collect()))
     }
 }
 

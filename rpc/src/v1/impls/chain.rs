@@ -17,10 +17,10 @@
 use super::super::errors;
 use super::super::traits::Chain;
 use super::super::types::{Block, BlockNumberAndHash, Transaction};
-use ccore::{BlockChainClient, BlockId, EngineInfo, TermInfo};
+use ccore::{BlockChainClient, EngineInfo, TermInfo};
 use cjson::scheme::Params;
 use ckey::{NetworkId, PlatformAddress};
-use ctypes::{BlockHash, BlockNumber, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, TxHash};
 use jsonrpc_core::Result;
 use std::sync::Arc;
 

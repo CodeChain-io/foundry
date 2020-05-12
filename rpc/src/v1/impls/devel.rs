@@ -18,13 +18,13 @@ use super::super::errors;
 use super::super::traits::Devel;
 use super::super::types::TPSTestSetting;
 use ccore::{
-    BlockChainClient, BlockId, BlockProducer, DatabaseClient, EngineClient, EngineInfo, MinerService, SnapshotClient,
-    TermInfo, COL_STATE,
+    BlockChainClient, BlockProducer, DatabaseClient, EngineClient, EngineInfo, MinerService, SnapshotClient, TermInfo,
+    COL_STATE,
 };
 use cjson::bytes::Bytes;
 use cnetwork::{unbounded_event_callback, EventSender, IntoSocketAddr};
 use csync::BlockSyncEvent;
-use ctypes::BlockHash;
+use ctypes::{BlockHash, BlockId};
 use jsonrpc_core::Result;
 use kvdb::KeyValueDB;
 use primitives::H256;

@@ -52,6 +52,25 @@ export class Header {
 
         return header;
     }
+
+    public static default(): Header {
+        return new Header(
+            new H256(
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            ),
+            new U256(0),
+            new U256(0),
+            new H256(
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            ),
+            Buffer.alloc(0),
+            BLAKE_NULL_RLP,
+            BLAKE_NULL_RLP,
+            BLAKE_NULL_RLP,
+            []
+        );
+    }
+
     private parentHash: H256;
     private timestamp: U256;
     private number: U256;
@@ -60,7 +79,7 @@ export class Header {
     private transactionsRoot: H256;
     private stateRoot: H256;
     private nextValidatorSetHash: H256;
-    private seal: number[][];
+    private seal: any[];
     private hash: null | H256;
     private bareHash: null | H256;
 
@@ -73,7 +92,7 @@ export class Header {
         transactionsRoot: H256,
         stateRoot: H256,
         nextValidatorSetHash: H256,
-        seal: number[][],
+        seal: any[],
         hash?: H256,
         bareHash?: H256
     ) {
@@ -122,8 +141,12 @@ export class Header {
         this.nextValidatorSetHash = root;
     }
 
-    public setSeal(seal: number[][]) {
+    public setSeal(seal: any[]) {
         this.seal = seal;
+    }
+
+    public getParentHash(): H256 | null {
+        return this.parentHash;
     }
 
     public getHash(): H256 | null {
@@ -132,24 +155,6 @@ export class Header {
 
     public getBareHash(): H256 | null {
         return this.bareHash;
-    }
-
-    public default(): Header {
-        return new Header(
-            new H256(
-                "0000000000000000000000000000000000000000000000000000000000000000"
-            ),
-            new U256(0),
-            new U256(0),
-            new H256(
-                "0000000000000000000000000000000000000000000000000000000000000000"
-            ),
-            Buffer.alloc(0),
-            BLAKE_NULL_RLP,
-            BLAKE_NULL_RLP,
-            BLAKE_NULL_RLP,
-            []
-        );
     }
 
     public toEncodeObject(): Array<any> {
@@ -162,7 +167,7 @@ export class Header {
             this.number.toEncodeObject(),
             this.timestamp.toEncodeObject(),
             this.extraData
-        ].concat(this.seal.map(seal => Buffer.of(...seal)));
+        ].concat(this.seal);
     }
 
     public rlpBytes(): Buffer {

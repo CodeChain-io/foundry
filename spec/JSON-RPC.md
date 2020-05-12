@@ -1104,7 +1104,7 @@ Errors: `Invalid params`
 ```
 curl \
     -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "mempool_unbanAccounts", "params": [["tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3"]], "id": null}' \
+    -d '{"jsonrpc": "2.0", "method": "mempool_unbanAccounts", "params": [["01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0"]], "id": null}' \
     localhost:8080
 ```
 
@@ -1143,7 +1143,7 @@ curl \
 {
   "jsonrpc": "2.0",
   "result": [
-    "tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3"
+    "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0"
   ],
   "id": null
 }
@@ -1166,7 +1166,7 @@ Error: `Invalid params`
 ```
 curl \
     -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "mempool_registerImmuneAccounts", "params": [["tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3"]], "id": null}' \
+    -d '{"jsonrpc": "2.0", "method": "mempool_registerImmuneAccounts", "params": [["01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0"]], "id": null}' \
     localhost:8080
 ```
 
@@ -1205,7 +1205,7 @@ curl \
 {
   "jsonrpc": "2.0",
   "result": [
-    "tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3"
+    "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0"
   ],
   "id": null
 }

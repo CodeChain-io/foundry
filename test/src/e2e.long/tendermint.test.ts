@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Kodebox, Inc.
+// Copyright 2018-2020 Kodebox, Inc.
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
@@ -63,10 +63,10 @@ describe("Tendermint ", function() {
     describe("getPossibleAuthors", function() {
         it("latest", async function() {
             const validators = [
-                "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde",
-                "tccqyz88auzcwhvq57r0l3tenh6j2vde79w8hpzv2h9gzs55kq07ae7vdca0jm",
-                "tccqyjs940xyyr8ngv7gheup7fj2ln6xfa64a05q06u5x4jdpdfu9eyuansncp",
-                "tccq85snuc3l5g4aeqjah8um6yvc5rnwqgp7a345eaeedznjrcued94umjdq57"
+                "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0",
+                "szff1322BHP3gsOuwFPDf-K8zvqSmNz4rj3CJirlQKFKWA_3c-Ytc0",
+                "qwfj0xwkJQLV5iEGeaGeRfPA-TJX56Mnuq9fQD9coasmhanhck4tc0",
+                "dbqtds3w6QnzEf0RXuQS7c_N6IzFBzcBAfdjWme5y0U5DxzLS14tc0"
             ];
             expect(
                 await nodes[0].rpc.chain.getPossibleAuthors({
@@ -92,7 +92,7 @@ describe("Tendermint ", function() {
 
         it("genesis", async function() {
             const validators = [
-                "tccqy9xjqk9zwz2zhgsvt9v8f8x9jxsct4s9dx707s2xpxwf7yw5jpdqurmyde"
+                "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0"
             ];
             expect(
                 await nodes[0].rpc.chain.getPossibleAuthors({ blockNumber: 0 })
