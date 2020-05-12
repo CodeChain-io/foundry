@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::message::RequestMessage;
-use ccore::BlockChainClient;
-use ctypes::{BlockHash, BlockId, Header};
+use ccore::{BlockChainTrait, Client};
+use ctypes::{BlockHash, BlockId, Header, SyncHeader};
 use primitives::U256;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -31,21 +31,21 @@ const MAX_WAIT: u64 = 15;
 #[derive(Clone)]
 pub struct HeaderDownloader {
     // NOTE: Use this member as minimum as possible.
-    client: Arc<dyn BlockChainClient>,
+    client: Arc<Client>,
 
     seq: U256,
     best_hash: BlockHash,
     /// The last header we downloaded from this peer.
     pivot: BlockHash,
     request_time: Option<Instant>,
-    downloaded: HashMap<BlockHash, Header>,
+    downloaded: HashMap<BlockHash, SyncHeader>,
     /// Headers that are importing now.
-    queued: HashMap<BlockHash, Header>,
+    queued: HashMap<BlockHash, SyncHeader>,
     trial: usize,
 }
 
 impl HeaderDownloader {
-    pub fn new(client: Arc<dyn BlockChainClient>, seq: U256, best_hash: BlockHash) -> Self {
+    pub fn new(client: Arc<Client>, seq: U256, best_hash: BlockHash) -> Self {
         let best_header_hash = client.best_block_header().hash();
 
         Self {
@@ -100,9 +100,9 @@ impl HeaderDownloader {
     /// Panics if header dosn't exist
     fn pivot_header(&self) -> Header {
         match self.queued.get(&self.pivot) {
-            Some(header) => header.clone(),
+            Some(header) => header.clone().into(),
             None => match self.downloaded.get(&self.pivot) {
-                Some(header) => header.clone(),
+                Some(header) => header.clone().into(),
                 None => self.client.block_header(&BlockId::Hash(self.pivot)).unwrap().decode(),
             },
         }
@@ -140,7 +140,7 @@ impl HeaderDownloader {
     /// Imports headers and mark success
     /// Expects importing headers matches requested header
     /// headers slice should be sorted in order of number
-    pub fn import_headers(&mut self, headers: &[Header]) {
+    pub fn import_headers(&mut self, headers: &[SyncHeader]) {
         let first_header = headers.first().expect("First header must exist");
         let first_header_hash = first_header.hash();
         let first_header_number = first_header.number();
@@ -179,7 +179,7 @@ impl HeaderDownloader {
         self.trial = 0;
     }
 
-    pub fn downloaded(&self) -> Vec<Header> {
+    pub fn downloaded(&self) -> Vec<SyncHeader> {
         self.downloaded.values().cloned().collect()
     }
 
