@@ -15,9 +15,9 @@ async function sendBlock() {
 
     await mock.sendEncodedBlock(
         [
-            header.toEncodeObject(),
-            header1.toEncodeObject(),
-            header2.toEncodeObject()
+            [header.toEncodeObject(), []],
+            [header1.toEncodeObject(), []],
+            [header2.toEncodeObject(), [[]]]
         ],
         [[], []],
         header2.hashing()
