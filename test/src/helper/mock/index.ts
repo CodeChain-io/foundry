@@ -46,7 +46,10 @@ import {
 } from "./tendermintMessage";
 import { TransactionSyncMessage } from "./transactionSyncMessage";
 
-type EncodedHeaders = Array<Array<Buffer>>;
+type EncodedHeader = any;
+type ValidatorSet = [] | Array<any>;
+type EncodedSyncHeader = [EncodedHeader, ValidatorSet];
+export type EncodedHeaders = Array<EncodedSyncHeader>;
 type EncodedTransactions = Array<Array<Buffer>>;
 type EncodedBodies = Array<Array<Array<Buffer>>>;
 
@@ -277,19 +280,26 @@ export class Mock {
     }
 
     public async sendBlock(
-        header: Array<Header>,
+        headers: Array<[Header, ValidatorSet]>,
         body: Array<Array<SignedTransaction>>
     ) {
         if (this.log) {
             console.log("Send blocks");
         }
-        const bestBlock = header[header.length - 1];
+        const [bestBlock, _bestHeaderValidatorSet] = headers[
+            headers.length - 1
+        ];
         const best = bestBlock.hashing();
         const genesis = this.p2psocket.getGenesisHash();
         const seq = new U256(0);
         await this.sendStatus(seq, best, genesis);
         await this.waitHeaderRequest();
-        await this.sendBlockHeaderResponse(header.map(h => h.toEncodeObject()));
+        await this.sendBlockHeaderResponse(
+            headers.map(([h, validatorSet]) => [
+                h.toEncodeObject(),
+                validatorSet
+            ])
+        );
         if (this.log) {
             console.log("Send header response");
         }

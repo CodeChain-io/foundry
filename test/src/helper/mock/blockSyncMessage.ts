@@ -272,7 +272,7 @@ type responseMessageBody = IHeaderss | IBodiess | IStateHeads | IStateChunks;
 
 interface IHeaderss {
     type: "headers";
-    data: Array<Array<Buffer>>;
+    data: any;
 }
 
 interface IBodiess {

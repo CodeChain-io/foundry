@@ -113,9 +113,12 @@ describe("Test onChain block communication", async function() {
 
         await mock.sendEncodedBlock(
             [
-                header.toEncodeObject(),
-                header1.toEncodeObject(),
-                header2.toEncodeObject()
+                // [] => None
+                [header.toEncodeObject(), []],
+                // [] => None
+                [header1.toEncodeObject(), []],
+                // [[]] => Some(EmptyValidatorSet)
+                [header2.toEncodeObject(), [[]]]
             ],
             [[], []],
             header2.hashing()
