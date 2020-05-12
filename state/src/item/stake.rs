@@ -235,8 +235,10 @@ impl NextValidators {
     }
 
     pub fn create_compact_validator_set(&self) -> CompactValidatorSet {
+        let mut reversed = self.0.clone();
+        reversed.reverse();
         CompactValidatorSet::new(
-            self.0
+            reversed
                 .iter()
                 .map(|x| CompactValidatorEntry {
                     public_key: *x.pubkey(),
