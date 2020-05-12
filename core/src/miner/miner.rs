@@ -24,7 +24,7 @@ use crate::error::Error;
 use crate::scheme::Scheme;
 use crate::transaction::PendingTransactions;
 use crate::types::{BlockId, TransactionId};
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use coordinator::traits::{BlockExecutor, TxFilter};
 use coordinator::types::{Transaction, TxOrigin};
 use cstate::TopLevelState;
@@ -33,6 +33,7 @@ use ctypes::{BlockHash, TxHash};
 use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
+use std::borrow::Borrow;
 use std::ops::Range;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -76,7 +77,7 @@ impl Default for MinerOptions {
 
 #[derive(Debug, Default, Clone)]
 pub struct AuthoringParams {
-    pub author: Address,
+    pub author: Public,
     pub extra_data: Bytes,
 }
 
@@ -235,11 +236,10 @@ impl Miner {
         assert!(self.engine.seals_internally(), "If a signer is not prepared, prepare_block should not be called");
         let seal = self.engine.generate_seal(None, &parent_header.decode());
         if let Some(seal_bytes) = seal.seal_fields() {
-            open_block.seal(seal_bytes).expect("Sealing always success");
+            open_block.seal(self.engine.borrow(), seal_bytes).expect("Sealing always success");
         } else {
             return Ok(None)
         }
-        self.engine.on_open_block(open_block.inner_mut())?;
 
         let evidences = self.engine.fetch_evidences();
 
@@ -284,19 +284,19 @@ impl MinerService for Miner {
         self.params.read().clone()
     }
 
-    fn set_author(&self, ap: Arc<AccountProvider>, address: Address) -> Result<(), AccountProviderError> {
-        self.params.write().author = address;
+    fn set_author(&self, ap: Arc<AccountProvider>, pubkey: Public) -> Result<(), AccountProviderError> {
+        self.params.write().author = pubkey;
 
         if self.engine_type().need_signer_key() {
-            ap.get_unlocked_account(&address)?.sign(&Default::default())?;
-            self.engine.set_signer(ap, address);
+            ap.get_unlocked_account(&pubkey)?.sign(&Default::default())?;
+            self.engine.set_signer(ap, pubkey);
             Ok(())
         } else {
             Ok(())
         }
     }
 
-    fn get_author_address(&self) -> Address {
+    fn get_author(&self) -> Public {
         self.params.read().author
     }
 

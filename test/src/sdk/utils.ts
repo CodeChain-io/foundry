@@ -6,14 +6,12 @@ import {
     blake256 as _blake256,
     blake256WithKey as _blake256WithKey,
     generatePrivateKey as _generatePrivateKey,
-    getAccountIdFromPrivate as _getAccountIdFromPrivate,
-    getAccountIdFromPublic as _getAccountIdFromPublic,
     getPublicFromPrivate as _getPublicFromPrivate,
     ripemd160 as _ripemd160,
     signEd25519 as _signEd25519,
     toHex as _toHex,
     verifyEd25519 as _verifyEd25519
-} from "foundry-primitives";
+} from "../primitives/src";
 
 /**
  * Converts buffer to hexadecimal string.
@@ -201,22 +199,6 @@ export const verifyEd25519 = (
  * @returns 32 byte hexadecimal string of private key
  */
 export const generatePrivateKey = (): string => _generatePrivateKey();
-
-/**
- * Gets account id from private key.
- * @param priv 32 byte hexadecimal string of private key
- * @returns 20 byte hexadecimal string of account id
- */
-export const getAccountIdFromPrivate = (priv: string): string =>
-    _getAccountIdFromPrivate(priv);
-
-/**
- * Gets account id from the given public key.
- * @param publicKey 64 byte hexadecimal string of uncompressed public key
- * @returns 20 byte hexadecimal string of account id
- */
-export const getAccountIdFromPublic = (publicKey: string): string =>
-    _getAccountIdFromPublic(publicKey);
 
 /**
  * Gets public key from private key.

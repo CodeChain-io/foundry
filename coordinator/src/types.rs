@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use ccrypto::blake256;
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use ctypes::{CompactValidatorSet, ConsensusParams, TxHash};
 use primitives::Bytes;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -55,13 +55,13 @@ pub struct Header {
     /// Block number.
     number: u64,
     /// Block author.
-    author: Address,
+    author: Public,
     /// Block extra data.
     extra_data: Bytes,
 }
 
 impl Header {
-    pub fn new(timestamp: u64, number: u64, author: Address, extra_data: Bytes) -> Self {
+    pub fn new(timestamp: u64, number: u64, author: Public, extra_data: Bytes) -> Self {
         Self {
             timestamp,
             number,

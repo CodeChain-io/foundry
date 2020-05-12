@@ -20,7 +20,7 @@ use crate::consensus::{ConsensusEngine, NullEngine, Solo, Tendermint};
 use crate::error::Error;
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::HashDB;
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
 use primitives::{Bytes, H256};
@@ -44,7 +44,7 @@ pub struct Scheme {
     /// The genesis block's parent hash field.
     pub parent_hash: BlockHash,
     /// The genesis block's author field.
-    pub author: Address,
+    pub author: Public,
     /// The genesis block's timestamp field.
     pub timestamp: u64,
     /// Transactions root of the genesis block. Should be BLAKE_NULL_RLP.

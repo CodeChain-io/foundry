@@ -36,10 +36,10 @@ use crate::client::ConsensusClient;
 use crate::error::Error;
 use crate::views::HeaderView;
 use crate::Client;
-use ckey::{Address, Signature};
+use ckey::{Ed25519Public as Public, Signature};
 use cnetwork::NetworkService;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
-use ctypes::{BlockHash, CompactValidatorSet, ConsensusParams, Header};
+use ctypes::{BlockHash, Header};
 use primitives::Bytes;
 use std::fmt;
 use std::sync::{Arc, Weak};
@@ -158,21 +158,6 @@ pub trait ConsensusEngine: Sync + Send {
     /// Called when the step is not changed in time
     fn on_timeout(&self, _token: usize) {}
 
-    /// Block transformation functions, before the transactions.
-    fn on_open_block(&self, _block: &mut ExecutedBlock) -> Result<(), Error> {
-        Ok(())
-    }
-
-    /// Block transformation functions, after the transactions.
-    fn on_close_block(
-        &self,
-        _block: &mut ExecutedBlock,
-        _updated_validator_set: Option<CompactValidatorSet>,
-        _updated_consensus_params: Option<ConsensusParams>,
-    ) -> Result<(), Error> {
-        Ok(())
-    }
-
     /// Add Client which can be used for sealing, potentially querying the state and sending messages.
     fn register_client(&self, _client: Weak<dyn ConsensusClient>) {}
 
@@ -189,7 +174,7 @@ pub trait ConsensusEngine: Sync + Send {
     }
 
     /// Register an account which signs consensus messages.
-    fn set_signer(&self, _ap: Arc<AccountProvider>, _address: Address) {}
+    fn set_signer(&self, _ap: Arc<AccountProvider>, _pubkey: Public) {}
 
     fn register_network_extension_to_service(&self, _: &NetworkService) {}
 
@@ -218,19 +203,19 @@ pub trait ConsensusEngine: Sync + Send {
         true
     }
 
-    fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError>;
+    fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Public>>, EngineError>;
 }
 
 /// Voting errors.
 #[derive(Debug)]
 pub enum EngineError {
     /// Precommit signatures or author field does not belong to an authority.
-    BlockNotAuthorized(Address),
+    BlockNotAuthorized(Public),
     /// The signature cannot be verified with the signer of the message.
     MessageWithInvalidSignature {
         height: u64,
         signer_index: usize,
-        address: Address,
+        pubkey: Public,
     },
     /// The vote for the future height couldn't be verified
     FutureMessage {
@@ -243,9 +228,9 @@ pub enum EngineError {
         index: usize,
     },
     /// The same author issued different votes at the same step.
-    DoubleVote(Address),
+    DoubleVote(Public),
     /// The received block is from an incorrect proposer.
-    NotProposer(Mismatch<Address>),
+    NotProposer(Mismatch<Public>),
     /// Seal field has an unexpected size.
     BadSealFieldSize(OutOfBounds<usize>),
     /// Malformed consensus message.
@@ -257,12 +242,12 @@ impl fmt::Display for EngineError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use self::EngineError::*;
         let msg = match self {
-            BlockNotAuthorized(address) => format!("Signer {} is not authorized.", address),
+            BlockNotAuthorized(pubkey) => format!("Signer {:?} is not authorized.", pubkey),
             MessageWithInvalidSignature {
                 height,
                 signer_index,
-                address,
-            } => format!("The {}th validator({}) on height {} is not authorized.", signer_index, address, height),
+                pubkey,
+            } => format!("The {}th validator({:?}) on height {} is not authorized.", signer_index, pubkey, height),
             FutureMessage {
                 future_height,
                 current_height,
@@ -271,8 +256,8 @@ impl fmt::Display for EngineError {
                 height,
                 index,
             } => format!("The {}th validator on height {} does not exist. (out of bound)", index, height),
-            DoubleVote(address) => format!("Author {} issued too many blocks.", address),
-            NotProposer(mis) => format!("Author is not a current proposer: {}", mis),
+            DoubleVote(pubkey) => format!("Author {:?} issued too many blocks.", pubkey),
+            NotProposer(mis) => format!("Author is not a current proposer: {:?}", mis),
             BadSealFieldSize(oob) => format!("Seal field has an unexpected length: {}", oob),
             MalformedMessage(msg) => format!("Received malformed consensus message: {}", msg),
             CannotOpenBlock => "Cannot open a block".to_string(),

@@ -22,7 +22,7 @@ import "mocha";
 chai.use(chaiAsPromised);
 import * as stake from "../../stakeholder";
 
-import { H256 } from "foundry-primitives/lib";
+import { H256 } from "../../primitives/src";
 import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
 import { PromiseExpect } from "../../helper/promise";

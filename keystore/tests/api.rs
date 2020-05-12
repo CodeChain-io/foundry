@@ -19,10 +19,11 @@ extern crate codechain_keystore as ckeystore;
 
 mod util;
 
-use ckey::{verify, Ed25519KeyPair as KeyPair, Ed25519Private as Private, KeyPairTrait};
+use ckey::{verify, Ed25519KeyPair as KeyPair, Ed25519Private as Private, Ed25519Public as Public, KeyPairTrait};
 use ckeystore::accounts_dir::RootDiskDirectory;
 use ckeystore::{KeyStore, SimpleSecretStore};
 use primitives::H256;
+use std::str::FromStr;
 use util::TransientDir;
 
 #[test]
@@ -108,26 +109,26 @@ fn secret_store_load_pat_files() {
     let dir = RootDiskDirectory::at(pat_path());
     let store = KeyStore::open(Box::new(dir)).unwrap();
     assert_eq!(store.accounts().unwrap(), vec![
-        "0x3fc74504d2b491d73079975e302279540bf6e44e".into(),
-        "0x41178717678e402bdb663d98fe47669d93b29603".into()
+        Public::from_str("800a29dbeab141ada7923517e945bf4594917473809547bc0bb2e47cd39ac94b").unwrap(),
+        Public::from_str("9f3f180b63b95559a95735385e35cd973c3d4e9f81bbf0faa61cf6159841feb5").unwrap()
     ]);
 }
 
 #[test]
 fn decrypting_files_with_short_ciphertext() {
-    // 0x0e8d3d2a8c5ad882331c94249806bdc2867ca186
+    // 800a29dbeab141ada7923517e945bf4594917473809547bc0bb2e47cd39ac94b
     let kp1: KeyPair =
         KeyPair::from_private("f52e5b0b80c5e7b6fcd64869dd5f4dc84763395b05620209fcc11e7436f0ac05800a29dbeab141ada7923517e945bf4594917473809547bc0bb2e47cd39ac94b".parse().unwrap())
             ;
-    // 0x1c593662f2812124a3ab842faf20acfbf9217eb7
+    // 9f3f180b63b95559a95735385e35cd973c3d4e9f81bbf0faa61cf6159841feb5
     let kp2: KeyPair =
         KeyPair::from_private("44795b6f434fde613af66cb01fe14ecf51f0f610b7db38ce3b369e15a49016709f3f180b63b95559a95735385e35cd973c3d4e9f81bbf0faa61cf6159841feb5".parse().unwrap());
     let dir = RootDiskDirectory::at(ciphertext_path());
     let store = KeyStore::open(Box::new(dir)).unwrap();
     let accounts = store.accounts().unwrap();
     assert_eq!(accounts, vec![
-        "0x0e8d3d2a8c5ad882331c94249806bdc2867ca186".into(),
-        "0x1c593662f2812124a3ab842faf20acfbf9217eb7".into()
+        Public::from_str("800a29dbeab141ada7923517e945bf4594917473809547bc0bb2e47cd39ac94b").unwrap(),
+        Public::from_str("9f3f180b63b95559a95735385e35cd973c3d4e9f81bbf0faa61cf6159841feb5").unwrap()
     ]);
 
     let message = H256::random();

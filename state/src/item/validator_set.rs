@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::stake::{CurrentValidators, NextValidators, Validator};
+use super::stake::{CurrentValidators, NextValidators};
 use crate::{StateResult, TopLevelState};
 use ckey::Ed25519Public as Public;
-use ctypes::{CompactValidatorEntry, CompactValidatorSet};
+use ctypes::{transaction::Validator, CompactValidatorEntry, CompactValidatorSet};
 use std::ops::Deref;
 
 // Validator information just enough for the host

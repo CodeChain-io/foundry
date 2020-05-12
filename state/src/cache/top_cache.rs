@@ -16,7 +16,7 @@
 
 use super::WriteBack;
 use crate::{Account, ActionData, Metadata, MetadataAddress, Module, ModuleAddress};
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use merkle_trie::{Result as TrieResult, Trie, TrieMut};
 use primitives::H256;
 use std::cell::RefMut;
@@ -31,7 +31,7 @@ pub struct TopCache {
 
 impl TopCache {
     pub fn new(
-        accounts: impl Iterator<Item = (Address, Account)>,
+        accounts: impl Iterator<Item = (Public, Account)>,
         metadata: impl Iterator<Item = (MetadataAddress, Metadata)>,
         modules: impl Iterator<Item = (ModuleAddress, Module)>,
         action_data: impl Iterator<Item = (H256, ActionData)>,
@@ -73,16 +73,16 @@ impl TopCache {
         Ok(())
     }
 
-    pub fn account(&self, a: &Address, db: &dyn Trie) -> TrieResult<Option<Account>> {
+    pub fn account(&self, a: &Public, db: &dyn Trie) -> TrieResult<Option<Account>> {
         self.account.get(a, db)
     }
 
-    pub fn account_mut(&self, a: &Address, db: &dyn Trie) -> TrieResult<RefMut<'_, Account>> {
+    pub fn account_mut(&self, a: &Public, db: &dyn Trie) -> TrieResult<RefMut<'_, Account>> {
         self.account.get_mut(a, db)
     }
 
-    pub fn remove_account(&self, address: &Address) {
-        self.account.remove(address)
+    pub fn remove_account(&self, pubkey: &Public) {
+        self.account.remove(pubkey)
     }
 
     pub fn metadata(&self, a: &MetadataAddress, db: &dyn Trie) -> TrieResult<Option<Metadata>> {
@@ -113,7 +113,7 @@ impl TopCache {
         self.action_data.remove(address)
     }
 
-    pub fn cached_accounts(&self) -> Vec<(Address, Option<Account>)> {
+    pub fn cached_accounts(&self) -> Vec<(Public, Option<Account>)> {
         self.account.items_sorted_by_touched()
     }
 

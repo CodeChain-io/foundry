@@ -1,5 +1,5 @@
-import { Address, H256 } from "foundry-primitives";
 import * as RLP from "rlp";
+import { Address, H256 } from "../../primitives/src";
 import { SignedTransaction, SignedTransactionJSON } from "./SignedTransaction";
 import { fromJSONToSignedTransaction } from "./transaction/json";
 
@@ -148,7 +148,7 @@ export class Block {
 
         const blockHeader: any[] = [];
         blockHeader.push(parentHash.toEncodeObject());
-        blockHeader.push(author.getAccountId().toEncodeObject());
+        blockHeader.push(author.getPubKey().toEncodeObject());
         blockHeader.push(stateRoot.toEncodeObject());
         blockHeader.push(transactionsRoot.toEncodeObject());
         blockHeader.push(nextValidatorSetHash.toEncodeObject());

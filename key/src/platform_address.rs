@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{Address, Error, NetworkId};
+use crate::{Ed25519Public as Public, Error, NetworkId};
 use bech32::Bech32;
 use lazy_static::lazy_static;
 use parking_lot::Mutex;
-use primitives::H160;
 use serde::de::{Error as SerdeError, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::cmp;
@@ -32,39 +31,39 @@ pub struct PlatformAddress {
     /// The version of the address.
     pub version: u8,
     /// Public key hash.
-    address: Address,
+    pubkey: Public,
 }
 
 impl PlatformAddress {
-    pub fn new_v1(network_id: NetworkId, address: Address) -> Self {
+    pub fn new_v1(network_id: NetworkId, pubkey: Public) -> Self {
         assert!(check_network_id(network_id));
         Self {
             network_id,
             version: 1,
-            address,
+            pubkey,
         }
     }
 
-    pub fn address(&self) -> &Address {
-        self.try_address().unwrap()
+    pub fn pubkey(&self) -> &Public {
+        self.try_pubkey().unwrap()
     }
 
-    pub fn into_address(self) -> Address {
-        self.try_into_address().unwrap()
+    pub fn into_pubkey(self) -> Public {
+        self.try_into_pubkey().unwrap()
     }
 
-    pub fn try_address(&self) -> Result<&Address, Error> {
+    pub fn try_pubkey(&self) -> Result<&Public, Error> {
         if !check_network_id(self.network_id) {
             return Err(Error::InvalidNetworkId(self.network_id))
         }
-        Ok(&self.address)
+        Ok(&self.pubkey)
     }
 
-    pub fn try_into_address(self) -> Result<Address, Error> {
+    pub fn try_into_pubkey(self) -> Result<Public, Error> {
         if !check_network_id(self.network_id) {
             return Err(Error::InvalidNetworkId(self.network_id))
         }
-        Ok(self.address)
+        Ok(self.pubkey)
     }
 }
 
@@ -108,7 +107,7 @@ impl fmt::Display for PlatformAddress {
         let hrp = format!("{}c", self.network_id);
         let mut data = Vec::new();
         data.push(self.version);
-        data.extend(&self.address.to_vec());
+        data.extend(self.pubkey.as_ref());
         let mut encoded = Bech32 {
             hrp,
             data: rearrange_bits(&data, 8, 5),
@@ -151,10 +150,10 @@ impl FromStr for PlatformAddress {
         Ok(Self {
             network_id,
             version: data[0],
-            address: {
-                let mut arr = [0u8; 20];
-                arr[..20].copy_from_slice(&data[1..=20]);
-                H160(arr).into()
+            pubkey: {
+                let mut arr = [0u8; 32];
+                arr[..32].copy_from_slice(&data[1..=32]);
+                Public::from_slice(&arr).ok_or(Error::InvalidSecret)?
             },
         })
     }
@@ -220,20 +219,22 @@ fn check_network_id(network_id: NetworkId) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{rearrange_bits, PlatformAddress};
+    use crate::Ed25519Public as Public;
     use std::str::FromStr;
 
     #[test]
     fn serialization() {
-        let address = PlatformAddress::from_str("tccq8txjnstz9h2uj2xw4jczejp57ew9zp7nqycg65e").unwrap();
+        let address =
+            PlatformAddress::from_str("tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3").unwrap();
         let serialized = serde_json::to_string(&address).unwrap();
-        assert_eq!(serialized, r#""tccq8txjnstz9h2uj2xw4jczejp57ew9zp7nqycg65e""#);
+        assert_eq!(serialized, r#""tccq8t6d5nxsd7pckgnswusmq6sdzu76kxa808t6m3gtygltrjqeeqncfggwh3""#);
     }
 
     #[test]
     fn deserialization() {
         let addr1: Result<PlatformAddress, _> = serde_json::from_str(r#""""#);
         let addr2: Result<PlatformAddress, _> =
-            serde_json::from_str(r#""tccq8txjnstz9h2uj2xw4jczejp57ew9zp7nqycg65e""#);
+            serde_json::from_str(r#""tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu""#);
 
         assert!(addr1.is_err());
         assert!(addr2.is_ok());
@@ -244,10 +245,10 @@ mod tests {
         let address = PlatformAddress {
             network_id: "tc".into(),
             version: 1,
-            address: "3f4aa1fedf1f54eeb03b759deadb36676b184911".into(),
+            pubkey: Public::from_str("e83c0184ed9acc66868a7be2fbe901eecfe7c054450bbb8d24328e0116ea5e0c").unwrap(),
         };
 
-        assert_eq!("tccqyl54g07mu04fm4s8d6em6kmxenkkxzfzyxyy2hg".to_string(), address.to_string());
+        assert_eq!("tccq85rcqvyakdvce5x3fa797lfq8hvle7q23zshwudyseguqgkaf0qcy2clnj".to_string(), address.to_string());
     }
 
     #[test]
@@ -255,10 +256,10 @@ mod tests {
         let address = PlatformAddress {
             network_id: "tc".into(),
             version: 1,
-            address: "3f4aa1fedf1f54eeb03b759deadb36676b184911".into(),
+            pubkey: Public::from_str("200c2fe942fdbe9143323ed264d0e39e7b321ca33c78bfa78a92576e00dc9ebd").unwrap(),
         };
 
-        assert_eq!(address, "tccqyl54g07mu04fm4s8d6em6kmxenkkxzfzyxyy2hg".into());
+        assert_eq!(address, "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu".into());
     }
 
     #[test]

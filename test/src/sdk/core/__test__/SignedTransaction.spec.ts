@@ -1,7 +1,7 @@
 import { expect } from "chai";
-import { Address, H512, U64 } from "foundry-primitives";
 import "mocha";
-import { getAccountIdFromPrivate } from "../../utils";
+import { Address, H512, U64 } from "../../../primitives/src";
+import { getPublicFromPrivate } from "../../utils";
 import { Pay } from "../classes";
 import { fromJSONToSignedTransaction } from "../transaction/json";
 
@@ -10,9 +10,12 @@ it("toJSON", () => {
         "9af28f6fd6a1170dbee2cb8c34abab0408e6d811d212cdcde23f72473eb0d97ad7a6d266837c1c591383b90d835068b9ed58dd3bcebd6e285911f58e40ce413c"
     );
     const pay = new Pay(
-        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
-            networkId: "tc"
-        }),
+        Address.fromPublic(
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            {
+                networkId: "tc"
+            }
+        ),
         new U64(11),
         "tc"
     );
@@ -24,18 +27,21 @@ it("toJSON", () => {
     expect(fromJSONToSignedTransaction(p.toJSON())).deep.equal(p);
 });
 
-it("getSignerAccountId", () => {
+it("getSignerPublic", () => {
     const secret = new H512(
         "9af28f6fd6a1170dbee2cb8c34abab0408e6d811d212cdcde23f72473eb0d97ad7a6d266837c1c591383b90d835068b9ed58dd3bcebd6e285911f58e40ce413c"
     );
-    const signerAccountId = Address.fromAccountId(
-        getAccountIdFromPrivate(secret.value),
+    const signerPubKey = Address.fromPublic(
+        getPublicFromPrivate(secret.value),
         { networkId: "tc" }
-    ).getAccountId();
+    ).getPubKey();
     const pay = new Pay(
-        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
-            networkId: "tc"
-        }),
+        Address.fromPublic(
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            {
+                networkId: "tc"
+            }
+        ),
         new U64(11),
         "tc"
     );
@@ -44,24 +50,27 @@ it("getSignerAccountId", () => {
         fee: 33,
         seq: 44
     });
-    expect(p.getSignerAccountId().value).equal(signerAccountId.value);
+    expect(p.getSignerPublic().value).equal(signerPubKey.value);
 });
 
 it("getSignerAddress", () => {
     const secret = new H512(
         "9af28f6fd6a1170dbee2cb8c34abab0408e6d811d212cdcde23f72473eb0d97ad7a6d266837c1c591383b90d835068b9ed58dd3bcebd6e285911f58e40ce413c"
     );
-    const signerAccountId = Address.fromAccountId(
-        getAccountIdFromPrivate(secret.value),
+    const signerPubKey = Address.fromPublic(
+        getPublicFromPrivate(secret.value),
         { networkId: "tc" }
-    ).getAccountId();
-    const signerAddress = Address.fromAccountId(signerAccountId, {
+    ).getPubKey();
+    const signerAddress = Address.fromPublic(signerPubKey, {
         networkId: "tc"
     });
     const pay = new Pay(
-        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
-            networkId: "tc"
-        }),
+        Address.fromPublic(
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            {
+                networkId: "tc"
+            }
+        ),
         new U64(11),
         "tc"
     );

@@ -27,7 +27,7 @@ use ccore::{
 };
 use cdiscovery::{Config, Discovery};
 use cinformer::{handler::Handler, InformerEventSender, InformerService, MetaIoHandler, PubSubHandler, Session};
-use ckey::{Address, NetworkId, PlatformAddress};
+use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use ckeystore::accounts_dir::RootDiskDirectory;
 use ckeystore::KeyStore;
 use clap::ArgMatches;
@@ -124,7 +124,7 @@ fn new_miner(
 
     match miner.engine_type() {
         EngineType::PBFT => match &config.mining.engine_signer {
-            Some(ref engine_signer) => match miner.set_author(ap, (*engine_signer).into_address()) {
+            Some(ref engine_signer) => match miner.set_author(ap, (*engine_signer).into_pubkey()) {
                 Err(AccountProviderError::NotUnlocked) => {
                     return Err(
                         format!("The account {} is not unlocked. The key file should exist in the keys_path directory, and the account's password should exist in the password_path file.", engine_signer)
@@ -140,7 +140,7 @@ fn new_miner(
             None => (),
         },
         EngineType::Solo => miner
-            .set_author(ap, config.mining.author.map_or(Address::default(), PlatformAddress::into_address))
+            .set_author(ap, config.mining.author.map_or(Public::default(), PlatformAddress::into_pubkey))
             .expect("set_author never fails when Solo is used"),
     }
 
@@ -180,13 +180,13 @@ fn load_password_file(path: &Option<String>) -> Result<PasswordFile, String> {
 
 fn unlock_accounts(ap: &AccountProvider, pf: &PasswordFile) -> Result<(), String> {
     for entry in pf.entries() {
-        let entry_address = entry.address.into_address();
+        let pubkey = entry.address.into_pubkey();
         let has_account = ap
-            .has_account(&entry_address)
-            .map_err(|e| format!("Unexpected error while querying account {}: {}", entry_address, e))?;
+            .has_account(&pubkey)
+            .map_err(|e| format!("Unexpected error while querying account {:?}: {}", pubkey, e))?;
         if has_account {
-            ap.unlock_account_permanently(entry_address, entry.password.clone())
-                .map_err(|e| format!("Failed to unlock account {}: {}", entry_address, e))?;
+            ap.unlock_account_permanently(pubkey, entry.password.clone())
+                .map_err(|e| format!("Failed to unlock account {:?}: {}", pubkey, e))?;
         }
     }
     Ok(())
@@ -270,10 +270,10 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
     // FIXME: unbound would cause memory leak.
     // FIXME: The full queue should be handled.
     // This will be fixed soon.
-    let (informer_connection_sender, informer_connection_receiver) = unbounded();
+    let (informer_sub_sender, informer_sub_receiver) = unbounded();
     let informer_event_sender = {
         if !config.informer.disable.unwrap() {
-            let (service, event_sender) = InformerService::new(informer_connection_receiver, client.client());
+            let (service, event_sender) = InformerService::new(informer_sub_receiver, client.client());
             service.run_service();
             event_sender
         } else {
@@ -343,7 +343,7 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
         if !config.informer.disable.unwrap() {
             let io: PubSubHandler<Arc<Session>> = PubSubHandler::new(MetaIoHandler::default());
             let mut informer_handler = Handler::new(io);
-            informer_handler.event_subscription(informer_connection_sender);
+            informer_handler.event_subscription(informer_sub_sender);
 
             Some(informer_handler.start_ws(config.informer_config())?)
         } else {

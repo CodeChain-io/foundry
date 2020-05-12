@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 import { createDecipheriv, createHash } from "crypto";
+import { Socket } from "net";
 import {
     exchange,
     generatePrivateKey,
@@ -23,8 +24,7 @@ import {
     U256,
     x25519GetPublicFromPrivate,
     X25519Private
-} from "foundry-primitives";
-import { Socket } from "net";
+} from "../../primitives/src";
 import { BlockSyncMessage } from "./blockSyncMessage";
 import {
     Ack,

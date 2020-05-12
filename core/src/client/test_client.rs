@@ -46,7 +46,7 @@ use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
 use crate::Error;
 use crate::{LocalizedTransaction, PendingTransactions};
 use ccrypto::BLAKE_NULL_RLP;
-use ckey::{Address, Ed25519Private as Private, Ed25519Public as Public, NetworkId, PlatformAddress};
+use ckey::{Ed25519Private as Private, Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::test_coordinator::TestCoordinator;
 use coordinator::types::{Event, Transaction};
 use cstate::tests::helpers::empty_top_state_with_metadata;
@@ -82,7 +82,7 @@ pub struct TestBlockChainClient {
     /// Extra data do set for each block
     pub extra_data: Bytes,
     /// Storage.
-    pub storage: RwLock<HashMap<(Address, H256), H256>>,
+    pub storage: RwLock<HashMap<(Public, H256), H256>>,
     /// Block queue size.
     pub queue_size: AtomicUsize,
     /// Miner
@@ -156,8 +156,8 @@ impl TestBlockChainClient {
     }
 
     /// Set storage `position` to `value` for account `address`.
-    pub fn set_storage(&self, address: Address, position: H256, value: H256) {
-        self.storage.write().insert((address, position), value);
+    pub fn set_storage(&self, pubkey: Public, position: H256, value: H256) {
+        self.storage.write().insert((pubkey, position), value);
     }
 
     /// Set block queue size for testing
@@ -178,7 +178,7 @@ impl TestBlockChainClient {
         }
     }
     /// Add a block to test client with designated author.
-    pub fn add_block_with_author(&self, author: Option<Address>, n: usize, transaction_length: usize) -> BlockHash {
+    pub fn add_block_with_author(&self, author: Option<Public>, n: usize, transaction_length: usize) -> BlockHash {
         let mut header = BlockHeader::new();
         header.set_parent_hash(*self.last_hash.read());
         header.set_number(n as BlockNumber);
@@ -303,7 +303,7 @@ pub fn get_temp_state_db() -> StateDB {
 }
 
 impl BlockProducer for TestBlockChainClient {
-    fn prepare_open_block(&self, _parent_block: BlockId, author: Address, extra_data: Bytes) -> OpenBlock<'_> {
+    fn prepare_open_block(&self, _parent_block: BlockId, author: Public, extra_data: Bytes) -> OpenBlock {
         let engine = &*self.scheme.engine;
         let genesis_header = self.scheme.genesis_header();
         let db = get_temp_state_db();
@@ -373,7 +373,7 @@ impl ImportBlock for TestBlockChainClient {
         }
         let len = self.numbers.read().len();
         if number == len {
-            mem::replace(&mut *self.last_hash.write(), h);
+            let _ = mem::replace(&mut *self.last_hash.write(), h);
             self.blocks.write().insert(h, b);
             self.numbers.write().insert(number, h);
             let mut parent_hash = *header.parent_hash();

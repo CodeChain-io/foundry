@@ -67,31 +67,31 @@ pub fn run_account_command(matches: &ArgMatches<'_>) -> Result<(), String> {
 
 fn create(ap: &AccountProvider, network_id: NetworkId) -> Result<(), String> {
     let password = read_password_and_confirm().ok_or("The password does not match")?;
-    let (address, _) = ap.new_account_and_public(&password).expect("Cannot create account");
-    println!("{}", PlatformAddress::new_v1(network_id, address));
+    let pubkey = ap.new_account_and_public(&password).expect("Cannot create account");
+    println!("{:?}", PlatformAddress::new_v1(network_id, pubkey));
     Ok(())
 }
 
 fn import(ap: &AccountProvider, network_id: NetworkId, json_path: &str) -> Result<(), String> {
     let json = fs::read(json_path).map_err(|err| err.to_string())?;
     let password = prompt_password("Password: ");
-    let address = ap.import_wallet(json.as_slice(), &password).map_err(|err| err.to_string())?;
-    println!("{}", PlatformAddress::new_v1(network_id, address));
+    let pubkey = ap.import_wallet(json.as_slice(), &password).map_err(|err| err.to_string())?;
+    println!("{}", PlatformAddress::new_v1(network_id, pubkey));
     Ok(())
 }
 
 fn import_raw(ap: &AccountProvider, network_id: NetworkId, raw_key: &str) -> Result<(), String> {
     let private = Private::from_str(remove_0x_prefix(raw_key)).map_err(|err| err.to_string())?;
     let password = read_password_and_confirm().ok_or("The password does not match")?;
-    let address = ap.insert_account(private, &password).map_err(|err| err.to_string())?;
-    println!("{}", PlatformAddress::new_v1(network_id, address));
+    let pubkey = ap.insert_account(private, &password).map_err(|err| err.to_string())?;
+    println!("{}", PlatformAddress::new_v1(network_id, pubkey));
     Ok(())
 }
 
 fn remove(ap: &AccountProvider, address: &str) -> Result<(), String> {
     let address = PlatformAddress::from_str(address).map_err(|err| err.to_string())?;
     if confirmation_dialog("REMOVE")? {
-        ap.remove_account(address.into_address()).map_err(|err| err.to_string())?;
+        ap.remove_account(address.into_pubkey()).map_err(|err| err.to_string())?;
         println!("{} is deleted", address);
         Ok(())
     } else {
@@ -100,9 +100,9 @@ fn remove(ap: &AccountProvider, address: &str) -> Result<(), String> {
 }
 
 fn list(ap: &AccountProvider, network_id: NetworkId) -> Result<(), String> {
-    let addresses = ap.get_list().expect("Cannot get account list");
-    for address in addresses {
-        println!("{}", PlatformAddress::new_v1(network_id, address))
+    let pubkeys = ap.get_list().expect("Cannot get account list");
+    for pubkey in pubkeys {
+        println!("{}", PlatformAddress::new_v1(network_id, pubkey))
     }
     Ok(())
 }
@@ -111,7 +111,7 @@ fn change_password(ap: &AccountProvider, address: &str) -> Result<(), String> {
     let address = PlatformAddress::from_str(address).map_err(|err| err.to_string())?;
     let old_password = prompt_password("Old Password: ");
     let new_password = read_password_and_confirm().ok_or("The password does not match")?;
-    ap.change_password(address.into_address(), &old_password, &new_password).map_err(|err| err.to_string())?;
+    ap.change_password(address.into_pubkey(), &old_password, &new_password).map_err(|err| err.to_string())?;
     println!("Password has changed");
     Ok(())
 }

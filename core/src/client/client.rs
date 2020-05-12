@@ -34,7 +34,7 @@ use crate::types::{BlockId, BlockStatus, TransactionId, VerificationQueueInfo as
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
-use ckey::{Address, NetworkId, PlatformAddress};
+use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::context::MemPoolAccess;
 use coordinator::traits::{BlockExecutor, Initializer};
 use coordinator::types::{Event, Transaction};
@@ -384,10 +384,9 @@ impl EngineInfo for Client {
             let genesis_author = self.block_header(&0.into()).expect("genesis block").author();
             return Ok(Some(vec![PlatformAddress::new_v1(network_id, genesis_author)]))
         }
-        let addresses = self.engine().possible_authors(block_number)?;
-        Ok(addresses.map(|addresses| {
-            addresses.into_iter().map(|address| PlatformAddress::new_v1(network_id, address)).collect()
-        }))
+        let pubkeys = self.engine().possible_authors(block_number)?;
+        Ok(pubkeys
+            .map(|pubkeys| pubkeys.into_iter().map(|pubkey| PlatformAddress::new_v1(network_id, pubkey)).collect()))
     }
 }
 
@@ -626,7 +625,7 @@ impl BlockChainClient for Client {
 
     fn transaction(&self, id: &TransactionId) -> Option<LocalizedTransaction> {
         let chain = self.block_chain();
-        self.transaction_address(id).and_then(|address| chain.transaction(&address))
+        self.transaction_address(id).and_then(|pubkey| chain.transaction(&pubkey))
     }
 
     fn events_by_tx_hash(&self, hash: &TxHash) -> Vec<Event> {
@@ -657,7 +656,7 @@ impl TermInfo for Client {
 }
 
 impl BlockProducer for Client {
-    fn prepare_open_block(&self, parent_block_id: BlockId, author: Address, extra_data: Bytes) -> OpenBlock<'_> {
+    fn prepare_open_block(&self, parent_block_id: BlockId, author: Public, extra_data: Bytes) -> OpenBlock {
         let engine = &*self.engine;
         let chain = self.block_chain();
         let parent_hash = self.block_hash(&parent_block_id).expect("parent exist always");

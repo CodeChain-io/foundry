@@ -29,11 +29,10 @@ use crate::consensus::EngineType;
 use crate::error::Error;
 use crate::views::HeaderView;
 use crate::BlockId;
-use ckey::Address;
+use ckey::Ed25519Public as Public;
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::{CurrentValidatorSet, NextValidatorSet, TopState};
-use ctypes::{BlockHash, CompactValidatorSet, ConsensusParams, Header};
+use ctypes::{BlockHash, Header};
 use std::sync::atomic::Ordering as AtomicOrdering;
 use std::sync::{Arc, Weak};
 
@@ -102,34 +101,6 @@ impl ConsensusEngine for Tendermint {
         self.inner.send(worker::Event::OnTimeout(token)).unwrap();
     }
 
-    /// Block transformation functions, before the transactions.
-    fn on_open_block(&self, block: &mut ExecutedBlock) -> Result<(), Error> {
-        let mut current_validators = CurrentValidatorSet::load_from_state(block.state())?;
-        current_validators.update(NextValidatorSet::load_from_state(block.state())?);
-        current_validators.save_to_state(block.state_mut())?;
-
-        Ok(())
-    }
-
-    fn on_close_block(
-        &self,
-        block: &mut ExecutedBlock,
-        updated_validator_set: Option<CompactValidatorSet>,
-        updated_consensus_params: Option<ConsensusParams>,
-    ) -> Result<(), Error> {
-        let state = block.state_mut();
-
-        if let Some(set) = updated_validator_set {
-            let validators = NextValidatorSet::from_compact_validator_set(set);
-            validators.save_to_state(state)?;
-        }
-
-        if let Some(params) = updated_consensus_params {
-            state.update_consensus_params(params)?;
-        }
-        Ok(())
-    }
-
     fn register_client(&self, client: Weak<dyn ConsensusClient>) {
         *self.client.write() = Some(Weak::clone(&client));
     }
@@ -164,12 +135,12 @@ impl ConsensusEngine for Tendermint {
         receiver.recv().unwrap()
     }
 
-    fn set_signer(&self, ap: Arc<AccountProvider>, address: Address) {
+    fn set_signer(&self, ap: Arc<AccountProvider>, pubkey: Public) {
         self.has_signer.store(true, AtomicOrdering::SeqCst);
         self.inner
             .send(worker::Event::SetSigner {
                 ap,
-                address,
+                pubkey,
             })
             .unwrap();
     }
@@ -214,7 +185,7 @@ impl ConsensusEngine for Tendermint {
         parent_hash_of_new_header == prev_best_hash || grandparent_hash_of_new_header == prev_best_hash
     }
 
-    fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {
+    fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Public>>, EngineError> {
         let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
         let header = match block_number {
             None => {
@@ -228,6 +199,6 @@ impl ConsensusEngine for Tendermint {
             }
         };
         let block_hash = header.hash();
-        Ok(Some(self.validators.next_addresses(&block_hash)))
+        Ok(Some(self.validators.next_validators(&block_hash)))
     }
 }

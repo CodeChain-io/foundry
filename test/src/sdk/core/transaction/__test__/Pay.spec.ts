@@ -1,15 +1,18 @@
 import { expect } from "chai";
-import { Address, H256, U64 } from "foundry-primitives";
 import "mocha";
+import { Address, U64 } from "../../../../primitives/src";
 import { Pay } from "../Pay";
 
 import { fromJSONToTransaction } from "../json";
 
 it("rlp", () => {
     const t = new Pay(
-        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
-            networkId: "tc"
-        }),
+        Address.fromPublic(
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            {
+                networkId: "tc"
+            }
+        ),
         new U64(11),
         "tc"
     );
@@ -17,15 +20,27 @@ it("rlp", () => {
     t.setSeq(0);
     expect(t.rlpBytes()).deep.equal(
         Buffer.from([
-            221,
+            233,
             128,
             128,
             130,
             116,
             99,
-            215,
+            227,
             2,
-            148,
+            160,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
@@ -53,24 +68,30 @@ it("rlp", () => {
 
 it("hash", () => {
     const t = new Pay(
-        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
-            networkId: "tc"
-        }),
+        Address.fromPublic(
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            {
+                networkId: "tc"
+            }
+        ),
         new U64(11),
         "tc"
     );
     t.setFee(0);
     t.setSeq(0);
     expect(t.unsignedHash().value).equal(
-        "3b578bebb32cae770ab1094d572a4721b624fc101bb88fbc580eeb2931f65665"
+        "9e30ad5042770e2ccc282c99736760b5b438b967bfa70afa424bae6f84aa2230"
     );
 });
 
 it("sign", () => {
     const pay = new Pay(
-        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
-            networkId: "tc"
-        }),
+        Address.fromPublic(
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            {
+                networkId: "tc"
+            }
+        ),
         new U64(11),
         "tc"
     );
@@ -81,15 +102,18 @@ it("sign", () => {
         fee: 0
     });
     expect(signed.signature()).equal(
-        "463ffba7f7f1527d66e9769204bbfec902e6bfaa8cfc9c161aad72bd6db25a1b97c78364fbade7ff6fa1a36e1da9205b646cdcefe82636f756bead33aa1e8a04"
+        "c0ccdc2c4966308d50f9e7e8c41078094c4cc3f2271f8d6e19e570b5afcb1098c2766202aec330d9f6d3c56158b6671dfc32697b08f2758654f80a615520370d"
     );
 });
 
 it("signed hash", () => {
     const pay = new Pay(
-        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
-            networkId: "tc"
-        }),
+        Address.fromPublic(
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            {
+                networkId: "tc"
+            }
+        ),
         new U64(11),
         "tc"
     );
@@ -100,15 +124,18 @@ it("signed hash", () => {
         fee: 0
     });
     expect(signed.hash().value).equal(
-        "21b9c5dda38bee928e6619f7b7266bfee120aadb62ed4f7eceb2893f2ee7c76e"
+        "7e3c89734e16ed7c173fdeba026f65f53aebefe9f8caf1feda5d2f96ffd916b6"
     );
 });
 
 it("toJSON", () => {
     const p = new Pay(
-        Address.fromAccountId("0x0000000000000000000000000000000000000000", {
-            networkId: "tc"
-        }),
+        Address.fromPublic(
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            {
+                networkId: "tc"
+            }
+        ),
         new U64(11),
         "tc"
     );

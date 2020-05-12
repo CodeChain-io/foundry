@@ -14,9 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 import * as EventEmitter from "events";
-import { H256 } from "foundry-primitives";
-import { U256 } from "foundry-primitives";
 import { compressSync, uncompressSync } from "snappy";
+import { H256, U256 } from "../../primitives/src";
 
 const RLP = require("rlp");
 

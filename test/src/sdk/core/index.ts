@@ -2,15 +2,13 @@ import {
     Address,
     AddressValue,
     H128,
-    H160,
     H256,
     H256Value,
     H512,
     U256,
     U64,
     U64Value
-} from "foundry-primitives";
-
+} from "../../primitives/src";
 import { Block } from "./Block";
 import { SignedTransaction } from "./SignedTransaction";
 import { Transaction } from "./Transaction";
@@ -28,7 +26,6 @@ export class Core {
     public static classes = {
         // Data
         H128,
-        H160,
         H256,
         H512,
         U256,

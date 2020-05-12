@@ -19,9 +19,8 @@ use crate::block::ExecutedBlock;
 use crate::client::snapshot_notify::NotifySender;
 use crate::client::ConsensusClient;
 use crate::consensus::{EngineError, EngineType};
-use crate::error::Error;
-use ckey::Address;
-use ctypes::{BlockHash, CompactValidatorSet, ConsensusParams, Header};
+use ckey::Ed25519Public as Public;
+use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
 use std::sync::{Arc, Weak};
 
@@ -54,15 +53,6 @@ impl ConsensusEngine for Solo {
         Seal::Solo
     }
 
-    fn on_close_block(
-        &self,
-        _block: &mut ExecutedBlock,
-        _updated_validator_set: Option<CompactValidatorSet>,
-        _updated_consensus_params: Option<ConsensusParams>,
-    ) -> Result<(), Error> {
-        Ok(())
-    }
-
     fn register_client(&self, client: Weak<dyn ConsensusClient>) {
         *self.client.write() = Some(Weak::clone(&client));
     }
@@ -79,7 +69,7 @@ impl ConsensusEngine for Solo {
         }
     }
 
-    fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Address>>, EngineError> {
+    fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Public>>, EngineError> {
         Ok(None)
     }
 }

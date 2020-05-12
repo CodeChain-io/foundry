@@ -118,7 +118,7 @@ const SEAL_FIELDS: usize = 4;
 
 #[cfg(test)]
 mod tests {
-    use ckey::{Address, Ed25519Private as Private};
+    use ckey::{Ed25519Private as Private, Ed25519Public as Public};
     use ctypes::Header;
 
     use super::super::BitSet;
@@ -144,7 +144,7 @@ mod tests {
         (scheme, tap, test_client)
     }
 
-    fn insert_and_unlock(tap: &Arc<AccountProvider>, acc: &str) -> Address {
+    fn insert_and_unlock(tap: &Arc<AccountProvider>, acc: &str) -> Public {
         let addr = tap.insert_account(Private::random(), &acc.into()).unwrap();
         tap.unlock_account_permanently(addr, acc.into()).unwrap();
         addr
