@@ -148,7 +148,7 @@ export class Mock {
     }
 
     // Get the most recent transaction sync message from the node
-    public getTransactionSyncMessage(): EncodedHeaders | null {
+    public getTransactionSyncMessage(): EncodedTransactions | null {
         for (const msg of this.p2psocket
             .getArrivedExtensionMessage()
             .reverse()) {
