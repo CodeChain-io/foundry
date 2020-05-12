@@ -331,6 +331,10 @@ impl EngineInfo for Client {
         Ok(pubkeys
             .map(|pubkeys| pubkeys.into_iter().map(|pubkey| PlatformAddress::new_v0(network_id, pubkey)).collect()))
     }
+
+    fn validator_set(&self, block_number: Option<u64>) -> Result<Option<ctypes::CompactValidatorSet>, EngineError> {
+        Ok(self.engine().current_validator_set(block_number)?)
+    }
 }
 
 impl EngineClient for Client {

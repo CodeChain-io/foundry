@@ -44,7 +44,7 @@ use cstate::{DoubleVoteHandler, StateDB, StateResult};
 use ctypes::errors::SyntaxError;
 use ctypes::transaction::Action;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
-use ctypes::{BlockHash, CommonParams, Header};
+use ctypes::{BlockHash, CommonParams, CompactValidatorSet, Header};
 use primitives::{Bytes, H256};
 use std::fmt;
 use std::sync::{Arc, Weak};
@@ -217,6 +217,8 @@ pub trait ConsensusEngine: Sync + Send {
     }
 
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<Public>>, EngineError>;
+
+    fn current_validator_set(&self, block_number: Option<u64>) -> Result<Option<CompactValidatorSet>, EngineError>;
 
     fn initialize_genesis_state(&self, db: StateDB, root: H256) -> StateResult<(StateDB, H256)> {
         Ok((db, root))

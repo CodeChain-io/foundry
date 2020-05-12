@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::types::{Block, BlockNumberAndHash, Transaction};
+use super::super::types::{Block, BlockNumberAndHash, Transaction, ValidatorSet};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
 use ckey::{NetworkId, PlatformAddress};
@@ -86,4 +86,8 @@ pub trait Chain {
     /// Return the valid block authors
     #[rpc(name = "chain_getPossibleAuthors")]
     fn get_possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>>;
+
+    /// Return the valid block authors
+    #[rpc(name = "chain_getValidatorSet")]
+    fn get_validator_set(&self, block_number: Option<u64>) -> Result<Option<ValidatorSet>>;
 }

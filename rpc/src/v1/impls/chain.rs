@@ -16,7 +16,7 @@
 
 use super::super::errors;
 use super::super::traits::Chain;
-use super::super::types::{Block, BlockNumberAndHash, Transaction};
+use super::super::types::{Block, BlockNumberAndHash, Transaction, ValidatorSet};
 use ccore::{AccountData, EngineInfo, MiningBlockChainClient, Shard, TermInfo};
 use cjson::scheme::Params;
 use cjson::uint::Uint;
@@ -138,5 +138,10 @@ where
 
     fn get_possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>> {
         Ok(self.client.possible_authors(block_number).map_err(errors::core)?)
+    }
+
+    fn get_validator_set(&self, block_number: Option<u64>) -> Result<Option<ValidatorSet>> {
+        let validator_set_in_core = self.client.validator_set(block_number).map_err(errors::core)?;
+        Ok(validator_set_in_core.map(ValidatorSet::from_core))
     }
 }
