@@ -105,7 +105,7 @@ impl TxFilter for TestCoordinator {
 
     fn filter_transactions<'a>(
         &self,
-        transactions: &'a [&'a TransactionWithMetadata],
+        transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
         memory_limit: Option<usize>,
         size_limit: Option<usize>,
     ) -> (Vec<&'a TransactionWithMetadata>, Vec<&'a TransactionWithMetadata>) {
@@ -113,8 +113,6 @@ impl TxFilter for TestCoordinator {
         let mut memory = 0;
         let mut size = 0;
         let low_priority = transactions
-            .to_vec()
-            .into_iter()
             .skip_while(|tx| {
                 memory += (*tx).size();
                 size += 1;
