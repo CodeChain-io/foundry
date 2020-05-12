@@ -39,7 +39,7 @@ use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ShardId, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ShardId, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::{Bytes, H256};
@@ -419,7 +419,7 @@ impl ImportBlock for Client {
         Ok(self.importer.block_queue.import(unverified)?)
     }
 
-    fn import_header(&self, unverified: Header) -> Result<BlockHash, BlockImportError> {
+    fn import_header(&self, unverified: SyncHeader) -> Result<BlockHash, BlockImportError> {
         if self.block_chain().is_known_header(&unverified.hash()) {
             return Err(BlockImportError::Import(ImportError::AlreadyInChain))
         }

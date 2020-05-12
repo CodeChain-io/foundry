@@ -54,7 +54,7 @@ use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::transaction::{Action, Transaction, Validator};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, Header as BlockHeader, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, Header as BlockHeader, SyncHeader, TxHash};
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
 use parking_lot::RwLock;
@@ -456,7 +456,7 @@ impl ImportBlock for TestBlockChainClient {
         Ok(h)
     }
 
-    fn import_header(&self, _bytes: Header) -> Result<BlockHash, BlockImportError> {
+    fn import_header(&self, _header: SyncHeader) -> Result<BlockHash, BlockImportError> {
         unimplemented!()
     }
 

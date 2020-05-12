@@ -105,6 +105,8 @@ pub enum BlockError {
     UnknownParent(BlockHash),
     /// Body size limit is exceeded.
     BodySizeIsTooBig,
+    /// prev_validator_set field in SyncHeader struct is invalid.
+    InvalidValidatorSet,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -141,6 +143,7 @@ impl fmt::Display for BlockError {
             UnknownParent(hash) => format!("Unknown parent: {}", hash),
             TooManyTransactions(pubkey) => format!("Too many transactions from: {:?}", pubkey),
             BodySizeIsTooBig => "Block's body size is too big".to_string(),
+            InvalidValidatorSet => "Invalid prev_validator_set in SyncHeader".to_string(),
         };
 
         f.write_fmt(format_args!("Block error ({})", msg))

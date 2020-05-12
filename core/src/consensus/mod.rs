@@ -25,7 +25,8 @@ mod validator_set;
 pub use self::null_engine::NullEngine;
 pub use self::solo::Solo;
 pub use self::tendermint::{
-    ConsensusMessage, Height, Step, Tendermint, TendermintParams, TimeGapParams, View, VoteOn, VoteStep,
+    types::TendermintSealView, ConsensusMessage, Height, Step, Tendermint, TendermintParams, TimeGapParams, View,
+    VoteOn, VoteStep,
 };
 pub use self::validator_set::{DynamicValidator, ValidatorSet};
 
@@ -141,6 +142,11 @@ pub trait ConsensusEngine: Sync + Send {
 
     /// Phase 1 quick block verification. Only does checks that are cheap. Returns either a null `Ok` or a general error detailing the problem with import.
     fn verify_header_basic(&self, _header: &Header) -> Result<(), Error> {
+        Ok(())
+    }
+
+    /// Phase 2 verification. Check signatures. To utilize thread structure, this function should not acquire any locks.
+    fn verify_header_seal(&self, _header: &Header, _validator_set: &CompactValidatorSet) -> Result<(), Error> {
         Ok(())
     }
 

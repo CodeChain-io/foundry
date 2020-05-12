@@ -34,7 +34,7 @@ use rlp::Encodable;
 use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::iter::FromIterator;
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 
 pub struct Importer {
     /// Lock used during block import
@@ -258,7 +258,7 @@ impl Importer {
         const MAX_HEADERS_TO_IMPORT: usize = 1_000;
         let lock = self.import_lock.lock();
         let headers = self.header_queue.drain(MAX_HEADERS_TO_IMPORT);
-        self.import_verified_headers(&headers, client, &lock)
+        self.import_verified_headers(headers.iter().map(|sync_header| sync_header.deref()), client, &lock)
     }
 
     pub fn import_verified_headers<'a>(

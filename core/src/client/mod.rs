@@ -39,7 +39,7 @@ use cdb::DatabaseError;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ShardId, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ShardId, SyncHeader, TxHash};
 use kvdb::KeyValueDB;
 use primitives::{Bytes, H256};
 use std::ops::Range;
@@ -160,7 +160,7 @@ pub trait ImportBlock {
     fn import_block(&self, bytes: Bytes) -> Result<BlockHash, BlockImportError>;
 
     /// Import a header into the blockchain
-    fn import_header(&self, header: Header) -> Result<BlockHash, BlockImportError>;
+    fn import_header(&self, header: SyncHeader) -> Result<BlockHash, BlockImportError>;
 
     /// Import a trusted header into the blockchain
     /// Trusted header doesn't go through any verifications and doesn't update the best header
