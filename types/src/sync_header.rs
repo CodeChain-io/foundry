@@ -30,6 +30,10 @@ impl SyncHeader {
             prev_validator_set: validator_set,
         }
     }
+
+    pub fn prev_validator_set(&self) -> Option<&CompactValidatorSet> {
+        self.prev_validator_set.as_ref()
+    }
 }
 
 impl Deref for SyncHeader {

@@ -998,8 +998,8 @@ impl Extension {
 
                 for header in completed {
                     let hash = header.hash();
-                    // FIXME: pass SyncHeader to the import_header function
-                    match self.client.import_header(header.into()) {
+
+                    match self.client.import_header(header) {
                         Err(BlockImportError::Import(ImportError::AlreadyInChain)) => exists.push(hash),
                         Err(BlockImportError::Import(ImportError::AlreadyQueued)) => queued.push(hash),
                         // FIXME: handle import errors

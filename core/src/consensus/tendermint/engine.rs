@@ -18,16 +18,16 @@ use super::super::{ConsensusEngine, EngineError, Seal};
 use super::network::TendermintExtension;
 pub use super::params::{TendermintParams, TimeoutParams};
 use super::worker;
-use super::{ChainNotify, Tendermint, SEAL_FIELDS};
+use super::{ChainNotify, Step, Tendermint, VoteOn, VoteStep, SEAL_FIELDS};
 use crate::account_provider::AccountProvider;
 use crate::block::*;
 use crate::client::snapshot_notify::NotifySender as SnapshotNotifySender;
 use crate::client::{Client, ConsensusClient};
 use crate::consensus::tendermint::params::TimeGapParams;
-use crate::consensus::EngineType;
-use crate::error::Error;
+use crate::consensus::{EngineType, TendermintSealView};
+use crate::error::{BlockError, Error};
 use crate::views::HeaderView;
-use ckey::Ed25519Public as Public;
+use ckey::{verify, Ed25519Public as Public};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{
@@ -35,7 +35,7 @@ use cstate::{
     TopLevelState, TopStateView,
 };
 use ctypes::transaction::Action;
-use ctypes::{BlockHash, BlockId, CompactValidatorSet, Header};
+use ctypes::{util::unexpected::OutOfBounds, BlockHash, BlockId, CompactValidatorSet, Header};
 use primitives::H256;
 use std::collections::HashSet;
 use std::iter::Iterator;
@@ -89,6 +89,73 @@ impl ConsensusEngine for Tendermint {
             })
             .unwrap();
         receiver.recv().unwrap()
+    }
+
+    /// This function is very similar to the verify_block_external in the tendermint/worker.rs file
+    fn verify_header_seal(&self, header: &Header, validator_set: &CompactValidatorSet) -> Result<(), Error> {
+        if header.number() <= 1 {
+            return Ok(())
+        }
+        let seal_view = TendermintSealView::new(header.seal());
+        let bitset_count = seal_view.bitset()?.count();
+        let precommits_count = seal_view.precommits().item_count()?;
+
+        if bitset_count < precommits_count {
+            cwarn!(
+                ENGINE,
+                "verify_header_seal: The header({})'s bitset count is less than the precommits count",
+                header.hash()
+            );
+            return Err(BlockError::InvalidSeal.into())
+        }
+
+        if bitset_count > precommits_count {
+            cwarn!(
+                ENGINE,
+                "verify_header_seal: The header({})'s bitset count is greater than the precommits count",
+                header.hash()
+            );
+            return Err(BlockError::InvalidSeal.into())
+        }
+
+        let parent_block_finalized_view = seal_view.parent_block_finalized_view()?;
+        let precommit_vote_on = VoteOn {
+            step: VoteStep::new(header.number() - 1, parent_block_finalized_view, Step::Precommit),
+            block_hash: Some(*header.parent_hash()),
+        };
+
+        let mut signed_delegation: u64 = 0;
+        for (bitset_index, signature) in seal_view.signatures()? {
+            if validator_set.len() <= bitset_index {
+                cwarn!(
+                    ENGINE,
+                    "verify_header_seal: The header({})'s bitset index({}) is greater than or equal to the validator set length({})",
+                    header.hash(),
+                    bitset_index,
+                    validator_set.len()
+                );
+                return Err(BlockError::InvalidSeal.into())
+            }
+            let public = validator_set[bitset_index].public_key;
+            let delegation = validator_set[bitset_index].delegation;
+            if !verify(&signature, &precommit_vote_on.hash(), &public) {
+                return Err(EngineError::BlockNotAuthorized(public).into())
+            }
+            signed_delegation += delegation;
+        }
+
+        let total_delegation: u64 = validator_set.iter().map(|entry| entry.delegation).sum();
+
+        if signed_delegation * 3 > total_delegation * 2 {
+            Ok(())
+        } else {
+            Err(EngineError::BadSealFieldSize(OutOfBounds {
+                min: Some(total_delegation as usize * 2 / 3),
+                max: Some(total_delegation as usize),
+                found: signed_delegation as usize,
+            })
+            .into())
+        }
     }
 
     fn verify_block_external(&self, header: &Header) -> Result<(), Error> {

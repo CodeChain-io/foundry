@@ -68,29 +68,29 @@ pub trait Kind: 'static + Sized + Send + Sync {
     fn create(input: Self::Input, engine: &dyn CodeChainEngine) -> Result<Self::Unverified, Error>;
 
     /// Attempt to verify the `Unverified` item using the given engine.
-    fn verify(unverified: Self::Unverified) -> Result<Self::Verified, Error>;
+    fn verify(unverified: Self::Unverified, engine: &dyn CodeChainEngine) -> Result<Self::Verified, Error>;
 
     fn signal() -> ClientIoMessage;
 }
 
 /// Verification for headers.
 pub mod headers {
-    use ctypes::{BlockHash, Header};
+    use ctypes::{BlockHash, Header, SyncHeader};
 
     use super::super::super::verification::verify_header_basic;
     use super::{BlockLike, Kind};
     use crate::consensus::CodeChainEngine;
-    use crate::error::Error;
+    use crate::error::{BlockError, Error};
     use crate::service::ClientIoMessage;
     use crate::verification::verify_header_with_engine;
 
-    impl BlockLike for Header {
+    impl BlockLike for SyncHeader {
         fn hash(&self) -> BlockHash {
-            self.hash()
+            Header::hash(self)
         }
 
         fn parent_hash(&self) -> BlockHash {
-            *self.parent_hash()
+            *Header::parent_hash(self)
         }
     }
 
@@ -98,9 +98,9 @@ pub mod headers {
     pub struct Headers;
 
     impl Kind for Headers {
-        type Input = Header;
-        type Unverified = Header;
-        type Verified = Header;
+        type Input = SyncHeader;
+        type Unverified = SyncHeader;
+        type Verified = SyncHeader;
 
         fn name() -> &'static str {
             "Headers"
@@ -113,7 +113,15 @@ pub mod headers {
             Ok(input)
         }
 
-        fn verify(un: Self::Unverified) -> Result<Self::Verified, Error> {
+        fn verify(un: Self::Unverified, engine: &dyn CodeChainEngine) -> Result<Self::Verified, Error> {
+            if un.number() <= 1 {
+                return Ok(un)
+            }
+            let validator_set = un.prev_validator_set();
+            match validator_set {
+                Some(validator_set) => engine.verify_header_seal(&un, validator_set)?,
+                None => return Err(BlockError::InvalidValidatorSet.into()),
+            }
             Ok(un)
         }
 
@@ -160,7 +168,7 @@ pub mod blocks {
             }
         }
 
-        fn verify(un: Self::Unverified) -> Result<Self::Verified, Error> {
+        fn verify(un: Self::Unverified, _engine: &dyn CodeChainEngine) -> Result<Self::Verified, Error> {
             let hash = un.hash();
             match verify_block_seal(un.header, un.bytes) {
                 Ok(verified) => Ok(verified),
