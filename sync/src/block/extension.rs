@@ -19,16 +19,16 @@ use super::message::{Message, RequestMessage, ResponseMessage};
 use crate::snapshot::snapshot_path;
 use ccore::encoded::Header as EncodedHeader;
 use ccore::{
-    Block, BlockChainClient, BlockChainTrait, BlockImportError, BlockStatus, ChainNotify, Client, ImportBlock,
-    ImportError, StateInfo, UnverifiedTransaction,
+    Block, BlockChainClient, BlockChainTrait, BlockImportError, BlockStatus, ChainNotify, Client, EngineInfo,
+    ImportBlock, ImportError, StateInfo, UnverifiedTransaction,
 };
 use cdb::AsHashDB;
 use cnetwork::{Api, EventSender, IntoSocketAddr, NetworkExtension, NodeId};
 use codechain_crypto::BLAKE_NULL_RLP;
 use cstate::{TopLevelState, TopStateView};
 use ctimer::TimerToken;
-use ctypes::header::{Header, Seal};
-use ctypes::{BlockHash, BlockId, BlockNumber, ShardId};
+use ctypes::header::Seal;
+use ctypes::{BlockHash, BlockId, BlockNumber, ShardId, SyncHeader};
 use kvdb::DBTransaction;
 use merkle_trie::snapshot::{ChunkDecompressor, Restore as SnapshotRestore};
 use merkle_trie::{skewed_merkle_root, Trie, TrieFactory};
@@ -805,7 +805,15 @@ impl Extension {
             .chain(once(best_proposal_header.hash().into()))
             .map(|block_id| self.client.block(&block_id))
             .take_while(Option::is_some)
-            .map(|block| block.expect("take_while guarantees existance of item").header().decode())
+            .map(|block| {
+                let header = block.expect("take_while guarantees existance of item").header().decode();
+                let validator_set = if header.number() != 0 {
+                    self.client.validator_set(Some(header.number() - 1)).expect("We are querying existing block's data")
+                } else {
+                    None
+                };
+                SyncHeader::new(header, validator_set)
+            })
             .collect();
         ResponseMessage::Headers(headers)
     }
@@ -838,7 +846,7 @@ impl Extension {
         let last_request = self.requests[from].iter().find(|(i, _)| *i == id).cloned();
         if let Some((_, request)) = last_request {
             if let ResponseMessage::Headers(headers) = &mut response {
-                headers.sort_unstable_by_key(Header::number);
+                headers.sort_unstable_by_key(|header| header.number());
             }
 
             if !self.is_valid_response(&request, &response) {
@@ -913,7 +921,7 @@ impl Extension {
                     }
                 }
 
-                headers.first().map(Header::number) == Some(*start_number)
+                headers.first().map(|header| header.number()) == Some(*start_number)
             }
             (RequestMessage::Bodies(hashes), ResponseMessage::Bodies(bodies)) => {
                 if hashes.len() != bodies.len() {
@@ -938,7 +946,7 @@ impl Extension {
         }
     }
 
-    fn on_header_response(&mut self, from: &NodeId, mut headers: Vec<Header>) {
+    fn on_header_response(&mut self, from: &NodeId, mut headers: Vec<SyncHeader>) {
         ctrace!(SYNC, "Received header response from({}) with length({})", from, headers.len());
         match self.state {
             State::SnapshotHeader(hash, _) => {
@@ -955,7 +963,7 @@ impl Extension {
                     let header_hash = header.hash();
                     let parent = headers.pop().expect("headers.len() == 1");
                     let parent_hash = parent.hash();
-                    match self.client.import_trusted_header(parent) {
+                    match self.client.import_trusted_header(parent.into()) {
                         Ok(_)
                         | Err(BlockImportError::Import(ImportError::AlreadyInChain))
                         | Err(BlockImportError::Import(ImportError::AlreadyQueued)) => {}
@@ -964,7 +972,7 @@ impl Extension {
                             return
                         }
                     }
-                    match self.client.import_trusted_header(header) {
+                    match self.client.import_trusted_header(header.into()) {
                         Ok(_)
                         | Err(BlockImportError::Import(ImportError::AlreadyInChain))
                         | Err(BlockImportError::Import(ImportError::AlreadyQueued)) => {}
@@ -983,14 +991,15 @@ impl Extension {
                 } else {
                     (Vec::new(), true)
                 };
-                completed.sort_unstable_by_key(Header::number);
+                completed.sort_unstable_by_key(|header| header.number());
 
                 let mut exists = Vec::new();
                 let mut queued = Vec::new();
 
                 for header in completed {
                     let hash = header.hash();
-                    match self.client.import_header(header) {
+                    // FIXME: pass SyncHeader to the import_header function
+                    match self.client.import_header(header.into()) {
                         Err(BlockImportError::Import(ImportError::AlreadyInChain)) => exists.push(hash),
                         Err(BlockImportError::Import(ImportError::AlreadyQueued)) => queued.push(hash),
                         // FIXME: handle import errors

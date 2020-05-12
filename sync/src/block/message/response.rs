@@ -16,12 +16,12 @@
 
 use super::MessageID;
 use ccore::UnverifiedTransaction;
-use ctypes::Header;
+use ctypes::SyncHeader;
 use rlp::{DecoderError, Encodable, Rlp, RlpStream};
 
 #[derive(Debug)]
 pub enum ResponseMessage {
-    Headers(Vec<Header>),
+    Headers(Vec<SyncHeader>),
     Bodies(Vec<Vec<UnverifiedTransaction>>),
     StateChunk(Vec<Vec<u8>>),
 }
@@ -113,6 +113,7 @@ impl ResponseMessage {
 mod tests {
     use rlp::{Encodable, Rlp};
 
+    use super::SyncHeader;
     use ccore::UnverifiedTransaction;
     use ckey::{Ed25519Public as Public, Signature};
     use ctypes::transaction::{Action, Transaction};
@@ -132,7 +133,7 @@ mod tests {
 
     #[test]
     fn headers_message_rlp() {
-        let headers = vec![Header::default()];
+        let headers = vec![SyncHeader::new(Header::default(), None)];
         headers.iter().for_each(|header| {
             header.hash();
         });
