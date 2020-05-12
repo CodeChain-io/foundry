@@ -127,6 +127,13 @@ impl ConsensusEngine for Solo {
         init_stake(&mut top_level, self.genesis_stakes.clone(), Default::default(), Default::default())?;
         Ok(top_level.commit_and_into_db()?)
     }
+
+    fn current_validator_set(
+        &self,
+        _block_number: Option<u64>,
+    ) -> Result<Option<ctypes::CompactValidatorSet>, EngineError> {
+        Ok(Some(ctypes::CompactValidatorSet::new(Vec::new())))
+    }
 }
 
 #[cfg(test)]

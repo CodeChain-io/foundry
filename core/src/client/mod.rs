@@ -39,7 +39,7 @@ use cdb::DatabaseError;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
 use ctypes::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ShardId, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ShardId, TxHash};
 use kvdb::KeyValueDB;
 use primitives::{Bytes, H256};
 use std::ops::Range;
@@ -74,6 +74,7 @@ pub trait EngineInfo: Send + Sync {
     fn common_params(&self, block_id: BlockId) -> Option<CommonParams>;
     fn metadata_seq(&self, block_id: BlockId) -> Option<u64>;
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>, EngineError>;
+    fn validator_set(&self, block_number: Option<u64>) -> Result<Option<CompactValidatorSet>, EngineError>;
 }
 
 /// Client facilities used by internally sealing Engines.

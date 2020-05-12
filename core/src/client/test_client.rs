@@ -602,6 +602,10 @@ impl EngineInfo for TestBlockChainClient {
     fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>, EngineError> {
         unimplemented!()
     }
+
+    fn validator_set(&self, _block_number: Option<u64>) -> Result<Option<ctypes::CompactValidatorSet>, EngineError> {
+        unimplemented!()
+    }
 }
 
 impl ConsensusClient for TestBlockChainClient {}

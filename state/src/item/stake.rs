@@ -389,6 +389,20 @@ impl CurrentValidators {
     pub fn pubkeys(&self) -> Vec<Public> {
         self.0.iter().rev().map(|v| *v.pubkey()).collect()
     }
+
+    pub fn create_compact_validator_set(&self) -> CompactValidatorSet {
+        let mut reversed = self.0.clone();
+        reversed.reverse();
+        CompactValidatorSet::new(
+            reversed
+                .iter()
+                .map(|x| CompactValidatorEntry {
+                    public_key: *x.pubkey(),
+                    delegation: x.delegation(),
+                })
+                .collect(),
+        )
+    }
 }
 
 impl Deref for CurrentValidators {

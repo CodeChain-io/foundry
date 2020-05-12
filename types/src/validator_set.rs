@@ -51,6 +51,12 @@ impl DerefMut for CompactValidatorSet {
     }
 }
 
+impl From<CompactValidatorSet> for Vec<CompactValidatorEntry> {
+    fn from(compact_validator_set: CompactValidatorSet) -> Self {
+        compact_validator_set.0
+    }
+}
+
 impl Encodable for CompactValidatorSet {
     fn rlp_append(&self, s: &mut RlpStream) {
         s.begin_list(self.0.len() * 2);

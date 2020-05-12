@@ -34,4 +34,11 @@ impl ConsensusEngine for NullEngine {
     fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<Public>>, EngineError> {
         Ok(None)
     }
+
+    fn current_validator_set(
+        &self,
+        _block_number: Option<u64>,
+    ) -> Result<Option<ctypes::CompactValidatorSet>, EngineError> {
+        Ok(None)
+    }
 }

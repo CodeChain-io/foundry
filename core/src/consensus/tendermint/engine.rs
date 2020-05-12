@@ -31,11 +31,11 @@ use ckey::Ed25519Public as Public;
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
 use cstate::{
-    init_stake, DoubleVoteHandler, Jail, NextValidators, StateDB, StateResult, StateWithCache, TopLevelState,
-    TopStateView,
+    init_stake, CurrentValidators, DoubleVoteHandler, Jail, NextValidators, StateDB, StateResult, StateWithCache,
+    TopLevelState, TopStateView,
 };
 use ctypes::transaction::Action;
-use ctypes::{BlockHash, BlockId, Header};
+use ctypes::{BlockHash, BlockId, CompactValidatorSet, Header};
 use primitives::H256;
 use std::collections::HashSet;
 use std::iter::Iterator;
@@ -270,6 +270,24 @@ impl ConsensusEngine for Tendermint {
 
         NextValidators::elect(&state)?.save_to_state(&mut state)?;
         Ok(state.commit_and_into_db()?)
+    }
+
+    fn current_validator_set(&self, block_number: Option<u64>) -> Result<Option<CompactValidatorSet>, EngineError> {
+        let client = self.client().ok_or(EngineError::CannotOpenBlock)?;
+        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
+        let state = match client.state_at(block_id) {
+            None => return Ok(None),
+            Some(state) => state,
+        };
+        if block_number != Some(0) {
+            Ok(Some(
+                CurrentValidators::load_from_state(&state)
+                    .expect("We read state from verified block")
+                    .create_compact_validator_set(),
+            ))
+        } else {
+            Ok(None)
+        }
     }
 }
 

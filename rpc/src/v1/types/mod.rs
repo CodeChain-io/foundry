@@ -28,6 +28,7 @@ pub use self::unsigned_transaction::UnsignedTransaction;
 pub use self::work::Work;
 
 use ctypes::TxHash;
+use primitives::H256;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FilterStatus {
@@ -46,4 +47,34 @@ pub struct SendTransactionResult {
 pub struct TPSTestSetting {
     pub count: u64,
     pub seed: u64,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ValidatorSet(Vec<ValidatorSetEntry>);
+
+impl ValidatorSet {
+    pub fn from_core(validator_set: ctypes::CompactValidatorSet) -> Self {
+        let entries = Vec::<ctypes::CompactValidatorEntry>::from(validator_set)
+            .into_iter()
+            .map(ValidatorSetEntry::from_core)
+            .collect();
+        ValidatorSet(entries)
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ValidatorSetEntry {
+    pub public_key: H256,
+    pub delegation: u64,
+}
+
+impl ValidatorSetEntry {
+    pub fn from_core(validator_set: ctypes::CompactValidatorEntry) -> Self {
+        ValidatorSetEntry {
+            public_key: H256::from_slice(validator_set.public_key.as_ref()),
+            delegation: validator_set.delegation,
+        }
+    }
 }
