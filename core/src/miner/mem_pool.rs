@@ -99,9 +99,9 @@ impl MemPool {
     /// Enforce the limit to the current/future queue
     fn enforce_limit(&mut self, batch: &mut DBTransaction) {
         let to_drop: Vec<TxHash> = {
-            let transactions: Vec<_> = self.transaction_pool.pool.values().collect();
+            let transactions = Box::new(self.transaction_pool.pool.values());
             let (invalid, low_priority) = self.tx_filter.filter_transactions(
-                &transactions,
+                transactions,
                 Some(self.queue_memory_limit),
                 Some(self.queue_count_limit),
             );
@@ -234,8 +234,8 @@ impl MemPool {
     pub fn remove_old(&mut self) {
         let mut batch = backup::backup_batch_with_capacity(self.transaction_pool.count);
         let to_be_removed: Vec<TxHash> = {
-            let transactions: Vec<_> = self.transaction_pool.pool.values().collect();
-            let (invalid, low_priority) = self.tx_filter.filter_transactions(&transactions, None, None);
+            let transactions = Box::new(self.transaction_pool.pool.values());
+            let (invalid, low_priority) = self.tx_filter.filter_transactions(transactions, None, None);
             let transactions_to_be_removed = [invalid, low_priority].concat();
             transactions_to_be_removed.iter().map(|tx| tx.hash()).collect()
         };

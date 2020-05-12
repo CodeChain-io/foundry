@@ -45,7 +45,7 @@ pub trait TxFilter: Send + Sync {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
     fn filter_transactions<'a>(
         &self,
-        transactions: &'a [&'a TransactionWithMetadata],
+        transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
         memory_limit: Option<usize>,
         size_limit: Option<usize>,
     ) -> (Vec<&'a TransactionWithMetadata>, Vec<&'a TransactionWithMetadata>);
