@@ -35,6 +35,7 @@ use ccrypto::BLAKE_NULL_RLP;
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
+use coordinator::context::ChainHistoryAccess;
 use coordinator::context::MemPoolAccess;
 use coordinator::traits::{BlockExecutor, Initializer};
 use coordinator::types::{Event, Transaction};
@@ -674,5 +675,11 @@ impl SnapshotClient for Client {
         if let Some(header) = self.block_header(&id) {
             self.engine.send_snapshot_notify(header.hash())
         }
+    }
+}
+
+impl ChainHistoryAccess for Client {
+    fn get_block_header(&self, block_id: BlockId) -> Option<Header> {
+        self.block_header(&block_id).map(|header| header.decode())
     }
 }
