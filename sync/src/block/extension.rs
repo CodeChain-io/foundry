@@ -799,7 +799,7 @@ impl Extension {
     fn create_headers_response(&self, start_number: BlockNumber, max_count: u64) -> ResponseMessage {
         let best_proposal_header = self.client.best_proposal_header();
         // In Tendermint the best proposal header can only be fetched by the block hash
-        let headers = (start_number..start_number + max_count)
+        let mut headers: Vec<_> = (start_number..start_number + max_count)
             .take_while(|number| *number < best_proposal_header.number())
             .map(BlockId::Number)
             .chain(once(best_proposal_header.hash().into()))
@@ -815,6 +815,19 @@ impl Extension {
                 SyncHeader::new(header, validator_set)
             })
             .collect();
+
+        if !headers.is_empty() {
+            for i in (1..(headers.len() - 1)).rev() {
+                let child = &headers[i];
+                let parent = &headers[i - 1];
+
+                let has_same_validator_set = child.prev_validator_set() == parent.prev_validator_set();
+                if has_same_validator_set {
+                    let child = &mut headers[i];
+                    child.clear_prev_validator_set();
+                }
+            }
+        }
         ResponseMessage::Headers(headers)
     }
 
@@ -847,6 +860,36 @@ impl Extension {
         if let Some((_, request)) = last_request {
             if let ResponseMessage::Headers(headers) = &mut response {
                 headers.sort_unstable_by_key(|header| header.number());
+
+                // Genesis header and header 1 do not have prev_validator_set
+                let start_index = if !headers.is_empty() && headers[0].number() == 0 {
+                    2
+                } else if !headers.is_empty() && headers[0].number() == 1 {
+                    1
+                } else {
+                    0
+                };
+
+                if headers.len() > start_index {
+                    if headers[start_index].prev_validator_set().is_none() {
+                        cdebug!(SYNC, "First header response does not have prev_validator_set");
+                        return
+                    }
+
+                    for i in start_index..(headers.len() - 1) {
+                        let prev = &headers[i];
+                        let next = &headers[i + 1];
+
+                        if next.prev_validator_set().is_some() {
+                            continue
+                        }
+
+                        let prev_prev_validator_set =
+                            prev.prev_validator_set().expect("Mathematical induction").clone();
+                        let next = &mut headers[i + 1];
+                        next.set_prev_validator_set(prev_prev_validator_set);
+                    }
+                }
             }
 
             if !self.is_valid_response(&request, &response) {
