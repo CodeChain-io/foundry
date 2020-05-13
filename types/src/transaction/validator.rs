@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::{BlockNumber, TransactionIndex};
 use ckey::Ed25519Public as Public;
 
 pub type StakeQuantity = u64;
@@ -25,15 +26,25 @@ pub struct Validator {
     delegation: StakeQuantity,
     deposit: DepositQuantity,
     pubkey: Public,
+    nominated_at_block_number: BlockNumber,
+    nominated_at_transaction_index: TransactionIndex,
 }
 
 impl Validator {
-    pub fn new(delegation: StakeQuantity, deposit: DepositQuantity, pubkey: Public) -> Self {
+    pub fn new(
+        delegation: StakeQuantity,
+        deposit: DepositQuantity,
+        pubkey: Public,
+        nominated_at_block_number: BlockNumber,
+        nominated_at_transaction_index: TransactionIndex,
+    ) -> Self {
         Self {
             weight: delegation,
             delegation,
             deposit,
             pubkey,
+            nominated_at_block_number,
+            nominated_at_transaction_index,
         }
     }
 
@@ -75,6 +86,8 @@ mod tests {
             delegation: 2,
             deposit: 3,
             pubkey: Public::random(),
+            nominated_at_block_number: 3,
+            nominated_at_transaction_index: 2
         });
     }
 }

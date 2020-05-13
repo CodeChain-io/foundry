@@ -115,7 +115,7 @@ export async function getCandidates(
     }
     const decoded = RLP.decode(Buffer.from(data, "hex"));
     function isCandidateShape(entry: any): entry is Buffer[] {
-        return entry != null && Array.isArray(entry) && entry.length === 4;
+        return entry != null && Array.isArray(entry) && entry.length === 6;
     }
     if (!isArrayOf<Buffer[]>(decoded, isCandidateShape)) {
         throw new Error(
@@ -263,7 +263,7 @@ export async function getValidators(
     }
     const decoded = RLP.decode(Buffer.from(data, "hex"));
     function isValidatorShape(entry: any): entry is Buffer[] {
-        return entry != null && Array.isArray(entry) && entry.length === 4;
+        return entry != null && Array.isArray(entry) && entry.length === 6;
     }
     if (!isArrayOf<Buffer[]>(decoded, isValidatorShape)) {
         throw new Error(

@@ -90,7 +90,7 @@ mod tests {
     use crate::tests::helpers;
     use crate::{NextValidators, TopLevelState, TopState, TopStateView};
     use ckey::Ed25519Public as Public;
-    use ctypes::CommonParams;
+    use ctypes::{CommonParams, TransactionLocation};
     use std::collections::HashMap;
 
     #[test]
@@ -130,8 +130,12 @@ mod tests {
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
         // TODO: change with stake::execute()
-        self_nominate(&mut state, &pubkey, 200, 0, 30, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &pubkey, 200, 0, 30, nomination_starts_at, b"".to_vec()).unwrap();
 
         let next_validators = Vec::from(NextValidators::load_from_state(&state).unwrap());
         close_term(&mut state, &next_validators, &[]).unwrap();
@@ -150,6 +154,8 @@ mod tests {
                 pubkey,
                 deposit: 200,
                 nomination_ends_at: 30,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             }),
             "Keep deposit before expiration",
@@ -185,8 +191,12 @@ mod tests {
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
         // TODO: change with stake::execute()
-        self_nominate(&mut state, &pubkey, 0, 0, 30, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &pubkey, 0, 0, 30, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 40;
         delegate_ccs(&mut state, &delegator, &pubkey, quantity).unwrap();
@@ -234,12 +244,27 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, nomination_starts_at, b"".to_vec()).unwrap();
         jail(&mut state, &[pubkey], custody_until, released_at).unwrap();
 
         for current_term in 0..=custody_until {
-            let result =
-                self_nominate(&mut state, &pubkey, 0, current_term, current_term + nominate_expire, b"".to_vec());
+            let nomination_starts_at = TransactionLocation {
+                block_number: 0,
+                transaction_index: 0,
+            };
+            let result = self_nominate(
+                &mut state,
+                &pubkey,
+                0,
+                current_term,
+                current_term + nominate_expire,
+                nomination_starts_at,
+                b"".to_vec(),
+            );
             assert!(
                 result.is_err(),
                 "Shouldn't nominate while current_term({}) <= custody_until({})",
@@ -271,7 +296,20 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, b"metadata-before".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(
+            &mut state,
+            &pubkey,
+            deposit,
+            0,
+            nominate_expire,
+            nomination_starts_at,
+            b"metadata-before".to_vec(),
+        )
+        .unwrap();
         jail(&mut state, &[pubkey], custody_until, released_at).unwrap();
         for current_term in 0..=custody_until {
             let next_validators = Vec::from(NextValidators::load_from_state(&state).unwrap());
@@ -292,6 +330,7 @@ mod tests {
             additional_deposit,
             current_term,
             current_term + nominate_expire,
+            nomination_starts_at,
             b"metadata-after".to_vec(),
         );
         assert!(result.is_ok());
@@ -303,6 +342,8 @@ mod tests {
                 deposit: deposit + additional_deposit,
                 nomination_ends_at: current_term + nominate_expire,
                 pubkey,
+                nomination_starts_at_block_number: nomination_starts_at.block_number,
+                nomination_starts_at_transaction_index: nomination_starts_at.transaction_index,
                 metadata: "metadata-after".into()
             }),
             "The prisoner is become a candidate",
@@ -328,7 +369,11 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, nomination_starts_at, b"".to_vec()).unwrap();
         jail(&mut state, &[pubkey], custody_until, released_at).unwrap();
 
         for current_term in 0..released_at {
@@ -386,7 +431,11 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, nomination_starts_at, b"".to_vec()).unwrap();
         jail(&mut state, &[pubkey], custody_until, released_at).unwrap();
 
         for current_term in 0..=released_at {
@@ -427,7 +476,11 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &pubkey, deposit, 0, nominate_expire, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 40;
         delegate_ccs(&mut state, &delegator, &pubkey, quantity).unwrap();
@@ -471,7 +524,11 @@ mod tests {
         let nominate_expire = 5;
         let custody_until = 10;
         let released_at = 20;
-        self_nominate(&mut state, &pubkey, 0, 0, nominate_expire, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &pubkey, 0, 0, nominate_expire, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 40;
         delegate_ccs(&mut state, &delegator, &pubkey, quantity).unwrap();
@@ -490,7 +547,19 @@ mod tests {
         }
 
         let current_term = custody_until + 1;
-        let result = self_nominate(&mut state, &pubkey, 0, current_term, current_term + nominate_expire, b"".to_vec());
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        let result = self_nominate(
+            &mut state,
+            &pubkey,
+            0,
+            current_term,
+            current_term + nominate_expire,
+            nomination_starts_at,
+            b"".to_vec(),
+        );
         assert!(result.is_ok());
 
         let delegation = Delegation::load_from_state(&state, &delegator).unwrap();
