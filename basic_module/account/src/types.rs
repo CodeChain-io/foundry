@@ -1,6 +1,6 @@
 use ccrypto::blake256;
 use ckey::{Ed25519Public as Public, NetworkId, Signature};
-use primitives::H256;
+use primitives::{Bytes, H256};
 
 #[allow(dead_code)]
 pub type ErroneousTransactions = Vec<SignedTransaction>;
@@ -11,9 +11,9 @@ pub struct Account {
     pub sequence: u64,
 }
 
-impl From<Vec<u8>> for Account {
-    fn from(vec: Vec<u8>) -> Account {
-        serde_cbor::from_slice(&vec).unwrap()
+impl From<Bytes> for Account {
+    fn from(bytes: Bytes) -> Account {
+        serde_cbor::from_slice(&bytes).unwrap()
     }
 }
 
@@ -35,7 +35,7 @@ impl Account {
         }
     }
 
-    pub fn to_vec(&self) -> Vec<u8> {
+    pub fn to_bytes(&self) -> Bytes {
         serde_cbor::to_vec(&self).unwrap()
     }
 }

@@ -29,7 +29,7 @@ pub fn add_balance(address: &Public, val: u64) {
     let mut account: Account = get_account(address);
 
     account.balance += val;
-    context.set(address, account.to_vec());
+    context.set(address, account.to_bytes());
 }
 
 #[allow(dead_code)]
@@ -42,7 +42,7 @@ pub fn sub_balance(address: &Public, val: u64) -> Result<(), Error> {
     }
 
     account.balance -= val;
-    context.set(address, account.to_vec());
+    context.set(address, account.to_bytes());
     Ok(())
 }
 
