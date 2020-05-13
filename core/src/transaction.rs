@@ -19,7 +19,7 @@ use ccrypto::blake256;
 use ckey::{sign, verify, Ed25519Private as Private, Ed25519Public as Public, Error as KeyError, Signature};
 use ctypes::errors::SyntaxError;
 use ctypes::transaction::Transaction;
-use ctypes::{BlockHash, BlockNumber, CommonParams, TxHash};
+use ctypes::{BlockHash, BlockNumber, CommonParams, TransactionIndex, TxHash};
 use rlp::{DecoderError, Encodable, Rlp, RlpStream};
 use std::convert::{TryFrom, TryInto};
 
@@ -222,7 +222,7 @@ pub struct LocalizedTransaction {
     /// Block hash.
     pub block_hash: BlockHash,
     /// Transaction index within block.
-    pub transaction_index: usize,
+    pub transaction_index: TransactionIndex,
     /// Cached public
     pub cached_signer_public: Option<Public>,
 }

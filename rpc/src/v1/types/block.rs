@@ -17,7 +17,7 @@
 use super::Transaction;
 use ccore::{Block as CoreBlock, LocalizedTransaction};
 use ckey::{NetworkId, PlatformAddress};
-use ctypes::{BlockHash, BlockNumber};
+use ctypes::{BlockHash, BlockNumber, TransactionIndex};
 use primitives::H256;
 
 #[derive(Debug, Serialize)]
@@ -49,7 +49,7 @@ impl Block {
                 signed,
                 block_number,
                 block_hash,
-                transaction_index,
+                transaction_index: transaction_index as TransactionIndex,
                 cached_signer_public: None,
             });
         Block {
