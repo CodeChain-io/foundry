@@ -28,8 +28,15 @@ pub enum VerifiedCrime {
     },
 }
 
+#[derive(Default)]
 pub struct TransactionExecutionOutcome {
     pub events: Vec<Event>,
+}
+
+impl TransactionExecutionOutcome {
+    pub fn push_event(&mut self, event: Event) {
+        self.events.push(event);
+    }
 }
 
 pub type HeaderError = String;
