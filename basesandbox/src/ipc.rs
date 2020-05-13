@@ -21,6 +21,8 @@ pub mod servo_channel;
 use once_cell::sync::OnceCell;
 use std::sync::Mutex;
 
+pub type DefaultIpc = servo_channel::ServoChannel;
+
 pub trait IpcSend: Send {
     /// It might block until counterparty's recv(). Even if not, the order is still guaranteed.
     fn send(&self, data: &[u8]);
