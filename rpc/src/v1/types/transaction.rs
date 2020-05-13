@@ -18,14 +18,14 @@ use super::Action;
 use ccore::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
 use cjson::uint::Uint;
 use ckey::{NetworkId, Signature};
-use ctypes::{BlockHash, TxHash};
+use ctypes::{BlockHash, TransactionIndex, TxHash};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Transaction {
     pub block_number: Option<u64>,
     pub block_hash: Option<BlockHash>,
-    pub transaction_index: Option<usize>,
+    pub transaction_index: Option<TransactionIndex>,
     pub result: Option<bool>,
     pub seq: u64,
     pub fee: Uint,
