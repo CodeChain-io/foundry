@@ -15,3 +15,5 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 extern crate codechain_basesandbox as cbsb;
+
+pub mod queue;
