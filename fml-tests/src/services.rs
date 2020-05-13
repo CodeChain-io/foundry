@@ -28,3 +28,50 @@ pub trait HelloFactory: Service {
 pub trait HelloRobot: Service {
     fn hello(&self, flag: i32) -> String;
 }
+
+#[derive(PartialEq, serde::Serialize, serde::Deserialize, Debug)]
+pub enum Answer {
+    Next(String),
+    End(String),
+}
+
+/// module index -> (caller module index -> availiable handlers)
+pub type AvailiableMap = Vec<Vec<usize>>;
+
+pub fn new_avail_map(size: usize, value: usize) -> AvailiableMap {
+    let mut result = vec![Vec::new(); size];
+    for (i, x) in result.iter_mut().enumerate() {
+        for j in 0..size {
+            if i == j {
+                x.push(0);
+            } else {
+                x.push(value);
+            }
+        }
+    }
+    result
+}
+
+#[fml_macro::service]
+pub trait Schedule: Service {
+    /// Get the schedule. It is then locked.
+    fn get(&self) -> AvailiableMap;
+
+    /// Set the schedule. It is then unlocked.
+    fn set(&self, s: AvailiableMap);
+}
+
+#[fml_macro::service]
+pub trait RelayerFactory: Service {
+    /// Make an invitation for a single visit toward itself
+    fn create(&self, key: String, current: usize, destination: String) -> Box<dyn RelayerMachine>;
+
+    /// Returns name of the next module to visit
+    fn ask_path(&self, key: String, current: usize) -> Answer;
+}
+
+#[fml_macro::service]
+pub trait RelayerMachine: Service {
+    /// Recursively traverse all the path and query the answer for the destination
+    fn run(&self) -> String;
+}

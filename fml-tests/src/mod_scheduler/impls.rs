@@ -14,30 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#![allow(clippy::mutex_atomic)]
-// TODO: Remove this
-#![allow(clippy::ptr_arg)]
+use super::get_context;
+use crate::services::*;
+use fml::*;
 
-extern crate codechain_basesandbox as cbsb;
-extern crate codechain_fml as fml;
-extern crate linkme;
-#[macro_use]
-extern crate intertrait;
+#[fml_macro::service_impl(Schedule, TraitHolder)]
+pub struct MySchedule {
+    pub handle: HandleInstance,
+}
 
-#[cfg(test)]
-mod key;
-mod mod_hello;
-mod mod_relayer;
-mod mod_scheduler;
-#[cfg(test)]
-mod module;
-mod services;
-#[cfg(test)]
-mod test1;
-#[cfg(test)]
-mod test2;
+impl Schedule for MySchedule {
+    fn get(&self) -> AvailiableMap {
+        let mut avail = get_context().custom.lock.lock().unwrap();
+        while !*avail {
+            avail = get_context().custom.cvar.wait(avail).unwrap()
+        }
+        *avail = false;
+        get_context().custom.map.lock().unwrap().clone()
+    }
 
-// main functions for binary modules
-pub use mod_hello::main_like as mod_hello_main;
-pub use mod_relayer::main_like as mod_relayer_main;
-pub use mod_scheduler::main_like as mod_scheduler_main;
+    fn set(&self, s: AvailiableMap) {
+        *get_context().custom.map.lock().unwrap() = s;
+        *get_context().custom.lock.lock().unwrap() = true;
+        get_context().custom.cvar.notify_one();
+    }
+}
