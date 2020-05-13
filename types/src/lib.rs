@@ -37,6 +37,12 @@ pub type TransactionIndex = u32;
 pub type ShardId = u16;
 pub type StorageId = u16;
 
+#[derive(Copy, Clone)]
+pub struct TransactionLocation {
+    pub block_number: BlockNumber,
+    pub transaction_index: TransactionIndex,
+}
+
 pub use block_hash::BlockHash;
 pub use block_id::BlockId;
 pub use common_params::CommonParams;

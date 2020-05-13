@@ -310,7 +310,7 @@ impl TestBlockChainClient {
             pubkeys.push(public);
         }
         let fixed_validators: NextValidators =
-            pubkeys.into_iter().map(|pubkey| Validator::new(0, 0, pubkey)).collect::<Vec<_>>().into();
+            pubkeys.into_iter().map(|pubkey| Validator::new(0, 0, pubkey, 0, 0)).collect::<Vec<_>>().into();
 
         self.validators = fixed_validators;
     }

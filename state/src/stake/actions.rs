@@ -20,7 +20,7 @@ use ckey::Ed25519Public as Public;
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Approval, Validator};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{CommonParams, Deposit};
+use ctypes::{CommonParams, Deposit, TransactionIndex, TransactionLocation};
 use primitives::Bytes;
 use std::collections::HashMap;
 
@@ -81,11 +81,19 @@ pub fn init_stake(
         let mut values: Vec<_> = genesis_candidates.values().collect();
         values.sort_unstable(); // The insertion order of candidates is important.
 
-        for candidate in values {
+        for (index, candidate) in values.iter().enumerate() {
+            let block_number = 0;
+            // `index` is not a real transaction index.
+            // Since Candidate struct requires transaction index to order candidates, let's add a fake one.
+            let transaction_index = index as TransactionIndex;
             candidates.add_deposit(
                 &candidate.pubkey,
                 candidate.deposit,
                 candidate.nomination_ends_at,
+                TransactionLocation {
+                    block_number,
+                    transaction_index,
+                },
                 candidate.metadata.clone(),
             );
         }
@@ -211,6 +219,7 @@ pub fn self_nominate(
     deposit: u64,
     current_term: u64,
     nomination_ends_at: u64,
+    nomination_starts_at: TransactionLocation,
     metadata: Bytes,
 ) -> StateResult<()> {
     let blacklist = Banned::load_from_state(state)?;
@@ -232,7 +241,7 @@ pub fn self_nominate(
 
     let mut candidates = Candidates::load_from_state(&state)?;
     state.sub_balance(nominee, deposit)?;
-    candidates.add_deposit(nominee, total_deposit, nomination_ends_at, metadata);
+    candidates.add_deposit(nominee, total_deposit, nomination_ends_at, nomination_starts_at, metadata);
 
     jail.save_to_state(state)?;
     candidates.save_to_state(state)?;
@@ -527,7 +536,11 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 40;
         delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
@@ -564,7 +577,11 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 100;
         delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
@@ -620,7 +637,11 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 200;
         delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap_err();
@@ -639,7 +660,11 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 50;
         delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
@@ -661,7 +686,11 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 50;
         delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
@@ -683,7 +712,11 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 50;
         delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
@@ -711,7 +744,11 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 50;
         delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
@@ -739,7 +776,11 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 50;
         delegate_ccs(&mut state, &delegator, &delegatee, quantity).unwrap();
@@ -765,8 +806,12 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &prev_delegatee, 0, 0, 10, b"".to_vec()).unwrap();
-        self_nominate(&mut state, &next_delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &prev_delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &next_delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 50;
         delegate_ccs(&mut state, &delegator, &prev_delegatee, quantity).unwrap();
@@ -795,8 +840,12 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &prev_delegatee, 0, 0, 10, b"".to_vec()).unwrap();
-        self_nominate(&mut state, &next_delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &prev_delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &next_delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 50;
         delegate_ccs(&mut state, &delegator, &prev_delegatee, quantity).unwrap();
@@ -825,8 +874,12 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &prev_delegatee, 0, 0, 10, b"".to_vec()).unwrap();
-        self_nominate(&mut state, &next_delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &prev_delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &next_delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 50;
         delegate_ccs(&mut state, &delegator, &prev_delegatee, quantity).unwrap();
@@ -856,7 +909,11 @@ mod tests {
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
-        self_nominate(&mut state, &prev_delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &prev_delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 40;
         delegate_ccs(&mut state, &delegator, &prev_delegatee, quantity).unwrap();
@@ -881,8 +938,12 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &prev_delegatee, 0, 0, 10, b"".to_vec()).unwrap();
-        self_nominate(&mut state, &criminal, 100, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &prev_delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &criminal, 100, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 40;
         delegate_ccs(&mut state, &delegator, &criminal, quantity).unwrap();
@@ -919,10 +980,14 @@ mod tests {
             genesis_stakes
         };
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
-        self_nominate(&mut state, &prev_delegatee, 0, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &prev_delegatee, 0, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let deposit = 200;
-        self_nominate(&mut state, &jail_pubkey, deposit, 0, 5, b"".to_vec()).unwrap();
+        self_nominate(&mut state, &jail_pubkey, deposit, 0, 5, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 40;
         delegate_ccs(&mut state, &delegator, &prev_delegatee, quantity).unwrap();
@@ -951,8 +1016,12 @@ mod tests {
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
         // TODO: change with stake::execute()
-        self_nominate(&mut state, &pubkey, 0, 0, 5, b"metadata1".to_vec()).unwrap();
+        self_nominate(&mut state, &pubkey, 0, 0, 5, nomination_starts_at, b"metadata1".to_vec()).unwrap();
 
         assert_eq!(state.balance(&pubkey).unwrap(), 1000);
         let candidates = Candidates::load_from_state(&state).unwrap();
@@ -962,12 +1031,18 @@ mod tests {
                 pubkey,
                 deposit: 0,
                 nomination_ends_at: 5,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"metadata1".to_vec(),
             }),
             "nomination_ends_at should be updated even if candidate deposits 0"
         );
 
-        self_nominate(&mut state, &pubkey, 200, 0, 10, b"metadata2".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &pubkey, 200, 0, 10, nomination_starts_at, b"metadata2".to_vec()).unwrap();
 
         assert_eq!(state.balance(&pubkey).unwrap(), 800);
         let candidates = Candidates::load_from_state(&state).unwrap();
@@ -977,11 +1052,17 @@ mod tests {
                 pubkey,
                 deposit: 200,
                 nomination_ends_at: 10,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"metadata2".to_vec(),
             })
         );
 
-        self_nominate(&mut state, &pubkey, 0, 0, 15, b"metadata3".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &pubkey, 0, 0, 15, nomination_starts_at, b"metadata3".to_vec()).unwrap();
 
         assert_eq!(state.balance(&pubkey).unwrap(), 800);
         let candidates = Candidates::load_from_state(&state).unwrap();
@@ -991,6 +1072,8 @@ mod tests {
                 pubkey,
                 deposit: 200,
                 nomination_ends_at: 15,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"metadata3".to_vec(),
             }),
             "nomination_ends_at should be updated even if candidate deposits 0"
@@ -1006,8 +1089,12 @@ mod tests {
 
         init_stake(&mut state, Default::default(), Default::default(), Default::default()).unwrap();
 
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
         // TODO: change with stake::execute()
-        let result = self_nominate(&mut state, &pubkey, 2000, 0, 5, b"".to_vec());
+        let result = self_nominate(&mut state, &pubkey, 2000, 0, 5, nomination_starts_at, b"".to_vec());
         assert!(result.is_err(), "Cannot self-nominate without a sufficient balance");
     }
 
@@ -1022,7 +1109,11 @@ mod tests {
 
         // TODO: change with stake::execute()
         let deposit = 200;
-        self_nominate(&mut state, &pubkey, deposit, 0, 5, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &pubkey, deposit, 0, 5, nomination_starts_at, b"".to_vec()).unwrap();
 
         let custody_until = 10;
         let released_at = 20;
@@ -1064,7 +1155,11 @@ mod tests {
         init_stake(&mut state, genesis_stakes, Default::default(), Default::default()).unwrap();
 
         let deposit = 100;
-        self_nominate(&mut state, &criminal, deposit, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &criminal, deposit, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
 
         let quantity = 40;
         delegate_ccs(&mut state, &delegator, &criminal, quantity).unwrap();
@@ -1096,7 +1191,11 @@ mod tests {
         assert_eq!(Ok(()), state.add_balance(&criminal, 100));
 
         let deposit = 10;
-        self_nominate(&mut state, &criminal, deposit, 0, 10, b"".to_vec()).unwrap();
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        self_nominate(&mut state, &criminal, deposit, 0, 10, nomination_starts_at, b"".to_vec()).unwrap();
         let custody_until = 10;
         let released_at = 20;
         jail(&mut state, &[criminal], custody_until, released_at).unwrap();

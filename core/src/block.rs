@@ -25,7 +25,7 @@ use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, StateError, StateWi
 use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{BlockNumber, TxHash};
+use ctypes::{BlockNumber, TransactionIndex, TxHash};
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -150,6 +150,7 @@ impl OpenBlock {
         client: &C,
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
+        transaction_index: TransactionIndex,
     ) -> Result<(), Error> {
         if self.block.transactions_set.contains(&tx.hash()) {
             return Err(HistoryError::TransactionAlreadyImported.into())
@@ -163,6 +164,7 @@ impl OpenBlock {
             parent_block_number,
             parent_block_timestamp,
             self.block.header.timestamp(),
+            transaction_index,
         ) {
             Ok(()) => {
                 self.block.transactions_set.insert(hash);
@@ -190,8 +192,14 @@ impl OpenBlock {
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
     ) -> Result<(), Error> {
-        for tx in transactions {
-            self.push_transaction(tx.clone(), client, parent_block_number, parent_block_timestamp)?;
+        for (index, tx) in transactions.iter().enumerate() {
+            self.push_transaction(
+                tx.clone(),
+                client,
+                parent_block_number,
+                parent_block_timestamp,
+                index as TransactionIndex,
+            )?;
         }
         Ok(())
     }

@@ -31,7 +31,7 @@ use ckey::{Ed25519Private as Private, Ed25519Public as Public, Password, Platfor
 use cstate::{FindDoubleVoteHandler, TopLevelState, TopStateView};
 use ctypes::errors::HistoryError;
 use ctypes::transaction::{IncompleteTransaction, Transaction};
-use ctypes::{BlockHash, BlockId, TxHash};
+use ctypes::{BlockHash, BlockId, TransactionIndex, TxHash};
 use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
@@ -342,8 +342,15 @@ impl Miner {
 
             let hash = tx.hash();
             let start = Instant::now();
+            let transaction_index = tx_count as TransactionIndex;
             // Check whether transaction type is allowed for sender
-            let result = open_block.push_transaction(tx, chain, parent_header.number(), parent_header.timestamp());
+            let result = open_block.push_transaction(
+                tx,
+                chain,
+                parent_header.number(),
+                parent_header.timestamp(),
+                transaction_index,
+            );
 
             match result {
                 // already have transaction - ignore
@@ -378,7 +385,8 @@ impl Miner {
             // It should use the block signer.
             let tx_signer = block_tx_signer.unwrap_or_else(Private::random);
             let mut seq = block_tx_seq.map(Ok).unwrap_or_else(|| open_block.state().seq(&tx_signer.public_key()))?;
-            for action in actions {
+            for (index, action) in actions.into_iter().enumerate() {
+                let transaction_index = (tx_count + index) as TransactionIndex;
                 let tx = Transaction {
                     network_id: chain.network_id(),
                     action,
@@ -389,7 +397,13 @@ impl Miner {
                 let tx = VerifiedTransaction::new_with_sign(tx, &tx_signer);
                 // TODO: The current code can insert more transactions than size limit.
                 // It should be fixed to pre-calculate the maximum size of the close transactions and prevent the size overflow.
-                open_block.push_transaction(tx, chain, parent_header.number(), parent_header.timestamp())?;
+                open_block.push_transaction(
+                    tx,
+                    chain,
+                    parent_header.number(),
+                    parent_header.timestamp(),
+                    transaction_index,
+                )?;
             }
         }
         let block = open_block.close()?;
