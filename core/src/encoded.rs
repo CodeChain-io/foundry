@@ -65,6 +65,11 @@ impl Header {
     pub fn into_inner(self) -> Vec<u8> {
         self.0
     }
+
+    pub fn into_simplified(self) -> coordinator::Header {
+        let view = self.view();
+        coordinator::Header::new(view.parent_hash(), view.timestamp(), view.number(), view.author(), view.extra_data())
+    }
 }
 
 // forwarders to borrowed view.

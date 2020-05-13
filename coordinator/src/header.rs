@@ -33,7 +33,6 @@ pub struct Header {
 }
 
 impl Header {
-    #[allow(dead_code)]
     pub fn new(parent_hash: BlockHash, timestamp: u64, number: u64, author: Public, extra_data: Bytes) -> Self {
         Self {
             parent_hash,

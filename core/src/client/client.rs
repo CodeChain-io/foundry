@@ -36,6 +36,7 @@ use crate::types::{BlockStatus, TransactionId, VerificationQueueInfo as BlockQue
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
+use coordinator::context::ChainHistoryAccess;
 use cstate::{DoubleVoteHandler, FindDoubleVoteHandler, StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::Header;
@@ -641,5 +642,11 @@ impl SnapshotClient for Client {
         if let Some(header) = self.block_header(&id) {
             self.engine.send_snapshot_notify(header.hash())
         }
+    }
+}
+
+impl ChainHistoryAccess for Client {
+    fn get_block_header(&self, block_id: BlockId) -> Option<coordinator::Header> {
+        self.block_header(&block_id).map(|header| header.into_simplified())
     }
 }
