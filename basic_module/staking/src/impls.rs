@@ -16,19 +16,31 @@
 
 use crate::check::check;
 use crate::core::{
-    Abci, ExecuteTransactionError, HeaderError, StakingView, TransactionExecutionOutcome, VerifiedCrime,
+    Abci, AdditionalTxCreator, ExecuteTransactionError, HeaderError, StakingView, TransactionExecutionOutcome,
+    VerifiedCrime,
 };
 use crate::error::Error;
 use crate::execute::{apply_internal, execute_auto_action};
 use crate::fee_manager;
 use crate::state::{get_stakes, Banned, CurrentValidators, Metadata, Params};
-use crate::transactions::{SignedTransaction, Transaction};
+use crate::transactions::{
+    create_close_block_transactions, create_open_block_transactions, SignedTransaction, Transaction,
+};
 use crate::types::{Header, Public, ResultantFee, Validator};
 use std::cell::RefCell;
 use std::collections::HashMap;
 
 struct ABCIHandle {
     executing_block_header: RefCell<Header>,
+}
+
+impl AdditionalTxCreator for ABCIHandle {
+    fn create(&self) -> Vec<Transaction> {
+        create_open_block_transactions()
+            .into_iter()
+            .chain(create_close_block_transactions(&*self.executing_block_header.borrow()).into_iter())
+            .collect()
+    }
 }
 
 impl Abci for ABCIHandle {

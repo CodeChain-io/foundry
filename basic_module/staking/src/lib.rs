@@ -19,7 +19,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate lazy_static;
 
-use coordinator::context::SubStorageAccess;
+use coordinator::context::{ChainHistoryAccess, SubStateHistoryAccess, SubStorageAccess};
 use imported::{AccountManager, AccountView, FeeManager};
 
 mod check;
@@ -46,6 +46,7 @@ pub fn serialize<T: serde::ser::Serialize>(data: T) -> Vec<u8> {
     serde_cbor::to_vec(&data).unwrap()
 }
 
+// FIXME: network_id should be mutable
 lazy_static! {
     static ref NETWORK_ID: types::NetworkId = Default::default();
 }
@@ -63,5 +64,13 @@ pub fn account_viewer() -> Box<dyn AccountView> {
 }
 
 pub fn fee_manager() -> Box<dyn FeeManager> {
+    unimplemented!()
+}
+
+pub fn chain_history_manager() -> Box<dyn ChainHistoryAccess> {
+    unimplemented!()
+}
+
+pub fn state_history_manager() -> Box<dyn SubStateHistoryAccess> {
     unimplemented!()
 }

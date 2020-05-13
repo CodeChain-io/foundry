@@ -40,3 +40,7 @@ pub trait StakingView {
     fn era(&self) -> u64;
     fn get_banned_validators(&self) -> Banned;
 }
+
+pub trait AdditionalTxCreator {
+    fn create(&self) -> Vec<Transaction>;
+}
