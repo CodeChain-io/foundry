@@ -13,6 +13,7 @@ ckey = { package = "codechain-key", path = "../key" }
 ckeystore = { package = "codechain-keystore", path="../keystore" }
 codechain-logger = { path = "../util/logger" }
 cnetwork = { package = "codechain-network", path = "../network" }
+coordinator = { path = "../coordinator" }
 cstate = { package = "codechain-state", path = "../state" }
 ctimer = { package = "codechain-timer", path = "../util/timer" }
 ctypes = { package = "codechain-types", path = "../types" }
