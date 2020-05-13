@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::Transaction;
-pub use ctypes::StorageId;
 use ctypes::TxHash;
+pub use ctypes::{BlockId, Header, StorageId};
 
 /// A `Context` provides the interface against the system services such as moulde substorage access,
 /// mempool access
@@ -57,4 +57,8 @@ pub trait StorageAccess {
 
 pub trait MemPoolAccess {
     fn inject_transactions(&self, txs: Vec<Transaction>) -> Vec<Result<TxHash, String>>;
+}
+
+pub trait ChainHistoryAccess {
+    fn get_block_header(&self, block_id: BlockId) -> Option<Header>;
 }
