@@ -34,6 +34,14 @@ impl SyncHeader {
     pub fn prev_validator_set(&self) -> Option<&CompactValidatorSet> {
         self.prev_validator_set.as_ref()
     }
+
+    pub fn clear_prev_validator_set(&mut self) {
+        self.prev_validator_set = None;
+    }
+
+    pub fn set_prev_validator_set(&mut self, prev_validator_set: CompactValidatorSet) {
+        self.prev_validator_set = Some(prev_validator_set);
+    }
 }
 
 impl Deref for SyncHeader {
