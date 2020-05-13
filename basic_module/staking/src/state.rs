@@ -17,8 +17,9 @@
 use crate::error::{Insufficient, Mismatch};
 use crate::runtime_error::Error;
 use crate::types::{Candidate, DepositQuantity, Prisoner, ReleaseResult, StakeQuantity, Validator};
-use crate::{deserialize, serialize, substorage};
+use crate::{deserialize, serialize, state_history_manager, substorage};
 use fkey::Ed25519Public as Public;
+use ftypes::BlockId;
 use primitives::Bytes;
 use serde::{de::DeserializeOwned, ser::Serialize};
 use std::cmp::{max, Ordering};
@@ -53,6 +54,10 @@ fn load_with_key<T: DeserializeOwned>(key: &KEY) -> Option<T> {
     substorage().get(key).map(deserialize)
 }
 
+fn load_with_key_from<T: DeserializeOwned>(key: &KEY, id: BlockId) -> Option<T> {
+    state_history_manager().get_at(Some(id), key).map(deserialize)
+}
+
 fn write_with_key<T: Serialize>(key: &KEY, data: T) {
     substorage().set(key, serialize(data))
 }
@@ -84,6 +89,10 @@ pub struct Params {
 impl Metadata {
     pub fn load() -> Self {
         load_with_key(METADATA_KEY).expect("Params must be exist")
+    }
+
+    pub fn load_from(state_id: BlockId) -> Option<Self> {
+        load_with_key_from(METADATA_KEY, state_id)
     }
 
     pub fn save(self) {

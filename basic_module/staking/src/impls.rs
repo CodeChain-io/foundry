@@ -15,11 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::check::check;
-use crate::core::{Abci, StakingView};
+use crate::core::{Abci, AdditionalTxCreator, StakingView};
 use crate::error::Error;
 use crate::execute::{apply_internal, execute_auto_action};
 use crate::state::{get_stakes, Banned, CurrentValidators, Metadata, Params};
-use crate::transactions::{SignedTransaction, Transaction};
+use crate::transactions::{
+    create_close_block_transactions, create_open_block_transactions, SignedTransaction, Transaction,
+};
 use crate::types::Validator;
 use coordinator::types::{ExecuteTransactionError, HeaderError, TransactionExecutionOutcome, VerifiedCrime};
 use coordinator::Header;
@@ -29,6 +31,14 @@ use std::collections::HashMap;
 
 struct ABCIHandle {
     executing_block_header: RefCell<Header>,
+}
+
+impl AdditionalTxCreator for ABCIHandle {
+    fn create(&self) -> Vec<Transaction> {
+        let mut transactions = create_open_block_transactions();
+        transactions.extend(create_close_block_transactions(&*self.executing_block_header.borrow()).into_iter());
+        transactions
+    }
 }
 
 impl Abci for ABCIHandle {
