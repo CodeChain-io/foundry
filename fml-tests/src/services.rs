@@ -14,18 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#![allow(clippy::mutex_atomic)]
-// TODO: Remove this
-#![allow(clippy::ptr_arg)]
-
-extern crate codechain_basesandbox as cbsb;
+// Common dependencis for services
 extern crate codechain_fml as fml;
-extern crate linkme;
-#[macro_use]
-extern crate intertrait;
-
-#[cfg(test)]
-mod key;
-#[cfg(test)]
-mod module;
-mod services;
+use fml::service_prelude::*;
+pub struct TraitHolder<T: ?Sized>(std::marker::PhantomData<T>);
