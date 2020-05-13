@@ -1,0 +1,5 @@
+error: Service trait must have only methods
+ --> $DIR/errorful_2.rs:6:5
+  |
+6 |     type What;
+  |     ^^^^^^^^^^

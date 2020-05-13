@@ -1,0 +1,5 @@
+error: You must not use a pattern for the argument
+ --> $DIR/errorful_3.rs:6:28
+  |
+6 |     fn fn_2(&self, a: i32, (a, b): (Vec<u8>, f32)) -> Box<dyn MyHandle>; // pattern in arg
+  |                            ^^^^^^^^^^^^^^^^^^^^^^

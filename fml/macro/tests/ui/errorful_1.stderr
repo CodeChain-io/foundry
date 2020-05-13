@@ -1,0 +1,5 @@
+error: All your method must take &self
+ --> $DIR/errorful_1.rs:6:5
+  |
+6 |     fn fn_2(a: i32, b: Vec<u8>) -> Box<dyn MyHandle>; // no &self
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
