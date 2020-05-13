@@ -1,0 +1,15 @@
+[package]
+name = "fml-macro"
+version = "0.1.0"
+authors = ["CodeChain Team <hi@codechain.io>"]
+
+[dependencies]
+proc-macro-crate = "0.1.4"
+proc-macro2 = "1.0"
+fml-macro-core = {path = "../macro_core"}
+
+[dev-dependencies]
+trybuild = "1.0.23"
+
+[lib]
+proc-macro = true
