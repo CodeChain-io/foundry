@@ -59,3 +59,34 @@ pub fn service(args: TokenStream2, input: TokenStream2) -> TokenStream2 {
         #import
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use proc_macro2::TokenStream as TokenStream2;
+    use std::fs::File;
+    use std::io::prelude::*;
+    use std::path::Path;
+    use std::str::FromStr;
+
+    pub fn service_string(source: &str) -> TokenStream2 {
+        service(TokenStream2::new(), TokenStream2::from_str(source).unwrap())
+    }
+
+    #[test]
+    fn example1() {
+        let source = {
+            let mut f = File::open(&Path::new("./src/example/ex1.rs")).unwrap();
+            let mut buffer = String::new();
+            f.read_to_string(&mut buffer).unwrap();
+            service_string(&buffer)
+        };
+        let expected = {
+            let mut f = File::open(&Path::new("./src/example/ex1_ex.rs")).unwrap();
+            let mut buffer = String::new();
+            f.read_to_string(&mut buffer).unwrap();
+            TokenStream2::from_str(&buffer).unwrap()
+        };
+        assert_eq!(format!("{}", source), format!("{}", expected))
+    }
+}
