@@ -27,7 +27,7 @@ use crate::verification::{PreverifiedBlock, Verifier};
 use crate::views::{BlockView, HeaderView};
 use cio::IoChannel;
 use ctypes::header::{Header, Seal};
-use ctypes::{BlockHash, BlockId};
+use ctypes::{BlockHash, BlockId, SyncHeader};
 use kvdb::DBTransaction;
 use parking_lot::{Mutex, MutexGuard};
 use rlp::Encodable;
@@ -92,7 +92,8 @@ impl Importer {
             }
 
             {
-                let headers: Vec<_> = blocks.iter().map(|block| &block.header).collect();
+                let headers: Vec<_> =
+                    blocks.iter().map(|block| VerifiedHeader::from_verified_block(&block.header)).collect();
                 self.import_verified_headers(headers, client, &import_lock);
             }
 
@@ -258,12 +259,16 @@ impl Importer {
         const MAX_HEADERS_TO_IMPORT: usize = 1_000;
         let lock = self.import_lock.lock();
         let headers = self.header_queue.drain(MAX_HEADERS_TO_IMPORT);
-        self.import_verified_headers(headers.iter().map(|sync_header| sync_header.deref()), client, &lock)
+        self.import_verified_headers(
+            headers.iter().map(|sync_header| VerifiedHeader::from_sync(sync_header)),
+            client,
+            &lock,
+        )
     }
 
     pub fn import_verified_headers<'a>(
         &'a self,
-        headers: impl IntoIterator<Item = &'a Header>,
+        headers: impl IntoIterator<Item = VerifiedHeader<'a>>,
         client: &Client,
         _importer_lock: &MutexGuard<'_, ()>,
     ) -> usize {
@@ -287,9 +292,18 @@ impl Importer {
                 .block_header(&(*header.parent_hash()).into())
                 .unwrap_or_else(|| panic!("Parent of importing header must exist {:?}", header.parent_hash()))
                 .decode();
+            let grand_parent = if header.number() <= 1 {
+                None
+            } else {
+                let grand_parent = client
+                    .block_header(&(*parent_header.parent_hash()).into())
+                    .unwrap_or_else(|| panic!("Grand parent of importing header must exist {:?}", header.parent_hash()))
+                    .decode();
+                Some(grand_parent)
+            };
             if client.block_header(&BlockId::Hash(hash)).is_some() {
                 // Do nothing if the header is already imported
-            } else if self.check_header(&header, &parent_header) {
+            } else if self.check_header(&header, &parent_header, grand_parent.as_ref()) {
                 imported.push(hash);
                 update_results.push(self.commit_header(&header, client));
             } else {
@@ -359,9 +373,10 @@ impl Importer {
         client.db().flush().expect("DB flush failed.");
     }
 
-    fn check_header(&self, header: &Header, parent: &Header) -> bool {
+    /// grand_parent === None only when parent is genesis
+    fn check_header(&self, header: &VerifiedHeader, parent: &Header, grand_parent: Option<&Header>) -> bool {
         // FIXME: self.verifier.verify_block_family
-        if let Err(e) = self.engine.verify_block_family(&header, &parent) {
+        if let Err(e) = self.engine.verify_block_family(header, &parent) {
             cwarn!(
                 CLIENT,
                 "Stage 3 block verification failed for #{} ({})\nError: {:?}",
@@ -371,6 +386,19 @@ impl Importer {
             );
             return false
         };
+
+        if let VerifiedHeader::FromSync(sync_header) = header {
+            if let Err(e) = self.engine.verify_header_family(sync_header, &parent, grand_parent) {
+                cwarn!(
+                    CLIENT,
+                    "Stage 3 header verification failed for #{} ({})\nError: {:?}",
+                    header.number(),
+                    header.hash(),
+                    e
+                );
+                return false
+            };
+        }
         true
     }
 
@@ -384,5 +412,36 @@ impl Importer {
         chain.commit();
 
         update_result
+    }
+}
+
+pub enum VerifiedHeader<'a> {
+    FromSync(&'a SyncHeader),
+    Generated(&'a Header),
+    FromVerifiedBlock(&'a Header),
+}
+
+impl<'a> VerifiedHeader<'a> {
+    pub fn from_sync(sync_header: &'a SyncHeader) -> Self {
+        VerifiedHeader::FromSync(sync_header)
+    }
+
+    pub fn from_generated(generated_header: &'a Header) -> Self {
+        VerifiedHeader::Generated(generated_header)
+    }
+
+    pub fn from_verified_block(header: &'a Header) -> Self {
+        VerifiedHeader::FromVerifiedBlock(header)
+    }
+}
+
+impl<'a> Deref for VerifiedHeader<'a> {
+    type Target = Header;
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::FromSync(sync_header) => sync_header,
+            Self::Generated(header) => header,
+            Self::FromVerifiedBlock(header) => header,
+        }
     }
 }
