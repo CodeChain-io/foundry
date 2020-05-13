@@ -1,0 +1,19 @@
+[package]
+name = "codechain-fml"
+version = "0.1.0"
+authors = ["CodeChain Team <hi@codechain.io>"]
+edition = "2018"
+
+[dependencies]
+crossbeam = "0.7.3"
+codechain-basesandbox = { path = "../basesandbox" }
+rand = "0.6.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_cbor = "0.11.1"
+linkme = "0.2.1"
+once_cell = "1.3.1"
+intertrait = "0.2.0"
+
+[features]
+default = []
+single_process = []
