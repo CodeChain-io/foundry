@@ -54,6 +54,10 @@ impl PortDispatcher {
         arguments: &[u8],
         return_buffer: std::io::Cursor<&mut Vec<u8>>,
     ) {
+        #[cfg(fml_statistics)]
+        {
+            crate::statistics::DISPATCH_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        }
         let service_object = self.service_table.read().unwrap().get(handle.index as usize);
         // NOTE: You must drop the ReadGuard before dispatch (if not deadlock)
         service_object.dispatch(method, arguments, return_buffer);
@@ -61,6 +65,10 @@ impl PortDispatcher {
 }
 
 pub fn register(port_id: PortId, trait_id: TraitId, mut handle_to_register: Box<dyn Service>) -> HandleInstance {
+    #[cfg(fml_statistics)]
+    {
+        crate::statistics::CREATE_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
     let context = context::global::get();
     let port_table = context.read().unwrap();
 

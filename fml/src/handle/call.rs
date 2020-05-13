@@ -24,6 +24,11 @@ pub fn call<S: serde::Serialize, D: serde::de::DeserializeOwned>(
     method: MethodId,
     args: &S,
 ) -> D {
+    #[cfg(fml_statistics)]
+    {
+        crate::statistics::CALL_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
+
     let mut buffer: Vec<u8> = Vec::new();
     buffer.resize(std::mem::size_of::<PacketHeader>(), 0 as u8);
     serde_cbor::to_writer(
@@ -44,6 +49,11 @@ pub fn call<S: serde::Serialize, D: serde::de::DeserializeOwned>(
 }
 
 pub fn delete(handle: &HandleInstance) {
+    #[cfg(fml_statistics)]
+    {
+        crate::statistics::DELETE_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
+
     let context = context::global::get();
     let port_table = context.read().unwrap();
     if port_table.no_drop {

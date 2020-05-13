@@ -14,26 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-extern crate codechain_basesandbox as cbsb;
+use std::sync::atomic::AtomicUsize;
 
-mod context;
-mod core;
-mod handle;
-mod port;
-pub mod queue;
-/// This is to compile service macro expansion, not the module.
-pub mod service_prelude;
-mod setup;
-pub mod statistics;
-
-pub use crate::core::run_control_loop;
-pub use context::{
-    global, single_process_support::get_key, single_process_support::set_key, Config, Context, Custom, FmlConfig,
-    InstanceKey,
-};
-pub use handle::association::*;
-pub use handle::id::IdMap;
-pub use handle::{
-    dispatch::ServiceDispatcher, HandleExchange, HandleInstance, HandlePreset, MethodId, Service, TraitId,
-};
-pub use port::PacketHeader;
+pub static CALL_COUNT: AtomicUsize = AtomicUsize::new(0);
+pub static DISPATCH_COUNT: AtomicUsize = AtomicUsize::new(0);
+pub static CREATE_COUNT: AtomicUsize = AtomicUsize::new(0);
+pub static DELETE_COUNT: AtomicUsize = AtomicUsize::new(0);
