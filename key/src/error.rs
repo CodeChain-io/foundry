@@ -15,57 +15,43 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::NetworkId;
-use bech32::Error as Bech32Error;
+use rlp::DecoderError;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
+    InvalidPublic(String),
+    InvalidPrivate(String),
     InvalidSecret,
     InvalidSignature,
     InvalidNetworkId(NetworkId),
     InvalidPlatformAddressVersion(u8),
-    Bech32MissingSeparator,
-    Bech32InvalidChecksum,
-    Bech32InvalidLength,
-    Bech32InvalidChar(u8),
-    Bech32InvalidData(u8),
-    Bech32MixedCase,
-    Bech32UnknownHRP,
+    InvalidPlatformAddressFormat(String),
+    RlpDecoderError(DecoderError),
     Custom(String),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let msg = match *self {
-            Error::InvalidSecret => "Invalid Secret".into(),
-            Error::InvalidSignature => "Invalid Signature".into(),
-            Error::InvalidNetworkId(network_id) => format!("{} is an invalid network id", network_id),
+        match self {
+            Error::InvalidPublic(key) => write!(f, "{} is an invalid public key", key),
+            Error::InvalidPrivate(key) => write!(f, "{} is an invlaid private key", key),
+            Error::InvalidSecret => write!(f, "Invalid Secret"),
+            Error::InvalidSignature => write!(f, "Invalid Signature"),
+            Error::InvalidNetworkId(network_id) => write!(f, "{} is an invalid network id", network_id),
             Error::InvalidPlatformAddressVersion(version) => {
-                format!("{} is an invalid platform address version", version)
+                write!(f, "{} is an invalid platform address version", version)
             }
-            Error::Bech32MissingSeparator => "Missing human-readable separator".into(),
-            Error::Bech32InvalidChecksum => "Invalid checksum".into(),
-            Error::Bech32InvalidLength => "Invalid Length".into(),
-            Error::Bech32InvalidChar(_) => "Invalid character".into(),
-            Error::Bech32InvalidData(_) => "Invalid data point".into(),
-            Error::Bech32MixedCase => "Mixed-case strings not allowed".into(),
-            Error::Bech32UnknownHRP => "Unknown human-readable part".into(),
-            Error::Custom(ref s) => s.clone(),
-        };
+            Error::InvalidPlatformAddressFormat(address) => write!(f, "{} is an invalid platform string", address),
+            Error::RlpDecoderError(err) => write!(f, "{}", err),
 
-        msg.fmt(f)
+            Error::Custom(ref s) => write!(f, "{}", s),
+        }
     }
 }
 
-impl From<Bech32Error> for Error {
-    fn from(e: Bech32Error) -> Self {
-        match e {
-            Bech32Error::MissingSeparator => Error::Bech32MissingSeparator,
-            Bech32Error::InvalidChecksum => Error::Bech32InvalidChecksum,
-            Bech32Error::InvalidLength => Error::Bech32InvalidLength,
-            Bech32Error::InvalidChar(ch) => Error::Bech32InvalidChar(ch),
-            Bech32Error::InvalidData(data) => Error::Bech32InvalidData(data),
-            Bech32Error::MixedCase => Error::Bech32MixedCase,
-        }
+impl From<DecoderError> for Error {
+    fn from(err: DecoderError) -> Self {
+        Error::RlpDecoderError(err)
     }
 }

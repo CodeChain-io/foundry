@@ -22,7 +22,7 @@ mod miner;
 
 use ckey::Ed25519Public as Public;
 use cstate::TopStateView;
-use ctypes::BlockHash;
+use ctypes::{BlockHash, BlockId};
 use primitives::Bytes;
 use std::ops::Range;
 use std::sync::Arc;
@@ -33,7 +33,6 @@ use crate::client::{BlockChainClient, BlockChainTrait, BlockProducer, EngineInfo
 use crate::consensus::EngineType;
 use crate::error::Error;
 use crate::transaction::PendingTransactions;
-use crate::BlockId;
 use coordinator::types::Transaction;
 
 /// Miner client API

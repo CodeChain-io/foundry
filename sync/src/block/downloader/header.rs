@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::message::RequestMessage;
-use ccore::{BlockChainClient, BlockId};
-use ctypes::{BlockHash, Header};
+use ccore::BlockChainClient;
+use ctypes::{BlockHash, BlockId, Header};
 use primitives::U256;
 use std::cmp::Ordering;
 use std::collections::HashMap;

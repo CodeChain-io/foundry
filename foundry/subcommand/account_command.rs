@@ -68,7 +68,7 @@ pub fn run_account_command(matches: &ArgMatches<'_>) -> Result<(), String> {
 fn create(ap: &AccountProvider, network_id: NetworkId) -> Result<(), String> {
     let password = read_password_and_confirm().ok_or("The password does not match")?;
     let pubkey = ap.new_account_and_public(&password).expect("Cannot create account");
-    println!("{:?}", PlatformAddress::new_v1(network_id, pubkey));
+    println!("{:?}", PlatformAddress::new_v0(network_id, pubkey));
     Ok(())
 }
 
@@ -76,7 +76,7 @@ fn import(ap: &AccountProvider, network_id: NetworkId, json_path: &str) -> Resul
     let json = fs::read(json_path).map_err(|err| err.to_string())?;
     let password = prompt_password("Password: ");
     let pubkey = ap.import_wallet(json.as_slice(), &password).map_err(|err| err.to_string())?;
-    println!("{}", PlatformAddress::new_v1(network_id, pubkey));
+    println!("{}", PlatformAddress::new_v0(network_id, pubkey));
     Ok(())
 }
 
@@ -84,7 +84,7 @@ fn import_raw(ap: &AccountProvider, network_id: NetworkId, raw_key: &str) -> Res
     let private = Private::from_str(remove_0x_prefix(raw_key)).map_err(|err| err.to_string())?;
     let password = read_password_and_confirm().ok_or("The password does not match")?;
     let pubkey = ap.insert_account(private, &password).map_err(|err| err.to_string())?;
-    println!("{}", PlatformAddress::new_v1(network_id, pubkey));
+    println!("{}", PlatformAddress::new_v0(network_id, pubkey));
     Ok(())
 }
 
@@ -102,7 +102,7 @@ fn remove(ap: &AccountProvider, address: &str) -> Result<(), String> {
 fn list(ap: &AccountProvider, network_id: NetworkId) -> Result<(), String> {
     let pubkeys = ap.get_list().expect("Cannot get account list");
     for pubkey in pubkeys {
-        println!("{}", PlatformAddress::new_v1(network_id, pubkey))
+        println!("{}", PlatformAddress::new_v0(network_id, pubkey))
     }
     Ok(())
 }

@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::config::load_config;
-use ccore::{AccountProvider, AccountProviderError, BlockId, ConsensusClient, Encodable, UnverifiedTransaction};
+use ccore::{AccountProvider, AccountProviderError, ConsensusClient, Encodable, UnverifiedTransaction};
 use ckey::PlatformAddress;
 use ckey::{Ed25519Public as Public, Signature};
 use ckeystore::DecryptedAccount;
@@ -23,6 +23,7 @@ use clap::ArgMatches;
 use cstate::{Banned, Candidates, Jail};
 use ctypes::transaction::Action::SelfNominate;
 use ctypes::transaction::Transaction;
+use ctypes::BlockId;
 use primitives::{Bytes, H256};
 use std::convert::TryInto;
 use std::sync::Arc;

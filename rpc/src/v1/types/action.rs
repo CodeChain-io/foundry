@@ -74,28 +74,28 @@ impl Action {
                 receiver,
                 quantity,
             } => Action::Pay {
-                receiver: PlatformAddress::new_v1(network_id, receiver),
+                receiver: PlatformAddress::new_v0(network_id, receiver),
                 quantity: quantity.into(),
             },
             ActionType::TransferCCS {
                 address,
                 quantity,
             } => Action::TransferCCS {
-                address: PlatformAddress::new_v1(network_id, address),
+                address: PlatformAddress::new_v0(network_id, address),
                 quantity: quantity.into(),
             },
             ActionType::DelegateCCS {
                 address,
                 quantity,
             } => Action::DelegateCCS {
-                address: PlatformAddress::new_v1(network_id, address),
+                address: PlatformAddress::new_v0(network_id, address),
                 quantity: quantity.into(),
             },
             ActionType::Revoke {
                 address,
                 quantity,
             } => Action::Revoke {
-                address: PlatformAddress::new_v1(network_id, address),
+                address: PlatformAddress::new_v0(network_id, address),
                 quantity: quantity.into(),
             },
             ActionType::Redelegate {
@@ -103,8 +103,8 @@ impl Action {
                 next_delegatee,
                 quantity,
             } => Action::Redelegate {
-                prev_delegatee: PlatformAddress::new_v1(network_id, prev_delegatee),
-                next_delegatee: PlatformAddress::new_v1(network_id, next_delegatee),
+                prev_delegatee: PlatformAddress::new_v0(network_id, prev_delegatee),
+                next_delegatee: PlatformAddress::new_v0(network_id, next_delegatee),
                 quantity: quantity.into(),
             },
             ActionType::SelfNominate {
@@ -200,7 +200,7 @@ impl TryFrom<Action> for ActionType {
                 approvals,
             } => ActionType::ChangeParams {
                 metadata_seq: metadata_seq.into(),
-                params: Box::new(rlp::decode(&params).map_err(|err| KeyError::Custom(format!("{:?}", err)))?),
+                params: Box::new(rlp::decode(&params).map_err(KeyError::from)?),
                 approvals,
             },
             Action::ReportDoubleVote {

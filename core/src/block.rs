@@ -31,7 +31,7 @@ use std::collections::HashMap;
 use std::iter::Iterator;
 
 /// A block, encoded as it is on the block chain.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Block {
     /// The header of this block
     pub header: Header,

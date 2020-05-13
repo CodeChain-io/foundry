@@ -4,10 +4,10 @@
         "solo": {
             "params": {
                 "genesisStakes": {
-                    "tccq90kljkawglne9yhqyqajx6qg0u48w8e88s5kavy8vh33xa4ye842kfxyqu": 40000,
-                    "tccqyaty0ad0jdy7865m06yl7fff5444dpdzhckreqxqjx440m7tkkegtwfee5": 30000,
-                    "tccq85rcqvyakdvce5x3fa797lfq8hvle7q23zshwudyseguqgkaf0qcy2clnj": 20000,
-                    "tccqysqctlfgt7may2rxgldyexsuw08kvsu5v7830a832f9wmsqmj0t6kygrhu": 10000
+                    "4cnj73b1X2_K3XI_PJSXAQHZG0BD-VO4-TnhS3WEOy8Ym7UmT1Utc0": 40000,
+                    "fys3db1kOrI_rXyaTx9U2_RP-SlNK1q0LRXxYeQGBI1av35drZQtc0": 30000,
+                    "whxw3vrh6DwBhO2azGaGinvi--kB7s_nwFRFC7uNJDKOARbqXgwtc0": 20000,
+                    "nxcmkryvIAwv6UL9vpFDMj7SZNDjnnsyHKM8eL-nipJXbgDcnr0tc0": 10000
                 }
             }
         }
@@ -31,7 +31,7 @@
         "seal": {
             "generic": "0x0"
         },
-        "author": "tccqyqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhhn9p3",
+        "author": "fjjh0000AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtc0",
         "timestamp": "0x00",
         "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "extraData": "0x"

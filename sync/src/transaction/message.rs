@@ -68,9 +68,17 @@ mod tests {
 
     use super::Message;
 
+    /// For a type that does not have PartialEq, uses Debug instead.
+    fn assert_eq_by_debug<T: std::fmt::Debug>(a: &T, b: &T) {
+        assert_eq!(format!("{:?}", a), format!("{:?}", b));
+    }
+
     #[test]
     fn transactions_message_rlp() {
-        rlp_encode_and_decode_test!(Message::Transactions(Vec::new()));
+        let message = Message::Transactions(Vec::new());
+        let encoded = rlp::encode(&message);
+        let decoded: Message = rlp::decode(&encoded).unwrap();
+        assert_eq_by_debug(&message, &decoded);
     }
 
     #[test]

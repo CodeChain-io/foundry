@@ -42,7 +42,7 @@ use crate::encoded;
 use crate::error::BlockImportError;
 use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
-use crate::types::{BlockId, TransactionId, VerificationQueueInfo as QueueInfo};
+use crate::types::{TransactionId, VerificationQueueInfo as QueueInfo};
 use crate::Error;
 use crate::{LocalizedTransaction, PendingTransactions};
 use ccrypto::BLAKE_NULL_RLP;
@@ -54,7 +54,7 @@ use cstate::{FindDoubleVoteHandler, NextValidatorSet, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::header::Header;
 use ctypes::{
-    BlockHash, BlockNumber, CommonParams, CompactValidatorEntry, CompactValidatorSet, ConsensusParams,
+    BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorEntry, CompactValidatorSet, ConsensusParams,
     Header as BlockHeader, TxHash,
 };
 use kvdb::KeyValueDB;

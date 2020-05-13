@@ -18,6 +18,7 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
+use std::ops::Index;
 use std::str::{self, FromStr};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash)]
@@ -90,6 +91,14 @@ impl<'a> Deserialize<'a> for NetworkId {
         D: Deserializer<'a>, {
         let data = String::deserialize(deserializer)?;
         data.parse().map_err(|_| Error::custom("Invalid network_id"))
+    }
+}
+
+impl Index<usize> for NetworkId {
+    type Output = u8;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
     }
 }
 
