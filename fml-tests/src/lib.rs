@@ -26,6 +26,12 @@ extern crate intertrait;
 
 #[cfg(test)]
 mod key;
+mod mod_hello;
 #[cfg(test)]
 mod module;
 mod services;
+#[cfg(test)]
+mod test1;
+
+// main functions for binary modules
+pub use mod_hello::main_like as mod_hello_main;
