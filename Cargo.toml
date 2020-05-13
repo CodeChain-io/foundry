@@ -53,6 +53,8 @@ tokio-core = "0.1.17"
 toml = "0.4"
 cidr = "0.0.4"
 cbasesandbox = {package = "codechain-basesandbox", path = "basesandbox"}
+fml = {package = "codechain-fml", path = "fml"}
+fml-tests = {package = "fml-tests", path = "fml-tests"}
 
 [build-dependencies]
 vergen = "2"
@@ -81,5 +83,7 @@ members = [
     "module-macros",
     "coordinator",
     "basesandbox",
-    "basic_module/account"
+    "basic_module/account",
+    "fml",
+    "fml-tests"
 ]
