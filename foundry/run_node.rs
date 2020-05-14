@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::auto_self_nominate::AutoSelfNomination;
 use crate::config::{self, load_config};
 use crate::constants::{DEFAULT_DB_PATH, DEFAULT_KEYS_PATH};
 use crate::dummy_network_service::DummyNetworkService;
 use crate::json::PasswordFile;
 use crate::rpc::{rpc_http_start, rpc_ipc_start, rpc_ws_start, setup_rpc_server};
 use crate::rpc_apis::ApiDependencies;
-use ccore::{snapshot_notify, ConsensusClient, EngineClient};
+use ccore::{snapshot_notify, EngineClient};
 use ccore::{
     AccountProvider, AccountProviderError, ChainNotify, ClientConfig, ClientService, EngineInfo, EngineType, Miner,
     MinerService, PeerDb, Scheme, NUM_COLUMNS,
@@ -75,11 +74,6 @@ fn network_start(
     .map_err(|e| format!("Network service error: {:?}", e))?;
 
     Ok(service)
-}
-
-fn self_nominate_start(c: Arc<dyn ConsensusClient>, matches: &ArgMatches, ap: Arc<AccountProvider>, pubkey: Public) {
-    let auto_self_nominate = AutoSelfNomination::new(c, ap, pubkey);
-    auto_self_nominate.send_self_nominate_transaction(matches);
 }
 
 fn discovery_start(
@@ -335,12 +329,6 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
             Arc::new(DummyNetworkService::new())
         }
     };
-    if config.mining.self_nomination_enable {
-        let c = client.client();
-        let author = miner.get_author();
-        let accountp = ap.clone();
-        self_nominate_start(c, matches, accountp, author);
-    }
 
     let informer_server = {
         if !config.informer.disable.unwrap() {
