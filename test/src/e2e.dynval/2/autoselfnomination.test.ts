@@ -28,7 +28,7 @@ import {
     withNodes
 } from "../setup";
 
-describe("Auto Self Nomination", function() {
+describe.skip("Auto Self Nomination", function() {
     const promiseExpect = new PromiseExpect();
     const NOMINATION_EXPIRATION = 2;
     const TERM_SECOND = 30;
