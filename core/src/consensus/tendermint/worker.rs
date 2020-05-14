@@ -1528,7 +1528,7 @@ impl Worker {
         assert_eq!(header.number(), self.height);
 
         let parent_hash = header.parent_hash();
-        let signer_index = self.validators.proposer_index(*parent_hash, self.view as usize);
+        let signer_index = self.validators.proposer_index(*parent_hash, self.view);
 
         let on = VoteOn {
             step: VoteStep::new(self.height, self.view, Step::Propose),
@@ -1555,7 +1555,7 @@ impl Worker {
         proposed_view: View,
         signature: Signature,
     ) -> Option<ConsensusMessage> {
-        let signer_index = self.validators.proposer_index(*header.parent_hash(), proposed_view as usize);
+        let signer_index = self.validators.proposer_index(*header.parent_hash(), proposed_view);
 
         let on = VoteOn {
             step: VoteStep::new(header.number(), proposed_view, Step::Propose),
@@ -1571,7 +1571,6 @@ impl Worker {
 
     fn signer_index(&self) -> Option<usize> {
         let parent = self.prev_block_hash();
-        // FIXME: More effecient way to find index
         self.signer.public().and_then(|public| self.validators.get_index(&parent, public))
     }
 

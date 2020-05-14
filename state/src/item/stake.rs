@@ -21,7 +21,7 @@ use ctypes::transaction::Validator;
 use ctypes::{BlockNumber, CompactValidatorEntry, CompactValidatorSet, TransactionIndex, TransactionLocation};
 use primitives::{Bytes, H256};
 use rlp::{decode_list, encode_list, Decodable, Encodable, Rlp, RlpStream};
-use std::cmp::Ordering;
+use std::cmp::{Ordering, Reverse};
 use std::collections::btree_map::{BTreeMap, Entry};
 use std::collections::btree_set::{self, BTreeSet};
 use std::collections::{btree_map, HashMap, HashSet};
@@ -235,10 +235,8 @@ impl NextValidators {
     }
 
     pub fn create_compact_validator_set(&self) -> CompactValidatorSet {
-        let mut reversed = self.0.clone();
-        reversed.reverse();
         CompactValidatorSet::new(
-            reversed
+            self.0
                 .iter()
                 .map(|x| CompactValidatorEntry {
                     public_key: *x.pubkey(),
@@ -263,9 +261,8 @@ impl NextValidators {
 
         let delegatees = Stakeholders::delegatees(&state)?;
         // Step 1 & 2.
+        // Ordered by (delegation DESC, deposit DESC, nomination_starts_at ASC)
         let mut validators = Candidates::prepare_validators(&state, min_deposit, &delegatees)?;
-        // validators are now sorted in descending order of (delegation, deposit, priority)
-        validators.reverse();
 
         let banned = Banned::load_from_state(&state)?;
         for validator in &validators {
@@ -289,7 +286,8 @@ impl NextValidators {
         let over_threshold = rest.iter().filter(|c| c.delegation() >= delegation_threshold);
 
         let mut result: Vec<_> = minimum.iter().chain(over_threshold).cloned().collect();
-        result.reverse(); // Ascending order of (delegation, deposit, priority)
+        result.sort_unstable_by_key(|v| *v.pubkey());
+
         Ok(Self(result))
     }
 
@@ -306,7 +304,16 @@ impl NextValidators {
     pub fn update_weight(state: &TopLevelState, block_author: &Public) -> StateResult<Self> {
         let mut validators = Self::load_from_state(state)?;
         let min_delegation = validators.min_delegation();
-        for validator in validators.0.iter_mut().rev() {
+        let mut sorted_validators_view: Vec<&mut Validator> = validators.0.iter_mut().collect();
+        sorted_validators_view.sort_unstable_by_key(|val| {
+            (
+                Reverse(val.weight()),
+                Reverse(val.deposit()),
+                val.nominated_at_block_number(),
+                val.nominated_at_transaction_index(),
+            )
+        });
+        for validator in sorted_validators_view.iter_mut() {
             if *validator.pubkey() == *block_author {
                 // block author
                 validator.set_weight(validator.weight().saturating_sub(min_delegation));
@@ -318,7 +325,6 @@ impl NextValidators {
         if validators.0.iter().all(|validator| validator.weight() == 0) {
             validators.0.iter_mut().for_each(Validator::reset);
         }
-        validators.0.sort_unstable();
         Ok(validators)
     }
 
@@ -369,7 +375,7 @@ pub struct CurrentValidators(Vec<Validator>);
 impl CurrentValidators {
     pub fn load_from_state(state: &TopLevelState) -> StateResult<Self> {
         let key = &*CURRENT_VALIDATORS_KEY;
-        let validators = state.action_data(&key)?.map(|data| decode_list(&data)).unwrap_or_default();
+        let validators: Vec<Validator> = state.action_data(&key)?.map(|data| decode_list(&data)).unwrap_or_default();
 
         Ok(Self(validators))
     }
@@ -384,7 +390,17 @@ impl CurrentValidators {
         Ok(())
     }
 
+    /// validator should be sorted by public key
     pub fn update(&mut self, validators: Vec<Validator>) {
+        debug_assert_eq!(
+            validators,
+            {
+                let mut cloned = validators.clone();
+                cloned.sort_unstable_by_key(|v| *v.pubkey());
+                cloned
+            },
+            "CurrentValidator is always sorted by public key"
+        );
         self.0 = validators;
     }
 
@@ -393,10 +409,8 @@ impl CurrentValidators {
     }
 
     pub fn create_compact_validator_set(&self) -> CompactValidatorSet {
-        let mut reversed = self.0.clone();
-        reversed.reverse();
         CompactValidatorSet::new(
-            reversed
+            self.0
                 .iter()
                 .map(|x| CompactValidatorEntry {
                     public_key: *x.pubkey(),
@@ -470,10 +484,15 @@ impl Candidates {
                 ));
             }
         }
-        // Candidates are sorted in low priority: low index, high priority: high index
-        // so stable sorting with the key (delegation, deposit) preserves its priority order.
-        // ascending order of (delegation, deposit, priority)
-        result.sort_by_key(|v| (v.delegation(), v.deposit()));
+        // Descending order of (delegation, deposit, priority)
+        result.sort_unstable_by_key(|v| {
+            (
+                Reverse(v.delegation()),
+                Reverse(v.deposit()),
+                v.nominated_at_block_number(),
+                v.nominated_at_transaction_index(),
+            )
+        });
         Ok(result)
     }
 
