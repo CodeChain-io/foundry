@@ -21,6 +21,7 @@ use crate::account::{
 };
 use crate::import::{fee_manager, signature_manager};
 use crate::{check, get_context, Action, SignedTransaction};
+use crate::error::CheckError;
 use ckey::{sign as sign_ed25519, verify as verify_ed25519};
 use coordinator::context::SubStorageAccess;
 pub use coordinator::types::ErrorCode;
@@ -31,10 +32,15 @@ pub struct Handler {}
 
 impl CheckTxHandler for Handler {
     fn check_transaction(&self, tx: &Transaction) -> Result<(), ErrorCode> {
-        if get_balance_internally(&tx.action.sender) < tx.fee + tx.action.quantity
-            || get_sequence_internally(&tx.action.sender) <= tx.seq
-        {
-            return Err(-1)
+        // TODO: verify network id
+        if !check(signature_manager(), signed_tx) {
+            return Err(CheckError::InvalidSignature)
+        }
+        if !get_sequence_internally(&tx.action.sender) <= tx.seq {
+            return Err(CheckError::InvalidSeq)
+        }
+        if get_balance_internally(&tx.action.sender) < tx.fee + tx.action.quantity {
+            return Err(CheckError::InsufficientBalance)
         }
         Ok(())
     }
