@@ -37,22 +37,13 @@
 
 use crate::cache::{ModuleCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
-use crate::stake::{
-    change_params, close_term, delegate_ccs, jail, redelegate, release_jailed_prisoners, revoke, self_nominate,
-    transfer_ccs,
-};
 use crate::traits::{ModuleStateView, StateWithCache, TopState, TopStateView};
-use crate::{
-    ActionData, CurrentValidators, FindDoubleVoteHandler, Metadata, MetadataAddress, Module, ModuleAddress,
-    ModuleLevelState, NextValidators, StateDB, StateResult,
-};
+use crate::{ActionData, Metadata, MetadataAddress, Module, ModuleAddress, ModuleLevelState, StateDB, StateResult};
 use cdb::{AsHashDB, DatabaseError};
-use ckey::{Ed25519Public as Public, NetworkId};
 use coordinator::context::{Key as DbCxtKey, StorageAccess, Value as DbCxtValue};
 use ctypes::errors::RuntimeError;
-use ctypes::transaction::{Action, Transaction};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{BlockNumber, CommonParams, ConsensusParams, StorageId, TxHash};
+use ctypes::{CommonParams, ConsensusParams, StorageId};
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use primitives::{Bytes, H256};
@@ -225,8 +216,6 @@ impl StateWithCache for TopLevelState {
 }
 
 const TOP_CHECKPOINT: CheckpointId = 777;
-const FEE_CHECKPOINT: CheckpointId = 123;
-const ACTION_CHECKPOINT: CheckpointId = 130;
 
 impl StateWithCheckpoint for TopLevelState {
     fn create_checkpoint(&mut self, id: CheckpointId) {
@@ -277,172 +266,6 @@ impl TopLevelState {
         };
 
         Ok(state)
-    }
-
-    /// Execute a given tranasction, charging tranasction fee.
-    /// This will change the state accordingly.
-    pub fn apply<C: FindDoubleVoteHandler>(
-        &mut self,
-        tx: &Transaction,
-        sender_public: &Public,
-        client: &C,
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-        current_block_timestamp: u64,
-    ) -> StateResult<()> {
-        StateWithCheckpoint::create_checkpoint(self, FEE_CHECKPOINT);
-        let result = self.apply_internal(
-            tx,
-            sender_public,
-            client,
-            parent_block_number,
-            parent_block_timestamp,
-            current_block_timestamp,
-        );
-        match result {
-            Ok(()) => {
-                StateWithCheckpoint::discard_checkpoint(self, FEE_CHECKPOINT);
-            }
-            Err(_) => {
-                self.revert_to_checkpoint(FEE_CHECKPOINT);
-            }
-        }
-        result
-    }
-
-    fn apply_internal<C: FindDoubleVoteHandler>(
-        &mut self,
-        tx: &Transaction,
-        sender: &Public,
-        client: &C,
-        parent_block_number: BlockNumber,
-        parent_block_timestamp: u64,
-        current_block_timestamp: u64,
-    ) -> StateResult<()> {
-        let seq = Default::default();
-
-        if tx.seq != seq {
-            return Err(RuntimeError::InvalidSeq(Mismatch {
-                expected: seq,
-                found: tx.seq,
-            })
-            .into())
-        }
-
-        let _fee = tx.fee;
-
-        // The failed transaction also must pay the fee and increase seq.
-        StateWithCheckpoint::create_checkpoint(self, ACTION_CHECKPOINT);
-        let result = self.apply_action(
-            &tx.action,
-            tx.network_id,
-            tx.hash(),
-            sender,
-            client,
-            parent_block_number,
-            parent_block_timestamp,
-            current_block_timestamp,
-        );
-        match &result {
-            Ok(()) => {
-                StateWithCheckpoint::discard_checkpoint(self, ACTION_CHECKPOINT);
-            }
-            Err(_) => {
-                self.revert_to_checkpoint(ACTION_CHECKPOINT);
-            }
-        }
-        result
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn apply_action<C: FindDoubleVoteHandler>(
-        &mut self,
-        action: &Action,
-        _network_id: NetworkId,
-        _tx_hash: TxHash,
-        sender: &Public,
-        client: &C,
-        parent_block_number: BlockNumber,
-        _parent_block_timestamp: u64,
-        _current_block_timestamp: u64,
-    ) -> StateResult<()> {
-        match action {
-            Action::Pay {
-                receiver: _,
-                quantity: _,
-            } => Ok(()),
-            Action::TransferCCS {
-                address,
-                quantity,
-            } => transfer_ccs(self, sender, &address, *quantity),
-            Action::DelegateCCS {
-                address,
-                quantity,
-            } => delegate_ccs(self, sender, &address, *quantity),
-            Action::Revoke {
-                address,
-                quantity,
-            } => revoke(self, sender, address, *quantity),
-            Action::Redelegate {
-                prev_delegatee,
-                next_delegatee,
-                quantity,
-            } => redelegate(self, sender, prev_delegatee, next_delegatee, *quantity),
-            Action::SelfNominate {
-                deposit,
-                metadata,
-            } => {
-                let (current_term, nomination_ends_at) = {
-                    let metadata = self.metadata()?.expect("Metadata must exist");
-                    let current_term = metadata.current_term_id();
-                    let expiration = metadata.params().nomination_expiration();
-                    let nomination_ends_at = current_term + expiration;
-                    (current_term, nomination_ends_at)
-                };
-                self_nominate(self, sender, *deposit, current_term, nomination_ends_at, metadata.clone())
-            }
-            Action::ChangeParams {
-                metadata_seq,
-                params,
-                approvals,
-            } => change_params(self, *metadata_seq, **params, &approvals),
-            Action::ReportDoubleVote {
-                message1,
-                ..
-            } => {
-                let handler = client.double_vote_handler().expect("Unknown custom transaction applied!");
-                handler.execute(message1, self, sender)?;
-                Ok(())
-            }
-            Action::UpdateValidators {
-                validators,
-            } => {
-                let next_validators_in_state = NextValidators::load_from_state(self)?;
-                if validators != &Vec::from(next_validators_in_state) {
-                    return Err(RuntimeError::InvalidValidators.into())
-                }
-                let mut current_validators = CurrentValidators::load_from_state(self)?;
-                current_validators.update(validators.clone());
-                current_validators.save_to_state(self)?;
-                Ok(())
-            }
-            Action::CloseTerm {
-                inactive_validators,
-                next_validators,
-                released_addresses,
-                custody_until,
-                kick_at,
-            } => {
-                close_term(self, next_validators, inactive_validators)?;
-                release_jailed_prisoners(self, released_addresses)?;
-                jail(self, inactive_validators, *custody_until, *kick_at)?;
-                self.increase_term_id(parent_block_number + 1)
-            }
-            Action::ChangeNextValidators {
-                validators,
-            } => NextValidators::from(validators.clone()).save_to_state(self),
-            Action::Elect => NextValidators::elect(self)?.save_to_state(self),
-        }
     }
 
     fn create_module_level_state(&mut self, storage_id: StorageId) -> StateResult<()> {

@@ -22,8 +22,6 @@ extern crate codechain_key as ckey;
 extern crate codechain_types as ctypes;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate rlp_derive;
 
 mod cache;
 mod checkpoint;
@@ -44,13 +42,9 @@ pub use crate::item::action_data::ActionData;
 pub use crate::item::metadata::{Metadata, MetadataAddress};
 pub use crate::item::module::{Module, ModuleAddress};
 pub use crate::item::module_datum::{ModuleDatum, ModuleDatumAddress};
-pub use crate::item::stake::{
-    get_delegation_key, get_stake_account_key, Banned, Candidates, CurrentValidators, Jail, NextValidators,
-};
+pub use crate::item::stake::{CurrentValidators, NextValidators};
 pub use crate::item::validator_set::{CurrentValidatorSet, NextValidatorSet, SimpleValidator};
-pub use crate::stake::{
-    ban, init_stake, query as query_stake_state, DoubleVoteHandler, FindDoubleVoteHandler, StakeKeyBuilder,
-};
+pub use crate::stake::{query as query_stake_state, DoubleVoteHandler, FindDoubleVoteHandler, StakeKeyBuilder};
 pub use crate::traits::{StateWithCache, TopState, TopStateView};
 
 use crate::cache::CacheableItem;
