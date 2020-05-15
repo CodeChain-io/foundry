@@ -38,7 +38,10 @@ pub fn sub_balance(address: &Public, val: u64) -> Result<(), Error> {
     let mut account: Account = get_account(address);
 
     if account.balance < val {
-        return Err(Error::InvalidValue(account.balance, val))
+        return Err(Error::InsufficentBalance {
+            balance: account.balance,
+            withdrawal: val,
+        })
     }
 
     account.balance -= val;

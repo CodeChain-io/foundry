@@ -14,27 +14,34 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::ckey::{NetworkId, Signature};
 use std::fmt;
 
 #[allow(dead_code)]
 #[derive(Debug)]
+// Error type which should be exposed to other modules
 pub enum Error {
-    InvalidValue(u64, u64),
-    InvalidSignature(Signature),
-    InvalidNetworkId(NetworkId),
+    InsufficentBalance {
+        balance: u64,
+        withdrawal: u64,
+    },
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let msg: String = match *self {
-            Error::InvalidValue(balance, value) => {
-                format!("Invalid Value. The balance {} is smaller than this value {}", balance, value)
-            }
-            Error::InvalidNetworkId(network_id) => format!("{} is an invalid network id", network_id),
-            Error::InvalidSignature(sig) => format!("Signature {:?} is invalid", sig),
+            Error::InsufficentBalance {
+                balance,
+                withdrawal,
+            } => format!("Invalid Value. The balance {} is smaller than this value {}", balance, withdrawal),
         };
-
         msg.fmt(f)
     }
+}
+
+// Error type which should be returned by check_transaction
+pub enum CheckError {
+    InsufficentBalance = 1,
+    InvalidSeq = 2,
+    InvalidNetworkId = 3,
+    InvalidSignature = 4,
 }
