@@ -16,9 +16,10 @@
 
 use crate::ipc::*;
 use once_cell::sync::OnceCell;
+use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::process::Command;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::time::Duration;
 
 pub trait Executor: Send {
@@ -62,11 +63,11 @@ pub type ThreadAsProcesss = Arc<dyn Fn(Vec<String>) -> () + Send + Sync>;
 static POOL: OnceCell<RwLock<HashMap<String, ThreadAsProcesss>>> = OnceCell::new();
 
 fn get_function_pool(key: &str) -> ThreadAsProcesss {
-    POOL.get_or_init(|| RwLock::new(HashMap::new())).read().unwrap().get(key).unwrap().clone()
+    POOL.get_or_init(Default::default).read().get(key).unwrap().clone()
 }
 
 pub fn add_function_pool(key: String, f: ThreadAsProcesss) {
-    assert!(POOL.get_or_init(|| RwLock::new(HashMap::new())).write().unwrap().insert(key, f).is_none());
+    assert!(POOL.get_or_init(Default::default).write().insert(key, f).is_none());
 }
 
 pub struct PlainThread {

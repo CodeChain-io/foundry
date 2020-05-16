@@ -17,8 +17,8 @@
 use super::*;
 use crossbeam::channel::{bounded, Receiver, RecvTimeoutError, Sender};
 use once_cell::sync::OnceCell;
+use parking_lot::Mutex;
 use std::collections::hash_map::HashMap;
-use std::sync::Mutex;
 
 struct RegisteredIpcEnds {
     is_server: bool,
@@ -34,11 +34,11 @@ fn get_pool_raw() -> &'static Mutex<HashMap<String, RegisteredIpcEnds>> {
 }
 
 fn add_ends(key: String, ends: RegisteredIpcEnds) {
-    assert!(get_pool_raw().lock().unwrap().insert(key, ends).is_none())
+    assert!(get_pool_raw().lock().insert(key, ends).is_none())
 }
 
 fn take_ends(key: &str) -> RegisteredIpcEnds {
-    get_pool_raw().lock().unwrap().remove(key).unwrap()
+    get_pool_raw().lock().remove(key).unwrap()
 }
 
 pub struct IntraSend(Sender<Vec<u8>>);

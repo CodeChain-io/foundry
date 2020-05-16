@@ -31,7 +31,7 @@ mod types;
 use crate::core::SignatureManager;
 use ckey::NetworkId;
 use coordinator::context::Context;
-use std::sync::Mutex;
+use parking_lot::Mutex;
 use std::unimplemented;
 use types::SignedTransaction;
 
@@ -52,7 +52,7 @@ pub fn check(sig_manager: Box<dyn SignatureManager>, signed_tx: &SignedTransacti
 }
 
 pub fn check_network_id(network_id: NetworkId) -> bool {
-    let mut saved_network_id = NETWORK_ID.lock().unwrap();
+    let mut saved_network_id = NETWORK_ID.lock();
     if saved_network_id.is_none() {
         *saved_network_id = Some(network_id);
     }

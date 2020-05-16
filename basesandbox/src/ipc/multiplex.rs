@@ -16,7 +16,7 @@
 
 use super::{IpcRecv, IpcSend, RecvError, Terminate};
 use crossbeam::channel::bounded;
-use std::sync::Mutex;
+use parking_lot::Mutex;
 use std::thread;
 
 type Sender = crossbeam::channel::Sender<Vec<u8>>;
@@ -93,7 +93,7 @@ impl Multiplexer {
 
 impl Drop for Multiplexer {
     fn drop(&mut self) {
-        self.termiantor.take().unwrap().into_inner().unwrap().terminate();
+        self.termiantor.take().unwrap().into_inner().terminate();
         self.sender_send.send(Vec::new()).unwrap();
         self.receiver_thread.take().unwrap().join().unwrap();
         self.sender_thread.take().unwrap().join().unwrap();
