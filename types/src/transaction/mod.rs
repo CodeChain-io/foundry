@@ -15,18 +15,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 mod action;
-mod approval;
 mod incomplete_transaction;
 mod partial_hashing;
 mod timelock;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod transaction;
-mod validator;
 
 pub use self::action::Action;
-pub use self::approval::Approval;
 pub use self::incomplete_transaction::IncompleteTransaction;
 pub use self::partial_hashing::{HashingError, PartialHashing};
 pub use self::timelock::Timelock;
 pub use self::transaction::Transaction;
-pub use self::validator::Validator;
