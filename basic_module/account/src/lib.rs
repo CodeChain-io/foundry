@@ -24,11 +24,12 @@ extern crate codechain_key as ckey;
 
 mod core;
 mod error;
+mod impls;
 mod import;
 mod internal;
 mod types;
 
-use crate::core::SignatureManager;
+use ckey::verify;
 use ckey::NetworkId;
 use coordinator::context::Context;
 use parking_lot::Mutex;
@@ -44,11 +45,11 @@ pub fn get_context() -> &'static mut dyn Context {
     unimplemented!();
 }
 
-pub fn check(sig_manager: Box<dyn SignatureManager>, signed_tx: &SignedTransaction) -> bool {
+pub fn check(signed_tx: &SignedTransaction) -> bool {
     let signature = signed_tx.signature;
     let network_id = signed_tx.tx.network_id;
 
-    sig_manager.verify(&signature, &signed_tx.tx.hash(), &signed_tx.signer_public) && check_network_id(network_id)
+    check_network_id(network_id) && verify(&signature, &signed_tx.tx.hash(), &signed_tx.signer_public)
 }
 
 pub fn check_network_id(network_id: NetworkId) -> bool {

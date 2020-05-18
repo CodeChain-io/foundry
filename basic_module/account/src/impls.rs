@@ -15,25 +15,33 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::core::*;
-use crate::account::{
+use crate::error::Error;
+use crate::import::fee_manager;
+use crate::internal::{
     add_balance as add_balance_internalliy, get_account, get_balance as get_balance_internally,
     get_sequence as get_sequence_internally, sub_balance as sub_balance_internalliy,
 };
-use crate::import::{fee_manager, signature_manager};
-use crate::{check, get_context, Action, SignedTransaction};
-use coordinator::context::SubStorageAccess;
+use crate::types::Action;
+use crate::{check, get_context, SignedTransaction};
 pub use coordinator::types::ErrorCode;
-use ckey::{sign as sign_ed25519, verify as verify_ed25519};
 pub use coordinator::types::TransactionExecutionOutcome;
 
 #[allow(dead_code)]
 pub struct Handler {}
 
 impl CheckTxHandler for Handler {
-    fn check_transaction(&self, tx: &Transaction) -> Result<(), ErrorCode> {
-        if get_balance_internally(&tx.action.sender) < tx.fee + tx.action.quantity || get_sequence_internally(&tx.action.sender) <= tx.seq {
+    fn check_transaction(&self, signed_tx: &SignedTransaction) -> Result<(), ErrorCode> {
+        check(signed_tx);
+
+        let Action::Pay {
+            sender,
+            receiver: _,
+            quantity: _,
+        } = signed_tx.tx.action;
+        if get_sequence_internally(&sender) > signed_tx.tx.seq {
             return Err(-1)
         }
+
         Ok(())
     }
 }
@@ -42,20 +50,21 @@ impl CheckTxHandler for Handler {
 pub struct Executor {}
 
 impl TransactionExecutor for Executor {
-    fn execute_transactions(
-        &self,
-        transactions: &[SignedTransaction],
-    ) -> Result<Vec<TransactionExecutionOutcome>, ()> {
+    fn execute_transactions(&self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionExecutionOutcome>, ()> {
         let mut total_additional_fee: u64 = 0;
         let mut total_min_fee: u64 = 0;
 
         for signed_tx in transactions {
+            let Action::Pay {
+                sender,
+                receiver,
+                quantity,
+            } = signed_tx.tx.action;
             total_additional_fee += signed_tx.tx.fee - signed_tx.tx.action.min_fee();
             total_min_fee += signed_tx.tx.action.min_fee();
 
-            // FIXME: Suitable error handling is needed
-            if !check(signature_manager(), signed_tx) || !sub_balance_internalliy(&signed_tx.tx.action.receiver, *signed_Tx.tx.action.quantity).is_ok() {
-                return
+            if !check(signed_tx) || sub_balance_internalliy(&receiver, quantity).is_err() {
+                return Err(())
             }
             add_balance_internalliy(&sender, signed_tx.tx.fee + quantity);
         }
@@ -110,18 +119,5 @@ impl AccountView for View {
 
     fn get_sequence(&self, address: &Public) -> u64 {
         get_sequence_internally(address)
-    }
-}
-
-#[allow(dead_code)]
-pub struct SigManager {}
-
-impl SignatureManager for SigManager {
-    fn verify(&self, signature: &Signature, message: &[u8], public: &Public) -> bool {
-        verify_ed25519(signature, message, public)
-    }
-
-    fn sign(&self, message: &[u8], private: &Private) -> Signature {
-        sign_ed25519(message, private)
     }
 }
