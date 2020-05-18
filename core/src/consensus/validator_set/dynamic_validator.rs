@@ -19,9 +19,9 @@ use crate::client::ConsensusClient;
 use crate::consensus::bit_set::BitSet;
 use crate::consensus::EngineError;
 use ckey::Ed25519Public as Public;
-use cstate::{CurrentValidatorSet, NextValidatorSet, SimpleValidator};
+use cstate::{CurrentValidators, NextValidators};
 use ctypes::util::unexpected::OutOfBounds;
-use ctypes::BlockHash;
+use ctypes::{BlockHash, CompactValidatorEntry, CompactValidatorSet};
 use parking_lot::RwLock;
 use std::sync::{Arc, Weak};
 
@@ -31,31 +31,31 @@ pub struct DynamicValidator {
 }
 
 impl DynamicValidator {
-    fn next_validators(&self, hash: BlockHash) -> Vec<SimpleValidator> {
+    fn next_validators(&self, hash: BlockHash) -> Vec<CompactValidatorEntry> {
         let client: Arc<dyn ConsensusClient> =
             self.client.read().as_ref().and_then(Weak::upgrade).expect("Client is not initialized");
         let block_id = hash.into();
         let state = client.state_at(block_id).expect("The next validators must be called on the confirmed block");
-        let validators = NextValidatorSet::load_from_state(&state).unwrap();
-        let mut validators: Vec<_> = validators.into();
+        let validators = NextValidators::load_from_state(&state).unwrap();
+        let mut validators: Vec<_> = CompactValidatorSet::from(validators).into();
         validators.reverse();
         validators
     }
 
-    fn current_validators(&self, hash: BlockHash) -> Vec<SimpleValidator> {
+    fn current_validators(&self, hash: BlockHash) -> Vec<CompactValidatorEntry> {
         let client: Arc<dyn ConsensusClient> =
             self.client.read().as_ref().and_then(Weak::upgrade).expect("Client is not initialized");
         let block_id = hash.into();
         let state = client.state_at(block_id).expect("The current validators must be called on the confirmed block");
-        let validators = CurrentValidatorSet::load_from_state(&state).unwrap();
-        let mut validators: Vec<_> = validators.into();
+        let validators = CurrentValidators::load_from_state(&state).unwrap();
+        let mut validators: Vec<_> = CompactValidatorSet::from(validators).into();
         validators.reverse();
         validators
     }
 
     fn validators(&self, hash: BlockHash) -> Vec<Public> {
         let validators = self.next_validators(hash);
-        validators.into_iter().map(|val| *val.pubkey()).collect()
+        validators.into_iter().map(|val| val.public_key).collect()
     }
 
     pub fn proposer_index(&self, parent: BlockHash, proposed_view: usize) -> usize {
@@ -67,7 +67,7 @@ impl DynamicValidator {
     pub fn get_current(&self, hash: &BlockHash, index: usize) -> Public {
         let validators = self.current_validators(*hash);
         let n_validators = validators.len();
-        *validators.get(index % n_validators).unwrap().pubkey()
+        validators.get(index % n_validators).unwrap().public_key
     }
 
     pub fn check_enough_votes_with_current(&self, hash: &BlockHash, votes: &BitSet) -> Result<(), EngineError> {
@@ -82,9 +82,9 @@ impl DynamicValidator {
                     index,
                 }
             })?;
-            voted_weight += validator.weight();
+            voted_weight += validator.delegation;
         }
-        let total_weight: u64 = validators.iter().map(|v| v.weight()).sum();
+        let total_weight: u64 = validators.iter().map(|v| v.delegation).sum();
         if voted_weight * 3 > total_weight * 2 {
             Ok(())
         } else {
@@ -141,9 +141,9 @@ impl ValidatorSet for DynamicValidator {
                     index,
                 }
             })?;
-            voted_weight += validator.weight();
+            voted_weight += validator.delegation;
         }
-        let total_weight: u64 = validators.iter().map(SimpleValidator::weight).sum();
+        let total_weight: u64 = validators.iter().map(|validator| validator.delegation).sum();
         if voted_weight * 3 > total_weight * 2 {
             Ok(())
         } else {
@@ -164,7 +164,7 @@ impl ValidatorSet for DynamicValidator {
     }
 
     fn current_validators(&self, hash: &BlockHash) -> Vec<Public> {
-        DynamicValidator::current_validators(self, *hash).into_iter().map(|v| *v.pubkey()).collect()
+        DynamicValidator::current_validators(self, *hash).into_iter().map(|v| v.public_key).collect()
     }
 
     fn next_validators(&self, hash: &BlockHash) -> Vec<Public> {

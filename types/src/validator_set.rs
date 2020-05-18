@@ -38,6 +38,12 @@ impl CompactValidatorSet {
     }
 }
 
+impl From<CompactValidatorSet> for Vec<CompactValidatorEntry> {
+    fn from(set: CompactValidatorSet) -> Self {
+        set.0
+    }
+}
+
 impl Deref for CompactValidatorSet {
     type Target = Vec<CompactValidatorEntry>;
     fn deref(&self) -> &Vec<CompactValidatorEntry> {

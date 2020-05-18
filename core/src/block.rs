@@ -20,7 +20,7 @@ use ccrypto::BLAKE_NULL_RLP;
 use ckey::Ed25519Public as Public;
 use coordinator::traits::BlockExecutor;
 use coordinator::types::{Event, Header as PreHeader, Transaction, TransactionWithMetadata, VerifiedCrime};
-use cstate::{CurrentValidatorSet, NextValidatorSet, StateDB, StateError, StateWithCache, TopLevelState, TopState};
+use cstate::{CurrentValidators, NextValidators, StateDB, StateError, StateWithCache, TopLevelState, TopState};
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{CompactValidatorSet, ConsensusParams, TxHash};
@@ -204,7 +204,7 @@ impl OpenBlock {
         let updated_validator_set = block_outcome.updated_validator_set;
         let next_validator_set_hash = match updated_validator_set {
             Some(ref set) => set.hash(),
-            None => NextValidatorSet::load_from_state(self.block.state())?.create_compact_validator_set().hash(),
+            None => NextValidators::load_from_state(self.block.state())?.hash(),
         };
         let updated_consensus_params = block_outcome.updated_consensus_params;
         if let Err(e) = self.update_next_block_state(updated_validator_set, updated_consensus_params) {
@@ -278,8 +278,8 @@ impl OpenBlock {
 
     // called on open_block
     fn update_current_validator_set(&mut self) -> Result<(), Error> {
-        let mut current_validators = CurrentValidatorSet::load_from_state(self.state())?;
-        current_validators.update(NextValidatorSet::load_from_state(self.state())?);
+        let mut current_validators = CurrentValidators::load_from_state(self.state())?;
+        current_validators.update(NextValidators::load_from_state(self.state())?.into());
         current_validators.save_to_state(self.state_mut())?;
 
         Ok(())
@@ -294,7 +294,7 @@ impl OpenBlock {
         let state = self.block.state_mut();
 
         if let Some(set) = updated_validator_set {
-            let validators = NextValidatorSet::from_compact_validator_set(set);
+            let validators: NextValidators = set.into();
             validators.save_to_state(state)?;
         }
 

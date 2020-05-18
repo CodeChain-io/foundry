@@ -50,7 +50,7 @@ use ckey::{Ed25519Private as Private, Ed25519Public as Public, NetworkId, Platfo
 use coordinator::test_coordinator::TestCoordinator;
 use coordinator::types::{Event, Transaction};
 use cstate::tests::helpers::empty_top_state_with_metadata;
-use cstate::{FindDoubleVoteHandler, NextValidatorSet, StateDB, TopLevelState};
+use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::header::Header;
 use ctypes::{
@@ -98,7 +98,7 @@ pub struct TestBlockChainClient {
     /// Fixed validator keys
     pub validator_keys: RwLock<HashMap<Public, Private>>,
     /// Fixed validators
-    pub validators: NextValidatorSet,
+    pub validators: NextValidators,
 }
 
 impl Default for TestBlockChainClient {
@@ -146,7 +146,7 @@ impl TestBlockChainClient {
             history: RwLock::new(None),
             term_id: Some(1),
             validator_keys: RwLock::new(HashMap::new()),
-            validators: NextValidatorSet::from_compact_validator_set(CompactValidatorSet::new(Vec::new())),
+            validators: CompactValidatorSet::new(Vec::new()).into(),
         };
 
         // insert genesis hash.
@@ -283,7 +283,7 @@ impl TestBlockChainClient {
                 .collect(),
         );
 
-        let fixed_validators: NextValidatorSet = NextValidatorSet::from_compact_validator_set(compact_validator_set);
+        let fixed_validators: NextValidators = compact_validator_set.into();
 
         self.validators = fixed_validators
     }

@@ -43,7 +43,6 @@ pub use crate::item::metadata::{Metadata, MetadataAddress};
 pub use crate::item::module::{Module, ModuleAddress};
 pub use crate::item::module_datum::{ModuleDatum, ModuleDatumAddress};
 pub use crate::item::stake::{CurrentValidators, NextValidators};
-pub use crate::item::validator_set::{CurrentValidatorSet, NextValidatorSet, SimpleValidator};
 pub use crate::stake::{query as query_stake_state, DoubleVoteHandler, FindDoubleVoteHandler, StakeKeyBuilder};
 pub use crate::traits::{StateWithCache, TopState, TopStateView};
 

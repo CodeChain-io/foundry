@@ -40,7 +40,7 @@ use coordinator::context::{
 };
 use coordinator::traits::{BlockExecutor, Initializer};
 use coordinator::types::{Event, Transaction};
-use cstate::{Metadata, MetadataAddress, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopStateView};
+use cstate::{Metadata, MetadataAddress, NextValidators, StateDB, StateWithCache, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
 use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ConsensusParams, TxHash};
@@ -251,7 +251,7 @@ impl Client {
         genesis_validators: CompactValidatorSet,
     ) -> Result<(StateDB, H256), Error> {
         let mut state = TopLevelState::from_existing(db.clone(&root), root)?;
-        let validator_set = NextValidatorSet::from_compact_validator_set(genesis_validators);
+        let validator_set: NextValidators = genesis_validators.into();
         validator_set.save_to_state(&mut state)?;
         let root = state.commit()?;
         Ok((db, root))
