@@ -20,16 +20,16 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::ops::{Deref, DerefMut};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CompactValidatorEntry {
+pub struct Validator {
     pub public_key: Public,
     pub delegation: u64,
 }
 
 // It will be hashed in the header.
 #[derive(Clone, Debug, Eq, PartialEq, Default)]
-pub struct CompactValidatorSet(Vec<CompactValidatorEntry>);
-impl CompactValidatorSet {
-    pub fn new(x: Vec<CompactValidatorEntry>) -> Self {
+pub struct Validators(Vec<Validator>);
+impl Validators {
+    pub fn new(x: Vec<Validator>) -> Self {
         Self(x)
     }
 
@@ -38,26 +38,26 @@ impl CompactValidatorSet {
     }
 }
 
-impl From<CompactValidatorSet> for Vec<CompactValidatorEntry> {
-    fn from(set: CompactValidatorSet) -> Self {
+impl From<Validators> for Vec<Validator> {
+    fn from(set: Validators) -> Self {
         set.0
     }
 }
 
-impl Deref for CompactValidatorSet {
-    type Target = Vec<CompactValidatorEntry>;
-    fn deref(&self) -> &Vec<CompactValidatorEntry> {
+impl Deref for Validators {
+    type Target = Vec<Validator>;
+    fn deref(&self) -> &Vec<Validator> {
         &self.0
     }
 }
 
-impl DerefMut for CompactValidatorSet {
-    fn deref_mut(&mut self) -> &mut Vec<CompactValidatorEntry> {
+impl DerefMut for Validators {
+    fn deref_mut(&mut self) -> &mut Vec<Validator> {
         &mut self.0
     }
 }
 
-impl Encodable for CompactValidatorSet {
+impl Encodable for Validators {
     fn rlp_append(&self, s: &mut RlpStream) {
         s.begin_list(self.0.len() * 2);
         for validator in self.0.iter() {
@@ -67,7 +67,7 @@ impl Encodable for CompactValidatorSet {
     }
 }
 
-impl Decodable for CompactValidatorSet {
+impl Decodable for Validators {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
         if item_count % 2 == 1 {
@@ -79,7 +79,7 @@ impl Decodable for CompactValidatorSet {
         let mut vec = Vec::with_capacity(item_count / 2);
         // TODO: Optimzie the below code
         for i in 0..(item_count / 2) {
-            vec.push(CompactValidatorEntry {
+            vec.push(Validator {
                 public_key: rlp.val_at(i * 2)?,
                 delegation: rlp.val_at(i * 2 + 1)?,
             });
@@ -102,11 +102,11 @@ mod tests {
         let mut rng: StdRng = rand::SeedableRng::from_seed(seed);
 
         for _ in 0..iteration {
-            let mut vset = CompactValidatorSet::new(Vec::new());
+            let mut vset = Validators::new(Vec::new());
             let n = rng.gen::<u8>();
 
             for _ in 0..n {
-                vset.0.push(CompactValidatorEntry {
+                vset.0.push(Validator {
                     public_key: Public::random(),
                     delegation: rng.gen::<u64>(),
                 })

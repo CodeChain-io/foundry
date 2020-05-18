@@ -17,12 +17,12 @@
 use super::context::StorageAccess;
 use super::traits::{BlockExecutor, Initializer, TxFilter};
 use super::types::*;
-use ctypes::{CompactValidatorSet, ConsensusParams};
+use ctypes::{ConsensusParams, Validators};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 // Coordinator dedicated for mempool and miner testing
 pub struct TestCoordinator {
-    validator_set: CompactValidatorSet,
+    validator_set: Validators,
     consensus_params: ConsensusParams,
     body_count: AtomicUsize,
     body_size: AtomicUsize,
@@ -40,7 +40,7 @@ impl Default for TestCoordinator {
 }
 
 impl Initializer for TestCoordinator {
-    fn initialize_chain(&self, _app_state: String) -> (CompactValidatorSet, ConsensusParams) {
+    fn initialize_chain(&self, _app_state: String) -> (Validators, ConsensusParams) {
         (self.validator_set.clone(), self.consensus_params)
     }
 }

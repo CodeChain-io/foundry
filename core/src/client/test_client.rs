@@ -54,8 +54,8 @@ use cstate::{FindDoubleVoteHandler, NextValidators, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::header::Header;
 use ctypes::{
-    BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorEntry, CompactValidatorSet, ConsensusParams,
-    Header as BlockHeader, TxHash,
+    BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header as BlockHeader, TxHash, Validator,
+    Validators,
 };
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
@@ -146,7 +146,7 @@ impl TestBlockChainClient {
             history: RwLock::new(None),
             term_id: Some(1),
             validator_keys: RwLock::new(HashMap::new()),
-            validators: CompactValidatorSet::new(Vec::new()).into(),
+            validators: Validators::new(Vec::new()).into(),
         };
 
         // insert genesis hash.
@@ -273,10 +273,10 @@ impl TestBlockChainClient {
             pubkeys.push(public);
         }
 
-        let compact_validator_set = CompactValidatorSet::new(
+        let compact_validator_set = Validators::new(
             pubkeys
                 .into_iter()
-                .map(|public_key| CompactValidatorEntry {
+                .map(|public_key| Validator {
                     public_key,
                     delegation: 0,
                 })

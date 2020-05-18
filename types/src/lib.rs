@@ -42,5 +42,4 @@ pub use consensus_params::ConsensusParams;
 pub use deposit::Deposit;
 pub use header::Header;
 pub use tx_hash::TxHash;
-pub use validator_set::CompactValidatorEntry;
-pub use validator_set::CompactValidatorSet;
+pub use validator_set::{Validator, Validators};

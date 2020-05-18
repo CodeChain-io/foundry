@@ -16,10 +16,10 @@
 
 use super::context::StorageAccess;
 use super::types::*;
-use ctypes::{CompactValidatorSet, ConsensusParams};
+use ctypes::{ConsensusParams, Validators};
 
 pub trait Initializer: Send + Sync {
-    fn initialize_chain(&self, app_state: String) -> (CompactValidatorSet, ConsensusParams);
+    fn initialize_chain(&self, app_state: String) -> (Validators, ConsensusParams);
 }
 pub trait BlockExecutor: Send + Sync {
     fn open_block(

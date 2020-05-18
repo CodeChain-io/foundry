@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{StakeKeyBuilder, StateResult, TopLevelState, TopState, TopStateView};
-use ctypes::CompactValidatorSet;
+use ctypes::Validators;
 use primitives::H256;
 use rlp::{decode, encode};
 use std::ops::Deref;
@@ -26,7 +26,7 @@ lazy_static! {
 }
 
 #[derive(Debug)]
-pub struct NextValidators(CompactValidatorSet);
+pub struct NextValidators(Validators);
 impl NextValidators {
     pub fn load_from_state(state: &TopLevelState) -> StateResult<Self> {
         let key = &*NEXT_VALIDATORS_KEY;
@@ -50,27 +50,27 @@ impl NextValidators {
 }
 
 impl Deref for NextValidators {
-    type Target = CompactValidatorSet;
+    type Target = Validators;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<CompactValidatorSet> for NextValidators {
-    fn from(set: CompactValidatorSet) -> Self {
+impl From<Validators> for NextValidators {
+    fn from(set: Validators) -> Self {
         Self(set)
     }
 }
 
-impl From<NextValidators> for CompactValidatorSet {
+impl From<NextValidators> for Validators {
     fn from(val: NextValidators) -> Self {
         val.0
     }
 }
 
 #[derive(Debug)]
-pub struct CurrentValidators(CompactValidatorSet);
+pub struct CurrentValidators(Validators);
 impl CurrentValidators {
     pub fn load_from_state(state: &TopLevelState) -> StateResult<Self> {
         let key = &*CURRENT_VALIDATORS_KEY;
@@ -92,20 +92,20 @@ impl CurrentValidators {
         Ok(())
     }
 
-    pub fn update(&mut self, validators: CompactValidatorSet) {
+    pub fn update(&mut self, validators: Validators) {
         self.0 = validators;
     }
 }
 
 impl Deref for CurrentValidators {
-    type Target = CompactValidatorSet;
+    type Target = Validators;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<CurrentValidators> for CompactValidatorSet {
+impl From<CurrentValidators> for Validators {
     fn from(val: CurrentValidators) -> Self {
         val.0
     }

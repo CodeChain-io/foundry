@@ -23,7 +23,7 @@ use coordinator::types::{Event, Header as PreHeader, Transaction, TransactionWit
 use cstate::{CurrentValidators, NextValidators, StateDB, StateError, StateWithCache, TopLevelState, TopState};
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{CompactValidatorSet, ConsensusParams, TxHash};
+use ctypes::{ConsensusParams, TxHash, Validators};
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -288,7 +288,7 @@ impl OpenBlock {
     // called on close_block
     fn update_next_block_state(
         &mut self,
-        updated_validator_set: Option<CompactValidatorSet>,
+        updated_validator_set: Option<Validators>,
         updated_consensus_params: Option<ConsensusParams>,
     ) -> Result<(), Error> {
         let state = self.block.state_mut();

@@ -16,7 +16,7 @@
 
 use ccrypto::blake256;
 use ckey::Ed25519Public as Public;
-use ctypes::{CompactValidatorSet, ConsensusParams, TxHash};
+use ctypes::{ConsensusParams, TxHash, Validators};
 use primitives::Bytes;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -239,7 +239,7 @@ pub type ExecuteTransactionError = ();
 pub type CloseBlockError = String;
 
 pub struct BlockOutcome {
-    pub updated_validator_set: Option<CompactValidatorSet>,
+    pub updated_validator_set: Option<Validators>,
     pub updated_consensus_params: Option<ConsensusParams>,
     pub events: Vec<Event>,
 }

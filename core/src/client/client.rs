@@ -43,7 +43,7 @@ use coordinator::types::{Event, Transaction};
 use cstate::{Metadata, MetadataAddress, NextValidators, StateDB, StateWithCache, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::header::Header;
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ConsensusParams, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, TxHash, Validators};
 use kvdb::{DBTransaction, KeyValueDB};
 use merkle_trie::{TrieFactory, TrieMut};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
@@ -236,7 +236,7 @@ impl Client {
     fn initialize_state(
         db: StateDB,
         genesis_consensus_params: ConsensusParams,
-        genesis_validators: CompactValidatorSet,
+        genesis_validators: Validators,
     ) -> Result<StateDB, Error> {
         let root = BLAKE_NULL_RLP;
         let (db, root) = Self::initialize_validator_set(db, root, genesis_validators)?;
@@ -248,7 +248,7 @@ impl Client {
     fn initialize_validator_set(
         db: StateDB,
         root: H256,
-        genesis_validators: CompactValidatorSet,
+        genesis_validators: Validators,
     ) -> Result<(StateDB, H256), Error> {
         let mut state = TopLevelState::from_existing(db.clone(&root), root)?;
         let validator_set: NextValidators = genesis_validators.into();

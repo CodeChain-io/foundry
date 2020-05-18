@@ -18,7 +18,7 @@
 use self::traits::{BlockExecutor, Initializer, TxFilter};
 use self::types::*;
 use context::StorageAccess;
-use ctypes::{CompactValidatorSet, ConsensusParams};
+use ctypes::{ConsensusParams, Validators};
 
 pub mod context;
 pub mod test_coordinator;
@@ -34,7 +34,7 @@ pub mod types;
 pub struct Coordinator {}
 
 impl Initializer for Coordinator {
-    fn initialize_chain(&self, app_state: String) -> (CompactValidatorSet, ConsensusParams) {
+    fn initialize_chain(&self, app_state: String) -> (Validators, ConsensusParams) {
         unimplemented!()
     }
 }

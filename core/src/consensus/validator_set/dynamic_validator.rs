@@ -21,7 +21,7 @@ use crate::consensus::EngineError;
 use ckey::Ed25519Public as Public;
 use cstate::{CurrentValidators, NextValidators};
 use ctypes::util::unexpected::OutOfBounds;
-use ctypes::{BlockHash, CompactValidatorEntry, CompactValidatorSet};
+use ctypes::{BlockHash, Validator, Validators};
 use parking_lot::RwLock;
 use std::sync::{Arc, Weak};
 
@@ -31,24 +31,24 @@ pub struct DynamicValidator {
 }
 
 impl DynamicValidator {
-    fn next_validators(&self, hash: BlockHash) -> Vec<CompactValidatorEntry> {
+    fn next_validators(&self, hash: BlockHash) -> Vec<Validator> {
         let client: Arc<dyn ConsensusClient> =
             self.client.read().as_ref().and_then(Weak::upgrade).expect("Client is not initialized");
         let block_id = hash.into();
         let state = client.state_at(block_id).expect("The next validators must be called on the confirmed block");
         let validators = NextValidators::load_from_state(&state).unwrap();
-        let mut validators: Vec<_> = CompactValidatorSet::from(validators).into();
+        let mut validators: Vec<_> = Validators::from(validators).into();
         validators.reverse();
         validators
     }
 
-    fn current_validators(&self, hash: BlockHash) -> Vec<CompactValidatorEntry> {
+    fn current_validators(&self, hash: BlockHash) -> Vec<Validator> {
         let client: Arc<dyn ConsensusClient> =
             self.client.read().as_ref().and_then(Weak::upgrade).expect("Client is not initialized");
         let block_id = hash.into();
         let state = client.state_at(block_id).expect("The current validators must be called on the confirmed block");
         let validators = CurrentValidators::load_from_state(&state).unwrap();
-        let mut validators: Vec<_> = CompactValidatorSet::from(validators).into();
+        let mut validators: Vec<_> = Validators::from(validators).into();
         validators.reverse();
         validators
     }
