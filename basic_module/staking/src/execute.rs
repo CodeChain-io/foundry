@@ -21,7 +21,7 @@ use crate::state::{
     StakeAccount, Stakeholders,
 };
 use crate::transactions::{AutoAction, UserAction, UserTransaction};
-use crate::types::{Approval, ReleaseResult, StakeQuantity};
+use crate::types::{Approval, ReleaseResult, StakeQuantity, Tiebreaker};
 use crate::{account_manager, account_viewer, substorage};
 use coordinator::types::TransactionExecutionOutcome;
 use fkey::Ed25519Public as Public;
@@ -44,7 +44,11 @@ fn check_before_fee_imposition(sender_public: &Public, fee: u64, seq: u64, min_f
     }
 }
 
-pub fn apply_internal(tx: UserTransaction, sender_public: &Public) -> Result<TransactionExecutionOutcome, Error> {
+pub fn apply_internal(
+    tx: UserTransaction,
+    sender_public: &Public,
+    tiebreaker: Tiebreaker,
+) -> Result<TransactionExecutionOutcome, Error> {
     let UserTransaction {
         action,
         fee,
@@ -68,7 +72,7 @@ pub fn apply_internal(tx: UserTransaction, sender_public: &Public) -> Result<Tra
     })?;
     account_manager.increment_sequence(&sender_public);
 
-    let result = execute_user_action(&sender_public, action);
+    let result = execute_user_action(&sender_public, action, tiebreaker);
     match result {
         Ok(_) => substorage.discard_checkpoint(),
         Err(_) => substorage.revert_to_the_checkpoint(),
@@ -77,7 +81,11 @@ pub fn apply_internal(tx: UserTransaction, sender_public: &Public) -> Result<Tra
     result
 }
 
-fn execute_user_action(sender_public: &Public, action: UserAction) -> Result<TransactionExecutionOutcome, Error> {
+fn execute_user_action(
+    sender_public: &Public,
+    action: UserAction,
+    tiebreaker: Tiebreaker,
+) -> Result<TransactionExecutionOutcome, Error> {
     match action {
         UserAction::TransferCCS {
             receiver_public,
@@ -99,7 +107,7 @@ fn execute_user_action(sender_public: &Public, action: UserAction) -> Result<Tra
         UserAction::SelfNominate {
             deposit,
             metadata,
-        } => self_nominate(sender_public, deposit, metadata),
+        } => self_nominate(sender_public, deposit, metadata, tiebreaker),
         UserAction::ChangeParams {
             metadata_seq,
             params,
@@ -237,6 +245,7 @@ pub fn self_nominate(
     nominee_public: &Public,
     deposit: u64,
     metadata: Bytes,
+    tiebreaker: Tiebreaker,
 ) -> Result<TransactionExecutionOutcome, Error> {
     let state_metadata = Metadata::load();
     let current_term = state_metadata.current_term_id;
@@ -260,7 +269,7 @@ pub fn self_nominate(
     let mut candidates = Candidates::load();
     // FIXME: Error handling is required
     account_manager().sub_balance(nominee_public, deposit).unwrap();
-    candidates.add_deposit(nominee_public, total_deposit, nomination_ends_at, metadata);
+    candidates.add_deposit(nominee_public, total_deposit, nomination_ends_at, metadata, tiebreaker);
 
     jail.save();
     candidates.save();
@@ -296,6 +305,7 @@ pub fn change_params(
 
 fn update_validators(validators: NextValidators) -> Result<TransactionExecutionOutcome, Error> {
     let next_validators_in_state = NextValidators::load();
+    // NextValidators should be sorted by public key.
     if validators != next_validators_in_state {
         return Err(Error::InvalidValidators)
     }
