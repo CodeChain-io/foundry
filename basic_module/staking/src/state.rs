@@ -16,13 +16,13 @@
 
 use crate::error::{Insufficient, Mismatch};
 use crate::runtime_error::Error;
-use crate::types::{Candidate, DepositQuantity, Prisoner, ReleaseResult, StakeQuantity, Validator};
+use crate::types::{Candidate, DepositQuantity, Prisoner, ReleaseResult, StakeQuantity, Tiebreaker, Validator};
 use crate::{deserialize, serialize, state_history_manager, substorage};
 use fkey::Ed25519Public as Public;
 use ftypes::BlockId;
 use primitives::Bytes;
 use serde::{de::DeserializeOwned, ser::Serialize};
-use std::cmp::{max, Ordering};
+use std::cmp::{max, Ordering, Reverse};
 use std::collections::{
     btree_map::{self, Entry},
     btree_set, BTreeMap, BTreeSet, HashMap, HashSet,
@@ -290,9 +290,8 @@ impl NextValidators {
             ..
         } = Metadata::load().term_params;
         assert!(max_num_of_validators >= min_num_of_validators);
+        // Sorted by (delegation DESC, deposit DESC, tiebreaker ASC)
         let mut validators = Candidates::prepare_validators(min_deposit);
-        // validators are now sorted in descending order of (delegation, deposit, priority)
-        validators.reverse();
 
         {
             let banned = Banned::load();
@@ -316,17 +315,20 @@ impl NextValidators {
         let over_threshold = rest.iter().filter(|c| c.delegation >= delegation_threshold);
 
         let mut result: Vec<_> = minimum.iter().chain(over_threshold).cloned().collect();
-        result.reverse();
+        result.sort_unstable_by_key(|v| v.pubkey);
+
         NextValidators(result)
     }
 
     pub fn update_weight(&mut self, block_author: &Public) {
         let min_delegation = self.min_delegation();
+        let mut sorted_validators_view: Vec<&mut Validator> = self.0.iter_mut().collect();
+        sorted_validators_view.sort_unstable_by_key(|val| (Reverse(val.weight), Reverse(val.deposit), val.tiebreaker));
         for Validator {
             weight,
             pubkey,
             ..
-        } in self.0.iter_mut().rev()
+        } in sorted_validators_view.iter_mut()
         {
             if pubkey == block_author {
                 // block author
@@ -339,7 +341,6 @@ impl NextValidators {
         if self.0.iter().all(|validator| validator.weight == 0) {
             self.0.iter_mut().for_each(Validator::reset);
         }
-        self.0.sort_unstable();
     }
 
     pub fn delegation(&self, pubkey: &Public) -> Option<StakeQuantity> {
@@ -387,6 +388,15 @@ impl CurrentValidators {
     }
 
     pub fn update(&mut self, validators: Vec<Validator>) {
+        debug_assert_eq!(
+            validators,
+            {
+                let mut cloned = validators.clone();
+                cloned.sort_unstable_by_key(|v| v.pubkey);
+                cloned
+            },
+            "CurrentValidators is always sorted by public key"
+        );
         self.0 = validators;
     }
 
@@ -428,11 +438,11 @@ impl Candidates {
             candidates.into_iter().filter(|c| c.deposit >= min_deposit).fold(Vec::new(), |mut vec, candidate| {
                 let public = &candidate.pubkey;
                 if let Some(&delegation) = delegations.get(public) {
-                    vec.push(Validator::new(delegation, candidate.deposit, candidate.pubkey));
+                    vec.push(Validator::new(delegation, candidate.deposit, candidate.pubkey, candidate.tiebreaker));
                 }
                 vec
             });
-        result.sort_by_key(|v| (v.delegation, v.deposit));
+        result.sort_unstable_by_key(|v| (Reverse(v.delegation), Reverse(v.deposit), v.tiebreaker));
         result
     }
 
@@ -446,6 +456,7 @@ impl Candidates {
         quantity: DepositQuantity,
         nomination_ends_at: u64,
         metadata: Bytes,
+        tiebreaker: Tiebreaker,
     ) {
         if let Some(candidate) = self.0.iter_mut().find(|c| c.pubkey == *pubkey) {
             candidate.deposit += quantity;
@@ -457,6 +468,7 @@ impl Candidates {
                 deposit: quantity,
                 nomination_ends_at,
                 metadata,
+                tiebreaker,
             })
         };
     }
