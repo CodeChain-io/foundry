@@ -26,7 +26,7 @@ use crate::state::{get_stakes, Banned, CurrentValidators, Metadata, Params};
 use crate::transactions::{
     create_close_block_transactions, create_open_block_transactions, SignedTransaction, Transaction,
 };
-use crate::types::{Header, Public, ResultantFee, Validator};
+use crate::types::{Header, Public, ResultantFee, Tiebreaker, Validator};
 use std::cell::RefCell;
 use std::collections::HashMap;
 
@@ -53,16 +53,22 @@ impl Abci for ABCIHandle {
         &self,
         transactions: Vec<Transaction>,
     ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError> {
+        let mut user_tx_idx = 0;
         let results: Result<Vec<_>, _> = transactions
             .into_iter()
             .map(|tx| match tx {
                 Transaction::User(signed_tx) => check(&signed_tx).map_err(Error::Syntax).and({
+                    user_tx_idx += 1;
                     let SignedTransaction {
                         tx,
                         signer_public,
                         ..
                     } = signed_tx;
-                    apply_internal(tx, &signer_public).map_err(Error::Runtime)
+                    let tiebreaker = Tiebreaker {
+                        nominated_at_block_number: self.executing_block_header.borrow().number(),
+                        nominated_at_transaction_index: user_tx_idx,
+                    };
+                    apply_internal(tx, &signer_public, tiebreaker).map_err(Error::Runtime)
                 }),
                 Transaction::Auto(auto_action) => {
                     execute_auto_action(auto_action, self.executing_block_header.borrow().number())

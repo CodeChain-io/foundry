@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub use fkey::{sign, verify, Ed25519Private as Private, Ed25519Public as Public, Signature};
-pub use ftypes::Header;
+pub use ftypes::{BlockNumber, Header};
 use std::fmt;
 use std::ops::Add;
 use std::str;
@@ -40,22 +40,31 @@ impl Default for NetworkId {
     }
 }
 
-#[derive(Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize, Clone)]
+#[derive(Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct Tiebreaker {
+    pub nominated_at_block_number: BlockNumber,
+    // User transaction index in a block
+    pub nominated_at_transaction_index: usize,
+}
+
+#[derive(Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize, Clone, Debug)]
 pub struct Validator {
     // Indicates weights in a round-robin proposer scheduling
     pub weight: StakeQuantity,
     pub delegation: StakeQuantity,
     pub deposit: DepositQuantity,
     pub pubkey: Public,
+    pub tiebreaker: Tiebreaker,
 }
 
 impl Validator {
-    pub fn new(delegation: StakeQuantity, deposit: DepositQuantity, pubkey: Public) -> Self {
+    pub fn new(delegation: StakeQuantity, deposit: DepositQuantity, pubkey: Public, tiebreaker: Tiebreaker) -> Self {
         Self {
             weight: delegation,
             delegation,
             deposit,
             pubkey,
+            tiebreaker,
         }
     }
 
@@ -78,6 +87,7 @@ pub struct Candidate {
     pub deposit: DepositQuantity,
     pub nomination_ends_at: u64,
     pub metadata: Bytes,
+    pub tiebreaker: Tiebreaker,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
