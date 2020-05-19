@@ -22,7 +22,7 @@ use std::ops::{Deref, DerefMut};
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Validator {
     pub public_key: Public,
-    pub delegation: u64,
+    pub voting_power: u64,
 }
 
 // It will be hashed in the header.
@@ -62,7 +62,7 @@ impl Encodable for Validators {
         s.begin_list(self.0.len() * 2);
         for validator in self.0.iter() {
             s.append(&validator.public_key);
-            s.append(&validator.delegation);
+            s.append(&validator.voting_power);
         }
     }
 }
@@ -81,7 +81,7 @@ impl Decodable for Validators {
         for i in 0..(item_count / 2) {
             vec.push(Validator {
                 public_key: rlp.val_at(i * 2)?,
-                delegation: rlp.val_at(i * 2 + 1)?,
+                voting_power: rlp.val_at(i * 2 + 1)?,
             });
         }
         Ok(Self::new(vec))
@@ -108,7 +108,7 @@ mod tests {
             for _ in 0..n {
                 vset.0.push(Validator {
                     public_key: Public::random(),
-                    delegation: rng.gen::<u64>(),
+                    voting_power: rng.gen::<u64>(),
                 })
             }
             rlp_encode_and_decode_test!(vset);

@@ -82,9 +82,9 @@ impl DynamicValidator {
                     index,
                 }
             })?;
-            voted_weight += validator.delegation;
+            voted_weight += validator.voting_power;
         }
-        let total_weight: u64 = validators.iter().map(|v| v.delegation).sum();
+        let total_weight: u64 = validators.iter().map(|v| v.voting_power).sum();
         if voted_weight * 3 > total_weight * 2 {
             Ok(())
         } else {
@@ -141,9 +141,9 @@ impl ValidatorSet for DynamicValidator {
                     index,
                 }
             })?;
-            voted_weight += validator.delegation;
+            voted_weight += validator.voting_power;
         }
-        let total_weight: u64 = validators.iter().map(|validator| validator.delegation).sum();
+        let total_weight: u64 = validators.iter().map(|validator| validator.voting_power).sum();
         if voted_weight * 3 > total_weight * 2 {
             Ok(())
         } else {

@@ -278,7 +278,7 @@ impl TestBlockChainClient {
                 .into_iter()
                 .map(|public_key| Validator {
                     public_key,
-                    delegation: 0,
+                    voting_power: 0,
                 })
                 .collect(),
         );
