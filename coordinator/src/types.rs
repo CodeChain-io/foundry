@@ -14,31 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub mod context;
-mod types;
+mod event;
 
-use self::context::Context;
+use self::event::Event;
+use ctypes::{CompactValidatorSet, ConsensusParams};
 
-/// The `Coordinator` encapsulates all the logic for a Foundry application.
-///
-/// It assembles modules and feeds them various events from the underlying
-/// consensus engine.
-pub struct Coordinator {}
-
-pub struct Builder<C: Context> {
-    _context: C,
+pub enum VerifiedCrime {
+    #[allow(dead_code)]
+    DoubleVote {
+        height: u64,
+        author_index: usize,
+        criminal_index: usize,
+    },
 }
 
-impl<C: Context> Builder<C> {
-    #[allow(dead_code)]
-    fn new(context: C) -> Self {
-        Builder {
-            _context: context,
-        }
-    }
-
-    #[allow(dead_code)]
-    fn build(self) -> Coordinator {
-        Coordinator {}
-    }
+pub struct TransactionExecutionOutcome {
+    pub events: Vec<Event>,
 }
+
+pub type HeaderError = String;
+pub type ExecuteTransactionError = ();
+pub type CloseBlockError = String;
+
+pub struct BlockOutcome {
+    pub updated_validator_set: Option<CompactValidatorSet>,
+    pub updated_consensus_params: Option<ConsensusParams>,
+    pub events: Vec<Event>,
+}
+
+pub type ErrorCode = u32;
