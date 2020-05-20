@@ -51,7 +51,7 @@ use ckey::{Ed25519Public as Public, NetworkId};
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, ShardTransaction, Transaction};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, TxHash};
+use ctypes::{BlockNumber, CommonParams, ShardId, StorageId, TransactionIndex, TransactionLocation, TxHash};
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use primitives::{Bytes, H256};
@@ -285,6 +285,7 @@ impl TopLevelState {
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
         current_block_timestamp: u64,
+        transaction_index: TransactionIndex,
     ) -> StateResult<()> {
         self.create_checkpoint(FEE_CHECKPOINT);
         let result = self.apply_internal(
@@ -294,6 +295,7 @@ impl TopLevelState {
             parent_block_number,
             parent_block_timestamp,
             current_block_timestamp,
+            transaction_index,
         );
         match result {
             Ok(()) => {
@@ -314,6 +316,7 @@ impl TopLevelState {
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
         current_block_timestamp: u64,
+        transaction_index: TransactionIndex,
     ) -> StateResult<()> {
         let seq = self.seq(sender)?;
 
@@ -341,6 +344,7 @@ impl TopLevelState {
             parent_block_number,
             parent_block_timestamp,
             current_block_timestamp,
+            transaction_index,
         );
         match &result {
             Ok(()) => {
@@ -364,6 +368,7 @@ impl TopLevelState {
         parent_block_number: BlockNumber,
         parent_block_timestamp: u64,
         _current_block_timestamp: u64,
+        transaction_index: TransactionIndex,
     ) -> StateResult<()> {
         let (transaction, approvers) = match action {
             Action::ShardStore {
@@ -410,7 +415,18 @@ impl TopLevelState {
                     let nomination_ends_at = current_term + expiration;
                     (current_term, nomination_ends_at)
                 };
-                return self_nominate(self, sender, *deposit, current_term, nomination_ends_at, metadata.clone())
+                return self_nominate(
+                    self,
+                    sender,
+                    *deposit,
+                    current_term,
+                    nomination_ends_at,
+                    TransactionLocation {
+                        block_number: parent_block_number + 1,
+                        transaction_index,
+                    },
+                    metadata.clone(),
+                )
             }
             Action::ChangeParams {
                 metadata_seq,
@@ -1151,7 +1167,7 @@ mod tests_tx {
                 expected: 0,
                 found: 2
             }))),
-            state.apply(&tx, &sender, &get_test_client(), 0, 0, 0)
+            state.apply(&tx, &sender, &get_test_client(), 0, 0, 0, 0)
         );
 
         check_top_level_state!(state, [
@@ -1174,7 +1190,7 @@ mod tests_tx {
                 cost: 5,
             }
             .into()),
-            state.apply(&tx, &sender, &get_test_client(), 0, 0, 0)
+            state.apply(&tx, &sender, &get_test_client(), 0, 0, 0, 0)
         );
 
         check_top_level_state!(state, [
@@ -1191,7 +1207,7 @@ mod tests_tx {
 
         let receiver = 1u64.into();
         let tx = transaction!(fee: 5, pay!(receiver, 10));
-        assert_eq!(Ok(()), state.apply(&tx, &sender, &get_test_client(), 0, 0, 0));
+        assert_eq!(Ok(()), state.apply(&tx, &sender, &get_test_client(), 0, 0, 0, 0));
 
         check_top_level_state!(state, [
             (account: sender => seq: 1, balance: 5),
@@ -1217,7 +1233,7 @@ mod tests_tx {
                 cost: 30,
             }
             .into()),
-            state.apply(&tx, &sender, &get_test_client(), 0, 0, 0)
+            state.apply(&tx, &sender, &get_test_client(), 0, 0, 0, 0)
         );
 
         check_top_level_state!(state, [

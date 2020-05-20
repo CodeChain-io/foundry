@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use ctypes::{BlockId, TxHash};
+use ctypes::{BlockId, TransactionIndex, TxHash};
 
 /// Uniquely identifies transaction.
 #[derive(Debug, PartialEq, Clone, Hash, Eq)]
@@ -23,7 +23,7 @@ pub enum TransactionId {
     Hash(TxHash),
     /// Block id and transaction index within this block.
     /// Querying by block position is always faster.
-    Location(BlockId, usize),
+    Location(BlockId, TransactionIndex),
 }
 
 impl From<TxHash> for TransactionId {

@@ -19,7 +19,7 @@ use super::extras::TransactionAddress;
 use crate::db::{self, CacheUpdatePolicy, Readable, Writable};
 use crate::encoded;
 use crate::views::BlockView;
-use ctypes::{BlockHash, TxHash};
+use ctypes::{BlockHash, TransactionIndex, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use lru_cache::LruCache;
 use parking_lot::{Mutex, RwLock};
@@ -179,7 +179,7 @@ fn tx_hash_and_address_entries(
     tx_hashes.into_iter().enumerate().map(move |(index, tx_hash)| {
         (tx_hash, TransactionAddress {
             block_hash,
-            index,
+            index: index as TransactionIndex,
         })
     })
 }

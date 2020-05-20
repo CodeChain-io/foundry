@@ -63,8 +63,8 @@ describe("Tendermint ", function() {
     describe("getPossibleAuthors", function() {
         it("latest", async function() {
             const validators = [
-                "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0",
                 "szff1322BHP3gsOuwFPDf-K8zvqSmNz4rj3CJirlQKFKWA_3c-Ytc0",
+                "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0",
                 "qwfj0xwkJQLV5iEGeaGeRfPA-TJX56Mnuq9fQD9coasmhanhck4tc0",
                 "dbqtds3w6QnzEf0RXuQS7c_N6IzFBzcBAfdjWme5y0U5DxzLS14tc0"
             ];

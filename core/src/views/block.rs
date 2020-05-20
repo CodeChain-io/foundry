@@ -17,7 +17,7 @@
 use super::{HeaderView, TransactionView};
 use crate::transaction::{LocalizedTransaction, UnverifiedTransaction};
 use ccrypto::blake256;
-use ctypes::{BlockHash, Header, TxHash};
+use ctypes::{BlockHash, Header, TransactionIndex, TxHash};
 use rlp::Rlp;
 
 /// View onto block rlp.
@@ -82,7 +82,7 @@ impl<'a> BlockView<'a> {
                 signed,
                 block_hash,
                 block_number,
-                transaction_index,
+                transaction_index: transaction_index as TransactionIndex,
                 cached_signer_public: None,
             })
             .collect()
@@ -104,12 +104,12 @@ impl<'a> BlockView<'a> {
     }
 
     /// Returns transaction at given index without deserializing unnecessary data.
-    pub fn transaction_at(&self, index: usize) -> Option<UnverifiedTransaction> {
-        self.rlp.at(1).unwrap().iter().nth(index).map(|rlp| rlp.as_val().unwrap())
+    pub fn transaction_at(&self, index: TransactionIndex) -> Option<UnverifiedTransaction> {
+        self.rlp.at(1).unwrap().iter().nth(index as usize).map(|rlp| rlp.as_val().unwrap())
     }
 
     /// Returns localized transaction at given index.
-    pub fn localized_transaction_at(&self, transaction_index: usize) -> Option<LocalizedTransaction> {
+    pub fn localized_transaction_at(&self, transaction_index: TransactionIndex) -> Option<LocalizedTransaction> {
         let header = self.header_view();
         let block_hash = header.hash();
         let block_number = header.number();

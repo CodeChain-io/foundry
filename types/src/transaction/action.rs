@@ -574,7 +574,10 @@ mod tests {
     #[test]
     fn rlp_of_update_validators() {
         rlp_encode_and_decode_test!(Action::UpdateValidators {
-            validators: vec![Validator::new(1, 2, Public::random()), Validator::new(3, 4, Public::random())],
+            validators: vec![
+                Validator::new(1, 2, Public::random(), 0, 0),
+                Validator::new(3, 4, Public::random(), 0, 0)
+            ],
         });
     }
 

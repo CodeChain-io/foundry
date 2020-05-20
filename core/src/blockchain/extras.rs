@@ -16,7 +16,7 @@
 
 use crate::db::Key;
 use crate::types::TransactionId;
-use ctypes::{BlockHash, BlockNumber, TxHash};
+use ctypes::{BlockHash, BlockNumber, TransactionIndex, TxHash};
 use primitives::{H256, H264};
 use std::ops::Deref;
 
@@ -95,7 +95,7 @@ pub struct TransactionAddress {
     /// Block hash
     pub block_hash: BlockHash,
     /// Transaction index within the block
-    pub index: usize,
+    pub index: TransactionIndex,
 }
 
 impl From<TransactionAddress> for TransactionId {

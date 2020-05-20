@@ -24,11 +24,26 @@ use ctypes::transaction::Validator;
 use ctypes::util::unexpected::OutOfBounds;
 use ctypes::BlockHash;
 use parking_lot::RwLock;
+use std::cmp::Reverse;
 use std::sync::{Arc, Weak};
 
 #[derive(Default)]
 pub struct DynamicValidator {
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
+}
+
+pub struct WeightOrderedValidators(Vec<Public>);
+
+pub struct WeightIndex(usize);
+
+impl WeightOrderedValidators {
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn get(&self, index: WeightIndex) -> Option<&Public> {
+        self.0.get(index.0)
+    }
 }
 
 impl DynamicValidator {
@@ -38,9 +53,7 @@ impl DynamicValidator {
         let block_id = hash.into();
         let state = client.state_at(block_id).expect("The next validators must be called on the confirmed block");
         let validators = NextValidators::load_from_state(&state).unwrap();
-        let mut validators: Vec<_> = validators.into();
-        validators.reverse();
-        validators
+        validators.into()
     }
 
     fn current_validators(&self, hash: BlockHash) -> Vec<Validator> {
@@ -49,9 +62,7 @@ impl DynamicValidator {
         let block_id = hash.into();
         let state = client.state_at(block_id).expect("The current validators must be called on the confirmed block");
         let validators = CurrentValidators::load_from_state(&state).unwrap();
-        let mut validators: Vec<_> = validators.into();
-        validators.reverse();
-        validators
+        validators.into()
     }
 
     fn validators(&self, hash: BlockHash) -> Vec<Public> {
@@ -59,10 +70,23 @@ impl DynamicValidator {
         validators.into_iter().map(|val| *val.pubkey()).collect()
     }
 
-    pub fn proposer_index(&self, parent: BlockHash, proposed_view: usize) -> usize {
-        let validators = self.next_validators(parent);
-        let num_validators = validators.len();
-        proposed_view % num_validators
+    fn validators_order_by_weight(&self, hash: BlockHash) -> WeightOrderedValidators {
+        let mut validators = self.next_validators(hash);
+        // Should we cache the sorted validator?
+        validators.sort_unstable_by_key(|v| {
+            (
+                Reverse(v.weight()),
+                Reverse(v.deposit()),
+                v.nominated_at_block_number(),
+                v.nominated_at_transaction_index(),
+            )
+        });
+        WeightOrderedValidators(validators.into_iter().map(|val| *val.pubkey()).collect())
+    }
+
+    pub fn proposer_index(&self, parent: BlockHash, proposed_view: u64) -> usize {
+        let propser = self.next_block_proposer(&parent, proposed_view);
+        self.get_index(&parent, &propser).expect("We know propser is included in a validator set")
     }
 
     pub fn get_current(&self, hash: &BlockHash, index: usize) -> Public {
@@ -112,17 +136,13 @@ impl ValidatorSet for DynamicValidator {
     }
 
     fn get_index(&self, parent: &BlockHash, public: &Public) -> Option<usize> {
-        self.validators(*parent)
-            .into_iter()
-            .enumerate()
-            .find(|(_index, pubkey)| pubkey == public)
-            .map(|(index, _)| index)
+        self.validators(*parent).binary_search(public).ok()
     }
 
     fn next_block_proposer(&self, parent: &BlockHash, view: u64) -> Public {
-        let validators = self.validators(*parent);
+        let validators = self.validators_order_by_weight(*parent);
         let n_validators = validators.len();
-        let index = view as usize % n_validators;
+        let index = WeightIndex(view as usize % n_validators);
         *validators.get(index).unwrap()
     }
 

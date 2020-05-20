@@ -14,26 +14,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::{BlockNumber, TransactionIndex};
 use ckey::Ed25519Public as Public;
 
 pub type StakeQuantity = u64;
 pub type DepositQuantity = u64;
 
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, RlpDecodable, RlpEncodable)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, RlpDecodable, RlpEncodable)]
 pub struct Validator {
     weight: StakeQuantity,
     delegation: StakeQuantity,
     deposit: DepositQuantity,
     pubkey: Public,
+    nominated_at_block_number: BlockNumber,
+    nominated_at_transaction_index: TransactionIndex,
 }
 
 impl Validator {
-    pub fn new(delegation: StakeQuantity, deposit: DepositQuantity, pubkey: Public) -> Self {
+    pub fn new(
+        delegation: StakeQuantity,
+        deposit: DepositQuantity,
+        pubkey: Public,
+        nominated_at_block_number: BlockNumber,
+        nominated_at_transaction_index: TransactionIndex,
+    ) -> Self {
         Self {
             weight: delegation,
             delegation,
             deposit,
             pubkey,
+            nominated_at_block_number,
+            nominated_at_transaction_index,
         }
     }
 
@@ -60,6 +71,14 @@ impl Validator {
     pub fn deposit(&self) -> DepositQuantity {
         self.deposit
     }
+
+    pub fn nominated_at_block_number(&self) -> BlockNumber {
+        self.nominated_at_block_number
+    }
+
+    pub fn nominated_at_transaction_index(&self) -> TransactionIndex {
+        self.nominated_at_transaction_index
+    }
 }
 
 #[cfg(test)]
@@ -75,6 +94,8 @@ mod tests {
             delegation: 2,
             deposit: 3,
             pubkey: Public::random(),
+            nominated_at_block_number: 3,
+            nominated_at_transaction_index: 2
         });
     }
 }

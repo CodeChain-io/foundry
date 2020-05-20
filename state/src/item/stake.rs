@@ -18,10 +18,10 @@ use crate::{ActionData, StakeKeyBuilder, StateResult, TopLevelState, TopState, T
 use ckey::Ed25519Public as Public;
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::Validator;
-use ctypes::{CompactValidatorEntry, CompactValidatorSet};
+use ctypes::{BlockNumber, CompactValidatorEntry, CompactValidatorSet, TransactionIndex, TransactionLocation};
 use primitives::{Bytes, H256};
 use rlp::{decode_list, encode_list, Decodable, Encodable, Rlp, RlpStream};
-use std::cmp::Ordering;
+use std::cmp::{Ordering, Reverse};
 use std::collections::btree_map::{BTreeMap, Entry};
 use std::collections::btree_set::{self, BTreeSet};
 use std::collections::{btree_map, HashMap, HashSet};
@@ -235,10 +235,8 @@ impl NextValidators {
     }
 
     pub fn create_compact_validator_set(&self) -> CompactValidatorSet {
-        let mut reversed = self.0.clone();
-        reversed.reverse();
         CompactValidatorSet::new(
-            reversed
+            self.0
                 .iter()
                 .map(|x| CompactValidatorEntry {
                     public_key: *x.pubkey(),
@@ -263,9 +261,8 @@ impl NextValidators {
 
         let delegatees = Stakeholders::delegatees(&state)?;
         // Step 1 & 2.
+        // Ordered by (delegation DESC, deposit DESC, nomination_starts_at ASC)
         let mut validators = Candidates::prepare_validators(&state, min_deposit, &delegatees)?;
-        // validators are now sorted in descending order of (delegation, deposit, priority)
-        validators.reverse();
 
         let banned = Banned::load_from_state(&state)?;
         for validator in &validators {
@@ -289,7 +286,8 @@ impl NextValidators {
         let over_threshold = rest.iter().filter(|c| c.delegation() >= delegation_threshold);
 
         let mut result: Vec<_> = minimum.iter().chain(over_threshold).cloned().collect();
-        result.reverse(); // Ascending order of (delegation, deposit, priority)
+        result.sort_unstable_by_key(|v| *v.pubkey());
+
         Ok(Self(result))
     }
 
@@ -306,7 +304,16 @@ impl NextValidators {
     pub fn update_weight(state: &TopLevelState, block_author: &Public) -> StateResult<Self> {
         let mut validators = Self::load_from_state(state)?;
         let min_delegation = validators.min_delegation();
-        for validator in validators.0.iter_mut().rev() {
+        let mut sorted_validators_view: Vec<&mut Validator> = validators.0.iter_mut().collect();
+        sorted_validators_view.sort_unstable_by_key(|val| {
+            (
+                Reverse(val.weight()),
+                Reverse(val.deposit()),
+                val.nominated_at_block_number(),
+                val.nominated_at_transaction_index(),
+            )
+        });
+        for validator in sorted_validators_view.iter_mut() {
             if *validator.pubkey() == *block_author {
                 // block author
                 validator.set_weight(validator.weight().saturating_sub(min_delegation));
@@ -318,7 +325,6 @@ impl NextValidators {
         if validators.0.iter().all(|validator| validator.weight() == 0) {
             validators.0.iter_mut().for_each(Validator::reset);
         }
-        validators.0.sort_unstable();
         Ok(validators)
     }
 
@@ -369,7 +375,7 @@ pub struct CurrentValidators(Vec<Validator>);
 impl CurrentValidators {
     pub fn load_from_state(state: &TopLevelState) -> StateResult<Self> {
         let key = &*CURRENT_VALIDATORS_KEY;
-        let validators = state.action_data(&key)?.map(|data| decode_list(&data)).unwrap_or_default();
+        let validators: Vec<Validator> = state.action_data(&key)?.map(|data| decode_list(&data)).unwrap_or_default();
 
         Ok(Self(validators))
     }
@@ -384,7 +390,17 @@ impl CurrentValidators {
         Ok(())
     }
 
+    /// validator should be sorted by public key
     pub fn update(&mut self, validators: Vec<Validator>) {
+        debug_assert_eq!(
+            validators,
+            {
+                let mut cloned = validators.clone();
+                cloned.sort_unstable_by_key(|v| *v.pubkey());
+                cloned
+            },
+            "CurrentValidator is always sorted by public key"
+        );
         self.0 = validators;
     }
 
@@ -393,10 +409,8 @@ impl CurrentValidators {
     }
 
     pub fn create_compact_validator_set(&self) -> CompactValidatorSet {
-        let mut reversed = self.0.clone();
-        reversed.reverse();
         CompactValidatorSet::new(
-            reversed
+            self.0
                 .iter()
                 .map(|x| CompactValidatorEntry {
                     public_key: *x.pubkey(),
@@ -428,6 +442,8 @@ pub struct Candidate {
     pub pubkey: Public,
     pub deposit: DepositQuantity,
     pub nomination_ends_at: u64,
+    pub nomination_starts_at_block_number: BlockNumber,
+    pub nomination_starts_at_transaction_index: TransactionIndex,
     pub metadata: Bytes,
 }
 
@@ -459,13 +475,24 @@ impl Candidates {
         let mut result = Vec::new();
         for candidate in candidates.into_iter().filter(|c| c.deposit >= min_deposit) {
             if let Some(delegation) = delegations.get(&candidate.pubkey).cloned() {
-                result.push(Validator::new(delegation, candidate.deposit, candidate.pubkey));
+                result.push(Validator::new(
+                    delegation,
+                    candidate.deposit,
+                    candidate.pubkey,
+                    candidate.nomination_starts_at_block_number,
+                    candidate.nomination_starts_at_transaction_index,
+                ));
             }
         }
-        // Candidates are sorted in low priority: low index, high priority: high index
-        // so stable sorting with the key (delegation, deposit) preserves its priority order.
-        // ascending order of (delegation, deposit, priority)
-        result.sort_by_key(|v| (v.delegation(), v.deposit()));
+        // Descending order of (delegation, deposit, priority)
+        result.sort_unstable_by_key(|v| {
+            (
+                Reverse(v.delegation()),
+                Reverse(v.deposit()),
+                v.nominated_at_block_number(),
+                v.nominated_at_transaction_index(),
+            )
+        });
         Ok(result)
     }
 
@@ -491,6 +518,7 @@ impl Candidates {
         pubkey: &Public,
         quantity: DepositQuantity,
         nomination_ends_at: u64,
+        nomination_starts_at: TransactionLocation,
         metadata: Bytes,
     ) {
         if let Some(index) = self.0.iter().position(|c| c.pubkey == *pubkey) {
@@ -505,6 +533,8 @@ impl Candidates {
                 pubkey: *pubkey,
                 deposit: quantity,
                 nomination_ends_at,
+                nomination_starts_at_block_number: nomination_starts_at.block_number,
+                nomination_starts_at_transaction_index: nomination_starts_at.transaction_index,
                 metadata,
             });
         };
@@ -1084,9 +1114,14 @@ mod tests {
         let pubkey = Public::random();
         let deposits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
+        let nomination_ends_at = 0;
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
         for deposit in deposits.iter() {
             let mut candidates = Candidates::load_from_state(&state).unwrap();
-            candidates.add_deposit(&pubkey, *deposit, 0, b"".to_vec());
+            candidates.add_deposit(&pubkey, *deposit, nomination_ends_at, nomination_starts_at, b"".to_vec());
             candidates.save_to_state(&mut state).unwrap();
         }
 
@@ -1105,7 +1140,13 @@ mod tests {
         let pubkey = Public::random();
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        candidates.add_deposit(&pubkey, 10, 0, b"metadata".to_vec());
+        let deposit = 10;
+        let nomination_ends_at = 0;
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        candidates.add_deposit(&pubkey, deposit, nomination_ends_at, nomination_starts_at, b"metadata".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         // Assert
@@ -1123,11 +1164,16 @@ mod tests {
         let pubkey = Public::random();
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        candidates.add_deposit(&pubkey, 10, 0, b"metadata".to_vec());
+        let nomination_ends_at = 0;
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        candidates.add_deposit(&pubkey, 10, nomination_ends_at, nomination_starts_at, b"metadata".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        candidates.add_deposit(&pubkey, 10, 0, b"metadata-updated".to_vec());
+        candidates.add_deposit(&pubkey, 10, nomination_ends_at, nomination_starts_at, b"metadata-updated".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         // Assert
@@ -1144,7 +1190,12 @@ mod tests {
         // Prepare
         let pubkey = Public::random();
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        candidates.add_deposit(&pubkey, 0, 10, b"".to_vec());
+        let nomination_ends_at = 10;
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        candidates.add_deposit(&pubkey, 0, nomination_ends_at, nomination_starts_at, b"".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         // Assert
@@ -1163,11 +1214,16 @@ mod tests {
         let pubkey = Public::random();
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        candidates.add_deposit(&pubkey, 10, 0, b"metadata".to_vec());
+        let nomination_ends_at = 0;
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
+        candidates.add_deposit(&pubkey, 10, nomination_ends_at, nomination_starts_at, b"metadata".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
-        candidates.add_deposit(&pubkey, 0, 0, b"metadata-updated".to_vec());
+        candidates.add_deposit(&pubkey, 0, nomination_ends_at, nomination_starts_at, b"metadata-updated".to_vec());
         candidates.save_to_state(&mut state).unwrap();
 
         // Assert
@@ -1185,9 +1241,13 @@ mod tests {
         let pubkey = Public::random();
         let deposit_and_nomination_ends_at = [(10, 11), (20, 22), (30, 33), (0, 44)];
 
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
         for (deposit, nomination_ends_at) in &deposit_and_nomination_ends_at {
             let mut candidates = Candidates::load_from_state(&state).unwrap();
-            candidates.add_deposit(&pubkey, *deposit, *nomination_ends_at, b"".to_vec());
+            candidates.add_deposit(&pubkey, *deposit, *nomination_ends_at, nomination_starts_at, b"".to_vec());
             candidates.save_to_state(&mut state).unwrap();
         }
 
@@ -1218,24 +1278,32 @@ mod tests {
                 pubkey: pubkey0,
                 deposit: 20,
                 nomination_ends_at: 11,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             Candidate {
                 pubkey: pubkey1,
                 deposit: 30,
                 nomination_ends_at: 22,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             Candidate {
                 pubkey: pubkey2,
                 deposit: 40,
                 nomination_ends_at: 33,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             Candidate {
                 pubkey: pubkey3,
                 deposit: 50,
                 nomination_ends_at: 44,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
         ];
@@ -1244,11 +1312,22 @@ mod tests {
             pubkey,
             deposit,
             nomination_ends_at,
+            nomination_starts_at_block_number,
+            nomination_starts_at_transaction_index,
             metadata,
         } in &candidates_prepared
         {
             let mut candidates = Candidates::load_from_state(&state).unwrap();
-            candidates.add_deposit(&pubkey, *deposit, *nomination_ends_at, metadata.clone());
+            candidates.add_deposit(
+                &pubkey,
+                *deposit,
+                *nomination_ends_at,
+                TransactionLocation {
+                    block_number: *nomination_starts_at_block_number,
+                    transaction_index: *nomination_starts_at_transaction_index,
+                },
+                metadata.clone(),
+            );
             candidates.save_to_state(&mut state).unwrap();
         }
 
@@ -1283,24 +1362,32 @@ mod tests {
                 pubkey: pubkey0,
                 deposit: 20,
                 nomination_ends_at: 11,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             Candidate {
                 pubkey: pubkey1,
                 deposit: 30,
                 nomination_ends_at: 22,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             Candidate {
                 pubkey: pubkey2,
                 deposit: 40,
                 nomination_ends_at: 33,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             Candidate {
                 pubkey: pubkey3,
                 deposit: 50,
                 nomination_ends_at: 44,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
         ];
@@ -1309,11 +1396,22 @@ mod tests {
             pubkey,
             deposit,
             nomination_ends_at,
+            nomination_starts_at_block_number,
+            nomination_starts_at_transaction_index,
             metadata,
         } in &candidates_prepared
         {
             let mut candidates = Candidates::load_from_state(&state).unwrap();
-            candidates.add_deposit(&pubkey, *deposit, *nomination_ends_at, metadata.clone());
+            candidates.add_deposit(
+                &pubkey,
+                *deposit,
+                *nomination_ends_at,
+                TransactionLocation {
+                    block_number: *nomination_starts_at_block_number,
+                    transaction_index: *nomination_starts_at_transaction_index,
+                },
+                metadata.clone(),
+            );
             candidates.save_to_state(&mut state).unwrap();
         }
 
@@ -1344,6 +1442,8 @@ mod tests {
                 pubkey,
                 deposit: 100,
                 nomination_ends_at: 0,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             10,
@@ -1370,6 +1470,8 @@ mod tests {
                 pubkey,
                 deposit: 100,
                 nomination_ends_at: 0,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             10,
@@ -1396,6 +1498,8 @@ mod tests {
                 pubkey,
                 deposit: 100,
                 nomination_ends_at: 0,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             10,
@@ -1438,6 +1542,8 @@ mod tests {
                 pubkey: pubkey1,
                 deposit: 100,
                 nomination_ends_at: 0,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             10,
@@ -1448,6 +1554,8 @@ mod tests {
                 pubkey: pubkey2,
                 deposit: 200,
                 nomination_ends_at: 0,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             15,
@@ -1482,6 +1590,8 @@ mod tests {
                 pubkey: pubkey1,
                 deposit: 100,
                 nomination_ends_at: 0,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             10,
@@ -1492,6 +1602,8 @@ mod tests {
                 pubkey: pubkey2,
                 deposit: 200,
                 nomination_ends_at: 0,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             15,
@@ -1535,6 +1647,8 @@ mod tests {
                 pubkey: pubkey1,
                 deposit: 100,
                 nomination_ends_at: 0,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             10,
@@ -1545,6 +1659,8 @@ mod tests {
                 pubkey: pubkey2,
                 deposit: 200,
                 nomination_ends_at: 0,
+                nomination_starts_at_block_number: 0,
+                nomination_starts_at_transaction_index: 0,
                 metadata: b"".to_vec(),
             },
             15,
@@ -1617,15 +1733,20 @@ mod tests {
         let pubkeys = (0..10).map(|_| Public::random()).collect::<Vec<_>>();
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
+        let nomination_ends_at = 0;
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
         for _ in 0..10 {
             // Random pre-fill
             let i = rand::thread_rng().gen_range(0, pubkeys.len());
             let pubkey = &pubkeys[i];
-            candidates.add_deposit(pubkey, 0, 0, Bytes::new());
+            candidates.add_deposit(pubkey, 0, nomination_ends_at, nomination_starts_at, Bytes::new());
         }
         // Inserting pubkey in this order, they'll get sorted.
         for pubkey in &pubkeys {
-            candidates.add_deposit(pubkey, 10, 0, Bytes::new());
+            candidates.add_deposit(pubkey, 10, nomination_ends_at, nomination_starts_at, Bytes::new());
         }
         candidates.save_to_state(&mut state).unwrap();
 
@@ -1643,12 +1764,18 @@ mod tests {
         let pubkeys = (0..10).map(|_| Public::random()).collect::<Vec<_>>();
 
         let mut candidates = Candidates::load_from_state(&state).unwrap();
+        let nomination_ends_at = 0;
+        let nomination_starts_at = TransactionLocation {
+            block_number: 0,
+            transaction_index: 0,
+        };
         for pubkey in &pubkeys {
-            candidates.add_deposit(pubkey, 10, 0, Bytes::new());
+            candidates.add_deposit(pubkey, 10, nomination_ends_at, nomination_starts_at, Bytes::new());
         }
         candidates.save_to_state(&mut state).unwrap();
 
-        let dummy_validators = pubkeys[0..5].iter().map(|pubkey| Validator::new(0, 0, *pubkey)).collect::<Vec<_>>();
+        let dummy_validators =
+            pubkeys[0..5].iter().map(|pubkey| Validator::new(0, 0, *pubkey, 0, 0)).collect::<Vec<_>>();
         let dummy_banned = Banned::load_from_state(&state).unwrap();
         candidates.renew_candidates(&dummy_validators, 0, &[], &dummy_banned);
 
