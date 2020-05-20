@@ -39,7 +39,6 @@ class SDK {
     private _networkId: string;
 
     /**
-     * @param params.server HTTP RPC server address
      * @param params.keyStoreType Specify the type of the keystore. The default value is "local". It creates keystore.db file on the working directory.
      * @param params.networkId The network id of CodeChain. The default value is "tc" (testnet)
      */
