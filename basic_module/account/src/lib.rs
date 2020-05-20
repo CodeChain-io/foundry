@@ -25,7 +25,6 @@ extern crate codechain_key as ckey;
 mod core;
 mod error;
 mod impls;
-mod import;
 mod internal;
 mod types;
 

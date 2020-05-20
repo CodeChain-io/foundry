@@ -32,7 +32,3 @@ pub trait AccountView {
 pub trait SignatureManager {
     fn verify(&self, signature: &Signature, message: &[u8], public: &Public) -> bool;
 }
-
-pub trait FeeManager {
-    fn accumulate_block_fee(&self, total_additional_fee: u64, total_min_fee: u64);
-}

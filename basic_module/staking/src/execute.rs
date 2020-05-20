@@ -19,7 +19,7 @@ use crate::error::{Insufficient, Mismatch};
 use crate::runtime_error::Error;
 use crate::state::*;
 use crate::transactions::{AutoAction, UserAction, UserTransaction};
-use crate::types::{Approval, Bytes, Public, ReleaseResult, ResultantFee, StakeQuantity, Tiebreaker};
+use crate::types::{Approval, Bytes, Public, ReleaseResult, StakeQuantity, Tiebreaker};
 use crate::{account_manager, account_viewer, substorage};
 
 fn check_before_fee_imposition(sender_public: &Public, fee: u64, seq: u64, min_fee: u64) -> Result<(), Error> {
@@ -43,7 +43,7 @@ pub fn apply_internal(
     tx: UserTransaction,
     sender_public: &Public,
     tiebreaker: Tiebreaker,
-) -> Result<(TransactionExecutionOutcome, ResultantFee), Error> {
+) -> Result<TransactionExecutionOutcome, Error> {
     let UserTransaction {
         action,
         fee,
@@ -73,12 +73,7 @@ pub fn apply_internal(
         Err(_) => substorage.revert_to_the_checkpoint(),
     };
 
-    result.map(|outcome| {
-        (outcome, ResultantFee {
-            additional_fee: fee - min_fee,
-            min_fee,
-        })
-    })
+    result
 }
 
 fn execute_user_action(

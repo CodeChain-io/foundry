@@ -20,7 +20,7 @@ extern crate serde_derive;
 extern crate lazy_static;
 
 use coordinator::context::{ChainHistoryAccess, SubStateHistoryAccess, SubStorageAccess};
-use imported::{AccountManager, AccountView, FeeManager};
+use imported::{AccountManager, AccountView};
 
 mod check;
 mod core;
@@ -60,10 +60,6 @@ pub fn account_manager() -> Box<dyn AccountManager> {
 }
 
 pub fn account_viewer() -> Box<dyn AccountView> {
-    unimplemented!()
-}
-
-pub fn fee_manager() -> Box<dyn FeeManager> {
     unimplemented!()
 }
 

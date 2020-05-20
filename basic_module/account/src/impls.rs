@@ -16,7 +16,6 @@
 
 use super::core::*;
 use crate::error::Error;
-use crate::import::fee_manager;
 use crate::internal::{
     add_balance as add_balance_internalliy, get_account, get_balance as get_balance_internally,
     get_sequence as get_sequence_internally, sub_balance as sub_balance_internalliy,
@@ -51,26 +50,18 @@ pub struct Executor {}
 
 impl TransactionExecutor for Executor {
     fn execute_transactions(&self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionExecutionOutcome>, ()> {
-        let mut total_additional_fee: u64 = 0;
-        let mut total_min_fee: u64 = 0;
-
         for signed_tx in transactions {
             let Action::Pay {
                 sender,
                 receiver,
                 quantity,
             } = signed_tx.tx.action;
-            total_additional_fee += signed_tx.tx.fee - signed_tx.tx.action.min_fee();
-            total_min_fee += signed_tx.tx.action.min_fee();
 
             if !check(signed_tx) || sub_balance_internalliy(&receiver, quantity).is_err() {
                 return Err(())
             }
             add_balance_internalliy(&sender, signed_tx.tx.fee + quantity);
         }
-
-        let fee_manager = fee_manager();
-        fee_manager.accumulate_block_fee(total_additional_fee, total_min_fee);
 
         Ok(vec![])
     }
