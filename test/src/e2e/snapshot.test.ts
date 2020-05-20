@@ -29,7 +29,7 @@ describe("Snapshot", async function() {
         await node.start();
     });
 
-    it("can make a snapshot when it is requsted with devel rpc", async function() {
+    it("can make a snapshot when it is requested with devel rpc", async function() {
         const pay = await node.sendPayTx({
             quantity: 100,
             recipient: aliceAddress
