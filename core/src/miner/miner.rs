@@ -43,7 +43,7 @@ use std::iter::FromIterator;
 use std::ops::Range;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 /// Configures the behaviour of the miner.
 #[derive(Debug, PartialEq)]
@@ -515,6 +515,14 @@ impl MinerService for Miner {
                 return
             }
         };
+
+        if std::env::var("RUN_ON_TEST").is_ok() {
+            let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("There is no time machine.").as_secs();
+            if block.header().timestamp() > now {
+                let delta = block.header().timestamp() - now;
+                std::thread::sleep(std::time::Duration::from_secs(delta));
+            }
+        }
 
         if self.engine.seals_internally() {
             ctrace!(MINER, "update_sealing: engine indicates internal sealing");

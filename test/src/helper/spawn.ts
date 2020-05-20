@@ -265,6 +265,7 @@ export default class CodeChain {
                 {
                     cwd: projectRoot,
                     env: {
+                        RUN_ON_TEST: "1",
                         ...process.env,
                         ...this.env
                     }

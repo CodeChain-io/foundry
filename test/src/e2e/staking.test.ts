@@ -861,7 +861,7 @@ describe("Staking", function() {
             address: validator1Address.toString()
         }))!;
         expect(validator1Balance).to.be.deep.equal(oldValidator1Balance);
-    });
+    }).timeout(60_000);
 
     afterEach(async function() {
         if (this.currentTest!.state === "failed") {
