@@ -21,12 +21,11 @@ use crate::core::{
 };
 use crate::error::Error;
 use crate::execute::{apply_internal, execute_auto_action};
-use crate::fee_manager;
 use crate::state::{get_stakes, Banned, CurrentValidators, Metadata, Params};
 use crate::transactions::{
     create_close_block_transactions, create_open_block_transactions, SignedTransaction, Transaction,
 };
-use crate::types::{Header, Public, ResultantFee, Tiebreaker, Validator};
+use crate::types::{Header, Public, Tiebreaker, Validator};
 use std::cell::RefCell;
 use std::collections::HashMap;
 
@@ -72,24 +71,12 @@ impl Abci for ABCIHandle {
                 }),
                 Transaction::Auto(auto_action) => {
                     execute_auto_action(auto_action, self.executing_block_header.borrow().number())
-                        .map(|execution_result| (execution_result, Default::default()))
                         .map_err(Error::Runtime)
                 }
             })
             .collect();
-
-        // failed block does not accumulate fee and rejected
-        results
-            .map(|results| {
-                let (outcomes, fees): (_, Vec<_>) = results.into_iter().unzip();
-                let ResultantFee {
-                    additional_fee: total_additional_fee,
-                    min_fee: total_min_fee,
-                } = fees.into_iter().fold(ResultantFee::default(), |fee_acc, fee| fee_acc + fee);
-                fee_manager().accumulate_block_fee(total_additional_fee, total_min_fee);
-                outcomes
-            })
-            .map_err(|_| ())
+        // TODO: handle errors
+        results.map_err(|_| ())
     }
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), i64> {
