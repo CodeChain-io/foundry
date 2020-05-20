@@ -44,27 +44,25 @@ interface ValidatorConfig {
     autoSelfNominate?: boolean;
 }
 
-interface NodePropertyModifier<T> {
+interface NodePropertyModifier {
     additionalArgv: string[];
-    nodeAdditionalProperties: T;
 }
 
-export function withNodes<T>(
+export function withNodes(
     suite: Suite,
     options: {
         promiseExpect: PromiseExpect;
         validators: ValidatorConfig[];
         overrideParams?: Partial<CommonParams>;
         onBeforeEnable?: (nodes: CodeChain[]) => Promise<void>;
-        modify?: (signer: Signer, index: number) => NodePropertyModifier<T>;
+        modify?: (signer: Signer, index: number) => NodePropertyModifier;
     }
 ) {
-    const nodes: (CodeChain & T)[] = [];
+    const nodes: CodeChain[] = [];
     const {
         overrideParams = {},
         modify = () => ({
-            additionalArgv: [],
-            nodeAdditionalProperties: {} as T
+            additionalArgv: []
         })
     } = options;
     const initialParams = {
@@ -110,13 +108,13 @@ export function findNode(nodes: CodeChain[], signer: Signer) {
     );
 }
 
-async function createNodes<T>(options: {
+async function createNodes(options: {
     promiseExpect: PromiseExpect;
     validators: ValidatorConfig[];
     initialParams: CommonParams;
     onBeforeEnable?: (nodes: CodeChain[]) => Promise<void>;
-    modify: (signer: Signer, index: number) => NodePropertyModifier<T>;
-}): Promise<(CodeChain & T)[]> {
+    modify: (signer: Signer, index: number) => NodePropertyModifier;
+}): Promise<CodeChain[]> {
     const chain = `${__dirname}/../scheme/tendermint-dynval.json`;
     const { promiseExpect, validators, initialParams, modify } = options;
 
@@ -140,7 +138,7 @@ async function createNodes<T>(options: {
         });
     }
 
-    const nodes: (CodeChain & T)[] = [];
+    const nodes: CodeChain[] = [];
     for (let i = 0; i < validators.length; i++) {
         const { signer: validator } = validators[i];
         const argv = [
@@ -167,7 +165,7 @@ async function createNodes<T>(options: {
             argv: [...argv, ...modifier.additionalArgv],
             additionalKeysPath: `tendermint.dynval/${validator.address.value}/keys`
         });
-        nodes[i] = Object.assign(node, modifier.nodeAdditionalProperties);
+        nodes[i] = node;
         nodes[i].signer = validator;
     }
     let bootstrapFailed = false;

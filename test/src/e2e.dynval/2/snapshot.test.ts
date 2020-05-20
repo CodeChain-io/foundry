@@ -22,7 +22,6 @@ import * as fs from "fs";
 import "mocha";
 import * as path from "path";
 import * as stake from "../../stakeholder";
-import * as mkdirp from "mkdirp";
 import { validators } from "../../../tendermint.dynval/constants";
 import { faucetAddress, faucetSecret } from "../../helper/constants";
 import { PromiseExpect } from "../../helper/promise";
@@ -33,7 +32,6 @@ import { H256 } from "../../primitives/src";
 chai.use(chaiAsPromised);
 
 const SNAPSHOT_CONFIG = `${__dirname}/../../../tendermint.dynval/snapshot-config.yml`;
-const SNAPSHOT_PATH = `${__dirname}/../../../../snapshot/`;
 
 describe("Snapshot for Tendermint with Dynamic Validator", function() {
     const promiseExpect = new PromiseExpect();
@@ -50,18 +48,8 @@ describe("Snapshot for Tendermint with Dynamic Validator", function() {
             deposit: 10_000_000 - index // tie-breaker
         })),
         modify: () => {
-            mkdirp.sync(SNAPSHOT_PATH);
-            const snapshotPath = fs.mkdtempSync(SNAPSHOT_PATH);
             return {
-                additionalArgv: [
-                    "--snapshot-path",
-                    snapshotPath,
-                    "--config",
-                    SNAPSHOT_CONFIG
-                ],
-                nodeAdditionalProperties: {
-                    snapshotPath
-                }
+                additionalArgv: ["--config", SNAPSHOT_CONFIG]
             };
         }
     });
@@ -94,7 +82,6 @@ describe("Snapshot for Tendermint with Dynamic Validator", function() {
         });
         const snapshotBlock = await getSnapshotBlock(nodes[0], termMetadata1);
         await makeItValidator(nodes[0], freshNodeValidator);
-        const snapshotPath = fs.mkdtempSync(SNAPSHOT_PATH);
         const node = new CodeChain({
             chain: `${__dirname}/../../scheme/tendermint-dynval.json`,
             argv: [
@@ -103,8 +90,6 @@ describe("Snapshot for Tendermint with Dynamic Validator", function() {
                 "--password-path",
                 `test/tendermint.dynval/${freshNodeValidator.address.value}/password.json`,
                 "--force-sealing",
-                "--snapshot-path",
-                snapshotPath,
                 "--config",
                 SNAPSHOT_CONFIG,
                 "--snapshot-hash",
