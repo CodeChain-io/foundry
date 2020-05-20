@@ -27,8 +27,6 @@ pub struct ConsensusParams {
     network_id: NetworkId,
     /// Maximum size of block body.
     max_body_size: usize,
-    /// Maximum gas per block
-    max_gas_total: usize,
     /// Snapshot creation period in unit of block numbers.
     snapshot_period: u64,
 
@@ -45,9 +43,6 @@ impl ConsensusParams {
     pub fn max_body_size(&self) -> usize {
         self.max_body_size
     }
-    pub fn max_gas_total(&self) -> usize {
-        self.max_gas_total
-    }
     pub fn snapshot_period(&self) -> u64 {
         self.snapshot_period
     }
@@ -60,7 +55,6 @@ impl ConsensusParams {
             max_extra_data_size: 1000,
             network_id: NetworkId::from_str("dt").unwrap(),
             max_body_size: 1000,
-            max_gas_total: 1000,
             snapshot_period: 1000,
             term_seconds: 1000,
         }
@@ -69,11 +63,10 @@ impl ConsensusParams {
 
 impl Encodable for ConsensusParams {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(6)
+        s.begin_list(5)
             .append(&self.max_extra_data_size)
             .append(&self.network_id)
             .append(&self.max_body_size)
-            .append(&self.max_gas_total)
             .append(&self.snapshot_period)
             .append(&self.term_seconds);
     }
@@ -82,9 +75,9 @@ impl Encodable for ConsensusParams {
 impl Decodable for ConsensusParams {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let size = rlp.item_count()?;
-        if size != 6 {
+        if size != 5 {
             return Err(DecoderError::RlpIncorrectListLen {
-                expected: 6,
+                expected: 5,
                 got: size,
             })
         }
@@ -92,15 +85,13 @@ impl Decodable for ConsensusParams {
         let max_extra_data_size = rlp.val_at(0)?;
         let network_id = rlp.val_at(1)?;
         let max_body_size = rlp.val_at(2)?;
-        let max_gas_total = rlp.val_at(3)?;
-        let snapshot_period = rlp.val_at(4)?;
-        let term_seconds = rlp.val_at(5)?;
+        let snapshot_period = rlp.val_at(3)?;
+        let term_seconds = rlp.val_at(4)?;
 
         Ok(Self {
             max_extra_data_size,
             network_id,
             max_body_size,
-            max_gas_total,
             snapshot_period,
             term_seconds,
         })
@@ -113,7 +104,6 @@ impl From<Params> for ConsensusParams {
             max_extra_data_size: p.max_extra_data_size.into(),
             network_id: p.network_id,
             max_body_size: p.max_body_size.into(),
-            max_gas_total: usize::max_value(), // TODO: add a parameter to scheme
             snapshot_period: p.snapshot_period.into(),
             term_seconds: p.term_seconds.into(),
         }
