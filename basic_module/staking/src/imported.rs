@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::types::{Public, Signature};
+use crate::types::Public;
 
 pub trait AccountManager {
     fn add_balance(&self, public: &Public, val: u64);
@@ -27,8 +27,4 @@ pub trait AccountView {
     fn is_active(&self, public: &Public) -> bool;
     fn get_balance(&self, public: &Public) -> u64;
     fn get_sequence(&self, public: &Public) -> u64;
-}
-
-pub trait SignatureManager {
-    fn verify(&self, signature: &Signature, message: &[u8], public: &Public) -> bool;
 }
