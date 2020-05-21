@@ -9,7 +9,7 @@ use thiserror::Error;
 use crate::link::Linkable;
 use once_cell::sync;
 
-type Result<'a, T> = std::result::Result<T, Error<'a>>;
+pub type Result<'a, T> = std::result::Result<T, Error<'a>>;
 
 #[distributed_slice]
 pub static SANDBOXERS: [fn() -> Arc<dyn Sandboxer>] = [..];
