@@ -21,6 +21,7 @@ extern crate lazy_static;
 
 use coordinator::context::{ChainHistoryAccess, SubStateHistoryAccess, SubStorageAccess};
 use imported::{AccountManager, AccountView};
+pub use state::init_stake;
 
 mod check;
 mod core;

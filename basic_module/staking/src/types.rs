@@ -39,7 +39,7 @@ impl Default for NetworkId {
     }
 }
 
-#[derive(Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Eq, Default, Ord, PartialEq, PartialOrd, Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct Tiebreaker {
     pub nominated_at_block_number: BlockNumber,
     // User transaction index in a block
