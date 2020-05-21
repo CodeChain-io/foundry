@@ -1,0 +1,14 @@
+doc: a generic account module
+
+bootstrap:
+  code-chain.account.bootstrap
+
+schema: |
+  type Test {
+  }
+
+imports:
+  account:
+    code-chain.account.account
+  store:
+    host.substore
