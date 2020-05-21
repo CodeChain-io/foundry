@@ -17,7 +17,7 @@
 use crate::error::{Insufficient, Mismatch};
 use crate::runtime_error::Error;
 use crate::types::{Candidate, DepositQuantity, Prisoner, ReleaseResult, StakeQuantity, Tiebreaker, Validator};
-use crate::{deserialize, serialize, state_history_manager, substorage};
+use crate::{account_viewer, deserialize, serialize, state_history_manager, substorage};
 use fkey::Ed25519Public as Public;
 use ftypes::BlockId;
 use primitives::Bytes;
@@ -41,6 +41,78 @@ const NEXT_VALIDATORS_KEY: &[u8; 14] = b"NextValidators";
 const CURRENT_VALIDATORS_KEY: &[u8; 17] = b"CurrentValidators";
 const JAIL_KEY: &[u8; 4] = b"Jail";
 const BANNED_KEY: &[u8; 6] = b"Banned";
+
+// The initialization process should be executed after the account module is initialized
+// because candidates require the corresponding accounts' balance
+#[allow(dead_code)]
+pub fn init_stake(
+    genesis_stakes: HashMap<Public, u64>,
+    genesis_candidates: HashMap<Public, Candidate>,
+    genesis_delegations: HashMap<Public, HashMap<Public, u64>>,
+) -> Result<(), Error> {
+    let mut genesis_stakes = genesis_stakes;
+    for (delegator, delegation) in &genesis_delegations {
+        let stake = genesis_stakes.entry(*delegator).or_default();
+        let total_delegation = delegation.values().sum();
+        if *stake < total_delegation {
+            return Err(Error::InsufficientStakes(Insufficient {
+                required: total_delegation,
+                actual: *stake,
+            }))
+        }
+        for delegatee in delegation.keys() {
+            if !genesis_candidates.contains_key(delegatee) {
+                return Err(Error::DelegateeNotFoundInCandidates(*delegatee))
+            }
+        }
+        *stake -= total_delegation;
+    }
+
+    let mut stakeholders = Stakeholders::load();
+    for (public, amount) in &genesis_stakes {
+        let account = StakeAccount {
+            public,
+            balance: *amount,
+        };
+        stakeholders.update_by_increased_balance(&account);
+        account.save();
+    }
+    stakeholders.save();
+
+    for (pubkey, candidate) in &genesis_candidates {
+        let balance: u64 = account_viewer().get_balance(pubkey);
+        if balance < candidate.deposit {
+            return Err(Error::InsufficientBalance(Insufficient {
+                actual: balance,
+                required: candidate.deposit,
+            }))
+        }
+    }
+
+    let mut candidates = Candidates::default();
+    {
+        for candidate in genesis_candidates.values() {
+            candidates.add_deposit(
+                &candidate.pubkey,
+                candidate.deposit,
+                candidate.nomination_ends_at,
+                candidate.metadata.clone(),
+                Default::default(),
+            );
+        }
+    }
+    candidates.save();
+
+    for (delegator, delegations) in &genesis_delegations {
+        let mut delegation = Delegation::load(&delegator);
+        for (delegatee, amount) in delegations {
+            delegation.add_quantity(*delegatee, *amount)?;
+        }
+        delegation.save();
+    }
+
+    Ok(())
+}
 
 fn prefix_public_key(prefix: &[u8], key: &Public) -> Vec<u8> {
     [prefix, key.as_ref()].concat()
