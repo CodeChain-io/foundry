@@ -1,0 +1,32 @@
+#@ load("defs.star", "name", "qname")
+#@ schemaName = "^[_A-Za-z][_0-9A-Za-z]*$"
+
+#@yaml/text-templated-strings
+---
+$schema: http://json-schema.org/draft-07/schema
+
+doc:
+  type: string
+
+#! Bootstrap service:
+#! A method named init is to be invoked for initialization of this module.
+#! Others are constructors to be mentioned in the exports in app descriptors.
+bootstrap:
+  $ref: defs.json#/qname
+
+#! GraphQL schema intended for use with Apollo federation
+schema:
+  type: string
+
+imports:
+  type: object
+  patternProperties:
+    (@= name @):
+      oneOf:
+        - $ref: defs.json#/qname #! represents single service object
+        - type: array #! represents 1+ service objects, though we write [service.type]
+          items:
+            $ref: defs.json#/qname
+          minItems: 0
+          maxItems: 1
+  additionalProperties: false
