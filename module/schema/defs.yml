@@ -1,0 +1,70 @@
+#@ load("defs.star", "name", "qname")
+
+#@yaml/text-templated-strings
+---
+$schema: http://json-schema.org/draft-07/schema
+
+name:
+  $id: '#name'
+  type: string
+  pattern: (@= name @)
+qname:
+  $id: '#qname'
+  type: string
+  pattern: (@= qname @)
+primitive:
+  $id: '#primitive'
+  enum:
+    - bool
+    - i8
+    - i16
+    - i32
+    - i64
+    - u8
+    - u16
+    - u32
+    - u64
+    - string
+ref:
+  $id: '#ref'
+  oneOf:
+    - $ref: '#name'
+    - $ref: '#qname'
+refs:
+  $id: '#refs'
+  oneOf:
+    - $ref: '#ref'
+    - type: array
+      items:
+        $ref: '#ref'
+type:
+  $id: '#type'
+  type: string
+  oneOf:
+    - $ref: '#primitive'
+    - $ref: '#ref'
+
+mapValue:
+  $id: '#mapValue'
+  type: object
+  patternProperties:
+    (@= name @):
+      $ref: '#value'
+  additionalProperties: false
+
+value:
+  $id: '#value'
+  oneOf:
+    - $ref: '#simpleValue'
+    - type: array
+      items:
+        $ref: '#mapValue'
+    - $ref: '#mapValue'
+    - type: null
+
+simpleValue:
+  $id: '#simpleValue'
+  oneOf:
+    - type: integer
+    - type: boolean
+    - type: string

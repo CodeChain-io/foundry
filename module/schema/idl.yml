@@ -1,7 +1,5 @@
-#@ ident = "([_a-z]+|[_A-Z]+)(-([_a-z0-9]+|[_A-Z0-9]+))*"
-#@ name = "^{}$".format(ident)
-#@ qname = "^{id}(:{id})+$".format(id=ident)
-#@ moduleName = "^:{}$".format(ident)
+#@ load("defs.star", "ident", "name")
+#@ namespace = "^/{}$".format(ident)
 
 #@yaml/text-templated-strings
 ---
@@ -10,39 +8,6 @@ $schema: http://json-schema.org/draft-07/schema
 $ref: '#module'
 
 definitions:
-  name:
-    $id: '#name'
-    type: string
-    pattern: (@= name @)
-  qname:
-    $id: '#qname'
-    type: string
-    pattern: (@= qname @)
-  primitive:
-    $id: '#primitive'
-    enum:
-      - bool
-      - i8
-      - i16
-      - i32
-      - i64
-      - u8
-      - u16
-      - u32
-      - u64
-      - string
-      - nil
-  userDefined:
-    $id: '#userDefined'
-    oneOf:
-      - $ref: '#name'
-      - $ref: '#qname'
-  type:
-    $id: '#type'
-    type: string
-    oneOf:
-      - $ref: '#primitive'
-      - $ref: '#userDefined'
   module:
     $id: '#module'
     type: object
@@ -56,7 +21,7 @@ definitions:
           - $ref: '#tuple'
           - $ref: '#map'
           - $ref: '#service'
-      (@= moduleName @):
+      (@= namespace @):
         $ref: '#module'
       additionalProperties: false
   struct:
@@ -72,9 +37,9 @@ definitions:
           type: object
           properties:
             name:
-              $ref: '#name'
+              $ref: defs.json#/name
             type:
-              $ref: '#type'
+              $ref: defs.json#/type
           required: [name, type]
           additionalProperties: false
       required: [type, fields]
@@ -91,23 +56,25 @@ definitions:
         oneOf:
           - type: array
             items:
-              $ref: '#name'
+              $ref: defs.json#/name
           - type: object
             patternProperties:
               (@= name @):
-                $ref: '#type'
+                oneOf:
+                  - $ref: defs.json#/type
+                  - const: '-'    #! when there is nothing associated with a variant
     required: [type, variants]
     additionalProperties: false
   list:
     $id: '#list'
     type: object
     properties:
-      doc:
+      doc:moduleName
         type: string
       type:
         const: list
       items:
-        $ref: '#type'
+        $ref: defs.json#/type
     required: [type, items]
     additionalProperties: false
   array:
@@ -119,7 +86,7 @@ definitions:
       type:
         const: array
       items:
-        $ref: '#type'
+        $ref: defs.json#/type
       size:
         type: integer
         minimum: 0
@@ -134,7 +101,7 @@ definitions:
       type:
         const: tuple
       items:
-        $ref: '#type'
+        $ref: defs.json#/type
     required: [type, items]
     additionalProperties: false
   map:
@@ -146,18 +113,9 @@ definitions:
       type:
         const: tuple
       keys:
-        enum: 
-          - i8,
-          - i16
-          - i32
-          - i64
-          - u8
-          - u16
-          - u32
-          - u64
-          - string
+        $ref: defs.json#/primitive
       values:
-        $ref: '#type'
+        $ref: defs.json#/type'
       required: [type, keys, values]
   service:
     type: object
@@ -165,7 +123,7 @@ definitions:
       extends:
         type: array
         items:
-          $ref: '#userDefined'
+          $ref: defs.json#/ref
       methods:
         type: object
         patternProperties:
@@ -176,14 +134,14 @@ definitions:
                 (@= name @):
                   type: array
                   items:
-                    - $ref: '#name'
-                    - $ref: '#type'
+                    - $ref: defs.json#/name
+                    - $ref: defs.json#/type
               returns:
-                $ref: '#type'
+                $ref: defs.json#/type
               throws:
-                $ref: '#type'
+                $ref: defs.json#/type
               overloaded:
-                $ref: '#name'
+                $ref: defs.json#/name
             additionalProperties: false
       required: [methods]
       additionalProperties: false
