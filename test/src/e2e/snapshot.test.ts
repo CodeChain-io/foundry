@@ -22,18 +22,14 @@ import * as path from "path";
 import { aliceAddress } from "../helper/constants";
 import CodeChain from "../helper/spawn";
 
-const SNAPSHOT_PATH = `${__dirname}/../../../snapshot/`;
-
 describe("Snapshot", async function() {
     let node: CodeChain;
     before(async function() {
-        node = new CodeChain({
-            argv: ["--snapshot-path", SNAPSHOT_PATH]
-        });
+        node = new CodeChain();
         await node.start();
     });
 
-    it("can make a snapshot when it is requsted with devel rpc", async function() {
+    it("can make a snapshot when it is requested with devel rpc", async function() {
         const pay = await node.sendPayTx({
             quantity: 100,
             recipient: aliceAddress
@@ -50,7 +46,11 @@ describe("Snapshot", async function() {
             blockHash
         }))!.stateRoot;
         expect(
-            path.join(SNAPSHOT_PATH, blockHash.substr(2), stateRoot.substr(2))
+            path.join(
+                node.snapshotPath,
+                blockHash.substr(2),
+                stateRoot.substr(2)
+            )
         ).to.satisfies(fs.existsSync);
     });
 

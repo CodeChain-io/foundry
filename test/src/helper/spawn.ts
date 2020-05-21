@@ -72,6 +72,7 @@ export default class CodeChain {
     private readonly _testFramework: SDK;
     private readonly _localKeyStorePath: string;
     private readonly _dbPath: string;
+    private readonly _snapshotPath: string;
     private readonly _ipcPath: string;
     private readonly _keysPath: string;
     private readonly _logFile: string;
@@ -110,6 +111,9 @@ export default class CodeChain {
     }
     public get dbPath(): string {
         return this._dbPath;
+    }
+    public get snapshotPath(): string {
+        return this._snapshotPath;
     }
     public get ipcPath(): string {
         return this._ipcPath;
@@ -164,7 +168,9 @@ export default class CodeChain {
         mkdirp.sync(`${projectRoot}/db/`);
         mkdirp.sync(`${projectRoot}/keys/`);
         mkdirp.sync(`${projectRoot}/test/log/`);
+        mkdirp.sync(`${projectRoot}/snapshot/`);
         this._dbPath = mkdtempSync(`${projectRoot}/db/`);
+        this._snapshotPath = mkdtempSync(`${projectRoot}/db/`);
         this._ipcPath = `/tmp/jsonrpc.${new Date()
             .toISOString()
             .replace(/[-:.]/g, "_")}.${this.id}.ipc`;
@@ -244,6 +250,8 @@ export default class CodeChain {
                     this.chain,
                     "--db-path",
                     this.dbPath,
+                    "--snapshot-path",
+                    this.snapshotPath,
                     "--keys-path",
                     this.keysPath,
                     "--no-ws",
@@ -257,6 +265,7 @@ export default class CodeChain {
                 {
                     cwd: projectRoot,
                     env: {
+                        RUN_ON_TEST: "1",
                         ...process.env,
                         ...this.env
                     }
