@@ -1,0 +1,53 @@
+modules:
+  ac0d0d050d0d0ddac0d0d0a0d0d0c534:
+    name: account
+    init: {}
+  bd011d070d0d0d3ac0d0d010d0d0d224:
+    name: name-service
+    init:
+      max-entries: 10
+      number-of-threads: {number-of-threads}
+  babc011d070d0d0d3ac0d0d010d0d412:
+    name: orderer
+    init: {}
+
+exports:
+  account:
+    name-server-account:
+      new-account: {}
+    /tx:
+      executor:
+        executor: {}
+      order:
+        order: {}
+  name-service:
+    service:
+      service: {}
+  orderer:
+    orderer:
+      orderer: {}
+
+imports:
+  name-service:
+    account: account.name-server-account
+    store: host.account-store
+
+host:
+  services:
+    account-store:
+      new-store:
+        id: account
+  bindings:
+    orderer: orderer.orderer
+
+transactions:
+  fundamental.account:
+    owner: account
+    services:
+      - tx
+      - tx.order
+
+params:
+  number-of-threads:
+    type: int
+    default: 8
