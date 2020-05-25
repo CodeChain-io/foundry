@@ -71,28 +71,28 @@ impl TransactionExecutor for Executor {
 pub struct Manager {}
 
 impl AccountManager for Manager {
-    fn add_balance(&self, address: &Public, val: u64) {
-        add_balance_internalliy(address, val)
+    fn add_balance(&self, account_id: &Public, val: u64) {
+        add_balance_internalliy(account_id, val)
     }
 
-    fn sub_balance(&self, address: &Public, val: u64) -> Result<(), Error> {
-        sub_balance_internalliy(address, val)
+    fn sub_balance(&self, account_id: &Public, val: u64) -> Result<(), Error> {
+        sub_balance_internalliy(account_id, val)
     }
 
-    fn set_balance(&self, address: &Public, val: u64) {
+    fn set_balance(&self, account_id: &Public, val: u64) {
         let context = get_context();
-        let mut account = get_account(address);
+        let mut account = get_account(account_id);
 
         account.balance = val;
-        context.set(address, account.to_vec());
+        context.set(account_id, account.to_vec());
     }
 
-    fn increment_sequence(&self, address: &Public) {
+    fn increment_sequence(&self, account_id: &Public) {
         let context = get_context();
-        let mut account = get_account(address);
+        let mut account = get_account(account_id);
 
         account.sequence += 1;
-        context.set(address, account.to_vec());
+        context.set(account_id, account.to_vec());
     }
 }
 
@@ -100,15 +100,15 @@ impl AccountManager for Manager {
 pub struct View {}
 
 impl AccountView for View {
-    fn is_active(&self, address: &Public) -> bool {
-        get_balance_internally(address) != 0 || get_sequence_internally(address) != 0
+    fn is_active(&self, account_id: &Public) -> bool {
+        get_balance_internally(account_id) != 0 || get_sequence_internally(account_id) != 0
     }
 
-    fn get_balance(&self, address: &Public) -> u64 {
-        get_balance_internally(address)
+    fn get_balance(&self, account_id: &Public) -> u64 {
+        get_balance_internally(account_id)
     }
 
-    fn get_sequence(&self, address: &Public) -> u64 {
-        get_sequence_internally(address)
+    fn get_sequence(&self, account_id: &Public) -> u64 {
+        get_sequence_internally(account_id)
     }
 }

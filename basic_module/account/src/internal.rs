@@ -20,42 +20,42 @@ use crate::types::Account;
 use ckey::Ed25519Public as Public;
 
 #[allow(dead_code)]
-pub fn add_balance(address: &Public, val: u64) {
+pub fn add_balance(account_id: &Public, val: u64) {
     if val == 0 {
         return
     }
 
     let context = get_context();
-    let mut account: Account = get_account(address);
+    let mut account: Account = get_account(account_id);
 
     account.balance += val;
-    context.set(address, account.to_vec());
+    context.set(account_id, account.to_vec());
 }
 
 #[allow(dead_code)]
-pub fn sub_balance(address: &Public, val: u64) -> Result<(), Error> {
+pub fn sub_balance(account_id: &Public, val: u64) -> Result<(), Error> {
     let context = get_context();
-    let mut account: Account = get_account(address);
+    let mut account: Account = get_account(account_id);
 
     if account.balance < val {
         return Err(Error::InvalidValue(account.balance, val))
     }
 
     account.balance -= val;
-    context.set(address, account.to_vec());
+    context.set(account_id, account.to_vec());
     Ok(())
 }
 
 #[allow(dead_code)]
-pub fn get_sequence(address: &Public) -> u64 {
-    get_account(address).sequence
+pub fn get_sequence(account_id: &Public) -> u64 {
+    get_account(account_id).sequence
 }
 
 #[allow(dead_code)]
-pub fn get_balance(address: &Public) -> u64 {
-    get_account(address).balance
+pub fn get_balance(account_id: &Public) -> u64 {
+    get_account(account_id).balance
 }
 
-pub fn get_account(address: &Public) -> Account {
-    get_context().get(address).map(|account| account.into()).unwrap_or_default()
+pub fn get_account(account_id: &Public) -> Account {
+    get_context().get(account_id).map(|account| account.into()).unwrap_or_default()
 }

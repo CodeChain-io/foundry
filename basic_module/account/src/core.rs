@@ -29,19 +29,19 @@ pub trait TransactionExecutor {
 }
 
 pub trait AccountManager {
-    fn add_balance(&self, address: &Public, val: u64);
+    fn add_balance(&self, account_id: &Public, val: u64);
 
-    fn sub_balance(&self, address: &Public, val: u64) -> Result<(), Error>;
+    fn sub_balance(&self, account_id: &Public, val: u64) -> Result<(), Error>;
 
-    fn set_balance(&self, address: &Public, val: u64);
+    fn set_balance(&self, account_id: &Public, val: u64);
 
-    fn increment_sequence(&self, address: &Public);
+    fn increment_sequence(&self, account_id: &Public);
 }
 
 pub trait AccountView {
-    fn is_active(&self, address: &Public) -> bool;
+    fn is_active(&self, account_id: &Public) -> bool;
 
-    fn get_balance(&self, address: &Public) -> u64;
+    fn get_balance(&self, account_id: &Public) -> u64;
 
-    fn get_sequence(&self, address: &Public) -> u64;
+    fn get_sequence(&self, account_id: &Public) -> u64;
 }
