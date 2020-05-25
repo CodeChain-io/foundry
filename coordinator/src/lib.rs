@@ -38,7 +38,7 @@ use ctypes::{CompactValidatorSet, ConsensusParams};
 pub struct Coordinator {}
 
 impl Initializer for Coordinator {
-    fn initialize_chain(&self, _app_state: String) -> (CompactValidatorSet, ConsensusParams) {
+    fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams) {
         unimplemented!()
     }
 }
