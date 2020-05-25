@@ -80,10 +80,12 @@ pub trait Port: CastFromSync {
     /// Returns the [`Receiver`] for placing messages into the [`Linkable`] this `Port` is
     /// created from. This method is used to implement the base link, which is required
     /// for the minimum interoperability among [`Linkable`]s.
+    /// This method should be called exactly once for the [`link`]. Otherwise, it will return `None`.
     ///
+    /// [`link`]: #tymethod.link
     /// [`Receiver`]: ./trait.Receiver.html
     /// [`Linkable`]: ./trait.Linkable.html
-    fn receiver(&self) -> Arc<dyn Receiver>;
+    fn receiver(&self) -> Option<Box<dyn Receiver>>;
 
     /// Links with another [`Linkable`] by passing in a [`Receiver`] taken from the [`Linkable`]
     /// in the opposite side.
@@ -95,7 +97,7 @@ pub trait Port: CastFromSync {
     /// [`Linkable`]: ./trait.Linkable.html
     /// [`export`]: #tymethod.export
     /// [`import`]: #tymethod.import
-    fn link(&mut self, receiver: Arc<dyn Receiver>);
+    fn link(&mut self, receiver: Box<dyn Receiver>);
 }
 
 /// An endpoint implemented by a [`Linkable`] for receiving incoming calls
