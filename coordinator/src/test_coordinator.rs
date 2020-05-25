@@ -45,7 +45,7 @@ impl Default for TestCoordinator {
 }
 
 impl Initializer for TestCoordinator {
-    fn initialize_chain(&self, _app_state: String) -> (CompactValidatorSet, ConsensusParams) {
+    fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams) {
         (self.validator_set.clone(), self.consensus_params)
     }
 }
