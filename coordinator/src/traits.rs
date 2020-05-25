@@ -19,7 +19,7 @@ use super::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 
 pub trait Initializer: Send + Sync {
-    fn initialize_chain(&self, app_state: String) -> (CompactValidatorSet, ConsensusParams);
+    fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams);
 }
 pub trait BlockExecutor: Send + Sync {
     fn open_block(

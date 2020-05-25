@@ -34,7 +34,7 @@ pub mod types;
 pub struct Coordinator {}
 
 impl Initializer for Coordinator {
-    fn initialize_chain(&self, app_state: String) -> (CompactValidatorSet, ConsensusParams) {
+    fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams) {
         unimplemented!()
     }
 }
