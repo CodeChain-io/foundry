@@ -102,7 +102,7 @@ pub trait Port: CastFromSync {
 /// from another [`Linkable`].
 ///
 /// [`Linkable`]: ./trait.Linkable.html
-pub trait Receiver {
+pub trait Receiver: Send {
     /// Places the given message (`[u8]`) and returns immediately.
     /// The `message` is typed `Box<dyn AsRef<[u8]>>` to allow for zero copy sending
     /// as much as possible. The intention is to wrap various types as they are if they
