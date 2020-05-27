@@ -57,7 +57,7 @@ cbasesandbox = {package = "codechain-basesandbox", path = "basesandbox"}
 module_account = {path = "basic_module/account"}
 
 [build-dependencies]
-vergen = "2"
+vergen = "3"
 
 [[bin]]
 path = "foundry/main.rs"
