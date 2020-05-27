@@ -8,10 +8,20 @@ name:
   $id: '#name'
   type: string
   pattern: (@= name @)
+
 qname:
   $id: '#qname'
   type: string
   pattern: (@= qname @)
+
+tags:
+  $id: '#tags'
+  type: object
+  patternProperties:
+    (@= name @):
+      $ref: '#value'
+  additionalProperties: false
+
 primitive:
   $id: '#primitive'
   enum:
@@ -60,7 +70,7 @@ value:
       items:
         $ref: '#mapValue'
     - $ref: '#mapValue'
-    - type: null
+    - type: 'null'
 
 simpleValue:
   $id: '#simpleValue'
