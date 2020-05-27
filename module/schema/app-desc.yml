@@ -20,6 +20,8 @@ properties:
           init:
             #! the map corresponds to the parameters to the init method as if we used named parameter syntax
             $ref: defs.json#/mapValue
+          tags:
+            $ref: defs.json#/tags
         required:
           - name
         additionalProperties: false
