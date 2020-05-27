@@ -56,9 +56,6 @@ pub struct Scheme {
 
     /// May be prepopulated if we know this in advance.
     state_root_memo: RwLock<H256>,
-
-    /// Application initial state
-    pub app_state: String,
 }
 
 // helper for formatting errors.
@@ -173,8 +170,6 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
         extra_data: g.extra_data,
         seal_rlp,
         state_root_memo: RwLock::new(Default::default()), // will be overwritten right after.
-
-        app_state: s.app_state,
     };
 
     // use memoized state root if provided.

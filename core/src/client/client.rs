@@ -95,7 +95,7 @@ impl Client {
             return Err(SchemeError::InvalidState.into())
         }
         if state_db.is_empty() {
-            let (validators, consensus_params) = coordinator.initialize_chain(scheme.app_state.clone());
+            let (validators, consensus_params) = coordinator.initialize_chain();
             state_db = Self::initialize_state(state_db, consensus_params, validators)?;
             let mut batch = DBTransaction::new();
             state_db.journal_under(&mut batch, 0, *scheme.genesis_header().hash())?;
