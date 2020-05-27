@@ -32,9 +32,6 @@ pub struct Scheme {
     pub params: Params,
     /// Genesis header.
     pub genesis: Genesis,
-
-    // Application initial state
-    pub app_state: String,
     /// Boot nodes.
     pub nodes: Option<Vec<String>>,
 }
