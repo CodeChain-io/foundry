@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::password_entry::PasswordEntry;
+use serde::{Deserialize, Serialize};
 use std::io::Read;
 
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
