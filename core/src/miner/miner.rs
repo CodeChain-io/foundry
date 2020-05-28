@@ -292,7 +292,8 @@ impl Miner {
             })
             .collect();
 
-        let fetch_account = fetch_account_creator(client);
+        let block_id = BlockId::Hash(best_header.hash());
+        let fetch_account = fetch_account_creator(client, block_id);
 
         let insertion_results = mem_pool.add(to_insert, current_block_number, current_timestamp, &fetch_account);
 
@@ -469,8 +470,11 @@ impl Miner {
         }
         let block = open_block.close()?;
 
-        let fetch_seq = |p: &Public| chain.latest_seq(p);
-
+        let block_id = {
+            let best_block_hash = chain.chain_info().best_block_hash;
+            BlockId::Hash(best_block_hash)
+        };
+        let fetch_seq = |p: &Public| chain.seq(p, block_id).expect("Read from best block");
         {
             let mut mem_pool = self.mem_pool.write();
             mem_pool.remove(
@@ -551,7 +555,11 @@ impl MinerService for Miner {
         ctrace!(MINER, "chain_new_blocks");
 
         {
-            let fetch_account = fetch_account_creator(chain);
+            let block_id = {
+                let current_block_hash = chain.chain_info().best_block_hash;
+                BlockId::Hash(current_block_hash)
+            };
+            let fetch_account = fetch_account_creator(chain, block_id);
             let current_block_number = chain.chain_info().best_block_number;
             let current_timestamp = chain.chain_info().best_block_timestamp;
             let mut mem_pool = self.mem_pool.write();
