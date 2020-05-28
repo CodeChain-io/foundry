@@ -121,21 +121,6 @@ pub trait MinerService: Send + Sync {
 
     /// Stop sealing.
     fn stop_sealing(&self);
-
-    /// Get malicious users
-    fn get_malicious_users(&self) -> Vec<Public>;
-
-    /// Release target malicious users from malicious user set.
-    fn release_malicious_users(&self, prisoner_vec: Vec<Public>);
-
-    /// Imprison target malicious users to malicious user set.
-    fn imprison_malicious_users(&self, prisoner_vec: Vec<Public>);
-
-    /// Get ban-immune users.
-    fn get_immune_users(&self) -> Vec<Public>;
-
-    /// Register users to ban-immune users.
-    fn register_immune_users(&self, immune_user_vec: Vec<Public>);
 }
 
 /// Mining status

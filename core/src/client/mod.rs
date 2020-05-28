@@ -241,22 +241,7 @@ pub trait BlockProducer {
 }
 
 /// Extended client interface used for mining
-pub trait MiningBlockChainClient: BlockChainClient + BlockProducer + FindDoubleVoteHandler {
-    /// Returns malicious users who sent failing transactions.
-    fn get_malicious_users(&self) -> Vec<Public>;
-
-    /// Release designated users from the malicious user list.
-    fn release_malicious_users(&self, prisoner_vec: Vec<Public>);
-
-    /// Append designated users to the malicious user list.
-    fn imprison_malicious_users(&self, prisoner_vec: Vec<Public>);
-
-    /// Returns users immune from getting banned.
-    fn get_immune_users(&self) -> Vec<Public>;
-
-    /// Append designated users to the immune user list.
-    fn register_immune_users(&self, immune_user_vec: Vec<Public>);
-}
+pub trait MiningBlockChainClient: BlockChainClient + BlockProducer + FindDoubleVoteHandler {}
 
 /// Provides methods to access database.
 pub trait DatabaseClient {
