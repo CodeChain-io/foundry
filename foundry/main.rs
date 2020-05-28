@@ -17,9 +17,13 @@
 #[macro_use]
 extern crate log;
 #[macro_use]
-extern crate serde_derive;
-#[macro_use]
 extern crate codechain_logger as clogger;
+
+use app_dirs::AppInfo;
+use clap::load_yaml;
+
+use crate::run_node::run_node;
+use crate::subcommand::run_subcommand;
 
 mod config;
 mod constants;
@@ -28,10 +32,7 @@ mod json;
 mod rpc;
 mod rpc_apis;
 mod run_node;
-
-use crate::run_node::run_node;
-use app_dirs::AppInfo;
-use clap::load_yaml;
+mod subcommand;
 
 pub const APP_INFO: AppInfo = AppInfo {
     name: "foundry",
@@ -43,7 +44,7 @@ fn main() -> Result<(), String> {
     panic_hook::set();
 
     // Always print backtrace on panic.
-    ::std::env::set_var("RUST_BACKTRACE", "1");
+    std::env::set_var("RUST_BACKTRACE", "1");
 
     run()
 }
@@ -53,6 +54,8 @@ fn run() -> Result<(), String> {
     let version = env!("CARGO_PKG_VERSION");
     let matches = clap::App::from_yaml(yaml).version(version).get_matches();
 
-    // TODO: Need to remove `subcommand` completely
-    run_node(&matches)
+    match matches.subcommand_name() {
+        Some(_) => run_subcommand(&matches),
+        None => run_node(&matches),
+    }
 }
