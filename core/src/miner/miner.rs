@@ -93,46 +93,6 @@ pub struct Miner {
     sealing_enabled: AtomicBool,
 
     accounts: Arc<AccountProvider>,
-    malicious_users: Users,
-    immune_users: Users,
-}
-
-struct Users {
-    users: RwLock<HashSet<Public>>,
-}
-
-impl Users {
-    pub fn new() -> Self {
-        Self {
-            users: RwLock::new(HashSet::new()),
-        }
-    }
-
-    pub fn cloned(&self) -> Vec<Public> {
-        self.users.read().iter().map(Clone::clone).collect()
-    }
-
-    pub fn contains(&self, public: &Public) -> bool {
-        self.users.read().contains(public)
-    }
-
-    pub fn insert(&self, public: Public) -> bool {
-        self.users.write().insert(public)
-    }
-
-    pub fn insert_users(&self, publics: impl Iterator<Item = Public>) {
-        let mut users = self.users.write();
-        for public in publics {
-            users.insert(public);
-        }
-    }
-
-    pub fn remove_users<'a>(&self, publics: impl Iterator<Item = &'a Public>) {
-        let mut users = self.users.write();
-        for public in publics {
-            users.remove(public);
-        }
-    }
 }
 
 struct Params {
@@ -214,8 +174,6 @@ impl Miner {
             options,
             sealing_enabled: AtomicBool::new(true),
             accounts,
-            malicious_users: Users::new(),
-            immune_users: Users::new(),
         }
     }
 
@@ -247,9 +205,6 @@ impl Miner {
                 let hash = tx.hash();
                 // FIXME: Refactoring is needed. recover_public is calling in verify_transaction_unordered.
                 let signer_public = tx.signer_public();
-                if default_origin.is_local() {
-                    self.immune_users.insert(signer_public);
-                }
 
                 let origin = if self.accounts.has_account(&signer_public).unwrap_or_default() {
                     TxOrigin::Local
@@ -257,10 +212,6 @@ impl Miner {
                     default_origin
                 };
 
-                if self.malicious_users.contains(&signer_public) {
-                    // FIXME: just to skip, think about another way.
-                    return Ok(())
-                }
                 if client.transaction_block(&TransactionId::Hash(hash)).is_some() {
                     cdebug!(MINER, "Rejected transaction {:?}: already in the blockchain", hash);
                     return Err(HistoryError::TransactionAlreadyImported.into())
@@ -274,12 +225,6 @@ impl Miner {
                     })
                     .and_then(|_| Ok(tx.try_into()?))
                     .map_err(|e| {
-                        match e {
-                            Error::Syntax(_) if !origin.is_local() && !self.immune_users.contains(&signer_public) => {
-                                self.malicious_users.insert(signer_public);
-                            }
-                            _ => {}
-                        }
                         cdebug!(MINER, "Rejected transaction {:?} with error {:?}", hash, e);
                         e
                     })?;
@@ -393,10 +338,6 @@ impl Miner {
 
         for tx in transactions {
             let signer_public = tx.signer_public();
-            if self.malicious_users.contains(&signer_public) {
-                invalid_transactions.push(tx.hash());
-                continue
-            }
             if invalid_tx_users.contains(&signer_public) {
                 // The previous transaction has failed
                 continue
@@ -771,26 +712,6 @@ impl MinerService for Miner {
     fn stop_sealing(&self) {
         cdebug!(MINER, "Stop sealing");
         self.sealing_enabled.store(false, Ordering::Relaxed);
-    }
-
-    fn get_malicious_users(&self) -> Vec<Public> {
-        self.malicious_users.cloned()
-    }
-
-    fn release_malicious_users(&self, prisoners: Vec<Public>) {
-        self.malicious_users.remove_users(prisoners.iter())
-    }
-
-    fn imprison_malicious_users(&self, prisoners: Vec<Public>) {
-        self.malicious_users.insert_users(prisoners.into_iter());
-    }
-
-    fn get_immune_users(&self) -> Vec<Public> {
-        self.immune_users.cloned()
-    }
-
-    fn register_immune_users(&self, immune_users: Vec<Public>) {
-        self.immune_users.insert_users(immune_users.into_iter())
     }
 }
 

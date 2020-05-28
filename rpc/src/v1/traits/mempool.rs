@@ -16,7 +16,6 @@
 
 use super::super::types::PendingTransactions;
 use cjson::bytes::Bytes;
-use ckey::PlatformAddress;
 use ctypes::TxHash;
 use jsonrpc_core::Result;
 
@@ -51,19 +50,4 @@ pub trait Mempool {
         to: Option<u64>,
         future_included: Option<bool>,
     ) -> Result<usize>;
-
-    #[rpc(name = "mempool_getBannedAccounts")]
-    fn get_banned_accounts(&self) -> Result<Vec<PlatformAddress>>;
-
-    #[rpc(name = "mempool_unbanAccounts")]
-    fn unban_accounts(&self, prisoner_list: Vec<PlatformAddress>) -> Result<()>;
-
-    #[rpc(name = "mempool_banAccounts")]
-    fn ban_accounts(&self, prisoner_list: Vec<PlatformAddress>) -> Result<()>;
-
-    #[rpc(name = "mempool_getImmuneAccounts")]
-    fn get_immune_accounts(&self) -> Result<Vec<PlatformAddress>>;
-
-    #[rpc(name = "mempool_registerImmuneAccounts")]
-    fn register_immune_accounts(&self, immune_user_list: Vec<PlatformAddress>) -> Result<()>;
 }

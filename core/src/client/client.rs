@@ -640,27 +640,7 @@ impl BlockProducer for Client {
     }
 }
 
-impl MiningBlockChainClient for Client {
-    fn get_malicious_users(&self) -> Vec<Public> {
-        self.miner.get_malicious_users()
-    }
-
-    fn release_malicious_users(&self, prisoner_vec: Vec<Public>) {
-        self.miner.release_malicious_users(prisoner_vec)
-    }
-
-    fn imprison_malicious_users(&self, prisoner_vec: Vec<Public>) {
-        self.miner.imprison_malicious_users(prisoner_vec)
-    }
-
-    fn get_immune_users(&self) -> Vec<Public> {
-        self.miner.get_immune_users()
-    }
-
-    fn register_immune_users(&self, immune_user_vec: Vec<Public>) {
-        self.miner.register_immune_users(immune_user_vec)
-    }
-}
+impl MiningBlockChainClient for Client {}
 
 impl FindDoubleVoteHandler for Client {
     fn double_vote_handler(&self) -> Option<&dyn DoubleVoteHandler> {
