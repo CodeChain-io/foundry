@@ -54,8 +54,6 @@ pub struct MinerOptions {
     pub reseal_on_own_transaction: bool,
     /// Minimum period between transaction-inspired reseals.
     pub reseal_min_period: Duration,
-    /// Disable the reseal timer
-    pub no_reseal_timer: bool,
     /// Maximum size of the mem pool.
     pub mem_pool_size: usize,
     /// Maximum memory usage of transactions in the queue (current / future).
@@ -73,7 +71,6 @@ impl Default for MinerOptions {
             reseal_on_external_transaction: true,
             reseal_on_own_transaction: true,
             reseal_min_period: Duration::from_secs(2),
-            no_reseal_timer: false,
             mem_pool_size: 8192,
             mem_pool_memory_limit: Some(2 * 1024 * 1024),
             mem_pool_fee_bump_shift: 3,
@@ -497,9 +494,7 @@ impl MinerService for Miner {
             mem_pool.remove_old(&fetch_account, current_block_number, current_timestamp);
         }
 
-        if !self.options.no_reseal_timer {
-            chain.set_min_timer();
-        }
+        chain.set_min_timer();
     }
 
     fn engine_type(&self) -> EngineType {
@@ -550,9 +545,7 @@ impl MinerService for Miner {
 
         // Sealing successful
         *self.next_allowed_reseal.lock() = Instant::now() + self.options.reseal_min_period;
-        if !self.options.no_reseal_timer {
-            chain.set_min_timer();
-        }
+        chain.set_min_timer();
     }
 
     fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(

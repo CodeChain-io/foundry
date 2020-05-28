@@ -83,7 +83,6 @@ impl Config {
             reseal_on_own_transaction,
             reseal_on_external_transaction,
             reseal_min_period: Duration::from_millis(self.mining.reseal_min_period.unwrap()),
-            no_reseal_timer: self.mining.no_reseal_timer.unwrap(),
         })
     }
 
@@ -218,7 +217,6 @@ pub struct Mining {
     pub mem_pool_fee_bump_shift: Option<usize>,
     pub reseal_on_txs: Option<String>,
     pub reseal_min_period: Option<u64>,
-    pub no_reseal_timer: Option<bool>,
     pub allowed_past_gap: Option<u64>,
     pub allowed_future_gap: Option<u64>,
 }
@@ -397,9 +395,6 @@ impl Mining {
         if other.reseal_min_period.is_some() {
             self.reseal_min_period = other.reseal_min_period;
         }
-        if other.no_reseal_timer.is_some() {
-            self.no_reseal_timer = other.no_reseal_timer;
-        }
     }
 
     pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
@@ -445,9 +440,6 @@ impl Mining {
         }
         if let Some(reseal_min_period) = matches.value_of("reseal-min-period") {
             self.reseal_min_period = Some(reseal_min_period.parse().map_err(|_| "Invalid period")?);
-        }
-        if matches.is_present("no-reseal-timer") {
-            self.no_reseal_timer = Some(true);
         }
         if let Some(allowed_past_gap) = matches.value_of("allowed-past-gap") {
             self.allowed_past_gap = Some(allowed_past_gap.parse().map_err(|_| "Invalid time gap")?);
