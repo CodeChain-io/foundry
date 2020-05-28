@@ -366,6 +366,9 @@ impl AccountData for TestBlockChainClient {
     fn seq(&self, pubkey: &Public, id: BlockId) -> Option<u64> {
         match id {
             BlockId::Latest => Some(self.seqs.read().get(pubkey).cloned().unwrap_or(0)),
+            BlockId::Hash(hash) if hash == *self.last_hash.read() => {
+                Some(self.seqs.read().get(pubkey).cloned().unwrap_or(0))
+            }
             _ => None,
         }
     }
@@ -373,6 +376,9 @@ impl AccountData for TestBlockChainClient {
     fn balance(&self, pubkey: &Public, state: StateOrBlock) -> Option<u64> {
         match state {
             StateOrBlock::Block(BlockId::Latest) | StateOrBlock::State(_) => {
+                Some(self.balances.read().get(pubkey).cloned().unwrap_or(0))
+            }
+            StateOrBlock::Block(BlockId::Hash(hash)) if hash == *self.last_hash.read() => {
                 Some(self.balances.read().get(pubkey).cloned().unwrap_or(0))
             }
             _ => None,
