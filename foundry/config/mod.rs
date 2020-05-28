@@ -22,6 +22,7 @@ use cinformer::InformerConfig;
 use ckey::PlatformAddress;
 use cnetwork::{FilterEntry, NetworkConfig, SocketAddr};
 use primitives::H256;
+use serde::Deserialize;
 use std::fs;
 use std::str::{self, FromStr};
 use std::time::Duration;
