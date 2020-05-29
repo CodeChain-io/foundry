@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+mod base;
+
 use intertrait::CastFrom;
 use linkme::distributed_slice;
 use once_cell::sync;
@@ -91,37 +93,6 @@ pub trait Port: CastFrom {
     /// This way, a module can't assign to an arbitrary slot in the other end.
     /// Only to the slots set by the host.
     fn import(&mut self, slots: &[&str]);
-
-    /// Returns the [`Receiver`] for placing messages into the [`Linkable`] this `Port` is
-    /// created from. This method is used to implement the base link, which is required
-    /// for the minimum interoperability among [`Linkable`]s.
-    ///
-    /// [`Receiver`]: ./trait.Receiver.html
-    /// [`Linkable`]: ./trait.Linkable.html
-    fn receiver(&self) -> Arc<dyn Receiver>;
-
-    /// Links with another [`Linkable`] by passing in a [`Receiver`] taken from the [`Linkable`]
-    /// in the opposite side. This method is to support the base link, which is required
-    /// for the minimum interoperability among [`Linkable`]s. Upon a call to this method,
-    /// `Port`s need to send and receive handles as configured with [`export`] and [`import`].
-    ///
-    /// [`Linkable`]: ./trait.Linkable.html
-    /// [`export`]: #tymethod.export
-    /// [`import`]: #tymethod.import
-    fn link(&mut self, receiver: Arc<dyn Receiver>);
-}
-
-/// An endpoint implemented by a [`Linkable`] for receiving incoming calls
-/// from another [`Linkable`].
-///
-/// [`Linkable`]: ./trait.Linkable.html
-pub trait Receiver: Send + Sync {
-    /// Places the given message (`[u8]`) and returns immediately.
-    /// The `message` is typed `Box<dyn AsRef<[u8]>>` to allow for zero copy sending
-    /// as much as possible. The intention is to wrap various types as they are if they
-    /// can be converted into a `&[u8]` to pass into this method. The `Box` is dropped
-    /// when done with the data, and the underlying data will also be dropped then.
-    fn receive(&mut self, message: Box<dyn AsRef<[u8]>>);
 }
 
 #[derive(Debug, Error)]
