@@ -35,7 +35,7 @@ use cstate::{
     TopLevelState, TopStateView,
 };
 use ctypes::transaction::Action;
-use ctypes::{util::unexpected::OutOfBounds, BlockHash, BlockId, CompactValidatorSet, Header};
+use ctypes::{util::unexpected::OutOfBounds, BlockHash, BlockId, CompactValidatorSet, Header, SyncHeader};
 use primitives::H256;
 use std::collections::HashSet;
 use std::iter::Iterator;
@@ -355,6 +355,37 @@ impl ConsensusEngine for Tendermint {
         } else {
             Ok(None)
         }
+    }
+
+    /// grand_parent === none only when parent is genesis
+    fn verify_header_family(
+        &self,
+        header: &SyncHeader,
+        parent: &Header,
+        grand_parent: Option<&Header>,
+    ) -> Result<(), Error> {
+        let grand_parent = match grand_parent {
+            Some(header) => header,
+            None => {
+                debug_assert_eq!(parent.number(), 0);
+                return Ok(())
+            }
+        };
+
+        // next validator hash of grand parent is not correct
+        if grand_parent.number() == 0 {
+            return Ok(())
+        }
+
+        let parent_validator_hash = grand_parent.next_validator_set_hash();
+        let parent_validator = header.prev_validator_set().expect("Currently all child should have validator_set");
+        if parent_validator_hash != &parent_validator.hash() {
+            cwarn!(SYNC, "Received headers have invalid validator set:\n  grand parent: (height: {}, hash: {}, next_validator_set_hash: {}),\n  child: (height: {}, hash: {}, hash(validator_set): {})", grand_parent.number(), grand_parent.hash(), parent_validator_hash,
+                               header.number(), header.hash(), parent_validator.hash());
+            return Err(BlockError::InvalidValidatorSet.into())
+        }
+
+        Ok(())
     }
 }
 

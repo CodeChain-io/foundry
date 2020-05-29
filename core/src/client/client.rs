@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::importer::Importer;
+use super::importer::{Importer, VerifiedHeader};
 use super::{
     AccountData, BlockChainClient, BlockChainInfo, BlockChainTrait, BlockProducer, ChainNotify, ClientConfig,
     DatabaseClient, EngineClient, EngineInfo, ImportBlock, ImportResult, MiningBlockChainClient, Shard, StateInfo,
@@ -458,7 +458,7 @@ impl ImportBlock for Client {
             let block_data = block.rlp_bytes();
             let header = block.header();
 
-            self.importer.import_verified_headers(vec![header], self, &import_lock);
+            self.importer.import_verified_headers(vec![VerifiedHeader::from_generated(header)], self, &import_lock);
 
             let update_result = self.importer.commit_block(block, header, &block_data, self);
             cinfo!(CLIENT, "Imported closed block #{} ({})", number, h);

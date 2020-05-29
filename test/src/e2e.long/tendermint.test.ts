@@ -336,9 +336,9 @@ describe("Tendermint ", function() {
         await promiseExpect.shouldFulfill(
             "wait blocknumber",
             Promise.all([
-                nodes[0].waitBlockNumber(startHeight + 3),
-                nodes[1].waitBlockNumber(startHeight + 3),
-                nodes[2].waitBlockNumber(startHeight + 3)
+                nodes[0].waitBlockNumber(startHeight + 5),
+                nodes[1].waitBlockNumber(startHeight + 5),
+                nodes[2].waitBlockNumber(startHeight + 5)
             ])
         );
 

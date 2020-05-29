@@ -45,7 +45,7 @@ use cstate::{DoubleVoteHandler, StateDB, StateResult};
 use ctypes::errors::SyntaxError;
 use ctypes::transaction::Action;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
-use ctypes::{BlockHash, CommonParams, CompactValidatorSet, Header};
+use ctypes::{BlockHash, CommonParams, CompactValidatorSet, Header, SyncHeader};
 use primitives::{Bytes, H256};
 use std::fmt;
 use std::sync::{Arc, Weak};
@@ -153,6 +153,18 @@ pub trait ConsensusEngine: Sync + Send {
     /// Phase 3 verification. Check block information against parent. Returns either a null `Ok` or a general error detailing the problem with import.
     /// The verification must be conducted only with the two headers' information because it does not guarantee whether the two corresponding bodies have been imported.
     fn verify_block_family(&self, _header: &Header, _parent: &Header) -> Result<(), Error> {
+        Ok(())
+    }
+
+    /// Phase 3 verification. Check header information against parent and grand parent. Returns either a null `Ok` or a general error detailing the problem with import.
+    /// The verification must be conducted only with the three headers' information because it does not guarantee whether the three corresponding bodies have been imported.
+    /// grand_parent == None only when parent is genesis
+    fn verify_header_family(
+        &self,
+        _header: &SyncHeader,
+        _parent: &Header,
+        _grand_parent: Option<&Header>,
+    ) -> Result<(), Error> {
         Ok(())
     }
 

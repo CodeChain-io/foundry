@@ -41,6 +41,8 @@ describe("Test onChain header communication", async function() {
     let header1: Header;
     let block1Validator: any;
     let header2: Header;
+    let block2Validator: any;
+    let header3: Header;
     let nodes: CodeChain[];
 
     before(async function() {
@@ -83,10 +85,10 @@ describe("Test onChain header communication", async function() {
         await promiseExpect.shouldFulfill(
             "block generation",
             Promise.all([
-                nodes[0].waitBlockNumber(2),
-                nodes[1].waitBlockNumber(2),
-                nodes[2].waitBlockNumber(2),
-                nodes[3].waitBlockNumber(2)
+                nodes[0].waitBlockNumber(3),
+                nodes[1].waitBlockNumber(3),
+                nodes[2].waitBlockNumber(3),
+                nodes[3].waitBlockNumber(3)
             ])
         );
 
@@ -118,6 +120,17 @@ describe("Test onChain header communication", async function() {
             throw Error("Cannot get the second block");
         }
         const block2Seal = block2.seal.map(intArray =>
+            RLP.decode(new Buffer(intArray))
+        );
+        block2Validator = (
+            await rpc.call({ method: "chain_getValidatorSet" }, 2)
+        ).result;
+
+        const block3 = await rpc.chain.getBlockByNumber({ blockNumber: 3 });
+        if (block3 == null) {
+            throw Error("Cannot get the second block");
+        }
+        const block3Seal = block3.seal.map(intArray =>
             RLP.decode(new Buffer(intArray))
         );
 
@@ -167,6 +180,18 @@ describe("Test onChain header communication", async function() {
             new H256(block2.nextValidatorSetHash),
             block2Seal
         );
+        const author4PlatformAddr = Address.fromString(block3.author);
+        header3 = new Header(
+            header2.hashing(),
+            new U256(block3.timestamp),
+            new U256(block3.number),
+            author4PlatformAddr.pubkey,
+            Buffer.from(block3.extraData),
+            new H256(block3.transactionsRoot),
+            new H256(block3.stateRoot),
+            new H256(block3.nextValidatorSetHash),
+            block3Seal
+        );
 
         nodeA = new CodeChain({
             chain: `${__dirname}/../scheme/tendermint-int.json`
@@ -183,11 +208,16 @@ describe("Test onChain header communication", async function() {
         await mock.sendBlockHeaderResponse([
             [genesisHeader.toEncodeObject(), []],
             [header1.toEncodeObject(), []],
-            [header2.toEncodeObject(), validatorToEncodeObject(block1Validator)]
+            [
+                header2.toEncodeObject(),
+                validatorToEncodeObject(block1Validator)
+            ],
+            [header3.toEncodeObject(), validatorToEncodeObject(block2Validator)]
         ]);
         await mock.waitBodyRequest();
         const bodyRequest = mock.getBlockBodyRequest();
         expect(bodyRequest!.data[0]).is.similarTo(header1.hashing());
+        expect(bodyRequest!.data[1]).is.similarTo(header2.hashing());
     }).timeout(50_000);
 
     afterEach(async function() {
