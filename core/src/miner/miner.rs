@@ -84,11 +84,8 @@ pub struct AuthoringParams {
     pub extra_data: Bytes,
 }
 
-type TransactionListener = Box<dyn Fn(&[TxHash]) + Send + Sync>;
-
 pub struct Miner {
     mem_pool: Arc<RwLock<MemPool>>,
-    transaction_listener: RwLock<Vec<TransactionListener>>,
     next_allowed_reseal: Mutex<Instant>,
     params: RwLock<AuthoringParams>,
     engine: Arc<dyn CodeChainEngine>,
@@ -131,7 +128,6 @@ impl Miner {
 
         Self {
             mem_pool,
-            transaction_listener: RwLock::new(vec![]),
             next_allowed_reseal: Mutex::new(Instant::now()),
             params: RwLock::new(AuthoringParams::default()),
             engine: scheme.engine.clone(),
@@ -145,11 +141,6 @@ impl Miner {
 
     pub fn recover_from_db(&self, client: &Client) {
         self.mem_pool.write().recover_from_db(client);
-    }
-
-    /// Set a callback to be notified about imported transactions' hashes.
-    pub fn add_transactions_listener(&self, f: Box<dyn Fn(&[TxHash]) + Send + Sync>) {
-        self.transaction_listener.write().push(f);
     }
 
     pub fn get_options(&self) -> &MinerOptions {
@@ -228,7 +219,7 @@ impl Miner {
 
         debug_assert_eq!(insertion_results.len(), intermediate_results.iter().filter(|r| r.is_ok()).count());
         let mut insertion_results_index = 0;
-        let results = intermediate_results
+        intermediate_results
             .into_iter()
             .map(|res| match res {
                 Err(e) => Err(e),
@@ -240,13 +231,7 @@ impl Miner {
                     Ok(result)
                 }
             })
-            .collect();
-
-        for listener in &*self.transaction_listener.read() {
-            listener(&inserted);
-        }
-
-        results
+            .collect()
     }
 
     pub fn delete_all_pending_transactions(&self) {
