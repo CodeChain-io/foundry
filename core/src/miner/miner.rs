@@ -87,7 +87,7 @@ pub struct AuthoringParams {
 pub struct Miner {
     mem_pool: Arc<RwLock<MemPool>>,
     next_allowed_reseal: NextAllowedReseal,
-    params: RwLock<AuthoringParams>,
+    params: Params,
     engine: Arc<dyn CodeChainEngine>,
     options: MinerOptions,
 
@@ -96,6 +96,29 @@ pub struct Miner {
     accounts: Arc<AccountProvider>,
     malicious_users: RwLock<HashSet<Public>>,
     immune_users: RwLock<HashSet<Public>>,
+}
+
+struct Params {
+    params: RwLock<AuthoringParams>,
+}
+
+impl Params {
+    pub fn new(params: AuthoringParams) -> Self {
+        Self {
+            params: RwLock::new(params),
+        }
+    }
+
+    pub fn get(&self) -> AuthoringParams {
+        self.params.read().clone()
+    }
+
+    pub fn apply<F>(&self, f: F)
+    where
+        F: FnOnce(&mut AuthoringParams) -> (), {
+        let mut params = self.params.write();
+        f(&mut params);
+    }
 }
 
 struct NextAllowedReseal {
@@ -149,7 +172,7 @@ impl Miner {
         Self {
             mem_pool,
             next_allowed_reseal: NextAllowedReseal::new(Instant::now()),
-            params: RwLock::new(AuthoringParams::default()),
+            params: Params::new(AuthoringParams::default()),
             engine: scheme.engine.clone(),
             options,
             sealing_enabled: AtomicBool::new(true),
@@ -269,7 +292,7 @@ impl Miner {
     ) -> Result<Option<ClosedBlock>, Error> {
         let (transactions, mut open_block, block_number, block_tx_signer, block_tx_seq) = {
             ctrace!(MINER, "prepare_block: No existing work - making new block");
-            let params = self.params.read().clone();
+            let params = self.params.get();
             let open_block = chain.prepare_open_block(parent_block_id, params.author, params.extra_data);
             let (block_number, parent_hash) = {
                 let header = open_block.block().header();
@@ -455,11 +478,11 @@ impl MinerService for Miner {
     }
 
     fn authoring_params(&self) -> AuthoringParams {
-        self.params.read().clone()
+        self.params.get()
     }
 
     fn set_author(&self, pubkey: Public) -> Result<(), AccountProviderError> {
-        self.params.write().author = pubkey;
+        self.params.apply(|params| params.author = pubkey);
 
         if self.engine_type().need_signer_key() {
             ctrace!(MINER, "Set author to {:?}", pubkey);
@@ -471,11 +494,11 @@ impl MinerService for Miner {
     }
 
     fn get_author(&self) -> Public {
-        self.params.read().author
+        self.params.get().author
     }
 
     fn set_extra_data(&self, extra_data: Bytes) {
-        self.params.write().extra_data = extra_data;
+        self.params.apply(|params| params.extra_data = extra_data);
     }
 
     fn transactions_limit(&self) -> usize {
