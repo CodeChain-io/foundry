@@ -86,7 +86,7 @@ pub struct AuthoringParams {
 
 pub struct Miner {
     mem_pool: Arc<RwLock<MemPool>>,
-    next_allowed_reseal: Mutex<Instant>,
+    next_allowed_reseal: NextAllowedReseal,
     params: RwLock<AuthoringParams>,
     engine: Arc<dyn CodeChainEngine>,
     options: MinerOptions,
@@ -96,6 +96,26 @@ pub struct Miner {
     accounts: Arc<AccountProvider>,
     malicious_users: RwLock<HashSet<Public>>,
     immune_users: RwLock<HashSet<Public>>,
+}
+
+struct NextAllowedReseal {
+    instant: Mutex<Instant>,
+}
+
+impl NextAllowedReseal {
+    pub fn new(instant: Instant) -> Self {
+        Self {
+            instant: Mutex::new(instant),
+        }
+    }
+
+    pub fn get(&self) -> Instant {
+        *self.instant.lock()
+    }
+
+    pub fn set(&self, instant: Instant) {
+        *self.instant.lock() = instant;
+    }
 }
 
 impl Miner {
@@ -128,7 +148,7 @@ impl Miner {
 
         Self {
             mem_pool,
-            next_allowed_reseal: Mutex::new(Instant::now()),
+            next_allowed_reseal: NextAllowedReseal::new(Instant::now()),
             params: RwLock::new(AuthoringParams::default()),
             engine: scheme.engine.clone(),
             options,
@@ -419,7 +439,7 @@ impl Miner {
 
     /// Are we allowed to do a non-mandatory reseal?
     fn transaction_reseal_allowed(&self) -> bool {
-        self.sealing_enabled.load(Ordering::Relaxed) && (Instant::now() > *self.next_allowed_reseal.lock())
+        self.sealing_enabled.load(Ordering::Relaxed) && (Instant::now() > self.next_allowed_reseal.get())
     }
 }
 
@@ -529,7 +549,7 @@ impl MinerService for Miner {
         }
 
         // Sealing successful
-        *self.next_allowed_reseal.lock() = Instant::now() + self.options.reseal_min_period;
+        self.next_allowed_reseal.set(Instant::now() + self.options.reseal_min_period);
         chain.set_min_timer();
     }
 
