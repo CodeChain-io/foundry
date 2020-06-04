@@ -39,7 +39,6 @@ use rlp::Encodable;
 use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::convert::TryInto;
-use std::iter::FromIterator;
 use std::ops::Range;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -86,16 +85,97 @@ pub struct AuthoringParams {
 
 pub struct Miner {
     mem_pool: Arc<RwLock<MemPool>>,
-    next_allowed_reseal: Mutex<Instant>,
-    params: RwLock<AuthoringParams>,
+    next_allowed_reseal: NextAllowedReseal,
+    params: Params,
     engine: Arc<dyn CodeChainEngine>,
     options: MinerOptions,
 
     sealing_enabled: AtomicBool,
 
     accounts: Arc<AccountProvider>,
-    malicious_users: RwLock<HashSet<Public>>,
-    immune_users: RwLock<HashSet<Public>>,
+    malicious_users: Users,
+    immune_users: Users,
+}
+
+struct Users {
+    users: RwLock<HashSet<Public>>,
+}
+
+impl Users {
+    pub fn new() -> Self {
+        Self {
+            users: RwLock::new(HashSet::new()),
+        }
+    }
+
+    pub fn cloned(&self) -> Vec<Public> {
+        self.users.read().iter().map(Clone::clone).collect()
+    }
+
+    pub fn contains(&self, public: &Public) -> bool {
+        self.users.read().contains(public)
+    }
+
+    pub fn insert(&self, public: Public) -> bool {
+        self.users.write().insert(public)
+    }
+
+    pub fn insert_users(&self, publics: impl Iterator<Item = Public>) {
+        let mut users = self.users.write();
+        for public in publics {
+            users.insert(public);
+        }
+    }
+
+    pub fn remove_users<'a>(&self, publics: impl Iterator<Item = &'a Public>) {
+        let mut users = self.users.write();
+        for public in publics {
+            users.remove(public);
+        }
+    }
+}
+
+struct Params {
+    params: RwLock<AuthoringParams>,
+}
+
+impl Params {
+    pub fn new(params: AuthoringParams) -> Self {
+        Self {
+            params: RwLock::new(params),
+        }
+    }
+
+    pub fn get(&self) -> AuthoringParams {
+        self.params.read().clone()
+    }
+
+    pub fn apply<F>(&self, f: F)
+    where
+        F: FnOnce(&mut AuthoringParams) -> (), {
+        let mut params = self.params.write();
+        f(&mut params);
+    }
+}
+
+struct NextAllowedReseal {
+    instant: Mutex<Instant>,
+}
+
+impl NextAllowedReseal {
+    pub fn new(instant: Instant) -> Self {
+        Self {
+            instant: Mutex::new(instant),
+        }
+    }
+
+    pub fn get(&self) -> Instant {
+        *self.instant.lock()
+    }
+
+    pub fn set(&self, instant: Instant) {
+        *self.instant.lock() = instant;
+    }
 }
 
 impl Miner {
@@ -128,14 +208,14 @@ impl Miner {
 
         Self {
             mem_pool,
-            next_allowed_reseal: Mutex::new(Instant::now()),
-            params: RwLock::new(AuthoringParams::default()),
+            next_allowed_reseal: NextAllowedReseal::new(Instant::now()),
+            params: Params::new(AuthoringParams::default()),
             engine: scheme.engine.clone(),
             options,
             sealing_enabled: AtomicBool::new(true),
             accounts,
-            malicious_users: RwLock::new(HashSet::new()),
-            immune_users: RwLock::new(HashSet::new()),
+            malicious_users: Users::new(),
+            immune_users: Users::new(),
         }
     }
 
@@ -168,7 +248,7 @@ impl Miner {
                 // FIXME: Refactoring is needed. recover_public is calling in verify_transaction_unordered.
                 let signer_public = tx.signer_public();
                 if default_origin.is_local() {
-                    self.immune_users.write().insert(signer_public);
+                    self.immune_users.insert(signer_public);
                 }
 
                 let origin = if self.accounts.has_account(&signer_public).unwrap_or_default() {
@@ -177,7 +257,7 @@ impl Miner {
                     default_origin
                 };
 
-                if self.malicious_users.read().contains(&signer_public) {
+                if self.malicious_users.contains(&signer_public) {
                     // FIXME: just to skip, think about another way.
                     return Ok(())
                 }
@@ -185,7 +265,6 @@ impl Miner {
                     cdebug!(MINER, "Rejected transaction {:?}: already in the blockchain", hash);
                     return Err(HistoryError::TransactionAlreadyImported.into())
                 }
-                let immune_users = self.immune_users.read();
                 let tx: VerifiedTransaction = tx
                     .verify_basic()
                     .map_err(From::from)
@@ -196,8 +275,8 @@ impl Miner {
                     .and_then(|_| Ok(tx.try_into()?))
                     .map_err(|e| {
                         match e {
-                            Error::Syntax(_) if !origin.is_local() && !immune_users.contains(&signer_public) => {
-                                self.malicious_users.write().insert(signer_public);
+                            Error::Syntax(_) if !origin.is_local() && !self.immune_users.contains(&signer_public) => {
+                                self.malicious_users.insert(signer_public);
                             }
                             _ => {}
                         }
@@ -249,7 +328,7 @@ impl Miner {
     ) -> Result<Option<ClosedBlock>, Error> {
         let (transactions, mut open_block, block_number, block_tx_signer, block_tx_seq) = {
             ctrace!(MINER, "prepare_block: No existing work - making new block");
-            let params = self.params.read().clone();
+            let params = self.params.get();
             let open_block = chain.prepare_open_block(parent_block_id, params.author, params.extra_data);
             let (block_number, parent_hash) = {
                 let header = open_block.block().header();
@@ -313,7 +392,7 @@ impl Miner {
 
         for tx in transactions {
             let signer_public = tx.signer_public();
-            if self.malicious_users.read().contains(&signer_public) {
+            if self.malicious_users.contains(&signer_public) {
                 invalid_transactions.push(tx.hash());
                 continue
             }
@@ -419,7 +498,7 @@ impl Miner {
 
     /// Are we allowed to do a non-mandatory reseal?
     fn transaction_reseal_allowed(&self) -> bool {
-        self.sealing_enabled.load(Ordering::Relaxed) && (Instant::now() > *self.next_allowed_reseal.lock())
+        self.sealing_enabled.load(Ordering::Relaxed) && (Instant::now() > self.next_allowed_reseal.get())
     }
 }
 
@@ -435,11 +514,11 @@ impl MinerService for Miner {
     }
 
     fn authoring_params(&self) -> AuthoringParams {
-        self.params.read().clone()
+        self.params.get()
     }
 
     fn set_author(&self, pubkey: Public) -> Result<(), AccountProviderError> {
-        self.params.write().author = pubkey;
+        self.params.apply(|params| params.author = pubkey);
 
         if self.engine_type().need_signer_key() {
             ctrace!(MINER, "Set author to {:?}", pubkey);
@@ -451,11 +530,11 @@ impl MinerService for Miner {
     }
 
     fn get_author(&self) -> Public {
-        self.params.read().author
+        self.params.get().author
     }
 
     fn set_extra_data(&self, extra_data: Bytes) {
-        self.params.write().extra_data = extra_data;
+        self.params.apply(|params| params.extra_data = extra_data);
     }
 
     fn transactions_limit(&self) -> usize {
@@ -529,7 +608,7 @@ impl MinerService for Miner {
         }
 
         // Sealing successful
-        *self.next_allowed_reseal.lock() = Instant::now() + self.options.reseal_min_period;
+        self.next_allowed_reseal.set(Instant::now() + self.options.reseal_min_period);
         chain.set_min_timer();
     }
 
@@ -687,32 +766,23 @@ impl MinerService for Miner {
     }
 
     fn get_malicious_users(&self) -> Vec<Public> {
-        Vec::from_iter(self.malicious_users.read().iter().map(Clone::clone))
+        self.malicious_users.cloned()
     }
 
     fn release_malicious_users(&self, prisoners: Vec<Public>) {
-        let mut malicious_users = self.malicious_users.write();
-        for prisoner in &prisoners {
-            malicious_users.remove(prisoner);
-        }
+        self.malicious_users.remove_users(prisoners.iter())
     }
 
     fn imprison_malicious_users(&self, prisoners: Vec<Public>) {
-        let mut malicious_users = self.malicious_users.write();
-        for prisoner in prisoners {
-            malicious_users.insert(prisoner);
-        }
+        self.malicious_users.insert_users(prisoners.into_iter());
     }
 
     fn get_immune_users(&self) -> Vec<Public> {
-        Vec::from_iter(self.immune_users.read().iter().map(Clone::clone))
+        self.immune_users.cloned()
     }
 
     fn register_immune_users(&self, immune_users: Vec<Public>) {
-        let mut immune_users_lock = self.immune_users.write();
-        for user in immune_users {
-            immune_users_lock.insert(user);
-        }
+        self.immune_users.insert_users(immune_users.into_iter())
     }
 }
 
