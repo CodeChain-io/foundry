@@ -54,8 +54,6 @@ pub struct MinerOptions {
     pub reseal_on_own_transaction: bool,
     /// Minimum period between transaction-inspired reseals.
     pub reseal_min_period: Duration,
-    /// Disable the reseal timer
-    pub no_reseal_timer: bool,
     /// Maximum size of the mem pool.
     pub mem_pool_size: usize,
     /// Maximum memory usage of transactions in the queue (current / future).
@@ -73,7 +71,6 @@ impl Default for MinerOptions {
             reseal_on_external_transaction: true,
             reseal_on_own_transaction: true,
             reseal_min_period: Duration::from_secs(2),
-            no_reseal_timer: false,
             mem_pool_size: 8192,
             mem_pool_memory_limit: Some(2 * 1024 * 1024),
             mem_pool_fee_bump_shift: 3,
@@ -87,11 +84,8 @@ pub struct AuthoringParams {
     pub extra_data: Bytes,
 }
 
-type TransactionListener = Box<dyn Fn(&[TxHash]) + Send + Sync>;
-
 pub struct Miner {
     mem_pool: Arc<RwLock<MemPool>>,
-    transaction_listener: RwLock<Vec<TransactionListener>>,
     next_allowed_reseal: Mutex<Instant>,
     params: RwLock<AuthoringParams>,
     engine: Arc<dyn CodeChainEngine>,
@@ -134,7 +128,6 @@ impl Miner {
 
         Self {
             mem_pool,
-            transaction_listener: RwLock::new(vec![]),
             next_allowed_reseal: Mutex::new(Instant::now()),
             params: RwLock::new(AuthoringParams::default()),
             engine: scheme.engine.clone(),
@@ -148,11 +141,6 @@ impl Miner {
 
     pub fn recover_from_db(&self, client: &Client) {
         self.mem_pool.write().recover_from_db(client);
-    }
-
-    /// Set a callback to be notified about imported transactions' hashes.
-    pub fn add_transactions_listener(&self, f: Box<dyn Fn(&[TxHash]) + Send + Sync>) {
-        self.transaction_listener.write().push(f);
     }
 
     pub fn get_options(&self) -> &MinerOptions {
@@ -231,7 +219,7 @@ impl Miner {
 
         debug_assert_eq!(insertion_results.len(), intermediate_results.iter().filter(|r| r.is_ok()).count());
         let mut insertion_results_index = 0;
-        let results = intermediate_results
+        intermediate_results
             .into_iter()
             .map(|res| match res {
                 Err(e) => Err(e),
@@ -243,13 +231,7 @@ impl Miner {
                     Ok(result)
                 }
             })
-            .collect();
-
-        for listener in &*self.transaction_listener.read() {
-            listener(&inserted);
-        }
-
-        results
+            .collect()
     }
 
     pub fn delete_all_pending_transactions(&self) {
@@ -497,9 +479,7 @@ impl MinerService for Miner {
             mem_pool.remove_old(&fetch_account, current_block_number, current_timestamp);
         }
 
-        if !self.options.no_reseal_timer {
-            chain.set_min_timer();
-        }
+        chain.set_min_timer();
     }
 
     fn engine_type(&self) -> EngineType {
@@ -550,9 +530,7 @@ impl MinerService for Miner {
 
         // Sealing successful
         *self.next_allowed_reseal.lock() = Instant::now() + self.options.reseal_min_period;
-        if !self.options.no_reseal_timer {
-            chain.set_min_timer();
-        }
+        chain.set_min_timer();
     }
 
     fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
