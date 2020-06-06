@@ -16,16 +16,12 @@
 
 use super::super::errors;
 use super::super::traits::Devel;
-use super::super::types::TPSTestSetting;
 use ccore::{
-    DatabaseClient, EngineClient, EngineInfo, MinerService, MiningBlockChainClient, SnapshotClient, TermInfo,
-    VerifiedTransaction, COL_STATE,
+    DatabaseClient, EngineClient, EngineInfo, MinerService, MiningBlockChainClient, SnapshotClient, TermInfo, COL_STATE,
 };
 use cjson::bytes::Bytes;
-use ckey::{Ed25519KeyPair as KeyPair, Ed25519Public as Public, Generator, KeyPairTrait, Random};
 use cnetwork::{unbounded_event_callback, EventSender, IntoSocketAddr};
 use csync::BlockSyncEvent;
-use ctypes::transaction::{Action, Transaction};
 use ctypes::{BlockHash, BlockId};
 use jsonrpc_core::Result;
 use kvdb::KeyValueDB;
@@ -34,10 +30,7 @@ use rlp::Rlp;
 use std::net::SocketAddr;
 use std::ops::Deref;
 use std::sync::Arc;
-use std::thread;
-use std::time::Duration;
 use std::vec::Vec;
-use time::PreciseTime;
 
 pub struct DevelClient<C, M> {
     client: Arc<C>,
@@ -124,73 +117,5 @@ where
     fn snapshot(&self, block_hash: BlockHash) -> Result<()> {
         self.client.notify_snapshot(BlockId::Hash(block_hash));
         Ok(())
-    }
-
-    fn test_tps(&self, setting: TPSTestSetting) -> Result<f64> {
-        let common_params = self.client.common_params(BlockId::Latest).unwrap();
-        let network_id = common_params.network_id();
-
-        // NOTE: Assuming solo network
-        let genesis_keypair: KeyPair = Random.generate().unwrap();
-
-        let base_seq = self.client.seq(genesis_keypair.public(), BlockId::Latest).unwrap();
-
-        // Helper macros
-        macro_rules! pay_tx {
-            ($seq:expr, $pubkey:expr) => {
-                pay_tx!($seq, $pubkey, 1)
-            };
-            ($seq:expr, $pubkey:expr, $quantity: expr) => {
-                Transaction {
-                    seq: $seq,
-                    fee: 0,
-                    network_id,
-                    action: Action::Pay {
-                        receiver: $pubkey,
-                        quantity: $quantity,
-                    },
-                }
-            };
-        }
-
-        // Helper functions
-        fn sign_tx(tx: Transaction, key_pair: &KeyPair) -> VerifiedTransaction {
-            VerifiedTransaction::new_with_sign(tx, key_pair.private())
-        }
-
-        fn tps(count: u64, start_time: PreciseTime, end_time: PreciseTime) -> f64 {
-            f64::from(count as u32) * 1000.0_f64 / f64::from(start_time.to(end_time).num_milliseconds() as i32)
-        }
-
-        // Main
-        let count = setting.count;
-        if count == 0 {
-            return Ok(0.0)
-        }
-        let transactions = {
-            let mut transactions = Vec::with_capacity(count as usize);
-            for i in 0..count {
-                let pubkey = Public::random();
-                let tx = sign_tx(pay_tx!(base_seq + i, pubkey), &genesis_keypair);
-                transactions.push(tx);
-            }
-            transactions
-        };
-
-        let last_hash = transactions.last().unwrap().hash();
-
-        let first_transaction = transactions[0].clone();
-        for tx in transactions.into_iter().skip(1) {
-            self.client.queue_own_transaction(tx).map_err(errors::transaction_core)?;
-        }
-        let start_time = PreciseTime::now();
-        self.client.queue_own_transaction(first_transaction).map_err(errors::transaction_core)?;
-        while !self.client.is_pending_queue_empty() {
-            thread::sleep(Duration::from_millis(50));
-        }
-        while self.client.transaction(&last_hash.into()).is_none() {}
-
-        let end_time = PreciseTime::now();
-        Ok(tps(count, start_time, end_time))
     }
 }
