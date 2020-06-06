@@ -152,7 +152,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_containsTransaction](#chain_containstransaction)
  * [chain_getSeq](#chain_getseq)
  * [chain_getBalance](#chain_getbalance)
- * [chain_getShardRoot](#chain_getshardroot)
  * [chain_getMinTransactionFee](#chain_getmintransactionfee)
  * [chain_getCommonParams](#chain_getcommonparams)
  * [chain_getTermMetadata](#chain_gettermmetadata)
@@ -165,11 +164,7 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [mempool_getPendingTransactionsCount](#mempool_getpendingtransactionscount)
  * [mempool_getMachineMinimumFees](#mempool_getmachineminimumfees)
 ***
- * [engine_getRecommendedConfirmation](#engine_getrecommendedconfirmation)
  * [engine_getCustomActionData](#engine_getcustomactiondata)
-***
- * [miner_getWork](#miner_getwork)
- * [miner_submitWork](#miner_submitwork)
 ***
  * [net_localKeyFor](#net_localkeyfor)
  * [net_registerRemoteKeyFor](#net_registerremotekeyfor)
@@ -1127,70 +1122,6 @@ Gets custom action data for given custom action handler id and rlp encoded key.
   "jsonrpc":"2.0",
   "result":"0c",
   "id":411
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## miner_getWork
-Returns the hash of the current block and score.
-
-### Params
-No parameters
-
-### Returns
-`Work`
-
-Errors: `No Author`, `No Work Required`, `No Work Found`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "miner_getWork", "params": [], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":{
-    "powHash":"0x56642f04d519ae3262c7ba6facf1c5b11450ebaeb7955337cfbc45420d573077",
-    "target":100
-  },
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## miner_submitWork
-Used for submitting a proof-of-work solution.
-
-### Params
- 1. powHash: `string`
- 2. seal: `string[]`
-
-### Returns
-`boolean`
-
-Errors: `No Work Required`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "miner_submitWork", "params": ["0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", ["0x56642f04d519ae3262c7ba6facf1c5b11450ebaeb7955337cfbc45420d573077"]], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":true,
-  "id":6
 }
 ```
 
