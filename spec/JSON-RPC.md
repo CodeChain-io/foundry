@@ -2120,38 +2120,3 @@ No parameters
 ```
 
 [Back to **List of methods**](#list-of-methods)
-
-## devel_testTPS
-
-Test TPS as the parameters.
-
-### Params
-
-1. count: `number` - Integer.
-2. seed: `number` - Integer, only used in "payOrTransfer" option.
-3. option: "payOnly" | "transferSingle" | "transferMultiple" | "payOrTransfer"
-
-### Returns
-
-`number`
-
-### Request Example
-
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "devel_testTPS", "params": [{"count": 1000, "seed": 0, "option": "payOnly"}], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-
-```
-{
-  "jsonrpc":"2.0",
-  "result":5000.0,
-  "id":null
-}
-`````
-
-[Back to **List of methods**](#list-of-methods)
