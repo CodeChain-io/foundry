@@ -3,7 +3,7 @@ Foundry is a framework for building blockchain applications. The goal of the Fou
 
 # Specification
 * [CodeChain Account](CodeChain-Account.md)
-* [CodeChain Address](CodeChain-Address.md)
+* [Foundry Address](Foundry-Address.md)
 * [CodeChain Coin](CodeChain-Coin.md)
 * [Transaction](Transaction.md)
 * [Consensus](Consensus.md)

@@ -25,7 +25,9 @@ A two-letter string to denote a network. For example, "cc" is for the main netwo
 
 ## PlatformAddress
 
-A string that starts with "(NetworkID)c", and Bech32 string follows. For example, "cccqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqz6sxn0" is for the main network, and "wccqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqz6sxn0" is for the Corgi test network. See [the specification](CodeChain-Address.md#1-platform-account-address-format).
+A printable encoding of a public key.
+The network id is at the end of the address.
+See [the specification](Foundry-Address.md).
 
 ## Block
 
