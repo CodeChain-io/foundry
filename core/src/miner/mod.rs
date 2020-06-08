@@ -141,9 +141,12 @@ pub enum TransactionImportResult {
     Future,
 }
 
-fn fetch_account_creator<'c>(client: &'c dyn AccountData) -> impl Fn(&Public) -> AccountDetails + 'c {
+fn fetch_account_creator<'c>(
+    client: &'c dyn AccountData,
+    block_id: BlockId,
+) -> impl Fn(&Public) -> AccountDetails + 'c {
     move |pubkey: &Public| AccountDetails {
-        seq: client.latest_seq(&pubkey),
-        balance: client.latest_balance(&pubkey),
+        seq: client.seq(&pubkey, block_id).expect("We are querying sequence using trusted block id"),
+        balance: client.balance(&pubkey, block_id.into()).expect("We are querying balance using trusted block id"),
     }
 }
