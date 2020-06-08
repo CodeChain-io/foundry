@@ -180,45 +180,6 @@ describe("chain", function() {
         expect(+thetx.fee).to.equal(Number(tx.fee()!.toString()));
     });
 
-    it("sendPayTx, getTransactionSigner", async function() {
-        const tx = node.testFramework.core.createPayTransaction({
-            recipient: "nxcmkryvIAwv6UL9vpFDMj7SZNDjnnsyHKM8eL-nipJXbgDcnr0tc0",
-            quantity: 0
-        });
-        const seq = (await node.rpc.chain.getSeq({
-            address: faucetAddress.toString(),
-            blockNumber: null
-        }))!;
-        const sig = tx.sign({
-            secret: faucetSecret,
-            fee: 10,
-            seq
-        });
-        const bytes = sig.rlpBytes().toString("hex");
-        const hash = await node.rpc.mempool.sendSignedTransaction({
-            tx: `0x${bytes}`
-        });
-        expect(
-            await node.rpc.chain.containsTransaction({ transactionHash: hash })
-        ).be.true;
-        const signer = await node.rpc.chain.getTransactionSigner({
-            transactionHash: hash
-        });
-        expect(signer).equal(faucetAddress.toString());
-        const signed = (await node.rpc.chain.getTransaction({
-            transactionHash: hash
-        }))!;
-        const publicKey = sig.getSignerPublic();
-        expect(signed).not.null;
-        expect(signed.sig).to.equal(`0x${sig.signature()}`);
-        expect(+signed.fee).to.equal(Number(tx.fee()!.toString()));
-        expect(
-            node.testFramework.core.classes.Address.fromPublic(publicKey, {
-                networkId: "tc"
-            }).toString()
-        ).equal(signer);
-    });
-
     afterEach(function() {
         if (this.currentTest!.state === "failed") {
             node.keepLogs();

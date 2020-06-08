@@ -148,11 +148,9 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_getBlockByHash](#chain_getblockbyhash)
  * [chain_getBlockTransactionCountByHash](#chain_getblocktransactioncountbyhash)
  * [chain_getTransaction](#chain_gettransaction)
- * [chain_getTransactionSigner](#chain_gettransactionsigner)
  * [chain_containsTransaction](#chain_containstransaction)
  * [chain_getSeq](#chain_getseq)
  * [chain_getBalance](#chain_getbalance)
- * [chain_getShardRoot](#chain_getshardroot)
  * [chain_getMinTransactionFee](#chain_getmintransactionfee)
  * [chain_getCommonParams](#chain_getcommonparams)
  * [chain_getTermMetadata](#chain_gettermmetadata)
@@ -163,18 +161,9 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [mempool_getErrorHint](#mempool_geterrorhint)
  * [mempool_getPendingTransactions](#mempool_getpendingtransactions)
  * [mempool_getPendingTransactionsCount](#mempool_getpendingtransactionscount)
- * [mempool_getBannedAccounts](#mempool_getbannedaccounts)
- * [mempool_unbanAccounts](#mempool_unbanaccounts)
- * [mempool_banAccounts](#mempool_banaccounts)
- * [mempool_registerImmuneAccounts](#mempool_registerimmuneaccounts)
- * [mempool_getRegisteredImmuneAccounts](#mempool_getregisteredimmuneaccounts)
  * [mempool_getMachineMinimumFees](#mempool_getmachineminimumfees)
 ***
- * [engine_getRecommendedConfirmation](#engine_getrecommendedconfirmation)
  * [engine_getCustomActionData](#engine_getcustomactiondata)
-***
- * [miner_getWork](#miner_getwork)
- * [miner_submitWork](#miner_submitwork)
 ***
  * [net_localKeyFor](#net_localkeyfor)
  * [net_registerRemoteKeyFor](#net_registerremotekeyfor)
@@ -575,36 +564,6 @@ Errors: `Invalid Params`
         "sig":"0x291d932e55162407eb01915923d68cf78df4815a25fc6033488b644bda44b02251123feac3a3c56a399a2b32331599fd50b7a39ec2c1a2325e37f383c6aeedc301"
     }
     "id": null,
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## chain_getTransactionSigner
-Returns the signer of the given transaction hash.
-
-It returns `null` if the transaction hash doesn't exist in the chain.
-
-### Params
-1. tx hash: `H256`
-
-### Returns
-`null` | `PlatformAddress`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getTransactionSigner", "params": ["0xdb7c705d02e8961880783b4cb3dc051c41e551ade244bed5521901d8de190fc6"], "id": "who-is-authors"}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result": "tccq94guhkrfndnehnca06dlkxcfuq0gdlamvw9ga4f",
-  "id": "who-is-authors"
 }
 ```
 
@@ -1066,160 +1025,6 @@ Returns a count of the transactions that have insertion_timestamps within the gi
 
 [Back to **List of methods**](#list-of-methods)
 
-## mempool_banAccounts
-Register accounts to the mempool's banned account list. The mempool would not import the transactions from the users on the list.
-
-### Params
- 1. prisoner_list: `PlatformAccount[]`
-
-### Returns
-`null`
-
-Errors: `Invalid params`
-
-### Request Example
-```
-curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "mempool_getBannedAccounts", "params": [], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc": "2.0",
-  "result": null,
-  "id": null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## mempool_unbanAccounts
-Release accounts from the mempool's banned account list.
-
-### Params
- 1. trusty_list: `PlatformAccount[]` 
-
-### Returns
-`null`
-
-Errors: `Invalid params`
-
-### Request Example
-```
-curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "mempool_unbanAccounts", "params": [["01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0"]], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc": "2.0",
-  "result": null,
-  "id": null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## mempool_getBannedAccounts
-Returns accounts banned for propagating transactions which cause syntax errors or runtime errors.
-
-### Params
-No parameters
-
-### Returns
-`PlatformAddress[]`
-
-Error: `Invalid params`
-
-### Request Example
-```
-curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "mempool_getBannedAccounts", "params": [], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc": "2.0",
-  "result": [
-    "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0"
-  ],
-  "id": null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## mempool_registerImmuneAccounts
-Register accounts immune from getting banned. The trasactions from these accounts would never be rejected for the reason they are malicious.
-
-### Params
- 1. immune_user_list: `PlatformAccount[]`
-
-### Returns
-`null`
-
-Error: `Invalid params`
-
-### Request Example
-```
-curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "mempool_registerImmuneAccounts", "params": [["01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0"]], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc": "2.0",
-  "result": null,
-  "id": null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## mempool_getRegisteredImmuneAccounts
-Gets immune accounts registered by `mempool_registerImmuneAccounts`.
-
-### Params
-No parameters
-
-### Returns
-`PlatformAccount[]`
-
-Error: `Invalid params`
-
-### Request Example
-```
-curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "mempool_getImmuneAccounts", "params": [], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc": "2.0",
-  "result": [
-    "01sv1ngs16bSZoN8HFkTg7kNg1Boue1Y3TvOvW4oWRH1jkDOQTwtc0"
-  ],
-  "id": null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
 ## mempool_getMachineMinimumFees
 Get minimum fees configured by the machine.
 
@@ -1286,70 +1091,6 @@ Gets custom action data for given custom action handler id and rlp encoded key.
   "jsonrpc":"2.0",
   "result":"0c",
   "id":411
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## miner_getWork
-Returns the hash of the current block and score.
-
-### Params
-No parameters
-
-### Returns
-`Work`
-
-Errors: `No Author`, `No Work Required`, `No Work Found`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "miner_getWork", "params": [], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":{
-    "powHash":"0x56642f04d519ae3262c7ba6facf1c5b11450ebaeb7955337cfbc45420d573077",
-    "target":100
-  },
-  "id":null
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-## miner_submitWork
-Used for submitting a proof-of-work solution.
-
-### Params
- 1. powHash: `string`
- 2. seal: `string[]`
-
-### Returns
-`boolean`
-
-Errors: `No Work Required`, `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "miner_submitWork", "params": ["0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", ["0x56642f04d519ae3262c7ba6facf1c5b11450ebaeb7955337cfbc45420d573077"]], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":true,
-  "id":6
 }
 ```
 
@@ -2377,40 +2118,5 @@ No parameters
   "id":3
 }
 ```
-
-[Back to **List of methods**](#list-of-methods)
-
-## devel_testTPS
-
-Test TPS as the parameters.
-
-### Params
-
-1. count: `number` - Integer.
-2. seed: `number` - Integer, only used in "payOrTransfer" option.
-3. option: "payOnly" | "transferSingle" | "transferMultiple" | "payOrTransfer"
-
-### Returns
-
-`number`
-
-### Request Example
-
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "devel_testTPS", "params": [{"count": 1000, "seed": 0, "option": "payOnly"}], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-
-```
-{
-  "jsonrpc":"2.0",
-  "result":5000.0,
-  "id":null
-}
-`````
 
 [Back to **List of methods**](#list-of-methods)

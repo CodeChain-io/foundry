@@ -26,7 +26,7 @@ use crate::transaction::{PendingVerifiedTransactions, VerifiedTransaction};
 use crate::Error as CoreError;
 use ckey::Ed25519Public as Public;
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
-use ctypes::{BlockNumber, TxHash};
+use ctypes::{BlockId, BlockNumber, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use std::cmp::max;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -404,7 +404,12 @@ impl MemPool {
 
     // Recover MemPool state from db stored data
     pub fn recover_from_db<C: AccountData + BlockChainTrait>(&mut self, client: &C) {
-        let fetch_account = fetch_account_creator(client);
+        let recover_block_id = {
+            let recover_block_hash = client.chain_info().best_block_hash;
+            BlockId::Hash(recover_block_hash)
+        };
+        let fetch_account = fetch_account_creator(client, recover_block_id);
+
         let by_hash = backup::recover_to_data(self.db.as_ref());
 
         let recover_block_number = client.chain_info().best_block_number;
@@ -1007,8 +1012,7 @@ pub mod test {
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db.clone());
 
-        let fetch_account = fetch_account_creator(&test_client);
-
+        let fetch_account = fetch_account_creator(&test_client, BlockId::Latest);
         let inserted_block_number = 1;
         let inserted_timestamp = 100;
         let mut inputs: Vec<MemPoolInput> = Vec::new();
@@ -1081,12 +1085,11 @@ pub mod test {
         let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db);
 
-        let fetch_account = fetch_account_creator(&test_client);
+        let fetch_account = fetch_account_creator(&test_client, BlockId::Latest);
         let keypair: KeyPair = Random.generate().unwrap();
         let pubkey = keypair.public();
         test_client.set_balance(*pubkey, 1_000_000_000_000);
         assert_eq!(1_000_000_000_000, test_client.latest_balance(&pubkey));
-
         let inserted_block_number = 1;
         let inserted_timestamp = 100;
         let inputs = vec![

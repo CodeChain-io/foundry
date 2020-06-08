@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::types::TPSTestSetting;
 use cjson::bytes::Bytes;
 use ctypes::BlockHash;
 use jsonrpc_core::Result;
@@ -46,7 +45,4 @@ pub trait Devel {
 
     #[rpc(name = "devel_snapshot")]
     fn snapshot(&self, hash: BlockHash) -> Result<()>;
-
-    #[rpc(name = "devel_testTPS")]
-    fn test_tps(&self, setting: TPSTestSetting) -> Result<f64>;
 }

@@ -52,14 +52,6 @@ where
         Ok(self.client.transaction(&id).map(From::from))
     }
 
-    fn get_transaction_signer(&self, transaction_hash: TxHash) -> Result<Option<PlatformAddress>> {
-        let id = transaction_hash.into();
-        Ok(self
-            .client
-            .transaction(&id)
-            .map(|mut tx| PlatformAddress::new_v0(tx.unverified_tx().transaction().network_id, tx.signer())))
-    }
-
     fn contains_transaction(&self, transaction_hash: TxHash) -> Result<bool> {
         Ok(self.client.transaction_block(&transaction_hash.into()).is_some())
     }
