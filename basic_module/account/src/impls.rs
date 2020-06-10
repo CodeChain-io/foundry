@@ -54,10 +54,10 @@ impl TransactionExecutor for Executor {
                 quantity,
             } = signed_tx.tx.action;
 
-            if !check(signed_tx) || sub_balance(&receiver, quantity).is_err() {
+            if !check(signed_tx) || sub_balance(&sender, quantity + signed_tx.tx.fee).is_err() {
                 return Err(())
             }
-            add_balance(&sender, signed_tx.tx.fee + quantity);
+            add_balance(&receiver, quantity);
         }
 
         Ok(vec![])
