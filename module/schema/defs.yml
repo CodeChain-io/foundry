@@ -1,4 +1,4 @@
-#@ load("defs.star", "name", "qname")
+#@ load("defs.star", "name", "qname", "hash")
 
 #@yaml/text-templated-strings
 ---
@@ -13,6 +13,11 @@ qname:
   $id: '#qname'
   type: string
   pattern: (@= qname @)
+
+hash:
+  $id: '#hash'
+  type: string
+  pattern: (@= hash @)
 
 tags:
   $id: '#tags'
@@ -40,6 +45,7 @@ ref:
   oneOf:
     - $ref: '#name'
     - $ref: '#qname'
+
 refs:
   $id: '#refs'
   oneOf:
@@ -68,7 +74,7 @@ value:
     - $ref: '#simpleValue'
     - type: array
       items:
-        $ref: '#mapValue'
+        $ref: '#value'
     - $ref: '#mapValue'
     - type: 'null'
 
