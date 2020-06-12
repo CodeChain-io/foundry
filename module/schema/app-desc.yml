@@ -10,13 +10,13 @@ properties:
   modules:
     type: object
     patternProperties:
-      (@= hash @):
+      #! module name to be referred to elsewhere in this descriptor.
+      #! 'host' is reserved to designate the foundry host.
+      (@= name @):
         type: object
         properties:
-          #! module name to be referred to elsewhere in this descriptor.
-          #! 'host' is reserved to designate the foundry host.
-          name:
-            $ref: defs.json#/name
+          hash:
+            $ref: defs.json#/hash
           init:
             #! the map corresponds to the parameters to the init method as if we used named parameter syntax
             $ref: defs.json#/mapValue
