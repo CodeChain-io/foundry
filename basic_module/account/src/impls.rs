@@ -22,7 +22,6 @@ use crate::types::{Action, SignedTransaction};
 use ckey::Ed25519Public as Public;
 use coordinator::context::Context;
 use coordinator::types::{ErrorCode, TransactionExecutionOutcome};
-use parking_lot::RwLock;
 
 pub struct Handler<C: Context> {
     context: C,
@@ -55,20 +54,23 @@ impl<C: Context> CheckTxHandler for Handler<C> {
 }
 
 pub struct Executor<C: Context> {
-    context: RwLock<C>,
+    context: C,
 }
 
 impl<C: Context> Executor<C> {
     #[allow(dead_code)]
     pub fn new(context: C) -> Self {
         Self {
-            context: context.into(),
+            context,
         }
     }
 }
 
 impl<C: Context> TransactionExecutor for Executor<C> {
-    fn execute_transactions(&self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionExecutionOutcome>, ()> {
+    fn execute_transactions(
+        &mut self,
+        transactions: &[SignedTransaction],
+    ) -> Result<Vec<TransactionExecutionOutcome>, ()> {
         for signed_tx in transactions {
             let Action::Pay {
                 sender,
@@ -76,12 +78,10 @@ impl<C: Context> TransactionExecutor for Executor<C> {
                 quantity,
             } = signed_tx.tx.action;
 
-            if !check(signed_tx)
-                || sub_balance(&mut *self.context.write(), &sender, quantity + signed_tx.tx.fee).is_err()
-            {
+            if !check(signed_tx) || sub_balance(&mut self.context, &sender, quantity + signed_tx.tx.fee).is_err() {
                 return Err(())
             }
-            add_balance(&mut *self.context.write(), &receiver, quantity);
+            add_balance(&mut self.context, &receiver, quantity);
         }
 
         Ok(vec![])
@@ -89,41 +89,39 @@ impl<C: Context> TransactionExecutor for Executor<C> {
 }
 
 pub struct Manager<C: Context> {
-    context: RwLock<C>,
+    context: C,
 }
 
 impl<C: Context> Manager<C> {
     #[allow(dead_code)]
     pub fn new(context: C) -> Self {
         Self {
-            context: context.into(),
+            context,
         }
     }
 }
 
 impl<C: Context> AccountManager for Manager<C> {
-    fn add_balance(&self, account_id: &Public, val: u64) {
-        add_balance(&mut *self.context.write(), account_id, val)
+    fn add_balance(&mut self, account_id: &Public, val: u64) {
+        add_balance(&mut self.context, account_id, val)
     }
 
-    fn sub_balance(&self, account_id: &Public, val: u64) -> Result<(), Error> {
-        sub_balance(&mut *self.context.write(), account_id, val)
+    fn sub_balance(&mut self, account_id: &Public, val: u64) -> Result<(), Error> {
+        sub_balance(&mut self.context, account_id, val)
     }
 
-    fn set_balance(&self, account_id: &Public, val: u64) {
-        let mut context = self.context.write();
-        let mut account = get_account(&*context, account_id);
+    fn set_balance(&mut self, account_id: &Public, val: u64) {
+        let mut account = get_account(&self.context, account_id);
 
         account.balance = val;
-        context.set(account_id, account.to_vec());
+        self.context.set(account_id, account.to_vec());
     }
 
-    fn increment_sequence(&self, account_id: &Public) {
-        let mut context = self.context.write();
-        let mut account = get_account(&*context, account_id);
+    fn increment_sequence(&mut self, account_id: &Public) {
+        let mut account = get_account(&self.context, account_id);
 
         account.sequence += 1;
-        context.set(account_id, account.to_vec());
+        self.context.set(account_id, account.to_vec());
     }
 }
 

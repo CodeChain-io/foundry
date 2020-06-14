@@ -25,17 +25,20 @@ pub trait CheckTxHandler {
 }
 
 pub trait TransactionExecutor {
-    fn execute_transactions(&self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionExecutionOutcome>, ()>;
+    fn execute_transactions(
+        &mut self,
+        transactions: &[SignedTransaction],
+    ) -> Result<Vec<TransactionExecutionOutcome>, ()>;
 }
 
 pub trait AccountManager {
-    fn add_balance(&self, account_id: &Public, val: u64);
+    fn add_balance(&mut self, account_id: &Public, val: u64);
 
-    fn sub_balance(&self, account_id: &Public, val: u64) -> Result<(), Error>;
+    fn sub_balance(&mut self, account_id: &Public, val: u64) -> Result<(), Error>;
 
-    fn set_balance(&self, account_id: &Public, val: u64);
+    fn set_balance(&mut self, account_id: &Public, val: u64);
 
-    fn increment_sequence(&self, account_id: &Public);
+    fn increment_sequence(&mut self, account_id: &Public);
 }
 
 pub trait AccountView {
