@@ -14,18 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::check;
 use crate::core::{AccountManager, AccountView, CheckTxHandler, TransactionExecutor};
 use crate::error::Error;
 use crate::internal::{add_balance, get_account, get_balance, get_sequence, sub_balance};
 use crate::types::{Action, SignedTransaction};
-use crate::{check, get_context};
 use ckey::Ed25519Public as Public;
+use coordinator::context::Context;
 use coordinator::types::{ErrorCode, TransactionExecutionOutcome};
+use parking_lot::RwLock;
 
-#[allow(dead_code)]
-pub struct Handler {}
+pub struct Handler<C: Context> {
+    context: C,
+}
 
-impl CheckTxHandler for Handler {
+impl<C: Context> Handler<C> {
+    #[allow(dead_code)]
+    pub fn new(context: C) -> Self {
+        Self {
+            context,
+        }
+    }
+}
+
+impl<C: Context> CheckTxHandler for Handler<C> {
     fn check_transaction(&self, signed_tx: &SignedTransaction) -> Result<(), ErrorCode> {
         check(signed_tx);
 
@@ -34,7 +46,7 @@ impl CheckTxHandler for Handler {
             receiver: _,
             quantity: _,
         } = signed_tx.tx.action;
-        if get_sequence(&sender) > signed_tx.tx.seq {
+        if get_sequence(&self.context, &sender) > signed_tx.tx.seq {
             return Err(0xFFFF_FFFF)
         }
 
@@ -42,10 +54,20 @@ impl CheckTxHandler for Handler {
     }
 }
 
-#[allow(dead_code)]
-pub struct Executor {}
+pub struct Executor<C: Context> {
+    context: RwLock<C>,
+}
 
-impl TransactionExecutor for Executor {
+impl<C: Context> Executor<C> {
+    #[allow(dead_code)]
+    pub fn new(context: C) -> Self {
+        Self {
+            context: context.into(),
+        }
+    }
+}
+
+impl<C: Context> TransactionExecutor for Executor<C> {
     fn execute_transactions(&self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionExecutionOutcome>, ()> {
         for signed_tx in transactions {
             let Action::Pay {
@@ -54,58 +76,80 @@ impl TransactionExecutor for Executor {
                 quantity,
             } = signed_tx.tx.action;
 
-            if !check(signed_tx) || sub_balance(&sender, quantity + signed_tx.tx.fee).is_err() {
+            if !check(signed_tx)
+                || sub_balance(&mut *self.context.write(), &sender, quantity + signed_tx.tx.fee).is_err()
+            {
                 return Err(())
             }
-            add_balance(&receiver, quantity);
+            add_balance(&mut *self.context.write(), &receiver, quantity);
         }
 
         Ok(vec![])
     }
 }
 
-#[allow(dead_code)]
-pub struct Manager {}
+pub struct Manager<C: Context> {
+    context: RwLock<C>,
+}
 
-impl AccountManager for Manager {
+impl<C: Context> Manager<C> {
+    #[allow(dead_code)]
+    pub fn new(context: C) -> Self {
+        Self {
+            context: context.into(),
+        }
+    }
+}
+
+impl<C: Context> AccountManager for Manager<C> {
     fn add_balance(&self, account_id: &Public, val: u64) {
-        add_balance(account_id, val)
+        add_balance(&mut *self.context.write(), account_id, val)
     }
 
     fn sub_balance(&self, account_id: &Public, val: u64) -> Result<(), Error> {
-        sub_balance(account_id, val)
+        sub_balance(&mut *self.context.write(), account_id, val)
     }
 
     fn set_balance(&self, account_id: &Public, val: u64) {
-        let context = get_context();
-        let mut account = get_account(account_id);
+        let mut context = self.context.write();
+        let mut account = get_account(&*context, account_id);
 
         account.balance = val;
         context.set(account_id, account.to_vec());
     }
 
     fn increment_sequence(&self, account_id: &Public) {
-        let context = get_context();
-        let mut account = get_account(account_id);
+        let mut context = self.context.write();
+        let mut account = get_account(&*context, account_id);
 
         account.sequence += 1;
         context.set(account_id, account.to_vec());
     }
 }
 
-#[allow(dead_code)]
-pub struct View {}
+pub struct View<C: Context> {
+    context: C,
+}
 
-impl AccountView for View {
+impl<C: Context> View<C> {
+    #[allow(dead_code)]
+    pub fn new(context: C) -> Self {
+        Self {
+            context,
+        }
+    }
+}
+
+impl<C: Context> AccountView for View<C> {
     fn is_active(&self, account_id: &Public) -> bool {
-        get_balance(account_id) != 0 || get_sequence(account_id) != 0
+        get_balance(&self.context, account_id) != 0 || get_sequence(&self.context, account_id) != 0
     }
 
     fn get_balance(&self, account_id: &Public) -> u64 {
-        get_balance(account_id)
+        get_balance(&self.context, account_id)
     }
 
     fn get_sequence(&self, account_id: &Public) -> u64 {
-        get_sequence(account_id)
+        get_sequence(&self.context, account_id)
     }
 }

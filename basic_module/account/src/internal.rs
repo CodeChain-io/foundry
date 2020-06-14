@@ -15,25 +15,23 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::error::Error;
-use crate::get_context;
 use crate::types::Account;
 use ckey::Ed25519Public as Public;
+use coordinator::context::Context;
 
-pub fn add_balance(account_id: &Public, val: u64) {
+pub fn add_balance(context: &mut dyn Context, account_id: &Public, val: u64) {
     if val == 0 {
         return
     }
 
-    let context = get_context();
-    let mut account: Account = get_account(account_id);
+    let mut account: Account = get_account(context, account_id);
 
     account.balance += val;
     context.set(account_id, account.to_vec());
 }
 
-pub fn sub_balance(account_id: &Public, val: u64) -> Result<(), Error> {
-    let context = get_context();
-    let mut account: Account = get_account(account_id);
+pub fn sub_balance(context: &mut dyn Context, account_id: &Public, val: u64) -> Result<(), Error> {
+    let mut account: Account = get_account(context, account_id);
 
     if account.balance < val {
         return Err(Error::InvalidValue(account.balance, val))
@@ -44,14 +42,14 @@ pub fn sub_balance(account_id: &Public, val: u64) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn get_sequence(account_id: &Public) -> u64 {
-    get_account(account_id).sequence
+pub fn get_sequence(context: &dyn Context, account_id: &Public) -> u64 {
+    get_account(context, account_id).sequence
 }
 
-pub fn get_balance(account_id: &Public) -> u64 {
-    get_account(account_id).balance
+pub fn get_balance(context: &dyn Context, account_id: &Public) -> u64 {
+    get_account(context, account_id).balance
 }
 
-pub fn get_account(account_id: &Public) -> Account {
-    get_context().get(account_id).map(|account| account.into()).unwrap_or_default()
+pub fn get_account(context: &dyn Context, account_id: &Public) -> Account {
+    context.get(account_id).map(|account| account.into()).unwrap_or_default()
 }
