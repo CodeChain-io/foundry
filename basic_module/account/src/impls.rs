@@ -53,20 +53,7 @@ impl<C: Context> CheckTxHandler for Handler<C> {
     }
 }
 
-pub struct Executor<C: Context> {
-    context: C,
-}
-
-impl<C: Context> Executor<C> {
-    #[allow(dead_code)]
-    pub fn new(context: C) -> Self {
-        Self {
-            context,
-        }
-    }
-}
-
-impl<C: Context> TransactionExecutor for Executor<C> {
+impl<C: Context> TransactionExecutor for Handler<C> {
     fn execute_transactions(
         &mut self,
         transactions: &[SignedTransaction],
@@ -88,20 +75,7 @@ impl<C: Context> TransactionExecutor for Executor<C> {
     }
 }
 
-pub struct Manager<C: Context> {
-    context: C,
-}
-
-impl<C: Context> Manager<C> {
-    #[allow(dead_code)]
-    pub fn new(context: C) -> Self {
-        Self {
-            context,
-        }
-    }
-}
-
-impl<C: Context> AccountManager for Manager<C> {
+impl<C: Context> AccountManager for Handler<C> {
     fn add_balance(&mut self, account_id: &Public, val: u64) {
         add_balance(&mut self.context, account_id, val)
     }
@@ -125,20 +99,7 @@ impl<C: Context> AccountManager for Manager<C> {
     }
 }
 
-pub struct View<C: Context> {
-    context: C,
-}
-
-impl<C: Context> View<C> {
-    #[allow(dead_code)]
-    pub fn new(context: C) -> Self {
-        Self {
-            context,
-        }
-    }
-}
-
-impl<C: Context> AccountView for View<C> {
+impl<C: Context> AccountView for Handler<C> {
     fn is_active(&self, account_id: &Public) -> bool {
         get_balance(&self.context, account_id) != 0 || get_sequence(&self.context, account_id) != 0
     }
