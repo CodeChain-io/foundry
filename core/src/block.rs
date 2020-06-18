@@ -18,8 +18,10 @@ use crate::consensus::{ConsensusEngine, Evidence, TendermintSealView};
 use crate::error::{BlockError, Error};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Ed25519Public as Public;
-use coordinator::traits::BlockExecutor;
-use coordinator::types::{Event, Header as PreHeader, Transaction, TransactionWithMetadata, VerifiedCrime};
+use coordinator::{
+    engine::BlockExecutor,
+    types::{Event, Header as PreHeader, Transaction, TransactionWithMetadata, VerifiedCrime},
+};
 use cstate::{CurrentValidatorSet, NextValidatorSet, StateDB, StateError, StateWithCache, TopLevelState, TopState};
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
@@ -206,10 +208,9 @@ impl OpenBlock {
     pub fn prepare_block_from_transactions<'a>(
         &mut self,
         block_executor: &dyn BlockExecutor,
-        transactions: impl Iterator<Item = &'a TransactionWithMetadata> + 'a,
+        mut transactions: impl Iterator<Item = &'a TransactionWithMetadata> + 'a,
     ) {
-        let transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata>> = Box::new(transactions);
-        let succeeded_transactions = block_executor.prepare_block(self.state_mut(), transactions);
+        let succeeded_transactions = block_executor.prepare_block(self.state_mut(), &mut transactions);
         self.block.transactions.append(&mut succeeded_transactions.into_iter().cloned().collect());
     }
 

@@ -15,15 +15,17 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #![allow(dead_code, unused_variables)]
-use self::traits::{BlockExecutor, Initializer, TxFilter};
+
+use self::context::{Context, StorageAccess};
+use self::engine::{BlockExecutor, Initializer, TxFilter};
 use self::types::*;
-use context::StorageAccess;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 
 pub mod context;
-pub mod test_coordinator;
-pub mod traits;
+pub mod engine;
 pub mod types;
+pub mod module;
+pub mod test_coordinator;
 
 /// The `Coordinator` encapsulates all the logic for a Foundry application.
 ///
@@ -60,7 +62,7 @@ impl BlockExecutor for Coordinator {
     fn prepare_block<'a>(
         &self,
         context: &mut dyn StorageAccess,
-        transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+        transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<&'a Transaction> {
         unimplemented!()
     }
@@ -77,7 +79,7 @@ impl TxFilter for Coordinator {
 
     fn filter_transactions<'a>(
         &self,
-        transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+        transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
         memory_limit: Option<usize>,
         size_limit: Option<usize>,
     ) -> (Vec<&'a TransactionWithMetadata>, Vec<&'a TransactionWithMetadata>) {
@@ -85,11 +87,11 @@ impl TxFilter for Coordinator {
     }
 }
 
-pub struct Builder<C: context::Context> {
+pub struct Builder<C: Context> {
     context: C,
 }
 
-impl<C: context::Context> Builder<C> {
+impl<C: Context> Builder<C> {
     fn new(context: C) -> Self {
         Builder {
             context,

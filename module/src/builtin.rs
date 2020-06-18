@@ -14,8 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub mod link;
-pub mod sandbox;
+use std::sync::Arc;
 
-#[cfg(builtin_module)]
-pub mod builtin;
+use crate::sandbox::{Result, Sandbox, Sandboxer, SANDBOXERS};
+use std::path::Path;
+
+#[distributed_slice(SANDBOXERS)]
+fn builtin_loader() -> Arc<dyn Sandboxer> {
+    Arc::new(BuiltinLoader {})
+}
+
+struct BuiltinLoader {}
+
+impl Sandboxer for BuiltinLoader {
+    fn id(&self) -> &'static str {
+        "builtin"
+    }
+
+    fn supported_module_types(&self) -> &'static [&'static str] {
+        &["builtin"]
+    }
+
+    fn load(
+        &self,
+        path: &dyn AsRef<Path>,
+        init: &dyn erased_serde::Serialize,
+        exports: &[(&str, &dyn erased_serde::Serialize)],
+    ) -> Result<Arc<dyn Sandbox>> {
+    }
+}
