@@ -15,15 +15,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub mod context;
+pub mod engine;
 mod header;
+pub mod module;
 pub mod test_coordinator;
-mod traits;
 mod transaction;
 pub mod types;
 
 use self::context::{Context, StorageAccess};
+use self::engine::{BlockExecutor, Initializer, TxFilter};
 pub use self::header::Header;
-use self::traits::{BlockExecutor, Initializer, TxFilter};
 use self::transaction::{Transaction, TransactionWithMetadata};
 use self::types::{BlockOutcome, ErrorCode, VerifiedCrime};
 use crate::types::{CloseBlockError, ExecuteTransactionError, HeaderError, TransactionExecutionOutcome};
@@ -63,7 +64,7 @@ impl BlockExecutor for Coordinator {
     fn prepare_block<'a>(
         &self,
         _storage: &mut dyn StorageAccess,
-        _transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+        _transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<&'a Transaction> {
         unimplemented!()
     }
@@ -80,7 +81,7 @@ impl TxFilter for Coordinator {
 
     fn filter_transactions<'a>(
         &self,
-        _transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+        _transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
         _memory_limit: Option<usize>,
         _size_limit: Option<usize>,
     ) -> (Vec<&'a TransactionWithMetadata>, Vec<&'a TransactionWithMetadata>) {
