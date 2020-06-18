@@ -2755,9 +2755,9 @@ version = "0.1.4"
 source = "git+https://github.com/CodeChain-io/remote-trait-object.git#48f05f81c5301ef46d7ed83eed41696c037fba04"
 dependencies = [
  "proc-macro-crate",
- "proc-macro2 1.0.18",
+ "proc-macro2 1.0.19",
  "quote 1.0.7",
- "syn 1.0.33",
+ "syn 1.0.35",
 ]
 
 [[package]]
