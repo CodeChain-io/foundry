@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::context::StorageAccess;
-use super::types::*;
+use crate::context::StorageAccess;
+use crate::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 
 pub trait Initializer: Send + Sync {
     fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams);
 }
+
 pub trait BlockExecutor: Send + Sync {
     fn open_block(
         &self,
@@ -36,7 +37,7 @@ pub trait BlockExecutor: Send + Sync {
     fn prepare_block<'a>(
         &self,
         context: &mut dyn StorageAccess,
-        transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+        transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<&'a Transaction>;
     fn close_block(&self, context: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError>;
 }
@@ -45,7 +46,7 @@ pub trait TxFilter: Send + Sync {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
     fn filter_transactions<'a>(
         &self,
-        transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+        transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
         memory_limit: Option<usize>,
         size_limit: Option<usize>,
     ) -> (Vec<&'a TransactionWithMetadata>, Vec<&'a TransactionWithMetadata>);

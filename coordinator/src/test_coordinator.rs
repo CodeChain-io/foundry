@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::context::StorageAccess;
-use super::traits::{BlockExecutor, Initializer, TxFilter};
-use super::types::*;
+use crate::context::StorageAccess;
+use crate::engine::{BlockExecutor, Initializer, TxFilter};
+use crate::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -75,7 +75,7 @@ impl BlockExecutor for TestCoordinator {
     fn prepare_block<'a>(
         &self,
         context: &mut dyn StorageAccess,
-        transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+        transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<&'a Transaction> {
         transactions.map(|tx_with_metadata| &tx_with_metadata.tx).collect()
     }
@@ -105,7 +105,7 @@ impl TxFilter for TestCoordinator {
 
     fn filter_transactions<'a>(
         &self,
-        transactions: Box<dyn Iterator<Item = &'a TransactionWithMetadata> + 'a>,
+        transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
         memory_limit: Option<usize>,
         size_limit: Option<usize>,
     ) -> (Vec<&'a TransactionWithMetadata>, Vec<&'a TransactionWithMetadata>) {

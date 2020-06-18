@@ -25,7 +25,7 @@ use crate::scheme::Scheme;
 use crate::transaction::PendingTransactions;
 use crate::types::TransactionId;
 use ckey::Ed25519Public as Public;
-use coordinator::traits::{BlockExecutor, TxFilter};
+use coordinator::engine::{BlockExecutor, TxFilter};
 use coordinator::types::{Transaction, TxOrigin};
 use cstate::TopLevelState;
 use ctypes::errors::HistoryError;
@@ -469,8 +469,8 @@ impl MinerService for Miner {
 #[cfg(test)]
 pub mod test {
     use cio::IoService;
-    use coordinator::test_coordinator::TestCoordinator;
     use coordinator::types::Transaction;
+    use coordinator::test_coordinator::TestCoordinator;
     use ctimer::TimerLoop;
 
     use super::super::super::client::ClientConfig;

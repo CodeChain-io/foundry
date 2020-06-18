@@ -38,7 +38,7 @@ use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::context::{
     ChainHistoryAccess, Key as DbKey, MemPoolAccess, StateHistoryAccess, StorageAccess, StorageId, Value as DbValue,
 };
-use coordinator::traits::{BlockExecutor, Initializer};
+use coordinator::engine::{BlockExecutor, Initializer};
 use coordinator::types::{Event, Transaction};
 use cstate::{Metadata, MetadataAddress, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};

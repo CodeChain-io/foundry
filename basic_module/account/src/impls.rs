@@ -22,8 +22,7 @@ use crate::internal::{
 };
 use crate::types::Action;
 use crate::{check, get_context, SignedTransaction};
-pub use coordinator::types::ErrorCode;
-pub use coordinator::types::TransactionExecutionOutcome;
+pub use coordinator::types::{ErrorCode, TransactionExecutionOutcome};
 
 #[allow(dead_code)]
 pub struct Handler {}
