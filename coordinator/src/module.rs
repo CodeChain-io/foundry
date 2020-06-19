@@ -18,30 +18,22 @@ use super::context::SubStorageAccess;
 use super::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 
-pub trait OnChainInit: Send + Sync {
+pub trait ChainInit: Send + Sync {
     fn chain_init(&self) -> (CompactValidatorSet, ConsensusParams);
 }
 
-pub trait OnBlockOpen: Send + Sync {
-    fn block_opened() -> Result<(), HeaderError>;
+pub trait BlockOpen: Send + Sync {
+    fn block_opened(&self, storage: Box<dyn SubStorageAccess>) -> Result<(), HeaderError>;
 }
 
-pub trait OnBlockClosed: Send + Sync {
-    fn block_closed(&self, storage: &mut dyn SubStorageAccess) -> Result<BlockOutcome, CloseBlockError>;
+pub trait BlockClosed: Send + Sync {
+    fn block_closed(&self) -> Result<BlockOutcome, CloseBlockError>;
 }
 
 pub trait TxOwner: Send + Sync {
-    fn execute_transactions(
-        &self,
-        context: &mut dyn SubStorageAccess,
-        transaction: &Transaction,
-    ) -> Result<Vec<TransactionExecutionOutcome>, ()>;
+    fn execute_transaction(&self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()>;
 
-    fn propose_transaction<'a>(
-        &self,
-        context: &mut dyn SubStorageAccess,
-        transaction: &TransactionWithMetadata,
-    ) -> bool;
+    fn propose_transaction<'a>(&self, transaction: &TransactionWithMetadata) -> bool;
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
 }
