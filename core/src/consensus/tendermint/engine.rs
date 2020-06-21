@@ -177,7 +177,7 @@ impl ConsensusEngine for Tendermint {
     /// Block transformation functions, before the transactions.
     fn open_block_action(&self, block: &ExecutedBlock) -> Result<Option<Action>, Error> {
         Ok(Some(Action::UpdateValidators {
-            validators: NextValidators::load_from_state(block.state())?.into(),
+            validators: NextValidators::load_from_state(&*block.state())?.into(),
         }))
     }
 
@@ -198,7 +198,7 @@ impl ConsensusEngine for Tendermint {
                 parent_term_common_params.expect("TermCommonParams should exist").term_seconds()
             }
         };
-        let next_validators = NextValidators::update_weight(block.state(), block.header().author())?;
+        let next_validators = NextValidators::update_weight(&*block.state(), block.header().author())?;
         if !is_term_changed(block.header(), &parent, term_seconds) {
             return Ok(vec![Action::ChangeNextValidators {
                 validators: next_validators.into(),
@@ -224,7 +224,7 @@ impl ConsensusEngine for Tendermint {
             (current_term + custody_period, current_term + release_period)
         };
 
-        let released_addresses = Jail::load_from_state(block.state())?.released_addresses(current_term);
+        let released_addresses = Jail::load_from_state(&*block.state())?.released_addresses(current_term);
 
         Ok(vec![
             Action::CloseTerm {

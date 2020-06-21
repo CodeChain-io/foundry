@@ -27,9 +27,11 @@ use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{BlockNumber, TransactionIndex, TxHash};
 use merkle_trie::skewed_merkle_root;
+use parking_lot::{Mutex, MutexGuard};
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::collections::HashSet;
+use std::sync::Arc;
 
 /// A block, encoded as it is on the block chain.
 #[derive(Debug, Clone)]
@@ -88,7 +90,7 @@ impl Decodable for Block {
 #[derive(Clone)]
 pub struct ExecutedBlock {
     header: Header,
-    state: TopLevelState,
+    state: Arc<Mutex<TopLevelState>>,
     evidences: Vec<Evidence>,
     transactions: Vec<VerifiedTransaction>,
     invoices: Vec<Invoice>,
@@ -99,7 +101,7 @@ impl ExecutedBlock {
     fn new(state: TopLevelState, parent: &Header) -> ExecutedBlock {
         ExecutedBlock {
             header: parent.generate_child(),
-            state,
+            state: Arc::new(Mutex::new(state)),
             evidences: Default::default(),
             transactions: Default::default(),
             invoices: Default::default(),
@@ -107,9 +109,9 @@ impl ExecutedBlock {
         }
     }
 
-    /// Get mutable access to a state.
-    pub fn state_mut(&mut self) -> &mut TopLevelState {
-        &mut self.state
+    /// Get exclusive access to a state.
+    pub fn state(&self) -> MutexGuard<TopLevelState> {
+        self.state.lock()
     }
 
     pub fn transactions(&self) -> &[VerifiedTransaction] {
@@ -168,20 +170,20 @@ impl OpenBlock {
         }
 
         let hash = tx.hash();
-        let error = match self.block.state.apply(
+        let error = match self.block.state().apply(
             &tx.transaction(),
             &tx.signer_public(),
             client,
             parent_block_number,
             transaction_index,
         ) {
-            Ok(()) => {
-                self.block.transactions_set.insert(hash);
-                self.block.transactions.push(tx);
-                None
-            }
+            Ok(()) => None,
             Err(err) => Some(err),
         };
+        if error.is_none() {
+            self.block.transactions_set.insert(hash);
+            self.block.transactions.push(tx);
+        }
         self.block.invoices.push(Invoice {
             hash,
             error: error.clone().map(|err| err.to_string()),
@@ -216,13 +218,13 @@ impl OpenBlock {
 
     /// Turn this into a `ClosedBlock`.
     pub fn close(mut self) -> Result<ClosedBlock, Error> {
-        let state_root = self.block.state.commit().map_err(|e| {
+        let state_root = self.block.state().commit().map_err(|e| {
             warn!("Encountered error on state commit: {}", e);
             e
         })?;
         self.block.header.set_state_root(state_root);
 
-        let vset_raw = NextValidators::load_from_state(self.block.state())?;
+        let vset_raw = NextValidators::load_from_state(&*self.block.state())?;
         let vset = vset_raw.create_compact_validator_set();
         self.block.header.set_next_validator_set_hash(vset.hash());
 
@@ -323,9 +325,9 @@ pub trait IsBlock {
         &self.block().evidences
     }
 
-    /// Get the final state associated with this object's block.
-    fn state(&self) -> &TopLevelState {
-        &self.block().state
+    /// Get exclusive access to the final state associated with this object's block.
+    fn state(&self) -> MutexGuard<TopLevelState> {
+        self.block().state.lock()
     }
 }
 
