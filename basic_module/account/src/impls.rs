@@ -74,9 +74,10 @@ impl<C: Context> TransactionExecutor for Handler<C> {
                 quantity,
             } = signed_tx.tx.action;
 
-            if !check_signature(signed_tx)
-                || sub_balance(&mut self.context, &sender, quantity + signed_tx.tx.fee).is_err()
-            {
+            #[cfg(debug_assertions)]
+            self.check_transaction(signed_tx).unwrap();
+
+            if sub_balance(&mut self.context, &sender, quantity + signed_tx.tx.fee).is_err() {
                 return Err(())
             }
             add_balance(&mut self.context, &receiver, quantity);
