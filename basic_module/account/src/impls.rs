@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::check;
 use crate::core::{AccountManager, AccountView, CheckTxHandler, TransactionExecutor};
 use crate::error::Error;
 use crate::internal::{add_balance, get_account, get_balance, get_sequence, sub_balance};
 use crate::types::{Action, SignedTransaction};
+use crate::{check_network_id, check_signature};
 use ckey::Ed25519Public as Public;
 use coordinator::context::Context;
 use coordinator::types::{ErrorCode, TransactionExecutionOutcome};
@@ -36,9 +36,18 @@ impl<C: Context> Handler<C> {
     }
 }
 
+const INVALID_NETWORK_ID: ErrorCode = 1;
+const INVALID_SIGNATURE: ErrorCode = 2;
+const INVALID_SEQ: ErrorCode = 0xFFFF_FFFF;
+
 impl<C: Context> CheckTxHandler for Handler<C> {
     fn check_transaction(&self, signed_tx: &SignedTransaction) -> Result<(), ErrorCode> {
-        check(signed_tx);
+        if !check_network_id(&signed_tx.tx.network_id) {
+            return Err(INVALID_NETWORK_ID)
+        }
+        if !check_signature(signed_tx) {
+            return Err(INVALID_SIGNATURE)
+        }
 
         let Action::Pay {
             sender,
@@ -46,7 +55,7 @@ impl<C: Context> CheckTxHandler for Handler<C> {
             quantity: _,
         } = signed_tx.tx.action;
         if get_sequence(&self.context, &sender) > signed_tx.tx.seq {
-            return Err(0xFFFF_FFFF)
+            return Err(INVALID_SEQ)
         }
 
         Ok(())
@@ -65,7 +74,9 @@ impl<C: Context> TransactionExecutor for Handler<C> {
                 quantity,
             } = signed_tx.tx.action;
 
-            if !check(signed_tx) || sub_balance(&mut self.context, &sender, quantity + signed_tx.tx.fee).is_err() {
+            if !check_signature(signed_tx)
+                || sub_balance(&mut self.context, &sender, quantity + signed_tx.tx.fee).is_err()
+            {
                 return Err(())
             }
             add_balance(&mut self.context, &receiver, quantity);
