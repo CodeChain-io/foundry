@@ -18,6 +18,7 @@ use crate::consensus::{ConsensusEngine, Evidence, TendermintSealView};
 use crate::error::{BlockError, Error};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Ed25519Public as Public;
+use coordinator::context::StorageAccess;
 use coordinator::{
     engine::BlockExecutor,
     types::{Event, Header as PreHeader, Transaction, TransactionWithMetadata, VerifiedCrime},
@@ -27,10 +28,12 @@ use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{CompactValidatorSet, ConsensusParams, TxHash};
 use merkle_trie::skewed_merkle_root;
+use parking_lot::{Mutex, MutexGuard};
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::collections::HashMap;
 use std::iter::Iterator;
+use std::sync::Arc;
 
 /// A block, encoded as it is on the block chain.
 #[derive(Debug, Clone)]
@@ -89,7 +92,7 @@ impl Decodable for Block {
 #[derive(Clone)]
 pub struct ExecutedBlock {
     header: Header,
-    state: TopLevelState,
+    state: Arc<Mutex<TopLevelState>>,
     evidences: Vec<Evidence>,
     transactions: Vec<Transaction>,
     tx_events: HashMap<TxHash, Vec<Event>>,
@@ -100,7 +103,7 @@ impl ExecutedBlock {
     fn new(state: TopLevelState, parent: &Header) -> ExecutedBlock {
         ExecutedBlock {
             header: parent.generate_child(),
-            state,
+            state: Arc::new(Mutex::new(state)),
             evidences: Default::default(),
             transactions: Default::default(),
             tx_events: Default::default(),
@@ -108,9 +111,9 @@ impl ExecutedBlock {
         }
     }
 
-    /// Get mutable access to a state.
-    pub fn state_mut(&mut self) -> &mut TopLevelState {
-        &mut self.state
+    /// Get exclusive access to a state.
+    pub fn state(&self) -> MutexGuard<TopLevelState> {
+        self.state.lock()
     }
 
     pub fn transactions(&self) -> &[Transaction] {
@@ -183,7 +186,9 @@ impl OpenBlock {
                 self.block.evidences.iter().map(Encodable::rlp_bytes),
             ));
         }
-        block_executor.open_block(self.state_mut(), &pre_header, &verified_crimes).map_err(From::from)
+        let storage = Arc::clone(&self.block.state);
+        let storage: Arc<Mutex<dyn StorageAccess>> = storage;
+        block_executor.open_block(storage, &pre_header, &verified_crimes).map_err(From::from)
     }
 
     pub fn execute_transactions(
@@ -193,7 +198,7 @@ impl OpenBlock {
     ) -> Result<(), Error> {
         // TODO: Handle erroneous transactions
         let transaction_results = block_executor
-            .execute_transactions(self.state_mut(), &transactions)
+            .execute_transactions(&transactions)
             .map_err(|_| Error::Other(String::from("Rejected while executing transactions")))?;
         self.block.transactions.append(&mut transactions);
         // TODO: How to do this without copy?
@@ -210,19 +215,19 @@ impl OpenBlock {
         block_executor: &dyn BlockExecutor,
         mut transactions: impl Iterator<Item = &'a TransactionWithMetadata> + 'a,
     ) {
-        let succeeded_transactions = block_executor.prepare_block(self.state_mut(), &mut transactions);
+        let succeeded_transactions = block_executor.prepare_block(&mut transactions);
         self.block.transactions.append(&mut succeeded_transactions.into_iter().cloned().collect());
     }
 
     /// Turn this into a `ClosedBlock`.
     pub fn close(mut self, block_executor: &dyn BlockExecutor) -> Result<ClosedBlock, Error> {
-        let block_outcome = block_executor.close_block(self.state_mut())?;
+        let block_outcome = block_executor.close_block()?;
 
         self.block.block_events = block_outcome.events;
         let updated_validator_set = block_outcome.updated_validator_set;
         let next_validator_set_hash = match updated_validator_set {
             Some(ref set) => set.hash(),
-            None => NextValidatorSet::load_from_state(self.block.state())?.create_compact_validator_set().hash(),
+            None => NextValidatorSet::load_from_state(&self.block.state())?.create_compact_validator_set().hash(),
         };
         let updated_consensus_params = block_outcome.updated_consensus_params;
         if let Err(e) = self.update_next_block_state(updated_validator_set, updated_consensus_params) {
@@ -230,7 +235,7 @@ impl OpenBlock {
             return Err(e)
         }
 
-        let state_root = self.block.state.commit().map_err(|e| {
+        let state_root = self.block.state.lock().commit().map_err(|e| {
             warn!("Encountered error on state commit: {}", e);
             e
         })?;
@@ -286,19 +291,15 @@ impl OpenBlock {
         &mut self.block
     }
 
-    fn state(&self) -> &TopLevelState {
+    fn state(&self) -> MutexGuard<TopLevelState> {
         self.block.state()
-    }
-
-    fn state_mut(&mut self) -> &mut TopLevelState {
-        &mut self.block.state
     }
 
     // called on open_block
     fn update_current_validator_set(&mut self) -> Result<(), Error> {
-        let mut current_validators = CurrentValidatorSet::load_from_state(self.state())?;
-        current_validators.update(NextValidatorSet::load_from_state(self.state())?);
-        current_validators.save_to_state(self.state_mut())?;
+        let mut current_validators = CurrentValidatorSet::load_from_state(&self.state())?;
+        current_validators.update(NextValidatorSet::load_from_state(&self.state())?);
+        current_validators.save_to_state(&mut self.state())?;
 
         Ok(())
     }
@@ -309,7 +310,7 @@ impl OpenBlock {
         updated_validator_set: Option<CompactValidatorSet>,
         updated_consensus_params: Option<ConsensusParams>,
     ) -> Result<(), Error> {
-        let state = self.block.state_mut();
+        let state = &mut self.block.state();
 
         if let Some(set) = updated_validator_set {
             let validators = NextValidatorSet::from_compact_validator_set(set);
@@ -371,9 +372,9 @@ pub trait IsBlock {
         &self.block().transactions
     }
 
-    /// Get the final state associated with this object's block.
-    fn state(&self) -> &TopLevelState {
-        &self.block().state
+    /// Get exclusive access to the final state associated with this object's block.
+    fn state(&self) -> MutexGuard<TopLevelState> {
+        self.block().state.lock()
     }
 
     /// Get the events of each transaction in this block

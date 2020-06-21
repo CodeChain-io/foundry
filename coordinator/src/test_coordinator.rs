@@ -18,7 +18,9 @@ use crate::context::StorageAccess;
 use crate::engine::{BlockExecutor, Initializer, TxFilter};
 use crate::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
+use parking_lot::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 
 // Coordinator dedicated for mempool and miner testing
 pub struct TestCoordinator {
@@ -48,7 +50,7 @@ impl Initializer for TestCoordinator {
 impl BlockExecutor for TestCoordinator {
     fn open_block(
         &self,
-        _context: &mut dyn StorageAccess,
+        _context: Arc<Mutex<dyn StorageAccess>>,
         _header: &Header,
         _verified_crime: &[VerifiedCrime],
     ) -> Result<(), HeaderError> {
@@ -59,7 +61,6 @@ impl BlockExecutor for TestCoordinator {
 
     fn execute_transactions(
         &self,
-        _context: &mut dyn StorageAccess,
         transactions: &[Transaction],
     ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError> {
         self.body_count.fetch_add(transactions.len(), Ordering::SeqCst);
@@ -74,13 +75,12 @@ impl BlockExecutor for TestCoordinator {
 
     fn prepare_block<'a>(
         &self,
-        context: &mut dyn StorageAccess,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<&'a Transaction> {
         transactions.map(|tx_with_metadata| &tx_with_metadata.tx).collect()
     }
 
-    fn close_block(&self, context: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError> {
+    fn close_block(&self) -> Result<BlockOutcome, CloseBlockError> {
         if self.body_size.load(Ordering::SeqCst) > self.consensus_params.max_body_size() {
             Ok(BlockOutcome {
                 updated_validator_set: Some(self.validator_set.clone()),

@@ -469,8 +469,8 @@ impl MinerService for Miner {
 #[cfg(test)]
 pub mod test {
     use cio::IoService;
-    use coordinator::types::Transaction;
     use coordinator::test_coordinator::TestCoordinator;
+    use coordinator::types::Transaction;
     use ctimer::TimerLoop;
 
     use super::super::super::client::ClientConfig;

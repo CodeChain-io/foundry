@@ -255,8 +255,8 @@ impl MemPool {
 
 #[cfg(test)]
 pub mod test {
-    use coordinator::types::Transaction;
     use coordinator::test_coordinator::TestCoordinator;
+    use coordinator::types::Transaction;
     use rand::Rng;
     use std::sync::Arc;
 
