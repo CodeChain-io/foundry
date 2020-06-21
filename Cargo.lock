@@ -1863,6 +1863,7 @@ dependencies = [
  "serde",
  "serde_cbor",
  "serde_derive",
+ "test-context",
 ]
 
 [[package]]

@@ -88,6 +88,15 @@ pub enum Action {
 }
 
 impl Action {
+    #[cfg(test)]
+    pub fn pay(sender: Public, receiver: Public, quantity: u64) -> Self {
+        Action::Pay {
+            sender,
+            receiver,
+            quantity,
+        }
+    }
+
     pub fn min_fee(&self) -> u64 {
         // Where can we initialize the min fee
         // We need both consensus-defined minimum fee and machine-defined minimum fee

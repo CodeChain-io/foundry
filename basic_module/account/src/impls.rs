@@ -28,7 +28,6 @@ pub struct Handler<C: Context> {
 }
 
 impl<C: Context> Handler<C> {
-    #[allow(dead_code)]
     pub fn new(context: C) -> Self {
         Self {
             context,
@@ -132,5 +131,272 @@ impl<C: Context> AccountView for Handler<C> {
 
     fn get_sequence(&self, account_id: &Public) -> u64 {
         get_sequence(&self.context, account_id)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::Account;
+    use coordinator::context::SubStorageAccess;
+    use test_context::TestContext;
+
+    #[test]
+    fn add_balance() {
+        let c = TestContext::default();
+        let mut handler = Handler::new(c);
+        let p = Public::random();
+
+        assert!(!handler.is_active(&p));
+        handler.add_balance(&p, 1);
+        assert!(handler.is_active(&p));
+        assert_eq!(1, handler.get_balance(&p));
+        assert_eq!(0, handler.get_sequence(&p));
+    }
+
+    #[test]
+    fn sub_balance() {
+        let mut c = TestContext::default();
+        let p = Public::random();
+        let account = Account::new(100, 0);
+        c.set(&p, account.to_vec());
+        let mut handler = Handler::new(c);
+
+        assert!(handler.is_active(&p));
+        handler.sub_balance(&p, 10).unwrap();
+        assert_eq!(90, handler.get_balance(&p));
+        assert_eq!(0, handler.get_sequence(&p));
+    }
+
+    #[test]
+    fn inc_seq() {
+        let mut c = TestContext::default();
+        let p = Public::random();
+        let account = Account::new(100, 10);
+        c.set(&p, account.to_vec());
+        let mut handler = Handler::new(c);
+
+        handler.increment_sequence(&p);
+        assert_eq!(100, handler.get_balance(&p));
+        assert_eq!(11, handler.get_sequence(&p));
+    }
+}
+
+#[cfg(test)]
+mod tx_tests {
+    use super::*;
+    use crate::types::{Account, Transaction};
+    use ckey::{sign, Ed25519Private as Private};
+    use coordinator::context::SubStorageAccess;
+    use test_context::TestContext;
+
+    #[test]
+    fn check() {
+        let sender_private = Private::random();
+        let sender = sender_private.public_key();
+        let receiver = Public::random();
+        let action = Action::pay(sender, receiver, 10);
+        let tx = Transaction {
+            seq: 0,
+            fee: 10,
+            action,
+            network_id: "tc".into(),
+        };
+        let signed = SignedTransaction {
+            signer_public: sender,
+            signature: sign(&tx.hash(), &sender_private),
+            tx,
+        };
+
+        let c = TestContext::default();
+        let handler = Handler::new(c);
+        handler.check_transaction(&signed).unwrap();
+    }
+
+    #[test]
+    fn check_old_seq() {
+        let sender_private = Private::random();
+        let sender = sender_private.public_key();
+        let receiver = Public::random();
+        let action = Action::pay(sender, receiver, 10);
+        let tx = Transaction {
+            seq: 3,
+            fee: 10,
+            action,
+            network_id: "tc".into(),
+        };
+        let signed = SignedTransaction {
+            signer_public: sender,
+            signature: sign(&tx.hash(), &sender_private),
+            tx,
+        };
+
+        let mut c = TestContext::default();
+        let account = Account::new(100, 10);
+        c.set(&sender, account.to_vec());
+        let handler = Handler::new(c);
+        assert_eq!(INVALID_SEQ, handler.check_transaction(&signed).unwrap_err());
+    }
+
+    #[test]
+    fn check_invalid_signature() {
+        let sender_private = Private::random();
+        let sender = sender_private.public_key();
+        let receiver = Public::random();
+        let action = Action::pay(sender, receiver, 10);
+        let tx = Transaction {
+            seq: 3,
+            fee: 10,
+            action,
+            network_id: "tc".into(),
+        };
+        let signed = SignedTransaction {
+            signer_public: sender,
+            signature: sign(&[], &sender_private),
+            tx,
+        };
+
+        let mut c = TestContext::default();
+        let account = Account::new(100, 10);
+        c.set(&sender, account.to_vec());
+        let handler = Handler::new(c);
+        assert_eq!(INVALID_SIGNATURE, handler.check_transaction(&signed).unwrap_err());
+    }
+
+    #[test]
+    fn execute_pay() {
+        let sender_private = Private::random();
+        let sender = sender_private.public_key();
+        let receiver = Public::random();
+        let quantity = 10;
+        let initial = 100;
+        let fee = 10;
+        let action = Action::pay(sender, receiver, quantity);
+        let tx = Transaction {
+            seq: 3,
+            fee,
+            action,
+            network_id: "tc".into(),
+        };
+        let signed = SignedTransaction {
+            signer_public: sender,
+            signature: sign(&tx.hash(), &sender_private),
+            tx,
+        };
+
+        let mut c = TestContext::default();
+        let account = Account::new(initial, 3);
+        c.set(&sender, account.to_vec());
+        let mut handler = Handler::new(c);
+        assert!(handler.execute_transactions(&[signed]).unwrap().is_empty());
+        assert!(handler.is_active(&sender));
+        assert!(handler.is_active(&receiver));
+        assert_eq!(handler.get_sequence(&sender), 4);
+        assert_eq!(handler.get_sequence(&receiver), 0);
+        assert_eq!(handler.get_balance(&sender), initial - quantity - fee);
+        assert_eq!(handler.get_balance(&receiver), quantity);
+    }
+
+    #[test]
+    fn execute_invalid_seq() {
+        let sender_private = Private::random();
+        let sender = sender_private.public_key();
+        let receiver = Public::random();
+        let quantity = 10;
+        let initial = 100;
+        let fee = 10;
+        let action = Action::pay(sender, receiver, quantity);
+        let tx = Transaction {
+            seq: 5,
+            fee,
+            action,
+            network_id: "tc".into(),
+        };
+        let signed = SignedTransaction {
+            signer_public: sender,
+            signature: sign(&tx.hash(), &sender_private),
+            tx,
+        };
+
+        let mut c = TestContext::default();
+        let account = Account::new(initial, 3);
+        c.set(&sender, account.to_vec());
+        let mut handler = Handler::new(c);
+        assert!(handler.execute_transactions(&[signed]).is_err());
+        assert!(handler.is_active(&sender));
+        assert!(!handler.is_active(&receiver));
+        assert_eq!(handler.get_sequence(&sender), 3);
+        assert_eq!(handler.get_sequence(&receiver), 0);
+        assert_eq!(handler.get_balance(&sender), initial);
+        assert_eq!(handler.get_balance(&receiver), 0);
+    }
+
+    #[test]
+    fn execute_insufficient_fee() {
+        let sender_private = Private::random();
+        let sender = sender_private.public_key();
+        let receiver = Public::random();
+        let quantity = 10;
+        let initial = 5;
+        let fee = 10;
+        let action = Action::pay(sender, receiver, quantity);
+        let tx = Transaction {
+            seq: 3,
+            fee,
+            action,
+            network_id: "tc".into(),
+        };
+        let signed = SignedTransaction {
+            signer_public: sender,
+            signature: sign(&tx.hash(), &sender_private),
+            tx,
+        };
+
+        let mut c = TestContext::default();
+        let account = Account::new(initial, 3);
+        c.set(&sender, account.to_vec());
+        let mut handler = Handler::new(c);
+        assert!(handler.execute_transactions(&[signed]).is_err());
+        assert!(handler.is_active(&sender));
+        assert!(!handler.is_active(&receiver));
+        assert_eq!(handler.get_sequence(&sender), 3);
+        assert_eq!(handler.get_sequence(&receiver), 0);
+        assert_eq!(handler.get_balance(&sender), initial);
+        assert_eq!(handler.get_balance(&receiver), 0);
+    }
+
+
+    #[test]
+    fn execute_insufficient() {
+        let sender_private = Private::random();
+        let sender = sender_private.public_key();
+        let receiver = Public::random();
+        let quantity = 10;
+        let initial = 15;
+        let fee = 10;
+        let action = Action::pay(sender, receiver, quantity);
+        let tx = Transaction {
+            seq: 3,
+            fee,
+            action,
+            network_id: "tc".into(),
+        };
+        let signed = SignedTransaction {
+            signer_public: sender,
+            signature: sign(&tx.hash(), &sender_private),
+            tx,
+        };
+
+        let mut c = TestContext::default();
+        let account = Account::new(initial, 3);
+        c.set(&sender, account.to_vec());
+        let mut handler = Handler::new(c);
+        assert!(handler.execute_transactions(&[signed]).unwrap().is_empty());
+        assert!(handler.is_active(&sender));
+        assert!(!handler.is_active(&receiver));
+        assert_eq!(handler.get_sequence(&sender), 4);
+        assert_eq!(handler.get_sequence(&receiver), 0);
+        assert_eq!(handler.get_balance(&sender), initial - fee);
+        assert_eq!(handler.get_balance(&receiver), 0);
     }
 }

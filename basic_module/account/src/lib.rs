@@ -25,8 +25,10 @@ mod impls;
 mod internal;
 mod types;
 
+pub use crate::core::{AccountManager, AccountView};
 use crate::types::SignedTransaction;
 use ckey::{verify, NetworkId};
+pub use impls::Handler;
 use parking_lot::Mutex;
 
 lazy_static! {
