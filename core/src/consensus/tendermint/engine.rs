@@ -172,14 +172,14 @@ impl ConsensusEngine for Tendermint {
     /// Block transformation functions, before the transactions.
     fn open_block_action(&self, block: &ExecutedBlock) -> Result<Option<Action>, Error> {
         Ok(Some(Action::UpdateValidators {
-            validators: NextValidators::load_from_state(block.state())?.into(),
+            validators: NextValidators::load_from_state(&*block.state())?.into(),
         }))
     }
 
     fn close_block_actions(&self, block: &ExecutedBlock) -> Result<Vec<Action>, Error> {
         let metadata = block.state().metadata()?.expect("Metadata must exist");
 
-        let next_validators = NextValidators::update_weight(block.state(), block.header().author())?;
+        let next_validators = NextValidators::update_weight(&*block.state(), block.header().author())?;
 
         let current_term = metadata.current_term_id();
         let (custody_until, kick_at) = {
