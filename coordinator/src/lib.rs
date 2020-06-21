@@ -29,6 +29,8 @@ use self::transaction::{Transaction, TransactionWithMetadata};
 use self::types::{BlockOutcome, ErrorCode, VerifiedCrime};
 use crate::types::{CloseBlockError, ExecuteTransactionError, HeaderError, TransactionExecutionOutcome};
 use ctypes::{CompactValidatorSet, ConsensusParams};
+use parking_lot::Mutex;
+use std::sync::Arc;
 
 /// The `Coordinator` encapsulates all the logic for a Foundry application.
 ///
@@ -46,7 +48,7 @@ impl Initializer for Coordinator {
 impl BlockExecutor for Coordinator {
     fn open_block(
         &self,
-        _storage: &mut dyn StorageAccess,
+        _storage: Arc<Mutex<dyn StorageAccess>>,
         _header: &Header,
         _verified_crimes: &[VerifiedCrime],
     ) -> Result<(), HeaderError> {
@@ -55,7 +57,6 @@ impl BlockExecutor for Coordinator {
 
     fn execute_transactions(
         &self,
-        _storage: &mut dyn StorageAccess,
         _transactions: &[Transaction],
     ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError> {
         unimplemented!()
@@ -63,13 +64,12 @@ impl BlockExecutor for Coordinator {
 
     fn prepare_block<'a>(
         &self,
-        _storage: &mut dyn StorageAccess,
         _transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<&'a Transaction> {
         unimplemented!()
     }
 
-    fn close_block(&self, _storage: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError> {
+    fn close_block(&self) -> Result<BlockOutcome, CloseBlockError> {
         unimplemented!()
     }
 }
