@@ -73,14 +73,24 @@ impl<C: Context> TransactionExecutor for Handler<C> {
                 receiver,
                 quantity,
             } = signed_tx.tx.action;
-
             #[cfg(debug_assertions)]
             self.check_transaction(signed_tx).unwrap();
-
-            if sub_balance(&mut self.context, &sender, quantity + signed_tx.tx.fee).is_err() {
+            if self.get_sequence(&sender) != signed_tx.tx.seq {
                 return Err(())
             }
+
+            if sub_balance(&mut self.context, &sender, signed_tx.tx.fee).is_err() {
+                return Err(())
+            }
+            self.increment_sequence(&sender);
+            self.context.create_checkpoint();
+
+            if sub_balance(&mut self.context, &sender, quantity).is_err() {
+                self.context.revert_to_the_checkpoint();
+                continue
+            }
             add_balance(&mut self.context, &receiver, quantity);
+            self.context.discard_checkpoint();
         }
 
         Ok(vec![])
