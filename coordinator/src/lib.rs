@@ -20,12 +20,14 @@ use self::context::{Context, StorageAccess};
 use self::engine::{BlockExecutor, Initializer, TxFilter};
 use self::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
+use parking_lot::Mutex;
+use std::sync::Arc;
 
 pub mod context;
 pub mod engine;
-pub mod types;
 pub mod module;
 pub mod test_coordinator;
+pub mod types;
 
 /// The `Coordinator` encapsulates all the logic for a Foundry application.
 ///
@@ -44,7 +46,7 @@ impl Initializer for Coordinator {
 impl BlockExecutor for Coordinator {
     fn open_block(
         &self,
-        context: &mut dyn StorageAccess,
+        context: Arc<Mutex<dyn StorageAccess>>,
         header: &Header,
         verified_crime: &[VerifiedCrime],
     ) -> Result<(), HeaderError> {
@@ -53,7 +55,6 @@ impl BlockExecutor for Coordinator {
 
     fn execute_transactions(
         &self,
-        context: &mut dyn StorageAccess,
         transactions: &[Transaction],
     ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError> {
         unimplemented!()
@@ -61,13 +62,12 @@ impl BlockExecutor for Coordinator {
 
     fn prepare_block<'a>(
         &self,
-        context: &mut dyn StorageAccess,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<&'a Transaction> {
         unimplemented!()
     }
 
-    fn close_block(&self, context: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError> {
+    fn close_block(&self) -> Result<BlockOutcome, CloseBlockError> {
         unimplemented!()
     }
 }
