@@ -60,7 +60,7 @@ pub fn apply_internal(
     check_before_fee_imposition(sender_public, fee, seq, min_fee)?;
 
     // Does not impose fee and increase sequence for a failed transaction
-    let substorage = substorage();
+    let mut substorage = substorage();
     substorage.create_checkpoint();
 
     let account_manager = account_manager();

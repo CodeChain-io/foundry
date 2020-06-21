@@ -20,14 +20,14 @@ pub type Value = Vec<u8>;
 // Interface between each module and the coordinator
 pub trait SubStorageAccess {
     fn get(&self, key: &Key) -> Option<Value>;
-    fn set(&self, key: &Key, value: Value);
+    fn set(&mut self, key: &Key, value: Value);
     fn has(&self, key: &Key) -> bool;
-    fn remove(&self, key: &Key);
+    fn remove(&mut self, key: &Key);
 
     /// Create a recoverable checkpoint of this state
-    fn create_checkpoint(&self);
+    fn create_checkpoint(&mut self);
     /// Revert to the last checkpoint and discard it
-    fn revert_to_the_checkpoint(&self);
+    fn revert_to_the_checkpoint(&mut self);
     /// Merge last checkpoint with the previous
-    fn discard_checkpoint(&self);
+    fn discard_checkpoint(&mut self);
 }
