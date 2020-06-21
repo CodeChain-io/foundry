@@ -19,6 +19,8 @@ use crate::header::Header;
 use crate::transaction::{Transaction, TransactionWithMetadata};
 use crate::types::{BlockOutcome, CloseBlockError, ErrorCode, HeaderError, TransactionExecutionOutcome, VerifiedCrime};
 use ctypes::{CompactValidatorSet, ConsensusParams};
+use parking_lot::Mutex;
+use std::sync::Arc;
 
 pub trait Initializer: Send + Sync {
     fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams);
@@ -27,21 +29,16 @@ pub trait Initializer: Send + Sync {
 pub trait BlockExecutor: Send + Sync {
     fn open_block(
         &self,
-        storage: &mut dyn StorageAccess,
+        storage: Arc<Mutex<dyn StorageAccess>>,
         header: &Header,
         verified_crimes: &[VerifiedCrime],
     ) -> Result<(), HeaderError>;
-    fn execute_transactions(
-        &self,
-        storage: &mut dyn StorageAccess,
-        transactions: &[Transaction],
-    ) -> Result<Vec<TransactionExecutionOutcome>, ()>;
+    fn execute_transactions(&self, transactions: &[Transaction]) -> Result<Vec<TransactionExecutionOutcome>, ()>;
     fn prepare_block<'a>(
         &self,
-        storage: &mut dyn StorageAccess,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<&'a Transaction>;
-    fn close_block(&self, storage: &mut dyn StorageAccess) -> Result<BlockOutcome, CloseBlockError>;
+    fn close_block(&self) -> Result<BlockOutcome, CloseBlockError>;
 }
 
 pub trait TxFilter: Send + Sync {
