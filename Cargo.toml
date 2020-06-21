@@ -77,5 +77,6 @@ members = [
     "types",
     "coordinator",
     "basic_module/account",
-    "basic_module/staking"
+    "basic_module/staking",
+    "basic_module/test_context"
 ]

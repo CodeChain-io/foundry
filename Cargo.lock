@@ -3094,6 +3094,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "test-context"
+version = "0.1.0"
+dependencies = [
+ "codechain-types",
+ "coordinator",
+ "primitives",
+]
+
+[[package]]
 name = "textwrap"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
