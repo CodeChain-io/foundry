@@ -688,6 +688,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "codechain-timestamp"
+version = "0.1.0"
+dependencies = [
+ "codechain-crypto",
+ "codechain-key",
+ "codechain-types",
+ "coordinator",
+ "foundry-module-rt",
+ "foundry-process-sandbox",
+ "linkme",
+ "parking_lot 0.11.0",
+ "primitives",
+ "serde",
+ "serde_cbor",
+]
+
+[[package]]
 name = "codechain-types"
 version = "0.1.0"
 dependencies = [
@@ -1204,6 +1221,7 @@ dependencies = [
  "codechain-state",
  "codechain-sync",
  "codechain-timer",
+ "codechain-timestamp",
  "codechain-types",
  "coordinator",
  "crossbeam-channel 0.3.8",
