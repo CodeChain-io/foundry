@@ -33,7 +33,7 @@ pub trait BlockClosed: Send + Sync {
 pub trait TxOwner: Send + Sync {
     fn execute_transaction(&self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()>;
 
-    fn propose_transaction<'a>(&self, transaction: &TransactionWithMetadata) -> bool;
+    fn propose_transaction(&self, transaction: &TransactionWithMetadata) -> bool;
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
 }
