@@ -75,13 +75,13 @@ pub trait Linkable: Send + Sync {
 
 /// A port represents an endpoint of a link between two [`Linkable`]s.
 ///
-/// Before linking two ports, each may be set up with its [`send`] and [`receive`] methods.
+/// Before linking two ports, each may be set up with its [`export`] and [`import`] methods.
 /// This trait is just the basic protocol and every `Port` it supposed to implement additional
 /// traits for its supported link types.
 ///
 /// [`Linkable`]: ./trait.Linkable.html
-/// [`send`]: ./trait.Port.html#tymnethod.send
-/// [`receive`]: ./trait.Port.html#tymnethod.receive
+/// [`export`]: ./trait.Port.html#tymnethod.export
+/// [`import`]: ./trait.Port.html#tymnethod.import
 pub trait Port: CastFromSync {
     /// Sets to send a list of handles represented by the `ids` to the other end on link
     /// creation. The `ids` are indices into a list of service objects created when the module
