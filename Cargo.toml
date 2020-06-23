@@ -84,5 +84,6 @@ members = [
     "coordinator",
     "basesandbox",
     "basic_module/account",
-    "basic_module/staking"
+    "basic_module/staking",
+    "timestamp"
 ]
