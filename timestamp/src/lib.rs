@@ -16,4 +16,5 @@
 
 pub mod account;
 pub mod common;
+pub mod stamp;
 pub mod token;
