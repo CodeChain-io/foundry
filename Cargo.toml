@@ -53,6 +53,7 @@ staking = { path = "basic_module/staking" }
 tokio-core = "0.1.17"
 toml = "0.4"
 cidr = "0.0.4"
+codechain-timestamp = {path = "timestamp"}
 
 [build-dependencies]
 vergen = "3"
@@ -81,5 +82,6 @@ members = [
     "basic_module/account",
     "basic_module/staking",
     "module",
-    "module-macros"
+    "module-macros",
+    "timestamp"
 ]

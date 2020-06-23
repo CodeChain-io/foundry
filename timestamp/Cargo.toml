@@ -1,0 +1,19 @@
+[package]
+name = "codechain-timestamp"
+version = "0.1.0"
+authors = ["CodeChain Team <hi@codechain.io>"]
+edition = "2018"
+
+[dependencies]
+ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
+ckey = {package = "codechain-key", path = "../key" }
+ctypes = { package = "codechain-types", path = "../types" }
+parking_lot = "0.11.0"
+primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
+serde = { version = "1.0.111", features = ["derive"] }
+serde_cbor = "0.11.1"
+coordinator = {path = "../coordinator"}
+remote-trait-object = { version = "0.2.0" }
+foundry-process-sandbox = { git = "https://github.com/CodeChain-io/foundry-sandbox.git"}
+foundry-module-rt = { version = "0.1.1", git = "https://github.com/CodeChain-io/module-rt.git" }
+linkme = "0.2.1"
