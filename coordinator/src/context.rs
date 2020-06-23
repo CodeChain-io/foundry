@@ -26,7 +26,7 @@ pub type Key = dyn AsRef<[u8]>;
 pub type Value = Vec<u8>;
 
 // Interface between each module and the coordinator
-pub trait SubStorageAccess {
+pub trait SubStorageAccess: Send + Sync {
     fn get(&self, key: &Key) -> Option<Value>;
     fn set(&self, key: &Key, value: Value);
     fn has(&self, key: &Key) -> bool;
