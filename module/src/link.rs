@@ -87,13 +87,13 @@ pub trait Port: CastFromSync {
     /// creation. The `ids` are indices into a list of service objects created when the module
     /// owning this port is loaded into a sandbox.CBOR map fed
     /// to the constructor function.
-    fn export(&mut self, ids: &[usize]) -> &mut dyn Port;
+    fn export(&mut self, ids: &[usize]);
 
     /// Sets to which slots the handles received from the other end are to be assigned.
     ///
     /// This way, a module can't assign to an arbitrary slot in the other end.
     /// Only to the slots set by the host.
-    fn import(&mut self, slots: &[&str]) -> &mut dyn Port;
+    fn import(&mut self, slots: &[&str]);
 }
 
 #[derive(Debug, Error)]
