@@ -722,6 +722,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "codechain-timestamp"
+version = "0.1.0"
+dependencies = [
+ "codechain-crypto",
+ "codechain-key",
+ "codechain-types",
+ "coordinator",
+ "parking_lot 0.6.4",
+ "primitives",
+ "serde",
+ "serde_cbor",
+]
+
+[[package]]
 name = "codechain-types"
 version = "0.1.0"
 dependencies = [
