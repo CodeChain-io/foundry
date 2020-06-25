@@ -21,7 +21,7 @@ makeKey(...fragments) = blake256(rlp([
 
  * Value: `rlp(list of account)`
 
-    An `account` is an [Account Id](./CodeChain-Address.md) which is a blake160 hash of a public key.
+    An `account` is a public key.
     The list consists of accounts that have non-zero balance of CCS, which is the sum of both undelegated and delegated CCS.
     An RLP-encoded list of those accounts is saved in the state.
     The list should be sorted in ascending order, and every `account` should be unique.
