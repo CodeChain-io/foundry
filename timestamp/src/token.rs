@@ -16,6 +16,7 @@
 
 use crate::account::AccountManager;
 use crate::common::{self, SignedTransaction};
+use ccrypto::blake256;
 pub use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
@@ -102,7 +103,7 @@ enum ExecuteError {
 
 impl Context {
     fn get_key(key: Public) -> H256 {
-        From::from(&{
+        blake256(&{
             let mut v = serde_cbor::to_vec(&key).unwrap();
             v.extend_from_slice(b"Token-Module");
             v
