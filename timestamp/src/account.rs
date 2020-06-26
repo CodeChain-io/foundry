@@ -41,9 +41,9 @@ pub struct Account {
 pub trait AccountManager: Send + Sync {
     fn create_account(&self, public: &Public) -> Result<(), Error>;
 
-    fn get_sequence(&self, public: &Public) -> Result<u64, Error>;
+    fn get_sequence(&self, public: &Public, default: bool) -> Result<u64, Error>;
 
-    fn increase_sequence(&self, public: &Public) -> Result<(), Error>;
+    fn increase_sequence(&self, public: &Public, default: bool) -> Result<(), Error>;
 }
 
 impl AccountManager for Context {
@@ -58,17 +58,34 @@ impl AccountManager for Context {
         Ok(())
     }
 
-    fn get_sequence(&self, public: &Public) -> Result<u64, Error> {
-        let account: Account =
-            serde_cbor::from_slice(&self.storage.read().get(public).ok_or_else(|| Error::NoSuchAccount)?)
-                .map_err(|_| Error::InvalidKey)?;
+    fn get_sequence(&self, public: &Public, default: bool) -> Result<u64, Error> {
+        let bytes = match self.storage.read().get(public) {
+            Some(bytes) => bytes,
+            None => {
+                if default {
+                    return Ok(0)
+                } else {
+                    return Err(Error::NoSuchAccount)
+                }
+            }
+        };
+        let account: Account = serde_cbor::from_slice(&bytes).map_err(|_| Error::InvalidKey)?;
         Ok(account.seq)
     }
 
-    fn increase_sequence(&self, public: &Public) -> Result<(), Error> {
-        let mut account: Account =
-            serde_cbor::from_slice(&self.storage.read().get(public).ok_or_else(|| Error::NoSuchAccount)?)
-                .map_err(|_| Error::InvalidKey)?;
+    fn increase_sequence(&self, public: &Public, default: bool) -> Result<(), Error> {
+        let option_bytes = self.storage.read().get(public);
+        if option_bytes.is_none() {
+            if default {
+                self.create_account(public).expect("Synchronization bug in AccountManager");
+                self.increase_sequence(public, false).expect("Synchronization bug in AccountManager");
+                return Ok(())
+            } else {
+                return Err(Error::NoSuchAccount)
+            }
+        }
+        let bytes = option_bytes.unwrap();
+        let mut account: Account = serde_cbor::from_slice(&bytes).map_err(|_| Error::InvalidKey)?;
         account.seq += 1;
         self.storage.read().set(public, serde_cbor::to_vec(&account).unwrap());
         Ok(())

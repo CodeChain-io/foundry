@@ -131,7 +131,9 @@ impl Context {
         let tx: OwnTransaction =
             serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
         tx.verify().map_err(|_| ExecuteError::InvalidSign)?;
-        if self.account.read().get_sequence(&tx.signer_public).map_err(ExecuteError::AccountModuleError)? != tx.tx.seq {
+        if self.account.read().get_sequence(&tx.signer_public, true).map_err(ExecuteError::AccountModuleError)?
+            != tx.tx.seq
+        {
             return Err(ExecuteError::InvalidSequence)
         }
 
@@ -163,6 +165,7 @@ impl Context {
                 recipient_account.tokens.push(token);
                 self.set_account(tx.signer_public, &sender_account);
                 self.set_account(receiver, &recipient_account);
+                self.account.read().increase_sequence(&tx.signer_public, true).unwrap();
             }
         }
         Ok(())

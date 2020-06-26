@@ -50,12 +50,13 @@ impl Context {
         let tx: OwnTransaction =
             serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
         tx.verify().map_err(|_| ExecuteError::InvalidSign)?;
-        if self.account.get_sequence(&tx.signer_public).map_err(ExecuteError::AccountModuleError)? != tx.tx.seq {
+        if self.account.get_sequence(&tx.signer_public, true).map_err(ExecuteError::AccountModuleError)? != tx.tx.seq {
             return Err(ExecuteError::InvalidSequence)
         }
 
         let account = self.token.get_account(tx.signer_public).map_err(ExecuteError::TokenModuleError)?;
         if account.tokens.iter().any(|x| x.issuer == self.token_issuer) {
+            self.account.increase_sequence(&tx.signer_public, true).unwrap();
             Ok(())
         } else {
             Err(ExecuteError::NotEligibleStamper)
