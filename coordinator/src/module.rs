@@ -18,8 +18,12 @@ use super::context::SubStorageAccess;
 use super::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 
-pub trait ChainInit: Send + Sync {
-    fn chain_init(&self) -> (CompactValidatorSet, ConsensusParams);
+pub trait InitGenesis: Send + Sync {
+    fn init_genesis(&self, config: &[u8], storage: Box<dyn SubStorageAccess>);
+}
+
+pub trait InitChain: Send + Sync {
+    fn init_chain(&self) -> (CompactValidatorSet, ConsensusParams);
 }
 
 pub trait BlockOpen: Send + Sync {
