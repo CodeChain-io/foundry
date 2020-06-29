@@ -40,7 +40,7 @@ use std::sync::Arc;
 pub struct Coordinator {}
 
 impl Initializer for Coordinator {
-    fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams) {
+    fn initialize_chain(&self, _storage: Arc<Mutex<dyn StorageAccess>>) -> (CompactValidatorSet, ConsensusParams) {
         unimplemented!()
     }
 }
