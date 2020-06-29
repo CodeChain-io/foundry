@@ -23,7 +23,7 @@ use parking_lot::Mutex;
 use std::sync::Arc;
 
 pub trait Initializer: Send + Sync {
-    fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams);
+    fn initialize_chain(&self, storage: Arc<Mutex<dyn StorageAccess>>) -> (CompactValidatorSet, ConsensusParams);
 }
 
 pub trait BlockExecutor: Send + Sync {
