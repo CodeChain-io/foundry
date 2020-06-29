@@ -38,7 +38,7 @@ pub mod types;
 pub struct Coordinator {}
 
 impl Initializer for Coordinator {
-    fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams) {
+    fn initialize_chain(&self, storage: Arc<Mutex<dyn StorageAccess>>) -> (CompactValidatorSet, ConsensusParams) {
         unimplemented!()
     }
 }
