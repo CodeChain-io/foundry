@@ -47,7 +47,7 @@ impl Default for TestCoordinator {
 }
 
 impl Initializer for TestCoordinator {
-    fn initialize_chain(&self) -> (CompactValidatorSet, ConsensusParams) {
+    fn initialize_chain(&self, _storage: Arc<Mutex<dyn StorageAccess>>) -> (CompactValidatorSet, ConsensusParams) {
         (self.validator_set.clone(), self.consensus_params)
     }
 }
