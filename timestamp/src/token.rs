@@ -146,7 +146,11 @@ impl Context {
                 issuer,
             }) => {
                 let mut sender_account: Account = serde_cbor::from_slice(
-                    &self.storage.read().get(&tx.signer_public).ok_or_else(|| ExecuteError::NoAccount)?,
+                    &self
+                        .storage
+                        .read()
+                        .get(&Self::get_key(tx.signer_public))
+                        .ok_or_else(|| ExecuteError::NoAccount)?,
                 )
                 .map_err(|_| ExecuteError::InvalidKey)?;
 
