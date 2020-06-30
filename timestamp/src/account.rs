@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 pub struct Context {
-    storage: RwLock<Arc<dyn SubStorageAccess>>,
+    pub storage: RwLock<Arc<dyn SubStorageAccess>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
