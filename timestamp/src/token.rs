@@ -114,7 +114,7 @@ impl Context {
 
     fn get_account_or_default(&self, key: Public) -> Result<Account, ()> {
         if let Some(x) = self.storage.read().get(&Self::get_key(key)) {
-            serde_cbor::from_slice(&x).map_err(|_| ())?
+            Ok(serde_cbor::from_slice(&x).map_err(|_| ())?)
         } else {
             Ok(Account {
                 tokens: Vec::new(),
