@@ -26,9 +26,9 @@ use primitives::H256;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-struct Context {
-    account: RwLock<Arc<dyn AccountManager>>,
-    storage: RwLock<Arc<dyn SubStorageAccess>>,
+pub struct Context {
+    pub account: RwLock<Arc<dyn AccountManager>>,
+    pub storage: RwLock<Arc<dyn SubStorageAccess>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -212,11 +212,11 @@ impl TxOwner for Context {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ActionTransferToken {
-    receiver: Public,
+    pub receiver: Public,
 
     /// There is no difference for tokens as far as the issuer is same;
     /// Thus it is enough to speicfy which token to transfer only by the issuer.
-    issuer: H256,
+    pub issuer: H256,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
