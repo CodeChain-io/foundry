@@ -61,7 +61,7 @@ describe("network2 nodes", function() {
                     address: address.toString(),
                     port: nodeB.port
                 })
-            ).to.be.undefined;
+            ).not.throw;
 
             while (
                 !(await nodeA.rpc.net.isConnected({
@@ -123,7 +123,7 @@ describe("network2 nodes", function() {
                     address: address.toString(),
                     port: nodeB.port
                 })
-            ).to.be.undefined;
+            ).not.throw;
 
             while (
                 await nodeA.rpc.net.isConnected({
