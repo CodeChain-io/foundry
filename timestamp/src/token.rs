@@ -24,6 +24,7 @@ use coordinator::types::*;
 use parking_lot::RwLock;
 use primitives::H256;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 use std::sync::Arc;
 
 pub struct Context {
@@ -54,8 +55,9 @@ pub enum Error {
 }
 
 pub trait TokenManager: Send + Sync {
-    fn get_account(&self, public: Public) -> Result<Account, Error>;
-    fn issue_token(&self, issuer: H256, receiver: Public) -> Result<(), Error>;
+    fn get_account(&self, public: &Public) -> Result<Account, Error>;
+    fn issue_token(&self, issuer: &H256, receiver: &Public) -> Result<(), Error>;
+    fn get_owning_accounts_with_issuer(&self, issuer: &H256) -> Result<BTreeSet<Public>, Error>;
 }
 
 impl TokenManager for Context {
@@ -70,7 +72,19 @@ impl TokenManager for Context {
             issuer,
         });
         self.set_account(receiver, &account);
+        let mut set = self.get_owning_accounts_with_issuer(issuer).map_err(|_| Error::InvalidKey)?;
+        set.insert(receiver);
+        self.set_owning_accounts_with_issuer(issuer, set);
+
         Ok(())
+    }
+
+    fn get_owning_accounts_with_issuer(&self, issuer: &H256) -> Result<BTreeSet<Public>, Error> {
+        Ok(if let Some(x) = self.storage.read().get(&Self::get_key_account_set(issuer)) {
+            serde_cbor::from_slice(&x).map_err(|_| Error::InvalidKey)?
+        } else {
+            BTreeSet::new()
+        })
     }
 }
 
@@ -107,7 +121,15 @@ impl Context {
     fn get_key(key: Public) -> H256 {
         blake256(&{
             let mut v = serde_cbor::to_vec(&key).unwrap();
-            v.extend_from_slice(b"Token-Module");
+            v.extend_from_slice(b"Token-Module-Account");
+            v
+        } as &[u8])
+    }
+
+    fn get_key_account_set(issuer: H256) -> H256 {
+        blake256(&{
+            let mut v = serde_cbor::to_vec(&issuer).unwrap();
+            v.extend_from_slice(b"Token-Module-Account-Set");
             v
         } as &[u8])
     }
@@ -125,6 +147,11 @@ impl Context {
     /// set_account() must not fail
     fn set_account(&self, key: Public, account: &Account) {
         self.storage.read().set(&Self::get_key(key), serde_cbor::to_vec(account).unwrap());
+    }
+
+    /// set_owning_accounts_with_issuer() must not fail
+    fn set_owning_accounts_with_issuer(&self, issuer: &H256, set: BTreeSet<Public>) {
+        self.storage.read().set(&Self::get_key_account_set(issuer), serde_cbor::to_vec(&set).unwrap());
     }
 
     fn excute_tx(&self, transaction: &Transaction) -> Result<(), ExecuteError> {
@@ -165,9 +192,17 @@ impl Context {
                 let mut recipient_account =
                     self.get_account_or_default(receiver).map_err(|_| ExecuteError::InvalidKey)?;
 
+                let mut set = self.get_owning_accounts_with_issuer(issuer).map_err(|_| ExecuteError::InvalidKey)?;
                 // From now on, it will actually mutate the state and must not fail
                 // to keep the consistency of the state.
                 // This issue might be handled by the coordinator and should be decided in detail.
+
+                // If that was the last token with the issuer
+                if sender_account.tokens.iter().find(|&x| x.issuer == issuer).is_none() {
+                    assert!(set.remove(&tx.signer_public));
+                }
+                set.insert(receiver);
+                self.set_owning_accounts_with_issuer(issuer, set);
 
                 recipient_account.tokens.push(token);
                 self.set_account(tx.signer_public, &sender_account);
