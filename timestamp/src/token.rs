@@ -47,6 +47,7 @@ pub struct Account {
     pub tokens: Vec<Token>,
 }
 
+#[derive(Debug)]
 pub enum Error {
     NoSuchAccount,
     InvalidKey,
@@ -90,6 +91,7 @@ impl BlockClosed for Context {
     }
 }
 
+#[derive(Debug)]
 enum ExecuteError {
     InvalidMetadata,
     InvalidSign,
