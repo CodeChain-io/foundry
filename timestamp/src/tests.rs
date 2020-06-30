@@ -126,4 +126,13 @@ fn token_simple2() {
 
     assert_eq!(token_manager.get_account(*user1.public()).unwrap().tokens.len(), 2);
     assert_eq!(token_manager.get_account(*user2.public()).unwrap().tokens.len(), 1);
+
+    let r = token_manager.get_owning_accounts_with_issuer(issuer1).unwrap();
+    assert_eq!(r.len(), 2);
+    assert!(r.contains(user1.public()));
+    assert!(r.contains(user2.public()));
+
+    let r = token_manager.get_owning_accounts_with_issuer(issuer2).unwrap();
+    assert_eq!(r.len(), 1);
+    assert!(r.contains(user1.public()));
 }
