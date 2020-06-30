@@ -61,19 +61,19 @@ pub trait TokenManager: Send + Sync {
 }
 
 impl TokenManager for Context {
-    fn get_account(&self, public: Public) -> Result<Account, Error> {
+    fn get_account(&self, public: &Public) -> Result<Account, Error> {
         let x = self.storage.read().get(&Self::get_key(public)).ok_or_else(|| Error::NoSuchAccount)?;
         Ok(serde_cbor::from_slice(&x).map_err(|_| Error::InvalidKey)?)
     }
 
-    fn issue_token(&self, issuer: H256, receiver: Public) -> Result<(), Error> {
+    fn issue_token(&self, issuer: &H256, receiver: &Public) -> Result<(), Error> {
         let mut account = self.get_account_or_default(receiver).map_err(|_| Error::InvalidKey)?;
         account.tokens.push(Token {
-            issuer,
+            issuer: *issuer,
         });
         self.set_account(receiver, &account);
         let mut set = self.get_owning_accounts_with_issuer(issuer).map_err(|_| Error::InvalidKey)?;
-        set.insert(receiver);
+        set.insert(*receiver);
         self.set_owning_accounts_with_issuer(issuer, set);
 
         Ok(())
@@ -118,7 +118,7 @@ enum ExecuteError {
 }
 
 impl Context {
-    fn get_key(key: Public) -> H256 {
+    fn get_key(key: &Public) -> H256 {
         blake256(&{
             let mut v = serde_cbor::to_vec(&key).unwrap();
             v.extend_from_slice(b"Token-Module-Account");
@@ -126,7 +126,7 @@ impl Context {
         } as &[u8])
     }
 
-    fn get_key_account_set(issuer: H256) -> H256 {
+    fn get_key_account_set(issuer: &H256) -> H256 {
         blake256(&{
             let mut v = serde_cbor::to_vec(&issuer).unwrap();
             v.extend_from_slice(b"Token-Module-Account-Set");
@@ -134,7 +134,7 @@ impl Context {
         } as &[u8])
     }
 
-    fn get_account_or_default(&self, key: Public) -> Result<Account, ()> {
+    fn get_account_or_default(&self, key: &Public) -> Result<Account, ()> {
         if let Some(x) = self.storage.read().get(&Self::get_key(key)) {
             Ok(serde_cbor::from_slice(&x).map_err(|_| ())?)
         } else {
@@ -145,7 +145,7 @@ impl Context {
     }
 
     /// set_account() must not fail
-    fn set_account(&self, key: Public, account: &Account) {
+    fn set_account(&self, key: &Public, account: &Account) {
         self.storage.read().set(&Self::get_key(key), serde_cbor::to_vec(account).unwrap());
     }
 
@@ -176,7 +176,7 @@ impl Context {
                     &self
                         .storage
                         .read()
-                        .get(&Self::get_key(tx.signer_public))
+                        .get(&Self::get_key(&tx.signer_public))
                         .ok_or_else(|| ExecuteError::NoAccount)?,
                 )
                 .map_err(|_| ExecuteError::InvalidKey)?;
@@ -190,9 +190,9 @@ impl Context {
                 let index = found.ok_or_else(|| ExecuteError::NoToken)?;
                 let token = sender_account.tokens.remove(index);
                 let mut recipient_account =
-                    self.get_account_or_default(receiver).map_err(|_| ExecuteError::InvalidKey)?;
+                    self.get_account_or_default(&receiver).map_err(|_| ExecuteError::InvalidKey)?;
 
-                let mut set = self.get_owning_accounts_with_issuer(issuer).map_err(|_| ExecuteError::InvalidKey)?;
+                let mut set = self.get_owning_accounts_with_issuer(&issuer).map_err(|_| ExecuteError::InvalidKey)?;
                 // From now on, it will actually mutate the state and must not fail
                 // to keep the consistency of the state.
                 // This issue might be handled by the coordinator and should be decided in detail.
@@ -202,11 +202,11 @@ impl Context {
                     assert!(set.remove(&tx.signer_public));
                 }
                 set.insert(receiver);
-                self.set_owning_accounts_with_issuer(issuer, set);
+                self.set_owning_accounts_with_issuer(&issuer, set);
 
                 recipient_account.tokens.push(token);
-                self.set_account(tx.signer_public, &sender_account);
-                self.set_account(receiver, &recipient_account);
+                self.set_account(&tx.signer_public, &sender_account);
+                self.set_account(&receiver, &recipient_account);
                 self.account.read().increase_sequence(&tx.signer_public, true).unwrap();
             }
         }

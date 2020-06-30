@@ -54,7 +54,7 @@ impl Context {
             return Err(ExecuteError::InvalidSequence)
         }
 
-        let account = self.token.get_account(tx.signer_public).map_err(ExecuteError::TokenModuleError)?;
+        let account = self.token.get_account(&tx.signer_public).map_err(ExecuteError::TokenModuleError)?;
         if account.tokens.iter().any(|x| x.issuer == self.token_issuer) {
             self.account.increase_sequence(&tx.signer_public, true).unwrap();
             Ok(())
