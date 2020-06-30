@@ -84,11 +84,11 @@ fn token_simple1() {
 
     let user1: Ed25519KeyPair = Random.generate().unwrap();
 
-    token_manager.issue_token(issuer1, *user1.public()).unwrap();
-    token_manager.issue_token(issuer1, *user1.public()).unwrap();
-    token_manager.issue_token(issuer1, *user1.public()).unwrap();
+    token_manager.issue_token(&issuer1, user1.public()).unwrap();
+    token_manager.issue_token(&issuer1, user1.public()).unwrap();
+    token_manager.issue_token(&issuer1, user1.public()).unwrap();
 
-    assert_eq!(token_manager.get_account(*user1.public()).unwrap().tokens.len(), 3);
+    assert_eq!(token_manager.get_account(user1.public()).unwrap().tokens.len(), 3);
 }
 
 #[test]
@@ -101,9 +101,9 @@ fn token_simple2() {
     let user1: Ed25519KeyPair = Random.generate().unwrap();
     let user2: Ed25519KeyPair = Random.generate().unwrap();
 
-    token_manager.issue_token(issuer1, *user1.public()).unwrap();
-    token_manager.issue_token(issuer1, *user1.public()).unwrap();
-    token_manager.issue_token(issuer2, *user1.public()).unwrap();
+    token_manager.issue_token(&issuer1, user1.public()).unwrap();
+    token_manager.issue_token(&issuer1, user1.public()).unwrap();
+    token_manager.issue_token(&issuer2, user1.public()).unwrap();
 
     let tx = token::Action::TransferToken(token::ActionTransferToken {
         receiver: *user2.public(),
@@ -124,15 +124,15 @@ fn token_simple2() {
 
     token_manager.execute_transaction(&tx).unwrap();
 
-    assert_eq!(token_manager.get_account(*user1.public()).unwrap().tokens.len(), 2);
-    assert_eq!(token_manager.get_account(*user2.public()).unwrap().tokens.len(), 1);
+    assert_eq!(token_manager.get_account(user1.public()).unwrap().tokens.len(), 2);
+    assert_eq!(token_manager.get_account(user2.public()).unwrap().tokens.len(), 1);
 
-    let r = token_manager.get_owning_accounts_with_issuer(issuer1).unwrap();
+    let r = token_manager.get_owning_accounts_with_issuer(&issuer1).unwrap();
     assert_eq!(r.len(), 2);
     assert!(r.contains(user1.public()));
     assert!(r.contains(user2.public()));
 
-    let r = token_manager.get_owning_accounts_with_issuer(issuer2).unwrap();
+    let r = token_manager.get_owning_accounts_with_issuer(&issuer2).unwrap();
     assert_eq!(r.len(), 1);
     assert!(r.contains(user1.public()));
 }
