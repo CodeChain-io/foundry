@@ -16,5 +16,6 @@
 
 pub mod account;
 pub mod common;
+pub mod staking;
 pub mod stamp;
 pub mod token;
