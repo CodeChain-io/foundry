@@ -15,30 +15,33 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::context::SubStorageAccess;
-use crate::transaction::{Transaction, TransactionWithMetadata};
-use crate::types::{BlockOutcome, CloseBlockError, ErrorCode, HeaderError, TransactionExecutionOutcome};
+use crate::transaction::Transaction;
+use crate::types::{CloseBlockError, ErrorCode, Event, HeaderError, TransactionExecutionOutcome};
+use crate::Header;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 
+pub trait Stateful: Send + Sync {
+    fn set_storage(&mut self, storage: Box<dyn SubStorageAccess>);
+}
+
 pub trait InitGenesis: Send + Sync {
-    fn init_genesis(&self, config: &[u8], storage: Box<dyn SubStorageAccess>);
-}
+    fn begin_genesis(&mut self);
 
-pub trait InitChain: Send + Sync {
-    fn init_chain(&self) -> (CompactValidatorSet, ConsensusParams);
-}
+    fn init_genesis(&mut self, config: &[u8]);
 
-pub trait BlockOpen: Send + Sync {
-    fn block_opened(&self, storage: Box<dyn SubStorageAccess>) -> Result<(), HeaderError>;
-}
-
-pub trait BlockClosed: Send + Sync {
-    fn block_closed(&self) -> Result<BlockOutcome, CloseBlockError>;
+    fn end_genesis(&mut self);
 }
 
 pub trait TxOwner: Send + Sync {
-    fn execute_transaction(&self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()>;
+    fn block_opened(&mut self, header: &Header) -> Result<(), HeaderError>;
 
-    fn propose_transaction(&self, transaction: &TransactionWithMetadata) -> bool;
+    fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()>;
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
+
+    fn block_closed(&mut self) -> Result<Vec<Event>, CloseBlockError>;
+}
+
+pub trait InitChain: Send + Sync {
+    fn init_chain(&mut self) -> (CompactValidatorSet, ConsensusParams);
 }
