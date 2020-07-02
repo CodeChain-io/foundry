@@ -16,7 +16,7 @@
 
 mod event;
 
-use self::event::Event;
+pub use self::event::Event;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 
 pub enum VerifiedCrime {
