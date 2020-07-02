@@ -29,6 +29,9 @@ pub mod module;
 pub mod test_coordinator;
 pub mod types;
 
+mod app_desc;
+mod values;
+
 /// The `Coordinator` encapsulates all the logic for a Foundry application.
 ///
 /// It assembles modules and feeds them various events from the underlying
