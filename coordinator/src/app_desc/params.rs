@@ -50,12 +50,12 @@ impl AppDesc {
         let mut merged_params = self.param_defaults.clone();
         merged_params.append(&mut params.clone());
 
-        let mut merger = Merger::new(&merged_params);
+        let merger = Merger::new(&merged_params);
 
         for (name, setup) in self.modules.iter_mut() {
-            setup.merge_params(&mut merger).with_context(|| format!("module: {}", name))?;
+            setup.merge_params(&merger).with_context(|| format!("module: {}", name))?;
         }
-        self.host.merge_params(&mut merger)?;
+        self.host.merge_params(&merger)?;
 
         Ok(())
     }

@@ -341,7 +341,7 @@ impl<'a, 'de, T: DeserializeOwned> Visitor<'de> for NamespacedMapVisitor<'a, T> 
                 self.map.insert(qualified_key, map.next_value::<T>()?);
             }
         }
-        return Ok(())
+        Ok(())
     }
 }
 
