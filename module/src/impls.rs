@@ -14,11 +14,4 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-extern crate foundry_process_sandbox as fproc_sndbx;
-
-pub mod impls;
-pub mod link;
-pub mod sandbox;
-
-#[cfg(builtin_module)]
-pub mod builtin;
+pub mod process;
