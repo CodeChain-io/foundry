@@ -73,12 +73,12 @@ pub trait Sandboxer: Send + Sync {
     /// the receiver likes.
     ///
     /// [`Sandbox`]: ./trait.Sandbox.html
-    fn load(
+    fn load<'a>(
         &self,
-        path: &dyn AsRef<Path>,
+        path: &'a dyn AsRef<Path>,
         init: &dyn erased_serde::Serialize,
         exports: &[(&str, &dyn erased_serde::Serialize)],
-    ) -> Result<Arc<dyn Sandbox>>;
+    ) -> Result<'a, Arc<dyn Sandbox>>;
 }
 
 /// A sandbox instance hosting an instantiated module.
