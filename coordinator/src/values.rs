@@ -15,12 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use serde::de::{Error, MapAccess, SeqAccess, Visitor};
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::fmt;
 
 /// Generic value that may be specified in the app descriptor and module manifests.
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum Value {
     Null,
     Int(i128),
@@ -97,5 +97,25 @@ impl<'de> Deserialize<'de> for Value {
         }
 
         deserializer.deserialize_any(ValueVisitor)
+    }
+}
+
+impl Serialize for Value {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            Value::Null => serializer.serialize_unit(),
+            Value::Bool(b) => serializer.serialize_bool(*b),
+            Value::Int(n) => n.serialize(serializer),
+            Value::String(s) => serializer.serialize_str(s),
+            Value::List(seq) => seq.serialize(serializer),
+            Value::Map(hash) => {
+                use serde::ser::SerializeMap;
+                let mut map = serializer.serialize_map(Some(hash.len()))?;
+                for (k, v) in hash {
+                    map.serialize_entry(k, v)?;
+                }
+                map.end()
+            }
+        }
     }
 }

@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::collections::{BTreeMap, HashMap};
-use std::{fmt, fmt::Formatter};
+use std::{fmt, fmt::Display, fmt::Formatter};
 
 use primitives::H256;
 use rustc_hex::FromHexError;
@@ -27,10 +27,10 @@ use super::values::Value;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::fmt::Debug;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-pub mod parser;
+pub mod params;
 
 macro_rules! first_word {
     () => {
@@ -62,6 +62,7 @@ static NAME_RE: Lazy<Regex> = Lazy::new(|| Regex::new(name!()).unwrap());
 static QNAME_RE: Lazy<Regex> = Lazy::new(|| Regex::new(qname!()).unwrap());
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
 pub struct AppDesc {
     // keyed with Name rather than module hash to allow for multiple instances of single module
     pub modules: HashMap<Name, ModuleSetup>,
@@ -70,7 +71,7 @@ pub struct AppDesc {
     #[serde(default)]
     pub transactions: Namespaced<TxSetup>,
     #[serde(default)]
-    pub params: Namespaced<Param>,
+    pub param_defaults: Namespaced<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -114,14 +115,6 @@ pub struct Constructor {
     pub args: Value,
 }
 
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-pub enum Param {
-    String(Option<String>),
-    Int(Option<i128>),
-    Bool(Option<bool>),
-}
-
 #[derive(Hash, Eq, Ord, PartialOrd, PartialEq)]
 pub struct Name(String);
 
@@ -136,6 +129,12 @@ impl Deref for Name {
 impl Debug for Name {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         Debug::fmt(&self.0, f)
+    }
+}
+
+impl Display for Name {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        Display::fmt(&self.0, f)
     }
 }
 
@@ -176,6 +175,12 @@ impl Deref for QName {
 impl Debug for QName {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         Debug::fmt(&self.0, f)
+    }
+}
+
+impl Display for QName {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        Display::fmt(&self.0, f)
     }
 }
 
@@ -279,6 +284,12 @@ impl<T: DeserializeOwned> Deref for Namespaced<T> {
     }
 }
 
+impl<T: DeserializeOwned> DerefMut for Namespaced<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 const NAMESPACE_PREFIX: char = '=';
 
 impl<T: DeserializeOwned> From<Namespaced<T>> for BTreeMap<String, T> {
@@ -348,5 +359,40 @@ impl<'a, 'de, T: DeserializeOwned> DeserializeSeed<'de> for NamespacedMapVisitor
     fn deserialize<D: Deserializer<'de>>(self, deserializer: D) -> Result<Self::Value, D::Error> {
         deserializer.deserialize_map(self)?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::app_desc::AppDesc;
+    use unindent::unindent;
+
+    #[test]
+    fn load_essentials() {
+        let source = unindent(
+            r#"
+            modules:
+                awesome-module:
+                    hash: 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+                    init-config:
+                        test: 1
+                        test:
+                            key1: 1
+                            key2: sdfsdaf
+            host:
+                imports:
+                    a: a.a
+                    =namespace:
+                        b.b: asdfsdaf-asdf
+            transactions:
+                great-tx:
+                    owner: awesome-module
+                    services:
+                        - tx-executor
+            param-defaults:
+                num-threads: 10
+        "#,
+        );
+        let _: AppDesc = serde_yaml::from_str(&source).unwrap();
     }
 }

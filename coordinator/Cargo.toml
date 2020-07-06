@@ -6,7 +6,8 @@ edition = "2018"
 
 [dependencies]
 ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
-ckey = {package = "codechain-key", path = "../key" }
+ckey = { package = "codechain-key", path = "../key" }
+cmodule = { package = "codechain-module", path = "../module" }
 ctypes = { package = "codechain-types", path = "../types" }
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
 rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
@@ -16,6 +17,10 @@ serde_yaml = "0.8"
 rustc-hex = "1"
 regex = "1"
 once_cell = "1"
+linkme = "0.2.2"
+thiserror = "1"
+handlebars = "3.2"
+anyhow = "1"
 
 [dev-dependencies]
 unindent = "0.1.6"
