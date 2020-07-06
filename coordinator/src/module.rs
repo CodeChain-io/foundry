@@ -18,6 +18,8 @@ use super::context::SubStorageAccess;
 use super::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 
+pub mod builtin;
+
 pub trait InitGenesis: Send + Sync {
     fn begin_genesis(&self, storage: Box<dyn SubStorageAccess>);
 

@@ -25,7 +25,6 @@ use std::sync::Arc;
 
 pub mod context;
 pub mod engine;
-pub mod module;
 pub mod test_coordinator;
 pub mod types;
 
