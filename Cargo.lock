@@ -343,6 +343,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cloudabi"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4344512281c643ae7638bbabc3af17a11307803ec8f0fcad9fae512a8bf36467"
+dependencies = [
+ "bitflags",
+]
+
+[[package]]
 name = "cmake"
 version = "0.1.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -495,7 +504,7 @@ dependencies = [
  "codechain-logger",
  "crossbeam 0.5.0",
  "log 0.4.8",
- "mio",
+ "mio 0.6.21",
  "parking_lot 0.6.4",
 ]
 
@@ -576,12 +585,19 @@ dependencies = [
 name = "codechain-module"
 version = "0.1.0"
 dependencies = [
+ "crossbeam 0.7.3",
  "erased-serde",
+ "foundry-module-rt",
+ "foundry-process-sandbox",
  "intertrait",
  "linkme",
  "once_cell",
+ "parking_lot 0.11.0",
  "primitives",
+ "remote-trait-object",
+ "remote-trait-object-macro",
  "serde",
+ "serde_cbor",
  "thiserror",
 ]
 
@@ -600,7 +616,7 @@ dependencies = [
  "finally-block",
  "kvdb",
  "log 0.4.8",
- "mio",
+ "mio 0.6.21",
  "never-type",
  "parking_lot 0.6.4",
  "primitives",
@@ -895,7 +911,7 @@ dependencies = [
  "lazy_static 1.4.0",
  "maybe-uninit",
  "memoffset 0.5.4",
- "scopeguard 1.0.0",
+ "scopeguard 1.1.0",
 ]
 
 [[package]]
@@ -1248,6 +1264,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "foundry-module-rt"
+version = "0.1.0"
+source = "git+https://github.com/CodeChain-io/module-rt.git#bf264083e58a6c54435fff457996ca4ea423f7c9"
+dependencies = [
+ "crossbeam 0.7.3",
+ "foundry-process-sandbox",
+ "linkme",
+ "parking_lot 0.11.0",
+ "remote-trait-object",
+ "remote-trait-object-macro",
+ "serde",
+ "serde_cbor",
+]
+
+[[package]]
+name = "foundry-process-sandbox"
+version = "0.1.0"
+source = "git+https://github.com/CodeChain-io/foundry-sandbox.git#04f36bb76eba5dd92739a3dcd6bf9da73599cfb9"
+dependencies = [
+ "codechain-crypto",
+ "crossbeam 0.7.3",
+ "hex",
+ "log 0.4.8",
+ "mio 0.7.0",
+ "once_cell",
+ "parking_lot 0.11.0",
+ "remote-trait-object",
+ "serde_cbor",
+]
+
+[[package]]
 name = "fs-swap"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1455,9 +1502,9 @@ checksum = "c2f407128745b78abc95c0ffbe4e5d37427fdc0d45470710cfef8c44522a2e37"
 
 [[package]]
 name = "humantime"
-version = "1.1.1"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0484fda3e7007f2a4a0d9c3a703ca38c71c54c55602ce4660c419fd32e188c9e"
+checksum = "df004cfca50ef23c36850aaaa59ad52cc70d0e90243c3c7737a4dd32dc7a3c4f"
 dependencies = [
  "quick-error",
 ]
@@ -1550,6 +1597,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e81a7c05f79578dbc15793d8b619db9ba32b4577003ef3af1a91c416798c58d"
 
 [[package]]
+name = "instant"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69da7ce1490173c2bf4d26bc8be429aaeeaf4cce6c4b970b7949651fa17655fe"
+
+[[package]]
 name = "interleaved-ordered"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1598,7 +1651,7 @@ dependencies = [
  "fnv",
  "lazy_static 1.4.0",
  "libc",
- "mio",
+ "mio 0.6.21",
  "rand 0.7.2",
  "serde",
  "tempfile",
@@ -1779,9 +1832,9 @@ checksum = "ddba4c30a78328befecec92fc94970e53b3ae385827d28620f0f5bb2493081e0"
 
 [[package]]
 name = "libc"
-version = "0.2.68"
+version = "0.2.71"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dea0c0405123bba743ee3f91f49b1c7cfb684eef0da0a50110f758ccf24cdff0"
+checksum = "9457b06509d27052635f90d6466700c65095fdf75409b3fbdd903e988b886f49"
 
 [[package]]
 name = "libflate"
@@ -1892,7 +1945,16 @@ version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4da24a77a3d8a6d4862d95f72e6fdb9c09a643ecdb402d754004a557f2bec75"
 dependencies = [
- "scopeguard 1.0.0",
+ "scopeguard 1.1.0",
+]
+
+[[package]]
+name = "lock_api"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de302ce1fe7482db13738fbaf2e21cfb06a986b89c0bf38d88abf16681aada4e"
+dependencies = [
+ "scopeguard 1.1.0",
 ]
 
 [[package]]
@@ -2026,6 +2088,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "mio"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e9971bc8349a361217a8f2a41f5d011274686bd4436465ba51730921039d7fb"
+dependencies = [
+ "lazy_static 1.4.0",
+ "libc",
+ "log 0.4.8",
+ "miow 0.3.3",
+ "ntapi",
+ "winapi 0.3.8",
+]
+
+[[package]]
 name = "mio-extras"
 version = "2.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2033,7 +2109,7 @@ checksum = "46e73a04c2fa6250b8d802134d56d554a9ec2922bf977777c805ea5def61ce40"
 dependencies = [
  "lazycell",
  "log 0.4.8",
- "mio",
+ "mio 0.6.21",
  "slab 0.4.2",
 ]
 
@@ -2044,7 +2120,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5e374eff525ce1c5b7687c4cef63943e7686524a387933ad27ca7ec43779cb3"
 dependencies = [
  "log 0.4.8",
- "mio",
+ "mio 0.6.21",
  "miow 0.3.3",
  "winapi 0.3.8",
 ]
@@ -2057,7 +2133,7 @@ checksum = "966257a94e196b11bb43aca423754d87429960a768de9414f3691d6957abf125"
 dependencies = [
  "iovec",
  "libc",
- "mio",
+ "mio 0.6.21",
 ]
 
 [[package]]
@@ -2184,6 +2260,15 @@ name = "nodrop"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a2228dca57108069a5262f2ed8bd2e82496d2e074a06d1ccc7ce1687b6ae0a2"
+
+[[package]]
+name = "ntapi"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a31937dea023539c72ddae0e3571deadc1414b300483fa7aaec176168cfa9d2"
+dependencies = [
+ "winapi 0.3.8",
+]
 
 [[package]]
 name = "num-bigint"
@@ -2394,6 +2479,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "parking_lot"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4893845fa2ca272e647da5d0e46660a314ead9c2fdd9a883aabc32e481a8733"
+dependencies = [
+ "instant",
+ "lock_api 0.4.0",
+ "parking_lot_core 0.8.0",
+]
+
+[[package]]
 name = "parking_lot_core"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2413,7 +2509,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b876b1b9e7ac6e1a74a6da34d25c42e17e8862aa409cbbbdcfc8d86c6f3bc62b"
 dependencies = [
  "cfg-if",
- "cloudabi",
+ "cloudabi 0.0.3",
  "libc",
  "redox_syscall",
  "rustc_version",
@@ -2428,7 +2524,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d58c7c768d4ba344e3e8d72518ac13e259d7c7ade24167003b8488e10b6740a3"
 dependencies = [
  "cfg-if",
- "cloudabi",
+ "cloudabi 0.0.3",
+ "libc",
+ "redox_syscall",
+ "smallvec 1.4.0",
+ "winapi 0.3.8",
+]
+
+[[package]]
+name = "parking_lot_core"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c361aa727dd08437f2f1447be8b59a33b0edd15e0fcee698f935613d9efbca9b"
+dependencies = [
+ "cfg-if",
+ "cloudabi 0.1.0",
+ "instant",
  "libc",
  "redox_syscall",
  "smallvec 1.4.0",
@@ -2651,7 +2762,7 @@ version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e464cd887e869cddcae8792a4ee31d23c7edd516700695608f5b98c67ee0131c"
 dependencies = [
- "cloudabi",
+ "cloudabi 0.0.3",
  "fuchsia-zircon",
  "libc",
  "rand_core 0.2.2",
@@ -2664,7 +2775,7 @@ version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae9d223d52ae411a33cf7e54ec6034ec165df296ccd23533d671a28252b6f66a"
 dependencies = [
- "cloudabi",
+ "cloudabi 0.0.3",
  "fuchsia-zircon",
  "libc",
  "rand_chacha 0.1.0",
@@ -2782,9 +2893,9 @@ dependencies = [
 
 [[package]]
 name = "redox_syscall"
-version = "0.1.40"
+version = "0.1.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c214e91d3ecf43e9a4e41e578973adeb14b474f2bee858742d127af75a0112b1"
+checksum = "2439c63f3f6139d1b57529d16bc3b8bb855230c8efcc5d3a896c8bea7c3b1e84"
 
 [[package]]
 name = "redox_termios"
@@ -2812,6 +2923,30 @@ name = "regex-syntax"
 version = "0.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "11a7e20d1cce64ef2fed88b66d347f88bd9babb82845b2b858f3edbf59a4f716"
+
+[[package]]
+name = "remote-trait-object"
+version = "0.1.3"
+source = "git+https://github.com/CodeChain-io/remote-trait-object.git#99eb6d2c44ee7481cafd7f59727fbf13bee1f435"
+dependencies = [
+ "crossbeam 0.7.3",
+ "linkme",
+ "log 0.4.8",
+ "parking_lot 0.11.0",
+ "serde",
+ "serde_cbor",
+]
+
+[[package]]
+name = "remote-trait-object-macro"
+version = "0.1.3"
+source = "git+https://github.com/CodeChain-io/remote-trait-object.git#99eb6d2c44ee7481cafd7f59727fbf13bee1f435"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2 1.0.10",
+ "quote 1.0.3",
+ "syn 1.0.18",
+]
 
 [[package]]
 name = "remove_dir_all"
@@ -2908,7 +3043,7 @@ version = "0.6.3"
 source = "git+https://github.com/tailhook/rotor#80ce2e4cd82fdc7f88bb2d737407fa5106799790"
 dependencies = [
  "log 0.3.9",
- "mio",
+ "mio 0.6.21",
  "quick-error",
  "slab 0.3.0",
  "void",
@@ -2994,9 +3129,9 @@ checksum = "94258f53601af11e6a49f722422f6e3425c52b06245a5cf9bc09908b174f5e27"
 
 [[package]]
 name = "scopeguard"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b42e15e59b18a828bbf5c58ea01debb36b9b096346de35d941dcb89009f24a0d"
+checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "scrypt"
@@ -3505,7 +3640,7 @@ checksum = "1021bb1f4150435ab8f222eb7ed37c60b2d57037def63ba43085a79f387512d7"
 dependencies = [
  "bytes 0.4.12",
  "futures",
- "mio",
+ "mio 0.6.21",
  "num_cpus",
  "tokio-codec",
  "tokio-current-thread",
@@ -3535,7 +3670,7 @@ dependencies = [
  "lazy_static 1.4.0",
  "libc",
  "memchr",
- "mio",
+ "mio 0.6.21",
  "mio-named-pipes",
  "mio-uds",
  "num_cpus",
@@ -3567,7 +3702,7 @@ dependencies = [
  "futures",
  "iovec",
  "log 0.4.8",
- "mio",
+ "mio 0.6.21",
  "scoped-tls",
  "tokio 0.1.17",
  "tokio-executor",
@@ -3637,7 +3772,7 @@ checksum = "9d282d483052288b2308ba5ee795f5673b159c9bdf63c385a05609da782a5eae"
 dependencies = [
  "bytes 0.4.12",
  "futures",
- "mio",
+ "mio 0.6.21",
  "mio-named-pipes",
  "tokio 0.1.17",
 ]
@@ -3650,7 +3785,7 @@ checksum = "b3cedc8e5af5131dc3423ffa4f877cce78ad25259a9a62de0613735a13ebc64b"
 dependencies = [
  "futures",
  "log 0.4.8",
- "mio",
+ "mio 0.6.21",
  "slab 0.4.2",
  "tokio-executor",
  "tokio-io",
@@ -3684,7 +3819,7 @@ dependencies = [
  "bytes 0.4.12",
  "futures",
  "iovec",
- "mio",
+ "mio 0.6.21",
  "tokio-io",
  "tokio-reactor",
 ]
@@ -3735,7 +3870,7 @@ dependencies = [
  "bytes 0.4.12",
  "futures",
  "log 0.4.8",
- "mio",
+ "mio 0.6.21",
  "tokio-io",
  "tokio-reactor",
 ]
@@ -3751,7 +3886,7 @@ dependencies = [
  "iovec",
  "libc",
  "log 0.4.8",
- "mio",
+ "mio 0.6.21",
  "mio-uds",
  "tokio-codec",
  "tokio-io",
@@ -4051,7 +4186,7 @@ dependencies = [
  "bytes 0.4.12",
  "httparse",
  "log 0.4.8",
- "mio",
+ "mio 0.6.21",
  "mio-extras",
  "rand 0.7.2",
  "sha-1",
