@@ -24,26 +24,29 @@ pub use handlebars::TemplateRenderError;
 pub use serde_yaml::Error as YamlError;
 
 #[allow(dead_code)]
-struct Merger {
+struct Merger<'reg> {
+    registry: Handlebars<'reg>,
     context: Context,
 }
 
 #[allow(dead_code)]
-impl Merger {
-    fn new(params: &BTreeMap<String, String>) -> Merger {
+impl<'reg> Merger<'reg> {
+    fn new(params: &BTreeMap<String, String>) -> Merger<'reg> {
+        let mut registry = Handlebars::new();
+        registry.register_escape_fn(no_escape);
+        registry.set_strict_mode(true);
+
         Merger {
+            registry,
             context: Context::wraps(params).unwrap(),
         }
     }
 
     fn merge(&self, s: &str) -> Result<String, TemplateRenderError> {
         let template = Template::compile(s)?;
-        let mut registry = Handlebars::new();
-        registry.register_escape_fn(no_escape);
-        registry.set_strict_mode(true);
         let mut render_context = RenderContext::new(None);
 
-        Ok(template.renders(&registry, &self.context, &mut render_context)?)
+        Ok(template.renders(&self.registry, &self.context, &mut render_context)?)
     }
 }
 
