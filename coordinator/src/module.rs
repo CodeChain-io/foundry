@@ -18,10 +18,14 @@ use super::context::SubStorageAccess;
 use super::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 
-pub trait InitGenesis: Send + Sync {
-    fn begin_genesis(&self, storage: Box<dyn SubStorageAccess>);
+pub trait Stateful: Send + Sync {
+    fn set_storage(&mut self, storage: Box<dyn SubStorageAccess>);
+}
 
-    fn init_genesis(&self, config: &[u8]);
+pub trait InitGenesis: Send + Sync {
+    fn begin_genesis(&self);
+
+    fn init_genesis(&mut self, config: &[u8]);
 
     fn end_genesis(&self);
 }
@@ -31,9 +35,9 @@ pub trait InitChain: Send + Sync {
 }
 
 pub trait TxOwner: Send + Sync {
-    fn block_opened(&self, storage: Box<dyn SubStorageAccess>) -> Result<(), HeaderError>;
+    fn block_opened(&self) -> Result<(), HeaderError>;
 
-    fn execute_transaction(&self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()>;
+    fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()>;
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
 
