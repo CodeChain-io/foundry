@@ -78,7 +78,7 @@ pub trait Sandboxer: Send + Sync {
         path: &'a dyn AsRef<Path>,
         init: &dyn erased_serde::Serialize,
         exports: &[(&str, &dyn erased_serde::Serialize)],
-    ) -> Result<'a, Arc<dyn Sandbox>>;
+    ) -> Result<'a, Box<dyn Sandbox>>;
 }
 
 /// A sandbox instance hosting an instantiated module.
