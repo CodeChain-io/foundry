@@ -18,6 +18,7 @@ mod event;
 
 pub use self::event::Event;
 use ctypes::{CompactValidatorSet, ConsensusParams};
+use serde::{Deserialize, Serialize};
 
 pub enum VerifiedCrime {
     #[allow(dead_code)]
@@ -28,7 +29,7 @@ pub enum VerifiedCrime {
     },
 }
 
-#[derive(Default)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct TransactionExecutionOutcome {
     pub events: Vec<Event>,
 }
@@ -43,6 +44,7 @@ pub type HeaderError = String;
 pub type ExecuteTransactionError = ();
 pub type CloseBlockError = String;
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct BlockOutcome {
     pub updated_validator_set: Option<CompactValidatorSet>,
     pub updated_consensus_params: Option<ConsensusParams>,
