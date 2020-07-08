@@ -157,7 +157,7 @@ impl<E: ExecutionScheme> Linkable for ProcessSandbox<E> {
 
     fn new_port(&mut self) -> Box<dyn Port> {
         Box::new(ProcessPort {
-            module_side_port: self.module.create_port("").unwrap(),
+            module_side_port: self.module.create_port("").import(),
             ids: Vec::new(),
             slots: Vec::new(),
         })
