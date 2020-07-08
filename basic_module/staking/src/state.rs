@@ -119,11 +119,11 @@ fn prefix_public_key(prefix: &[u8], key: &Public) -> Vec<u8> {
 }
 
 fn remove_key(key: &KEY) {
-    substorage().remove(key)
+    substorage().remove(key.as_ref())
 }
 
 fn load_with_key<T: DeserializeOwned>(key: &KEY) -> Option<T> {
-    substorage().get(key).map(deserialize)
+    substorage().get(key.as_ref()).map(deserialize)
 }
 
 fn load_with_key_from<T: DeserializeOwned>(key: &KEY, id: BlockId) -> Option<T> {
@@ -131,7 +131,7 @@ fn load_with_key_from<T: DeserializeOwned>(key: &KEY, id: BlockId) -> Option<T> 
 }
 
 fn write_with_key<T: Serialize>(key: &KEY, data: T) {
-    substorage().set(key, serialize(data))
+    substorage().set(key.as_ref(), serialize(data))
 }
 
 #[derive(Serialize, Deserialize)]
