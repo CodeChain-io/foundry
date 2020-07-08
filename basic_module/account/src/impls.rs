@@ -88,14 +88,14 @@ impl<C: Context> AccountManager for Handler<C> {
         let mut account = get_account(&self.context, account_id);
 
         account.balance = val;
-        self.context.set(account_id, account.to_vec());
+        self.context.set(account_id.as_ref(), account.to_vec());
     }
 
     fn increment_sequence(&mut self, account_id: &Public) {
         let mut account = get_account(&self.context, account_id);
 
         account.sequence += 1;
-        self.context.set(account_id, account.to_vec());
+        self.context.set(account_id.as_ref(), account.to_vec());
     }
 }
 
