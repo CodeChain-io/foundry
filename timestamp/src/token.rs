@@ -28,8 +28,8 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 pub struct Context {
-    pub account: RwLock<Arc<dyn AccountManager>>,
-    pub storage: RwLock<Arc<dyn SubStorageAccess>>,
+    pub account: Arc<RwLock<dyn AccountManager>>,
+    pub storage: Arc<RwLock<dyn SubStorageAccess>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -88,23 +88,6 @@ impl TokenManager for Context {
     }
 }
 
-impl BlockOpen for Context {
-    fn block_opened(&self, storage: Box<dyn SubStorageAccess>) -> Result<(), HeaderError> {
-        *self.storage.write() = Arc::from(storage);
-        Ok(())
-    }
-}
-
-impl BlockClosed for Context {
-    fn block_closed(&self) -> Result<BlockOutcome, CloseBlockError> {
-        Ok(BlockOutcome {
-            updated_consensus_params: None,
-            updated_validator_set: None,
-            events: Vec::new(),
-        })
-    }
-}
-
 #[derive(Debug)]
 enum ExecuteError {
     InvalidMetadata,
@@ -146,12 +129,12 @@ impl Context {
 
     /// set_account() must not fail
     fn set_account(&self, key: &Public, account: &Account) {
-        self.storage.read().set(&Self::get_key(key), serde_cbor::to_vec(account).unwrap());
+        self.storage.write().set(&Self::get_key(key), serde_cbor::to_vec(account).unwrap());
     }
 
     /// set_owning_accounts_with_issuer() must not fail
     fn set_owning_accounts_with_issuer(&self, issuer: &H256, set: BTreeSet<Public>) {
-        self.storage.read().set(&Self::get_key_account_set(issuer), serde_cbor::to_vec(&set).unwrap());
+        self.storage.write().set(&Self::get_key_account_set(issuer), serde_cbor::to_vec(&set).unwrap());
     }
 
     fn excute_tx(&self, transaction: &Transaction) -> Result<(), ExecuteError> {
@@ -214,8 +197,18 @@ impl Context {
     }
 }
 
+impl Stateful for Context {
+    fn set_storage(&mut self, _storage: Box<dyn SubStorageAccess>) {
+        unimplemented!()
+    }
+}
+
 impl TxOwner for Context {
-    fn execute_transaction(&self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()> {
+    fn block_opened(&self) -> Result<(), HeaderError> {
+        Ok(())
+    }
+
+    fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()> {
         if let Err(error) = self.excute_tx(transaction) {
             match error {
                 ExecuteError::InvalidMetadata => Err(()),
@@ -232,16 +225,16 @@ impl TxOwner for Context {
         }
     }
 
-    fn propose_transaction(&self, _transaction: &TransactionWithMetadata) -> bool {
-        unimplemented!()
-    }
-
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), coordinator::types::ErrorCode> {
         let todo_fixthis: coordinator::types::ErrorCode = 3;
         assert_eq!(transaction.tx_type(), "Stamp");
         let tx: OwnTransaction = serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
         tx.verify().map_err(|_| todo_fixthis)?;
         Ok(())
+    }
+
+    fn block_closed(&self) -> Result<Vec<Event>, CloseBlockError> {
+        Ok(Vec::new())
     }
 }
 
