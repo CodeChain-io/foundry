@@ -30,10 +30,6 @@ pub trait InitGenesis: Send + Sync {
     fn end_genesis(&self);
 }
 
-pub trait InitChain: Send + Sync {
-    fn init_chain(&self) -> (CompactValidatorSet, ConsensusParams);
-}
-
 pub trait TxOwner: Send + Sync {
     fn block_opened(&self) -> Result<(), HeaderError>;
 
@@ -42,4 +38,12 @@ pub trait TxOwner: Send + Sync {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
 
     fn block_closed(&self) -> Result<Vec<Event>, CloseBlockError>;
+}
+
+pub trait InitChain: Send + Sync {
+    fn init_chain(&self) -> (CompactValidatorSet, ConsensusParams);
+}
+
+pub trait UpdateChain: Send + Sync {
+    fn update_chain(&self) -> (CompactValidatorSet, ConsensusParams);
 }
