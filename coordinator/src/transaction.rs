@@ -18,9 +18,10 @@ use ccrypto::blake256;
 use ctypes::TxHash;
 use primitives::Bytes;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+use serde::{Deserialize, Serialize};
 
 /// An encoded transaction.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct Transaction {
     tx_type: String,
     body: Bytes,
@@ -68,7 +69,7 @@ impl Decodable for Transaction {
 }
 
 /// Transaction origin
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TxOrigin {
     /// Transaction coming from local RPC
     Local,
@@ -99,7 +100,7 @@ impl Decodable for TxOrigin {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct TransactionWithMetadata {
     pub tx: Transaction,
     pub origin: TxOrigin,
