@@ -24,12 +24,15 @@ use coordinator::module::*;
 use coordinator::types::Transaction;
 use parking_lot::RwLock;
 use primitives::H256;
+use remote_trait_object::Service;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 pub struct MockDb {
     map: HashMap<H256, Vec<u8>>,
 }
+
+impl Service for MockDb {}
 
 impl SubStorageAccess for MockDb {
     fn get(&self, key: &[u8]) -> Option<Vec<u8>> {

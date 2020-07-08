@@ -20,6 +20,7 @@ use crate::token::TokenManager;
 use coordinator::module::*;
 use coordinator::types::*;
 use primitives::H256;
+use remote_trait_object::Service;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -28,6 +29,8 @@ struct Context {
     token: Arc<dyn TokenManager>,
     token_issuer: H256,
 }
+
+impl Service for Context {}
 
 enum ExecuteError {
     InvalidMetadata,

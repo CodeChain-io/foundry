@@ -23,6 +23,7 @@ use coordinator::module::*;
 use coordinator::types::*;
 use parking_lot::RwLock;
 use primitives::H256;
+use remote_trait_object::{Service, ServiceRef};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -31,6 +32,8 @@ pub struct Context {
     pub account: Arc<RwLock<dyn AccountManager>>,
     pub storage: Arc<RwLock<dyn SubStorageAccess>>,
 }
+
+impl Service for Context {}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Token {
@@ -198,7 +201,7 @@ impl Context {
 }
 
 impl Stateful for Context {
-    fn set_storage(&mut self, _storage: Box<dyn SubStorageAccess>) {
+    fn set_storage(&mut self, _storage: ServiceRef<dyn SubStorageAccess>) {
         unimplemented!()
     }
 }
