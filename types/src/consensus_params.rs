@@ -17,9 +17,10 @@
 use cjson::scheme::Params;
 use ckey::NetworkId;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, Default, PartialEq)]
 pub struct ConsensusParams {
     /// Maximum size of extra data.
     max_extra_data_size: u64,

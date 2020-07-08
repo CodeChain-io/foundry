@@ -17,16 +17,17 @@ use ccrypto::blake256;
 use ckey::Ed25519Public as Public;
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct CompactValidatorEntry {
     pub public_key: Public,
     pub delegation: u64,
 }
 
 // It will be hashed in the header.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, Eq, PartialEq)]
 pub struct CompactValidatorSet(Vec<CompactValidatorEntry>);
 impl CompactValidatorSet {
     pub fn new(x: Vec<CompactValidatorEntry>) -> Self {

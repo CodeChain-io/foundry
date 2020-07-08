@@ -17,8 +17,9 @@
 use ckey::Ed25519Public as Public;
 use ctypes::BlockHash;
 use primitives::Bytes;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Header {
     /// Parent hash.
     parent_hash: BlockHash,
