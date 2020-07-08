@@ -45,3 +45,7 @@ pub trait TxOwner: Send + Sync {
 pub trait InitChain: Send + Sync {
     fn init_chain(&mut self) -> (CompactValidatorSet, ConsensusParams);
 }
+
+pub trait UpdateChain: Send + Sync {
+    fn update_chain(&mut self) -> (Option<CompactValidatorSet>, Option<ConsensusParams>);
+}
