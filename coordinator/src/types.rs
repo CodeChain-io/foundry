@@ -19,8 +19,9 @@ use ckey::Ed25519Public as Public;
 use ctypes::{CompactValidatorSet, ConsensusParams, TxHash};
 use primitives::Bytes;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Event {
     pub key: String,
     pub value: Bytes,
@@ -48,7 +49,7 @@ impl Decodable for Event {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Header {
     /// Block timestamp.
     timestamp: u64,
@@ -81,7 +82,7 @@ impl Header {
 }
 
 /// A decoded transaction.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct Transaction {
     tx_type: String,
     body: Bytes,
@@ -134,7 +135,7 @@ impl Decodable for Transaction {
 }
 
 /// Transaction origin
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TxOrigin {
     /// Transaction coming from local RPC
     Local,
@@ -165,7 +166,7 @@ impl Decodable for TxOrigin {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct TransactionWithMetadata {
     pub tx: Transaction,
     pub origin: TxOrigin,
@@ -239,7 +240,7 @@ pub enum VerifiedCrime {
     },
 }
 
-#[derive(Default)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct TransactionExecutionOutcome {
     pub events: Vec<Event>,
 }
@@ -254,6 +255,7 @@ pub type HeaderError = String;
 pub type ExecuteTransactionError = ();
 pub type CloseBlockError = String;
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct BlockOutcome {
     pub updated_validator_set: Option<CompactValidatorSet>,
     pub updated_consensus_params: Option<ConsensusParams>,
