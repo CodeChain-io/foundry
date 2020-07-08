@@ -27,10 +27,10 @@ pub type Value = Vec<u8>;
 
 // Interface between each module and the coordinator
 pub trait SubStorageAccess: Send + Sync {
-    fn get(&self, key: &Key) -> Option<Value>;
-    fn set(&mut self, key: &Key, value: Value);
-    fn has(&self, key: &Key) -> bool;
-    fn remove(&mut self, key: &Key);
+    fn get(&self, key: &[u8]) -> Option<Value>;
+    fn set(&mut self, key: &[u8], value: Value);
+    fn has(&self, key: &[u8]) -> bool;
+    fn remove(&mut self, key: &[u8]);
 
     /// Create a recoverable checkpoint of this state
     fn create_checkpoint(&mut self);

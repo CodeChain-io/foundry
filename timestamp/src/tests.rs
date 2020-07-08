@@ -32,19 +32,19 @@ pub struct MockDb {
 }
 
 impl SubStorageAccess for MockDb {
-    fn get(&self, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>> {
+    fn get(&self, key: &[u8]) -> Option<Vec<u8>> {
         self.map.get(&blake256(key)).cloned()
     }
 
-    fn set(&mut self, key: &dyn AsRef<[u8]>, value: Vec<u8>) {
+    fn set(&mut self, key: &[u8], value: Vec<u8>) {
         self.map.insert(blake256(key), value);
     }
 
-    fn remove(&mut self, key: &dyn AsRef<[u8]>) {
+    fn remove(&mut self, key: &[u8]) {
         self.map.remove(&blake256(key));
     }
 
-    fn has(&self, key: &dyn AsRef<[u8]>) -> bool {
+    fn has(&self, key: &[u8]) -> bool {
         self.map.get(&blake256(key)).is_some()
     }
 
