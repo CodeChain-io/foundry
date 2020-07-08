@@ -14,15 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub type Key = dyn AsRef<[u8]>;
+use remote_trait_object::Service;
+
 pub type Value = Vec<u8>;
 
 // Interface between each module and the coordinator
-pub trait SubStorageAccess {
-    fn get(&self, key: &Key) -> Option<Value>;
-    fn set(&mut self, key: &Key, value: Value);
-    fn has(&self, key: &Key) -> bool;
-    fn remove(&mut self, key: &Key);
+#[remote_trait_object_macro::service]
+pub trait SubStorageAccess: Service {
+    fn get(&self, key: &[u8]) -> Option<Value>;
+    fn set(&mut self, key: &[u8], value: Value);
+    fn has(&self, key: &[u8]) -> bool;
+    fn remove(&mut self, key: &[u8]);
 
     /// Create a recoverable checkpoint of this state
     fn create_checkpoint(&mut self);
