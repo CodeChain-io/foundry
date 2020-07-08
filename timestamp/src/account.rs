@@ -50,15 +50,15 @@ impl AccountManager for Context {
         let account = Account {
             seq: 0,
         };
-        if self.storage.read().has(public) {
+        if self.storage.read().has(public.as_ref()) {
             return Err(Error::AccountExists)
         }
-        self.storage.write().set(public, serde_cbor::to_vec(&account).unwrap());
+        self.storage.write().set(public.as_ref(), serde_cbor::to_vec(&account).unwrap());
         Ok(())
     }
 
     fn get_sequence(&self, public: &Public, default: bool) -> Result<u64, Error> {
-        let bytes = match self.storage.read().get(public) {
+        let bytes = match self.storage.read().get(public.as_ref()) {
             Some(bytes) => bytes,
             None => {
                 if default {
@@ -73,7 +73,7 @@ impl AccountManager for Context {
     }
 
     fn increase_sequence(&self, public: &Public, default: bool) -> Result<(), Error> {
-        let option_bytes = self.storage.read().get(public);
+        let option_bytes = self.storage.read().get(public.as_ref());
         if option_bytes.is_none() {
             if default {
                 self.create_account(public).expect("Synchronization bug in AccountManager");
@@ -86,7 +86,7 @@ impl AccountManager for Context {
         let bytes = option_bytes.unwrap();
         let mut account: Account = serde_cbor::from_slice(&bytes).map_err(|_| Error::InvalidKey)?;
         account.seq += 1;
-        self.storage.write().set(public, serde_cbor::to_vec(&account).unwrap());
+        self.storage.write().set(public.as_ref(), serde_cbor::to_vec(&account).unwrap());
         Ok(())
     }
 }

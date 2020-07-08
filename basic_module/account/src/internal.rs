@@ -29,7 +29,7 @@ pub fn add_balance(account_id: &Public, val: u64) {
     let mut account: Account = get_account(account_id);
 
     account.balance += val;
-    context.set(account_id, account.to_vec());
+    context.set(account_id.as_ref(), account.to_vec());
 }
 
 #[allow(dead_code)]
@@ -42,7 +42,7 @@ pub fn sub_balance(account_id: &Public, val: u64) -> Result<(), Error> {
     }
 
     account.balance -= val;
-    context.set(account_id, account.to_vec());
+    context.set(account_id.as_ref(), account.to_vec());
     Ok(())
 }
 
@@ -57,5 +57,5 @@ pub fn get_balance(account_id: &Public) -> u64 {
 }
 
 pub fn get_account(account_id: &Public) -> Account {
-    get_context().get(account_id).map(|account| account.into()).unwrap_or_default()
+    get_context().get(account_id.as_ref()).map(|account| account.into()).unwrap_or_default()
 }
