@@ -17,7 +17,6 @@
 use crate::account::AccountManager;
 use crate::common::*;
 use crate::token::TokenManager;
-use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
 use coordinator::types::*;
 use primitives::H256;
@@ -28,23 +27,6 @@ struct Context {
     account: Arc<dyn AccountManager>,
     token: Arc<dyn TokenManager>,
     token_issuer: H256,
-}
-
-impl BlockOpen for Context {
-    fn block_opened(&self, _storage: Box<dyn SubStorageAccess>) -> Result<(), HeaderError> {
-        // stamp module is very special; it doesn't access to the storage AT ALL.
-        Ok(())
-    }
-}
-
-impl BlockClosed for Context {
-    fn block_closed(&self) -> Result<BlockOutcome, CloseBlockError> {
-        Ok(BlockOutcome {
-            updated_consensus_params: None,
-            updated_validator_set: None,
-            events: Vec::new(),
-        })
-    }
 }
 
 enum ExecuteError {
@@ -81,7 +63,11 @@ impl Context {
 }
 
 impl TxOwner for Context {
-    fn execute_transaction(&self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()> {
+    fn block_opened(&self) -> Result<(), HeaderError> {
+        Ok(())
+    }
+
+    fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()> {
         if let Err(error) = self.excute_tx(transaction) {
             match error {
                 ExecuteError::InvalidMetadata => Err(()),
@@ -97,16 +83,16 @@ impl TxOwner for Context {
         }
     }
 
-    fn propose_transaction<'a>(&self, _transaction: &TransactionWithMetadata) -> bool {
-        unimplemented!()
-    }
-
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), coordinator::types::ErrorCode> {
         let todo_fixthis: coordinator::types::ErrorCode = 3;
         assert_eq!(transaction.tx_type(), "Stamp");
         let tx: OwnTransaction = serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
         tx.verify().map_err(|_| todo_fixthis)?;
         Ok(())
+    }
+
+    fn block_closed(&self) -> Result<Vec<Event>, CloseBlockError> {
+        Ok(Vec::new())
     }
 }
 

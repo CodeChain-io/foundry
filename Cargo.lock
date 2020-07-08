@@ -1250,6 +1250,7 @@ dependencies = [
  "codechain-state",
  "codechain-sync",
  "codechain-timer",
+ "codechain-timestamp",
  "codechain-types",
  "coordinator",
  "crossbeam-channel 0.3.8",

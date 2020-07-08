@@ -28,51 +28,51 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 pub struct MockDb {
-    map: RwLock<HashMap<H256, Vec<u8>>>,
+    map: HashMap<H256, Vec<u8>>,
 }
 
 impl SubStorageAccess for MockDb {
     fn get(&self, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>> {
-        self.map.read().get(&blake256(key)).cloned()
+        self.map.get(&blake256(key)).cloned()
     }
 
-    fn set(&self, key: &dyn AsRef<[u8]>, value: Vec<u8>) {
-        self.map.write().insert(blake256(key), value);
+    fn set(&mut self, key: &dyn AsRef<[u8]>, value: Vec<u8>) {
+        self.map.insert(blake256(key), value);
     }
 
-    fn remove(&self, key: &dyn AsRef<[u8]>) {
-        self.map.write().remove(&blake256(key));
+    fn remove(&mut self, key: &dyn AsRef<[u8]>) {
+        self.map.remove(&blake256(key));
     }
 
     fn has(&self, key: &dyn AsRef<[u8]>) -> bool {
-        self.map.read().get(&blake256(key)).is_some()
+        self.map.get(&blake256(key)).is_some()
     }
 
-    fn create_checkpoint(&self) {
+    fn create_checkpoint(&mut self) {
         unimplemented!()
     }
 
-    fn discard_checkpoint(&self) {
+    fn discard_checkpoint(&mut self) {
         unimplemented!()
     }
 
-    fn revert_to_the_checkpoint(&self) {
+    fn revert_to_the_checkpoint(&mut self) {
         unimplemented!()
     }
 }
 
-fn setup() -> (Arc<account::Context>, Arc<token::Context>) {
-    let db = Arc::new(MockDb {
+fn setup() -> (Arc<RwLock<account::Context>>, Arc<RwLock<token::Context>>) {
+    let db = Arc::new(RwLock::new(MockDb {
         map: Default::default(),
-    }) as Arc<dyn SubStorageAccess>;
-    let account_module = Arc::new(account::Context {
-        storage: RwLock::new(Arc::clone(&db)),
-    });
-    let account_manager = Arc::clone(&account_module) as Arc<dyn account::AccountManager>;
-    let token_module = Arc::new(token::Context {
-        account: RwLock::new(Arc::clone(&account_manager)),
-        storage: RwLock::new(Arc::clone(&db)),
-    });
+    })) as Arc<RwLock<dyn SubStorageAccess>>;
+    let account_module = Arc::new(RwLock::new(account::Context {
+        storage: Arc::clone(&db),
+    }));
+    let account_manager = Arc::clone(&account_module) as Arc<RwLock<dyn account::AccountManager>>;
+    let token_module = Arc::new(RwLock::new(token::Context {
+        account: Arc::clone(&account_manager),
+        storage: Arc::clone(&db),
+    }));
     (account_module, token_module)
 }
 
@@ -84,11 +84,11 @@ fn token_simple1() {
 
     let user1: Ed25519KeyPair = Random.generate().unwrap();
 
-    token_manager.issue_token(&issuer1, user1.public()).unwrap();
-    token_manager.issue_token(&issuer1, user1.public()).unwrap();
-    token_manager.issue_token(&issuer1, user1.public()).unwrap();
+    token_manager.write().issue_token(&issuer1, user1.public()).unwrap();
+    token_manager.write().issue_token(&issuer1, user1.public()).unwrap();
+    token_manager.write().issue_token(&issuer1, user1.public()).unwrap();
 
-    assert_eq!(token_manager.get_account(user1.public()).unwrap().tokens.len(), 3);
+    assert_eq!(token_manager.read().get_account(user1.public()).unwrap().tokens.len(), 3);
 }
 
 #[test]
@@ -101,9 +101,9 @@ fn token_simple2() {
     let user1: Ed25519KeyPair = Random.generate().unwrap();
     let user2: Ed25519KeyPair = Random.generate().unwrap();
 
-    token_manager.issue_token(&issuer1, user1.public()).unwrap();
-    token_manager.issue_token(&issuer1, user1.public()).unwrap();
-    token_manager.issue_token(&issuer2, user1.public()).unwrap();
+    token_manager.write().issue_token(&issuer1, user1.public()).unwrap();
+    token_manager.write().issue_token(&issuer1, user1.public()).unwrap();
+    token_manager.write().issue_token(&issuer2, user1.public()).unwrap();
 
     let tx = token::Action::TransferToken(token::ActionTransferToken {
         receiver: *user2.public(),
@@ -122,17 +122,17 @@ fn token_simple2() {
     };
     let tx = Transaction::new("Token".to_owned(), serde_cbor::to_vec(&tx).unwrap());
 
-    token_manager.execute_transaction(&tx).unwrap();
+    token_manager.write().execute_transaction(&tx).unwrap();
 
-    assert_eq!(token_manager.get_account(user1.public()).unwrap().tokens.len(), 2);
-    assert_eq!(token_manager.get_account(user2.public()).unwrap().tokens.len(), 1);
+    assert_eq!(token_manager.read().get_account(user1.public()).unwrap().tokens.len(), 2);
+    assert_eq!(token_manager.read().get_account(user2.public()).unwrap().tokens.len(), 1);
 
-    let r = token_manager.get_owning_accounts_with_issuer(&issuer1).unwrap();
+    let r = token_manager.read().get_owning_accounts_with_issuer(&issuer1).unwrap();
     assert_eq!(r.len(), 2);
     assert!(r.contains(user1.public()));
     assert!(r.contains(user2.public()));
 
-    let r = token_manager.get_owning_accounts_with_issuer(&issuer2).unwrap();
+    let r = token_manager.read().get_owning_accounts_with_issuer(&issuer2).unwrap();
     assert_eq!(r.len(), 1);
     assert!(r.contains(user1.public()));
 }

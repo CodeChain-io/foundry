@@ -17,13 +17,12 @@
 pub use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
-use coordinator::types::*;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 pub struct Context {
-    pub storage: RwLock<Arc<dyn SubStorageAccess>>,
+    pub storage: Arc<RwLock<dyn SubStorageAccess>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -54,7 +53,7 @@ impl AccountManager for Context {
         if self.storage.read().has(public) {
             return Err(Error::AccountExists)
         }
-        self.storage.read().set(public, serde_cbor::to_vec(&account).unwrap());
+        self.storage.write().set(public, serde_cbor::to_vec(&account).unwrap());
         Ok(())
     }
 
@@ -87,14 +86,13 @@ impl AccountManager for Context {
         let bytes = option_bytes.unwrap();
         let mut account: Account = serde_cbor::from_slice(&bytes).map_err(|_| Error::InvalidKey)?;
         account.seq += 1;
-        self.storage.read().set(public, serde_cbor::to_vec(&account).unwrap());
+        self.storage.write().set(public, serde_cbor::to_vec(&account).unwrap());
         Ok(())
     }
 }
 
-impl BlockOpen for Context {
-    fn block_opened(&self, storage: Box<dyn SubStorageAccess>) -> Result<(), HeaderError> {
-        *self.storage.write() = Arc::from(storage);
-        Ok(())
+impl Stateful for Context {
+    fn set_storage(&mut self, _storage: Box<dyn SubStorageAccess>) {
+        unimplemented!()
     }
 }

@@ -55,6 +55,7 @@ toml = "0.4"
 cidr = "0.0.4"
 cbasesandbox = {package = "codechain-basesandbox", path = "basesandbox"}
 module_account = {path = "basic_module/account"}
+codechain-timestamp = {path = "timestamp"}
 
 [build-dependencies]
 vergen = "3"

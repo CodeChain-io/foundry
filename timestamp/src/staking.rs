@@ -16,9 +16,7 @@
 
 use crate::token::TokenManager;
 use ckey::Ed25519Public as Public;
-use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
-use coordinator::types::*;
 use ctypes::{CompactValidatorEntry, CompactValidatorSet, ConsensusParams};
 use parking_lot::RwLock;
 use primitives::H256;
@@ -68,13 +66,16 @@ impl StakeManager for Context {
 }
 
 impl InitGenesis for Context {
-    // _storage will be removed in the updated interface
-    fn init_genesis(&self, config: &[u8], _storage: Box<dyn SubStorageAccess>) {
+    fn begin_genesis(&self) {}
+
+    fn init_genesis(&mut self, config: &[u8]) {
         let initial_validator_set: Validators = serde_cbor::from_slice(config).unwrap();
         for public in initial_validator_set {
             self.token_manager.read().issue_token(&self.validator_token_issuer, &public).unwrap();
         }
     }
+
+    fn end_genesis(&self) {}
 }
 
 impl InitChain for Context {
@@ -85,13 +86,10 @@ impl InitChain for Context {
     }
 }
 
-impl BlockClosed for Context {
-    fn block_closed(&self) -> Result<BlockOutcome, CloseBlockError> {
+impl UpdateChain for Context {
+    fn update_chain(&self) -> (CompactValidatorSet, ConsensusParams) {
         let validator_set = self.track_validator_set();
-        Ok(BlockOutcome {
-            updated_consensus_params: None,
-            updated_validator_set: Some(validator_set),
-            events: Vec::new(),
-        })
+        let consensus_params = ConsensusParams::default_for_test();
+        (validator_set, consensus_params)
     }
 }
