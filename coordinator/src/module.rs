@@ -17,12 +17,15 @@
 use super::context::SubStorageAccess;
 use super::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
+use remote_trait_object::{Service, ServiceRef};
 
-pub trait Stateful: Send + Sync {
-    fn set_storage(&mut self, storage: Box<dyn SubStorageAccess>);
+#[remote_trait_object_macro::service]
+pub trait Stateful: Service {
+    fn set_storage(&mut self, storage: ServiceRef<dyn SubStorageAccess>);
 }
 
-pub trait InitGenesis: Send + Sync {
+#[remote_trait_object_macro::service]
+pub trait InitGenesis: Service {
     fn begin_genesis(&self);
 
     fn init_genesis(&mut self, config: &[u8]);
@@ -30,7 +33,8 @@ pub trait InitGenesis: Send + Sync {
     fn end_genesis(&self);
 }
 
-pub trait TxOwner: Send + Sync {
+#[remote_trait_object_macro::service]
+pub trait TxOwner: Service {
     fn block_opened(&self) -> Result<(), HeaderError>;
 
     fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()>;
@@ -40,10 +44,12 @@ pub trait TxOwner: Send + Sync {
     fn block_closed(&self) -> Result<Vec<Event>, CloseBlockError>;
 }
 
-pub trait InitChain: Send + Sync {
+#[remote_trait_object_macro::service]
+pub trait InitChain: Service {
     fn init_chain(&self) -> (CompactValidatorSet, ConsensusParams);
 }
 
-pub trait UpdateChain: Send + Sync {
+#[remote_trait_object_macro::service]
+pub trait UpdateChain: Service {
     fn update_chain(&self) -> (CompactValidatorSet, ConsensusParams);
 }
