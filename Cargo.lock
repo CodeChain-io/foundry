@@ -729,8 +729,12 @@ dependencies = [
  "codechain-key",
  "codechain-types",
  "coordinator",
- "parking_lot 0.6.4",
+ "foundry-module-rt",
+ "foundry-process-sandbox",
+ "parking_lot 0.11.0",
  "primitives",
+ "remote-trait-object",
+ "remote-trait-object-macro",
  "serde",
  "serde_cbor",
 ]
