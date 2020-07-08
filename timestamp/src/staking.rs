@@ -20,6 +20,7 @@ use coordinator::module::*;
 use ctypes::{CompactValidatorEntry, CompactValidatorSet, ConsensusParams};
 use parking_lot::RwLock;
 use primitives::H256;
+use remote_trait_object::Service;
 use std::sync::Arc;
 
 pub type Validators = Vec<Public>;
@@ -28,6 +29,8 @@ pub struct Context {
     pub token_manager: RwLock<Arc<dyn TokenManager>>,
     pub validator_token_issuer: H256,
 }
+
+impl Service for Context {}
 
 impl Context {
     fn track_validator_set(&self) -> CompactValidatorSet {

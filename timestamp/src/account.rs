@@ -18,12 +18,15 @@ pub use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
 use parking_lot::RwLock;
+use remote_trait_object::{Service, ServiceRef};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 pub struct Context {
     pub storage: Arc<RwLock<dyn SubStorageAccess>>,
 }
+
+impl Service for Context {}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Error {
@@ -92,7 +95,7 @@ impl AccountManager for Context {
 }
 
 impl Stateful for Context {
-    fn set_storage(&mut self, _storage: Box<dyn SubStorageAccess>) {
+    fn set_storage(&mut self, _storage: ServiceRef<dyn SubStorageAccess>) {
         unimplemented!()
     }
 }
