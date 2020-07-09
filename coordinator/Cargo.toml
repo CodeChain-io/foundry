@@ -11,7 +11,7 @@ cmodule = { package = "codechain-module", path = "../module" }
 ctypes = { package = "codechain-types", path = "../types" }
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
 rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
-parking_lot = "0.10.2"
+parking_lot = "0.11.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
 rustc-hex = "1"
