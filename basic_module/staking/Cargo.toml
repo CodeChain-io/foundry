@@ -10,7 +10,7 @@ coordinator = { path = "../../coordinator" }
 fkey = { path = "../../key", package = "codechain-key" }
 ftypes = { path = "../../types", package = "codechain-types" }
 lazy_static = "1.4"
-parking_lot = "0.6.0"
+parking_lot = "0.11.0"
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
 serde = { version = "1.0", features = ["derive"] }
 serde_cbor = "0.11.1"
