@@ -12,7 +12,7 @@ codechain-logger = { path = "../util/logger" }
 kvdb = "0.1"
 lazy_static = "1.2"
 crossbeam-channel = "0.3"
-parking_lot = "0.6.0"
+parking_lot = "0.11.0"
 rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
 cinfo_courier = { package = "codechain_informer_courier", path = "../informer_courier" }
 ccore = { package = "codechain-core", path = "../core" }
