@@ -15,28 +15,35 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::token::TokenManager;
+use ccrypto::blake256;
 use ckey::Ed25519Public as Public;
 use coordinator::module::*;
 use ctypes::{CompactValidatorEntry, CompactValidatorSet, ConsensusParams};
+use foundry_module_rt::UserModule;
 use parking_lot::RwLock;
 use primitives::H256;
-use remote_trait_object::Service;
+use remote_trait_object::{import_service, Context as RtoContext, Dispatch, HandleToExchange, Service, ToDispatcher};
 use std::sync::Arc;
 
 pub type Validators = Vec<Public>;
 
 pub struct Context {
-    pub token_manager: RwLock<Arc<dyn TokenManager>>,
+    pub token_manager: Option<Box<dyn TokenManager>>,
     pub validator_token_issuer: H256,
 }
 
-impl Service for Context {}
-
 impl Context {
+    fn token_manager(&self) -> &dyn TokenManager {
+        self.token_manager.as_ref().unwrap().as_ref()
+    }
+
+    fn token_manager_mut(&mut self) -> &mut dyn TokenManager {
+        self.token_manager.as_mut().unwrap().as_mut()
+    }
+
     fn track_validator_set(&self) -> CompactValidatorSet {
         let validator_set: Validators = self
-            .token_manager
-            .read()
+            .token_manager()
             .get_owning_accounts_with_issuer(&self.validator_token_issuer)
             .unwrap()
             .into_iter()
@@ -53,14 +60,19 @@ impl Context {
     }
 }
 
+impl Service for Context {}
+
+pub struct Module {
+    ctx: Arc<RwLock<Context>>,
+}
+
 pub trait StakeManager: Send + Sync {
     fn get_validators(&self) -> Validators;
 }
 
 impl StakeManager for Context {
     fn get_validators(&self) -> Validators {
-        self.token_manager
-            .read()
+        self.token_manager()
             .get_owning_accounts_with_issuer(&self.validator_token_issuer)
             .unwrap()
             .into_iter()
@@ -73,8 +85,9 @@ impl InitGenesis for Context {
 
     fn init_genesis(&mut self, config: &[u8]) {
         let initial_validator_set: Validators = serde_cbor::from_slice(config).unwrap();
+        let validator_token_issuer = self.validator_token_issuer;
         for public in initial_validator_set {
-            self.token_manager.read().issue_token(&self.validator_token_issuer, &public).unwrap();
+            self.token_manager_mut().issue_token(&validator_token_issuer, &public).unwrap();
         }
     }
 
@@ -94,5 +107,56 @@ impl UpdateChain for Context {
         let validator_set = self.track_validator_set();
         let consensus_params = ConsensusParams::default_for_test();
         (validator_set, consensus_params)
+    }
+}
+
+impl UserModule for Module {
+    fn new(_arg: &[u8]) -> Self {
+        Module {
+            ctx: Arc::new(RwLock::new(Context {
+                token_manager: None,
+                validator_token_issuer: blake256("validator"),
+            })),
+        }
+    }
+
+    fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Arc<dyn Dispatch> {
+        match ctor_name {
+            "init_genesis" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                (Arc::clone(&self.ctx) as Arc<RwLock<dyn InitGenesis>>).to_dispatcher()
+            }
+            "init_chain" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                (Arc::clone(&self.ctx) as Arc<RwLock<dyn InitChain>>).to_dispatcher()
+            }
+            "update_chain" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                (Arc::clone(&self.ctx) as Arc<RwLock<dyn UpdateChain>>).to_dispatcher()
+            }
+            _ => panic!("Unsupported ctor_name in prepare_service_to_export() : {}", ctor_name),
+        }
+    }
+
+    fn import_service(
+        &mut self,
+        rto_context: &RtoContext,
+        _exporter_module: &str,
+        name: &str,
+        handle: HandleToExchange,
+    ) {
+        match name {
+            "token_manager" => {
+                self.ctx.write().token_manager.replace(import_service(rto_context, handle));
+            }
+            _ => panic!("Invalid name in import_service()"),
+        }
+    }
+
+    fn debug(&mut self, _arg: &[u8]) -> Vec<u8> {
+        unimplemented!()
     }
 }

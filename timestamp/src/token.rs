@@ -21,19 +21,44 @@ pub use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
 use coordinator::types::*;
+use foundry_module_rt::UserModule;
 use parking_lot::RwLock;
 use primitives::H256;
-use remote_trait_object::{Service, ServiceRef};
+use remote_trait_object::{
+    import_service, Context as RtoContext, Dispatch, HandleToExchange, Service, ServiceRef, ToDispatcher,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
 pub struct Context {
-    pub account: Arc<RwLock<dyn AccountManager>>,
-    pub storage: Arc<RwLock<dyn SubStorageAccess>>,
+    pub account: Option<Box<dyn AccountManager>>,
+    pub storage: Option<Box<dyn SubStorageAccess>>,
+}
+
+impl Context {
+    fn account(&self) -> &dyn AccountManager {
+        self.account.as_ref().unwrap().as_ref()
+    }
+
+    fn account_mut(&mut self) -> &mut dyn AccountManager {
+        self.account.as_mut().unwrap().as_mut()
+    }
+
+    fn storage(&self) -> &dyn SubStorageAccess {
+        self.storage.as_ref().unwrap().as_ref()
+    }
+
+    fn storage_mut(&mut self) -> &mut dyn SubStorageAccess {
+        self.storage.as_mut().unwrap().as_mut()
+    }
 }
 
 impl Service for Context {}
+
+pub struct Module {
+    ctx: Arc<RwLock<Context>>,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Token {
@@ -51,25 +76,26 @@ pub struct Account {
     pub tokens: Vec<Token>,
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum Error {
     NoSuchAccount,
     InvalidKey,
 }
 
-pub trait TokenManager: Send + Sync {
+#[remote_trait_object_macro::service]
+pub trait TokenManager: Service {
     fn get_account(&self, public: &Public) -> Result<Account, Error>;
-    fn issue_token(&self, issuer: &H256, receiver: &Public) -> Result<(), Error>;
+    fn issue_token(&mut self, issuer: &H256, receiver: &Public) -> Result<(), Error>;
     fn get_owning_accounts_with_issuer(&self, issuer: &H256) -> Result<BTreeSet<Public>, Error>;
 }
 
 impl TokenManager for Context {
     fn get_account(&self, public: &Public) -> Result<Account, Error> {
-        let x = self.storage.read().get(&Self::get_key(public)).ok_or_else(|| Error::NoSuchAccount)?;
+        let x = self.storage().get(&Self::get_key(public)).ok_or_else(|| Error::NoSuchAccount)?;
         Ok(serde_cbor::from_slice(&x).map_err(|_| Error::InvalidKey)?)
     }
 
-    fn issue_token(&self, issuer: &H256, receiver: &Public) -> Result<(), Error> {
+    fn issue_token(&mut self, issuer: &H256, receiver: &Public) -> Result<(), Error> {
         let mut account = self.get_account_or_default(receiver).map_err(|_| Error::InvalidKey)?;
         account.tokens.push(Token {
             issuer: *issuer,
@@ -83,7 +109,7 @@ impl TokenManager for Context {
     }
 
     fn get_owning_accounts_with_issuer(&self, issuer: &H256) -> Result<BTreeSet<Public>, Error> {
-        Ok(if let Some(x) = self.storage.read().get(&Self::get_key_account_set(issuer)) {
+        Ok(if let Some(x) = self.storage().get(&Self::get_key_account_set(issuer)) {
             serde_cbor::from_slice(&x).map_err(|_| Error::InvalidKey)?
         } else {
             BTreeSet::new()
@@ -121,7 +147,7 @@ impl Context {
     }
 
     fn get_account_or_default(&self, key: &Public) -> Result<Account, ()> {
-        if let Some(x) = self.storage.read().get(&Self::get_key(key)) {
+        if let Some(x) = self.storage().get(&Self::get_key(key)) {
             Ok(serde_cbor::from_slice(&x).map_err(|_| ())?)
         } else {
             Ok(Account {
@@ -131,24 +157,23 @@ impl Context {
     }
 
     /// set_account() must not fail
-    fn set_account(&self, key: &Public, account: &Account) {
-        self.storage.write().set(&Self::get_key(key), serde_cbor::to_vec(account).unwrap());
+    fn set_account(&mut self, key: &Public, account: &Account) {
+        self.storage_mut().set(&Self::get_key(key), serde_cbor::to_vec(account).unwrap());
     }
 
     /// set_owning_accounts_with_issuer() must not fail
-    fn set_owning_accounts_with_issuer(&self, issuer: &H256, set: BTreeSet<Public>) {
-        self.storage.write().set(&Self::get_key_account_set(issuer), serde_cbor::to_vec(&set).unwrap());
+    fn set_owning_accounts_with_issuer(&mut self, issuer: &H256, set: BTreeSet<Public>) {
+        self.storage_mut().set(&Self::get_key_account_set(issuer), serde_cbor::to_vec(&set).unwrap());
     }
 
-    fn excute_tx(&self, transaction: &Transaction) -> Result<(), ExecuteError> {
+    fn excute_tx(&mut self, transaction: &Transaction) -> Result<(), ExecuteError> {
         if transaction.tx_type() != "Token" {
             return Err(ExecuteError::InvalidMetadata)
         }
         let tx: OwnTransaction =
             serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
         tx.verify().map_err(|_| ExecuteError::InvalidSign)?;
-        if self.account.read().get_sequence(&tx.signer_public, true).map_err(ExecuteError::AccountModuleError)?
-            != tx.tx.seq
+        if self.account().get_sequence(&tx.signer_public, true).map_err(ExecuteError::AccountModuleError)? != tx.tx.seq
         {
             return Err(ExecuteError::InvalidSequence)
         }
@@ -159,11 +184,7 @@ impl Context {
                 issuer,
             }) => {
                 let mut sender_account: Account = serde_cbor::from_slice(
-                    &self
-                        .storage
-                        .read()
-                        .get(&Self::get_key(&tx.signer_public))
-                        .ok_or_else(|| ExecuteError::NoAccount)?,
+                    &self.storage().get(&Self::get_key(&tx.signer_public)).ok_or_else(|| ExecuteError::NoAccount)?,
                 )
                 .map_err(|_| ExecuteError::InvalidKey)?;
 
@@ -193,7 +214,7 @@ impl Context {
                 recipient_account.tokens.push(token);
                 self.set_account(&tx.signer_public, &sender_account);
                 self.set_account(&receiver, &recipient_account);
-                self.account.read().increase_sequence(&tx.signer_public, true).unwrap();
+                self.account_mut().increase_sequence(&tx.signer_public, true).unwrap();
             }
         }
         Ok(())
@@ -201,8 +222,8 @@ impl Context {
 }
 
 impl Stateful for Context {
-    fn set_storage(&mut self, _storage: ServiceRef<dyn SubStorageAccess>) {
-        unimplemented!()
+    fn set_storage(&mut self, storage: ServiceRef<dyn SubStorageAccess>) {
+        self.storage.replace(storage.import());
     }
 }
 
@@ -258,3 +279,57 @@ pub enum Action {
 impl common::Action for Action {}
 
 pub type OwnTransaction = SignedTransaction<Action>;
+
+impl UserModule for Module {
+    fn new(_arg: &[u8]) -> Self {
+        Module {
+            ctx: Arc::new(RwLock::new(Context {
+                account: None,
+                storage: None,
+            })),
+        }
+    }
+
+    fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Arc<dyn Dispatch> {
+        match ctor_name {
+            "token_manager" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                (Arc::clone(&self.ctx) as Arc<RwLock<dyn TokenManager>>).to_dispatcher()
+            }
+            "stateful" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                (Arc::clone(&self.ctx) as Arc<RwLock<dyn Stateful>>).to_dispatcher()
+            }
+            "tx_owner" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                (Arc::clone(&self.ctx) as Arc<RwLock<dyn TxOwner>>).to_dispatcher()
+            }
+            _ => panic!("Unsupported ctor_name in prepare_service_to_export() : {}", ctor_name),
+        }
+    }
+
+    fn import_service(
+        &mut self,
+        rto_context: &RtoContext,
+        _exporter_module: &str,
+        name: &str,
+        handle: HandleToExchange,
+    ) {
+        match name {
+            "account_manager" => {
+                self.ctx.write().account.replace(import_service(rto_context, handle));
+            }
+            "sub_storage_access" => {
+                self.ctx.write().storage.replace(import_service(rto_context, handle));
+            }
+            _ => panic!("Unsupported name in import_service() : {}", name),
+        }
+    }
+
+    fn debug(&mut self, _arg: &[u8]) -> Vec<u8> {
+        unimplemented!()
+    }
+}

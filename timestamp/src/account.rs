@@ -17,16 +17,33 @@
 pub use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
+use foundry_module_rt::UserModule;
 use parking_lot::RwLock;
-use remote_trait_object::{Service, ServiceRef};
+use remote_trait_object::{
+    import_service, Context as RtoContext, Dispatch, HandleToExchange, Service, ServiceRef, ToDispatcher,
+};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 pub struct Context {
-    pub storage: Arc<RwLock<dyn SubStorageAccess>>,
+    pub storage: Option<Box<dyn SubStorageAccess>>,
+}
+
+impl Context {
+    fn storage(&self) -> &dyn SubStorageAccess {
+        self.storage.as_ref().unwrap().as_ref()
+    }
+
+    fn storage_mut(&mut self) -> &mut dyn SubStorageAccess {
+        self.storage.as_mut().unwrap().as_mut()
+    }
 }
 
 impl Service for Context {}
+
+pub struct Module {
+    ctx: Arc<RwLock<Context>>,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Error {
@@ -40,28 +57,29 @@ pub struct Account {
     seq: u64,
 }
 
-pub trait AccountManager: Send + Sync {
-    fn create_account(&self, public: &Public) -> Result<(), Error>;
+#[remote_trait_object_macro::service]
+pub trait AccountManager: Service {
+    fn create_account(&mut self, public: &Public) -> Result<(), Error>;
 
     fn get_sequence(&self, public: &Public, default: bool) -> Result<u64, Error>;
 
-    fn increase_sequence(&self, public: &Public, default: bool) -> Result<(), Error>;
+    fn increase_sequence(&mut self, public: &Public, default: bool) -> Result<(), Error>;
 }
 
 impl AccountManager for Context {
-    fn create_account(&self, public: &Public) -> Result<(), Error> {
+    fn create_account(&mut self, public: &Public) -> Result<(), Error> {
         let account = Account {
             seq: 0,
         };
-        if self.storage.read().has(public.as_ref()) {
+        if self.storage().has(public.as_ref()) {
             return Err(Error::AccountExists)
         }
-        self.storage.write().set(public.as_ref(), serde_cbor::to_vec(&account).unwrap());
+        self.storage_mut().set(public.as_ref(), serde_cbor::to_vec(&account).unwrap());
         Ok(())
     }
 
     fn get_sequence(&self, public: &Public, default: bool) -> Result<u64, Error> {
-        let bytes = match self.storage.read().get(public.as_ref()) {
+        let bytes = match self.storage().get(public.as_ref()) {
             Some(bytes) => bytes,
             None => {
                 if default {
@@ -75,8 +93,8 @@ impl AccountManager for Context {
         Ok(account.seq)
     }
 
-    fn increase_sequence(&self, public: &Public, default: bool) -> Result<(), Error> {
-        let option_bytes = self.storage.read().get(public.as_ref());
+    fn increase_sequence(&mut self, public: &Public, default: bool) -> Result<(), Error> {
+        let option_bytes = self.storage().get(public.as_ref());
         if option_bytes.is_none() {
             if default {
                 self.create_account(public).expect("Synchronization bug in AccountManager");
@@ -89,13 +107,58 @@ impl AccountManager for Context {
         let bytes = option_bytes.unwrap();
         let mut account: Account = serde_cbor::from_slice(&bytes).map_err(|_| Error::InvalidKey)?;
         account.seq += 1;
-        self.storage.write().set(public.as_ref(), serde_cbor::to_vec(&account).unwrap());
+        self.storage_mut().set(public.as_ref(), serde_cbor::to_vec(&account).unwrap());
         Ok(())
     }
 }
 
 impl Stateful for Context {
-    fn set_storage(&mut self, _storage: ServiceRef<dyn SubStorageAccess>) {
+    fn set_storage(&mut self, storage: ServiceRef<dyn SubStorageAccess>) {
+        self.storage.replace(storage.import());
+    }
+}
+
+impl UserModule for Module {
+    fn new(_arg: &[u8]) -> Self {
+        Module {
+            ctx: Arc::new(RwLock::new(Context {
+                storage: None,
+            })),
+        }
+    }
+
+    fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Arc<dyn Dispatch> {
+        match ctor_name {
+            "account_manager" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                (Arc::clone(&self.ctx) as Arc<RwLock<dyn AccountManager>>).to_dispatcher()
+            }
+            "stateful" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                (Arc::clone(&self.ctx) as Arc<RwLock<dyn Stateful>>).to_dispatcher()
+            }
+            _ => panic!("Unsupported ctor_name in prepare_service_to_export() : {}", ctor_name),
+        }
+    }
+
+    fn import_service(
+        &mut self,
+        rto_context: &RtoContext,
+        _exporter_module: &str,
+        name: &str,
+        handle: HandleToExchange,
+    ) {
+        match name {
+            "sub_storage_access" => {
+                self.ctx.write().storage.replace(import_service(rto_context, handle));
+            }
+            _ => panic!("Invalid name in import_service()"),
+        }
+    }
+
+    fn debug(&mut self, _arg: &[u8]) -> Vec<u8> {
         unimplemented!()
     }
 }

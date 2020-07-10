@@ -18,6 +18,4 @@ pub mod account;
 pub mod common;
 pub mod staking;
 pub mod stamp;
-#[cfg(test)]
-mod tests;
 pub mod token;
