@@ -17,3 +17,4 @@ remote-trait-object = { version = "0.1.4", git = "https://github.com/CodeChain-i
 remote-trait-object-macro = { version = "0.1.4", git = "https://github.com/CodeChain-io/remote-trait-object.git" }
 foundry-process-sandbox = { git = "https://github.com/CodeChain-io/foundry-sandbox.git"}
 foundry-module-rt = { version = "0.1.1", git = "https://github.com/CodeChain-io/module-rt.git" }
+linkme = "0.2.1"

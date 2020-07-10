@@ -17,20 +17,47 @@
 use crate::account::AccountManager;
 use crate::common::*;
 use crate::token::TokenManager;
+use ccrypto::blake256;
+pub use ckey::Ed25519Public as Public;
 use coordinator::module::*;
 use coordinator::types::*;
+use foundry_module_rt::UserModule;
+use parking_lot::RwLock;
 use primitives::H256;
-use remote_trait_object::Service;
+use remote_trait_object::{import_service, Context as RtoContext, Dispatch, HandleToExchange, Service, ToDispatcher};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 struct Context {
-    account: Arc<dyn AccountManager>,
-    token: Arc<dyn TokenManager>,
+    account: Option<Box<dyn AccountManager>>,
+    token: Option<Box<dyn TokenManager>>,
     token_issuer: H256,
 }
 
+impl Context {
+    fn account(&self) -> &dyn AccountManager {
+        self.account.as_ref().unwrap().as_ref()
+    }
+
+    fn account_mut(&mut self) -> &mut dyn AccountManager {
+        self.account.as_mut().unwrap().as_mut()
+    }
+
+    fn token(&self) -> &dyn TokenManager {
+        self.token.as_ref().unwrap().as_ref()
+    }
+
+    fn token_mut(&mut self) -> &mut dyn TokenManager {
+        self.token.as_mut().unwrap().as_mut()
+    }
+}
+
 impl Service for Context {}
+
+pub struct Module {
+    ctx: Arc<RwLock<Context>>,
+}
 
 enum ExecuteError {
     InvalidMetadata,
@@ -43,7 +70,7 @@ enum ExecuteError {
 }
 
 impl Context {
-    fn excute_tx(&self, transaction: &Transaction) -> Result<(), ExecuteError> {
+    fn excute_tx(&mut self, transaction: &Transaction) -> Result<(), ExecuteError> {
         if transaction.tx_type() != "Stamp" {
             return Err(ExecuteError::InvalidMetadata)
         }
@@ -51,18 +78,35 @@ impl Context {
         let tx: OwnTransaction =
             serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
         tx.verify().map_err(|_| ExecuteError::InvalidSign)?;
-        if self.account.get_sequence(&tx.signer_public, true).map_err(ExecuteError::AccountModuleError)? != tx.tx.seq {
+        if self.account().get_sequence(&tx.signer_public, true).map_err(ExecuteError::AccountModuleError)? != tx.tx.seq
+        {
             return Err(ExecuteError::InvalidSequence)
         }
 
-        let account = self.token.get_account(&tx.signer_public).map_err(ExecuteError::TokenModuleError)?;
+        let account = self.token().get_account(&tx.signer_public).map_err(ExecuteError::TokenModuleError)?;
         if account.tokens.iter().any(|x| x.issuer == self.token_issuer) {
-            self.account.increase_sequence(&tx.signer_public, true).unwrap();
+            self.account_mut().increase_sequence(&tx.signer_public, true).unwrap();
             Ok(())
         } else {
             Err(ExecuteError::NotEligibleStamper)
         }
     }
+}
+
+impl InitGenesis for Context {
+    fn begin_genesis(&self) {}
+
+    fn init_genesis(&mut self, config: &[u8]) {
+        let stampers: HashMap<Public, usize> = serde_cbor::from_slice(&config).unwrap();
+        for (stamper, number) in stampers {
+            for _ in 0..number {
+                let token_issuer = self.token_issuer;
+                self.token_mut().issue_token(&token_issuer, &stamper).unwrap()
+            }
+        }
+    }
+
+    fn end_genesis(&self) {}
 }
 
 impl TxOwner for Context {
@@ -101,9 +145,59 @@ impl TxOwner for Context {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TxStamp {
-    hash: H256,
+    pub hash: H256,
 }
 
 impl Action for TxStamp {}
 
 pub type OwnTransaction = crate::common::SignedTransaction<TxStamp>;
+
+impl UserModule for Module {
+    fn new(_arg: &[u8]) -> Self {
+        Module {
+            ctx: Arc::new(RwLock::new(Context {
+                account: None,
+                token: None,
+                token_issuer: blake256("stamp"),
+            })),
+        }
+    }
+
+    fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Arc<dyn Dispatch> {
+        match ctor_name {
+            "tx_owner" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                (Arc::clone(&self.ctx) as Arc<RwLock<dyn TxOwner>>).to_dispatcher()
+            }
+            "init_genesis" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                (Arc::clone(&self.ctx) as Arc<RwLock<dyn InitGenesis>>).to_dispatcher()
+            }
+            _ => panic!("Unsupported ctor_name in prepare_service_to_export() : {}", ctor_name),
+        }
+    }
+
+    fn import_service(
+        &mut self,
+        rto_context: &RtoContext,
+        _exporter_module: &str,
+        name: &str,
+        handle: HandleToExchange,
+    ) {
+        match name {
+            "account_manager" => {
+                self.ctx.write().account.replace(import_service(rto_context, handle));
+            }
+            "token_manager" => {
+                self.ctx.write().token.replace(import_service(rto_context, handle));
+            }
+            _ => panic!("Invalid name in import_service()"),
+        }
+    }
+
+    fn debug(&mut self, _arg: &[u8]) -> Vec<u8> {
+        unimplemented!()
+    }
+}
