@@ -156,8 +156,11 @@ impl<E: ExecutionScheme> Linkable for ProcessSandbox<E> {
     }
 
     fn new_port(&mut self) -> Box<dyn Port> {
+        // TODO: use module name.
+        // It MUST be unique anyway, for now.
+        let random_name = fproc_sndbx::ipc::generate_random_name();
         Box::new(ProcessPort {
-            module_side_port: self.module.create_port("").import(),
+            module_side_port: self.module.create_port(&random_name).import(),
             ids: Vec::new(),
             slots: Vec::new(),
         })
