@@ -1,16 +1,7 @@
 {
   "name": "Solo",
   "engine": {
-    "solo": {
-      "params": {
-          "genesisStakes": {
-              "4cnj73b1X2_K3XI_PJSXAQHZG0BD-VO4-TnhS3WEOy8Ym7UmT1Utc0": 40000,
-              "fys3db1kOrI_rXyaTx9U2_RP-SlNK1q0LRXxYeQGBI1av35drZQtc0": 30000,
-              "whxw3vrh6DwBhO2azGaGinvi--kB7s_nwFRFC7uNJDKOARbqXgwtc0": 20000,
-              "nxcmkryvIAwv6UL9vpFDMj7SZNDjnnsyHKM8eL-nipJXbgDcnr0tc0": 10000
-          }
-      }
-    }
+    "solo": null
   },
   "params": {
     "maxExtraDataSize": "0x20",

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{Solo, Tendermint};
+use super::Tendermint;
 
 /// Engine deserialization.
 #[derive(Debug, PartialEq, Deserialize)]
@@ -22,7 +22,7 @@ use super::{Solo, Tendermint};
 pub enum Engine {
     /// Null engine.
     Null,
-    Solo(Solo),
+    Solo,
     Tendermint(Box<Tendermint>),
 }
 
@@ -40,24 +40,19 @@ mod tests {
         assert_eq!(deserialized, Engine::Null);
 
         let s = r#"{
-            "solo": {
-                "params": {
-                }
-            }
+            "solo": null
         }"#;
 
         let deserialized: Engine = serde_json::from_str(s).unwrap();
         match deserialized {
-            Engine::Solo(_) => {} // solo is unit tested in its own file.
+            Engine::Solo => {} // solo is unit tested in its own file.
             _ => panic!(),
         };
 
         let s = r#"{
             "tendermint": {
                 "params": {
-                    "validators": ["0x6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375"],
-                    "genesisStakes": {},
-                    "genesisCandidates": {}
+                    "validators": ["0x6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375"]
                 }
             }
         }"#;
