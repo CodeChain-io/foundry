@@ -16,41 +16,17 @@
 
 use super::types::View;
 use super::Step;
-use ckey::Ed25519Public as Public;
-use ctypes::Deposit;
-use std::collections::HashMap;
 use std::time::Duration;
 
 /// `Tendermint` params.
 pub struct TendermintParams {
     /// Timeout durations for different steps.
     pub timeouts: TimeoutParams,
-    /// Tokens distributed at genesis.
-    pub genesis_stakes: HashMap<Public, u64>,
-    pub genesis_candidates: HashMap<Public, Deposit>,
-    pub genesis_delegations: HashMap<Public, HashMap<Public, u64>>,
 }
 
 impl From<cjson::scheme::TendermintParams> for TendermintParams {
     fn from(p: cjson::scheme::TendermintParams) -> Self {
         let dt = TimeoutParams::default();
-        let genesis_stakes =
-            p.genesis_stakes.iter().map(|(pa, stake_account)| (pa.into_pubkey(), stake_account.stake)).collect();
-        let genesis_delegations = p
-            .genesis_stakes
-            .into_iter()
-            .map(|(pa, stake_account)| {
-                (
-                    pa.into_pubkey(),
-                    stake_account
-                        .delegations
-                        .unwrap_or_default()
-                        .into_iter()
-                        .map(|(delegatee, amount)| (delegatee.into_pubkey(), amount))
-                        .collect(),
-                )
-            })
-            .collect();
         TendermintParams {
             timeouts: TimeoutParams {
                 propose: p.timeout_propose.map_or(dt.propose, to_duration),
@@ -61,20 +37,6 @@ impl From<cjson::scheme::TendermintParams> for TendermintParams {
                 precommit_delta: p.timeout_precommit_delta.map_or(dt.precommit_delta, to_duration),
                 commit: p.timeout_commit.map_or(dt.commit, to_duration),
             },
-            genesis_stakes,
-            genesis_candidates: p
-                .genesis_candidates
-                .into_iter()
-                .map(|(pubkey, deposit)| {
-                    (pubkey.into_pubkey(), Deposit {
-                        pubkey: deposit.pubkey,
-                        deposit: deposit.deposit,
-                        nomination_ends_at: deposit.nomination_ends_at,
-                        metadata: deposit.metadata.into_bytes(),
-                    })
-                })
-                .collect(),
-            genesis_delegations,
         }
     }
 }
