@@ -9,44 +9,7 @@
         "timeoutPrevoteDelta": 5000,
         "timeoutPrecommit": 10000,
         "timeoutPrecommitDelta": 5000,
-        "timeoutCommit": 10000,
-        "genesisStakes": {
-          "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0": {
-            "stake": 100,
-            "delegations": {
-              "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0": 9,
-              "szff1322BHP3gsOuwFPDf-K8zvqSmNz4rj3CJirlQKFKWA_3c-Ytc0": 8,
-              "qwfj0xwkJQLV5iEGeaGeRfPA-TJX56Mnuq9fQD9coasmhanhck4tc0": 7,
-              "dbqtds3w6QnzEf0RXuQS7c_N6IzFBzcBAfdjWme5y0U5DxzLS14tc0": 6
-            }
-          }
-        },
-        "genesisCandidates": {
-          "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0": {
-            "pubkey": "0x5f6fcadd723f3c94970101d91b4043f953b8f939e14b75843b2f189bb5264f55",
-            "deposit": 20,
-            "nominationEndsAt": 100,
-            "metadata": "validator 0"
-          },
-          "szff1322BHP3gsOuwFPDf-K8zvqSmNz4rj3CJirlQKFKWA_3c-Ytc0": {
-            "pubkey": "0x3ab23fad7c9a4f1f54dbf44ff9294d2b5ab42d15f161e406048d5abf7e5dad94",
-            "deposit": 20,
-            "nominationEndsAt": 100,
-            "metadata": "validator 1"
-          },
-          "qwfj0xwkJQLV5iEGeaGeRfPA-TJX56Mnuq9fQD9coasmhanhck4tc0": {
-            "pubkey": "0xe83c0184ed9acc66868a7be2fbe901eecfe7c054450bbb8d24328e0116ea5e0c",
-            "deposit": 20,
-            "nominationEndsAt": 100,
-            "metadata": "validator 2"
-          },
-          "dbqtds3w6QnzEf0RXuQS7c_N6IzFBzcBAfdjWme5y0U5DxzLS14tc0": {
-            "pubkey": "0x200c2fe942fdbe9143323ed264d0e39e7b321ca33c78bfa78a92576e00dc9ebd",
-            "deposit": 20,
-            "nominationEndsAt": 100,
-            "metadata": "validator 3"
-          }
-        }
+        "timeoutCommit": 10000
       }
     }
   },
