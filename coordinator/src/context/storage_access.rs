@@ -16,15 +16,12 @@
 
 pub use ctypes::StorageId;
 
-pub type Key = dyn AsRef<[u8]>;
-pub type Value = Vec<u8>;
-
 // Interface between host and the coordinator
 pub trait StorageAccess {
-    fn get(&self, storage_id: StorageId, key: &Key) -> Option<Value>;
-    fn set(&mut self, storage_id: StorageId, key: &Key, value: Value);
-    fn has(&self, storage_id: StorageId, key: &Key) -> bool;
-    fn remove(&mut self, storage_id: StorageId, key: &Key);
+    fn get(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>>;
+    fn set(&mut self, storage_id: StorageId, key: &dyn AsRef<[u8]>, value: Vec<u8>);
+    fn has(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> bool;
+    fn remove(&mut self, storage_id: StorageId, key: &dyn AsRef<[u8]>);
 
     /// Create a recoverable checkpoint of this state
     fn create_checkpoint(&mut self);
