@@ -16,13 +16,11 @@
 
 use remote_trait_object::Service;
 
-pub type Value = Vec<u8>;
-
 // Interface between each module and the coordinator
 #[remote_trait_object_macro::service]
 pub trait SubStorageAccess: Service {
-    fn get(&self, key: &[u8]) -> Option<Value>;
-    fn set(&mut self, key: &[u8], value: Value);
+    fn get(&self, key: &[u8]) -> Option<Vec<u8>>;
+    fn set(&mut self, key: &[u8], value: Vec<u8>);
     fn has(&self, key: &[u8]) -> bool;
     fn remove(&mut self, key: &[u8]);
 
