@@ -23,14 +23,11 @@ use remote_trait_object::{service, Service};
 /// mempool access and state history access.
 pub trait Context: SubStorageAccess + MemPoolAccess + StateHistoryAccess {}
 
-pub type Key = dyn AsRef<[u8]>;
-pub type Value = Vec<u8>;
-
 // Interface between each module and the coordinator
 #[service]
 pub trait SubStorageAccess: Service {
-    fn get(&self, key: &[u8]) -> Option<Value>;
-    fn set(&mut self, key: &[u8], value: Value);
+    fn get(&self, key: &[u8]) -> Option<Vec<u8>>;
+    fn set(&mut self, key: &[u8], value: Vec<u8>);
     fn has(&self, key: &[u8]) -> bool;
     fn remove(&mut self, key: &[u8]);
 
@@ -43,11 +40,11 @@ pub trait SubStorageAccess: Service {
 }
 
 // Interface between host and the coordinator
-pub trait StorageAccess {
-    fn get(&self, storage_id: StorageId, key: &Key) -> Option<Value>;
-    fn set(&mut self, storage_id: StorageId, key: &Key, value: Value);
-    fn has(&self, storage_id: StorageId, key: &Key) -> bool;
-    fn remove(&mut self, storage_id: StorageId, key: &Key);
+pub trait StorageAccess: Send {
+    fn get(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>>;
+    fn set(&mut self, storage_id: StorageId, key: &dyn AsRef<[u8]>, value: Vec<u8>);
+    fn has(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> bool;
+    fn remove(&mut self, storage_id: StorageId, key: &dyn AsRef<[u8]>);
 
     /// Create a recoverable checkpoint of this state
     fn create_checkpoint(&mut self);
@@ -67,12 +64,12 @@ pub trait ChainHistoryAccess {
 
 // Interface observable from modules
 pub trait SubStateHistoryAccess {
-    fn get_at(&self, block_number: Option<BlockId>, key: &Key) -> Option<Value>;
-    fn has_at(&self, block_number: Option<BlockId>, key: &Key) -> bool;
+    fn get_at(&self, block_number: Option<BlockId>, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>>;
+    fn has_at(&self, block_number: Option<BlockId>, key: &dyn AsRef<[u8]>) -> bool;
 }
 
 // Host side internal trait
 pub trait StateHistoryAccess {
-    fn get_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &Key) -> Option<Value>;
-    fn has_at(&self, storgae_id: StorageId, block_number: Option<BlockId>, key: &Key) -> bool;
+    fn get_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>>;
+    fn has_at(&self, storgae_id: StorageId, block_number: Option<BlockId>, key: &dyn AsRef<[u8]>) -> bool;
 }

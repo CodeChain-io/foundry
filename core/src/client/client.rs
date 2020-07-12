@@ -36,7 +36,7 @@ use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::context::{
-    ChainHistoryAccess, Key as DbKey, MemPoolAccess, StateHistoryAccess, StorageAccess, StorageId, Value as DbValue,
+    ChainHistoryAccess, MemPoolAccess, StateHistoryAccess, StorageAccess, StorageId,
 };
 use coordinator::engine::{BlockExecutor, Initializer};
 use coordinator::types::{Event, Transaction};
@@ -341,12 +341,12 @@ impl StateInfo for Client {
 
 // NOTE: The minimum requirement to implement this trait is the object be "StateInfo"
 impl StateHistoryAccess for Client {
-    fn get_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &DbKey) -> Option<DbValue> {
+    fn get_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>> {
         let block_id = block_number.unwrap_or(BlockId::Latest);
         self.state_at(block_id).and_then(|state| state.get(storage_id, key))
     }
 
-    fn has_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &DbKey) -> bool {
+    fn has_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &dyn AsRef<[u8]>) -> bool {
         let block_id = block_number.unwrap_or(BlockId::Latest);
         self.state_at(block_id).map(|state| state.has(storage_id, key)).unwrap_or(false)
     }
