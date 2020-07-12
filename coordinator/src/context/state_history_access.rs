@@ -16,17 +16,14 @@
 
 use ctypes::{BlockId, StorageId};
 
-pub type Key = dyn AsRef<[u8]>;
-pub type Value = Vec<u8>;
-
 // Interface observable from modules
 pub trait SubStateHistoryAccess {
-    fn get_at(&self, block_number: Option<BlockId>, key: &Key) -> Option<Value>;
-    fn has_at(&self, block_number: Option<BlockId>, key: &Key) -> bool;
+    fn get_at(&self, block_number: Option<BlockId>, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>>;
+    fn has_at(&self, block_number: Option<BlockId>, key: &dyn AsRef<[u8]>) -> bool;
 }
 
 // Host side internal trait
 pub trait StateHistoryAccess {
-    fn get_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &Key) -> Option<Value>;
-    fn has_at(&self, storgae_id: StorageId, block_number: Option<BlockId>, key: &Key) -> bool;
+    fn get_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>>;
+    fn has_at(&self, storgae_id: StorageId, block_number: Option<BlockId>, key: &dyn AsRef<[u8]>) -> bool;
 }
