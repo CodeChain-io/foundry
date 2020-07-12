@@ -48,7 +48,7 @@ use crate::{
 };
 use cdb::{AsHashDB, DatabaseError};
 use ckey::Ed25519Public as Public;
-use coordinator::context::{Key as DbCxtKey, StorageAccess, Value as DbCxtValue};
+use coordinator::context::StorageAccess;
 use ctypes::errors::RuntimeError;
 use ctypes::transaction::{Action, Transaction};
 use ctypes::util::unexpected::Mismatch;
@@ -139,7 +139,7 @@ macro_rules! panic_at {
 }
 
 impl StorageAccess for TopLevelState {
-    fn get(&self, storage_id: StorageId, key: &DbCxtKey) -> Option<DbCxtValue> {
+    fn get(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>> {
         match self.module_state(storage_id) {
             Ok(state) => match state?.get_datum(key) {
                 Ok(datum) => datum.map(|datum| datum.content()),
@@ -149,7 +149,7 @@ impl StorageAccess for TopLevelState {
         }
     }
 
-    fn set(&mut self, storage_id: StorageId, key: &DbCxtKey, value: DbCxtValue) {
+    fn set(&mut self, storage_id: StorageId, key: &dyn AsRef<[u8]>, value: Vec<u8>) {
         match self.module_state_mut(storage_id) {
             Ok(state) => {
                 if let Err(e) = state.set_datum(key, value) {
@@ -160,7 +160,7 @@ impl StorageAccess for TopLevelState {
         }
     }
 
-    fn has(&self, storage_id: StorageId, key: &DbCxtKey) -> bool {
+    fn has(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> bool {
         match self.module_state(storage_id) {
             Ok(state) => state
                 .map(|state| match state.has_key(key) {
@@ -172,7 +172,7 @@ impl StorageAccess for TopLevelState {
         }
     }
 
-    fn remove(&mut self, storage_id: StorageId, key: &DbCxtKey) {
+    fn remove(&mut self, storage_id: StorageId, key: &dyn AsRef<[u8]>) {
         match self.module_state_mut(storage_id) {
             Ok(state) => state.remove_key(key),
             Err(e) => panic_at!("remove", e),
