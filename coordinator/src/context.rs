@@ -29,6 +29,3 @@ pub use sub_storage_access::SubStorageAccess;
 /// A `Context` provides the interface against the system services such as moulde substorage access,
 /// mempool access
 pub trait Context: SubStorageAccess + MemPoolAccess + StateHistoryAccess {}
-
-pub type Key = dyn AsRef<[u8]>;
-pub type Value = Vec<u8>;
