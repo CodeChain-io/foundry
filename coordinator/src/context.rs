@@ -17,7 +17,7 @@
 use crate::Transaction;
 use ctypes::TxHash;
 pub use ctypes::{BlockId, Header, StorageId};
-use remote_trait_object::Service;
+use remote_trait_object::{service, Service};
 
 /// A `Context` provides the interface against the system services such as moulde substorage access,
 /// mempool access and state history access.
@@ -27,7 +27,7 @@ pub type Key = dyn AsRef<[u8]>;
 pub type Value = Vec<u8>;
 
 // Interface between each module and the coordinator
-#[remote_trait_object_macro::service]
+#[service]
 pub trait SubStorageAccess: Service {
     fn get(&self, key: &[u8]) -> Option<Value>;
     fn set(&mut self, key: &[u8], value: Value);
