@@ -27,16 +27,10 @@ mod types;
 
 use crate::types::SignedTransaction;
 use ckey::{verify, NetworkId};
-use coordinator::context::Context;
 use parking_lot::Mutex;
 
 lazy_static! {
     static ref NETWORK_ID: Mutex<Option<NetworkId>> = Mutex::new(None);
-}
-
-pub fn get_context() -> &'static mut dyn Context {
-    // This function should be implemented after the context has been formatted.
-    unimplemented!();
 }
 
 pub fn check(signed_tx: &SignedTransaction) -> bool {
