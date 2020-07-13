@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use remote_trait_object::Service;
+use remote_trait_object::{service, Service};
 
 // Interface between each module and the coordinator
-#[remote_trait_object_macro::service]
+#[service]
 pub trait SubStorageAccess: Service {
     fn get(&self, key: &[u8]) -> Option<Vec<u8>>;
     fn set(&mut self, key: &[u8], value: Vec<u8>);

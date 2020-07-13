@@ -562,7 +562,6 @@ dependencies = [
  "parking_lot 0.11.0",
  "primitives",
  "remote-trait-object",
- "remote-trait-object-macro",
  "serde",
  "serde_cbor",
  "thiserror",
@@ -747,7 +746,6 @@ dependencies = [
  "primitives",
  "regex",
  "remote-trait-object",
- "remote-trait-object-macro",
  "rlp",
  "rustc-hex 1.0.0",
  "serde",
@@ -1232,14 +1230,13 @@ dependencies = [
 [[package]]
 name = "foundry-module-rt"
 version = "0.1.1"
-source = "git+https://github.com/CodeChain-io/module-rt.git#2dde2b81b790cd6e2a7de5ad60b9046a2d1e5fbc"
+source = "git+https://github.com/CodeChain-io/module-rt.git#7bbaabbfffbd9cdbb07753387131980c8be8201e"
 dependencies = [
  "crossbeam 0.7.3",
  "foundry-process-sandbox",
  "linkme",
  "parking_lot 0.11.0",
  "remote-trait-object",
- "remote-trait-object-macro",
  "serde",
  "serde_cbor",
 ]
@@ -1247,7 +1244,7 @@ dependencies = [
 [[package]]
 name = "foundry-process-sandbox"
 version = "0.1.0"
-source = "git+https://github.com/CodeChain-io/foundry-sandbox.git#83f1b3c3f207d698184a284942f1c17d5c578d05"
+source = "git+https://github.com/CodeChain-io/foundry-sandbox#2b9df6f106beb55c0f9e5cd8a80bbdf3e9fd4537"
 dependencies = [
  "codechain-crypto",
  "crossbeam 0.7.3",
@@ -2845,21 +2842,24 @@ checksum = "11a7e20d1cce64ef2fed88b66d347f88bd9babb82845b2b858f3edbf59a4f716"
 
 [[package]]
 name = "remote-trait-object"
-version = "0.1.4"
-source = "git+https://github.com/CodeChain-io/remote-trait-object.git#48f05f81c5301ef46d7ed83eed41696c037fba04"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7e5ca5b6bbdb99f4d537e7afdb2b8e545d98cec8adb884b10dffa2b763d4878"
 dependencies = [
  "crossbeam 0.7.3",
  "linkme",
  "log 0.4.8",
  "parking_lot 0.11.0",
+ "remote-trait-object-macro",
  "serde",
  "serde_cbor",
 ]
 
 [[package]]
 name = "remote-trait-object-macro"
-version = "0.1.4"
-source = "git+https://github.com/CodeChain-io/remote-trait-object.git#48f05f81c5301ef46d7ed83eed41696c037fba04"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d80767f7f0c0a29bed421934d66d75631b84291e9603f38407da103f91aaa2a1"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2 1.0.19",
