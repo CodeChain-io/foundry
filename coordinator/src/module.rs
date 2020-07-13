@@ -19,15 +19,15 @@ use crate::transaction::{Transaction, TransactionWithMetadata};
 use crate::types::{CloseBlockError, ErrorCode, Event, HeaderError, TransactionOutcome, VerifiedCrime};
 use crate::Header;
 use ctypes::{CompactValidatorSet, ConsensusParams};
-use remote_trait_object::{Service, ServiceRef};
+use remote_trait_object::{service, Service, ServiceRef};
 use serde::{Deserialize, Serialize};
 
-#[remote_trait_object_macro::service]
+#[service]
 pub trait Stateful: Service {
     fn set_storage(&mut self, storage: ServiceRef<dyn SubStorageAccess>);
 }
 
-#[remote_trait_object_macro::service]
+#[service]
 pub trait InitGenesis: Service {
     fn begin_genesis(&mut self);
 
@@ -36,7 +36,7 @@ pub trait InitGenesis: Service {
     fn end_genesis(&mut self);
 }
 
-#[remote_trait_object_macro::service]
+#[service]
 pub trait TxOwner: Service {
     fn block_opened(&mut self, header: &Header) -> Result<(), HeaderError>;
 
@@ -47,17 +47,17 @@ pub trait TxOwner: Service {
     fn block_closed(&mut self) -> Result<Vec<Event>, CloseBlockError>;
 }
 
-#[remote_trait_object_macro::service]
+#[service]
 pub trait InitChain: Service {
     fn init_chain(&mut self) -> (CompactValidatorSet, ConsensusParams);
 }
 
-#[remote_trait_object_macro::service]
+#[service]
 pub trait UpdateChain: Service {
     fn update_chain(&mut self) -> (Option<CompactValidatorSet>, Option<ConsensusParams>);
 }
 
-#[remote_trait_object_macro::service]
+#[service]
 pub trait TxSorter: Service {
     fn sort_txs(&self, txs: &[TransactionWithMetadata]) -> SortedTxs;
 }
@@ -68,7 +68,7 @@ pub struct SortedTxs {
     pub sorted: Vec<usize>,
 }
 
-#[remote_trait_object_macro::service]
+#[service]
 pub trait HandleCrimes: Service {
     fn handle_crimes(&mut self, crimes: &[VerifiedCrime]);
 }
