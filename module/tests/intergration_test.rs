@@ -23,10 +23,10 @@ use cmodule::sandbox::*;
 use foundry_module_rt::UserModule;
 use fproc_sndbx::execution::executor;
 use fproc_sndbx::ipc::generate_random_name;
-use remote_trait_object::{Context as RtoContext, Dispatch, HandleToExchange, Service, ToDispatcher};
+use remote_trait_object::{service, Context as RtoContext, Dispatch, HandleToExchange, Service, ToDispatcher};
 use std::sync::Arc;
 
-#[remote_trait_object_macro::service]
+#[service]
 trait Hello: Service {
     fn hello(&self) -> i32;
     fn hi(&self) -> String;
