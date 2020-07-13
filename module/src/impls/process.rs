@@ -17,10 +17,10 @@
 use crate::link::{self, Linkable, Linker, Port};
 use crate::sandbox::{self, Sandbox, Sandboxer};
 use crossbeam::thread;
-use fproc_sndbx::execution::{executor, with_rto};
+use fproc_sndbx::execution::executor;
 use fproc_sndbx::ipc::Ipc;
 use parking_lot::Mutex;
-use remote_trait_object::HandleToExchange;
+use remote_trait_object::{Config as RtoConfig, Context as RtoContext, HandleToExchange};
 use std::io::Cursor;
 use std::marker::PhantomData;
 use std::path::Path;
@@ -99,17 +99,6 @@ impl ExecutionScheme for SingleProcess {
     }
 }
 
-#[remote_trait_object_macro::service]
-pub trait SandboxForModule: remote_trait_object::Service {
-    fn ping(&self);
-}
-
-struct DummyPong;
-impl remote_trait_object::Service for DummyPong {}
-impl SandboxForModule for DummyPong {
-    fn ping(&self) {}
-}
-
 pub struct ProcessSandbox<E: ExecutionScheme> {
     _process: Mutex<executor::Context<E::Ipc, E::Execution>>,
     /// module should be dropped first before rto_context
@@ -119,17 +108,25 @@ pub struct ProcessSandbox<E: ExecutionScheme> {
 
 impl<E: ExecutionScheme> ProcessSandbox<E> {
     fn new<'a>(path: &'a Path, init: &[u8], exports: &[(String, Vec<u8>)]) -> Result<Self, sandbox::Error<'a>> {
-        let process =
+        let mut process =
             executor::execute::<E::Ipc, E::Execution>(path.to_str().ok_or_else(|| sandbox::Error::ModuleNotFound {
                 path,
             })?)
             .map_err(|_| sandbox::Error::ModuleNotFound {
                 path,
             })?;
-        let (process, rto_context, handle) =
-            with_rto::setup_executor(process, Box::new(DummyPong) as Box<dyn SandboxForModule>).unwrap();
-        let mut module: Box<dyn foundry_module_rt::coordinator_interface::FoundryModule> =
-            remote_trait_object::import_service(&rto_context, handle);
+
+        // TODO: parse init to get proper rto config
+        let rto_config = RtoConfig::default_setup();
+        let (transport_send, transport_recv) = process.ipc.take().unwrap().split();
+
+        let (rto_context, mut module): (_, Box<dyn foundry_module_rt::coordinator_interface::FoundryModule>) =
+            RtoContext::with_initial_service(
+                rto_config,
+                transport_send,
+                transport_recv,
+                remote_trait_object::create_null_service(),
+            );
         module.initialize(init, exports);
 
         Ok(Self {
@@ -191,8 +188,8 @@ impl Port for ProcessPort {
 }
 
 impl ProcessPort {
-    fn initialize(&mut self, ipc_arg: Vec<u8>, intra: bool) {
-        self.module_side_port.initialize(ipc_arg, intra);
+    fn initialize(&mut self, rto_config: RtoConfig, ipc_arg: Vec<u8>, intra: bool) {
+        self.module_side_port.initialize(rto_config, ipc_arg, intra);
     }
 }
 
@@ -224,12 +221,16 @@ impl<E: ExecutionScheme> Linker for ProcessLinker<E> {
 
         let (ipc_arg_a, ipc_arg_b) = E::Ipc::arguments_for_both_ends();
 
+        // TODO: get config from the module itself
+        let rto_config_a = RtoConfig::default_setup();
+        let rto_config_b = RtoConfig::default_setup();
+
         thread::scope(|s| {
             // two initialize()s must be called concurrently
             let j = s.spawn(|_| {
-                port_a.initialize(ipc_arg_a, E::is_intra());
+                port_a.initialize(rto_config_a, ipc_arg_a, E::is_intra());
             });
-            port_b.initialize(ipc_arg_b, E::is_intra());
+            port_b.initialize(rto_config_b, ipc_arg_b, E::is_intra());
             j.join().unwrap();
         })
         .unwrap();
