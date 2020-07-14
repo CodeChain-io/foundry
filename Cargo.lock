@@ -167,16 +167,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1955ebdd52d5c5f1fb4f94e97aa241c2ce5729d200b3c34fc71ac6ff7a7cc556"
 
 [[package]]
-name = "bincode"
-version = "1.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5753e2a71534719bf3f4e57006c3a4f0d2c672a4b676eec84161f763eca87dbf"
-dependencies = [
- "byteorder",
- "serde",
-]
-
-[[package]]
 name = "bitflags"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -358,23 +348,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ec65ee4f9c9d16f335091d23693457ed4928657ba4982289d7fafee03bc614a"
 dependencies = [
  "cc",
-]
-
-[[package]]
-name = "codechain-basesandbox"
-version = "0.1.0"
-dependencies = [
- "codechain-crypto",
- "crossbeam 0.7.3",
- "hex",
- "ipc-channel",
- "nix",
- "once_cell",
- "parking_lot 0.11.0",
- "primitives",
- "serde",
- "serde_cbor",
- "serde_derive",
 ]
 
 [[package]]
@@ -1245,7 +1218,6 @@ dependencies = [
  "app_dirs",
  "cidr",
  "clap",
- "codechain-basesandbox",
  "codechain-core",
  "codechain-discovery",
  "codechain-informer",
@@ -1660,24 +1632,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b2b3ea6ff95e175473f8ffe6a7eb7c00d054240321b84c57051175fe3c1e075e"
 dependencies = [
  "libc",
-]
-
-[[package]]
-name = "ipc-channel"
-version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3698b8affd5656032a074a7d40b3c2a29b71971f3e1ff6042b9d40724e20d97c"
-dependencies = [
- "bincode",
- "crossbeam-channel 0.4.2",
- "fnv",
- "lazy_static 1.4.0",
- "libc",
- "mio 0.6.21",
- "rand 0.7.3",
- "serde",
- "tempfile",
- "uuid 0.8.1",
 ]
 
 [[package]]
@@ -2263,19 +2217,6 @@ name = "never-type"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c026cbdf8890d6cab75bd177f36e948bf3a512c61f3e93898fd288f571da6551"
-
-[[package]]
-name = "nix"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50e4785f2c3b7589a0d0c1dd60285e1188adac4006e8abd6dd578e1567027363"
-dependencies = [
- "bitflags",
- "cc",
- "cfg-if",
- "libc",
- "void",
-]
 
 [[package]]
 name = "nodrop"

@@ -53,7 +53,6 @@ staking = { path = "basic_module/staking" }
 tokio-core = "0.1.17"
 toml = "0.4"
 cidr = "0.0.4"
-cbasesandbox = {package = "codechain-basesandbox", path = "basesandbox"}
 module_account = {path = "basic_module/account"}
 codechain-timestamp = {path = "timestamp"}
 
@@ -83,7 +82,6 @@ members = [
     "module",
     "module-macros",
     "coordinator",
-    "basesandbox",
     "basic_module/account",
     "basic_module/staking",
     "timestamp"
