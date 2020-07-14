@@ -735,6 +735,7 @@ dependencies = [
  "linkme",
  "parking_lot 0.11.0",
  "primitives",
+ "rand 0.7.3",
  "remote-trait-object",
  "serde",
  "serde_cbor",
@@ -1673,7 +1674,7 @@ dependencies = [
  "lazy_static 1.4.0",
  "libc",
  "mio 0.6.21",
- "rand 0.7.2",
+ "rand 0.7.3",
  "serde",
  "tempfile",
  "uuid 0.8.1",
@@ -2461,7 +2462,7 @@ dependencies = [
  "log 0.4.8",
  "mio-named-pipes",
  "miow 0.3.3",
- "rand 0.7.2",
+ "rand 0.7.3",
  "tokio 0.1.17",
  "tokio-named-pipes",
  "tokio-uds",
@@ -2787,9 +2788,9 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.7.2"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ae1b169243eaf61759b8475a998f0a385e42042370f3a7dbaf35246eacc8412"
+checksum = "6a6b1679d49b24bbfe0c803429aa1874472f50d9b363131f0e89fc356b544d03"
 dependencies = [
  "getrandom",
  "libc",
@@ -2924,7 +2925,7 @@ checksum = "11a7e20d1cce64ef2fed88b66d347f88bd9babb82845b2b858f3edbf59a4f716"
 [[package]]
 name = "remote-trait-object"
 version = "0.2.0"
-source = "git+https://github.com/CodeChain-io/remote-trait-object.git#35f3d57f0cd82f4af51f51cc14768839bc817b05"
+source = "git+https://github.com/CodeChain-io/remote-trait-object.git#4b04bce6e86ab4ab0f75a4533821edff835ae34a"
 dependencies = [
  "crossbeam 0.7.3",
  "linkme",
@@ -2938,7 +2939,7 @@ dependencies = [
 [[package]]
 name = "remote-trait-object-macro"
 version = "0.2.0"
-source = "git+https://github.com/CodeChain-io/remote-trait-object.git#35f3d57f0cd82f4af51f51cc14768839bc817b05"
+source = "git+https://github.com/CodeChain-io/remote-trait-object.git#4b04bce6e86ab4ab0f75a4533821edff835ae34a"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2 1.0.10",
@@ -3528,7 +3529,7 @@ checksum = "7a6e24d9338a0a5be79593e2fa15a648add6138caa803e2d5bc782c371732ca9"
 dependencies = [
  "cfg-if",
  "libc",
- "rand 0.7.2",
+ "rand 0.7.3",
  "redox_syscall",
  "remove_dir_all",
  "winapi 0.3.8",
@@ -4048,7 +4049,7 @@ version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9fde2f6a4bea1d6e007c4ad38c6839fa71cbb63b6dbf5b595aa38dc9b1093c11"
 dependencies = [
- "rand 0.7.2",
+ "rand 0.7.3",
 ]
 
 [[package]]
@@ -4186,7 +4187,7 @@ dependencies = [
  "log 0.4.8",
  "mio 0.6.21",
  "mio-extras",
- "rand 0.7.2",
+ "rand 0.7.3",
  "sha-1",
  "slab 0.4.2",
  "url 2.1.0",
