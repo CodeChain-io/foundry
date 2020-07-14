@@ -63,12 +63,12 @@ impl SubStorageAccess for MockDb {
     }
 }
 
-fn tx_stamp(public: &Public, private: &Private, contents: &str) -> Transaction {
+fn tx_stamp(public: &Public, private: &Private, seq: u64, contents: &str) -> Transaction {
     let tx = timestamp::stamp::TxStamp {
         hash: blake256(contents),
     };
     let tx = UserTransaction {
-        seq: 0,
+        seq,
         network_id: Default::default(),
         action: tx,
     };
@@ -95,8 +95,8 @@ pub fn simple1(ctx: &RwLock<Context>) {
 
     ctx.write().init_genesises.get_mut("stamp").unwrap().init_genesis(&serde_cbor::to_vec(&stampers).unwrap());
 
-    let stamp_by_user1 = tx_stamp(user1.public(), user1.private(), "Hello");
-    let stamp_by_user2 = tx_stamp(user2.public(), user2.private(), "Hello");
+    let stamp_by_user1 = tx_stamp(user1.public(), user1.private(), 0, "Hello");
+    let stamp_by_user2 = tx_stamp(user2.public(), user2.private(), 0, "Hello");
 
     ctx.write().tx_owners.get_mut("stamp").unwrap().execute_transaction(&stamp_by_user1).unwrap();
     assert!(ctx.write().tx_owners.get_mut("stamp").unwrap().execute_transaction(&stamp_by_user2).is_err());
