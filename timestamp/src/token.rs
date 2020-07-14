@@ -242,7 +242,7 @@ impl TxOwner for Context {
                 ExecuteError::InvalidSequence => Err(()),
                 ExecuteError::NoAccount => Err(()),
                 ExecuteError::InvalidKey => Err(()),
-                ExecuteError::NoToken => Ok(Default::default()), // Don't reject; just accept though it fails to mutate something.
+                ExecuteError::NoToken => Err(()),
             }
         } else {
             Ok(Default::default())
