@@ -123,7 +123,7 @@ impl TxOwner for Context {
                 ExecuteError::AccountModuleError(_) => Err(()),
                 ExecuteError::TokenModuleError(_) => Err(()),
                 ExecuteError::InvalidSequence => Err(()),
-                ExecuteError::NotEligibleStamper => Ok(Default::default()), // Don't reject; just accept though it fails to mutate something.
+                ExecuteError::NotEligibleStamper => Err(()),
             }
         } else {
             Ok(Default::default())
