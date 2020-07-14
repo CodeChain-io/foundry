@@ -75,6 +75,7 @@ fn generate_link_table() -> LinkTable {
     map.insert("token", vec![
         ("staking", "token_manager", "token_manager"),
         ("stamp", "token_manager", "token_manager"),
+        ("coordinator", "tx_owner", "token/tx_owner"),
         ("coordinator", "stateful", "token/stateful"),
     ]);
 
