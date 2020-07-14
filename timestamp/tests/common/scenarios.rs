@@ -22,6 +22,8 @@ use coordinator::context::SubStorageAccess;
 use coordinator::types::Transaction;
 use parking_lot::RwLock;
 use primitives::H256;
+use rand::prelude::*;
+use rand::seq::IteratorRandom;
 use remote_trait_object::{Service, ServiceRef};
 use std::collections::HashMap;
 use timestamp::common::*;
@@ -81,6 +83,25 @@ fn tx_stamp(public: &Public, private: &Private, seq: u64, contents: &str) -> Tra
     Transaction::new("Stamp".to_owned(), serde_cbor::to_vec(&tx).unwrap())
 }
 
+fn tx_token_transfer(public: &Public, private: &Private, seq: u64, receiver: Public, issuer: H256) -> Transaction {
+    let tx = timestamp::token::Action::TransferToken(timestamp::token::ActionTransferToken {
+        issuer,
+        receiver,
+    });
+    let tx = UserTransaction {
+        seq,
+        network_id: Default::default(),
+        action: tx,
+    };
+    let tx_hash = tx.hash();
+    let tx = SignedTransaction {
+        signature: ckey::sign(&tx_hash, private),
+        signer_public: *public,
+        tx,
+    };
+    Transaction::new("Token".to_owned(), serde_cbor::to_vec(&tx).unwrap())
+}
+
 pub fn simple1(ctx: &RwLock<Context>) {
     for stateful in ctx.write().statefuls.values_mut() {
         stateful.set_storage(ServiceRef::export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
@@ -100,4 +121,60 @@ pub fn simple1(ctx: &RwLock<Context>) {
 
     ctx.write().tx_owners.get_mut("stamp").unwrap().execute_transaction(&stamp_by_user1).unwrap();
     assert!(ctx.write().tx_owners.get_mut("stamp").unwrap().execute_transaction(&stamp_by_user2).is_err());
+}
+
+pub fn multiple(ctx: &RwLock<Context>) {
+    let mut rng = rand::thread_rng();
+    let stamp_issuer = blake256("stamp");
+
+    for stateful in ctx.write().statefuls.values_mut() {
+        stateful.set_storage(ServiceRef::export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
+    }
+
+    let n = 32;
+    let mut users: Vec<(Ed25519KeyPair, u64)> = (0..n).map(|_| (Random.generate().unwrap(), 0)).collect();
+    let mut tokens: Vec<usize> = (0..n).choose_multiple(&mut rng, n / 2).into_iter().collect();
+
+    let mut stampers = HashMap::new();
+    for token_owner in tokens.iter() {
+        stampers.insert(users[*token_owner].0.public(), 1usize);
+    }
+    ctx.write().init_genesises.get_mut("stamp").unwrap().init_genesis(&serde_cbor::to_vec(&stampers).unwrap());
+
+    for _ in 0..100 {
+        let m = rng.gen_range(1, n);
+        let stampers = (0..n).choose_multiple(&mut rng, m);
+        for i in stampers {
+            let (key, seq) = &mut users[i];
+            let tx = tx_stamp(key.public(), key.private(), *seq, "Hello");
+
+            if tokens.iter().any(|&x| x == i) {
+                ctx.write().tx_owners.get_mut("stamp").unwrap().execute_transaction(&tx).unwrap();
+                *seq += 1;
+            } else {
+                assert!(ctx.write().tx_owners.get_mut("stamp").unwrap().execute_transaction(&tx).is_err());
+            }
+        }
+
+        let m = rng.gen_range(1, n);
+        let transferers = (0..n).choose_multiple(&mut rng, m);
+        for i in transferers {
+            let receiver = rng.gen_range(0, n);
+            let receiver_key = *users[receiver].0.public();
+            let (key, seq) = &mut users[i];
+            let tx = tx_token_transfer(key.public(), key.private(), *seq, receiver_key, stamp_issuer);
+
+            if receiver == i {
+                continue
+            }
+
+            if let Some(owner) = tokens.iter_mut().find(|x| **x == i) {
+                ctx.write().tx_owners.get_mut("token").unwrap().execute_transaction(&tx).unwrap();
+                *seq += 1;
+                *owner = receiver;
+            } else {
+                assert!(ctx.write().tx_owners.get_mut("token").unwrap().execute_transaction(&tx).is_err());
+            }
+        }
+    }
 }

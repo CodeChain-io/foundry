@@ -21,3 +21,4 @@ linkme = "0.2.1"
 codechain-module = {path = "../module"}
 foundry-process-sandbox = { git = "https://github.com/CodeChain-io/foundry-sandbox" }
 erased-serde = "0.3.11"
+rand = { version = "0.7.3" }

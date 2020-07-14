@@ -99,6 +99,7 @@ impl UserModule for MockCoordinator {
         let scenario: String = serde_cbor::from_slice(arg).unwrap();
         match scenario.as_str() {
             "simple1" => scenarios::simple1(self.ctx.as_ref()),
+            "multiple" => scenarios::multiple(self.ctx.as_ref()),
             _ => panic!(),
         }
         Vec::new()
