@@ -20,7 +20,7 @@ use coordinator::module::*;
 use foundry_module_rt::UserModule;
 use parking_lot::RwLock;
 use remote_trait_object::{
-    import_service, Context as RtoContext, Dispatch, HandleToExchange, Service, ServiceRef, ToDispatcher,
+    import_service, service, Context as RtoContext, Dispatch, HandleToExchange, Service, ServiceRef, ToDispatcher,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -57,7 +57,7 @@ pub struct Account {
     seq: u64,
 }
 
-#[remote_trait_object_macro::service]
+#[service]
 pub trait AccountManager: Service {
     fn create_account(&mut self, public: &Public) -> Result<(), Error>;
 

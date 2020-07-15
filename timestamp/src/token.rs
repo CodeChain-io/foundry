@@ -25,7 +25,7 @@ use foundry_module_rt::UserModule;
 use parking_lot::RwLock;
 use primitives::H256;
 use remote_trait_object::{
-    import_service, Context as RtoContext, Dispatch, HandleToExchange, Service, ServiceRef, ToDispatcher,
+    import_service, service, Context as RtoContext, Dispatch, HandleToExchange, Service, ServiceRef, ToDispatcher,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
@@ -82,7 +82,7 @@ pub enum Error {
     InvalidKey,
 }
 
-#[remote_trait_object_macro::service]
+#[service]
 pub trait TokenManager: Service {
     fn get_account(&self, public: &Public) -> Result<Account, Error>;
     fn issue_token(&mut self, issuer: &H256, receiver: &Public) -> Result<(), Error>;
