@@ -1261,7 +1261,7 @@ dependencies = [
 [[package]]
 name = "foundry-module-rt"
 version = "0.1.1"
-source = "git+https://github.com/CodeChain-io/module-rt.git#30ca2dbf6f53d47d8e30d29697dcc0d988262c48"
+source = "git+https://github.com/CodeChain-io/module-rt.git#7bbaabbfffbd9cdbb07753387131980c8be8201e"
 dependencies = [
  "crossbeam 0.7.3",
  "foundry-process-sandbox",
@@ -1275,7 +1275,7 @@ dependencies = [
 [[package]]
 name = "foundry-process-sandbox"
 version = "0.1.0"
-source = "git+https://github.com/CodeChain-io/foundry-sandbox#c51fd551384b38e810d28f75369c2fb28a71d661"
+source = "git+https://github.com/CodeChain-io/foundry-sandbox#2b9df6f106beb55c0f9e5cd8a80bbdf3e9fd4537"
 dependencies = [
  "codechain-crypto",
  "crossbeam 0.7.3",
@@ -2866,7 +2866,8 @@ checksum = "11a7e20d1cce64ef2fed88b66d347f88bd9babb82845b2b858f3edbf59a4f716"
 [[package]]
 name = "remote-trait-object"
 version = "0.2.0"
-source = "git+https://github.com/CodeChain-io/remote-trait-object.git#4b04bce6e86ab4ab0f75a4533821edff835ae34a"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7e5ca5b6bbdb99f4d537e7afdb2b8e545d98cec8adb884b10dffa2b763d4878"
 dependencies = [
  "crossbeam 0.7.3",
  "linkme",
@@ -2880,7 +2881,8 @@ dependencies = [
 [[package]]
 name = "remote-trait-object-macro"
 version = "0.2.0"
-source = "git+https://github.com/CodeChain-io/remote-trait-object.git#4b04bce6e86ab4ab0f75a4533821edff835ae34a"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d80767f7f0c0a29bed421934d66d75631b84291e9603f38407da103f91aaa2a1"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2 1.0.10",
