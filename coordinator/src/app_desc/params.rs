@@ -17,11 +17,9 @@
 use crate::app_desc::{AppDesc, HostSetup, ModuleSetup};
 use crate::values::Value;
 use anyhow::Context as _;
-use handlebars::{no_escape, Context, Handlebars, RenderContext, Renderable, Template};
-use std::collections::BTreeMap;
-
-pub use handlebars::TemplateRenderError;
+use handlebars::{no_escape, Context, Handlebars, TemplateRenderError};
 pub use serde_yaml::Error as YamlError;
+use std::collections::BTreeMap;
 
 struct Merger<'reg> {
     registry: Handlebars<'reg>,
@@ -41,10 +39,7 @@ impl<'reg> Merger<'reg> {
     }
 
     fn merge(&self, s: &str) -> Result<String, TemplateRenderError> {
-        let template = Template::compile(s)?;
-        let mut render_context = RenderContext::new(None);
-
-        Ok(template.renders(&self.registry, &self.context, &mut render_context)?)
+        self.registry.render_template_with_context(s, &self.context)
     }
 }
 
@@ -148,6 +143,8 @@ mod tests {
                 .into_iter()
                 .collect(),
         );
+
+        println!("{:?}", value.merge_params(&merger));
 
         value.merge_params(&merger).unwrap();
 
