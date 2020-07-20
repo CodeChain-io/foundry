@@ -94,7 +94,7 @@ impl Context {
 }
 
 impl InitGenesis for Context {
-    fn begin_genesis(&self) {}
+    fn begin_genesis(&mut self) {}
 
     fn init_genesis(&mut self, config: &[u8]) {
         let stampers: HashMap<Public, usize> = serde_cbor::from_slice(&config).unwrap();
@@ -106,15 +106,15 @@ impl InitGenesis for Context {
         }
     }
 
-    fn end_genesis(&self) {}
+    fn end_genesis(&mut self) {}
 }
 
 impl TxOwner for Context {
-    fn block_opened(&self) -> Result<(), HeaderError> {
+    fn block_opened(&mut self, _: &Header) -> Result<(), HeaderError> {
         Ok(())
     }
 
-    fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()> {
+    fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionOutcome, ()> {
         if let Err(error) = self.excute_tx(transaction) {
             match error {
                 ExecuteError::InvalidMetadata => Err(()),
@@ -138,7 +138,7 @@ impl TxOwner for Context {
         Ok(())
     }
 
-    fn block_closed(&self) -> Result<Vec<Event>, CloseBlockError> {
+    fn block_closed(&mut self) -> Result<Vec<Event>, CloseBlockError> {
         Ok(Vec::new())
     }
 }

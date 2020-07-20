@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::core::TransactionExecutionOutcome;
+use crate::core::TransactionOutcome;
 use crate::error::{Insufficient, Mismatch};
 use crate::runtime_error::Error;
 use crate::state::*;
@@ -43,7 +43,7 @@ pub fn apply_internal(
     tx: UserTransaction,
     sender_public: &Public,
     tiebreaker: Tiebreaker,
-) -> Result<TransactionExecutionOutcome, Error> {
+) -> Result<TransactionOutcome, Error> {
     let UserTransaction {
         action,
         fee,
@@ -80,7 +80,7 @@ fn execute_user_action(
     sender_public: &Public,
     action: UserAction,
     tiebreaker: Tiebreaker,
-) -> Result<TransactionExecutionOutcome, Error> {
+) -> Result<TransactionOutcome, Error> {
     match action {
         UserAction::TransferCCS {
             receiver_public,
@@ -114,10 +114,7 @@ fn execute_user_action(
     }
 }
 
-pub fn execute_auto_action(
-    action: AutoAction,
-    current_block_number: u64,
-) -> Result<TransactionExecutionOutcome, Error> {
+pub fn execute_auto_action(action: AutoAction, current_block_number: u64) -> Result<TransactionOutcome, Error> {
     match action {
         AutoAction::UpdateValidators {
             validators,
@@ -151,7 +148,7 @@ pub fn execute_auto_action(
     }
 }
 
-fn transfer_ccs(from: &Public, to: &Public, quantity: StakeQuantity) -> Result<TransactionExecutionOutcome, Error> {
+fn transfer_ccs(from: &Public, to: &Public, quantity: StakeQuantity) -> Result<TransactionOutcome, Error> {
     let mut stakeholders = Stakeholders::load();
     let mut sender_account = StakeAccount::load(from);
     let mut receiver_account = StakeAccount::load(to);
@@ -170,7 +167,7 @@ fn transfer_ccs(from: &Public, to: &Public, quantity: StakeQuantity) -> Result<T
     Ok(Default::default())
 }
 
-fn delegate_ccs(delegator: &Public, delegatee: &Public, quantity: u64) -> Result<TransactionExecutionOutcome, Error> {
+fn delegate_ccs(delegator: &Public, delegatee: &Public, quantity: u64) -> Result<TransactionOutcome, Error> {
     let candidates = Candidates::load();
     if candidates.get_candidate(delegatee).is_none() {
         return Err(Error::DelegateeNotFoundInCandidates(*delegatee))
@@ -194,7 +191,7 @@ fn delegate_ccs(delegator: &Public, delegatee: &Public, quantity: u64) -> Result
     Ok(Default::default())
 }
 
-fn revoke(delegator: &Public, delegatee: &Public, quantity: u64) -> Result<TransactionExecutionOutcome, Error> {
+fn revoke(delegator: &Public, delegatee: &Public, quantity: u64) -> Result<TransactionOutcome, Error> {
     let mut delegator_account = StakeAccount::load(delegator);
     let mut delegation = Delegation::load(delegator);
 
@@ -213,7 +210,7 @@ fn redelegate(
     prev_delegatee: &Public,
     next_delegatee: &Public,
     quantity: u64,
-) -> Result<TransactionExecutionOutcome, Error> {
+) -> Result<TransactionOutcome, Error> {
     let candidates = Candidates::load();
     if candidates.get_candidate(next_delegatee).is_none() {
         return Err(Error::DelegateeNotFoundInCandidates(*next_delegatee))
@@ -241,7 +238,7 @@ pub fn self_nominate(
     deposit: u64,
     metadata: Bytes,
     tiebreaker: Tiebreaker,
-) -> Result<TransactionExecutionOutcome, Error> {
+) -> Result<TransactionOutcome, Error> {
     let state_metadata = Metadata::load();
     let current_term = state_metadata.current_term_id;
     let nomination_ends_at = current_term + state_metadata.term_params.nomination_expiration;
@@ -272,11 +269,7 @@ pub fn self_nominate(
     Ok(Default::default())
 }
 
-pub fn change_params(
-    metadata_seq: u64,
-    params: Params,
-    approvals: Vec<Approval>,
-) -> Result<TransactionExecutionOutcome, Error> {
+pub fn change_params(metadata_seq: u64, params: Params, approvals: Vec<Approval>) -> Result<TransactionOutcome, Error> {
     // Update state first because the signature validation is more expensive.
     let mut metadata = Metadata::load();
     metadata.update_params(metadata_seq, params)?;
@@ -298,7 +291,7 @@ pub fn change_params(
     Ok(Default::default())
 }
 
-fn update_validators(validators: NextValidators) -> Result<TransactionExecutionOutcome, Error> {
+fn update_validators(validators: NextValidators) -> Result<TransactionOutcome, Error> {
     let next_validators_in_state = NextValidators::load();
     // NextValidators should be sorted by public key.
     if validators != next_validators_in_state {

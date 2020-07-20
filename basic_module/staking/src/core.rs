@@ -18,7 +18,7 @@ use crate::state::{Banned, Params};
 use crate::transactions::Transaction;
 use crate::types::{Header, Public, Validator};
 pub use coordinator::context::SubStorageAccess;
-pub use coordinator::types::{ExecuteTransactionError, HeaderError, TransactionExecutionOutcome, VerifiedCrime};
+pub use coordinator::types::{ExecuteTransactionError, HeaderError, TransactionOutcome, VerifiedCrime};
 use std::collections::HashMap;
 
 pub trait Abci {
@@ -26,7 +26,7 @@ pub trait Abci {
     fn execute_transactions(
         &self,
         transactions: Vec<Transaction>,
-    ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError>;
+    ) -> Result<Vec<TransactionOutcome>, ExecuteTransactionError>;
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), i64>;
 }
 

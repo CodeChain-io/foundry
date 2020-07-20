@@ -22,7 +22,7 @@ use crate::internal::{
 };
 use crate::types::Action;
 use crate::{check, get_context, SignedTransaction};
-pub use coordinator::types::{ErrorCode, TransactionExecutionOutcome};
+pub use coordinator::types::{ErrorCode, TransactionOutcome};
 
 #[allow(dead_code)]
 pub struct Handler {}
@@ -48,7 +48,7 @@ impl CheckTxHandler for Handler {
 pub struct Executor {}
 
 impl TransactionExecutor for Executor {
-    fn execute_transactions(&self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionExecutionOutcome>, ()> {
+    fn execute_transactions(&self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionOutcome>, ()> {
         for signed_tx in transactions {
             let Action::Pay {
                 sender,

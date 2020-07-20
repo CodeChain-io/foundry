@@ -81,7 +81,7 @@ impl StakeManager for Context {
 }
 
 impl InitGenesis for Context {
-    fn begin_genesis(&self) {}
+    fn begin_genesis(&mut self) {}
 
     fn init_genesis(&mut self, config: &[u8]) {
         let initial_validator_set: Validators = serde_cbor::from_slice(config).unwrap();
@@ -91,11 +91,11 @@ impl InitGenesis for Context {
         }
     }
 
-    fn end_genesis(&self) {}
+    fn end_genesis(&mut self) {}
 }
 
 impl InitChain for Context {
-    fn init_chain(&self) -> (CompactValidatorSet, ConsensusParams) {
+    fn init_chain(&mut self) -> (CompactValidatorSet, ConsensusParams) {
         let validator_set = self.track_validator_set();
         let consensus_params = ConsensusParams::default_for_test();
         (validator_set, consensus_params)
@@ -103,10 +103,10 @@ impl InitChain for Context {
 }
 
 impl UpdateChain for Context {
-    fn update_chain(&self) -> (CompactValidatorSet, ConsensusParams) {
+    fn update_chain(&mut self) -> (Option<CompactValidatorSet>, Option<ConsensusParams>) {
         let validator_set = self.track_validator_set();
         let consensus_params = ConsensusParams::default_for_test();
-        (validator_set, consensus_params)
+        (Some(validator_set), Some(consensus_params))
     }
 }
 

@@ -16,8 +16,7 @@
 
 use crate::check::check;
 use crate::core::{
-    Abci, AdditionalTxCreator, ExecuteTransactionError, HeaderError, StakingView, TransactionExecutionOutcome,
-    VerifiedCrime,
+    Abci, AdditionalTxCreator, ExecuteTransactionError, HeaderError, StakingView, TransactionOutcome, VerifiedCrime,
 };
 use crate::error::Error;
 use crate::execute::{apply_internal, execute_auto_action};
@@ -51,7 +50,7 @@ impl Abci for ABCIHandle {
     fn execute_transactions(
         &self,
         transactions: Vec<Transaction>,
-    ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError> {
+    ) -> Result<Vec<TransactionOutcome>, ExecuteTransactionError> {
         let mut user_tx_idx = 0;
         let results: Result<Vec<_>, _> = transactions
             .into_iter()
