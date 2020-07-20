@@ -17,7 +17,7 @@
 use crate::state::{Banned, Params};
 use crate::transactions::Transaction;
 use crate::types::Validator;
-use coordinator::types::{ExecuteTransactionError, HeaderError, TransactionExecutionOutcome, VerifiedCrime};
+use coordinator::types::{ExecuteTransactionError, HeaderError, TransactionOutcome, VerifiedCrime};
 use coordinator::Header;
 use fkey::Ed25519Public as Public;
 use std::collections::HashMap;
@@ -27,7 +27,7 @@ pub trait Abci {
     fn execute_transactions(
         &self,
         transactions: Vec<Transaction>,
-    ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError>;
+    ) -> Result<Vec<TransactionOutcome>, ExecuteTransactionError>;
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), i64>;
 }
 

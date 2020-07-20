@@ -17,7 +17,7 @@
 use crate::context::StorageAccess;
 use crate::header::Header;
 use crate::transaction::{Transaction, TransactionWithMetadata};
-use crate::types::{BlockOutcome, CloseBlockError, ErrorCode, HeaderError, TransactionExecutionOutcome, VerifiedCrime};
+use crate::types::{BlockOutcome, CloseBlockError, ErrorCode, HeaderError, TransactionOutcome, VerifiedCrime};
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use parking_lot::Mutex;
 use std::sync::Arc;
@@ -33,11 +33,11 @@ pub trait BlockExecutor: Send + Sync {
         header: &Header,
         verified_crimes: &[VerifiedCrime],
     ) -> Result<(), HeaderError>;
-    fn execute_transactions(&self, transactions: &[Transaction]) -> Result<Vec<TransactionExecutionOutcome>, ()>;
+    fn execute_transactions(&self, transactions: &[Transaction]) -> Result<Vec<TransactionOutcome>, ()>;
     fn prepare_block<'a>(
         &self,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
-    ) -> Vec<&'a Transaction>;
+    ) -> Vec<(&'a Transaction, TransactionOutcome)>;
     fn close_block(&self) -> Result<BlockOutcome, CloseBlockError>;
 }
 
@@ -48,5 +48,10 @@ pub trait TxFilter: Send + Sync {
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
         memory_limit: Option<usize>,
         size_limit: Option<usize>,
-    ) -> (Vec<&'a TransactionWithMetadata>, Vec<&'a TransactionWithMetadata>);
+    ) -> FilteredTxs<'a>;
+}
+
+pub struct FilteredTxs<'a> {
+    pub invalid: Vec<&'a Transaction>,
+    pub low_priority: Vec<&'a Transaction>,
 }

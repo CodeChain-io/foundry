@@ -23,7 +23,7 @@ use crate::transactions::{
     create_close_block_transactions, create_open_block_transactions, SignedTransaction, Transaction,
 };
 use crate::types::{Tiebreaker, Validator};
-use coordinator::types::{ExecuteTransactionError, HeaderError, TransactionExecutionOutcome, VerifiedCrime};
+use coordinator::types::{ExecuteTransactionError, HeaderError, TransactionOutcome, VerifiedCrime};
 use coordinator::Header;
 use fkey::Ed25519Public as Public;
 use std::cell::RefCell;
@@ -50,7 +50,7 @@ impl Abci for ABCIHandle {
     fn execute_transactions(
         &self,
         transactions: Vec<Transaction>,
-    ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError> {
+    ) -> Result<Vec<TransactionOutcome>, ExecuteTransactionError> {
         let mut user_tx_idx = 0;
         let results: Result<Vec<_>, _> = transactions
             .into_iter()
