@@ -28,8 +28,7 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    #[allow(dead_code)]
-    fn tx_type(&self) -> &str {
+    pub fn tx_type(&self) -> &str {
         &self.tx_type
     }
 

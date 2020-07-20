@@ -17,7 +17,7 @@
 pub use ctypes::StorageId;
 
 // Interface between host and the coordinator
-pub trait StorageAccess {
+pub trait StorageAccess: Send {
     fn get(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>>;
     fn set(&mut self, storage_id: StorageId, key: &dyn AsRef<[u8]>, value: Vec<u8>);
     fn has(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> bool;

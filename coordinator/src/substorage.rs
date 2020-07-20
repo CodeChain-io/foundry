@@ -29,7 +29,6 @@ unsafe impl Send for SubStorageView {}
 unsafe impl Sync for SubStorageView {}
 
 impl SubStorageView {
-    #[allow(dead_code)]
     pub fn new(id: StorageId, storage: Arc<Mutex<dyn StorageAccess>>) -> SubStorageView {
         SubStorageView {
             id,
