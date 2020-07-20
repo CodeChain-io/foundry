@@ -16,7 +16,7 @@
 
 use super::context::SubStorageAccess;
 use crate::transaction::Transaction;
-use crate::types::{CloseBlockError, ErrorCode, Event, HeaderError, TransactionExecutionOutcome};
+use crate::types::{CloseBlockError, ErrorCode, Event, HeaderError, TransactionOutcome};
 use crate::Header;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use remote_trait_object::{Service, ServiceRef};
@@ -39,7 +39,7 @@ pub trait InitGenesis: Service {
 pub trait TxOwner: Service {
     fn block_opened(&mut self, header: &Header) -> Result<(), HeaderError>;
 
-    fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()>;
+    fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionOutcome, ()>;
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
 
