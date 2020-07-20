@@ -18,6 +18,7 @@ use super::context::SubStorageAccess;
 use super::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use remote_trait_object::{service, Service, ServiceRef};
+use serde::{Deserialize, Serialize};
 
 #[service]
 pub trait Stateful: Service {
@@ -26,30 +27,46 @@ pub trait Stateful: Service {
 
 #[service]
 pub trait InitGenesis: Service {
-    fn begin_genesis(&self);
+    fn begin_genesis(&mut self);
 
     fn init_genesis(&mut self, config: &[u8]);
 
-    fn end_genesis(&self);
+    fn end_genesis(&mut self);
 }
 
 #[service]
 pub trait TxOwner: Service {
-    fn block_opened(&self) -> Result<(), HeaderError>;
+    fn block_opened(&mut self, header: &Header) -> Result<(), HeaderError>;
 
-    fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionExecutionOutcome, ()>;
+    fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionOutcome, ()>;
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
 
-    fn block_closed(&self) -> Result<Vec<Event>, CloseBlockError>;
+    fn block_closed(&mut self) -> Result<Vec<Event>, CloseBlockError>;
 }
 
 #[service]
 pub trait InitChain: Service {
-    fn init_chain(&self) -> (CompactValidatorSet, ConsensusParams);
+    fn init_chain(&mut self) -> (CompactValidatorSet, ConsensusParams);
 }
 
 #[service]
 pub trait UpdateChain: Service {
-    fn update_chain(&self) -> (CompactValidatorSet, ConsensusParams);
+    fn update_chain(&mut self) -> (Option<CompactValidatorSet>, Option<ConsensusParams>);
+}
+
+#[service]
+pub trait TxSorter: Service {
+    fn sort_txs(&self, txs: &[TransactionWithMetadata]) -> SortedTxs;
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct SortedTxs {
+    pub invalid: Vec<usize>,
+    pub sorted: Vec<usize>,
+}
+
+#[service]
+pub trait HandleCrimes: Service {
+    fn handle_crimes(&mut self, crimes: &[VerifiedCrime]);
 }
