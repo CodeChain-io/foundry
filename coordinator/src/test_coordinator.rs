@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::context::StorageAccess;
-use crate::engine::{BlockExecutor, Initializer, TxFilter};
+use crate::engine::{BlockExecutor, FilteredTxs, Initializer, TxFilter};
 use crate::types::*;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use parking_lot::Mutex;
@@ -62,12 +62,12 @@ impl BlockExecutor for TestCoordinator {
     fn execute_transactions(
         &self,
         transactions: &[Transaction],
-    ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError> {
+    ) -> Result<Vec<TransactionOutcome>, ExecuteTransactionError> {
         self.body_count.fetch_add(transactions.len(), Ordering::SeqCst);
         let body_size: usize = transactions.iter().map(|tx| tx.size()).sum();
         self.body_size.fetch_add(body_size, Ordering::SeqCst);
         Ok((0..self.body_count.load(Ordering::SeqCst))
-            .map(|_| TransactionExecutionOutcome {
+            .map(|_| TransactionOutcome {
                 events: Vec::new(),
             })
             .collect())
@@ -76,8 +76,8 @@ impl BlockExecutor for TestCoordinator {
     fn prepare_block<'a>(
         &self,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
-    ) -> Vec<&'a Transaction> {
-        transactions.map(|tx_with_metadata| &tx_with_metadata.tx).collect()
+    ) -> Vec<(&'a Transaction, TransactionOutcome)> {
+        transactions.map(|tx_with_metadata| (&tx_with_metadata.tx, TransactionOutcome::default())).collect()
     }
 
     fn close_block(&self) -> Result<BlockOutcome, CloseBlockError> {
@@ -108,17 +108,21 @@ impl TxFilter for TestCoordinator {
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
         memory_limit: Option<usize>,
         size_limit: Option<usize>,
-    ) -> (Vec<&'a TransactionWithMetadata>, Vec<&'a TransactionWithMetadata>) {
+    ) -> FilteredTxs<'a> {
         let invalid = Vec::new();
         let mut memory = 0;
         let mut size = 0;
         let low_priority = transactions
+            .map(|tx_with_metadata| &tx_with_metadata.tx)
             .skip_while(|tx| {
                 memory += (*tx).size();
                 size += 1;
                 memory <= memory_limit.unwrap_or(usize::max_value()) && size <= size_limit.unwrap_or(usize::max_value())
             })
             .collect();
-        (invalid, low_priority)
+        FilteredTxs {
+            invalid,
+            low_priority,
+        }
     }
 }

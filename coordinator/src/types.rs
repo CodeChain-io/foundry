@@ -232,6 +232,7 @@ impl Decodable for TransactionWithMetadata {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum VerifiedCrime {
     DoubleVote {
         height: u64,
@@ -241,11 +242,11 @@ pub enum VerifiedCrime {
 }
 
 #[derive(Serialize, Deserialize, Default)]
-pub struct TransactionExecutionOutcome {
+pub struct TransactionOutcome {
     pub events: Vec<Event>,
 }
 
-impl TransactionExecutionOutcome {
+impl TransactionOutcome {
     fn push_event(&mut self, event: Event) {
         self.events.push(event);
     }
