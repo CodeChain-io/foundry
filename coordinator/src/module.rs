@@ -15,11 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::context::SubStorageAccess;
-use crate::transaction::Transaction;
-use crate::types::{CloseBlockError, ErrorCode, Event, HeaderError, TransactionOutcome};
+use crate::transaction::{Transaction, TransactionWithMetadata};
+use crate::types::{CloseBlockError, ErrorCode, Event, HeaderError, TransactionOutcome, VerifiedCrime};
 use crate::Header;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use remote_trait_object::{Service, ServiceRef};
+use serde::{Deserialize, Serialize};
 
 #[remote_trait_object_macro::service]
 pub trait Stateful: Service {
@@ -54,4 +55,20 @@ pub trait InitChain: Service {
 #[remote_trait_object_macro::service]
 pub trait UpdateChain: Service {
     fn update_chain(&mut self) -> (Option<CompactValidatorSet>, Option<ConsensusParams>);
+}
+
+#[remote_trait_object_macro::service]
+pub trait TxSorter: Service {
+    fn sort_txs(&self, txs: &[TransactionWithMetadata]) -> SortedTxs;
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct SortedTxs {
+    pub invalid: Vec<usize>,
+    pub sorted: Vec<usize>,
+}
+
+#[remote_trait_object_macro::service]
+pub trait HandleCrimes: Service {
+    fn handle_crimes(&mut self, crimes: &[VerifiedCrime]);
 }
