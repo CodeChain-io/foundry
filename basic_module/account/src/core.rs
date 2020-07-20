@@ -18,17 +18,14 @@ use crate::error::Error;
 use crate::types::SignedTransaction;
 pub use ckey::{Ed25519Private as Private, Ed25519Public as Public, Error as KeyError, Password, Signature};
 pub use coordinator::context::SubStorageAccess;
-pub use coordinator::types::{ErrorCode, TransactionExecutionOutcome};
+pub use coordinator::types::{ErrorCode, TransactionOutcome};
 
 pub trait CheckTxHandler {
     fn check_transaction(&self, tx: &SignedTransaction) -> Result<(), ErrorCode>;
 }
 
 pub trait TransactionExecutor {
-    fn execute_transactions(
-        &mut self,
-        transactions: &[SignedTransaction],
-    ) -> Result<Vec<TransactionExecutionOutcome>, ()>;
+    fn execute_transactions(&mut self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionOutcome>, ()>;
 }
 
 pub trait AccountManager {

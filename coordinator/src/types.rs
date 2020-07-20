@@ -20,6 +20,7 @@ pub use self::event::Event;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)]
 pub enum VerifiedCrime {
     #[allow(dead_code)]
     DoubleVote {
@@ -30,11 +31,11 @@ pub enum VerifiedCrime {
 }
 
 #[derive(Serialize, Deserialize, Default)]
-pub struct TransactionExecutionOutcome {
+pub struct TransactionOutcome {
     pub events: Vec<Event>,
 }
 
-impl TransactionExecutionOutcome {
+impl TransactionOutcome {
     pub fn push_event(&mut self, event: Event) {
         self.events.push(event);
     }
