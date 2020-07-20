@@ -21,7 +21,7 @@ use crate::internal::{add_balance, get_account, get_balance, get_sequence, sub_b
 use crate::types::{Action, SignedTransaction};
 use ckey::Ed25519Public as Public;
 use coordinator::context::Context;
-use coordinator::types::{ErrorCode, TransactionExecutionOutcome};
+use coordinator::types::{ErrorCode, TransactionOutcome};
 
 pub struct Handler<C: Context> {
     context: C,
@@ -54,10 +54,7 @@ impl<C: Context> CheckTxHandler for Handler<C> {
 }
 
 impl<C: Context> TransactionExecutor for Handler<C> {
-    fn execute_transactions(
-        &mut self,
-        transactions: &[SignedTransaction],
-    ) -> Result<Vec<TransactionExecutionOutcome>, ()> {
+    fn execute_transactions(&mut self, transactions: &[SignedTransaction]) -> Result<Vec<TransactionOutcome>, ()> {
         for signed_tx in transactions {
             let Action::Pay {
                 sender,

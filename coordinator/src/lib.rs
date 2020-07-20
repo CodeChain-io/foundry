@@ -29,7 +29,8 @@ use self::engine::{BlockExecutor, Initializer, TxFilter};
 pub use self::header::Header;
 use self::transaction::{Transaction, TransactionWithMetadata};
 use self::types::{BlockOutcome, ErrorCode, VerifiedCrime};
-use crate::types::{CloseBlockError, ExecuteTransactionError, HeaderError, TransactionExecutionOutcome};
+use crate::engine::FilteredTxs;
+use crate::types::{CloseBlockError, ExecuteTransactionError, HeaderError, TransactionOutcome};
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use parking_lot::Mutex;
 use std::sync::Arc;
@@ -60,14 +61,14 @@ impl BlockExecutor for Coordinator {
     fn execute_transactions(
         &self,
         _transactions: &[Transaction],
-    ) -> Result<Vec<TransactionExecutionOutcome>, ExecuteTransactionError> {
+    ) -> Result<Vec<TransactionOutcome>, ExecuteTransactionError> {
         unimplemented!()
     }
 
     fn prepare_block<'a>(
         &self,
         _transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
-    ) -> Vec<&'a Transaction> {
+    ) -> Vec<(&'a Transaction, TransactionOutcome)> {
         unimplemented!()
     }
 
@@ -86,7 +87,7 @@ impl TxFilter for Coordinator {
         _transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
         _memory_limit: Option<usize>,
         _size_limit: Option<usize>,
-    ) -> (Vec<&'a TransactionWithMetadata>, Vec<&'a TransactionWithMetadata>) {
+    ) -> FilteredTxs<'a> {
         unimplemented!()
     }
 }
