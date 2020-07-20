@@ -215,8 +215,9 @@ impl OpenBlock {
         block_executor: &dyn BlockExecutor,
         mut transactions: impl Iterator<Item = &'a TransactionWithMetadata> + 'a,
     ) {
-        let succeeded_transactions = block_executor.prepare_block(&mut transactions);
-        self.block.transactions.append(&mut succeeded_transactions.into_iter().cloned().collect());
+        let proposed_txs = block_executor.prepare_block(&mut transactions);
+        self.block.transactions.append(&mut proposed_txs.iter().map(|(tx, _)| (*tx).clone()).collect());
+        self.block.tx_events = proposed_txs.into_iter().map(|(tx, outcome)| (tx.hash(), outcome.events)).collect();
     }
 
     /// Turn this into a `ClosedBlock`.

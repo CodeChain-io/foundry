@@ -35,9 +35,7 @@ use ccrypto::BLAKE_NULL_RLP;
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
-use coordinator::context::{
-    ChainHistoryAccess, MemPoolAccess, StateHistoryAccess, StorageAccess, StorageId,
-};
+use coordinator::context::{ChainHistoryAccess, MemPoolAccess, StateHistoryAccess, StorageAccess, StorageId};
 use coordinator::engine::{BlockExecutor, Initializer};
 use coordinator::types::{Event, Transaction};
 use cstate::{Metadata, MetadataAddress, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopStateView};

@@ -18,7 +18,7 @@ use super::backup;
 use super::mem_pool_types::{PoolingInstant, TransactionPool};
 use crate::transaction::PendingTransactions;
 use crate::Error as CoreError;
-use coordinator::engine::TxFilter;
+use coordinator::engine::{FilteredTxs, TxFilter};
 use coordinator::types::{ErrorCode, Transaction, TransactionWithMetadata, TxOrigin};
 use ctypes::errors::{HistoryError, SyntaxError};
 use ctypes::TxHash;
@@ -100,7 +100,10 @@ impl MemPool {
     fn enforce_limit(&mut self, batch: &mut DBTransaction) {
         let to_drop: Vec<TxHash> = {
             let mut transactions = self.transaction_pool.pool.values();
-            let (invalid, low_priority) = self.tx_filter.filter_transactions(
+            let FilteredTxs {
+                invalid,
+                low_priority,
+            } = self.tx_filter.filter_transactions(
                 &mut transactions,
                 Some(self.queue_memory_limit),
                 Some(self.queue_count_limit),
@@ -235,7 +238,10 @@ impl MemPool {
         let mut batch = backup::backup_batch_with_capacity(self.transaction_pool.count);
         let to_be_removed: Vec<TxHash> = {
             let mut transactions = self.transaction_pool.pool.values();
-            let (invalid, low_priority) = self.tx_filter.filter_transactions(&mut transactions, None, None);
+            let FilteredTxs {
+                invalid,
+                low_priority,
+            } = self.tx_filter.filter_transactions(&mut transactions, None, None);
             let transactions_to_be_removed = [invalid, low_priority].concat();
             transactions_to_be_removed.iter().map(|tx| tx.hash()).collect()
         };
