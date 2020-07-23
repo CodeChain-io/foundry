@@ -133,6 +133,7 @@ impl OpenBlock {
         db: StateDB,
         parent: &Header,
         author: Public,
+        evidences: &[Evidence],
         extra_data: Bytes,
     ) -> Result<Self, Error> {
         let state = TopLevelState::from_existing(db, *parent.state_root()).map_err(StateError::from)?;
@@ -143,6 +144,11 @@ impl OpenBlock {
         r.block.header.set_author(author);
         r.block.header.set_extra_data(extra_data);
         r.block.header.note_dirty();
+        r.block
+            .header
+            .set_evidences_root(skewed_merkle_root(BLAKE_NULL_RLP, r.block.evidences.iter().map(Encodable::rlp_bytes)));
+
+        r.block.evidences = evidences.to_vec();
 
         engine.populate_from_parent(&mut r.block.header, parent);
 
@@ -351,8 +357,7 @@ pub fn enact<C: EngineInfo + FindDoubleVoteHandler + TermInfo>(
     db: StateDB,
     parent: &Header,
 ) -> Result<ClosedBlock, Error> {
-    let mut b = OpenBlock::try_new(engine, db, parent, Public::default(), vec![])?;
-    b.block.evidences = evidences.to_vec();
+    let mut b = OpenBlock::try_new(engine, db, parent, Public::default(), evidences, vec![])?;
 
     b.populate_from(header);
     b.push_transactions(transactions, client, parent.number())?;
