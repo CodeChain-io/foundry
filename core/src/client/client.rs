@@ -637,6 +637,7 @@ impl BlockProducer for Client {
             self.state_db.read().clone(&parent_header.state_root()),
             &parent_header,
             author,
+            &[],
             extra_data,
         ).expect("OpenBlock::new only fails if parent state root invalid; state root of best block's header is never invalid; qed")
     }
