@@ -14,12 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::consensus::{ConsensusEngine, Evidence};
+use crate::consensus::{ConsensusEngine, Evidence, TendermintSealView};
 use crate::error::{BlockError, Error};
 use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::Ed25519Public as Public;
+use coordinator::context::StorageAccess;
+use coordinator::engine::BlockExecutor;
 use coordinator::types::Event;
+use coordinator::Header as PreHeader;
 use cstate::{NextValidators, StateDB, StateError, StateWithCache, TopLevelState};
 use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
@@ -156,6 +159,33 @@ impl OpenBlock {
         engine.populate_from_parent(&mut r.block.header, parent);
 
         Ok(r)
+    }
+
+    pub fn open(&mut self, block_executor: &dyn BlockExecutor, engine: &dyn ConsensusEngine) -> Result<(), Error> {
+        let last_committed_validators = {
+            let validator_bitset = TendermintSealView::new(self.header().seal())
+                .bitset()
+                .map_err(|_| Error::Block(BlockError::InvalidSeal))?;
+            let possible_authors = engine.possible_authors(None)?.expect("Tendermint must have possible authors");
+            let committed_validators_result: Result<Vec<_>, _> = validator_bitset
+                .true_index_iter()
+                .map(|index| possible_authors.get(index).map(Clone::clone).ok_or(Error::Block(BlockError::InvalidSeal)))
+                .collect();
+            committed_validators_result?
+        };
+
+        let pre_header = PreHeader::new(
+            *self.header().parent_hash(),
+            self.header().timestamp(),
+            self.header().number(),
+            *self.header().author(),
+            last_committed_validators,
+            self.header().extra_data().clone(),
+        );
+        let verified_crimes: Vec<_> = self.block.evidences.iter().map(|e| e.into()).collect();
+        let storage = Arc::clone(&self.block.state);
+        let storage: Arc<Mutex<dyn StorageAccess>> = storage;
+        block_executor.open_block(storage, &pre_header, &verified_crimes).map_err(From::from)
     }
 
     /// Push a transaction into the block.
