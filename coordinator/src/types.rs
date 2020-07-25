@@ -22,7 +22,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub enum VerifiedCrime {
-    #[allow(dead_code)]
     DoubleVote {
         height: u64,
         author_index: usize,
