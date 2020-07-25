@@ -17,6 +17,7 @@
 use super::{ConsensusMessage, VoteStep};
 use crate::consensus::BitSet;
 use ckey::Signature;
+use coordinator::types::VerifiedCrime;
 use ctypes::BlockHash;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::collections::{BTreeMap, HashMap};
@@ -51,6 +52,18 @@ impl Encodable for DoubleVote {
 impl Decodable for DoubleVote {
     fn decode(_rlp: &Rlp) -> Result<Self, DecoderError> {
         todo!()
+    }
+}
+
+impl From<&DoubleVote> for VerifiedCrime {
+    fn from(double_vote: &DoubleVote) -> Self {
+        assert_eq!(double_vote.vote_one.signer_index, double_vote.vote_two.signer_index);
+        assert_eq!(double_vote.vote_one.height(), double_vote.vote_two.height());
+        Self::DoubleVote {
+            height: double_vote.vote_one.height(),
+            author_index: double_vote.author_index,
+            criminal_index: double_vote.vote_one.signer_index,
+        }
     }
 }
 
