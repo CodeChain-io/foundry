@@ -19,6 +19,7 @@ use crate::consensus::EngineError;
 use cdb::DatabaseError;
 use cio::IoError;
 use ckey::{Ed25519Public as Public, Error as KeyError};
+use coordinator::types::CloseBlockError;
 use cstate::StateError;
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
@@ -297,5 +298,11 @@ impl From<DatabaseError> for Error {
 impl From<DecoderError> for Error {
     fn from(err: DecoderError) -> Error {
         Error::Rlp(err)
+    }
+}
+
+impl From<CloseBlockError> for Error {
+    fn from(err: CloseBlockError) -> Error {
+        Error::Other(err)
     }
 }
