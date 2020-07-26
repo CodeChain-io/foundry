@@ -15,12 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::transaction::VerifiedTransaction;
-use ckey::Ed25519Public as Public;
-use ctypes::transaction::Action;
 use ctypes::{BlockNumber, TxHash};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
 /// Point in time when transaction was inserted.
 pub type PoolingInstant = BlockNumber;
@@ -80,23 +78,11 @@ impl TxOrigin {
     pub fn is_local(self) -> bool {
         self == TxOrigin::Local
     }
-
-    pub fn is_external(self) -> bool {
-        self == TxOrigin::External
-    }
 }
 
 #[derive(Clone, Copy, Debug)]
 /// Light structure used to identify transaction and its order
 pub struct TransactionOrder {
-    /// Primary ordering factory. Difference between transaction seq and expected seq in state
-    /// (e.g. Transaction(seq:5), State(seq:0) -> height: 5)
-    /// High seq_height = Low priority (processed later)
-    pub seq_height: u64,
-    /// Fee of the transaction.
-    pub fee: u64,
-    /// Fee per bytes(rlp serialized) of the transaction
-    pub fee_per_byte: u64,
     /// Memory usage of this transaction.
     /// Currently using the RLP byte length of the transaction as the mem usage.
     pub mem_usage: usize,
@@ -109,29 +95,15 @@ pub struct TransactionOrder {
 }
 
 impl TransactionOrder {
-    pub fn for_transaction(item: &MemPoolItem, seq_seq: u64) -> Self {
+    pub fn for_transaction(item: &MemPoolItem) -> Self {
         let rlp_bytes_len = rlp::encode(&item.tx).len();
-        let fee = item.tx.transaction().fee;
         ctrace!(MEM_POOL, "New tx with size {}", rlp_bytes_len);
         Self {
-            seq_height: item.seq() - seq_seq,
-            fee,
             mem_usage: rlp_bytes_len,
-            fee_per_byte: fee / rlp_bytes_len as u64,
             hash: item.hash(),
             insertion_id: item.insertion_id,
             origin: item.origin,
         }
-    }
-
-    pub fn update_height(mut self, seq: u64, base_seq: u64) -> Self {
-        self.seq_height = seq - base_seq;
-        self
-    }
-
-    pub fn change_origin(mut self, origin: TxOrigin) -> Self {
-        self.origin = origin;
-        self
     }
 }
 
@@ -152,20 +124,6 @@ impl Ord for TransactionOrder {
         // Local transactions should always have priority
         if self.origin != b.origin {
             return self.origin.cmp(&b.origin)
-        }
-
-        // Check seq_height
-        if self.seq_height != b.seq_height {
-            return self.seq_height.cmp(&b.seq_height)
-        }
-
-        if self.fee_per_byte != b.fee_per_byte {
-            return self.fee_per_byte.cmp(&b.fee_per_byte)
-        }
-
-        // Then compare fee
-        if self.fee != b.fee {
-            return b.fee.cmp(&self.fee)
         }
 
         // Lastly compare insertion_id
@@ -208,54 +166,12 @@ impl MemPoolItem {
     pub fn hash(&self) -> TxHash {
         self.tx.hash()
     }
-
-    pub fn seq(&self) -> u64 {
-        self.tx.transaction().seq
-    }
-
-    pub fn signer_public(&self) -> Public {
-        self.tx.signer_public()
-    }
-
-    pub fn cost(&self) -> u64 {
-        match &self.tx.transaction().action {
-            Action::Pay {
-                quantity,
-                ..
-            } => self.tx.transaction().fee + *quantity,
-            _ => self.tx.transaction().fee,
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum QueueTag {
-    Current,
-    Future,
-    New,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct TransactionOrderWithTag {
-    pub order: TransactionOrder,
-    pub tag: QueueTag,
-}
-
-impl TransactionOrderWithTag {
-    pub fn new(order: TransactionOrder, tag: QueueTag) -> Self {
-        Self {
-            order,
-            tag,
-        }
-    }
 }
 
 #[derive(Debug, PartialEq)]
 pub struct CurrentQueue {
     /// Priority queue for transactions
     pub queue: BTreeSet<TransactionOrder>,
-    /// Counter on fees of transactions in the current queue
-    pub fee_counter: BTreeMap<u64, usize>,
     /// Memory usage of the external transactions in the queue
     pub mem_usage: usize,
     /// Count of the external transactions in the queue
@@ -266,7 +182,6 @@ impl CurrentQueue {
     pub fn new() -> Self {
         Self {
             queue: BTreeSet::new(),
-            fee_counter: BTreeMap::new(),
             mem_usage: 0,
             count: 0,
         }
@@ -274,7 +189,6 @@ impl CurrentQueue {
 
     pub fn clear(&mut self) {
         self.queue.clear();
-        self.fee_counter.clear();
         self.mem_usage = 0;
         self.count = 0;
     }
@@ -289,7 +203,6 @@ impl CurrentQueue {
             self.mem_usage += order.mem_usage;
             self.count += 1;
         }
-        *self.fee_counter.entry(order.fee).or_default() += 1;
     }
 
     pub fn remove(&mut self, order: &TransactionOrder) {
@@ -298,41 +211,5 @@ impl CurrentQueue {
             self.mem_usage -= order.mem_usage;
             self.count -= 1;
         }
-        {
-            let counter = self.fee_counter.get_mut(&order.fee).unwrap();
-            *counter -= 1;
-            if *counter != 0 {
-                return
-            }
-        }
-        self.fee_counter.remove(&order.fee);
     }
-
-    pub fn minimum_fee(&self) -> u64 {
-        self.fee_counter.keys().next().map_or(0, |k| k + 1)
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct MemPoolInput {
-    pub transaction: VerifiedTransaction,
-    pub origin: TxOrigin,
-}
-
-impl MemPoolInput {
-    pub fn new(transaction: VerifiedTransaction, origin: TxOrigin) -> Self {
-        Self {
-            transaction,
-            origin,
-        }
-    }
-}
-
-#[derive(Debug)]
-/// Details of account
-pub struct AccountDetails {
-    /// Most recent account seq
-    pub seq: u64,
-    /// Current account balance
-    pub balance: u64,
 }
