@@ -22,10 +22,6 @@ use rlp::RlpStream;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Transaction {
-    /// Seq.
-    pub seq: u64,
-    /// Quantity of CCC to be paid as a cost for distributing this transaction to the network.
-    pub fee: u64,
     /// Network Id
     pub network_id: NetworkId,
 
@@ -35,9 +31,7 @@ pub struct Transaction {
 impl Transaction {
     /// Append object with a without signature into RLP stream
     pub fn rlp_append_unsigned(&self, s: &mut RlpStream) {
-        s.begin_list(4);
-        s.append(&self.seq);
-        s.append(&self.fee);
+        s.begin_list(2);
         s.append(&self.network_id);
         s.append(&self.action);
     }

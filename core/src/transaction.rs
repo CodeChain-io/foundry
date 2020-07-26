@@ -45,22 +45,20 @@ impl rlp::Encodable for SignedTransaction {
 impl rlp::Decodable for SignedTransaction {
     fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = d.item_count()?;
-        if item_count != 6 {
+        if item_count != 4 {
             return Err(DecoderError::RlpIncorrectListLen {
-                expected: 6,
+                expected: 4,
                 got: item_count,
             })
         }
         let hash = blake256(d.as_raw()).into();
         Ok(SignedTransaction {
             unsigned: Transaction {
-                seq: d.val_at(0)?,
-                fee: d.val_at(1)?,
-                network_id: d.val_at(2)?,
-                action: d.val_at(3)?,
+                network_id: d.val_at(0)?,
+                action: d.val_at(1)?,
             },
-            sig: d.val_at(4)?,
-            signer_public: d.val_at(5)?,
+            sig: d.val_at(2)?,
+            signer_public: d.val_at(3)?,
             hash,
         })
     }
@@ -69,9 +67,7 @@ impl rlp::Decodable for SignedTransaction {
 impl SignedTransaction {
     /// Append object with a signature into RLP stream
     fn rlp_append_sealed_transaction(&self, s: &mut RlpStream) {
-        s.begin_list(6);
-        s.append(&self.unsigned.seq);
-        s.append(&self.unsigned.fee);
+        s.begin_list(4);
         s.append(&self.unsigned.network_id);
         s.append(&self.unsigned.action);
         s.append(&self.sig);
@@ -263,8 +259,6 @@ mod tests {
     fn encode_and_decode_pay_transaction() {
         rlp_encode_and_decode_test!(UnverifiedTransaction(SignedTransaction {
             unsigned: Transaction {
-                seq: 30,
-                fee: 40,
                 network_id: "tc".into(),
                 action: Action::Pay {
                     receiver: Public::random(),

@@ -209,8 +209,6 @@ impl TestBlockChainClient {
             // Update seqs value
             self.seqs.write().insert(*keypair.public(), 0);
             let tx = Transaction {
-                seq: 0,
-                fee: 10,
                 network_id: NetworkId::default(),
                 action: Action::Pay {
                     receiver: Public::random(),
@@ -283,8 +281,6 @@ impl TestBlockChainClient {
     pub fn insert_transaction_to_pool(&self) -> TxHash {
         let keypair: KeyPair = Random.generate().unwrap();
         let tx = Transaction {
-            seq: 0,
-            fee: 10,
             network_id: NetworkId::default(),
             action: Action::Pay {
                 receiver: Public::random(),
