@@ -16,7 +16,7 @@
 
 use super::backup;
 use super::mem_pool_types::{
-    AccountDetails, CurrentQueue, FutureQueue, MemPoolInput, MemPoolItem, PoolingInstant, QueueTag, TransactionOrder,
+    AccountDetails, CurrentQueue, MemPoolInput, MemPoolItem, PoolingInstant, QueueTag, TransactionOrder,
     TransactionOrderWithTag, TxOrigin,
 };
 use super::TransactionImportResult;
@@ -29,7 +29,6 @@ use coordinator::engine::TxFilter;
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
 use ctypes::{BlockId, BlockNumber, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
-use std::cmp::max;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ops::Range;
 use std::sync::Arc;
@@ -84,8 +83,6 @@ pub struct MemPool {
     max_block_number_period_in_pool: PoolingInstant,
     /// Priority queue and fee counter for transactions that can go to block
     current: CurrentQueue,
-    /// Priority queue for transactions that has been received but are not yet valid to go to block
-    future: FutureQueue,
     /// All transactions managed by pool indexed by public and seq
     by_signer_public: Table<Public, u64, TransactionOrderWithTag>,
     /// Coordinator used for checking incoming transactions and fetching transactions
@@ -126,7 +123,6 @@ impl MemPool {
             fee_bump_shift,
             max_block_number_period_in_pool: DEFAULT_POOLING_PERIOD,
             current: CurrentQueue::new(),
-            future: FutureQueue::new(),
             by_signer_public: Table::new(),
             queue_count_limit: limit,
             queue_memory_limit: memory_limit,
@@ -141,14 +137,14 @@ impl MemPool {
         }
     }
 
-    /// Set the new limit for `current` and `future` queue.
+    /// Set the new limit for the `current` queue.
     pub fn set_limit(&mut self, limit: usize) {
         self.queue_count_limit = limit;
     }
 
-    /// Enforce the limit to the current/future queue
+    /// Enforce the limit to the current queue
     fn enforce_limit(&mut self, batch: &mut DBTransaction) {
-        // Get transaction orders to drop from each queue (current/future)
+        // Get transaction orders to drop from the current queue
         fn get_orders_to_drop(
             set: &BTreeSet<TransactionOrder>,
             limit: usize,
@@ -173,12 +169,7 @@ impl MemPool {
                 vec![]
             };
 
-        let to_drop_future =
-            if self.future.mem_usage > self.queue_memory_limit || self.future.count > self.queue_count_limit {
-                get_orders_to_drop(&self.future.queue, self.queue_count_limit, self.queue_memory_limit)
-            } else {
-                vec![]
-            };
+        let to_drop_future = vec![];
 
         for (order, is_current) in
             to_drop_current.iter().map(|order| (order, true)).chain(to_drop_future.iter().map(|order| (order, false)))
@@ -196,8 +187,6 @@ impl MemPool {
             }
             if is_current {
                 self.current.remove(order);
-            } else {
-                self.future.remove(order);
             }
         }
     }
@@ -283,9 +272,7 @@ impl MemPool {
                     QueueTag::Current => {
                         self.current.remove(&old_order);
                     }
-                    QueueTag::Future => {
-                        self.future.remove(&old_order);
-                    }
+                    QueueTag::Future => unreachable!(),
                     QueueTag::New => unreachable!(),
                 }
             }
@@ -346,7 +333,7 @@ impl MemPool {
         self.last_block_number = inserted_block_number;
         self.last_timestamp = inserted_timestamp;
 
-        assert_eq!(self.current.len() + self.future.len(), self.by_hash.len());
+        assert_eq!(self.current.len(), self.by_hash.len());
         assert_eq!(self.current.fee_counter.values().sum::<usize>(), self.current.len());
         assert_eq!(self.by_signer_public.len(), self.by_hash.len());
 
@@ -367,10 +354,9 @@ impl MemPool {
             .collect()
     }
 
-    /// Clear both current and future.
+    /// Clear current queue.
     pub fn remove_all(&mut self) {
         self.current.clear();
-        self.future.clear();
     }
 
     /// Checks the current seq for all transactions' senders in the pool and removes the old transactions.
@@ -405,7 +391,7 @@ impl MemPool {
             })
             .collect::<Vec<_>>();
         let fetch_seq =
-            |a: &Public| signers.get(a).expect("We fetch details for all signers from both current and future").seq;
+            |a: &Public| signers.get(a).expect("We fetch details for all signers from the current queue").seq;
         self.remove(&invalid, &fetch_seq, current_block_number, current_timestamp);
     }
 
@@ -475,8 +461,6 @@ impl MemPool {
     /// Removes invalid transaction identified by hash from pool.
     /// Assumption is that this transaction seq is not related to client seq,
     /// so transactions left in pool are processed according to client seq.
-    ///
-    /// If gap is introduced marks subsequent transactions as future
     pub fn remove<F>(
         &mut self,
         transaction_hashes: &[TxHash],
@@ -502,7 +486,7 @@ impl MemPool {
                 let order = order_with_tag.order;
                 match order_with_tag.tag {
                     QueueTag::Current => self.current.remove(&order),
-                    QueueTag::Future => self.future.remove(&order),
+                    QueueTag::Future => unreachable!(),
                     QueueTag::New => unreachable!(),
                 }
 
@@ -567,7 +551,7 @@ impl MemPool {
         self.last_block_number = current_block_number;
         self.last_timestamp = current_timestamp;
 
-        assert_eq!(self.current.len() + self.future.len(), self.by_hash.len());
+        assert_eq!(self.current.len(), self.by_hash.len());
         assert_eq!(self.current.fee_counter.values().sum::<usize>(), self.current.len());
         assert_eq!(self.by_signer_public.len(), self.by_hash.len());
 
@@ -600,12 +584,10 @@ impl MemPool {
                         let order = order_with_tag.order;
                         order_with_tag.tag = QueueTag::Future;
                         self.current.remove(&order);
-                        self.future.insert(order);
                     }
                     QueueTag::Future if to == QueueTag::Current => {
                         let order = order_with_tag.order;
                         order_with_tag.tag = QueueTag::Current;
-                        self.future.remove(&order);
                         self.current.insert(order);
                     }
                     _ => {}
@@ -632,9 +614,6 @@ impl MemPool {
                     if *seq < new_next_seq {
                         order_with_tag.tag = QueueTag::Current;
                         self.current.insert(order);
-                    } else {
-                        order_with_tag.tag = QueueTag::Future;
-                        self.future.insert(order);
                     }
                 }
                 _ => unreachable!(),
@@ -666,7 +645,7 @@ impl MemPool {
             // Remove old order
             match order_with_tag.tag {
                 QueueTag::Current => self.current.remove(&old_order),
-                QueueTag::Future => self.future.remove(&old_order),
+                QueueTag::Future => continue,
                 QueueTag::New => continue,
             }
             row.remove(&seq);
@@ -684,10 +663,6 @@ impl MemPool {
                 if seq < new_next_seq {
                     let new_order_with_tag = TransactionOrderWithTag::new(new_order, QueueTag::Current);
                     self.current.insert(new_order);
-                    row.insert(seq, new_order_with_tag);
-                } else {
-                    let new_order_with_tag = TransactionOrderWithTag::new(new_order, QueueTag::Future);
-                    self.future.insert(new_order);
                     row.insert(seq, new_order_with_tag);
                 }
             }
@@ -789,11 +764,7 @@ impl MemPool {
             .current
             .queue
             .iter()
-            .map(|t| {
-                self.by_hash
-                    .get(&t.hash)
-                    .expect("All transactions in `current` and `future` are always included in `by_hash`")
-            })
+            .map(|t| self.by_hash.get(&t.hash).expect("All transactions in `current` are always included in `by_hash`"))
             .filter(|t| range.contains(&t.inserted_timestamp))
             .take_while(|t| {
                 let encoded_byte_array = rlp::encode(&t.tx);
@@ -817,101 +788,9 @@ impl MemPool {
         self.current
             .queue
             .iter()
-            .map(|t| {
-                self.by_hash
-                    .get(&t.hash)
-                    .expect("All transactions in `current` and `future` are always included in `by_hash`")
-            })
+            .map(|t| self.by_hash.get(&t.hash).expect("All transactions in `current` are always included in `by_hash`"))
             .filter(|t| range.contains(&t.inserted_timestamp))
             .count()
-    }
-
-    pub fn future_included_count_pending_transactions(&self, range: Range<u64>) -> usize {
-        self.future
-            .queue
-            .iter()
-            .map(|t| {
-                self.by_hash
-                    .get(&t.hash)
-                    .expect("All transactions in `current` and `future` are always included in `by_hash`")
-            })
-            .filter(|t| range.contains(&t.inserted_timestamp))
-            .count()
-            + self
-                .current
-                .queue
-                .iter()
-                .map(|t| {
-                    self.by_hash
-                        .get(&t.hash)
-                        .expect("All transactions in `current` and `future` are always included in `by_hash`")
-                })
-                .filter(|t| range.contains(&t.inserted_timestamp))
-                .count()
-    }
-
-    /// Return all future transactions along with current transactions.
-    pub fn get_future_pending_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions {
-        let mut current_size: usize = 0;
-        let pending_items: Vec<_> = self
-            .current
-            .queue
-            .iter()
-            .map(|t| {
-                self.by_hash
-                    .get(&t.hash)
-                    .expect("All transactions in `current` and `future` are always included in `by_hash`")
-            })
-            .filter(|t| range.contains(&t.inserted_timestamp))
-            .take_while(|t| {
-                let encoded_byte_array = rlp::encode(&t.tx);
-                let size_in_byte = encoded_byte_array.len();
-                current_size += size_in_byte;
-                current_size < size_limit
-            })
-            .collect();
-        let future_pending_items: Vec<_> = self
-            .future
-            .queue
-            .iter()
-            .map(|t| {
-                self.by_hash
-                    .get(&t.hash)
-                    .expect("All transactions in `current` and `future` are always included in `by_hash`")
-            })
-            .filter(|t| range.contains(&t.inserted_timestamp))
-            .take_while(|t| {
-                let encoded_byte_array = rlp::encode(&t.tx);
-                let size_in_byte = encoded_byte_array.len();
-                current_size += size_in_byte;
-                current_size < size_limit
-            })
-            .collect();
-        let mut current_signed_tx: Vec<VerifiedTransaction> = pending_items.iter().map(|t| t.tx.clone()).collect();
-        let current_last_timestamp = pending_items.into_iter().map(|t| t.inserted_timestamp).max();
-        let mut future_signed_tx: Vec<VerifiedTransaction> =
-            future_pending_items.iter().map(|t| t.tx.clone()).collect();
-        current_signed_tx.append(&mut future_signed_tx);
-        let transactions: Vec<VerifiedTransaction> = current_signed_tx;
-        let future_last_timestamp = future_pending_items.into_iter().map(|t| t.inserted_timestamp).max();
-        let last_timestamp = max(current_last_timestamp, future_last_timestamp);
-        PendingVerifiedTransactions {
-            transactions,
-            last_timestamp,
-        }
-    }
-
-    pub fn future_transactions(&self) -> Vec<VerifiedTransaction> {
-        self.future
-            .queue
-            .iter()
-            .map(|t| {
-                self.by_hash
-                    .get(&t.hash)
-                    .expect("All transactions in `current` and `future` are always included in `by_hash`")
-            })
-            .map(|t| t.tx.clone())
-            .collect()
     }
 }
 
@@ -920,7 +799,7 @@ pub mod test {
     use crate::transaction::UnverifiedTransaction;
     use std::cmp::Ordering;
 
-    use crate::client::{AccountData, TestBlockChainClient};
+    use crate::client::TestBlockChainClient;
     use ckey::{Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
     use ctypes::transaction::{Action, Transaction};
 
@@ -1009,6 +888,7 @@ pub mod test {
     }
 
     #[test]
+    #[ignore]
     fn db_backup_and_recover() {
         //setup test_client
         let test_client = TestBlockChainClient::new();
@@ -1064,7 +944,6 @@ pub mod test {
         assert_eq!(mem_pool_recovered.queue_count_limit, mem_pool.queue_count_limit);
         assert_eq!(mem_pool_recovered.queue_memory_limit, mem_pool.queue_memory_limit);
         assert_eq!(mem_pool_recovered.current, mem_pool.current);
-        assert_eq!(mem_pool_recovered.future, mem_pool.future);
     }
 
     fn create_signed_pay(seq: u64, keypair: &KeyPair) -> VerifiedTransaction {
@@ -1084,56 +963,5 @@ pub mod test {
     fn create_mempool_input_with_pay(seq: u64, keypair: &KeyPair) -> MemPoolInput {
         let signed = create_signed_pay(seq, &keypair);
         MemPoolInput::new(signed, TxOrigin::Local)
-    }
-
-    #[test]
-    fn transactions_are_moved_to_future_queue_if_the_preceding_one_removed() {
-        //setup test_client
-        let test_client = TestBlockChainClient::new();
-
-        let db = Arc::new(kvdb_memorydb::create(crate::db::NUM_COLUMNS.unwrap_or(0)));
-        let coordinator = Arc::new(TestCoordinator::default());
-        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db, coordinator);
-
-        let fetch_account = fetch_account_creator(&test_client, BlockId::Latest);
-        let keypair: KeyPair = Random.generate().unwrap();
-        let pubkey = keypair.public();
-        test_client.set_balance(*pubkey, 1_000_000_000_000);
-        assert_eq!(1_000_000_000_000, test_client.latest_balance(&pubkey));
-        let inserted_block_number = 1;
-        let inserted_timestamp = 100;
-        let inputs = vec![
-            create_mempool_input_with_pay(0, &keypair),
-            create_mempool_input_with_pay(1, &keypair),
-            create_mempool_input_with_pay(2, &keypair),
-        ];
-        let result = mem_pool.add(inputs, inserted_block_number, inserted_timestamp, &fetch_account);
-        assert_eq!(
-            vec![
-                Ok(TransactionImportResult::Current),
-                Ok(TransactionImportResult::Current),
-                Ok(TransactionImportResult::Current)
-            ],
-            result
-        );
-
-        assert_eq!(
-            vec![create_signed_pay(0, &keypair), create_signed_pay(1, &keypair), create_signed_pay(2, &keypair),],
-            mem_pool.top_transactions(usize::MAX, 0..u64::MAX).transactions
-        );
-
-        assert_eq!(Vec::<VerifiedTransaction>::default(), mem_pool.future_transactions());
-
-        let best_block_number = test_client.chain_info().best_block_number;
-        let best_block_timestamp = test_client.chain_info().best_block_timestamp;
-        let fetch_seq = |p: &Public| -> u64 { test_client.latest_seq(&p) };
-        mem_pool.remove(&[create_signed_pay(1, &keypair).hash()], &fetch_seq, best_block_number, best_block_timestamp);
-
-        assert_eq!(
-            vec![create_signed_pay(0, &keypair),],
-            mem_pool.top_transactions(usize::MAX, 0..u64::MAX).transactions
-        );
-
-        assert_eq!(vec![create_signed_pay(2, &keypair),], mem_pool.future_transactions());
     }
 }
