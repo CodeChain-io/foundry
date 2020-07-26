@@ -265,7 +265,7 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
 
     let miner = new_miner(&config, &scheme, ap.clone(), Arc::clone(&db), coordinator.clone())?;
     let client = client_start(&client_config, &timer_loop, db, &scheme, miner.clone(), coordinator)?;
-    miner.recover_from_db(client.client().as_ref());
+    miner.recover_from_db();
 
     // FIXME: unbound would cause memory leak.
     // FIXME: The full queue should be handled.

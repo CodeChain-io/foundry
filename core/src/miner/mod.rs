@@ -26,7 +26,6 @@ use ctypes::{BlockHash, BlockId};
 use primitives::Bytes;
 use std::ops::Range;
 
-use self::mem_pool_types::AccountDetails;
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};
 use crate::account_provider::Error as AccountProviderError;
 use crate::client::{
@@ -109,14 +108,4 @@ pub enum TransactionImportResult {
     Current,
     /// Transaction was imported to future queue.
     Future,
-}
-
-fn fetch_account_creator<'c>(
-    client: &'c dyn AccountData,
-    block_id: BlockId,
-) -> impl Fn(&Public) -> AccountDetails + 'c {
-    move |pubkey: &Public| AccountDetails {
-        seq: client.seq(&pubkey, block_id).expect("We are querying sequence using trusted block id"),
-        balance: client.balance(&pubkey, block_id.into()).expect("We are querying balance using trusted block id"),
-    }
 }

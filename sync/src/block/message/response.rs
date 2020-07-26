@@ -152,8 +152,6 @@ mod tests {
 
         let tx = UnverifiedTransaction::new(
             Transaction {
-                seq: 0,
-                fee: 10,
                 action: Action::Pay {
                     receiver: Public::random(),
                     quantity: 64,

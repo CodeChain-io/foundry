@@ -15,12 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::mem_pool::{Error as MemPoolError, MemPool};
-use super::mem_pool_types::{MemPoolInput, TxOrigin};
-use super::{fetch_account_creator, MinerService, TransactionImportResult};
+use super::mem_pool_types::TxOrigin;
+use super::{MinerService, TransactionImportResult};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::block::{ClosedBlock, IsBlock};
 use crate::client::{
-    AccountData, BlockChainTrait, BlockProducer, Client, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo,
+    AccountData, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo,
 };
 use crate::consensus::{ConsensusEngine, EngineType};
 use crate::error::Error;
@@ -29,7 +29,7 @@ use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, Ver
 use crate::types::TransactionId;
 use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::engine::{BlockExecutor, TxFilter};
-use cstate::{TopLevelState, TopStateView};
+use cstate::TopLevelState;
 use ctypes::errors::HistoryError;
 use ctypes::transaction::Transaction;
 use ctypes::{BlockHash, BlockId, TransactionIndex};
@@ -38,7 +38,6 @@ use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
 use rlp::Encodable;
 use std::borrow::Borrow;
-use std::collections::HashSet;
 use std::convert::TryInto;
 use std::ops::Range;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -58,7 +57,7 @@ pub struct MinerOptions {
     pub mem_pool_size: usize,
     /// Maximum memory usage of transactions in the queue (current / future).
     pub mem_pool_memory_limit: Option<usize>,
-    /// A value which is used to check whether a new transaciton can replace a transaction in the memory pool with the same signer and seq.
+    /// A value which is used to check whether a new transaciton can replace a transaction in the memory pool with the same signer.
     /// If the fee of the new transaction is `new_fee` and the fee of the transaction in the memory pool is `old_fee`,
     /// then `new_fee > old_fee + old_fee >> mem_pool_fee_bump_shift` should be satisfied to replace.
     /// Local transactions ignore this option.
@@ -168,13 +167,8 @@ impl Miner {
         coordinator: Arc<C>,
     ) -> Self {
         let mem_limit = options.mem_pool_memory_limit.unwrap_or_else(usize::max_value);
-        let mem_pool = Arc::new(RwLock::new(MemPool::with_limits(
-            options.mem_pool_size,
-            mem_limit,
-            options.mem_pool_fee_bump_shift,
-            db,
-            coordinator.clone(),
-        )));
+        let mem_pool =
+            Arc::new(RwLock::new(MemPool::with_limits(options.mem_pool_size, mem_limit, db, coordinator.clone())));
 
         Self {
             mem_pool,
@@ -188,8 +182,8 @@ impl Miner {
         }
     }
 
-    pub fn recover_from_db(&self, client: &Client) {
-        self.mem_pool.write().recover_from_db(client);
+    pub fn recover_from_db(&self) {
+        self.mem_pool.write().recover_from_db();
     }
 
     pub fn get_options(&self) -> &MinerOptions {
@@ -200,10 +194,9 @@ impl Miner {
         &self,
         client: &C,
         transactions: Vec<UnverifiedTransaction>,
-        default_origin: TxOrigin,
+        origin: TxOrigin,
         mem_pool: &mut MemPool,
     ) -> Vec<Result<TransactionImportResult, Error>> {
-        let best_header = client.best_block_header().decode();
         let current_block_number = client.chain_info().best_block_number;
         let current_timestamp = client.chain_info().best_block_timestamp;
         let mut inserted = Vec::with_capacity(transactions.len());
@@ -214,15 +207,6 @@ impl Miner {
             .into_iter()
             .map(|tx| {
                 let hash = tx.hash();
-                // FIXME: Refactoring is needed. recover_public is calling in verify_transaction_unordered.
-                let signer_public = tx.signer_public();
-
-                let origin = if self.accounts.has_account(&signer_public).unwrap_or_default() {
-                    TxOrigin::Local
-                } else {
-                    default_origin
-                };
-
                 if client.transaction_block(&TransactionId::Hash(hash)).is_some() {
                     cdebug!(MINER, "Rejected transaction {:?}: already in the blockchain", hash);
                     return Err(HistoryError::TransactionAlreadyImported.into())
@@ -233,18 +217,13 @@ impl Miner {
                         e
                     })?;
 
-                let tx_hash = tx.hash();
-
-                to_insert.push(MemPoolInput::new(tx, origin));
-                tx_hashes.push(tx_hash);
+                to_insert.push(tx);
+                tx_hashes.push(hash);
                 Ok(())
             })
             .collect();
 
-        let block_id = BlockId::Hash(best_header.hash());
-        let fetch_account = fetch_account_creator(client, block_id);
-
-        let insertion_results = mem_pool.add(to_insert, current_block_number, current_timestamp, &fetch_account);
+        let insertion_results = mem_pool.add(to_insert, origin, current_block_number, current_timestamp);
 
         debug_assert_eq!(insertion_results.len(), intermediate_results.iter().filter(|r| r.is_ok()).count());
         let mut insertion_results_index = 0;
@@ -274,7 +253,7 @@ impl Miner {
         parent_block_id: BlockId,
         chain: &C,
     ) -> Result<Option<ClosedBlock>, Error> {
-        let (transactions, mut open_block, block_number, block_tx_signer, block_tx_seq) = {
+        let (transactions, mut open_block, block_number, block_tx_signer) = {
             ctrace!(MINER, "prepare_block: No existing work - making new block");
             let params = self.params.get();
             let open_block = chain.prepare_open_block(parent_block_id, params.author, params.extra_data);
@@ -291,32 +270,28 @@ impl Miner {
             let mem_pool = self.mem_pool.read();
 
             let mut transactions = Vec::default();
-            let (block_tx_signer, block_tx_seq) =
-                if let Some(action) = self.engine.open_block_action(open_block.block())? {
-                    ctrace!(MINER, "Enqueue a transaction to open block");
-                    // TODO: This generates a new random account to make the transaction.
-                    // It should use the block signer.
-                    let tx_signer = Private::random();
-                    let seq = open_block.state().seq(&tx_signer.public_key())?;
-                    let tx = Transaction {
-                        network_id: chain.network_id(),
-                        action,
-                        seq,
-                        fee: 0,
-                    };
-                    let verified_tx = VerifiedTransaction::new_with_sign(tx, &tx_signer);
-                    transactions.push(verified_tx);
-                    (Some(tx_signer), Some(seq + 1))
-                } else {
-                    (None, None)
+            let block_tx_signer = if let Some(action) = self.engine.open_block_action(open_block.block())? {
+                ctrace!(MINER, "Enqueue a transaction to open block");
+                // TODO: This generates a new random account to make the transaction.
+                // It should use the block signer.
+                let tx_signer = Private::random();
+                let tx = Transaction {
+                    network_id: chain.network_id(),
+                    action,
                 };
+                let verified_tx = VerifiedTransaction::new_with_sign(tx, &tx_signer);
+                transactions.push(verified_tx);
+                Some(tx_signer)
+            } else {
+                None
+            };
             let open_transaction_size = transactions.iter().map(|tx| tx.rlp_bytes().len()).sum();
             assert!(max_body_size > open_transaction_size);
             let mut pending_transactions =
                 mem_pool.top_transactions(max_body_size - open_transaction_size, DEFAULT_RANGE).transactions;
             transactions.append(&mut pending_transactions);
 
-            (transactions, open_block, block_number, block_tx_signer, block_tx_seq)
+            (transactions, open_block, block_number, block_tx_signer)
         };
 
         let parent_header = {
@@ -336,15 +311,8 @@ impl Miner {
 
         let mut tx_count: usize = 0;
         let tx_total = transactions.len();
-        let mut invalid_tx_users = HashSet::new();
 
         for tx in transactions {
-            let signer_public = tx.signer_public();
-            if invalid_tx_users.contains(&signer_public) {
-                // The previous transaction has failed
-                continue
-            }
-
             let hash = tx.hash();
             let start = Instant::now();
             let transaction_index = tx_count as TransactionIndex;
@@ -355,7 +323,6 @@ impl Miner {
                 // already have transaction - ignore
                 Err(Error::History(HistoryError::TransactionAlreadyImported)) => {}
                 Err(e) => {
-                    invalid_tx_users.insert(signer_public);
                     invalid_transactions.push(hash);
                     cinfo!(
                         MINER,
@@ -383,16 +350,12 @@ impl Miner {
             // TODO: This generates a new random account to make the transaction.
             // It should use the block signer.
             let tx_signer = block_tx_signer.unwrap_or_else(Private::random);
-            let mut seq = block_tx_seq.map(Ok).unwrap_or_else(|| open_block.state().seq(&tx_signer.public_key()))?;
             for (index, action) in actions.into_iter().enumerate() {
                 let transaction_index = (tx_count + index) as TransactionIndex;
                 let tx = Transaction {
                     network_id: chain.network_id(),
                     action,
-                    seq,
-                    fee: 0,
                 };
-                seq += 1;
                 let tx = VerifiedTransaction::new_with_sign(tx, &tx_signer);
                 // TODO: The current code can insert more transactions than size limit.
                 // It should be fixed to pre-calculate the maximum size of the close transactions and prevent the size overflow.
@@ -401,16 +364,10 @@ impl Miner {
         }
         let block = open_block.close()?;
 
-        let block_id = {
-            let best_block_hash = chain.chain_info().best_block_hash;
-            BlockId::Hash(best_block_hash)
-        };
-        let fetch_seq = |p: &Public| chain.seq(p, block_id).expect("Read from best block");
         {
             let mut mem_pool = self.mem_pool.write();
             mem_pool.remove(
                 &invalid_transactions,
-                &fetch_seq,
                 chain.chain_info().best_block_number,
                 chain.chain_info().best_block_timestamp,
             );
@@ -480,18 +437,6 @@ impl MinerService for Miner {
     where
         C: AccountData + BlockChainTrait + BlockProducer + EngineInfo + ImportBlock, {
         ctrace!(MINER, "chain_new_blocks");
-
-        {
-            let block_id = {
-                let current_block_hash = chain.chain_info().best_block_hash;
-                BlockId::Hash(current_block_hash)
-            };
-            let fetch_account = fetch_account_creator(chain, block_id);
-            let current_block_number = chain.chain_info().best_block_number;
-            let current_timestamp = chain.chain_info().best_block_timestamp;
-            let mut mem_pool = self.mem_pool.write();
-            mem_pool.remove_old(&fetch_account, current_block_number, current_timestamp);
-        }
 
         chain.set_min_timer();
     }
@@ -665,14 +610,12 @@ pub mod test {
         let coordinator = Arc::new(TestCoordinator::default());
         let miner = Arc::new(Miner::with_scheme_for_test(&scheme, db.clone(), coordinator.clone()));
 
-        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), 3, db.clone(), coordinator);
+        let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db.clone(), coordinator);
         let client = generate_test_client(db, Arc::clone(&miner), &scheme).unwrap();
 
         let private = Private::random();
         let transaction1: UnverifiedTransaction = VerifiedTransaction::new_with_sign(
             Transaction {
-                seq: 30,
-                fee: 40,
                 network_id: "tc".into(),
                 action: Action::Pay {
                     receiver: Public::random(),
@@ -686,8 +629,6 @@ pub mod test {
         // Invalid signature transaction which will be rejected before mem_pool.add
         let transaction2 = UnverifiedTransaction::new(
             Transaction {
-                seq: 32,
-                fee: 40,
                 network_id: "tc".into(),
                 action: Action::Pay {
                     receiver: Public::random(),
