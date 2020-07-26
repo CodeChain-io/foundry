@@ -18,7 +18,6 @@ use super::super::errors;
 use super::Action;
 use cjson::uint::Uint;
 use ckey::NetworkId;
-use ctypes::transaction::IncompleteTransaction;
 use jsonrpc_core::Error;
 use std::convert::{TryFrom, TryInto};
 
@@ -29,18 +28,4 @@ pub struct UnsignedTransaction {
     pub fee: Uint,
     pub network_id: NetworkId,
     pub action: Action,
-}
-
-impl TryFrom<UnsignedTransaction> for (IncompleteTransaction, Option<u64>) {
-    type Error = Error;
-    fn try_from(tx: UnsignedTransaction) -> Result<Self, Self::Error> {
-        Ok((
-            IncompleteTransaction {
-                fee: tx.fee.into(),
-                network_id: tx.network_id,
-                action: tx.action.try_into().map_err(errors::conversion)?,
-            },
-            tx.seq,
-        ))
-    }
 }

@@ -20,16 +20,15 @@ mod mem_pool_types;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod miner;
 
-use ckey::{Ed25519Public as Public, Password, PlatformAddress};
+use ckey::Ed25519Public as Public;
 use cstate::TopStateView;
-use ctypes::transaction::IncompleteTransaction;
-use ctypes::{BlockHash, BlockId, TxHash};
+use ctypes::{BlockHash, BlockId};
 use primitives::Bytes;
 use std::ops::Range;
 
 use self::mem_pool_types::AccountDetails;
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};
-use crate::account_provider::{AccountProvider, Error as AccountProviderError};
+use crate::account_provider::Error as AccountProviderError;
 use crate::client::{
     AccountData, BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo,
 };
@@ -89,17 +88,6 @@ pub trait MinerService: Send + Sync {
         chain: &C,
         tx: VerifiedTransaction,
     ) -> Result<TransactionImportResult, Error>;
-
-    /// Imports incomplete (node owner) transaction to mem pool.
-    fn import_incomplete_transaction<C: MiningBlockChainClient + AccountData + EngineInfo + TermInfo>(
-        &self,
-        chain: &C,
-        account_provider: &AccountProvider,
-        tx: IncompleteTransaction,
-        platform_address: PlatformAddress,
-        passphrase: Option<Password>,
-        seq: Option<u64>,
-    ) -> Result<(TxHash, u64), Error>;
 
     /// Get a list of all pending transactions in the mem pool.
     fn ready_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions;
