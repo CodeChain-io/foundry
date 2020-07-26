@@ -86,8 +86,6 @@ mod tests {
     fn transactions_message_rlp_with_tx() {
         let tx = UnverifiedTransaction::new(
             Transaction {
-                seq: 0,
-                fee: 10,
                 action: Action::Pay {
                     receiver: Public::random(),
                     quantity: 30,

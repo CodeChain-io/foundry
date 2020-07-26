@@ -24,8 +24,6 @@ use std::convert::{TryFrom, TryInto};
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UnsignedTransaction {
-    pub seq: Option<u64>,
-    pub fee: Uint,
     pub network_id: NetworkId,
     pub action: Action,
 }

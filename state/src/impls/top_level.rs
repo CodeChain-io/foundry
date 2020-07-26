@@ -314,21 +314,6 @@ impl TopLevelState {
         parent_block_number: BlockNumber,
         transaction_index: TransactionIndex,
     ) -> StateResult<()> {
-        let seq = self.seq(sender)?;
-
-        if tx.seq != seq {
-            return Err(RuntimeError::InvalidSeq(Mismatch {
-                expected: seq,
-                found: tx.seq,
-            })
-            .into())
-        }
-
-        let fee = tx.fee;
-
-        self.inc_seq(sender)?;
-        self.sub_balance(sender, fee)?;
-
         // The failed transaction also must pay the fee and increase seq.
         StateWithCheckpoint::create_checkpoint(self, ACTION_CHECKPOINT);
         let result = self.apply_action(&tx.action, sender, parent_block_number, transaction_index);
