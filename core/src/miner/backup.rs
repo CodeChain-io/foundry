@@ -17,8 +17,8 @@
 use super::mem_pool_types::MemPoolItem;
 use crate::db as dblib;
 use crate::error::Error;
-use crate::miner::mem_pool_types::TxOrigin;
 use crate::transaction::UnverifiedTransaction;
+use coordinator::TxOrigin;
 use ctypes::BlockNumber;
 use kvdb::{DBTransaction, KeyValueDB};
 use primitives::H256;
