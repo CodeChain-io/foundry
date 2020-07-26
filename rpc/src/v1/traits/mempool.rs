@@ -25,25 +25,15 @@ pub trait Mempool {
     #[rpc(name = "mempool_sendSignedTransaction")]
     fn send_signed_transaction(&self, raw: Bytes) -> Result<TxHash>;
 
-    /// Deletes all pending transactions in the mem pool, including future queue.
+    /// Deletes all pending transactions in the mem pool.
     #[rpc(name = "mempool_deleteAllPendingTransactions")]
     fn delete_all_pending_transactions(&self) -> Result<()>;
 
-    /// Gets transactions in the current mem pool. future_included is set to check whether append future queue or not.
+    /// Gets transactions in the current mem pool.
     #[rpc(name = "mempool_getPendingTransactions")]
-    fn get_pending_transactions(
-        &self,
-        from: Option<u64>,
-        to: Option<u64>,
-        future_included: Option<bool>,
-    ) -> Result<PendingTransactions>;
+    fn get_pending_transactions(&self, from: Option<u64>, to: Option<u64>) -> Result<PendingTransactions>;
 
     /// Gets the count of transactions in the current mem pool.
     #[rpc(name = "mempool_getPendingTransactionsCount")]
-    fn get_pending_transactions_count(
-        &self,
-        from: Option<u64>,
-        to: Option<u64>,
-        future_included: Option<bool>,
-    ) -> Result<usize>;
+    fn get_pending_transactions_count(&self, from: Option<u64>, to: Option<u64>) -> Result<usize>;
 }
