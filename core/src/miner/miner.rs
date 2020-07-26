@@ -628,24 +628,19 @@ impl MinerService for Miner {
         let pubkey = platform_address.try_into_pubkey()?;
         let seq = match seq {
             Some(seq) => seq,
-            None => get_next_seq(self.future_transactions(), &[pubkey])
-                .map(|seq| {
-                    cwarn!(RPC, "There are future transactions for {}", platform_address);
-                    seq
-                })
-                .unwrap_or_else(|| {
-                    let size_limit = client
-                        .common_params(BlockId::Latest)
-                        .expect("Common params of the latest block always exists")
-                        .max_body_size();
-                    const DEFAULT_RANGE: Range<u64> = 0..u64::MAX;
-                    get_next_seq(self.ready_transactions(size_limit, DEFAULT_RANGE).transactions, &[pubkey])
-                        .map(|seq| {
-                            cdebug!(RPC, "There are ready transactions for {}", platform_address);
-                            seq
-                        })
-                        .unwrap_or_else(|| client.latest_seq(&pubkey))
-                }),
+            None => {
+                let size_limit = client
+                    .common_params(BlockId::Latest)
+                    .expect("Common params of the latest block always exists")
+                    .max_body_size();
+                const DEFAULT_RANGE: Range<u64> = 0..u64::MAX;
+                get_next_seq(self.ready_transactions(size_limit, DEFAULT_RANGE).transactions, &[pubkey])
+                    .map(|seq| {
+                        cdebug!(RPC, "There are ready transactions for {}", platform_address);
+                        seq
+                    })
+                    .unwrap_or_else(|| client.latest_seq(&pubkey))
+            }
         };
         let tx = tx.complete(seq);
         let tx_hash = tx.hash();
@@ -666,19 +661,6 @@ impl MinerService for Miner {
 
     fn count_pending_transactions(&self, range: Range<u64>) -> usize {
         self.mem_pool.read().count_pending_transactions(range)
-    }
-
-    fn future_included_count_pending_transactions(&self, range: Range<u64>) -> usize {
-        self.mem_pool.read().future_included_count_pending_transactions(range)
-    }
-
-    fn future_pending_transactions(&self, range: Range<u64>) -> PendingVerifiedTransactions {
-        self.mem_pool.read().get_future_pending_transactions(usize::max_value(), range)
-    }
-
-    /// Get a list of all future transactions.
-    fn future_transactions(&self) -> Vec<VerifiedTransaction> {
-        self.mem_pool.read().future_transactions()
     }
 
     fn start_sealing<C: MiningBlockChainClient + EngineInfo + TermInfo>(&self, client: &C) {

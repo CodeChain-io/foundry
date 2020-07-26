@@ -313,52 +313,6 @@ impl CurrentQueue {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct FutureQueue {
-    /// Priority queue for transactions
-    pub queue: BTreeSet<TransactionOrder>,
-    /// Memory usage of the external transactions in the queue
-    pub mem_usage: usize,
-    /// Count of the external transactions in the queue
-    pub count: usize,
-}
-
-impl FutureQueue {
-    pub fn new() -> Self {
-        Self {
-            queue: BTreeSet::new(),
-            mem_usage: 0,
-            count: 0,
-        }
-    }
-
-    pub fn clear(&mut self) {
-        self.queue.clear();
-        self.mem_usage = 0;
-        self.count = 0;
-    }
-
-    pub fn len(&self) -> usize {
-        self.queue.len()
-    }
-
-    pub fn insert(&mut self, order: TransactionOrder) {
-        self.queue.insert(order);
-        if !order.origin.is_local() {
-            self.mem_usage += order.mem_usage;
-            self.count += 1;
-        }
-    }
-
-    pub fn remove(&mut self, order: &TransactionOrder) {
-        assert!(self.queue.remove(order));
-        if !order.origin.is_local() {
-            self.mem_usage -= order.mem_usage;
-            self.count -= 1;
-        }
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct MemPoolInput {
     pub transaction: VerifiedTransaction,
