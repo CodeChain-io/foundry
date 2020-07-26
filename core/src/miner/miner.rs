@@ -27,12 +27,12 @@ use crate::error::Error;
 use crate::scheme::Scheme;
 use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
 use crate::types::TransactionId;
-use ckey::{Ed25519Private as Private, Ed25519Public as Public, Password, PlatformAddress};
+use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::engine::{BlockExecutor, TxFilter};
 use cstate::{TopLevelState, TopStateView};
 use ctypes::errors::HistoryError;
-use ctypes::transaction::{IncompleteTransaction, Transaction};
-use ctypes::{BlockHash, BlockId, TransactionIndex, TxHash};
+use ctypes::transaction::Transaction;
+use ctypes::{BlockHash, BlockId, TransactionIndex};
 use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
@@ -616,45 +616,6 @@ impl MinerService for Miner {
         imported
     }
 
-    fn import_incomplete_transaction<C: MiningBlockChainClient + AccountData + EngineInfo + TermInfo>(
-        &self,
-        client: &C,
-        account_provider: &AccountProvider,
-        tx: IncompleteTransaction,
-        platform_address: PlatformAddress,
-        passphrase: Option<Password>,
-        seq: Option<u64>,
-    ) -> Result<(TxHash, u64), Error> {
-        let pubkey = platform_address.try_into_pubkey()?;
-        let seq = match seq {
-            Some(seq) => seq,
-            None => {
-                let size_limit = client
-                    .common_params(BlockId::Latest)
-                    .expect("Common params of the latest block always exists")
-                    .max_body_size();
-                const DEFAULT_RANGE: Range<u64> = 0..u64::MAX;
-                get_next_seq(self.ready_transactions(size_limit, DEFAULT_RANGE).transactions, &[pubkey])
-                    .map(|seq| {
-                        cdebug!(RPC, "There are ready transactions for {}", platform_address);
-                        seq
-                    })
-                    .unwrap_or_else(|| client.latest_seq(&pubkey))
-            }
-        };
-        let tx = tx.complete(seq);
-        let tx_hash = tx.hash();
-        let account = account_provider.get_account(&pubkey, passphrase.as_ref())?;
-        let sig = account.sign(&tx_hash)?;
-        let signer_public = account.public()?;
-        let unverified = UnverifiedTransaction::new(tx, sig, signer_public);
-        let signed: VerifiedTransaction = unverified.try_into()?;
-        let hash = signed.hash();
-        self.import_own_transaction(client, signed)?;
-
-        Ok((hash, seq))
-    }
-
     fn ready_transactions(&self, size_limit: usize, range: Range<u64>) -> PendingVerifiedTransactions {
         self.mem_pool.read().top_transactions(size_limit, range)
     }
@@ -679,16 +640,6 @@ impl MinerService for Miner {
     fn stop_sealing(&self) {
         cdebug!(MINER, "Stop sealing");
         self.sealing_enabled.store(false, Ordering::Relaxed);
-    }
-}
-
-fn get_next_seq(transactions: impl IntoIterator<Item = VerifiedTransaction>, pubkeys: &[Public]) -> Option<u64> {
-    let mut txes =
-        transactions.into_iter().filter(|tx| pubkeys.contains(&tx.signer_public())).map(|tx| tx.transaction().seq);
-    if let Some(first) = txes.next() {
-        Some(txes.fold(first, std::cmp::max) + 1)
-    } else {
-        None
     }
 }
 
