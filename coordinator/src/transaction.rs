@@ -19,6 +19,7 @@ use ctypes::TxHash;
 use primitives::Bytes;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 
 /// An encoded transaction.
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
@@ -96,6 +97,35 @@ impl Decodable for TxOrigin {
             EXTERNAL => Ok(TxOrigin::External),
             _ => Err(DecoderError::Custom("Unexpected Txorigin type")),
         }
+    }
+}
+
+impl PartialOrd for TxOrigin {
+    fn partial_cmp(&self, other: &TxOrigin) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for TxOrigin {
+    fn cmp(&self, other: &TxOrigin) -> Ordering {
+        if *other == *self {
+            return Ordering::Equal
+        }
+
+        match (*self, *other) {
+            (TxOrigin::Local, _) => Ordering::Less,
+            _ => Ordering::Greater,
+        }
+    }
+}
+
+impl TxOrigin {
+    pub fn is_local(self) -> bool {
+        self == TxOrigin::Local
+    }
+
+    pub fn is_external(self) -> bool {
+        self == TxOrigin::External
     }
 }
 

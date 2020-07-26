@@ -28,7 +28,7 @@ mod values;
 use self::context::{StorageAccess, SubStorageAccess};
 use self::engine::{BlockExecutor, Initializer, TxFilter};
 pub use self::header::Header;
-use self::transaction::{Transaction, TransactionWithMetadata};
+pub use self::transaction::{Transaction, TransactionWithMetadata, TxOrigin};
 use self::types::{BlockOutcome, ErrorCode, VerifiedCrime};
 use crate::engine::FilteredTxs;
 use crate::module::{HandleCrimes, InitChain, InitGenesis, SortedTxs, Stateful, TxOwner, TxSorter, UpdateChain};

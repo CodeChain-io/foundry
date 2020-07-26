@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::mem_pool::{Error as MemPoolError, MemPool};
-use super::mem_pool_types::TxOrigin;
 use super::{MinerService, TransactionImportResult};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::block::{ClosedBlock, IsBlock};
@@ -29,6 +28,7 @@ use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, Ver
 use crate::types::TransactionId;
 use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::engine::{BlockExecutor, TxFilter};
+use coordinator::TxOrigin;
 use cstate::TopLevelState;
 use ctypes::errors::HistoryError;
 use ctypes::transaction::Transaction;
