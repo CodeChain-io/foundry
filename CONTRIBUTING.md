@@ -13,6 +13,6 @@ Create a [new issue](https://github.com/CodeChain-io/codechain/issues/new) in ou
 
 # License
 
-By contributing to CodeChain, you agree that your contributions will be licensed under the AGPLv3 License.
+By contributing to CodeChain, you agree that your contributions will be licensed under the GPLv3 License.
 
 Each contributor has to [sign our Contributor License Agreement](https://www.clahub.com/agreements/CodeChain-io/codechain). The purpose of the CLA is to ensure that the guardian of a project's outputs has the necessary ownership or grants of rights over all contributions to allow them to distribute under the chosen license. You can read and sign our full Contributor License Agreement before submitting a pull request.

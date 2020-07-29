@@ -1,7 +1,7 @@
 Foundry
 [![Build Status](https://travis-ci.com/CodeChain-io/foundry.svg?branch=master)](https://travis-ci.com/CodeChain-io/foundry)
 [![chat](https://img.shields.io/discord/569610676205781012.svg?logo=discord)](https://discord.gg/xhpdXm7)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ==============
 
 Foundry is a programmable open source blockchain engine.
@@ -112,4 +112,4 @@ cargo +nightly-2020-05-05 clippy --all --all-targets
 Developers are strongly encouraged to write unit tests for new code, and to submit new unit tests for old code. Unit tests can be compiled and run with: `cargo test --all`. For more details, please reference [Unit Tests](https://github.com/CodeChain-io/codechain/wiki/Unit-Tests).
 
 ## License
-CodeChain is licensed under the AGPL License - see the [LICENSE](https://github.com/CodeChain-io/foundry/blob/master/LICENSE) file for details
+CodeChain is licensed under the GPL License - see the [LICENSE](https://github.com/CodeChain-io/foundry/blob/master/LICENSE) file for details
