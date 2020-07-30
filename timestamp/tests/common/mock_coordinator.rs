@@ -19,7 +19,8 @@ pub use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::module::*;
 use foundry_module_rt::UserModule;
 use parking_lot::RwLock;
-use remote_trait_object::{import_service, Context as RtoContext, Dispatch, HandleToExchange, Service};
+use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange, Skeleton};
+use remote_trait_object::{Context as RtoContext, Service};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -50,7 +51,7 @@ impl UserModule for MockCoordinator {
         }
     }
 
-    fn prepare_service_to_export(&mut self, _ctor_name: &str, _ctor_arg: &[u8]) -> Arc<dyn Dispatch> {
+    fn prepare_service_to_export(&mut self, _ctor_name: &str, _ctor_arg: &[u8]) -> Skeleton {
         panic!("Coordinator doesn't export anything!")
     }
 
@@ -65,32 +66,34 @@ impl UserModule for MockCoordinator {
         assert_eq!(tokens.len(), 2);
         let exporter_module = tokens[0];
         let name = tokens[1];
-
-        rto_context.get_port().upgrade().unwrap();
-
         match name {
             "tx_owner" => assert!(self
                 .ctx
                 .write()
                 .tx_owners
-                .insert(exporter_module.to_owned(), import_service(rto_context, handle))
+                .insert(exporter_module.to_owned(), import_service_from_handle(rto_context, handle))
                 .is_none()),
             "init_genesis" => assert!(self
                 .ctx
                 .write()
                 .init_genesises
-                .insert(exporter_module.to_owned(), import_service(rto_context, handle))
+                .insert(exporter_module.to_owned(), import_service_from_handle(rto_context, handle))
                 .is_none()),
             "stateful" => assert!(self
                 .ctx
                 .write()
                 .statefuls
-                .insert(exporter_module.to_owned(), import_service(rto_context, handle))
+                .insert(exporter_module.to_owned(), import_service_from_handle(rto_context, handle))
                 .is_none()),
-            "init_chain" => assert!(self.ctx.write().init_chain.replace(import_service(rto_context, handle)).is_none()),
-            "update_chain" => {
-                assert!(self.ctx.write().update_chain.replace(import_service(rto_context, handle)).is_none())
+            "init_chain" => {
+                assert!(self.ctx.write().init_chain.replace(import_service_from_handle(rto_context, handle)).is_none())
             }
+            "update_chain" => assert!(self
+                .ctx
+                .write()
+                .update_chain
+                .replace(import_service_from_handle(rto_context, handle))
+                .is_none()),
             _ => panic!("Unsupported name in import_service() : {}", name),
         }
     }

@@ -104,7 +104,7 @@ fn tx_token_transfer(public: &Public, private: &Private, seq: u64, receiver: Pub
 
 pub fn simple1(ctx: &RwLock<Context>) {
     for stateful in ctx.write().statefuls.values_mut() {
-        stateful.set_storage(ServiceRef::export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
+        stateful.set_storage(ServiceRef::create_export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
     }
 
     let user1: Ed25519KeyPair = Random.generate().unwrap();
@@ -128,7 +128,7 @@ pub fn multiple(ctx: &RwLock<Context>) {
     let stamp_issuer = blake256("stamp");
 
     for stateful in ctx.write().statefuls.values_mut() {
-        stateful.set_storage(ServiceRef::export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
+        stateful.set_storage(ServiceRef::create_export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
     }
 
     let n = 32;
