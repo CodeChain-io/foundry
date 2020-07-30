@@ -17,10 +17,12 @@
 use crate::link::{self, Linkable, Linker, Port};
 use crate::sandbox::{self, Sandbox, Sandboxer};
 use crossbeam::thread;
+use foundry_module_rt::coordinator_interface::{FoundryModule, PartialRtoConfig};
 use fproc_sndbx::execution::executor;
 use fproc_sndbx::ipc::Ipc;
 use parking_lot::Mutex;
-use remote_trait_object::{Config as RtoConfig, Context as RtoContext, HandleToExchange};
+use remote_trait_object::raw_exchange::HandleToExchange;
+use remote_trait_object::{Config as RtoConfig, Context as RtoContext, ServiceToImport};
 use std::io::Cursor;
 use std::marker::PhantomData;
 use std::path::Path;
@@ -120,13 +122,9 @@ impl<E: ExecutionScheme> ProcessSandbox<E> {
         let rto_config = RtoConfig::default_setup();
         let (transport_send, transport_recv) = process.ipc.take().unwrap().split();
 
-        let (rto_context, mut module): (_, Box<dyn foundry_module_rt::coordinator_interface::FoundryModule>) =
-            RtoContext::with_initial_service(
-                rto_config,
-                transport_send,
-                transport_recv,
-                remote_trait_object::create_null_service(),
-            );
+        let (rto_context, module): (_, ServiceToImport<dyn FoundryModule>) =
+            RtoContext::with_initial_service_import(rto_config, transport_send, transport_recv);
+        let mut module: Box<dyn FoundryModule> = module.into_remote();
         module.initialize(init, exports);
 
         Ok(Self {
@@ -157,7 +155,7 @@ impl<E: ExecutionScheme> Linkable for ProcessSandbox<E> {
         // It MUST be unique anyway, for now.
         let random_name = fproc_sndbx::ipc::generate_random_name();
         Box::new(ProcessPort {
-            module_side_port: self.module.create_port(&random_name).import(),
+            module_side_port: self.module.create_port(&random_name).unwrap_import().into_remote(),
             ids: Vec::new(),
             slots: Vec::new(),
         })
@@ -188,7 +186,7 @@ impl Port for ProcessPort {
 }
 
 impl ProcessPort {
-    fn initialize(&mut self, rto_config: RtoConfig, ipc_arg: Vec<u8>, intra: bool) {
+    fn initialize(&mut self, rto_config: PartialRtoConfig, ipc_arg: Vec<u8>, intra: bool) {
         self.module_side_port.initialize(rto_config, ipc_arg, intra);
     }
 }
@@ -222,8 +220,8 @@ impl<E: ExecutionScheme> Linker for ProcessLinker<E> {
         let (ipc_arg_a, ipc_arg_b) = E::Ipc::arguments_for_both_ends();
 
         // TODO: get config from the module itself
-        let rto_config_a = RtoConfig::default_setup();
-        let rto_config_b = RtoConfig::default_setup();
+        let rto_config_a = PartialRtoConfig::from_rto_config(RtoConfig::default_setup());
+        let rto_config_b = PartialRtoConfig::from_rto_config(RtoConfig::default_setup());
 
         thread::scope(|s| {
             // two initialize()s must be called concurrently
