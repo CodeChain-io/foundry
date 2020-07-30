@@ -161,6 +161,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d5ca2cd0adc3f48f9e9ea5a6bbdf9ccc0bfade884847e484d452414c7ccffb3"
 
 [[package]]
+name = "bincode"
+version = "1.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f30d3a39baa26f9651f17b375061f3233dde33424a8b72b0dbe93a68a0bc896d"
+dependencies = [
+ "byteorder",
+ "serde",
+]
+
+[[package]]
 name = "bitflags"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -232,9 +242,9 @@ checksum = "e3b5ca7a04898ad4bcd41c90c5285445ff5b791899bb1b0abdd2a2aa791211d7"
 
 [[package]]
 name = "byteorder"
-version = "1.2.7"
+version = "1.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94f88df23a25417badc922ab0f5716cc1330e87f71ddd9203b3a3ccd9cedf75d"
+checksum = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
 
 [[package]]
 name = "bytes"
@@ -303,9 +313,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "2.31.2"
+version = "2.33.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f0f16b89cbb9ee36d87483dc939fe9f1e13c05898d56d7b230a0d4dff033a536"
+checksum = "bdfa80d47f954d53a35a64987ca1422f495b8d6483c0fe9f7117b36c2a792129"
 dependencies = [
  "ansi_term",
  "atty",
@@ -384,7 +394,7 @@ dependencies = [
 [[package]]
 name = "codechain-crypto"
 version = "0.2.0"
-source = "git+https://github.com/CodeChain-io/rust-codechain-crypto.git#82d3c1b30ea1f25f909fefde77217e3b9eb99d4a"
+source = "git+https://github.com/CodeChain-io/rust-codechain-crypto.git#565c1eebf3abc909ed297bee584dddb84784d838"
 dependencies = [
  "aes",
  "blake2",
@@ -1255,7 +1265,7 @@ dependencies = [
 [[package]]
 name = "foundry-module-rt"
 version = "0.1.1"
-source = "git+https://github.com/CodeChain-io/module-rt.git#7bbaabbfffbd9cdbb07753387131980c8be8201e"
+source = "git+https://github.com/CodeChain-io/module-rt.git#3e335b89674eed46b0ab9947b558e29cdb6f06f8"
 dependencies = [
  "crossbeam 0.7.3",
  "foundry-process-sandbox",
@@ -1264,12 +1274,13 @@ dependencies = [
  "remote-trait-object",
  "serde",
  "serde_cbor",
+ "threadpool",
 ]
 
 [[package]]
 name = "foundry-process-sandbox"
 version = "0.1.0"
-source = "git+https://github.com/CodeChain-io/foundry-sandbox#2b9df6f106beb55c0f9e5cd8a80bbdf3e9fd4537"
+source = "git+https://github.com/CodeChain-io/foundry-sandbox.git#8653e55a4ce4d71a72a3f46b3b735d953eca6533"
 dependencies = [
  "codechain-crypto",
  "crossbeam 0.7.3",
@@ -2249,9 +2260,9 @@ checksum = "630de1ef5cc79d0cdd78b7e33b81f083cbfe90de0f4b2b2f07f905867c70e9fe"
 
 [[package]]
 name = "num_cpus"
-version = "1.11.1"
+version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76dac5ed2a876980778b8b85f75a71b6cbf0db0b1232ee12f826bccb00d09d72"
+checksum = "05499f3756671c15885fee9034446956fff3f243d6077b91e5767df161f766b3"
 dependencies = [
  "hermit-abi",
  "libc",
@@ -2843,10 +2854,11 @@ checksum = "11a7e20d1cce64ef2fed88b66d347f88bd9babb82845b2b858f3edbf59a4f716"
 
 [[package]]
 name = "remote-trait-object"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7e5ca5b6bbdb99f4d537e7afdb2b8e545d98cec8adb884b10dffa2b763d4878"
+checksum = "78586526a5a9e0ceecd77023d1472d883f347fcaeda57d24264c94a1eb47b57d"
 dependencies = [
+ "bincode",
  "crossbeam 0.7.3",
  "linkme",
  "log 0.4.8",
@@ -2854,13 +2866,14 @@ dependencies = [
  "remote-trait-object-macro",
  "serde",
  "serde_cbor",
+ "threadpool",
 ]
 
 [[package]]
 name = "remote-trait-object-macro"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d80767f7f0c0a29bed421934d66d75631b84291e9603f38407da103f91aaa2a1"
+checksum = "db4ea99288b534de7a066299c56bc0394433bf392fa5e0c2b2c5b0d954a97239"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2 1.0.19",
@@ -3373,9 +3386,9 @@ checksum = "b639411d0b9c738748b5397d5ceba08e648f4f1992231aa859af1a017f31f60b"
 
 [[package]]
 name = "strsim"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb4f380125926a99e52bc279241539c018323fab05ad6368b56f93d9369ff550"
+checksum = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"
 
 [[package]]
 name = "subtle"
@@ -3488,9 +3501,9 @@ dependencies = [
 
 [[package]]
 name = "textwrap"
-version = "0.9.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0b59b6b4b44d867f1370ef1bd91bfb262bf07bf0ae65c202ea2fbc16153b693"
+checksum = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
 dependencies = [
  "unicode-width",
 ]
@@ -3522,6 +3535,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c6b53e329000edc2b34dbe8545fd20e55a333362d0a321909685a19bd28c3f1b"
 dependencies = [
  "lazy_static 1.4.0",
+]
+
+[[package]]
+name = "threadpool"
+version = "1.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d050e60b33d41c19108b32cea32164033a9013fe3b46cbd4457559bfbf77afaa"
+dependencies = [
+ "num_cpus",
 ]
 
 [[package]]
