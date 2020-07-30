@@ -1,7 +1,19 @@
-Foundry [![Build Status](https://travis-ci.com/CodeChain-io/foundry.svg?branch=master)](https://travis-ci.com/CodeChain-io/foundry) [![Gitter: Foundry](https://badges.gitter.im/CodeChain-io/foundry.svg)](https://gitter.im/CodeChain-io/foundry?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+Foundry
+[![Build Status](https://travis-ci.com/CodeChain-io/foundry.svg?branch=master)](https://travis-ci.com/CodeChain-io/foundry)
+[![chat](https://img.shields.io/discord/569610676205781012.svg?logo=discord)](https://discord.gg/xhpdXm7)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ==============
 
-Foundry is a programmable open source blockchain engine.
+CodeChain Foundry is a blockchain engine based on a composable module system, called _Mold_.
+Users can define their own modules, and can construct an arbitrary blockchain application with them.
+The reason we provide such a composable, and user-customizable module system is
+because we want to make only application logic as user's responsibility,
+while the _host_ manages common things such as consensus, networking, mempool or DB, for all kinds of applications.
+
+The actual execution of the transaction, which is essentially a transition of state from the previous one, will be requested to the _coordinator_ from the host.
+The coordinator manages multiple modules for the application, and handles such requests from the host asking the modules.
+Transactions will be delivered to the responsible module, and that module will handle the transaction in the way it is implemented in,
+which might also involve communications with other modules.
 
 ## Build
 
@@ -109,4 +121,4 @@ cargo +nightly-2020-05-05 clippy --all --all-targets
 Developers are strongly encouraged to write unit tests for new code, and to submit new unit tests for old code. Unit tests can be compiled and run with: `cargo test --all`. For more details, please reference [Unit Tests](https://github.com/CodeChain-io/codechain/wiki/Unit-Tests).
 
 ## License
-CodeChain is licensed under the AGPL License - see the [LICENSE](https://github.com/CodeChain-io/foundry/blob/master/LICENSE) file for details
+CodeChain is licensed under the GPL License - see the [LICENSE](https://github.com/CodeChain-io/foundry/blob/master/LICENSE) file for details

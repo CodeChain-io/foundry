@@ -4,7 +4,7 @@
   "description": "CodeChain end-to-end test",
   "main": "index.js",
   "author": "CodeChain Team <hi@codechain.io>",
-  "license": "AGPL-3.0",
+  "license": "GPL-3.0",
   "private": true,
   "engines": {
     "node": ">=12",
