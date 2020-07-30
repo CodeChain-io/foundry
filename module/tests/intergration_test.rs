@@ -23,7 +23,8 @@ use cmodule::sandbox::*;
 use foundry_module_rt::UserModule;
 use fproc_sndbx::execution::executor;
 use fproc_sndbx::ipc::generate_random_name;
-use remote_trait_object::{service, Context as RtoContext, Dispatch, HandleToExchange, Service, ToDispatcher};
+use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange, Skeleton};
+use remote_trait_object::{service, Context as RtoContext, Service};
 use std::sync::Arc;
 
 #[service]
@@ -64,14 +65,13 @@ impl UserModule for ModuleA {
         }
     }
 
-    fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Arc<dyn Dispatch> {
+    fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Skeleton {
         assert_eq!(ctor_name, "Constructor");
         let value: i32 = serde_cbor::from_slice(ctor_arg).unwrap();
-        (Box::new(SimpleHello {
+        Skeleton::new(Box::new(SimpleHello {
             value,
             greeting: self.my_greeting.clone(),
         }) as Box<dyn Hello>)
-            .to_dispatcher()
     }
 
     fn import_service(
@@ -81,7 +81,7 @@ impl UserModule for ModuleA {
         name: &str,
         handle: HandleToExchange,
     ) {
-        self.hello_list.push((remote_trait_object::import_service(rto_context, handle), name.parse().unwrap()))
+        self.hello_list.push((import_service_from_handle(rto_context, handle), name.parse().unwrap()))
     }
 
     fn debug(&mut self, _arg: &[u8]) -> Vec<u8> {

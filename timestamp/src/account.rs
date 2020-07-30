@@ -19,9 +19,8 @@ use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
 use foundry_module_rt::UserModule;
 use parking_lot::RwLock;
-use remote_trait_object::{
-    import_service, service, Context as RtoContext, Dispatch, HandleToExchange, Service, ServiceRef, ToDispatcher,
-};
+use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange, Skeleton};
+use remote_trait_object::{service, Context as RtoContext, Service, ServiceRef};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -114,7 +113,7 @@ impl AccountManager for Context {
 
 impl Stateful for Context {
     fn set_storage(&mut self, storage: ServiceRef<dyn SubStorageAccess>) {
-        self.storage.replace(storage.import());
+        self.storage.replace(storage.unwrap_import().into_remote());
     }
 }
 
@@ -127,17 +126,17 @@ impl UserModule for Module {
         }
     }
 
-    fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Arc<dyn Dispatch> {
+    fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Skeleton {
         match ctor_name {
             "account_manager" => {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
-                (Arc::clone(&self.ctx) as Arc<RwLock<dyn AccountManager>>).to_dispatcher()
+                Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn AccountManager>>)
             }
             "stateful" => {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
-                (Arc::clone(&self.ctx) as Arc<RwLock<dyn Stateful>>).to_dispatcher()
+                Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn Stateful>>)
             }
             _ => panic!("Unsupported ctor_name in prepare_service_to_export() : {}", ctor_name),
         }
@@ -152,7 +151,7 @@ impl UserModule for Module {
     ) {
         match name {
             "sub_storage_access" => {
-                self.ctx.write().storage.replace(import_service(rto_context, handle));
+                self.ctx.write().storage.replace(import_service_from_handle(rto_context, handle));
             }
             _ => panic!("Invalid name in import_service()"),
         }
