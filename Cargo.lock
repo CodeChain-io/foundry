@@ -734,6 +734,15 @@ dependencies = [
 [[package]]
 name = "codechain-voting"
 version = "0.1.0"
+dependencies = [
+ "codechain-crypto",
+ "coordinator",
+ "foundry-module-rt",
+ "parking_lot 0.11.0",
+ "remote-trait-object",
+ "serde",
+ "serde_cbor",
+]
 
 [[package]]
 name = "codechain_informer_courier"
