@@ -732,6 +732,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "codechain-voting"
+version = "0.1.0"
+
+[[package]]
 name = "codechain_informer_courier"
 version = "0.1.0"
 dependencies = [
@@ -1283,6 +1287,7 @@ dependencies = [
  "codechain-timer",
  "codechain-timestamp",
  "codechain-types",
+ "codechain-voting",
  "coordinator",
  "crossbeam-channel 0.3.9",
  "ctrlc",
