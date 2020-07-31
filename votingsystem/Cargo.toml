@@ -1,0 +1,21 @@
+[package]
+name = "codechain-votingsystem"
+version = "0.1.0"
+authors = ["CodeChain Team <hi@codechain.io>"]
+edition = "2018"
+
+[dependencies]
+ctypes = { package = "codechain-types", path = "../types" }
+coordinator = { path = "../coordinator" }
+ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
+ckey = {package = "codechain-key", path = "../key"}
+foundry-module-rt = { version = "0.1.1", git = "https://github.com/CodeChain-io/module-rt.git" }
+linkme = "0.2.1"
+parking_lot = "0.11.0"
+primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
+rand = "0.6.1"
+remote-trait-object = { version = "0.3.0" }
+rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
+serde = { version = "1.0.111", features = ["derive"] }
+serde_cbor = "0.11.1"
+staking = { path = "../basic_module/staking" }
