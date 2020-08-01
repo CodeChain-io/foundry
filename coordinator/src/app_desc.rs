@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use std::borrow::Borrow;
 use std::collections::{BTreeMap, HashMap};
 use std::{fmt, fmt::Display, fmt::Formatter};
 
@@ -30,8 +31,19 @@ use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 
-pub mod params;
+pub(self) mod params;
+pub(self) mod validator;
 
+macro_rules! module_delim {
+    () => {
+        "/"
+    };
+}
+macro_rules! namespace_delim {
+    () => {
+        "."
+    };
+}
 macro_rules! first_word {
     () => {
         r"[A-Za-z][a-z0-9]*|[A-Z][A-Z0-9]*"
@@ -47,31 +59,95 @@ macro_rules! ident {
         concat!(first_word!(), "(-", trailing_word!(), ")*")
     };
 }
-macro_rules! name {
+macro_rules! simple_name {
     () => {
         concat!("^", ident!(), "$")
     };
 }
-macro_rules! qname {
+macro_rules! local_name {
     () => {
-        concat!("^", ident!(), "(.", ident!(), ")+$")
+        concat!("^", ident!(), "(", namespace_delim!(), ident!(), ")*$")
+    };
+}
+macro_rules! global_name {
+    () => {
+        concat!("^", ident!(), module_delim!(), ident!(), "(", namespace_delim!(), ident!(), ")*$")
+    };
+}
+macro_rules! impl_name {
+    ($name_type:ident, $pattern:ident, $expecting:tt) => {
+        #[derive(Hash, Eq, Ord, PartialOrd, PartialEq)]
+        pub struct $name_type(String);
+
+        impl Deref for $name_type {
+            type Target = String;
+
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+
+        impl Borrow<str> for $name_type {
+            fn borrow(&self) -> &str {
+                &self.0
+            }
+        }
+
+        impl Debug for $name_type {
+            fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+                Debug::fmt(&self.0, f)
+            }
+        }
+
+        impl Display for $name_type {
+            fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+                Display::fmt(&self.0, f)
+            }
+        }
+
+        impl<'de> Deserialize<'de> for $name_type {
+            fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+                deserializer
+                    .deserialize_str(NameVisitor {
+                        expecting: $expecting,
+                        pattern: &*$pattern,
+                    })
+                    .map($name_type)
+            }
+        }
     };
 }
 
-static NAME_RE: Lazy<Regex> = Lazy::new(|| Regex::new(name!()).unwrap());
-static QNAME_RE: Lazy<Regex> = Lazy::new(|| Regex::new(qname!()).unwrap());
+pub const MODULE_DELIMITER: &str = module_delim!();
+pub const NAMESPACE_DELIMITER: &str = namespace_delim!();
+
+static SIMPLE_NAME_RE: Lazy<Regex> = Lazy::new(|| Regex::new(simple_name!()).unwrap());
+static LOCAL_NAME_RE: Lazy<Regex> = Lazy::new(|| Regex::new(local_name!()).unwrap());
+static GLOBAL_NAME_RE: Lazy<Regex> = Lazy::new(|| Regex::new(global_name!()).unwrap());
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct AppDesc {
     // keyed with Name rather than module hash to allow for multiple instances of single module
-    pub modules: HashMap<Name, ModuleSetup>,
+    pub modules: HashMap<SimpleName, ModuleSetup>,
+    /// The ID of the default `Sandboxer` to be used when no `Sandboxer` is specified for modules.
+    #[serde(default)]
+    pub default_sandboxer: String,
     #[serde(default)]
     pub host: HostSetup,
     #[serde(default)]
-    pub transactions: Namespaced<TxSetup>,
+    pub transactions: Namespaced<SimpleName>,
     #[serde(default)]
     pub param_defaults: Namespaced<String>,
+}
+
+impl AppDesc {
+    pub fn from_str(s: &str) -> anyhow::Result<AppDesc> {
+        let app_desc: AppDesc = serde_yaml::from_str(s)?;
+        app_desc.validate()?;
+
+        Ok(app_desc)
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -80,13 +156,20 @@ pub struct ModuleSetup {
     #[serde(deserialize_with = "deserialize_h256")]
     pub hash: H256,
     #[serde(default)]
+    pub sandboxer: String,
+    #[serde(default)]
     pub exports: Namespaced<Constructor>,
     #[serde(default)]
-    pub imports: Namespaced<QName>,
+    pub imports: Namespaced<GlobalName>,
+    /// List of export names expected to hold the required services.
+    /// Then the module will receive imports for `@tx/<transaction-type>/<export-name>`s.
+    /// It is mainly intended for modules providing `TxSorter` service.
     #[serde(default)]
-    pub init_config: Namespaced<Value>,
+    pub transactions: Vec<LocalName>,
     #[serde(default)]
-    pub genesis_config: Namespaced<Value>,
+    pub init_config: Value,
+    #[serde(default)]
+    pub genesis_config: Value,
     #[serde(default)]
     pub tags: HashMap<String, Value>,
 }
@@ -96,17 +179,11 @@ pub struct HostSetup {
     #[serde(default)]
     pub exports: Namespaced<Constructor>,
     #[serde(default)]
-    pub imports: Namespaced<QName>,
+    pub imports: Namespaced<GlobalName>,
     #[serde(default)]
     pub init_config: Namespaced<Value>,
     #[serde(default)]
     pub genesis_config: Namespaced<Value>,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct TxSetup {
-    pub owner: Name,
-    pub services: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -115,95 +192,42 @@ pub struct Constructor {
     pub args: Value,
 }
 
-#[derive(Hash, Eq, Ord, PartialOrd, PartialEq)]
-pub struct Name(String);
-
-impl Deref for Name {
-    type Target = String;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+struct NameVisitor {
+    expecting: &'static str,
+    pattern: &'static Regex,
 }
 
-impl Debug for Name {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        Debug::fmt(&self.0, f)
+impl<'de> Visitor<'de> for NameVisitor {
+    type Value = String;
+
+    fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+        write!(formatter, "{}", self.expecting)
     }
-}
 
-impl Display for Name {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        Display::fmt(&self.0, f)
-    }
-}
-
-impl<'de> Deserialize<'de> for Name {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        struct NameVisitor;
-
-        impl<'de> Visitor<'de> for NameVisitor {
-            type Value = Name;
-
-            fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
-                write!(formatter, "a kebab-cased identifier")
-            }
-
-            fn visit_str<E: Error>(self, v: &str) -> Result<Self::Value, E> {
-                if !NAME_RE.is_match(v) {
-                    Err(E::invalid_value(Unexpected::Str(v), &"a kebab-cased identifier"))
-                } else {
-                    Ok(Name(v.to_owned()))
-                }
-            }
+    fn visit_str<E: Error>(self, v: &str) -> Result<Self::Value, E> {
+        if !self.pattern.is_match(v) {
+            Err(E::invalid_value(Unexpected::Str(v), &self.expecting))
+        } else {
+            Ok(v.to_owned())
         }
-        deserializer.deserialize_str(NameVisitor)
     }
 }
 
-#[derive(Hash, Eq, Ord, PartialOrd, PartialEq)]
-pub struct QName(String);
+impl_name!(SimpleName, SIMPLE_NAME_RE, "a kebab-cased identifier");
 
-impl Deref for QName {
-    type Target = String;
+impl_name!(LocalName, LOCAL_NAME_RE, "a name consisting of identifiers separated by dots");
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl_name!(GlobalName, GLOBAL_NAME_RE, "a namespaced name qualified with module name");
+
+impl GlobalName {
+    pub fn module(&self) -> &str {
+        let delimiter_index = self.0.find(MODULE_DELIMITER).expect("a module name followed by a module delimiter");
+        &self.0[0..delimiter_index]
     }
-}
 
-impl Debug for QName {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        Debug::fmt(&self.0, f)
-    }
-}
-
-impl Display for QName {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        Display::fmt(&self.0, f)
-    }
-}
-
-impl<'de> Deserialize<'de> for QName {
-    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        struct QNameVisitor;
-
-        impl<'de> Visitor<'de> for QNameVisitor {
-            type Value = QName;
-
-            fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
-                write!(formatter, "a kebab-cased dot delimited identifiers")
-            }
-
-            fn visit_str<E: Error>(self, v: &str) -> Result<Self::Value, E> {
-                if !QNAME_RE.is_match(v) {
-                    Err(E::invalid_value(Unexpected::Str(v), &"a kebab-cased dot delimited identifiers"))
-                } else {
-                    Ok(QName(v.to_owned()))
-                }
-            }
-        }
-        deserializer.deserialize_str(QNameVisitor)
+    pub fn name(&self) -> &str {
+        let delimiter_index = self.0.find(MODULE_DELIMITER).expect("a module name followed by a module delimiter");
+        &self.0[delimiter_index + 1..]
     }
 }
 
@@ -290,7 +314,7 @@ impl<T: DeserializeOwned> DerefMut for Namespaced<T> {
     }
 }
 
-const NAMESPACE_PREFIX: char = '=';
+const NAMESPACE_PREFIX: char = '\\';
 
 impl<T: DeserializeOwned> From<Namespaced<T>> for BTreeMap<String, T> {
     fn from(from: Namespaced<T>) -> Self {
@@ -315,7 +339,7 @@ impl<'a, 'de, T: DeserializeOwned> Visitor<'de> for NamespacedMapVisitor<'a, T> 
             if prefix.is_empty() {
                 key.to_owned()
             } else {
-                String::with_capacity(prefix.len() + key.len() + 1) + prefix + "." + key
+                String::with_capacity(prefix.len() + key.len() + 1) + prefix + NAMESPACE_DELIMITER + key
             }
         }
 
@@ -325,7 +349,7 @@ impl<'a, 'de, T: DeserializeOwned> Visitor<'de> for NamespacedMapVisitor<'a, T> 
 
             if key.starts_with(NAMESPACE_PREFIX) {
                 let key_part = &key[1..];
-                if !QNAME_RE.is_match(key_part) {
+                if !LOCAL_NAME_RE.is_match(key_part) {
                     return Err(A::Error::invalid_value(Unexpected::Str(&key), &"an @-prefixed qualified name"))
                 }
                 let prefix = to_qualified(&self.prefix, key_part);
@@ -334,7 +358,7 @@ impl<'a, 'de, T: DeserializeOwned> Visitor<'de> for NamespacedMapVisitor<'a, T> 
                     map: self.map,
                 })?;
             } else {
-                if !QNAME_RE.is_match(&key) {
+                if !LOCAL_NAME_RE.is_match(&key) {
                     return Err(A::Error::invalid_value(Unexpected::Str(&key), &"a qualified name"))
                 }
                 let qualified_key = to_qualified(&self.prefix, &key);
@@ -377,21 +401,20 @@ mod tests {
             modules:
                 awesome-module:
                     hash: 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+                    transactions:
+                        - has-seq
                     init-config:
                         test: 1
-                        test:
+                        test1:
                             key1: 1
                             key2: sdfsdaf
             host:
                 imports:
-                    a: a.a
-                    =namespace:
+                    a: awesome-module/a.a
+                    \namespace:
                         b.b: asdfsdaf-asdf
             transactions:
-                great-tx:
-                    owner: awesome-module
-                    services:
-                        - tx-executor
+                great-tx: awesome-module
             param-defaults:
                 num-threads: 10
         "#,
