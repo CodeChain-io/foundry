@@ -15,7 +15,17 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 extern crate foundry_process_sandbox as fproc_sndbx;
+use linkme::distributed_slice;
 
 pub mod impls;
 pub mod link;
 pub mod sandbox;
+
+#[distributed_slice]
+pub static MODULE_INITS: [fn()] = [..];
+
+pub fn init_modules() {
+    for init in MODULE_INITS {
+        init();
+    }
+}
