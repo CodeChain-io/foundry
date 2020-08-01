@@ -9,11 +9,14 @@ ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io
 ckey = { package = "codechain-key", path = "../key" }
 cmodule = { package = "codechain-module", path = "../module" }
 ctypes = { package = "codechain-types", path = "../types" }
+foundry-process-sandbox = { git = "https://github.com/CodeChain-io/foundry-sandbox.git" }
+foundry-module-rt = { version = "0.1.1", git = "https://github.com/CodeChain-io/module-rt.git" }
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
 rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
 parking_lot = "0.11.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
+erased-serde = "0.3"
 rustc-hex = "2"
 regex = "1"
 once_cell = "1"
