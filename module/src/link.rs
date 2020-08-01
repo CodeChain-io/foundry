@@ -16,10 +16,11 @@
 
 mod base;
 
+use crate::sandbox::Sandbox;
 use intertrait::CastFromSync;
 use linkme::distributed_slice;
 use once_cell::sync;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use thiserror::Error;
 
@@ -36,6 +37,20 @@ pub fn linker(id: &str) -> Option<Arc<dyn Linker>> {
     static MAP: sync::Lazy<HashMap<&'static str, Arc<dyn Linker>>> =
         sync::Lazy::new(|| LINKERS.iter().map(|new| new()).collect());
     MAP.get(id).map(Arc::clone)
+}
+
+/// Picks the best `Linker` for the given pairs of `Linkable`s.
+pub fn best_linker(a: &dyn Sandbox, b: &dyn Sandbox) -> Option<Arc<dyn Linker>> {
+    // Assumes that a linker is always better than another regardless of Linkables involved.
+    // So picks the first one in the list of linkers for a Linkable in common with the other
+    // Linkable regardless of the linker's position in the list of supported linkers
+    // for the latter.
+    let linkers_for_a = a.supported_linkers();
+    let linkers_for_b = b.supported_linkers();
+
+    let linker_set: HashSet<_> = linkers_for_b.iter().cloned().collect();
+
+    linkers_for_a.iter().find(|id| linker_set.contains(*id)).iter().flat_map(|id| linker(**id)).last()
 }
 
 /// A linker is responsible for linking to `Port`s if both of them support
