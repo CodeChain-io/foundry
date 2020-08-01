@@ -15,44 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::db as dblib;
-use crate::error::Error;
-use crate::miner::mem_pool_types::MemPoolItem;
-use coordinator::{Transaction, TxOrigin};
-use ctypes::BlockNumber;
+use coordinator::TransactionWithMetadata;
 use kvdb::{DBTransaction, KeyValueDB};
 use primitives::H256;
 use rlp::Encodable;
 use std::collections::HashMap;
-use std::convert::{TryFrom, TryInto};
-
-pub type PoolingInstant = BlockNumber;
-
-#[derive(Clone, Eq, PartialEq, Debug, RlpEncodable, RlpDecodable)]
-pub struct MemPoolItemProjection {
-    /// Transaction.
-    pub tx: Transaction,
-    /// Transaction origin.
-    pub origin: TxOrigin,
-    /// Insertion time
-    pub inserted_block_number: PoolingInstant,
-    /// Insertion timstamp
-    pub inserted_timestamp: u64,
-    /// ID assigned upon insertion, should be unique.
-    pub insertion_id: u64,
-}
-
-impl TryFrom<MemPoolItemProjection> for MemPoolItem {
-    type Error = Error;
-    fn try_from(mem_pool: MemPoolItemProjection) -> Result<Self, Error> {
-        Ok(MemPoolItem::new(
-            mem_pool.tx,
-            mem_pool.origin,
-            mem_pool.inserted_block_number,
-            mem_pool.inserted_timestamp,
-            mem_pool.insertion_id,
-        ))
-    }
-}
 
 const PREFIX_SIZE: usize = 5;
 const PREFIX_ITEM: &[u8; PREFIX_SIZE] = b"item_";
@@ -61,7 +28,7 @@ pub fn backup_batch_with_capacity(length: usize) -> DBTransaction {
     DBTransaction::with_capacity(length)
 }
 
-pub fn backup_item(batch: &mut DBTransaction, key: H256, item: &MemPoolItem) {
+pub fn backup_item(batch: &mut DBTransaction, key: H256, item: &TransactionWithMetadata) {
     let mut db_key = PREFIX_ITEM.to_vec();
     db_key.extend_from_slice(key.as_ref());
     batch.put(dblib::COL_MEMPOOL, db_key.as_ref(), item.rlp_bytes().as_ref());
@@ -73,15 +40,14 @@ pub fn remove_item(batch: &mut DBTransaction, key: &H256) {
     batch.delete(dblib::COL_MEMPOOL, db_key.as_ref());
 }
 
-pub fn recover_to_data(db: &dyn KeyValueDB) -> HashMap<H256, MemPoolItem> {
+pub fn recover_to_data(db: &dyn KeyValueDB) -> HashMap<H256, TransactionWithMetadata> {
     let mut by_hash = HashMap::new();
 
     for (key, value) in db.iter(dblib::COL_MEMPOOL) {
         let bytes = (*value).to_vec();
         let rlp = rlp::Rlp::new(&bytes);
         let decoded_key = (key.as_ref()[PREFIX_SIZE..]).into();
-        let mem_pool_projection: MemPoolItemProjection = rlp.as_val().unwrap();
-        let decoded_item = mem_pool_projection.try_into().expect("DB corruption detected");
+        let decoded_item = rlp.as_val().unwrap();
         by_hash.insert(decoded_key, decoded_item);
     }
 
