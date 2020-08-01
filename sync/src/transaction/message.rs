@@ -65,7 +65,7 @@ impl Decodable for Message {
 mod tests {
     use ccore::UnverifiedTransaction;
     use ckey::{Ed25519Public as Public, Signature};
-    use ctypes::transaction::{Action, Transaction};
+    use ctypes::transaction::Transaction;
 
     use super::Message;
 
@@ -86,10 +86,6 @@ mod tests {
     fn transactions_message_rlp_with_tx() {
         let tx = UnverifiedTransaction::new(
             Transaction {
-                action: Action::Pay {
-                    receiver: Public::random(),
-                    quantity: 30,
-                },
                 network_id: "tc".into(),
             },
             Signature::default(),

@@ -118,7 +118,7 @@ mod tests {
     use super::SyncHeader;
     use ccore::UnverifiedTransaction;
     use ckey::{Ed25519Public as Public, Signature};
-    use ctypes::transaction::{Action, Transaction};
+    use ctypes::transaction::Transaction;
     use ctypes::Header;
     use rlp::{Encodable, Rlp};
 
@@ -152,10 +152,6 @@ mod tests {
 
         let tx = UnverifiedTransaction::new(
             Transaction {
-                action: Action::Pay {
-                    receiver: Public::random(),
-                    quantity: 64,
-                },
                 network_id: "tc".into(),
             },
             Signature::default(),
