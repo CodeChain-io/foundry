@@ -26,17 +26,15 @@ use crate::error::Error;
 use crate::scheme::Scheme;
 use crate::transaction::{PendingVerifiedTransactions, UnverifiedTransaction, VerifiedTransaction};
 use crate::types::TransactionId;
-use ckey::{Ed25519Private as Private, Ed25519Public as Public};
+use ckey::Ed25519Public as Public;
 use coordinator::engine::{BlockExecutor, TxFilter};
 use coordinator::TxOrigin;
 use cstate::TopLevelState;
 use ctypes::errors::HistoryError;
-use ctypes::transaction::Transaction;
 use ctypes::{BlockHash, BlockId};
 use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
-use rlp::Encodable;
 use std::borrow::Borrow;
 use std::convert::TryInto;
 use std::ops::Range;
@@ -253,7 +251,7 @@ impl Miner {
         parent_block_id: BlockId,
         chain: &C,
     ) -> Result<Option<ClosedBlock>, Error> {
-        let (transactions, mut open_block, block_number, block_tx_signer) = {
+        let (transactions, mut open_block, block_number) = {
             ctrace!(MINER, "prepare_block: No existing work - making new block");
             let params = self.params.get();
             let open_block = chain.prepare_open_block(parent_block_id, params.author, params.extra_data);
@@ -269,29 +267,9 @@ impl Miner {
             // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock
             let mem_pool = self.mem_pool.read();
 
-            let mut transactions = Vec::default();
-            let block_tx_signer = if let Some(action) = self.engine.open_block_action(open_block.block())? {
-                ctrace!(MINER, "Enqueue a transaction to open block");
-                // TODO: This generates a new random account to make the transaction.
-                // It should use the block signer.
-                let tx_signer = Private::random();
-                let tx = Transaction {
-                    network_id: chain.network_id(),
-                    action,
-                };
-                let verified_tx = VerifiedTransaction::new_with_sign(tx, &tx_signer);
-                transactions.push(verified_tx);
-                Some(tx_signer)
-            } else {
-                None
-            };
-            let open_transaction_size = transactions.iter().map(|tx| tx.rlp_bytes().len()).sum();
-            assert!(max_body_size > open_transaction_size);
-            let mut pending_transactions =
-                mem_pool.pending_transactions(max_body_size - open_transaction_size, DEFAULT_RANGE).transactions;
-            transactions.append(&mut pending_transactions);
+            let transactions = mem_pool.pending_transactions(max_body_size, DEFAULT_RANGE).transactions;
 
-            (transactions, open_block, block_number, block_tx_signer)
+            (transactions, open_block, block_number)
         };
 
         let parent_header = {
@@ -340,28 +318,7 @@ impl Miner {
         }
         cdebug!(MINER, "Pushed {}/{} transactions", tx_count, tx_total);
 
-        let actions = self.engine.close_block_actions(open_block.block()).map_err(|e| {
-            warn!("Encountered error on closing the block: {}", e);
-            e
-        })?;
-        if !actions.is_empty() {
-            ctrace!(MINER, "Enqueue {} transactions to close block", actions.len());
-            // TODO: This generates a new random account to make the transaction.
-            // It should use the block signer.
-            let tx_signer = block_tx_signer.unwrap_or_else(Private::random);
-            for action in actions {
-                let tx = Transaction {
-                    network_id: chain.network_id(),
-                    action,
-                };
-                let tx = VerifiedTransaction::new_with_sign(tx, &tx_signer);
-                // TODO: The current code can insert more transactions than size limit.
-                // It should be fixed to pre-calculate the maximum size of the close transactions and prevent the size overflow.
-                open_block.push_transaction(tx)?;
-            }
-        }
         let block = open_block.close()?;
-
         {
             let mut mem_pool = self.mem_pool.write();
             mem_pool.remove(
@@ -592,7 +549,7 @@ pub mod test {
     use ckey::{Ed25519Private as Private, Signature};
     use coordinator::test_coordinator::TestCoordinator;
     use ctimer::TimerLoop;
-    use ctypes::transaction::{Action, Transaction};
+    use ctypes::transaction::Transaction;
 
     use super::super::super::client::ClientConfig;
     use super::super::super::service::ClientIoMessage;
@@ -615,10 +572,6 @@ pub mod test {
         let transaction1: UnverifiedTransaction = VerifiedTransaction::new_with_sign(
             Transaction {
                 network_id: "tc".into(),
-                action: Action::Pay {
-                    receiver: Public::random(),
-                    quantity: 100,
-                },
             },
             &private,
         )
@@ -628,10 +581,6 @@ pub mod test {
         let transaction2 = UnverifiedTransaction::new(
             Transaction {
                 network_id: "tc".into(),
-                action: Action::Pay {
-                    receiver: Public::random(),
-                    quantity: 100,
-                },
             },
             Signature::random(),
             Public::random(),

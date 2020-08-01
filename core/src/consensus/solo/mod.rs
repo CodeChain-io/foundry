@@ -19,9 +19,7 @@ use crate::block::ExecutedBlock;
 use crate::client::snapshot_notify::NotifySender;
 use crate::client::ConsensusClient;
 use crate::consensus::{EngineError, EngineType};
-use crate::error::Error;
 use ckey::Ed25519Public as Public;
-use ctypes::transaction::Action;
 use ctypes::{BlockHash, Header};
 use parking_lot::RwLock;
 use std::sync::{Arc, Weak};
@@ -53,10 +51,6 @@ impl ConsensusEngine for Solo {
 
     fn generate_seal(&self, _block: Option<&ExecutedBlock>, _parent: &Header) -> Seal {
         Seal::Solo
-    }
-
-    fn close_block_actions(&self, _block: &ExecutedBlock) -> Result<Vec<Action>, Error> {
-        Ok(vec![])
     }
 
     fn register_client(&self, client: Weak<dyn ConsensusClient>) {

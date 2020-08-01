@@ -14,13 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod action;
 mod block;
 mod transaction;
 mod unsigned_transaction;
 mod work;
 
-pub use self::action::Action;
 pub use self::block::Block;
 pub use self::block::BlockNumberAndHash;
 pub use self::transaction::{PendingTransactions, Transaction};

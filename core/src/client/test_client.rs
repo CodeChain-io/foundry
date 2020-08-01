@@ -54,7 +54,7 @@ use coordinator::types::Event;
 use cstate::tests::helpers::empty_top_state_with_metadata;
 use cstate::{NextValidators, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
-use ctypes::transaction::{Action, Transaction, Validator};
+use ctypes::transaction::{Transaction, Validator};
 use ctypes::Header;
 use ctypes::{
     BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header as BlockHeader, SyncHeader, TxHash,
@@ -210,10 +210,6 @@ impl TestBlockChainClient {
             self.seqs.write().insert(*keypair.public(), 0);
             let tx = Transaction {
                 network_id: NetworkId::default(),
-                action: Action::Pay {
-                    receiver: Public::random(),
-                    quantity: 0,
-                },
             };
             let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
             transactions.push(signed);
@@ -282,10 +278,6 @@ impl TestBlockChainClient {
         let keypair: KeyPair = Random.generate().unwrap();
         let tx = Transaction {
             network_id: NetworkId::default(),
-            action: Action::Pay {
-                receiver: Public::random(),
-                quantity: 0,
-            },
         };
         let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
         self.set_balance(signed.signer_public(), 10_000_000_000_000_000_000);

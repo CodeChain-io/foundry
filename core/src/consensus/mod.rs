@@ -40,7 +40,6 @@ use crate::views::HeaderView;
 use crate::Client;
 use ckey::{Ed25519Public as Public, Signature};
 use cnetwork::NetworkService;
-use ctypes::transaction::Action;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
 use ctypes::{BlockHash, CompactValidatorSet, Header, SyncHeader};
 use primitives::Bytes;
@@ -177,16 +176,6 @@ pub trait ConsensusEngine: Sync + Send {
 
     /// Called when the step is not changed in time
     fn on_timeout(&self, _token: usize) {}
-
-    /// Block transformation functions, before the transactions.
-    fn open_block_action(&self, _block: &ExecutedBlock) -> Result<Option<Action>, Error> {
-        Ok(None)
-    }
-
-    /// Block transformation functions, after the transactions.
-    fn close_block_actions(&self, _block: &ExecutedBlock) -> Result<Vec<Action>, Error> {
-        Ok(vec![])
-    }
 
     /// Add Client which can be used for sealing, potentially querying the state and sending messages.
     fn register_client(&self, _client: Weak<dyn ConsensusClient>) {}

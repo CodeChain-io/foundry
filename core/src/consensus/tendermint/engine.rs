@@ -30,8 +30,7 @@ use crate::views::HeaderView;
 use ckey::{verify, Ed25519Public as Public};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::{CurrentValidators, NextValidators, TopStateView};
-use ctypes::transaction::Action;
+use cstate::CurrentValidators;
 use ctypes::{util::unexpected::OutOfBounds, BlockHash, BlockId, CompactValidatorSet, Header, SyncHeader};
 use std::iter::Iterator;
 use std::sync::atomic::Ordering as AtomicOrdering;
@@ -167,40 +166,6 @@ impl ConsensusEngine for Tendermint {
     /// Equivalent to a timeout: to be used for tests.
     fn on_timeout(&self, token: usize) {
         self.inner.send(worker::Event::OnTimeout(token)).unwrap();
-    }
-
-    /// Block transformation functions, before the transactions.
-    fn open_block_action(&self, block: &ExecutedBlock) -> Result<Option<Action>, Error> {
-        Ok(Some(Action::UpdateValidators {
-            validators: NextValidators::load_from_state(&*block.state())?.into(),
-        }))
-    }
-
-    fn close_block_actions(&self, block: &ExecutedBlock) -> Result<Vec<Action>, Error> {
-        let metadata = block.state().metadata()?.expect("Metadata must exist");
-
-        let next_validators = NextValidators::update_weight(&*block.state(), block.header().author())?;
-
-        let current_term = metadata.current_term_id();
-        let (custody_until, kick_at) = {
-            let params = metadata.params();
-            let custody_period = params.custody_period();
-            assert_ne!(0, custody_period);
-            let release_period = params.release_period();
-            assert_ne!(0, release_period);
-            (current_term + custody_period, current_term + release_period)
-        };
-
-        Ok(vec![
-            Action::CloseTerm {
-                inactive_validators: vec![],
-                next_validators: next_validators.into(),
-                released_addresses: vec![],
-                custody_until,
-                kick_at,
-            },
-            Action::Elect {},
-        ])
     }
 
     fn register_client(&self, client: Weak<dyn ConsensusClient>) {
