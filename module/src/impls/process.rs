@@ -160,6 +160,8 @@ impl<E: ExecutionScheme> Linkable for ProcessSandbox<E> {
             slots: Vec::new(),
         })
     }
+
+    fn seal(&mut self) {}
 }
 
 impl<E: ExecutionScheme> Drop for ProcessSandbox<E> {

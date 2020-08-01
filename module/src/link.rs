@@ -70,6 +70,9 @@ pub trait Linkable: Send + Sync {
     /// [`Port`]: ./trait.Port.html
     /// [`Linker`]: ./trait.Linker.html
     fn new_port(&mut self) -> Box<dyn Port>;
+
+    /// Seals this `Linkable` in the sense that no more `Port` is created and linked.
+    fn seal(&mut self);
 }
 
 /// A port represents an endpoint of a link between two [`Linkable`]s.
