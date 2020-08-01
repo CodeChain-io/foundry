@@ -19,6 +19,3 @@ extern crate foundry_process_sandbox as fproc_sndbx;
 pub mod impls;
 pub mod link;
 pub mod sandbox;
-
-#[cfg(builtin_module)]
-pub mod builtin;
