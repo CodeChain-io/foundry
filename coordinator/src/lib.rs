@@ -89,7 +89,7 @@ impl Inner {
         self.current_storage = Some(Arc::clone(storage));
         for (id, (_name, ref mut stateful)) in self.stateful.iter_mut().enumerate() {
             let substorage: Box<dyn SubStorageAccess> =
-                Box::new(SubStorageView::new(id as StorageId, Arc::clone(storage)));
+                Box::new(SubStorageView::of(id as StorageId, Arc::clone(storage)));
             stateful.set_storage(ServiceRef::create_export(substorage));
         }
     }
