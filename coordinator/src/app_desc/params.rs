@@ -67,12 +67,8 @@ impl ModuleSetup {
         for (export, cons) in self.exports.iter_mut() {
             cons.args.merge_params(merger).with_context(|| format!("exports > {} = {}", export, cons.name))?;
         }
-        for (config, value) in self.init_config.iter_mut() {
-            value.merge_params(merger).with_context(|| format!("init-config > {}", config))?;
-        }
-        for (config, value) in self.genesis_config.iter_mut() {
-            value.merge_params(merger).with_context(|| format!("genesis-config > {}", config))?;
-        }
+        self.init_config.merge_params(merger).context("init-config")?;
+        self.genesis_config.merge_params(merger).context("genesis-config")?;
         Ok(())
     }
 }
