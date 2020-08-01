@@ -24,32 +24,19 @@ use std::sync::Arc;
 use thiserror::Error;
 
 #[distributed_slice]
-pub static SANDBOXERS: [fn() -> Arc<dyn Sandboxer>] = [..];
+pub static SANDBOXERS: [fn() -> (&'static str, Arc<dyn Sandboxer>)] = [..];
 
 /// Returns a `Sandboxer` with the given `id`.
 pub fn sandboxer(id: &str) -> Option<Arc<dyn Sandboxer>> {
-    static MAP: sync::Lazy<HashMap<&'static str, Arc<dyn Sandboxer>>> = sync::Lazy::new(|| {
-        SANDBOXERS
-            .iter()
-            .map(|new| {
-                let sandboxer = new();
-                (sandboxer.id(), sandboxer)
-            })
-            .collect()
-    });
+    static MAP: sync::Lazy<HashMap<&'static str, Arc<dyn Sandboxer>>> =
+        sync::Lazy::new(|| SANDBOXERS.iter().map(|new| new()).collect());
     MAP.get(id).map(Arc::clone)
 }
 
 /// An entity that can sandbox modules of types it supports.
-///
+///q
 /// A `Sandboxer` is thread-safe.
 pub trait Sandboxer: Send + Sync {
-    /// Returns the identifier string for this provider.
-    fn id(&self) -> &'static str;
-
-    /// Returns a list of module types that can be loaded by this `Sandboxer`.
-    fn supported_module_types(&self) -> &'static [&'static str];
-
     /// Loads the module in the given `path` into a [`Sandbox`] and pass the given
     /// `init` and `exports` to the module for initialization.
     ///

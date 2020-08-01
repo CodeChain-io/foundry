@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::link::{self, Linkable, Linker, Port, LINKERS};
-use crate::sandbox::{LoadError, Sandbox, Sandboxer};
+use crate::sandbox::{LoadError, Sandbox, Sandboxer, SANDBOXERS};
 use anyhow::anyhow;
 use crossbeam::thread;
 use foundry_module_rt::coordinator_interface::{FoundryModule, PartialRtoConfig};
@@ -29,6 +29,16 @@ use std::io::Cursor;
 use std::marker::PhantomData;
 use std::path::Path;
 use std::sync::Arc;
+
+#[distributed_slice(SANDBOXERS)]
+fn single_process() -> (&'static str, Arc<dyn Sandboxer>) {
+    ("single-process", Arc::new(ProcessSandboxer::<SingleProcess>::new()))
+}
+
+#[distributed_slice(SANDBOXERS)]
+fn multi_process() -> (&'static str, Arc<dyn Sandboxer>) {
+    ("multi-process", Arc::new(ProcessSandboxer::<MultiProcess>::new()))
+}
 
 #[distributed_slice(LINKERS)]
 fn single_process_linker() -> (&'static str, Arc<dyn Linker>) {
@@ -48,14 +58,6 @@ pub struct ProcessSandboxer<E: ExecutionScheme> {
 }
 
 impl<E: ExecutionScheme> Sandboxer for ProcessSandboxer<E> {
-    fn id(&self) -> &'static str {
-        unimplemented!()
-    }
-
-    fn supported_module_types(&self) -> &'static [&'static str] {
-        unimplemented!()
-    }
-
     fn load(
         &self,
         path: &dyn AsRef<Path>,
