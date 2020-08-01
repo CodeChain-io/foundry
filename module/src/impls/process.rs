@@ -147,10 +147,6 @@ impl<E: ExecutionScheme> ProcessSandbox<E> {
 }
 
 impl<E: ExecutionScheme> Sandbox for ProcessSandbox<E> {
-    fn sandboxer(&self) -> Arc<dyn Sandboxer> {
-        unimplemented!()
-    }
-
     fn debug(&mut self, arg: &[u8]) -> Vec<u8> {
         self.module.debug(arg)
     }
