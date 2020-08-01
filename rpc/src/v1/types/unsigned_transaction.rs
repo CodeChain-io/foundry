@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::errors;
-use super::Action;
 use cjson::uint::Uint;
 use ckey::NetworkId;
 use jsonrpc_core::Error;
@@ -25,5 +24,4 @@ use std::convert::{TryFrom, TryInto};
 #[serde(rename_all = "camelCase")]
 pub struct UnsignedTransaction {
     pub network_id: NetworkId,
-    pub action: Action,
 }

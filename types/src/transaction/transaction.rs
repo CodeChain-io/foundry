@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::Action;
 use crate::TxHash;
 use ccrypto::blake256;
 use ckey::NetworkId;
@@ -24,16 +23,13 @@ use rlp::RlpStream;
 pub struct Transaction {
     /// Network Id
     pub network_id: NetworkId,
-
-    pub action: Action,
 }
 
 impl Transaction {
     /// Append object with a without signature into RLP stream
     pub fn rlp_append_unsigned(&self, s: &mut RlpStream) {
-        s.begin_list(2);
+        s.begin_list(1);
         s.append(&self.network_id);
-        s.append(&self.action);
     }
 
     /// The message hash of the transaction.

@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::Action;
 use ccore::{LocalizedTransaction, PendingVerifiedTransactions, VerifiedTransaction};
 use cjson::uint::Uint;
 use ckey::{NetworkId, Signature};
@@ -28,7 +27,6 @@ pub struct Transaction {
     pub transaction_index: Option<TransactionIndex>,
     pub result: Option<bool>,
     pub network_id: NetworkId,
-    pub action: Action,
     pub hash: TxHash,
     pub sig: Signature,
 }
@@ -59,10 +57,6 @@ impl From<LocalizedTransaction> for Transaction {
             transaction_index: Some(p.transaction_index),
             result: Some(true),
             network_id: p.unverified_tx().transaction().network_id,
-            action: Action::from_core(
-                p.unverified_tx().transaction().action.clone(),
-                p.unverified_tx().transaction().network_id,
-            ),
             hash: p.unverified_tx().hash(),
             sig,
         }
@@ -78,7 +72,6 @@ impl From<VerifiedTransaction> for Transaction {
             transaction_index: None,
             result: None,
             network_id: p.transaction().network_id,
-            action: Action::from_core(p.transaction().action.clone(), p.transaction().network_id),
             hash: p.hash(),
             sig,
         }

@@ -276,7 +276,7 @@ pub mod test {
 
     use crate::client::TestBlockChainClient;
     use ckey::{Ed25519KeyPair as KeyPair, Generator, KeyPairTrait, Random};
-    use ctypes::transaction::{Action, Transaction};
+    use ctypes::transaction::Transaction;
 
     use super::backup::MemPoolItemProjection;
     use super::*;
@@ -297,14 +297,9 @@ pub mod test {
 
     #[test]
     fn signed_transaction_encode_and_decode() {
-        let receiver = 0u64.into();
         let keypair: KeyPair = Random.generate().unwrap();
         let tx = Transaction {
             network_id: "tc".into(),
-            action: Action::Pay {
-                receiver,
-                quantity: 100_000,
-            },
         };
         let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
 
@@ -321,10 +316,6 @@ pub mod test {
         let keypair: KeyPair = Random.generate().unwrap();
         let tx = Transaction {
             network_id: "tc".into(),
-            action: Action::Pay {
-                receiver: Default::default(),
-                quantity: 0,
-            },
         };
         let signed = VerifiedTransaction::new_with_sign(tx, keypair.private());
         let item = MemPoolItem::new(signed, TxOrigin::Local, 0, 0, 0);
@@ -390,13 +381,8 @@ pub mod test {
     }
 
     fn create_signed_pay(keypair: &KeyPair) -> VerifiedTransaction {
-        let receiver = 1u64.into();
         let tx = Transaction {
             network_id: "tc".into(),
-            action: Action::Pay {
-                receiver,
-                quantity: 100_000,
-            },
         };
         VerifiedTransaction::new_with_sign(tx, keypair.private())
     }
