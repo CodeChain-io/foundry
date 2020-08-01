@@ -193,7 +193,8 @@ fn unlock_accounts(ap: &AccountProvider, pf: &PasswordFile) -> Result<(), String
 }
 
 fn prepare_coordinator() -> Arc<Coordinator> {
-    unimplemented!()
+    let app_desc = fs::read_to_string("./app-desc.yml").unwrap();
+    Arc::new(Coordinator::from_app_desc(&app_desc).unwrap())
 }
 
 pub fn open_db(cfg: &config::Operating, client_config: &ClientConfig) -> Result<Arc<dyn KeyValueDB>, String> {
