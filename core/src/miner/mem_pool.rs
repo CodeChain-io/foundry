@@ -18,27 +18,30 @@ use super::backup;
 use super::mem_pool_types::TransactionPool;
 use crate::transaction::PendingTransactions;
 use crate::Error as CoreError;
-use coordinator::engine::TxFilter;
+use coordinator::engine::{TxFilter, FilteredTxs};
 use coordinator::{Transaction, TransactionWithMetadata, TxOrigin};
-use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
+use ctypes::errors::{HistoryError, SyntaxError};
 use ctypes::{BlockNumber, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use std::ops::Range;
 use std::sync::Arc;
+use coordinator::types::ErrorCode;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Error {
     History(HistoryError),
-    Runtime(RuntimeError),
     Syntax(SyntaxError),
+    App(ErrorCode),
 }
 
 impl Error {
     pub fn into_core_error(self) -> CoreError {
         match self {
             Error::History(err) => CoreError::History(err),
-            Error::Runtime(err) => CoreError::Runtime(err),
             Error::Syntax(err) => CoreError::Syntax(err),
+            Error::App(err_code) => {
+                CoreError::Other(format!("Rejected by check_transaction with error code: {}", err_code))
+            }
         }
     }
 }
@@ -46,12 +49,6 @@ impl Error {
 impl From<HistoryError> for Error {
     fn from(err: HistoryError) -> Error {
         Error::History(err)
-    }
-}
-
-impl From<RuntimeError> for Error {
-    fn from(err: RuntimeError) -> Error {
-        Error::Runtime(err)
     }
 }
 
@@ -63,7 +60,7 @@ impl From<SyntaxError> for Error {
 
 pub struct MemPool {
     /// Coordinator used for checking incoming transactions and fetching transactions
-    _tx_filter: Arc<dyn TxFilter>,
+    tx_filter: Arc<dyn TxFilter>,
     /// list of all transactions in the pool
     transaction_pool: TransactionPool,
     /// The count(number) limit of each queue
@@ -85,7 +82,7 @@ impl MemPool {
         tx_filter: Arc<dyn TxFilter>,
     ) -> Self {
         MemPool {
-            _tx_filter: tx_filter,
+            tx_filter,
             transaction_pool: TransactionPool::new(),
             queue_count_limit: limit,
             queue_memory_limit: memory_limit,
@@ -104,18 +101,12 @@ impl MemPool {
         let to_drop = if self.transaction_pool.mem_usage > self.queue_memory_limit
             || self.transaction_pool.count > self.queue_count_limit
         {
-            let mut count = 0;
-            let mut mem_usage = 0;
-            self.transaction_pool
-                .pool
-                .values()
-                .filter(|item| {
-                    count += 1;
-                    mem_usage += item.size();
-                    !item.origin.is_local() && (mem_usage > self.queue_memory_limit || count > self.queue_count_limit)
-                })
-                .map(|tx| tx.hash())
-                .collect()
+            let mut transactions = self.transaction_pool.pool.values();
+            let FilteredTxs {
+                invalid,
+                low_priority,
+            } = self.tx_filter.filter_transactions(&mut transactions, Some(self.queue_memory_limit), Some(self.queue_count_limit));
+            invalid.into_iter().map(|tx| tx.hash()).chain(low_priority.into_iter().map(|tx| tx.hash())).collect()
         } else {
             vec![]
         };
@@ -148,27 +139,30 @@ impl MemPool {
         inserted_timestamp: u64,
     ) -> Vec<Result<(), Error>> {
         ctrace!(MEM_POOL, "add() called, time: {}, timestamp: {}", inserted_block_number, inserted_timestamp);
-        let mut insert_results = Vec::new();
+        let mut insert_results = Vec::with_capacity(transactions.len());
         let mut batch = backup::backup_batch_with_capacity(transactions.len());
 
         for tx in transactions {
-            if let Err(e) = self.verify_transaction(&tx) {
-                insert_results.push(Err(e));
-                continue
-            }
+            match self.tx_filter.check_transaction(&tx) {
+                Ok(()) => {
+                    let id = self.next_transaction_id;
+                    self.next_transaction_id += 1;
 
-            let id = self.next_transaction_id;
-            self.next_transaction_id += 1;
-
-            let hash = tx.hash();
-            let tx = TransactionWithMetadata::new(tx, origin, inserted_block_number, inserted_timestamp, id);
-            if self.transaction_pool.contains(&hash) {
-                // This transaction is already in the pool.
-                insert_results.push(Err(HistoryError::TransactionAlreadyImported.into()));
-            } else {
-                backup::backup_item(&mut batch, *tx.hash(), &tx);
-                self.transaction_pool.insert(tx);
-                insert_results.push(Ok(hash));
+                    let hash = tx.hash();
+                    let tx = TransactionWithMetadata::new(tx, origin, inserted_block_number, inserted_timestamp, id);
+                    if self.transaction_pool.contains(&hash) {
+                        // This transaction is already in the pool.
+                        insert_results.push(Err(HistoryError::TransactionAlreadyImported.into()));
+                    } else {
+                        backup::backup_item(&mut batch, *tx.hash(), &tx);
+                        self.transaction_pool.insert(tx);
+                        insert_results.push(Ok(hash));
+                    }
+                }
+                Err(err_code) => {
+                    // This transaction is invalid.
+                    insert_results.push(Err(Error::App(err_code)));
+                }
             }
         }
         self.enforce_limit(&mut batch);
@@ -176,9 +170,13 @@ impl MemPool {
         self.db.write(batch).expect("Low level database error. Some issue with disk?");
         insert_results
             .into_iter()
-            .map(|v| match v {
-                Ok(_) => Ok(()),
-                Err(e) => Err(e),
+            .map(|v| {
+                let hash = v?;
+                if self.transaction_pool.contains(&hash) {
+                    Ok(())
+                } else {
+                    Err(HistoryError::LimitReached.into())
+                }
             })
             .collect()
     }
@@ -220,16 +218,24 @@ impl MemPool {
         self.db.write(batch).expect("Low level database error. Some issue with disk?");
     }
 
-    /// Verify signed transaction with its content.
-    /// This function can return errors: InsufficientFee, InsufficientBalance,
-    /// TransactionAlreadyImported, Old, TooCheapToReplace
-    fn verify_transaction(&self, tx: &Transaction) -> Result<(), Error> {
-        if self.transaction_pool.contains(&tx.hash()) {
-            ctrace!(MEM_POOL, "Dropping already imported transaction: {:?}", tx.hash());
-            return Err(HistoryError::TransactionAlreadyImported.into())
+    pub fn remove_old(&mut self, current_block_number: BlockNumber, current_timestamp: u64) {
+        ctrace!(MEM_POOL, "remove_old() called, time: {}, timestamp: {}", current_block_number, current_timestamp);
+        let mut batch = backup::backup_batch_with_capacity(0);
+        let to_be_removed: Vec<TxHash> = {
+            let transactions: Vec<_> = self.transaction_pool.pool.values().collect();
+            let FilteredTxs {
+                invalid,
+                low_priority,
+            } = self.tx_filter.filter_transactions(&mut transactions.into_iter(), None, None);
+            invalid.into_iter().map(|tx| tx.hash()).chain(low_priority.into_iter().map(|tx| tx.hash())).collect()
+        };
+        // TODO: mark invalid transactions
+        for hash in to_be_removed {
+            backup::remove_item(&mut batch, &hash);
+            self.transaction_pool.remove(&hash);
         }
 
-        Ok(())
+        self.db.write(batch).expect("Low level database error. Some issue with disk?")
     }
 
     /// Returns top transactions whose timestamp are in the given range from the pool ordered by priority.

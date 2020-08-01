@@ -87,7 +87,7 @@ pub struct Miner {
 
     sealing_enabled: AtomicBool,
 
-    _block_executor: Arc<dyn BlockExecutor>,
+    block_executor: Arc<dyn BlockExecutor>,
 }
 
 struct Params {
@@ -168,7 +168,7 @@ impl Miner {
             engine: scheme.engine.clone(),
             options,
             sealing_enabled: AtomicBool::new(true),
-            _block_executor: coordinator,
+            block_executor: coordinator,
         }
     }
 
@@ -238,25 +238,10 @@ impl Miner {
         parent_block_id: BlockId,
         chain: &C,
     ) -> Result<Option<ClosedBlock>, Error> {
-        let (transactions, mut open_block, block_number) = {
+        let mut open_block = {
             ctrace!(MINER, "prepare_block: No existing work - making new block");
             let params = self.params.get();
-            let open_block = chain.prepare_open_block(parent_block_id, params.author, params.extra_data);
-            let (block_number, parent_hash) = {
-                let header = open_block.block().header();
-                let block_number = header.number();
-                let parent_hash = *header.parent_hash();
-                (block_number, parent_hash)
-            };
-            let max_body_size = chain.consensus_params(parent_hash.into()).unwrap().max_body_size() as usize;
-            const DEFAULT_RANGE: Range<u64> = 0..u64::MAX;
-
-            // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock
-            let mem_pool = self.mem_pool.read();
-
-            let transactions = mem_pool.pending_transactions(max_body_size, DEFAULT_RANGE).transactions;
-
-            (transactions, open_block, block_number)
+            chain.prepare_open_block(parent_block_id, params.author, params.extra_data)
         };
 
         let parent_header = {
@@ -272,49 +257,17 @@ impl Miner {
             return Ok(None)
         }
 
-        let mut invalid_transactions = Vec::new();
+        let evidences = self.engine.fetch_evidences();
 
-        let mut tx_count: usize = 0;
-        let tx_total = transactions.len();
-
-        for tx in transactions {
-            let hash = tx.hash();
-            let start = Instant::now();
-            // Check whether transaction type is allowed for sender
-            let result = open_block.push_transaction(tx);
-
-            match result {
-                // already have transaction - ignore
-                Err(Error::History(HistoryError::TransactionAlreadyImported)) => {}
-                Err(e) => {
-                    invalid_transactions.push(hash);
-                    cinfo!(
-                        MINER,
-                        "Error adding transaction to block: number={}. tx_hash={:?}, Error: {:?}",
-                        block_number,
-                        hash,
-                        e
-                    );
-                }
-                Ok(()) => {
-                    let took = start.elapsed();
-                    ctrace!(MINER, "Adding transaction {:?} took {:?}", hash, took);
-                    tx_count += 1;
-                } // imported ok
-            }
-        }
-        cdebug!(MINER, "Pushed {}/{} transactions", tx_count, tx_total);
-
-        let block = open_block.close()?;
+        open_block.open(self.block_executor.borrow(), self.engine.borrow(), evidences)?;
         {
-            let mut mem_pool = self.mem_pool.write();
-            mem_pool.remove(
-                &invalid_transactions,
-                chain.chain_info().best_block_number,
-                chain.chain_info().best_block_timestamp,
-            );
+            // NOTE: This lock should be acquired after `prepare_open_block` to prevent deadlock
+            let mem_pool = self.mem_pool.read();
+            let transactions = mem_pool.all_pending_transactions_with_metadata();
+            open_block.prepare_block_from_transactions(block_executor, transactions);
         }
-        Ok(Some(block))
+        let closed_block = open_block.close(block_executor)?;
+        Ok(Some(closed_block))
     }
 
     /// Attempts to perform internal sealing (one that does not require work) and handles the result depending on the type of Seal.
@@ -375,11 +328,24 @@ impl MinerService for Miner {
         self.mem_pool.write().set_limit(limit)
     }
 
-    fn chain_new_blocks<C>(&self, chain: &C, _imported: &[BlockHash], _invalid: &[BlockHash], _enacted: &[BlockHash])
+    fn chain_new_blocks<C>(&self, chain: &C, _imported: &[BlockHash], _invalid: &[BlockHash], enacted: &[BlockHash])
     where
         C: BlockChainTrait + BlockProducer + EngineInfo + ImportBlock, {
         ctrace!(MINER, "chain_new_blocks");
 
+        {
+            let current_block_number = chain.chain_info().best_block_number;
+            let current_timestamp = chain.chain_info().best_block_timestamp;
+            let mut mem_pool = self.mem_pool.write();
+            let to_remove: Vec<_> = enacted
+                .iter()
+                .flat_map(|hash| chain.block(&BlockId::from(*hash)))
+                .flat_map(|block| block.view().transactions())
+                .map(|tx| tx.hash())
+                .collect();
+            mem_pool.remove(&to_remove, current_block_number, current_timestamp);
+            mem_pool.remove_old(current_block_number, current_timestamp);
+        }
         chain.set_min_timer();
     }
 
