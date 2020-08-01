@@ -19,11 +19,9 @@ use linkme::distributed_slice;
 use once_cell::sync;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use thiserror::Error;
-
-type Result<'a, T> = std::result::Result<T, Error<'a>>;
 
 #[distributed_slice]
 pub static SANDBOXERS: [fn() -> Arc<dyn Sandboxer>] = [..];
@@ -71,12 +69,12 @@ pub trait Sandboxer: Send + Sync {
     /// the receiver likes.
     ///
     /// [`Sandbox`]: ./trait.Sandbox.html
-    fn load<'a>(
+    fn load(
         &self,
-        path: &'a dyn AsRef<Path>,
+        path: &dyn AsRef<Path>,
         init: &dyn erased_serde::Serialize,
         exports: &[(&str, &dyn erased_serde::Serialize)],
-    ) -> Result<'a, Box<dyn Sandbox>>;
+    ) -> Result<Box<dyn Sandbox>, LoadError>;
 }
 
 /// A sandbox instance hosting an instantiated module.
@@ -87,19 +85,16 @@ pub trait Sandbox: Linkable {
 }
 
 #[derive(Debug, Error)]
-pub enum Error<'a> {
-    /// The module identified by the given `path` is not in the module repository.
-    #[error("Could not find the specified module: {path:?}")]
-    ModuleNotFound {
-        path: &'a Path,
+pub enum LoadError {
+    /// The module in the given `path` is suspected as corrupted.
+    #[error("The module at '{path:?}'seems corrupted")]
+    ModuleCorrupted {
+        /// The path to the subject module.
+        path: PathBuf,
+        source: Option<anyhow::Error>,
     },
 
-    /// The module identified by the given `path` is not supported by the provider.
-    #[error("The module is not supported: type '{ty:?}' at '{path:?}'")]
-    UnsupportedModuleType {
-        /// The identifier of the subject module.
-        path: &'a Path,
-        /// The type of the subject module.
-        ty: String,
-    },
+    /// An error specific to the `Sandboxer` involved.
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
 }

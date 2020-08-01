@@ -552,6 +552,7 @@ dependencies = [
 name = "codechain-module"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "crossbeam 0.7.3",
  "erased-serde",
  "foundry-module-rt",
