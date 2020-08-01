@@ -29,19 +29,12 @@ type Result<T> = std::result::Result<T, Error>;
 ///
 /// [`Linker`]: ./trait.Linker.html
 #[distributed_slice]
-pub static LINKERS: [fn() -> Arc<dyn Linker>] = [..];
+pub static LINKERS: [fn() -> (&'static str, Arc<dyn Linker>)] = [..];
 
 /// Returns a `Linker` with the given `id`.
 pub fn linker(id: &str) -> Option<Arc<dyn Linker>> {
-    static MAP: sync::Lazy<HashMap<&'static str, Arc<dyn Linker>>> = sync::Lazy::new(|| {
-        LINKERS
-            .iter()
-            .map(|new| {
-                let linker = new();
-                (linker.id(), linker)
-            })
-            .collect()
-    });
+    static MAP: sync::Lazy<HashMap<&'static str, Arc<dyn Linker>>> =
+        sync::Lazy::new(|| LINKERS.iter().map(|new| new()).collect());
     MAP.get(id).map(Arc::clone)
 }
 
@@ -49,9 +42,6 @@ pub fn linker(id: &str) -> Option<Arc<dyn Linker>> {
 /// the required common traits. Each linker must mark itself with `#[Linker]`
 /// attribute.
 pub trait Linker: Send + Sync {
-    /// Returns the identifier for this `Linker`.
-    fn id(&self) -> &'static str;
-
     /// Links the two [`Port`]s together.
     ///
     /// [`Port`]: ./trait.Port.html
