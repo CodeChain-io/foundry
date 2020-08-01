@@ -221,13 +221,11 @@ impl_name!(LocalName, LOCAL_NAME_RE, "a name consisting of identifiers separated
 impl_name!(GlobalName, GLOBAL_NAME_RE, "a namespaced name qualified with module name");
 
 impl GlobalName {
-    #[allow(dead_code)]
     pub fn module(&self) -> &str {
         let delimiter_index = self.0.find(MODULE_DELIMITER).expect("a module name followed by a module delimiter");
         &self.0[0..delimiter_index]
     }
 
-    #[allow(dead_code)]
     pub fn name(&self) -> &str {
         let delimiter_index = self.0.find(MODULE_DELIMITER).expect("a module name followed by a module delimiter");
         &self.0[delimiter_index + 1..]
