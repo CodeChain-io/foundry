@@ -15,14 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::backup;
-use super::mem_pool_types::{PoolingInstant, TransactionPool};
-use crate::miner::mem_pool_types::MemPoolItem;
+use super::mem_pool_types::TransactionPool;
 use crate::transaction::PendingTransactions;
 use crate::Error as CoreError;
 use coordinator::engine::TxFilter;
-use coordinator::{Transaction, TxOrigin};
+use coordinator::{Transaction, TransactionWithMetadata, TxOrigin};
 use ctypes::errors::{HistoryError, RuntimeError, SyntaxError};
-use ctypes::TxHash;
+use ctypes::{BlockNumber, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use std::ops::Range;
 use std::sync::Arc;
@@ -112,7 +111,7 @@ impl MemPool {
                 .values()
                 .filter(|item| {
                     count += 1;
-                    mem_usage += item.mem_usage;
+                    mem_usage += item.size();
                     !item.origin.is_local() && (mem_usage > self.queue_memory_limit || count > self.queue_count_limit)
                 })
                 .map(|tx| tx.hash())
@@ -145,7 +144,7 @@ impl MemPool {
         &mut self,
         transactions: Vec<Transaction>,
         origin: TxOrigin,
-        inserted_block_number: PoolingInstant,
+        inserted_block_number: BlockNumber,
         inserted_timestamp: u64,
     ) -> Vec<Result<(), Error>> {
         ctrace!(MEM_POOL, "add() called, time: {}, timestamp: {}", inserted_block_number, inserted_timestamp);
@@ -162,12 +161,12 @@ impl MemPool {
             self.next_transaction_id += 1;
 
             let hash = tx.hash();
-            let tx = MemPoolItem::new(tx, origin, inserted_block_number, inserted_timestamp, id);
+            let tx = TransactionWithMetadata::new(tx, origin, inserted_block_number, inserted_timestamp, id);
             if self.transaction_pool.contains(&hash) {
                 // This transaction is already in the pool.
                 insert_results.push(Err(HistoryError::TransactionAlreadyImported.into()));
             } else {
-                backup::backup_item(&mut batch, *hash, &tx);
+                backup::backup_item(&mut batch, *tx.hash(), &tx);
                 self.transaction_pool.insert(tx);
                 insert_results.push(Ok(hash));
             }
@@ -208,12 +207,7 @@ impl MemPool {
     /// Removes invalid transaction identified by hash from pool.
     /// Assumption is that this transaction seq is not related to client seq,
     /// so transactions left in pool are processed according to client seq.
-    pub fn remove(
-        &mut self,
-        transaction_hashes: &[TxHash],
-        current_block_number: PoolingInstant,
-        current_timestamp: u64,
-    ) {
+    pub fn remove(&mut self, transaction_hashes: &[TxHash], current_block_number: BlockNumber, current_timestamp: u64) {
         ctrace!(MEM_POOL, "remove() called, time: {}, timestamp: {}", current_block_number, current_timestamp);
         let mut batch = backup::backup_batch_with_capacity(transaction_hashes.len());
 
