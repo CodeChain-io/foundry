@@ -80,18 +80,6 @@ impl<'a> StakeAccount<'a> {
         Ok(())
     }
 
-    pub fn subtract_balance(&mut self, amount: u64) -> Result<(), RuntimeError> {
-        if self.balance < amount {
-            return Err(RuntimeError::InsufficientBalance {
-                pubkey: *self.pubkey,
-                cost: amount,
-                balance: self.balance,
-            })
-        }
-        self.balance -= amount;
-        Ok(())
-    }
-
     pub fn add_balance(&mut self, amount: u64) -> Result<(), RuntimeError> {
         self.balance += amount;
         Ok(())
@@ -137,13 +125,6 @@ impl Stakeholders {
     pub fn update_by_increased_balance(&mut self, account: &StakeAccount<'_>) {
         if account.balance > 0 {
             self.0.insert(*account.pubkey);
-        }
-    }
-
-    pub fn update_by_decreased_balance(&mut self, account: &StakeAccount<'_>, delegation: &Delegation<'_>) {
-        assert!(account.pubkey == delegation.delegator);
-        if account.balance == 0 && delegation.sum() == 0 {
-            self.0.remove(account.pubkey);
         }
     }
 
@@ -217,10 +198,6 @@ impl<'a> Delegation<'a> {
 
     pub fn iter(&self) -> btree_map::Iter<'_, Public, StakeQuantity> {
         self.delegatees.iter()
-    }
-
-    pub fn sum(&self) -> u64 {
-        self.delegatees.values().sum()
     }
 }
 
@@ -817,68 +794,6 @@ mod tests {
     }
 
     #[test]
-    fn balance_subtract_error_on_low() {
-        let mut state = helpers::get_temp_state();
-        let pubkey = Public::random();
-        {
-            let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
-            account.add_balance(100).unwrap();
-            account.save_to_state(&mut state).unwrap();
-        }
-        {
-            let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
-            let result = account.subtract_balance(110);
-            assert!(result.is_err());
-            assert_eq!(
-                result,
-                Err(RuntimeError::InsufficientBalance {
-                    pubkey,
-                    cost: 110,
-                    balance: 100,
-                })
-            );
-        }
-        let account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
-        assert_eq!(account.balance, 100);
-    }
-
-    #[test]
-    fn balance_subtract() {
-        let mut state = helpers::get_temp_state();
-        let pubkey = Public::random();
-
-        let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
-        account.add_balance(100).unwrap();
-        account.save_to_state(&mut state).unwrap();
-
-        let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
-        let result = account.subtract_balance(90);
-        assert!(result.is_ok());
-        account.save_to_state(&mut state).unwrap();
-
-        let account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
-        assert_eq!(account.balance, 10);
-    }
-
-    #[test]
-    fn balance_subtract_all_should_remove_entry_from_db() {
-        let mut state = helpers::get_temp_state();
-        let pubkey = Public::random();
-
-        let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
-        account.add_balance(100).unwrap();
-        account.save_to_state(&mut state).unwrap();
-
-        let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
-        let result = account.subtract_balance(100);
-        assert!(result.is_ok());
-        account.save_to_state(&mut state).unwrap();
-
-        let data = state.action_data(&get_stake_account_key(&pubkey)).unwrap();
-        assert_eq!(data, None);
-    }
-
-    #[test]
     fn stakeholders_track() {
         let mut rng = rng();
         let mut state = helpers::get_temp_state();
@@ -899,77 +814,6 @@ mod tests {
 
         let stakeholders = Stakeholders::load_from_state(&state).unwrap();
         assert!(pubkeys.iter().all(|pubkey| stakeholders.contains(pubkey)));
-    }
-
-    #[test]
-    fn stakeholders_untrack() {
-        let mut rng = rng();
-        let mut state = helpers::get_temp_state();
-        let pubkeys: Vec<_> = (1..100).map(Public::from).collect();
-        let mut accounts: Vec<_> = pubkeys
-            .iter()
-            .map(|pubkey| StakeAccount {
-                pubkey,
-                balance: rng.gen_range(1, 100),
-            })
-            .collect();
-
-        let mut stakeholders = Stakeholders::load_from_state(&state).unwrap();
-        for account in &accounts {
-            stakeholders.update_by_increased_balance(account);
-        }
-        stakeholders.save_to_state(&mut state).unwrap();
-
-        let mut stakeholders = Stakeholders::load_from_state(&state).unwrap();
-        for account in &mut accounts {
-            if rand::random() {
-                account.balance = 0;
-            }
-            let delegation = Delegation::load_from_state(&state, account.pubkey).unwrap();
-            stakeholders.update_by_decreased_balance(account, &delegation);
-        }
-        stakeholders.save_to_state(&mut state).unwrap();
-
-        let stakeholders = Stakeholders::load_from_state(&state).unwrap();
-        for account in &accounts {
-            let tracked = stakeholders.contains(account.pubkey);
-            let has_balance = account.balance > 0;
-            assert!(tracked && has_balance || !tracked && !has_balance);
-        }
-    }
-
-    #[test]
-    fn stakeholders_doesnt_untrack_if_delegation_exists() {
-        let mut state = helpers::get_temp_state();
-        let pubkeys: Vec<_> = (1..100).map(Public::from).collect();
-        let mut accounts: Vec<_> = pubkeys
-            .iter()
-            .map(|pubkey| StakeAccount {
-                pubkey,
-                balance: 100,
-            })
-            .collect();
-
-        let mut stakeholders = Stakeholders::load_from_state(&state).unwrap();
-        for account in &accounts {
-            stakeholders.update_by_increased_balance(account);
-        }
-        stakeholders.save_to_state(&mut state).unwrap();
-
-        let mut stakeholders = Stakeholders::load_from_state(&state).unwrap();
-        for account in &mut accounts {
-            // like self-delegate
-            let mut delegation = Delegation::load_from_state(&state, account.pubkey).unwrap();
-            delegation.add_quantity(*account.pubkey, account.balance).unwrap();
-            account.balance = 0;
-            stakeholders.update_by_decreased_balance(account, &delegation);
-        }
-        stakeholders.save_to_state(&mut state).unwrap();
-
-        let stakeholders = Stakeholders::load_from_state(&state).unwrap();
-        for account in &accounts {
-            assert!(stakeholders.contains(account.pubkey));
-        }
     }
 
     #[test]

@@ -27,7 +27,7 @@ use cstate::{NextValidators, StateDB, StateError, StateWithCache, TopLevelState}
 use ctypes::errors::HistoryError;
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{BlockNumber, TransactionIndex, TxHash};
+use ctypes::TxHash;
 use merkle_trie::skewed_merkle_root;
 use parking_lot::{Mutex, MutexGuard};
 use primitives::{Bytes, H256};
@@ -189,31 +189,21 @@ impl OpenBlock {
     }
 
     /// Push a transaction into the block.
-    pub fn push_transaction(
-        &mut self,
-        tx: VerifiedTransaction,
-        parent_block_number: BlockNumber,
-        transaction_index: TransactionIndex,
-    ) -> Result<(), Error> {
+    pub fn push_transaction(&mut self, tx: VerifiedTransaction) -> Result<(), Error> {
         if self.block.transactions_set.contains(&tx.hash()) {
             return Err(HistoryError::TransactionAlreadyImported.into())
         }
 
         let hash = tx.hash();
-        self.block.state().apply(&tx.transaction(), &tx.signer_public(), parent_block_number, transaction_index)?;
         self.block.transactions_set.insert(hash);
         self.block.transactions.push(tx);
         Ok(())
     }
 
     /// Push transactions onto the block.
-    pub fn push_transactions(
-        &mut self,
-        transactions: &[VerifiedTransaction],
-        parent_block_number: BlockNumber,
-    ) -> Result<(), Error> {
-        for (index, tx) in transactions.iter().enumerate() {
-            self.push_transaction(tx.clone(), parent_block_number, index as TransactionIndex)?;
+    pub fn push_transactions(&mut self, transactions: &[VerifiedTransaction]) -> Result<(), Error> {
+        for tx in transactions {
+            self.push_transaction(tx.clone())?;
         }
         Ok(())
     }
@@ -378,7 +368,7 @@ pub fn enact(
     let mut b = OpenBlock::try_new(engine, db, parent, Public::default(), evidences, vec![])?;
 
     b.populate_from(header);
-    b.push_transactions(transactions, parent.number())?;
+    b.push_transactions(transactions)?;
 
     b.close()
 }

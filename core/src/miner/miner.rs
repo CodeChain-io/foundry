@@ -32,7 +32,7 @@ use coordinator::TxOrigin;
 use cstate::TopLevelState;
 use ctypes::errors::HistoryError;
 use ctypes::transaction::Transaction;
-use ctypes::{BlockHash, BlockId, TransactionIndex};
+use ctypes::{BlockHash, BlockId};
 use kvdb::KeyValueDB;
 use parking_lot::{Mutex, RwLock};
 use primitives::Bytes;
@@ -315,9 +315,8 @@ impl Miner {
         for tx in transactions {
             let hash = tx.hash();
             let start = Instant::now();
-            let transaction_index = tx_count as TransactionIndex;
             // Check whether transaction type is allowed for sender
-            let result = open_block.push_transaction(tx, parent_header.number(), transaction_index);
+            let result = open_block.push_transaction(tx);
 
             match result {
                 // already have transaction - ignore
@@ -350,8 +349,7 @@ impl Miner {
             // TODO: This generates a new random account to make the transaction.
             // It should use the block signer.
             let tx_signer = block_tx_signer.unwrap_or_else(Private::random);
-            for (index, action) in actions.into_iter().enumerate() {
-                let transaction_index = (tx_count + index) as TransactionIndex;
+            for action in actions {
                 let tx = Transaction {
                     network_id: chain.network_id(),
                     action,
@@ -359,7 +357,7 @@ impl Miner {
                 let tx = VerifiedTransaction::new_with_sign(tx, &tx_signer);
                 // TODO: The current code can insert more transactions than size limit.
                 // It should be fixed to pre-calculate the maximum size of the close transactions and prevent the size overflow.
-                open_block.push_transaction(tx, parent_header.number(), transaction_index)?;
+                open_block.push_transaction(tx)?;
             }
         }
         let block = open_block.close()?;
