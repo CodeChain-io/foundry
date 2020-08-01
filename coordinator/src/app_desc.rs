@@ -142,7 +142,6 @@ pub struct AppDesc {
 }
 
 impl AppDesc {
-    #[allow(dead_code)]
     pub fn from_str(s: &str) -> anyhow::Result<AppDesc> {
         let app_desc: AppDesc = serde_yaml::from_str(s)?;
         app_desc.validate()?;

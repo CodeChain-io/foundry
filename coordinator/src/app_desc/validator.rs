@@ -19,7 +19,6 @@ use crate::app_desc::{GlobalName, Namespaced};
 use anyhow::bail;
 
 impl AppDesc {
-    #[allow(dead_code)]
     pub fn validate(&self) -> anyhow::Result<()> {
         self.sandboxer_specified()?;
         self.tx_owners_are_valid()?;
