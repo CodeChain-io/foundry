@@ -15,7 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::link::{self, Linkable, Linker, Port, LINKERS};
-use crate::sandbox::{self, Sandbox, Sandboxer};
+use crate::sandbox::{LoadError, Sandbox, Sandboxer};
+use anyhow::anyhow;
 use crossbeam::thread;
 use foundry_module_rt::coordinator_interface::{FoundryModule, PartialRtoConfig};
 use fproc_sndbx::execution::executor;
@@ -55,12 +56,12 @@ impl<E: ExecutionScheme> Sandboxer for ProcessSandboxer<E> {
         unimplemented!()
     }
 
-    fn load<'a>(
+    fn load(
         &self,
-        path: &'a dyn AsRef<Path>,
+        path: &dyn AsRef<Path>,
         init: &dyn erased_serde::Serialize,
         exports: &[(&str, &dyn erased_serde::Serialize)],
-    ) -> Result<Box<dyn Sandbox>, sandbox::Error<'a>> {
+    ) -> Result<Box<dyn Sandbox>, LoadError> {
         let mut init_buffer = Vec::<u8>::new();
         let cbor = &mut serde_cbor::Serializer::new(serde_cbor::ser::IoWrite::new(Cursor::new(&mut init_buffer)));
         init.erased_serialize(&mut erased_serde::Serializer::erase(cbor)).unwrap();
@@ -95,6 +96,7 @@ pub trait ExecutionScheme: Send + Sync + 'static {
 }
 
 pub struct MultiProcess;
+
 impl ExecutionScheme for MultiProcess {
     type Ipc = fproc_sndbx::ipc::unix_socket::DomainSocket;
     type Execution = fproc_sndbx::execution::executor::Executable;
@@ -104,6 +106,7 @@ impl ExecutionScheme for MultiProcess {
 }
 
 pub struct SingleProcess;
+
 impl ExecutionScheme for SingleProcess {
     type Ipc = fproc_sndbx::ipc::intra::Intra;
     type Execution = fproc_sndbx::execution::executor::PlainThread;
@@ -120,13 +123,15 @@ pub struct ProcessSandbox<E: ExecutionScheme> {
 }
 
 impl<E: ExecutionScheme> ProcessSandbox<E> {
-    fn new<'a>(path: &'a Path, init: &[u8], exports: &[(String, Vec<u8>)]) -> Result<Self, sandbox::Error<'a>> {
+    fn new(path: &Path, init: &[u8], exports: &[(String, Vec<u8>)]) -> Result<Self, LoadError> {
         let mut process =
-            executor::execute::<E::Ipc, E::Execution>(path.to_str().ok_or_else(|| sandbox::Error::ModuleNotFound {
-                path,
+            executor::execute::<E::Ipc, E::Execution>(path.to_str().ok_or_else(|| LoadError::ModuleCorrupted {
+                path: path.to_owned(),
+                source: Some(anyhow!("the path isn't a valid str: {:?}", path)),
             })?)
-            .map_err(|_| sandbox::Error::ModuleNotFound {
-                path,
+            .map_err(|e| LoadError::ModuleCorrupted {
+                path: path.to_owned(),
+                source: Some(anyhow!(e)),
             })?;
 
         // TODO: parse init to get proper rto config
