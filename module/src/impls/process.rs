@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::link::{self, Linkable, Linker, Port};
+use crate::link::{self, Linkable, Linker, Port, LINKERS};
 use crate::sandbox::{self, Sandbox, Sandboxer};
 use crossbeam::thread;
 use foundry_module_rt::coordinator_interface::{FoundryModule, PartialRtoConfig};
 use fproc_sndbx::execution::executor;
 use fproc_sndbx::ipc::Ipc;
+use linkme::distributed_slice;
 use parking_lot::Mutex;
 use remote_trait_object::raw_exchange::HandleToExchange;
 use remote_trait_object::{Config as RtoConfig, Context as RtoContext, ServiceToImport};
@@ -27,6 +28,16 @@ use std::io::Cursor;
 use std::marker::PhantomData;
 use std::path::Path;
 use std::sync::Arc;
+
+#[distributed_slice(LINKERS)]
+fn single_process_linker() -> (&'static str, Arc<dyn Linker>) {
+    ("single-process", Arc::new(ProcessLinker::<SingleProcess>::new()))
+}
+
+#[distributed_slice(LINKERS)]
+fn multi_process_linker() -> (&'static str, Arc<dyn Linker>) {
+    ("multi-process", Arc::new(ProcessLinker::<MultiProcess>::new()))
+}
 
 /// ProcessSandboxer is really trivial, because there is nothing really to do
 /// for the processes. It just creates ProcessSandbox by demand, and let it just be.
@@ -147,7 +158,7 @@ impl<E: ExecutionScheme> Sandbox for ProcessSandbox<E> {
 
 impl<E: ExecutionScheme> Linkable for ProcessSandbox<E> {
     fn supported_linkers(&self) -> &'static [&'static str] {
-        unimplemented!()
+        &["single-process-linker", "multi-process-linker"]
     }
 
     fn new_port(&mut self) -> Box<dyn Port> {
@@ -207,10 +218,6 @@ impl<E: ExecutionScheme> ProcessLinker<E> {
 }
 
 impl<E: ExecutionScheme> Linker for ProcessLinker<E> {
-    fn id(&self) -> &'static str {
-        unimplemented!()
-    }
-
     fn link(&self, a: &mut dyn Port, b: &mut dyn Port) -> Result<(), link::Error> {
         let port_a: &mut ProcessPort = a.mut_any().downcast_mut().ok_or_else(|| link::Error::UnsupportedPortType {
             id: "Unknown",
