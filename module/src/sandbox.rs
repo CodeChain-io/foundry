@@ -81,9 +81,6 @@ pub trait Sandboxer: Send + Sync {
 
 /// A sandbox instance hosting an instantiated module.
 pub trait Sandbox: Linkable {
-    /// Returns the `Sandboxer` for this sandbox.
-    fn sandboxer(&self) -> Arc<dyn Sandboxer>;
-
     fn debug(&mut self, _arg: &[u8]) -> Vec<u8> {
         Vec::new()
     }
