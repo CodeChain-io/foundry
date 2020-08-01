@@ -45,9 +45,9 @@ impl rlp::Encodable for SignedTransaction {
 impl rlp::Decodable for SignedTransaction {
     fn decode(d: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = d.item_count()?;
-        if item_count != 4 {
+        if item_count != 3 {
             return Err(DecoderError::RlpIncorrectListLen {
-                expected: 4,
+                expected: 3,
                 got: item_count,
             })
         }
@@ -55,10 +55,9 @@ impl rlp::Decodable for SignedTransaction {
         Ok(SignedTransaction {
             unsigned: Transaction {
                 network_id: d.val_at(0)?,
-                action: d.val_at(1)?,
             },
-            sig: d.val_at(2)?,
-            signer_public: d.val_at(3)?,
+            sig: d.val_at(1)?,
+            signer_public: d.val_at(2)?,
             hash,
         })
     }
@@ -67,9 +66,8 @@ impl rlp::Decodable for SignedTransaction {
 impl SignedTransaction {
     /// Append object with a signature into RLP stream
     fn rlp_append_sealed_transaction(&self, s: &mut RlpStream) {
-        s.begin_list(4);
+        s.begin_list(3);
         s.append(&self.unsigned.network_id);
-        s.append(&self.unsigned.action);
         s.append(&self.sig);
         s.append(&self.signer_public);
     }
@@ -179,7 +177,7 @@ impl UnverifiedTransaction {
 
     /// Verify basic signature params. Does not attempt signer recovery.
     pub fn verify_basic(&self) -> Result<(), SyntaxError> {
-        self.transaction().action.verify()
+        Ok(())
     }
 
     /// Verify transactiosn with the common params. Does not attempt signer recovery.
@@ -191,7 +189,7 @@ impl UnverifiedTransaction {
         if byte_size >= params.max_body_size() {
             return Err(SyntaxError::TransactionIsTooBig)
         }
-        self.transaction().action.verify_with_params(params)
+        Ok(())
     }
 
     pub fn verify_transaction(&self) -> bool {
@@ -249,7 +247,6 @@ impl From<LocalizedTransaction> for Transaction {
 #[cfg(test)]
 mod tests {
     use ckey::{Ed25519Public as Public, Signature};
-    use ctypes::transaction::Action;
     use primitives::H256;
     use rlp::rlp_encode_and_decode_test;
 
@@ -260,10 +257,6 @@ mod tests {
         rlp_encode_and_decode_test!(UnverifiedTransaction(SignedTransaction {
             unsigned: Transaction {
                 network_id: "tc".into(),
-                action: Action::Pay {
-                    receiver: Public::random(),
-                    quantity: 300,
-                },
             },
             sig: Signature::default(),
             hash: H256::default().into(),

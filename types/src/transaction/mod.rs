@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod action;
 mod approval;
 mod partial_hashing;
 mod timelock;
@@ -22,7 +21,6 @@ mod timelock;
 mod transaction;
 mod validator;
 
-pub use self::action::Action;
 pub use self::approval::Approval;
 pub use self::partial_hashing::{HashingError, PartialHashing};
 pub use self::timelock::Timelock;
