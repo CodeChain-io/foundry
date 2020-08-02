@@ -632,12 +632,13 @@ impl BlockProducer for Client {
         let parent_hash = self.block_hash(&parent_block_id).expect("parent exist always");
         let parent_header = chain.block_header(&parent_hash).expect("parent exist always");
 
+        let evidences = engine.fetch_evidences();
         OpenBlock::try_new(
             engine,
             self.state_db.read().clone(&parent_header.state_root()),
             &parent_header,
             author,
-            &[],
+            evidences,
             extra_data,
         ).expect("OpenBlock::new only fails if parent state root invalid; state root of best block's header is never invalid; qed")
     }
