@@ -146,7 +146,7 @@ impl OpenBlock {
         r.block.header.note_dirty();
         r.block
             .header
-            .set_evidences_root(skewed_merkle_root(BLAKE_NULL_RLP, r.block.evidences.iter().map(Encodable::rlp_bytes)));
+            .set_evidences_root(skewed_merkle_root(BLAKE_NULL_RLP, evidences.iter().map(Encodable::rlp_bytes)));
 
         r.block.evidences = evidences.to_vec();
 
