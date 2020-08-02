@@ -133,7 +133,7 @@ impl OpenBlock {
         db: StateDB,
         parent: &Header,
         author: Public,
-        evidences: &[Evidence],
+        evidences: Vec<Evidence>,
         extra_data: Bytes,
     ) -> Result<Self, Error> {
         let state = TopLevelState::from_existing(db, *parent.state_root()).map_err(StateError::from)?;
@@ -148,7 +148,7 @@ impl OpenBlock {
             .header
             .set_evidences_root(skewed_merkle_root(BLAKE_NULL_RLP, evidences.iter().map(Encodable::rlp_bytes)));
 
-        r.block.evidences = evidences.to_vec();
+        r.block.evidences = evidences;
 
         engine.populate_from_parent(&mut r.block.header, parent);
 
@@ -350,7 +350,7 @@ impl IsBlock for ClosedBlock {
 /// Enact the block given by block header, transactions and uncles
 pub fn enact<C: EngineInfo + FindDoubleVoteHandler + TermInfo>(
     header: &Header,
-    evidences: &[Evidence],
+    evidences: Vec<Evidence>,
     transactions: &[VerifiedTransaction],
     engine: &dyn CodeChainEngine,
     client: &C,
