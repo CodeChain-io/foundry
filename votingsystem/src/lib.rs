@@ -16,3 +16,4 @@
 
 pub mod common;
 pub mod general_meeting;
+pub mod voting;
