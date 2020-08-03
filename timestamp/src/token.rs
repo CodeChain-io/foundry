@@ -283,6 +283,18 @@ impl common::Action for Action {}
 
 pub type OwnTransaction = SignedTransaction<Action>;
 
+struct GetAccountAndSeq;
+
+impl Service for GetAccountAndSeq {}
+
+impl crate::sorting::GetAccountAndSeq for GetAccountAndSeq {
+    fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, u64), ()> {
+        assert_eq!(tx.tx_type(), "Token");
+        let tx: OwnTransaction = serde_cbor::from_slice(&tx.body()).map_err(|_| ())?;
+        Ok((tx.signer_public, tx.tx.seq))
+    }
+}
+
 impl UserModule for Module {
     fn new(_arg: &[u8]) -> Self {
         Module {
@@ -309,6 +321,11 @@ impl UserModule for Module {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn TxOwner>>)
+            }
+            "get_account_and_seq" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                Skeleton::new(Box::new(GetAccountAndSeq) as Box<dyn crate::sorting::GetAccountAndSeq>)
             }
             _ => panic!("Unsupported ctor_name in prepare_service_to_export() : {}", ctor_name),
         }
