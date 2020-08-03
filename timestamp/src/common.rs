@@ -32,7 +32,7 @@ impl fmt::Display for NetworkId {
 
 impl Default for NetworkId {
     fn default() -> Self {
-        NetworkId([116, 99])
+        NetworkId([b't', b'c'])
     }
 }
 
