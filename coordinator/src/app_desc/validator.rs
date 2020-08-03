@@ -65,7 +65,7 @@ impl AppDesc {
             })
             .collect();
 
-        if !(invalid_owners.is_empty()) {
+        if invalid_owners.is_empty() {
             Ok(())
         } else {
             bail!(
