@@ -112,7 +112,7 @@ impl Params {
 
     pub fn apply<F>(&self, f: F)
     where
-        F: FnOnce(&mut AuthoringParams) -> (), {
+        F: FnOnce(&mut AuthoringParams), {
         let mut params = self.params.write();
         f(&mut params);
     }
