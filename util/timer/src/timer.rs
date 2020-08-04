@@ -503,10 +503,7 @@ impl ScheduleStateControl {
 
     fn is_cancelled(&self) -> bool {
         let state = self.state.read();
-        match *state {
-            ScheduleState::Cancelled => true,
-            _ => false,
-        }
+        matches!(*state, ScheduleState::Cancelled)
     }
 
     fn within_lock<F, T>(&self, mut callback: F) -> T

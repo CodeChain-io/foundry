@@ -129,10 +129,7 @@ impl InformerService {
     }
 
     fn compare_event_types(tag: &EventTags, event: &Events) -> bool {
-        match (tag, event) {
-            (EventTags::PeerAdded, Events::PeerAdded(..)) => true,
-            _ => false,
-        }
+        matches!((tag, event), (EventTags::PeerAdded, Events::PeerAdded(..)))
     }
 
     pub fn notify_client(&self, popup_event: Events) {
