@@ -136,10 +136,7 @@ impl RoutingTable {
 
     pub fn is_banned(&self, target: &SocketAddr) -> bool {
         let entries = self.entries.read();
-        match entries.get(target) {
-            Some(State::Banned) => true,
-            _ => false,
-        }
+        matches!(entries.get(target), Some(State::Banned))
     }
 
     pub fn is_establishing_or_established(&self, target: &SocketAddr) -> bool {
@@ -160,14 +157,12 @@ impl RoutingTable {
 
     pub fn is_established(&self, target: &SocketAddr) -> bool {
         let entries = self.entries.read();
-        if let Some(State::Established {
-            ..
-        }) = entries.get(target)
-        {
-            true
-        } else {
-            false
-        }
+        matches!(
+            entries.get(target),
+            Some(State::Established {
+                ..
+            })
+        )
     }
 
     pub fn is_establishing(&self, target: &SocketAddr) -> bool {
@@ -589,14 +584,7 @@ impl RoutingTable {
         let entry = entries.entry(target).or_default();
         let mut new_state = State::Banned;
         std::mem::swap(&mut new_state, entry);
-        if let State::Established {
-            ..
-        } = new_state
-        {
-            true
-        } else {
-            false
-        }
+        matches!(new_state, State::Established {..})
     }
 
     pub fn unban(&self, target: SocketAddr) -> bool {

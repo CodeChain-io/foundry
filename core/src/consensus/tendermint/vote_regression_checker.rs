@@ -14,10 +14,7 @@ impl VoteRegressionChecker {
 
     pub fn check(&mut self, vote_on: &VoteOn) -> bool {
         assert!(
-            match vote_on.step.step {
-                Step::Propose | Step::Prevote | Step::Precommit => true,
-                _ => false,
-            },
+            matches!(vote_on.step.step, Step::Propose | Step::Prevote | Step::Precommit),
             "We don't vote on Commit. Check your code"
         );
 

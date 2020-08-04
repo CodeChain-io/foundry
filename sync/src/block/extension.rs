@@ -350,12 +350,7 @@ impl Extension {
 
         self.check_sync_variable();
         if let Some(requests) = self.requests.get_mut(id) {
-            let have_body_request = {
-                requests.iter().any(|r| match r {
-                    (_, RequestMessage::Bodies(..)) => true,
-                    _ => false,
-                })
-            };
+            let have_body_request = { requests.iter().any(|r| matches!(r, (_, RequestMessage::Bodies(..)))) };
             if have_body_request {
                 cdebug!(SYNC, "Wait body response");
                 return
@@ -382,10 +377,8 @@ impl Extension {
     }
 
     fn send_chunk_request(&mut self, block: &BlockHash, root: &H256) {
-        let have_chunk_request = self.requests.values().flatten().any(|r| match r {
-            (_, RequestMessage::StateChunk(..)) => true,
-            _ => false,
-        });
+        let have_chunk_request =
+            self.requests.values().flatten().any(|r| matches!(r, (_, RequestMessage::StateChunk(..))));
 
         if !have_chunk_request {
             let mut peer_ids: Vec<_> = self.header_downloaders.keys().cloned().collect();

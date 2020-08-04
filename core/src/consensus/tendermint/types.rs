@@ -75,12 +75,10 @@ impl TendermintState {
     }
 
     pub fn is_propose_wait_empty_block_timer(&self) -> bool {
-        match self {
-            TendermintState::ProposeWaitEmptyBlockTimer {
-                ..
-            } => true,
-            _ => false,
-        }
+        matches!(self,
+        TendermintState::ProposeWaitEmptyBlockTimer {
+            ..
+        })
     }
 
     pub fn is_commit(&self) -> bool {
@@ -96,12 +94,10 @@ impl TendermintState {
     }
 
     pub fn is_commit_timedout(&self) -> bool {
-        match self {
-            TendermintState::CommitTimedout {
-                ..
-            } => true,
-            _ => false,
-        }
+        matches! (self,
+        TendermintState::CommitTimedout {
+            ..
+        })
     }
 
     pub fn committed(&self) -> Option<(View, BlockHash)> {
@@ -330,9 +326,6 @@ impl Proposal {
     }
 
     pub fn is_none(&self) -> bool {
-        match self {
-            Proposal::None => true,
-            _ => false,
-        }
+        matches!(self, Proposal::None)
     }
 }
