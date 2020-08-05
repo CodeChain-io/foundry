@@ -124,7 +124,7 @@ struct Inner {
 
 impl Inner {
     #[allow(dead_code)]
-    pub fn new(_init_chain: Box<dyn InitChain>) -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
