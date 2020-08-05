@@ -81,7 +81,14 @@ impl Coordinator {
         app_desc.merge_params(&BTreeMap::new())?;
 
         let weaver = Weaver::new();
-        let (sandboxes, inner) = weaver.weave(&app_desc)?;
+        let (sandboxes, mut inner) = weaver.weave(&app_desc)?;
+
+        inner.genesis_config = app_desc
+            .modules
+            .iter()
+            .map(|(name, setup)| ((**name).clone(), serde_cbor::to_vec(&setup.genesis_config).unwrap()))
+            .collect();
+
         let inner = Mutex::new(inner);
 
         Ok(Coordinator {
