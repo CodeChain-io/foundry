@@ -16,6 +16,7 @@
 
 use crate::common::*;
 use crate::voting::VoteId;
+use crate::voting::VoteManager;
 pub use ckey::Ed25519Public as Public;
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
@@ -35,13 +36,22 @@ enum ExecuteError {
     InvalidSign,
     InvalidFormat,
     InvalidAdmin,
+    WrongPublishTime,
+    WrongEndTime,
+    TallyingTimeIsBeforeNow,
+    TallyingIsBeforeEndTime,
+    GeneralMeetingNotFound,
+    InvalidVotingBox,
 }
 
 const ADMIN_STATE_KEY: &str = "admin";
-const TX_TYPE: &str = "GeneralMeeting";
+const CREATE_MEETING_TX_TYPE: &str = "GeneralMeeting";
+const PUBLISH_TX_TYPE: &str = "PublishResult";
 
 struct Context {
     pub storage: Option<Box<dyn SubStorageAccess>>,
+    pub vote: Option<Box<dyn VoteManager>>,
+    pub block_header: Option<Header>,
 }
 
 impl Context {
@@ -51,6 +61,14 @@ impl Context {
 
     fn storage_mut(&mut self) -> &mut dyn SubStorageAccess {
         self.storage.as_mut().unwrap().as_mut()
+    }
+
+    fn vote(&self) -> &dyn VoteManager {
+        self.vote.as_ref().unwrap().as_ref()
+    }
+
+    fn _vote_mute(&mut self) -> &mut dyn VoteManager {
+        self.vote.as_mut().unwrap().as_mut()
     }
 }
 
@@ -63,30 +81,100 @@ pub struct TxGeneralMeeting {
     pub tallying_time: TimeStamp,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TxPublishResult {
+    pub meeting_id: GeneralMeetingId,
+}
+
 impl Action for TxGeneralMeeting {}
-pub type OwnTransaction = crate::common::SignedTransaction<TxGeneralMeeting>;
+impl Action for TxPublishResult {}
+pub type MeetingOwnTransaction = crate::common::SignedTransaction<TxGeneralMeeting>;
+pub type PublishOwnTransaction = crate::common::PublicTransaction<TxPublishResult>;
+
+enum TxResult {
+    GeneralMeeting(GeneralMeetingId),
+    Result,
+}
 
 impl Context {
-    fn excute_tx(&mut self, transaction: &Transaction) -> Result<GeneralMeetingId, ExecuteError> {
-        if transaction.tx_type() != TX_TYPE {
-            return Err(ExecuteError::InvalidMetadata)
+    fn excute_tx(&mut self, transaction: &Transaction) -> Result<TxResult, ExecuteError> {
+        match transaction.tx_type() {
+            CREATE_MEETING_TX_TYPE => {
+                let tx: MeetingOwnTransaction =
+                    serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
+                tx.verify().map_err(|_| ExecuteError::InvalidSign)?;
+
+                let num_agendas = tx.tx.action.number_of_agendas;
+                let end_time = tx.tx.action.end_time;
+                let tallying_time = tx.tx.action.tallying_time;
+                let now = self.block_header.as_ref().unwrap().timestamp();
+                if now > end_time.time {
+                    return Err(ExecuteError::WrongEndTime)
+                }
+                if now > tallying_time.time {
+                    return Err(ExecuteError::TallyingTimeIsBeforeNow)
+                }
+                if tallying_time.time < end_time.time {
+                    return Err(ExecuteError::TallyingIsBeforeEndTime)
+                }
+
+                let meeting = GeneralMeeting::new(end_time, tallying_time, num_agendas);
+                let key = meeting.id.clone();
+
+                self.storage_mut().set(key.as_ref(), serde_cbor::to_vec(&meeting).unwrap());
+
+                let vote_box = VoteBox::new(meeting.id.clone());
+                let box_key = crate::generate_voting_box_key(&meeting.id);
+                self.storage_mut().set(box_key.as_slice(), serde_cbor::to_vec(&vote_box).unwrap());
+                Ok(TxResult::GeneralMeeting(meeting.id))
+            }
+            PUBLISH_TX_TYPE => {
+                let tx: PublishOwnTransaction =
+                    serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
+
+                let meeting_id = tx.action.meeting_id;
+                let key = crate::generate_voting_box_key(&meeting_id);
+                let vote_box: VoteBox = {
+                    let bytes = &self.storage().get(key.as_slice()).ok_or_else(|| ExecuteError::InvalidVotingBox)?;
+                    serde_cbor::from_slice(&bytes).expect("Vote box is serialized by this code")
+                };
+                let mut vote_result = VoteResult::new();
+
+                let mut meeting: GeneralMeeting = {
+                    let bytes =
+                        self.storage().get(meeting_id.as_ref()).ok_or_else(|| ExecuteError::GeneralMeetingNotFound)?;
+                    serde_cbor::from_slice(&bytes).expect("General meeting is serialized by this code")
+                };
+
+                let now = self.block_header.as_ref().unwrap().timestamp();
+                if meeting.tallying_time.time > now {
+                    return Err(ExecuteError::WrongPublishTime)
+                }
+                let mut final_result = Vec::new();
+
+                for _agenda in 0..meeting.number_of_agendas {
+                    for vote_id in &vote_box.votes {
+                        let vote = self.vote().get_vote(&vote_id).unwrap();
+                        let vote_choice = vote.get_choice();
+                        let number_of_shares = self.vote().get_shares(&vote_id).unwrap();
+                        if vote_choice == crate::voting::FAVOR {
+                            vote_result.favor += number_of_shares;
+                        }
+                        if vote_choice == crate::voting::AGAINST {
+                            vote_result.against += number_of_shares;
+                        }
+                        if vote_choice == crate::voting::ABSENTION {
+                            vote_result.absention += number_of_shares;
+                        }
+                    }
+                    final_result.push(vote_result.clone());
+                }
+                meeting.save_results(final_result);
+
+                Ok(TxResult::Result)
+            }
+            _ => return Err(ExecuteError::InvalidMetadata),
         }
-        let tx: OwnTransaction =
-            serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
-        tx.verify().map_err(|_| ExecuteError::InvalidSign)?;
-
-        let num_agandas = tx.tx.action.number_of_agendas;
-        let end_time = tx.tx.action.end_time;
-        let tallying_time = tx.tx.action.tallying_time;
-        let meeting = GeneralMeeting::new(end_time, tallying_time, num_agandas);
-        let key = meeting.id.clone();
-
-        self.storage_mut().set(key.as_ref(), serde_cbor::to_vec(&meeting).unwrap());
-
-        let vote_box = VoteBox::new(meeting.id.clone());
-        let box_key = crate::generate_voting_box_key(&meeting.id);
-        self.storage_mut().set(box_key.as_slice(), serde_cbor::to_vec(&vote_box).unwrap());
-        Ok(meeting.id)
     }
 }
 
@@ -119,6 +207,12 @@ impl TxOwner for Context {
                 ExecuteError::InvalidSign => Err(()),
                 ExecuteError::InvalidFormat => Err(()),
                 ExecuteError::InvalidAdmin => Err(()),
+                ExecuteError::WrongPublishTime => Err(()),
+                ExecuteError::WrongEndTime => Err(()),
+                ExecuteError::TallyingTimeIsBeforeNow => Err(()),
+                ExecuteError::TallyingIsBeforeEndTime => Err(()),
+                ExecuteError::GeneralMeetingNotFound => Err(()),
+                ExecuteError::InvalidVotingBox => Err(()),
             }
         } else {
             Ok(Default::default())
@@ -127,18 +221,38 @@ impl TxOwner for Context {
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), coordinator::types::ErrorCode> {
         let todo_fixthis: coordinator::types::ErrorCode = 3;
-        assert_eq!(transaction.tx_type(), TX_TYPE);
-        let tx: OwnTransaction = serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
-        tx.verify().map_err(|_| todo_fixthis)?;
+        match transaction.tx_type() {
+            CREATE_MEETING_TX_TYPE => {
+                let tx: MeetingOwnTransaction =
+                    serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
+                tx.verify().map_err(|_| todo_fixthis)?;
 
-        let admin_public_key = tx.signer_public;
-        let written_admin: Public =
-            serde_cbor::from_slice(&self.storage().get(ADMIN_STATE_KEY.as_bytes()).unwrap()).unwrap();
+                let admin_public_key = tx.signer_public;
+                let written_admin: Public =
+                    serde_cbor::from_slice(&self.storage().get(ADMIN_STATE_KEY.as_bytes()).unwrap()).unwrap();
 
-        if written_admin != admin_public_key {
-            return Err(ExecuteError::InvalidAdmin).map_err(|_| todo_fixthis)
+                if written_admin != admin_public_key {
+                    return Err(ExecuteError::InvalidAdmin).map_err(|_| todo_fixthis)
+                }
+                Ok(())
+            }
+            PUBLISH_TX_TYPE => {
+                let tx: PublishOwnTransaction =
+                    serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
+
+                let meeting_id = tx.action.meeting_id;
+                let meeting: GeneralMeeting = serde_cbor::from_slice(&self.storage().get(meeting_id.as_ref()).unwrap())
+                    .map_err(|_| ExecuteError::GeneralMeetingNotFound)
+                    .map_err(|_| todo_fixthis)?;
+
+                let now = self.block_header.as_ref().unwrap().timestamp();
+                if meeting.tallying_time.time > now {
+                    return Err(ExecuteError::WrongPublishTime).map_err(|_| todo_fixthis)
+                }
+                Ok(())
+            }
+            _ => return Err(ExecuteError::InvalidMetadata).map_err(|_| todo_fixthis),
         }
-        Ok(())
     }
 
     fn block_closed(&mut self) -> Result<Vec<Event>, CloseBlockError> {
@@ -214,6 +328,16 @@ pub struct VoteResult {
     absention: u32,
 }
 
+impl VoteResult {
+    pub fn new() -> Self {
+        Self {
+            favor: 0,
+            against: 0,
+            absention: 0,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum GeneralMeetingError {
     NoSuchMeeting,
@@ -239,6 +363,10 @@ impl GeneralMeeting {
             tallying_time,
             result: None,
         }
+    }
+
+    pub fn save_results(&mut self, result: Vec<VoteResult>) {
+        self.result.get_or_insert(result);
     }
 }
 
@@ -269,6 +397,8 @@ impl UserModule for Module {
         Module {
             ctx: Arc::new(RwLock::new(Context {
                 storage: None,
+                vote: None,
+                block_header: None,
             })),
         }
     }
@@ -302,6 +432,9 @@ impl UserModule for Module {
         handle: HandleToExchange,
     ) {
         match name {
+            "vote_manager" => {
+                self.ctx.write().vote.replace(import_service_from_handle(rto_context, handle));
+            }
             "sub_storage_access" => {
                 self.ctx.write().storage.replace(import_service_from_handle(rto_context, handle));
             }

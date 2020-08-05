@@ -25,7 +25,7 @@ use parking_lot::RwLock;
 use primitives::H256;
 use rand::Rng;
 use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange, Skeleton};
-use remote_trait_object::{Context as RtoContext, Service, ServiceRef};
+use remote_trait_object::{service, Context as RtoContext, Service, ServiceRef};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -116,29 +116,35 @@ impl VotePaper {
     }
 }
 
-const FAVOR: &str = "favor";
-const AGAINST: &str = "against";
-const ABSENTION: &str = "absention";
+pub const FAVOR: &str = "favor";
+pub const AGAINST: &str = "against";
+pub const ABSENTION: &str = "absention";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Vote {
+    corresponding_paper_id: H256,
     vote_id: VoteId,
     choice: String,
     signature: Signature,
 }
 
 impl Vote {
-    pub fn new(choice: String, signature: Signature) -> Self {
+    pub fn new(vote_paper_id: H256, choice: String, signature: Signature) -> Self {
         let mut rng = rand::thread_rng();
         let random_id: u64 = rng.gen();
         let vote_id = VoteId {
             id: H256::from(random_id),
         };
         Self {
+            corresponding_paper_id: vote_paper_id,
             vote_id,
             choice,
             signature,
         }
+    }
+
+    pub fn get_choice(&self) -> &String {
+        &self.choice
     }
 }
 
@@ -167,6 +173,35 @@ impl Context {
 }
 
 impl Service for Context {}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum Error {
+    InvalidVote,
+}
+
+#[service]
+pub trait VoteManager: Service {
+    fn get_vote(&self, vote_id: &VoteId) -> Result<Vote, Error>;
+    fn get_shares(&self, vote_id: &VoteId) -> Result<u32, Error>;
+}
+
+impl VoteManager for Context {
+    fn get_vote(&self, vote_id: &VoteId) -> Result<Vote, Error> {
+        if !self.storage().has(vote_id.as_ref()) {
+            return Err(Error::InvalidVote)
+        }
+        let vote: Vote = serde_cbor::from_slice(&self.storage().get(vote_id.as_ref()).unwrap()).unwrap();
+        Ok(vote)
+    }
+
+    fn get_shares(&self, vote_id: &VoteId) -> Result<u32, Error> {
+        let vote: Vote = serde_cbor::from_slice(&self.storage().get(vote_id.as_ref()).unwrap()).unwrap();
+        let vote_paper_id = vote.corresponding_paper_id;
+        let vote_paper: VotePaper =
+            serde_cbor::from_slice(&self.storage().get(vote_paper_id.0.as_ref()).unwrap()).unwrap();
+        Ok(vote_paper.number_of_shares)
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TxCreateVotePaper {
@@ -235,9 +270,10 @@ impl Context {
                     return Err(ExecuteError::WrongVoter)
                 }
 
-                let vote = Vote::new(choice, voter_signature);
+                let vote = Vote::new(vote_paper_id, choice, voter_signature);
                 let vote_id = vote.clone().vote_id;
                 vote_paper.set_used_in(vote_id.clone()).map_err(|_| ExecuteError::UsedVotePaper)?;
+                let meeting_id = vote_paper.get_general_meeting_id();
                 self.storage_mut().set(vote_id.as_ref(), serde_cbor::to_vec(&vote).unwrap());
                 let box_key = crate::generate_voting_box_key(&meeting_id);
                 let mut vote_box = self.meeting_mut().get_box(box_key.as_slice()).unwrap();
@@ -317,11 +353,9 @@ impl TxOwner for Context {
                 }
                 Ok(())
             }
-
             _ => return Err(ExecuteError::InvalidMetadata).map_err(|_| todo_fixthis),
         }
     }
-
     fn block_closed(&mut self) -> Result<Vec<Event>, CloseBlockError> {
         Ok(Vec::new())
     }
