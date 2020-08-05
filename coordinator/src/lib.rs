@@ -78,7 +78,14 @@ impl Coordinator {
     pub fn from_app_desc(app_desc: &str) -> anyhow::Result<Coordinator> {
         let app_desc = AppDesc::from_str(app_desc)?;
         let weaver = Weaver::new();
-        let (sandboxes, inner) = weaver.weave(&app_desc)?;
+        let (sandboxes, mut inner) = weaver.weave(&app_desc)?;
+
+        inner.genesis_config = app_desc
+            .modules
+            .iter()
+            .map(|(name, setup)| ((**name).clone(), serde_cbor::to_vec(&setup.genesis_config).unwrap()))
+            .collect();
+
         let inner = Mutex::new(inner);
 
         Ok(Coordinator {
