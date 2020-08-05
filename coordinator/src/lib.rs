@@ -42,7 +42,7 @@ use ctypes::StorageId;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use parking_lot::Mutex;
 use remote_trait_object::{Service, ServiceRef};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::ops::Bound;
 use std::ops::Bound::*;
 use std::sync::Arc;
@@ -76,7 +76,10 @@ pub struct Coordinator {
 
 impl Coordinator {
     pub fn from_app_desc(app_desc: &str) -> anyhow::Result<Coordinator> {
-        let app_desc = AppDesc::from_str(app_desc)?;
+        let mut app_desc = AppDesc::from_str(app_desc)?;
+        // TODO: proper parameter merging must be implemented with actual parameters from configs
+        app_desc.merge_params(&BTreeMap::new())?;
+
         let weaver = Weaver::new();
         let (sandboxes, mut inner) = weaver.weave(&app_desc)?;
 
@@ -130,7 +133,6 @@ struct Inner {
 }
 
 impl Inner {
-    #[allow(dead_code)]
     pub fn new() -> Self {
         Self::default()
     }

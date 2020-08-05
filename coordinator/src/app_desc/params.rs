@@ -21,7 +21,6 @@ use handlebars::{no_escape, Context, Handlebars, TemplateRenderError};
 pub use serde_yaml::Error as YamlError;
 use std::collections::BTreeMap;
 
-#[allow(dead_code)]
 struct Merger<'reg> {
     registry: Handlebars<'reg>,
     context: Context,
@@ -45,7 +44,6 @@ impl<'reg> Merger<'reg> {
     }
 }
 
-#[allow(dead_code)]
 impl AppDesc {
     pub fn merge_params(&mut self, params: &BTreeMap<String, String>) -> anyhow::Result<()> {
         let mut merged_params = self.param_defaults.clone();

@@ -65,7 +65,7 @@ pub(crate) struct Services {
 
 impl Services {
     pub(super) fn inner(&mut self) -> Inner {
-        let mut inner = Inner::default();
+        let mut inner = Inner::new();
 
         inner.tx_owner = self.tx_owners.drain().collect();
         inner.init_genesis = self.init_genesis.drain(..).collect();
