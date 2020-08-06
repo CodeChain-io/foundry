@@ -5,14 +5,15 @@ Foundry
 ==============
 
 CodeChain Foundry is a blockchain engine based on a composable module system, called _Mold_.
-Users can define their own modules, and can construct an arbitrary blockchain application with them.
-The reason we provide such a composable, and user-customizable module system is
-because we want to make only application logic as user's responsibility,
-while the _host_ manages common things such as consensus, networking, mempool or DB, for all kinds of applications.
+Users can write their own modules and additionally bring those written by others in to construct an arbitrary blockchain application.
+The reason why we provide such a composable and user-configurable module system is
+because we want to make as much of an application configurable as possible and foster an ecosystem of reusable modules,
+while reusing the underlying consensus engine across all the different kinds of applications.
 
-The actual execution of the transaction, which is essentially a transition of state from the previous one, will be requested to the _coordinator_ from the host.
-The coordinator manages multiple modules for the application, and handles such requests from the host asking the modules.
-Transactions will be delivered to the responsible module, and that module will handle the transaction in the way it is implemented in,
+On an execution of a transaction, that is essentially a state transition, the coordinator will be told to do so from the underlying consensus engine.
+Then the coordinator literally coordinates multiple modules constituting an application
+by invoking services exported by the modules to the coordinator in an appropriate order passing appropriate arguments.
+Transactions will be delivered to the responsible modules, and that the modules will handle the executions of the transactions,
 which might also involve communications with other modules.
 
 ## Build
