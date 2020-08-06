@@ -239,6 +239,9 @@ impl Context {
                 let vote_id = vote.clone().vote_id;
                 vote_paper.set_used_in(vote_id.clone()).map_err(|_| ExecuteError::UsedVotePaper)?;
                 self.storage_mut().set(vote_id.as_ref(), serde_cbor::to_vec(&vote).unwrap());
+                let box_key = crate::generate_voting_box_key(&meeting_id);
+                let mut vote_box = self.meeting_mut().get_box(box_key.as_slice()).unwrap();
+                vote_box.drop_in_box(vote.clone().vote_id);
                 Ok(vote_id.id)
             }
             _ => return Err(ExecuteError::InvalidMetadata),

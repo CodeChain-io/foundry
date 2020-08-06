@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::common::*;
+use crate::voting::VoteId;
 pub use ckey::Ed25519Public as Public;
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
@@ -78,9 +79,13 @@ impl Context {
         let end_time = tx.tx.action.end_time;
         let tallying_time = tx.tx.action.tallying_time;
         let meeting = GeneralMeeting::new(end_time, tallying_time, num_agandas);
-        let key = meeting.id.as_ref();
+        let key = meeting.id.clone();
 
-        self.storage_mut().set(key, serde_cbor::to_vec(&meeting).unwrap());
+        self.storage_mut().set(key.as_ref(), serde_cbor::to_vec(&meeting).unwrap());
+
+        let vote_box = VoteBox::new(meeting.id.clone());
+        let box_key = crate::generate_voting_box_key(&meeting.id);
+        self.storage_mut().set(box_key.as_slice(), serde_cbor::to_vec(&vote_box).unwrap());
         Ok(meeting.id)
     }
 }
@@ -180,6 +185,7 @@ pub enum Error {
 #[service]
 pub trait GeneralMeetingManager: Service {
     fn get_meeting(&mut self, meeting_id: &GeneralMeetingId) -> Result<GeneralMeeting, Error>;
+    fn get_box(&mut self, key: &[u8]) -> Result<VoteBox, Error>;
 }
 
 impl GeneralMeetingManager for Context {
@@ -190,6 +196,14 @@ impl GeneralMeetingManager for Context {
         let meeting: GeneralMeeting =
             serde_cbor::from_slice(&self.storage().get(meeting_id.as_ref()).unwrap()).unwrap();
         Ok(meeting)
+    }
+
+    fn get_box(&mut self, key: &[u8]) -> Result<VoteBox, Error> {
+        if !self.storage().has(key) {
+            return Err(Error::InvalidMeeting)
+        }
+
+        Ok(serde_cbor::from_slice(&self.storage().get(key).unwrap()).unwrap())
     }
 }
 
@@ -230,6 +244,24 @@ impl GeneralMeeting {
 
 pub struct Module {
     ctx: Arc<RwLock<Context>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VoteBox {
+    pub meeting_id: GeneralMeetingId,
+    pub votes: Vec<VoteId>,
+}
+impl VoteBox {
+    pub fn new(meeting_id: GeneralMeetingId) -> Self {
+        Self {
+            meeting_id,
+            votes: Vec::new(),
+        }
+    }
+
+    pub fn drop_in_box(&mut self, vote: VoteId) {
+        self.votes.push(vote);
+    }
 }
 
 impl UserModule for Module {

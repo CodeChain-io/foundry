@@ -14,6 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+pub const PREFIX: &str = "VoteBox";
+
 pub mod common;
 pub mod general_meeting;
 pub mod voting;
+
+pub fn generate_voting_box_key(meeting_id: &general_meeting::GeneralMeetingId) -> Vec<u8> {
+    let byte_prefix = PREFIX.as_bytes();
+    let mut vec: Vec<u8> = Vec::new();
+    vec.extend_from_slice(byte_prefix);
+    vec.extend_from_slice(meeting_id.id.0.as_ref());
+    vec
+}
