@@ -27,6 +27,7 @@ struct LinkInfo {
     imports: RefCell<HashMap<String, Vec<Import>>>,
 }
 
+#[derive(Debug)]
 struct Import {
     from: String,
     to: String,
@@ -213,14 +214,22 @@ impl Weaver {
 
         for (tx_type, tx_owner) in self.tx_owners.iter().filter(|(_, owner)| *owner != module) {
             let exports = &self.modules[tx_owner].exports;
+
             for &service in services {
-                if exports.contains_key(service) {
-                    // import only if such an export exists
-                    imports.entry(tx_owner.to_owned()).or_default().push(Import {
-                        from: service.to_owned(),
-                        to: format!("@tx/{}/{}", tx_type, service),
-                    });
-                }
+                let type_specific_export = format!("{}.{}", service, tx_type);
+                let export = if exports.contains_key(&type_specific_export) {
+                    type_specific_export
+                } else if exports.contains_key(service) {
+                    service.to_owned()
+                } else {
+                    continue
+                };
+
+                // import only if such an export exists
+                imports.entry(tx_owner.to_owned()).or_default().push(Import {
+                    from: export,
+                    to: format!("@tx/{}/{}", tx_type, service),
+                });
             }
         }
     }
@@ -251,5 +260,129 @@ impl Weaver {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{Import, LinkInfo, Weaver};
+    use cmodule::link::{Linkable, Port};
+    use cmodule::sandbox::Sandbox;
+    use std::cell::RefCell;
+    use std::collections::{BTreeMap, HashMap};
+
+    struct DummySandbox;
+
+    impl Linkable for DummySandbox {
+        fn supported_linkers(&self) -> &'static [&'static str] {
+            &["linker-a", "linker-b"]
+        }
+        fn new_port(&mut self) -> Box<dyn Port> {
+            Box::new(DummyPort)
+        }
+        fn seal(&mut self) {}
+    }
+    impl Sandbox for DummySandbox {}
+
+    struct DummyPort;
+
+    impl Port for DummyPort {
+        fn export(&mut self, _ids: &[usize]) {}
+        fn import(&mut self, _slots: &[&str]) {}
+    }
+
+    fn exports(list: &[(&str, usize)]) -> BTreeMap<String, usize> {
+        list.iter().map(|(export, id)| ((*export).to_owned(), *id)).collect()
+    }
+
+    fn tx_owners(list: &[(&str, &str)]) -> HashMap<String, String> {
+        list.iter().map(|(ty, owner)| ((*ty).to_owned(), (*owner).to_owned())).collect()
+    }
+
+    fn weaver_for_testing_import_of_tx_services() -> Weaver {
+        let modules = vec![
+            ("a".to_owned(), LinkInfo {
+                linkable: RefCell::new(Box::new(DummySandbox)),
+                exports: exports(&[("service-a", 0), ("service-b.tx-type-a", 1), ("service-b.tx-type-b", 2)]),
+                imports: RefCell::new(Default::default()),
+            }),
+            ("b".to_owned(), LinkInfo {
+                linkable: RefCell::new(Box::new(DummySandbox)),
+                exports: exports(&[("service-a", 0), ("service-b", 1)]),
+                imports: RefCell::new(Default::default()),
+            }),
+            ("c".to_owned(), LinkInfo {
+                linkable: RefCell::new(Box::new(DummySandbox)),
+                exports: exports(&[("service-a", 0), ("service-b", 1)]),
+                imports: RefCell::new(Default::default()),
+            }),
+            ("d".to_owned(), LinkInfo {
+                linkable: RefCell::new(Box::new(DummySandbox)),
+                exports: Default::default(),
+                imports: RefCell::new(Default::default()),
+            }),
+        ]
+        .into_iter()
+        .collect();
+
+        let tx_owners = tx_owners(&[("tx-type-a", "a"), ("tx-type-b", "a"), ("tx-type-c", "b")]);
+
+        Weaver {
+            modules,
+            tx_owners,
+        }
+    }
+
+    #[test]
+    fn import_single_tx_service_from_multi_tx_owner() {
+        let mut weaver = weaver_for_testing_import_of_tx_services();
+        weaver.import_tx_services("c", &["service-a"]);
+        let imports = weaver.modules["c"].imports.borrow();
+
+        assert!(!imports.contains_key("c"));
+        assert!(!imports.contains_key("d"));
+
+        let import_list = imports.get("a").expect("should have imported from module 'a'");
+        assert!(import_list.iter().all(
+            |Import {
+                 from,
+                 to,
+             }| from == "service-a" && (to == "@tx/tx-type-a/service-a" || to == "@tx/tx-type-b/service-a")
+        ));
+
+        let import_list = imports.get("b").expect("should have imported from module 'b'");
+        assert!(import_list.iter().all(
+            |Import {
+                 from,
+                 to,
+             }| from == "service-a" && to == "@tx/tx-type-c/service-a"
+        ));
+    }
+
+    #[test]
+    fn import_per_tx_service_from_multi_tx_owner() {
+        let mut weaver = weaver_for_testing_import_of_tx_services();
+        weaver.import_tx_services("c", &["service-b"]);
+        let imports = weaver.modules["c"].imports.borrow();
+
+        assert!(!imports.contains_key("c"));
+        assert!(!imports.contains_key("d"));
+
+        let import_list = imports.get("a").expect("should have imported from module 'a'");
+        assert!(import_list.iter().all(
+            |Import {
+                 from,
+                 to,
+             }| (from == "service-b.tx-type-a" && to == "@tx/tx-type-a/service-b")
+                || (from == "service-b.tx-type-b" && to == "@tx/tx-type-b/service-b")
+        ));
+
+        let import_list = imports.get("b").expect("should have imported from module 'b'");
+        assert!(import_list.iter().all(
+            |Import {
+                 from,
+                 to,
+             }| from == "service-b" && to == "@tx/tx-type-c/service-b"
+        ));
     }
 }
