@@ -211,7 +211,7 @@ impl Weaver {
     fn import_tx_services(&mut self, module: &str, services: &[&str]) {
         let imports = &mut self.modules[module].imports.borrow_mut();
 
-        for (tx_type, tx_owner) in self.tx_owners.iter().filter(|(name, _)| *name != module) {
+        for (tx_type, tx_owner) in self.tx_owners.iter().filter(|(_, owner)| *owner != module) {
             let exports = &self.modules[tx_owner].exports;
             for &service in services {
                 if exports.contains_key(service) {
