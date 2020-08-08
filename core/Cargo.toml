@@ -5,8 +5,8 @@ authors = ["CodeChain Team <hi@codechain.io>"]
 edition = "2018"
 
 [dependencies]
-ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
-cdb = { package = "codechain-db", git = "https://github.com/CodeChain-io/rust-codechain-db.git", version = "0.2" }
+ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.3", tag = "v0.3.0" }
+cdb = { package = "codechain-db", git = "https://github.com/CodeChain-io/rust-codechain-db.git", version = "0.2", tag = "v0.2.0" }
 cio = { package = "codechain-io", path = "../util/io" }
 cjson = { package = "codechain-json", path = "../json" }
 ckey = { package = "codechain-key", path = "../key" }
@@ -28,11 +28,11 @@ lru-cache = "0.1.2"
 merkle-trie = { git = "https://github.com/CodeChain-io/rust-merkle-trie.git", version = "0.4" }
 num-rational = "0.2.1"
 parking_lot = "0.11.0"
-primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
+primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.5", tag = "v0.5.1" }
 rand = "0.6.1"
-rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
-rlp_compress = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.2" }
-rlp_derive = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.2" }
+rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.5", tag = "v0.5.0" }
+rlp_compress = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.5", tag = "v0.5.0" }
+rlp_derive = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.5", tag = "v0.5.0" }
 snap = "0.2"
 table = { path = "../util/table" }
 
