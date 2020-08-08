@@ -54,7 +54,7 @@ pub fn address_to_hash(addr: &SocketAddr) -> H128 {
             }
             let octets: [u8; 16] = ip.to_ipv6_compatible().octets();
             let mut hash = H128::blake(&octets);
-            let hash_len = hash.len();
+            let hash_len = H128::len_bytes();
             hash.as_mut()[hash_len - 2] ^= (port >> 8) as u8;
             hash.as_mut()[hash_len - 1] ^= (port & 0xFF) as u8;
             hash
@@ -70,8 +70,7 @@ fn log2_distance(addr: &SocketAddr, datum: &H128) -> usize {
     const B: usize = 16 * 8;
     const BYTES_SIZE: usize = B / 8;
     debug_assert_eq!(B % 8, 0);
-    let mut distance_as_bytes: [u8; BYTES_SIZE] = [0; BYTES_SIZE];
-    distance.copy_to(&mut distance_as_bytes);
+    let distance_as_bytes: [u8; BYTES_SIZE] = distance.to_fixed_bytes();
 
     let mut same_prefix_length: usize = 0;
     const MASKS: [u8; 8] =

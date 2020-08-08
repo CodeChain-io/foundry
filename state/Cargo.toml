@@ -5,8 +5,8 @@ authors = ["CodeChain Team <hi@codechain.io>"]
 edition = "2018"
 
 [dependencies]
-codechain-crypto = { git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
-codechain-db = { git = "https://github.com/CodeChain-io/rust-codechain-db.git", version = "0.2" }
+codechain-crypto = { git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.3", tag = "v0.3.0" }
+codechain-db = { git = "https://github.com/CodeChain-io/rust-codechain-db.git", version = "0.2", tag = "v0.2.0" }
 codechain-logger = { path = "../util/logger" }
 codechain-key = { path = "../key" }
 codechain-types = { path = "../types" }
@@ -17,9 +17,9 @@ log = "0.4.6"
 lru-cache = "0.1.1"
 merkle-trie = { git = "https://github.com/CodeChain-io/rust-merkle-trie.git", version = "0.4" }
 parking_lot = "0.11.0"
-primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
-rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
-rlp_derive = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.2" }
+primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.5", tag = "v0.5.1" }
+rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.5", tag = "v0.5.0" }
+rlp_derive = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.5", tag = "v0.5.0" }
 rustc-hex = "1.0"
 
 [dev-dependencies]

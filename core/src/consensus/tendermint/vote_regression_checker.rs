@@ -41,7 +41,7 @@ mod tests {
 
     use crate::consensus::VoteStep;
 
-    use primitives::H256;
+    use primitives::{u256_from_u128, BigEndianHash, H256};
 
     #[test]
     fn test_initial_set() {
@@ -74,12 +74,12 @@ mod tests {
 
         checker.check(&VoteOn {
             step: VoteStep::new(100, 10, Step::Prevote),
-            block_hash: Some(H256::from(1).into()),
+            block_hash: Some(H256::from_uint(&u256_from_u128(1u128)).into()),
         });
 
         assert!(checker.check(&VoteOn {
             step: VoteStep::new(101, 10, Step::Prevote),
-            block_hash: Some(H256::from(2).into())
+            block_hash: Some(H256::from_uint(&u256_from_u128(2u128)).into()),
         }))
     }
 
@@ -89,12 +89,12 @@ mod tests {
 
         checker.check(&VoteOn {
             step: VoteStep::new(100, 10, Step::Prevote),
-            block_hash: Some(H256::from(1).into()),
+            block_hash: Some(H256::from_uint(&u256_from_u128(1u128)).into()),
         });
 
         assert!(!checker.check(&VoteOn {
             step: VoteStep::new(99, 10, Step::Prevote),
-            block_hash: Some(H256::from(2).into())
+            block_hash: Some(H256::from_uint(&u256_from_u128(2u128)).into()),
         }))
     }
 
@@ -104,12 +104,12 @@ mod tests {
 
         checker.check(&VoteOn {
             step: VoteStep::new(100, 10, Step::Prevote),
-            block_hash: Some(H256::from(1).into()),
+            block_hash: Some(H256::from_uint(&u256_from_u128(1u128)).into()),
         });
 
         assert!(checker.check(&VoteOn {
             step: VoteStep::new(100, 11, Step::Prevote),
-            block_hash: Some(H256::from(2).into())
+            block_hash: Some(H256::from_uint(&u256_from_u128(2u128)).into()),
         }))
     }
 
@@ -119,12 +119,12 @@ mod tests {
 
         checker.check(&VoteOn {
             step: VoteStep::new(100, 10, Step::Prevote),
-            block_hash: Some(H256::from(1).into()),
+            block_hash: Some(H256::from_uint(&u256_from_u128(1u128)).into()),
         });
 
         assert!(!checker.check(&VoteOn {
             step: VoteStep::new(100, 9, Step::Prevote),
-            block_hash: Some(H256::from(2).into())
+            block_hash: Some(H256::from_uint(&u256_from_u128(2u128)).into()),
         }))
     }
 
@@ -134,12 +134,12 @@ mod tests {
 
         checker.check(&VoteOn {
             step: VoteStep::new(100, 10, Step::Prevote),
-            block_hash: Some(H256::from(1).into()),
+            block_hash: Some(H256::from_uint(&u256_from_u128(1u128)).into()),
         });
 
         assert!(checker.check(&VoteOn {
             step: VoteStep::new(100, 10, Step::Precommit),
-            block_hash: Some(H256::from(2).into())
+            block_hash: Some(H256::from_uint(&u256_from_u128(2u128)).into())
         }))
     }
 
@@ -149,12 +149,12 @@ mod tests {
 
         checker.check(&VoteOn {
             step: VoteStep::new(100, 10, Step::Prevote),
-            block_hash: Some(H256::from(1).into()),
+            block_hash: Some(H256::from_uint(&u256_from_u128(1u128)).into()),
         });
 
         assert!(!checker.check(&VoteOn {
             step: VoteStep::new(100, 10, Step::Propose),
-            block_hash: Some(H256::from(2).into())
+            block_hash: Some(H256::from_uint(&u256_from_u128(2u128)).into())
         }))
     }
 
@@ -180,12 +180,12 @@ mod tests {
 
         checker.check(&VoteOn {
             step: VoteStep::new(100, 10, Step::Prevote),
-            block_hash: Some(H256::from(1).into()),
+            block_hash: Some(H256::from_uint(&u256_from_u128(1u128)).into()),
         });
 
         assert!(!checker.check(&VoteOn {
             step: VoteStep::new(100, 10, Step::Prevote),
-            block_hash: Some(H256::from(2).into())
+            block_hash: Some(H256::from_uint(&u256_from_u128(2u128)).into())
         }))
     }
 }
