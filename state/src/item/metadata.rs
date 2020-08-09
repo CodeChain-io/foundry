@@ -155,7 +155,9 @@ impl_address!(TOP, MetadataAddress, PREFIX);
 
 impl MetadataAddress {
     pub fn new() -> Self {
-        Self::from_transaction_hash(H256::from_slice(b"metadata address"), 0)
+        let mut key = [0u8; 32];
+        key[0..16].copy_from_slice(b"metadata address");
+        Self::from_transaction_hash(H256::from_slice(&key), 0)
     }
 }
 
@@ -237,5 +239,15 @@ mod tests {
             term_params: CommonParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);
+    }
+
+    #[test]
+    fn metadata_address_is_constant() {
+        let address = MetadataAddress::new();
+        let expected = [
+            77u8, 65, 87, 171, 93, 124, 219, 195, 206, 204, 98, 127, 21, 167, 126, 51, 136, 47, 48, 19, 43, 129, 199,
+            232, 2, 92, 210, 163, 14, 209, 173, 33,
+        ];
+        assert_eq!(expected, address.as_ref());
     }
 }
