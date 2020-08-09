@@ -623,6 +623,7 @@ impl TopState for TopLevelState {
 
 #[cfg(test)]
 mod tests_state {
+    use std::str::FromStr;
     use std::sync::Arc;
 
     use cdb::{new_journaldb, Algorithm};
@@ -970,7 +971,7 @@ mod tests_state {
         let mut state = get_temp_state();
         let a = Public::default();
         state.get_account_mut(&a).unwrap();
-        assert_eq!(Ok(H256::from("d53db6d6b7631919a40209daec6271dc77c6ae67155afa6ce0efabf7978de67a")), state.commit());
+        assert_eq!(Ok(H256::from_str("d53db6d6b7631919a40209daec6271dc77c6ae67155afa6ce0efabf7978de67a").unwrap()), state.commit());
     }
 
     #[test]

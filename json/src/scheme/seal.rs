@@ -45,6 +45,7 @@ mod tests {
     use crate::bytes::Bytes;
     use crate::hash::H520;
     use primitives::H520 as Core520;
+    use std::str::FromStr;
 
     #[test]
     fn seal_deserialization() {
@@ -69,7 +70,7 @@ mod tests {
             Seal::Tendermint(TendermintSeal {
                 prev_view: 0x3.into(),
                 cur_view: 0x4.into(),
-                precommits: vec![H520(Core520::from("0x4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004"))]
+                precommits: vec![H520(Core520::from_str("4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004").unwrap())]
             }),
         ]);
     }
