@@ -59,8 +59,8 @@ macro_rules! impl_hash {
                     where
                         E: Error, {
                         let value = match value.len() {
-                            0 => $inner::from(0),
-                            2 if value == "0x" => $inner::from(0),
+                            0 => $inner::zero(),
+                            2 if value == "0x" => $inner::zero(),
                             _ if value.starts_with("0x") => $inner::from_str(&value[2..])
                                 .map_err(|e| Error::custom(format!("Invalid hex value {}: {}", value, e).as_str()))?,
                             _ => $inner::from_str(value)
@@ -105,13 +105,13 @@ mod test {
         let s = r#"["", "5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae"]"#;
         let deserialized: Vec<H256> = serde_json::from_str(s).unwrap();
         assert_eq!(deserialized, vec![
-            H256(primitives::H256::from(0)),
+            H256(primitives::H256::zero()),
             H256(primitives::H256::from("5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae")),
         ]);
     }
 
     #[test]
     fn hash_into() {
-        assert_eq!(primitives::H256::from(0), H256(primitives::H256::from(0)).into());
+        assert_eq!(primitives::H256::zero(), H256(primitives::H256::zero()).into());
     }
 }
