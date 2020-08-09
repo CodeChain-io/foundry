@@ -90,7 +90,9 @@ impl_address!(TOP, ModuleAddress, PREFIX);
 
 impl ModuleAddress {
     pub fn new(storage_id: StorageId) -> Self {
-        Self::from_transaction_hash(H256::from_slice(b"module"), storage_id.into())
+        let mut key = [0u8; 32];
+        key[0..6].copy_from_slice(b"module");
+        Self::from_transaction_hash(H256::from_slice(&key), storage_id.into())
     }
 }
 
