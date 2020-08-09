@@ -382,6 +382,7 @@ mod tests {
     use super::super::Step;
     use super::*;
     use rlp::rlp_encode_and_decode_test;
+    use std::str::FromStr;
 
     #[test]
     fn step_ordering() {
@@ -457,7 +458,9 @@ mod tests {
                     on: VoteOn {
                         step: VoteStep::new(2, 3, Step::Commit),
                         block_hash: Some(
-                            H256::from("07feab4c39250abf60b77d7589a5b61fdf409bd837e936376381d19db1e1f050").into()
+                            H256::from_str("07feab4c39250abf60b77d7589a5b61fdf409bd837e936376381d19db1e1f050")
+                                .unwrap()
+                                .into()
                         ),
                     },
                 },
@@ -467,7 +470,9 @@ mod tests {
                     on: VoteOn {
                         step: VoteStep::new(2, 3, Step::Commit),
                         block_hash: Some(
-                            H256::from("07feab4c39250abf60b77d7589a5b61fdf409bd837e936376381d19db1e1f050").into()
+                            H256::from_str("07feab4c39250abf60b77d7589a5b61fdf409bd837e936376381d19db1e1f050")
+                                .unwrap()
+                                .into()
                         ),
                     },
                 }
@@ -488,7 +493,9 @@ mod tests {
             signer_index: 0x1234,
             on: VoteOn {
                 step: VoteStep::new(2, 3, Step::Commit),
-                block_hash: Some(H256::from("07feab4c39250abf60b77d7589a5b61fdf409bd837e936376381d19db1e1f050").into()),
+                block_hash: Some(
+                    H256::from_str("07feab4c39250abf60b77d7589a5b61fdf409bd837e936376381d19db1e1f050").unwrap().into(),
+                ),
             },
         };
         rlp_encode_and_decode_test!(message);
@@ -501,7 +508,8 @@ mod tests {
         let step = Step::Commit;
         let signature = Signature::random();
         let signer_index = 0x1234;
-        let block_hash = Some(H256::from("07feab4c39250abf60b77d7589a5b61fdf409bd837e936376381d19db1e1f050").into());
+        let block_hash =
+            Some(H256::from_str("07feab4c39250abf60b77d7589a5b61fdf409bd837e936376381d19db1e1f050").unwrap().into());
         let consensus_message = ConsensusMessage {
             signature,
             signer_index,

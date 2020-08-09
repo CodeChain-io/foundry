@@ -99,6 +99,7 @@ impl_hash!(H520, Hash520);
 #[cfg(test)]
 mod test {
     use super::H256;
+    use std::str::FromStr;
 
     #[test]
     fn hash_deserialization() {
@@ -106,7 +107,9 @@ mod test {
         let deserialized: Vec<H256> = serde_json::from_str(s).unwrap();
         assert_eq!(deserialized, vec![
             H256(primitives::H256::zero()),
-            H256(primitives::H256::from("5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae")),
+            H256(
+                primitives::H256::from_str("5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae").unwrap()
+            ),
         ]);
     }
 
