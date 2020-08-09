@@ -154,7 +154,7 @@ mod tests {
         let account =
             SafeAccount::create(&keypair, [0u8; 16], password, 10240, "{\"name\":\"Test\"}".to_string()).unwrap();
         let signature = account.decrypt(password).unwrap().sign(&message).unwrap();
-        assert!(verify(&signature, &message, keypair.public()));
+        assert!(verify(&signature, message.as_ref(), keypair.public()));
     }
 
     #[test]

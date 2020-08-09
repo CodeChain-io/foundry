@@ -38,7 +38,7 @@ fn tendermint_max_step_time(b: &mut Bencher) {
     while i < num_validators - 1 {
         let key_pair: Ed25519KeyPair = Random.generate().unwrap();
         let message = Message::random();
-        let signature = sign(&message, key_pair.private());
+        let signature = sign(message.as_ref(), key_pair.private());
 
         key_pairs.push(key_pair);
         messages.push(message);
@@ -47,11 +47,11 @@ fn tendermint_max_step_time(b: &mut Bencher) {
         i += 1;
     }
     b.iter(|| {
-        sign(&message_self, key_pair_self.private());
+        sign(message_self.as_ref(), key_pair_self.private());
 
         let mut i = 0;
         while i < num_validators - 1 {
-            assert!(verify(&signatures[i], &messages[i], key_pairs[i].public()));
+            assert!(verify(&signatures[i], messages[i].as_ref(), key_pairs[i].public()));
             i += 1;
         }
     });

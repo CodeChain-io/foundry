@@ -187,7 +187,7 @@ mod tests {
     fn parse_return_some() {
         let hash = {
             let mut hash = H256::random();
-            hash[0] = PREFIX;
+            hash.as_mut()[0] = PREFIX;
             hash
         };
         let address = MetadataAddress::from_hash(hash);

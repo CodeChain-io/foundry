@@ -55,7 +55,7 @@ impl BodyDB {
         let genesis_hash = genesis.hash();
         if bdb.block_body(&genesis_hash).is_none() {
             let mut batch = DBTransaction::new();
-            batch.put(db::COL_BODIES, &genesis_hash, &Self::block_to_body(genesis));
+            batch.put(db::COL_BODIES, genesis_hash.as_ref(), &Self::block_to_body(genesis));
 
             bdb.db.write(batch).expect("Low level database error. Some issue with disk?");
         }
@@ -76,7 +76,7 @@ impl BodyDB {
         let compressed_body = compress(&Self::block_to_body(block), blocks_swapper());
 
         // store block in db
-        batch.put(db::COL_BODIES, &hash, &compressed_body);
+        batch.put(db::COL_BODIES, hash.as_ref(), &compressed_body);
     }
 
     pub fn update_best_block(&self, batch: &mut DBTransaction, best_block_changed: &BestBlockChanged) {
@@ -164,7 +164,7 @@ impl BodyProvider for BodyDB {
 
         // Read from DB and populate cache
         let compressed_body =
-            self.db.get(db::COL_BODIES, hash).expect("Low level database error. Some issue with disk?")?;
+            self.db.get(db::COL_BODIES, hash.as_ref()).expect("Low level database error. Some issue with disk?")?;
 
         let raw_body = decompress(&compressed_body, blocks_swapper());
         let mut lock = self.body_cache.lock();

@@ -17,9 +17,11 @@
 macro_rules! define_address_constructor {
     (TOP, $name:ident, $prefix:expr) => {
         fn from_transaction_hash(transaction_hash: ::primitives::H256, index: u64) -> Self {
-            let mut hash: ::primitives::H256 =
-                ::ccrypto::Blake::blake_with_key(&transaction_hash, &::primitives::H128::from(index));
-            hash[0] = $prefix;
+            let mut hash: ::primitives::H256 = ::ccrypto::Blake::blake_with_key(
+                &transaction_hash,
+                ::primitives::h128_from_u128(index.into()).as_ref(),
+            );
+            hash.as_mut()[0] = $prefix;
             $name(hash)
         }
     };
@@ -95,15 +97,6 @@ macro_rules! impl_address {
         impl AsRef<[u8]> for $name {
             fn as_ref(&self) -> &[u8] {
                 self.0.as_ref()
-            }
-        }
-
-        impl ::std::ops::Deref for $name {
-            type Target = [u8];
-
-            #[inline]
-            fn deref(&self) -> &Self::Target {
-                &self.0
             }
         }
     };

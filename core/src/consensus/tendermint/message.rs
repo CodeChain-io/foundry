@@ -373,7 +373,7 @@ impl ConsensusMessage {
     }
 
     pub fn verify(&self, signer_public: &Public) -> bool {
-        verify(&self.signature, &self.on.hash(), signer_public)
+        verify(&self.signature, self.on.hash().as_ref(), signer_public)
     }
 }
 

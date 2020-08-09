@@ -84,7 +84,7 @@ impl<'de> Deserialize<'de> for Public {
     where
         D: Deserializer<'de>, {
         let h256_pubkey = H256::deserialize(deserializer)?;
-        Ok(Self::from_slice(&h256_pubkey).expect("Bytes length was verified"))
+        Ok(Self::from_slice(h256_pubkey.as_ref()).expect("Bytes length was verified"))
     }
 }
 

@@ -81,7 +81,7 @@ pub fn recover_to_data(db: &dyn KeyValueDB) -> HashMap<H256, MemPoolItem> {
     for (key, value) in db.iter(dblib::COL_MEMPOOL) {
         let bytes = (*value).to_vec();
         let rlp = rlp::Rlp::new(&bytes);
-        let decoded_key = (key.as_ref()[PREFIX_SIZE..]).into();
+        let decoded_key = H256::from_slice(&key.as_ref()[PREFIX_SIZE..]);
         let mem_pool_projection: MemPoolItemProjection = rlp.as_val().unwrap();
         let decoded_item = mem_pool_projection.try_into().expect("DB corruption detected");
         by_hash.insert(decoded_key, decoded_item);

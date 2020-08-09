@@ -129,7 +129,7 @@ mod tests {
         let address1 = ModuleDatumAddress::new("foundry", 1);
         let address2 = ModuleDatumAddress::new("foundry", 2);
         assert_ne!(address1, address2);
-        assert_eq!(address1[0], PREFIX);
-        assert_eq!(address2[0], PREFIX);
+        assert_eq!(address1.as_ref()[0], PREFIX);
+        assert_eq!(address2.as_ref()[0], PREFIX);
     }
 }

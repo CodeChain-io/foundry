@@ -48,7 +48,7 @@ impl Public {
 impl From<u64> for Public {
     fn from(integer: u64) -> Self {
         let for_slice: H256 = integer.into();
-        PublicKey::from_slice(&for_slice).unwrap().into()
+        PublicKey::from_slice(for_slice.as_ref()).unwrap().into()
     }
 }
 
@@ -56,7 +56,7 @@ impl FromStr for Public {
     type Err = crate::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let for_slice = H256::from_str(s).map_err(|_| crate::Error::InvalidPublic(s.to_string()))?;
-        Ok(PublicKey::from_slice(&for_slice).expect("H256 has length 32").into())
+        Ok(PublicKey::from_slice(for_slice.as_ref()).expect("H256 has length 32").into())
     }
 }
 
@@ -109,7 +109,7 @@ impl<'de> Deserialize<'de> for Public {
     where
         D: Deserializer<'de>, {
         let h256_pubkey = H256::deserialize(deserializer)?;
-        Ok(Self::from_slice(&h256_pubkey).expect("Bytes length was verified"))
+        Ok(Self::from_slice(h256_pubkey.as_ref()).expect("Bytes length was verified"))
     }
 }
 

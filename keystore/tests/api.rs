@@ -135,6 +135,6 @@ fn decrypting_files_with_short_ciphertext() {
 
     let s1 = store.decrypt_account(&accounts[0], &"password".into()).unwrap().sign(&message).unwrap();
     let s2 = store.decrypt_account(&accounts[1], &"password".into()).unwrap().sign(&message).unwrap();
-    assert!(verify(&s1, &message, kp1.public()));
-    assert!(verify(&s2, &message, kp2.public()));
+    assert!(verify(&s1, message.as_ref(), kp1.public()));
+    assert!(verify(&s2, message.as_ref(), kp2.public()));
 }

@@ -1223,7 +1223,7 @@ impl Worker {
         let parent_hash = header.parent_hash();
         for (bitset_index, signature) in seal_view.signatures()? {
             let public = self.validators.get_current(header.parent_hash(), bitset_index);
-            if !verify(&signature, &precommit_vote_on.hash(), &public) {
+            if !verify(&signature, precommit_vote_on.hash().as_ref(), &public) {
                 return Err(EngineError::BlockNotAuthorized(public).into())
             }
             assert!(!voted_validators.is_set(bitset_index), "Double vote");

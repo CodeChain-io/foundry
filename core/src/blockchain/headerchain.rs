@@ -77,13 +77,13 @@ impl HeaderChain {
                 };
 
                 let mut batch = DBTransaction::new();
-                batch.put(db::COL_HEADERS, &hash, genesis.rlp().as_raw());
+                batch.put(db::COL_HEADERS, hash.as_ref(), genesis.rlp().as_raw());
 
                 batch.write(db::COL_EXTRA, &hash, &details);
                 batch.write(db::COL_EXTRA, &genesis.number(), &hash);
 
-                batch.put(db::COL_EXTRA, BEST_HEADER_KEY, &hash);
-                batch.put(db::COL_EXTRA, BEST_PROPOSAL_HEADER_KEY, &hash);
+                batch.put(db::COL_EXTRA, BEST_HEADER_KEY, hash.as_ref());
+                batch.put(db::COL_EXTRA, BEST_PROPOSAL_HEADER_KEY, hash.as_ref());
                 db.write(batch).expect("Low level database error. Some issue with disk?");
                 hash
             }
@@ -127,7 +127,7 @@ impl HeaderChain {
         }
 
         let compressed_header = compress(header.rlp().as_raw(), blocks_swapper());
-        batch.put(db::COL_HEADERS, &hash, &compressed_header);
+        batch.put(db::COL_HEADERS, hash.as_ref(), &compressed_header);
 
         let mut new_hashes = HashMap::new();
         new_hashes.insert(header.number(), hash);
@@ -151,9 +151,9 @@ impl HeaderChain {
         assert!(self.pending_best_header_hash.read().is_none());
         assert!(self.pending_best_proposal_block_hash.read().is_none());
 
-        batch.put(db::COL_EXTRA, BEST_HEADER_KEY, hash);
+        batch.put(db::COL_EXTRA, BEST_HEADER_KEY, hash.as_ref());
         *self.pending_best_header_hash.write() = Some(*hash);
-        batch.put(db::COL_EXTRA, BEST_PROPOSAL_HEADER_KEY, hash);
+        batch.put(db::COL_EXTRA, BEST_PROPOSAL_HEADER_KEY, hash.as_ref());
         *self.pending_best_proposal_block_hash.write() = Some(*hash);
     }
 
@@ -181,7 +181,7 @@ impl HeaderChain {
 
         // store block in db
         let compressed_header = compress(header.rlp().as_raw(), blocks_swapper());
-        batch.put(db::COL_HEADERS, &hash, &compressed_header);
+        batch.put(db::COL_HEADERS, hash.as_ref(), &compressed_header);
 
         let best_header_changed = self.best_header_changed(header, engine);
 
@@ -191,10 +191,10 @@ impl HeaderChain {
         let mut pending_best_header_hash = self.pending_best_header_hash.write();
         let mut pending_best_proposal_header_hash = self.pending_best_proposal_block_hash.write();
         if let Some(best_block_hash) = best_header_changed.new_best_hash() {
-            batch.put(db::COL_EXTRA, BEST_HEADER_KEY, &best_block_hash);
+            batch.put(db::COL_EXTRA, BEST_HEADER_KEY, best_block_hash.as_ref());
             *pending_best_header_hash = Some(best_block_hash);
 
-            batch.put(db::COL_EXTRA, BEST_PROPOSAL_HEADER_KEY, &hash);
+            batch.put(db::COL_EXTRA, BEST_PROPOSAL_HEADER_KEY, hash.as_ref());
             *pending_best_proposal_header_hash = Some(hash);
         }
 
@@ -344,11 +344,11 @@ impl HeaderChain {
         new_hashes.insert(block_detail.number, block_hash);
 
         let mut pending_best_header_hash = self.pending_best_header_hash.write();
-        batch.put(db::COL_EXTRA, BEST_HEADER_KEY, &block_hash);
+        batch.put(db::COL_EXTRA, BEST_HEADER_KEY, block_hash.as_ref());
         *pending_best_header_hash = Some(block_hash);
 
         let mut pending_best_proposal_block_hash = self.pending_best_proposal_block_hash.write();
-        batch.put(db::COL_EXTRA, BEST_PROPOSAL_HEADER_KEY, &block_hash);
+        batch.put(db::COL_EXTRA, BEST_PROPOSAL_HEADER_KEY, block_hash.as_ref());
         *pending_best_proposal_block_hash = Some(block_hash);
 
         let mut pending_hashes = self.pending_hashes.write();
@@ -454,7 +454,7 @@ fn block_header_data(
         }
     }
     // Read from DB and populate cache
-    let b = db.get(db::COL_HEADERS, hash).expect("Low level database error. Some issue with disk?")?;
+    let b = db.get(db::COL_HEADERS, hash.as_ref()).expect("Low level database error. Some issue with disk?")?;
 
     let bytes = decompress(&b, blocks_swapper());
 

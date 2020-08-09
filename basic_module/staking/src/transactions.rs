@@ -38,7 +38,7 @@ pub struct SignedTransaction {
 impl SignedTransaction {
     pub fn verify(&self) -> bool {
         let message = self.tx.hash();
-        verify(&self.signature, &message, &self.signer_public)
+        verify(&self.signature, message.as_ref(), &self.signer_public)
     }
 }
 
