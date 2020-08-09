@@ -2,16 +2,16 @@
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
+// it under the terms of the GNU General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::session::{Nonce, Session};
@@ -136,10 +136,7 @@ impl RoutingTable {
 
     pub fn is_banned(&self, target: &SocketAddr) -> bool {
         let entries = self.entries.read();
-        match entries.get(target) {
-            Some(State::Banned) => true,
-            _ => false,
-        }
+        matches!(entries.get(target), Some(State::Banned))
     }
 
     pub fn is_establishing_or_established(&self, target: &SocketAddr) -> bool {
@@ -160,14 +157,12 @@ impl RoutingTable {
 
     pub fn is_established(&self, target: &SocketAddr) -> bool {
         let entries = self.entries.read();
-        if let Some(State::Established {
-            ..
-        }) = entries.get(target)
-        {
-            true
-        } else {
-            false
-        }
+        matches!(
+            entries.get(target),
+            Some(State::Established {
+                ..
+            })
+        )
     }
 
     pub fn is_establishing(&self, target: &SocketAddr) -> bool {
@@ -589,14 +584,7 @@ impl RoutingTable {
         let entry = entries.entry(target).or_default();
         let mut new_state = State::Banned;
         std::mem::swap(&mut new_state, entry);
-        if let State::Established {
-            ..
-        } = new_state
-        {
-            true
-        } else {
-            false
-        }
+        matches!(new_state, State::Established {..})
     }
 
     pub fn unban(&self, target: SocketAddr) -> bool {

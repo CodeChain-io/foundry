@@ -2,16 +2,16 @@
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
+// it under the terms of the GNU General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::BitSet;
@@ -75,12 +75,10 @@ impl TendermintState {
     }
 
     pub fn is_propose_wait_empty_block_timer(&self) -> bool {
-        match self {
-            TendermintState::ProposeWaitEmptyBlockTimer {
-                ..
-            } => true,
-            _ => false,
-        }
+        matches!(self,
+        TendermintState::ProposeWaitEmptyBlockTimer {
+            ..
+        })
     }
 
     pub fn is_commit(&self) -> bool {
@@ -96,12 +94,10 @@ impl TendermintState {
     }
 
     pub fn is_commit_timedout(&self) -> bool {
-        match self {
-            TendermintState::CommitTimedout {
-                ..
-            } => true,
-            _ => false,
-        }
+        matches! (self,
+        TendermintState::CommitTimedout {
+            ..
+        })
     }
 
     pub fn committed(&self) -> Option<(View, BlockHash)> {
@@ -330,9 +326,6 @@ impl Proposal {
     }
 
     pub fn is_none(&self) -> bool {
-        match self {
-            Proposal::None => true,
-            _ => false,
-        }
+        matches!(self, Proposal::None)
     }
 }

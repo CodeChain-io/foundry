@@ -2,16 +2,16 @@
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
+// it under the terms of the GNU General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::block_info::BestBlockChanged;
@@ -120,8 +120,10 @@ impl BodyDB {
 
     /// Create a block body from a block.
     pub fn block_to_body(block: &BlockView<'_>) -> Bytes {
-        let mut body = RlpStream::new_list(1);
-        body.append_raw(block.rlp().at(1).unwrap().as_raw(), 1);
+        let mut body = RlpStream::new_list(2);
+        let rlp = block.rlp();
+        body.append_raw(rlp.at(1).unwrap().as_raw(), 1); // evidences
+        body.append_raw(rlp.at(2).unwrap().as_raw(), 1); // transactions
         body.out()
     }
 }

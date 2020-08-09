@@ -2,16 +2,16 @@
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
+// it under the terms of the GNU General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 //! Lazily-decoded owning views of RLP-encoded blockchain objects.
@@ -26,6 +26,7 @@
 use crate::block::Block as FullBlock;
 use crate::transaction::UnverifiedTransaction;
 use crate::views;
+use crate::Evidence;
 use ccrypto::blake256;
 use ckey::Ed25519Public as Public;
 use ctypes::{BlockHash, BlockNumber, Header as FullHeader, TxHash};
@@ -177,6 +178,16 @@ impl Body {
 
 // forwarders to borrowed view.
 impl Body {
+    /// Get a vector of all evidences
+    pub fn evidences(&self) -> Vec<Evidence> {
+        self.view().evidences()
+    }
+
+    ///Number of evidences in the block
+    pub fn evidences_count(&self) -> usize {
+        self.view().evidences_count()
+    }
+
     /// Get a vector of all transactions.
     pub fn transactions(&self) -> Vec<UnverifiedTransaction> {
         self.view().transactions()
@@ -297,6 +308,16 @@ impl Block {
 
 // forwarders to body view.
 impl Block {
+    /// Get a vector of all evidences
+    pub fn evidences(&self) -> Vec<Evidence> {
+        self.view().evidences()
+    }
+
+    ///Number of evidences in the block
+    pub fn evidences_count(&self) -> usize {
+        self.view().evidences_count()
+    }
+
     /// Get a vector of all transactions.
     pub fn transactions(&self) -> Vec<UnverifiedTransaction> {
         self.view().transactions()

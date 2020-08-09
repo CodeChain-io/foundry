@@ -2,20 +2,21 @@
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
+// it under the terms of the GNU General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::{HeaderView, TransactionView};
 use crate::transaction::{LocalizedTransaction, UnverifiedTransaction};
+use crate::Evidence;
 use ccrypto::blake256;
 use ctypes::{BlockHash, Header, TransactionIndex, TxHash};
 use rlp::Rlp;
@@ -65,9 +66,17 @@ impl<'a> BlockView<'a> {
         HeaderView::new_from_rlp(self.rlp.at(0).unwrap())
     }
 
+    pub fn evidences(&self) -> Vec<Evidence> {
+        self.rlp.list_at(1).unwrap()
+    }
+
+    pub fn evidences_count(&self) -> usize {
+        self.rlp.at(1).iter().count()
+    }
+
     /// Return List of transactions in given block.
     pub fn transactions(&self) -> Vec<UnverifiedTransaction> {
-        self.rlp.list_at(1).unwrap()
+        self.rlp.list_at(2).unwrap()
     }
 
     /// Return List of transactions with additional localization info.
@@ -90,22 +99,22 @@ impl<'a> BlockView<'a> {
 
     /// Return number of transactions in given block, without deserializing them.
     pub fn tranasctions_count(&self) -> usize {
-        self.rlp.at(1).iter().count()
+        self.rlp.at(2).iter().count()
     }
 
     /// Return List of transactions in given block.
     pub fn transaction_views(&self) -> Vec<TransactionView<'a>> {
-        self.rlp.at(1).unwrap().iter().map(TransactionView::new_from_rlp).collect()
+        self.rlp.at(2).unwrap().iter().map(TransactionView::new_from_rlp).collect()
     }
 
     /// Return transaction hashes.
     pub fn transaction_hashes(&self) -> Vec<TxHash> {
-        self.rlp.at(1).unwrap().iter().map(|rlp| blake256(rlp.as_raw()).into()).collect()
+        self.rlp.at(2).unwrap().iter().map(|rlp| blake256(rlp.as_raw()).into()).collect()
     }
 
     /// Returns transaction at given index without deserializing unnecessary data.
     pub fn transaction_at(&self, index: TransactionIndex) -> Option<UnverifiedTransaction> {
-        self.rlp.at(1).unwrap().iter().nth(index as usize).map(|rlp| rlp.as_val().unwrap())
+        self.rlp.at(2).unwrap().iter().nth(index as usize).map(|rlp| rlp.as_val().unwrap())
     }
 
     /// Returns localized transaction at given index.

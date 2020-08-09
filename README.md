@@ -1,7 +1,19 @@
-Foundry [![Build Status](https://travis-ci.com/CodeChain-io/foundry.svg?branch=master)](https://travis-ci.com/CodeChain-io/foundry) [![Gitter: Foundry](https://badges.gitter.im/CodeChain-io/foundry.svg)](https://gitter.im/CodeChain-io/foundry?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+Foundry
+[![Build Status](https://travis-ci.com/CodeChain-io/foundry.svg?branch=master)](https://travis-ci.com/CodeChain-io/foundry)
+[![chat](https://img.shields.io/discord/569610676205781012.svg?logo=discord)](https://discord.gg/xhpdXm7)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ==============
 
-Foundry is a programmable open source blockchain engine.
+CodeChain Foundry is a blockchain engine based on a composable module system, called _Mold_.
+Users can define their own modules, and can construct an arbitrary blockchain application with them.
+The reason we provide such a composable, and user-customizable module system is
+because we want to make only application logic as user's responsibility,
+while the _host_ manages common things such as consensus, networking, mempool or DB, for all kinds of applications.
+
+The actual execution of the transaction, which is essentially a transition of state from the previous one, will be requested to the _coordinator_ from the host.
+The coordinator manages multiple modules for the application, and handles such requests from the host asking the modules.
+Transactions will be delivered to the responsible module, and that module will handle the transaction in the way it is implemented in,
+which might also involve communications with other modules.
 
 ## Build
 
@@ -23,7 +35,7 @@ This will produce an executable in the `./target/release` directory.
 ### Building From Source
 
 #### Build Dependencies
-Foundry requires Rust version 1.43.0 to build. Using [rustup](https://rustup.rs/ "rustup URL") is recommended.
+Foundry requires Rust version 1.45.2 to build. Using [rustup](https://rustup.rs/ "rustup URL") is recommended.
 
 - For Linux Systems:
   - Ubuntu
@@ -73,35 +85,35 @@ You can create a block by sending a transaction through [JSON-RPC](https://githu
 
 ## Formatting
 
-Make sure you run `rustfmt` before creating a PR to the repo. You need to install the nightly-2020-05-05 version of `rustfmt`.
+Make sure you run `rustfmt` before creating a PR to the repo. You need to install the nightly-2020-07-27 version of `rustfmt`.
 
 ```sh
-rustup toolchain install nightly-2020-05-05
-rustup component add rustfmt --toolchain nightly-2020-05-05
+rustup toolchain install nightly-2020-07-27
+rustup component add rustfmt --toolchain nightly-2020-07-27
 ```
 
 To run `rustfmt`,
 
 ```sh
-cargo +nightly-2020-05-05 fmt
+cargo +nightly-2020-07-27 fmt
 ```
 
 ## Linting
 
 You should run `clippy` also. This is a lint tool for rust. It suggests more efficient/readable code.
 You can see [the clippy document](https://rust-lang.github.io/rust-clippy/master/index.html) for more information.
-You need to install the nightly-2020-05-05 version of `clippy`.
+You need to install the nightly-2020-07-27 version of `clippy`.
 
 ### Install
 ```sh
-rustup toolchain install nightly-2020-05-05
-rustup component add clippy --toolchain nightly-2020-05-05
+rustup toolchain install nightly-2020-07-27
+rustup component add clippy --toolchain nightly-2020-07-27
 ```
 
 ### Run
 
 ```sh
-cargo +nightly-2020-05-05 clippy --all --all-targets
+cargo +nightly-2020-07-27 clippy --all --all-targets
 ```
 
 ## Testing
@@ -109,4 +121,4 @@ cargo +nightly-2020-05-05 clippy --all --all-targets
 Developers are strongly encouraged to write unit tests for new code, and to submit new unit tests for old code. Unit tests can be compiled and run with: `cargo test --all`. For more details, please reference [Unit Tests](https://github.com/CodeChain-io/codechain/wiki/Unit-Tests).
 
 ## License
-CodeChain is licensed under the AGPL License - see the [LICENSE](https://github.com/CodeChain-io/foundry/blob/master/LICENSE) file for details
+CodeChain is licensed under the GPL License - see the [LICENSE](https://github.com/CodeChain-io/foundry/blob/master/LICENSE) file for details

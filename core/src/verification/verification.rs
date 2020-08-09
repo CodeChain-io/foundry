@@ -2,19 +2,19 @@
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
+// it under the terms of the GNU General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::consensus::CodeChainEngine;
+use crate::consensus::{CodeChainEngine, Evidence};
 use crate::error::{BlockError, Error};
 use crate::transaction::{UnverifiedTransaction, VerifiedTransaction};
 use crate::views::BlockView;
@@ -31,6 +31,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub struct PreverifiedBlock {
     /// Populated block header
     pub header: Header,
+    /// Populated block evidences
+    pub evidences: Vec<Evidence>,
     /// Populated block transactions
     pub transactions: Vec<VerifiedTransaction>,
     /// Block bytes
@@ -41,7 +43,7 @@ pub struct PreverifiedBlock {
 pub fn verify_block_basic(header: &Header, bytes: &[u8]) -> Result<(), Error> {
     verify_header_basic(header)?;
 
-    let body_rlp = Rlp::new(bytes).at(1)?;
+    let body_rlp = Rlp::new(bytes).at(2)?;
 
     let raw_transactions = body_rlp
         .iter()
@@ -52,6 +54,8 @@ pub fn verify_block_basic(header: &Header, bytes: &[u8]) -> Result<(), Error> {
         })
         .collect::<Result<Vec<Bytes>, Error>>()?;
     verify_transactions_root(raw_transactions, header.transactions_root())?;
+
+    // TODO: verify evidences root
     Ok(())
 }
 
@@ -76,7 +80,7 @@ pub fn verify_block_with_params(
 ) -> Result<(), Error> {
     verify_header_with_params(&header, common_params)?;
 
-    let body_rlp = Rlp::new(bytes).at(1).expect("verify_block_basic already checked it");
+    let body_rlp = Rlp::new(bytes).at(2).expect("verify_block_basic already checked it");
     if body_rlp.as_raw().len() > common_params.max_body_size() {
         return Err(BlockError::BodySizeIsTooBig.into())
     }
@@ -155,10 +159,12 @@ fn verify_transactions_root(
 /// Still operates on a individual block
 /// Returns a `PreverifiedBlock` structure populated with transactions
 pub fn verify_block_seal(header: Header, bytes: Bytes) -> Result<PreverifiedBlock, Error> {
-    let transactions: Vec<_> =
-        BlockView::new(&bytes).transactions().into_iter().map(TryInto::try_into).collect::<Result<_, _>>()?;
+    let view = BlockView::new(&bytes);
+    let transactions: Vec<_> = view.transactions().into_iter().map(TryInto::try_into).collect::<Result<_, _>>()?;
+    let evidences = view.evidences();
     Ok(PreverifiedBlock {
         header,
+        evidences,
         transactions,
         bytes,
     })

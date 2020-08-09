@@ -12,7 +12,7 @@ jobs:
           fetch-depth: 1
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2020-05-05
+          toolchain: nightly-2020-07-27
           components: clippy
           profile: minimal
           override: true
@@ -28,7 +28,7 @@ jobs:
           fetch-depth: 1
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2020-05-05
+          toolchain: nightly-2020-07-27
           components: rustfmt
           profile: minimal
           override: true
@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 1
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.43.0
+          toolchain: 1.45.2
           profile: minimal
           override: true
       - run: cargo fetch --verbose

@@ -2,16 +2,16 @@
 // This file is part of CodeChain.
 //
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
+// it under the terms of the GNU General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::downloader::{BodyDownloader, HeaderDownloader};
@@ -19,7 +19,7 @@ use super::message::{Message, RequestMessage, ResponseMessage};
 use crate::snapshot::snapshot_path;
 use ccore::encoded::Header as EncodedHeader;
 use ccore::{
-    Block, BlockChainClient, BlockChainTrait, BlockImportError, BlockStatus, ChainNotify, Client, EngineInfo,
+    Block, BlockChainClient, BlockChainTrait, BlockImportError, BlockStatus, ChainNotify, Client, EngineInfo, Evidence,
     ImportBlock, ImportError, StateInfo, UnverifiedTransaction,
 };
 use cdb::AsHashDB;
@@ -350,12 +350,7 @@ impl Extension {
 
         self.check_sync_variable();
         if let Some(requests) = self.requests.get_mut(id) {
-            let have_body_request = {
-                requests.iter().any(|r| match r {
-                    (_, RequestMessage::Bodies(..)) => true,
-                    _ => false,
-                })
-            };
+            let have_body_request = { requests.iter().any(|r| matches!(r, (_, RequestMessage::Bodies(..)))) };
             if have_body_request {
                 cdebug!(SYNC, "Wait body response");
                 return
@@ -382,10 +377,8 @@ impl Extension {
     }
 
     fn send_chunk_request(&mut self, block: &BlockHash, root: &H256) {
-        let have_chunk_request = self.requests.values().flatten().any(|r| match r {
-            (_, RequestMessage::StateChunk(..)) => true,
-            _ => false,
-        });
+        let have_chunk_request =
+            self.requests.values().flatten().any(|r| matches!(r, (_, RequestMessage::StateChunk(..))));
 
         if !have_chunk_request {
             let mut peer_ids: Vec<_> = self.header_downloaders.keys().cloned().collect();
@@ -835,7 +828,10 @@ impl Extension {
         let bodies = hashes
             .into_iter()
             .map(|hash| {
-                self.client.block_body(&BlockId::Hash(hash)).map(|body| body.transactions()).unwrap_or_default()
+                self.client
+                    .block_body(&BlockId::Hash(hash))
+                    .map(|body| (body.evidences(), body.transactions()))
+                    .unwrap_or_default()
             })
             .collect();
         ResponseMessage::Bodies(bodies)
@@ -1089,27 +1085,35 @@ impl Extension {
         }
     }
 
-    fn import_blocks(&mut self, blocks: Vec<(BlockHash, Vec<UnverifiedTransaction>)>) {
+    fn import_blocks(&mut self, blocks: Vec<(BlockHash, Vec<Evidence>, Vec<UnverifiedTransaction>)>) {
         let mut imported = Vec::new();
         let mut remains = Vec::new();
         let mut error_target = None;
-        for (hash, transactions) in blocks {
+        for (hash, evidences, transactions) in blocks {
             if error_target.is_some() {
-                remains.push((hash, transactions));
+                remains.push((hash, evidences, transactions));
                 continue
             }
             let header =
                 self.client.block_header(&BlockId::Hash(hash)).expect("Downloaded body's header must exist").decode();
+            let calculated_evidences_root =
+                skewed_merkle_root(BLAKE_NULL_RLP, evidences.iter().map(Encodable::rlp_bytes));
+            if *header.evidences_root() != calculated_evidences_root {
+                cwarn!(SYNC, "Received corrupted evidences for ${}({}", header.number(), hash);
+                error_target = Some(hash);
+                continue
+            }
             let calculated_transactions_root =
                 skewed_merkle_root(BLAKE_NULL_RLP, transactions.iter().map(Encodable::rlp_bytes));
             if *header.transactions_root() != calculated_transactions_root {
-                cwarn!(SYNC, "Received corrupted body for ${}({}", header.number(), hash);
+                cwarn!(SYNC, "Received corrupted transactions for ${}({}", header.number(), hash);
                 error_target = Some(hash);
                 continue
             }
 
             let block = Block {
                 header,
+                evidences,
                 transactions,
             };
             cdebug!(SYNC, "Body download completed for #{}({})", block.header.number(), hash);
@@ -1136,19 +1140,24 @@ impl Extension {
         self.body_downloader.remove_targets(&imported);
     }
 
-    fn on_body_response(&mut self, hashes: Vec<BlockHash>, bodies: Vec<Vec<UnverifiedTransaction>>) {
+    fn on_body_response(&mut self, hashes: Vec<BlockHash>, bodies: Vec<(Vec<Evidence>, Vec<UnverifiedTransaction>)>) {
         ctrace!(SYNC, "Received body response with length({}) {:?}", hashes.len(), hashes);
 
         match &self.state {
             State::SnapshotBody {
                 header,
             } => {
-                let body = bodies.first().expect("Body response in SnapshotBody state has only one body");
-                let new_root = skewed_merkle_root(BLAKE_NULL_RLP, body.iter().map(Encodable::rlp_bytes));
-                if header.transactions_root() == new_root {
+                let (evidences, transactions) =
+                    bodies.first().expect("Body response in SnapshotBody state has only one body");
+                let new_evidences_root = skewed_merkle_root(BLAKE_NULL_RLP, evidences.iter().map(Encodable::rlp_bytes));
+                let new_transactions_root =
+                    skewed_merkle_root(BLAKE_NULL_RLP, transactions.iter().map(Encodable::rlp_bytes));
+                if header.transactions_root() == new_transactions_root && header.evidences_root() == new_evidences_root
+                {
                     let block = Block {
                         header: header.decode(),
-                        transactions: body.clone(),
+                        evidences: evidences.clone(),
+                        transactions: transactions.clone(),
                     };
                     match self.client.import_trusted_block(&block) {
                         Ok(_) | Err(BlockImportError::Import(ImportError::AlreadyInChain)) => {
