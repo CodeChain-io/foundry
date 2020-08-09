@@ -52,7 +52,7 @@ pub mod helpers {
     /// Creates new state with empty state root
     /// Used for tests.
     pub fn empty_top_state(mut db: StateDB) -> TopLevelState {
-        let mut root = H256::new();
+        let mut root = H256::default();
         // init trie and reset root too null
         let _ = TrieFactory::create(db.as_hashdb_mut(), &mut root);
 
@@ -62,7 +62,7 @@ pub mod helpers {
     /// Creates new state with empty state root
     /// Used for tests.
     pub fn empty_top_state_with_metadata(mut db: StateDB, params: CommonParams) -> TopLevelState {
-        let mut root = H256::new();
+        let mut root = H256::default();
         // init trie and reset root too null
         {
             let mut t = TrieFactory::create(db.as_hashdb_mut(), &mut root);
