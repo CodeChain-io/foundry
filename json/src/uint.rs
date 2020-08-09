@@ -33,32 +33,32 @@ impl From<Uint> for U256 {
 
 impl From<Uint> for u64 {
     fn from(f: Uint) -> Self {
-        Self::from(f.0)
+        f.0.as_u64()
     }
 }
 
 impl From<Uint> for u32 {
     fn from(f: Uint) -> Self {
-        Self::from(f.0)
+        f.0.as_u32()
     }
 }
 
 impl From<Uint> for u16 {
     fn from(f: Uint) -> Self {
-        u64::from(f.0) as u16
+        u64::from(f) as u16
     }
 }
 
 impl From<Uint> for u8 {
     fn from(f: Uint) -> Self {
-        u64::from(f.0) as u8
+        u64::from(f) as u8
     }
 }
 
 impl From<Uint> for usize {
     fn from(f: Uint) -> Self {
         // TODO: clean it after util conversions refactored.
-        u64::from(f.0) as usize
+        f.0.as_usize()
     }
 }
 
