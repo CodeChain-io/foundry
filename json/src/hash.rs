@@ -18,7 +18,6 @@
 //! Lenient hash json deserialization for test json files.
 
 use primitives::{H256 as Hash256, H520 as Hash520};
-use rustc_hex::ToHex;
 use serde::de::{Error, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
@@ -85,9 +84,7 @@ macro_rules! impl_hash {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: Serializer, {
-                let mut hex = "0x".to_string();
-                hex.push_str(&self.0.to_hex());
-                serializer.serialize_str(&hex)
+                serializer.serialize_str(&format!("0x{:x}", self.0))
             }
         }
     };
@@ -111,6 +108,21 @@ mod test {
                 primitives::H256::from_str("5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae").unwrap()
             ),
         ]);
+    }
+
+    #[test]
+    fn hash_serialization() {
+        let hash1 = H256(primitives::H256::zero());
+        let hash2 =
+            primitives::H256::from_str("5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae").unwrap();
+        assert_eq!(
+            "\"0x0000000000000000000000000000000000000000000000000000000000000000\"",
+            serde_json::to_string(&hash1).unwrap()
+        );
+        assert_eq!(
+            "\"0x5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae\"",
+            serde_json::to_string(&hash2).unwrap()
+        );
     }
 
     #[test]
