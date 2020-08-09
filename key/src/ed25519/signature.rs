@@ -38,7 +38,7 @@ pub struct Ed25519Signature(Signature);
 
 impl Ed25519Signature {
     pub fn random() -> Self {
-        Self(Signature::from_slice(&H512::random()).unwrap())
+        Self(Signature::from_slice(H512::random().as_ref()).unwrap())
     }
 
     pub fn from_slice(slice: &[u8]) -> Option<Self> {
@@ -107,7 +107,7 @@ impl<'de> Deserialize<'de> for Ed25519Signature {
     where
         D: Deserializer<'de>, {
         let h512_signature = H512::deserialize(deserializer)?;
-        Ok(Self::from_slice(&h512_signature).expect("Bytes length was verified"))
+        Ok(Self::from_slice(h512_signature.as_ref()).expect("Bytes length was verified"))
     }
 }
 

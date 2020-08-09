@@ -138,7 +138,7 @@ impl ConsensusEngine for Tendermint {
             }
             let public = validator_set[bitset_index].public_key;
             let delegation = validator_set[bitset_index].delegation;
-            if !verify(&signature, &precommit_vote_on.hash(), &public) {
+            if !verify(&signature, precommit_vote_on.hash().as_ref(), &public) {
                 return Err(EngineError::BlockNotAuthorized(public).into())
             }
             signed_delegation += delegation;

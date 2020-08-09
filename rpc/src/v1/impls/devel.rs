@@ -28,7 +28,6 @@ use kvdb::KeyValueDB;
 use primitives::H256;
 use rlp::Rlp;
 use std::net::SocketAddr;
-use std::ops::Deref;
 use std::sync::Arc;
 use std::vec::Vec;
 
@@ -61,11 +60,11 @@ where
 {
     fn get_state_trie_keys(&self, offset: usize, limit: usize) -> Result<Vec<H256>> {
         let iter = self.db.iter(COL_STATE);
-        Ok(iter.skip(offset).take(limit).map(|val| H256::from(val.0.deref())).collect())
+        Ok(iter.skip(offset).take(limit).map(|val| H256::from_slice(&*val.0)).collect())
     }
 
     fn get_state_trie_value(&self, key: H256) -> Result<Vec<Bytes>> {
-        match self.db.get(COL_STATE, &key).map_err(errors::core)? {
+        match self.db.get(COL_STATE, key.as_ref()).map_err(errors::core)? {
             Some(value) => {
                 let rlp = Rlp::new(&value);
                 Ok(rlp.as_list::<Vec<u8>>().map_err(|e| errors::rlp(&e))?.into_iter().map(Bytes::from).collect())

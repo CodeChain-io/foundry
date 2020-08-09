@@ -147,7 +147,7 @@ impl Crypto {
 
         let mac = ccrypto::blake256(ccrypto::derive_mac(&derived_right_bits, &self.ciphertext));
 
-        if !ccrypto::is_equal(&mac, &self.mac) {
+        if !ccrypto::is_equal(mac.as_ref(), &self.mac) {
             return Err(Error::InvalidPassword)
         }
 

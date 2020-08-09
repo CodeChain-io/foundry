@@ -174,7 +174,7 @@ impl Action {
                 };
                 let encoded_action = H256::blake(rlp::encode(&action));
                 for approval in approvals {
-                    if !verify(approval.signature(), &encoded_action, approval.signer_public()) {
+                    if !verify(approval.signature(), encoded_action.as_ref(), approval.signer_public()) {
                         return Err(SyntaxError::InvalidCustomAction(format!(
                             "Cannot decode the signature {:?} with public {:?} and the message {:?}",
                             approval.signature(),

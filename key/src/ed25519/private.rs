@@ -46,7 +46,7 @@ impl FromStr for Private {
     type Err = crate::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let for_slice = H512::from_str(s).map_err(|_| crate::Error::InvalidPrivate(s.to_string()))?;
-        Ok(SecretKey::from_slice(&for_slice).expect("H512 has length 64").into())
+        Ok(SecretKey::from_slice(for_slice.as_ref()).expect("H512 has length 64").into())
     }
 }
 

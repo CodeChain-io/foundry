@@ -37,7 +37,7 @@ pub fn check(signed_tx: &SignedTransaction) -> bool {
     let signature = signed_tx.signature;
     let network_id = signed_tx.tx.network_id;
 
-    check_network_id(network_id) && verify(&signature, &signed_tx.tx.hash(), &signed_tx.signer_public)
+    check_network_id(network_id) && verify(&signature, signed_tx.tx.hash().as_ref(), &signed_tx.signer_public)
 }
 
 fn check_network_id(network_id: NetworkId) -> bool {

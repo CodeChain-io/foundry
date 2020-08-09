@@ -129,7 +129,7 @@ impl Scheme {
             let mut t = TrieFactory::from_existing(db.as_hashdb_mut(), &mut root)?;
             let address = MetadataAddress::new();
 
-            let r = t.insert(&*address, &global_metadata.rlp_bytes());
+            let r = t.insert(address.as_ref(), &global_metadata.rlp_bytes());
             debug_assert_eq!(Ok(None), r);
             r?;
         }

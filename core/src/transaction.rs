@@ -100,7 +100,7 @@ impl From<VerifiedTransaction> for UnverifiedTransaction {
 impl VerifiedTransaction {
     /// Signs the transaction as coming from `signer`.
     pub fn new_with_sign(tx: Transaction, private: &Private) -> VerifiedTransaction {
-        let sig = sign(&tx.hash(), private);
+        let sig = sign(tx.hash().as_ref(), private);
         UnverifiedTransaction::new(tx, sig, private.public_key())
             .try_into()
             .expect("The transaction's signature is invalid")
@@ -199,7 +199,7 @@ impl UnverifiedTransaction {
     }
 
     pub fn verify_transaction(&self) -> bool {
-        verify(&self.0.sig, &self.0.unsigned.hash(), &self.0.signer_public)
+        verify(&self.0.sig, self.0.unsigned.hash().as_ref(), &self.0.signer_public)
     }
 
     pub fn transaction(&self) -> &Transaction {

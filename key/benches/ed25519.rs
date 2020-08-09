@@ -27,7 +27,7 @@ fn ec25519_sign(b: &mut Bencher) {
     b.iter(|| {
         let key_pair: Ed25519KeyPair = Random.generate().unwrap();
         let message = Message::random();
-        let _signature = sign(&message, key_pair.private());
+        let _signature = sign(message.as_ref(), key_pair.private());
     })
 }
 
@@ -36,8 +36,8 @@ fn ed25519_sign_and_verify(b: &mut Bencher) {
     b.iter(|| {
         let key_pair: Ed25519KeyPair = Random.generate().unwrap();
         let message = Message::random();
-        let signature = sign(&message, key_pair.private());
-        assert!(verify(&signature, &message, key_pair.public()));
+        let signature = sign(message.as_ref(), key_pair.private());
+        assert!(verify(&signature, message.as_ref(), key_pair.public()));
     })
 }
 
@@ -46,7 +46,7 @@ fn ed25519_sign_and_recover(b: &mut Bencher) {
     b.iter(|| {
         let key_pair: Ed25519KeyPair = Random.generate().unwrap();
         let message = Message::random();
-        let signature = sign(&message, key_pair.private());
-        assert!(verify(&signature, &message, key_pair.public()));
+        let signature = sign(message.as_ref(), key_pair.private());
+        assert!(verify(&signature, message.as_ref(), key_pair.public()));
     });
 }

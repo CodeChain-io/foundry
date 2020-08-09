@@ -103,8 +103,8 @@ mod tests {
         let address1 = ModuleAddress::new(0);
         let address2 = ModuleAddress::new(1);
         assert_ne!(address1, address2);
-        assert_eq!(address1[0], PREFIX);
-        assert_eq!(address2[0], PREFIX);
+        assert_eq!(address1.as_ref()[0], PREFIX);
+        assert_eq!(address2.as_ref()[0], PREFIX);
     }
 
     #[test]
@@ -128,7 +128,7 @@ mod tests {
     fn parse_return_some() {
         let hash = {
             let mut hash = H256::random();
-            hash[0] = PREFIX;
+            hash.as_mut()[0] = PREFIX;
             hash
         };
         let address = ModuleAddress::from_hash(hash);

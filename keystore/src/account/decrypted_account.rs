@@ -31,7 +31,7 @@ impl DecryptedAccount {
 
     /// Sign a message.
     pub fn sign(&self, message: &Message) -> Result<Signature, KeyError> {
-        Ok(sign(&message, &self.secret))
+        Ok(sign(message.as_ref(), &self.secret))
     }
 
     /// Derive public key.

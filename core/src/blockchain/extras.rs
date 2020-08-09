@@ -18,7 +18,6 @@ use crate::db::Key;
 use crate::types::TransactionId;
 use ctypes::{BlockHash, BlockNumber, TransactionIndex, TxHash};
 use primitives::{H256, H264};
-use std::ops::Deref;
 
 /// Represents index of extra data in database
 #[derive(Copy, Debug, Hash, Eq, PartialEq, Clone)]
@@ -33,18 +32,16 @@ enum ExtrasIndex {
 
 fn with_index(hash: &H256, i: ExtrasIndex) -> H264 {
     let mut result = H264::default();
-    result[0] = i as u8;
-    (*result)[1..].copy_from_slice(hash);
+    result.as_mut()[0] = i as u8;
+    result.as_mut()[1..].copy_from_slice(hash.as_ref());
     result
 }
 
 pub struct BlockNumberKey([u8; 5]);
 
-impl Deref for BlockNumberKey {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl AsRef<[u8]> for BlockNumberKey {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_ref()
     }
 }
 

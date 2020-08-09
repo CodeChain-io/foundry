@@ -70,7 +70,7 @@ where
     fn create_account_from_secret(&self, secret: H512, passphrase: Option<Password>) -> Result<PlatformAddress> {
         self.account_provider
             .insert_account(
-                Private::from_slice(&secret).ok_or_else(|| Error::invalid_params("Invalid secret"))?,
+                Private::from_slice(secret.as_ref()).ok_or_else(|| Error::invalid_params("Invalid secret"))?,
                 &passphrase.unwrap_or_default(),
             )
             .map(|pubkey| PlatformAddress::new_v0(self.client.network_id(), pubkey))

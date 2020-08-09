@@ -62,7 +62,7 @@ fn get_or_insert_with<F: FnOnce() -> BlockHash>(db: &dyn KeyValueDB, key: &[u8],
             let hash = default();
 
             let mut batch = DBTransaction::new();
-            batch.put(db::COL_EXTRA, BEST_BLOCK_KEY, &hash);
+            batch.put(db::COL_EXTRA, BEST_BLOCK_KEY, hash.as_ref());
             db.write(batch).expect("Low level database error. Some issue with disk?");
             hash
         }
@@ -136,9 +136,9 @@ impl BlockChain {
             best_block: block.into_inner(),
         });
 
-        batch.put(db::COL_EXTRA, BEST_BLOCK_KEY, hash);
+        batch.put(db::COL_EXTRA, BEST_BLOCK_KEY, hash.as_ref());
         *self.pending_best_block_hash.write() = Some(*hash);
-        batch.put(db::COL_EXTRA, BEST_PROPOSAL_BLOCK_KEY, hash);
+        batch.put(db::COL_EXTRA, BEST_PROPOSAL_BLOCK_KEY, hash.as_ref());
         *self.pending_best_proposal_block_hash.write() = Some(*hash);
     }
 
@@ -178,11 +178,11 @@ impl BlockChain {
 
         if let Some(best_block_hash) = best_block_changed.new_best_hash() {
             let mut pending_best_block_hash = self.pending_best_block_hash.write();
-            batch.put(db::COL_EXTRA, BEST_BLOCK_KEY, &best_block_hash);
+            batch.put(db::COL_EXTRA, BEST_BLOCK_KEY, best_block_hash.as_ref());
             *pending_best_block_hash = Some(best_block_hash);
 
             let mut pending_best_proposal_block_hash = self.pending_best_proposal_block_hash.write();
-            batch.put(db::COL_EXTRA, BEST_PROPOSAL_BLOCK_KEY, &*new_block_hash);
+            batch.put(db::COL_EXTRA, BEST_PROPOSAL_BLOCK_KEY, new_block_hash.as_ref());
             *pending_best_proposal_block_hash = Some(new_block_hash);
         }
 
@@ -316,11 +316,11 @@ impl BlockChain {
         self.body_db.update_best_block(batch, &best_block_changed);
 
         let mut pending_best_block_hash = self.pending_best_block_hash.write();
-        batch.put(db::COL_EXTRA, BEST_BLOCK_KEY, &block_hash);
+        batch.put(db::COL_EXTRA, BEST_BLOCK_KEY, block_hash.as_ref());
         *pending_best_block_hash = Some(block_hash);
 
         let mut pending_best_proposal_block_hash = self.pending_best_proposal_block_hash.write();
-        batch.put(db::COL_EXTRA, BEST_PROPOSAL_BLOCK_KEY, &*block_hash);
+        batch.put(db::COL_EXTRA, BEST_PROPOSAL_BLOCK_KEY, block_hash.as_ref());
         *pending_best_proposal_block_hash = Some(block_hash);
 
         ChainUpdateResult::new(&best_block_changed)
