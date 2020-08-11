@@ -31,6 +31,10 @@ use remote_trait_object::{service, Context as RtoContext, Service, ServiceRef};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
+/// This module is supposed to handle `CreateGeneralMeeting` TX and `PublishResult` TX.
+/// `CreateGeneralMeeting` TX is designed to create a genral meeting and store it on the state.
+/// `publishResult` TX is supposed to calculate the final result of the poll.
+
 enum ExecuteError {
     InvalidMetadata,
     InvalidSign,
@@ -86,6 +90,7 @@ pub struct TxPublishResult {
     pub meeting_id: GeneralMeetingId,
 }
 
+/// Two type of TX: `CreateGeneralMeeting` is a SignedTransaction while `PublishResult` is a UserTransaction.
 impl Action for TxGeneralMeeting {}
 impl Action for TxPublishResult {}
 pub type MeetingOwnTransaction = crate::common::SignedTransaction<TxGeneralMeeting>;
@@ -97,6 +102,9 @@ enum TxResult {
 }
 
 impl Context {
+    /// TXs are executed here in this function.
+    /// Some information is known while transaction execution like information of the header; therefore,
+    /// Rigorous conditions are checked here for both TXs although they are checked in `check_transaction` function.
     fn excute_tx(&mut self, transaction: &Transaction) -> Result<TxResult, ExecuteError> {
         match transaction.tx_type() {
             CREATE_MEETING_TX_TYPE => {
@@ -296,6 +304,8 @@ pub enum Error {
     InvalidMeeting,
 }
 
+/// Give an access to its state for `Vote Module`.
+/// `Vote Module` needs to retrieve the related meeting.
 #[service]
 pub trait GeneralMeetingManager: Service {
     fn get_meeting(&mut self, meeting_id: &GeneralMeetingId) -> Result<GeneralMeeting, Error>;

@@ -29,6 +29,11 @@ use remote_trait_object::{service, Context as RtoContext, Service, ServiceRef};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
+/// This Module is supposed to handle `Vote` and `Vote_Paper` Transactions.
+/// `Vote_Paper` is issued by the admin and is suppose to provide a paper that needs to be used by Voter.
+/// This will happen after authorization.
+/// `Vote` is send by voter and it contains the actual vote.
+
 const VOTE_TX_TYPE: &str = "Vote";
 const VOTE_PAPER_TX_TYPE: &str = "Vote_Paper";
 
@@ -179,6 +184,8 @@ pub enum Error {
     InvalidVote,
 }
 
+/// Give an access to its state for `GeneralMeeting Module`.
+/// `GeneralMeeting Module` needs votes to calculate the final result.
 #[service]
 pub trait VoteManager: Service {
     fn get_vote(&self, vote_id: &VoteId) -> Result<Vote, Error>;
