@@ -193,6 +193,8 @@ impl Weaver {
             }
         }
 
+        self.modules.iter().for_each(|(_, link_info)| link_info.linkable.borrow_mut().seal());
+
         Ok(())
     }
 
