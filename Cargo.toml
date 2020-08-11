@@ -55,7 +55,7 @@ toml = "0.4"
 cidr = "0.0.4"
 module_account = {path = "basic_module/account"}
 codechain-timestamp = {path = "timestamp"}
-codechain-votingsystem = {path = "votingsystem"}
+codechain-voting = {path = "voting"}
 
 [build-dependencies]
 vergen = "3"
@@ -86,5 +86,5 @@ members = [
     "basic_module/account",
     "basic_module/staking",
     "timestamp",
-    "votingsystem"
+    "voting"
 ]
