@@ -348,7 +348,7 @@ dependencies = [
 name = "codechain-core"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0)",
  "codechain-db",
  "codechain-io",
  "codechain-json",
@@ -384,6 +384,27 @@ dependencies = [
 [[package]]
 name = "codechain-crypto"
 version = "0.2.0"
+source = "git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0#82d3c1b30ea1f25f909fefde77217e3b9eb99d4a"
+dependencies = [
+ "aes",
+ "blake2",
+ "block-modes",
+ "ctr",
+ "digest",
+ "hex",
+ "primitives",
+ "quick-error",
+ "ring",
+ "ripemd160",
+ "scrypt",
+ "sha-1",
+ "sha2",
+ "sha3",
+]
+
+[[package]]
+name = "codechain-crypto"
+version = "0.2.0"
 source = "git+https://github.com/CodeChain-io/rust-codechain-crypto.git#565c1eebf3abc909ed297bee584dddb84784d838"
 dependencies = [
  "aes",
@@ -407,7 +428,7 @@ name = "codechain-db"
 version = "0.2.0"
 source = "git+https://github.com/CodeChain-io/rust-codechain-db.git#08bd8ceeb360a1e17e011b4dcb084333ddda5cab"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git)",
  "kvdb",
  "plain_hasher",
  "primitives",
@@ -418,7 +439,7 @@ dependencies = [
 name = "codechain-discovery"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0)",
  "codechain-logger",
  "codechain-network",
  "codechain-timer",
@@ -492,7 +513,7 @@ name = "codechain-key"
 version = "0.1.0"
 dependencies = [
  "base64 0.12.3",
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0)",
  "lazy_static",
  "never-type",
  "parking_lot 0.11.0",
@@ -512,7 +533,7 @@ dependencies = [
 name = "codechain-keystore"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0)",
  "codechain-json",
  "codechain-key",
  "codechain-types",
@@ -573,7 +594,7 @@ name = "codechain-network"
 version = "0.1.0"
 dependencies = [
  "cidr",
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0)",
  "codechain-io",
  "codechain-key",
  "codechain-logger",
@@ -634,7 +655,7 @@ dependencies = [
 name = "codechain-state"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0)",
  "codechain-db",
  "codechain-key",
  "codechain-logger",
@@ -659,7 +680,7 @@ name = "codechain-sync"
 version = "0.1.0"
 dependencies = [
  "codechain-core",
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0)",
  "codechain-db",
  "codechain-key",
  "codechain-logger",
@@ -692,7 +713,7 @@ dependencies = [
 name = "codechain-timestamp"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0)",
  "codechain-key",
  "codechain-module",
  "codechain-types",
@@ -713,7 +734,7 @@ dependencies = [
 name = "codechain-types"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0)",
  "codechain-json",
  "codechain-key",
  "primitives",
@@ -779,7 +800,7 @@ name = "coordinator"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0)",
  "codechain-key",
  "codechain-module",
  "codechain-types",
@@ -1322,7 +1343,7 @@ name = "foundry-process-sandbox"
 version = "0.1.0"
 source = "git+https://github.com/CodeChain-io/foundry-sandbox.git#eab7359ff69024b936b011565ba4af95233322e3"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git)",
  "crossbeam 0.7.3",
  "hex",
  "log",
@@ -2135,7 +2156,7 @@ name = "merkle-trie"
 version = "0.4.0"
 source = "git+https://github.com/CodeChain-io/rust-merkle-trie.git#c2a84172e9c212bee1a29ae2e056d3ea988115ce"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git)",
  "codechain-db",
  "lru-cache",
  "primitives",
@@ -2273,7 +2294,7 @@ dependencies = [
 name = "module_account"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0)",
  "codechain-key",
  "coordinator",
  "lazy_static",
@@ -3490,7 +3511,7 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 name = "staking"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.2.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.2.0)",
  "codechain-key",
  "codechain-types",
  "coordinator",

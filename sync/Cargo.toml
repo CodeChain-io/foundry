@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 codechain-core = { path = "../core" }
-codechain-crypto = { git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
+codechain-crypto = { git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2", tag = "v0.2.0" }
 codechain-db = { git = "https://github.com/CodeChain-io/rust-codechain-db.git", version = "0.2" }
 coordinator = { path = "../coordinator" }
 codechain-key = { path = "../key" }
