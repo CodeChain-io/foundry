@@ -1,3 +1,19 @@
+// Copyright 2020 Kodebox, Inc.
+// This file is part of CodeChain.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ops::RangeBounds;
@@ -11,6 +27,9 @@ use crate::app_desc::{AppDesc, Constructor, GlobalName, HostSetup, ModuleSetup, 
 use crate::linkable::{inner, HOST_PATH};
 use crate::{Inner, Occurrences};
 use crate::{HOST_ID, SERVICES_FOR_HOST, TX_SERVICES_FOR_HOST};
+
+#[cfg(test)]
+mod test;
 
 type ExportIdMap = BTreeMap<String, usize>;
 type ServiceSpec<'a> = (&'a str, &'a dyn erased_serde::Serialize);
@@ -135,6 +154,8 @@ impl Weaver {
             export_port.export(&exports);
         }
 
+        static NO_IMPORT: Vec<Import> = Vec::new();
+
         for (a, link_info_a) in self.modules.iter() {
             let imports_into_a = link_info_a.imports.borrow();
             for (b, imports_from_b) in imports_into_a.iter() {
@@ -164,7 +185,7 @@ impl Weaver {
 
                 let exports_from_a = &link_info_a.exports;
                 let imports_into_b = link_info_b.imports.borrow();
-                let imports_from_a = &imports_into_b[a];
+                let imports_from_a = imports_into_b.get(a).unwrap_or(&NO_IMPORT);
 
                 set_imports(exports_from_a, &mut port_b, &mut port_a, imports_from_a);
 
@@ -260,211 +281,5 @@ impl Weaver {
         }
 
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::{Import, LinkInfo, Weaver};
-    use cmodule::link::{Linkable, Port};
-    use cmodule::sandbox::Sandbox;
-    use std::cell::RefCell;
-    use std::collections::{BTreeMap, HashMap};
-    use std::ops::Bound::*;
-
-    struct DummySandbox;
-
-    impl Linkable for DummySandbox {
-        fn supported_linkers(&self) -> &'static [&'static str] {
-            &["linker-a", "linker-b"]
-        }
-        fn new_port(&mut self) -> Box<dyn Port> {
-            Box::new(DummyPort)
-        }
-        fn seal(&mut self) {}
-    }
-    impl Sandbox for DummySandbox {}
-
-    struct DummyPort;
-
-    impl Port for DummyPort {
-        fn export(&mut self, _ids: &[usize]) {}
-        fn import(&mut self, _slots: &[&str]) {}
-    }
-
-    fn build_modules(list: &[(&str, &[&str], &[(&str, &[(&str, &str)])])]) -> HashMap<String, LinkInfo> {
-        list.iter()
-            .map(|(name, exports, imports)| {
-                ((*name).to_owned(), LinkInfo {
-                    linkable: RefCell::new(Box::new(DummySandbox)),
-                    exports: build_exports(*exports),
-                    imports: RefCell::new(build_imports(*imports)),
-                })
-            })
-            .collect()
-    }
-
-    fn build_exports(list: &[&str]) -> BTreeMap<String, usize> {
-        list.iter().enumerate().map(|(id, export)| ((*export).to_owned(), id)).collect()
-    }
-
-    fn build_imports(list: &[(&str, &[(&str, &str)])]) -> HashMap<String, Vec<Import>> {
-        list.iter()
-            .map(|(module, import_pairs)| {
-                (
-                    (*module).to_owned(),
-                    (*import_pairs)
-                        .iter()
-                        .map(|(from, to)| Import {
-                            from: (*from).to_owned(),
-                            to: (*to).to_owned(),
-                        })
-                        .collect(),
-                )
-            })
-            .collect()
-    }
-
-    fn tx_owners(list: &[(&str, &str)]) -> HashMap<String, String> {
-        list.iter().map(|(ty, owner)| ((*ty).to_owned(), (*owner).to_owned())).collect()
-    }
-
-    fn new_test_weaver_with_exports() -> Weaver {
-        let modules = build_modules(&[
-            ("a", &["service-a", "service-b.tx-type-a", "service-b.tx-type-b"], &[]),
-            ("b", &["service-a", "service-b"], &[]),
-            ("c", &["service-a", "service-b", "service-c"], &[]),
-            ("d", &[], &[]),
-        ]);
-
-        let tx_owners = tx_owners(&[("tx-type-a", "a"), ("tx-type-b", "a"), ("tx-type-c", "b")]);
-
-        Weaver {
-            modules,
-            tx_owners,
-        }
-    }
-
-    #[test]
-    fn import_single_tx_service_from_multi_tx_owner() {
-        let mut weaver = new_test_weaver_with_exports();
-        weaver.import_tx_services("c", &["service-a"]);
-        let imports = weaver.modules["c"].imports.borrow();
-
-        assert!(!imports.contains_key("c"));
-        assert!(!imports.contains_key("d"));
-
-        let import_list = imports.get("a").expect("should have imported from module 'a'");
-        assert!(import_list.iter().all(
-            |Import {
-                 from,
-                 to,
-             }| from == "service-a" && (to == "@tx/tx-type-a/service-a" || to == "@tx/tx-type-b/service-a")
-        ));
-
-        let import_list = imports.get("b").expect("should have imported from module 'b'");
-        assert!(import_list.iter().all(
-            |Import {
-                 from,
-                 to,
-             }| from == "service-a" && to == "@tx/tx-type-c/service-a"
-        ));
-    }
-
-    #[test]
-    fn import_per_tx_service_from_multi_tx_owner() {
-        let mut weaver = new_test_weaver_with_exports();
-        weaver.import_tx_services("c", &["service-b"]);
-        let imports = weaver.modules["c"].imports.borrow();
-
-        assert!(!imports.contains_key("c"));
-        assert!(!imports.contains_key("d"));
-
-        let import_list = imports.get("a").expect("should have imported from module 'a'");
-        assert!(import_list.iter().all(
-            |Import {
-                 from,
-                 to,
-             }| (from == "service-b.tx-type-a" && to == "@tx/tx-type-a/service-b")
-                || (from == "service-b.tx-type-b" && to == "@tx/tx-type-b/service-b")
-        ));
-
-        let import_list = imports.get("b").expect("should have imported from module 'b'");
-        assert!(import_list.iter().all(
-            |Import {
-                 from,
-                 to,
-             }| from == "service-b" && to == "@tx/tx-type-c/service-b"
-        ));
-    }
-
-    #[test]
-    fn host_possibly_imports_no_service() {
-        let mut weaver = new_test_weaver_with_exports();
-        weaver
-            .import_services("d", &[((Included(0), Excluded(2)), "non-existing-service")])
-            .expect("should be ok without an instance of the designated service");
-    }
-
-    #[test]
-    fn host_must_import_at_least_a_service() {
-        let mut weaver = new_test_weaver_with_exports();
-        weaver
-            .import_services("d", &[((Included(1), Unbounded), "non-existing-service")])
-            .expect_err("should be at least one instance of the designated service");
-        weaver
-            .import_services("d", &[((Included(1), Unbounded), "service-c")])
-            .expect("should be at least one instance of the designated service");
-
-        let imports = weaver.modules["d"].imports.borrow();
-        let imports_from_c = imports.get("c").expect("there must be an import from 'c'");
-
-        assert_eq!(imports_from_c.len(), 1);
-
-        let Import {
-            from,
-            to,
-        } = imports_from_c.first().unwrap();
-
-        assert_eq!(from, "service-c");
-        assert_eq!(to, "service-c/c");
-    }
-
-    #[test]
-    fn host_imports_multiple_instances_of_a_service() {
-        let mut weaver = new_test_weaver_with_exports();
-        weaver
-            .import_services("d", &[((Included(1), Unbounded), "service-a")])
-            .expect("should be at least one instance of the designated service");
-        weaver
-            .import_services("d", &[((Included(1), Unbounded), "service-b")])
-            .expect("should be at least one instance of the designated service");
-
-        let imports = weaver.modules["d"].imports.borrow();
-
-        let imports_from_a = imports.get("a").expect("there must be an import from 'a'");
-        let imports_from_b = imports.get("b").expect("there must be an import from 'b'");
-        let imports_from_c = imports.get("c").expect("there must be an import from 'c'");
-
-        assert!(imports_from_a.iter().all(
-            |Import {
-                 from,
-                 to,
-             }| (from == "service-a" && to == "service-a/a")
-        ));
-        assert!(imports_from_b.iter().all(
-            |Import {
-                 from,
-                 to,
-             }| (from == "service-a" && to == "service-a/b")
-                || (from == "service-b" && to == "service-b/b")
-        ));
-        assert!(imports_from_c.iter().all(
-            |Import {
-                 from,
-                 to,
-             }| (from == "service-a" && to == "service-a/c")
-                || (from == "service-b" && to == "service-b/c")
-        ));
     }
 }

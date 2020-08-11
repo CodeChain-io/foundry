@@ -787,6 +787,7 @@ dependencies = [
  "foundry-module-rt",
  "foundry-process-sandbox",
  "handlebars",
+ "intertrait",
  "linkme",
  "once_cell",
  "parking_lot 0.11.0",
