@@ -748,6 +748,7 @@ dependencies = [
  "codechain-key",
  "coordinator",
  "foundry-module-rt 0.1.1 (git+https://github.com/CodeChain-io/module-rt.git?tag=v0.1.1)",
+ "linkme",
  "parking_lot 0.11.0",
  "primitives",
  "rand 0.6.5",

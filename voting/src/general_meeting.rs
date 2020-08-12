@@ -24,7 +24,7 @@ use parking_lot::RwLock;
 use primitives::H256;
 use rand::Rng;
 use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange, Skeleton};
-use remote_trait_object::{Context as RtoContext, Service, ServiceRef};
+use remote_trait_object::{service, Context as RtoContext, Service, ServiceRef};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -186,6 +186,30 @@ impl TxOwner for Context {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub enum Error {
+    MeetingNotFound,
+}
+
+#[service]
+pub trait GeneralMeetingManager: Service {
+    fn get_meeting(&mut self, meeting_id: &GeneralMeetingId) -> Result<GeneralMeeting, Error>;
+}
+
+impl GeneralMeetingManager for Context {
+    fn get_meeting(&mut self, meeting_id: &GeneralMeetingId) -> Result<GeneralMeeting, Error> {
+        if !self.storage().has(meeting_id.as_ref()) {
+            return Err(Error::MeetingNotFound)
+        }
+        let meeting: GeneralMeeting = {
+            let bytes =
+                self.storage().get(meeting_id.as_ref()).expect("We checked the existence in the above if statement");
+            serde_cbor::from_slice(&bytes).expect("General meeting is serialized by this code")
+        };
+        Ok(meeting)
+    }
+}
+
 pub struct Module {
     ctx: Arc<RwLock<Context>>,
 }
@@ -202,6 +226,11 @@ impl UserModule for Module {
 
     fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Skeleton {
         match ctor_name {
+            "general_meeting_manager" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn GeneralMeetingManager>>)
+            }
             "tx_owner" => {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
