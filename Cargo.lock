@@ -736,6 +736,7 @@ name = "codechain-voting"
 version = "0.1.0"
 dependencies = [
  "codechain-crypto",
+ "codechain-key",
  "coordinator",
  "foundry-module-rt",
  "parking_lot 0.11.0",

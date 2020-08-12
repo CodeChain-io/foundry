@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use ckey::Ed25519Public as Public;
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
 use coordinator::types::*;
@@ -22,6 +23,8 @@ use parking_lot::RwLock;
 use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange, Skeleton};
 use remote_trait_object::{Context as RtoContext, Service, ServiceRef};
 use std::sync::Arc;
+
+const ADMIN_STATE_KEY: &str = "admin";
 
 struct Context {
     pub storage: Option<Box<dyn SubStorageAccess>>,
@@ -34,6 +37,14 @@ impl Context {
 
     fn storage_mut(&mut self) -> &mut dyn SubStorageAccess {
         self.storage.as_mut().unwrap().as_mut()
+    }
+
+    fn admin(&self) -> Public {
+        let bytes = self
+            .storage()
+            .get(ADMIN_STATE_KEY.as_bytes())
+            .expect("GeneralMeeting module set the admin in the genesis state");
+        serde_cbor::from_slice(&bytes).expect("Admin key is saved in the GeneralMeeting module")
     }
 }
 
@@ -49,7 +60,8 @@ impl InitGenesis for Context {
     fn begin_genesis(&mut self) {}
 
     fn init_genesis(&mut self, config: &[u8]) {
-        unimplemented!()
+        let admin: Public = serde_cbor::from_slice(&config).unwrap();
+        self.storage_mut().set(ADMIN_STATE_KEY.as_bytes(), serde_cbor::to_vec(&admin).unwrap());
     }
 
     fn end_genesis(&mut self) {}
