@@ -69,7 +69,14 @@ impl Header {
 
     pub fn into_simplified(self) -> coordinator::Header {
         let view = self.view();
-        coordinator::Header::new(view.parent_hash(), view.timestamp(), view.number(), view.author(), view.extra_data())
+        coordinator::Header::new(
+            view.parent_hash(),
+            view.timestamp(),
+            view.number(),
+            view.author(),
+            view.last_committed_validators(),
+            view.extra_data(),
+        )
     }
 }
 
@@ -118,6 +125,10 @@ impl Header {
     /// Time this block was produced.
     pub fn timestamp(&self) -> u64 {
         self.view().timestamp()
+    }
+
+    pub fn last_committed_validators(&self) -> Vec<Public> {
+        self.view().last_committed_validators()
     }
 
     /// Block extra data.

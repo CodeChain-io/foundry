@@ -90,14 +90,18 @@ impl<'a> HeaderView<'a> {
         self.rlp.val_at(7).unwrap()
     }
 
+    pub fn last_committed_validators(&self) -> Vec<Public> {
+        self.rlp.list_at(8).unwrap()
+    }
+
     /// Returns block extra data.
     pub fn extra_data(&self) -> Bytes {
-        self.rlp.val_at(8).unwrap()
+        self.rlp.val_at(9).unwrap()
     }
 
     /// Returns a vector of post-RLP-encoded seal fields.
     pub fn seal(&self) -> Vec<Bytes> {
-        const SIZE_WITHOUT_SEAL: usize = 9;
+        const SIZE_WITHOUT_SEAL: usize = 10;
 
         let item_count = self.rlp.item_count().unwrap();
         let mut seal = Vec::with_capacity(item_count - SIZE_WITHOUT_SEAL);

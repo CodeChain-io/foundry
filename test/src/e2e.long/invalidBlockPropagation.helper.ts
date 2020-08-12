@@ -57,6 +57,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         new U256(block0.timestamp),
         new U256(block0.number),
         authorPaddress.pubkey,
+        [], // lastCommittedValidators
         Buffer.from(block0.extraData),
         BLAKE_NULL_RLP,
         new H256(block0.transactionsRoot),
@@ -70,6 +71,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         new U256(block1.timestamp),
         new U256(block1.number),
         author1.pubkey,
+        [], // lastCommittedValidators
         Buffer.from(block1.extraData),
         BLAKE_NULL_RLP,
         new H256(block1.transactionsRoot),
@@ -83,6 +85,7 @@ async function setup(): Promise<[Header, Block, Header]> {
         new U256(block2.timestamp),
         new U256(block2.number),
         author3.pubkey,
+        [], // lastCommittedValidators
         Buffer.from(block2.extraData),
         BLAKE_NULL_RLP,
         new H256(block2.transactionsRoot),
@@ -147,6 +150,7 @@ async function testBody(
         new U256(block1.timestamp),
         new U256(block1.number),
         author4.pubkey,
+        [], // lastCommittedValidators
         Buffer.from(block1.extraData),
         BLAKE_NULL_RLP,
         new H256(block1.transactionsRoot),
