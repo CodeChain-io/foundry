@@ -28,6 +28,7 @@ const ADMIN_STATE_KEY: &str = "admin";
 
 struct Context {
     pub storage: Option<Box<dyn SubStorageAccess>>,
+    pub block_header: Option<Header>,
 }
 
 impl Context {
@@ -68,7 +69,8 @@ impl InitGenesis for Context {
 }
 
 impl TxOwner for Context {
-    fn block_opened(&mut self, _: &Header) -> Result<(), HeaderError> {
+    fn block_opened(&mut self, header: &Header) -> Result<(), HeaderError> {
+        self.block_header = Some(header.clone());
         Ok(())
     }
 
@@ -81,6 +83,7 @@ impl TxOwner for Context {
     }
 
     fn block_closed(&mut self) -> Result<Vec<Event>, CloseBlockError> {
+        self.block_header = None;
         Ok(Vec::new())
     }
 }
@@ -94,6 +97,7 @@ impl UserModule for Module {
         Module {
             ctx: Arc::new(RwLock::new(Context {
                 storage: None,
+                block_header: None,
             })),
         }
     }
