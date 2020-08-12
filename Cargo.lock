@@ -570,8 +570,8 @@ dependencies = [
  "anyhow",
  "crossbeam 0.7.3",
  "erased-serde",
- "foundry-module-rt 0.1.1 (git+https://github.com/CodeChain-io/module-rt.git)",
- "foundry-process-sandbox 0.1.0 (git+https://github.com/CodeChain-io/foundry-sandbox.git)",
+ "foundry-module-rt 0.1.1 (git+https://github.com/CodeChain-io/module-rt.git?tag=v0.1.1)",
+ "foundry-process-sandbox",
  "intertrait",
  "linkme",
  "once_cell",
@@ -713,8 +713,8 @@ dependencies = [
  "codechain-types",
  "coordinator",
  "erased-serde",
- "foundry-module-rt 0.1.1 (git+https://github.com/CodeChain-io/module-rt.git)",
- "foundry-process-sandbox 0.1.0 (git+https://github.com/CodeChain-io/foundry-sandbox.git)",
+ "foundry-module-rt 0.1.1 (git+https://github.com/CodeChain-io/module-rt.git?tag=v0.1.1)",
+ "foundry-process-sandbox",
  "linkme",
  "parking_lot 0.11.0",
  "primitives",
@@ -815,8 +815,8 @@ dependencies = [
  "codechain-module",
  "codechain-types",
  "erased-serde",
- "foundry-module-rt 0.1.1 (git+https://github.com/CodeChain-io/module-rt.git)",
- "foundry-process-sandbox 0.1.0 (git+https://github.com/CodeChain-io/foundry-sandbox.git)",
+ "foundry-module-rt 0.1.1 (git+https://github.com/CodeChain-io/module-rt.git?tag=v0.1.0)",
+ "foundry-process-sandbox",
  "handlebars",
  "linkme",
  "once_cell",
@@ -1353,10 +1353,10 @@ dependencies = [
 [[package]]
 name = "foundry-module-rt"
 version = "0.1.1"
-source = "git+https://github.com/CodeChain-io/module-rt.git?tag=v0.1.1#d1b413023c37075b2ee53a4608ed6feef54c8af2"
+source = "git+https://github.com/CodeChain-io/module-rt.git?tag=v0.1.0#d1b413023c37075b2ee53a4608ed6feef54c8af2"
 dependencies = [
  "crossbeam 0.7.3",
- "foundry-process-sandbox 0.1.0 (git+https://github.com/CodeChain-io/foundry-sandbox?tag=v0.1.0)",
+ "foundry-process-sandbox",
  "linkme",
  "parking_lot 0.11.0",
  "remote-trait-object",
@@ -1368,10 +1368,10 @@ dependencies = [
 [[package]]
 name = "foundry-module-rt"
 version = "0.1.1"
-source = "git+https://github.com/CodeChain-io/module-rt.git#6fcc0054bc50c7a8a0ffc654881bfdee3a389537"
+source = "git+https://github.com/CodeChain-io/module-rt.git?tag=v0.1.1#d1b413023c37075b2ee53a4608ed6feef54c8af2"
 dependencies = [
  "crossbeam 0.7.3",
- "foundry-process-sandbox 0.1.0 (git+https://github.com/CodeChain-io/foundry-sandbox.git)",
+ "foundry-process-sandbox",
  "linkme",
  "parking_lot 0.11.0",
  "remote-trait-object",
@@ -1394,22 +1394,6 @@ dependencies = [
  "remote-trait-object",
  "serde_cbor",
  "sha2 0.9.1",
-]
-
-[[package]]
-name = "foundry-process-sandbox"
-version = "0.1.0"
-source = "git+https://github.com/CodeChain-io/foundry-sandbox.git#eab7359ff69024b936b011565ba4af95233322e3"
-dependencies = [
- "codechain-crypto",
- "crossbeam 0.7.3",
- "hex",
- "log",
- "mio 0.7.0",
- "once_cell",
- "parking_lot 0.11.0",
- "remote-trait-object",
- "serde_cbor",
 ]
 
 [[package]]
