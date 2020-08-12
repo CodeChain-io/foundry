@@ -296,6 +296,12 @@ pub struct TimeStamp {
     time: u64,
 }
 
+impl TimeStamp {
+    pub fn get_time(&self) -> u64 {
+        self.time
+    }
+}
+
 impl VoteResult {
     pub fn new() -> Self {
         Self {
@@ -336,5 +342,17 @@ impl GeneralMeeting {
 
     pub fn save_results(&mut self, result: Vec<VoteResult>) {
         self.result.get_or_insert(result);
+    }
+
+    pub fn get_end_time(&self) -> &TimeStamp {
+        &self.voting_end_time
+    }
+
+    pub fn get_tallying_time(&self) -> &TimeStamp {
+        &self.tallying_time
+    }
+
+    pub fn get_agendas(&self) -> u32 {
+        self.number_of_agendas
     }
 }
