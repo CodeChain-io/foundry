@@ -13,9 +13,9 @@ serde = { version = "1.0.105", features = ["derive"] }
 serde_cbor = "0.11.1"
 erased-serde = "0.3.11"
 intertrait = "0.2.0"
-remote-trait-object = "0.3.0"
-foundry-process-sandbox = { git = "https://github.com/CodeChain-io/foundry-sandbox.git"}
-foundry-module-rt = { version = "0.1.1", git = "https://github.com/CodeChain-io/module-rt.git" }
+remote-trait-object = "=0.3.0"
+foundry-process-sandbox = { git = "https://github.com/CodeChain-io/foundry-sandbox.git", tag = "v0.1.0" }
+foundry-module-rt = { version = "0.1.1", git = "https://github.com/CodeChain-io/module-rt.git", tag = "v0.1.1" }
 parking_lot = "0.11.0"
 crossbeam = "0.7"
 anyhow = "1"

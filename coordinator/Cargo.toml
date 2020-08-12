@@ -9,8 +9,8 @@ ctypes = { package = "codechain-types", path = "../types" }
 ckey = { package = "codechain-key", path = "../key" }
 cmodule = { package = "codechain-module", path = "../module" }
 ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.2" }
-foundry-process-sandbox = { git = "https://github.com/CodeChain-io/foundry-sandbox.git" }
-foundry-module-rt = { version = "0.1.1", git = "https://github.com/CodeChain-io/module-rt.git" }
+foundry-process-sandbox = { git = "https://github.com/CodeChain-io/foundry-sandbox.git", tag = "v0.1.0" }
+foundry-module-rt = { version = "0.1.1", git = "https://github.com/CodeChain-io/module-rt.git", tag = "v0.1.0" }
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
 rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.4" }
 serde = { version = "1.0", features = ["derive"] }
@@ -24,7 +24,7 @@ linkme = "0.2.2"
 thiserror = "1"
 handlebars = "3.3"
 anyhow = "1"
-remote-trait-object = "0.3.0"
+remote-trait-object = "=0.3.0"
 serde_cbor = "0.11.1"
 
 [dev-dependencies]
