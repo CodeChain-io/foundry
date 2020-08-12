@@ -35,6 +35,7 @@ enum ExecuteError {
     TallyingTimePassed,
     TallyingIsBeforeVotingEnd,
     VotingEndPassed,
+    NotAuthorized,
 }
 
 const ADMIN_STATE_KEY: &str = "admin";
@@ -83,7 +84,6 @@ impl Context {
                 let tx: CreateGeneralMeetingOwnTransaction =
                     serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
                 tx.verify().map_err(|_| ExecuteError::InvalidSignature)?;
-
                 let num_agendas = tx.tx.action.number_of_agendas;
                 let voting_end_time = tx.tx.action.voting_end_time;
                 let tallying_time = tx.tx.action.tallying_time;
@@ -147,7 +147,29 @@ impl TxOwner for Context {
     }
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), coordinator::types::ErrorCode> {
-        unimplemented!();
+        let todo_fixthis: coordinator::types::ErrorCode = 3;
+        match transaction.tx_type() {
+            CREATE_GENERAL_MEETING_TX_TYPE => {
+                let tx: CreateGeneralMeetingOwnTransaction =
+                    serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
+                tx.verify().map_err(|_| todo_fixthis)?;
+
+                let tallying_time = tx.tx.action.tallying_time;
+                let end_time = tx.tx.action.voting_end_time;
+
+                let admin_public_key = tx.signer_public;
+                let valid_admin: Public = self.admin();
+
+                if valid_admin != admin_public_key {
+                    return Err(ExecuteError::NotAuthorized).map_err(|_| todo_fixthis)
+                }
+                if tallying_time.time < end_time.time {
+                    return Err(ExecuteError::TallyingIsBeforeVotingEnd).map_err(|_| todo_fixthis)
+                }
+                Ok(())
+            }
+            _ => return Err(ExecuteError::InvalidMetadata).map_err(|_| todo_fixthis),
+        }
     }
 
     fn block_closed(&mut self) -> Result<Vec<Event>, CloseBlockError> {
