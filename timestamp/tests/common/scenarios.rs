@@ -76,7 +76,7 @@ fn tx_stamp(public: &Public, private: &Private, seq: u64, contents: &str) -> Tra
     };
     let tx_hash = tx.hash();
     let tx = SignedTransaction {
-        signature: ckey::sign(&tx_hash, private),
+        signature: ckey::sign(tx_hash.as_bytes(), private),
         signer_public: *public,
         tx,
     };
@@ -95,7 +95,7 @@ fn tx_token_transfer(public: &Public, private: &Private, seq: u64, receiver: Pub
     };
     let tx_hash = tx.hash();
     let tx = SignedTransaction {
-        signature: ckey::sign(&tx_hash, private),
+        signature: ckey::sign(tx_hash.as_bytes(), private),
         signer_public: *public,
         tx,
     };
