@@ -91,7 +91,7 @@ pub trait TokenManager: Service {
 
 impl TokenManager for Context {
     fn get_account(&self, public: &Public) -> Result<Account, Error> {
-        let x = self.storage().get(&Self::get_key(public)).ok_or_else(|| Error::NoSuchAccount)?;
+        let x = self.storage().get(Self::get_key(public).as_bytes()).ok_or_else(|| Error::NoSuchAccount)?;
         Ok(serde_cbor::from_slice(&x).map_err(|_| Error::InvalidKey)?)
     }
 
@@ -109,7 +109,7 @@ impl TokenManager for Context {
     }
 
     fn get_owning_accounts_with_issuer(&self, issuer: &H256) -> Result<BTreeSet<Public>, Error> {
-        Ok(if let Some(x) = self.storage().get(&Self::get_key_account_set(issuer)) {
+        Ok(if let Some(x) = self.storage().get(Self::get_key_account_set(issuer).as_bytes()) {
             serde_cbor::from_slice(&x).map_err(|_| Error::InvalidKey)?
         } else {
             BTreeSet::new()
@@ -147,7 +147,7 @@ impl Context {
     }
 
     fn get_account_or_default(&self, key: &Public) -> Result<Account, ()> {
-        if let Some(x) = self.storage().get(&Self::get_key(key)) {
+        if let Some(x) = self.storage().get(Self::get_key(key).as_bytes()) {
             Ok(serde_cbor::from_slice(&x).map_err(|_| ())?)
         } else {
             Ok(Account {
@@ -158,12 +158,12 @@ impl Context {
 
     /// set_account() must not fail
     fn set_account(&mut self, key: &Public, account: &Account) {
-        self.storage_mut().set(&Self::get_key(key), serde_cbor::to_vec(account).unwrap());
+        self.storage_mut().set(Self::get_key(key).as_bytes(), serde_cbor::to_vec(account).unwrap());
     }
 
     /// set_owning_accounts_with_issuer() must not fail
     fn set_owning_accounts_with_issuer(&mut self, issuer: &H256, set: BTreeSet<Public>) {
-        self.storage_mut().set(&Self::get_key_account_set(issuer), serde_cbor::to_vec(&set).unwrap());
+        self.storage_mut().set(Self::get_key_account_set(issuer).as_bytes(), serde_cbor::to_vec(&set).unwrap());
     }
 
     fn excute_tx(&mut self, transaction: &Transaction) -> Result<(), ExecuteError> {
@@ -184,7 +184,10 @@ impl Context {
                 issuer,
             }) => {
                 let mut sender_account: Account = serde_cbor::from_slice(
-                    &self.storage().get(&Self::get_key(&tx.signer_public)).ok_or_else(|| ExecuteError::NoAccount)?,
+                    &self
+                        .storage()
+                        .get(Self::get_key(&tx.signer_public).as_bytes())
+                        .ok_or_else(|| ExecuteError::NoAccount)?,
                 )
                 .map_err(|_| ExecuteError::InvalidKey)?;
 
