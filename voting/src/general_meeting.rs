@@ -84,6 +84,14 @@ impl Context {
                 let tx: CreateGeneralMeetingOwnTransaction =
                     serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
                 tx.verify().map_err(|_| ExecuteError::InvalidSignature)?;
+
+                let admin_public_key = tx.signer_public;
+                let valid_admin: Public = self.admin();
+
+                if valid_admin != admin_public_key {
+                    return Err(ExecuteError::NotAuthorized)
+                }
+
                 let num_agendas = tx.tx.action.number_of_agendas;
                 let voting_end_time = tx.tx.action.voting_end_time;
                 let tallying_time = tx.tx.action.tallying_time;
