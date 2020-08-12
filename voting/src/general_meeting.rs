@@ -14,17 +14,41 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::common::*;
 use ckey::Ed25519Public as Public;
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
 use coordinator::types::*;
 use foundry_module_rt::UserModule;
 use parking_lot::RwLock;
+use primitives::H256;
+use rand::Rng;
 use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange, Skeleton};
 use remote_trait_object::{Context as RtoContext, Service, ServiceRef};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
+enum ExecuteError {
+    InvalidMetadata,
+    InvalidFormat,
+    InvalidSignature,
+    TallyingTimePassed,
+    TallyingIsBeforeVotingEnd,
+    VotingEndPassed,
+}
+
 const ADMIN_STATE_KEY: &str = "admin";
+const CREATE_GENERAL_MEETING_TX_TYPE: &str = "CreateGeneralMeeting";
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TxCreateGeneralMeeting {
+    pub number_of_agendas: u32,
+    pub voting_end_time: TimeStamp,
+    pub tallying_time: TimeStamp,
+}
+
+impl Action for TxCreateGeneralMeeting {}
+pub type CreateGeneralMeetingOwnTransaction = SignedTransaction<TxCreateGeneralMeeting>;
 
 struct Context {
     pub storage: Option<Box<dyn SubStorageAccess>>,
@@ -46,6 +70,46 @@ impl Context {
             .get(ADMIN_STATE_KEY.as_bytes())
             .expect("GeneralMeeting module set the admin in the genesis state");
         serde_cbor::from_slice(&bytes).expect("Admin key is saved in the GeneralMeeting module")
+    }
+
+    /// TXs are executed here in this function.
+    /// Rigorous conditions are checked here for both TXs although they are checked in `check_transaction` function.
+    /// check transaction could be executed not in a block context.
+    /// execute_tx always be called in a block context.
+    /// We can read the Header information only in `execute_tx`.
+    fn excute_tx(&mut self, transaction: &Transaction) -> Result<(), ExecuteError> {
+        match transaction.tx_type() {
+            CREATE_GENERAL_MEETING_TX_TYPE => {
+                let tx: CreateGeneralMeetingOwnTransaction =
+                    serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
+                tx.verify().map_err(|_| ExecuteError::InvalidSignature)?;
+
+                let num_agendas = tx.tx.action.number_of_agendas;
+                let voting_end_time = tx.tx.action.voting_end_time;
+                let tallying_time = tx.tx.action.tallying_time;
+
+                let now = self.block_header.as_ref().unwrap().timestamp();
+                if now > voting_end_time.time {
+                    return Err(ExecuteError::VotingEndPassed)
+                }
+                if now > tallying_time.time {
+                    return Err(ExecuteError::TallyingTimePassed)
+                }
+                if tallying_time.time < voting_end_time.time {
+                    return Err(ExecuteError::TallyingIsBeforeVotingEnd)
+                }
+
+                let meeting = GeneralMeeting::new(voting_end_time, tallying_time, num_agendas);
+                let key = meeting.id.clone();
+
+                self.storage_mut().set(key.as_ref(), serde_cbor::to_vec(&meeting).unwrap());
+
+                // FIXME: add vote box
+                Ok(())
+            }
+
+            _ => return Err(ExecuteError::InvalidMetadata),
+        }
     }
 }
 
@@ -75,7 +139,11 @@ impl TxOwner for Context {
     }
 
     fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionOutcome, ()> {
-        unimplemented!();
+        if let Err(error) = self.excute_tx(transaction) {
+            Err(())
+        } else {
+            Ok(Default::default())
+        }
     }
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), coordinator::types::ErrorCode> {
@@ -135,5 +203,79 @@ impl UserModule for Module {
 
     fn debug(&mut self, _arg: &[u8]) -> Vec<u8> {
         unimplemented!()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(transparent)]
+pub struct GeneralMeetingId {
+    id: H256,
+}
+
+impl GeneralMeetingId {
+    pub fn new() -> Self {
+        let mut rng = rand::thread_rng();
+        let random_id: u64 = rng.gen();
+        let meeting_id = H256::from(random_id);
+        Self {
+            id: meeting_id,
+        }
+    }
+}
+
+type StorageKeyRef = [u8];
+
+impl AsRef<StorageKeyRef> for GeneralMeetingId {
+    fn as_ref(&self) -> &StorageKeyRef {
+        &self.id.0.as_ref()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct TimeStamp {
+    time: u64,
+}
+
+impl VoteResult {
+    pub fn new() -> Self {
+        Self {
+            favor: 0,
+            against: 0,
+            absention: 0,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct VoteResult {
+    favor: u32,
+    against: u32,
+    absention: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GeneralMeeting {
+    id: GeneralMeetingId,
+    number_of_agendas: u32,
+    voting_end_time: TimeStamp,
+    tallying_time: TimeStamp,
+    result: Option<Vec<VoteResult>>,
+}
+
+impl GeneralMeeting {
+    pub fn new(voting_end_time: TimeStamp, tallying_time: TimeStamp, number_of_agendas: u32) -> Self {
+        let meeting_id = GeneralMeetingId::new();
+        Self {
+            id: meeting_id,
+            number_of_agendas,
+            voting_end_time,
+            tallying_time,
+            result: None,
+        }
+    }
+
+    pub fn save_results(&mut self, result: Vec<VoteResult>) {
+        self.result.get_or_insert(result);
     }
 }

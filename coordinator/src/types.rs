@@ -79,6 +79,10 @@ impl Header {
             extra_data,
         }
     }
+
+    pub fn timestamp(&self) -> u64 {
+        self.timestamp
+    }
 }
 
 /// A decoded transaction.

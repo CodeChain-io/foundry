@@ -10,6 +10,8 @@ ckey = {package = "codechain-key", path = "../key"}
 coordinator = { path = "../coordinator" }
 foundry-module-rt = { version = "0.1.1", git = "https://github.com/CodeChain-io/module-rt.git" }
 parking_lot = "0.11.0"
+primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.4" }
+rand = "0.6.1"
 remote-trait-object = { version = "0.3.0" }
 serde_cbor = "0.11.1"
 serde = { version = "1.0.111", features = ["derive"] }
