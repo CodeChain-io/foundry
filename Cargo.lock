@@ -34,7 +34,7 @@ checksum = "cfd7e7ae3f9a1fb5c03b389fc6bb9a51400d0c13053f0dca698c832bfd893a0d"
 dependencies = [
  "block-cipher-trait",
  "byteorder",
- "opaque-debug",
+ "opaque-debug 0.2.3",
 ]
 
 [[package]]
@@ -44,7 +44,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f70a6b5f971e473091ab7cfb5ffac6cde81666c4556751d8d5620ead8abf100"
 dependencies = [
  "block-cipher-trait",
- "opaque-debug",
+ "opaque-debug 0.2.3",
 ]
 
 [[package]]
@@ -186,8 +186,8 @@ checksum = "94cb07b0da6a73955f8fb85d24c466778e70cda767a568229b104f0264089330"
 dependencies = [
  "byte-tools",
  "crypto-mac",
- "digest",
- "opaque-debug",
+ "digest 0.8.1",
+ "opaque-debug 0.2.3",
 ]
 
 [[package]]
@@ -199,7 +199,16 @@ dependencies = [
  "block-padding",
  "byte-tools",
  "byteorder",
- "generic-array",
+ "generic-array 0.12.3",
+]
+
+[[package]]
+name = "block-buffer"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4152116fd6e9dadb291ae18fc1ec3575ed6d84c29642d97890f4b4a3417297e4"
+dependencies = [
+ "generic-array 0.14.4",
 ]
 
 [[package]]
@@ -208,7 +217,7 @@ version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c924d49bd09e7c06003acda26cd9742e796e34282ec6c1189404dee0c1f4774"
 dependencies = [
- "generic-array",
+ "generic-array 0.12.3",
 ]
 
 [[package]]
@@ -396,7 +405,7 @@ dependencies = [
  "blake2",
  "block-modes",
  "ctr",
- "digest",
+ "digest 0.8.1",
  "hex",
  "primitives",
  "quick-error",
@@ -404,7 +413,7 @@ dependencies = [
  "ripemd160",
  "scrypt",
  "sha-1",
- "sha2",
+ "sha2 0.8.2",
  "sha3",
 ]
 
@@ -561,8 +570,8 @@ dependencies = [
  "anyhow",
  "crossbeam 0.7.3",
  "erased-serde",
- "foundry-module-rt",
- "foundry-process-sandbox",
+ "foundry-module-rt 0.1.1 (git+https://github.com/CodeChain-io/module-rt.git)",
+ "foundry-process-sandbox 0.1.0 (git+https://github.com/CodeChain-io/foundry-sandbox.git)",
  "intertrait",
  "linkme",
  "once_cell",
@@ -704,8 +713,8 @@ dependencies = [
  "codechain-types",
  "coordinator",
  "erased-serde",
- "foundry-module-rt",
- "foundry-process-sandbox",
+ "foundry-module-rt 0.1.1 (git+https://github.com/CodeChain-io/module-rt.git)",
+ "foundry-process-sandbox 0.1.0 (git+https://github.com/CodeChain-io/foundry-sandbox.git)",
  "linkme",
  "parking_lot 0.11.0",
  "primitives",
@@ -738,7 +747,7 @@ dependencies = [
  "codechain-crypto",
  "codechain-key",
  "coordinator",
- "foundry-module-rt",
+ "foundry-module-rt 0.1.1 (git+https://github.com/CodeChain-io/module-rt.git?tag=v0.1.1)",
  "parking_lot 0.11.0",
  "primitives",
  "rand 0.6.5",
@@ -806,8 +815,8 @@ dependencies = [
  "codechain-module",
  "codechain-types",
  "erased-serde",
- "foundry-module-rt",
- "foundry-process-sandbox",
+ "foundry-module-rt 0.1.1 (git+https://github.com/CodeChain-io/module-rt.git)",
+ "foundry-process-sandbox 0.1.0 (git+https://github.com/CodeChain-io/foundry-sandbox.git)",
  "handlebars",
  "linkme",
  "once_cell",
@@ -839,6 +848,12 @@ name = "core-foundation-sys"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b3a71ab494c0b5b860bdc8407ae08978052417070c2ced38573a9157ad75b8ac"
+
+[[package]]
+name = "cpuid-bool"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8aebca1129a03dc6dc2b127edd729435bbc4a37e1d5f4d7513165089ceb02634"
 
 [[package]]
 name = "crc32fast"
@@ -1012,7 +1027,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4434400df11d95d556bac068ddfedd482915eb18fe8bea89bc80b6e4b1c179e5"
 dependencies = [
- "generic-array",
+ "generic-array 0.12.3",
  "subtle",
 ]
 
@@ -1078,7 +1093,16 @@ version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3d0c8c8752312f9713efd397ff63acb9f85585afbf179282e720e7704954dd5"
 dependencies = [
- "generic-array",
+ "generic-array 0.12.3",
+]
+
+[[package]]
+name = "digest"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3dd60d1080a57a05ab032377049e0591415d2b31afd7028356dbf3cc6dcb066"
+dependencies = [
+ "generic-array 0.14.4",
 ]
 
 [[package]]
@@ -1329,16 +1353,47 @@ dependencies = [
 [[package]]
 name = "foundry-module-rt"
 version = "0.1.1"
-source = "git+https://github.com/CodeChain-io/module-rt.git#6fcc0054bc50c7a8a0ffc654881bfdee3a389537"
+source = "git+https://github.com/CodeChain-io/module-rt.git?tag=v0.1.1#d1b413023c37075b2ee53a4608ed6feef54c8af2"
 dependencies = [
  "crossbeam 0.7.3",
- "foundry-process-sandbox",
+ "foundry-process-sandbox 0.1.0 (git+https://github.com/CodeChain-io/foundry-sandbox?tag=v0.1.0)",
  "linkme",
  "parking_lot 0.11.0",
  "remote-trait-object",
  "serde",
  "serde_cbor",
  "threadpool",
+]
+
+[[package]]
+name = "foundry-module-rt"
+version = "0.1.1"
+source = "git+https://github.com/CodeChain-io/module-rt.git#6fcc0054bc50c7a8a0ffc654881bfdee3a389537"
+dependencies = [
+ "crossbeam 0.7.3",
+ "foundry-process-sandbox 0.1.0 (git+https://github.com/CodeChain-io/foundry-sandbox.git)",
+ "linkme",
+ "parking_lot 0.11.0",
+ "remote-trait-object",
+ "serde",
+ "serde_cbor",
+ "threadpool",
+]
+
+[[package]]
+name = "foundry-process-sandbox"
+version = "0.1.0"
+source = "git+https://github.com/CodeChain-io/foundry-sandbox?tag=v0.1.0#0f03160cb67be5f4b9883e8f2dd401afdc46e95a"
+dependencies = [
+ "crossbeam 0.7.3",
+ "hex",
+ "log",
+ "mio 0.7.0",
+ "once_cell",
+ "parking_lot 0.11.0",
+ "remote-trait-object",
+ "serde_cbor",
+ "sha2 0.9.1",
 ]
 
 [[package]]
@@ -1459,6 +1514,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c68f0274ae0e023facc3c97b2e00f076be70e254bc851d972503b328db79b2ec"
 dependencies = [
  "typenum",
+]
+
+[[package]]
+name = "generic-array"
+version = "0.14.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "501466ecc8a30d1d3b7fc9229b122b2ce8ed6e9d9223f1138d4babb253e51817"
+dependencies = [
+ "typenum",
+ "version_check",
 ]
 
 [[package]]
@@ -1619,7 +1684,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5dcb5e64cda4c23119ab41ba960d1e170a774c8e4b9d9e6a9bc18aabf5e59695"
 dependencies = [
  "crypto-mac",
- "digest",
+ "digest 0.8.1",
 ]
 
 [[package]]
@@ -2464,6 +2529,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2839e79665f131bdb5782e51f2c6c9599c133c6098982a54c794358bf432529c"
 
 [[package]]
+name = "opaque-debug"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
+
+[[package]]
 name = "openssl"
 version = "0.10.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3144,9 +3215,9 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ad5112e0dbbb87577bfbc56c42450235e3012ce336e29c5befd7807bd626da4a"
 dependencies = [
- "block-buffer",
- "digest",
- "opaque-debug",
+ "block-buffer 0.7.3",
+ "digest 0.8.1",
+ "opaque-debug 0.2.3",
 ]
 
 [[package]]
@@ -3265,7 +3336,7 @@ dependencies = [
  "byteorder",
  "hmac",
  "pbkdf2",
- "sha2",
+ "sha2 0.8.2",
 ]
 
 [[package]]
@@ -3393,10 +3464,10 @@ version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7d94d0bede923b3cea61f3f1ff57ff8cdfd77b400fb8f9998949e0cf04163df"
 dependencies = [
- "block-buffer",
- "digest",
+ "block-buffer 0.7.3",
+ "digest 0.8.1",
  "fake-simd",
- "opaque-debug",
+ "opaque-debug 0.2.3",
 ]
 
 [[package]]
@@ -3405,10 +3476,23 @@ version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a256f46ea78a0c0d9ff00077504903ac881a1dafdc20da66545699e7776b3e69"
 dependencies = [
- "block-buffer",
- "digest",
+ "block-buffer 0.7.3",
+ "digest 0.8.1",
  "fake-simd",
- "opaque-debug",
+ "opaque-debug 0.2.3",
+]
+
+[[package]]
+name = "sha2"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2933378ddfeda7ea26f48c555bdad8bb446bf8a3d17832dc83e380d444cfb8c1"
+dependencies = [
+ "block-buffer 0.9.0",
+ "cfg-if",
+ "cpuid-bool",
+ "digest 0.9.0",
+ "opaque-debug 0.3.0",
 ]
 
 [[package]]
@@ -3417,11 +3501,11 @@ version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd26bc0e7a2e3a7c959bc494caf58b72ee0c71d67704e9520f736ca7e4853ecf"
 dependencies = [
- "block-buffer",
+ "block-buffer 0.7.3",
  "byte-tools",
- "digest",
+ "digest 0.8.1",
  "keccak",
- "opaque-debug",
+ "opaque-debug 0.2.3",
 ]
 
 [[package]]
@@ -3547,7 +3631,7 @@ version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8131256a5896cabcf5eb04f4d6dacbe1aefda854b0d9896e09cb58829ec5638c"
 dependencies = [
- "generic-array",
+ "generic-array 0.12.3",
 ]
 
 [[package]]
