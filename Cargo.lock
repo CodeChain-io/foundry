@@ -740,6 +740,8 @@ dependencies = [
  "coordinator",
  "foundry-module-rt",
  "parking_lot 0.11.0",
+ "primitives",
+ "rand 0.6.5",
  "remote-trait-object",
  "serde",
  "serde_cbor",
