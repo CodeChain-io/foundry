@@ -79,6 +79,8 @@ pub struct Coordinator {
 
 impl Coordinator {
     pub fn from_app_desc(app_desc: &str) -> anyhow::Result<Coordinator> {
+        cmodule::init_modules();
+
         let mut app_desc = AppDesc::from_str(app_desc)?;
         // TODO: proper parameter merging must be implemented with actual parameters from configs
         app_desc.merge_params(&BTreeMap::new())?;
