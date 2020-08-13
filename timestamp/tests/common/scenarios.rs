@@ -19,7 +19,7 @@ use ccrypto::blake256;
 use ckey::{Ed25519KeyPair, Generator, KeyPairTrait, Random};
 use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::context::SubStorageAccess;
-use coordinator::Transaction;
+use coordinator::{Transaction, TransactionWithMetadata, TxOrigin};
 use parking_lot::RwLock;
 use primitives::H256;
 use rand::prelude::*;
@@ -63,6 +63,22 @@ impl SubStorageAccess for MockDb {
     fn revert_to_the_checkpoint(&mut self) {
         unimplemented!()
     }
+}
+
+fn tx_hello(public: &Public, private: &Private, seq: u64) -> Transaction {
+    let tx = timestamp::account::TxHello;
+    let tx = UserTransaction {
+        seq,
+        network_id: Default::default(),
+        action: tx,
+    };
+    let tx_hash = tx.hash();
+    let tx = SignedTransaction {
+        signature: ckey::sign(tx_hash.as_bytes(), private),
+        signer_public: *public,
+        tx,
+    };
+    Transaction::new("account".to_owned(), serde_cbor::to_vec(&tx).unwrap())
 }
 
 fn tx_stamp(public: &Public, private: &Private, seq: u64, contents: &str) -> Transaction {
@@ -176,5 +192,49 @@ pub fn multiple(ctx: &RwLock<Context>) {
                 assert!(ctx.write().tx_owners.get_mut("token").unwrap().execute_transaction(&tx).is_err());
             }
         }
+    }
+}
+
+pub fn sort(ctx: &RwLock<Context>) {
+    for stateful in ctx.write().statefuls.values_mut() {
+        stateful.set_storage(ServiceRef::create_export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
+    }
+
+    let user_num = 10;
+    let mut rng = rand::thread_rng();
+    let users: Vec<Ed25519KeyPair> = (0..user_num).map(|_| Random.generate().unwrap()).collect();
+
+    let mut txes: Vec<Transaction> = Vec::new();
+    for user in users {
+        let n = rng.gen_range(10, 100);
+        for i in 0..n {
+            let tx = tx_hello(user.public(), user.private(), i);
+            txes.push(tx);
+        }
+
+        // invalid transactions
+        for i in (n + 100)..(n + 200) {
+            let tx = tx_hello(user.public(), user.private(), i);
+            txes.push(tx);
+        }
+    }
+    txes.shuffle(&mut rng);
+    let txes: Vec<TransactionWithMetadata> = txes
+        .into_iter()
+        .map(|tx| TransactionWithMetadata {
+            tx,
+            origin: TxOrigin::Local,
+            inserted_block_number: 1,
+            inserted_timestamp: 1234,
+            insertion_id: 1234,
+        })
+        .collect();
+
+    let result = ctx.read().tx_sorter.as_ref().unwrap().sort_txs(&txes);
+    assert_eq!(result.invalid.len(), 100 * user_num);
+
+    // all transactions must succeed
+    for tx in result.sorted {
+        ctx.write().tx_owners.get_mut("account").unwrap().execute_transaction(&txes[tx].tx).unwrap();
     }
 }
