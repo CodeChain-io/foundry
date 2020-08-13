@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::common::*;
+use crate::voting::VoteId;
 use ckey::Ed25519Public as Public;
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
@@ -354,5 +355,24 @@ impl GeneralMeeting {
 
     pub fn get_number_of_agendas(&self) -> u32 {
         self.number_of_agendas
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VoteBox {
+    pub meeting_id: GeneralMeetingId,
+    pub votes: Vec<VoteId>,
+}
+
+impl VoteBox {
+    pub fn new(meeting_id: GeneralMeetingId) -> Self {
+        Self {
+            meeting_id,
+            votes: Vec::new(),
+        }
+    }
+
+    pub fn drop_in_box(&mut self, vote: VoteId) {
+        self.votes.push(vote);
     }
 }
