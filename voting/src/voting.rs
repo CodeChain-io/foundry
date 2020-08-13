@@ -38,9 +38,13 @@ enum ExecuteError {
     VoteAfterTallyingTime,
     InvalidAgendaNumber,
     UsedVotePaper,
+    InvalidChoice,
+    VotePaperNotFound,
+    InvalidVoterSignature,
 }
 
 const CREATE_VOTE_PAPER_TX_TYPE: &str = "Create_Vote_Paper";
+const VOTE_TX_TYPE: &str = "Vote";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TxCreateVotePaper {
@@ -51,8 +55,17 @@ pub struct TxCreateVotePaper {
     voter_public_key: Public,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TxVote {
+    vote_paper_id: H256,
+    choice: VoteChoice,
+    voter_signature: Signature,
+}
+
 impl Action for TxCreateVotePaper {}
+impl Action for TxVote {}
 pub type CreateVotePaperTransaction = crate::common::SignedTransaction<TxCreateVotePaper>;
+pub type VoteTransaction = crate::common::UserTransaction<TxVote>;
 
 struct Context {
     pub storage: Option<Box<dyn SubStorageAccess>>,
@@ -100,6 +113,45 @@ impl Context {
                 let vote_paper = VotePaper::new(meeting_id.clone(), agenda_number, name, shares, voter_public_key);
                 self.storage_mut().set(vote_paper.vote_paper_id.0.as_ref(), serde_cbor::to_vec(&vote_paper).unwrap());
                 Ok(vote_paper.vote_paper_id)
+            }
+            VOTE_TX_TYPE => {
+                let tx: VoteTransaction =
+                    serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
+                let vote_paper_id = tx.action.vote_paper_id;
+                let choice = tx.action.choice;
+                let voter_signature = tx.action.voter_signature;
+
+                if choice != VoteChoice::Favor && choice != VoteChoice::Against && choice != VoteChoice::Absention {
+                    return Err(ExecuteError::InvalidChoice)
+                }
+
+                if !self.storage().has(vote_paper_id.0.as_ref()) {
+                    return Err(ExecuteError::VotePaperNotFound)
+                }
+                let mut vote_paper: VotePaper = {
+                    let bytes = self
+                        .storage()
+                        .get(vote_paper_id.0.as_ref())
+                        .expect("Previously we checked the existance of the vote paper in the state");
+                    serde_cbor::from_slice(&bytes).expect("Vote paper is serialized by this code")
+                };
+
+                if !vote_paper.verify_signature(&voter_signature) {
+                    return Err(ExecuteError::InvalidVoterSignature)
+                }
+
+                let vote = Vote::new(vote_paper_id, choice, voter_signature);
+                let vote_id = vote.vote_id.clone();
+                vote_paper.set_used_in(vote_id.clone()).map_err(|_| ExecuteError::UsedVotePaper)?;
+                self.storage_mut().set(vote_id.as_ref(), serde_cbor::to_vec(&vote).unwrap());
+
+                let meeting_id = vote_paper.get_general_meeting_id();
+
+                let box_key = crate::generate_voting_box_key(&meeting_id);
+                let mut vote_box = self.meeting_mut().get_vote_box(box_key.as_slice()).unwrap();
+                vote_box.drop_in_box(vote.vote_id.clone());
+
+                Ok(vote_id.id)
             }
             _ => return Err(ExecuteError::InvalidMetadata),
         }
@@ -281,5 +333,37 @@ impl VotePaper {
     //FIXME: verification should be chekced based on the third-party signature algorithm.
     pub fn verify_signature(&self, _signature: &Signature) -> bool {
         return true
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
+#[repr(u8)]
+pub enum VoteChoice {
+    Favor = 0,
+    Against = 1,
+    Absention = 2,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Vote {
+    corresponding_paper_id: H256,
+    vote_id: VoteId,
+    choice: VoteChoice,
+    signature: Signature,
+}
+
+impl Vote {
+    pub fn new(vote_paper_id: H256, choice: VoteChoice, signature: Signature) -> Self {
+        let mut rng = rand::thread_rng();
+        let random_id: u64 = rng.gen();
+        let vote_id = VoteId {
+            id: H256::from(random_id),
+        };
+        Self {
+            corresponding_paper_id: vote_paper_id,
+            vote_id,
+            choice,
+            signature,
+        }
     }
 }
