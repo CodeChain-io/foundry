@@ -14,9 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::common::*;
 pub use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
+use coordinator::types::*;
+use coordinator::{Header, Transaction};
 use foundry_module_rt::UserModule;
 use parking_lot::RwLock;
 use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange, Skeleton};
@@ -26,6 +29,7 @@ use std::sync::Arc;
 
 pub struct Context {
     pub storage: Option<Box<dyn SubStorageAccess>>,
+    pub allow_hello: bool,
 }
 
 impl Context {
@@ -117,17 +121,101 @@ impl Stateful for Context {
     }
 }
 
+enum ExecuteError {
+    InvalidMetadata,
+    InvalidSign,
+    InvalidFormat,
+    InvalidSequence,
+    AccountError(Error),
+    NotAllowedHello,
+}
+
+impl Context {
+    fn excute_tx(&mut self, transaction: &Transaction) -> Result<(), ExecuteError> {
+        if transaction.tx_type() != "account" {
+            return Err(ExecuteError::InvalidMetadata)
+        }
+
+        let tx: OwnTransaction =
+            serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
+        tx.verify().map_err(|_| ExecuteError::InvalidSign)?;
+        if self.get_sequence(&tx.signer_public, true).map_err(ExecuteError::AccountError)? != tx.tx.seq {
+            return Err(ExecuteError::InvalidSequence)
+        }
+        if !self.allow_hello {
+            return Err(ExecuteError::NotAllowedHello)
+        }
+        self.increase_sequence(&tx.signer_public, true).unwrap();
+        Ok(())
+    }
+}
+
+impl TxOwner for Context {
+    fn block_opened(&mut self, _: &Header) -> Result<(), HeaderError> {
+        Ok(())
+    }
+
+    fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionOutcome, ()> {
+        if let Err(error) = self.excute_tx(transaction) {
+            match error {
+                ExecuteError::InvalidMetadata => Err(()),
+                ExecuteError::InvalidSign => Err(()),
+                ExecuteError::InvalidFormat => Err(()),
+                ExecuteError::AccountError(_) => Err(()),
+                ExecuteError::InvalidSequence => Err(()),
+                ExecuteError::NotAllowedHello => Err(()),
+            }
+        } else {
+            Ok(Default::default())
+        }
+    }
+
+    fn check_transaction(&self, transaction: &Transaction) -> Result<(), coordinator::types::ErrorCode> {
+        let todo_fixthis: coordinator::types::ErrorCode = 3;
+        assert_eq!(transaction.tx_type(), "account");
+        let tx: OwnTransaction = serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
+        tx.verify().map_err(|_| todo_fixthis)?;
+        Ok(())
+    }
+
+    fn block_closed(&mut self) -> Result<Vec<Event>, CloseBlockError> {
+        Ok(Vec::new())
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TxHello;
+impl Action for TxHello {}
+pub type OwnTransaction = crate::common::SignedTransaction<TxHello>;
+
+struct GetAccountAndSeq;
+impl Service for GetAccountAndSeq {}
+impl crate::sorting::GetAccountAndSeq for GetAccountAndSeq {
+    fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, u64), ()> {
+        assert_eq!(tx.tx_type(), "account");
+        let tx: OwnTransaction = serde_cbor::from_slice(&tx.body()).map_err(|_| ())?;
+        Ok((tx.signer_public, tx.tx.seq))
+    }
+}
+
 impl UserModule for Module {
     fn new(_arg: &[u8]) -> Self {
         Module {
             ctx: Arc::new(RwLock::new(Context {
                 storage: None,
+                // TODO: read this from config
+                allow_hello: true,
             })),
         }
     }
 
     fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Skeleton {
         match ctor_name {
+            "tx_owner" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn TxOwner>>)
+            }
             "account_manager" => {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
@@ -137,6 +225,11 @@ impl UserModule for Module {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn Stateful>>)
+            }
+            "get_account_and_seq" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                Skeleton::new(Box::new(GetAccountAndSeq) as Box<dyn crate::sorting::GetAccountAndSeq>)
             }
             _ => panic!("Unsupported ctor_name in prepare_service_to_export() : {}", ctor_name),
         }
