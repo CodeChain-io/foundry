@@ -207,6 +207,27 @@ impl TxOwner for Context {
                 }
                 Ok(())
             }
+            VOTE_TX_TYPE => {
+                let tx: VoteTransaction = serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
+                let vote_paper_id = tx.action.vote_paper_id;
+                let choice = tx.action.choice;
+                let voter_signature = tx.action.voter_signature;
+
+                if choice != VoteChoice::Favor && choice != VoteChoice::Against && choice != VoteChoice::Absention {
+                    return Err(ExecuteError::InvalidChoice).map_err(|_| todo_fixthis)
+                }
+                let mut vote_paper: VotePaper =
+                    serde_cbor::from_slice(&self.storage().get(vote_paper_id.0.as_ref()).unwrap())
+                        .map_err(|_| ExecuteError::VotePaperNotFound)
+                        .map_err(|_| todo_fixthis)?;
+                if vote_paper.is_used_vote_paper() {
+                    return Err(ExecuteError::UsedVotePaper).map_err(|_| todo_fixthis)
+                }
+                if !vote_paper.verify_signature(&voter_signature) {
+                    return Err(ExecuteError::InvalidVoterSignature).map_err(|_| todo_fixthis)
+                }
+                Ok(())
+            }
             _ => return Err(ExecuteError::InvalidMetadata).map_err(|_| todo_fixthis),
         }
     }
