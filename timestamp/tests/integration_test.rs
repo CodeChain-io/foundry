@@ -30,6 +30,7 @@ use fproc_sndbx::ipc::generate_random_name;
 use std::collections::HashMap;
 use std::sync::Arc;
 use timestamp::account::Module as AccountModule;
+use timestamp::sorting::Module as SortingModule;
 use timestamp::staking::Module as StakingModule;
 use timestamp::stamp::Module as StampModule;
 use timestamp::token::Module as TokenModule;
@@ -58,6 +59,7 @@ fn generate_link_table() -> LinkTable {
     map.insert("account", vec![
         ("token", "account_manager", "account_manager"),
         ("stamp", "account_manager", "account_manager"),
+        ("sorting", "account_manager", "account_manager"),
         ("coordinator", "stateful", "account/stateful"),
     ]);
 
@@ -68,6 +70,7 @@ fn generate_link_table() -> LinkTable {
     ]);
 
     map.insert("stamp", vec![
+        ("sorting", "get_account_and_seq", "stamp/get_account_and_seq"),
         ("coordinator", "tx_owner", "stamp/tx_owner"),
         ("coordinator", "init_genesis", "stamp/init_genesis"),
     ]);
@@ -75,9 +78,12 @@ fn generate_link_table() -> LinkTable {
     map.insert("token", vec![
         ("staking", "token_manager", "token_manager"),
         ("stamp", "token_manager", "token_manager"),
+        ("sorting", "get_account_and_seq", "token/get_account_and_seq"),
         ("coordinator", "tx_owner", "token/tx_owner"),
         ("coordinator", "stateful", "token/stateful"),
     ]);
+
+    map.insert("sorting", vec![("coordinator", "tx_sorter", "sorting/tx_sorter")]);
 
     map.insert("coordinator", vec![]);
 
@@ -128,6 +134,16 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
             .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<TokenModule>(&sandboxer, &"unused", &exports)
+    });
+
+    modules.insert("sorting", {
+        let exports: Vec<(&str, &dyn erased_serde::Serialize)> = link_table
+            .get("sorting")
+            .unwrap()
+            .iter()
+            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .collect();
+        load_sandbox::<SortingModule>(&sandboxer, &"unused", &exports)
     });
 
     modules.insert("coordinator", {
