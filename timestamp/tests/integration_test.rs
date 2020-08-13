@@ -203,6 +203,10 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
         linker.link(port1.as_mut(), port2.as_mut()).unwrap();
     }
 
+    for module in modules.values_mut() {
+        module.seal();
+    }
+
     modules
 }
 

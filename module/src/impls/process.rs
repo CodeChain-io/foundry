@@ -142,7 +142,7 @@ impl<E: ExecutionScheme> ProcessSandbox<E> {
 
         let (rto_context, module): (_, ServiceToImport<dyn FoundryModule>) =
             RtoContext::with_initial_service_import(rto_config, transport_send, transport_recv);
-        let mut module: Box<dyn FoundryModule> = module.into_remote();
+        let mut module: Box<dyn FoundryModule> = module.into_proxy();
         module.initialize(init, exports);
 
         Ok(Self {
@@ -169,13 +169,15 @@ impl<E: ExecutionScheme> Linkable for ProcessSandbox<E> {
         // It MUST be unique anyway, for now.
         let random_name = fproc_sndbx::ipc::generate_random_name();
         Box::new(ProcessPort {
-            module_side_port: self.module.create_port(&random_name).unwrap_import().into_remote(),
+            module_side_port: self.module.create_port(&random_name).unwrap_import().into_proxy(),
             ids: Vec::new(),
             slots: Vec::new(),
         })
     }
 
-    fn seal(&mut self) {}
+    fn seal(&mut self) {
+        self.module.finish_bootstrap();
+    }
 }
 
 impl<E: ExecutionScheme> Drop for ProcessSandbox<E> {
