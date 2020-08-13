@@ -113,7 +113,10 @@ impl Context {
 
                 self.storage_mut().set(key.as_ref(), serde_cbor::to_vec(&meeting).unwrap());
 
-                // FIXME: add vote box
+                let vote_box = VoteBox::new(meeting.id.clone());
+                let box_key = crate::generate_voting_box_key(&meeting.id);
+                self.storage_mut().set(box_key.as_slice(), serde_cbor::to_vec(&vote_box).unwrap());
+
                 Ok(())
             }
 
