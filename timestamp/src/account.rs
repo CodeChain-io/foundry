@@ -113,7 +113,7 @@ impl AccountManager for Context {
 
 impl Stateful for Context {
     fn set_storage(&mut self, storage: ServiceRef<dyn SubStorageAccess>) {
-        self.storage.replace(storage.unwrap_import().into_remote());
+        self.storage.replace(storage.unwrap_import().into_proxy());
     }
 }
 
@@ -142,13 +142,7 @@ impl UserModule for Module {
         }
     }
 
-    fn import_service(
-        &mut self,
-        rto_context: &RtoContext,
-        _exporter_module: &str,
-        name: &str,
-        handle: HandleToExchange,
-    ) {
+    fn import_service(&mut self, rto_context: &RtoContext, name: &str, handle: HandleToExchange) {
         match name {
             "sub_storage_access" => {
                 self.ctx.write().storage.replace(import_service_from_handle(rto_context, handle));

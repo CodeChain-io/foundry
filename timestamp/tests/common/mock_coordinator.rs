@@ -55,13 +55,7 @@ impl UserModule for MockCoordinator {
         panic!("Coordinator doesn't export anything!")
     }
 
-    fn import_service(
-        &mut self,
-        rto_context: &RtoContext,
-        _exporter_module: &str,
-        name: &str,
-        handle: HandleToExchange,
-    ) {
+    fn import_service(&mut self, rto_context: &RtoContext, name: &str, handle: HandleToExchange) {
         let tokens: Vec<&str> = name.split('/').collect();
         assert_eq!(tokens.len(), 2);
         let exporter_module = tokens[0];
