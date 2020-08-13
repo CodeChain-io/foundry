@@ -167,7 +167,7 @@ impl Context {
     }
 
     fn excute_tx(&mut self, transaction: &Transaction) -> Result<(), ExecuteError> {
-        if transaction.tx_type() != "Token" {
+        if transaction.tx_type() != "token" {
             return Err(ExecuteError::InvalidMetadata)
         }
         let tx: OwnTransaction =
@@ -254,7 +254,7 @@ impl TxOwner for Context {
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), coordinator::types::ErrorCode> {
         let todo_fixthis: coordinator::types::ErrorCode = 3;
-        assert_eq!(transaction.tx_type(), "Stamp");
+        assert_eq!(transaction.tx_type(), "stamp");
         let tx: OwnTransaction = serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
         tx.verify().map_err(|_| todo_fixthis)?;
         Ok(())
@@ -289,7 +289,7 @@ impl Service for GetAccountAndSeq {}
 
 impl crate::sorting::GetAccountAndSeq for GetAccountAndSeq {
     fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, u64), ()> {
-        assert_eq!(tx.tx_type(), "Token");
+        assert_eq!(tx.tx_type(), "token");
         let tx: OwnTransaction = serde_cbor::from_slice(&tx.body()).map_err(|_| ())?;
         Ok((tx.signer_public, tx.tx.seq))
     }
