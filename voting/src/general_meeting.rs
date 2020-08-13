@@ -190,11 +190,13 @@ impl TxOwner for Context {
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Error {
     MeetingNotFound,
+    VoteBoxNotFound,
 }
 
 #[service]
 pub trait GeneralMeetingManager: Service {
     fn get_meeting(&mut self, meeting_id: &GeneralMeetingId) -> Result<GeneralMeeting, Error>;
+    fn get_vote_box(&mut self, key: &[u8]) -> Result<VoteBox, Error>;
 }
 
 impl GeneralMeetingManager for Context {
@@ -208,6 +210,17 @@ impl GeneralMeetingManager for Context {
             serde_cbor::from_slice(&bytes).expect("General meeting is serialized by this code")
         };
         Ok(meeting)
+    }
+
+    fn get_vote_box(&mut self, key: &[u8]) -> Result<VoteBox, Error> {
+        if !self.storage().has(key) {
+            return Err(Error::VoteBoxNotFound)
+        }
+        let vote_box = {
+            let bytes = self.storage().get(key).expect("We check the existence of the vote box in above statement");
+            serde_cbor::from_slice(&bytes).expect("Vote Box is serialized by this code")
+        };
+        Ok(vote_box)
     }
 }
 
