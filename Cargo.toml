@@ -38,6 +38,7 @@ finally-block = "0.1"
 futures = "0.1"
 kvdb = "0.1"
 kvdb-rocksdb = "0.1"
+linkme = "0.2.2"
 log = "0.4.6"
 env_logger = "0.5.3"
 never-type = "0.1.0"
@@ -54,6 +55,9 @@ tokio-core = "0.1.17"
 toml = "0.4"
 cidr = "0.0.4"
 codechain-timestamp = {path = "timestamp"}
+remote-trait-object = "0.4.0"
+foundry-process-sandbox = { version = "0.2.0", git = "https://github.com/CodeChain-io/foundry-sandbox.git", tag = "v0.2.0" }
+foundry-module-rt = { version = "0.2.0", git = "https://github.com/CodeChain-io/module-rt.git", tag = "v0.2.0" }
 
 [build-dependencies]
 vergen = "3"
