@@ -114,7 +114,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a60f9ba7c4e6df97f3aacb14bb5c0cd7d98a49dcbaed0d7f292912ad9a6a3ed2"
 dependencies = [
  "quote 1.0.7",
- "syn 1.0.39",
+ "syn 1.0.38",
 ]
 
 [[package]]
@@ -301,7 +301,7 @@ checksum = "750ca8fb60bbdc79491991650ba5d2ae7cd75f3fc00ead51390cfe9efda0d4d8"
 dependencies = [
  "proc-macro2 1.0.19",
  "quote 1.0.7",
- "syn 1.0.39",
+ "syn 1.0.38",
 ]
 
 [[package]]
@@ -1671,7 +1671,7 @@ dependencies = [
  "heck",
  "proc-macro2 1.0.19",
  "quote 1.0.7",
- "syn 1.0.39",
+ "syn 1.0.38",
 ]
 
 [[package]]
@@ -1866,6 +1866,7 @@ dependencies = [
  "futures 0.1.29",
  "kvdb",
  "kvdb-rocksdb",
+ "linkme",
  "log",
  "never-type",
  "panic_hook",
@@ -3948,7 +3949,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "11834e137f3b14e309437a8276714eed3a80d1ef894869e510f2c0c0b98b9f4a"
 dependencies = [
  "hostname",
- "quick-error 1.2.3",
+ "quick-error",
 ]
 
 [[package]]
@@ -4462,7 +4463,7 @@ dependencies = [
  "quote 1.0.7",
  "serde",
  "serde_derive",
- "syn 1.0.39",
+ "syn 1.0.38",
 ]
 
 [[package]]
@@ -4478,7 +4479,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "sha1",
- "syn 1.0.39",
+ "syn 1.0.38",
 ]
 
 [[package]]
@@ -4680,7 +4681,7 @@ dependencies = [
  "proc-macro2 1.0.19",
  "quote 1.0.7",
  "standback",
- "syn 1.0.39",
+ "syn 1.0.38",
 ]
 
 [[package]]
@@ -5335,7 +5336,7 @@ dependencies = [
  "log",
  "proc-macro2 1.0.19",
  "quote 1.0.7",
- "syn 1.0.39",
+ "syn 1.0.38",
  "wasm-bindgen-shared",
 ]
 
@@ -5357,7 +5358,7 @@ checksum = "f249f06ef7ee334cc3b8ff031bfc11ec99d00f34d86da7498396dc1e3b1498fe"
 dependencies = [
  "proc-macro2 1.0.19",
  "quote 1.0.7",
- "syn 1.0.39",
+ "syn 1.0.38",
  "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
