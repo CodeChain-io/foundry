@@ -241,3 +241,10 @@ fn multiple() {
     let coordinator = modules.get_mut("coordinator").unwrap().as_mut();
     coordinator.debug(&serde_cbor::to_vec(&"multiple").unwrap());
 }
+
+#[test]
+fn sort() {
+    let mut modules = setup();
+    let coordinator = modules.get_mut("coordinator").unwrap().as_mut();
+    coordinator.debug(&serde_cbor::to_vec(&"sort").unwrap());
+}
