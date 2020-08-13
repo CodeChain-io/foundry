@@ -30,6 +30,7 @@ pub struct Context {
     pub statefuls: HashMap<String, Box<dyn Stateful>>,
     pub init_chain: Option<Box<dyn InitChain>>,
     pub update_chain: Option<Box<dyn UpdateChain>>,
+    pub tx_sorter: Option<Box<dyn TxSorter>>,
 }
 
 impl Service for Context {}
@@ -47,6 +48,7 @@ impl UserModule for MockCoordinator {
                 statefuls: Default::default(),
                 init_chain: Default::default(),
                 update_chain: Default::default(),
+                tx_sorter: Default::default(),
             })),
         }
     }
@@ -88,6 +90,9 @@ impl UserModule for MockCoordinator {
                 .update_chain
                 .replace(import_service_from_handle(rto_context, handle))
                 .is_none()),
+            "tx_sorter" => {
+                assert!(self.ctx.write().tx_sorter.replace(import_service_from_handle(rto_context, handle)).is_none())
+            }
             _ => panic!("Unsupported name in import_service() : {}", name),
         }
     }
