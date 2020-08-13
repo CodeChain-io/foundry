@@ -25,7 +25,7 @@ use parking_lot::RwLock;
 use primitives::H256;
 use rand::Rng;
 use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange, Skeleton};
-use remote_trait_object::{Context as RtoContext, Service, ServiceRef};
+use remote_trait_object::{service, Context as RtoContext, Service, ServiceRef};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -214,6 +214,57 @@ impl TxOwner for Context {
     fn block_closed(&mut self) -> Result<Vec<Event>, CloseBlockError> {
         self.block_header = None;
         Ok(Vec::new())
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum Error {
+    VoteNotFound,
+    CorrespondingVotePaperNotFound,
+}
+
+// GeneralMeeting module needs VoteManager for publishing the final result.
+#[service]
+pub trait VoteManager: Service {
+    fn get_vote(&self, vote_id: &VoteId) -> Result<Vote, Error>;
+    fn get_shares(&self, vote_id: &VoteId) -> Result<u32, Error>;
+}
+
+impl VoteManager for Context {
+    fn get_vote(&self, vote_id: &VoteId) -> Result<Vote, Error> {
+        if !self.storage().has(vote_id.as_ref()) {
+            return Err(Error::VoteNotFound)
+        }
+        let vote = {
+            let bytes = &self.storage().get(vote_id.as_ref()).expect("Previously we checked the existence of the vote");
+            serde_cbor::from_slice(bytes).expect("Vote is serialized by this code")
+        };
+
+        Ok(vote)
+    }
+
+    fn get_shares(&self, vote_id: &VoteId) -> Result<u32, Error> {
+        if !self.storage().has(vote_id.as_ref()) {
+            return Err(Error::VoteNotFound)
+        }
+        let vote: Vote = {
+            let bytes = &self.storage().get(vote_id.as_ref()).expect("Previously we checked the existence of the vote");
+            serde_cbor::from_slice(bytes).expect("Vote is serialized by this code")
+        };
+        let vote_paper_id = vote.corresponding_paper_id;
+
+        if !self.storage().has(vote_paper_id.0.as_ref()) {
+            return Err(Error::CorrespondingVotePaperNotFound)
+        }
+        let vote_paper: VotePaper = {
+            let bytes = &self
+                .storage()
+                .get(vote_paper_id.0.as_ref())
+                .expect("Previously we checked the existence of the vote paper");
+            serde_cbor::from_slice(bytes).expect("Vote paper is serialized by this code")
+        };
+
+        Ok(vote_paper.number_of_shares)
     }
 }
 
