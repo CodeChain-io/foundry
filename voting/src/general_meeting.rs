@@ -200,6 +200,7 @@ pub enum Error {
 pub trait GeneralMeetingManager: Service {
     fn get_meeting(&mut self, meeting_id: &GeneralMeetingId) -> Result<GeneralMeeting, Error>;
     fn get_vote_box(&mut self, meeting_id: &GeneralMeetingId) -> Result<VoteBox, Error>;
+    fn update_vote_box(&mut self, meeting_id: &GeneralMeetingId, vote_box: &VoteBox) -> Result<(), Error>;
 }
 
 impl GeneralMeetingManager for Context {
@@ -227,6 +228,17 @@ impl GeneralMeetingManager for Context {
             serde_cbor::from_slice(&bytes).expect("Vote Box is serialized by this code")
         };
         Ok(vote_box)
+    }
+
+    fn update_vote_box(&mut self, meeting_id: &GeneralMeetingId, vote_box: &VoteBox) -> Result<(), Error> {
+        let key = crate::generate_voting_box_key(meeting_id);
+
+        if !self.storage().has(key.as_slice()) {
+            return Err(Error::VoteBoxNotFound)
+        }
+
+        self.storage_mut().set(key.as_slice(), serde_cbor::to_vec(&vote_box).unwrap());
+        Ok(())
     }
 }
 
