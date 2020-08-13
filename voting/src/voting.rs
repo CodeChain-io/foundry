@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::general_meeting::GeneralMeetingManager;
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
 use coordinator::types::*;
@@ -26,6 +27,7 @@ use std::sync::Arc;
 struct Context {
     pub storage: Option<Box<dyn SubStorageAccess>>,
     pub block_header: Option<Header>,
+    pub general_meeting: Option<Box<dyn GeneralMeetingManager>>,
 }
 
 impl Context {
@@ -35,6 +37,10 @@ impl Context {
 
     fn storage_mut(&mut self) -> &mut dyn SubStorageAccess {
         self.storage.as_mut().unwrap().as_mut()
+    }
+
+    fn meeting_mut(&mut self) -> &mut dyn GeneralMeetingManager {
+        self.general_meeting.as_mut().unwrap().as_mut()
     }
 }
 
@@ -86,6 +92,7 @@ impl UserModule for Module {
             ctx: Arc::new(RwLock::new(Context {
                 storage: None,
                 block_header: None,
+                general_meeting: None,
             })),
         }
     }
@@ -109,6 +116,9 @@ impl UserModule for Module {
         handle: HandleToExchange,
     ) {
         match name {
+            "meeting_manager" => {
+                self.ctx.write().general_meeting.replace(import_service_from_handle(rto_context, handle));
+            }
             "sub_storage_access" => {
                 self.ctx.write().storage.replace(import_service_from_handle(rto_context, handle));
             }
