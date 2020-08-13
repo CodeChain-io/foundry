@@ -352,7 +352,7 @@ impl GeneralMeeting {
         &self.tallying_time
     }
 
-    pub fn get_agendas(&self) -> u32 {
+    pub fn get_number_of_agendas(&self) -> u32 {
         self.number_of_agendas
     }
 }
