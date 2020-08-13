@@ -159,7 +159,7 @@ struct GetAccountAndSeq;
 impl Service for GetAccountAndSeq {}
 
 impl crate::sorting::GetAccountAndSeq for GetAccountAndSeq {
-    fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, u64), ()> {
+    fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, TxSeq), ()> {
         assert_eq!(tx.tx_type(), "stamp");
         let tx: OwnTransaction = serde_cbor::from_slice(&tx.body()).map_err(|_| ())?;
         Ok((tx.signer_public, tx.tx.seq))
