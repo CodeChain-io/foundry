@@ -41,7 +41,7 @@ pub const APP_INFO: AppInfo = AppInfo {
 
 #[cfg(all(unix, target_arch = "x86_64"))]
 fn main() -> Result<(), String> {
-    panic_hook::set();
+    //panic_hook::set();
 
     // Always print backtrace on panic.
     std::env::set_var("RUST_BACKTRACE", "1");
