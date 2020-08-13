@@ -102,6 +102,7 @@ impl UserModule for MockCoordinator {
         match scenario.as_str() {
             "simple1" => scenarios::simple1(self.ctx.as_ref()),
             "multiple" => scenarios::multiple(self.ctx.as_ref()),
+            "sort" => scenarios::sort(self.ctx.as_ref()),
             _ => panic!(),
         }
         Vec::new()
