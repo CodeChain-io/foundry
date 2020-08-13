@@ -17,3 +17,14 @@
 mod common;
 pub mod general_meeting;
 pub mod voting;
+
+pub const PREFIX: &str = "VoteBox";
+
+// VoteBox and GeneralMeeting have the same key to be stored in the state; We need to have a different key for VoteBox.
+pub fn generate_voting_box_key(meeting_id: &general_meeting::GeneralMeetingId) -> Vec<u8> {
+    let byte_prefix = PREFIX.as_bytes();
+    let mut vec: Vec<u8> = Vec::new();
+    vec.extend_from_slice(byte_prefix);
+    vec.extend_from_slice(meeting_id.get_meeting_id().0.as_ref());
+    vec
+}

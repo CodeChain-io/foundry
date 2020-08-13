@@ -294,6 +294,10 @@ impl GeneralMeetingId {
             id: meeting_id,
         }
     }
+
+    pub fn get_meeting_id(&self) -> &H256 {
+        &self.id
+    }
 }
 
 type StorageKeyRef = [u8];
