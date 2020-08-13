@@ -133,6 +133,11 @@ impl Context {
 
                 let meeting_id = vote_paper.get_general_meeting_id();
 
+                let mut vote_box = self.meeting_mut().get_vote_box(&meeting_id).unwrap();
+                vote_box.drop_in_box(vote.vote_id.clone());
+
+                self.meeting_mut().update_vote_box(&meeting_id, &vote_box).expect("We get the vote box before");
+
                 Ok(vote_id.id)
             }
             _ => return Err(ExecuteError::InvalidMetadata),
