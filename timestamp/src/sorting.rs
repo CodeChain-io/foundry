@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use super::common::*;
 use crate::account::AccountManager;
 pub use ckey::Ed25519Public as Public;
 use coordinator::module::*;
@@ -27,7 +28,7 @@ use std::sync::Arc;
 
 #[service]
 pub trait GetAccountAndSeq: Service {
-    fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, u64), ()>;
+    fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, TxSeq), ()>;
 }
 
 struct Context {
@@ -42,7 +43,7 @@ impl Context {
         self.account_manager.as_ref().unwrap().as_ref()
     }
 
-    fn account_and_seq_from_tx(&self, tx: &TransactionWithMetadata) -> Option<(Public, u64)> {
+    fn account_and_seq_from_tx(&self, tx: &TransactionWithMetadata) -> Option<(Public, TxSeq)> {
         let get_account_and_seq: &dyn GetAccountAndSeq = match self.get_account_and_seqs.get(tx.tx.tx_type()) {
             Some(get_account_and_seq) => get_account_and_seq.as_ref(),
             None => return None,
@@ -59,7 +60,7 @@ impl TxSorter for Context {
     // TODO: Consider origin
     fn sort_txs(&self, txs: &[TransactionWithMetadata]) -> SortedTxs {
         // TODO: Avoid Public hashmap
-        let mut accounts: HashMap<Public, Vec<(u64, usize)>> = HashMap::new();
+        let mut accounts: HashMap<Public, Vec<(TxSeq, usize)>> = HashMap::new();
         let mut invalid: Vec<usize> = Vec::new();
 
         for (i, tx) in txs.iter().enumerate() {

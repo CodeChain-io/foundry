@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use super::common::*;
 use crate::account::AccountManager;
 use crate::common::{self, SignedTransaction};
 use ccrypto::blake256;
@@ -288,7 +289,7 @@ struct GetAccountAndSeq;
 impl Service for GetAccountAndSeq {}
 
 impl crate::sorting::GetAccountAndSeq for GetAccountAndSeq {
-    fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, u64), ()> {
+    fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, TxSeq), ()> {
         assert_eq!(tx.tx_type(), "token");
         let tx: OwnTransaction = serde_cbor::from_slice(&tx.body()).map_err(|_| ())?;
         Ok((tx.signer_public, tx.tx.seq))
