@@ -74,13 +74,7 @@ impl UserModule for ModuleA {
         }) as Box<dyn Hello>)
     }
 
-    fn import_service(
-        &mut self,
-        rto_context: &RtoContext,
-        _exporter_module: &str,
-        name: &str,
-        handle: HandleToExchange,
-    ) {
+    fn import_service(&mut self, rto_context: &RtoContext, name: &str, handle: HandleToExchange) {
         self.hello_list.push((import_service_from_handle(rto_context, handle), name.parse().unwrap()))
     }
 

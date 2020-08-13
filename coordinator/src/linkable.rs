@@ -95,7 +95,7 @@ impl UserModule for HostModule {
         panic!("Nothing exported yet")
     }
 
-    fn import_service(&mut self, rto_context: &Context, _exporter_module: &str, name: &str, handle: HandleToExchange) {
+    fn import_service(&mut self, rto_context: &Context, name: &str, handle: HandleToExchange) {
         let mut services = SERVICES.lock();
 
         if let Some(cap) = TX_SERVICE_RE.captures(name) {
