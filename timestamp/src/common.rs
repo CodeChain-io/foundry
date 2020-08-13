@@ -23,6 +23,8 @@ use std::fmt;
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy)]
 pub struct NetworkId([u8; 2]);
 
+pub type TxSeq = u64;
+
 impl fmt::Display for NetworkId {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let s = std::str::from_utf8(&self.0).expect("network_id a valid utf8 string");
@@ -58,7 +60,7 @@ impl<T: Action> SignedTransaction<T> {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UserTransaction<T: Action> {
-    pub seq: u64,
+    pub seq: TxSeq,
     pub network_id: NetworkId,
     pub action: T,
 }

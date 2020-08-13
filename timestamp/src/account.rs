@@ -57,14 +57,14 @@ pub enum Error {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Account {
-    seq: u64,
+    seq: TxSeq,
 }
 
 #[service]
 pub trait AccountManager: Service {
     fn create_account(&mut self, public: &Public) -> Result<(), Error>;
 
-    fn get_sequence(&self, public: &Public, default: bool) -> Result<u64, Error>;
+    fn get_sequence(&self, public: &Public, default: bool) -> Result<TxSeq, Error>;
 
     fn increase_sequence(&mut self, public: &Public, default: bool) -> Result<(), Error>;
 }
@@ -81,7 +81,7 @@ impl AccountManager for Context {
         Ok(())
     }
 
-    fn get_sequence(&self, public: &Public, default: bool) -> Result<u64, Error> {
+    fn get_sequence(&self, public: &Public, default: bool) -> Result<TxSeq, Error> {
         let bytes = match self.storage().get(public.as_ref()) {
             Some(bytes) => bytes,
             None => {
@@ -191,7 +191,7 @@ pub type OwnTransaction = crate::common::SignedTransaction<TxHello>;
 struct GetAccountAndSeq;
 impl Service for GetAccountAndSeq {}
 impl crate::sorting::GetAccountAndSeq for GetAccountAndSeq {
-    fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, u64), ()> {
+    fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, TxSeq), ()> {
         assert_eq!(tx.tx_type(), "account");
         let tx: OwnTransaction = serde_cbor::from_slice(&tx.body()).map_err(|_| ())?;
         Ok((tx.signer_public, tx.tx.seq))
