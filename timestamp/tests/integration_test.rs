@@ -60,6 +60,8 @@ fn generate_link_table() -> LinkTable {
         ("token", "account_manager", "account_manager"),
         ("stamp", "account_manager", "account_manager"),
         ("sorting", "account_manager", "account_manager"),
+        ("sorting", "get_account_and_seq", "account/get_account_and_seq"),
+        ("coordinator", "tx_owner", "account/tx_owner"),
         ("coordinator", "stateful", "account/stateful"),
     ]);
 
