@@ -91,7 +91,7 @@ impl Context {
                 if meeting.get_tallying_time().get_time() < self.block_header.as_ref().unwrap().timestamp() {
                     return Err(ExecuteError::VoteAfterTallyingTime)
                 }
-                if 0 == agenda_number && agenda_number > meeting.get_agendas() {
+                if 0 == agenda_number && agenda_number > meeting.get_number_of_agendas() {
                     return Err(ExecuteError::InvalidAgendaNumber)
                 }
                 if meeting.get_end_time().get_time() > self.block_header.as_ref().unwrap().timestamp() {
@@ -139,7 +139,24 @@ impl TxOwner for Context {
     }
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), coordinator::types::ErrorCode> {
-        unimplemented!();
+        let todo_fixthis: coordinator::types::ErrorCode = 3;
+        match transaction.tx_type() {
+            CREATE_VOTE_PAPER_TX_TYPE => {
+                let tx: CreateVotePaperTransaction =
+                    serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
+                tx.verify().map_err(|_| todo_fixthis)?;
+                let meeting_id = tx.tx.action.general_meeting_id;
+                let agenda_number = tx.tx.action.agenda_number;
+
+                let meeting: GeneralMeeting = serde_cbor::from_slice(&self.storage().get(meeting_id.as_ref()).unwrap())
+                    .map_err(|_| todo_fixthis)?;
+                if 0 == agenda_number && agenda_number > meeting.get_number_of_agendas() {
+                    return Err(ExecuteError::InvalidAgendaNumber).map_err(|_| todo_fixthis)
+                }
+                Ok(())
+            }
+            _ => return Err(ExecuteError::InvalidMetadata).map_err(|_| todo_fixthis),
+        }
     }
 
     fn block_closed(&mut self) -> Result<Vec<Event>, CloseBlockError> {
