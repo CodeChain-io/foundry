@@ -80,7 +80,7 @@ fn tx_stamp(public: &Public, private: &Private, seq: u64, contents: &str) -> Tra
         signer_public: *public,
         tx,
     };
-    Transaction::new("Stamp".to_owned(), serde_cbor::to_vec(&tx).unwrap())
+    Transaction::new("stamp".to_owned(), serde_cbor::to_vec(&tx).unwrap())
 }
 
 fn tx_token_transfer(public: &Public, private: &Private, seq: u64, receiver: Public, issuer: H256) -> Transaction {
@@ -99,7 +99,7 @@ fn tx_token_transfer(public: &Public, private: &Private, seq: u64, receiver: Pub
         signer_public: *public,
         tx,
     };
-    Transaction::new("Token".to_owned(), serde_cbor::to_vec(&tx).unwrap())
+    Transaction::new("token".to_owned(), serde_cbor::to_vec(&tx).unwrap())
 }
 
 pub fn simple1(ctx: &RwLock<Context>) {
