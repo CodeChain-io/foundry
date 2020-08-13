@@ -59,3 +59,52 @@ fn run() -> Result<(), String> {
         None => run_node(&matches),
     }
 }
+
+mod timestamp_setup {
+    use cmodule::impls::process::{ExecutionScheme, SingleProcess};
+    use cmodule::MODULE_INITS;
+    use foundry_module_rt::start;
+    use foundry_process_sandbox::execution::executor::add_function_pool;
+    use linkme::distributed_slice;
+    use std::sync::Arc;
+
+    #[distributed_slice(MODULE_INITS)]
+    fn account() {
+        add_function_pool(
+            "a010000000012345678901234567890123456789012345678901234567890123".to_owned(),
+            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::account::Module>),
+        );
+    }
+
+    #[distributed_slice(MODULE_INITS)]
+    fn staking() {
+        add_function_pool(
+            "a020000000012345678901234567890123456789012345678901234567890123".to_owned(),
+            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::staking::Module>),
+        );
+    }
+
+    #[distributed_slice(MODULE_INITS)]
+    fn stamp() {
+        add_function_pool(
+            "a030000000012345678901234567890123456789012345678901234567890123".to_owned(),
+            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::stamp::Module>),
+        );
+    }
+
+    #[distributed_slice(MODULE_INITS)]
+    fn token() {
+        add_function_pool(
+            "a040000000012345678901234567890123456789012345678901234567890123".to_owned(),
+            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::token::Module>),
+        );
+    }
+
+    #[distributed_slice(MODULE_INITS)]
+    fn sorting() {
+        add_function_pool(
+            "a050000000012345678901234567890123456789012345678901234567890123".to_owned(),
+            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::sorting::Module>),
+        );
+    }
+}
