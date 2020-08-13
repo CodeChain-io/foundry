@@ -151,6 +151,8 @@ impl Context {
                 let mut vote_box = self.meeting_mut().get_vote_box(box_key.as_slice()).unwrap();
                 vote_box.drop_in_box(vote.vote_id.clone());
 
+                self.meeting_mut().update_vote_box(&meeting_id, &vote_box);
+
                 Ok(vote_id.id)
             }
             _ => return Err(ExecuteError::InvalidMetadata),
@@ -216,10 +218,19 @@ impl TxOwner for Context {
                 if choice != VoteChoice::Favor && choice != VoteChoice::Against && choice != VoteChoice::Absention {
                     return Err(ExecuteError::InvalidChoice).map_err(|_| todo_fixthis)
                 }
-                let mut vote_paper: VotePaper =
-                    serde_cbor::from_slice(&self.storage().get(vote_paper_id.0.as_ref()).unwrap())
-                        .map_err(|_| ExecuteError::VotePaperNotFound)
-                        .map_err(|_| todo_fixthis)?;
+
+                if !self.storage().has(vote_paper_id.0.as_ref()) {
+                    return Err(ExecuteError::VotePaperNotFound).map_err(|_| todo_fixthis)
+                }
+
+                let mut vote_paper: VotePaper = {
+                    let bytes = &self
+                        .storage()
+                        .get(vote_paper_id.0.as_ref())
+                        .expect("Previously we checked the existence of the vote paper");
+                    serde_cbor::from_slice(bytes).expect("Vote paper is serialized by this code")
+                };
+
                 if vote_paper.is_used_vote_paper() {
                     return Err(ExecuteError::UsedVotePaper).map_err(|_| todo_fixthis)
                 }
