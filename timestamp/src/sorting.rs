@@ -124,8 +124,7 @@ impl UserModule for Module {
     fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Skeleton {
         match ctor_name {
             "tx_sorter" => {
-                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
-                assert_eq!(arg, "unused");
+                assert_empty_arg(ctor_arg).unwrap();
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn TxSorter>>)
             }
             _ => panic!("Unsupported ctor_name in prepare_service_to_export() : {}", ctor_name),

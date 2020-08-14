@@ -98,12 +98,14 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
     let link_table = generate_link_table();
     let mut modules = HashMap::new();
 
+    let empty_arg: HashMap<String, String> = HashMap::new();
+
     modules.insert("account", {
         let exports: Vec<(&str, &dyn erased_serde::Serialize)> = link_table
             .get("account")
             .unwrap()
             .iter()
-            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .map(|(_, ctor, _)| (*ctor, &empty_arg as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<AccountModule>(&sandboxer, &"unused", &exports)
     });
@@ -113,7 +115,7 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
             .get("staking")
             .unwrap()
             .iter()
-            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .map(|(_, ctor, _)| (*ctor, &empty_arg as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<StakingModule>(&sandboxer, &"unused", &exports)
     });
@@ -123,7 +125,7 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
             .get("stamp")
             .unwrap()
             .iter()
-            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .map(|(_, ctor, _)| (*ctor, &empty_arg as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<StampModule>(&sandboxer, &"unused", &exports)
     });
@@ -133,7 +135,7 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
             .get("token")
             .unwrap()
             .iter()
-            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .map(|(_, ctor, _)| (*ctor, &empty_arg as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<TokenModule>(&sandboxer, &"unused", &exports)
     });
@@ -143,7 +145,7 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
             .get("sorting")
             .unwrap()
             .iter()
-            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .map(|(_, ctor, _)| (*ctor, &empty_arg as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<SortingModule>(&sandboxer, &"unused", &exports)
     });
@@ -153,7 +155,7 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
             .get("coordinator")
             .unwrap()
             .iter()
-            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .map(|(_, ctor, _)| (*ctor, &empty_arg as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<MockCoordinator>(&sandboxer, &"unused", &exports)
     });
