@@ -33,8 +33,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 pub(crate) static HOST_PATH: &str = "$";
-static TX_SERVICE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^@tx/([^/])/([^/])$").unwrap());
-static SERVICE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^([^/])/([^/])$").unwrap());
+static TX_SERVICE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^@tx/([^/]+)/([^/]+)$").unwrap());
+static SERVICE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^([^/]+)/([^/]+)$").unwrap());
 
 static SERVICES: Lazy<Mutex<Services>> = Lazy::new(|| Mutex::new(Services::default()));
 
