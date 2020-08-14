@@ -123,7 +123,7 @@ impl UserModule for Module {
 
     fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Skeleton {
         match ctor_name {
-            "tx_sorter" => {
+            "tx-sorter" => {
                 assert_empty_arg(ctor_arg).unwrap();
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn TxSorter>>)
             }

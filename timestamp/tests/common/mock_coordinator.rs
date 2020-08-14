@@ -63,13 +63,13 @@ impl UserModule for MockCoordinator {
         let exporter_module = tokens[0];
         let name = tokens[1];
         match name {
-            "tx_owner" => assert!(self
+            "tx-owner" => assert!(self
                 .ctx
                 .write()
                 .tx_owners
                 .insert(exporter_module.to_owned(), import_service_from_handle(rto_context, handle))
                 .is_none()),
-            "init_genesis" => assert!(self
+            "init-genesis" => assert!(self
                 .ctx
                 .write()
                 .init_genesises
@@ -81,16 +81,16 @@ impl UserModule for MockCoordinator {
                 .statefuls
                 .insert(exporter_module.to_owned(), import_service_from_handle(rto_context, handle))
                 .is_none()),
-            "init_chain" => {
+            "init-chain" => {
                 assert!(self.ctx.write().init_chain.replace(import_service_from_handle(rto_context, handle)).is_none())
             }
-            "update_chain" => assert!(self
+            "update-chain" => assert!(self
                 .ctx
                 .write()
                 .update_chain
                 .replace(import_service_from_handle(rto_context, handle))
                 .is_none()),
-            "tx_sorter" => {
+            "tx-sorter" => {
                 assert!(self.ctx.write().tx_sorter.replace(import_service_from_handle(rto_context, handle)).is_none())
             }
             _ => panic!("Unsupported name in import_service() : {}", name),

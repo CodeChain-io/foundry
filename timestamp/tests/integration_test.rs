@@ -57,35 +57,35 @@ fn generate_link_table() -> LinkTable {
     let mut map = HashMap::new();
 
     map.insert("account", vec![
-        ("token", "account_manager", "account_manager"),
-        ("stamp", "account_manager", "account_manager"),
-        ("sorting", "account_manager", "account_manager"),
-        ("sorting", "get_account_and_seq", "account/get_account_and_seq"),
-        ("coordinator", "tx_owner", "account/tx_owner"),
+        ("token", "account-manager", "account-manager"),
+        ("stamp", "account-manager", "account-manager"),
+        ("sorting", "account-manager", "account-manager"),
+        ("sorting", "get-account-and-seq", "account/get-account-and-seq"),
+        ("coordinator", "tx-owner", "account/tx-owner"),
         ("coordinator", "stateful", "account/stateful"),
     ]);
 
     map.insert("staking", vec![
-        ("coordinator", "init_genesis", "staking/init_genesis"),
-        ("coordinator", "init_chain", "staking/init_chain"),
-        ("coordinator", "update_chain", "staking/update_chain"),
+        ("coordinator", "init-genesis", "staking/init-genesis"),
+        ("coordinator", "init-chain", "staking/init-chain"),
+        ("coordinator", "update-chain", "staking/update-chain"),
     ]);
 
     map.insert("stamp", vec![
-        ("sorting", "get_account_and_seq", "stamp/get_account_and_seq"),
-        ("coordinator", "tx_owner", "stamp/tx_owner"),
-        ("coordinator", "init_genesis", "stamp/init_genesis"),
+        ("sorting", "get-account-and-seq", "stamp/get-account-and-seq"),
+        ("coordinator", "tx-owner", "stamp/tx-owner"),
+        ("coordinator", "init-genesis", "stamp/init-genesis"),
     ]);
 
     map.insert("token", vec![
-        ("staking", "token_manager", "token_manager"),
-        ("stamp", "token_manager", "token_manager"),
-        ("sorting", "get_account_and_seq", "token/get_account_and_seq"),
-        ("coordinator", "tx_owner", "token/tx_owner"),
+        ("staking", "token-manager", "token-manager"),
+        ("stamp", "token-manager", "token-manager"),
+        ("sorting", "get-account-and-seq", "token/get-account-and-seq"),
+        ("coordinator", "tx-owner", "token/tx-owner"),
         ("coordinator", "stateful", "token/stateful"),
     ]);
 
-    map.insert("sorting", vec![("coordinator", "tx_sorter", "sorting/tx_sorter")]);
+    map.insert("sorting", vec![("coordinator", "tx-sorter", "sorting/tx-sorter")]);
 
     map.insert("coordinator", vec![]);
 
