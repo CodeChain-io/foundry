@@ -203,14 +203,17 @@ impl Weaver {
         let mut init_exports: Vec<ServiceSpec> = Vec::with_capacity(exports.len());
 
         for (
-            export_name,
-            Constructor {
-                name,
-                args,
-            },
-        ) in exports.iter()
+            i,
+            (
+                export_name,
+                Constructor {
+                    name,
+                    args,
+                },
+            ),
+        ) in exports.iter().enumerate()
         {
-            export_ids.insert(export_name.clone(), exports.len());
+            export_ids.insert(export_name.clone(), i);
             init_exports.push((name, args));
         }
 
