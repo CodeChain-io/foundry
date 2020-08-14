@@ -211,24 +211,20 @@ impl UserModule for Module {
 
     fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Skeleton {
         match ctor_name {
-            "tx_owner" => {
-                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
-                assert_eq!(arg, "unused");
+            "tx-owner" => {
+                assert_empty_arg(ctor_arg).unwrap();
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn TxOwner>>)
             }
-            "account_manager" => {
-                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
-                assert_eq!(arg, "unused");
+            "account-manager" => {
+                assert_empty_arg(ctor_arg).unwrap();
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn AccountManager>>)
             }
             "stateful" => {
-                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
-                assert_eq!(arg, "unused");
+                assert_empty_arg(ctor_arg).unwrap();
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn Stateful>>)
             }
-            "get_account_and_seq" => {
-                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
-                assert_eq!(arg, "unused");
+            "get-account-and-seq" => {
+                assert_empty_arg(ctor_arg).unwrap();
                 Skeleton::new(Box::new(GetAccountAndSeq) as Box<dyn crate::sorting::GetAccountAndSeq>)
             }
             _ => panic!("Unsupported ctor_name in prepare_service_to_export() : {}", ctor_name),
@@ -237,7 +233,7 @@ impl UserModule for Module {
 
     fn import_service(&mut self, rto_context: &RtoContext, name: &str, handle: HandleToExchange) {
         match name {
-            "sub_storage_access" => {
+            "sub-storage-access" => {
                 self.ctx.write().storage.replace(import_service_from_handle(rto_context, handle));
             }
             _ => panic!("Invalid name in import_service()"),

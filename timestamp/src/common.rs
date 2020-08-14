@@ -25,6 +25,15 @@ pub struct NetworkId([u8; 2]);
 
 pub type TxSeq = u64;
 
+pub fn assert_empty_arg(arg: &[u8]) -> Result<(), ()> {
+    let a: std::collections::HashMap<String, String> = serde_cbor::from_slice(arg).map_err(|_| ())?;
+    if a.is_empty() {
+        Ok(())
+    } else {
+        Err(())
+    }
+}
+
 impl fmt::Display for NetworkId {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let s = std::str::from_utf8(&self.0).expect("network_id a valid utf8 string");

@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use super::common::*;
 use crate::token::TokenManager;
 use ccrypto::blake256;
 use ckey::Ed25519Public as Public;
@@ -85,7 +86,9 @@ impl InitGenesis for Context {
     fn begin_genesis(&mut self) {}
 
     fn init_genesis(&mut self, config: &[u8]) {
-        let initial_validator_set: Validators = serde_cbor::from_slice(config).unwrap();
+        let initial_validator_set: Vec<String> = serde_cbor::from_slice(config).unwrap();
+        let initial_validator_set: Validators =
+            initial_validator_set.into_iter().map(|x| std::str::FromStr::from_str(&x).unwrap()).collect();
         let validator_token_issuer = self.validator_token_issuer;
         for public in initial_validator_set {
             self.token_manager_mut().issue_token(&validator_token_issuer, &public).unwrap();
@@ -123,19 +126,16 @@ impl UserModule for Module {
 
     fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Skeleton {
         match ctor_name {
-            "init_genesis" => {
-                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
-                assert_eq!(arg, "unused");
+            "init-genesis" => {
+                assert_empty_arg(ctor_arg).unwrap();
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn InitGenesis>>)
             }
-            "init_chain" => {
-                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
-                assert_eq!(arg, "unused");
+            "init-chain" => {
+                assert_empty_arg(ctor_arg).unwrap();
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn InitChain>>)
             }
-            "update_chain" => {
-                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
-                assert_eq!(arg, "unused");
+            "update-chain" => {
+                assert_empty_arg(ctor_arg).unwrap();
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn UpdateChain>>)
             }
             _ => panic!("Unsupported ctor_name in prepare_service_to_export() : {}", ctor_name),
@@ -144,7 +144,7 @@ impl UserModule for Module {
 
     fn import_service(&mut self, rto_context: &RtoContext, name: &str, handle: HandleToExchange) {
         match name {
-            "token_manager" => {
+            "token-manager" => {
                 self.ctx.write().token_manager.replace(import_service_from_handle(rto_context, handle));
             }
             _ => panic!("Invalid name in import_service()"),
