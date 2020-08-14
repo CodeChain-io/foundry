@@ -137,14 +137,14 @@ impl UserModule for Module {
 
         if entries.len() == 1 {
             match name {
-                "account_manager" => {
+                "account-manager" => {
                     self.ctx.write().account_manager.replace(import_service_from_handle(rto_context, handle));
                 }
                 _ => panic!("Invalid name in import_service()"),
             }
         } else if entries.len() == 2 {
             match entries[1] {
-                "get_account_and_seq" => assert!(
+                "get-account-and-seq" => assert!(
                     self.ctx
                         .write()
                         .get_account_and_seqs

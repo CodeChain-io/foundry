@@ -211,12 +211,12 @@ impl UserModule for Module {
 
     fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Skeleton {
         match ctor_name {
-            "tx_owner" => {
+            "tx-owner" => {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn TxOwner>>)
             }
-            "account_manager" => {
+            "account-manager" => {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn AccountManager>>)
@@ -226,7 +226,7 @@ impl UserModule for Module {
                 assert_eq!(arg, "unused");
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn Stateful>>)
             }
-            "get_account_and_seq" => {
+            "get-account-and-seq" => {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
                 Skeleton::new(Box::new(GetAccountAndSeq) as Box<dyn crate::sorting::GetAccountAndSeq>)
@@ -237,7 +237,7 @@ impl UserModule for Module {
 
     fn import_service(&mut self, rto_context: &RtoContext, name: &str, handle: HandleToExchange) {
         match name {
-            "sub_storage_access" => {
+            "sub-storage-access" => {
                 self.ctx.write().storage.replace(import_service_from_handle(rto_context, handle));
             }
             _ => panic!("Invalid name in import_service()"),

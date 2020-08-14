@@ -123,17 +123,17 @@ impl UserModule for Module {
 
     fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Skeleton {
         match ctor_name {
-            "init_genesis" => {
+            "init-genesis" => {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn InitGenesis>>)
             }
-            "init_chain" => {
+            "init-chain" => {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn InitChain>>)
             }
-            "update_chain" => {
+            "update-chain" => {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn UpdateChain>>)
@@ -144,7 +144,7 @@ impl UserModule for Module {
 
     fn import_service(&mut self, rto_context: &RtoContext, name: &str, handle: HandleToExchange) {
         match name {
-            "token_manager" => {
+            "token-manager" => {
                 self.ctx.write().token_manager.replace(import_service_from_handle(rto_context, handle));
             }
             _ => panic!("Invalid name in import_service()"),
