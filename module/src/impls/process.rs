@@ -42,12 +42,12 @@ fn multi_process() -> (&'static str, Arc<dyn Sandboxer>) {
 
 #[distributed_slice(LINKERS)]
 fn single_process_linker() -> (&'static str, Arc<dyn Linker>) {
-    ("single-process", Arc::new(ProcessLinker::<SingleProcess>::new()))
+    ("single-process-linker", Arc::new(ProcessLinker::<SingleProcess>::new()))
 }
 
 #[distributed_slice(LINKERS)]
 fn multi_process_linker() -> (&'static str, Arc<dyn Linker>) {
-    ("multi-process", Arc::new(ProcessLinker::<MultiProcess>::new()))
+    ("multi-process-linker", Arc::new(ProcessLinker::<MultiProcess>::new()))
 }
 
 /// ProcessSandboxer is really trivial, because there is nothing really to do
