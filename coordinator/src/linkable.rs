@@ -103,6 +103,7 @@ impl UserModule for HostModule {
                 services.tx_owners.insert(cap[1].to_owned(), import_service_from_handle(rto_context, handle));
                 return
             }
+            panic!("Unknown import: {}", name)
         }
         if let Some(cap) = SERVICE_RE.captures(name) {
             let module = &cap[2];
@@ -122,8 +123,9 @@ impl UserModule for HostModule {
                 "tx-sorter" => {
                     services.tx_sorter.replace(import_service_from_handle(rto_context, handle));
                 }
-                _ => {}
+                _ => panic!("Unknown import: {}", name),
             }
+            return
         }
         panic!("Unknown import: {}", name)
     }
