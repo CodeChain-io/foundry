@@ -123,9 +123,8 @@ impl UserModule for Module {
 
     fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Skeleton {
         match ctor_name {
-            "tx_sorter" => {
-                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
-                assert_eq!(arg, "unused");
+            "tx-sorter" => {
+                assert_empty_arg(ctor_arg).unwrap();
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn TxSorter>>)
             }
             _ => panic!("Unsupported ctor_name in prepare_service_to_export() : {}", ctor_name),
@@ -137,18 +136,19 @@ impl UserModule for Module {
 
         if entries.len() == 1 {
             match name {
-                "account_manager" => {
+                "account-manager" => {
                     self.ctx.write().account_manager.replace(import_service_from_handle(rto_context, handle));
                 }
                 _ => panic!("Invalid name in import_service()"),
             }
-        } else if entries.len() == 2 {
-            match entries[1] {
-                "get_account_and_seq" => assert!(
+        } else if entries.len() == 3 {
+            assert_eq!(entries[0], "@tx");
+            match entries[2] {
+                "get-account-and-seq" => assert!(
                     self.ctx
                         .write()
                         .get_account_and_seqs
-                        .insert(entries[0].to_owned(), import_service_from_handle(rto_context, handle))
+                        .insert(entries[1].to_owned(), import_service_from_handle(rto_context, handle))
                         .is_none(),
                     "Duplicate transaction service"
                 ),

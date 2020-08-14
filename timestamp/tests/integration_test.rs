@@ -57,35 +57,35 @@ fn generate_link_table() -> LinkTable {
     let mut map = HashMap::new();
 
     map.insert("account", vec![
-        ("token", "account_manager", "account_manager"),
-        ("stamp", "account_manager", "account_manager"),
-        ("sorting", "account_manager", "account_manager"),
-        ("sorting", "get_account_and_seq", "account/get_account_and_seq"),
-        ("coordinator", "tx_owner", "account/tx_owner"),
+        ("token", "account-manager", "account-manager"),
+        ("stamp", "account-manager", "account-manager"),
+        ("sorting", "account-manager", "account-manager"),
+        ("sorting", "get-account-and-seq", "@tx/account/get-account-and-seq"),
+        ("coordinator", "tx-owner", "account/tx-owner"),
         ("coordinator", "stateful", "account/stateful"),
     ]);
 
     map.insert("staking", vec![
-        ("coordinator", "init_genesis", "staking/init_genesis"),
-        ("coordinator", "init_chain", "staking/init_chain"),
-        ("coordinator", "update_chain", "staking/update_chain"),
+        ("coordinator", "init-genesis", "staking/init-genesis"),
+        ("coordinator", "init-chain", "staking/init-chain"),
+        ("coordinator", "update-chain", "staking/update-chain"),
     ]);
 
     map.insert("stamp", vec![
-        ("sorting", "get_account_and_seq", "stamp/get_account_and_seq"),
-        ("coordinator", "tx_owner", "stamp/tx_owner"),
-        ("coordinator", "init_genesis", "stamp/init_genesis"),
+        ("sorting", "get-account-and-seq", "@tx/stamp/get-account-and-seq"),
+        ("coordinator", "tx-owner", "stamp/tx-owner"),
+        ("coordinator", "init-genesis", "stamp/init-genesis"),
     ]);
 
     map.insert("token", vec![
-        ("staking", "token_manager", "token_manager"),
-        ("stamp", "token_manager", "token_manager"),
-        ("sorting", "get_account_and_seq", "token/get_account_and_seq"),
-        ("coordinator", "tx_owner", "token/tx_owner"),
+        ("staking", "token-manager", "token-manager"),
+        ("stamp", "token-manager", "token-manager"),
+        ("sorting", "get-account-and-seq", "@tx/token/get-account-and-seq"),
+        ("coordinator", "tx-owner", "token/tx-owner"),
         ("coordinator", "stateful", "token/stateful"),
     ]);
 
-    map.insert("sorting", vec![("coordinator", "tx_sorter", "sorting/tx_sorter")]);
+    map.insert("sorting", vec![("coordinator", "tx-sorter", "sorting/tx-sorter")]);
 
     map.insert("coordinator", vec![]);
 
@@ -98,12 +98,14 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
     let link_table = generate_link_table();
     let mut modules = HashMap::new();
 
+    let empty_arg: HashMap<String, String> = HashMap::new();
+
     modules.insert("account", {
         let exports: Vec<(&str, &dyn erased_serde::Serialize)> = link_table
             .get("account")
             .unwrap()
             .iter()
-            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .map(|(_, ctor, _)| (*ctor, &empty_arg as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<AccountModule>(&sandboxer, &"unused", &exports)
     });
@@ -113,7 +115,7 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
             .get("staking")
             .unwrap()
             .iter()
-            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .map(|(_, ctor, _)| (*ctor, &empty_arg as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<StakingModule>(&sandboxer, &"unused", &exports)
     });
@@ -123,7 +125,7 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
             .get("stamp")
             .unwrap()
             .iter()
-            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .map(|(_, ctor, _)| (*ctor, &empty_arg as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<StampModule>(&sandboxer, &"unused", &exports)
     });
@@ -133,7 +135,7 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
             .get("token")
             .unwrap()
             .iter()
-            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .map(|(_, ctor, _)| (*ctor, &empty_arg as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<TokenModule>(&sandboxer, &"unused", &exports)
     });
@@ -143,7 +145,7 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
             .get("sorting")
             .unwrap()
             .iter()
-            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .map(|(_, ctor, _)| (*ctor, &empty_arg as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<SortingModule>(&sandboxer, &"unused", &exports)
     });
@@ -153,7 +155,7 @@ pub fn setup() -> HashMap<&'static str, Box<dyn Sandbox>> {
             .get("coordinator")
             .unwrap()
             .iter()
-            .map(|(_, ctor, _)| (*ctor, &"unused" as &dyn erased_serde::Serialize))
+            .map(|(_, ctor, _)| (*ctor, &empty_arg as &dyn erased_serde::Serialize))
             .collect();
         load_sandbox::<MockCoordinator>(&sandboxer, &"unused", &exports)
     });
