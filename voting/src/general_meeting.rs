@@ -246,6 +246,25 @@ impl TxOwner for Context {
                 }
                 Ok(())
             }
+            PUBLISH_RESULT_TX_TYPE => {
+                let tx: PublishResultTransaction =
+                    serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
+
+                let meeting_id = tx.action.meeting_id;
+                let meeting: GeneralMeeting = {
+                    let bytes = self
+                        .storage()
+                        .get(meeting_id.as_ref())
+                        .ok_or_else(|| ExecuteError::GeneralMeetingNotFound)
+                        .map_err(|_| todo_fixthis)?;
+                    serde_cbor::from_slice(&bytes).expect("General meeting is serialized by this code")
+                };
+                let now = self.block_header.as_ref().unwrap().timestamp();
+                if meeting.tallying_time.time > now {
+                    return Err(ExecuteError::PublishTimeBeforeTallyingTime).map_err(|_| todo_fixthis)
+                }
+                Ok(())
+            }
             _ => return Err(ExecuteError::InvalidMetadata).map_err(|_| todo_fixthis),
         }
     }
