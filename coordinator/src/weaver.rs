@@ -281,7 +281,12 @@ impl Weaver {
         for (bounds, service) in services {
             let count = counts.get(*service).unwrap_or(&0);
             if !bounds.contains(count) {
-                bail!("The number of '{}' instances doesn't conform to the specification of '{:?}'", *service, bounds)
+                bail!(
+                    "The number of '{}' ({}) instances doesn't conform to the specification of '{:?}'",
+                    *service,
+                    count,
+                    bounds
+                )
             }
         }
 
