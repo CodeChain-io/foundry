@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::common::*;
-use crate::voting::VoteId;
+use crate::voting::{VoteChoice, VoteId, VoteManager};
 use ckey::Ed25519Public as Public;
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
@@ -37,10 +37,14 @@ enum ExecuteError {
     TallyingIsBeforeVotingEnd,
     VotingEndPassed,
     NotAuthorized,
+    PublishTimeBeforeTallyingTime,
+    GeneralMeetingNotFound,
+    VotingBoxNotFound,
 }
 
 const ADMIN_STATE_KEY: &str = "admin";
 const CREATE_GENERAL_MEETING_TX_TYPE: &str = "CreateGeneralMeeting";
+const PUBLISH_RESULT_TX_TYPE: &str = "PublishResult";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TxCreateGeneralMeeting {
@@ -49,12 +53,21 @@ pub struct TxCreateGeneralMeeting {
     pub tallying_time: TimeStamp,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TxPublishResult {
+    pub meeting_id: GeneralMeetingId,
+}
+
 impl Action for TxCreateGeneralMeeting {}
+impl Action for TxPublishResult {}
+
 pub type CreateGeneralMeetingOwnTransaction = SignedTransaction<TxCreateGeneralMeeting>;
+pub type PublishResultTransaction = crate::common::UserTransaction<TxPublishResult>;
 
 struct Context {
     pub storage: Option<Box<dyn SubStorageAccess>>,
     pub block_header: Option<Header>,
+    pub vote: Option<Box<dyn VoteManager>>,
 }
 
 impl Context {
@@ -64,6 +77,10 @@ impl Context {
 
     fn storage_mut(&mut self) -> &mut dyn SubStorageAccess {
         self.storage.as_mut().unwrap().as_mut()
+    }
+
+    fn vote(&self) -> &dyn VoteManager {
+        self.vote.as_ref().unwrap().as_ref()
     }
 
     fn admin(&self) -> Public {
@@ -119,7 +136,56 @@ impl Context {
 
                 Ok(())
             }
+            PUBLISH_RESULT_TX_TYPE => {
+                let tx: PublishResultTransaction =
+                    serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
 
+                let meeting_id = tx.action.meeting_id;
+                let key = crate::generate_voting_box_key(&meeting_id);
+                let vote_box: VoteBox = {
+                    let bytes = &self.storage().get(key.as_slice()).ok_or_else(|| ExecuteError::VotingBoxNotFound)?;
+                    serde_cbor::from_slice(&bytes).expect("Vote box is serialized by this code")
+                };
+
+                let mut meeting: GeneralMeeting = {
+                    let bytes =
+                        self.storage().get(meeting_id.as_ref()).expect("If vote box exist, general meeting must exist");
+                    serde_cbor::from_slice(&bytes).expect("General meeting is serialized by this code")
+                };
+
+                let now = self.block_header.as_ref().unwrap().timestamp();
+                if meeting.tallying_time.time > now {
+                    return Err(ExecuteError::PublishTimeBeforeTallyingTime)
+                }
+                let mut final_result = Vec::new();
+
+                for agenda in 0..meeting.number_of_agendas {
+                    let mut vote_result = VoteResult::new();
+                    for vote_id in &vote_box.votes {
+                        let vote = self.vote().get_vote(&vote_id).unwrap();
+                        let vote_choice = vote.get_choice();
+                        let shares = self.vote().get_shares(&vote_id).unwrap();
+                        let agenda_number = self.vote().get_agenda_number(&vote_id).unwrap();
+                        if agenda_number == agenda {
+                            match vote_choice {
+                                VoteChoice::Favor => {
+                                    vote_result.favor += shares;
+                                }
+                                VoteChoice::Against => {
+                                    vote_result.against += shares;
+                                }
+                                VoteChoice::Absention => {
+                                    vote_result.absention += shares;
+                                }
+                            }
+                        }
+                    }
+                    final_result.push(vote_result);
+                }
+                meeting.save_results(final_result);
+
+                Ok(())
+            }
             _ => return Err(ExecuteError::InvalidMetadata),
         }
     }
@@ -252,6 +318,7 @@ impl UserModule for Module {
             ctx: Arc::new(RwLock::new(Context {
                 storage: None,
                 block_header: None,
+                vote: None,
             })),
         }
     }
@@ -285,6 +352,9 @@ impl UserModule for Module {
         handle: HandleToExchange,
     ) {
         match name {
+            "vote_manager" => {
+                self.ctx.write().vote.replace(import_service_from_handle(rto_context, handle));
+            }
             "sub_storage_access" => {
                 self.ctx.write().storage.replace(import_service_from_handle(rto_context, handle));
             }

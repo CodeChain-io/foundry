@@ -456,4 +456,8 @@ impl Vote {
             signature,
         }
     }
+
+    pub fn get_choice(&self) -> &VoteChoice {
+        &self.choice
+    }
 }
