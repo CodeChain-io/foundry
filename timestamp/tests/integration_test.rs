@@ -60,7 +60,7 @@ fn generate_link_table() -> LinkTable {
         ("token", "account-manager", "account-manager"),
         ("stamp", "account-manager", "account-manager"),
         ("sorting", "account-manager", "account-manager"),
-        ("sorting", "get-account-and-seq", "account/get-account-and-seq"),
+        ("sorting", "get-account-and-seq", "@tx/account/get-account-and-seq"),
         ("coordinator", "tx-owner", "account/tx-owner"),
         ("coordinator", "stateful", "account/stateful"),
     ]);
@@ -72,7 +72,7 @@ fn generate_link_table() -> LinkTable {
     ]);
 
     map.insert("stamp", vec![
-        ("sorting", "get-account-and-seq", "stamp/get-account-and-seq"),
+        ("sorting", "get-account-and-seq", "@tx/stamp/get-account-and-seq"),
         ("coordinator", "tx-owner", "stamp/tx-owner"),
         ("coordinator", "init-genesis", "stamp/init-genesis"),
     ]);
@@ -80,7 +80,7 @@ fn generate_link_table() -> LinkTable {
     map.insert("token", vec![
         ("staking", "token-manager", "token-manager"),
         ("stamp", "token-manager", "token-manager"),
-        ("sorting", "get-account-and-seq", "token/get-account-and-seq"),
+        ("sorting", "get-account-and-seq", "@tx/token/get-account-and-seq"),
         ("coordinator", "tx-owner", "token/tx-owner"),
         ("coordinator", "stateful", "token/stateful"),
     ]);

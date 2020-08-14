@@ -141,13 +141,14 @@ impl UserModule for Module {
                 }
                 _ => panic!("Invalid name in import_service()"),
             }
-        } else if entries.len() == 2 {
-            match entries[1] {
+        } else if entries.len() == 3 {
+            assert_eq!(entries[0], "@tx");
+            match entries[2] {
                 "get-account-and-seq" => assert!(
                     self.ctx
                         .write()
                         .get_account_and_seqs
-                        .insert(entries[0].to_owned(), import_service_from_handle(rto_context, handle))
+                        .insert(entries[1].to_owned(), import_service_from_handle(rto_context, handle))
                         .is_none(),
                     "Duplicate transaction service"
                 ),
