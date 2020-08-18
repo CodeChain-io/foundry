@@ -38,6 +38,7 @@ enum ExecuteError {
     VoteAfterTallyingTime,
     InvalidAgendaNumber,
     UsedVotePaper,
+    VotePaperNotFound,
 }
 
 const CREATE_VOTE_PAPER_TX_TYPE: &str = "Create_Vote_Paper";
@@ -103,6 +104,22 @@ impl Context {
             }
             _ => return Err(ExecuteError::InvalidMetadata),
         }
+    }
+
+    pub fn get_vote_paper(&self, vote_paper_id: &H256) -> Result<VotePaper, ExecuteError> {
+        if !self.storage().has(vote_paper_id.as_ref()) {
+            return Err(ExecuteError::VotePaperNotFound)
+        }
+
+        let mut vote_paper: VotePaper = {
+            let bytes = self
+                .storage()
+                .get(vote_paper_id.as_ref())
+                .expect("Previously we checked the existance of the vote paper in the state");
+            serde_cbor::from_slice(&bytes).expect("Vote paper is serialized by this code")
+        };
+
+        Ok(vote_paper)
     }
 }
 
