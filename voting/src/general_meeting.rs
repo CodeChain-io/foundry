@@ -199,7 +199,7 @@ pub enum Error {
 #[service]
 pub trait GeneralMeetingManager: Service {
     fn get_meeting(&mut self, meeting_id: &GeneralMeetingId) -> Result<GeneralMeeting, Error>;
-    fn get_vote_box(&mut self, key: &[u8]) -> Result<VoteBox, Error>;
+    fn get_vote_box(&mut self, meeting_id: &GeneralMeetingId) -> Result<VoteBox, Error>;
 }
 
 impl GeneralMeetingManager for Context {
@@ -215,12 +215,15 @@ impl GeneralMeetingManager for Context {
         Ok(meeting)
     }
 
-    fn get_vote_box(&mut self, key: &[u8]) -> Result<VoteBox, Error> {
-        if !self.storage().has(key) {
+    fn get_vote_box(&mut self, meeting_id: &GeneralMeetingId) -> Result<VoteBox, Error> {
+        let key = crate::generate_voting_box_key(meeting_id);
+
+        if !self.storage().has(key.as_slice()) {
             return Err(Error::VoteBoxNotFound)
         }
         let vote_box = {
-            let bytes = self.storage().get(key).expect("We check the existence of the vote box in above statement");
+            let bytes =
+                self.storage().get(key.as_slice()).expect("We check the existence of the vote box in above statement");
             serde_cbor::from_slice(&bytes).expect("Vote Box is serialized by this code")
         };
         Ok(vote_box)
