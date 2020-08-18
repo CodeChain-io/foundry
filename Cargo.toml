@@ -54,6 +54,7 @@ tokio-core = "0.1.17"
 toml = "0.4"
 cidr = "0.0.4"
 codechain-timestamp = {path = "timestamp"}
+codechain-voting = {path = "voting"}
 
 [build-dependencies]
 vergen = "3"
@@ -83,5 +84,6 @@ members = [
     "basic_module/staking",
     "module",
     "module-macros",
-    "timestamp"
+    "timestamp",
+    "voting"
 ]
