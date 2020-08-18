@@ -247,6 +247,7 @@ pub enum Error {
 pub trait VoteManager: Service {
     fn get_vote(&self, vote_id: &VoteId) -> Result<Vote, Error>;
     fn get_shares(&self, vote_id: &VoteId) -> Result<u32, Error>;
+    fn get_agenda_number(&self, vote_id: &VoteId) -> Result<u32, Error>;
 }
 
 impl VoteManager for Context {
@@ -284,6 +285,25 @@ impl VoteManager for Context {
         };
 
         Ok(vote_paper.number_of_shares)
+    }
+
+    fn get_agenda_number(&self, vote_id: &VoteId) -> Result<u32, Error> {
+        if !self.storage().has(vote_id.as_ref()) {
+            return Err(Error::VoteNotFound)
+        }
+        let vote: Vote = {
+            let bytes = &self.storage().get(vote_id.as_ref()).expect("Previously we checked the existence of the vote");
+            serde_cbor::from_slice(bytes).expect("Vote is serialized by this code")
+        };
+        let vote_paper_id = vote.corresponding_paper_id;
+
+        let vote_paper: VotePaper = {
+            let bytes =
+                &self.storage().get(vote_paper_id.as_ref()).expect("If the vote exist, the vote paper must exist");
+            serde_cbor::from_slice(bytes).expect("Vote paper is serialized by this code")
+        };
+
+        Ok(vote_paper.agenda_number)
     }
 }
 
