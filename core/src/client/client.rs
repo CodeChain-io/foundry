@@ -39,16 +39,13 @@ use coordinator::context::{ChainHistoryAccess, MemPoolAccess, StateHistoryAccess
 use coordinator::engine::{BlockExecutor, Initializer};
 use coordinator::types::Event;
 use coordinator::Transaction;
-use cstate::{
-    Metadata, MetadataAddress, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopState, TopStateView,
-};
+use cstate::{Metadata, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header, StorageId, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
-use merkle_trie::{TrieFactory, TrieMut};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use primitives::{Bytes, H256};
-use rlp::{Encodable, Rlp};
+use primitives::Bytes;
+use rlp::Rlp;
 use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
 use std::sync::{Arc, Weak};
@@ -241,43 +238,25 @@ impl Client {
         let root = BLAKE_NULL_RLP;
         let state = Arc::new(Mutex::new(TopLevelState::from_existing(db.clone(&root), root)?));
 
-        for _ in 0..5 {
-            state.lock().create_module().unwrap();
+        // 1 for the metadata
+        for i in 0..(5 + 1) {
+            state.lock().create_module_level_state(i).unwrap();
         }
 
-        let storage = Arc::clone(&state) as Arc<Mutex<dyn StorageAccess>>;
+        let (validators, consensus_params) =
+            coordinator.initialize_chain(Arc::clone(&state) as Arc<Mutex<dyn StorageAccess>>);
 
-        let (validators, consensus_params) = coordinator.initialize_chain(storage);
+        let (db, root) = {
+            let state_mut = &mut state.lock();
+            let validator_set = NextValidatorSet::from_compact_validator_set(validators);
+            validator_set.save_to_state(state_mut)?;
+            state_mut.commit_and_clone_db()?
+        };
 
-        let state_mut = &mut state.lock();
-
-        let validator_set = NextValidatorSet::from_compact_validator_set(validators);
-        validator_set.save_to_state(state_mut)?;
-
-        let root = state_mut.commit()?;
-
-        let db = Self::initialize_modules(db, root, consensus_params)?;
-
-        Ok(db)
-    }
-
-    fn initialize_modules(
-        mut db: StateDB,
-        mut root: H256,
-        genesis_consensus_params: ConsensusParams,
-    ) -> Result<StateDB, Error> {
-        // TODO: remove CommonParams
+        let state = TopLevelState::from_existing(db, root)?;
         let genesis_params = CommonParams::default();
-        let global_metadata = Metadata::new(genesis_params, genesis_consensus_params);
-        {
-            let mut t = TrieFactory::from_existing(db.as_hashdb_mut(), &mut root)?;
-            let address = MetadataAddress::new();
-
-            let r = t.insert(address.as_ref(), &global_metadata.rlp_bytes());
-            debug_assert_eq!(Ok(None), r);
-            r?;
-        }
-        Ok(db)
+        *state.get_metadata_mut().unwrap() = Metadata::new(genesis_params, consensus_params);
+        Ok(state.commit_and_into_db().unwrap().0)
     }
 
     fn block_number_ref(&self, id: &BlockId) -> Option<BlockNumber> {
