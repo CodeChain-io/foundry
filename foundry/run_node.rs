@@ -200,6 +200,9 @@ fn prepare_coordinator() -> Arc<Coordinator> {
 pub fn open_db(cfg: &config::Operating, client_config: &ClientConfig) -> Result<Arc<dyn KeyValueDB>, String> {
     let base_path = cfg.base_path.as_ref().unwrap().clone();
     let db_path = cfg.db_path.as_ref().map(String::clone).unwrap_or_else(|| base_path + "/" + DEFAULT_DB_PATH);
+    // this is for debug
+    std::process::Command::new("rm").arg("-rf").arg(&db_path).output().unwrap();
+
     let client_path = Path::new(&db_path);
     let mut db_config = DatabaseConfig::with_columns(NUM_COLUMNS);
 
