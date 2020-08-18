@@ -213,6 +213,11 @@ impl StateWithCache for TopLevelState {
         let root = self.commit()?;
         Ok((self.db.into_inner(), root))
     }
+
+    fn commit_and_clone_db(&mut self) -> StateResult<(StateDB, H256)> {
+        let root = self.commit()?;
+        Ok((self.db.borrow().clone(&root), root))
+    }
 }
 
 const TOP_CHECKPOINT: CheckpointId = 777;
@@ -268,7 +273,7 @@ impl TopLevelState {
         Ok(state)
     }
 
-    fn create_module_level_state(&mut self, storage_id: StorageId) -> StateResult<()> {
+    pub fn create_module_level_state(&mut self, storage_id: StorageId) -> StateResult<()> {
         const DEFAULT_MODULE_ROOT: H256 = ccrypto::BLAKE_NULL_RLP;
         {
             let module_cache = self.module_caches.entry(storage_id).or_default();
@@ -285,7 +290,7 @@ impl TopLevelState {
         Ok(ModuleLevelState::from_existing(storage_id, &mut self.db, module_root, module_cache)?)
     }
 
-    fn get_metadata_mut(&self) -> TrieResult<RefMut<'_, Metadata>> {
+    pub fn get_metadata_mut(&self) -> TrieResult<RefMut<'_, Metadata>> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         let address = MetadataAddress::new();
