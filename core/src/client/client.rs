@@ -39,7 +39,9 @@ use coordinator::context::{ChainHistoryAccess, MemPoolAccess, StateHistoryAccess
 use coordinator::engine::{BlockExecutor, Initializer};
 use coordinator::types::Event;
 use coordinator::Transaction;
-use cstate::{Metadata, MetadataAddress, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopStateView};
+use cstate::{
+    Metadata, MetadataAddress, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopState, TopStateView,
+};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header, StorageId, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
@@ -238,6 +240,11 @@ impl Client {
     fn initialize_state(db: StateDB, coordinator: &impl Initializer) -> Result<StateDB, Error> {
         let root = BLAKE_NULL_RLP;
         let state = Arc::new(Mutex::new(TopLevelState::from_existing(db.clone(&root), root)?));
+
+        for _ in 0..5 {
+            state.lock().create_module().unwrap();
+        }
+
         let storage = Arc::clone(&state) as Arc<Mutex<dyn StorageAccess>>;
 
         let (validators, consensus_params) = coordinator.initialize_chain(storage);
