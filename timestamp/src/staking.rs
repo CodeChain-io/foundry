@@ -86,7 +86,9 @@ impl InitGenesis for Context {
     fn begin_genesis(&mut self) {}
 
     fn init_genesis(&mut self, config: &[u8]) {
-        let initial_validator_set: Validators = serde_cbor::from_slice(config).unwrap();
+        let initial_validator_set: Vec<String> = serde_cbor::from_slice(config).unwrap();
+        let initial_validator_set: Validators =
+            initial_validator_set.into_iter().map(|x| std::str::FromStr::from_str(&x).unwrap()).collect();
         let validator_token_issuer = self.validator_token_issuer;
         for public in initial_validator_set {
             self.token_manager_mut().issue_token(&validator_token_issuer, &public).unwrap();

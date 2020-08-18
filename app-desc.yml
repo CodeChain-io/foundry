@@ -29,7 +29,9 @@ modules:
       token-manager: module-token/token-manager
     init-config:
       thread-pool-size: 16
-    genesis-config: {}
+    genesis-config:
+      - 6018c0bc7b885061001c8bc635502f0f540f482cc742c691215cb8f0496a1e13
+      # private: e97759bc112c04bd8fb79fab2d6c82452432818046d4ab1146654f63bdf6cebc6018c0bc7b885061001c8bc635502f0f540f482cc742c691215cb8f0496a1e13
     tags:
       previliged: true
 
