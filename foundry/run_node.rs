@@ -217,7 +217,7 @@ pub fn open_db(cfg: &config::Operating, client_config: &ClientConfig) -> Result<
     Ok(db)
 }
 
-pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
+pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), String> {
     // increase max number of open files
     raise_fd_limit();
 
@@ -412,7 +412,11 @@ pub fn run_node(matches: &ArgMatches<'_>) -> Result<(), String> {
 
     cinfo!(TEST_SCRIPT, "Initialization complete");
 
-    wait_for_exit();
+    if let Some(test_cmd) = test_cmd {
+        super::tests::handle_test_command(test_cmd, client.client())
+    } else {
+        wait_for_exit();
+    }
 
     if let Some(server) = informer_server {
         server.close_handle().close();
