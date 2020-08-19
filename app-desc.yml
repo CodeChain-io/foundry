@@ -30,8 +30,8 @@ modules:
     init-config:
       thread-pool-size: 16
     genesis-config:
-      - 6018c0bc7b885061001c8bc635502f0f540f482cc742c691215cb8f0496a1e13
-      # private: e97759bc112c04bd8fb79fab2d6c82452432818046d4ab1146654f63bdf6cebc6018c0bc7b885061001c8bc635502f0f540f482cc742c691215cb8f0496a1e13
+      - 0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0
+      # private: 4ca2cbc987cd76b393f11124fe7145fdc680e311a1ed9dee060e7c3fbeb8943e0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0
     tags:
       previliged: true
 
