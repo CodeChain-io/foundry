@@ -1,6 +1,7 @@
 branches:
   except:
     - mold
+    - voting
 
 language: rust
 rust:
