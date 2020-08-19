@@ -96,6 +96,10 @@ impl Scheme {
         *self.state_root_memo.read()
     }
 
+    pub fn set_state_root(&self, root: H256) {
+        *self.state_root_memo.write() = root;
+    }
+
     /// Loads scheme from json file. Provide factories for executing contracts and ensuring
     /// storage goes to the right place.
     pub fn load<R>(reader: R) -> Result<Self, String>
