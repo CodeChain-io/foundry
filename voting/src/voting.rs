@@ -324,6 +324,11 @@ impl UserModule for Module {
 
     fn prepare_service_to_export(&mut self, ctor_name: &str, ctor_arg: &[u8]) -> Skeleton {
         match ctor_name {
+            "vote_manager" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn VoteManager>>)
+            }
             "tx_owner" => {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
