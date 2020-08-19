@@ -44,7 +44,7 @@ use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header, StorageId, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use primitives::Bytes;
+use primitives::{Bytes, H256};
 use rlp::Rlp;
 use std::collections::HashMap;
 use std::ops::Range;
@@ -98,7 +98,10 @@ impl Client {
             return Err(SchemeError::InvalidState.into())
         }
         if state_db.is_empty() {
-            state_db = Self::initialize_state(state_db, &*coordinator)?;
+            let (state_db_new, root) = Self::initialize_state(state_db, &*coordinator)?;
+            state_db = state_db_new;
+            scheme.set_state_root(root);
+
             let mut batch = DBTransaction::new();
             state_db.journal_under(&mut batch, 0, *scheme.genesis_header().hash())?;
             db.write(batch)?;
@@ -243,7 +246,7 @@ impl Client {
         self.new_blocks(&[], &[], &enacted);
     }
 
-    fn initialize_state(db: StateDB, coordinator: &impl Initializer) -> Result<StateDB, Error> {
+    fn initialize_state(db: StateDB, coordinator: &impl Initializer) -> Result<(StateDB, H256), Error> {
         let root = BLAKE_NULL_RLP;
         let state = Arc::new(Mutex::new(TopLevelState::from_existing(db.clone(&root), root)?));
 
@@ -265,7 +268,7 @@ impl Client {
         let state = TopLevelState::from_existing(db, root)?;
         let genesis_params = CommonParams::default();
         *state.get_metadata_mut().unwrap() = Metadata::new(genesis_params, consensus_params);
-        Ok(state.commit_and_into_db().unwrap().0)
+        Ok(state.commit_and_into_db().unwrap())
     }
 
     fn block_number_ref(&self, id: &BlockId) -> Option<BlockNumber> {
