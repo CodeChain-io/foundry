@@ -22,7 +22,7 @@ extern crate codechain_logger as clogger;
 use app_dirs::AppInfo;
 use clap::load_yaml;
 
-use crate::run_node::run_node;
+pub use crate::run_node::run_node;
 use crate::subcommand::run_subcommand;
 
 mod config;
@@ -33,6 +33,7 @@ mod rpc;
 mod rpc_apis;
 mod run_node;
 mod subcommand;
+mod tests;
 
 pub const APP_INFO: AppInfo = AppInfo {
     name: "foundry",
@@ -45,7 +46,6 @@ fn main() -> Result<(), String> {
 
     // Always print backtrace on panic.
     std::env::set_var("RUST_BACKTRACE", "1");
-
     run()
 }
 
@@ -56,7 +56,7 @@ fn run() -> Result<(), String> {
 
     match matches.subcommand_name() {
         Some(_) => run_subcommand(&matches),
-        None => run_node(&matches),
+        None => run_node(&matches, None),
     }
 }
 
