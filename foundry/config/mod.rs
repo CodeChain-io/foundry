@@ -767,7 +767,7 @@ pub fn load_config(matches: &clap::ArgMatches<'_>) -> Result<Config, String> {
         toml::from_str(toml_string.as_ref()).expect("The preset config file must be valid")
     };
 
-    if let Some(config_path) = matches.value_of("config") {
+    if let Some(config_path) = Some("./config.tendermint-solo.toml") {
         let toml_string = fs::read_to_string(config_path).map_err(|e| format!("Fail to read file: {:?}", e))?;
         let extra_config: Config =
             toml::from_str(toml_string.as_ref()).map_err(|e| format!("Error while parsing TOML: {:?}", e))?;

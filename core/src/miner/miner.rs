@@ -374,7 +374,7 @@ impl MinerService for Miner {
             }
         };
 
-        if std::env::var("RUN_ON_TEST").is_ok() {
+        if true {
             let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("There is no time machine.").as_secs();
             if block.header().timestamp() > now {
                 let delta = block.header().timestamp() - now;
