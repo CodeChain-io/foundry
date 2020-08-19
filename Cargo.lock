@@ -379,7 +379,7 @@ dependencies = [
 name = "codechain-core"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "codechain-db",
  "codechain-io",
  "codechain-json",
@@ -402,7 +402,7 @@ dependencies = [
  "merkle-trie",
  "num-rational",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rand 0.6.5",
  "rand_xorshift",
  "rlp 0.5.0",
@@ -423,7 +423,28 @@ dependencies = [
  "ctr",
  "digest 0.8.1",
  "hex",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
+ "quick-error",
+ "ring",
+ "ripemd160",
+ "scrypt",
+ "sha-1",
+ "sha2 0.8.2",
+ "sha3",
+]
+
+[[package]]
+name = "codechain-crypto"
+version = "0.3.0"
+source = "git+https://github.com/CodeChain-io/rust-codechain-crypto.git#7915c393a2b6df7f9785866e8d4889867fd9e333"
+dependencies = [
+ "aes",
+ "blake2",
+ "block-modes",
+ "ctr",
+ "digest 0.8.1",
+ "hex",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "quick-error",
  "ring",
  "ripemd160",
@@ -438,10 +459,10 @@ name = "codechain-db"
 version = "0.2.0"
 source = "git+https://github.com/CodeChain-io/rust-codechain-db.git?tag=v0.2.0#01344a752c45ebcf7e2089f1962dbfed2b115db4"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "kvdb",
  "plain_hasher",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rlp 0.5.0",
 ]
 
@@ -449,7 +470,7 @@ dependencies = [
 name = "codechain-discovery"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "codechain-logger",
  "codechain-network",
  "codechain-timer",
@@ -457,7 +478,7 @@ dependencies = [
  "log",
  "never-type",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rand 0.6.5",
  "rlp 0.5.0",
  "time",
@@ -511,7 +532,7 @@ name = "codechain-json"
 version = "0.1.0"
 dependencies = [
  "codechain-key",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rustc-hex 1.0.0",
  "serde",
  "serde_derive",
@@ -523,11 +544,11 @@ name = "codechain-key"
 version = "0.1.0"
 dependencies = [
  "base64 0.12.3",
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "lazy_static",
  "never-type",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rand 0.6.5",
  "rand_xorshift",
  "rlp 0.5.0",
@@ -543,7 +564,7 @@ dependencies = [
 name = "codechain-keystore"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "codechain-json",
  "codechain-key",
  "codechain-types",
@@ -551,7 +572,7 @@ dependencies = [
  "log",
  "matches",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rand 0.6.5",
  "rustc-hex 1.0.0",
  "serde",
@@ -592,7 +613,7 @@ dependencies = [
  "linkme",
  "once_cell",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "remote-trait-object",
  "serde",
  "serde_cbor",
@@ -604,7 +625,7 @@ name = "codechain-network"
 version = "0.1.0"
 dependencies = [
  "cidr",
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "codechain-io",
  "codechain-key",
  "codechain-logger",
@@ -617,7 +638,7 @@ dependencies = [
  "mio 0.6.22",
  "never-type",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rand 0.6.5",
  "rlp 0.5.0",
  "rlp_derive",
@@ -650,7 +671,7 @@ dependencies = [
  "lazy_static",
  "log",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rand 0.6.5",
  "rlp 0.5.0",
  "rustc-hex 1.0.0",
@@ -665,7 +686,7 @@ dependencies = [
 name = "codechain-state"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "codechain-db",
  "codechain-key",
  "codechain-logger",
@@ -677,7 +698,7 @@ dependencies = [
  "lru-cache",
  "merkle-trie",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rand 0.6.5",
  "rand_xorshift",
  "rlp 0.5.0",
@@ -690,7 +711,7 @@ name = "codechain-sync"
 version = "0.1.0"
 dependencies = [
  "codechain-core",
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "codechain-db",
  "codechain-key",
  "codechain-logger",
@@ -703,7 +724,7 @@ dependencies = [
  "log",
  "merkle-trie",
  "never-type",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rand 0.6.5",
  "rlp 0.5.0",
  "snap",
@@ -723,7 +744,7 @@ dependencies = [
 name = "codechain-timestamp"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "codechain-key",
  "codechain-module",
  "codechain-types",
@@ -733,7 +754,7 @@ dependencies = [
  "foundry-process-sandbox",
  "linkme",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rand 0.7.3",
  "remote-trait-object",
  "serde",
@@ -744,16 +765,32 @@ dependencies = [
 name = "codechain-types"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "codechain-json",
  "codechain-key",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rand 0.6.5",
  "rlp 0.5.0",
  "rlp_derive",
  "serde",
  "serde_derive",
  "serde_json",
+]
+
+[[package]]
+name = "codechain-voting"
+version = "0.1.0"
+dependencies = [
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git)",
+ "codechain-key",
+ "coordinator",
+ "foundry-module-rt",
+ "linkme",
+ "parking_lot 0.11.0",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
+ "remote-trait-object",
+ "serde",
+ "serde_cbor",
 ]
 
 [[package]]
@@ -810,7 +847,7 @@ name = "coordinator"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "codechain-key",
  "codechain-module",
  "codechain-types",
@@ -822,7 +859,7 @@ dependencies = [
  "linkme",
  "once_cell",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "regex",
  "remote-trait-object",
  "rlp 0.5.0",
@@ -1310,6 +1347,7 @@ dependencies = [
  "codechain-timer",
  "codechain-timestamp",
  "codechain-types",
+ "codechain-voting",
  "coordinator",
  "crossbeam-channel 0.3.9",
  "ctrlc",
@@ -1323,7 +1361,7 @@ dependencies = [
  "never-type",
  "panic_hook",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rpassword",
  "rustc-serialize",
  "serde",
@@ -2205,10 +2243,10 @@ name = "merkle-trie"
 version = "0.4.1"
 source = "git+https://github.com/CodeChain-io/rust-merkle-trie.git?tag=v0.4.1#773e054f453a5a72e4fe7fe441c9fb30099751d3"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "codechain-db",
  "lru-cache",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rand 0.6.5",
  "rlp 0.5.0",
  "rlp_derive",
@@ -2343,12 +2381,12 @@ dependencies = [
 name = "module_account"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "codechain-key",
  "coordinator",
  "lazy_static",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "serde",
  "serde_cbor",
  "serde_derive",
@@ -2835,6 +2873,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "primitives"
+version = "0.5.1"
+source = "git+https://github.com/CodeChain-io/rust-codechain-primitives.git#11a82f22dfd821af30d9ba37e0ab712dfeb400b6"
+dependencies = [
+ "ethereum-types",
+]
+
+[[package]]
 name = "proc-macro-crate"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3230,7 +3276,7 @@ name = "rlp"
 version = "0.5.0"
 source = "git+https://github.com/CodeChain-io/rlp.git?tag=v0.5.0#13880ca798e305988205b505ef605d8e6173e466"
 dependencies = [
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "rustc-hex 1.0.0",
 ]
 
@@ -3619,13 +3665,13 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 name = "staking"
 version = "0.1.0"
 dependencies = [
- "codechain-crypto",
+ "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git?tag=v0.3.0)",
  "codechain-key",
  "codechain-types",
  "coordinator",
  "lazy_static",
  "parking_lot 0.11.0",
- "primitives",
+ "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git?tag=v0.5.1)",
  "serde",
  "serde_cbor",
  "serde_derive",

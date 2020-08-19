@@ -20,10 +20,10 @@ use ckey::Ed25519Public as Public;
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
 use coordinator::types::*;
+use coordinator::{Header, Transaction};
 use foundry_module_rt::UserModule;
 use parking_lot::RwLock;
 use primitives::H256;
-use rand::Rng;
 use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange, Skeleton};
 use remote_trait_object::{service, Context as RtoContext, Service, ServiceRef};
 use serde::{Deserialize, Serialize};
@@ -195,7 +195,7 @@ impl Service for Context {}
 
 impl Stateful for Context {
     fn set_storage(&mut self, storage: ServiceRef<dyn SubStorageAccess>) {
-        self.storage.replace(storage.unwrap_import().into_remote());
+        self.storage.replace(storage.unwrap_import().into_proxy());
     }
 }
 
@@ -363,13 +363,7 @@ impl UserModule for Module {
         }
     }
 
-    fn import_service(
-        &mut self,
-        rto_context: &RtoContext,
-        _exporter_module: &str,
-        name: &str,
-        handle: HandleToExchange,
-    ) {
+    fn import_service(&mut self, rto_context: &RtoContext, name: &str, handle: HandleToExchange) {
         match name {
             "vote_manager" => {
                 self.ctx.write().vote.replace(import_service_from_handle(rto_context, handle));
@@ -394,9 +388,7 @@ pub struct GeneralMeetingId {
 
 impl GeneralMeetingId {
     pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
-        let random_id: u64 = rng.gen();
-        let meeting_id = H256::from(random_id);
+        let meeting_id = H256::random().into();
         Self {
             id: meeting_id,
         }

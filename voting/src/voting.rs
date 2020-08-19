@@ -20,10 +20,10 @@ pub use ckey::{Ed25519Public as Public, Signature};
 use coordinator::context::SubStorageAccess;
 use coordinator::module::*;
 use coordinator::types::*;
+use coordinator::{Header, Transaction};
 use foundry_module_rt::UserModule;
 use parking_lot::RwLock;
 use primitives::H256;
-use rand::Rng;
 use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange, Skeleton};
 use remote_trait_object::{service, Context as RtoContext, Service, ServiceRef};
 use serde::{Deserialize, Serialize};
@@ -165,7 +165,7 @@ impl Service for Context {}
 
 impl Stateful for Context {
     fn set_storage(&mut self, storage: ServiceRef<dyn SubStorageAccess>) {
-        self.storage.replace(storage.unwrap_import().into_remote());
+        self.storage.replace(storage.unwrap_import().into_proxy());
     }
 }
 
@@ -333,13 +333,7 @@ impl UserModule for Module {
         }
     }
 
-    fn import_service(
-        &mut self,
-        rto_context: &RtoContext,
-        _exporter_module: &str,
-        name: &str,
-        handle: HandleToExchange,
-    ) {
+    fn import_service(&mut self, rto_context: &RtoContext, name: &str, handle: HandleToExchange) {
         match name {
             "meeting_manager" => {
                 self.ctx.write().general_meeting.replace(import_service_from_handle(rto_context, handle));
@@ -389,9 +383,7 @@ impl VotePaper {
         number_of_shares: u32,
         voter_publickey: Public,
     ) -> Self {
-        let mut rng = rand::thread_rng();
-        let random_id: u64 = rng.gen();
-        let vote_paper_id = H256::from(random_id);
+        let vote_paper_id = H256::random().into();
 
         Self {
             vote_paper_id,
@@ -444,10 +436,8 @@ pub struct Vote {
 
 impl Vote {
     pub fn new(vote_paper_id: H256, choice: VoteChoice, signature: Signature) -> Self {
-        let mut rng = rand::thread_rng();
-        let random_id: u64 = rng.gen();
         let vote_id = VoteId {
-            id: H256::from(random_id),
+            id: H256::random().into(),
         };
         Self {
             corresponding_paper_id: vote_paper_id,

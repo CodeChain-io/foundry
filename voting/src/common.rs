@@ -48,7 +48,7 @@ pub struct SignedTransaction<T: Action> {
 impl<T: Action> SignedTransaction<T> {
     pub fn verify(&self) -> Result<(), ()> {
         let message = self.tx.hash();
-        if verify(&self.signature, &message, &self.signer_public) {
+        if verify(&self.signature, &message.as_ref(), &self.signer_public) {
             Ok(())
         } else {
             Err(())
