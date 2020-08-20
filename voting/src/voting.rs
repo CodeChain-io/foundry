@@ -329,6 +329,11 @@ impl UserModule for Module {
                 assert_eq!(arg, "unused");
                 Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn VoteManager>>)
             }
+            "stateful" => {
+                let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
+                assert_eq!(arg, "unused");
+                Skeleton::new(Arc::clone(&self.ctx) as Arc<RwLock<dyn Stateful>>)
+            }
             "tx_owner" => {
                 let arg: String = serde_cbor::from_slice(ctor_arg).unwrap();
                 assert_eq!(arg, "unused");
