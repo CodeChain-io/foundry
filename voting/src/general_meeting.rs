@@ -415,7 +415,7 @@ impl AsRef<StorageKeyRef> for GeneralMeetingId {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct TimeStamp {
-    time: u64,
+    pub time: u64,
 }
 
 impl TimeStamp {
