@@ -1877,6 +1877,7 @@ dependencies = [
  "rpassword",
  "rustc-serialize",
  "serde",
+ "serde_cbor",
  "serde_derive",
  "serde_json",
  "staking",

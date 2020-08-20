@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 mod basic;
+mod timestamp;
 
 use ccore::Client;
 use std::sync::Arc;
@@ -22,6 +23,7 @@ use std::sync::Arc;
 pub fn handle_test_command(cmd: &str, client: Arc<Client>) {
     match cmd {
         "check_block_nums" => basic::check_block_nums(client),
+        "inject_hello_txes" => timestamp::inject_hello_txes(client),
         _ => panic!(),
     }
 }
@@ -29,4 +31,9 @@ pub fn handle_test_command(cmd: &str, client: Arc<Client>) {
 #[test]
 fn check_block_nums() {
     super::run_node(&clap::ArgMatches::new(), Some("check_block_nums")).unwrap()
+}
+
+#[test]
+fn inject_hello_txes() {
+    super::run_node(&clap::ArgMatches::new(), Some("inject_hello_txes")).unwrap()
 }
