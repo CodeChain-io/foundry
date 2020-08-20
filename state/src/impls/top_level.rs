@@ -103,7 +103,7 @@ impl TopStateView for TopLevelState {
         match self.module_root(storage_id)? {
             // FIXME: Find a way to use stored cache.
             Some(module_root) => {
-                let module_cache = self.module_caches.get(&storage_id).cloned().unwrap_or_default();
+                let module_cache = self.module_caches.get(&storage_id);
                 Ok(Some(Box::new(ModuleLevelState::read_only(storage_id, &self.db, module_root, module_cache)?)))
             }
             None => Ok(None),
