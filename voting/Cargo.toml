@@ -15,3 +15,9 @@ primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.
 remote-trait-object = { version = "=0.4.0" }
 serde_cbor = "0.11.1"
 serde = { version = "1.0.111", features = ["derive"] }
+
+[dev-dependencies]
+codechain-module = {path = "../module"}
+erased-serde = "0.3.11"
+ctypes = { package = "codechain-types", path = "../types" }
+foundry-process-sandbox = { version = "0.2.0", git = "https://github.com/CodeChain-io/foundry-sandbox.git", tag = "v0.2.0" }
