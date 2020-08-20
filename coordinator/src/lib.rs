@@ -292,20 +292,18 @@ impl BlockExecutor for Coordinator {
     ) -> Result<Vec<TransactionOutcome>, ExecuteTransactionError> {
         let inner = &mut *self.inner.lock();
 
-        let storage = &mut *inner.current_storage.lock();
-
         let mut outcomes = Vec::with_capacity(transactions.len());
 
         for tx in transactions {
             match inner.tx_owner.get_mut(tx.tx_type()) {
                 Some(owner) => {
-                    storage.create_checkpoint();
+                    inner.current_storage.lock().create_checkpoint();
                     match owner.execute_transaction(tx) {
                         Ok(outcome) => {
                             outcomes.push(outcome);
-                            storage.discard_checkpoint();
+                            inner.current_storage.lock().discard_checkpoint();
                         }
-                        Err(_) => storage.revert_to_the_checkpoint(),
+                        Err(_) => inner.current_storage.lock().revert_to_the_checkpoint(),
                     }
                 }
                 None => outcomes.push(TransactionOutcome::default()),
@@ -320,8 +318,6 @@ impl BlockExecutor for Coordinator {
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<(&'a Transaction, TransactionOutcome)> {
         let inner = &mut *self.inner.lock();
-
-        let storage = &mut *inner.current_storage.lock();
 
         let txs: Vec<_> = transactions.collect();
         let owned_txs: Vec<_> = txs.iter().map(|tx| (*tx).clone()).collect();
@@ -340,14 +336,14 @@ impl BlockExecutor for Coordinator {
                 if remaining_block_space <= tx.size() {
                     break
                 }
-                storage.create_checkpoint();
+                inner.current_storage.lock().create_checkpoint();
                 if let Ok(outcome) = owner.execute_transaction(&tx) {
-                    storage.discard_checkpoint();
+                    inner.current_storage.lock().discard_checkpoint();
                     tx_n_outcomes.push((tx, outcome));
                     remaining_block_space -= tx.size();
                     continue
                 }
-                storage.revert_to_the_checkpoint()
+                inner.current_storage.lock().revert_to_the_checkpoint();
             }
         }
         tx_n_outcomes
