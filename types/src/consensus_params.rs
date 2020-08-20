@@ -55,7 +55,7 @@ impl ConsensusParams {
         Self {
             max_extra_data_size: 1000,
             network_id: NetworkId::from_str("dt").unwrap(),
-            max_body_size: 1000,
+            max_body_size: 1000 * 1000 * 1000,
             snapshot_period: 1000,
             term_seconds: 1000,
         }

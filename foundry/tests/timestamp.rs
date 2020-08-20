@@ -58,7 +58,7 @@ pub fn inject_hello_txes(client: Arc<Client>) {
 
     for i in 0..n {
         client.queue_own_transaction(tx_hello(user1.public(), user1.private(), i)).unwrap();
-        sleep(Duration::from_millis(100));
+        //sleep(Duration::from_millisisis(100));
     }
 
     sleep(Duration::from_millis(5000));
