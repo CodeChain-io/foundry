@@ -345,7 +345,7 @@ impl UserModule for Module {
 
     fn import_service(&mut self, rto_context: &RtoContext, name: &str, handle: HandleToExchange) {
         match name {
-            "meeting_manager" => {
+            "general_meeting_manager" => {
                 self.ctx.write().general_meeting.replace(import_service_from_handle(rto_context, handle));
             }
             "sub_storage_access" => {
