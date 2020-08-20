@@ -783,8 +783,12 @@ version = "0.1.0"
 dependencies = [
  "codechain-crypto 0.3.0 (git+https://github.com/CodeChain-io/rust-codechain-crypto.git)",
  "codechain-key",
+ "codechain-module",
+ "codechain-types",
  "coordinator",
+ "erased-serde",
  "foundry-module-rt",
+ "foundry-process-sandbox",
  "linkme",
  "parking_lot 0.11.0",
  "primitives 0.5.1 (git+https://github.com/CodeChain-io/rust-codechain-primitives.git)",
