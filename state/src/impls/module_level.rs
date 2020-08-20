@@ -73,10 +73,10 @@ impl<'db> ModuleLevelState<'db> {
     /// Creates immutable module state
     pub fn read_only(
         storage_id: StorageId,
-        db: &RefCell<StateDB>,
+        db: &'db RefCell<StateDB>,
         root: H256,
-        cache: ModuleCache,
-    ) -> TrieResult<ReadOnlyModuleLevelState<'_>> {
+        cache: Option<&'db ModuleCache>,
+    ) -> TrieResult<ReadOnlyModuleLevelState<'db>> {
         if !db.borrow().as_hashdb().contains(&root) {
             return Err(TrieError::InvalidStateRoot(root))
         }
@@ -143,7 +143,7 @@ impl<'db> StateWithCheckpoint for ModuleLevelState<'db> {
 pub struct ReadOnlyModuleLevelState<'db> {
     db: &'db RefCell<StateDB>,
     root: H256,
-    cache: ModuleCache,
+    cache: Option<&'db ModuleCache>,
     storage_id: StorageId,
 }
 
@@ -151,13 +151,27 @@ impl<'db> ModuleStateView for ReadOnlyModuleLevelState<'db> {
     fn get_datum(&self, key: &dyn AsRef<[u8]>) -> Result<Option<ModuleDatum>, TrieError> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.cache.module_datum(&ModuleDatumAddress::new(key, self.storage_id), &trie)
+        match self.cache {
+            Some(ref cache) => cache.module_datum(&ModuleDatumAddress::new(key, self.storage_id), &trie),
+            None => {
+                // FIXME: Creating an empty cache looks awkward.
+                let default_cache = ModuleCache::default();
+                default_cache.module_datum(&ModuleDatumAddress::new(key, self.storage_id), &trie)
+            }
+        }
     }
 
     fn has_key(&self, key: &dyn AsRef<[u8]>) -> TrieResult<bool> {
         let db = self.db.borrow();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.cache.has(&ModuleDatumAddress::new(key, self.storage_id), &trie)
+        match self.cache {
+            Some(ref cache) => cache.has(&ModuleDatumAddress::new(key, self.storage_id), &trie),
+            None => {
+                // FIXME: Creating an empty cache looks awkward.
+                let default_cache = ModuleCache::default();
+                default_cache.has(&ModuleDatumAddress::new(key, self.storage_id), &trie)
+            }
+        }
     }
 }
 
