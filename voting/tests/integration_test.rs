@@ -183,3 +183,10 @@ fn create_meeting() {
     let coordinator = modules.get_mut("coordinator").unwrap().as_mut();
     coordinator.debug(&serde_cbor::to_vec(&"create_meeting").unwrap());
 }
+
+#[test]
+fn create_vote_paper() {
+    let mut modules = setup();
+    let coordinator = modules.get_mut("coordinator").unwrap().as_mut();
+    coordinator.debug(&serde_cbor::to_vec(&"create_vote_paper").unwrap());
+}
