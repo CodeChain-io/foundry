@@ -190,3 +190,10 @@ fn create_vote_paper() {
     let coordinator = modules.get_mut("coordinator").unwrap().as_mut();
     coordinator.debug(&serde_cbor::to_vec(&"create_vote_paper").unwrap());
 }
+
+#[test]
+fn vote() {
+    let mut modules = setup();
+    let coordinator = modules.get_mut("coordinator").unwrap().as_mut();
+    coordinator.debug(&serde_cbor::to_vec(&"vote").unwrap());
+}
