@@ -47,11 +47,11 @@ const VOTE_TX_TYPE: &str = "Vote";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TxCreateVotePaper {
-    general_meeting_id: GeneralMeetingId,
-    agenda_number: u32,
-    number_of_shares: u32,
-    voter_name: String,
-    voter_public_key: Public,
+    pub general_meeting_id: GeneralMeetingId,
+    pub agenda_number: u32,
+    pub number_of_shares: u32,
+    pub voter_name: String,
+    pub voter_public_key: Public,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -103,10 +103,10 @@ impl Context {
                 if meeting.get_tallying_time().get_time() < self.block_header.as_ref().unwrap().timestamp() {
                     return Err(ExecuteError::VoteAfterTallyingTime)
                 }
-                if 0 == agenda_number && agenda_number > meeting.get_number_of_agendas() {
+                if agenda_number == 0 || agenda_number > meeting.get_number_of_agendas() {
                     return Err(ExecuteError::InvalidAgendaNumber)
                 }
-                if meeting.get_end_time().get_time() > self.block_header.as_ref().unwrap().timestamp() {
+                if meeting.get_end_time().get_time() < self.block_header.as_ref().unwrap().timestamp() {
                     return Err(ExecuteError::VoteAfterEndTime)
                 }
                 let vote_paper = VotePaper::new(meeting_id.clone(), agenda_number, name, shares, voter_public_key);
