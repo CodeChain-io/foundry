@@ -388,7 +388,7 @@ impl UserModule for Module {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(transparent)]
 pub struct GeneralMeetingId {
-    id: H256,
+    pub id: H256,
 }
 
 impl GeneralMeetingId {
