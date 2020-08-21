@@ -27,7 +27,8 @@ use remote_trait_object::{Service, ServiceRef};
 use std::borrow::ToOwned;
 use std::collections::HashMap;
 use vote::common::*;
-use vote::general_meeting::{GeneralMeetingId, TimeStamp};
+use vote::general_meeting::{GeneralMeetingId, TimeStamp, TxResult};
+use vote::voting::TxCreateVotePaper;
 
 #[derive(Default)]
 pub struct MockDb {
@@ -95,6 +96,37 @@ fn tx_create_general_meeting(
     Transaction::new("CreateGeneralMeeting".to_owned(), serde_cbor::to_vec(&tx).unwrap())
 }
 
+fn tx_vote_paper(
+    public: &Public,
+    private: &Private,
+    general_meeting_id: H256,
+    agenda_number: u32,
+    number_of_shares: u32,
+    voter_name: String,
+    voter_public_key: Public,
+) -> Transaction {
+    let tx = TxCreateVotePaper {
+        general_meeting_id: GeneralMeetingId {
+            id: general_meeting_id,
+        },
+        agenda_number,
+        number_of_shares,
+        voter_name,
+        voter_public_key,
+    };
+    let tx = UserTransaction {
+        network_id: Default::default(),
+        action: tx,
+    };
+    let tx_hash = tx.hash();
+    let tx = SignedTransaction {
+        signature: ckey::sign(&tx_hash.as_bytes(), private),
+        signer_public: *public,
+        tx,
+    };
+    Transaction::new("Create_Vote_Paper".to_owned(), serde_cbor::to_vec(&tx).unwrap())
+}
+
 pub fn test_create_meeting(ctx: &RwLock<Context>) {
     for stateful in ctx.write().statefuls.values_mut() {
         stateful.set_storage(ServiceRef::create_export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
@@ -143,4 +175,69 @@ pub fn test_create_meeting(ctx: &RwLock<Context>) {
     let tallying_passed_execution =
         ctx.write().tx_owners.get_mut("general_meeting").unwrap().execute_transaction(&create_meeting_tallying_passed);
     assert!(tallying_passed_execution.is_err());
+}
+
+pub fn test_create_vote_paper(ctx: &RwLock<Context>) {
+    for stateful in ctx.write().statefuls.values_mut() {
+        stateful.set_storage(ServiceRef::create_export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
+    }
+
+    let admin: Ed25519KeyPair = Random.generate().unwrap();
+    let admin_key = admin.public();
+
+    ctx.write()
+        .init_genesises
+        .get_mut("general_meeting")
+        .unwrap()
+        .init_genesis(&serde_cbor::to_vec(&admin_key).unwrap());
+
+    let create_meeting = tx_create_general_meeting(&admin.public(), &admin.private(), 2, 12, 18);
+
+    let block_hash: BlockHash = BlockHash::default();
+    let author: Public = Public::default();
+    let validators: Vec<Public> = Vec::new();
+    let extera_data: Bytes = Bytes::default();
+
+    let header = Header::new(block_hash, 1, 0, author, validators.clone(), extera_data.clone());
+    ctx.write().tx_owners.get_mut("general_meeting").unwrap().block_opened(&header).unwrap();
+
+    let creat_meeting_outcome =
+        ctx.write().tx_owners.get_mut("general_meeting").unwrap().execute_transaction(&create_meeting).unwrap();
+    let meeting_id: H256 = serde_cbor::from_slice(&creat_meeting_outcome.events.get(0).unwrap().value).unwrap();
+
+    let voter1: Ed25519KeyPair = Random.generate().unwrap();
+    let header = Header::new(block_hash, 1, 0, author, validators.clone(), extera_data.clone());
+    ctx.write().tx_owners.get_mut("voting").unwrap().block_opened(&header).unwrap();
+
+    let create_vote_paper = tx_vote_paper(
+        voter1.public(),
+        voter1.private(),
+        meeting_id,
+        2,
+        10,
+        String::from("CodeChain"),
+        *voter1.public(),
+    );
+    let transaction_execution =
+        ctx.write().tx_owners.get_mut("voting").unwrap().execute_transaction(&create_vote_paper);
+    assert!(transaction_execution.is_ok());
+
+    // Number of agendas are bigger than the meeting number of agendas. Should return and error.
+    //FIXME: The actual returned error should be checked.
+    let voter2: Ed25519KeyPair = Random.generate().unwrap();
+    let meeting_id2: H256 = serde_cbor::from_slice(&creat_meeting_outcome.events.get(0).unwrap().value).unwrap();
+    let create_vote_paper = tx_vote_paper(
+        voter2.public(),
+        voter2.private(),
+        meeting_id2,
+        4,
+        10,
+        String::from("CodeChain"),
+        *voter1.public(),
+    );
+    let transaction_execution =
+        ctx.write().tx_owners.get_mut("voting").unwrap().execute_transaction(&create_vote_paper);
+    assert!(transaction_execution.is_err());
+
+    //FIXME: The rest of for vote_papaer should be done after coordinator full implementation.
 }
