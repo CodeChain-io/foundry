@@ -47,6 +47,12 @@ const CREATE_GENERAL_MEETING_TX_TYPE: &str = "CreateGeneralMeeting";
 const PUBLISH_RESULT_TX_TYPE: &str = "PublishResult";
 
 #[derive(Serialize, Deserialize, Debug)]
+pub enum TxResult {
+    GeneralMeeting(GeneralMeetingId),
+    Empty,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct TxCreateGeneralMeeting {
     pub number_of_agendas: u32,
     pub voting_end_time: TimeStamp,
@@ -96,7 +102,7 @@ impl Context {
     /// check transaction could be executed not in a block context.
     /// execute_tx always be called in a block context.
     /// We can read the Header information only in `execute_tx`.
-    fn excute_tx(&mut self, transaction: &Transaction) -> Result<(), ExecuteError> {
+    fn excute_tx(&mut self, transaction: &Transaction) -> Result<TxResult, ExecuteError> {
         match transaction.tx_type() {
             CREATE_GENERAL_MEETING_TX_TYPE => {
                 let tx: CreateGeneralMeetingOwnTransaction =
@@ -134,7 +140,7 @@ impl Context {
                 let box_key = crate::generate_voting_box_key(&meeting.id);
                 self.storage_mut().set(box_key.as_slice(), serde_cbor::to_vec(&vote_box).unwrap());
 
-                Ok(())
+                Ok(TxResult::GeneralMeeting(meeting.id.clone()))
             }
             PUBLISH_RESULT_TX_TYPE => {
                 let tx: PublishResultTransaction =
@@ -184,7 +190,7 @@ impl Context {
                 }
                 meeting.save_results(final_result);
 
-                Ok(())
+                Ok(TxResult::Empty)
             }
             _ => return Err(ExecuteError::InvalidMetadata),
         }
@@ -217,10 +223,22 @@ impl TxOwner for Context {
     }
 
     fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionOutcome, ()> {
-        if let Err(error) = self.excute_tx(transaction) {
-            Err(())
+        let transaction_execution = self.excute_tx(transaction);
+        if let Ok(result) = transaction_execution {
+            match result {
+                TxResult::GeneralMeeting(id) => {
+                    let event = Event {
+                        key: "meeting_id".to_string(),
+                        value: serde_cbor::to_vec(&id.id).unwrap(),
+                    };
+                    Ok(TransactionOutcome {
+                        events: vec![event],
+                    })
+                }
+                TxResult::Empty => Ok(Default::default()),
+            }
         } else {
-            Ok(Default::default())
+            Err(())
         }
     }
 
