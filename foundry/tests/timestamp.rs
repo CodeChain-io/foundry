@@ -51,22 +51,42 @@ fn tx_hello(public: &Public, private: &Private, seq: u64) -> Transaction {
 }
 
 pub fn inject_hello_txes(client: Arc<Client>) {
-    let last_num = client.block_number(&BlockId::Latest).unwrap();
+    let mut last_block_num = client.block_number(&BlockId::Latest).unwrap();
 
-    let n = 200;
+    let total_block_num = 8;
+    let tx_per_step = 20;
+
     let user1: Ed25519KeyPair = Random.generate().unwrap();
+    let mut seq = 0;
 
-    for i in 0..n {
-        client.queue_own_transaction(tx_hello(user1.public(), user1.private(), i)).unwrap();
-        sleep(Duration::from_millis(100));
+    for _ in 0..total_block_num {
+        let mut success = false;
+        for _ in 0..1000 {
+            sleep(Duration::from_millis(100));
+
+            for s in 0..tx_per_step {
+                let _ = client.queue_own_transaction(tx_hello(user1.public(), user1.private(), seq + s));
+            }
+
+            let current_block_num = client.block_number(&BlockId::Latest).unwrap();
+            if current_block_num == last_block_num {
+                continue
+            }
+
+            let mut count = 0;
+
+            for block_num in (last_block_num + 1)..current_block_num {
+                count += client.block_body(&BlockId::Number(block_num)).unwrap().transactions_count();
+            }
+            if count == tx_per_step as usize {
+                last_block_num = current_block_num;
+                success = true;
+                break
+            } else {
+                continue
+            }
+        }
+        assert!(success);
+        seq += tx_per_step;
     }
-
-    sleep(Duration::from_millis(5000));
-
-    let mut count = 0;
-    for block_num in last_num..=client.block_number(&BlockId::Latest).unwrap() {
-        count += client.block_body(&BlockId::Number(block_num)).unwrap().transactions_count();
-    }
-
-    assert_eq!(n, count as u64);
 }
