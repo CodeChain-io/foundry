@@ -28,7 +28,7 @@ use std::borrow::ToOwned;
 use std::collections::HashMap;
 use vote::common::*;
 use vote::general_meeting::{GeneralMeetingId, TimeStamp, TxResult};
-use vote::voting::TxCreateVotePaper;
+use vote::voting::{TxCreateVotePaper, VoteChoice};
 
 #[derive(Default)]
 pub struct MockDb {
@@ -125,6 +125,19 @@ fn tx_vote_paper(
         tx,
     };
     Transaction::new("Create_Vote_Paper".to_owned(), serde_cbor::to_vec(&tx).unwrap())
+}
+
+fn tx_vote(vote_paper_id: H256, choice: VoteChoice, voter_signature: Signature) -> Transaction {
+    let tx = vote::voting::TxVote {
+        vote_paper_id,
+        choice,
+        voter_signature,
+    };
+    let tx = UserTransaction {
+        network_id: Default::default(),
+        action: tx,
+    };
+    Transaction::new("Vote".to_owned(), serde_cbor::to_vec(&tx).unwrap())
 }
 
 pub fn test_create_meeting(ctx: &RwLock<Context>) {
@@ -240,4 +253,67 @@ pub fn test_create_vote_paper(ctx: &RwLock<Context>) {
     assert!(transaction_execution.is_err());
 
     //FIXME: The rest of for vote_papaer should be done after coordinator full implementation.
+}
+
+pub fn test_vote(ctx: &RwLock<Context>) {
+    for stateful in ctx.write().statefuls.values_mut() {
+        stateful.set_storage(ServiceRef::create_export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
+    }
+
+    let admin: Ed25519KeyPair = Random.generate().unwrap();
+    let admin_key = admin.public();
+
+    ctx.write()
+        .init_genesises
+        .get_mut("general_meeting")
+        .unwrap()
+        .init_genesis(&serde_cbor::to_vec(&admin_key).unwrap());
+
+    let create_meeting = tx_create_general_meeting(&admin.public(), &admin.private(), 2, 12, 18);
+
+    let block_hash: BlockHash = BlockHash::default();
+    let author: Public = Public::default();
+    let validators: Vec<Public> = Vec::new();
+    let extera_data: Bytes = Bytes::default();
+
+    let header = Header::new(block_hash, 1, 0, author, validators.clone(), extera_data.clone());
+    ctx.write().tx_owners.get_mut("general_meeting").unwrap().block_opened(&header).unwrap();
+
+    let creat_meeting_outcome =
+        ctx.write().tx_owners.get_mut("general_meeting").unwrap().execute_transaction(&create_meeting).unwrap();
+    let meeting_id: H256 = serde_cbor::from_slice(&creat_meeting_outcome.events.get(0).unwrap().value).unwrap();
+
+    let voter1: Ed25519KeyPair = Random.generate().unwrap();
+    let header = Header::new(block_hash, 1, 0, author, validators.clone(), extera_data.clone());
+    ctx.write().tx_owners.get_mut("voting").unwrap().block_opened(&header).unwrap();
+
+    let create_vote_paper = tx_vote_paper(
+        voter1.public(),
+        voter1.private(),
+        meeting_id,
+        2,
+        10,
+        String::from("CodeChain"),
+        *voter1.public(),
+    );
+    let vote_paper_execution =
+        ctx.write().tx_owners.get_mut("voting").unwrap().execute_transaction(&create_vote_paper).unwrap();
+
+    let vote_paper_id: H256 = serde_cbor::from_slice(&vote_paper_execution.events.get(0).unwrap().value).unwrap();
+    let signature = ckey::sign("vote".as_ref(), voter1.private());
+    let choice = VoteChoice::Favor;
+    let vote = tx_vote(vote_paper_id, choice.clone(), signature);
+
+    let vote_transaction = ctx.write().tx_owners.get_mut("voting").unwrap().execute_transaction(&vote);
+
+    assert!(vote_transaction.is_ok());
+    //FIXME: The actual returned error should be checked.
+    /// This will test the error of `UsedVotePaper` for vote transaction.
+    let same_vote_paper_id: H256 = serde_cbor::from_slice(&vote_paper_execution.events.get(0).unwrap().value).unwrap();
+    let vote = tx_vote(same_vote_paper_id, choice.clone(), signature);
+
+    let used_vote_transaction = ctx.write().tx_owners.get_mut("voting").unwrap().execute_transaction(&vote);
+    assert!(used_vote_transaction.is_err());
+
+    //FIXME: `InvalidVoterSignature` should be checked after it is fully implemented.
 }
