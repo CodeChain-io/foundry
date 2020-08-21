@@ -56,9 +56,9 @@ pub struct TxCreateVotePaper {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TxVote {
-    vote_paper_id: H256,
-    choice: VoteChoice,
-    voter_signature: Signature,
+    pub vote_paper_id: H256,
+    pub choice: VoteChoice,
+    pub voter_signature: Signature,
 }
 
 impl Action for TxCreateVotePaper {}
