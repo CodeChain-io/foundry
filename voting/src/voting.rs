@@ -45,6 +45,11 @@ enum ExecuteError {
 const CREATE_VOTE_PAPER_TX_TYPE: &str = "Create_Vote_Paper";
 const VOTE_TX_TYPE: &str = "Vote";
 
+pub enum TxResult {
+    VotePaperId(H256),
+    VoteId(VoteId),
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TxCreateVotePaper {
     pub general_meeting_id: GeneralMeetingId,
@@ -85,7 +90,7 @@ impl Context {
         self.general_meeting.as_mut().unwrap().as_mut()
     }
 
-    fn excute_tx(&mut self, transaction: &Transaction) -> Result<H256, ExecuteError> {
+    fn excute_tx(&mut self, transaction: &Transaction) -> Result<TxResult, ExecuteError> {
         match transaction.tx_type() {
             CREATE_VOTE_PAPER_TX_TYPE => {
                 let tx: CreateVotePaperTransaction =
@@ -111,7 +116,7 @@ impl Context {
                 }
                 let vote_paper = VotePaper::new(meeting_id.clone(), agenda_number, name, shares, voter_public_key);
                 self.storage_mut().set(vote_paper.vote_paper_id.0.as_ref(), serde_cbor::to_vec(&vote_paper).unwrap());
-                Ok(vote_paper.vote_paper_id)
+                Ok(TxResult::VotePaperId(vote_paper.vote_paper_id))
             }
             VOTE_TX_TYPE => {
                 let tx: VoteTransaction =
@@ -138,7 +143,7 @@ impl Context {
 
                 self.meeting_mut().update_vote_box(&meeting_id, &vote_box).expect("We get the vote box before");
 
-                Ok(vote_id.id)
+                Ok(TxResult::VoteId(vote_id))
             }
             _ => return Err(ExecuteError::InvalidMetadata),
         }
@@ -186,10 +191,30 @@ impl TxOwner for Context {
     }
 
     fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionOutcome, ()> {
-        if let Err(error) = self.excute_tx(transaction) {
-            Err(())
+        let transaction_execution = self.excute_tx(transaction);
+        if let Ok(result) = transaction_execution {
+            match result {
+                TxResult::VotePaperId(id) => {
+                    let event = Event {
+                        key: "Vote_Paper".to_string(),
+                        value: serde_cbor::to_vec(&id).unwrap(),
+                    };
+                    Ok(TransactionOutcome {
+                        events: vec![event],
+                    })
+                }
+                TxResult::VoteId(id) => {
+                    let event = Event {
+                        key: "Vote".to_string(),
+                        value: serde_cbor::to_vec(&id.id).unwrap(),
+                    };
+                    Ok(TransactionOutcome {
+                        events: vec![event],
+                    })
+                }
+            }
         } else {
-            Ok(Default::default())
+            Err(())
         }
     }
 
