@@ -24,44 +24,18 @@ use parking_lot::RwLock;
 use primitives::H256;
 use rand::prelude::*;
 use rand::seq::IteratorRandom;
-use remote_trait_object::{Service, ServiceRef};
+use remote_trait_object::ServiceRef;
 use std::collections::HashMap;
+use std::sync::Arc;
 use timestamp::common::*;
 
-#[derive(Default)]
-pub struct MockDb {
-    map: HashMap<H256, Vec<u8>>,
-}
+fn setup_stateful(ctx: &RwLock<Context>) {
+    let names: Vec<String> = ctx.write().statefuls.keys().cloned().collect();
+    let mut storages: HashMap<String, Arc<RwLock<dyn SubStorageAccess>>> =
+        names.iter().map(|name| (name.to_owned(), ctx.write().get_storage(name.to_owned()).to_owned())).collect();
 
-impl Service for MockDb {}
-
-impl SubStorageAccess for MockDb {
-    fn get(&self, key: &[u8]) -> Option<Vec<u8>> {
-        self.map.get(&blake256(key)).cloned()
-    }
-
-    fn set(&mut self, key: &[u8], value: Vec<u8>) {
-        self.map.insert(blake256(key), value);
-    }
-
-    fn remove(&mut self, key: &[u8]) {
-        self.map.remove(&blake256(key));
-    }
-
-    fn has(&self, key: &[u8]) -> bool {
-        self.map.get(&blake256(key)).is_some()
-    }
-
-    fn create_checkpoint(&mut self) {
-        unimplemented!()
-    }
-
-    fn discard_checkpoint(&mut self) {
-        unimplemented!()
-    }
-
-    fn revert_to_the_checkpoint(&mut self) {
-        unimplemented!()
+    for (name, stateful) in ctx.write().statefuls.iter_mut() {
+        stateful.set_storage(ServiceRef::create_export(storages.remove(name).unwrap()))
     }
 }
 
@@ -119,9 +93,7 @@ fn tx_token_transfer(public: &Public, private: &Private, seq: u64, receiver: Pub
 }
 
 pub fn simple1(ctx: &RwLock<Context>) {
-    for stateful in ctx.write().statefuls.values_mut() {
-        stateful.set_storage(ServiceRef::create_export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
-    }
+    setup_stateful(ctx);
 
     let user1: Ed25519KeyPair = Random.generate().unwrap();
     let user2: Ed25519KeyPair = Random.generate().unwrap();
@@ -143,9 +115,7 @@ pub fn multiple(ctx: &RwLock<Context>) {
     let mut rng = rand::thread_rng();
     let stamp_issuer = blake256("stamp");
 
-    for stateful in ctx.write().statefuls.values_mut() {
-        stateful.set_storage(ServiceRef::create_export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
-    }
+    setup_stateful(ctx);
 
     let n = 32;
     let mut users: Vec<(Ed25519KeyPair, u64)> = (0..n).map(|_| (Random.generate().unwrap(), 0)).collect();
@@ -196,9 +166,7 @@ pub fn multiple(ctx: &RwLock<Context>) {
 }
 
 pub fn sort(ctx: &RwLock<Context>) {
-    for stateful in ctx.write().statefuls.values_mut() {
-        stateful.set_storage(ServiceRef::create_export(Box::new(MockDb::default()) as Box<dyn SubStorageAccess>))
-    }
+    setup_stateful(ctx);
 
     let user_num = 10;
     let mut rng = rand::thread_rng();
@@ -237,4 +205,24 @@ pub fn sort(ctx: &RwLock<Context>) {
     for tx in result.sorted {
         ctx.write().tx_owners.get_mut("account").unwrap().execute_transaction(&txes[tx].tx).unwrap();
     }
+}
+
+pub fn query(ctx: &RwLock<Context>) {
+    setup_stateful(ctx);
+
+    let user: Ed25519KeyPair = Random.generate().unwrap();
+
+    let n = 21;
+    for i in 0..n {
+        let tx = tx_hello(user.public(), user.private(), i);
+        ctx.write().tx_owners.get_mut("account").unwrap().execute_transaction(&tx).unwrap();
+    }
+
+    let public_str = hex::encode(user.public().as_ref());
+    let result =
+        ctx.read().handle_graphqls.get("account").unwrap().execute(&format!(
+            "{{ withBlockHeight(height: null) {{ account(public: \"{}\") {{ seq }} }} }}",
+            public_str
+        ));
+    assert_eq!(r#"{"data":{"withBlockHeight":{"account":{"seq":21}}}}"#, result);
 }
