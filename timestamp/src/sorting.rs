@@ -86,10 +86,6 @@ impl TxSorter for Context {
                 invalid.extend_from_slice(&tx_indices);
                 continue
             };
-            if valid[0].0 != seq_in_state {
-                let tx_indices: Vec<usize> = valid.iter().map(|(_, index)| *index).collect();
-                invalid.extend_from_slice(&tx_indices);
-            }
 
             let mut last_seq = seq_in_state;
             for (seq, index) in valid {
