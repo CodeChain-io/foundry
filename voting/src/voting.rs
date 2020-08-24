@@ -432,7 +432,7 @@ impl VotePaper {
     }
 
     pub fn set_used_in(&mut self, vote_id: VoteId) -> Result<(), ExecuteError> {
-        if self.used_in.is_none() {
+        if self.used_in.is_some() {
             return Err(ExecuteError::UsedVotePaper)
         }
         self.used_in = Some(vote_id);
