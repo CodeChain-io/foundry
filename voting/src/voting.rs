@@ -134,6 +134,7 @@ impl Context {
                 let vote = Vote::new(vote_paper_id, choice, voter_signature);
                 let vote_id = vote.vote_id.clone();
                 vote_paper.set_used_in(vote_id.clone())?;
+                self.storage_mut().set(vote_paper.vote_paper_id.as_ref(), serde_cbor::to_vec(&vote_paper).unwrap());
                 self.storage_mut().set(vote_id.as_ref(), serde_cbor::to_vec(&vote).unwrap());
 
                 let meeting_id = vote_paper.get_general_meeting_id();
