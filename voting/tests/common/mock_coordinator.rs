@@ -105,6 +105,7 @@ impl UserModule for MockCoordinator {
             "create_meeting" => scenarios::test_create_meeting(self.ctx.as_ref()),
             "create_vote_paper" => scenarios::test_create_vote_paper(self.ctx.as_ref()),
             "vote" => scenarios::test_vote(self.ctx.as_ref()),
+            "publish_result" => scenarios::test_publish_result(self.ctx.as_ref()),
             _ => panic!(),
         }
         Vec::new()

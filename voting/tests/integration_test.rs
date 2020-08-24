@@ -197,3 +197,10 @@ fn vote() {
     let coordinator = modules.get_mut("coordinator").unwrap().as_mut();
     coordinator.debug(&serde_cbor::to_vec(&"vote").unwrap());
 }
+
+#[test]
+fn publish_result() {
+    let mut modules = setup();
+    let coordinator = modules.get_mut("coordinator").unwrap().as_mut();
+    coordinator.debug(&serde_cbor::to_vec(&"publish_result").unwrap());
+}
