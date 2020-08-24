@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value as GqlValue};
 use ccrypto::blake256;
 use ckey::{verify, Ed25519Public as Public, Signature};
 use primitives::H256;
@@ -79,4 +80,36 @@ impl<T: Action> UserTransaction<T> {
         let serialized = serde_cbor::to_vec(&self).unwrap();
         blake256(serialized)
     }
+}
+
+pub struct GqlPublic(pub Public);
+
+#[Scalar]
+impl ScalarType for GqlPublic {
+    fn parse(value: GqlValue) -> InputValueResult<Self> {
+        if let GqlValue::String(s) = value {
+            Ok(GqlPublic(
+                Public::from_slice(
+                    &hex::decode(&s).map_err(|_| InputValueError::Custom("Invalid public key".to_owned()))?,
+                )
+                .ok_or_else(|| InputValueError::Custom("Invalid public key".to_owned()))?,
+            ))
+        } else {
+            Err(InputValueError::Custom("Invalid public key".to_owned()))
+        }
+    }
+
+    fn to_value(&self) -> GqlValue {
+        GqlValue::String(hex::encode(self.0.as_ref()))
+    }
+}
+
+pub fn handle_gql_query<T: async_graphql::ObjectType + Send + Sync + 'static>(
+    runtime: &tokio::runtime::Handle,
+    root: T,
+    query: &str,
+) -> String {
+    let schema = async_graphql::Schema::new(root, async_graphql::EmptyMutation, async_graphql::EmptySubscription);
+    let res = schema.execute(query);
+    async_graphql::serde_json::to_string(&async_graphql::http::GQLResponse(runtime.block_on(res))).unwrap()
 }
