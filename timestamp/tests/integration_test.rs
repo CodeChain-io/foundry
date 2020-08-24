@@ -63,6 +63,7 @@ fn generate_link_table() -> LinkTable {
         ("sorting", "get-account-and-seq", "@tx/account/get-account-and-seq"),
         ("coordinator", "tx-owner", "account/tx-owner"),
         ("coordinator", "stateful", "account/stateful"),
+        ("coordinator", "handle-graphql-request", "account/handle-graphql-request"),
     ]);
 
     map.insert("staking", vec![
@@ -87,7 +88,7 @@ fn generate_link_table() -> LinkTable {
 
     map.insert("sorting", vec![("coordinator", "tx-sorter", "sorting/tx-sorter")]);
 
-    map.insert("coordinator", vec![]);
+    map.insert("coordinator", vec![("account", "get-storage", "get-storage")]);
 
     map
 }
@@ -249,4 +250,11 @@ fn sort() {
     let mut modules = setup();
     let coordinator = modules.get_mut("coordinator").unwrap().as_mut();
     coordinator.debug(&serde_cbor::to_vec(&"sort").unwrap());
+}
+
+#[test]
+fn query() {
+    let mut modules = setup();
+    let coordinator = modules.get_mut("coordinator").unwrap().as_mut();
+    coordinator.debug(&serde_cbor::to_vec(&"query").unwrap());
 }
