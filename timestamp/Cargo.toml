@@ -17,6 +17,9 @@ remote-trait-object = "0.4.0"
 foundry-process-sandbox = { version = "0.2.0", git = "https://github.com/CodeChain-io/foundry-sandbox.git", tag = "v0.2.0" }
 foundry-module-rt = { version = "0.2.0", git = "https://github.com/CodeChain-io/module-rt.git", tag = "v0.2.0" }
 linkme = "0.2.1"
+async-graphql = { version = "1.17" }
+tokio = {version = "0.2.21", features = ["sync", "time", "rt-threaded", "macros", "uds"]}
+hex = "0.4.2"
 
 [dev-dependencies]
 codechain-module = {path = "../module"}
