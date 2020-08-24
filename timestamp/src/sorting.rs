@@ -79,7 +79,7 @@ impl TxSorter for Context {
 
         for (account, valid) in accounts.iter_mut() {
             valid.sort();
-            let mut seq_in_state = if let Ok(seq) = self.account_manager().get_sequence(account, true) {
+            let seq_in_state = if let Ok(seq) = self.account_manager().get_sequence(account, true) {
                 seq
             } else {
                 let tx_indices: Vec<usize> = valid.iter().map(|(_, index)| *index).collect();
@@ -91,11 +91,12 @@ impl TxSorter for Context {
                 invalid.extend_from_slice(&tx_indices);
             }
 
+            let mut last_seq = seq_in_state;
             for (seq, index) in valid {
-                if *seq != seq_in_state {
+                if *seq != last_seq {
                     invalid.push(*index);
                 } else {
-                    seq_in_state += 1;
+                    last_seq += 1;
                     sorted.push(*index);
                 }
             }
