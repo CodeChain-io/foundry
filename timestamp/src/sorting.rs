@@ -87,12 +87,10 @@ impl TxSorter for Context {
                 continue
             };
 
-            let mut last_seq = seq_in_state;
             for (seq, index) in valid {
-                if *seq != last_seq {
+                if *seq < seq_in_state {
                     invalid.push(*index);
                 } else {
-                    last_seq += 1;
                     sorted.push(*index);
                 }
             }
