@@ -72,3 +72,14 @@ pub struct SortedTxs {
 pub trait HandleCrimes: Service {
     fn handle_crimes(&mut self, crimes: &[VerifiedCrime]);
 }
+
+/// The only service that the coordinator exports to the modules
+#[service]
+pub trait GetStorage: Service {
+    fn get_storage(&self, block_height: Option<u64>) -> Option<ServiceRef<dyn SubStorageAccess>>;
+}
+
+#[service]
+pub trait HandleGraphQlRequest: Service {
+    fn execute(&self, request: &str) -> String;
+}
