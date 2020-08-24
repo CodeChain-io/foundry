@@ -11,7 +11,7 @@ ckey = { package = "codechain-key", path = "../key" }
 codechain-logger = { path = "../util/logger" }
 cinfo_courier = { package = "codechain_informer_courier", path = "../informer_courier" }
 ctimer = { package = "codechain-timer", path = "../util/timer" }
-crossbeam-channel = "0.3"
+crossbeam-channel = "0.4"
 finally-block = "0.1"
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.5", tag = "v0.5.1" }
 log = "0.4.6"
