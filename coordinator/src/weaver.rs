@@ -52,11 +52,12 @@ struct Import {
     to: String,
 }
 
+#[allow(dead_code)]
 fn print_links(links: &HashMap<String, LinkInfo>) {
     for (module_name, link) in links {
         println!("----- Module {} -----", module_name);
         println!("{:#?}", link.exports);
-        println!("");
+        println!();
         println!("{:#?}", link.imports.borrow());
         print!("\n\n\n");
     }
