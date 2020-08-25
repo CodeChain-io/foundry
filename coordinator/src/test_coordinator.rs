@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::context::StorageAccess;
-use crate::engine::{BlockExecutor, FilteredTxs, Initializer, TxFilter};
+use crate::engine::{BlockExecutor, FilteredTxs, GraphQlHandlerProvider, Initializer, TxFilter};
 use crate::header::Header;
 use crate::transaction::{Transaction, TransactionWithMetadata};
 use crate::types::{
@@ -128,5 +128,11 @@ impl TxFilter for TestCoordinator {
             invalid,
             low_priority,
         }
+    }
+}
+
+impl GraphQlHandlerProvider for TestCoordinator {
+    fn get(&self) -> Vec<(String, Arc<dyn super::module::HandleGraphQlRequest>)> {
+        unimplemented!()
     }
 }
