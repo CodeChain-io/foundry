@@ -55,3 +55,8 @@ pub struct FilteredTxs<'a> {
     pub invalid: Vec<&'a Transaction>,
     pub low_priority: Vec<&'a Transaction>,
 }
+
+pub trait GraphQlHandlerProvider: Send + Sync {
+    /// Returns list of (module name, module graphql handler).
+    fn get(&self) -> Vec<(String, Arc<dyn super::module::HandleGraphQlRequest>)>;
+}
