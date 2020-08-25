@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::module::{InitChain, InitGenesis, Stateful, TxOwner, TxSorter, UpdateChain};
+use crate::module::{HandleGraphQlRequest, InitChain, InitGenesis, Stateful, TxOwner, TxSorter, UpdateChain};
 use crate::Inner;
 use cmodule::impls::process::{ExecutionScheme, SingleProcess};
 use cmodule::MODULE_INITS;
@@ -61,6 +61,7 @@ pub(crate) struct Services {
     update_chain: Option<Box<dyn UpdateChain>>,
     stateful: Vec<(String, Box<dyn Stateful>)>,
     tx_sorter: Option<Box<dyn TxSorter>>,
+    handle_graphqls: Vec<(String, Arc<dyn HandleGraphQlRequest>)>,
 }
 
 impl Services {
@@ -79,6 +80,7 @@ impl Services {
         if let Some(tx_sorter) = self.tx_sorter.take() {
             inner.tx_sorter = tx_sorter;
         }
+        inner.handle_graphqls = self.handle_graphqls.drain(..).collect();
 
         inner
     }
@@ -122,6 +124,9 @@ impl UserModule for HostModule {
                 }
                 "tx-sorter" => {
                     services.tx_sorter.replace(import_service_from_handle(rto_context, handle));
+                }
+                "handle-graphql-request" => {
+                    services.handle_graphqls.push((module.to_owned(), import_service_from_handle(rto_context, handle)));
                 }
                 _ => panic!("Unknown import: {}", name),
             }
