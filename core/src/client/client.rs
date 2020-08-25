@@ -36,7 +36,7 @@ use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::context::{ChainHistoryAccess, MemPoolAccess, StateHistoryAccess, StorageAccess};
-use coordinator::engine::{BlockExecutor, Initializer};
+use coordinator::engine::{BlockExecutor, GraphQlHandlerProvider, Initializer};
 use coordinator::types::Event;
 use coordinator::Transaction;
 use cstate::{Metadata, MetadataAddress, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopStateView};
@@ -45,8 +45,9 @@ use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Hea
 use kvdb::{DBTransaction, KeyValueDB};
 use merkle_trie::{TrieFactory, TrieMut};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use primitives::{Bytes, H256};
-use rlp::{Encodable, Rlp};
+use primitives::Bytes;
+use rlp::Rlp;
+use std::collections::HashMap;
 use std::ops::Range;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
 use std::sync::{Arc, Weak};
@@ -78,10 +79,12 @@ pub struct Client {
 
     /// Timer for reseal_min_period on miner client
     reseal_timer: TimerApi,
+
+    graphql_handlers: HashMap<String, Arc<dyn coordinator::module::HandleGraphQlRequest>>,
 }
 
 impl Client {
-    pub fn try_new<C: 'static + Initializer + BlockExecutor>(
+    pub fn try_new<C: 'static + Initializer + BlockExecutor + GraphQlHandlerProvider>(
         config: &ClientConfig,
         scheme: &Scheme,
         db: Arc<dyn KeyValueDB>,
@@ -107,8 +110,13 @@ impl Client {
 
         let engine = scheme.engine.clone();
 
-        let importer =
-            Importer::try_new(config, engine.clone(), message_channel.clone(), Arc::clone(&miner), coordinator)?;
+        let importer = Importer::try_new(
+            config,
+            engine.clone(),
+            message_channel.clone(),
+            Arc::clone(&miner),
+            Arc::clone(&coordinator) as Arc<dyn BlockExecutor>,
+        )?;
 
         let client = Arc::new(Client {
             engine,
@@ -121,6 +129,7 @@ impl Client {
             importer,
             miner,
             reseal_timer,
+            graphql_handlers: GraphQlHandlerProvider::get(coordinator.as_ref()).into_iter().collect(),
         });
 
         // ensure buffered changes are flushed.
@@ -306,6 +315,10 @@ impl Client {
 
     pub fn db(&self) -> &Arc<dyn KeyValueDB> {
         &self.db
+    }
+
+    pub fn graphql_handler(&self, module: &str) -> &dyn coordinator::module::HandleGraphQlRequest {
+        self.graphql_handlers.get(module).unwrap().as_ref()
     }
 }
 
