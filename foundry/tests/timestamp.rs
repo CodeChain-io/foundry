@@ -83,3 +83,7 @@ pub fn inject_hello_txes(client: Arc<Client>) {
         seq += tx_per_step;
     }
 }
+
+pub fn check_graphql_setup(client: Arc<Client>) {
+    client.graphql_handler("module-account");
+}
