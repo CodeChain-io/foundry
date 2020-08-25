@@ -29,9 +29,11 @@ mod weaver;
 
 use crate::app_desc::AppDesc;
 use crate::context::{StorageAccess, SubStorageAccess};
-use crate::engine::{BlockExecutor, FilteredTxs, Initializer, TxFilter};
+use crate::engine::{BlockExecutor, FilteredTxs, GraphQlHandlerProvider, Initializer, TxFilter};
 pub use crate::header::Header;
-use crate::module::{HandleCrimes, InitChain, InitGenesis, SortedTxs, Stateful, TxOwner, TxSorter, UpdateChain};
+use crate::module::{
+    HandleCrimes, HandleGraphQlRequest, InitChain, InitGenesis, SortedTxs, Stateful, TxOwner, TxSorter, UpdateChain,
+};
 use crate::substorage::SubStorageView;
 pub use crate::transaction::{Transaction, TransactionWithMetadata, TxOrigin};
 use crate::types::{BlockOutcome, ErrorCode, VerifiedCrime};
@@ -60,6 +62,7 @@ pub(crate) static SERVICES_FOR_HOST: &[(Occurrences, &str)] = &[
     ((Included(0), Unbounded), "stateful"),
     ((Included(0), Excluded(2)), "tx-sorter"),
     ((Included(0), Excluded(2)), "handle-crimes"),
+    ((Included(0), Unbounded), "handle-graphql-request"),
 ];
 
 /// The `Coordinator` encapsulates all the logic for a Foundry application.
@@ -132,6 +135,9 @@ struct Inner {
 
     /// A service sorting Tx'es in the mempool.
     pub tx_sorter: Box<dyn TxSorter>,
+
+    /// A map from module name to its GraphQL handler
+    pub handle_graphqls: Vec<(String, Arc<dyn HandleGraphQlRequest>)>,
 }
 
 impl Inner {
@@ -162,6 +168,7 @@ impl Default for Inner {
             init_chain: Box::new(PanickingInitChain) as Box<dyn InitChain>,
             update_chain: Box::new(NoOpUpdateChain) as Box<dyn UpdateChain>,
             tx_sorter: Box::new(DefaultTxSorter) as Box<dyn TxSorter>,
+            handle_graphqls: Default::default(),
         }
     }
 }
@@ -407,5 +414,11 @@ impl TxFilter for Coordinator {
             invalid,
             low_priority,
         }
+    }
+}
+
+impl GraphQlHandlerProvider for Coordinator {
+    fn get(&self) -> Vec<(String, Arc<dyn HandleGraphQlRequest>)> {
+        self.inner.lock().handle_graphqls.to_vec()
     }
 }
