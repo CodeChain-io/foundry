@@ -11,6 +11,10 @@ modules:
         account-manager: {}
       get-account-and-seq:
         get-account-and-seq: {}
+      handle-graphql-request:
+        handle-graphql-request: {}
+    imports:
+      get-storage: module-token/token-manager
     init-config:
       thread-pool-size: 16
     tags:
