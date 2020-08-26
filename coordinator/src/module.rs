@@ -81,5 +81,5 @@ pub trait GetStorage: Service {
 
 #[service]
 pub trait HandleGraphQlRequest: Service {
-    fn execute(&self, request: &str) -> String;
+    fn execute(&self, query: &str, variables: &str) -> String;
 }
