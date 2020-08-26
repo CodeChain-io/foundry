@@ -219,10 +219,17 @@ pub fn query(ctx: &RwLock<Context>) {
     }
 
     let public_str = hex::encode(user.public().as_ref());
-    let result =
-        ctx.read().handle_graphqls.get("account").unwrap().execute(&format!(
-            "{{ withBlockHeight(height: null) {{ account(public: \"{}\") {{ seq }} }} }}",
-            public_str
-        ));
+    let result = ctx.read().handle_graphqls.get("account").unwrap().execute(
+        &format!("{{ withBlockHeight(height: null) {{ account(public: \"{}\") {{ seq }} }} }}", public_str),
+        "{}",
+    );
+    assert_eq!(r#"{"data":{"withBlockHeight":{"account":{"seq":21}}}}"#, result);
+
+    let result = ctx
+        .read()
+        .handle_graphqls
+        .get("account")
+        .unwrap()
+        .execute(include_str!("./query.graphql"), &format!("{{\"public\": \"{}\"}}", public_str));
     assert_eq!(r#"{"data":{"withBlockHeight":{"account":{"seq":21}}}}"#, result);
 }
