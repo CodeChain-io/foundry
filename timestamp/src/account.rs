@@ -339,7 +339,7 @@ impl Account {
 }
 
 impl HandleGraphQlRequest for GraphQlRequestHandler {
-    fn execute(&self, request: &str) -> String {
-        handle_gql_query(self.tokio_runtime.handle(), self.root.clone(), request)
+    fn execute(&self, query: &str, variables: &str) -> String {
+        handle_gql_query(self.tokio_runtime.handle(), self.root.clone(), query, variables)
     }
 }
