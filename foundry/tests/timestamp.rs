@@ -16,20 +16,13 @@
 
 use ccore::BlockChainClient;
 use ccore::Client;
-use ccrypto::blake256;
+
 use ckey::{Ed25519KeyPair, Generator, KeyPairTrait, Random};
 use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use codechain_timestamp::account::TxHello;
 use codechain_timestamp::common::*;
-use coordinator::context::SubStorageAccess;
-use coordinator::{Transaction, TransactionWithMetadata, TxOrigin};
+use coordinator::Transaction;
 use ctypes::BlockId;
-use parking_lot::RwLock;
-use primitives::H256;
-use rand::prelude::*;
-use rand::seq::IteratorRandom;
-use remote_trait_object::{Service, ServiceRef};
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
