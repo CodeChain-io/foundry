@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub mod account;
+pub mod account2;
 pub mod common;
 pub mod sorting;
 pub mod staking;
