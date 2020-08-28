@@ -14,11 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+mod state_manager;
+
 use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value as GqlValue};
 use ccrypto::blake256;
 use ckey::{verify, Ed25519Public as Public, Signature};
 use primitives::H256;
 use serde::{Deserialize, Serialize};
+pub use state_manager::StateManager;
 use std::fmt;
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy)]
