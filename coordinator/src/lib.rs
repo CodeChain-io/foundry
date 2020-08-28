@@ -20,6 +20,7 @@ pub mod engine;
 mod header;
 mod linkable;
 pub mod module;
+pub mod module2;
 mod substorage;
 pub mod test_coordinator;
 mod transaction;
