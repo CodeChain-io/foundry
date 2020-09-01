@@ -108,6 +108,24 @@ impl ScalarType for GqlPublic {
     }
 }
 
+pub struct GqlH256(pub H256);
+
+impl ScalarType for GqlH256 {
+    fn parse(value: GqlValue) -> InputValueResult<Self> {
+        if let GqlValue::String(s) = value {
+            Ok(GqlH256(H256::from_slice(
+                &hex::decode(&s).map_err(|_| InputValueError::Custom("Invalid public key".to_owned()))?,
+            )))
+        } else {
+            Err(InputValueError::Custom("Invalid public key".to_owned()))
+        }
+    }
+
+    fn to_value(&self) -> GqlValue {
+        GqlValue::String(hex::encode(self.0.as_ref()))
+    }
+}
+
 pub fn handle_gql_query<T: async_graphql::ObjectType + Send + Sync + 'static>(
     runtime: &tokio::runtime::Handle,
     root: T,
