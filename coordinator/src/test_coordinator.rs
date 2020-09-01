@@ -15,11 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::context::StorageAccess;
-use crate::engine::{BlockExecutor, FilteredTxs, GraphQlHandlerProvider, Initializer, TxFilter};
+use crate::engine::{BlockExecutor, ExecutionId, GraphQlHandlerProvider, Initializer, TxFilter};
 use crate::header::Header;
 use crate::transaction::{Transaction, TransactionWithMetadata};
 use crate::types::{
-    BlockOutcome, CloseBlockError, ErrorCode, ExecuteTransactionError, HeaderError, TransactionOutcome, VerifiedCrime,
+    BlockOutcome, CloseBlockError, ErrorCode, ExecuteTransactionError, FilteredTxs, HeaderError, TransactionOutcome,
+    VerifiedCrime,
 };
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use parking_lot::Mutex;
@@ -28,6 +29,7 @@ use std::sync::Arc;
 
 // Coordinator dedicated for mempool and miner testing
 pub struct TestCoordinator {
+    storage: Mutex<Option<Box<dyn StorageAccess>>>,
     validator_set: CompactValidatorSet,
     consensus_params: ConsensusParams,
     body_count: AtomicUsize,
@@ -37,6 +39,7 @@ pub struct TestCoordinator {
 impl Default for TestCoordinator {
     fn default() -> Self {
         Self {
+            storage: Mutex::new(None),
             validator_set: Default::default(),
             consensus_params: ConsensusParams::default_for_test(),
             body_count: AtomicUsize::new(0),
@@ -46,25 +49,34 @@ impl Default for TestCoordinator {
 }
 
 impl Initializer for TestCoordinator {
-    fn initialize_chain(&self, _storage: Arc<Mutex<dyn StorageAccess>>) -> (CompactValidatorSet, ConsensusParams) {
-        (self.validator_set.clone(), self.consensus_params)
+    fn number_of_sub_storages(&self) -> usize {
+        5
+    }
+
+    fn initialize_chain(
+        &self,
+        storage: Box<dyn StorageAccess>,
+    ) -> (Box<dyn StorageAccess>, CompactValidatorSet, ConsensusParams) {
+        (storage, self.validator_set.clone(), self.consensus_params)
     }
 }
 
 impl BlockExecutor for TestCoordinator {
     fn open_block(
-        &self,
-        _storage: Arc<Mutex<dyn StorageAccess>>,
+        &mut self,
+        storage: Box<dyn StorageAccess>,
         _header: &Header,
         _verified_crime: &[VerifiedCrime],
-    ) -> Result<(), HeaderError> {
+    ) -> Result<ExecutionId, HeaderError> {
+        self.storage.lock().replace(storage);
         self.body_count.store(0, Ordering::SeqCst);
         self.body_size.store(0, Ordering::SeqCst);
-        Ok(())
+        Ok(0)
     }
 
     fn execute_transactions(
-        &self,
+        &mut self,
+        _execution_id: ExecutionId,
         transactions: &[Transaction],
     ) -> Result<Vec<TransactionOutcome>, ExecuteTransactionError> {
         self.body_count.fetch_add(transactions.len(), Ordering::SeqCst);
@@ -78,15 +90,17 @@ impl BlockExecutor for TestCoordinator {
     }
 
     fn prepare_block<'a>(
-        &self,
+        &mut self,
+        _execution_id: ExecutionId,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<(&'a Transaction, TransactionOutcome)> {
         transactions.map(|tx_with_metadata| (&tx_with_metadata.tx, TransactionOutcome::default())).collect()
     }
 
-    fn close_block(&self) -> Result<BlockOutcome, CloseBlockError> {
+    fn close_block(&mut self, _execution_id: ExecutionId) -> Result<BlockOutcome, CloseBlockError> {
         if self.body_size.load(Ordering::SeqCst) > self.consensus_params.max_body_size() as usize {
             Ok(BlockOutcome {
+                storage: self.storage.lock().take().unwrap(),
                 updated_validator_set: Some(self.validator_set.clone()),
                 updated_consensus_params: Some(self.consensus_params),
 
@@ -109,6 +123,7 @@ impl TxFilter for TestCoordinator {
 
     fn filter_transactions<'a>(
         &self,
+        storage: Box<dyn StorageAccess>,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
         memory_limit: Option<usize>,
         size_limit: Option<usize>,
@@ -125,6 +140,7 @@ impl TxFilter for TestCoordinator {
             })
             .collect();
         FilteredTxs {
+            storage,
             invalid,
             low_priority,
         }
