@@ -20,7 +20,6 @@ pub mod engine;
 mod header;
 mod linkable;
 pub mod module;
-mod substorage;
 pub mod test_coordinator;
 mod transaction;
 pub mod types;
@@ -28,16 +27,18 @@ pub mod values;
 mod weaver;
 
 use crate::app_desc::AppDesc;
-use crate::context::{StorageAccess, SubStorageAccess};
-use crate::engine::{BlockExecutor, FilteredTxs, GraphQlHandlerProvider, Initializer, TxFilter};
+use crate::context::StorageAccess;
+use crate::engine::{BlockExecutor, ExecutionId, GraphQlHandlerProvider, Initializer, TxFilter};
 pub use crate::header::Header;
 use crate::module::{
-    HandleCrimes, HandleGraphQlRequest, InitChain, InitGenesis, SortedTxs, Stateful, TxOwner, TxSorter, UpdateChain,
+    HandleCrimes, HandleGraphQlRequest, InitChain, InitGenesis, SessionId, SortedTxs, Stateful, TxOwner, TxSorter,
+    UpdateChain,
 };
-use crate::substorage::SubStorageView;
 pub use crate::transaction::{Transaction, TransactionWithMetadata, TxOrigin};
-use crate::types::{BlockOutcome, ErrorCode, VerifiedCrime};
-use crate::types::{CloseBlockError, ExecuteTransactionError, HeaderError, TransactionOutcome};
+use crate::types::{
+    BlockOutcome, CloseBlockError, ErrorCode, ExecuteTransactionError, FilteredTxs, HeaderError, TransactionOutcome,
+    VerifiedCrime,
+};
 use crate::weaver::Weaver;
 use cmodule::sandbox::Sandbox;
 use ctypes::StorageId;
@@ -107,8 +108,8 @@ struct Inner {
     /// The maximum block size.
     max_body_size: usize,
 
-    /// The current storage set to all `Stateful` modules.
-    current_storage: Arc<Mutex<dyn StorageAccess>>,
+    /// Currently active sessions.
+    sessions: Vec<Option<Box<dyn StorageAccess>>>,
 
     /// List of module name and `Stateful` service pairs in the current app.
     /// The module name is used to keep the index of the corresponding `Stateful`
@@ -145,20 +146,42 @@ impl Inner {
         Self::default()
     }
 
-    fn set_storage(&mut self, storage: &Arc<Mutex<dyn StorageAccess>>) {
-        self.current_storage = Arc::clone(storage);
-        for (id, (_name, ref mut stateful)) in self.stateful.iter_mut().enumerate() {
-            let substorage: Box<dyn SubStorageAccess> =
-                Box::new(SubStorageView::of(id as StorageId, Arc::clone(storage)));
-            stateful.set_storage(ServiceRef::create_export(substorage));
+    fn new_session(&mut self, mut storage: Box<dyn StorageAccess>) -> SessionId {
+        let session_id = self
+            .sessions
+            .iter()
+            .enumerate()
+            .find_map(|(id, session)| match session {
+                Some(_) => None,
+                None => Some(id),
+            })
+            .unwrap_or_else(|| {
+                let new_id = self.sessions.len();
+                self.sessions.push(None);
+                new_id
+            }) as SessionId;
+
+        for (id, (_, ref mut stateful)) in self.stateful.iter_mut().enumerate() {
+            stateful.new_session(session_id, ServiceRef::create_export(storage.sub_storage(id as StorageId)));
         }
+
+        self.sessions[session_id as usize] = Some(storage);
+
+        session_id
+    }
+
+    fn end_session(&mut self, id: SessionId) -> Box<dyn StorageAccess> {
+        for (_, ref mut stateful) in self.stateful.iter_mut() {
+            stateful.end_session(id);
+        }
+        self.sessions[id as usize].take().unwrap()
     }
 }
 
 impl Default for Inner {
     fn default() -> Self {
         Inner {
-            current_storage: Arc::new(Mutex::new(NoOpStorage)) as Arc<Mutex<dyn StorageAccess>>,
+            sessions: Vec::new(),
             max_body_size: 0,
             stateful: Vec::new(),
             init_genesis: Vec::new(),
@@ -173,34 +196,12 @@ impl Default for Inner {
     }
 }
 
-struct NoOpStorage;
-
-impl StorageAccess for NoOpStorage {
-    fn get(&self, _storage_id: u16, _key: &dyn AsRef<[u8]>) -> Option<Vec<u8>> {
-        Some(Vec::default())
-    }
-
-    fn set(&mut self, _storage_id: u16, _key: &dyn AsRef<[u8]>, _value: Vec<u8>) {}
-
-    fn has(&self, _storage_id: u16, _key: &dyn AsRef<[u8]>) -> bool {
-        false
-    }
-
-    fn remove(&mut self, _storage_id: u16, _key: &dyn AsRef<[u8]>) {}
-
-    fn create_checkpoint(&mut self) {}
-
-    fn revert_to_the_checkpoint(&mut self) {}
-
-    fn discard_checkpoint(&mut self) {}
-}
-
 struct NoOpHandleCrimes;
 
 impl Service for NoOpHandleCrimes {}
 
 impl HandleCrimes for NoOpHandleCrimes {
-    fn handle_crimes(&mut self, _crimes: &[VerifiedCrime]) {}
+    fn handle_crimes(&mut self, _session_id: SessionId, _crimes: &[VerifiedCrime]) {}
 }
 
 struct PanickingInitChain;
@@ -208,7 +209,7 @@ struct PanickingInitChain;
 impl Service for PanickingInitChain {}
 
 impl InitChain for PanickingInitChain {
-    fn init_chain(&mut self) -> (CompactValidatorSet, ConsensusParams) {
+    fn init_chain(&mut self, _session_id: SessionId) -> (CompactValidatorSet, ConsensusParams) {
         panic!("There must be a `InitChain` service")
     }
 }
@@ -218,7 +219,7 @@ struct NoOpUpdateChain;
 impl Service for NoOpUpdateChain {}
 
 impl UpdateChain for NoOpUpdateChain {
-    fn update_chain(&mut self) -> (Option<CompactValidatorSet>, Option<ConsensusParams>) {
+    fn update_chain(&mut self, _session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ConsensusParams>) {
         (None, None)
     }
 }
@@ -228,7 +229,7 @@ struct DefaultTxSorter;
 impl Service for DefaultTxSorter {}
 
 impl TxSorter for DefaultTxSorter {
-    fn sort_txs(&self, txs: &[TransactionWithMetadata]) -> SortedTxs {
+    fn sort_txs(&self, _session_id: SessionId, txs: &[TransactionWithMetadata]) -> SortedTxs {
         SortedTxs {
             invalid: Vec::new(),
             sorted: (0..txs.len()).collect(),
@@ -237,73 +238,80 @@ impl TxSorter for DefaultTxSorter {
 }
 
 impl Initializer for Coordinator {
-    fn initialize_chain(&self, storage: Arc<Mutex<dyn StorageAccess>>) -> (CompactValidatorSet, ConsensusParams) {
+    fn number_of_sub_storages(&self) -> usize {
+        self.inner.lock().stateful.len()
+    }
+
+    fn initialize_chain(
+        &self,
+        storage: Box<dyn StorageAccess>,
+    ) -> (Box<dyn StorageAccess>, CompactValidatorSet, ConsensusParams) {
         let inner = &mut *self.inner.lock();
 
-        inner.set_storage(&storage);
-
-        for (_, init) in inner.init_genesis.iter_mut() {
-            init.begin_genesis();
-        }
+        let session_id = inner.new_session(storage);
 
         for (ref module, ref mut init) in inner.init_genesis.iter_mut() {
             let config = match inner.genesis_config.get(module) {
                 Some(value) => value as &[u8],
                 None => &[],
             };
-            init.init_genesis(config);
+            init.init_genesis(session_id, config);
         }
 
-        for (_, init) in inner.init_genesis.iter_mut() {
-            init.end_genesis();
-        }
-
-        let (validator_set, params) = inner.init_chain.init_chain();
+        let (validator_set, params) = inner.init_chain.init_chain(session_id);
 
         inner.max_body_size = params.max_body_size() as usize;
 
-        (validator_set, params)
+        let storage = inner.end_session(session_id);
+
+        (storage, validator_set, params)
     }
 }
 
 impl BlockExecutor for Coordinator {
     fn open_block(
-        &self,
-        storage: Arc<Mutex<dyn StorageAccess>>,
+        &mut self,
+        storage: Box<dyn StorageAccess>,
         header: &Header,
         verified_crimes: &[VerifiedCrime],
-    ) -> Result<(), HeaderError> {
+    ) -> Result<ExecutionId, HeaderError> {
         let mut inner = self.inner.lock();
 
-        inner.set_storage(&storage);
+        let session_id = inner.new_session(storage);
 
-        inner.handle_crimes.handle_crimes(verified_crimes);
+        inner.handle_crimes.handle_crimes(session_id, verified_crimes);
 
         for owner in inner.tx_owner.values_mut() {
-            owner.block_opened(header)?;
+            owner.block_opened(session_id, header)?;
         }
 
-        Ok(())
+        Ok(session_id)
     }
 
     fn execute_transactions(
-        &self,
+        &mut self,
+        execution_id: ExecutionId,
         transactions: &[Transaction],
     ) -> Result<Vec<TransactionOutcome>, ExecuteTransactionError> {
         let inner = &mut *self.inner.lock();
 
         let mut outcomes = Vec::with_capacity(transactions.len());
+        let session_id = execution_id as SessionId;
+        let storage = match &mut inner.sessions[session_id as usize] {
+            Some(s) => s,
+            None => panic!("invalid session: {}", session_id),
+        };
 
         for tx in transactions {
             match inner.tx_owner.get_mut(tx.tx_type()) {
                 Some(owner) => {
-                    inner.current_storage.lock().create_checkpoint();
-                    match owner.execute_transaction(tx) {
+                    storage.create_checkpoint();
+                    match owner.execute_transaction(session_id, tx) {
                         Ok(outcome) => {
                             outcomes.push(outcome);
-                            inner.current_storage.lock().discard_checkpoint();
+                            storage.discard_checkpoint();
                         }
-                        Err(_) => inner.current_storage.lock().revert_to_the_checkpoint(),
+                        Err(_) => storage.revert_to_the_checkpoint(),
                     }
                 }
                 None => outcomes.push(TransactionOutcome::default()),
@@ -314,21 +322,27 @@ impl BlockExecutor for Coordinator {
     }
 
     fn prepare_block<'a>(
-        &self,
+        &mut self,
+        execution_id: ExecutionId,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<(&'a Transaction, TransactionOutcome)> {
         let inner = &mut *self.inner.lock();
 
         let txs: Vec<_> = transactions.collect();
         let owned_txs: Vec<_> = txs.iter().map(|tx| (*tx).clone()).collect();
+        let session_id = execution_id as SessionId;
 
         let SortedTxs {
             sorted,
             ..
-        } = inner.tx_sorter.sort_txs(&owned_txs);
+        } = inner.tx_sorter.sort_txs(session_id, &owned_txs);
 
         let mut tx_n_outcomes: Vec<(&'a Transaction, TransactionOutcome)> = Vec::new();
         let mut remaining_block_space = inner.max_body_size;
+        let storage = match &mut inner.sessions[session_id as usize] {
+            Some(s) => s,
+            None => panic!("invalid session: {}", session_id),
+        };
 
         for index in sorted {
             let tx = &txs[index].tx;
@@ -336,29 +350,33 @@ impl BlockExecutor for Coordinator {
                 if remaining_block_space <= tx.size() {
                     break
                 }
-                inner.current_storage.lock().create_checkpoint();
-                if let Ok(outcome) = owner.execute_transaction(&tx) {
-                    inner.current_storage.lock().discard_checkpoint();
+                storage.create_checkpoint();
+                if let Ok(outcome) = owner.execute_transaction(session_id, &tx) {
+                    storage.discard_checkpoint();
                     tx_n_outcomes.push((tx, outcome));
                     remaining_block_space -= tx.size();
                     continue
                 }
-                inner.current_storage.lock().revert_to_the_checkpoint();
+                storage.revert_to_the_checkpoint();
             }
         }
         tx_n_outcomes
     }
 
-    fn close_block(&self) -> Result<BlockOutcome, CloseBlockError> {
-        let inner = &mut *self.inner.lock();
+    fn close_block(&mut self, execution_id: ExecutionId) -> Result<BlockOutcome, CloseBlockError> {
+        let mut inner = self.inner.lock();
 
+        let session_id = execution_id as SessionId;
         let mut events = Vec::new();
         for owner in inner.tx_owner.values_mut() {
-            events.extend(owner.block_closed()?.into_iter());
+            events.extend(owner.block_closed(session_id)?.into_iter());
         }
-        let (updated_validator_set, updated_consensus_params) = inner.update_chain.update_chain();
+        let (updated_validator_set, updated_consensus_params) = inner.update_chain.update_chain(session_id);
+
+        let storage = inner.end_session(session_id);
 
         Ok(BlockOutcome {
+            storage,
             updated_validator_set,
             updated_consensus_params,
             events,
@@ -379,19 +397,22 @@ impl TxFilter for Coordinator {
 
     fn filter_transactions<'a>(
         &self,
+        storage: Box<dyn StorageAccess>,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
         memory_limit: Option<usize>,
         size_limit: Option<usize>,
     ) -> FilteredTxs<'a> {
-        let inner = &mut *self.inner.lock();
+        let mut inner = self.inner.lock();
 
         let txs: Vec<_> = transactions.collect();
         let owned_txs: Vec<_> = txs.iter().map(|tx| (*tx).clone()).collect();
 
+        let session_id = inner.new_session(storage);
+
         let SortedTxs {
             sorted,
             invalid,
-        } = inner.tx_sorter.sort_txs(&owned_txs);
+        } = inner.tx_sorter.sort_txs(session_id, &owned_txs);
 
         let memory_limit = memory_limit.unwrap_or(usize::MAX);
         let mut memory_usage = 0;
@@ -409,8 +430,10 @@ impl TxFilter for Coordinator {
             .collect();
 
         let invalid = invalid.into_iter().map(|i| &txs[i].tx).collect();
+        let storage = inner.end_session(session_id);
 
         FilteredTxs {
+            storage,
             invalid,
             low_priority,
         }

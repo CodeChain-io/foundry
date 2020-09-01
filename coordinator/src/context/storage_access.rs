@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::context::SubStorageAccess;
 pub use ctypes::StorageId;
 
 // Interface between host and the coordinator
 pub trait StorageAccess: Send {
-    fn get(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>>;
-    fn set(&mut self, storage_id: StorageId, key: &dyn AsRef<[u8]>, value: Vec<u8>);
-    fn has(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> bool;
-    fn remove(&mut self, storage_id: StorageId, key: &dyn AsRef<[u8]>);
+    /// Returns a subspace of the given `storage_id` in the underlying storage.
+    fn sub_storage(&mut self, storage_id: StorageId) -> Box<dyn SubStorageAccess>;
 
     /// Create a recoverable checkpoint of this state
     fn create_checkpoint(&mut self);

@@ -23,11 +23,4 @@ pub trait SubStorageAccess: Service {
     fn set(&mut self, key: &[u8], value: Vec<u8>);
     fn has(&self, key: &[u8]) -> bool;
     fn remove(&mut self, key: &[u8]);
-
-    /// Create a recoverable checkpoint of this state
-    fn create_checkpoint(&mut self);
-    /// Revert to the last checkpoint and discard it
-    fn revert_to_the_checkpoint(&mut self);
-    /// Merge last checkpoint with the previous
-    fn discard_checkpoint(&mut self);
 }

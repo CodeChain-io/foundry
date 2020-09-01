@@ -22,44 +22,48 @@ use ctypes::{CompactValidatorSet, ConsensusParams};
 use remote_trait_object::{service, Service, ServiceRef};
 use serde::{Deserialize, Serialize};
 
+pub type SessionId = u32;
+
 #[service]
 pub trait Stateful: Service {
-    fn set_storage(&mut self, storage: ServiceRef<dyn SubStorageAccess>);
+    fn new_session(&mut self, id: SessionId, storage: ServiceRef<dyn SubStorageAccess>);
+
+    fn end_session(&mut self, id: SessionId);
 }
 
 #[service]
 pub trait InitGenesis: Service {
-    fn begin_genesis(&mut self);
-
-    fn init_genesis(&mut self, config: &[u8]);
-
-    fn end_genesis(&mut self);
+    fn init_genesis(&mut self, session_id: SessionId, config: &[u8]);
 }
 
 #[service]
 pub trait TxOwner: Service {
-    fn block_opened(&mut self, header: &Header) -> Result<(), HeaderError>;
+    fn block_opened(&mut self, session_id: SessionId, header: &Header) -> Result<(), HeaderError>;
 
-    fn execute_transaction(&mut self, transaction: &Transaction) -> Result<TransactionOutcome, ()>;
+    fn execute_transaction(
+        &mut self,
+        session_id: SessionId,
+        transaction: &Transaction,
+    ) -> Result<TransactionOutcome, ()>;
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
 
-    fn block_closed(&mut self) -> Result<Vec<Event>, CloseBlockError>;
+    fn block_closed(&mut self, session_id: SessionId) -> Result<Vec<Event>, CloseBlockError>;
 }
 
 #[service]
 pub trait InitChain: Service {
-    fn init_chain(&mut self) -> (CompactValidatorSet, ConsensusParams);
+    fn init_chain(&mut self, session_id: SessionId) -> (CompactValidatorSet, ConsensusParams);
 }
 
 #[service]
 pub trait UpdateChain: Service {
-    fn update_chain(&mut self) -> (Option<CompactValidatorSet>, Option<ConsensusParams>);
+    fn update_chain(&mut self, session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ConsensusParams>);
 }
 
 #[service]
 pub trait TxSorter: Service {
-    fn sort_txs(&self, txs: &[TransactionWithMetadata]) -> SortedTxs;
+    fn sort_txs(&self, session_id: SessionId, txs: &[TransactionWithMetadata]) -> SortedTxs;
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -70,16 +74,10 @@ pub struct SortedTxs {
 
 #[service]
 pub trait HandleCrimes: Service {
-    fn handle_crimes(&mut self, crimes: &[VerifiedCrime]);
-}
-
-/// The only service that the coordinator exports to the modules
-#[service]
-pub trait GetStorage: Service {
-    fn get_storage(&self, block_height: Option<u64>) -> Option<ServiceRef<dyn SubStorageAccess>>;
+    fn handle_crimes(&mut self, session_id: SessionId, crimes: &[VerifiedCrime]);
 }
 
 #[service]
 pub trait HandleGraphQlRequest: Service {
-    fn execute(&self, query: &str, variables: &str) -> String;
+    fn execute(&self, session_id: SessionId, query: &str, variables: &str) -> String;
 }
