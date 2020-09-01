@@ -68,7 +68,7 @@ impl<'a> StateTransition for IssueToken<'a> {
     fn execute(self, state: &mut dyn SubStorageAccess) -> Result<(), Error> {
         let mut account = GetAccount {
             public: self.receiver,
-            default: false,
+            default: true,
         }
         .execute(state)
         .map_err(|_| Error::InvalidKey)?;
