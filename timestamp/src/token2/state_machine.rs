@@ -109,9 +109,18 @@ pub(super) enum ExecuteError {
     InvalidFormat,
     AccountModuleError(crate::account2::Error),
     InvalidSequence,
-    NoAccount,
+    NoSuchAccount,
     InvalidKey,
     NoToken,
+}
+
+impl From<Error> for ExecuteError {
+    fn from(e: Error) -> Self {
+        match e {
+            Error::InvalidKey => ExecuteError::InvalidKey,
+            Error::NoSuchAccount => ExecuteError::NoSuchAccount,
+        }
+    }
 }
 
 pub(super) struct ExecuteTransaction<'a, 'b> {
@@ -139,7 +148,7 @@ impl<'a, 'b> StateTransition for ExecuteTransaction<'a, 'b> {
         } = tx.tx.action;
 
         let mut sender_account: Account = serde_cbor::from_slice(
-            &state.get(get_state_key(&tx.signer_public).as_bytes()).ok_or_else(|| ExecuteError::NoAccount)?,
+            &state.get(get_state_key(&tx.signer_public).as_bytes()).ok_or_else(|| ExecuteError::NoSuchAccount)?,
         )
         .map_err(|_| ExecuteError::InvalidKey)?;
 
@@ -155,13 +164,11 @@ impl<'a, 'b> StateTransition for ExecuteTransaction<'a, 'b> {
             public: &receiver,
             default: true,
         }
-        .execute(state)
-        .map_err(|_| ExecuteError::InvalidKey)?;
+        .execute(state)?;
         let mut set = GetOwningAccountsWithIssuer {
             issuer: &issuer,
         }
-        .execute(state)
-        .map_err(|_| ExecuteError::InvalidKey)?;
+        .execute(state)?;
 
         // From now on, it will actually mutate the state and must not fail
         // to keep the consistency of the state.
