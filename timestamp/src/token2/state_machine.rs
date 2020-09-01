@@ -70,8 +70,7 @@ impl<'a> StateTransition for IssueToken<'a> {
             public: self.receiver,
             default: true,
         }
-        .execute(state)
-        .map_err(|_| Error::InvalidKey)?;
+        .execute(state)?;
         account.tokens.push(Token {
             issuer: *self.issuer,
         });
@@ -79,8 +78,7 @@ impl<'a> StateTransition for IssueToken<'a> {
         let mut set = GetOwningAccountsWithIssuer {
             issuer: self.issuer,
         }
-        .execute(state)
-        .map_err(|_| Error::InvalidKey)?;
+        .execute(state)?;
         set.insert(*self.receiver);
         set_owning_accounts_with_issuer(state, self.issuer, set);
 
