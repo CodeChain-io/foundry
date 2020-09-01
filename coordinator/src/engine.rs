@@ -17,43 +17,52 @@
 use crate::context::StorageAccess;
 use crate::header::Header;
 use crate::transaction::{Transaction, TransactionWithMetadata};
-use crate::types::{BlockOutcome, CloseBlockError, ErrorCode, HeaderError, TransactionOutcome, VerifiedCrime};
+use crate::types::{
+    BlockOutcome, CloseBlockError, ErrorCode, FilteredTxs, HeaderError, TransactionOutcome, VerifiedCrime,
+};
 use ctypes::{CompactValidatorSet, ConsensusParams};
-use parking_lot::Mutex;
 use std::sync::Arc;
 
 pub trait Initializer: Send + Sync {
-    fn initialize_chain(&self, storage: Arc<Mutex<dyn StorageAccess>>) -> (CompactValidatorSet, ConsensusParams);
+    fn number_of_sub_storages(&self) -> usize;
+
+    fn initialize_chain(
+        &self,
+        storage: Box<dyn StorageAccess>,
+    ) -> (Box<dyn StorageAccess>, CompactValidatorSet, ConsensusParams);
 }
+
+pub type ExecutionId = u32;
 
 pub trait BlockExecutor: Send + Sync {
     fn open_block(
-        &self,
-        storage: Arc<Mutex<dyn StorageAccess>>,
+        &mut self,
+        storage: Box<dyn StorageAccess>,
         header: &Header,
         verified_crimes: &[VerifiedCrime],
-    ) -> Result<(), HeaderError>;
-    fn execute_transactions(&self, transactions: &[Transaction]) -> Result<Vec<TransactionOutcome>, ()>;
+    ) -> Result<ExecutionId, HeaderError>;
+    fn execute_transactions(
+        &mut self,
+        execution_id: ExecutionId,
+        transactions: &[Transaction],
+    ) -> Result<Vec<TransactionOutcome>, ()>;
     fn prepare_block<'a>(
-        &self,
+        &mut self,
+        execution_id: ExecutionId,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<(&'a Transaction, TransactionOutcome)>;
-    fn close_block(&self) -> Result<BlockOutcome, CloseBlockError>;
+    fn close_block(&mut self, execution_id: ExecutionId) -> Result<BlockOutcome, CloseBlockError>;
 }
 
 pub trait TxFilter: Send + Sync {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
     fn filter_transactions<'a>(
         &self,
+        storage: Box<dyn StorageAccess>,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
         memory_limit: Option<usize>,
         size_limit: Option<usize>,
     ) -> FilteredTxs<'a>;
-}
-
-pub struct FilteredTxs<'a> {
-    pub invalid: Vec<&'a Transaction>,
-    pub low_priority: Vec<&'a Transaction>,
 }
 
 pub trait GraphQlHandlerProvider: Send + Sync {
