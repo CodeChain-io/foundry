@@ -85,7 +85,7 @@ impl TxOwner for ServiceHandler {
                 ExecuteError::InvalidFormat => Err(()),
                 ExecuteError::AccountModuleError(_) => Err(()),
                 ExecuteError::InvalidSequence => Err(()),
-                ExecuteError::NoAccount => Err(()),
+                ExecuteError::NoSuchAccount => Err(()),
                 ExecuteError::InvalidKey => Err(()),
                 ExecuteError::NoToken => Err(()),
             }
