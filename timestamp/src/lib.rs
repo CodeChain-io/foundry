@@ -20,5 +20,6 @@ pub mod common;
 pub mod sorting;
 pub mod staking;
 pub mod stamp;
+pub mod stamp2;
 pub mod token;
 pub mod token2;
