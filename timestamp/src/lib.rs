@@ -18,6 +18,7 @@ pub mod account;
 pub mod account2;
 pub mod common;
 pub mod sorting;
+pub mod sorting2;
 pub mod staking;
 pub mod stamp;
 pub mod stamp2;
