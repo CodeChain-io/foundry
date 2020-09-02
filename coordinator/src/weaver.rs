@@ -24,8 +24,8 @@ use cmodule::link::{best_linker, Port};
 use cmodule::sandbox::{sandboxer, Sandbox};
 
 use crate::app_desc::{AppDesc, Constructor, GlobalName, HostSetup, ModuleSetup, Namespaced, SimpleName};
-use crate::linkable::{inner, HOST_PATH};
-use crate::{Inner, Occurrences};
+use crate::linkable::{services, HOST_PATH};
+use crate::{Occurrences, Services};
 use crate::{HOST_ID, SERVICES_FOR_HOST, TX_SERVICES_FOR_HOST};
 
 #[cfg(test)]
@@ -57,7 +57,7 @@ impl Weaver {
         Self::default()
     }
 
-    pub(super) fn weave(mut self, app_desc: &AppDesc) -> anyhow::Result<(Vec<Box<dyn Sandbox>>, Inner)> {
+    pub(super) fn weave(mut self, app_desc: &AppDesc) -> anyhow::Result<(Vec<Box<dyn Sandbox>>, Services)> {
         self.modules.reserve(app_desc.modules.len());
 
         self.process_host(&app_desc.host)?;
@@ -71,7 +71,7 @@ impl Weaver {
 
         let linkables = self.modules.into_iter().map(|(_, link_info)| link_info.linkable.into_inner()).collect();
 
-        Ok((linkables, inner()))
+        Ok((linkables, services()))
     }
 
     fn process_host(&mut self, setup: &HostSetup) -> anyhow::Result<()> {

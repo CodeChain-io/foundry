@@ -54,7 +54,7 @@ impl Initializer for TestCoordinator {
     }
 
     fn initialize_chain(
-        &self,
+        &mut self,
         storage: Box<dyn StorageAccess>,
     ) -> (Box<dyn StorageAccess>, CompactValidatorSet, ConsensusParams) {
         (storage, self.validator_set.clone(), self.consensus_params)
@@ -63,7 +63,7 @@ impl Initializer for TestCoordinator {
 
 impl BlockExecutor for TestCoordinator {
     fn open_block(
-        &mut self,
+        &self,
         storage: Box<dyn StorageAccess>,
         _header: &Header,
         _verified_crime: &[VerifiedCrime],
@@ -75,7 +75,7 @@ impl BlockExecutor for TestCoordinator {
     }
 
     fn execute_transactions(
-        &mut self,
+        &self,
         _execution_id: ExecutionId,
         transactions: &[Transaction],
     ) -> Result<Vec<TransactionOutcome>, ExecuteTransactionError> {
@@ -90,14 +90,14 @@ impl BlockExecutor for TestCoordinator {
     }
 
     fn prepare_block<'a>(
-        &mut self,
+        &self,
         _execution_id: ExecutionId,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<(&'a Transaction, TransactionOutcome)> {
         transactions.map(|tx_with_metadata| (&tx_with_metadata.tx, TransactionOutcome::default())).collect()
     }
 
-    fn close_block(&mut self, _execution_id: ExecutionId) -> Result<BlockOutcome, CloseBlockError> {
+    fn close_block(&self, _execution_id: ExecutionId) -> Result<BlockOutcome, CloseBlockError> {
         if self.body_size.load(Ordering::SeqCst) > self.consensus_params.max_body_size() as usize {
             Ok(BlockOutcome {
                 storage: self.storage.lock().take().unwrap(),

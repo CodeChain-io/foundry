@@ -14,8 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::module::{HandleGraphQlRequest, InitChain, InitGenesis, Stateful, TxOwner, TxSorter, UpdateChain};
-use crate::Inner;
+use crate::Services;
 use cmodule::impls::process::{ExecutionScheme, SingleProcess};
 use cmodule::MODULE_INITS;
 
@@ -28,15 +27,14 @@ use regex::Regex;
 use remote_trait_object::raw_exchange::Skeleton;
 use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange};
 use remote_trait_object::Context;
-
-use std::collections::HashMap;
+use std::mem;
 use std::sync::Arc;
 
 pub(crate) static HOST_PATH: &str = "$";
 static TX_SERVICE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^@tx/([^/]+)/([^/]+)$").unwrap());
 static SERVICE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^([^/]+)/([^/]+)$").unwrap());
 
-static SERVICES: Lazy<Mutex<Services>> = Lazy::new(|| Mutex::new(Services::default()));
+static SERVICES: Lazy<Mutex<Services>> = Lazy::new(|| Mutex::new(Services::new()));
 
 #[distributed_slice(MODULE_INITS)]
 fn init() {
@@ -46,50 +44,15 @@ fn init() {
     );
 }
 
-pub(super) fn inner() -> Inner {
-    SERVICES.lock().inner()
+pub(super) fn services() -> Services {
+    mem::take(&mut SERVICES.lock())
 }
 
 #[derive(Default)]
 struct HostModule;
 
-#[derive(Default)]
-pub(crate) struct Services {
-    tx_owners: HashMap<String, Box<dyn TxOwner>>,
-    init_genesis: Vec<(String, Box<dyn InitGenesis>)>,
-    init_chain: Option<Box<dyn InitChain>>,
-    update_chain: Option<Box<dyn UpdateChain>>,
-    stateful: Vec<(String, Box<dyn Stateful>)>,
-    tx_sorter: Option<Box<dyn TxSorter>>,
-    handle_graphqls: Vec<(String, Arc<dyn HandleGraphQlRequest>)>,
-}
-
-impl Services {
-    pub(super) fn inner(&mut self) -> Inner {
-        let mut inner = Inner::new();
-
-        inner.tx_owner = self.tx_owners.drain().collect();
-        inner.init_genesis = self.init_genesis.drain(..).collect();
-        if let Some(init_chain) = self.init_chain.take() {
-            inner.init_chain = init_chain;
-        }
-        if let Some(update_chain) = self.update_chain.take() {
-            inner.update_chain = update_chain;
-        }
-        inner.stateful = self.stateful.drain(..).collect();
-        if let Some(tx_sorter) = self.tx_sorter.take() {
-            inner.tx_sorter = tx_sorter;
-        }
-        inner.handle_graphqls = self.handle_graphqls.drain(..).collect();
-
-        inner
-    }
-}
-
 impl UserModule for HostModule {
     fn new(_arg: &[u8]) -> Self {
-        // Initialize here to repeat creation of Coordinator upon updates
-        *SERVICES.lock() = Services::default();
         HostModule::default()
     }
 
@@ -102,7 +65,7 @@ impl UserModule for HostModule {
 
         if let Some(cap) = TX_SERVICE_RE.captures(name) {
             if &cap[2] == "tx-owner" {
-                services.tx_owners.insert(cap[1].to_owned(), import_service_from_handle(rto_context, handle));
+                services.tx_owner.insert(cap[1].to_owned(), import_service_from_handle(rto_context, handle));
                 return
             }
             panic!("Unknown import: {}", name)
@@ -114,16 +77,16 @@ impl UserModule for HostModule {
                     services.init_genesis.push((module.to_owned(), import_service_from_handle(rto_context, handle)));
                 }
                 "init-chain" => {
-                    services.init_chain.replace(import_service_from_handle(rto_context, handle));
+                    services.init_chain = import_service_from_handle(rto_context, handle);
                 }
                 "update-chain" => {
-                    services.update_chain.replace(import_service_from_handle(rto_context, handle));
+                    services.update_chain = import_service_from_handle(rto_context, handle);
                 }
                 "stateful" => {
-                    services.stateful.push((module.to_owned(), import_service_from_handle(rto_context, handle)));
+                    services.stateful.lock().push((module.to_owned(), import_service_from_handle(rto_context, handle)));
                 }
                 "tx-sorter" => {
-                    services.tx_sorter.replace(import_service_from_handle(rto_context, handle));
+                    services.tx_sorter = import_service_from_handle(rto_context, handle);
                 }
                 "handle-graphql-request" => {
                     services.handle_graphqls.push((module.to_owned(), import_service_from_handle(rto_context, handle)));
