@@ -201,7 +201,7 @@ struct NoOpHandleCrimes;
 impl Service for NoOpHandleCrimes {}
 
 impl HandleCrimes for NoOpHandleCrimes {
-    fn handle_crimes(&mut self, _session_id: SessionId, _crimes: &[VerifiedCrime]) {}
+    fn handle_crimes(&self, _session_id: SessionId, _crimes: &[VerifiedCrime]) {}
 }
 
 struct PanickingInitChain;
@@ -209,7 +209,7 @@ struct PanickingInitChain;
 impl Service for PanickingInitChain {}
 
 impl InitChain for PanickingInitChain {
-    fn init_chain(&mut self, _session_id: SessionId) -> (CompactValidatorSet, ConsensusParams) {
+    fn init_chain(&self, _session_id: SessionId) -> (CompactValidatorSet, ConsensusParams) {
         panic!("There must be a `InitChain` service")
     }
 }
@@ -219,7 +219,7 @@ struct NoOpUpdateChain;
 impl Service for NoOpUpdateChain {}
 
 impl UpdateChain for NoOpUpdateChain {
-    fn update_chain(&mut self, _session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ConsensusParams>) {
+    fn update_chain(&self, _session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ConsensusParams>) {
         (None, None)
     }
 }

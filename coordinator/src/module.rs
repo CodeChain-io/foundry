@@ -33,32 +33,32 @@ pub trait Stateful: Service {
 
 #[service]
 pub trait InitGenesis: Service {
-    fn init_genesis(&mut self, session_id: SessionId, config: &[u8]);
+    fn init_genesis(&self, session_id: SessionId, config: &[u8]);
 }
 
 #[service]
 pub trait TxOwner: Service {
-    fn block_opened(&mut self, session_id: SessionId, header: &Header) -> Result<(), HeaderError>;
+    fn block_opened(&self, session_id: SessionId, header: &Header) -> Result<(), HeaderError>;
 
     fn execute_transaction(
-        &mut self,
+        &self,
         session_id: SessionId,
         transaction: &Transaction,
     ) -> Result<TransactionOutcome, ()>;
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
 
-    fn block_closed(&mut self, session_id: SessionId) -> Result<Vec<Event>, CloseBlockError>;
+    fn block_closed(&self, session_id: SessionId) -> Result<Vec<Event>, CloseBlockError>;
 }
 
 #[service]
 pub trait InitChain: Service {
-    fn init_chain(&mut self, session_id: SessionId) -> (CompactValidatorSet, ConsensusParams);
+    fn init_chain(&self, session_id: SessionId) -> (CompactValidatorSet, ConsensusParams);
 }
 
 #[service]
 pub trait UpdateChain: Service {
-    fn update_chain(&mut self, session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ConsensusParams>);
+    fn update_chain(&self, session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ConsensusParams>);
 }
 
 #[service]
@@ -74,7 +74,7 @@ pub struct SortedTxs {
 
 #[service]
 pub trait HandleCrimes: Service {
-    fn handle_crimes(&mut self, session_id: SessionId, crimes: &[VerifiedCrime]);
+    fn handle_crimes(&self, session_id: SessionId, crimes: &[VerifiedCrime]);
 }
 
 #[service]
