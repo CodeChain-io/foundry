@@ -40,11 +40,7 @@ pub trait InitGenesis: Service {
 pub trait TxOwner: Service {
     fn block_opened(&self, session_id: SessionId, header: &Header) -> Result<(), HeaderError>;
 
-    fn execute_transaction(
-        &self,
-        session_id: SessionId,
-        transaction: &Transaction,
-    ) -> Result<TransactionOutcome, ()>;
+    fn execute_transaction(&self, session_id: SessionId, transaction: &Transaction) -> Result<TransactionOutcome, ()>;
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
 
