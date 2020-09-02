@@ -27,7 +27,7 @@ pub trait Initializer: Send + Sync {
     fn number_of_sub_storages(&self) -> usize;
 
     fn initialize_chain(
-        &self,
+        &mut self,
         storage: Box<dyn StorageAccess>,
     ) -> (Box<dyn StorageAccess>, CompactValidatorSet, ConsensusParams);
 }
@@ -36,22 +36,22 @@ pub type ExecutionId = u32;
 
 pub trait BlockExecutor: Send + Sync {
     fn open_block(
-        &mut self,
+        &self,
         storage: Box<dyn StorageAccess>,
         header: &Header,
         verified_crimes: &[VerifiedCrime],
     ) -> Result<ExecutionId, HeaderError>;
     fn execute_transactions(
-        &mut self,
+        &self,
         execution_id: ExecutionId,
         transactions: &[Transaction],
     ) -> Result<Vec<TransactionOutcome>, ()>;
     fn prepare_block<'a>(
-        &mut self,
+        &self,
         execution_id: ExecutionId,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<(&'a Transaction, TransactionOutcome)>;
-    fn close_block(&mut self, execution_id: ExecutionId) -> Result<BlockOutcome, CloseBlockError>;
+    fn close_block(&self, execution_id: ExecutionId) -> Result<BlockOutcome, CloseBlockError>;
 }
 
 pub trait TxFilter: Send + Sync {
