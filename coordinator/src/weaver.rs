@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use parking_lot::RwLock;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ops::RangeBounds;
+use std::sync::Arc;
 
 use anyhow::{anyhow, bail, Context};
 
@@ -24,7 +26,6 @@ use cmodule::link::{best_linker, Port};
 use cmodule::sandbox::{sandboxer, Sandbox};
 
 use crate::app_desc::{AppDesc, Constructor, GlobalName, HostSetup, ModuleSetup, Namespaced, SimpleName};
-use crate::linkable::{services, HOST_PATH};
 use crate::{Occurrences, Services};
 use crate::{HOST_ID, SERVICES_FOR_HOST, TX_SERVICES_FOR_HOST};
 
@@ -38,6 +39,7 @@ type ServiceSpec<'a> = (&'a str, &'a dyn erased_serde::Serialize);
 pub(super) struct Weaver {
     modules: HashMap<String, LinkInfo>,
     tx_owners: HashMap<String, String>,
+    services: Arc<RwLock<Option<Services>>>,
 }
 
 struct LinkInfo {
@@ -71,7 +73,7 @@ impl Weaver {
 
         let linkables = self.modules.into_iter().map(|(_, link_info)| link_info.linkable.into_inner()).collect();
 
-        Ok((linkables, services()))
+        Ok((linkables, self.services.write().take().unwrap()))
     }
 
     fn process_host(&mut self, setup: &HostSetup) -> anyhow::Result<()> {
@@ -79,10 +81,26 @@ impl Weaver {
         let imports = Self::process_imports(&setup.imports);
         let imports = RefCell::new(imports);
 
-        // FIXME: need to shy away from relying on a specific sandboxer?
-        let sandboxer = sandboxer("single-process").unwrap();
-        let linkable: Box<dyn Sandbox> = sandboxer.load(&HOST_PATH, &"", &*init_exports)?;
-        let linkable = RefCell::new(linkable);
+        let init_exports: Vec<(String, Vec<u8>)> = init_exports
+            .iter()
+            .map(|(name, data)| {
+                let mut buffer = Vec::<u8>::new();
+                let cbor =
+                    &mut serde_cbor::Serializer::new(serde_cbor::ser::IoWrite::new(std::io::Cursor::new(&mut buffer)));
+                data.erased_serialize(&mut erased_serde::Serializer::erase(cbor)).unwrap();
+                (name.to_string(), buffer)
+            })
+            .collect();
+
+        self.services.write().replace(Default::default());
+        let linkable = foundry_module_rt::create_foundry_module(
+            super::linkable::HostModule {
+                services: Arc::clone(&self.services),
+            },
+            &init_exports,
+        );
+
+        let linkable = RefCell::new(Box::new(linkable) as Box<dyn Sandbox>);
 
         self.modules.insert(HOST_ID.to_owned(), LinkInfo {
             linkable,
