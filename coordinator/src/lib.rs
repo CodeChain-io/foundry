@@ -71,9 +71,6 @@ pub(crate) static SERVICES_FOR_HOST: &[(Occurrences, &str)] = &[
 /// It assembles modules and feeds them various events from the underlying
 /// consensus engine.
 pub struct Coordinator {
-    /// List of `Sandbox`es of the modules constituting the current application.
-    _sandboxes: Vec<Box<dyn Sandbox>>,
-
     /// The maximum block size.
     max_body_size: usize,
 
@@ -82,6 +79,9 @@ pub struct Coordinator {
 
     /// The key services from modules for implementing a chain.
     services: Services,
+
+    /// List of `Sandbox`es of the modules constituting the current application.
+    _sandboxes: Vec<Box<dyn Sandbox>>,
 }
 
 impl Coordinator {
