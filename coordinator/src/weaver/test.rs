@@ -215,6 +215,7 @@ fn new_test_weaver_with_exports() -> Weaver {
     let tx_owners = tx_owners(&[("tx-type-a", "a"), ("tx-type-b", "a"), ("tx-type-c", "b")]);
 
     Weaver {
+        services: Default::default(),
         modules,
         tx_owners,
     }
@@ -365,6 +366,7 @@ fn link_complex() {
     let tx_owners = tx_owners(&[]);
 
     let mut weaver = Weaver {
+        services: Default::default(),
         modules,
         tx_owners,
     };

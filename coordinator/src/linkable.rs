@@ -15,45 +15,26 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::Services;
-use cmodule::impls::process::{ExecutionScheme, SingleProcess};
-use cmodule::MODULE_INITS;
 
 use foundry_module_rt::UserModule;
-use foundry_process_sandbox::execution::executor;
-use linkme::distributed_slice;
 use once_cell::sync::Lazy;
-use parking_lot::Mutex;
+use parking_lot::RwLock;
 use regex::Regex;
 use remote_trait_object::raw_exchange::Skeleton;
 use remote_trait_object::raw_exchange::{import_service_from_handle, HandleToExchange};
 use remote_trait_object::Context;
-use std::mem;
 use std::sync::Arc;
 
-pub(crate) static HOST_PATH: &str = "$";
 static TX_SERVICE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^@tx/([^/]+)/([^/]+)$").unwrap());
 static SERVICE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^([^/]+)/([^/]+)$").unwrap());
 
-static SERVICES: Lazy<Mutex<Services>> = Lazy::new(|| Mutex::new(Services::new()));
-
-#[distributed_slice(MODULE_INITS)]
-fn init() {
-    executor::add_function_pool(
-        HOST_PATH.to_owned(),
-        Arc::new(foundry_module_rt::start::<<SingleProcess as ExecutionScheme>::Ipc, HostModule>),
-    );
+pub struct HostModule {
+    pub(crate) services: Arc<RwLock<Option<Services>>>,
 }
-
-pub(super) fn services() -> Services {
-    mem::take(&mut SERVICES.lock())
-}
-
-#[derive(Default)]
-struct HostModule;
 
 impl UserModule for HostModule {
     fn new(_arg: &[u8]) -> Self {
-        HostModule::default()
+        panic!("HostModule must be created direclty")
     }
 
     fn prepare_service_to_export(&mut self, _ctor_name: &str, _ctor_arg: &[u8]) -> Skeleton {
@@ -61,7 +42,8 @@ impl UserModule for HostModule {
     }
 
     fn import_service(&mut self, rto_context: &Context, name: &str, handle: HandleToExchange) {
-        let mut services = SERVICES.lock();
+        let mut guard = self.services.write();
+        let services = guard.as_mut().unwrap();
 
         if let Some(cap) = TX_SERVICE_RE.captures(name) {
             if &cap[2] == "tx-owner" {
