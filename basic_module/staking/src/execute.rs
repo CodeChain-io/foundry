@@ -22,7 +22,8 @@ use crate::state::{
 };
 use crate::transactions::{AutoAction, UserAction, UserTransaction};
 use crate::types::{Approval, ReleaseResult, StakeQuantity, Tiebreaker};
-use crate::{account_manager, account_viewer, substorage};
+// use crate::{account_manager, account_viewer, substorage};
+use crate::{account_manager, account_viewer};
 use coordinator::types::TransactionOutcome;
 use fkey::Ed25519Public as Public;
 use primitives::Bytes;
@@ -60,8 +61,8 @@ pub fn apply_internal(
     check_before_fee_imposition(sender_public, fee, seq, min_fee)?;
 
     // Does not impose fee and increase sequence for a failed transaction
-    let mut substorage = substorage();
-    substorage.create_checkpoint();
+    // let mut substorage = substorage();
+    // substorage.create_checkpoint();
 
     let account_manager = account_manager();
     account_manager.sub_balance(sender_public, fee).map_err(|_err| {
@@ -73,10 +74,10 @@ pub fn apply_internal(
     account_manager.increment_sequence(&sender_public);
 
     let result = execute_user_action(&sender_public, action, tiebreaker);
-    match result {
-        Ok(_) => substorage.discard_checkpoint(),
-        Err(_) => substorage.revert_to_the_checkpoint(),
-    };
+    // match result {
+    //     Ok(_) => substorage.discard_checkpoint(),
+    //     Err(_) => substorage.revert_to_the_checkpoint(),
+    // };
 
     result
 }
