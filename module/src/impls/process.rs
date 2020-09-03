@@ -120,7 +120,7 @@ impl ExecutionScheme for SingleProcess {
 pub struct ProcessSandbox<E: ExecutionScheme> {
     _process: Mutex<executor::Context<E::Ipc, E::Execution>>,
     /// module should be dropped first before rto_context
-    module: Box<dyn foundry_module_rt::coordinator_interface::FoundryModule>,
+    module: Box<dyn FoundryModule>,
     rto_context: remote_trait_object::Context,
 }
 
@@ -159,7 +159,11 @@ impl<E: ExecutionScheme> Sandbox for ProcessSandbox<E> {
     }
 }
 
-impl<E: ExecutionScheme> Linkable for ProcessSandbox<E> {
+/// [`FoundryModule`] is mostly for the modules created with `module-rt` and so a process.
+///
+/// However it can be also used for [`FoundryModule`] directly createdf with [`create_foundry_module`],
+/// which is mainly for the coordinator.
+impl<T> Linkable for T where T: FoundryModule + ?Sized {
     fn supported_linkers(&self) -> &'static [&'static str] {
         &["single-process-linker", "multi-process-linker"]
     }
@@ -169,14 +173,28 @@ impl<E: ExecutionScheme> Linkable for ProcessSandbox<E> {
         // It MUST be unique anyway, for now.
         let random_name = fproc_sndbx::ipc::generate_random_name();
         Box::new(ProcessPort {
-            module_side_port: self.module.create_port(&random_name).unwrap_import().into_proxy(),
+            module_side_port: self.create_port(&random_name).unwrap_import().into_proxy(),
             ids: Vec::new(),
             slots: Vec::new(),
         })
     }
 
     fn seal(&mut self) {
-        self.module.finish_bootstrap();
+        self.finish_bootstrap();
+    }
+}
+
+impl<E: ExecutionScheme> Linkable for ProcessSandbox<E> {
+    fn supported_linkers(&self) -> &'static [&'static str] {
+        self.module.supported_linkers()
+    }
+
+    fn new_port(&mut self) -> Box<dyn Port> {
+        self.module.new_port()
+    }
+
+    fn seal(&mut self) {
+        self.module.seal()
     }
 }
 
