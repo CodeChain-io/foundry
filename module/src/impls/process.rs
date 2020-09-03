@@ -153,6 +153,15 @@ impl<E: ExecutionScheme> ProcessSandbox<E> {
     }
 }
 
+impl<T> Sandbox for T
+where
+    T: FoundryModule,
+{
+    fn debug(&mut self, arg: &[u8]) -> Vec<u8> {
+        self.debug(arg)
+    }
+}
+
 impl<E: ExecutionScheme> Sandbox for ProcessSandbox<E> {
     fn debug(&mut self, arg: &[u8]) -> Vec<u8> {
         self.module.debug(arg)
@@ -163,7 +172,10 @@ impl<E: ExecutionScheme> Sandbox for ProcessSandbox<E> {
 ///
 /// However it can be also used for [`FoundryModule`] directly createdf with [`create_foundry_module`],
 /// which is mainly for the coordinator.
-impl<T> Linkable for T where T: FoundryModule + ?Sized {
+impl<T> Linkable for T
+where
+    T: FoundryModule + ?Sized,
+{
     fn supported_linkers(&self) -> &'static [&'static str] {
         &["single-process-linker", "multi-process-linker"]
     }
@@ -173,7 +185,7 @@ impl<T> Linkable for T where T: FoundryModule + ?Sized {
         // It MUST be unique anyway, for now.
         let random_name = fproc_sndbx::ipc::generate_random_name();
         Box::new(ProcessPort {
-            module_side_port: self.create_port(&random_name).unwrap_import().into_proxy(),
+            module_side_port: self.create_port(&random_name).into_object(),
             ids: Vec::new(),
             slots: Vec::new(),
         })
