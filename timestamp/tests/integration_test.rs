@@ -18,6 +18,8 @@ extern crate codechain_module as cmodule;
 extern crate codechain_timestamp as timestamp;
 extern crate foundry_process_sandbox as fproc_sndbx;
 
+use coordinator::Coordinator;
+
 mod timestamp_setup {
     use super::*;
     use codechain_module::impls::process::{ExecutionScheme, SingleProcess};
@@ -66,4 +68,18 @@ mod timestamp_setup {
             Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, timestamp::sorting::Module>),
         );
     }
+}
+
+fn app_desc_path() -> &'static str {
+    if std::path::Path::exists(std::path::Path::new("../app-desc.yml")) {
+        "../app-desc.yml"
+    } else {
+        "./app-desc.yml"
+    }
+}
+
+#[test]
+fn weave() {
+    let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
+    Coordinator::from_app_desc(&app_desc).unwrap();
 }
