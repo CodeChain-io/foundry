@@ -175,12 +175,6 @@ struct Services {
     pub handle_graphqls: Vec<(String, Arc<dyn HandleGraphQlRequest>)>,
 }
 
-impl Services {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
 impl Default for Services {
     fn default() -> Self {
         Self {

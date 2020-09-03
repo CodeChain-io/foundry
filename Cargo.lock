@@ -725,7 +725,7 @@ dependencies = [
  "anyhow",
  "crossbeam 0.7.3",
  "erased-serde",
- "foundry-module-rt",
+ "foundry-module-rt 0.2.1",
  "foundry-process-sandbox",
  "intertrait",
  "linkme",
@@ -869,7 +869,7 @@ dependencies = [
  "codechain-types",
  "coordinator",
  "erased-serde",
- "foundry-module-rt",
+ "foundry-module-rt 0.2.0",
  "foundry-process-sandbox",
  "hex",
  "linkme",
@@ -957,7 +957,7 @@ dependencies = [
  "codechain-module",
  "codechain-types",
  "erased-serde",
- "foundry-module-rt",
+ "foundry-module-rt 0.2.1",
  "foundry-process-sandbox",
  "handlebars",
  "intertrait",
@@ -1470,7 +1470,7 @@ dependencies = [
  "env_logger 0.5.13",
  "fdlimit",
  "finally-block",
- "foundry-module-rt",
+ "foundry-module-rt 0.2.0",
  "foundry-process-sandbox",
  "futures 0.1.29",
  "kvdb",
@@ -1499,6 +1499,20 @@ dependencies = [
 name = "foundry-module-rt"
 version = "0.2.1"
 source = "git+https://github.com/CodeChain-io/module-rt.git?tag=v0.2.1#5b94cf63627e330bfc8e5aaec6cfa5c2c4b7a703"
+dependencies = [
+ "crossbeam 0.7.3",
+ "foundry-process-sandbox",
+ "linkme",
+ "parking_lot 0.11.0",
+ "remote-trait-object",
+ "serde",
+ "serde_cbor",
+ "threadpool",
+]
+
+[[package]]
+name = "foundry-module-rt"
+version = "0.2.1"
 dependencies = [
  "crossbeam 0.7.3",
  "foundry-process-sandbox",
