@@ -52,3 +52,5 @@ impl ServiceHandler {
 }
 
 impl remote_trait_object::Service for ServiceHandler {}
+
+pub use types::TxStamp;
