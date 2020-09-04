@@ -44,6 +44,8 @@ modules:
         tx-owner: {}
       get-account-and-seq:
         get-account-and-seq: {}
+      init-genesis:
+        init-genesis: {}
     imports:
       account-manager: module-account/account-manager
       token-manager: module-token/token-manager
@@ -62,6 +64,8 @@ modules:
         stateful: {}
       token-manager:
         token-manager: {}
+      handle-graphql-request:
+        handle-graphql-request: {}
     imports:
       account-manager: module-account/account-manager
     init-config:
