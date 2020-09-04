@@ -1,7 +1,5 @@
 query Test($public: String) {
-    withBlockHeight(height: null) {
-        account(public: $public) {
-            seq
-        }
+    account(public: $public) {
+        seq
     }
 }
