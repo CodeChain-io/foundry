@@ -142,9 +142,13 @@ impl Coordinator {
         let mut sessions = self.sessions.lock();
         sessions[id as usize].take().unwrap()
     }
+
+    pub fn services(&self) -> &Services {
+        &self.services
+    }
 }
 
-struct Services {
+pub struct Services {
     /// List of module name and `Stateful` service pairs in the current app.
     /// The module name is used to keep the index of the corresponding `Stateful`
     /// same across updates, since the index is used as `StorageId`.
