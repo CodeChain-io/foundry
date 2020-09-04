@@ -516,13 +516,15 @@ impl IoHandler<Message> for Handler {
                         remote_node_id,
                         token
                     );
-                    assert_eq!(
-                        None,
-                        self.remote_node_ids_reverse.write().insert(remote_node_id, token),
-                        "{}:{} is already registered",
-                        remote_node_id,
-                        token
-                    );
+                    if !self.remote_node_ids_reverse.write().contains_key(&remote_node_id) {
+                        assert_eq!(
+                            None,
+                            self.remote_node_ids_reverse.write().insert(remote_node_id, token),
+                            "{}:{} is already registered",
+                            remote_node_id,
+                            token
+                        );
+                    }
 
                     let t = inbound_connections.insert(token, connection);
                     assert!(t.is_none());
@@ -546,13 +548,15 @@ impl IoHandler<Message> for Handler {
                         remote_node_id,
                         token
                     );
-                    assert_eq!(
-                        None,
-                        self.remote_node_ids_reverse.write().insert(remote_node_id, token),
-                        "{}:{} is already registered",
-                        remote_node_id,
-                        token
-                    );
+                    if !self.remote_node_ids_reverse.write().contains_key(&remote_node_id) {
+                        assert_eq!(
+                            None,
+                            self.remote_node_ids_reverse.write().insert(remote_node_id, token),
+                            "{}:{} is already registered",
+                            remote_node_id,
+                            token
+                        );
+                    }
 
                     let mut network_message_size = 0;
                     for (name, versions) in self.client.extension_versions() {

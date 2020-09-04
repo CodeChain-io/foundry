@@ -477,8 +477,10 @@ impl NetworkExtension<Event> for Extension {
         cinfo!(SYNC, "New peer detected #{}", id);
         self.send_status(id);
 
-        let t = self.connected_nodes.insert(*id);
-        debug_assert!(t, "{} is already added to peer list", id);
+        if !self.connected_nodes.contains(id) {
+            let t = self.connected_nodes.insert(*id);
+            debug_assert!(t, "{} is already added to peer list", id);
+        }
 
         let token = self.token_generator.gen().expect("Token generator is full");
         let token_info = TokenInfo {
@@ -486,13 +488,16 @@ impl NetworkExtension<Event> for Extension {
             request_id: None,
         };
 
-        let t = self.requests.insert(*id, Vec::new());
-        debug_assert_eq!(None, t);
-        let t = self.tokens_info.insert(token, token_info);
-        debug_assert_eq!(None, t);
-        let t = self.tokens.insert(*id, token);
-        debug_assert_eq!(None, t);
-        debug_assert!(t.is_none());
+        if !self.requests.contains_key(id) {
+            let t = self.requests.insert(*id, Vec::new());
+            debug_assert_eq!(None, t);
+        }
+        self.tokens_info.entry(token).or_insert(token_info);
+        if !self.tokens.contains_key(id) {
+            let t = self.tokens.insert(*id, token);
+            debug_assert_eq!(None, t);
+            debug_assert!(t.is_none());
+        }
     }
 
     fn on_node_removed(&mut self, id: &NodeId) {
