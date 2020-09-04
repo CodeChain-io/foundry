@@ -11,7 +11,7 @@ cmodule = { package = "codechain-module", path = "../module" }
 ctypes = { package = "codechain-types", path = "../types" }
 remote-trait-object = "0.4.0"
 foundry-process-sandbox = { version = "0.2.0", git = "https://github.com/CodeChain-io/foundry-sandbox.git", tag = "v0.2.0" }
-foundry-module-rt = { version = "0.2.0", git = "https://github.com/CodeChain-io/module-rt.git", tag = "v0.2.0" }
+foundry-module-rt = { version = "0.2.1", git = "https://github.com/CodeChain-io/module-rt.git", tag = "v0.2.1" }
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.5", tag = "v0.5.1" }
 rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.5", tag = "v0.5.0"}
 parking_lot = "0.11.0"
