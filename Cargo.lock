@@ -1497,8 +1497,8 @@ dependencies = [
 
 [[package]]
 name = "foundry-module-rt"
-version = "0.2.0"
-source = "git+https://github.com/CodeChain-io/module-rt.git?tag=v0.2.0#856ef3cd9643de95041f16ddb29a70caca343799"
+version = "0.2.1"
+source = "git+https://github.com/CodeChain-io/module-rt.git?tag=v0.2.1#5b94cf63627e330bfc8e5aaec6cfa5c2c4b7a703"
 dependencies = [
  "crossbeam 0.7.3",
  "foundry-process-sandbox",
