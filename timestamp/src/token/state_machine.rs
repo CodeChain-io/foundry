@@ -35,7 +35,7 @@ impl<'a> StateAccess for GetAccount<'a> {
     type Outcome = Result<Account, Error>;
 
     fn execute(self, state: &dyn SubStorageAccess) -> Result<Account, Error> {
-        let bytes = match state.get(self.public.as_ref()) {
+        let bytes = match state.get(get_state_key(self.public).as_bytes()) {
             Some(bytes) => bytes,
             None => {
                 if self.default {
