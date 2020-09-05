@@ -59,7 +59,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "crypto-js": "^4.0.0",
-    "elliptic": "^6.5.2",
+    "elliptic": "^6.5.3",
     "foundry-keystore": "^0.1.0",
     "foundry-rpc": "^0.1.2",
     "get-port": "^5.1.1",
