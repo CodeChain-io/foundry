@@ -23,9 +23,11 @@ mod common;
 use ccrypto::blake256;
 use ckey::{Ed25519KeyPair, Generator, KeyPairTrait, Random};
 use common::*;
+use coordinator::module::SessionId;
 use coordinator::Coordinator;
 use rand::prelude::*;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 mod timestamp_setup {
     use super::*;
@@ -157,17 +159,14 @@ fn simple1() {
     assert!(services.tx_owner.get("stamp").unwrap().execute_transaction(0, &stamp_by_user2).is_err());
 }
 
-#[test]
-fn multiple() {
-    let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
-    let coordinator = Coordinator::from_app_desc(&app_desc).unwrap();
-    set_empty_session(0, &coordinator);
-    let services = Services::new(&coordinator);
+fn run_massive_token_exchange(id: SessionId, c: &Coordinator) {
+    set_empty_session(id, &c);
+    let services = Services::new(&c);
 
     let mut rng = rand::thread_rng();
     let stamp_issuer = blake256("stamp");
 
-    let n = 32;
+    let n = 16;
     let mut users: Vec<(Ed25519KeyPair, u64)> = (0..n).map(|_| (Random.generate().unwrap(), 0)).collect();
     let mut tokens: Vec<usize> = (0..n).choose_multiple(&mut rng, n / 2).into_iter().collect();
 
@@ -175,7 +174,7 @@ fn multiple() {
     for token_owner in tokens.iter() {
         stampers.insert(users[*token_owner].0.public(), 1usize);
     }
-    services.init_genesis.get("module-stamp").unwrap().init_genesis(0, &serde_cbor::to_vec(&stampers).unwrap());
+    services.init_genesis.get("module-stamp").unwrap().init_genesis(id, &serde_cbor::to_vec(&stampers).unwrap());
 
     for _ in 0..100 {
         let m = rng.gen_range(1, n);
@@ -185,10 +184,10 @@ fn multiple() {
             let tx = tx_stamp(key.public(), key.private(), *seq, "Hello");
 
             if tokens.iter().any(|&x| x == i) {
-                services.tx_owner.get("stamp").unwrap().execute_transaction(0, &tx).unwrap();
+                services.tx_owner.get("stamp").unwrap().execute_transaction(id, &tx).unwrap();
                 *seq += 1;
             } else {
-                assert!(services.tx_owner.get("stamp").unwrap().execute_transaction(0, &tx).is_err());
+                assert!(services.tx_owner.get("stamp").unwrap().execute_transaction(id, &tx).is_err());
             }
         }
 
@@ -205,13 +204,34 @@ fn multiple() {
             }
 
             if let Some(owner) = tokens.iter_mut().find(|x| **x == i) {
-                services.tx_owner.get("token").unwrap().execute_transaction(0, &tx).unwrap();
+                services.tx_owner.get("token").unwrap().execute_transaction(id, &tx).unwrap();
                 *seq += 1;
                 *owner = receiver;
             } else {
-                assert!(services.tx_owner.get("token").unwrap().execute_transaction(0, &tx).is_err());
+                assert!(services.tx_owner.get("token").unwrap().execute_transaction(id, &tx).is_err());
             }
         }
+    }
+}
+
+#[test]
+fn multiple() {
+    let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
+    let coordinator = Coordinator::from_app_desc(&app_desc).unwrap();
+    run_massive_token_exchange(0, &coordinator);
+}
+
+#[test]
+fn multiple_concurrent() {
+    let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
+    let coordinator = Arc::new(Coordinator::from_app_desc(&app_desc).unwrap());
+    let mut joins = Vec::new();
+    for i in 0..4 {
+        let c = Arc::clone(&coordinator);
+        joins.push(std::thread::spawn(move || run_massive_token_exchange(i, c.as_ref())));
+    }
+    for j in joins {
+        j.join().unwrap();
     }
 }
 
