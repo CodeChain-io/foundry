@@ -81,5 +81,33 @@ fn app_desc_path() -> &'static str {
 #[test]
 fn weave() {
     let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
-    Coordinator::from_app_desc(&app_desc).unwrap();
+    let c = Coordinator::from_app_desc(&app_desc).unwrap();
+
+    assert_eq!(c.services().stateful.lock().len(), 2);
+    assert_eq!(c.services().init_genesis.len(), 2);
+    assert_eq!(c.services().tx_owner.len(), 3);
+    assert_eq!(c.services().handle_graphqls.len(), 2);
+}
+
+#[test]
+fn weave_conccurent() {
+    for i in 0..8 {
+        let n = 8;
+        let mut joins = Vec::new();
+        for _ in 0..n {
+            joins.push(std::thread::spawn(|| {
+                let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
+                let c = Coordinator::from_app_desc(&app_desc).unwrap();
+
+                assert_eq!(c.services().stateful.lock().len(), 2);
+                assert_eq!(c.services().init_genesis.len(), 2);
+                assert_eq!(c.services().tx_owner.len(), 3);
+                assert_eq!(c.services().handle_graphqls.len(), 2);
+            }))
+        }
+        for j in joins {
+            j.join().unwrap();
+        }
+        println!("{}", i);
+    }
 }
