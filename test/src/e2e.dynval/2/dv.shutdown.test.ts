@@ -193,6 +193,15 @@ describe("Shutdown test", function() {
                 );
             }
         });
+
+        afterEach(async function() {
+            await Promise.all([
+                getAlphas().nodes.map(node => node.clean()),
+                getBetas().nodes.map(node => node.clean()),
+                getAlphaBetas().nodes.map(node => node.clean()),
+                getObserver().node.clean()
+            ]);
+        });
     });
 
     describe("Total shutdown", async function() {
@@ -296,6 +305,10 @@ describe("Shutdown test", function() {
                     "All validators are alphas"
                 );
             }
+        });
+
+        afterEach(async function() {
+            await Promise.all(getValidators().nodes.map(node => node.clean()));
         });
     });
 
