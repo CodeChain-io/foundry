@@ -141,6 +141,7 @@ pub struct AppDesc {
     pub param_defaults: Namespaced<String>,
 }
 
+#[allow(clippy::should_implement_trait)]
 impl AppDesc {
     pub fn from_str(s: &str) -> anyhow::Result<AppDesc> {
         let app_desc: AppDesc = serde_yaml::from_str(s)?;
