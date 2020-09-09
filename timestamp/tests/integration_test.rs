@@ -24,7 +24,7 @@ use ccrypto::blake256;
 use ckey::{Ed25519KeyPair, Generator, KeyPairTrait, Random};
 use common::*;
 use coordinator::module::SessionId;
-use coordinator::Coordinator;
+use coordinator::{AppDesc, Coordinator};
 use rand::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -102,10 +102,17 @@ fn app_desc_path() -> &'static str {
     }
 }
 
+fn app_desc() -> AppDesc {
+    let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
+    let mut app_desc = AppDesc::from_str(&app_desc).unwrap();
+    // TODO: proper parameter merging must be implemented with actual parameters from configs
+    app_desc.merge_params(&std::collections::BTreeMap::new()).unwrap();
+    app_desc
+}
+
 #[test]
 fn weave() {
-    let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
-    let c = Coordinator::from_app_desc(&app_desc).unwrap();
+    let c = Coordinator::from_app_desc(&app_desc()).unwrap();
 
     assert_eq!(c.services().stateful.lock().len(), 2);
     assert_eq!(c.services().init_genesis.len(), 2);
@@ -120,8 +127,7 @@ fn weave_conccurent() {
         let mut joins = Vec::new();
         for _ in 0..n {
             joins.push(std::thread::spawn(|| {
-                let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
-                let c = Coordinator::from_app_desc(&app_desc).unwrap();
+                let c = Coordinator::from_app_desc(&app_desc()).unwrap();
 
                 assert_eq!(c.services().stateful.lock().len(), 2);
                 assert_eq!(c.services().init_genesis.len(), 2);
@@ -138,8 +144,7 @@ fn weave_conccurent() {
 
 #[test]
 fn simple1() {
-    let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
-    let coordinator = Coordinator::from_app_desc(&app_desc).unwrap();
+    let coordinator = Coordinator::from_app_desc(&app_desc()).unwrap();
     set_empty_session(0, &coordinator);
     let services = Services::new(&coordinator);
 
@@ -216,15 +221,13 @@ fn run_massive_token_exchange(id: SessionId, c: &Coordinator) {
 
 #[test]
 fn multiple() {
-    let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
-    let coordinator = Coordinator::from_app_desc(&app_desc).unwrap();
+    let coordinator = Coordinator::from_app_desc(&app_desc()).unwrap();
     run_massive_token_exchange(0, &coordinator);
 }
 
 #[test]
 fn multiple_concurrent() {
-    let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
-    let coordinator = Arc::new(Coordinator::from_app_desc(&app_desc).unwrap());
+    let coordinator = Arc::new(Coordinator::from_app_desc(&app_desc()).unwrap());
     let mut joins = Vec::new();
     for i in 0..4 {
         let c = Arc::clone(&coordinator);
@@ -237,8 +240,7 @@ fn multiple_concurrent() {
 
 #[test]
 fn query() {
-    let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
-    let coordinator = Coordinator::from_app_desc(&app_desc).unwrap();
+    let coordinator = Coordinator::from_app_desc(&app_desc()).unwrap();
     set_empty_session(0, &coordinator);
     let services = Services::new(&coordinator);
 

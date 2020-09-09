@@ -26,7 +26,7 @@ pub mod types;
 pub mod values;
 mod weaver;
 
-use crate::app_desc::AppDesc;
+pub use crate::app_desc::AppDesc;
 use crate::context::StorageAccess;
 use crate::engine::{BlockExecutor, ExecutionId, GraphQlHandlerProvider, Initializer, TxFilter};
 pub use crate::header::Header;
@@ -45,7 +45,7 @@ use ctypes::StorageId;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use parking_lot::Mutex;
 use remote_trait_object::{Service, ServiceRef};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::ops::Bound;
 use std::ops::Bound::*;
 use std::sync::Arc;
@@ -85,15 +85,11 @@ pub struct Coordinator {
 }
 
 impl Coordinator {
-    pub fn from_app_desc(app_desc: &str) -> anyhow::Result<Coordinator> {
+    pub fn from_app_desc(app_desc: &AppDesc) -> anyhow::Result<Coordinator> {
         cmodule::init_modules();
 
-        let mut app_desc = AppDesc::from_str(app_desc)?;
-        // TODO: proper parameter merging must be implemented with actual parameters from configs
-        app_desc.merge_params(&BTreeMap::new())?;
-
         let weaver = Weaver::new();
-        let (sandboxes, mut services) = weaver.weave(&app_desc)?;
+        let (sandboxes, mut services) = weaver.weave(app_desc)?;
 
         services.genesis_config = app_desc
             .modules
