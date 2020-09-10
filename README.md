@@ -36,7 +36,7 @@ This will produce an executable in the `./target/release` directory.
 ### Building From Source
 
 #### Build Dependencies
-Foundry requires Rust version 1.45.2 to build. Using [rustup](https://rustup.rs/ "rustup URL") is recommended.
+Foundry requires Rust version 1.46.0 to build. Using [rustup](https://rustup.rs/ "rustup URL") is recommended.
 
 - For Linux Systems:
   - Ubuntu
