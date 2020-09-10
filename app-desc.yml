@@ -66,6 +66,8 @@ modules:
         token-manager: {}
       handle-graphql-request:
         handle-graphql-request: {}
+      get-account-and-seq:
+        get-account-and-seq: {}
     imports:
       account-manager: module-account/account-manager
     init-config:
