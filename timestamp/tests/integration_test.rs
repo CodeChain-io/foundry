@@ -107,6 +107,10 @@ fn app_desc() -> AppDesc {
     let mut app_desc = AppDesc::from_str(&app_desc).unwrap();
     // TODO: proper parameter merging must be implemented with actual parameters from configs
     app_desc.merge_params(&std::collections::BTreeMap::new()).unwrap();
+    #[cfg(feature = "multi-process")]
+    {
+        app_desc.default_sandboxer = "multi-process".to_owned();
+    }
     app_desc
 }
 
