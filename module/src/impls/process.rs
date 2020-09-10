@@ -198,7 +198,11 @@ where
 
 impl<E: ExecutionScheme> Linkable for ProcessSandbox<E> {
     fn supported_linkers(&self) -> &'static [&'static str] {
-        self.module.supported_linkers()
+        if E::is_intra() {
+            &["single-process-linker", "multi-process-linker"]
+        } else {
+            &["multi-process-linker"]
+        }
     }
 
     fn new_port(&mut self) -> Box<dyn Port> {
