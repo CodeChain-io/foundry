@@ -243,13 +243,6 @@ args:
         takes_value: true
         conflicts_with:
             - no-miner
-    - reseal-max-period:
-        long: reseal-max-period
-        value_name: MS
-        help: Specify the maximum time since last block to enable force-sealing. MS is time measured in milliseconds.
-        takes_value: true
-        conflicts_with:
-            - no-miner
     - no-discovery:
         long: no-discovery
         help: Do not use discovery
