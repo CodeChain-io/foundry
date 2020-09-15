@@ -90,5 +90,6 @@ members = [
     "basic_module/staking",
     "module",
     "module-macros",
-    "timestamp"
+    "timestamp",
+    "graphql"
 ]
