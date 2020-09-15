@@ -256,13 +256,6 @@ args:
         takes_value: false
         conflicts_with:
             - no-miner
-    - work-queue-size:
-        long: work-queue-size
-        value_name: ITEMS
-        help: Specify the number of historical work packages which are kept cached lest a solution is found for them later. High values take more memory but result in fewer unusable solutions.
-        takes_value: true
-        conflicts_with:
-            - no-miner
     - no-discovery:
         long: no-discovery
         help: Do not use discovery
