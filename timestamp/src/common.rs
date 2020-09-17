@@ -133,8 +133,7 @@ pub fn handle_gql_query<T: async_graphql::ObjectType + Send + Sync + 'static>(
     variables: &str,
 ) -> String {
     let variables = if let Ok(s) = (|| -> Result<_, ()> {
-        Ok(async_graphql::Variables::parse_from_json(async_graphql::serde_json::from_str(variables).map_err(|_| ())?)
-            .map_err(|_| ())?)
+        Ok(async_graphql::Variables::parse_from_json(async_graphql::serde_json::from_str(variables).map_err(|_| ())?))
     })() {
         s
     } else {
