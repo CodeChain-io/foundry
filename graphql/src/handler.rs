@@ -9,7 +9,7 @@ pub fn handle_gql_query<T: async_graphql::ObjectType + Send + Sync + 'static>(
 ) -> String {
     let variables = if let Ok(s) = (|| -> Result<_, ()> {
         let json_variables = async_graphql::serde_json::from_str(variables).map_err(|_| ())?;
-        let variables = async_graphql::Variables::parse_from_json(json_variables).map_err(|_| ())?;
+        let variables = async_graphql::Variables::parse_from_json(json_variables);
         Ok(variables)
     })() {
         s
