@@ -63,7 +63,7 @@ impl ServerData {
 #[derive(Deserialize)]
 struct GraphQlArgs {
     query: String,
-    variables: String,
+    variables: Option<String>,
 }
 
 async fn handle_post(session_and_handler: SessionAndHandler, args: web::Json<GraphQlArgs>) -> Result<HttpResponse> {
@@ -72,7 +72,7 @@ async fn handle_post(session_and_handler: SessionAndHandler, args: web::Json<Gra
         handler,
     } = session_and_handler;
     let query = &args.query;
-    let variables = &args.variables;
+    let variables = args.variables.as_deref().unwrap_or("{}");
 
     let graphql_response = handler.execute(session, query, variables);
     Ok(HttpResponse::Ok().content_type("application/json").body(graphql_response))
@@ -84,7 +84,7 @@ async fn handle_get(session_and_handler: SessionAndHandler, args: web::Query<Gra
         handler,
     } = session_and_handler;
     let query = &args.query;
-    let variables = &args.variables;
+    let variables = args.variables.as_deref().unwrap_or("{}");
 
     let graphql_response = handler.execute(session, query, variables);
     Ok(HttpResponse::Ok().content_type("application/json").body(graphql_response))
