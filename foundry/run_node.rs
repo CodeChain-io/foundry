@@ -33,7 +33,7 @@ use ckeystore::KeyStore;
 use clap::ArgMatches;
 use clogger::{EmailAlarm, LoggerConfig};
 use cnetwork::{Filters, ManagingPeerdb, NetworkConfig, NetworkControl, NetworkService, RoutingTable, SocketAddr};
-use coordinator::Coordinator;
+use coordinator::{AppDesc, Coordinator};
 use crossbeam::unbounded;
 use crossbeam_channel as crossbeam;
 use csync::snapshot::Service as SnapshotService;
@@ -193,7 +193,7 @@ fn unlock_accounts(ap: &AccountProvider, pf: &PasswordFile) -> Result<(), String
 }
 
 fn prepare_coordinator() -> Arc<Coordinator> {
-    let app_desc = fs::read_to_string("./app-desc.yml").unwrap();
+    let app_desc = AppDesc::from_str(&fs::read_to_string("./app-desc.yml").unwrap()).unwrap();
     Arc::new(Coordinator::from_app_desc(&app_desc).unwrap())
 }
 
