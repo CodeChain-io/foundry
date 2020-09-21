@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+mod graphiql;
 mod handler;
 
 use actix_web::{
@@ -25,6 +26,7 @@ use actix_web::{
 };
 use coordinator::module::{HandleGraphQlRequest, SessionId};
 use futures::Future;
+use graphiql::graphiql_source;
 pub use handler::handle_gql_query;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -90,10 +92,22 @@ async fn handle_get(session_and_handler: SessionAndHandler, args: web::Query<Gra
     Ok(HttpResponse::Ok().content_type("application/json").body(graphql_response))
 }
 
+async fn handle_graphiql(path: web::Path<String>) -> Result<HttpResponse> {
+    let module_name = path.into_inner();
+    let graphql_endpoint_url = format! {"/{}/graphql", module_name};
+    let html = graphiql_source(&graphql_endpoint_url);
+    Ok(HttpResponse::Ok().content_type("text/html; charset=utf-8").body(html))
+}
+
 pub fn app_configure(config: &mut ServiceConfig, server_data: Arc<ServerData>) {
-    config.data(Arc::clone(&server_data)).service(
-        web::resource("/{module_name}/graphql").route(web::post().to(handle_post)).route(web::get().to(handle_get)),
-    );
+    config
+        .data(Arc::clone(&server_data))
+        .service(
+            web::resource("/{module_name}/graphql")
+                .route(web::post().to(handle_post))
+                .route(web::get().to(handle_get)),
+        )
+        .service(web::resource("/{module_name}/__graphql").route(web::get().to(handle_graphiql)));
 }
 
 pub fn run_server(server_data: ServerData, addr: SocketAddr) -> Result<Server> {
