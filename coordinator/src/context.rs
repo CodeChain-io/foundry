@@ -16,16 +16,14 @@
 
 mod chain_history_access;
 mod mem_pool_access;
-mod state_history_access;
 mod storage_access;
 mod sub_storage_access;
 
 pub use chain_history_access::ChainHistoryAccess;
 pub use mem_pool_access::MemPoolAccess;
-pub use state_history_access::{StateHistoryAccess, SubStateHistoryAccess};
 pub use storage_access::StorageAccess;
 pub use sub_storage_access::SubStorageAccess;
 
 /// A `Context` provides the interface against the system services such as moulde substorage access,
 /// mempool access
-pub trait Context: SubStorageAccess + MemPoolAccess + StateHistoryAccess {}
+pub trait Context: SubStorageAccess + MemPoolAccess {}

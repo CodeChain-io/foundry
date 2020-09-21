@@ -16,8 +16,8 @@
 
 use super::lru_cache::LruCache;
 use super::{ModuleCache, TopCache};
-use crate::CacheableItem;
 use crate::{ActionData, Metadata, Module, ModuleDatum};
+use crate::{CacheableItem, ModuleDatumAddress};
 use ctypes::StorageId;
 use std::collections::{HashMap, HashSet};
 
@@ -71,18 +71,17 @@ impl GlobalCache {
         })
     }
 
-    pub fn override_cache(&mut self, top_cache: &TopCache, module_caches: &HashMap<StorageId, ModuleCache>) {
+    pub fn override_cache(
+        &mut self,
+        top_cache: &TopCache,
+        module_data: Vec<(ModuleDatumAddress, Option<ModuleDatum>)>,
+    ) {
         self.clear();
 
         Self::drain_cacheable_into_lru_cache(top_cache.cached_metadata(), &mut self.metadata);
         Self::drain_cacheable_into_lru_cache(top_cache.cached_action_data(), &mut self.action_data);
         Self::drain_cacheable_into_lru_cache(top_cache.cached_modules(), &mut self.module);
-
-        let mut cached_module_data: Vec<_> =
-            module_caches.iter().flat_map(|(_, module_cache)| module_cache.cached_module_datum().into_iter()).collect();
-        cached_module_data.sort_unstable_by_key(|item| item.0);
-        let cached_module_data: Vec<_> = cached_module_data.into_iter().map(|(_, addr, item)| (addr, item)).collect();
-        Self::drain_cacheable_into_lru_cache(cached_module_data, &mut self.module_data);
+        Self::drain_cacheable_into_lru_cache(module_data, &mut self.module_data);
     }
 
     pub fn clear(&mut self) {

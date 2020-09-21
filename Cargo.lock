@@ -1169,6 +1169,7 @@ dependencies = [
  "primitives",
  "rand 0.6.5",
  "rand_xorshift",
+ "remote-trait-object",
  "rlp 0.5.0",
  "rlp_derive",
  "rustc-hex 1.0.0",

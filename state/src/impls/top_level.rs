@@ -38,17 +38,22 @@
 use crate::cache::{ModuleCache, TopCache};
 use crate::checkpoint::{CheckpointId, StateWithCheckpoint};
 use crate::traits::{ModuleStateView, StateWithCache, TopState, TopStateView};
-use crate::{ActionData, Metadata, MetadataAddress, Module, ModuleAddress, ModuleLevelState, StateDB, StateResult};
+use crate::{
+    ActionData, Metadata, MetadataAddress, Module, ModuleAddress, ModuleDatum, ModuleDatumAddress, ModuleLevelState,
+    StateDB, StateResult,
+};
 use cdb::{AsHashDB, DatabaseError};
-use coordinator::context::StorageAccess;
+use coordinator::context::{StorageAccess, SubStorageAccess};
 use ctypes::errors::RuntimeError;
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{CommonParams, ConsensusParams, StorageId};
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
+use parking_lot::{Mutex, RwLock};
 use primitives::{Bytes, H256};
 use std::cell::{RefCell, RefMut};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Representation of the entire state of all accounts in the system.
 ///
@@ -73,11 +78,11 @@ use std::collections::HashMap;
 /// checkpoint can be discarded with `discard_checkpoint`. All of the orignal
 /// backed-up values are moved into a parent checkpoint (if any).
 pub struct TopLevelState {
-    db: RefCell<StateDB>,
+    db: Arc<RwLock<StateDB>>,
     root: H256,
 
     top_cache: TopCache,
-    module_caches: HashMap<StorageId, ModuleCache>,
+    module_caches: RefCell<HashMap<StorageId, Arc<Mutex<ModuleCache>>>>,
     id_of_checkpoints: Vec<CheckpointId>,
 }
 
@@ -86,81 +91,47 @@ impl TopStateView for TopLevelState {
     /// First searches for account in the local, then the shared cache.
     /// Populates local cache if nothing found.
     fn metadata(&self) -> TrieResult<Option<Metadata>> {
-        let db = self.db.borrow();
+        let db = self.db.read();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         let address = MetadataAddress::new();
         self.top_cache.metadata(&address, &trie)
     }
 
     fn module(&self, storage_id: StorageId) -> TrieResult<Option<Module>> {
-        let db = self.db.borrow();
+        let db = self.db.read();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         let module_address = ModuleAddress::new(storage_id);
         self.top_cache.module(&module_address, &trie)
     }
 
-    fn module_state<'db>(&'db self, storage_id: StorageId) -> TrieResult<Option<Box<dyn ModuleStateView + 'db>>> {
+    fn module_state(&self, storage_id: StorageId) -> TrieResult<Option<Box<dyn ModuleStateView>>> {
         match self.module_root(storage_id)? {
-            // FIXME: Find a way to use stored cache.
             Some(module_root) => {
-                let module_cache = self.module_caches.get(&storage_id);
-                Ok(Some(Box::new(ModuleLevelState::read_only(storage_id, &self.db, module_root, module_cache)?)))
+                let mut module_caches = self.module_caches.borrow_mut();
+                let module_cache = module_caches.entry(storage_id).or_default();
+                Ok(Some(Box::new(ModuleLevelState::from_existing(
+                    storage_id,
+                    Arc::clone(&self.db),
+                    module_root,
+                    Arc::clone(module_cache),
+                )?)))
             }
             None => Ok(None),
         }
     }
 
     fn action_data(&self, key: &H256) -> TrieResult<Option<ActionData>> {
-        let db = self.db.borrow();
+        let db = self.db.read();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         Ok(self.top_cache.action_data(key, &trie)?.map(Into::into))
     }
 }
 
-macro_rules! panic_at {
-    ($method: literal, $e: expr) => {
-        panic!("StorageAccess {} method failed with {}", $method, $e);
-    };
-}
-
 impl StorageAccess for TopLevelState {
-    fn get(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>> {
-        match self.module_state(storage_id) {
-            Ok(state) => match state?.get_datum(key) {
-                Ok(datum) => datum.map(|datum| datum.content()),
-                Err(e) => panic_at!("get", e),
-            },
-            Err(e) => panic_at!("get", e),
-        }
-    }
-
-    fn set(&mut self, storage_id: StorageId, key: &dyn AsRef<[u8]>, value: Vec<u8>) {
+    fn sub_storage(&mut self, storage_id: u16) -> Box<dyn SubStorageAccess> {
         match self.module_state_mut(storage_id) {
-            Ok(state) => {
-                if let Err(e) = state.set_datum(key, value) {
-                    panic_at!("set", e)
-                }
-            }
-            Err(e) => panic_at!("set", e),
-        }
-    }
-
-    fn has(&self, storage_id: StorageId, key: &dyn AsRef<[u8]>) -> bool {
-        match self.module_state(storage_id) {
-            Ok(state) => state
-                .map(|state| match state.has_key(key) {
-                    Ok(result) => result,
-                    Err(e) => panic_at!("has", e),
-                })
-                .unwrap_or(false),
-            Err(e) => panic_at!("has", e),
-        }
-    }
-
-    fn remove(&mut self, storage_id: StorageId, key: &dyn AsRef<[u8]>) {
-        match self.module_state_mut(storage_id) {
-            Ok(state) => state.remove_key(key),
-            Err(e) => panic_at!("remove", e),
+            Ok(sub_storage) => Box::new(sub_storage),
+            Err(e) => panic!("unknown sub-storage: {}", e),
         }
     }
 
@@ -181,10 +152,11 @@ impl StateWithCache for TopLevelState {
     fn commit(&mut self) -> StateResult<H256> {
         let module_changes = self
             .module_caches
-            .iter()
-            .map(|(&storage_id, _)| {
-                if let Some(module_root) = self.module_root(storage_id)? {
-                    Ok(Some((storage_id, module_root)))
+            .borrow()
+            .keys()
+            .map(|storage_id| {
+                if let Some(module_root) = self.module_root(*storage_id)? {
+                    Ok(Some((*storage_id, module_root)))
                 } else {
                     Ok(None)
                 }
@@ -192,31 +164,27 @@ impl StateWithCache for TopLevelState {
             .collect::<StateResult<Vec<_>>>()?;
         for (storage_id, mut module_root) in module_changes.into_iter().filter_map(|result| result) {
             {
-                let mut db = self.db.borrow_mut();
+                let mut db = self.db.write();
                 let mut trie = TrieFactory::from_existing(db.as_hashdb_mut(), &mut module_root)?;
 
-                let module_cache = self.module_caches.get_mut(&storage_id).expect("Module must exist");
+                let module_caches = self.module_caches.borrow();
+                let module_cache = module_caches.get(&storage_id).expect("Module must exist");
 
-                module_cache.commit(&mut trie)?;
+                module_cache.lock().commit(&mut trie)?;
             }
             self.set_module_root(storage_id, module_root)?;
         }
         {
-            let mut db = self.db.borrow_mut();
+            let mut db = self.db.write();
             let mut trie = TrieFactory::from_existing(db.as_hashdb_mut(), &mut self.root)?;
             self.top_cache.commit(&mut trie)?;
         }
         Ok(self.root)
     }
 
-    fn commit_and_into_db(mut self) -> StateResult<(StateDB, H256)> {
-        let root = self.commit()?;
-        Ok((self.db.into_inner(), root))
-    }
-
     fn commit_and_clone_db(&mut self) -> StateResult<(StateDB, H256)> {
         let root = self.commit()?;
-        Ok((self.db.borrow().clone(&root), root))
+        Ok((self.db.read().clone(&root), root))
     }
 }
 
@@ -228,7 +196,7 @@ impl StateWithCheckpoint for TopLevelState {
         self.id_of_checkpoints.push(id);
         self.top_cache.checkpoint();
 
-        self.module_caches.iter_mut().for_each(|(_, cache)| cache.checkpoint())
+        self.module_caches.borrow_mut().values_mut().for_each(|cache| cache.lock().checkpoint())
     }
 
     fn discard_checkpoint(&mut self, id: CheckpointId) {
@@ -238,7 +206,7 @@ impl StateWithCheckpoint for TopLevelState {
         ctrace!(STATE, "Checkpoint({}) for top level is discarded", id);
         self.top_cache.discard_checkpoint();
 
-        self.module_caches.iter_mut().for_each(|(_, cache)| cache.discard_checkpoint())
+        self.module_caches.borrow_mut().values_mut().for_each(|cache| cache.lock().discard_checkpoint())
     }
 
     fn revert_to_checkpoint(&mut self, id: CheckpointId) {
@@ -248,7 +216,7 @@ impl StateWithCheckpoint for TopLevelState {
         ctrace!(STATE, "Checkpoint({}) for top level is reverted", id);
         self.top_cache.revert_to_checkpoint();
 
-        self.module_caches.iter_mut().for_each(|(_, cache)| cache.revert_to_checkpoint())
+        self.module_caches.borrow_mut().values_mut().for_each(|cache| cache.lock().revert_to_checkpoint())
     }
 }
 
@@ -260,66 +228,81 @@ impl TopLevelState {
         }
 
         let top_cache = db.top_cache();
-        let module_caches = db.module_caches();
+        let module_caches =
+            db.module_caches().into_iter().map(|(id, cache)| (id, Arc::new(Mutex::new(cache)))).collect();
 
         let state = TopLevelState {
-            db: RefCell::new(db),
+            db: Arc::new(RwLock::new(db)),
             root,
             top_cache,
-            module_caches,
+            module_caches: RefCell::new(module_caches),
             id_of_checkpoints: Default::default(),
         };
 
         Ok(state)
     }
 
-    pub fn create_module_level_state(&mut self, storage_id: StorageId) -> StateResult<()> {
+    fn create_module_level_state(&mut self, storage_id: StorageId) -> StateResult<()> {
         const DEFAULT_MODULE_ROOT: H256 = ccrypto::BLAKE_NULL_RLP;
         {
-            let module_cache = self.module_caches.entry(storage_id).or_default();
-            ModuleLevelState::from_existing(storage_id, &mut self.db, DEFAULT_MODULE_ROOT, module_cache)?;
+            let mut module_caches = self.module_caches.borrow_mut();
+            let module_cache = module_caches.entry(storage_id).or_default();
+            ModuleLevelState::from_existing(
+                storage_id,
+                Arc::clone(&self.db),
+                DEFAULT_MODULE_ROOT,
+                Arc::clone(&module_cache),
+            )?;
         }
         ctrace!(STATE, "module storage({}) created", storage_id);
         self.set_module_root(storage_id, DEFAULT_MODULE_ROOT)?;
         Ok(())
     }
 
-    fn module_state_mut(&mut self, storage_id: StorageId) -> StateResult<ModuleLevelState> {
+    fn module_state_mut(&self, storage_id: StorageId) -> StateResult<ModuleLevelState> {
         let module_root = self.module_root(storage_id)?.ok_or_else(|| RuntimeError::InvalidStorageId(storage_id))?;
-        let module_cache = self.module_caches.entry(storage_id).or_default();
-        Ok(ModuleLevelState::from_existing(storage_id, &mut self.db, module_root, module_cache)?)
+        let mut module_caches = self.module_caches.borrow_mut();
+        let module_cache = module_caches.entry(storage_id).or_default();
+        Ok(ModuleLevelState::from_existing(storage_id, Arc::clone(&self.db), module_root, Arc::clone(&module_cache))?)
     }
 
     pub fn get_metadata_mut(&self) -> TrieResult<RefMut<'_, Metadata>> {
-        let db = self.db.borrow();
+        let db = self.db.read();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         let address = MetadataAddress::new();
         self.top_cache.metadata_mut(&address, &trie)
     }
 
     fn get_module_mut(&self, storage_id: StorageId) -> TrieResult<RefMut<'_, Module>> {
-        let db = self.db.borrow();
+        let db = self.db.read();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         let address = ModuleAddress::new(storage_id);
         self.top_cache.module_mut(&address, &trie)
     }
 
     fn get_action_data_mut(&self, key: &H256) -> TrieResult<RefMut<'_, ActionData>> {
-        let db = self.db.borrow();
+        let db = self.db.read();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
         self.top_cache.action_data_mut(key, &trie)
     }
 
     pub fn journal_under(&self, batch: &mut DBTransaction, now: u64) -> Result<u32, DatabaseError> {
-        self.db.borrow_mut().journal_under(batch, now, self.root)
+        self.db.write().journal_under(batch, now, self.root)
     }
 
     pub fn top_cache(&self) -> &TopCache {
         &self.top_cache
     }
 
-    pub fn module_caches(&self) -> &HashMap<StorageId, ModuleCache> {
-        &self.module_caches
+    pub fn cached_module_data(&self) -> Vec<(ModuleDatumAddress, Option<ModuleDatum>)> {
+        let mut flatten: Vec<_> = self
+            .module_caches
+            .borrow()
+            .values()
+            .flat_map(|cache| cache.lock().cached_module_datum().into_iter())
+            .collect();
+        flatten.sort_unstable_by_key(|(key, ..)| *key);
+        flatten.into_iter().map(|(_, address, item)| (address, item)).collect()
     }
 
     pub fn root(&self) -> H256 {
@@ -331,12 +314,18 @@ impl TopLevelState {
 // checkpoints where possible.
 impl Clone for TopLevelState {
     fn clone(&self) -> TopLevelState {
+        let module_caches = self
+            .module_caches
+            .borrow()
+            .iter()
+            .map(|(id, cache)| (*id, Arc::new(Mutex::new(cache.lock().clone()))))
+            .collect();
         TopLevelState {
-            db: RefCell::new(self.db.borrow().clone(&self.root)),
+            db: Arc::new(RwLock::new(self.db.read().clone(&self.root))),
             root: self.root,
             id_of_checkpoints: self.id_of_checkpoints.clone(),
             top_cache: self.top_cache.clone(),
-            module_caches: self.module_caches.clone(),
+            module_caches: RefCell::new(module_caches),
         }
     }
 }
@@ -439,7 +428,7 @@ mod test_module_states {
                 ]
             });
         }
-        let (db, root) = top_level_state.commit_and_into_db().unwrap();
+        let (db, root) = top_level_state.commit_and_clone_db().unwrap();
         let mut top_level_state = TopLevelState::from_existing(db, root).unwrap();
         {
             let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
@@ -477,7 +466,7 @@ mod test_module_states {
                 ]
             });
         }
-        let (state_db, root) = top_level_state.commit_and_into_db().unwrap();
+        let (state_db, root) = top_level_state.commit_and_clone_db().unwrap();
         let mut top_level_state = TopLevelState::from_existing(state_db.clone(&root), root).unwrap();
         {
             let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
@@ -684,7 +673,7 @@ mod test_module_states {
                 ]
             });
         }
-        let (db, root) = top_level_state.commit_and_into_db().unwrap();
+        let (db, root) = top_level_state.commit_and_clone_db().unwrap();
         let mut top_level_state = TopLevelState::from_existing(db, root).unwrap();
 
         StateWithCheckpoint::revert_to_checkpoint(&mut top_level_state, checkpoint1);

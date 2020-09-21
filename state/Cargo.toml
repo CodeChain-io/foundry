@@ -21,6 +21,7 @@ primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.
 rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.5", tag = "v0.5.0"}
 rlp_derive = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.5", tag = "v0.5.0"}
 rustc-hex = "1.0"
+remote-trait-object = "0.4.2"
 
 [dev-dependencies]
 rand = "0.6.1"

@@ -20,25 +20,28 @@ use crate::traits::ModuleStateView;
 use crate::{ModuleDatum, ModuleDatumAddress, StateDB, StateResult};
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::AsHashDB;
+use coordinator::context::SubStorageAccess;
 use ctypes::StorageId;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
+use parking_lot::{Mutex, RwLock};
 use primitives::H256;
-use std::cell::RefCell;
+use remote_trait_object::Service;
+use std::sync::Arc;
 
-pub struct ModuleLevelState<'db> {
-    db: &'db mut RefCell<StateDB>,
+pub struct ModuleLevelState {
+    db: Arc<RwLock<StateDB>>,
     root: H256,
-    cache: &'db mut ModuleCache,
+    cache: Arc<Mutex<ModuleCache>>,
     id_of_checkpoints: Vec<CheckpointId>,
     storage_id: StorageId,
 }
 
-impl<'db> ModuleLevelState<'db> {
+impl ModuleLevelState {
     /// Creates new state with empty state root
     pub fn try_new(
         storage_id: StorageId,
-        db: &'db mut RefCell<StateDB>,
-        cache: &'db mut ModuleCache,
+        db: Arc<RwLock<StateDB>>,
+        cache: Arc<Mutex<ModuleCache>>,
     ) -> StateResult<Self> {
         let root = BLAKE_NULL_RLP;
         Ok(Self {
@@ -53,11 +56,11 @@ impl<'db> ModuleLevelState<'db> {
     /// Creates new state with existing state root
     pub fn from_existing(
         storage_id: StorageId,
-        db: &'db mut RefCell<StateDB>,
+        db: Arc<RwLock<StateDB>>,
         root: H256,
-        cache: &'db mut ModuleCache,
+        cache: Arc<Mutex<ModuleCache>>,
     ) -> TrieResult<Self> {
-        if !db.borrow().as_hashdb().contains(&root) {
+        if !db.read().as_hashdb().contains(&root) {
             return Err(TrieError::InvalidStateRoot(root))
         }
 
@@ -70,57 +73,39 @@ impl<'db> ModuleLevelState<'db> {
         })
     }
 
-    /// Creates immutable module state
-    pub fn read_only(
-        storage_id: StorageId,
-        db: &'db RefCell<StateDB>,
-        root: H256,
-        cache: Option<&'db ModuleCache>,
-    ) -> TrieResult<ReadOnlyModuleLevelState<'db>> {
-        if !db.borrow().as_hashdb().contains(&root) {
-            return Err(TrieError::InvalidStateRoot(root))
-        }
-
-        Ok(ReadOnlyModuleLevelState {
-            db,
-            root,
-            cache,
-            storage_id,
-        })
-    }
-
     pub fn set_datum(&self, key: &dyn AsRef<[u8]>, datum: Vec<u8>) -> StateResult<()> {
-        let db = self.db.borrow();
+        let db = self.db.write();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        let mut datum_mut = self.cache.module_datum_mut(&ModuleDatumAddress::new(key, self.storage_id), &trie)?;
+        let cache = self.cache.lock();
+        let mut datum_mut = cache.module_datum_mut(&ModuleDatumAddress::new(key, self.storage_id), &trie)?;
         *datum_mut = ModuleDatum::new(datum);
         Ok(())
     }
 
     pub fn remove_key(&self, key: &dyn AsRef<[u8]>) {
-        self.cache.remove_module_datum(&ModuleDatumAddress::new(key, self.storage_id))
+        self.cache.lock().remove_module_datum(&ModuleDatumAddress::new(key, self.storage_id))
     }
 }
 
-impl<'db> ModuleStateView for ModuleLevelState<'db> {
+impl ModuleStateView for ModuleLevelState {
     fn get_datum(&self, key: &dyn AsRef<[u8]>) -> Result<Option<ModuleDatum>, TrieError> {
-        let db = self.db.borrow();
+        let db = self.db.read();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.cache.module_datum(&ModuleDatumAddress::new(key, self.storage_id), &trie)
+        self.cache.lock().module_datum(&ModuleDatumAddress::new(key, self.storage_id), &trie)
     }
 
     fn has_key(&self, key: &dyn AsRef<[u8]>) -> TrieResult<bool> {
-        let db = self.db.borrow();
+        let db = self.db.read();
         let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        self.cache.has(&ModuleDatumAddress::new(key, self.storage_id), &trie)
+        self.cache.lock().has(&ModuleDatumAddress::new(key, self.storage_id), &trie)
     }
 }
 
-impl<'db> StateWithCheckpoint for ModuleLevelState<'db> {
+impl StateWithCheckpoint for ModuleLevelState {
     fn create_checkpoint(&mut self, id: CheckpointId) {
         ctrace!(STATE, "Checkpoint({}) for module({}) is created", id, self.storage_id);
         self.id_of_checkpoints.push(id);
-        self.cache.checkpoint();
+        self.cache.lock().checkpoint();
     }
 
     fn discard_checkpoint(&mut self, id: CheckpointId) {
@@ -128,7 +113,7 @@ impl<'db> StateWithCheckpoint for ModuleLevelState<'db> {
         assert_eq!(expected, id);
 
         ctrace!(STATE, "Checkpoint({}) for module({}) is discarded", id, self.storage_id);
-        self.cache.discard_checkpoint();
+        self.cache.lock().discard_checkpoint();
     }
 
     fn revert_to_checkpoint(&mut self, id: CheckpointId) {
@@ -136,42 +121,41 @@ impl<'db> StateWithCheckpoint for ModuleLevelState<'db> {
         assert_eq!(expected, id);
 
         ctrace!(STATE, "Checkpoint({}) for module({}) is reverted", id, self.storage_id);
-        self.cache.revert_to_checkpoint();
+        self.cache.lock().revert_to_checkpoint();
     }
 }
 
-pub struct ReadOnlyModuleLevelState<'db> {
-    db: &'db RefCell<StateDB>,
-    root: H256,
-    cache: Option<&'db ModuleCache>,
-    storage_id: StorageId,
+macro_rules! panic_at {
+    ($method: literal, $e: expr) => {
+        panic!("SubStorageAccess {} method failed with {}", $method, $e);
+    };
 }
 
-impl<'db> ModuleStateView for ReadOnlyModuleLevelState<'db> {
-    fn get_datum(&self, key: &dyn AsRef<[u8]>) -> Result<Option<ModuleDatum>, TrieError> {
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        match self.cache {
-            Some(ref cache) => cache.module_datum(&ModuleDatumAddress::new(key, self.storage_id), &trie),
-            None => {
-                // FIXME: Creating an empty cache looks awkward.
-                let default_cache = ModuleCache::default();
-                default_cache.module_datum(&ModuleDatumAddress::new(key, self.storage_id), &trie)
-            }
+impl Service for ModuleLevelState {}
+
+impl SubStorageAccess for ModuleLevelState {
+    fn get(&self, key: &[u8]) -> Option<Vec<u8>> {
+        match self.get_datum(&key) {
+            Ok(datum) => datum.map(|datum| datum.content()),
+            Err(e) => panic_at!("get", e),
         }
     }
 
-    fn has_key(&self, key: &dyn AsRef<[u8]>) -> TrieResult<bool> {
-        let db = self.db.borrow();
-        let trie = TrieFactory::readonly(db.as_hashdb(), &self.root)?;
-        match self.cache {
-            Some(ref cache) => cache.has(&ModuleDatumAddress::new(key, self.storage_id), &trie),
-            None => {
-                // FIXME: Creating an empty cache looks awkward.
-                let default_cache = ModuleCache::default();
-                default_cache.has(&ModuleDatumAddress::new(key, self.storage_id), &trie)
-            }
+    fn set(&mut self, key: &[u8], value: Vec<u8>) {
+        if let Err(e) = self.set_datum(&key, value) {
+            panic_at!("set", e)
         }
+    }
+
+    fn has(&self, key: &[u8]) -> bool {
+        match self.has_key(&key) {
+            Ok(result) => result,
+            Err(e) => panic_at!("has", e),
+        }
+    }
+
+    fn remove(&mut self, key: &[u8]) {
+        self.remove_key(&key)
     }
 }
 
@@ -183,19 +167,19 @@ mod tests {
     const STORAGE_ID: StorageId = 4;
     const CHECKPOINT_ID: usize = 777;
 
-    fn get_temp_module_state<'d>(
-        state_db: &'d mut RefCell<StateDB>,
+    fn get_temp_module_state(
+        state_db: Arc<RwLock<StateDB>>,
         storage_id: StorageId,
-        cache: &'d mut ModuleCache,
-    ) -> ModuleLevelState<'d> {
+        cache: Arc<RwLock<ModuleCache>>,
+    ) -> ModuleLevelState {
         ModuleLevelState::try_new(storage_id, state_db, cache).unwrap()
     }
 
     #[test]
     fn set_module_datum() {
-        let mut state_db = RefCell::new(get_temp_state_db());
-        let mut module_cache = ModuleCache::default();
-        let state = get_temp_module_state(&mut state_db, STORAGE_ID, &mut module_cache);
+        let state_db = Arc::new(RwLock::new(get_temp_state_db()));
+        let module_cache = Arc::new(RwLock::new(ModuleCache::default()));
+        let state = get_temp_module_state(state_db, STORAGE_ID, module_cache);
 
         let key = "datum key";
         let datum = "module_datum";
@@ -208,9 +192,9 @@ mod tests {
 
     #[test]
     fn checkpoint_and_revert() {
-        let mut state_db = RefCell::new(get_temp_state_db());
-        let mut module_cache = ModuleCache::default();
-        let mut state = get_temp_module_state(&mut state_db, STORAGE_ID, &mut module_cache);
+        let state_db = Arc::new(RwLock::new(get_temp_state_db()));
+        let module_cache = Arc::new(RwLock::new(ModuleCache::default()));
+        let mut state = get_temp_module_state(state_db, STORAGE_ID, module_cache);
 
         // state 1
         let key1 = "datum key 1";
@@ -248,9 +232,9 @@ mod tests {
 
     #[test]
     fn checkpoint_discard_and_revert() {
-        let mut state_db = RefCell::new(get_temp_state_db());
-        let mut module_cache = ModuleCache::default();
-        let mut state = get_temp_module_state(&mut state_db, STORAGE_ID, &mut module_cache);
+        let state_db = Arc::new(RwLock::new(get_temp_state_db()));
+        let module_cache = Arc::new(RwLock::new(ModuleCache::default()));
+        let mut state = get_temp_module_state(state_db, STORAGE_ID, module_cache);
 
         // state 1
         let key = "datum key";
@@ -309,9 +293,9 @@ mod tests {
 
     #[test]
     fn checkpoint_and_revert_with_remove() {
-        let mut state_db = RefCell::new(get_temp_state_db());
-        let mut module_cache = ModuleCache::default();
-        let mut state = get_temp_module_state(&mut state_db, STORAGE_ID, &mut module_cache);
+        let state_db = Arc::new(RwLock::new(get_temp_state_db()));
+        let module_cache = Arc::new(RwLock::new(ModuleCache::default()));
+        let mut state = get_temp_module_state(state_db, STORAGE_ID, module_cache);
 
         // state 1
         let key1 = "datum key1";

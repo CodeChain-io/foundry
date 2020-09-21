@@ -43,9 +43,11 @@ use crate::weaver::Weaver;
 use cmodule::sandbox::Sandbox;
 use ctypes::StorageId;
 use ctypes::{CompactValidatorSet, ConsensusParams};
-use parking_lot::Mutex;
+use once_cell::sync::OnceCell;
+use parking_lot::{Mutex, RwLock};
 use remote_trait_object::{Service, ServiceRef};
 use std::collections::HashMap;
+use std::mem;
 use std::ops::Bound;
 use std::ops::Bound::*;
 use std::sync::Arc;
@@ -66,16 +68,18 @@ pub(crate) static SERVICES_FOR_HOST: &[(Occurrences, &str)] = &[
     ((Included(0), Unbounded), "handle-graphql-request"),
 ];
 
+type SessionSlot = u128;
+
 /// The `Coordinator` encapsulates all the logic for a Foundry application.
 ///
 /// It assembles modules and feeds them various events from the underlying
 /// consensus engine.
 pub struct Coordinator {
     /// The maximum block size.
-    max_body_size: usize,
+    max_body_size: OnceCell<usize>,
 
-    /// Currently active sessions.
-    sessions: Mutex<Vec<Option<Box<dyn StorageAccess>>>>,
+    /// Currently active sessions represented as bits set.
+    sessions: RwLock<Vec<SessionSlot>>,
 
     /// The key services from modules for implementing a chain.
     services: Services,
@@ -83,6 +87,8 @@ pub struct Coordinator {
     /// List of `Sandbox`es of the modules constituting the current application.
     _sandboxes: Vec<Box<dyn Sandbox>>,
 }
+
+const SESSION_BITS_PER_SLOT: usize = mem::size_of::<SessionSlot>() * 8;
 
 impl Coordinator {
     pub fn from_app_desc(app_desc: &AppDesc) -> anyhow::Result<Coordinator> {
@@ -100,43 +106,52 @@ impl Coordinator {
         Ok(Coordinator {
             services,
             _sandboxes: sandboxes,
-            max_body_size: 0,
-            sessions: Mutex::new(Vec::new()),
+            max_body_size: Default::default(),
+            sessions: RwLock::new(vec![0]),
         })
     }
 
-    fn new_session(&self, mut storage: Box<dyn StorageAccess>) -> SessionId {
-        let mut sessions = self.sessions.lock();
-        let session_id = sessions
+    pub fn max_body_size(&self) -> usize {
+        *self.max_body_size.get().expect("the max_body_size is not set yet")
+    }
+
+    fn new_session(&self, storage: &mut dyn StorageAccess) -> SessionId {
+        let mut sessions = self.sessions.write();
+        let (index, bit) = sessions
             .iter()
             .enumerate()
-            .find_map(|(id, session)| match session {
-                Some(_) => None,
-                None => Some(id),
+            .find_map(|(i, &bits)| {
+                if bits == SessionSlot::MAX {
+                    None
+                } else {
+                    Some((i, bits.trailing_ones()))
+                }
             })
             .unwrap_or_else(|| {
-                let new_id = sessions.len();
-                sessions.push(None);
-                new_id
-            }) as SessionId;
+                sessions.push(0);
+                (sessions.len() - 1, 0)
+            });
 
-        let mut stateful = self.services.stateful.lock();
-        for (id, (_, ref mut stateful)) in stateful.iter_mut().enumerate() {
-            stateful.new_session(session_id, ServiceRef::create_export(storage.sub_storage(id as StorageId)));
+        sessions[index] |= 1 << bit;
+        let session_id = bit + (SESSION_BITS_PER_SLOT * index) as SessionId;
+
+        let mut statefuls = self.services.stateful.lock();
+        for (storage_id, (_, stateful)) in statefuls.iter_mut().enumerate() {
+            let sub_storage = storage.sub_storage(storage_id as StorageId);
+            stateful.new_session(session_id, ServiceRef::create_export(sub_storage));
         }
-
-        sessions[session_id as usize] = Some(storage);
 
         session_id
     }
 
-    fn end_session(&self, id: SessionId) -> Box<dyn StorageAccess> {
-        let mut stateful = self.services.stateful.lock();
-        for (_, ref mut stateful) in stateful.iter_mut() {
-            stateful.end_session(id);
+    fn end_session(&self, session_id: SessionId) {
+        let mut statefuls = self.services.stateful.lock();
+        for (_, ref mut stateful) in statefuls.iter_mut() {
+            stateful.end_session(session_id);
         }
-        let mut sessions = self.sessions.lock();
-        sessions[id as usize].take().unwrap()
+        let mut sessions = self.sessions.write();
+        let session_id = session_id as usize;
+        sessions[session_id / SESSION_BITS_PER_SLOT] &= !(1 << (session_id % SESSION_BITS_PER_SLOT));
     }
 
     pub fn services(&self) -> &Services {
@@ -237,10 +252,7 @@ impl Initializer for Coordinator {
         self.services.stateful.lock().len()
     }
 
-    fn initialize_chain(
-        &mut self,
-        storage: Box<dyn StorageAccess>,
-    ) -> (Box<dyn StorageAccess>, CompactValidatorSet, ConsensusParams) {
+    fn initialize_chain(&self, storage: &mut dyn StorageAccess) -> (CompactValidatorSet, ConsensusParams) {
         let services = &self.services;
         let session_id = self.new_session(storage);
 
@@ -254,18 +266,17 @@ impl Initializer for Coordinator {
 
         let (validator_set, params) = services.init_chain.init_chain(session_id);
 
-        self.max_body_size = params.max_body_size() as usize;
+        self.max_body_size.set(params.max_body_size() as usize).expect("this must be the first assignment");
+        self.end_session(session_id);
 
-        let storage = self.end_session(session_id);
-
-        (storage, validator_set, params)
+        (validator_set, params)
     }
 }
 
 impl BlockExecutor for Coordinator {
     fn open_block(
         &self,
-        storage: Box<dyn StorageAccess>,
+        storage: &mut dyn StorageAccess,
         header: &Header,
         verified_crimes: &[VerifiedCrime],
     ) -> Result<ExecutionId, HeaderError> {
@@ -285,17 +296,13 @@ impl BlockExecutor for Coordinator {
     fn execute_transactions(
         &self,
         execution_id: ExecutionId,
+        storage: &mut dyn StorageAccess,
         transactions: &[Transaction],
     ) -> Result<Vec<TransactionOutcome>, ExecuteTransactionError> {
         let services = &self.services;
 
         let mut outcomes = Vec::with_capacity(transactions.len());
         let session_id = execution_id as SessionId;
-        let mut sessions = self.sessions.lock();
-        let storage = match &mut sessions[session_id as usize] {
-            Some(s) => s,
-            None => panic!("invalid session: {}", session_id),
-        };
 
         for tx in transactions {
             match services.tx_owner.get(tx.tx_type()) {
@@ -319,6 +326,7 @@ impl BlockExecutor for Coordinator {
     fn prepare_block<'a>(
         &self,
         execution_id: ExecutionId,
+        storage: &mut dyn StorageAccess,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<(&'a Transaction, TransactionOutcome)> {
         let services = &self.services;
@@ -333,12 +341,7 @@ impl BlockExecutor for Coordinator {
         } = services.tx_sorter.sort_txs(session_id, &owned_txs);
 
         let mut tx_n_outcomes: Vec<(&'a Transaction, TransactionOutcome)> = Vec::new();
-        let mut remaining_block_space = self.max_body_size;
-        let mut sessions = self.sessions.lock();
-        let storage = match &mut sessions[session_id as usize] {
-            Some(s) => s,
-            None => panic!("invalid session: {}", session_id),
-        };
+        let mut remaining_block_space = self.max_body_size();
 
         for index in sorted {
             let tx = &txs[index].tx;
@@ -369,10 +372,9 @@ impl BlockExecutor for Coordinator {
         }
         let (updated_validator_set, updated_consensus_params) = services.update_chain.update_chain(session_id);
 
-        let storage = self.end_session(session_id);
+        self.end_session(session_id);
 
         Ok(BlockOutcome {
-            storage,
             updated_validator_set,
             updated_consensus_params,
             events,
@@ -393,7 +395,7 @@ impl TxFilter for Coordinator {
 
     fn filter_transactions<'a>(
         &self,
-        storage: Box<dyn StorageAccess>,
+        storage: &mut dyn StorageAccess,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
         memory_limit: Option<usize>,
         size_limit: Option<usize>,
@@ -426,10 +428,9 @@ impl TxFilter for Coordinator {
             .collect();
 
         let invalid = invalid.into_iter().map(|i| &txs[i].tx).collect();
-        let storage = self.end_session(session_id);
+        self.end_session(session_id);
 
         FilteredTxs {
-            storage,
             invalid,
             low_priority,
         }

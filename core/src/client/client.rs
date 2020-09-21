@@ -35,13 +35,13 @@ use ccrypto::BLAKE_NULL_RLP;
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
-use coordinator::context::{ChainHistoryAccess, MemPoolAccess, StateHistoryAccess, StorageAccess};
+use coordinator::context::{ChainHistoryAccess, MemPoolAccess};
 use coordinator::engine::{BlockExecutor, GraphQlHandlerProvider, Initializer};
 use coordinator::types::Event;
 use coordinator::Transaction;
-use cstate::{Metadata, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopStateView};
+use cstate::{Metadata, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header, StorageId, SyncHeader, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::{Bytes, H256};
@@ -97,14 +97,12 @@ impl Client {
         if !scheme.check_genesis_root(state_db.as_hashdb()) {
             return Err(SchemeError::InvalidState.into())
         }
-        if state_db.is_empty() {
-            let (state_db_new, root) = Self::initialize_state(state_db, &*coordinator)?;
-            state_db = state_db_new;
-            scheme.set_state_root(root);
 
-            let mut batch = DBTransaction::new();
-            state_db.journal_under(&mut batch, 0, *scheme.genesis_header().hash())?;
-            db.write(batch)?;
+        if state_db.is_empty() {
+            // it's genesis
+            let (db, root) = Self::initialize_state(state_db, &*coordinator)?;
+            scheme.set_state_root(root);
+            state_db = db;
         }
 
         let gb = scheme.genesis_block();
@@ -246,29 +244,24 @@ impl Client {
         self.new_blocks(&[], &[], &enacted);
     }
 
+    /// Initializes the state at genesis.
     fn initialize_state(db: StateDB, coordinator: &impl Initializer) -> Result<(StateDB, H256), Error> {
         let root = BLAKE_NULL_RLP;
-        let state = Arc::new(Mutex::new(TopLevelState::from_existing(db.clone(&root), root)?));
+        let mut state = TopLevelState::from_existing(db, root)?;
 
-        // 1 for the metadata
-        for i in 0..(5 + 1) {
-            state.lock().create_module_level_state(i).unwrap();
+        for _ in 0..coordinator.number_of_sub_storages() {
+            state.create_module()?;
         }
 
-        let (validators, consensus_params) =
-            coordinator.initialize_chain(Arc::clone(&state) as Arc<Mutex<dyn StorageAccess>>);
+        let (validators, consensus_params) = coordinator.initialize_chain(&mut state);
 
-        let (db, root) = {
-            let state_mut = &mut state.lock();
-            let validator_set = NextValidatorSet::from_compact_validator_set(validators);
-            validator_set.save_to_state(state_mut)?;
-            state_mut.commit_and_clone_db()?
-        };
+        let validator_set = NextValidatorSet::from_compact_validator_set(validators);
+        validator_set.save_to_state(&mut state)?;
 
-        let state = TopLevelState::from_existing(db, root)?;
         let genesis_params = CommonParams::default();
         *state.get_metadata_mut().unwrap() = Metadata::new(genesis_params, consensus_params);
-        Ok(state.commit_and_into_db().unwrap())
+
+        Ok(state.commit_and_clone_db()?)
     }
 
     fn block_number_ref(&self, id: &BlockId) -> Option<BlockNumber> {
@@ -341,19 +334,6 @@ impl StateInfo for Client {
             let root = header.state_root();
             TopLevelState::from_existing(self.state_db.read().clone(&root), root).ok()
         })
-    }
-}
-
-// NOTE: The minimum requirement to implement this trait is the object be "StateInfo"
-impl StateHistoryAccess for Client {
-    fn get_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &dyn AsRef<[u8]>) -> Option<Vec<u8>> {
-        let block_id = block_number.unwrap_or(BlockId::Latest);
-        self.state_at(block_id).and_then(|state| state.get(storage_id, key))
-    }
-
-    fn has_at(&self, storage_id: StorageId, block_number: Option<BlockId>, key: &dyn AsRef<[u8]>) -> bool {
-        let block_id = block_number.unwrap_or(BlockId::Latest);
-        self.state_at(block_id).map(|state| state.has(storage_id, key)).unwrap_or(false)
     }
 }
 

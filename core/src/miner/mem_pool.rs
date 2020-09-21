@@ -18,8 +18,9 @@ use super::backup;
 use super::mem_pool_types::TransactionPool;
 use crate::transaction::PendingTransactions;
 use crate::Error as CoreError;
-use coordinator::engine::{FilteredTxs, TxFilter};
-use coordinator::types::ErrorCode;
+use coordinator::context::StorageAccess;
+use coordinator::engine::TxFilter;
+use coordinator::types::{ErrorCode, FilteredTxs};
 use coordinator::{Transaction, TransactionWithMetadata, TxOrigin};
 use ctypes::errors::{HistoryError, SyntaxError};
 use ctypes::{BlockNumber, TxHash};
@@ -97,7 +98,7 @@ impl MemPool {
     }
 
     /// Enforce the limit to the current queue
-    fn enforce_limit(&mut self, batch: &mut DBTransaction) {
+    fn enforce_limit(&mut self, state: &mut dyn StorageAccess, batch: &mut DBTransaction) {
         let to_drop = if self.transaction_pool.mem_usage > self.queue_memory_limit
             || self.transaction_pool.count > self.queue_count_limit
         {
@@ -106,6 +107,7 @@ impl MemPool {
                 invalid,
                 low_priority,
             } = self.tx_filter.filter_transactions(
+                state,
                 &mut transactions,
                 Some(self.queue_memory_limit),
                 Some(self.queue_count_limit),
@@ -114,7 +116,6 @@ impl MemPool {
         } else {
             vec![]
         };
-
         for hash in to_drop {
             backup::remove_item(batch, &hash);
             self.transaction_pool.remove(&hash);
@@ -139,6 +140,7 @@ impl MemPool {
         &mut self,
         transactions: Vec<Transaction>,
         origin: TxOrigin,
+        state: &mut dyn StorageAccess,
         inserted_block_number: BlockNumber,
         inserted_timestamp: u64,
     ) -> Vec<Result<(), Error>> {
@@ -169,7 +171,7 @@ impl MemPool {
                 }
             }
         }
-        self.enforce_limit(&mut batch);
+        self.enforce_limit(state, &mut batch);
 
         self.db.write(batch).expect("Low level database error. Some issue with disk?");
         insert_results
@@ -226,7 +228,12 @@ impl MemPool {
         self.db.write(batch).expect("Low level database error. Some issue with disk?");
     }
 
-    pub fn remove_old(&mut self, current_block_number: BlockNumber, current_timestamp: u64) {
+    pub fn remove_old(
+        &mut self,
+        state: &mut dyn StorageAccess,
+        current_block_number: BlockNumber,
+        current_timestamp: u64,
+    ) {
         ctrace!(MEM_POOL, "remove_old() called, time: {}, timestamp: {}", current_block_number, current_timestamp);
         let mut batch = backup::backup_batch_with_capacity(0);
         let to_be_removed: Vec<TxHash> = {
@@ -234,7 +241,7 @@ impl MemPool {
             let FilteredTxs {
                 invalid,
                 low_priority,
-            } = self.tx_filter.filter_transactions(&mut transactions.into_iter(), None, None);
+            } = self.tx_filter.filter_transactions(state, &mut transactions.into_iter(), None, None);
             invalid.into_iter().map(|tx| tx.hash()).chain(low_priority.into_iter().map(|tx| tx.hash())).collect()
         };
         // TODO: mark invalid transactions
@@ -281,6 +288,7 @@ impl MemPool {
 #[cfg(test)]
 pub mod test {
     use crate::miner::mem_pool::MemPool;
+    use coordinator::context::{StorageAccess, SubStorageAccess};
     use coordinator::test_coordinator::TestCoordinator;
     use coordinator::{Transaction, TxOrigin};
     use rand::Rng;
@@ -304,8 +312,10 @@ pub mod test {
         let origin = TxOrigin::External;
 
         let transactions: Vec<_> = (0..10).map(|_| create_random_transaction()).collect();
+        let mut state = DummyStorage;
 
-        let add_result = mem_pool.add(transactions.clone(), origin, inserted_block_number, inserted_timestamp);
+        let add_result =
+            mem_pool.add(transactions.clone(), origin, &mut state, inserted_block_number, inserted_timestamp);
         assert!(add_result.iter().all(|r| r.is_ok()));
 
         mem_pool.remove_all();
@@ -326,8 +336,10 @@ pub mod test {
         let origin = TxOrigin::External;
 
         let transactions: Vec<_> = (0..10).map(|_| create_random_transaction()).collect();
+        let mut state = DummyStorage;
 
-        let add_result = mem_pool.add(transactions.clone(), origin, inserted_block_number, inserted_timestamp);
+        let add_result =
+            mem_pool.add(transactions.clone(), origin, &mut state, inserted_block_number, inserted_timestamp);
         assert!(add_result.iter().all(|r| r.is_ok()));
 
         let (to_remove, to_keep) = transactions.split_at(5);
@@ -357,8 +369,9 @@ pub mod test {
         let origin = TxOrigin::External;
 
         let transactions: Vec<_> = (0..10).map(|_| create_random_transaction()).collect();
+        let mut state = DummyStorage;
 
-        let add_result = mem_pool.add(transactions, origin, inserted_block_number, inserted_timestamp);
+        let add_result = mem_pool.add(transactions, origin, &mut state, inserted_block_number, inserted_timestamp);
         assert!(add_result.iter().all(|r| r.is_ok()));
 
         let inserted_block_number = 2;
@@ -377,5 +390,25 @@ pub mod test {
         assert_eq!(mem_pool_recovered.queue_count_limit, mem_pool.queue_count_limit);
         assert_eq!(mem_pool_recovered.queue_memory_limit, mem_pool.queue_memory_limit);
         assert_eq!(mem_pool_recovered.next_transaction_id, mem_pool.next_transaction_id);
+    }
+
+    struct DummyStorage;
+
+    impl StorageAccess for DummyStorage {
+        fn sub_storage(&mut self, storage_id: u16) -> Box<dyn SubStorageAccess> {
+            unimplemented!()
+        }
+
+        fn create_checkpoint(&mut self) {
+            unimplemented!()
+        }
+
+        fn revert_to_the_checkpoint(&mut self) {
+            unimplemented!()
+        }
+
+        fn discard_checkpoint(&mut self) {
+            unimplemented!()
+        }
     }
 }
