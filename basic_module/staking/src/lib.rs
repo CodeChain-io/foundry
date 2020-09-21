@@ -30,7 +30,7 @@ mod transactions;
 mod types;
 
 use crate::types::NetworkId;
-use coordinator::context::{ChainHistoryAccess, SubStateHistoryAccess, SubStorageAccess};
+use coordinator::context::{ChainHistoryAccess, SubStorageAccess};
 use imported::{AccountManager, AccountView};
 use lazy_static::lazy_static;
 use parking_lot::Mutex;
@@ -69,9 +69,5 @@ fn account_viewer() -> Box<dyn AccountView> {
 }
 
 fn chain_history_manager() -> Box<dyn ChainHistoryAccess> {
-    unimplemented!()
-}
-
-fn state_history_manager() -> Box<dyn SubStateHistoryAccess> {
     unimplemented!()
 }

@@ -32,7 +32,7 @@ use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::client::{BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo};
 use crate::consensus::EngineType;
 use crate::error::Error;
-use crate::PendingTransactions;
+use crate::{PendingTransactions, StateInfo};
 use coordinator::Transaction;
 
 /// Miner client API
@@ -64,7 +64,7 @@ pub trait MinerService: Send + Sync {
     /// Called when blocks are imported to chain, updates transactions queue.
     fn chain_new_blocks<C>(&self, chain: &C, imported: &[BlockHash], invalid: &[BlockHash], enacted: &[BlockHash])
     where
-        C: BlockChainTrait + BlockProducer + EngineInfo + ImportBlock;
+        C: BlockChainTrait + BlockProducer + EngineInfo + ImportBlock + StateInfo;
 
     /// Get the type of consensus engine.
     fn engine_type(&self) -> EngineType;
@@ -75,14 +75,14 @@ pub trait MinerService: Send + Sync {
         C: BlockChainTrait + BlockProducer + ImportBlock + EngineInfo + TermInfo;
 
     /// Imports transactions to mem pool.
-    fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
+    fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo + StateInfo>(
         &self,
         client: &C,
         transactions: Vec<Transaction>,
     ) -> Vec<Result<(), Error>>;
 
     /// Imports own (node owner) transaction to mem pool.
-    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo>(
+    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo + StateInfo>(
         &self,
         chain: &C,
         tx: Transaction,

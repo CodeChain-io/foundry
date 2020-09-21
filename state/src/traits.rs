@@ -66,6 +66,5 @@ pub trait TopState {
 pub trait StateWithCache {
     /// Commits our cached account changes into the trie.
     fn commit(&mut self) -> StateResult<H256>;
-    fn commit_and_into_db(self) -> StateResult<(StateDB, H256)>;
     fn commit_and_clone_db(&mut self) -> StateResult<(StateDB, H256)>;
 }

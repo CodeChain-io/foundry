@@ -24,6 +24,7 @@ use crate::error::Error;
 use crate::scheme::Scheme;
 use crate::transaction::PendingTransactions;
 use crate::types::TransactionId;
+use crate::StateInfo;
 use ckey::Ed25519Public as Public;
 use coordinator::engine::{BlockExecutor, TxFilter};
 use coordinator::{Transaction, TxOrigin};
@@ -180,7 +181,7 @@ impl Miner {
         &self.options
     }
 
-    fn add_transactions_to_pool<C: BlockChainTrait + EngineInfo>(
+    fn add_transactions_to_pool<C: BlockChainTrait + EngineInfo + StateInfo>(
         &self,
         client: &C,
         transactions: Vec<Transaction>,
@@ -208,7 +209,8 @@ impl Miner {
             })
             .collect();
 
-        let insertion_results = mem_pool.add(to_insert, origin, current_block_number, current_timestamp);
+        let mut state = client.state_at(BlockId::Number(current_block_number)).expect("the block must exist");
+        let insertion_results = mem_pool.add(to_insert, origin, &mut state, current_block_number, current_timestamp);
 
         debug_assert_eq!(insertion_results.len(), intermediate_results.iter().filter(|r| r.is_ok()).count());
         let mut insertion_results_index = 0;
@@ -328,7 +330,7 @@ impl MinerService for Miner {
 
     fn chain_new_blocks<C>(&self, chain: &C, _imported: &[BlockHash], _invalid: &[BlockHash], enacted: &[BlockHash])
     where
-        C: BlockChainTrait + BlockProducer + EngineInfo + ImportBlock, {
+        C: BlockChainTrait + BlockProducer + EngineInfo + ImportBlock + StateInfo, {
         ctrace!(MINER, "chain_new_blocks");
 
         {
@@ -342,7 +344,8 @@ impl MinerService for Miner {
                 .map(|tx| tx.hash())
                 .collect();
             mem_pool.remove(&to_remove, current_block_number, current_timestamp);
-            mem_pool.remove_old(current_block_number, current_timestamp);
+            let mut state = chain.state_at(BlockId::Number(current_block_number)).expect("the block must exist");
+            mem_pool.remove_old(&mut state, current_block_number, current_timestamp);
         }
         chain.set_min_timer();
     }
@@ -397,7 +400,7 @@ impl MinerService for Miner {
         chain.set_min_timer();
     }
 
-    fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo>(
+    fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo + StateInfo>(
         &self,
         client: &C,
         transactions: Vec<Transaction>,
@@ -422,7 +425,7 @@ impl MinerService for Miner {
         results
     }
 
-    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo>(
+    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo + StateInfo>(
         &self,
         chain: &C,
         tx: Transaction,

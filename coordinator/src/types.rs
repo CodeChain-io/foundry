@@ -17,7 +17,6 @@
 mod event;
 
 pub use self::event::Event;
-use crate::context::StorageAccess;
 use crate::Transaction;
 use ctypes::{CompactValidatorSet, ConsensusParams};
 use serde::{Deserialize, Serialize};
@@ -47,7 +46,6 @@ pub type ExecuteTransactionError = ();
 pub type CloseBlockError = String;
 
 pub struct BlockOutcome {
-    pub storage: Box<dyn StorageAccess>,
     pub updated_validator_set: Option<CompactValidatorSet>,
     pub updated_consensus_params: Option<ConsensusParams>,
     pub events: Vec<Event>,
@@ -56,7 +54,6 @@ pub struct BlockOutcome {
 pub type ErrorCode = u32;
 
 pub struct FilteredTxs<'a> {
-    pub storage: Box<dyn StorageAccess>,
     pub invalid: Vec<&'a Transaction>,
     pub low_priority: Vec<&'a Transaction>,
 }

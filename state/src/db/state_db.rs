@@ -84,7 +84,7 @@ impl StateDB {
     }
 
     pub fn override_state(&mut self, state: &TopLevelState) {
-        self.cache.override_cache(state.top_cache(), state.module_caches());
+        self.cache.override_cache(state.top_cache(), state.cached_module_data());
         self.current_hash = Some(state.root());
     }
 

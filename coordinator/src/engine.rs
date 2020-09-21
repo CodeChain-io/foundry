@@ -26,10 +26,7 @@ use std::sync::Arc;
 pub trait Initializer: Send + Sync {
     fn number_of_sub_storages(&self) -> usize;
 
-    fn initialize_chain(
-        &mut self,
-        storage: Box<dyn StorageAccess>,
-    ) -> (Box<dyn StorageAccess>, CompactValidatorSet, ConsensusParams);
+    fn initialize_chain(&self, storage: &mut dyn StorageAccess) -> (CompactValidatorSet, ConsensusParams);
 }
 
 pub type ExecutionId = u32;
@@ -37,18 +34,20 @@ pub type ExecutionId = u32;
 pub trait BlockExecutor: Send + Sync {
     fn open_block(
         &self,
-        storage: Box<dyn StorageAccess>,
+        storage: &mut dyn StorageAccess,
         header: &Header,
         verified_crimes: &[VerifiedCrime],
     ) -> Result<ExecutionId, HeaderError>;
     fn execute_transactions(
         &self,
         execution_id: ExecutionId,
+        storage: &mut dyn StorageAccess,
         transactions: &[Transaction],
     ) -> Result<Vec<TransactionOutcome>, ()>;
     fn prepare_block<'a>(
         &self,
         execution_id: ExecutionId,
+        storage: &mut dyn StorageAccess,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<(&'a Transaction, TransactionOutcome)>;
     fn close_block(&self, execution_id: ExecutionId) -> Result<BlockOutcome, CloseBlockError>;
@@ -58,7 +57,7 @@ pub trait TxFilter: Send + Sync {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode>;
     fn filter_transactions<'a>(
         &self,
-        storage: Box<dyn StorageAccess>,
+        storage: &mut dyn StorageAccess,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
         memory_limit: Option<usize>,
         size_limit: Option<usize>,

@@ -17,7 +17,7 @@
 use crate::error::{Insufficient, Mismatch};
 use crate::runtime_error::Error;
 use crate::types::{Candidate, DepositQuantity, Prisoner, ReleaseResult, StakeQuantity, Tiebreaker, Validator};
-use crate::{account_viewer, deserialize, serialize, state_history_manager, substorage};
+use crate::{account_viewer, deserialize, serialize, substorage};
 use fkey::Ed25519Public as Public;
 use ftypes::BlockId;
 use primitives::Bytes;
@@ -126,8 +126,9 @@ fn load_with_key<T: DeserializeOwned>(key: &KEY) -> Option<T> {
     substorage().get(key.as_ref()).map(deserialize)
 }
 
-fn load_with_key_from<T: DeserializeOwned>(key: &KEY, id: BlockId) -> Option<T> {
-    state_history_manager().get_at(Some(id), key).map(deserialize)
+fn load_with_key_from<T: DeserializeOwned>(_key: &KEY, _id: BlockId) -> Option<T> {
+    // state_history_manager().get_at(Some(id), key).map(deserialize)
+    None
 }
 
 fn write_with_key<T: Serialize>(key: &KEY, data: T) {
