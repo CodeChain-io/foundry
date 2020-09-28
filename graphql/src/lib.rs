@@ -103,9 +103,7 @@ pub fn app_configure(config: &mut ServiceConfig, server_data: Arc<ServerData>) {
     config
         .data(Arc::clone(&server_data))
         .service(
-            web::resource("/{module_name}/graphql")
-                .route(web::post().to(handle_post))
-                .route(web::get().to(handle_get)),
+            web::resource("/{module_name}/graphql").route(web::post().to(handle_post)).route(web::get().to(handle_get)),
         )
         .service(web::resource("/{module_name}/__graphql").route(web::get().to(handle_graphiql)));
 }
