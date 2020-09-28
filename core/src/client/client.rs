@@ -523,13 +523,15 @@ impl ImportBlock for Client {
     }
 
     fn set_min_timer(&self) {
-        self.reseal_timer.cancel(RESEAL_MIN_TIMER_TOKEN).expect("Reseal min timer clear succeeds");
+        self.reseal_timer.cancel(RESEAL_MIN_TIMER_TOKEN); //.expect("Reseal min timer clear succeeds");
         match self.reseal_timer.schedule_once(self.miner.get_options().reseal_min_period, RESEAL_MIN_TIMER_TOKEN) {
             Ok(_) => {}
             Err(TimerScheduleError::TokenAlreadyScheduled) => {
                 // Since set_min_timer could be called in multi thread, ignore the TokenAlreadyScheduled error
             }
-            Err(err) => unreachable!("Reseal min timer should not fail but failed with {:?}", err),
+            Err(err) => {
+                //unreachable!("Reseal min timer should not fail but failed with {:?}", err),
+            }
         }
     }
 }
