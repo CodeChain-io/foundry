@@ -33,13 +33,9 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::{pin::Pin, sync::Arc};
 
-// TODO: replace with the real Client.
-pub struct Client {}
-
-impl Client {
-    fn allocate_session(&self, _height: Option<u64>) -> SessionId {
-        123
-    }
+pub trait ManageSession: Send + Sync {
+    fn new_session(&self, block: ctypes::BlockId) -> SessionId;
+    fn end_session(&self, session: SessionId);
 }
 
 pub struct GraphQlRequestHandler {
@@ -48,15 +44,18 @@ pub struct GraphQlRequestHandler {
 }
 
 pub struct ServerData {
-    client: Arc<Client>,
+    session_manager: Arc<dyn ManageSession>,
     /// Name to (session_needed, handler)
     graphql_handlers: HashMap<String, GraphQlRequestHandler>,
 }
 
 impl ServerData {
-    pub fn new(client: Arc<Client>, graphql_handlers: HashMap<String, GraphQlRequestHandler>) -> Self {
+    pub fn new(
+        session_manager: Arc<dyn ManageSession>,
+        graphql_handlers: HashMap<String, GraphQlRequestHandler>,
+    ) -> Self {
         Self {
-            client,
+            session_manager,
             graphql_handlers,
         }
     }
@@ -68,27 +67,19 @@ struct GraphQlArgs {
     variables: Option<String>,
 }
 
-async fn handle_post(session_and_handler: SessionAndHandler, args: web::Json<GraphQlArgs>) -> Result<HttpResponse> {
-    let SessionAndHandler {
-        session,
-        handler,
-    } = session_and_handler;
+async fn handle_post(session: Session, args: web::Json<GraphQlArgs>) -> Result<HttpResponse> {
     let query = &args.query;
     let variables = args.variables.as_deref().unwrap_or("{}");
 
-    let graphql_response = handler.execute(session, query, variables);
+    let graphql_response = session.handler.execute(session.session_id, query, variables);
     Ok(HttpResponse::Ok().content_type("application/json").body(graphql_response))
 }
 
-async fn handle_get(session_and_handler: SessionAndHandler, args: web::Query<GraphQlArgs>) -> Result<HttpResponse> {
-    let SessionAndHandler {
-        session,
-        handler,
-    } = session_and_handler;
+async fn handle_get(session: Session, args: web::Query<GraphQlArgs>) -> Result<HttpResponse> {
     let query = &args.query;
     let variables = args.variables.as_deref().unwrap_or("{}");
 
-    let graphql_response = handler.execute(session, query, variables);
+    let graphql_response = session.handler.execute(session.session_id, query, variables);
     Ok(HttpResponse::Ok().content_type("application/json").body(graphql_response))
 }
 
@@ -116,12 +107,19 @@ pub fn run_server(server_data: ServerData, addr: SocketAddr) -> Result<Server> {
     Ok(server.bind(addr)?.run())
 }
 
-struct SessionAndHandler {
-    pub session: SessionId,
+struct Session {
+    pub session_id: SessionId,
+    pub session_manager: Arc<dyn ManageSession>,
     pub handler: Arc<dyn HandleGraphQlRequest>,
 }
 
-impl FromRequest for SessionAndHandler {
+impl Drop for Session {
+    fn drop(&mut self) {
+        self.session_manager.end_session(self.session_id)
+    }
+}
+
+impl FromRequest for Session {
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self, Self::Error>>>>;
     type Config = ();
@@ -137,15 +135,16 @@ impl FromRequest for SessionAndHandler {
                 handler,
             }) = server_data.graphql_handlers.get(&module_name)
             {
-                let session = if *session_needed {
-                    let height = None;
-                    server_data.client.allocate_session(height)
+                let session_id = if *session_needed {
+                    let height = ();
+                    server_data.session_manager.new_session(ctypes::BlockId::Latest)
                 } else {
                     0
                 };
 
-                Ok(SessionAndHandler {
-                    session,
+                Ok(Session {
+                    session_id,
+                    session_manager: Arc::clone(&server_data.session_manager),
                     handler: handler.clone(),
                 })
             } else {
