@@ -67,4 +67,7 @@ pub trait TxFilter: Send + Sync {
 pub trait GraphQlHandlerProvider: Send + Sync {
     /// Returns list of (module name, module graphql handler).
     fn get(&self) -> Vec<(String, Arc<dyn super::module::HandleGraphQlRequest>)>;
+
+    fn new_session_for_query(&self, storage: &mut dyn StorageAccess) -> crate::module::SessionId;
+    fn end_session_for_query(&self, session: crate::module::SessionId);
 }
