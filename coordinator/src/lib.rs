@@ -441,4 +441,12 @@ impl GraphQlHandlerProvider for Coordinator {
     fn get(&self) -> Vec<(String, Arc<dyn HandleGraphQlRequest>)> {
         self.services.handle_graphqls.to_vec()
     }
+
+    fn new_session_for_query(&self, storage: &mut dyn StorageAccess) -> crate::module::SessionId {
+        self.new_session(storage)
+    }
+
+    fn end_session_for_query(&self, session: crate::module::SessionId) {
+        self.end_session(session)
+    }
 }

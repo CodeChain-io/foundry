@@ -37,6 +37,7 @@ use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::context::{ChainHistoryAccess, MemPoolAccess};
 use coordinator::engine::{BlockExecutor, GraphQlHandlerProvider, Initializer};
+use coordinator::module::SessionId;
 use coordinator::types::Event;
 use coordinator::Transaction;
 use cstate::{Metadata, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopState, TopStateView};
@@ -79,6 +80,7 @@ pub struct Client {
     /// Timer for reseal_min_period on miner client
     reseal_timer: TimerApi,
 
+    session_allocator: Arc<dyn GraphQlHandlerProvider>,
     graphql_handlers: HashMap<String, Arc<dyn coordinator::module::HandleGraphQlRequest>>,
 }
 
@@ -129,6 +131,7 @@ impl Client {
             importer,
             miner,
             reseal_timer,
+            session_allocator: Arc::clone(&coordinator) as Arc<dyn GraphQlHandlerProvider>,
             graphql_handlers: GraphQlHandlerProvider::get(coordinator.as_ref()).into_iter().collect(),
         });
 
@@ -299,8 +302,16 @@ impl Client {
         &self.db
     }
 
-    pub fn graphql_handler(&self, module: &str) -> &dyn coordinator::module::HandleGraphQlRequest {
-        self.graphql_handlers.get(module).unwrap().as_ref()
+    pub fn new_session(&self, block: BlockId) -> SessionId {
+        self.session_allocator.new_session_for_query(&mut self.state_at(block).unwrap())
+    }
+
+    pub fn end_session(&self, session: SessionId) {
+        self.session_allocator.end_session_for_query(session);
+    }
+
+    pub fn graphql_handlers(&self) -> &HashMap<String, Arc<dyn coordinator::module::HandleGraphQlRequest>> {
+        &self.graphql_handlers
     }
 }
 

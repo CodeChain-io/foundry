@@ -144,4 +144,12 @@ impl GraphQlHandlerProvider for TestCoordinator {
     fn get(&self) -> Vec<(String, Arc<dyn super::module::HandleGraphQlRequest>)> {
         unimplemented!()
     }
+
+    fn new_session_for_query(&self, _storage: &mut dyn StorageAccess) -> crate::module::SessionId {
+        unimplemented!()
+    }
+
+    fn end_session_for_query(&self, _session: crate::module::SessionId) {
+        unimplemented!()
+    }
 }
