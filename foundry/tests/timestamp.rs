@@ -82,8 +82,39 @@ pub fn inject_hello_txes(client: Arc<Client>) {
         assert!(success);
         seq += tx_per_step;
     }
+
+    let session = client.new_session(BlockId::Latest);
+    let result = client.graphql_handlers().get("module-account").unwrap().execute(
+        session,
+        &format!("{{ account(public: \"{}\") {{ seq }} }}", hex::encode(user1.public().as_ref())),
+        "{}",
+    );
+    assert_eq!(result, r#"{"data":{"account":{"seq":80}}}"#);
+    client.end_session(session);
 }
 
-pub fn check_graphql_setup(client: Arc<Client>) {
-    client.graphql_handler("module-account");
+fn test_query(public: &Public) -> (std::collections::HashMap<String, String>, String) {
+    let public_str = hex::encode(public.as_ref());
+    let graphql_query = format!("{{ account(public: \"{}\") {{ seq }} }}", public_str);
+    let variables = "{}".to_owned();
+    (
+        (vec![("query".to_owned(), graphql_query), ("variables".to_owned(), variables)]).into_iter().collect(),
+        r#"{"data":{"account":{"seq":1}}}"#.to_string(),
+    )
+}
+
+pub fn graphql(client: Arc<Client>) {
+    let mut rt = tokio::runtime::Runtime::new().unwrap();
+    rt.block_on(async {
+        let user1: Ed25519KeyPair = Random.generate().unwrap();
+        client.queue_own_transaction(tx_hello(user1.public(), user1.private(), 0)).unwrap();
+        sleep(Duration::from_millis(4000));
+
+        let client = awc::Client::new();
+        let (query, expected) = test_query(user1.public());
+        let request = client.get(&format!("http://localhost:{}/module-account/graphql", 1234)).query(&query).unwrap();
+        let response_bytes = request.send().await.unwrap().body().await.unwrap();
+        let response = std::str::from_utf8(&response_bytes).expect("GraphQL server must return utf8-encoded string");
+        assert_eq!(response, expected);
+    });
 }

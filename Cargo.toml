@@ -61,6 +61,10 @@ foundry-process-sandbox = { version = "0.2.1", git = "https://github.com/CodeCha
 foundry-module-rt = { version = "0.2.2", git = "https://github.com/CodeChain-io/module-rt.git", tag = "v0.2.2" }
 rand = { version = "0.7.3" }
 ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.3", tag = "v0.3.0" }
+hex = "0.4.2"
+foundry-graphql = { path = "./graphql"}
+tokio = {version = "0.2.21", features = ["rt-util"]}
+awc = {version = "2.0.0"}
 
 [build-dependencies]
 vergen = "3"

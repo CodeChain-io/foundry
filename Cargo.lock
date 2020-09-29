@@ -256,9 +256,9 @@ dependencies = [
 
 [[package]]
 name = "actix-web"
-version = "3.0.1"
+version = "3.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd7fc56022da91a4dc00ccae7d7bb82e539749ca36df181695f4efdf5d413b2e"
+checksum = "36de80175eb1f0a5c518024ce0d23646b54a23008279e090ca1848f6f1448bf4"
 dependencies = [
  "actix-codec 0.3.0",
  "actix-http",
@@ -1839,6 +1839,7 @@ name = "foundry"
 version = "0.0.0"
 dependencies = [
  "app_dirs",
+ "awc",
  "cidr",
  "clap",
  "codechain-core",
@@ -1862,9 +1863,11 @@ dependencies = [
  "env_logger 0.5.13",
  "fdlimit",
  "finally-block",
+ "foundry-graphql",
  "foundry-module-rt",
  "foundry-process-sandbox",
  "futures 0.1.29",
+ "hex",
  "kvdb",
  "kvdb-rocksdb",
  "linkme",
@@ -1882,6 +1885,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "staking",
+ "tokio 0.2.22",
  "tokio-core",
  "toml 0.4.10",
  "vergen",
@@ -1896,6 +1900,7 @@ dependencies = [
  "actix-service",
  "actix-web",
  "async-graphql",
+ "codechain-types",
  "coordinator",
  "crossbeam 0.7.3",
  "futures 0.3.5",

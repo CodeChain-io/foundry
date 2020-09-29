@@ -22,8 +22,8 @@ use crate::rpc::{rpc_http_start, rpc_ipc_start, rpc_ws_start, setup_rpc_server};
 use crate::rpc_apis::ApiDependencies;
 use ccore::{snapshot_notify, EngineClient};
 use ccore::{
-    AccountProvider, AccountProviderError, ChainNotify, ClientConfig, ClientService, EngineInfo, EngineType, Miner,
-    MinerService, PeerDb, Scheme, NUM_COLUMNS,
+    AccountProvider, AccountProviderError, ChainNotify, Client, ClientConfig, ClientService, EngineInfo, EngineType,
+    Miner, MinerService, PeerDb, Scheme, NUM_COLUMNS,
 };
 use cdiscovery::{Config, Discovery};
 use cinformer::{handler::Handler, InformerEventSender, InformerService, MetaIoHandler, PubSubHandler, Session};
@@ -48,6 +48,18 @@ use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Weak};
 use std::time::{SystemTime, UNIX_EPOCH};
+
+struct ClientWrapper(Arc<Client>);
+
+impl foundry_graphql::ManageSession for ClientWrapper {
+    fn new_session(&self, block: ctypes::BlockId) -> coordinator::module::SessionId {
+        self.0.new_session(block)
+    }
+
+    fn end_session(&self, session: coordinator::module::SessionId) {
+        self.0.end_session(session)
+    }
+}
 
 fn network_start(
     network_id: NetworkId,
@@ -247,6 +259,30 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     let miner = new_miner(&config, &scheme, ap.clone(), Arc::clone(&db), coordinator.clone())?;
     let client = client_start(&client_config, &timer_loop, db, &scheme, miner.clone(), coordinator)?;
     miner.recover_from_db();
+
+    foundry_graphql::setup();
+    let _graphql_webserver = {
+        use foundry_graphql::{GraphQlRequestHandler, ServerData};
+        use std::collections::HashMap;
+        use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+        let mut handlers: HashMap<String, GraphQlRequestHandler> = client
+            .client()
+            .graphql_handlers()
+            .into_iter()
+            .map(|(k, v)| {
+                (k.to_string(), GraphQlRequestHandler {
+                    handler: Arc::clone(v),
+                    session_needed: true,
+                })
+            })
+            .collect();
+        // add chain-level handlers
+
+        let server_data = ServerData::new(Arc::new(ClientWrapper(client.client())), handlers);
+        let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 1234);
+        foundry_graphql::run_server(server_data, socket).unwrap()
+    };
 
     let instance_id = config.operating.instance_id.unwrap_or(
         SystemTime::now()
