@@ -24,7 +24,7 @@ pub fn handle_test_command(cmd: &str, client: Arc<Client>) {
     match cmd {
         "check_block_nums" => basic::check_block_nums(client),
         "inject_hello_txes" => timestamp::inject_hello_txes(client),
-        "check_graphql_setup" => timestamp::check_graphql_setup(client),
+        "graphql" => timestamp::graphql(client),
         _ => panic!(),
     }
 }
@@ -40,6 +40,6 @@ fn inject_hello_txes() {
 }
 
 #[test]
-fn check_graphql_setup() {
-    super::run_node(&clap::ArgMatches::new(), Some("check_graphql_setup")).unwrap()
+fn graphql() {
+    super::run_node(&clap::ArgMatches::new(), Some("graphql")).unwrap()
 }
