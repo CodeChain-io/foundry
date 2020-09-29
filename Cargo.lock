@@ -1865,6 +1865,7 @@ dependencies = [
  "fdlimit",
  "finally-block",
  "foundry-graphql",
+ "foundry-graphql-engine",
  "foundry-module-rt",
  "foundry-process-sandbox",
  "futures 0.1.29",
@@ -1908,6 +1909,25 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+ "tokio 0.2.22",
+]
+
+[[package]]
+name = "foundry-graphql-engine"
+version = "0.1.0"
+dependencies = [
+ "async-graphql",
+ "codechain-core",
+ "codechain-crypto",
+ "codechain-key",
+ "codechain-types",
+ "coordinator",
+ "crossbeam 0.7.3",
+ "hex",
+ "parking_lot 0.11.0",
+ "primitives",
+ "remote-trait-object",
+ "serde",
  "tokio 0.2.22",
 ]
 

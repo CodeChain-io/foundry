@@ -1,0 +1,20 @@
+[package]
+name = "foundry-graphql-engine"
+version = "0.1.0"
+authors = ["CodeChain Team <hi@codechain.io>"]
+edition = "2018"
+
+[dependencies]
+coordinator = { path = "../coordinator" }
+ccore = { package = "codechain-core", path = "../core" }
+ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.3", tag = "v0.3.0" }
+ckey = {package = "codechain-key", path = "../key" }
+ctypes = { package = "codechain-types", path = "../types" }
+parking_lot = "0.11.0"
+primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.5", tag = "v0.5.1" }
+serde = { version = "1.0.111", features = ["derive"] }
+remote-trait-object = "0.4.0"
+async-graphql = { version = "1.18" }
+tokio = {version = "0.2.21", features = ["sync", "time", "rt-threaded", "macros", "uds"]}
+hex = "0.4.2"
+crossbeam = "0.7"
