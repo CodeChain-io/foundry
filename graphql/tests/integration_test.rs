@@ -35,6 +35,16 @@ fn graphql_handlers() -> HashMap<String, GraphQlRequestHandler> {
     .collect()
 }
 
+struct TestClient;
+
+impl fgql::ManageSession for TestClient {
+    fn new_session(&self, _block: ctypes::BlockId) -> coordinator::module::SessionId {
+        123
+    }
+
+    fn end_session(&self, _session: coordinator::module::SessionId) {}
+}
+
 /// Creates the actual server.
 ///
 /// If you want to use test utilities, try this instead.
@@ -42,7 +52,7 @@ fn graphql_handlers() -> HashMap<String, GraphQlRequestHandler> {
 /// init_service(App::new().configure(|config: &mut ServiceConfig| app_configure(config, Arc::clone(&server_data))))
 /// ```
 fn create_server(port: u16) -> actix_web::dev::Server {
-    let server_data = ServerData::new(Arc::new(fgql::Client {}), graphql_handlers());
+    let server_data = ServerData::new(Arc::new(TestClient), graphql_handlers());
     let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), port);
     fgql::run_server(server_data, socket).unwrap()
 }
