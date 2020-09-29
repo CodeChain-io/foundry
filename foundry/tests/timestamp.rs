@@ -46,7 +46,7 @@ fn tx_hello(public: &Public, private: &Private, seq: u64) -> Transaction {
 pub fn inject_hello_txes(client: Arc<Client>) {
     let mut last_block_num = client.block_number(&BlockId::Latest).unwrap();
 
-    let total_block_num = 8;
+    let total_block_num = 4;
     let tx_per_step = 20;
 
     let user1: Ed25519KeyPair = Random.generate().unwrap();
