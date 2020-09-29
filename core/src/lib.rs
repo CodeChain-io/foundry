@@ -66,3 +66,4 @@ pub use crate::service::ClientService;
 pub use crate::transaction::{LocalizedTransaction, PendingTransactions};
 pub use crate::types::{BlockStatus, TransactionId};
 pub use rlp::Encodable;
+pub use views::{BlockView, BodyView, HeaderView};

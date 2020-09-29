@@ -65,6 +65,7 @@ foundry-graphql = { path = "./graphql"}
 tokio = {version = "0.2.21", features = ["rt-util"]}
 awc = {version = "2.0.0"}
 actix-rt = "1.1.1"
+foundry-graphql-engine = { path = "./graphql-engine"}
 
 [build-dependencies]
 vergen = "3"
@@ -94,5 +95,6 @@ members = [
     "module-macros",
     "timestamp",
     "graphql",
-    "integration-test"
+    "integration-test",
+    "graphql-engine",
 ]
