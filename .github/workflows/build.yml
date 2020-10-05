@@ -1,0 +1,35 @@
+on: [push, pull_request]
+
+name: build
+
+jobs:
+  build:
+    name: Actions - build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macOS-10.14, ubuntu-18.04]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.46.0
+          profile: minimal
+          override: true
+      - run: cargo fetch --verbose
+      - run: cargo build --release
+      - name: Archive
+        working-directory: target/release
+        run: |
+          mkdir artifacts
+          echo ${{github.sha}} ${{github.ref}} | tee artifacts/git-ref
+          shasum -a 256 foundry | tee artifacts/sha256sums
+          FOUNDRY_VERSION="$(./foundry --version | cut -d ' ' -f 2)"
+          tar cvfz artifacts/foundry-${FOUNDRY_VERSION}-$(uname -m)-$(echo $(uname) | tr '[:upper:]' '[:lower:]').tar.gz foundry
+      - uses: actions/upload-artifact@v1
+        with:
+          name: foundry-${{ matrix.os }}
+          path: target/release/artifacts
