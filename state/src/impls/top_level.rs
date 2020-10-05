@@ -429,7 +429,7 @@ mod test_module_states {
             });
         }
         let (db, root) = top_level_state.commit_and_clone_db().unwrap();
-        let mut top_level_state = TopLevelState::from_existing(db, root).unwrap();
+        let top_level_state = TopLevelState::from_existing(db, root).unwrap();
         {
             let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
             module_level!(state_with_id_0, {
@@ -467,7 +467,7 @@ mod test_module_states {
             });
         }
         let (state_db, root) = top_level_state.commit_and_clone_db().unwrap();
-        let mut top_level_state = TopLevelState::from_existing(state_db.clone(&root), root).unwrap();
+        let top_level_state = TopLevelState::from_existing(state_db.clone(&root), root).unwrap();
         {
             let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
             module_level!(state_with_id_0, {
@@ -488,7 +488,7 @@ mod test_module_states {
                 ]
             });
         }
-        let mut top_level_state = TopLevelState::from_existing(state_db.clone(&root), root).unwrap();
+        let top_level_state = TopLevelState::from_existing(state_db.clone(&root), root).unwrap();
         {
             let state_with_id_0 = top_level_state.module_state_mut(storage_id_0).unwrap();
             module_level!(state_with_id_0, {

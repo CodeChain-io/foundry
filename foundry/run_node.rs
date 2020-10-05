@@ -260,16 +260,15 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     let client = client_start(&client_config, &timer_loop, db, &scheme, miner.clone(), coordinator)?;
     miner.recover_from_db();
 
-    foundry_graphql::setup();
     let _graphql_webserver = {
         use foundry_graphql::{GraphQlRequestHandler, ServerData};
         use std::collections::HashMap;
         use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
-        let mut handlers: HashMap<String, GraphQlRequestHandler> = client
+        let handlers: HashMap<String, GraphQlRequestHandler> = client
             .client()
             .graphql_handlers()
-            .into_iter()
+            .iter()
             .map(|(k, v)| {
                 (k.to_string(), GraphQlRequestHandler {
                     handler: Arc::clone(v),

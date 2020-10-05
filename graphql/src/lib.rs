@@ -136,7 +136,7 @@ impl FromRequest for Session {
             }) = server_data.graphql_handlers.get(&module_name)
             {
                 let session_id = if *session_needed {
-                    let height = ();
+                    let _height = ();
                     server_data.session_manager.new_session(ctypes::BlockId::Latest)
                 } else {
                     0

@@ -59,7 +59,7 @@ impl TxSorter for ServiceHandler {
         let mut sorted: Vec<usize> = Vec::new();
 
         for (account, valid) in accounts.iter_mut() {
-            valid.sort();
+            valid.sort_unstable();
             let seq_in_state = if let Ok(account) = self.account_manager.read().get_account(session, account, true) {
                 account.seq
             } else {

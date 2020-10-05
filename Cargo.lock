@@ -1884,7 +1884,6 @@ dependencies = [
  "serde_cbor",
  "serde_derive",
  "serde_json",
- "staking",
  "tokio 0.2.22",
  "tokio-core",
  "toml 0.4.10",
@@ -3031,21 +3030,6 @@ dependencies = [
  "proc-macro2 1.0.19",
  "quote 1.0.7",
  "syn 1.0.39",
-]
-
-[[package]]
-name = "module_account"
-version = "0.1.0"
-dependencies = [
- "codechain-crypto",
- "codechain-key",
- "coordinator",
- "lazy_static",
- "parking_lot 0.11.0",
- "primitives",
- "serde",
- "serde_cbor",
- "serde_derive",
 ]
 
 [[package]]
@@ -4420,22 +4404,6 @@ name = "stable_deref_trait"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
-
-[[package]]
-name = "staking"
-version = "0.1.0"
-dependencies = [
- "codechain-crypto",
- "codechain-key",
- "codechain-types",
- "coordinator",
- "lazy_static",
- "parking_lot 0.11.0",
- "primitives",
- "serde",
- "serde_cbor",
- "serde_derive",
-]
 
 [[package]]
 name = "standback"
