@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use primitives::{u256_from_u128, BigEndianHash, H256};
+use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sodiumoxide::crypto::sign::{gen_keypair, PublicKey, PUBLICKEYBYTES};
@@ -47,7 +47,7 @@ impl Public {
 
 impl From<u64> for Public {
     fn from(integer: u64) -> Self {
-        let for_slice: H256 = H256::from_uint(&u256_from_u128(integer.into()));
+        let for_slice: H256 = integer.into();
         PublicKey::from_slice(for_slice.as_ref()).unwrap().into()
     }
 }

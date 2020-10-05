@@ -58,7 +58,7 @@ use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, Header as BlockHeade
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
 use parking_lot::RwLock;
-use primitives::{u256_from_u128, BigEndianHash, Bytes, H256};
+use primitives::{Bytes, H256};
 use rlp::{Encodable, Rlp, RlpStream};
 use std::collections::HashMap;
 use std::mem;
@@ -242,7 +242,7 @@ impl TestBlockChainClient {
         let block_id = n.into();
         let hash = self.block_hash(&block_id).unwrap();
         let mut header: BlockHeader = self.block_header(&block_id).unwrap().decode();
-        header.set_parent_hash(H256::from_uint(&u256_from_u128(42u128)).into());
+        header.set_parent_hash(H256::from(42).into());
         let mut rlp = RlpStream::new_list(3);
         rlp.append(&header);
         rlp.append_raw(&::rlp::NULL_RLP, 1);
