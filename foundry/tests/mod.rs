@@ -30,16 +30,19 @@ pub fn handle_test_command(cmd: &str, client: Arc<Client>) {
 }
 
 #[test]
+#[ignore]
 fn check_block_nums() {
     super::run_node(&clap::ArgMatches::new(), Some("check_block_nums")).unwrap()
 }
 
 #[test]
+#[ignore]
 fn inject_hello_txes() {
     super::run_node(&clap::ArgMatches::new(), Some("inject_hello_txes")).unwrap()
 }
 
 #[test]
+#[ignore]
 fn graphql() {
     super::run_node(&clap::ArgMatches::new(), Some("graphql")).unwrap()
 }
