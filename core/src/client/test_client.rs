@@ -107,7 +107,6 @@ impl Default for TestBlockChainClient {
     }
 }
 
-#[allow(clippy::same_item_push)]
 impl TestBlockChainClient {
     /// Creates new test client.
     pub fn new() -> Self {
