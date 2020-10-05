@@ -159,7 +159,7 @@ impl SubStorageAccess for ModuleLevelState {
     }
 }
 
-#[cfg(test)]
+#[cfg(never)]
 mod tests {
     use super::*;
     use crate::tests::helpers::get_temp_state_db;

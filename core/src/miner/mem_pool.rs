@@ -380,7 +380,7 @@ pub mod test {
 
         let transactions: Vec<_> = (0..10).map(|_| create_random_transaction()).collect();
 
-        let add_result = mem_pool.add(transactions, origin, inserted_block_number, inserted_timestamp);
+        let add_result = mem_pool.add(transactions, origin, &mut state, inserted_block_number, inserted_timestamp);
         assert!(add_result.iter().all(|r| r.is_ok()));
 
         let mut mem_pool_recovered = MemPool::with_limits(8192, usize::max_value(), db, validator);
@@ -395,7 +395,7 @@ pub mod test {
     struct DummyStorage;
 
     impl StorageAccess for DummyStorage {
-        fn sub_storage(&mut self, storage_id: u16) -> Box<dyn SubStorageAccess> {
+        fn sub_storage(&mut self, _storage_id: u16) -> Box<dyn SubStorageAccess> {
             unimplemented!()
         }
 

@@ -15,7 +15,7 @@ struct GraphQlRoot {
 #[async_graphql::Object]
 impl GraphQlRoot {
     async fn account(&self, name: String) -> Option<Account> {
-        self.accounts.get(&name).map(|x| x.clone())
+        self.accounts.get(&name).cloned()
     }
 }
 

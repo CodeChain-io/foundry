@@ -148,7 +148,7 @@ impl<'a, 'b> StateTransition for ExecuteTransaction<'a, 'b> {
         } = tx.tx.action;
 
         let mut sender_account: Account = serde_cbor::from_slice(
-            &state.get(get_state_key(&tx.signer_public).as_bytes()).ok_or_else(|| ExecuteError::NoSuchAccount)?,
+            &state.get(get_state_key(&tx.signer_public).as_bytes()).ok_or(ExecuteError::NoSuchAccount)?,
         )
         .map_err(|_| ExecuteError::InvalidKey)?;
 
@@ -158,7 +158,7 @@ impl<'a, 'b> StateTransition for ExecuteTransaction<'a, 'b> {
                 found = Some(i)
             }
         }
-        let index = found.ok_or_else(|| ExecuteError::NoToken)?;
+        let index = found.ok_or(ExecuteError::NoToken)?;
         let token = sender_account.tokens.remove(index);
         let mut recipient_account = GetAccount {
             public: &receiver,

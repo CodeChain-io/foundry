@@ -18,7 +18,6 @@ extern crate foundry_graphql as fgql;
 
 mod common;
 
-use actix_rt;
 use actix_web::client::Client;
 use actix_web::dev::Body;
 use fgql::{GraphQlRequestHandler, ServerData};
