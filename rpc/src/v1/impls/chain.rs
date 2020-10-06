@@ -17,7 +17,7 @@
 use super::super::errors;
 use super::super::traits::Chain;
 use super::super::types::{Block, BlockNumberAndHash, Transaction, ValidatorSet};
-use ccore::{BlockChainClient, EngineInfo, TermInfo};
+use ccore::{BlockChainClient, EngineInfo};
 use cjson::scheme::Params;
 use ckey::{NetworkId, PlatformAddress};
 use ctypes::{BlockHash, BlockId, BlockNumber, TxHash};
@@ -43,7 +43,7 @@ where
 
 impl<C> Chain for ChainClient<C>
 where
-    C: BlockChainClient + EngineInfo + TermInfo + 'static,
+    C: BlockChainClient + EngineInfo + 'static,
 {
     fn get_transaction(&self, transaction_hash: TxHash) -> Result<Option<Transaction>> {
         let id = transaction_hash.into();

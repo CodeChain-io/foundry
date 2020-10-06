@@ -34,7 +34,7 @@ use crate::block::{Block, ClosedBlock, OpenBlock};
 use crate::blockchain_info::BlockChainInfo;
 use crate::client::{
     BlockChainClient, BlockChainTrait, BlockProducer, BlockStatus, ConsensusClient, EngineInfo, ImportBlock,
-    ImportResult, MiningBlockChainClient, StateInfo, TermInfo,
+    ImportResult, MiningBlockChainClient, StateInfo,
 };
 use crate::consensus::EngineError;
 use crate::db::{COL_STATE, NUM_COLUMNS};
@@ -549,16 +549,6 @@ impl EngineInfo for TestBlockChainClient {
 }
 
 impl ConsensusClient for TestBlockChainClient {}
-
-impl TermInfo for TestBlockChainClient {
-    fn last_term_finished_block_num(&self, _id: BlockId) -> Option<BlockNumber> {
-        None
-    }
-
-    fn current_term_id(&self, _id: BlockId) -> Option<u64> {
-        self.term_id
-    }
-}
 
 impl StateInfo for TestBlockChainClient {
     fn state_at(&self, _id: BlockId) -> Option<TopLevelState> {

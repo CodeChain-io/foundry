@@ -17,7 +17,7 @@
 use super::super::errors;
 use super::super::traits::Devel;
 use ccore::{
-    DatabaseClient, EngineClient, EngineInfo, MinerService, MiningBlockChainClient, SnapshotClient, TermInfo, COL_STATE,
+    DatabaseClient, EngineClient, EngineInfo, MinerService, MiningBlockChainClient, SnapshotClient, COL_STATE,
 };
 use cjson::bytes::Bytes;
 use cnetwork::{unbounded_event_callback, EventSender, IntoSocketAddr};
@@ -55,7 +55,7 @@ where
 
 impl<C, M> Devel for DevelClient<C, M>
 where
-    C: DatabaseClient + EngineInfo + EngineClient + MiningBlockChainClient + TermInfo + SnapshotClient + 'static,
+    C: DatabaseClient + EngineInfo + EngineClient + MiningBlockChainClient + SnapshotClient + 'static,
     M: MinerService + 'static,
 {
     fn get_state_trie_keys(&self, offset: usize, limit: usize) -> Result<Vec<H256>> {

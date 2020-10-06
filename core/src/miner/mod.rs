@@ -29,7 +29,7 @@ use std::sync::Arc;
 
 pub use self::miner::{AuthoringParams, Miner, MinerOptions};
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
-use crate::client::{BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo};
+use crate::client::{BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient};
 use crate::consensus::EngineType;
 use crate::error::Error;
 use crate::{PendingTransactions, StateInfo};
@@ -72,17 +72,17 @@ pub trait MinerService: Send + Sync {
     /// New chain head event. Restart mining operation.
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: BlockChainTrait + BlockProducer + ImportBlock + EngineInfo + TermInfo;
+        C: BlockChainTrait + BlockProducer + ImportBlock + EngineInfo;
 
     /// Imports transactions to mem pool.
-    fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo + StateInfo>(
+    fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + StateInfo>(
         &self,
         client: &C,
         transactions: Vec<Transaction>,
     ) -> Vec<Result<(), Error>>;
 
     /// Imports own (node owner) transaction to mem pool.
-    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo + StateInfo>(
+    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + StateInfo>(
         &self,
         chain: &C,
         tx: Transaction,
@@ -95,7 +95,7 @@ pub trait MinerService: Send + Sync {
     fn count_pending_transactions(&self, range: Range<u64>) -> usize;
 
     /// Start sealing.
-    fn start_sealing<C: MiningBlockChainClient + EngineInfo + TermInfo>(&self, client: &C);
+    fn start_sealing<C: MiningBlockChainClient + EngineInfo>(&self, client: &C);
 
     /// Stop sealing.
     fn stop_sealing(&self);
