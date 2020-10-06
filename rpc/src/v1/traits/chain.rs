@@ -62,10 +62,6 @@ pub trait Chain {
     #[rpc(name = "chain_getCommonParams")]
     fn get_common_params(&self, block_number: Option<u64>) -> Result<Option<Params>>;
 
-    /// Return the current term id at given block number
-    #[rpc(name = "chain_getTermMetadata")]
-    fn get_term_metadata(&self, block_number: Option<u64>) -> Result<Option<(u64, u64)>>;
-
     /// Return the current metadata seq at given block number
     #[rpc(name = "chain_getMetadataSeq")]
     fn get_metadata_seq(&self, block_number: Option<u64>) -> Result<Option<u64>>;

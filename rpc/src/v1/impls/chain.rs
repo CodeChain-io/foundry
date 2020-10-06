@@ -96,19 +96,6 @@ where
         Ok(self.client.common_params(block_id).map(Params::from))
     }
 
-    fn get_term_metadata(&self, block_number: Option<u64>) -> Result<Option<(u64, u64)>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        let last_term_finished_block_num = self.client.last_term_finished_block_num(block_id);
-        let current_term_id = self.client.current_term_id(block_id);
-        match (last_term_finished_block_num, current_term_id) {
-            (Some(last_term_finished_block_num), Some(current_term_id)) => {
-                Ok(Some((last_term_finished_block_num, current_term_id)))
-            }
-            (None, None) => Ok(None),
-            _ => unreachable!(),
-        }
-    }
-
     fn get_metadata_seq(&self, block_number: Option<u64>) -> Result<Option<u64>> {
         let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
         Ok(self.client.metadata_seq(block_id))
