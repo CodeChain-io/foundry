@@ -40,8 +40,9 @@ pub const APP_INFO: AppInfo = AppInfo {
     author: "Kodebox",
 };
 
+#[actix_rt::main]
 #[cfg(all(unix, target_arch = "x86_64"))]
-fn main() -> Result<(), String> {
+async fn main() -> Result<(), String> {
     //panic_hook::set();
 
     // Always print backtrace on panic.
