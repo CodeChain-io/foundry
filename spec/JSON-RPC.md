@@ -152,7 +152,6 @@ When `Transaction` is included in any response, there will be an additional fiel
  * [chain_getBalance](#chain_getbalance)
  * [chain_getMinTransactionFee](#chain_getmintransactionfee)
  * [chain_getCommonParams](#chain_getcommonparams)
- * [chain_getTermMetadata](#chain_gettermmetadata)
  * [chain_getNetworkId](#chain_getnetworkid)
  * [chain_getPossibleAuthors](#chain_getpossibleauthors)
 ***
@@ -728,40 +727,6 @@ Errors: `Invalid Params`
     "maxBodySize":4194304,
     "snapshotPeriod":16384
   },
-  "id":7
-}
-```
-
-[Back to **List of methods**](#list-of-methods)
-
-# chain_getTermMetadata
-Gets the term metadata.
-It returns null if the block number parameter is larger than the current best block.
-
-### Params
- 1. block number - `number` | `null`
-
-### Returns
-`[number, number]` | `null`
-
-- The first item is the last block number that the term is closed. 
-- The second item is the current term id.
-
-Errors: `Invalid Params`
-
-### Request Example
-```
-  curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "chain_getTermMetadata", "params": [53], "id": 7}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":[43,4],
   "id":7
 }
 ```
