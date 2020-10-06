@@ -1911,6 +1911,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "foundry-integration-test"
+version = "0.1.0"
+dependencies = [
+ "actix-rt",
+ "awc",
+ "codechain-types",
+ "coordinator",
+ "futures 0.3.5",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "tokio 0.2.22",
+]
+
+[[package]]
 name = "foundry-module-rt"
 version = "0.2.2"
 source = "git+https://github.com/CodeChain-io/module-rt.git?tag=v0.2.2#4ced59132c68da935662f3afa11fa6ebd844ac6a"
