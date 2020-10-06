@@ -92,5 +92,6 @@ members = [
     "module",
     "module-macros",
     "timestamp",
-    "graphql"
+    "graphql",
+    "integration-test"
 ]
