@@ -54,8 +54,6 @@ pub trait TopState {
     fn create_module(&mut self) -> StateResult<()>;
     fn set_module_root(&mut self, storage_id: StorageId, new_root: H256) -> StateResult<()>;
 
-    fn increase_term_id(&mut self, last_term_finished_block_num: u64) -> StateResult<()>;
-
     fn update_action_data(&mut self, key: &H256, data: Bytes) -> StateResult<()>;
     fn remove_action_data(&mut self, key: &H256);
 

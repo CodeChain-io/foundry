@@ -22,8 +22,6 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Metadata {
     number_of_modules: StorageId,
-    last_term_finished_block_num: u64,
-    current_term_id: u64,
     seq: u64,
     params: CommonParams,
     consensus_params: ConsensusParams,
@@ -33,8 +31,6 @@ impl Metadata {
     pub fn new(params: CommonParams, consensus_params: ConsensusParams) -> Self {
         Self {
             number_of_modules: 0,
-            last_term_finished_block_num: 0,
-            current_term_id: 0,
             seq: 0,
             params,
             consensus_params,
@@ -74,20 +70,6 @@ impl Metadata {
     pub fn set_consensus_params(&mut self, consensus_params: ConsensusParams) {
         self.consensus_params = consensus_params;
     }
-
-    pub fn increase_term_id(&mut self, last_term_finished_block_num: u64) {
-        assert!(self.last_term_finished_block_num < last_term_finished_block_num);
-        self.last_term_finished_block_num = last_term_finished_block_num;
-        self.current_term_id += 1;
-    }
-
-    pub fn last_term_finished_block_num(&self) -> u64 {
-        self.last_term_finished_block_num
-    }
-
-    pub fn current_term_id(&self) -> u64 {
-        self.current_term_id
-    }
 }
 
 impl CacheableItem for Metadata {
@@ -102,11 +84,9 @@ const PREFIX: u8 = super::Prefix::Metadata as u8;
 
 impl Encodable for Metadata {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(7)
+        s.begin_list(5)
             .append(&PREFIX)
             .append(&self.number_of_modules)
-            .append(&self.last_term_finished_block_num)
-            .append(&self.current_term_id)
             .append(&self.seq)
             .append(&self.params)
             .append(&self.consensus_params);
@@ -116,10 +96,10 @@ impl Encodable for Metadata {
 impl Decodable for Metadata {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
-        if item_count != 7 {
+        if item_count != 5 {
             return Err(DecoderError::RlpInvalidLength {
                 got: item_count,
-                expected: 7,
+                expected: 5,
             })
         }
 
@@ -130,17 +110,13 @@ impl Decodable for Metadata {
         }
         let number_of_modules = rlp.val_at(1)?;
 
-        let last_term_finished_block_num = rlp.val_at(2)?;
-        let current_term_id = rlp.val_at(3)?;
-        let seq = rlp.val_at(4)?;
-        let params = rlp.val_at(5)?;
+        let seq = rlp.val_at(2)?;
+        let params = rlp.val_at(3)?;
 
-        let consensus_params = rlp.val_at(6)?;
+        let consensus_params = rlp.val_at(4)?;
 
         Ok(Self {
             number_of_modules,
-            last_term_finished_block_num,
-            current_term_id,
             seq,
             params,
             consensus_params,
@@ -203,11 +179,9 @@ mod tests {
     }
 
     #[test]
-    fn metadata_without_term_with_seq() {
+    fn metadata_with_seq() {
         let metadata = Metadata {
             number_of_modules: 7,
-            last_term_finished_block_num: 0,
-            current_term_id: 0,
             seq: 3,
             params: CommonParams::default_for_test(),
             consensus_params: ConsensusParams::default_for_test(),
@@ -216,25 +190,10 @@ mod tests {
     }
 
     #[test]
-    fn metadata_with_term_without_seq() {
+    fn metadata_without_seq() {
         let metadata = Metadata {
             number_of_modules: 7,
-            last_term_finished_block_num: 0,
-            current_term_id: 0,
             seq: 0,
-            params: CommonParams::default_for_test(),
-            consensus_params: ConsensusParams::default_for_test(),
-        };
-        rlp_encode_and_decode_test!(metadata);
-    }
-
-    #[test]
-    fn metadata_with_term_and_seq() {
-        let metadata = Metadata {
-            number_of_modules: 7,
-            last_term_finished_block_num: 1,
-            current_term_id: 100,
-            seq: 3,
             params: CommonParams::default_for_test(),
             consensus_params: ConsensusParams::default_for_test(),
         };
