@@ -34,6 +34,7 @@ use crate::rpc::{RpcHttpConfig, RpcIpcConfig, RpcWsConfig};
 #[serde(deny_unknown_fields)]
 pub struct Config {
     pub ipc: Ipc,
+    pub graphql: GraphQl,
     #[serde(rename = "codechain")]
     pub operating: Operating,
     pub mining: Mining,
@@ -49,6 +50,7 @@ pub struct Config {
 impl Config {
     pub fn merge(&mut self, other: &Config) {
         self.ipc.merge(&other.ipc);
+        self.graphql.merge(&other.graphql);
         self.operating.merge(&other.operating);
         self.mining.merge(&other.mining);
         self.network.merge(&other.network);
@@ -194,6 +196,12 @@ pub struct Ipc {
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct GraphQl {
+    pub port: Option<u16>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Operating {
     pub quiet: Option<bool>,
     pub instance_id: Option<usize>,
@@ -310,6 +318,21 @@ impl Ipc {
         }
         if let Some(path) = matches.value_of("ipc-path") {
             self.path = Some(path.to_string());
+        }
+        Ok(())
+    }
+}
+
+impl GraphQl {
+    pub fn merge(&mut self, other: &GraphQl) {
+        if other.port.is_some() {
+            self.port = other.port;
+        }
+    }
+
+    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
+        if let Some(port) = matches.value_of("graphql-port") {
+            self.port = Some(port.parse().map_err(|_| "Invalid port")?);
         }
         Ok(())
     }
@@ -775,6 +798,7 @@ pub fn load_config(matches: &clap::ArgMatches<'_>) -> Result<Config, String> {
     };
 
     config.ipc.overwrite_with(&matches)?;
+    config.graphql.overwrite_with(&matches)?;
     config.operating.overwrite_with(&matches)?;
     config.mining.overwrite_with(&matches)?;
     config.network.overwrite_with(&matches)?;

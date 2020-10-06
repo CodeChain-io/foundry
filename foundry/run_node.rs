@@ -279,7 +279,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
         // add chain-level handlers
 
         let server_data = ServerData::new(Arc::new(ClientWrapper(client.client())), handlers);
-        let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 1234);
+        let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), config.graphql.port.unwrap());
         foundry_graphql::run_server(server_data, socket).unwrap()
     };
 
