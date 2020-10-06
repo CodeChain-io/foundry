@@ -48,44 +48,6 @@ pub fn get_delegation_key(pubkey: &Public) -> H256 {
 pub type StakeQuantity = u64;
 pub type DepositQuantity = u64;
 
-pub struct StakeAccount<'a> {
-    pub pubkey: &'a Public,
-    pub balance: StakeQuantity,
-}
-
-impl<'a> StakeAccount<'a> {
-    pub fn load_from_state(state: &TopLevelState, pubkey: &'a Public) -> StateResult<StakeAccount<'a>> {
-        let account_key = get_stake_account_key(pubkey);
-        let action_data = state.action_data(&account_key)?;
-
-        let balance = match action_data {
-            Some(data) => Rlp::new(&data).as_val().unwrap(),
-            None => StakeQuantity::default(),
-        };
-
-        Ok(StakeAccount {
-            pubkey,
-            balance,
-        })
-    }
-
-    pub fn save_to_state(&self, state: &mut TopLevelState) -> StateResult<()> {
-        let account_key = get_stake_account_key(self.pubkey);
-        if self.balance != 0 {
-            let rlp = rlp::encode(&self.balance);
-            state.update_action_data(&account_key, rlp)?;
-        } else {
-            state.remove_action_data(&account_key);
-        }
-        Ok(())
-    }
-
-    pub fn add_balance(&mut self, amount: u64) -> Result<(), RuntimeError> {
-        self.balance += amount;
-        Ok(())
-    }
-}
-
 pub struct Stakeholders(BTreeSet<Public>);
 
 impl Stakeholders {
@@ -121,13 +83,6 @@ impl Stakeholders {
     pub fn contains(&self, pubkey: &Public) -> bool {
         self.0.contains(pubkey)
     }
-
-    pub fn update_by_increased_balance(&mut self, account: &StakeAccount<'_>) {
-        if account.balance > 0 {
-            self.0.insert(*account.pubkey);
-        }
-    }
-
     pub fn iter(&self) -> btree_set::Iter<'_, Public> {
         self.0.iter()
     }
@@ -773,51 +728,6 @@ mod tests {
     fn rng() -> XorShiftRng {
         let seed: [u8; 16] = [0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7];
         XorShiftRng::from_seed(seed)
-    }
-
-    #[test]
-    fn default_balance_is_zero() {
-        let state = helpers::get_temp_state();
-        let pubkey = Public::random();
-        let account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
-        assert_eq!(account.pubkey, &pubkey);
-        assert_eq!(account.balance, 0);
-    }
-
-    #[test]
-    fn balance_add() {
-        let mut state = helpers::get_temp_state();
-        let pubkey = Public::random();
-        {
-            let mut account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
-            account.add_balance(100).unwrap();
-            account.save_to_state(&mut state).unwrap();
-        }
-        let account = StakeAccount::load_from_state(&state, &pubkey).unwrap();
-        assert_eq!(account.balance, 100);
-    }
-
-    #[test]
-    fn stakeholders_track() {
-        let mut rng = rng();
-        let mut state = helpers::get_temp_state();
-        let pubkeys: Vec<_> = (1..100).map(Public::from).collect();
-        let accounts: Vec<_> = pubkeys
-            .iter()
-            .map(|pubkey| StakeAccount {
-                pubkey,
-                balance: rng.gen_range(1, 100),
-            })
-            .collect();
-
-        let mut stakeholders = Stakeholders::load_from_state(&state).unwrap();
-        for account in &accounts {
-            stakeholders.update_by_increased_balance(account);
-        }
-        stakeholders.save_to_state(&mut state).unwrap();
-
-        let stakeholders = Stakeholders::load_from_state(&state).unwrap();
-        assert!(pubkeys.iter().all(|pubkey| stakeholders.contains(pubkey)));
     }
 
     #[test]
