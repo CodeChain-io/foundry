@@ -18,7 +18,7 @@ use super::mem_pool::{Error as MemPoolError, MemPool};
 use super::MinerService;
 use crate::account_provider::{AccountProvider, Error as AccountProviderError};
 use crate::block::{ClosedBlock, IsBlock};
-use crate::client::{BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient, TermInfo};
+use crate::client::{BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient};
 use crate::consensus::{ConsensusEngine, EngineType};
 use crate::error::Error;
 use crate::scheme::Scheme;
@@ -235,7 +235,7 @@ impl Miner {
     }
 
     /// Prepares new block for sealing including top transactions from queue and seal it.
-    fn prepare_and_seal_block<C: BlockChainTrait + BlockProducer + EngineInfo + TermInfo>(
+    fn prepare_and_seal_block<C: BlockChainTrait + BlockProducer + EngineInfo>(
         &self,
         parent_block_id: BlockId,
         chain: &C,
@@ -356,7 +356,7 @@ impl MinerService for Miner {
 
     fn update_sealing<C>(&self, chain: &C, parent_block: BlockId, allow_empty_block: bool)
     where
-        C: BlockChainTrait + BlockProducer + EngineInfo + ImportBlock + TermInfo, {
+        C: BlockChainTrait + BlockProducer + EngineInfo + ImportBlock, {
         ctrace!(MINER, "update_sealing: preparing a block");
 
         let block = match self.prepare_and_seal_block(parent_block, chain) {
@@ -400,7 +400,7 @@ impl MinerService for Miner {
         chain.set_min_timer();
     }
 
-    fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + TermInfo + StateInfo>(
+    fn import_external_transactions<C: MiningBlockChainClient + EngineInfo + StateInfo>(
         &self,
         client: &C,
         transactions: Vec<Transaction>,
@@ -425,7 +425,7 @@ impl MinerService for Miner {
         results
     }
 
-    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + TermInfo + StateInfo>(
+    fn import_own_transaction<C: MiningBlockChainClient + EngineInfo + StateInfo>(
         &self,
         chain: &C,
         tx: Transaction,
@@ -478,7 +478,7 @@ impl MinerService for Miner {
         self.mem_pool.read().count_pending_transactions(range)
     }
 
-    fn start_sealing<C: MiningBlockChainClient + EngineInfo + TermInfo>(&self, client: &C) {
+    fn start_sealing<C: MiningBlockChainClient + EngineInfo>(&self, client: &C) {
         cdebug!(MINER, "Start sealing");
         self.sealing_enabled.store(true, Ordering::Relaxed);
         // ------------------------------------------------------------------

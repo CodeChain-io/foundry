@@ -21,7 +21,7 @@ use super::{
 };
 use crate::block::{Block, ClosedBlock, IsBlock, OpenBlock};
 use crate::blockchain::{BlockChain, BlockProvider, BodyProvider, EventProvider, HeaderProvider, TransactionAddress};
-use crate::client::{ConsensusClient, SnapshotClient, TermInfo};
+use crate::client::{ConsensusClient, SnapshotClient};
 use crate::consensus::{ConsensusEngine, EngineError};
 use crate::encoded;
 use crate::error::{BlockImportError, Error, ImportError, SchemeError};
@@ -647,20 +647,6 @@ impl BlockChainClient for Client {
         let chain = self.block_chain();
         let source = EventSource::Block(*hash);
         chain.events(&source)
-    }
-}
-
-impl TermInfo for Client {
-    fn last_term_finished_block_num(&self, id: BlockId) -> Option<BlockNumber> {
-        self.state_at(id)
-            .map(|state| state.metadata().unwrap().expect("Metadata always exist"))
-            .map(|metadata| metadata.last_term_finished_block_num())
-    }
-
-    fn current_term_id(&self, id: BlockId) -> Option<u64> {
-        self.state_at(id)
-            .map(|state| state.metadata().unwrap().expect("Metadata always exist"))
-            .map(|metadata| metadata.current_term_id())
     }
 }
 
