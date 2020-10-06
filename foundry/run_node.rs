@@ -260,12 +260,14 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     let client = client_start(&client_config, &timer_loop, db, &scheme, miner.clone(), coordinator)?;
     miner.recover_from_db();
 
+    let engine_graphql_handler = foundry_graphql_engine::EngineLevelGraphQlHandler::new(client.client());
+
     let _graphql_webserver = {
         use foundry_graphql::{GraphQlRequestHandler, ServerData};
         use std::collections::HashMap;
         use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
-        let handlers: HashMap<String, GraphQlRequestHandler> = client
+        let mut handlers: HashMap<String, GraphQlRequestHandler> = client
             .client()
             .graphql_handlers()
             .iter()
@@ -276,7 +278,11 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
                 })
             })
             .collect();
-        // add chain-level handlers
+
+        handlers.insert("engine".to_owned(), GraphQlRequestHandler {
+            handler: Arc::new(engine_graphql_handler),
+            session_needed: false,
+        });
 
         let server_data = ServerData::new(Arc::new(ClientWrapper(client.client())), handlers);
         let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), config.graphql.port.unwrap());
