@@ -14,9 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod actions;
-
-pub use self::actions::{ban, init_stake, revert_delegations};
 use super::TopStateView;
 use crate::{StateResult, TopLevelState};
 use ccrypto::blake256;
