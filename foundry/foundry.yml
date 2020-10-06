@@ -87,6 +87,11 @@ args:
     - no-tx-relay:
         long: no-tx-relay
         help: Do not relay transactions.
+    - graphql-port:
+        long: graphql-port
+        value_name: PORT
+        help: Open GraphQL webserver on PORT.
+        takes_value: true
     - jsonrpc-interface:
         long: jsonrpc-interface
         value_name: INTERFACE

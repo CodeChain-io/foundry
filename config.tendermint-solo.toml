@@ -36,6 +36,9 @@ disable = false
 interface = "127.0.0.1"
 port = 8080
 
+[graphql]
+port = 4040
+
 [ipc]
 disable = false
 path = "/tmp/jsonrpc.ipc"
