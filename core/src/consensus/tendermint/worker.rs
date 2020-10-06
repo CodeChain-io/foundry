@@ -1631,13 +1631,10 @@ impl Worker {
         let mut last_snapshot_point = None;
         for block_hash in enacted.iter().rev() {
             let block_id = BlockId::Hash(*block_hash);
-
-            if c.current_term_id(block_id).expect("State trie should exist for enacted block") > 0 {
-                let last_term_finished_block_num = c.last_term_finished_block_num(block_id).expect("Block is enacted");
-                let block_number = c.block_number(&block_id).expect("Block number should exist for enacted block");
-                if last_term_finished_block_num + 1 == block_number {
-                    last_snapshot_point = Some(block_hash);
-                }
+            let block_number = c.block_number(&block_id).expect("Block number should exist for enacted block");
+            // FIXME: Receive snapshot period from config
+            if block_number % 1000 == 999 {
+                last_snapshot_point = Some(block_hash);
             }
         }
         if let Some(last_snapshot_point) = last_snapshot_point {
