@@ -22,16 +22,7 @@
     "minSetShardUsersCost" : 10,
     "minCustomCost" : 10,
     "maxBodySize": 4194304,
-    "snapshotPeriod": 16384,
-    "termSeconds": 10000,
-    "nominationExpiration": 100,
-    "custodyPeriod": 100,
-    "releasePeriod": 200,
-    "maxNumOfValidators": 100,
-    "minNumOfValidators": 1,
-    "delegationThreshold": 1,
-    "minDeposit": 1,
-    "maxCandidateMetadataSize": 500
+    "snapshotPeriod": 16384
   },
   "genesis": {
     "seal": {
