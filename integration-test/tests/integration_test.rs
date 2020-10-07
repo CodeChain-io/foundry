@@ -19,8 +19,15 @@
 
 extern crate foundry_integration_test as test_common;
 
+use serde_json::Value;
 use std::thread::sleep;
 use std::time::Duration;
+
+async fn get_latest_block(port: u16) -> u64 {
+    let query_result = test_common::request_query(port, "engine", "{block{header{number}}}", "{}").await;
+    let value: Value = serde_json::from_str(&query_result).unwrap();
+    value["data"]["block"]["header"]["number"].as_u64().unwrap()
+}
 
 #[test]
 fn run() {
@@ -36,6 +43,21 @@ async fn ping() {
     sleep(Duration::from_secs(3));
     let x = test_common::request_query(5555, "ping", "aaaa", "aaaa").await;
     assert_eq!(x, "Module not found: ping");
+    child.kill().unwrap();
+    child.wait().unwrap();
+}
+
+#[actix_rt::test]
+async fn track_blocks() {
+    let port = 5555;
+    let mut child = test_common::run_node(port);
+    sleep(Duration::from_secs(3));
+
+    let start_block = get_latest_block(port).await;
+    while get_latest_block(port).await < start_block + 15 {
+        sleep(Duration::from_secs(1));
+    }
+
     child.kill().unwrap();
     child.wait().unwrap();
 }
