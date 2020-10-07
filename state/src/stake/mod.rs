@@ -14,17 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{StateResult, TopLevelState};
 use ccrypto::blake256;
-use ckey::Ed25519Public as Public;
-use ctypes::errors::SyntaxError;
 use primitives::H256;
 use rlp::{Encodable, RlpStream};
-
-pub trait DoubleVoteHandler: Send + Sync {
-    fn execute(&self, message1: &[u8], state: &mut TopLevelState, fee_payer: &Public) -> StateResult<()>;
-    fn verify(&self, message1: &[u8], message2: &[u8]) -> Result<(), SyntaxError>;
-}
 
 pub struct StakeKeyBuilder {
     rlp: RlpStream,

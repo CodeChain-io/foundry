@@ -16,7 +16,7 @@
 
 use crate::client::ConsensusClient;
 use ckey::Ed25519Public as Public;
-use cstate::{ban, DoubleVoteHandler, StateResult, TopLevelState};
+use cstate::{ban, StateResult, TopLevelState};
 use ctypes::errors::{RuntimeError, SyntaxError};
 use parking_lot::RwLock;
 use std::sync::{Arc, Weak};
@@ -34,33 +34,6 @@ impl Stake {
     pub fn register_resources(&self, client: Weak<dyn ConsensusClient>, validators: Weak<dyn ValidatorSet>) {
         *self.client.write() = Some(Weak::clone(&client));
         *self.validators.write() = Some(Weak::clone(&validators));
-    }
-}
-
-impl DoubleVoteHandler for Stake {
-    fn execute(&self, message1: &[u8], state: &mut TopLevelState, sender: &Public) -> StateResult<()> {
-        let message1: ConsensusMessage =
-            rlp::decode(message1).map_err(|err| RuntimeError::FailedToHandleCustomAction(err.to_string()))?;
-        let validators =
-            self.validators.read().as_ref().and_then(Weak::upgrade).expect("ValidatorSet must be initialized");
-        let client = self.client.read().as_ref().and_then(Weak::upgrade).expect("Client must be initialized");
-
-        execute_report_double_vote(message1, state, sender, &*client, &*validators)?;
-        Ok(())
-    }
-
-    fn verify(&self, message1: &[u8], message2: &[u8]) -> Result<(), SyntaxError> {
-        let client: Arc<dyn ConsensusClient> =
-            self.client.read().as_ref().and_then(Weak::upgrade).expect("Client should be initialized");
-        let validators: Arc<dyn ValidatorSet> =
-            self.validators.read().as_ref().and_then(Weak::upgrade).expect("ValidatorSet should be initialized");
-
-        let message1: ConsensusMessage =
-            rlp::decode(message1).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
-        let message2: ConsensusMessage =
-            rlp::decode(message2).map_err(|err| SyntaxError::InvalidCustomAction(err.to_string()))?;
-
-        verify_report_double_vote(message1, message2, &*client, &*validators)
     }
 }
 
