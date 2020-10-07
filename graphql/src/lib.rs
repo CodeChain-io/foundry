@@ -107,6 +107,8 @@ pub fn run_server(server_data: ServerData, addr: SocketAddr) -> Result<Server> {
     Ok(server.bind(addr)?.run())
 }
 
+const NO_SESSION: SessionId = SessionId::MAX;
+
 struct Session {
     pub session_id: SessionId,
     pub session_manager: Arc<dyn ManageSession>,
@@ -115,7 +117,9 @@ struct Session {
 
 impl Drop for Session {
     fn drop(&mut self) {
-        self.session_manager.end_session(self.session_id)
+        if self.session_id != NO_SESSION {
+            self.session_manager.end_session(self.session_id)
+        }
     }
 }
 
@@ -139,7 +143,7 @@ impl FromRequest for Session {
                     let _height = ();
                     server_data.session_manager.new_session(ctypes::BlockId::Latest)
                 } else {
-                    0
+                    NO_SESSION
                 };
 
                 Ok(Session {
