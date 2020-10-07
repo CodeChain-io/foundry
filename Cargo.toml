@@ -92,7 +92,6 @@ members = [
     "types",
     "coordinator",
     "module",
-    "module-macros",
     "timestamp",
     "graphql",
     "integration-test",
