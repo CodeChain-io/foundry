@@ -31,7 +31,6 @@ import {
     Transaction,
     U64
 } from "../sdk/core/classes";
-import * as stake from "../stakeholder";
 import { faucetAddress, faucetSecret } from "./constants";
 import { wait } from "./promise";
 
@@ -771,23 +770,6 @@ export default class CodeChain {
         await checkNoError();
     }
 
-    public async waitForTermChange(target: number, timeout?: number) {
-        const start = Date.now();
-        while (true) {
-            const termMetadata = (await stake.getTermMetadata(this.rpc))!;
-            if (termMetadata.currentTermId >= target) {
-                return termMetadata;
-            }
-            await wait(1000);
-            if (timeout) {
-                if (Date.now() - start > timeout * 1000) {
-                    throw new Error(
-                        `Term didn't changed to ${target} in ${timeout} s. It is ${termMetadata.currentTermId} now`
-                    );
-                }
-            }
-        }
-    }
     public informerClient(): WebSocket {
         return new WebSocket(`ws://localhost:${this.informerPort}`);
     }
