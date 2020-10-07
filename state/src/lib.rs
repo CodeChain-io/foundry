@@ -22,7 +22,6 @@ extern crate codechain_key as ckey;
 extern crate codechain_types as ctypes;
 #[macro_use]
 extern crate log;
-#[macro_use]
 extern crate rlp_derive;
 
 mod cache;
