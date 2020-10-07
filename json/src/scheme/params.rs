@@ -32,16 +32,6 @@ pub struct Params {
     /// Snapshot creation period in unit of block numbers.
     pub snapshot_period: Uint,
 
-    pub term_seconds: Uint,
-    pub nomination_expiration: Uint,
-    pub custody_period: Uint,
-    pub release_period: Uint,
-    pub max_num_of_validators: Uint,
-    pub min_num_of_validators: Uint,
-    pub delegation_threshold: Uint,
-    pub min_deposit: Uint,
-    pub max_candidate_metadata_size: Uint,
-
     /// A monotonically increasing number to denote the consensus version.
     /// It is increased when we fork.
     pub era: Option<Uint>,
@@ -58,16 +48,7 @@ mod tests {
             "maxExtraDataSize": "0x20",
             "networkID" : "tc",
             "maxBodySize" : 4194304,
-            "snapshotPeriod": 16384,
-            "termSeconds": 3600,
-            "nominationExpiration": 24,
-            "custodyPeriod": 25,
-            "releasePeriod": 26,
-            "maxNumOfValidators": 27,
-            "minNumOfValidators": 28,
-            "delegationThreshold": 29,
-            "minDeposit": 30,
-            "maxCandidateMetadataSize": 31
+            "snapshotPeriod": 16384
         }"#;
 
         let deserialized: Params = serde_json::from_str(s).unwrap();
@@ -75,15 +56,6 @@ mod tests {
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.max_body_size, 4_194_304.into());
         assert_eq!(deserialized.snapshot_period, 16_384.into());
-        assert_eq!(deserialized.term_seconds, 3600.into());
-        assert_eq!(deserialized.nomination_expiration, 24.into());
-        assert_eq!(deserialized.custody_period, 25.into());
-        assert_eq!(deserialized.release_period, 26.into());
-        assert_eq!(deserialized.max_num_of_validators, 27.into());
-        assert_eq!(deserialized.min_num_of_validators, 28.into());
-        assert_eq!(deserialized.delegation_threshold, 29.into());
-        assert_eq!(deserialized.min_deposit, 30.into());
-        assert_eq!(deserialized.max_candidate_metadata_size, 31.into());
         assert_eq!(deserialized.era, None);
     }
 
@@ -95,15 +67,6 @@ mod tests {
             "networkID" : "tc",
             "maxBodySize" : 4194304,
             "snapshotPeriod": 16384,
-            "termSeconds": 3600,
-            "nominationExpiration": 24,
-            "custodyPeriod": 25,
-            "releasePeriod": 26,
-            "maxNumOfValidators": 27,
-            "minNumOfValidators": 28,
-            "delegationThreshold": 29,
-            "minDeposit": 30,
-            "maxCandidateMetadataSize": 31,
             "era": 32
         }"#;
 
@@ -112,15 +75,6 @@ mod tests {
         assert_eq!(deserialized.network_id, "tc".into());
         assert_eq!(deserialized.max_body_size, 4_194_304.into());
         assert_eq!(deserialized.snapshot_period, 16_384.into());
-        assert_eq!(deserialized.term_seconds, 3600.into());
-        assert_eq!(deserialized.nomination_expiration, 24.into());
-        assert_eq!(deserialized.custody_period, 25.into());
-        assert_eq!(deserialized.release_period, 26.into());
-        assert_eq!(deserialized.max_num_of_validators, 27.into());
-        assert_eq!(deserialized.min_num_of_validators, 28.into());
-        assert_eq!(deserialized.delegation_threshold, 29.into());
-        assert_eq!(deserialized.min_deposit, 30.into());
-        assert_eq!(deserialized.max_candidate_metadata_size, 31.into());
         assert_eq!(deserialized.era, Some(32.into()));
     }
 }
