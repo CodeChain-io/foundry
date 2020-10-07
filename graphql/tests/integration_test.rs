@@ -94,6 +94,23 @@ async fn request_get() {
 }
 
 #[actix_rt::test]
+async fn request_get_with_block_number() {
+    let port = 4006;
+    let _server = create_server(port);
+    let client = Client::new();
+    let (query, expected) = test_query();
+
+    let request = client
+        .get(&format!("http://localhost:{}/module1/graphql", port))
+        .query(&query)
+        .unwrap()
+        .set_header("number", "111");
+    let response_bytes = request.send().await.unwrap().body().await.unwrap();
+    let response = std::str::from_utf8(&response_bytes).expect("GraphQL server must return utf8-encoded string");
+    assert_eq!(response, expected);
+}
+
+#[actix_rt::test]
 async fn request_get_with_variables() {
     let port = 4002;
     let _server = create_server(port);
