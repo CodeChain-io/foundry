@@ -131,7 +131,8 @@ impl FromRequest for Session {
     fn from_request(req: &HttpRequest, _payload: &mut actix_http::Payload) -> Self::Future {
         let module_name = req.match_info().get("module_name").map(|string| string.to_owned());
         let server_data = req.app_data::<web::Data<Arc<ServerData>>>().unwrap().clone();
-        Box::pin(async move {
+
+        let result = (|| {
             let module_name = module_name.ok_or_else(|| ErrorBadRequest("module_name not found"))?;
 
             if let Some(GraphQlRequestHandler {
@@ -140,8 +141,18 @@ impl FromRequest for Session {
             }) = server_data.graphql_handlers.get(&module_name)
             {
                 let session_id = if *session_needed {
-                    let _height = ();
-                    server_data.session_manager.new_session(ctypes::BlockId::Latest)
+                    // TODO: support hash too.
+                    let number: ctypes::BlockId = if let Some(v) = req.headers().get("number") {
+                        ctypes::BlockId::Number(
+                            v.to_str()
+                                .map_err(|_| ErrorBadRequest("'number' in the header has an invalid value"))?
+                                .parse()
+                                .map_err(|_| ErrorBadRequest("'number' in the header has an invalid value"))?,
+                        )
+                    } else {
+                        ctypes::BlockId::Latest
+                    };
+                    server_data.session_manager.new_session(number)
                 } else {
                     NO_SESSION
                 };
@@ -154,6 +165,8 @@ impl FromRequest for Session {
             } else {
                 Err(ErrorNotFound(format!("Module not found: {}", module_name)))
             }
-        })
+        })();
+
+        Box::pin(async move { result })
     }
 }
