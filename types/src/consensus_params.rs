@@ -30,8 +30,6 @@ pub struct ConsensusParams {
     max_body_size: u64,
     /// Snapshot creation period in unit of block numbers.
     snapshot_period: u64,
-
-    term_seconds: u64,
 }
 
 impl ConsensusParams {
@@ -47,9 +45,6 @@ impl ConsensusParams {
     pub fn snapshot_period(&self) -> u64 {
         self.snapshot_period
     }
-    pub fn term_seconds(&self) -> u64 {
-        self.term_seconds
-    }
 
     pub fn default_for_test() -> Self {
         Self {
@@ -57,28 +52,26 @@ impl ConsensusParams {
             network_id: NetworkId::from_str("dt").unwrap(),
             max_body_size: 100_000,
             snapshot_period: 1000,
-            term_seconds: 1000,
         }
     }
 }
 
 impl Encodable for ConsensusParams {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(5)
+        s.begin_list(4)
             .append(&self.max_extra_data_size)
             .append(&self.network_id)
             .append(&self.max_body_size)
-            .append(&self.snapshot_period)
-            .append(&self.term_seconds);
+            .append(&self.snapshot_period);
     }
 }
 
 impl Decodable for ConsensusParams {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let size = rlp.item_count()?;
-        if size != 5 {
+        if size != 4 {
             return Err(DecoderError::RlpIncorrectListLen {
-                expected: 5,
+                expected: 4,
                 got: size,
             })
         }
@@ -87,14 +80,12 @@ impl Decodable for ConsensusParams {
         let network_id = rlp.val_at(1)?;
         let max_body_size = rlp.val_at(2)?;
         let snapshot_period = rlp.val_at(3)?;
-        let term_seconds = rlp.val_at(4)?;
 
         Ok(Self {
             max_extra_data_size,
             network_id,
             max_body_size,
             snapshot_period,
-            term_seconds,
         })
     }
 }
@@ -106,7 +97,6 @@ impl From<Params> for ConsensusParams {
             network_id: p.network_id,
             max_body_size: p.max_body_size.into(),
             snapshot_period: p.snapshot_period.into(),
-            term_seconds: p.term_seconds.into(),
         }
     }
 }
