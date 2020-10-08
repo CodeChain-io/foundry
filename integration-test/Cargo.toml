@@ -14,6 +14,8 @@ serde_derive = "1.0.110"
 serde = "1.0.110"
 coordinator = {path = "../coordinator"}
 ctypes = { package = "codechain-types", path = "../types" }
+hex = "0.4.2"
+ckey = {package = "codechain-key", path = "../key" }
 
 [features]
 integration-test = []
