@@ -19,6 +19,8 @@
 
 extern crate foundry_integration_test as test_common;
 
+use ckey::{Ed25519KeyPair, Generator, KeyPairTrait, Random};
+use serde_json::Value;
 use std::thread::sleep;
 use std::time::Duration;
 use test_common::*;
@@ -51,6 +53,43 @@ async fn track_blocks() {
     while get_latest_block(port).await < start_block + 15 {
         sleep(Duration::from_secs(1));
     }
+
+    child.kill().unwrap();
+    child.wait().unwrap();
+}
+
+#[actix_rt::test]
+async fn send_hello_tx() {
+    let port = 5555;
+    let mut child = run_node(port);
+    sleep(Duration::from_secs(3));
+
+    let user: Ed25519KeyPair = Random.generate().unwrap();
+
+    // valid
+    let tx = create_tx_hello(port, user.public(), user.private(), 0).await;
+    send_tx(port, tx.tx_type(), tx.body()).await;
+
+    // invalid
+    let tx = create_tx_hello(port, user.public(), user.private(), 100).await;
+    send_tx(port, tx.tx_type(), tx.body()).await;
+
+    sleep(Duration::from_secs(6));
+
+    let latest = get_latest_block(port).await;
+    let mut num = 0;
+    let query = "query Test($number: Int!) {
+        block(number: $number) {
+            transactions { txType }
+        }
+    }";
+    for i in 0..latest {
+        let query_result = request_query(port, "engine", query, &format!(r#"{{"number": {}}}"#, i)).await;
+        let value: Value = serde_json::from_str(&query_result).unwrap();
+        let txes: Vec<Value> = serde_json::from_value(value["data"]["block"]["transactions"].clone()).unwrap();
+        num += txes.len();
+    }
+    assert_eq!(num, 1);
 
     child.kill().unwrap();
     child.wait().unwrap();
