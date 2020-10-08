@@ -448,7 +448,7 @@ impl BlockChainClient for TestBlockChainClient {
 
     fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions {
         let size_limit = self
-            .consensus_params(BlockId::Latest)
+            .chain_params(BlockId::Latest)
             .expect("Common params of the latest block always exists")
             .max_body_size();
         self.miner.pending_transactions(size_limit as usize, range)
@@ -527,7 +527,7 @@ impl EngineInfo for TestBlockChainClient {
         unimplemented!()
     }
 
-    fn consensus_params(&self, _block_id: BlockId) -> Option<ChainParams> {
+    fn chain_params(&self, _block_id: BlockId) -> Option<ChainParams> {
         unimplemented!()
     }
 

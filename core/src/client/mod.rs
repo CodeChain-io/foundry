@@ -72,7 +72,7 @@ pub trait BlockChainTrait {
 
 pub trait EngineInfo: Send + Sync {
     fn network_id(&self) -> NetworkId;
-    fn consensus_params(&self, block_id: BlockId) -> Option<ChainParams>;
+    fn chain_params(&self, block_id: BlockId) -> Option<ChainParams>;
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>, EngineError>;
     fn validator_set(&self, block_number: Option<u64>) -> Result<Option<CompactValidatorSet>, EngineError>;
 }

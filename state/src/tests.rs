@@ -38,9 +38,9 @@ pub mod helpers {
         get_temp_state_with_metadata(ChainParams::default_for_test())
     }
 
-    pub fn get_temp_state_with_metadata(consensus_params: ChainParams) -> TopLevelState {
+    pub fn get_temp_state_with_metadata(chain_params: ChainParams) -> TopLevelState {
         let state_db = get_temp_state_db();
-        empty_top_state_with_metadata(state_db, consensus_params)
+        empty_top_state_with_metadata(state_db, chain_params)
     }
 
     pub fn get_test_client() -> TestClient {
@@ -59,12 +59,12 @@ pub mod helpers {
 
     /// Creates new state with empty state root
     /// Used for tests.
-    pub fn empty_top_state_with_metadata(mut db: StateDB, consensus_params: ChainParams) -> TopLevelState {
+    pub fn empty_top_state_with_metadata(mut db: StateDB, chain_params: ChainParams) -> TopLevelState {
         let mut root = H256::default();
         // init trie and reset root too null
         {
             let mut t = TrieFactory::create(db.as_hashdb_mut(), &mut root);
-            t.insert(MetadataAddress::new().as_ref(), &Metadata::new(consensus_params).rlp_bytes()).unwrap();
+            t.insert(MetadataAddress::new().as_ref(), &Metadata::new(chain_params).rlp_bytes()).unwrap();
         }
 
         TopLevelState::from_existing(db, root).expect("The empty trie root was initialized")

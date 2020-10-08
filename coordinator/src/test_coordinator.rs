@@ -29,7 +29,7 @@ use std::sync::Arc;
 // Coordinator dedicated for mempool and miner testing
 pub struct TestCoordinator {
     validator_set: CompactValidatorSet,
-    consensus_params: ChainParams,
+    chain_params: ChainParams,
     body_count: AtomicUsize,
     body_size: AtomicUsize,
 }
@@ -38,7 +38,7 @@ impl Default for TestCoordinator {
     fn default() -> Self {
         Self {
             validator_set: Default::default(),
-            consensus_params: ChainParams::default_for_test(),
+            chain_params: ChainParams::default_for_test(),
             body_count: AtomicUsize::new(0),
             body_size: AtomicUsize::new(0),
         }
@@ -51,7 +51,7 @@ impl Initializer for TestCoordinator {
     }
 
     fn initialize_chain(&self, _storage: &mut dyn StorageAccess) -> (CompactValidatorSet, ChainParams) {
-        (self.validator_set.clone(), self.consensus_params)
+        (self.validator_set.clone(), self.chain_params)
     }
 }
 
@@ -93,10 +93,10 @@ impl BlockExecutor for TestCoordinator {
     }
 
     fn close_block(&self, _execution_id: ExecutionId) -> Result<BlockOutcome, CloseBlockError> {
-        if self.body_size.load(Ordering::SeqCst) > self.consensus_params.max_body_size() as usize {
+        if self.body_size.load(Ordering::SeqCst) > self.chain_params.max_body_size() as usize {
             Ok(BlockOutcome {
                 updated_validator_set: Some(self.validator_set.clone()),
-                updated_consensus_params: Some(self.consensus_params),
+                updated_chain_params: Some(self.chain_params),
 
                 events: Vec::new(),
             })
@@ -108,7 +108,7 @@ impl BlockExecutor for TestCoordinator {
 
 impl TxFilter for TestCoordinator {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), ErrorCode> {
-        if transaction.size() > self.consensus_params.max_body_size() as usize {
+        if transaction.size() > self.chain_params.max_body_size() as usize {
             Err(1)
         } else {
             Ok(())

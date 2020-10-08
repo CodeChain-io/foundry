@@ -30,9 +30,9 @@ impl Verifier {
         header: &Header,
         parent: &Header,
         engine: &dyn ConsensusEngine,
-        consensus_params: &ChainParams,
+        chain_params: &ChainParams,
     ) -> Result<(), Error> {
-        verification::verify_block_family(block, header, parent, engine, consensus_params)
+        verification::verify_block_family(block, header, parent, engine, chain_params)
     }
 
     /// Do a final verification check for an enacted header vs its expected counterpart.

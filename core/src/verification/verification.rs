@@ -65,11 +65,11 @@ pub fn verify_header_with_engine(header: &Header, engine: &dyn ConsensusEngine) 
     Ok(())
 }
 
-pub fn verify_block_with_params(header: &Header, bytes: &[u8], consensus_params: &ChainParams) -> Result<(), Error> {
-    verify_header_with_params(&header, consensus_params)?;
+pub fn verify_block_with_params(header: &Header, bytes: &[u8], chain_params: &ChainParams) -> Result<(), Error> {
+    verify_header_with_params(&header, chain_params)?;
 
     let body_rlp = Rlp::new(bytes).at(2).expect("verify_block_basic already checked it");
-    if body_rlp.as_raw().len() > consensus_params.max_body_size() as usize {
+    if body_rlp.as_raw().len() > chain_params.max_body_size() as usize {
         return Err(BlockError::BodySizeIsTooBig.into())
     }
     Ok(())
@@ -111,8 +111,8 @@ pub fn verify_header_basic(header: &Header) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn verify_header_with_params(header: &Header, consensus_params: &ChainParams) -> Result<(), Error> {
-    let max_extra_data_size = consensus_params.max_extra_data_size() as usize;
+pub fn verify_header_with_params(header: &Header, chain_params: &ChainParams) -> Result<(), Error> {
+    let max_extra_data_size = chain_params.max_extra_data_size() as usize;
     if header.extra_data().len() > max_extra_data_size {
         return Err(From::from(BlockError::ExtraDataOutOfBounds(OutOfBounds {
             min: None,
@@ -160,9 +160,9 @@ pub fn verify_block_family(
     header: &Header,
     parent: &Header,
     engine: &dyn ConsensusEngine,
-    consensus_params: &ChainParams,
+    chain_params: &ChainParams,
 ) -> Result<(), Error> {
-    verify_block_with_params(header, block, consensus_params)?;
+    verify_block_with_params(header, block, chain_params)?;
 
     // TODO: verify timestamp
     verify_parent(&header, &parent)?;

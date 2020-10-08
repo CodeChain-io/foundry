@@ -47,7 +47,7 @@ pub type CloseBlockError = String;
 
 pub struct BlockOutcome {
     pub updated_validator_set: Option<CompactValidatorSet>,
-    pub updated_consensus_params: Option<ChainParams>,
+    pub updated_chain_params: Option<ChainParams>,
     pub events: Vec<Event>,
 }
 

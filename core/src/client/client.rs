@@ -256,12 +256,12 @@ impl Client {
             state.create_module()?;
         }
 
-        let (validators, consensus_params) = coordinator.initialize_chain(&mut state);
+        let (validators, chain_params) = coordinator.initialize_chain(&mut state);
 
         let validator_set = NextValidatorSet::from_compact_validator_set(validators);
         validator_set.save_to_state(&mut state)?;
 
-        *state.get_metadata_mut().unwrap() = Metadata::new(consensus_params);
+        *state.get_metadata_mut().unwrap() = Metadata::new(chain_params);
 
         Ok(state.commit_and_clone_db()?)
     }
@@ -349,16 +349,16 @@ impl StateInfo for Client {
 
 impl EngineInfo for Client {
     fn network_id(&self) -> NetworkId {
-        self.consensus_params(BlockId::Earliest).expect("Genesis state must exist").network_id()
+        self.chain_params(BlockId::Earliest).expect("Genesis state must exist").network_id()
     }
 
-    fn consensus_params(&self, block_id: BlockId) -> Option<ChainParams> {
+    fn chain_params(&self, block_id: BlockId) -> Option<ChainParams> {
         self.state_info(block_id.into()).map(|state| {
             *state
                 .metadata()
                 .unwrap_or_else(|err| unreachable!("Unexpected failure. Maybe DB was corrupted: {:?}", err))
                 .unwrap()
-                .consensus_params()
+                .chain_params()
         })
     }
 
@@ -573,7 +573,7 @@ impl BlockChainClient for Client {
 
     fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions {
         let size_limit = self
-            .consensus_params(BlockId::Latest)
+            .chain_params(BlockId::Latest)
             .expect("Consensus params of the latest block always exists")
             .max_body_size();
         self.miner.pending_transactions(size_limit as usize, range)
