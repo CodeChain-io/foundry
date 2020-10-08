@@ -54,7 +54,7 @@ use cstate::{NextValidatorSet, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::Header;
 use ctypes::{
-    BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorEntry, CompactValidatorSet, ConsensusParams,
+    BlockHash, BlockId, BlockNumber, CompactValidatorEntry, CompactValidatorSet, ConsensusParams,
     Header as BlockHeader, SyncHeader, TxHash,
 };
 use kvdb::KeyValueDB;
@@ -527,10 +527,6 @@ impl EngineInfo for TestBlockChainClient {
         unimplemented!()
     }
 
-    fn common_params(&self, _block_id: BlockId) -> Option<CommonParams> {
-        unimplemented!()
-    }
-
     fn consensus_params(&self, _block_id: BlockId) -> Option<ConsensusParams> {
         unimplemented!()
     }
@@ -553,8 +549,7 @@ impl ConsensusClient for TestBlockChainClient {}
 impl StateInfo for TestBlockChainClient {
     fn state_at(&self, _id: BlockId) -> Option<TopLevelState> {
         let statedb = StateDB::new_with_memorydb();
-        let top_state =
-            empty_top_state_with_metadata(statedb, CommonParams::default(), ConsensusParams::default_for_test());
+        let top_state = empty_top_state_with_metadata(statedb, ConsensusParams::default_for_test());
 
         Some(top_state)
     }

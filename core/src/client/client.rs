@@ -42,7 +42,7 @@ use coordinator::types::Event;
 use coordinator::Transaction;
 use cstate::{Metadata, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
-use ctypes::{BlockHash, BlockId, BlockNumber, CommonParams, ConsensusParams, Header, SyncHeader, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, ConsensusParams, Header, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::{Bytes, H256};
@@ -261,8 +261,7 @@ impl Client {
         let validator_set = NextValidatorSet::from_compact_validator_set(validators);
         validator_set.save_to_state(&mut state)?;
 
-        let genesis_params = CommonParams::default();
-        *state.get_metadata_mut().unwrap() = Metadata::new(genesis_params, consensus_params);
+        *state.get_metadata_mut().unwrap() = Metadata::new(consensus_params);
 
         Ok(state.commit_and_clone_db()?)
     }
@@ -351,16 +350,6 @@ impl StateInfo for Client {
 impl EngineInfo for Client {
     fn network_id(&self) -> NetworkId {
         self.consensus_params(BlockId::Earliest).expect("Genesis state must exist").network_id()
-    }
-
-    fn common_params(&self, block_id: BlockId) -> Option<CommonParams> {
-        self.state_info(block_id.into()).map(|state| {
-            *state
-                .metadata()
-                .unwrap_or_else(|err| unreachable!("Unexpected failure. Maybe DB was corrupted: {:?}", err))
-                .unwrap()
-                .params()
-        })
     }
 
     fn consensus_params(&self, block_id: BlockId) -> Option<ConsensusParams> {
@@ -595,7 +584,7 @@ impl BlockChainClient for Client {
     fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions {
         let size_limit = self
             .consensus_params(BlockId::Latest)
-            .expect("Common params of the latest block always exists")
+            .expect("Consensus params of the latest block always exists")
             .max_body_size();
         self.miner.pending_transactions(size_limit as usize, range)
     }

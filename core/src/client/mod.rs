@@ -40,9 +40,7 @@ use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::types::Event;
 use coordinator::Transaction;
 use cstate::{TopLevelState, TopStateView};
-use ctypes::{
-    BlockHash, BlockId, BlockNumber, CommonParams, CompactValidatorSet, ConsensusParams, Header, SyncHeader, TxHash,
-};
+use ctypes::{BlockHash, BlockId, BlockNumber, CompactValidatorSet, ConsensusParams, Header, SyncHeader, TxHash};
 use kvdb::KeyValueDB;
 use primitives::Bytes;
 use std::ops::Range;
@@ -74,7 +72,6 @@ pub trait BlockChainTrait {
 
 pub trait EngineInfo: Send + Sync {
     fn network_id(&self) -> NetworkId;
-    fn common_params(&self, block_id: BlockId) -> Option<CommonParams>;
     fn consensus_params(&self, block_id: BlockId) -> Option<ConsensusParams>;
     fn metadata_seq(&self, block_id: BlockId) -> Option<u64>;
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>, EngineError>;

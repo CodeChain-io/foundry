@@ -45,8 +45,7 @@ use crate::{
 use cdb::{AsHashDB, DatabaseError};
 use coordinator::context::{StorageAccess, SubStorageAccess};
 use ctypes::errors::RuntimeError;
-use ctypes::util::unexpected::Mismatch;
-use ctypes::{CommonParams, ConsensusParams, StorageId};
+use ctypes::{ConsensusParams, StorageId};
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use parking_lot::{Mutex, RwLock};
@@ -355,21 +354,6 @@ impl TopState for TopLevelState {
 
     fn remove_action_data(&mut self, key: &H256) {
         self.top_cache.remove_action_data(key)
-    }
-
-    fn update_params(&mut self, metadata_seq: u64, params: CommonParams) -> StateResult<()> {
-        let mut metadata = self.get_metadata_mut()?;
-        if metadata.seq() != metadata_seq {
-            return Err(RuntimeError::InvalidSeq(Mismatch {
-                found: metadata_seq,
-                expected: metadata.seq(),
-            })
-            .into())
-        }
-
-        metadata.set_params(params);
-        metadata.increase_seq();
-        Ok(())
     }
 
     fn update_consensus_params(&mut self, consensus_params: ConsensusParams) -> StateResult<()> {
