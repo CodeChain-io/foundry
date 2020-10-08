@@ -17,6 +17,7 @@
 use super::state_machine::*;
 use super::types::*;
 use super::ServiceHandler;
+use crate::common::SignedTransaction;
 pub use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::module::*;
 use coordinator::types::*;
@@ -86,7 +87,7 @@ impl TxOwner for ServiceHandler {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), coordinator::types::ErrorCode> {
         let todo_fixthis: coordinator::types::ErrorCode = 3;
         assert_eq!(transaction.tx_type(), "account");
-        let tx: OwnTransaction = serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
+        let tx: SignedTransaction = serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
         tx.verify().map_err(|_| todo_fixthis)?;
         Ok(())
     }

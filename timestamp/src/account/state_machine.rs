@@ -17,6 +17,7 @@
 use super::types::*;
 use super::Config;
 use crate::common::state_machine::{StateAccess, StateTransition};
+use crate::common::SignedTransaction;
 pub use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::context::SubStorageAccess;
 use coordinator::Transaction;
@@ -119,8 +120,10 @@ impl<'a> StateTransition for ExecuteTransaction<'a> {
             return Err(ExecuteError::InvalidMetadata)
         }
 
-        let tx: OwnTransaction = serde_cbor::from_slice(&self.tx.body()).map_err(|_| ExecuteError::InvalidFormat)?;
+        let tx: SignedTransaction = serde_cbor::from_slice(&self.tx.body()).map_err(|_| ExecuteError::InvalidFormat)?;
+        let action: TxHello = serde_cbor::from_slice(&tx.action).map_err(|_| ExecuteError::InvalidFormat)?;
         tx.verify().map_err(|_| ExecuteError::InvalidSign)?;
+
         if (GetAccount {
             public: &tx.signer_public,
             default: true,
@@ -128,7 +131,7 @@ impl<'a> StateTransition for ExecuteTransaction<'a> {
         .execute(state)
         .map_err(ExecuteError::AccountError)?
         .seq)
-            != tx.tx.seq
+            != action.seq
         {
             return Err(ExecuteError::InvalidSequence)
         }

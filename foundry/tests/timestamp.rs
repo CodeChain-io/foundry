@@ -17,6 +17,7 @@
 use ccore::BlockChainClient;
 use ccore::Client;
 
+use ccrypto::blake256;
 use ckey::{Ed25519KeyPair, Generator, KeyPairTrait, Random};
 use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use codechain_timestamp::account::TxHello;
@@ -28,17 +29,15 @@ use std::thread::sleep;
 use std::time::Duration;
 
 fn tx_hello(public: &Public, private: &Private, seq: u64) -> Transaction {
-    let tx = TxHello;
-    let tx = UserTransaction {
+    let action = serde_cbor::to_vec(&TxHello {
         seq,
-        network_id: Default::default(),
-        action: tx,
-    };
-    let tx_hash = tx.hash();
+    })
+    .unwrap();
+    let tx_hash = blake256(&action);
     let tx = SignedTransaction {
         signature: ckey::sign(tx_hash.as_bytes(), private),
         signer_public: *public,
-        tx,
+        action,
     };
     Transaction::new("account".to_owned(), serde_cbor::to_vec(&tx).unwrap())
 }
