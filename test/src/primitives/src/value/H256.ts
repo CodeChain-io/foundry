@@ -6,7 +6,7 @@ const RLP = require("rlp");
 export type H256Value = H256 | string;
 
 /**
- * Handles 256-bit data. Used to express block hash, parcel hash, transaction hash, merkle root, etc.
+ * Handles 256-bit data. Used to express block hash, transaction hash, merkle root, etc.
  */
 export class H256 {
     public static fromBytes(buffer: Buffer): H256 {
