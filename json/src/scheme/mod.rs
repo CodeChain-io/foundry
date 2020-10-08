@@ -16,7 +16,6 @@
 
 mod engine;
 mod genesis;
-mod params;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod scheme;
 mod seal;
@@ -24,7 +23,6 @@ mod tendermint;
 
 pub use self::engine::Engine;
 pub use self::genesis::Genesis;
-pub use self::params::Params;
 pub use self::scheme::Scheme;
 pub use self::seal::{Seal, TendermintSeal};
 pub use self::tendermint::{Tendermint, TendermintParams};

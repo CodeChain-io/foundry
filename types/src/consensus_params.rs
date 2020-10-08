@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use cjson::scheme::Params;
 use ckey::NetworkId;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use serde::{Deserialize, Serialize};
@@ -87,17 +86,6 @@ impl Decodable for ConsensusParams {
             max_body_size,
             snapshot_period,
         })
-    }
-}
-
-impl From<Params> for ConsensusParams {
-    fn from(p: Params) -> Self {
-        Self {
-            max_extra_data_size: p.max_extra_data_size.into(),
-            network_id: p.network_id,
-            max_body_size: p.max_body_size.into(),
-            snapshot_period: p.snapshot_period.into(),
-        }
     }
 }
 

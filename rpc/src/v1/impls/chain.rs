@@ -18,7 +18,6 @@ use super::super::errors;
 use super::super::traits::Chain;
 use super::super::types::{Block, BlockNumberAndHash, Transaction, ValidatorSet};
 use ccore::{BlockChainClient, EngineInfo};
-use cjson::scheme::Params;
 use ckey::{NetworkId, PlatformAddress};
 use ctypes::{BlockHash, BlockId, BlockNumber, TxHash};
 use jsonrpc_core::Result;
@@ -89,11 +88,6 @@ where
 
     fn get_network_id(&self) -> Result<NetworkId> {
         Ok(self.client.network_id())
-    }
-
-    fn get_common_params(&self, block_number: Option<u64>) -> Result<Option<Params>> {
-        let block_id = block_number.map(BlockId::Number).unwrap_or(BlockId::Latest);
-        Ok(self.client.common_params(block_id).map(Params::from))
     }
 
     fn get_metadata_seq(&self, block_number: Option<u64>) -> Result<Option<u64>> {
