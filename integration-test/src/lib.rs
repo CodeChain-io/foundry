@@ -37,6 +37,12 @@ pub async fn request_query(port: u16, module: &str, query: &str, variables: &str
     response.to_owned()
 }
 
+pub async fn get_latest_block(port: u16) -> u64 {
+    let query_result = request_query(port, "engine", "{block{header{number}}}", "{}").await;
+    let value: Value = serde_json::from_str(&query_result).unwrap();
+    value["data"]["block"]["header"]["number"].as_u64().unwrap()
+}
+
 /// This is a copy from `codechain-timestamp`.
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct SignedTransaction {
