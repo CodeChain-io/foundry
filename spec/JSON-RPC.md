@@ -981,47 +981,6 @@ Returns a count of the transactions that have insertion_timestamps within the gi
 
 [Back to **List of methods**](#list-of-methods)
 
-## mempool_getMachineMinimumFees
-Get minimum fees configured by the machine.
-
-### Params
-No parameters
-
-### Returns
-{
-  "minCreateShardTransactionCost":`number`,
-  "minCustomTransactionCost":`number`,
-  "minPayTransactionCost":`number`,
-  "minSetShardOwnersTransactionCost":`number`,
-  "minSetShardUsersTransactionCost":`number`,
-}
-
-### Request Example
-```
-curl \
-    -H 'Content-Type: application/json' \
-    -d '{"jsonrpc": "2.0", "method": "mempool_getMachineMinimumFees", "params": [], "id": null}' \
-    localhost:8080
-```
-
-### Response Example
-```
-{
-  "jsonrpc":"2.0",
-  "result":{
-    "minCreateShardTransactionCost":0,
-    "minCustomTransactionCost":0,
-    "minPayTransactionCost":0,
-    "minSetShardOwnersTransactionCost":0,
-    "minSetShardUsersTransactionCost":0,
-    },
-  "id":null
-}
-
-```
-
-[Back to **List of methods**](#list-of-methods)
-
 ## engine_getCustomActionData
 Gets custom action data for given custom action handler id and rlp encoded key.
 
