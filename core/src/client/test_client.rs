@@ -54,8 +54,8 @@ use cstate::{NextValidatorSet, StateDB, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::Header;
 use ctypes::{
-    BlockHash, BlockId, BlockNumber, CompactValidatorEntry, CompactValidatorSet, ConsensusParams,
-    Header as BlockHeader, SyncHeader, TxHash,
+    BlockHash, BlockId, BlockNumber, ChainParams, CompactValidatorEntry, CompactValidatorSet, Header as BlockHeader,
+    SyncHeader, TxHash,
 };
 use kvdb::KeyValueDB;
 use merkle_trie::skewed_merkle_root;
@@ -527,7 +527,7 @@ impl EngineInfo for TestBlockChainClient {
         unimplemented!()
     }
 
-    fn consensus_params(&self, _block_id: BlockId) -> Option<ConsensusParams> {
+    fn consensus_params(&self, _block_id: BlockId) -> Option<ChainParams> {
         unimplemented!()
     }
 
@@ -545,7 +545,7 @@ impl ConsensusClient for TestBlockChainClient {}
 impl StateInfo for TestBlockChainClient {
     fn state_at(&self, _id: BlockId) -> Option<TopLevelState> {
         let statedb = StateDB::new_with_memorydb();
-        let top_state = empty_top_state_with_metadata(statedb, ConsensusParams::default_for_test());
+        let top_state = empty_top_state_with_metadata(statedb, ChainParams::default_for_test());
 
         Some(top_state)
     }

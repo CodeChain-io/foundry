@@ -20,7 +20,7 @@ use crate::views::BlockView;
 use ccrypto::BLAKE_NULL_RLP;
 use coordinator::Transaction;
 use ctypes::util::unexpected::{Mismatch, OutOfBounds};
-use ctypes::{BlockNumber, ConsensusParams, Header};
+use ctypes::{BlockNumber, ChainParams, Header};
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
 use rlp::Rlp;
@@ -65,11 +65,7 @@ pub fn verify_header_with_engine(header: &Header, engine: &dyn ConsensusEngine) 
     Ok(())
 }
 
-pub fn verify_block_with_params(
-    header: &Header,
-    bytes: &[u8],
-    consensus_params: &ConsensusParams,
-) -> Result<(), Error> {
+pub fn verify_block_with_params(header: &Header, bytes: &[u8], consensus_params: &ChainParams) -> Result<(), Error> {
     verify_header_with_params(&header, consensus_params)?;
 
     let body_rlp = Rlp::new(bytes).at(2).expect("verify_block_basic already checked it");
@@ -115,7 +111,7 @@ pub fn verify_header_basic(header: &Header) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn verify_header_with_params(header: &Header, consensus_params: &ConsensusParams) -> Result<(), Error> {
+pub fn verify_header_with_params(header: &Header, consensus_params: &ChainParams) -> Result<(), Error> {
     let max_extra_data_size = consensus_params.max_extra_data_size() as usize;
     if header.extra_data().len() > max_extra_data_size {
         return Err(From::from(BlockError::ExtraDataOutOfBounds(OutOfBounds {
@@ -164,7 +160,7 @@ pub fn verify_block_family(
     header: &Header,
     parent: &Header,
     engine: &dyn ConsensusEngine,
-    consensus_params: &ConsensusParams,
+    consensus_params: &ChainParams,
 ) -> Result<(), Error> {
     verify_block_with_params(header, block, consensus_params)?;
 

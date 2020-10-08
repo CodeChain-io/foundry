@@ -18,7 +18,7 @@ pub mod helpers {
     use crate::impls::TopLevelState;
     use crate::{Metadata, MetadataAddress, StateDB};
     use cdb::AsHashDB;
-    use ctypes::ConsensusParams;
+    use ctypes::ChainParams;
     use kvdb::KeyValueDB;
     use merkle_trie::{TrieFactory, TrieMut};
     use primitives::H256;
@@ -35,10 +35,10 @@ pub mod helpers {
     }
 
     pub fn get_temp_state() -> TopLevelState {
-        get_temp_state_with_metadata(ConsensusParams::default_for_test())
+        get_temp_state_with_metadata(ChainParams::default_for_test())
     }
 
-    pub fn get_temp_state_with_metadata(consensus_params: ConsensusParams) -> TopLevelState {
+    pub fn get_temp_state_with_metadata(consensus_params: ChainParams) -> TopLevelState {
         let state_db = get_temp_state_db();
         empty_top_state_with_metadata(state_db, consensus_params)
     }
@@ -59,7 +59,7 @@ pub mod helpers {
 
     /// Creates new state with empty state root
     /// Used for tests.
-    pub fn empty_top_state_with_metadata(mut db: StateDB, consensus_params: ConsensusParams) -> TopLevelState {
+    pub fn empty_top_state_with_metadata(mut db: StateDB, consensus_params: ChainParams) -> TopLevelState {
         let mut root = H256::default();
         // init trie and reset root too null
         {

@@ -24,7 +24,7 @@ use coordinator::{Header as PreHeader, Transaction, TransactionWithMetadata};
 use cstate::{CurrentValidatorSet, NextValidatorSet, StateDB, StateError, StateWithCache, TopLevelState, TopState};
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
-use ctypes::{CompactValidatorSet, ConsensusParams, TxHash};
+use ctypes::{ChainParams, CompactValidatorSet, TxHash};
 use merkle_trie::skewed_merkle_root;
 use primitives::{Bytes, H256};
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
@@ -302,7 +302,7 @@ impl OpenBlock {
     fn update_next_block_state(
         &mut self,
         updated_validator_set: Option<CompactValidatorSet>,
-        updated_consensus_params: Option<ConsensusParams>,
+        updated_consensus_params: Option<ChainParams>,
     ) -> Result<(), Error> {
         let state = self.block.state_mut();
 

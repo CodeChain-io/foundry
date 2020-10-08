@@ -18,7 +18,7 @@ use super::context::SubStorageAccess;
 use crate::transaction::{Transaction, TransactionWithMetadata};
 use crate::types::{CloseBlockError, ErrorCode, Event, HeaderError, TransactionOutcome, VerifiedCrime};
 use crate::Header;
-use ctypes::{CompactValidatorSet, ConsensusParams};
+use ctypes::{ChainParams, CompactValidatorSet};
 use remote_trait_object::{service, Service, ServiceRef};
 use serde::{Deserialize, Serialize};
 
@@ -49,12 +49,12 @@ pub trait TxOwner: Service {
 
 #[service]
 pub trait InitChain: Service {
-    fn init_chain(&self, session_id: SessionId) -> (CompactValidatorSet, ConsensusParams);
+    fn init_chain(&self, session_id: SessionId) -> (CompactValidatorSet, ChainParams);
 }
 
 #[service]
 pub trait UpdateChain: Service {
-    fn update_chain(&self, session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ConsensusParams>);
+    fn update_chain(&self, session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ChainParams>);
 }
 
 #[service]
