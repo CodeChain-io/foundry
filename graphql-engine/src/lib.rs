@@ -47,8 +47,8 @@ struct MutationRoot {
 
 #[async_graphql::Object]
 impl MutationRoot {
-    async fn send_transaction(&self, name: String, body: Vec<u8>) -> String {
-        let tx = coordinator::Transaction::new(name, body);
+    async fn send_transaction(&self, tx_type: String, body: Vec<u8>) -> String {
+        let tx = coordinator::Transaction::new(tx_type, body);
         // NOTE: Check `queue_own_transaction()` won't cause a deadlock, especially when called by the async runtime.
         match self.client.queue_own_transaction(tx) {
             Ok(_) => "Done".to_owned(),
