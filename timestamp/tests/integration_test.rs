@@ -26,6 +26,7 @@ use common::*;
 use coordinator::module::SessionId;
 use coordinator::{AppDesc, Coordinator};
 use rand::prelude::*;
+use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -270,4 +271,22 @@ fn query() {
         &format!("{{\"public\": \"{}\"}}", public_str),
     );
     assert_eq!(r#"{"data":{"account":{"seq":21}}}"#, result);
+}
+
+#[test]
+fn query_tx() {
+    let coordinator = Coordinator::from_app_desc(&app_desc()).unwrap();
+    set_empty_session(0, &coordinator);
+    let services = Services::new(&coordinator);
+
+    let result =
+        services.handle_graphqls.get("module-account").unwrap().execute(0, &format!("{{ txHello(seq: {}) }}", 0), "{}");
+
+    let value: Value = serde_json::from_str(&result).unwrap();
+    let tx = hex::decode(value["data"]["txHello"].as_str().unwrap()).unwrap();
+
+    let user: Ed25519KeyPair = Random.generate().unwrap();
+    let tx = sign_tx(user.public(), user.private(), "account".to_owned(), tx);
+
+    services.tx_owner.get("account").unwrap().execute_transaction(0, &tx).unwrap();
 }
