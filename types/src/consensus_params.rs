@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Default, PartialEq)]
-pub struct ConsensusParams {
+pub struct ChainParams {
     /// Maximum size of extra data.
     max_extra_data_size: u64,
     /// Network id.
@@ -31,7 +31,7 @@ pub struct ConsensusParams {
     snapshot_period: u64,
 }
 
-impl ConsensusParams {
+impl ChainParams {
     pub fn max_extra_data_size(&self) -> u64 {
         self.max_extra_data_size
     }
@@ -55,7 +55,7 @@ impl ConsensusParams {
     }
 }
 
-impl Encodable for ConsensusParams {
+impl Encodable for ChainParams {
     fn rlp_append(&self, s: &mut RlpStream) {
         s.begin_list(4)
             .append(&self.max_extra_data_size)
@@ -65,7 +65,7 @@ impl Encodable for ConsensusParams {
     }
 }
 
-impl Decodable for ConsensusParams {
+impl Decodable for ChainParams {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let size = rlp.item_count()?;
         if size != 4 {
@@ -96,12 +96,12 @@ mod tests {
 
     #[test]
     fn encode_and_decode_default() {
-        rlp_encode_and_decode_test!(ConsensusParams::default_for_test());
+        rlp_encode_and_decode_test!(ChainParams::default_for_test());
     }
 
     #[test]
     fn rlp_with_extra_fields() {
-        let mut params = ConsensusParams::default_for_test();
+        let mut params = ChainParams::default_for_test();
         params.max_extra_data_size = 100;
         params.max_body_size = 123;
         rlp_encode_and_decode_test!(params);

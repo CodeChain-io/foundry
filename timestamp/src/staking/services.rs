@@ -17,7 +17,7 @@
 use super::ServiceHandler;
 pub use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::module::*;
-use ctypes::{CompactValidatorEntry, CompactValidatorSet, ConsensusParams};
+use ctypes::{ChainParams, CompactValidatorEntry, CompactValidatorSet};
 
 pub type Validators = Vec<Public>;
 
@@ -55,17 +55,17 @@ impl InitGenesis for ServiceHandler {
 }
 
 impl InitChain for ServiceHandler {
-    fn init_chain(&self, session: SessionId) -> (CompactValidatorSet, ConsensusParams) {
+    fn init_chain(&self, session: SessionId) -> (CompactValidatorSet, ChainParams) {
         let validator_set = self.track_validator_set(session);
-        let consensus_params = ConsensusParams::default_for_test();
+        let consensus_params = ChainParams::default_for_test();
         (validator_set, consensus_params)
     }
 }
 
 impl UpdateChain for ServiceHandler {
-    fn update_chain(&self, session: SessionId) -> (Option<CompactValidatorSet>, Option<ConsensusParams>) {
+    fn update_chain(&self, session: SessionId) -> (Option<CompactValidatorSet>, Option<ChainParams>) {
         let validator_set = self.track_validator_set(session);
-        let consensus_params = ConsensusParams::default_for_test();
+        let consensus_params = ChainParams::default_for_test();
         (Some(validator_set), Some(consensus_params))
     }
 }

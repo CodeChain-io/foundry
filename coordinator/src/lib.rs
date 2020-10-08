@@ -42,7 +42,7 @@ use crate::types::{
 use crate::weaver::Weaver;
 use cmodule::sandbox::Sandbox;
 use ctypes::StorageId;
-use ctypes::{CompactValidatorSet, ConsensusParams};
+use ctypes::{ChainParams, CompactValidatorSet};
 use once_cell::sync::OnceCell;
 use parking_lot::{Mutex, RwLock};
 use remote_trait_object::{Service, ServiceRef};
@@ -219,7 +219,7 @@ struct PanickingInitChain;
 impl Service for PanickingInitChain {}
 
 impl InitChain for PanickingInitChain {
-    fn init_chain(&self, _session_id: SessionId) -> (CompactValidatorSet, ConsensusParams) {
+    fn init_chain(&self, _session_id: SessionId) -> (CompactValidatorSet, ChainParams) {
         panic!("There must be a `InitChain` service")
     }
 }
@@ -229,7 +229,7 @@ struct NoOpUpdateChain;
 impl Service for NoOpUpdateChain {}
 
 impl UpdateChain for NoOpUpdateChain {
-    fn update_chain(&self, _session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ConsensusParams>) {
+    fn update_chain(&self, _session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ChainParams>) {
         (None, None)
     }
 }
@@ -252,7 +252,7 @@ impl Initializer for Coordinator {
         self.services.stateful.lock().len()
     }
 
-    fn initialize_chain(&self, storage: &mut dyn StorageAccess) -> (CompactValidatorSet, ConsensusParams) {
+    fn initialize_chain(&self, storage: &mut dyn StorageAccess) -> (CompactValidatorSet, ChainParams) {
         let services = &self.services;
         let session_id = self.new_session(storage);
 

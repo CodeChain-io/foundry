@@ -42,7 +42,7 @@ use coordinator::types::Event;
 use coordinator::Transaction;
 use cstate::{Metadata, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
-use ctypes::{BlockHash, BlockId, BlockNumber, ConsensusParams, Header, SyncHeader, TxHash};
+use ctypes::{BlockHash, BlockId, BlockNumber, ChainParams, Header, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use primitives::{Bytes, H256};
@@ -352,7 +352,7 @@ impl EngineInfo for Client {
         self.consensus_params(BlockId::Earliest).expect("Genesis state must exist").network_id()
     }
 
-    fn consensus_params(&self, block_id: BlockId) -> Option<ConsensusParams> {
+    fn consensus_params(&self, block_id: BlockId) -> Option<ChainParams> {
         self.state_info(block_id.into()).map(|state| {
             *state
                 .metadata()

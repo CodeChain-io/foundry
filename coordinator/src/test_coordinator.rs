@@ -22,14 +22,14 @@ use crate::types::{
     BlockOutcome, CloseBlockError, ErrorCode, ExecuteTransactionError, FilteredTxs, HeaderError, TransactionOutcome,
     VerifiedCrime,
 };
-use ctypes::{CompactValidatorSet, ConsensusParams};
+use ctypes::{ChainParams, CompactValidatorSet};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 // Coordinator dedicated for mempool and miner testing
 pub struct TestCoordinator {
     validator_set: CompactValidatorSet,
-    consensus_params: ConsensusParams,
+    consensus_params: ChainParams,
     body_count: AtomicUsize,
     body_size: AtomicUsize,
 }
@@ -38,7 +38,7 @@ impl Default for TestCoordinator {
     fn default() -> Self {
         Self {
             validator_set: Default::default(),
-            consensus_params: ConsensusParams::default_for_test(),
+            consensus_params: ChainParams::default_for_test(),
             body_count: AtomicUsize::new(0),
             body_size: AtomicUsize::new(0),
         }
@@ -50,7 +50,7 @@ impl Initializer for TestCoordinator {
         5
     }
 
-    fn initialize_chain(&self, _storage: &mut dyn StorageAccess) -> (CompactValidatorSet, ConsensusParams) {
+    fn initialize_chain(&self, _storage: &mut dyn StorageAccess) -> (CompactValidatorSet, ChainParams) {
         (self.validator_set.clone(), self.consensus_params)
     }
 }

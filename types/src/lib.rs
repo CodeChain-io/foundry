@@ -44,7 +44,7 @@ pub struct TransactionLocation {
 
 pub use block_hash::BlockHash;
 pub use block_id::BlockId;
-pub use consensus_params::ConsensusParams;
+pub use consensus_params::ChainParams;
 pub use deposit::Deposit;
 pub use header::Header;
 pub use sync_header::SyncHeader;

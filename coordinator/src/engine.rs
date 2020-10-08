@@ -20,13 +20,13 @@ use crate::transaction::{Transaction, TransactionWithMetadata};
 use crate::types::{
     BlockOutcome, CloseBlockError, ErrorCode, FilteredTxs, HeaderError, TransactionOutcome, VerifiedCrime,
 };
-use ctypes::{CompactValidatorSet, ConsensusParams};
+use ctypes::{ChainParams, CompactValidatorSet};
 use std::sync::Arc;
 
 pub trait Initializer: Send + Sync {
     fn number_of_sub_storages(&self) -> usize;
 
-    fn initialize_chain(&self, storage: &mut dyn StorageAccess) -> (CompactValidatorSet, ConsensusParams);
+    fn initialize_chain(&self, storage: &mut dyn StorageAccess) -> (CompactValidatorSet, ChainParams);
 }
 
 pub type ExecutionId = u32;

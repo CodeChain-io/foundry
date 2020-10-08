@@ -15,18 +15,18 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::CacheableItem;
-use ctypes::{ConsensusParams, StorageId};
+use ctypes::{ChainParams, StorageId};
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Metadata {
     number_of_modules: StorageId,
-    consensus_params: ConsensusParams,
+    consensus_params: ChainParams,
 }
 
 impl Metadata {
-    pub fn new(consensus_params: ConsensusParams) -> Self {
+    pub fn new(consensus_params: ChainParams) -> Self {
         Self {
             number_of_modules: 0,
             consensus_params,
@@ -43,11 +43,11 @@ impl Metadata {
         r
     }
 
-    pub fn consensus_params(&self) -> &ConsensusParams {
+    pub fn consensus_params(&self) -> &ChainParams {
         &self.consensus_params
     }
 
-    pub fn set_consensus_params(&mut self, consensus_params: ConsensusParams) {
+    pub fn set_consensus_params(&mut self, consensus_params: ChainParams) {
         self.consensus_params = consensus_params;
     }
 }
@@ -144,7 +144,7 @@ mod tests {
     fn metadata() {
         let metadata = Metadata {
             number_of_modules: 7,
-            consensus_params: ConsensusParams::default_for_test(),
+            consensus_params: ChainParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);
     }

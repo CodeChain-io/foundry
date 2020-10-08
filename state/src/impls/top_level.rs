@@ -45,7 +45,7 @@ use crate::{
 use cdb::{AsHashDB, DatabaseError};
 use coordinator::context::{StorageAccess, SubStorageAccess};
 use ctypes::errors::RuntimeError;
-use ctypes::{ConsensusParams, StorageId};
+use ctypes::{ChainParams, StorageId};
 use kvdb::DBTransaction;
 use merkle_trie::{Result as TrieResult, TrieError, TrieFactory};
 use parking_lot::{Mutex, RwLock};
@@ -356,7 +356,7 @@ impl TopState for TopLevelState {
         self.top_cache.remove_action_data(key)
     }
 
-    fn update_consensus_params(&mut self, consensus_params: ConsensusParams) -> StateResult<()> {
+    fn update_consensus_params(&mut self, consensus_params: ChainParams) -> StateResult<()> {
         let mut metadata = self.get_metadata_mut()?;
         metadata.set_consensus_params(consensus_params);
         Ok(())
