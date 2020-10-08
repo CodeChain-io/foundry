@@ -19,15 +19,8 @@
 
 extern crate foundry_integration_test as test_common;
 
-use serde_json::Value;
 use std::thread::sleep;
 use std::time::Duration;
-
-async fn get_latest_block(port: u16) -> u64 {
-    let query_result = test_common::request_query(port, "engine", "{block{header{number}}}", "{}").await;
-    let value: Value = serde_json::from_str(&query_result).unwrap();
-    value["data"]["block"]["header"]["number"].as_u64().unwrap()
-}
 
 #[test]
 fn run() {
