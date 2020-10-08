@@ -15,8 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::uint::Uint;
-use ckey::{Ed25519Public as Public, PlatformAddress};
-use std::collections::HashMap;
 
 /// Tendermint params deserialization.
 #[derive(Debug, PartialEq, Deserialize)]
@@ -40,22 +38,6 @@ pub struct TendermintParams {
     pub allowed_past_timegap: Option<Uint>,
     /// allowed future time gap in milliseconds.
     pub allowed_future_timegap: Option<Uint>,
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Deposit {
-    pub pubkey: Public,
-    pub deposit: u64,
-    pub nomination_ends_at: u64,
-    pub metadata: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct StakeAccount {
-    pub stake: u64,
-    pub delegations: Option<HashMap<PlatformAddress, u64>>,
 }
 
 /// Tendermint engine deserialization.
