@@ -183,7 +183,7 @@ mod tests {
         let metadata = Metadata {
             number_of_modules: 7,
             seq: 3,
-            params: CommonParams::default_for_test(),
+            params: CommonParams::default(),
             consensus_params: ConsensusParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);
@@ -194,7 +194,7 @@ mod tests {
         let metadata = Metadata {
             number_of_modules: 7,
             seq: 0,
-            params: CommonParams::default_for_test(),
+            params: CommonParams::default(),
             consensus_params: ConsensusParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);

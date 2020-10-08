@@ -108,12 +108,6 @@ impl Decodable for CommonParams {
     }
 }
 
-impl CommonParams {
-    pub fn default_for_test() -> Self {
-        Default::default()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -121,6 +115,6 @@ mod tests {
 
     #[test]
     fn encode_and_decode_default() {
-        rlp_encode_and_decode_test!(CommonParams::default_for_test());
+        rlp_encode_and_decode_test!(CommonParams::default());
     }
 }
