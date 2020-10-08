@@ -21,7 +21,6 @@ extern crate rlp_derive;
 
 mod block_hash;
 mod block_id;
-mod common_params;
 mod consensus_params;
 mod deposit;
 mod sync_header;
@@ -45,7 +44,6 @@ pub struct TransactionLocation {
 
 pub use block_hash::BlockHash;
 pub use block_id::BlockId;
-pub use common_params::CommonParams;
 pub use consensus_params::ConsensusParams;
 pub use deposit::Deposit;
 pub use header::Header;

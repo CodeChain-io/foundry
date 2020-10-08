@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{ActionData, Metadata, Module, ModuleDatum, StateDB, StateResult};
-use ctypes::{CommonParams, ConsensusParams, StorageId};
+use ctypes::{ConsensusParams, StorageId};
 use merkle_trie::Result as TrieResult;
 use primitives::{Bytes, H256};
 
@@ -57,7 +57,6 @@ pub trait TopState {
     fn update_action_data(&mut self, key: &H256, data: Bytes) -> StateResult<()>;
     fn remove_action_data(&mut self, key: &H256);
 
-    fn update_params(&mut self, metadata_seq: u64, params: CommonParams) -> StateResult<()>;
     fn update_consensus_params(&mut self, consensus_params: ConsensusParams) -> StateResult<()>;
 }
 

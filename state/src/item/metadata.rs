@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::CacheableItem;
-use ctypes::{CommonParams, ConsensusParams, StorageId};
+use ctypes::{ConsensusParams, StorageId};
 use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -23,16 +23,14 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 pub struct Metadata {
     number_of_modules: StorageId,
     seq: u64,
-    params: CommonParams,
     consensus_params: ConsensusParams,
 }
 
 impl Metadata {
-    pub fn new(params: CommonParams, consensus_params: ConsensusParams) -> Self {
+    pub fn new(consensus_params: ConsensusParams) -> Self {
         Self {
             number_of_modules: 0,
             seq: 0,
-            params,
             consensus_params,
         }
     }
@@ -53,14 +51,6 @@ impl Metadata {
 
     pub fn increase_seq(&mut self) {
         self.seq += 1;
-    }
-
-    pub fn params(&self) -> &CommonParams {
-        &self.params
-    }
-
-    pub fn set_params(&mut self, params: CommonParams) {
-        self.params = params;
     }
 
     pub fn consensus_params(&self) -> &ConsensusParams {
@@ -84,11 +74,10 @@ const PREFIX: u8 = super::Prefix::Metadata as u8;
 
 impl Encodable for Metadata {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(5)
+        s.begin_list(4)
             .append(&PREFIX)
             .append(&self.number_of_modules)
             .append(&self.seq)
-            .append(&self.params)
             .append(&self.consensus_params);
     }
 }
@@ -96,10 +85,10 @@ impl Encodable for Metadata {
 impl Decodable for Metadata {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
-        if item_count != 5 {
+        if item_count != 4 {
             return Err(DecoderError::RlpInvalidLength {
                 got: item_count,
-                expected: 5,
+                expected: 4,
             })
         }
 
@@ -111,14 +100,12 @@ impl Decodable for Metadata {
         let number_of_modules = rlp.val_at(1)?;
 
         let seq = rlp.val_at(2)?;
-        let params = rlp.val_at(3)?;
 
-        let consensus_params = rlp.val_at(4)?;
+        let consensus_params = rlp.val_at(3)?;
 
         Ok(Self {
             number_of_modules,
             seq,
-            params,
             consensus_params,
         })
     }
@@ -139,7 +126,6 @@ impl MetadataAddress {
 
 #[cfg(test)]
 mod tests {
-    use ctypes::CommonParams;
     use rlp::rlp_encode_and_decode_test;
 
     use super::*;
@@ -183,7 +169,6 @@ mod tests {
         let metadata = Metadata {
             number_of_modules: 7,
             seq: 3,
-            params: CommonParams::default(),
             consensus_params: ConsensusParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);
@@ -194,7 +179,6 @@ mod tests {
         let metadata = Metadata {
             number_of_modules: 7,
             seq: 0,
-            params: CommonParams::default(),
             consensus_params: ConsensusParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);
