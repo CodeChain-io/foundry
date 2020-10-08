@@ -21,10 +21,11 @@ extern crate foundry_integration_test as test_common;
 
 use std::thread::sleep;
 use std::time::Duration;
+use test_common::*;
 
 #[test]
 fn run() {
-    let mut child = test_common::run_node(4444);
+    let mut child = run_node(4444);
     sleep(Duration::from_secs(3));
     child.kill().unwrap();
     child.wait().unwrap();
@@ -32,9 +33,9 @@ fn run() {
 
 #[actix_rt::test]
 async fn ping() {
-    let mut child = test_common::run_node(5555);
+    let mut child = run_node(5555);
     sleep(Duration::from_secs(3));
-    let x = test_common::request_query(5555, "ping", "aaaa", "aaaa").await;
+    let x = request_query(5555, "ping", "aaaa", "aaaa").await;
     assert_eq!(x, "Module not found: ping");
     child.kill().unwrap();
     child.wait().unwrap();
@@ -43,7 +44,7 @@ async fn ping() {
 #[actix_rt::test]
 async fn track_blocks() {
     let port = 5555;
-    let mut child = test_common::run_node(port);
+    let mut child = run_node(port);
     sleep(Duration::from_secs(3));
 
     let start_block = get_latest_block(port).await;
