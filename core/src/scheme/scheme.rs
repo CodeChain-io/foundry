@@ -35,11 +35,6 @@ pub struct Scheme {
     pub name: String,
     /// What engine are we using for this?
     pub engine: Arc<dyn ConsensusEngine>,
-    /// Name of the subdir inside the main data dir to use for chain data and settings.
-    pub data_dir: String,
-
-    /// Known nodes on the network in enode format.
-    pub nodes: Vec<String>,
 
     /// The genesis block's parent hash field.
     pub parent_hash: BlockHash,
@@ -164,10 +159,8 @@ fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
     let engine = Scheme::engine(s.engine);
 
     let mut s = Scheme {
-        name: s.name.clone(),
+        name: s.name,
         engine,
-        data_dir: s.data_dir.unwrap_or(s.name),
-        nodes: s.nodes.unwrap_or_else(Vec::new),
         parent_hash: g.parent_hash,
         transactions_root: g.transactions_root,
         author: g.author,

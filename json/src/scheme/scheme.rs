@@ -24,17 +24,12 @@ use std::io::Read;
 pub struct Scheme {
     /// Scheme name.
     pub name: String,
-    /// Special fork name.
-    pub data_dir: Option<String>,
     /// Engine.
     pub engine: Engine,
     /// Scheme params.
     pub params: Params,
     /// Genesis header.
     pub genesis: Genesis,
-
-    /// Boot nodes.
-    pub nodes: Option<Vec<String>>,
 }
 
 impl Scheme {
@@ -54,7 +49,6 @@ mod tests {
     fn spec_deserialization() {
         let s = r#"{
             "name": "Morden",
-            "dataDir": "morden",
             "engine": {
                 "tendermint": {
                     "params": {
@@ -88,10 +82,7 @@ mod tests {
                 "author": "fjjh0000AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtc0",
                 "timestamp": "0x00",
                 "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
-            },
-            "nodes": [
-            "enode://b1217cbaa440e35ed471157123fe468e19e8b5ad5bedb4b1fdbcbdab6fb2f5ed3e95dd9c24a22a79fdb2352204cea207df27d92bfd21bfd41545e8b16f637499@104.44.138.37:30303"
-            ]
+            }
         }"#;
         let _deserialized: Scheme = serde_json::from_str(s).unwrap();
         // TODO: validate all fields
