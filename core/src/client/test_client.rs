@@ -531,10 +531,6 @@ impl EngineInfo for TestBlockChainClient {
         unimplemented!()
     }
 
-    fn metadata_seq(&self, _block_id: BlockId) -> Option<u64> {
-        unimplemented!()
-    }
-
     fn possible_authors(&self, _block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>, EngineError> {
         unimplemented!()
     }
