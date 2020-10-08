@@ -572,10 +572,8 @@ impl BlockChainClient for Client {
     }
 
     fn pending_transactions(&self, range: Range<u64>) -> PendingTransactions {
-        let size_limit = self
-            .chain_params(BlockId::Latest)
-            .expect("Consensus params of the latest block always exists")
-            .max_body_size();
+        let size_limit =
+            self.chain_params(BlockId::Latest).expect("Chain params of the latest block always exists").max_body_size();
         self.miner.pending_transactions(size_limit as usize, range)
     }
 
