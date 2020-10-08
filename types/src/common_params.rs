@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use cjson::scheme::Params;
 use ckey::NetworkId;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 
@@ -71,35 +70,6 @@ impl CommonParams {
     }
 }
 
-impl From<Params> for CommonParams {
-    fn from(p: Params) -> Self {
-        Self {
-            max_extra_data_size: p.max_extra_data_size.into(),
-            network_id: p.network_id,
-            max_body_size: p.max_body_size.into(),
-            snapshot_period: p.snapshot_period.into(),
-            era: p.era.map(From::from).unwrap_or_default(),
-        }
-    }
-}
-
-impl From<CommonParams> for Params {
-    fn from(p: CommonParams) -> Params {
-        let mut result: Params = Params {
-            max_extra_data_size: p.max_extra_data_size().into(),
-            network_id: p.network_id(),
-            max_body_size: p.max_body_size().into(),
-            snapshot_period: p.snapshot_period().into(),
-            era: None,
-        };
-        let era = p.era();
-        if era != 0 {
-            result.era = Some(era.into());
-        }
-        result
-    }
-}
-
 impl Encodable for CommonParams {
     fn rlp_append(&self, s: &mut RlpStream) {
         s.begin_list(5)
@@ -140,7 +110,7 @@ impl Decodable for CommonParams {
 
 impl CommonParams {
     pub fn default_for_test() -> Self {
-        Self::from(Params::default())
+        Default::default()
     }
 }
 
@@ -152,25 +122,5 @@ mod tests {
     #[test]
     fn encode_and_decode_default() {
         rlp_encode_and_decode_test!(CommonParams::default_for_test());
-    }
-
-    #[test]
-    fn params_from_json_with_era() {
-        let s = r#"{
-            "maxExtraDataSize": "0x20",
-            "networkID" : "tc",
-            "maxBodySize" : 4194304,
-            "snapshotPeriod": 16384,
-            "era": 32
-        }"#;
-        let params = serde_json::from_str::<Params>(s).unwrap();
-        let deserialized = CommonParams::from(params.clone());
-        assert_eq!(deserialized.max_extra_data_size, 0x20);
-        assert_eq!(deserialized.network_id, "tc".into());
-        assert_eq!(deserialized.max_body_size, 4_194_304);
-        assert_eq!(deserialized.snapshot_period, 16_384);
-        assert_eq!(deserialized.era, 32);
-
-        assert_eq!(params, deserialized.into());
     }
 }

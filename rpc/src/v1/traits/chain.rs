@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::types::{Block, BlockNumberAndHash, Transaction, ValidatorSet};
-use cjson::scheme::Params;
 use ckey::{NetworkId, PlatformAddress};
 use ctypes::{BlockHash, BlockNumber, TxHash};
 use jsonrpc_core::Result;
@@ -57,10 +56,6 @@ pub trait Chain {
     /// Return the network id that is used in this chain.
     #[rpc(name = "chain_getNetworkId")]
     fn get_network_id(&self) -> Result<NetworkId>;
-
-    /// Return common params at given block number
-    #[rpc(name = "chain_getCommonParams")]
-    fn get_common_params(&self, block_number: Option<u64>) -> Result<Option<Params>>;
 
     /// Return the current metadata seq at given block number
     #[rpc(name = "chain_getMetadataSeq")]

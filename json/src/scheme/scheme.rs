@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{Engine, Genesis, Params};
+use super::{Engine, Genesis};
 use serde_json::Error;
 use std::io::Read;
 
@@ -26,8 +26,6 @@ pub struct Scheme {
     pub name: String,
     /// Engine.
     pub engine: Engine,
-    /// Scheme params.
-    pub params: Params,
     /// Genesis header.
     pub genesis: Genesis,
 }
@@ -62,12 +60,6 @@ mod tests {
                         "timeoutCommit": 10000
                     }
                 }
-            },
-            "params": {
-                "maxExtraDataSize": "0x20",
-                "networkID" : "tc",
-                "maxBodySize": 4194304,
-                "snapshotPeriod": 16384
             },
             "genesis": {
                 "seal": {
