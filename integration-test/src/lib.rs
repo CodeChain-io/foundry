@@ -15,6 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use awc::Client;
+use ckey::{Ed25519Public as Public, Signature};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::process::{Child, Command};
 
@@ -33,4 +35,12 @@ pub async fn request_query(port: u16, module: &str, query: &str, variables: &str
     let response_bytes = request.send().await.unwrap().body().await.unwrap();
     let response = std::str::from_utf8(&response_bytes).expect("GraphQL server must return utf8-encoded string");
     response.to_owned()
+}
+
+/// This is a copy from `codechain-timestamp`.
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+pub struct SignedTransaction {
+    pub signature: Signature,
+    pub signer_public: Public,
+    pub action: Vec<u8>,
 }
