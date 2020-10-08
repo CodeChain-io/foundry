@@ -2,11 +2,5 @@
   "name": "Solo",
   "engine": {
     "solo": null
-  },
-  "params": {
-    "maxExtraDataSize": "0x20",
-    "networkID": "tc",
-    "maxBodySize": 4194304,
-    "snapshotPeriod": 16384
   }
 }
