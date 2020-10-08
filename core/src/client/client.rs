@@ -362,16 +362,6 @@ impl EngineInfo for Client {
         })
     }
 
-    fn metadata_seq(&self, block_id: BlockId) -> Option<u64> {
-        self.state_info(block_id.into()).map(|state| {
-            state
-                .metadata()
-                .unwrap_or_else(|err| unreachable!("Unexpected failure. Maybe DB was corrupted: {:?}", err))
-                .unwrap()
-                .seq()
-        })
-    }
-
     fn possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>, EngineError> {
         let network_id = self.network_id();
         if block_number == Some(0) {

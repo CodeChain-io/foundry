@@ -22,7 +22,6 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Metadata {
     number_of_modules: StorageId,
-    seq: u64,
     consensus_params: ConsensusParams,
 }
 
@@ -30,7 +29,6 @@ impl Metadata {
     pub fn new(consensus_params: ConsensusParams) -> Self {
         Self {
             number_of_modules: 0,
-            seq: 0,
             consensus_params,
         }
     }
@@ -43,14 +41,6 @@ impl Metadata {
         let r = self.number_of_modules;
         self.number_of_modules += 1;
         r
-    }
-
-    pub fn seq(&self) -> u64 {
-        self.seq
-    }
-
-    pub fn increase_seq(&mut self) {
-        self.seq += 1;
     }
 
     pub fn consensus_params(&self) -> &ConsensusParams {
@@ -74,21 +64,17 @@ const PREFIX: u8 = super::Prefix::Metadata as u8;
 
 impl Encodable for Metadata {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(4)
-            .append(&PREFIX)
-            .append(&self.number_of_modules)
-            .append(&self.seq)
-            .append(&self.consensus_params);
+        s.begin_list(3).append(&PREFIX).append(&self.number_of_modules).append(&self.consensus_params);
     }
 }
 
 impl Decodable for Metadata {
     fn decode(rlp: &Rlp<'_>) -> Result<Self, DecoderError> {
         let item_count = rlp.item_count()?;
-        if item_count != 4 {
+        if item_count != 3 {
             return Err(DecoderError::RlpInvalidLength {
                 got: item_count,
-                expected: 4,
+                expected: 3,
             })
         }
 
@@ -98,14 +84,10 @@ impl Decodable for Metadata {
             return Err(DecoderError::Custom("Unexpected prefix"))
         }
         let number_of_modules = rlp.val_at(1)?;
-
-        let seq = rlp.val_at(2)?;
-
-        let consensus_params = rlp.val_at(3)?;
+        let consensus_params = rlp.val_at(2)?;
 
         Ok(Self {
             number_of_modules,
-            seq,
             consensus_params,
         })
     }
@@ -159,26 +141,9 @@ mod tests {
     }
 
     #[test]
-    fn metadata_with_0_seq() {
-        let metadata = Metadata::default();
-        rlp_encode_and_decode_test!(metadata);
-    }
-
-    #[test]
-    fn metadata_with_seq() {
+    fn metadata() {
         let metadata = Metadata {
             number_of_modules: 7,
-            seq: 3,
-            consensus_params: ConsensusParams::default_for_test(),
-        };
-        rlp_encode_and_decode_test!(metadata);
-    }
-
-    #[test]
-    fn metadata_without_seq() {
-        let metadata = Metadata {
-            number_of_modules: 7,
-            seq: 0,
             consensus_params: ConsensusParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);

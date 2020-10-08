@@ -57,10 +57,6 @@ pub trait Chain {
     #[rpc(name = "chain_getNetworkId")]
     fn get_network_id(&self) -> Result<NetworkId>;
 
-    /// Return the current metadata seq at given block number
-    #[rpc(name = "chain_getMetadataSeq")]
-    fn get_metadata_seq(&self, block_number: Option<u64>) -> Result<Option<u64>>;
-
     /// Return the valid block authors
     #[rpc(name = "chain_getPossibleAuthors")]
     fn get_possible_authors(&self, block_number: Option<u64>) -> Result<Option<Vec<PlatformAddress>>>;
