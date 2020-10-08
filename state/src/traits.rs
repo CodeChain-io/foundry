@@ -57,7 +57,7 @@ pub trait TopState {
     fn update_action_data(&mut self, key: &H256, data: Bytes) -> StateResult<()>;
     fn remove_action_data(&mut self, key: &H256);
 
-    fn update_consensus_params(&mut self, consensus_params: ChainParams) -> StateResult<()>;
+    fn update_chain_params(&mut self, chain_params: ChainParams) -> StateResult<()>;
 }
 
 pub trait StateWithCache {

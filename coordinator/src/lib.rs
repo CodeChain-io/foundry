@@ -370,13 +370,13 @@ impl BlockExecutor for Coordinator {
         for owner in services.tx_owner.values() {
             events.extend(owner.block_closed(session_id)?.into_iter());
         }
-        let (updated_validator_set, updated_consensus_params) = services.update_chain.update_chain(session_id);
+        let (updated_validator_set, updated_chain_params) = services.update_chain.update_chain(session_id);
 
         self.end_session(session_id);
 
         Ok(BlockOutcome {
             updated_validator_set,
-            updated_consensus_params,
+            updated_chain_params,
             events,
         })
     }

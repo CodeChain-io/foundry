@@ -356,9 +356,9 @@ impl TopState for TopLevelState {
         self.top_cache.remove_action_data(key)
     }
 
-    fn update_consensus_params(&mut self, consensus_params: ChainParams) -> StateResult<()> {
+    fn update_chain_params(&mut self, chain_params: ChainParams) -> StateResult<()> {
         let mut metadata = self.get_metadata_mut()?;
-        metadata.set_consensus_params(consensus_params);
+        metadata.set_chain_params(chain_params);
         Ok(())
     }
 }

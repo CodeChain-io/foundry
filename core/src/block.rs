@@ -233,8 +233,8 @@ impl OpenBlock {
             Some(ref set) => set.hash(),
             None => NextValidatorSet::load_from_state(self.block.state())?.create_compact_validator_set().hash(),
         };
-        let updated_consensus_params = block_outcome.updated_consensus_params;
-        if let Err(e) = self.update_next_block_state(updated_validator_set, updated_consensus_params) {
+        let updated_chain_params = block_outcome.updated_chain_params;
+        if let Err(e) = self.update_next_block_state(updated_validator_set, updated_chain_params) {
             warn!("Encountered error on closing the block: {}", e);
             return Err(e)
         }
@@ -302,7 +302,7 @@ impl OpenBlock {
     fn update_next_block_state(
         &mut self,
         updated_validator_set: Option<CompactValidatorSet>,
-        updated_consensus_params: Option<ChainParams>,
+        updated_chain_params: Option<ChainParams>,
     ) -> Result<(), Error> {
         let state = self.block.state_mut();
 
@@ -311,8 +311,8 @@ impl OpenBlock {
             validators.save_to_state(state)?;
         }
 
-        if let Some(params) = updated_consensus_params {
-            state.update_consensus_params(params)?;
+        if let Some(params) = updated_chain_params {
+            state.update_chain_params(params)?;
         }
         Ok(())
     }

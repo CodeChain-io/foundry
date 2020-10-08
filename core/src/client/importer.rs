@@ -232,10 +232,10 @@ impl Importer {
             );
         })?;
 
-        let consensus_params = client.consensus_params(parent.hash().into()).unwrap();
+        let chain_params = client.chain_params(parent.hash().into()).unwrap();
 
         // Verify Block Family
-        self.verifier.verify_block_family(&block.bytes, header, &parent, engine, &consensus_params).map_err(|e| {
+        self.verifier.verify_block_family(&block.bytes, header, &parent, engine, &chain_params).map_err(|e| {
             cwarn!(
                 CLIENT,
                 "Stage 3 block verification failed for #{} ({})\nError: {:?}",

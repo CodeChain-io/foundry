@@ -22,14 +22,14 @@ use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Metadata {
     number_of_modules: StorageId,
-    consensus_params: ChainParams,
+    chain_params: ChainParams,
 }
 
 impl Metadata {
-    pub fn new(consensus_params: ChainParams) -> Self {
+    pub fn new(chain_params: ChainParams) -> Self {
         Self {
             number_of_modules: 0,
-            consensus_params,
+            chain_params,
         }
     }
 
@@ -43,12 +43,12 @@ impl Metadata {
         r
     }
 
-    pub fn consensus_params(&self) -> &ChainParams {
-        &self.consensus_params
+    pub fn chain_params(&self) -> &ChainParams {
+        &self.chain_params
     }
 
-    pub fn set_consensus_params(&mut self, consensus_params: ChainParams) {
-        self.consensus_params = consensus_params;
+    pub fn set_chain_params(&mut self, chain_params: ChainParams) {
+        self.chain_params = chain_params;
     }
 }
 
@@ -64,7 +64,7 @@ const PREFIX: u8 = super::Prefix::Metadata as u8;
 
 impl Encodable for Metadata {
     fn rlp_append(&self, s: &mut RlpStream) {
-        s.begin_list(3).append(&PREFIX).append(&self.number_of_modules).append(&self.consensus_params);
+        s.begin_list(3).append(&PREFIX).append(&self.number_of_modules).append(&self.chain_params);
     }
 }
 
@@ -84,11 +84,11 @@ impl Decodable for Metadata {
             return Err(DecoderError::Custom("Unexpected prefix"))
         }
         let number_of_modules = rlp.val_at(1)?;
-        let consensus_params = rlp.val_at(2)?;
+        let chain_params = rlp.val_at(2)?;
 
         Ok(Self {
             number_of_modules,
-            consensus_params,
+            chain_params,
         })
     }
 }
@@ -144,7 +144,7 @@ mod tests {
     fn metadata() {
         let metadata = Metadata {
             number_of_modules: 7,
-            consensus_params: ChainParams::default_for_test(),
+            chain_params: ChainParams::default_for_test(),
         };
         rlp_encode_and_decode_test!(metadata);
     }
