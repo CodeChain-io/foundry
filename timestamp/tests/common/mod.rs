@@ -26,54 +26,46 @@ use std::collections::HashMap;
 use timestamp::common::*;
 
 pub fn tx_hello(public: &Public, private: &Private, seq: u64) -> Transaction {
-    let tx = timestamp::account::TxHello;
-    let tx = UserTransaction {
+    let action = serde_cbor::to_vec(&timestamp::account::TxHello {
         seq,
-        network_id: Default::default(),
-        action: tx,
-    };
-    let tx_hash = tx.hash();
+    })
+    .unwrap();
+    let tx_hash = blake256(&action);
     let tx = SignedTransaction {
         signature: ckey::sign(tx_hash.as_bytes(), private),
         signer_public: *public,
-        tx,
+        action,
     };
     Transaction::new("account".to_owned(), serde_cbor::to_vec(&tx).unwrap())
 }
 
 pub fn tx_stamp(public: &Public, private: &Private, seq: u64, contents: &str) -> Transaction {
-    let tx = timestamp::stamp::TxStamp {
-        hash: blake256(contents),
-    };
-    let tx = UserTransaction {
+    let action = serde_cbor::to_vec(&timestamp::stamp::TxStamp {
         seq,
-        network_id: Default::default(),
-        action: tx,
-    };
-    let tx_hash = tx.hash();
+        hash: blake256(contents),
+    })
+    .unwrap();
+    let tx_hash = blake256(&action);
     let tx = SignedTransaction {
         signature: ckey::sign(tx_hash.as_bytes(), private),
         signer_public: *public,
-        tx,
+        action,
     };
     Transaction::new("stamp".to_owned(), serde_cbor::to_vec(&tx).unwrap())
 }
 
 pub fn tx_token_transfer(public: &Public, private: &Private, seq: u64, receiver: Public, issuer: H256) -> Transaction {
-    let tx = timestamp::token::ActionTransferToken {
+    let action = serde_cbor::to_vec(&timestamp::token::TxTransferToken {
+        seq,
         issuer,
         receiver,
-    };
-    let tx = UserTransaction {
-        seq,
-        network_id: Default::default(),
-        action: tx,
-    };
-    let tx_hash = tx.hash();
+    })
+    .unwrap();
+    let tx_hash = blake256(&action);
     let tx = SignedTransaction {
         signature: ckey::sign(tx_hash.as_bytes(), private),
         signer_public: *public,
-        tx,
+        action,
     };
     Transaction::new("token".to_owned(), serde_cbor::to_vec(&tx).unwrap())
 }

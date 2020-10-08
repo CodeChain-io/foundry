@@ -16,6 +16,7 @@
 
 use super::types::*;
 use crate::common::state_machine::{StateAccess, StateTransition};
+use crate::common::SignedTransaction;
 pub use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::context::SubStorageAccess;
 use coordinator::Transaction;
@@ -136,16 +137,18 @@ impl<'a, 'b> StateTransition for ExecuteTransaction<'a, 'b> {
         if self.tx.tx_type() != "token" {
             return Err(ExecuteError::InvalidMetadata)
         }
-        let tx: OwnTransaction = serde_cbor::from_slice(&self.tx.body()).map_err(|_| ExecuteError::InvalidFormat)?;
+        let tx: SignedTransaction = serde_cbor::from_slice(&self.tx.body()).map_err(|_| ExecuteError::InvalidFormat)?;
         tx.verify().map_err(|_| ExecuteError::InvalidSign)?;
-        if (*self.get_sequence)(&tx.signer_public).map_err(ExecuteError::AccountModuleError)? != tx.tx.seq {
-            return Err(ExecuteError::InvalidSequence)
-        }
 
-        let ActionTransferToken {
+        let TxTransferToken {
+            seq,
             receiver,
             issuer,
-        } = tx.tx.action;
+        } = serde_cbor::from_slice(&tx.action).map_err(|_| ExecuteError::InvalidFormat)?;
+
+        if (*self.get_sequence)(&tx.signer_public).map_err(ExecuteError::AccountModuleError)? != seq {
+            return Err(ExecuteError::InvalidSequence)
+        }
 
         let mut sender_account: Account = serde_cbor::from_slice(
             &state.get(get_state_key(&tx.signer_public).as_bytes()).ok_or(ExecuteError::NoSuchAccount)?,

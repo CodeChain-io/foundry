@@ -56,5 +56,5 @@ impl ServiceHandler {
 
 impl remote_trait_object::Service for ServiceHandler {}
 
-pub use types::ActionTransferToken;
 pub use types::Error;
+pub use types::TxTransferToken;

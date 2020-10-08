@@ -45,23 +45,23 @@ pub enum Error {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ActionTransferToken {
+pub struct TxTransferToken {
+    pub seq: TxSeq,
     pub receiver: Public,
 
     /// There is no difference for tokens as far as the issuer is same;
     /// Thus it is enough to speicfy which token to transfer only by the issuer.
     pub issuer: H256,
 }
-impl Action for ActionTransferToken {}
-pub type OwnTransaction = SignedTransaction<ActionTransferToken>;
 
 pub struct GetAccountAndSeq;
 impl Service for GetAccountAndSeq {}
 impl crate::sorting::GetAccountAndSeq for GetAccountAndSeq {
     fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, TxSeq), ()> {
         assert_eq!(tx.tx_type(), "token");
-        let tx: OwnTransaction = serde_cbor::from_slice(&tx.body()).map_err(|_| ())?;
-        Ok((tx.signer_public, tx.tx.seq))
+        let tx: SignedTransaction = serde_cbor::from_slice(&tx.body()).map_err(|_| ())?;
+        let action: TxTransferToken = serde_cbor::from_slice(&tx.action).map_err(|_| ())?;
+        Ok((tx.signer_public, action.seq))
     }
 }
 

@@ -23,10 +23,6 @@ use ckey::{verify, Ed25519Public as Public, Signature};
 use primitives::H256;
 use serde::{Deserialize, Serialize};
 pub use state_manager::StateManager;
-use std::fmt;
-
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Copy)]
-pub struct NetworkId([u8; 2]);
 
 pub type TxSeq = u64;
 
@@ -39,50 +35,21 @@ pub fn assert_empty_arg(arg: &[u8]) -> Result<(), ()> {
     }
 }
 
-impl fmt::Display for NetworkId {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let s = std::str::from_utf8(&self.0).expect("network_id a valid utf8 string");
-        write!(f, "{}", s)
-    }
-}
-
-impl Default for NetworkId {
-    fn default() -> Self {
-        NetworkId([116, 99])
-    }
-}
-
-pub trait Action: Serialize + std::fmt::Debug {}
-
 #[derive(Serialize, Deserialize, Debug)]
-pub struct SignedTransaction<T: Action> {
+pub struct SignedTransaction {
     pub signature: Signature,
     pub signer_public: Public,
-    pub tx: UserTransaction<T>,
+    pub action: Vec<u8>,
 }
 
-impl<T: Action> SignedTransaction<T> {
+impl SignedTransaction {
     pub fn verify(&self) -> Result<(), ()> {
-        let message = self.tx.hash();
-        if verify(&self.signature, message.as_bytes(), &self.signer_public) {
+        let hash = blake256(&self.action);
+        if verify(&self.signature, hash.as_bytes(), &self.signer_public) {
             Ok(())
         } else {
             Err(())
         }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct UserTransaction<T: Action> {
-    pub seq: TxSeq,
-    pub network_id: NetworkId,
-    pub action: T,
-}
-
-impl<T: Action> UserTransaction<T> {
-    pub fn hash(&self) -> H256 {
-        let serialized = serde_cbor::to_vec(&self).unwrap();
-        blake256(serialized)
     }
 }
 

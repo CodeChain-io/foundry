@@ -23,12 +23,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TxStamp {
+    pub seq: TxSeq,
     pub hash: H256,
 }
-
-impl Action for TxStamp {}
-
-pub type OwnTransaction = crate::common::SignedTransaction<TxStamp>;
 
 pub struct GetAccountAndSeq;
 
@@ -37,7 +34,8 @@ impl Service for GetAccountAndSeq {}
 impl crate::sorting::GetAccountAndSeq for GetAccountAndSeq {
     fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, TxSeq), ()> {
         assert_eq!(tx.tx_type(), "stamp");
-        let tx: OwnTransaction = serde_cbor::from_slice(&tx.body()).map_err(|_| ())?;
-        Ok((tx.signer_public, tx.tx.seq))
+        let tx: SignedTransaction = serde_cbor::from_slice(&tx.body()).map_err(|_| ())?;
+        let action: TxStamp = serde_cbor::from_slice(&tx.action).map_err(|_| ())?;
+        Ok((tx.signer_public, action.seq))
     }
 }

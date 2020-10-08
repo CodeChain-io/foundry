@@ -33,16 +33,17 @@ pub enum Error {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct TxHello;
-impl Action for TxHello {}
-pub type OwnTransaction = crate::common::SignedTransaction<TxHello>;
+pub struct TxHello {
+    pub seq: TxSeq,
+}
 
 pub struct GetAccountAndSeq;
 impl Service for GetAccountAndSeq {}
 impl crate::sorting::GetAccountAndSeq for GetAccountAndSeq {
     fn get_account_and_seq(&self, tx: &Transaction) -> Result<(Public, TxSeq), ()> {
         assert_eq!(tx.tx_type(), "account");
-        let tx: OwnTransaction = serde_cbor::from_slice(&tx.body()).map_err(|_| ())?;
-        Ok((tx.signer_public, tx.tx.seq))
+        let tx: SignedTransaction = serde_cbor::from_slice(&tx.body()).map_err(|_| ())?;
+        let action: TxHello = serde_cbor::from_slice(&tx.action).map_err(|_| ())?;
+        Ok((tx.signer_public, action.seq))
     }
 }

@@ -16,6 +16,7 @@
 
 use super::types::*;
 use super::ServiceHandler;
+use crate::common::SignedTransaction;
 pub use ckey::{Ed25519Private as Private, Ed25519Public as Public};
 use coordinator::module::*;
 use coordinator::types::*;
@@ -39,16 +40,18 @@ impl ServiceHandler {
             return Err(ExecuteError::InvalidMetadata)
         }
 
-        let tx: OwnTransaction =
+        let tx: SignedTransaction =
             serde_cbor::from_slice(&transaction.body()).map_err(|_| ExecuteError::InvalidFormat)?;
         tx.verify().map_err(|_| ExecuteError::InvalidSign)?;
+        let action: TxStamp = serde_cbor::from_slice(&tx.action).map_err(|_| ExecuteError::InvalidFormat)?;
+
         if self
             .account_manager
             .read()
             .get_account(session, &tx.signer_public, true)
             .map_err(ExecuteError::AccountModuleError)?
             .seq
-            != tx.tx.seq
+            != action.seq
         {
             return Err(ExecuteError::InvalidSequence)
         }
@@ -103,7 +106,7 @@ impl TxOwner for ServiceHandler {
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), coordinator::types::ErrorCode> {
         let todo_fixthis: coordinator::types::ErrorCode = 3;
         assert_eq!(transaction.tx_type(), "stamp");
-        let tx: OwnTransaction = serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
+        let tx: SignedTransaction = serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
         tx.verify().map_err(|_| todo_fixthis)?;
         Ok(())
     }
