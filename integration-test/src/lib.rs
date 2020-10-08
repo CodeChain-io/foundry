@@ -15,7 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use awc::Client;
-use ckey::{Ed25519Public as Public, Signature};
+use ccrypto::blake256;
+use ckey::{Ed25519Private as Private, Ed25519Public as Public, Signature};
+use coordinator::Transaction;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::process::{Child, Command};
@@ -49,4 +51,41 @@ pub struct SignedTransaction {
     pub signature: Signature,
     pub signer_public: Public,
     pub action: Vec<u8>,
+}
+
+pub fn sign_tx(public: &Public, private: &Private, tx_type: String, action: Vec<u8>) -> Transaction {
+    let tx_hash = blake256(&action);
+    let tx = SignedTransaction {
+        signature: ckey::sign(tx_hash.as_bytes(), private),
+        signer_public: *public,
+        action,
+    };
+    Transaction::new(tx_type, serde_cbor::to_vec(&tx).unwrap())
+}
+
+pub async fn send_tx(port: u16, tx_type: &str, body: &[u8]) {
+    let query = "mutation Test($txType: String!, $body: String!) {
+        sendTransaction(txType: $txType, body: $body)
+    }";
+    let mut variables = Value::Object(Default::default());
+    variables["txType"] = Value::String(tx_type.to_owned());
+    variables["body"] = Value::String(hex::encode(body));
+
+    let query_result = request_query(port, "engine", query, &variables.to_string()).await;
+    let value: Value = serde_json::from_str(&query_result).unwrap();
+    assert_eq!(value["data"]["sendTransaction"].as_str().unwrap(), "Done");
+}
+
+pub async fn create_tx_hello(port: u16, public: &Public, private: &Private, sequence: u64) -> Transaction {
+    let query = "query Test($seq: Int!) {
+        txHello(seq: $seq)
+    }";
+    let mut variables = Value::Object(Default::default());
+    variables["seq"] = Value::Number(sequence.into());
+
+    let query_result = request_query(port, "module-account", query, &variables.to_string()).await;
+    let value: Value = serde_json::from_str(&query_result).unwrap();
+    let tx = hex::decode(value["data"]["txHello"].as_str().unwrap()).unwrap();
+
+    sign_tx(public, private, "account".to_owned(), tx)
 }
