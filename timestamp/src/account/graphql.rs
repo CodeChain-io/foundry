@@ -37,6 +37,13 @@ impl GraphQlRoot {
             })
             .ok()
     }
+
+    async fn tx_hello(&self, seq: TxSeq) -> String {
+        let action = TxHello {
+            seq,
+        };
+        hex::encode(serde_cbor::to_vec(&action).unwrap())
+    }
 }
 
 #[async_graphql::Object]
