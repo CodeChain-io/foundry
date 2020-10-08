@@ -31,9 +31,9 @@ struct QueryRoot {
 
 #[async_graphql::Object]
 impl QueryRoot {
-    async fn block(&self, height: Option<u64>) -> Option<Block> {
-        let id = match height {
-            Some(h) => ctypes::BlockId::Number(h),
+    async fn block(&self, number: Option<u64>) -> Option<Block> {
+        let id = match number {
+            Some(n) => ctypes::BlockId::Number(n),
             None => ctypes::BlockId::Latest,
         };
         self.client.block(&id).map(|x| Block::new(x.rlp().as_raw().to_vec()))
