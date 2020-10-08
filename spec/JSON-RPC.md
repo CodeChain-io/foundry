@@ -92,11 +92,7 @@ When `Transaction` is included in any response, there will be an additional fiel
 ## CommonParams
 
  - maxExtraDataSize: `U64`
- - maxTransferMetadataSize: `U64`
- - maxTextContentSize: `U64`
  - networkID: `string`
- - minPayCost: `U64`
- - minCustomCost: `U64`
  - maxBodySize: `U64`
  - snapshotPeriod: `U64`
 
@@ -708,14 +704,7 @@ Errors: `Invalid Params`
   "jsonrpc":"2.0",
   "result":{
     "maxExtraDataSize":"0x20",
-    "maxTransferMetadataSize":"0x0100",
-    "maxTextContentSize":"0x0200",
     "networkID":"tc",
-    "minPayCost":10,
-    "minCreateShardCost":10,
-    "minSetShardOwnersCost":10,
-    "minSetShardUsersCost":10,
-    "minCustomCost":10,
     "maxBodySize":4194304,
     "snapshotPeriod":16384
   },

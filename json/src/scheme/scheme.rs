@@ -71,8 +71,6 @@ mod tests {
             },
             "params": {
                 "maxExtraDataSize": "0x20",
-                "maxTransferMetadataSize": "0x0100",
-                "maxTextContentSize": "0x0200",
                 "networkID" : "tc",
                 "maxBodySize": 4194304,
                 "snapshotPeriod": 16384
