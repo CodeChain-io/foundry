@@ -553,11 +553,8 @@ impl ConsensusClient for TestBlockChainClient {}
 impl StateInfo for TestBlockChainClient {
     fn state_at(&self, _id: BlockId) -> Option<TopLevelState> {
         let statedb = StateDB::new_with_memorydb();
-        let top_state = empty_top_state_with_metadata(
-            statedb,
-            CommonParams::default_for_test(),
-            ConsensusParams::default_for_test(),
-        );
+        let top_state =
+            empty_top_state_with_metadata(statedb, CommonParams::default(), ConsensusParams::default_for_test());
 
         Some(top_state)
     }

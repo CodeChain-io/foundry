@@ -35,7 +35,7 @@ pub mod helpers {
     }
 
     pub fn get_temp_state() -> TopLevelState {
-        get_temp_state_with_metadata(CommonParams::default_for_test(), ConsensusParams::default_for_test())
+        get_temp_state_with_metadata(CommonParams::default(), ConsensusParams::default_for_test())
     }
 
     pub fn get_temp_state_with_metadata(params: CommonParams, consensus_params: ConsensusParams) -> TopLevelState {
