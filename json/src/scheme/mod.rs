@@ -27,4 +27,4 @@ pub use self::genesis::Genesis;
 pub use self::params::Params;
 pub use self::scheme::Scheme;
 pub use self::seal::{Seal, TendermintSeal};
-pub use self::tendermint::{StakeAccount, Tendermint, TendermintParams};
+pub use self::tendermint::{Tendermint, TendermintParams};
