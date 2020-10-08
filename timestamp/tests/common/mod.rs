@@ -25,18 +25,22 @@ use remote_trait_object::ServiceRef;
 use std::collections::HashMap;
 use timestamp::common::*;
 
-pub fn tx_hello(public: &Public, private: &Private, seq: u64) -> Transaction {
-    let action = serde_cbor::to_vec(&timestamp::account::TxHello {
-        seq,
-    })
-    .unwrap();
+pub fn sign_tx(public: &Public, private: &Private, tx_type: String, action: Vec<u8>) -> Transaction {
     let tx_hash = blake256(&action);
     let tx = SignedTransaction {
         signature: ckey::sign(tx_hash.as_bytes(), private),
         signer_public: *public,
         action,
     };
-    Transaction::new("account".to_owned(), serde_cbor::to_vec(&tx).unwrap())
+    Transaction::new(tx_type, serde_cbor::to_vec(&tx).unwrap())
+}
+
+pub fn tx_hello(public: &Public, private: &Private, seq: u64) -> Transaction {
+    let action = serde_cbor::to_vec(&timestamp::account::TxHello {
+        seq,
+    })
+    .unwrap();
+    sign_tx(public, private, "account".to_owned(), action)
 }
 
 pub fn tx_stamp(public: &Public, private: &Private, seq: u64, contents: &str) -> Transaction {
@@ -45,13 +49,7 @@ pub fn tx_stamp(public: &Public, private: &Private, seq: u64, contents: &str) ->
         hash: blake256(contents),
     })
     .unwrap();
-    let tx_hash = blake256(&action);
-    let tx = SignedTransaction {
-        signature: ckey::sign(tx_hash.as_bytes(), private),
-        signer_public: *public,
-        action,
-    };
-    Transaction::new("stamp".to_owned(), serde_cbor::to_vec(&tx).unwrap())
+    sign_tx(public, private, "stamp".to_owned(), action)
 }
 
 pub fn tx_token_transfer(public: &Public, private: &Private, seq: u64, receiver: Public, issuer: H256) -> Transaction {
@@ -61,13 +59,7 @@ pub fn tx_token_transfer(public: &Public, private: &Private, seq: u64, receiver:
         receiver,
     })
     .unwrap();
-    let tx_hash = blake256(&action);
-    let tx = SignedTransaction {
-        signature: ckey::sign(tx_hash.as_bytes(), private),
-        signer_public: *public,
-        action,
-    };
-    Transaction::new("token".to_owned(), serde_cbor::to_vec(&tx).unwrap())
+    sign_tx(public, private, "token".to_owned(), action)
 }
 
 #[derive(Default)]
