@@ -54,7 +54,7 @@ async fn track_blocks() {
 }
 
 #[actix_rt::test]
-async fn send_hello_tx() {
+async fn sequence_management1() {
     let port = 5555;
     let _node = run_node(port);
     delay_for(Duration::from_secs(3)).await;
@@ -93,7 +93,7 @@ async fn send_hello_tx() {
 }
 
 #[actix_rt::test]
-async fn send_hello_txes() {
+async fn sequence_management2() {
     let port = 5555;
     let _node = run_node(port);
     delay_for(Duration::from_secs(3)).await;
