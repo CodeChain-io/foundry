@@ -64,7 +64,7 @@ impl GraphQlRequestHandler {
     pub(super) fn new(service_handler: Arc<ServiceHandler>) -> Self {
         Self {
             service_handler,
-            tokio_runtime: tokio::runtime::Runtime::new().unwrap(),
+            tokio_runtime: tokio::runtime::Builder::new().basic_scheduler().build().unwrap(),
         }
     }
 }
