@@ -63,7 +63,7 @@ impl InitConsensus for ServiceHandler {
 }
 
 impl UpdateConsensus for ServiceHandler {
-    fn update_chain(&self, session: SessionId) -> (Option<CompactValidatorSet>, Option<ChainParams>) {
+    fn update_consensus(&self, session: SessionId) -> (Option<CompactValidatorSet>, Option<ChainParams>) {
         let validator_set = self.track_validator_set(session);
         let chain_params = ChainParams::default_for_test();
         (Some(validator_set), Some(chain_params))
