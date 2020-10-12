@@ -63,11 +63,11 @@ async fn send_hello_tx() {
 
     // valid
     let tx = create_tx_hello(port, user.public(), user.private(), 0).await;
-    send_tx(port, tx.tx_type(), tx.body()).await;
+    send_tx(port, tx.tx_type(), tx.body()).await.unwrap();
 
     // invalid
     let tx = create_tx_hello(port, user.public(), user.private(), 100).await;
-    send_tx(port, tx.tx_type(), tx.body()).await;
+    send_tx(port, tx.tx_type(), tx.body()).await.unwrap();
 
     delay_for(Duration::from_secs(6)).await;
 
