@@ -73,7 +73,7 @@ impl EngineLevelGraphQlHandler {
             mutation_root: MutationRoot {
                 client,
             },
-            tokio_runtime: tokio::runtime::Runtime::new().unwrap(),
+            tokio_runtime: tokio::runtime::Builder::new().basic_scheduler().build().unwrap(),
         }
     }
 }
