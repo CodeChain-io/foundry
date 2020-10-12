@@ -21,14 +21,14 @@ extern crate foundry_integration_test as test_common;
 
 use ckey::{Ed25519KeyPair, Generator, KeyPairTrait, Random};
 use serde_json::Value;
-use std::thread::sleep;
 use std::time::Duration;
 use test_common::*;
+use tokio::time::delay_for;
 
-#[test]
-fn run() {
+#[actix_rt::test]
+async fn run() {
     let mut child = run_node(4444);
-    sleep(Duration::from_secs(3));
+    delay_for(Duration::from_secs(3)).await;
     child.kill().unwrap();
     child.wait().unwrap();
 }
@@ -36,7 +36,7 @@ fn run() {
 #[actix_rt::test]
 async fn ping() {
     let mut child = run_node(5555);
-    sleep(Duration::from_secs(3));
+    delay_for(Duration::from_secs(3)).await;
     let x = request_query(5555, "ping", "aaaa", "aaaa").await;
     assert_eq!(x, "Module not found: ping");
     child.kill().unwrap();
@@ -47,11 +47,11 @@ async fn ping() {
 async fn track_blocks() {
     let port = 5555;
     let mut child = run_node(port);
-    sleep(Duration::from_secs(3));
+    delay_for(Duration::from_secs(3)).await;
 
     let start_block = get_latest_block(port).await;
     while get_latest_block(port).await < start_block + 15 {
-        sleep(Duration::from_secs(1));
+        delay_for(Duration::from_secs(1)).await;
     }
 
     child.kill().unwrap();
@@ -62,7 +62,7 @@ async fn track_blocks() {
 async fn send_hello_tx() {
     let port = 5555;
     let mut child = run_node(port);
-    sleep(Duration::from_secs(3));
+    delay_for(Duration::from_secs(3)).await;
 
     let user: Ed25519KeyPair = Random.generate().unwrap();
 
@@ -74,7 +74,7 @@ async fn send_hello_tx() {
     let tx = create_tx_hello(port, user.public(), user.private(), 100).await;
     send_tx(port, tx.tx_type(), tx.body()).await;
 
-    sleep(Duration::from_secs(6));
+    delay_for(Duration::from_secs(6)).await;
 
     let latest = get_latest_block(port).await;
     let mut num = 0;
