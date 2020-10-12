@@ -25,7 +25,7 @@ use std::process::{Child, Command};
 pub fn run_node(port: u16) -> Child {
     let path = std::fs::canonicalize("../target/debug/foundry").unwrap();
     let mut command = Command::new(path);
-    command.arg("--graphql-port").arg(format!("{}", port)).current_dir("../").spawn().unwrap()
+    command.env("RUST_LOG", "warn").arg("--graphql-port").arg(format!("{}", port)).current_dir("../").spawn().unwrap()
 }
 
 pub async fn request_query(port: u16, module: &str, query: &str, variables: &str) -> String {
