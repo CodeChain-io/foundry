@@ -99,7 +99,7 @@ pub struct Services<'a> {
     pub genesis_config: HashMap<&'a str, &'a [u8]>,
     pub tx_owner: HashMap<&'a str, &'a dyn TxOwner>,
     pub handle_crimes: &'a dyn HandleCrimes,
-    pub init_chain: &'a dyn InitChain,
+    pub init_chain: &'a dyn InitConsensus,
     pub update_chain: &'a dyn UpdateChain,
     pub tx_sorter: &'a dyn TxSorter,
     pub handle_graphqls: HashMap<&'a str, &'a dyn HandleGraphQlRequest>,

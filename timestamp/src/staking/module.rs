@@ -45,7 +45,7 @@ impl UserModule for Module {
             }
             "init-chain" => {
                 assert_empty_arg(ctor_arg).unwrap();
-                Skeleton::new(Arc::clone(&self.service_handler) as Arc<dyn InitChain>)
+                Skeleton::new(Arc::clone(&self.service_handler) as Arc<dyn InitConsensus>)
             }
             "update-chain" => {
                 assert_empty_arg(ctor_arg).unwrap();

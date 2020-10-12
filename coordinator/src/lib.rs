@@ -31,7 +31,7 @@ use crate::context::StorageAccess;
 use crate::engine::{BlockExecutor, ExecutionId, GraphQlHandlerProvider, Initializer, TxFilter};
 pub use crate::header::Header;
 use crate::module::{
-    HandleCrimes, HandleGraphQlRequest, InitChain, InitGenesis, SessionId, SortedTxs, Stateful, TxOwner, TxSorter,
+    HandleCrimes, HandleGraphQlRequest, InitConsensus, InitGenesis, SessionId, SortedTxs, Stateful, TxOwner, TxSorter,
     UpdateChain,
 };
 pub use crate::transaction::{Transaction, TransactionWithMetadata, TxOrigin};
@@ -178,7 +178,7 @@ pub struct Services {
     pub handle_crimes: Box<dyn HandleCrimes>,
 
     /// A service responsible for initializing the validators and the parameters.
-    pub init_chain: Box<dyn InitChain>,
+    pub init_chain: Box<dyn InitConsensus>,
 
     /// A service responsible for updating the validators and the parameters when closing every block.
     pub update_chain: Box<dyn UpdateChain>,
@@ -198,7 +198,7 @@ impl Default for Services {
             genesis_config: Default::default(),
             tx_owner: Default::default(),
             handle_crimes: Box::new(NoOpHandleCrimes) as Box<dyn HandleCrimes>,
-            init_chain: Box::new(PanickingInitChain) as Box<dyn InitChain>,
+            init_chain: Box::new(PanickingInitConsensus) as Box<dyn InitConsensus>,
             update_chain: Box::new(NoOpUpdateChain) as Box<dyn UpdateChain>,
             tx_sorter: Box::new(DefaultTxSorter) as Box<dyn TxSorter>,
             handle_graphqls: Default::default(),
@@ -214,13 +214,13 @@ impl HandleCrimes for NoOpHandleCrimes {
     fn handle_crimes(&self, _session_id: SessionId, _crimes: &[VerifiedCrime]) {}
 }
 
-struct PanickingInitChain;
+struct PanickingInitConsensus;
 
-impl Service for PanickingInitChain {}
+impl Service for PanickingInitConsensus {}
 
-impl InitChain for PanickingInitChain {
+impl InitConsensus for PanickingInitConsensus {
     fn init_chain(&self, _session_id: SessionId) -> (CompactValidatorSet, ChainParams) {
-        panic!("There must be a `InitChain` service")
+        panic!("There must be a `InitConsensus` service")
     }
 }
 

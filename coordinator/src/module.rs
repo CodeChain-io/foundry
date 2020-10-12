@@ -48,7 +48,7 @@ pub trait TxOwner: Service {
 }
 
 #[service]
-pub trait InitChain: Service {
+pub trait InitConsensus: Service {
     fn init_chain(&self, session_id: SessionId) -> (CompactValidatorSet, ChainParams);
 }
 
