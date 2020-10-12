@@ -91,3 +91,39 @@ async fn send_hello_tx() {
     let value: Value = serde_json::from_str(&query_result).unwrap();
     assert_eq!(value["data"]["account"]["seq"], 1);
 }
+
+#[actix_rt::test]
+async fn send_hello_txes() {
+    let port = 5555;
+    let _node = run_node(port);
+    delay_for(Duration::from_secs(3)).await;
+
+    let user: Ed25519KeyPair = Random.generate().unwrap();
+    let tx_num_per_step = 100;
+    let mut rng = thread_rng();
+
+    for i in 0..4 {
+        let mut txes = Vec::new();
+        for j in 0..tx_num_per_step {
+            txes.push(create_tx_hello(port, user.public(), user.private(), i * tx_num_per_step + j).await);
+            // Far future tx
+            txes.push(create_tx_hello(port, user.public(), user.private(), 100000 + j).await);
+            // invalid tx
+            if i > 0 {
+                txes.push(create_tx_hello(port, user.public(), user.private(), (i - 1) * tx_num_per_step + j).await);
+            }
+        }
+        txes.shuffle(&mut rng);
+
+        for tx in txes {
+            let _ = send_tx(port, tx.tx_type(), tx.body()).await;
+        }
+
+        delay_for(Duration::from_secs(8)).await;
+
+        let query = format!("{{ account(public: \"{}\") {{ seq }} }}", hex::encode(user.public().as_ref()));
+        let query_result = request_query(port, "module-account", &query, "{}").await;
+        let value: Value = serde_json::from_str(&query_result).unwrap();
+        assert_eq!(value["data"]["account"]["seq"], tx_num_per_step * (i + 1));
+    }
+}
