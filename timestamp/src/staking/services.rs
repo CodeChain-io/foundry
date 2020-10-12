@@ -54,7 +54,7 @@ impl InitGenesis for ServiceHandler {
     }
 }
 
-impl InitChain for ServiceHandler {
+impl InitConsensus for ServiceHandler {
     fn init_chain(&self, session: SessionId) -> (CompactValidatorSet, ChainParams) {
         let validator_set = self.track_validator_set(session);
         let chain_params = ChainParams::default_for_test();
