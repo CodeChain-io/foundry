@@ -62,7 +62,7 @@ impl UserModule for HostModule {
                     services.init_consensus = import_service_from_handle(rto_context, handle);
                 }
                 "update-chain" => {
-                    services.update_chain = import_service_from_handle(rto_context, handle);
+                    services.update_consensus = import_service_from_handle(rto_context, handle);
                 }
                 "stateful" => {
                     services.stateful.lock().push((module.to_owned(), import_service_from_handle(rto_context, handle)));

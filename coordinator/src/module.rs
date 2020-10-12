@@ -54,7 +54,7 @@ pub trait InitConsensus: Service {
 
 #[service]
 pub trait UpdateConsensus: Service {
-    fn update_chain(&self, session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ChainParams>);
+    fn update_consensus(&self, session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ChainParams>);
 }
 
 #[service]

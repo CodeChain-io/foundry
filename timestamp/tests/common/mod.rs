@@ -100,7 +100,7 @@ pub struct Services<'a> {
     pub tx_owner: HashMap<&'a str, &'a dyn TxOwner>,
     pub handle_crimes: &'a dyn HandleCrimes,
     pub init_consensus: &'a dyn InitConsensus,
-    pub update_chain: &'a dyn UpdateConsensus,
+    pub update_consensus: &'a dyn UpdateConsensus,
     pub tx_sorter: &'a dyn TxSorter,
     pub handle_graphqls: HashMap<&'a str, &'a dyn HandleGraphQlRequest>,
 }
@@ -114,7 +114,7 @@ impl<'a> Services<'a> {
             tx_owner: s.tx_owner.iter().map(|(s, x)| (s.as_str(), x.as_ref())).collect(),
             handle_crimes: s.handle_crimes.as_ref(),
             init_consensus: s.init_consensus.as_ref(),
-            update_chain: s.update_chain.as_ref(),
+            update_consensus: s.update_consensus.as_ref(),
             tx_sorter: s.tx_sorter.as_ref(),
             handle_graphqls: s.handle_graphqls.iter().map(|(s, x)| (s.as_str(), x.as_ref())).collect(),
         }

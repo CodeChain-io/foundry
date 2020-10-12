@@ -181,7 +181,7 @@ pub struct Services {
     pub init_consensus: Box<dyn InitConsensus>,
 
     /// A service responsible for updating the validators and the parameters when closing every block.
-    pub update_chain: Box<dyn UpdateConsensus>,
+    pub update_consensus: Box<dyn UpdateConsensus>,
 
     /// A service sorting Tx'es in the mempool.
     pub tx_sorter: Box<dyn TxSorter>,
@@ -199,7 +199,7 @@ impl Default for Services {
             tx_owner: Default::default(),
             handle_crimes: Box::new(NoOpHandleCrimes) as Box<dyn HandleCrimes>,
             init_consensus: Box::new(PanickingInitConsensus) as Box<dyn InitConsensus>,
-            update_chain: Box::new(NoOpUpdateConsensus) as Box<dyn UpdateConsensus>,
+            update_consensus: Box::new(NoOpUpdateConsensus) as Box<dyn UpdateConsensus>,
             tx_sorter: Box::new(DefaultTxSorter) as Box<dyn TxSorter>,
             handle_graphqls: Default::default(),
         }
@@ -229,7 +229,7 @@ struct NoOpUpdateConsensus;
 impl Service for NoOpUpdateConsensus {}
 
 impl UpdateConsensus for NoOpUpdateConsensus {
-    fn update_chain(&self, _session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ChainParams>) {
+    fn update_consensus(&self, _session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ChainParams>) {
         (None, None)
     }
 }
@@ -370,7 +370,7 @@ impl BlockExecutor for Coordinator {
         for owner in services.tx_owner.values() {
             events.extend(owner.block_closed(session_id)?.into_iter());
         }
-        let (updated_validator_set, updated_chain_params) = services.update_chain.update_chain(session_id);
+        let (updated_validator_set, updated_chain_params) = services.update_consensus.update_consensus(session_id);
 
         self.end_session(session_id);
 
