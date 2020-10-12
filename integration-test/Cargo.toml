@@ -18,6 +18,7 @@ ctypes = { package = "codechain-types", path = "../types" }
 hex = "0.4.2"
 ckey = {package = "codechain-key", path = "../key" }
 ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.3", tag = "v0.3.0" }
+rand = "0.7"
 
 [features]
 integration-test = []
