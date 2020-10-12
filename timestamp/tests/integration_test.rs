@@ -290,3 +290,35 @@ fn query_tx() {
 
     services.tx_owner.get("account").unwrap().execute_transaction(0, &tx).unwrap();
 }
+
+#[test]
+fn query_concurrent() {
+    let coordinator = Coordinator::from_app_desc(&app_desc()).unwrap();
+    set_empty_session(0, &coordinator);
+    let services = Services::new(&coordinator);
+
+    let gql_handler = Arc::clone(
+        &coordinator.services().handle_graphqls.iter().find(|(name, _)| name == "module-account").unwrap().1,
+    );
+
+    let user: Ed25519KeyPair = Random.generate().unwrap();
+    let tx = tx_hello(user.public(), user.private(), 0);
+    services.tx_owner.get("account").unwrap().execute_transaction(0, &tx).unwrap();
+
+    let mut joins = Vec::new();
+    for _ in 0..20 {
+        let gql_handler = Arc::clone(&gql_handler);
+        let public_str = hex::encode(user.public().as_ref());
+        joins.push(std::thread::spawn(move || {
+            for _ in 0..500 {
+                let result =
+                    gql_handler.execute(0, &format!("{{ account(public: \"{}\") {{ seq }} }}", public_str), "{}");
+                assert_eq!(r#"{"data":{"account":{"seq":1}}}"#, result);
+            }
+        }))
+    }
+
+    for join in joins {
+        join.join().unwrap();
+    }
+}
