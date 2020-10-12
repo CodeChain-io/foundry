@@ -178,7 +178,7 @@ pub struct Services {
     pub handle_crimes: Box<dyn HandleCrimes>,
 
     /// A service responsible for initializing the validators and the parameters.
-    pub init_chain: Box<dyn InitConsensus>,
+    pub init_consensus: Box<dyn InitConsensus>,
 
     /// A service responsible for updating the validators and the parameters when closing every block.
     pub update_chain: Box<dyn UpdateChain>,
@@ -198,7 +198,7 @@ impl Default for Services {
             genesis_config: Default::default(),
             tx_owner: Default::default(),
             handle_crimes: Box::new(NoOpHandleCrimes) as Box<dyn HandleCrimes>,
-            init_chain: Box::new(PanickingInitConsensus) as Box<dyn InitConsensus>,
+            init_consensus: Box::new(PanickingInitConsensus) as Box<dyn InitConsensus>,
             update_chain: Box::new(NoOpUpdateChain) as Box<dyn UpdateChain>,
             tx_sorter: Box::new(DefaultTxSorter) as Box<dyn TxSorter>,
             handle_graphqls: Default::default(),
@@ -219,7 +219,7 @@ struct PanickingInitConsensus;
 impl Service for PanickingInitConsensus {}
 
 impl InitConsensus for PanickingInitConsensus {
-    fn init_chain(&self, _session_id: SessionId) -> (CompactValidatorSet, ChainParams) {
+    fn init_consensus(&self, _session_id: SessionId) -> (CompactValidatorSet, ChainParams) {
         panic!("There must be a `InitConsensus` service")
     }
 }
@@ -264,7 +264,7 @@ impl Initializer for Coordinator {
             init.init_genesis(session_id, config);
         }
 
-        let (validator_set, params) = services.init_chain.init_chain(session_id);
+        let (validator_set, params) = services.init_consensus.init_consensus(session_id);
 
         self.max_body_size.set(params.max_body_size() as usize).expect("this must be the first assignment");
         self.end_session(session_id);

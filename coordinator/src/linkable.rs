@@ -59,7 +59,7 @@ impl UserModule for HostModule {
                     services.init_genesis.push((module.to_owned(), import_service_from_handle(rto_context, handle)));
                 }
                 "init-chain" => {
-                    services.init_chain = import_service_from_handle(rto_context, handle);
+                    services.init_consensus = import_service_from_handle(rto_context, handle);
                 }
                 "update-chain" => {
                     services.update_chain = import_service_from_handle(rto_context, handle);
