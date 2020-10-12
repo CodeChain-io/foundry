@@ -116,31 +116,32 @@ impl Coordinator {
     }
 
     fn new_session(&self, storage: &mut dyn StorageAccess) -> SessionId {
-        let mut sessions = self.sessions.write();
-        let (index, bit) = sessions
-            .iter()
-            .enumerate()
-            .find_map(|(i, &bits)| {
-                if bits == SessionSlot::MAX {
-                    None
-                } else {
-                    Some((i, bits.trailing_ones()))
-                }
-            })
-            .unwrap_or_else(|| {
-                sessions.push(0);
-                (sessions.len() - 1, 0)
-            });
+        let session_id = {
+            let mut sessions = self.sessions.write();
+            let (index, bit) = sessions
+                .iter()
+                .enumerate()
+                .find_map(|(i, &bits)| {
+                    if bits == SessionSlot::MAX {
+                        None
+                    } else {
+                        Some((i, bits.trailing_ones()))
+                    }
+                })
+                .unwrap_or_else(|| {
+                    sessions.push(0);
+                    (sessions.len() - 1, 0)
+                });
 
-        sessions[index] |= 1 << bit;
-        let session_id = bit + (SESSION_BITS_PER_SLOT * index) as SessionId;
+            sessions[index] |= 1 << bit;
+            bit + (SESSION_BITS_PER_SLOT * index) as SessionId
+        };
 
         let mut statefuls = self.services.stateful.lock();
         for (storage_id, (_, stateful)) in statefuls.iter_mut().enumerate() {
             let sub_storage = storage.sub_storage(storage_id as StorageId);
             stateful.new_session(session_id, ServiceRef::create_export(sub_storage));
         }
-
         session_id
     }
 
