@@ -100,7 +100,7 @@ pub struct Services<'a> {
     pub tx_owner: HashMap<&'a str, &'a dyn TxOwner>,
     pub handle_crimes: &'a dyn HandleCrimes,
     pub init_consensus: &'a dyn InitConsensus,
-    pub update_chain: &'a dyn UpdateChain,
+    pub update_chain: &'a dyn UpdateConsensus,
     pub tx_sorter: &'a dyn TxSorter,
     pub handle_graphqls: HashMap<&'a str, &'a dyn HandleGraphQlRequest>,
 }

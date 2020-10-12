@@ -32,7 +32,7 @@ use crate::engine::{BlockExecutor, ExecutionId, GraphQlHandlerProvider, Initiali
 pub use crate::header::Header;
 use crate::module::{
     HandleCrimes, HandleGraphQlRequest, InitConsensus, InitGenesis, SessionId, SortedTxs, Stateful, TxOwner, TxSorter,
-    UpdateChain,
+    UpdateConsensus,
 };
 pub use crate::transaction::{Transaction, TransactionWithMetadata, TxOrigin};
 use crate::types::{
@@ -181,7 +181,7 @@ pub struct Services {
     pub init_consensus: Box<dyn InitConsensus>,
 
     /// A service responsible for updating the validators and the parameters when closing every block.
-    pub update_chain: Box<dyn UpdateChain>,
+    pub update_chain: Box<dyn UpdateConsensus>,
 
     /// A service sorting Tx'es in the mempool.
     pub tx_sorter: Box<dyn TxSorter>,
@@ -199,7 +199,7 @@ impl Default for Services {
             tx_owner: Default::default(),
             handle_crimes: Box::new(NoOpHandleCrimes) as Box<dyn HandleCrimes>,
             init_consensus: Box::new(PanickingInitConsensus) as Box<dyn InitConsensus>,
-            update_chain: Box::new(NoOpUpdateChain) as Box<dyn UpdateChain>,
+            update_chain: Box::new(NoOpUpdateConsensus) as Box<dyn UpdateConsensus>,
             tx_sorter: Box::new(DefaultTxSorter) as Box<dyn TxSorter>,
             handle_graphqls: Default::default(),
         }
@@ -224,11 +224,11 @@ impl InitConsensus for PanickingInitConsensus {
     }
 }
 
-struct NoOpUpdateChain;
+struct NoOpUpdateConsensus;
 
-impl Service for NoOpUpdateChain {}
+impl Service for NoOpUpdateConsensus {}
 
-impl UpdateChain for NoOpUpdateChain {
+impl UpdateConsensus for NoOpUpdateConsensus {
     fn update_chain(&self, _session_id: SessionId) -> (Option<CompactValidatorSet>, Option<ChainParams>) {
         (None, None)
     }
