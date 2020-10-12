@@ -20,6 +20,8 @@
 extern crate foundry_integration_test as test_common;
 
 use ckey::{Ed25519KeyPair, Generator, KeyPairTrait, Random};
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 use serde_json::Value;
 use std::time::Duration;
 use test_common::*;
@@ -83,4 +85,9 @@ async fn send_hello_tx() {
         num += txes.len();
     }
     assert_eq!(num, 1);
+
+    let query = format!("{{ account(public: \"{}\") {{ seq }} }}", hex::encode(user.public().as_ref()));
+    let query_result = request_query(port, "module-account", &query, "{}").await;
+    let value: Value = serde_json::from_str(&query_result).unwrap();
+    assert_eq!(value["data"]["account"]["seq"], 1);
 }

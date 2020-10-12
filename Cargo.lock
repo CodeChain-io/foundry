@@ -1944,6 +1944,7 @@ dependencies = [
  "coordinator",
  "futures 0.3.5",
  "hex",
+ "rand 0.7.3",
  "serde",
  "serde_cbor",
  "serde_derive",
