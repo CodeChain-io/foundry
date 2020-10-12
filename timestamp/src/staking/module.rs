@@ -49,7 +49,7 @@ impl UserModule for Module {
             }
             "update-chain" => {
                 assert_empty_arg(ctor_arg).unwrap();
-                Skeleton::new(Arc::clone(&self.service_handler) as Arc<dyn UpdateChain>)
+                Skeleton::new(Arc::clone(&self.service_handler) as Arc<dyn UpdateConsensus>)
             }
             _ => panic!("Unsupported ctor_name in prepare_service_to_export() : {}", ctor_name),
         }
