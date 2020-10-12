@@ -27,41 +27,34 @@ use tokio::time::delay_for;
 
 #[actix_rt::test]
 async fn run() {
-    let mut child = run_node(4444);
+    let _node = run_node(4444);
     delay_for(Duration::from_secs(3)).await;
-    child.kill().unwrap();
-    child.wait().unwrap();
 }
 
 #[actix_rt::test]
 async fn ping() {
-    let mut child = run_node(5555);
+    let _node = run_node(5555);
     delay_for(Duration::from_secs(3)).await;
     let x = request_query(5555, "ping", "aaaa", "aaaa").await;
     assert_eq!(x, "Module not found: ping");
-    child.kill().unwrap();
-    child.wait().unwrap();
 }
 
 #[actix_rt::test]
 async fn track_blocks() {
     let port = 5555;
-    let mut child = run_node(port);
+    let _node = run_node(port);
     delay_for(Duration::from_secs(3)).await;
 
     let start_block = get_latest_block(port).await;
     while get_latest_block(port).await < start_block + 15 {
         delay_for(Duration::from_secs(1)).await;
     }
-
-    child.kill().unwrap();
-    child.wait().unwrap();
 }
 
 #[actix_rt::test]
 async fn send_hello_tx() {
     let port = 5555;
-    let mut child = run_node(port);
+    let _node = run_node(port);
     delay_for(Duration::from_secs(3)).await;
 
     let user: Ed25519KeyPair = Random.generate().unwrap();
@@ -90,7 +83,4 @@ async fn send_hello_tx() {
         num += txes.len();
     }
     assert_eq!(num, 1);
-
-    child.kill().unwrap();
-    child.wait().unwrap();
 }

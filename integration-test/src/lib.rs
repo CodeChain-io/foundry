@@ -22,10 +22,29 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::process::{Child, Command};
 
-pub fn run_node(port: u16) -> Child {
+pub struct FoundryNode {
+    child: Child,
+}
+
+impl Drop for FoundryNode {
+    fn drop(&mut self) {
+        self.child.kill().unwrap();
+        self.child.wait().unwrap();
+    }
+}
+
+pub fn run_node(port: u16) -> FoundryNode {
     let path = std::fs::canonicalize("../target/debug/foundry").unwrap();
     let mut command = Command::new(path);
-    command.env("RUST_LOG", "warn").arg("--graphql-port").arg(format!("{}", port)).current_dir("../").spawn().unwrap()
+    FoundryNode {
+        child: command
+            .env("RUST_LOG", "warn")
+            .arg("--graphql-port")
+            .arg(format!("{}", port))
+            .current_dir("../")
+            .spawn()
+            .unwrap(),
+    }
 }
 
 pub async fn request_query(port: u16, module: &str, query: &str, variables: &str) -> String {
