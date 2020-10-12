@@ -82,7 +82,7 @@ pub fn sign_tx(public: &Public, private: &Private, tx_type: String, action: Vec<
     Transaction::new(tx_type, serde_cbor::to_vec(&tx).unwrap())
 }
 
-pub async fn send_tx(port: u16, tx_type: &str, body: &[u8]) {
+pub async fn send_tx(port: u16, tx_type: &str, body: &[u8]) -> Result<(), ()> {
     let query = "mutation Test($txType: String!, $body: String!) {
         sendTransaction(txType: $txType, body: $body)
     }";
@@ -92,7 +92,12 @@ pub async fn send_tx(port: u16, tx_type: &str, body: &[u8]) {
 
     let query_result = request_query(port, "engine", query, &variables.to_string()).await;
     let value: Value = serde_json::from_str(&query_result).unwrap();
-    assert_eq!(value["data"]["sendTransaction"].as_str().unwrap(), "Done");
+
+    if value["data"]["sendTransaction"].as_str().unwrap() == "Done" {
+        Ok(())
+    } else {
+        Err(())
+    }
 }
 
 pub async fn create_tx_hello(port: u16, public: &Public, private: &Private, sequence: u64) -> Transaction {
