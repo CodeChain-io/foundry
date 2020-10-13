@@ -1,0 +1,53 @@
+[codechain]
+quiet = false
+base_path = "."
+chain = "./tendermint-solo.json"
+password_path = "./password.json"
+
+[mining]
+mem_pool_mem_limit = 4 # MB
+mem_pool_size = 32768
+mem_pool_fee_bump_shift = 3 # 12.5%
+reseal_on_txs = "all"
+reseal_min_period = 0
+self_nomination_enable = false
+allowed_past_gap = 30000
+allowed_future_gap = 5000
+engine_signer = "qwfj0xwkJQLV5iEGeaGeRfPA-TJX56Mnuq9fQD9coasmhanhck4tc0"
+
+[network]
+disable = false
+interface = "0.0.0.0"
+port = 3485
+max_peers = 30
+min_peers = 10
+bootstrap_addresses = []
+sync = true
+transaction_relay = true
+discovery = true
+discovery_type = "unstructured"
+discovery_refresh = 60000
+discovery_bucket_size = 10
+# whitelist_path = "whitelist.txt"
+# blacklist_path = "blacklist.txt"
+
+[graphql]
+port = 4040
+
+[rpc]
+disable = true
+
+[ipc]
+disable = true
+
+[informer]
+disable = true
+
+[ws]
+disable = true
+
+[snapshot]
+disable = true
+
+[email_alarm]
+disable = true
