@@ -1,0 +1,31 @@
+{
+    "name": "Tendermint",
+    "engine": {
+        "tendermint": {
+            "params": {
+                "timeoutPropose": 1000,
+                "timeoutProposeDelta": 1000,
+                "timeoutPrevote": 1000,
+                "timeoutPrevoteDelta": 1000,
+                "timeoutPrecommit": 1000,
+                "timeoutPrecommitDelta": 1000,
+                "timeoutCommit": 1000
+            }
+        }
+    },
+    "genesis": {
+        "seal": {
+            "tendermint": {
+                "prev_view": "0x0",
+                "cur_view": "0x0",
+                "precommits": [
+                    "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+                ]
+            }
+        },
+        "author": "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0",
+        "timestamp": "0x00",
+        "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "extraData": "0x"
+    }
+}
