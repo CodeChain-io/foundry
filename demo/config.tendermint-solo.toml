@@ -31,34 +31,23 @@ discovery_bucket_size = 10
 # whitelist_path = "whitelist.txt"
 # blacklist_path = "blacklist.txt"
 
-[rpc]
-disable = false
-interface = "127.0.0.1"
-port = 8080
-
 [graphql]
 port = 4040
 
+[rpc]
+disable = true
+
 [ipc]
-disable = false
-path = "/tmp/jsonrpc.ipc"
+disable = true
 
 [informer]
-disable = false
-interface = "127.0.0.1"
-port = 7070
-max_connections = 100
+disable = true
 
 [ws]
-disable = false
-interface = "127.0.0.1"
-port = 8081
-max_connections = 100
+disable = true
 
 [snapshot]
-disable = false
-path = "snapshot"
-expiration = 100000 # blocks. About a week
+disable = true
 
 [email_alarm]
 disable = true
