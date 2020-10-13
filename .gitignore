@@ -16,3 +16,6 @@
 
 # macOS
 .DS_store
+
+# integration test
+/integration-test/db/
