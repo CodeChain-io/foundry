@@ -20,7 +20,7 @@ use crate::dummy_network_service::DummyNetworkService;
 use crate::json::PasswordFile;
 use crate::rpc::{rpc_http_start, rpc_ipc_start, rpc_ws_start, setup_rpc_server};
 use crate::rpc_apis::ApiDependencies;
-use ccore::{snapshot_notify, EngineClient};
+use ccore::{snapshot_notify, ConsensusEngine, EngineClient};
 use ccore::{
     AccountProvider, AccountProviderError, ChainNotify, Client, ClientConfig, ClientService, EngineInfo, EngineType,
     Miner, MinerService, PeerDb, Scheme, NUM_COLUMNS,
@@ -127,12 +127,12 @@ fn client_start(
 
 fn new_miner(
     config: &config::Config,
-    scheme: &Scheme,
+    engine: Arc<dyn ConsensusEngine>,
     ap: Arc<AccountProvider>,
     db: Arc<dyn KeyValueDB>,
     coordinator: Arc<Coordinator>,
 ) -> Result<Arc<Miner>, String> {
-    let miner = Miner::new(config.miner_options()?, scheme, db, coordinator);
+    let miner = Miner::new(config.miner_options()?, engine, db, coordinator);
 
     match miner.engine_type() {
         EngineType::PBFT => match &config.mining.engine_signer {
@@ -242,7 +242,8 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
         Some(chain) => chain.scheme()?,
         None => return Err("chain is not specified".to_string()),
     };
-    scheme.engine.register_time_gap_config_to_worker(time_gap_params);
+    let engine = Arc::clone(&scheme.engine);
+    engine.register_time_gap_config_to_worker(time_gap_params);
 
     let coordinator = prepare_coordinator(config.operating.app_desc_path.as_ref().unwrap());
 
@@ -256,7 +257,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     let client_config: ClientConfig = Default::default();
     let db = open_db(&config.operating, &client_config)?;
 
-    let miner = new_miner(&config, &scheme, ap.clone(), Arc::clone(&db), coordinator.clone())?;
+    let miner = new_miner(&config, Arc::clone(&engine), ap.clone(), Arc::clone(&db), coordinator.clone())?;
     let client = client_start(&client_config, &timer_loop, db, &scheme, miner.clone(), coordinator)?;
     miner.recover_from_db();
 
