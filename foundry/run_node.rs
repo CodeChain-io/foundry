@@ -204,8 +204,8 @@ fn unlock_accounts(ap: &AccountProvider, pf: &PasswordFile) -> Result<(), String
     Ok(())
 }
 
-fn prepare_coordinator() -> Arc<Coordinator> {
-    let app_desc = AppDesc::from_str(&fs::read_to_string("./app-desc.yml").unwrap()).unwrap();
+fn prepare_coordinator(path: &str) -> Arc<Coordinator> {
+    let app_desc = AppDesc::from_str(&fs::read_to_string(path).unwrap()).unwrap();
     Arc::new(Coordinator::from_app_desc(&app_desc).unwrap())
 }
 
@@ -244,7 +244,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     };
     scheme.engine.register_time_gap_config_to_worker(time_gap_params);
 
-    let coordinator = prepare_coordinator();
+    let coordinator = prepare_coordinator(config.operating.app_desc_path.as_ref().unwrap());
 
     let pf = load_password_file(&config.operating.password_path)?;
     let base_path = config.operating.base_path.as_ref().unwrap().clone();
