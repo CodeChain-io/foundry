@@ -3,6 +3,11 @@ version_short: "v"
 author: CodeChain Team <hi@codechain.io>
 about: Foundry client
 args:
+    - app-desc-path:
+        long: app-desc-path
+        value_name: PATH
+        help: Specify the app descriptor path.
+        takes_value: true
     - chain:
         short: c
         long: chain

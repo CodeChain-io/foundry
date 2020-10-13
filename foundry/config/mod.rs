@@ -203,6 +203,7 @@ pub struct GraphQl {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Operating {
+    pub app_desc_path: Option<String>,
     pub quiet: Option<bool>,
     pub instance_id: Option<usize>,
     pub base_path: Option<String>,
@@ -340,6 +341,9 @@ impl GraphQl {
 
 impl Operating {
     pub fn merge(&mut self, other: &Operating) {
+        if other.app_desc_path.is_some() {
+            self.app_desc_path = other.app_desc_path.clone();
+        }
         if other.quiet.is_some() {
             self.quiet = other.quiet;
         }
@@ -364,6 +368,9 @@ impl Operating {
     }
 
     pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
+        if let Some(base_path) = matches.value_of("app-desc-path") {
+            self.app_desc_path = Some(base_path.to_string());
+        }
         if matches.is_present("quiet") {
             self.quiet = Some(true);
         }
