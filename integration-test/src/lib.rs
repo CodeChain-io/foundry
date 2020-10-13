@@ -39,6 +39,8 @@ pub fn run_node(port: u16) -> FoundryNode {
     FoundryNode {
         child: command
             .env("RUST_LOG", "warn")
+            .arg("--config")
+            .arg("config.tendermint-solo.toml")
             .arg("--graphql-port")
             .arg(format!("{}", port))
             .current_dir("../")
