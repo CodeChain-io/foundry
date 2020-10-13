@@ -56,7 +56,7 @@ pub use crate::client::{
 };
 pub use crate::consensus::signer::EngineSigner;
 pub use crate::consensus::tendermint::Evidence;
-pub use crate::consensus::{EngineType, TimeGapParams};
+pub use crate::consensus::{ConsensusEngine, EngineType, TimeGapParams};
 pub use crate::db::{COL_STATE, NUM_COLUMNS};
 pub use crate::error::{BlockImportError, Error, ImportError};
 pub use crate::miner::{Miner, MinerOptions, MinerService};

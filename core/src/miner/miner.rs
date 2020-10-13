@@ -137,11 +137,11 @@ impl NextAllowedReseal {
 impl Miner {
     pub fn new<C: 'static + BlockExecutor + TxFilter>(
         options: MinerOptions,
-        scheme: &Scheme,
+        engine: Arc<dyn ConsensusEngine>,
         db: Arc<dyn KeyValueDB>,
         block_executor: Arc<C>,
     ) -> Arc<Self> {
-        Arc::new(Self::new_raw(options, scheme, db, block_executor))
+        Arc::new(Self::new_raw(options, engine, db, block_executor))
     }
 
     pub fn with_scheme_for_test<C: 'static + BlockExecutor + TxFilter>(
@@ -149,12 +149,12 @@ impl Miner {
         db: Arc<dyn KeyValueDB>,
         coordinator: Arc<C>,
     ) -> Self {
-        Self::new_raw(Default::default(), scheme, db, coordinator)
+        Self::new_raw(Default::default(), Arc::clone(&scheme.engine), db, coordinator)
     }
 
     fn new_raw<C: 'static + BlockExecutor + TxFilter>(
         options: MinerOptions,
-        scheme: &Scheme,
+        engine: Arc<dyn ConsensusEngine>,
         db: Arc<dyn KeyValueDB>,
         coordinator: Arc<C>,
     ) -> Self {
@@ -166,7 +166,7 @@ impl Miner {
             mem_pool,
             next_allowed_reseal: NextAllowedReseal::new(Instant::now()),
             params: Params::new(AuthoringParams::default()),
-            engine: scheme.engine.clone(),
+            engine: engine.clone(),
             options,
             sealing_enabled: AtomicBool::new(true),
             block_executor: coordinator,
