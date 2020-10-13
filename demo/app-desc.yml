@@ -33,7 +33,9 @@ modules:
       thread-pool-size: 16
     genesis-config:
       - 0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0
-      # private: 4ca2cbc987cd76b393f11124fe7145fdc680e311a1ed9dee060e7c3fbeb8943e0a6902c51384a15d1062cac3a4e62c8d0c2eb02b4de7fa0a304ce4f88ea482d0
+      - 0473f782c3aec053c37fe2bccefa9298dcf8ae3dc2262ae540a14a580ff773e6
+      - 2502d5e6210679a19e45f3c0f93257e7a327baaf5f403f5ca1ab2685a9e1724e
+      - e909f311fd115ee412edcfcde88cc507370101f7635a67b9cb45390f1ccb4b5e
     tags:
       previliged: true
 
