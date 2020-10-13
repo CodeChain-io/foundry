@@ -21,7 +21,11 @@ interface = "0.0.0.0"
 port = 3033
 max_peers = 30
 min_peers = 10
-bootstrap_addresses = []
+bootstrap_addresses = [
+    "127.0.0.1:3030",
+    "127.0.0.1:3031",
+    "127.0.0.1:3032"
+]
 sync = true
 transaction_relay = true
 discovery = true
