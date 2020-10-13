@@ -18,7 +18,7 @@ engine_signer = "szff1322BHP3gsOuwFPDf-K8zvqSmNz4rj3CJirlQKFKWA_3c-Ytc0"
 [network]
 disable = false
 interface = "0.0.0.0"
-port = 3485
+port = 3031
 max_peers = 30
 min_peers = 10
 bootstrap_addresses = []
