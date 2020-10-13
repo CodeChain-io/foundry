@@ -541,6 +541,15 @@ pub mod test {
         let reseal_timer = timer_loop.new_timer_with_name("Client reseal timer");
         let io_service = IoService::<ClientIoMessage>::start("Client")?;
 
-        Client::try_new(&client_config, scheme, db, miner, coordinator, io_service.channel(), reseal_timer)
+        Client::try_new(
+            &client_config,
+            Arc::clone(&scheme.engine),
+            scheme,
+            db,
+            miner,
+            coordinator,
+            io_service.channel(),
+            reseal_timer,
+        )
     }
 }

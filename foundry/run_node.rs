@@ -112,13 +112,14 @@ fn client_start(
     client_config: &ClientConfig,
     timer_loop: &TimerLoop,
     db: Arc<dyn KeyValueDB>,
+    engine: Arc<dyn ConsensusEngine>,
     scheme: &Scheme,
     miner: Arc<Miner>,
     coordinator: Arc<Coordinator>,
 ) -> Result<ClientService, String> {
     cinfo!(CLIENT, "Starting client");
     let reseal_timer = timer_loop.new_timer_with_name("Client reseal timer");
-    let service = ClientService::start(client_config, &scheme, db, miner, coordinator, reseal_timer.clone())
+    let service = ClientService::start(client_config, engine, &scheme, db, miner, coordinator, reseal_timer.clone())
         .map_err(|e| format!("Client service error: {}", e))?;
     reseal_timer.set_handler(Arc::downgrade(&service.client()));
 
@@ -258,7 +259,8 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     let db = open_db(&config.operating, &client_config)?;
 
     let miner = new_miner(&config, Arc::clone(&engine), ap.clone(), Arc::clone(&db), coordinator.clone())?;
-    let client = client_start(&client_config, &timer_loop, db, &scheme, miner.clone(), coordinator)?;
+    let client =
+        client_start(&client_config, &timer_loop, db, Arc::clone(&engine), &scheme, miner.clone(), coordinator)?;
     miner.recover_from_db();
 
     let engine_graphql_handler = foundry_graphql_engine::EngineLevelGraphQlHandler::new(client.client());

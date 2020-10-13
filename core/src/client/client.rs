@@ -87,6 +87,7 @@ pub struct Client {
 impl Client {
     pub fn try_new<C: 'static + Initializer + BlockExecutor + GraphQlHandlerProvider>(
         config: &ClientConfig,
+        engine: Arc<dyn ConsensusEngine>,
         scheme: &Scheme,
         db: Arc<dyn KeyValueDB>,
         miner: Arc<Miner>,
@@ -113,8 +114,6 @@ impl Client {
 
         let gb = scheme.genesis_block();
         let chain = BlockChain::new(&gb, db.clone());
-
-        let engine = scheme.engine.clone();
 
         let importer = Importer::try_new(
             config,
