@@ -32,7 +32,7 @@ discovery_bucket_size = 10
 # blacklist_path = "blacklist.txt"
 
 [graphql]
-port = 4040
+port = 4043
 
 [rpc]
 disable = true
