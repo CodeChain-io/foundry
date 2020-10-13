@@ -19,3 +19,7 @@
 
 # integration test
 /integration-test/db/
+
+# demo
+/demo/db*
+/demo/foundry
