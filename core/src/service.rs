@@ -17,7 +17,7 @@
 use crate::client::{Client, ClientConfig};
 use crate::error::Error;
 use crate::miner::Miner;
-use crate::scheme::Scheme;
+use crate::{scheme::Scheme, ConsensusEngine};
 use cio::{IoContext, IoHandler, IoHandlerResult, IoService};
 use coordinator::Coordinator;
 use ctimer::TimerApi;
@@ -35,6 +35,7 @@ pub struct ClientService {
 impl ClientService {
     pub fn start(
         config: &ClientConfig,
+        engine: Arc<dyn ConsensusEngine>,
         scheme: &Scheme,
         db: Arc<dyn KeyValueDB>,
         miner: Arc<Miner>,
@@ -43,14 +44,23 @@ impl ClientService {
     ) -> Result<ClientService, Error> {
         let io_service = IoService::<ClientIoMessage>::start("Client")?;
 
-        let client = Client::try_new(config, &scheme, db, miner, coordinator, io_service.channel(), reseal_timer)?;
+        let client = Client::try_new(
+            config,
+            Arc::clone(&engine),
+            &scheme,
+            db,
+            miner,
+            coordinator,
+            io_service.channel(),
+            reseal_timer,
+        )?;
 
         let client_io = Arc::new(ClientIoHandler {
             client: client.clone(),
         });
         io_service.register_handler(client_io)?;
 
-        scheme.engine.register_client(Arc::downgrade(&client) as _);
+        engine.register_client(Arc::downgrade(&client) as _);
 
         Ok(ClientService {
             _io_service: io_service,
