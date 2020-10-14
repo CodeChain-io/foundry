@@ -23,7 +23,7 @@ use crate::rpc_apis::ApiDependencies;
 use ccore::{snapshot_notify, ConsensusEngine, EngineClient};
 use ccore::{
     AccountProvider, AccountProviderError, ChainNotify, Client, ClientConfig, ClientService, EngineInfo, EngineType,
-    Miner, MinerService, PeerDb, Scheme, NUM_COLUMNS,
+    Miner, MinerService, NullEngine, PeerDb, Scheme, Solo, Tendermint, NUM_COLUMNS,
 };
 use cdiscovery::{Config, Discovery};
 use cinformer::{handler::Handler, InformerEventSender, InformerService, MetaIoHandler, PubSubHandler, Session};
@@ -205,11 +205,6 @@ fn unlock_accounts(ap: &AccountProvider, pf: &PasswordFile) -> Result<(), String
     Ok(())
 }
 
-fn prepare_coordinator(path: &str) -> Arc<Coordinator> {
-    let app_desc = AppDesc::from_str(&fs::read_to_string(path).unwrap()).unwrap();
-    Arc::new(Coordinator::from_app_desc(&app_desc).unwrap())
-}
-
 pub fn open_db(cfg: &config::Operating, client_config: &ClientConfig) -> Result<Arc<dyn KeyValueDB>, String> {
     let base_path = cfg.base_path.as_ref().unwrap().clone();
     let db_path = cfg.db_path.as_ref().map(String::clone).unwrap_or_else(|| base_path + "/" + DEFAULT_DB_PATH);
@@ -243,10 +238,20 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
         Some(chain) => chain.scheme()?,
         None => return Err("chain is not specified".to_string()),
     };
-    let engine = Arc::clone(&scheme.engine);
-    engine.register_time_gap_config_to_worker(time_gap_params);
 
-    let coordinator = prepare_coordinator(config.operating.app_desc_path.as_ref().unwrap());
+    let app_desc =
+        AppDesc::from_str(&fs::read_to_string(config.operating.app_desc_path.as_ref().unwrap()).unwrap()).unwrap();
+    let coordinator = Arc::new(Coordinator::from_app_desc(&app_desc).unwrap());
+
+    let engine: Arc<dyn ConsensusEngine> = {
+        let engine_config = app_desc.host.engine;
+        match engine_config {
+            coordinator::app_desc::Engine::Null => Arc::new(NullEngine::default()),
+            coordinator::app_desc::Engine::Solo => Arc::new(Solo::new()),
+            coordinator::app_desc::Engine::Tendermint(tendermint) => Tendermint::new(tendermint.params.into()),
+        }
+    };
+    engine.register_time_gap_config_to_worker(time_gap_params);
 
     let pf = load_password_file(&config.operating.password_path)?;
     let base_path = config.operating.base_path.as_ref().unwrap().clone();
