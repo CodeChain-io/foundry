@@ -157,6 +157,8 @@ impl OpenBlock {
     }
 
     pub fn open(&mut self, block_executor: &dyn BlockExecutor, engine: &dyn ConsensusEngine) -> Result<(), Error> {
+        self.update_current_validator_set()?;
+
         let last_committed_validators = {
             let validator_bitset = TendermintSealView::new(self.header().seal())
                 .bitset()
@@ -413,7 +415,6 @@ pub fn enact(
     let mut b = OpenBlock::try_new(engine, db, parent, Public::default(), evidences, vec![])?;
 
     b.populate_from(header);
-    b.update_current_validator_set()?;
 
     b.open(block_executor, engine)?;
     b.execute_transactions(block_executor, transactions.to_vec())?;
