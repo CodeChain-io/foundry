@@ -25,6 +25,7 @@ use parking_lot::RwLock;
 use std::sync::{Arc, Weak};
 
 /// A consensus engine which does not provide any consensus mechanism.
+#[derive(Default)]
 pub struct Solo {
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
     snapshot_notify_sender: Arc<RwLock<Option<NotifySender>>>,
