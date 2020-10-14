@@ -84,12 +84,12 @@ impl ConsensusEngine for Solo {
 
 #[cfg(test)]
 mod tests {
-    use crate::scheme::Scheme;
+    use crate::{ConsensusEngine, Solo};
     use ctypes::Header;
 
     #[test]
     fn fail_to_verify() {
-        let engine = Scheme::new_test_solo().engine;
+        let engine = Solo::new();
         let header: Header = Header::default();
 
         assert!(engine.verify_header_basic(&header).is_ok());

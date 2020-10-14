@@ -21,7 +21,6 @@ use crate::block::{ClosedBlock, IsBlock};
 use crate::client::{BlockChainTrait, BlockProducer, EngineInfo, ImportBlock, MiningBlockChainClient};
 use crate::consensus::{ConsensusEngine, EngineType};
 use crate::error::Error;
-use crate::scheme::Scheme;
 use crate::transaction::PendingTransactions;
 use crate::types::TransactionId;
 use crate::StateInfo;
@@ -144,12 +143,12 @@ impl Miner {
         Arc::new(Self::new_raw(options, engine, db, block_executor))
     }
 
-    pub fn with_scheme_for_test<C: 'static + BlockExecutor + TxFilter>(
-        scheme: &Scheme,
+    pub fn with_engine_for_test<C: 'static + BlockExecutor + TxFilter>(
+        engine: Arc<dyn ConsensusEngine>,
         db: Arc<dyn KeyValueDB>,
         coordinator: Arc<C>,
     ) -> Self {
-        Self::new_raw(Default::default(), Arc::clone(&scheme.engine), db, coordinator)
+        Self::new_raw(Default::default(), Arc::clone(&engine), db, coordinator)
     }
 
     fn new_raw<C: 'static + BlockExecutor + TxFilter>(
@@ -503,7 +502,7 @@ pub mod test {
     use super::super::super::service::ClientIoMessage;
     use super::*;
     use crate::client::Client;
-    use crate::db::NUM_COLUMNS;
+    use crate::{db::NUM_COLUMNS, Scheme, Tendermint};
     use cio::IoService;
     use coordinator::test_coordinator::TestCoordinator;
     use ctimer::TimerLoop;
@@ -513,7 +512,8 @@ pub mod test {
         let test_coordinator = Arc::new(TestCoordinator::default());
         let db = Arc::new(kvdb_memorydb::create(NUM_COLUMNS.unwrap()));
         let scheme = Scheme::new_test();
-        let miner = Arc::new(Miner::with_scheme_for_test(&scheme, db.clone(), test_coordinator.clone()));
+        let engine = Tendermint::new_for_test();
+        let miner = Arc::new(Miner::with_engine_for_test(engine, db.clone(), test_coordinator.clone()));
 
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db.clone(), test_coordinator.clone());
         let client = generate_test_client(db, Arc::clone(&miner), &scheme, test_coordinator).unwrap();
@@ -540,16 +540,8 @@ pub mod test {
         let client_config: ClientConfig = Default::default();
         let reseal_timer = timer_loop.new_timer_with_name("Client reseal timer");
         let io_service = IoService::<ClientIoMessage>::start("Client")?;
+        let engine = Tendermint::new_for_test();
 
-        Client::try_new(
-            &client_config,
-            Arc::clone(&scheme.engine),
-            scheme,
-            db,
-            miner,
-            coordinator,
-            io_service.channel(),
-            reseal_timer,
-        )
+        Client::try_new(&client_config, engine, scheme, db, miner, coordinator, io_service.channel(), reseal_timer)
     }
 }

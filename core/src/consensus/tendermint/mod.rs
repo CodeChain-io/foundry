@@ -35,7 +35,7 @@ pub use super::ValidatorSet;
 use crate::client::ConsensusClient;
 use crate::consensus::DynamicValidator;
 use crate::snapshot_notify::NotifySender as SnapshotNotifySender;
-use crate::ChainNotify;
+use crate::{ChainNotify, ConsensusEngine};
 use crossbeam_channel as crossbeam;
 use ctimer::TimerToken;
 use parking_lot::RwLock;
@@ -109,6 +109,11 @@ impl Tendermint {
         })
     }
 
+    pub fn new_for_test() -> Arc<dyn ConsensusEngine> {
+        let config = coordinator::app_desc::TendermintParams::default();
+        Self::new(config.into())
+    }
+
     fn client(&self) -> Option<Arc<dyn ConsensusClient>> {
         self.client.read().as_ref()?.upgrade()
     }
@@ -133,15 +138,15 @@ mod tests {
     use super::*;
 
     /// Accounts inserted with "0" and "1" are validators. First proposer is "0".
-    fn setup() -> (Scheme, Arc<AccountProvider>, Arc<TestBlockChainClient>) {
+    fn setup() -> (Arc<dyn ConsensusEngine>, Arc<AccountProvider>, Arc<TestBlockChainClient>) {
         let tap = AccountProvider::transient_provider();
-        let scheme = Scheme::new_test_tendermint();
+        let engine = Tendermint::new_for_test();
         let test = TestBlockChainClient::new_with_scheme(Scheme::new_test_tendermint());
 
         let test_client: Arc<TestBlockChainClient> = Arc::new(test);
         let consensus_client = Arc::clone(&test_client) as Arc<dyn ConsensusClient>;
-        scheme.engine.register_client(Arc::downgrade(&consensus_client));
-        (scheme, tap, test_client)
+        engine.register_client(Arc::downgrade(&consensus_client));
+        (engine, tap, test_client)
     }
 
     fn insert_and_unlock(tap: &Arc<AccountProvider>, acc: &str) -> Public {
@@ -153,7 +158,7 @@ mod tests {
     #[test]
     #[ignore] // FIXME
     fn verification_fails_on_short_seal() {
-        let engine = Scheme::new_test_tendermint().engine;
+        let engine = Tendermint::new_for_test();
         let header = Header::default();
 
         let verify_result = engine.verify_header_basic(&header);
@@ -172,8 +177,7 @@ mod tests {
     #[test]
     #[ignore] // FIXME
     fn parent_block_existence_checking() {
-        let (spec, tap, _c) = setup();
-        let engine = spec.engine;
+        let (engine, tap, _c) = setup();
 
         let mut header = Header::default();
         header.set_number(4);

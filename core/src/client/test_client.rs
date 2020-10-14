@@ -43,7 +43,7 @@ use crate::error::{BlockImportError, Error as GenericError};
 use crate::miner::{Miner, MinerService};
 use crate::scheme::Scheme;
 use crate::types::{TransactionId, VerificationQueueInfo as QueueInfo};
-use crate::{LocalizedTransaction, PendingTransactions};
+use crate::{ConsensusEngine, LocalizedTransaction, PendingTransactions, Tendermint};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::{Ed25519Private as Private, Ed25519Public as Public, NetworkId, PlatformAddress};
 use coordinator::test_coordinator::TestCoordinator;
@@ -131,6 +131,7 @@ impl TestBlockChainClient {
         let genesis_block = scheme.genesis_block();
         let genesis_header = scheme.genesis_header();
         let genesis_hash = genesis_header.hash();
+        let engine = Tendermint::new_for_test();
 
         let mut client = TestBlockChainClient {
             blocks: RwLock::new(HashMap::new()),
@@ -140,7 +141,7 @@ impl TestBlockChainClient {
             last_hash: RwLock::new(genesis_hash),
             storage: RwLock::new(HashMap::new()),
             queue_size: AtomicUsize::new(0),
-            miner: Arc::new(Miner::with_scheme_for_test(&scheme, db, Arc::new(TestCoordinator::default()))),
+            miner: Arc::new(Miner::with_engine_for_test(engine, db, Arc::new(TestCoordinator::default()))),
             scheme,
             latest_block_timestamp: RwLock::new(10_000_000),
             history: RwLock::new(None),
@@ -305,12 +306,12 @@ pub fn get_temp_state_db() -> StateDB {
 
 impl BlockProducer for TestBlockChainClient {
     fn prepare_open_block(&self, _parent_block: BlockId, author: Public, extra_data: Bytes) -> OpenBlock {
-        let engine = &*self.scheme.engine;
+        let engine: Arc<dyn ConsensusEngine> = Tendermint::new_for_test();
         let genesis_header = self.scheme.genesis_header();
         let db = get_temp_state_db();
 
         let evidences = engine.fetch_evidences();
-        let mut open_block = OpenBlock::try_new(engine, db, &genesis_header, author, evidences, extra_data)
+        let mut open_block = OpenBlock::try_new(engine.as_ref(), db, &genesis_header, author, evidences, extra_data)
             .expect("Opening block for tests will not fail.");
         // TODO [todr] Override timestamp for predictability (set_timestamp_now kind of sucks)
         open_block.set_timestamp(*self.latest_block_timestamp.read());
