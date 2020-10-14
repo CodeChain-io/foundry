@@ -96,19 +96,19 @@ impl Client {
     ) -> Result<Arc<Client>, Error> {
         let journal_db = new_journaldb(Arc::clone(&db), Algorithm::Archive, crate::db::COL_STATE);
         let mut state_db = StateDB::new(journal_db);
-        if !scheme.check_genesis_root(state_db.as_hashdb()) {
-            return Err(SchemeError::InvalidState.into())
-        }
+
+        let (new_state_db, root) = Self::initialize_state(state_db, &*coordinator)?;
+        scheme.set_state_root(root);
+        state_db = new_state_db;
 
         if state_db.is_empty() {
-            // it's genesis
-            let (new_state_db, root) = Self::initialize_state(state_db, &*coordinator)?;
-            scheme.set_state_root(root);
-            state_db = new_state_db;
-
             let mut batch = DBTransaction::new();
             state_db.journal_under(&mut batch, 0, *scheme.genesis_header().hash())?;
             db.write(batch)?
+        }
+
+        if !scheme.check_genesis_root(state_db.as_hashdb()) {
+            return Err(SchemeError::InvalidState.into())
         }
 
         let gb = scheme.genesis_block();
