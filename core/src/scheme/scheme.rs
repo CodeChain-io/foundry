@@ -16,7 +16,6 @@
 
 use super::seal::Generic as GenericSeal;
 use super::Genesis;
-use crate::consensus::{ConsensusEngine, NullEngine, Solo, Tendermint};
 use crate::error::Error;
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::HashDB;
@@ -26,16 +25,12 @@ use parking_lot::RwLock;
 use primitives::{Bytes, H256};
 use rlp::{Rlp, RlpStream};
 use std::io::Read;
-use std::sync::Arc;
 
 /// Parameters for a block chain; includes both those intrinsic to the design of the
 /// chain and those to be interpreted by the active chain engine.
 pub struct Scheme {
     /// User friendly scheme name
     pub name: String,
-    /// What engine are we using for this?
-    pub engine: Arc<dyn ConsensusEngine>,
-
     /// The genesis block's parent hash field.
     pub parent_hash: BlockHash,
     /// The genesis block's author field.
@@ -69,16 +64,6 @@ macro_rules! load_bundled {
 }
 
 impl Scheme {
-    /// Convert engine scheme into a arc'd Engine of the right underlying type.
-    /// TODO avoid this hard-coded nastiness - use dynamic-linked plugin framework instead.
-    fn engine(engine_scheme: cjson::scheme::Engine) -> Arc<dyn ConsensusEngine> {
-        match engine_scheme {
-            cjson::scheme::Engine::Null => Arc::new(NullEngine::default()),
-            cjson::scheme::Engine::Solo => Arc::new(Solo::new()),
-            cjson::scheme::Engine::Tendermint(tendermint) => Tendermint::new(tendermint.params.into()),
-        }
-    }
-
     pub fn check_genesis_root(&self, db: &dyn HashDB) -> bool {
         if db.is_empty() {
             return true
@@ -156,11 +141,9 @@ impl Scheme {
 fn load_from(s: cjson::scheme::Scheme) -> Result<Scheme, Error> {
     let g = Genesis::from(s.genesis);
     let GenericSeal(seal_rlp) = g.seal.into();
-    let engine = Scheme::engine(s.engine);
 
     let mut s = Scheme {
         name: s.name,
-        engine,
         parent_hash: g.parent_hash,
         transactions_root: g.transactions_root,
         author: g.author,

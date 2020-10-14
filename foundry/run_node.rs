@@ -337,7 +337,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     let mut _maybe_sync = None;
     let mut maybe_sync_sender = None;
 
-    scheme.engine.register_chain_notify(client.client().as_ref());
+    engine.register_chain_notify(client.client().as_ref());
 
     let network_service: Arc<dyn NetworkControl> = {
         if !config.network.disable.unwrap() {
@@ -384,7 +384,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
                 service.register_extension(move |api| TransactionSyncExtension::new(client, api));
             }
 
-            scheme.engine.register_network_extension_to_service(&service);
+            engine.register_network_extension_to_service(&service);
 
             service
         } else {

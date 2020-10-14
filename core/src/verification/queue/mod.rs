@@ -496,14 +496,13 @@ mod tests {
     use super::kind::blocks::Unverified;
     use super::{BlockQueue, Config};
     use crate::error::{Error, ImportError};
-    use crate::scheme::Scheme;
-    use crate::tests::helpers::get_good_dummy_block;
+    use crate::{tests::helpers::get_good_dummy_block, ConsensusEngine, Solo};
+    use std::sync::Arc;
 
     // create a test block queue.
     // auto_scaling enables verifier adjustment.
     fn get_test_queue() -> BlockQueue {
-        let scheme = Scheme::new_test();
-        let engine = scheme.engine;
+        let engine: Arc<dyn ConsensusEngine> = Arc::new(Solo::new());
 
         let config = Config::default();
         BlockQueue::new(&config, engine, IoChannel::disconnected())
@@ -512,8 +511,7 @@ mod tests {
     #[test]
     fn create() {
         // TODO better test
-        let scheme = Scheme::new_test();
-        let engine = scheme.engine;
+        let engine: Arc<dyn ConsensusEngine> = Arc::new(Solo::new());
 
         let config = Config::default();
         let _ = BlockQueue::new(&config, engine, IoChannel::disconnected());
