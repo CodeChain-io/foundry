@@ -102,9 +102,13 @@ impl Client {
 
         if state_db.is_empty() {
             // it's genesis
-            let (db, root) = Self::initialize_state(state_db, &*coordinator)?;
+            let (new_state_db, root) = Self::initialize_state(state_db, &*coordinator)?;
             scheme.set_state_root(root);
-            state_db = db;
+            state_db = new_state_db;
+
+            let mut batch = DBTransaction::new();
+            state_db.journal_under(&mut batch, 0, *scheme.genesis_header().hash())?;
+            db.write(batch)?
         }
 
         let gb = scheme.genesis_block();
