@@ -97,6 +97,9 @@ impl Coordinator {
         let weaver = Weaver::new();
         let (sandboxes, mut services) = weaver.weave(app_desc)?;
 
+        // The order of stateful decides the assignment of substorage ids. It MUST be deterministic.
+        services.stateful.lock().sort_by(|a, b| a.0.cmp(&b.0));
+
         services.genesis_config = app_desc
             .modules
             .iter()
