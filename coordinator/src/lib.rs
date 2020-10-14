@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod app_desc;
+pub mod app_desc;
 pub mod context;
 pub mod engine;
 mod header;
