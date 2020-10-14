@@ -24,6 +24,23 @@ pub struct TendermintParams {
     pub timeouts: TimeoutParams,
 }
 
+impl From<coordinator::app_desc::TendermintParams> for TendermintParams {
+    fn from(p: coordinator::app_desc::TendermintParams) -> Self {
+        let dt = TimeoutParams::default();
+        TendermintParams {
+            timeouts: TimeoutParams {
+                propose: p.timeout_propose.map_or(dt.propose, Duration::from_millis),
+                propose_delta: p.timeout_propose_delta.map_or(dt.propose_delta, Duration::from_millis),
+                prevote: p.timeout_prevote.map_or(dt.prevote, Duration::from_millis),
+                prevote_delta: p.timeout_prevote_delta.map_or(dt.prevote_delta, Duration::from_millis),
+                precommit: p.timeout_precommit.map_or(dt.precommit, Duration::from_millis),
+                precommit_delta: p.timeout_precommit_delta.map_or(dt.precommit_delta, Duration::from_millis),
+                commit: p.timeout_commit.map_or(dt.commit, Duration::from_millis),
+            },
+        }
+    }
+}
+
 impl From<cjson::scheme::TendermintParams> for TendermintParams {
     fn from(p: cjson::scheme::TendermintParams) -> Self {
         let dt = TimeoutParams::default();

@@ -25,13 +25,17 @@ use serde::de::{MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
 
 use super::values::Value;
+pub use engine::Engine;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
+pub use tendermint::{Tendermint, TendermintParams};
 
+mod engine;
 pub(self) mod params;
+mod tendermint;
 pub(self) mod validator;
 
 macro_rules! module_delim {
@@ -185,6 +189,8 @@ pub struct HostSetup {
     pub init_config: Namespaced<Value>,
     #[serde(default)]
     pub genesis_config: Namespaced<Value>,
+    #[serde(default)]
+    pub engine: Engine,
 }
 
 #[derive(Debug)]
