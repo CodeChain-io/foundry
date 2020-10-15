@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::{Engine, Genesis};
+use super::Genesis;
 use serde_json::Error;
 use std::io::Read;
 
@@ -24,8 +24,6 @@ use std::io::Read;
 pub struct Scheme {
     /// Scheme name.
     pub name: String,
-    /// Engine.
-    pub engine: Engine,
     /// Genesis header.
     pub genesis: Genesis,
 }
@@ -47,20 +45,6 @@ mod tests {
     fn spec_deserialization() {
         let s = r#"{
             "name": "Morden",
-            "engine": {
-                "tendermint": {
-                    "params": {
-                        "validators" : [
-                            "0x6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375",
-                            "0xe3c20d46302d0ce9db2c48619486db2f7f65726e438bcbaaf548ff2671d93c9e"
-                        ],
-                        "timeoutPropose": 10000,
-                        "timeoutPrevote": 10000,
-                        "timeoutPrecommit": 10000,
-                        "timeoutCommit": 10000
-                    }
-                }
-            },
             "genesis": {
                 "seal": {
                     "tendermint": {
