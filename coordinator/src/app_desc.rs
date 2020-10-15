@@ -154,7 +154,7 @@ pub struct AppDesc {
 #[allow(clippy::should_implement_trait)]
 impl AppDesc {
     pub fn from_str(s: &str) -> anyhow::Result<AppDesc> {
-        let app_desc: AppDesc = serde_yaml::from_str(s)?;
+        let app_desc: AppDesc = toml::from_str(s)?;
         app_desc.validate()?;
 
         Ok(app_desc)
@@ -431,6 +431,6 @@ mod tests {
                 num-threads: 10
         "#,
         );
-        let _: AppDesc = serde_yaml::from_str(&source).unwrap();
+        let _: AppDesc = toml::from_str(&source).unwrap();
     }
 }

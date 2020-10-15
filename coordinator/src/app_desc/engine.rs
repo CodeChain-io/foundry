@@ -43,14 +43,14 @@ mod tests {
             "null": null
         }"#;
 
-        let deserialized: Engine = serde_yaml::from_str(s).unwrap();
+        let deserialized: Engine = toml::from_str(s).unwrap();
         assert_eq!(deserialized, Engine::Null);
 
         let s = r#"{
             "solo": null
         }"#;
 
-        let deserialized: Engine = serde_yaml::from_str(s).unwrap();
+        let deserialized: Engine = toml::from_str(s).unwrap();
         match deserialized {
             Engine::Solo => {} // solo is unit tested in its own file.
             _ => panic!(),
@@ -63,7 +63,7 @@ mod tests {
                 }
             }
         }"#;
-        let deserialized: Engine = serde_yaml::from_str(s).unwrap();
+        let deserialized: Engine = toml::from_str(s).unwrap();
         match deserialized {
             Engine::Tendermint(_) => {} // Tendermint is unit tested in its own file.
             _ => panic!(),
