@@ -246,7 +246,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
         match engine_config {
             coordinator::app_desc::Engine::Null => Arc::new(NullEngine::default()),
             coordinator::app_desc::Engine::Solo => Arc::new(Solo::new()),
-            coordinator::app_desc::Engine::Tendermint(tendermint) => Tendermint::new(tendermint.params.into()),
+            coordinator::app_desc::Engine::Tendermint(tendermint) => Tendermint::new((*tendermint).into()),
         }
     };
     engine.register_time_gap_config_to_worker(time_gap_params);

@@ -14,17 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::tendermint::Tendermint;
+use super::tendermint::TendermintParams;
 use serde::Deserialize;
 
 /// Engine deserialization.
 #[derive(Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(tag = "type", content = "params")]
 pub enum Engine {
     /// Null engine.
     Null,
     Solo,
-    Tendermint(Box<Tendermint>),
+    Tendermint(Box<TendermintParams>),
 }
 
 impl Default for Engine {
@@ -39,16 +40,16 @@ mod tests {
 
     #[test]
     fn engine_deserialization() {
-        let s = r#"{
-            "null": null
-        }"#;
+        let s = r#"
+            type = "null"
+        "#;
 
         let deserialized: Engine = toml::from_str(s).unwrap();
         assert_eq!(deserialized, Engine::Null);
 
-        let s = r#"{
-            "solo": null
-        }"#;
+        let s = r#"
+            type = "solo"
+        "#;
 
         let deserialized: Engine = toml::from_str(s).unwrap();
         match deserialized {
@@ -56,13 +57,10 @@ mod tests {
             _ => panic!(),
         };
 
-        let s = r#"{
-            "tendermint": {
-                "params": {
-                    "validators": ["0x6f57729dbeeae75cb180984f0bf65c56f822135c47337d68a0aef41d7f932375"]
-                }
-            }
-        }"#;
+        let s = r#"
+            type = "tendermint"
+            params.timeoutPropose = 6
+        "#;
         let deserialized: Engine = toml::from_str(s).unwrap();
         match deserialized {
             Engine::Tendermint(_) => {} // Tendermint is unit tested in its own file.

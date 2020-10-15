@@ -39,9 +39,3 @@ pub struct TendermintParams {
     /// allowed future time gap in milliseconds.
     pub allowed_future_timegap: Option<u64>,
 }
-
-/// Tendermint engine deserialization.
-#[derive(Debug, PartialEq, Deserialize, Default)]
-pub struct Tendermint {
-    pub params: TendermintParams,
-}
