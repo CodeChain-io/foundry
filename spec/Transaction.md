@@ -1,70 +1,32 @@
 # Transaction
 
-Only a platform account can generate a transaction.
-The transaction generator pays the transaction fees.
-Transactions that cost less than the [minimum fee](Minimum-Fee.md) are rejected.
-The minumum fee is different for each transaction type.
+## Definition
 
-The seq must be identical with the payer’s account seq.
-The account seq will be increased by 1 after a transaction is added to the block.
-The amount of fee is deducted from the payer’s balance.
-A transaction will not be included if the seq of the account doesn’t match or the balance of the account is less than the fee.
+Foundry defines a transaction as `txType` + `body`.
+`txType` is the name of the transaction, as defined in the app-descriptor.
+It is used only to route the transaction to the owning module.
+`body` is an opaque content of the transaction.
+Foundry host doesn't care about the value and the format is entirely defined by the module.
 
-```rust
-struct Transaction {
-    seq: u64,
-    fee: u64,
-    network_id: NetworkId,
-    action: Action,
-}
+## Guideline
 
-enum Action {
-    Pay { ..., },
-    Custom { ..., },
-}
-```
+Signature of transaction is also part of the body.
+Module can choose whatever signing scheme it wants, and even it can omit siganture for special transactions.
+Thus creating a `body` from high-level parameters and user's private key is a module-specific process.
+Foundry never manages this, and you should know how the module supports this.
 
-### Timelock
+However, there is a typical way that we encourage for modules.
 
-A transaction fails if any `timelock` condition isn't met.
-There are 4 types of `timelock`.
-Basically, they keep the transaction from being executed until the specific point in time.
-`Block` and `Time` types indicate the absolute time.
-`BlockAge` and `TimeAge` types indicate relative time based on how long has the address been created.
+1. Each module (who defines own transaction) exposes a GraphQL field to create an opaque **before-signed** transaction from high-level parameters.
+2. Use trusted 3rd party program to sign the transaction.
+3. Create a final `body`, which would be **before-signed** content + public key + signature.
+This format is also module-specific, so the author could provide another GraphQL field or another stand-alone program.
 
-- `Block(u64)`: The given value must be less than or equal to the current block's number.
-- `BlockAge(u64)`: The given value must be less than or equal to the value `X`, where `X` = `current block number` - `the block number that the address was created at`.
-- `Time(u64)`: The given value must be less than or equal to the current block's timestamp.
-- `TimeAge(u64)`: The given value must be less than or equal to the value `X`, where `X` = `current block timestamp` - `the block timestamp that the address was created at`.
+2 and 3 might be merged into 1, so that user can get the final `body` right from the high-level parameters and his private key,
+but it is not recommended unless he can 100% trust the module.
 
-```rust
-enum Timelock {
-    Block(u64),
-    BlockAge(u64),
-    Time(u64),
-    TimeAge(u64),
-}
-```
+## How to Send
 
-## Pay
-
-`Pay` sends `quantity` amount of CCC to the `receiver`.
-
-```rust
-Pay {
-    receiver: Address,
-    quantity: u64,
-}
-```
-
-## Custom
-
-`Custom` is a special transaction.
-The types of transactions that may exist depends on the consensus engine.
-
-```rust
-Custom {
-    handler_id: u64,
-    bytes: Bytes,
-}
-```
+As explained [here](GraphQL.md), the engine itself has GraphQL endpoint too.
+You can find `sendTransaction` field under the mutation root.
+Pass `txType` and `body` using it, and it will be injected in the mempool.
