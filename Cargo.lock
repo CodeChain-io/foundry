@@ -1036,6 +1036,7 @@ dependencies = [
  "codechain-json",
  "codechain-key",
  "codechain-types",
+ "hex",
  "libc",
  "log",
  "matches",
