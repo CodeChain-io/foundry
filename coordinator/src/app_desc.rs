@@ -33,7 +33,7 @@ pub use seal::{Seal, TendermintSeal};
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
-pub use tendermint::{Tendermint, TendermintParams};
+pub use tendermint::TendermintParams;
 
 mod bytes;
 mod engine;
