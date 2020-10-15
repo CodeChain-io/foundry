@@ -128,7 +128,7 @@ fn weave() {
 #[test]
 fn weave_conccurent() {
     for i in 0..8 {
-        let n = 8;
+        let n = 4;
         let mut joins = Vec::new();
         for _ in 0..n {
             joins.push(std::thread::spawn(|| {
