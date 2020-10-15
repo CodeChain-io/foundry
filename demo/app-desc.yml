@@ -91,7 +91,17 @@ modules:
     tags:
       previliged: true
 
-host: {}
+host:
+  engine:
+    tendermint:
+      params:
+        timeoutPropose: 1000
+        timeoutProposeDelta: 1000
+        timeoutPrevote: 1000
+        timeoutPrevoteDelta: 1000
+        timeoutPrecommit: 1000
+        timeoutPrecommitDelta: 1000
+        timeoutCommit: 1000
 
 transactions:
   account: module-account
