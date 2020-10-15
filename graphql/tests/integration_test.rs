@@ -21,6 +21,7 @@ mod common;
 use actix_web::client::Client;
 use actix_web::dev::Body;
 use fgql::{GraphQlRequestHandler, ServerData};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
@@ -56,20 +57,39 @@ fn create_server(port: u16) -> actix_web::dev::Server {
     fgql::run_server(server_data, socket).unwrap()
 }
 
-fn test_query() -> (HashMap<String, String>, String) {
+fn test_query() -> (HashMap<String, Value>, String) {
     let graphql_query = r#"{account(name: "John"){balance}}"#.to_owned();
-    let variables = "{}".to_owned();
+    let variables = Value::String("{}".to_owned());
     (
-        (vec![("query".to_owned(), graphql_query), ("variables".to_owned(), variables)]).into_iter().collect(),
-        r#"{"data":{"account":{"balance":10}}}"#.to_string(),
+        (vec![("query".to_owned(), serde_json::Value::String(graphql_query)), ("variables".to_owned(), variables)])
+            .into_iter()
+            .collect(),
+        r#"{"data":{"account":{"balance":10}}}"#.to_owned(),
     )
 }
 
-fn test_query_variables() -> (HashMap<String, String>, String) {
-    let graphql_query = r#"query Test($name: String){account(name: $name){balance}}"#.to_owned();
+fn test_query_variables_in_string() -> (HashMap<String, String>, String) {
+    let graphql_query = r#"query Test($name: String!){account(name: $name){balance}}"#.to_owned();
     let variables = r#"{"name": "John"}"#.to_owned();
+
     (
         (vec![("query".to_owned(), graphql_query), ("variables".to_owned(), variables)]).into_iter().collect(),
+        r#"{"data":{"account":{"balance":10}}}"#.to_owned(),
+    )
+}
+
+fn test_query_variables() -> (HashMap<String, Value>, String) {
+    let graphql_query = r#"query Test($name: String!){account(name: $name){balance}}"#.to_owned();
+    let mut variables = Value::Object(Default::default());
+    variables["name"] = Value::String("John".to_owned());
+    (
+        (vec![
+            ("query".to_owned(), Value::String(graphql_query)),
+            ("variables".to_owned(), variables),
+            ("operationName".to_owned(), Value::String("Test".to_owned())),
+        ])
+        .into_iter()
+        .collect(),
         r#"{"data":{"account":{"balance":10}}}"#.to_owned(),
     )
 }
@@ -115,7 +135,7 @@ async fn request_get_with_variables() {
     let port = 4002;
     let _server = create_server(port);
     let client = Client::new();
-    let (query, expected) = test_query_variables();
+    let (query, expected) = test_query_variables_in_string();
 
     let request = client.get(&format!("http://localhost:{}/module1/graphql", port)).query(&query).unwrap();
     let response_bytes = request.send().await.unwrap().body().await.unwrap();
