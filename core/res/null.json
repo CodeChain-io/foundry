@@ -1,8 +1,5 @@
 {
   "name": "Null",
-  "engine": {
-    "null": null
-  },
   "genesis": {
     "seal": {
       "generic": "0x0"
