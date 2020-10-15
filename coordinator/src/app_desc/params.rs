@@ -21,7 +21,6 @@ use crate::{
 };
 use anyhow::Context as _;
 use handlebars::{no_escape, Context, Handlebars, TemplateRenderError};
-pub use serde_yaml::Error as YamlError;
 use std::collections::BTreeMap;
 
 struct Merger<'reg> {
@@ -100,7 +99,7 @@ impl Value {
                 } else if s.starts_with('@') {
                     // Remove @ and type is anything
                     let merged = merger.merge(&s[1..])?;
-                    *self = serde_yaml::from_str::<Value>(&merged)?;
+                    *self = TOMLValueDeserializer::deserialize(&merged)?;
                 } else {
                     // Type is string
                     let merged = merger.merge(s)?;
@@ -183,7 +182,7 @@ mod tests {
     fn merge_at() {
         let params = vec![("hello".to_owned(), "world".to_owned())].into_iter().collect();
         let merger = Merger::new(&params);
-        let mut value = Value::String("@=={{hello}}==".to_owned());
+        let mut value = Value::String("@\"=={{hello}}==\"".to_owned());
         value.merge_params(&merger).unwrap();
         assert_eq!(value, Value::String("==world==".to_owned()))
     }
@@ -201,7 +200,7 @@ mod tests {
     fn merge_at_map() {
         let params = vec![("hello".to_owned(), "world".to_owned())].into_iter().collect();
         let merger = Merger::new(&params);
-        let mut value = Value::String("@{ \"key\": \"{{hello}}\" }".to_owned());
+        let mut value = Value::String("@{ \"key\" = \"{{hello}}\" }".to_owned());
         value.merge_params(&merger).unwrap();
         assert_eq!(
             value,
