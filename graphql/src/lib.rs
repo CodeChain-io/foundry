@@ -62,24 +62,36 @@ impl ServerData {
 }
 
 #[derive(Deserialize)]
-struct GraphQlArgs {
+#[serde(deny_unknown_fields)]
+struct GetGraphQlArgs {
     query: String,
+    #[serde(rename = "operationName")]
+    _operation_name: Option<String>,
     variables: Option<String>,
 }
 
-async fn handle_post(session: Session, args: web::Json<GraphQlArgs>) -> Result<HttpResponse> {
-    let query = &args.query;
-    let variables = args.variables.as_deref().unwrap_or("{}");
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PostGraphQlArgs {
+    query: String,
+    #[serde(rename = "operationName")]
+    _operation_name: Option<String>,
+    variables: Option<serde_json::Value>,
+}
 
-    let graphql_response = session.handler.execute(session.session_id, query, variables);
+async fn handle_post(session: Session, args: web::Json<PostGraphQlArgs>) -> Result<HttpResponse> {
+    let query = &args.query;
+    let variables = args.variables.as_ref().map(|x| x.to_string()).unwrap_or_else(|| "{}".to_string());
+
+    let graphql_response = session.handler.execute(session.session_id, query, &variables);
     Ok(HttpResponse::Ok().content_type("application/json").body(graphql_response))
 }
 
-async fn handle_get(session: Session, args: web::Query<GraphQlArgs>) -> Result<HttpResponse> {
+async fn handle_get(session: Session, args: web::Query<GetGraphQlArgs>) -> Result<HttpResponse> {
     let query = &args.query;
-    let variables = args.variables.as_deref().unwrap_or("{}");
+    let variables = args.variables.as_ref().cloned().unwrap_or_else(|| "{}".to_string());
 
-    let graphql_response = session.handler.execute(session.session_id, query, variables);
+    let graphql_response = session.handler.execute(session.session_id, query, &variables);
     Ok(HttpResponse::Ok().content_type("application/json").body(graphql_response))
 }
 
