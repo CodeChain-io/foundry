@@ -410,26 +410,36 @@ mod tests {
     fn load_essentials() {
         let source = unindent(
             r#"
-            modules:
-                awesome-module:
-                    hash: 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-                    transactions:
-                        - has-seq
-                    init-config:
-                        test: 1
-                        test1:
-                            key1: 1
-                            key2: sdfsdaf
-            host:
-                imports:
-                    a: awesome-module/a.a
-                    \namespace:
-                        b.b: asdfsdaf-asdf
-            transactions:
-                great-tx: awesome-module
-            param-defaults:
-                num-threads: 10
-        "#,
+[modules.awesome-module]
+hash = "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+transactions = ["has-seq"]
+
+[modules.awesome-module.init-config]
+test = 1
+
+[modules.awesome-module.init-config.test1]
+key1 = 1
+key2 = "sdfsdaf"
+
+[modules.awesome-module.exports]
+init-genesis.init-genesis = {}
+init-chain.init-chain = {}
+update-chain.update-chain = {}
+
+[host]
+
+[host.imports]
+a = "awesome-module/a.a"
+
+[host.imports."\\namespace"]
+"b.b" = "asdfsdaf-asdf"
+
+[transactions]
+great-tx = "awesome-module"
+
+[param-defaults]
+num-threads = "10"
+            "#,
         );
         let _: AppDesc = toml::from_str(&source).unwrap();
     }

@@ -96,10 +96,10 @@ mod timestamp_setup {
 }
 
 fn app_desc_path() -> &'static str {
-    if std::path::Path::exists(std::path::Path::new("./app-desc.yml")) {
-        "./app-desc.yml"
+    if std::path::Path::exists(std::path::Path::new("./app-desc.toml")) {
+        "./app-desc.toml"
     } else {
-        "./timestamp/app-desc.yml"
+        "./timestamp/app-desc.toml"
     }
 }
 
