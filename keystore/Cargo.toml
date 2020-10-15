@@ -20,9 +20,12 @@ parking_lot = "0.11.0"
 ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.3", tag = "v0.3.0" }
 smallvec = "0.4"
 tempdir = "0.3"
+hex = "0.4.2"
 
 [dev-dependencies]
 matches = "0.1"
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.5", tag = "v0.5.1" }
 
-[lib]
+[[bin]]
+path = "./src/bin/sign.rs"
+name = "sign"
