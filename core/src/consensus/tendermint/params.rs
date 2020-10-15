@@ -41,28 +41,6 @@ impl From<coordinator::app_desc::TendermintParams> for TendermintParams {
     }
 }
 
-impl From<cjson::scheme::TendermintParams> for TendermintParams {
-    fn from(p: cjson::scheme::TendermintParams) -> Self {
-        let dt = TimeoutParams::default();
-        TendermintParams {
-            timeouts: TimeoutParams {
-                propose: p.timeout_propose.map_or(dt.propose, to_duration),
-                propose_delta: p.timeout_propose_delta.map_or(dt.propose_delta, to_duration),
-                prevote: p.timeout_prevote.map_or(dt.prevote, to_duration),
-                prevote_delta: p.timeout_prevote_delta.map_or(dt.prevote_delta, to_duration),
-                precommit: p.timeout_precommit.map_or(dt.precommit, to_duration),
-                precommit_delta: p.timeout_precommit_delta.map_or(dt.precommit_delta, to_duration),
-                commit: p.timeout_commit.map_or(dt.commit, to_duration),
-            },
-        }
-    }
-}
-
-fn to_duration(ms: cjson::uint::Uint) -> Duration {
-    let ms: usize = ms.into();
-    Duration::from_millis(ms as u64)
-}
-
 pub struct TimeGapParams {
     pub allowed_past_gap: Duration,
     pub allowed_future_gap: Duration,
