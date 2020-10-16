@@ -91,6 +91,12 @@ modules:
     tags:
       previliged: true
 
+  module-util:
+    hash: a060000000012345678901234567890123456789012345678901234567890123
+    exports:
+      handle-graphql-request:
+        handle-graphql-request: {}
+
 host:
   engine:
     tendermint:
