@@ -18,7 +18,6 @@ pub mod state_machine;
 mod state_manager;
 
 use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value as GqlValue};
-use ccrypto::blake256;
 use ckey::{verify, Ed25519Public as Public, Signature};
 use primitives::H256;
 use serde::{Deserialize, Serialize};
@@ -44,8 +43,7 @@ pub struct SignedTransaction {
 
 impl SignedTransaction {
     pub fn verify(&self) -> Result<(), ()> {
-        let hash = blake256(&self.action);
-        if verify(&self.signature, hash.as_bytes(), &self.signer_public) {
+        if verify(&self.signature, &self.action, &self.signer_public) {
             Ok(())
         } else {
             Err(())

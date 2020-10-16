@@ -26,9 +26,8 @@ use std::collections::HashMap;
 use timestamp::common::*;
 
 pub fn sign_tx(public: &Public, private: &Private, tx_type: String, action: Vec<u8>) -> Transaction {
-    let tx_hash = blake256(&action);
     let tx = SignedTransaction {
-        signature: ckey::sign(tx_hash.as_bytes(), private),
+        signature: ckey::sign(&action, private),
         signer_public: *public,
         action,
     };
