@@ -108,4 +108,12 @@ mod timestamp_setup {
             Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::sorting::Module>),
         );
     }
+
+    #[distributed_slice(MODULE_INITS)]
+    fn util() {
+        add_function_pool(
+            "a060000000012345678901234567890123456789012345678901234567890123".to_owned(),
+            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::util::Module>),
+        );
+    }
 }
