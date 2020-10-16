@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use awc::Client;
-use ccrypto::blake256;
 use ckey::{Ed25519Private as Private, Ed25519Public as Public, Signature};
 use coordinator::Transaction;
 use serde_json::Value;
@@ -76,9 +75,8 @@ pub struct SignedTransaction {
 }
 
 pub fn sign_tx(public: &Public, private: &Private, tx_type: String, action: Vec<u8>) -> Transaction {
-    let tx_hash = blake256(&action);
     let tx = SignedTransaction {
-        signature: ckey::sign(tx_hash.as_bytes(), private),
+        signature: ckey::sign(&action, private),
         signer_public: *public,
         action,
     };
