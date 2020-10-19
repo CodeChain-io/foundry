@@ -39,7 +39,7 @@ fn tx_hello(public: &Public, private: &Private, seq: u64) -> Transaction {
         signer_public: *public,
         action,
     };
-    Transaction::new("account".to_owned(), serde_cbor::to_vec(&tx).unwrap())
+    Transaction::new("hello".to_owned(), serde_cbor::to_vec(&tx).unwrap())
 }
 
 pub fn inject_hello_txes(client: Arc<Client>) {

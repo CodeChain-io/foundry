@@ -40,7 +40,7 @@ pub fn tx_hello(public: &Public, private: &Private, seq: u64) -> Transaction {
         seq,
     })
     .unwrap();
-    sign_tx(public, private, "account".to_owned(), action)
+    sign_tx(public, private, "hello".to_owned(), action)
 }
 
 pub fn tx_stamp(public: &Public, private: &Private, seq: u64, contents: &str) -> Transaction {
@@ -59,7 +59,7 @@ pub fn tx_token_transfer(public: &Public, private: &Private, seq: u64, receiver:
         receiver,
     })
     .unwrap();
-    sign_tx(public, private, "token".to_owned(), action)
+    sign_tx(public, private, "token-transfer".to_owned(), action)
 }
 
 #[derive(Default)]

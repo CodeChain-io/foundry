@@ -214,11 +214,11 @@ fn run_massive_token_exchange(id: SessionId, c: &Coordinator) {
             }
 
             if let Some(owner) = tokens.iter_mut().find(|x| **x == i) {
-                services.tx_owner.get("token").unwrap().execute_transaction(id, &tx).unwrap();
+                services.tx_owner.get("token-transfer").unwrap().execute_transaction(id, &tx).unwrap();
                 *seq += 1;
                 *owner = receiver;
             } else {
-                assert!(services.tx_owner.get("token").unwrap().execute_transaction(id, &tx).is_err());
+                assert!(services.tx_owner.get("token-transfer").unwrap().execute_transaction(id, &tx).is_err());
             }
         }
     }
@@ -254,7 +254,7 @@ fn query() {
     let n = 21;
     for i in 0..n {
         let tx = tx_hello(user.public(), user.private(), i);
-        services.tx_owner.get("account").unwrap().execute_transaction(0, &tx).unwrap();
+        services.tx_owner.get("hello").unwrap().execute_transaction(0, &tx).unwrap();
     }
 
     let public_str = hex::encode(user.public().as_ref());
@@ -286,9 +286,9 @@ fn query_tx() {
     let tx = hex::decode(value["data"]["txHello"].as_str().unwrap()).unwrap();
 
     let user: Ed25519KeyPair = Random.generate().unwrap();
-    let tx = sign_tx(user.public(), user.private(), "account".to_owned(), tx);
+    let tx = sign_tx(user.public(), user.private(), "hello".to_owned(), tx);
 
-    services.tx_owner.get("account").unwrap().execute_transaction(0, &tx).unwrap();
+    services.tx_owner.get("hello").unwrap().execute_transaction(0, &tx).unwrap();
 }
 
 #[test]
@@ -303,7 +303,7 @@ fn query_concurrent() {
 
     let user: Ed25519KeyPair = Random.generate().unwrap();
     let tx = tx_hello(user.public(), user.private(), 0);
-    services.tx_owner.get("account").unwrap().execute_transaction(0, &tx).unwrap();
+    services.tx_owner.get("hello").unwrap().execute_transaction(0, &tx).unwrap();
 
     let mut joins = Vec::new();
     for _ in 0..20 {

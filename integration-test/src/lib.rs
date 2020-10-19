@@ -114,5 +114,5 @@ pub async fn create_tx_hello(port: u16, public: &Public, private: &Private, sequ
     let value: Value = serde_json::from_str(&query_result).unwrap();
     let tx = hex::decode(value["data"]["txHello"].as_str().unwrap()).unwrap();
 
-    sign_tx(public, private, "account".to_owned(), tx)
+    sign_tx(public, private, "hello".to_owned(), tx)
 }

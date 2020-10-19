@@ -134,7 +134,7 @@ impl<'a, 'b> StateTransition for ExecuteTransaction<'a, 'b> {
     type Outcome = Result<(), ExecuteError>;
 
     fn execute(self, state: &mut dyn SubStorageAccess) -> Result<(), ExecuteError> {
-        if self.tx.tx_type() != "token" {
+        if self.tx.tx_type() != "token-transfer" {
             return Err(ExecuteError::InvalidMetadata)
         }
         let tx: SignedTransaction = serde_cbor::from_slice(&self.tx.body()).map_err(|_| ExecuteError::InvalidFormat)?;

@@ -116,7 +116,7 @@ impl<'a> StateTransition for ExecuteTransaction<'a> {
     type Outcome = Result<(), ExecuteError>;
 
     fn execute(self, state: &mut dyn SubStorageAccess) -> Result<(), ExecuteError> {
-        if self.tx.tx_type() != "account" {
+        if self.tx.tx_type() != "hello" {
             return Err(ExecuteError::InvalidMetadata)
         }
 
