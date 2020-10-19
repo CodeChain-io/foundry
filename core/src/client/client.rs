@@ -27,11 +27,12 @@ use crate::encoded;
 use crate::error::{BlockImportError, Error, ImportError, SchemeError};
 use crate::event::EventSource;
 use crate::miner::{Miner, MinerService};
-use crate::scheme::Scheme;
 use crate::service::ClientIoMessage;
 use crate::transaction::{LocalizedTransaction, PendingTransactions};
-use crate::types::{BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo};
-use ccrypto::BLAKE_NULL_RLP;
+use crate::{
+    genesis::Genesis,
+    types::{BlockStatus, TransactionId, VerificationQueueInfo as BlockQueueInfo},
+};
 use cdb::{new_journaldb, Algorithm, AsHashDB};
 use cio::IoChannel;
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
@@ -40,12 +41,12 @@ use coordinator::engine::{BlockExecutor, GraphQlHandlerProvider, Initializer};
 use coordinator::module::SessionId;
 use coordinator::types::Event;
 use coordinator::Transaction;
-use cstate::{Metadata, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopState, TopStateView};
+use cstate::{StateDB, TopLevelState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::{BlockHash, BlockId, BlockNumber, ChainParams, Header, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use primitives::{Bytes, H256};
+use primitives::Bytes;
 use rlp::Rlp;
 use std::collections::HashMap;
 use std::ops::Range;
@@ -88,7 +89,7 @@ impl Client {
     pub fn try_new<C: 'static + Initializer + BlockExecutor + GraphQlHandlerProvider>(
         config: &ClientConfig,
         engine: Arc<dyn ConsensusEngine>,
-        scheme: &Scheme,
+        genesis: &Genesis,
         db: Arc<dyn KeyValueDB>,
         miner: Arc<Miner>,
         coordinator: Arc<C>,
@@ -98,21 +99,19 @@ impl Client {
         let journal_db = new_journaldb(Arc::clone(&db), Algorithm::Archive, crate::db::COL_STATE);
         let mut state_db = StateDB::new(journal_db);
 
-        let (new_state_db, root) = Self::initialize_state(state_db, &*coordinator)?;
-        scheme.set_state_root(root);
-        state_db = new_state_db;
-
+        // we don't need to call initialize state
         if state_db.is_empty() {
             let mut batch = DBTransaction::new();
-            state_db.journal_under(&mut batch, 0, *scheme.genesis_header().hash())?;
+            state_db = Genesis::initialize_state(state_db, coordinator.as_ref())?.0;
+            state_db.journal_under(&mut batch, 0, *genesis.header().hash())?;
             db.write(batch)?
         }
 
-        if !scheme.check_genesis_root(state_db.as_hashdb()) {
+        if !genesis.check_genesis_root(state_db.as_hashdb()) {
             return Err(SchemeError::InvalidState.into())
         }
 
-        let gb = scheme.genesis_block();
+        let gb = genesis.block();
         let chain = BlockChain::new(&gb, db.clone());
 
         let importer = Importer::try_new(
@@ -248,25 +247,6 @@ impl Client {
         let enacted = self.importer.extract_enacted(vec![update_result]);
         self.miner.chain_new_blocks(self, &[], &[], &enacted);
         self.new_blocks(&[], &[], &enacted);
-    }
-
-    /// Initializes the state at genesis.
-    fn initialize_state(db: StateDB, coordinator: &impl Initializer) -> Result<(StateDB, H256), Error> {
-        let root = BLAKE_NULL_RLP;
-        let mut state = TopLevelState::from_existing(db, root)?;
-
-        for _ in 0..coordinator.number_of_sub_storages() {
-            state.create_module()?;
-        }
-
-        let (validators, chain_params) = coordinator.initialize_chain(&mut state);
-
-        let validator_set = NextValidatorSet::from_compact_validator_set(validators);
-        validator_set.save_to_state(&mut state)?;
-
-        *state.get_metadata_mut().unwrap() = Metadata::new(chain_params);
-
-        Ok(state.commit_and_clone_db()?)
     }
 
     fn block_number_ref(&self, id: &BlockId) -> Option<BlockNumber> {

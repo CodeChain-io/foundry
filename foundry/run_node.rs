@@ -20,11 +20,11 @@ use crate::dummy_network_service::DummyNetworkService;
 use crate::json::PasswordFile;
 use crate::rpc::{rpc_http_start, rpc_ipc_start, rpc_ws_start, setup_rpc_server};
 use crate::rpc_apis::ApiDependencies;
-use ccore::{snapshot_notify, ConsensusEngine, EngineClient};
 use ccore::{
-    AccountProvider, AccountProviderError, ChainNotify, Client, ClientConfig, ClientService, EngineInfo, EngineType,
-    Miner, MinerService, NullEngine, PeerDb, Scheme, Solo, Tendermint, NUM_COLUMNS,
+    genesis::Genesis, AccountProvider, AccountProviderError, ChainNotify, Client, ClientConfig, ClientService,
+    EngineInfo, EngineType, Miner, MinerService, NullEngine, PeerDb, Solo, Tendermint, NUM_COLUMNS,
 };
+use ccore::{snapshot_notify, ConsensusEngine, EngineClient};
 use cdiscovery::{Config, Discovery};
 use cinformer::{handler::Handler, InformerEventSender, InformerService, MetaIoHandler, PubSubHandler, Session};
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
@@ -113,13 +113,13 @@ fn client_start(
     timer_loop: &TimerLoop,
     db: Arc<dyn KeyValueDB>,
     engine: Arc<dyn ConsensusEngine>,
-    scheme: &Scheme,
+    genesis: &Genesis,
     miner: Arc<Miner>,
     coordinator: Arc<Coordinator>,
 ) -> Result<ClientService, String> {
     cinfo!(CLIENT, "Starting client");
     let reseal_timer = timer_loop.new_timer_with_name("Client reseal timer");
-    let service = ClientService::start(client_config, engine, &scheme, db, miner, coordinator, reseal_timer.clone())
+    let service = ClientService::start(client_config, engine, &genesis, db, miner, coordinator, reseal_timer.clone())
         .map_err(|e| format!("Client service error: {}", e))?;
     reseal_timer.set_handler(Arc::downgrade(&service.client()));
 
@@ -243,6 +243,8 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
         AppDesc::from_str(&fs::read_to_string(config.operating.app_desc_path.as_ref().unwrap()).unwrap()).unwrap();
     let coordinator = Arc::new(Coordinator::from_app_desc(&app_desc).unwrap());
 
+    let genesis = Genesis::new(app_desc.host.genesis, coordinator.as_ref());
+
     let engine: Arc<dyn ConsensusEngine> = {
         let engine_config = app_desc.host.engine;
         match engine_config {
@@ -265,7 +267,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
 
     let miner = new_miner(&config, Arc::clone(&engine), ap.clone(), Arc::clone(&db), coordinator.clone())?;
     let client =
-        client_start(&client_config, &timer_loop, db, Arc::clone(&engine), &scheme, miner.clone(), coordinator)?;
+        client_start(&client_config, &timer_loop, db, Arc::clone(&engine), &genesis, miner.clone(), coordinator)?;
     miner.recover_from_db();
 
     let engine_graphql_handler = foundry_graphql_engine::EngineLevelGraphQlHandler::new(client.client());
