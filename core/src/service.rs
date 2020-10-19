@@ -17,7 +17,7 @@
 use crate::client::{Client, ClientConfig};
 use crate::error::Error;
 use crate::miner::Miner;
-use crate::{scheme::Scheme, ConsensusEngine};
+use crate::{genesis::Genesis, ConsensusEngine};
 use cio::{IoContext, IoHandler, IoHandlerResult, IoService};
 use coordinator::Coordinator;
 use ctimer::TimerApi;
@@ -36,7 +36,7 @@ impl ClientService {
     pub fn start(
         config: &ClientConfig,
         engine: Arc<dyn ConsensusEngine>,
-        scheme: &Scheme,
+        genesis: &Genesis,
         db: Arc<dyn KeyValueDB>,
         miner: Arc<Miner>,
         coordinator: Arc<Coordinator>,
@@ -47,7 +47,7 @@ impl ClientService {
         let client = Client::try_new(
             config,
             Arc::clone(&engine),
-            &scheme,
+            &genesis,
             db,
             miner,
             coordinator,

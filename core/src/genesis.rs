@@ -17,11 +17,13 @@
 use crate::scheme::seal::{Generic as GenericSeal, Seal};
 use crate::Error;
 use ccrypto::BLAKE_NULL_RLP;
+use cdb::HashDB;
 use ckey::{Ed25519Public as Public, PlatformAddress};
 use coordinator::engine::Initializer;
 use cstate::{Metadata, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopState};
-use ctypes::BlockHash;
+use ctypes::{BlockHash, Header};
 use primitives::{Bytes, H256};
+use rlp::{Rlp, RlpStream};
 
 pub struct Genesis {
     parent_hash: BlockHash,
@@ -73,5 +75,41 @@ impl Genesis {
         *state.get_metadata_mut().unwrap() = Metadata::new(chain_params);
 
         Ok(state.commit_and_clone_db()?)
+    }
+
+    pub fn check_genesis_root(&self, db: &dyn HashDB) -> bool {
+        if db.is_empty() {
+            return true
+        }
+        db.contains(&self.state_root)
+    }
+
+    pub fn header(&self) -> Header {
+        let mut header: Header = Default::default();
+        header.set_parent_hash(self.parent_hash);
+        header.set_timestamp(self.timestamp);
+        header.set_number(0);
+        header.set_author(self.author);
+        header.set_transactions_root(self.transactions_root);
+        header.set_extra_data(self.extra_data.clone());
+        header.set_state_root(self.state_root);
+        header.set_next_validator_set_hash(BLAKE_NULL_RLP /* This will be calculated from state after https://github.com/CodeChain-io/foundry/issues/142*/);
+        header.set_seal({
+            let r = Rlp::new(&self.seal_rlp);
+            r.iter().map(|f| f.as_raw().to_vec()).collect()
+        });
+        ctrace!(SPEC, "Genesis header is {:?}", header);
+        ctrace!(SPEC, "Genesis header hash is {}", header.hash());
+        header
+    }
+
+    pub fn block(&self) -> Bytes {
+        let empty_list = RlpStream::new_list(0).out();
+        let header = self.header();
+        let mut ret = RlpStream::new_list(3);
+        ret.append(&header);
+        ret.append_raw(&empty_list, 1); // evidences
+        ret.append_raw(&empty_list, 1);
+        ret.out()
     }
 }

@@ -502,7 +502,7 @@ pub mod test {
     use super::super::super::service::ClientIoMessage;
     use super::*;
     use crate::client::Client;
-    use crate::{db::NUM_COLUMNS, Scheme, Tendermint};
+    use crate::{db::NUM_COLUMNS, genesis::Genesis, Scheme, Tendermint};
     use cio::IoService;
     use coordinator::test_coordinator::TestCoordinator;
     use ctimer::TimerLoop;
@@ -512,11 +512,12 @@ pub mod test {
         let test_coordinator = Arc::new(TestCoordinator::default());
         let db = Arc::new(kvdb_memorydb::create(NUM_COLUMNS.unwrap()));
         let scheme = Scheme::new_test();
+        let genesis = Genesis::new(Default::default(), test_coordinator.as_ref());
         let engine = Tendermint::new_for_test();
         let miner = Arc::new(Miner::with_engine_for_test(engine, db.clone(), test_coordinator.clone()));
 
         let mut mem_pool = MemPool::with_limits(8192, usize::max_value(), db.clone(), test_coordinator.clone());
-        let client = generate_test_client(db, Arc::clone(&miner), &scheme, test_coordinator).unwrap();
+        let client = generate_test_client(db, Arc::clone(&miner), &genesis, test_coordinator).unwrap();
 
         let transaction1 = Transaction::new("sample".to_string(), vec![1, 2, 3, 4, 5]);
         let transaction2 = Transaction::new("sample".to_string(), vec![5, 4, 3, 2, 1]);
@@ -532,7 +533,7 @@ pub mod test {
     fn generate_test_client(
         db: Arc<dyn KeyValueDB>,
         miner: Arc<Miner>,
-        scheme: &Scheme,
+        genesis: &Genesis,
         coordinator: Arc<TestCoordinator>,
     ) -> Result<Arc<Client>, Error> {
         let timer_loop = TimerLoop::new(2);
@@ -542,6 +543,6 @@ pub mod test {
         let io_service = IoService::<ClientIoMessage>::start("Client")?;
         let engine = Tendermint::new_for_test();
 
-        Client::try_new(&client_config, engine, scheme, db, miner, coordinator, io_service.channel(), reseal_timer)
+        Client::try_new(&client_config, engine, genesis, db, miner, coordinator, io_service.channel(), reseal_timer)
     }
 }
