@@ -26,15 +26,21 @@ use serde::{Deserialize, Deserializer};
 
 use super::values::Value;
 pub use engine::Engine;
+pub use genesis::Genesis;
 use once_cell::sync::Lazy;
 use regex::Regex;
+pub use seal::Seal;
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 pub use tendermint::{Tendermint, TendermintParams};
 
+mod bytes;
 mod engine;
+mod genesis;
+mod hash;
 pub(self) mod params;
+mod seal;
 mod tendermint;
 pub(self) mod validator;
 
@@ -191,6 +197,8 @@ pub struct HostSetup {
     pub genesis_config: Namespaced<Value>,
     #[serde(default)]
     pub engine: Engine,
+    #[serde(default)]
+    pub genesis: Genesis,
 }
 
 #[derive(Debug)]
