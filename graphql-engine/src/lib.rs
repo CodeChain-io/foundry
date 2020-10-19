@@ -83,9 +83,7 @@ impl Service for EngineLevelGraphQlHandler {}
 impl HandleGraphQlRequest for EngineLevelGraphQlHandler {
     fn execute(&self, _session_id: SessionId, query: &str, variables: &str) -> String {
         let variables = if let Ok(s) = (|| -> Result<_, ()> {
-            Ok(async_graphql::Variables::parse_from_json(
-                async_graphql::serde_json::from_str(variables).map_err(|_| ())?,
-            ))
+            Ok(async_graphql::Variables::from_json(serde_json::from_str(variables).map_err(|_| ())?))
         })() {
             s
         } else {
@@ -97,17 +95,12 @@ impl HandleGraphQlRequest for EngineLevelGraphQlHandler {
             self.mutation_root.clone(),
             async_graphql::EmptySubscription,
         );
-        let query = async_graphql::QueryBuilder::new(query).variables(variables);
-        let res = query.execute(&schema);
+        let query = async_graphql::Request::new(query).variables(variables);
+        let res = schema.execute(query);
 
         // FIXME: We can't use tokio runtime inside another tokio. We spawn a new thread to avoid such restriciton.
         crossbeam::thread::scope(|s| {
-            let j = s.spawn(|_| {
-                async_graphql::serde_json::to_string(&async_graphql::http::GQLResponse(
-                    self.tokio_runtime.handle().block_on(res),
-                ))
-                .unwrap()
-            });
+            let j = s.spawn(|_| serde_json::to_string(&self.tokio_runtime.handle().block_on(res)).unwrap());
             j.join().unwrap()
         })
         .unwrap()
