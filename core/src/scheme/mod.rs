@@ -17,7 +17,7 @@
 mod genesis;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod scheme;
-mod seal;
+pub mod seal;
 
 pub use self::genesis::Genesis;
 pub use self::scheme::Scheme;

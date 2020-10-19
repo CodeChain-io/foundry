@@ -66,3 +66,16 @@ impl From<Seal> for Generic {
         }
     }
 }
+
+impl From<coordinator::app_desc::Seal> for Seal {
+    fn from(s: coordinator::app_desc::Seal) -> Self {
+        match s {
+            coordinator::app_desc::Seal::Tendermint(tender) => Seal::Tendermint(Tendermint {
+                prev_view: tender.prev_view as usize,
+                cur_view: tender.cur_view as usize,
+                precommits: tender.precommits.into_iter().map(Into::into).collect(),
+            }),
+            coordinator::app_desc::Seal::Generic(g) => Seal::Generic(Generic(g.into())),
+        }
+    }
+}

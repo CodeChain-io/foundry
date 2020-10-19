@@ -34,6 +34,7 @@ mod db_version;
 pub mod encoded;
 mod error;
 mod event;
+pub mod genesis;
 mod miner;
 mod peer_db;
 mod scheme;
