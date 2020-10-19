@@ -86,7 +86,7 @@ impl TxOwner for ServiceHandler {
 
     fn check_transaction(&self, transaction: &Transaction) -> Result<(), coordinator::types::ErrorCode> {
         let todo_fixthis: coordinator::types::ErrorCode = 3;
-        assert_eq!(transaction.tx_type(), "account");
+        assert_eq!(transaction.tx_type(), "hello");
         let tx: SignedTransaction = serde_cbor::from_slice(&transaction.body()).map_err(|_| todo_fixthis)?;
         tx.verify().map_err(|_| todo_fixthis)?;
         Ok(())

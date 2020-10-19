@@ -102,9 +102,9 @@ host:
         timeoutCommit: 1000
 
 transactions:
-  account: module-account
+  hello: module-account
   stamp: module-stamp
-  token: module-token
+  token-transfer: module-token
 
 param-defaults:
-  hello: Annyeong Haseyo
+  hi: Annyeong Haseyo
