@@ -1,7 +1,6 @@
 fn main() {
     let args = std::env::args().collect();
-    foundry_module_rt::start::<
-        foundry_process_sandbox::ipc::unix_socket::DomainSocket,
-        codechain_timestamp::stamp::Module,
-    >(args);
+    foundry_module_rt::start::<foundry_process_sandbox::ipc::unix_socket::DomainSocket, foundry_timestamp::stamp::Module>(
+        args,
+    );
 }

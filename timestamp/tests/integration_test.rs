@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 extern crate codechain_module as cmodule;
-extern crate codechain_timestamp as timestamp;
 extern crate foundry_process_sandbox as fproc_sndbx;
+extern crate foundry_timestamp as timestamp;
 
 mod common;
 
