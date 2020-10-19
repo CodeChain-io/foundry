@@ -18,7 +18,7 @@ remote-trait-object = "0.4.0"
 foundry-process-sandbox = { version = "0.2.1", git = "https://github.com/CodeChain-io/foundry-sandbox.git", tag = "v0.2.1" }
 foundry-module-rt = { version = "0.2.2", git = "https://github.com/CodeChain-io/module-rt.git", tag = "v0.2.2" }
 linkme = "0.2.1"
-async-graphql = { version = "1.18" }
+async-graphql = "2.0.5"
 tokio = {version = "0.2.21", features = ["sync", "time", "rt-threaded", "macros", "uds"]}
 hex = "0.4.2"
 

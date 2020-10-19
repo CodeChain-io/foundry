@@ -59,12 +59,12 @@ impl ScalarType for GqlPublic {
         if let GqlValue::String(s) = value {
             Ok(GqlPublic(
                 Public::from_slice(
-                    &hex::decode(&s).map_err(|_| InputValueError::Custom("Invalid public key".to_owned()))?,
+                    &hex::decode(&s).map_err(|_| InputValueError::custom("Invalid public key".to_owned()))?,
                 )
-                .ok_or_else(|| InputValueError::Custom("Invalid public key".to_owned()))?,
+                .ok_or_else(|| InputValueError::custom("Invalid public key".to_owned()))?,
             ))
         } else {
-            Err(InputValueError::Custom("Invalid public key".to_owned()))
+            Err(InputValueError::custom("Invalid public key".to_owned()))
         }
     }
 
@@ -75,14 +75,15 @@ impl ScalarType for GqlPublic {
 
 pub struct GqlH256(pub H256);
 
+#[Scalar]
 impl ScalarType for GqlH256 {
     fn parse(value: GqlValue) -> InputValueResult<Self> {
         if let GqlValue::String(s) = value {
             Ok(GqlH256(H256::from_slice(
-                &hex::decode(&s).map_err(|_| InputValueError::Custom("Invalid public key".to_owned()))?,
+                &hex::decode(&s).map_err(|_| InputValueError::custom("Invalid public key".to_owned()))?,
             )))
         } else {
-            Err(InputValueError::Custom("Invalid public key".to_owned()))
+            Err(InputValueError::custom("Invalid public key".to_owned()))
         }
     }
 
@@ -98,7 +99,7 @@ pub fn handle_gql_query<T: async_graphql::ObjectType + Send + Sync + 'static>(
     variables: &str,
 ) -> String {
     let variables = if let Ok(s) = (|| -> Result<_, ()> {
-        Ok(async_graphql::Variables::parse_from_json(async_graphql::serde_json::from_str(variables).map_err(|_| ())?))
+        Ok(async_graphql::context::Variables::from_json(serde_json::from_str(variables).map_err(|_| ())?))
     })() {
         s
     } else {
@@ -106,7 +107,7 @@ pub fn handle_gql_query<T: async_graphql::ObjectType + Send + Sync + 'static>(
     };
 
     let schema = async_graphql::Schema::new(root, async_graphql::EmptyMutation, async_graphql::EmptySubscription);
-    let query = async_graphql::QueryBuilder::new(query).variables(variables);
-    let res = query.execute(&schema);
-    async_graphql::serde_json::to_string(&async_graphql::http::GQLResponse(runtime.block_on(res))).unwrap()
+    let request = async_graphql::Request::new(query).variables(variables);
+    let res = schema.execute(request);
+    serde_json::to_string(&runtime.block_on(res)).unwrap()
 }
