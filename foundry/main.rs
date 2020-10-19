@@ -73,7 +73,7 @@ mod timestamp_setup {
     fn account() {
         add_function_pool(
             "a010000000012345678901234567890123456789012345678901234567890123".to_owned(),
-            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::account::Module>),
+            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, foundry_timestamp::account::Module>),
         );
     }
 
@@ -81,7 +81,7 @@ mod timestamp_setup {
     fn staking() {
         add_function_pool(
             "a020000000012345678901234567890123456789012345678901234567890123".to_owned(),
-            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::staking::Module>),
+            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, foundry_timestamp::staking::Module>),
         );
     }
 
@@ -89,7 +89,7 @@ mod timestamp_setup {
     fn stamp() {
         add_function_pool(
             "a030000000012345678901234567890123456789012345678901234567890123".to_owned(),
-            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::stamp::Module>),
+            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, foundry_timestamp::stamp::Module>),
         );
     }
 
@@ -97,7 +97,7 @@ mod timestamp_setup {
     fn token() {
         add_function_pool(
             "a040000000012345678901234567890123456789012345678901234567890123".to_owned(),
-            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::token::Module>),
+            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, foundry_timestamp::token::Module>),
         );
     }
 
@@ -105,7 +105,7 @@ mod timestamp_setup {
     fn sorting() {
         add_function_pool(
             "a050000000012345678901234567890123456789012345678901234567890123".to_owned(),
-            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::sorting::Module>),
+            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, foundry_timestamp::sorting::Module>),
         );
     }
 
@@ -113,7 +113,7 @@ mod timestamp_setup {
     fn util() {
         add_function_pool(
             "a060000000012345678901234567890123456789012345678901234567890123".to_owned(),
-            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, codechain_timestamp::util::Module>),
+            Arc::new(start::<<SingleProcess as ExecutionScheme>::Ipc, foundry_timestamp::util::Module>),
         );
     }
 }

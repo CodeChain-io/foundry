@@ -66,7 +66,7 @@ pub async fn get_latest_block(port: u16) -> u64 {
     value["data"]["block"]["header"]["number"].as_u64().unwrap()
 }
 
-/// This is a copy from `codechain-timestamp`.
+/// This is a copy from `foundry-timestamp`.
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct SignedTransaction {
     pub signature: Signature,

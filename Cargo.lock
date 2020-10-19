@@ -1283,31 +1283,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "codechain-timestamp"
-version = "0.1.0"
-dependencies = [
- "async-graphql",
- "codechain-crypto",
- "codechain-key",
- "codechain-module",
- "codechain-types",
- "coordinator",
- "erased-serde",
- "foundry-module-rt",
- "foundry-process-sandbox",
- "hex",
- "linkme",
- "parking_lot 0.11.0",
- "primitives",
- "rand 0.7.3",
- "remote-trait-object",
- "serde",
- "serde_cbor",
- "serde_json",
- "tokio 0.2.22",
-]
-
-[[package]]
 name = "codechain-types"
 version = "0.1.0"
 dependencies = [
@@ -1989,7 +1964,6 @@ dependencies = [
  "codechain-state",
  "codechain-sync",
  "codechain-timer",
- "codechain-timestamp",
  "codechain-types",
  "coordinator",
  "crossbeam-channel 0.4.3",
@@ -2001,6 +1975,7 @@ dependencies = [
  "foundry-graphql-engine",
  "foundry-module-rt",
  "foundry-process-sandbox",
+ "foundry-timestamp",
  "futures 0.1.29",
  "hex",
  "kvdb",
@@ -2114,6 +2089,31 @@ dependencies = [
  "remote-trait-object",
  "serde_cbor",
  "sha2 0.9.1",
+]
+
+[[package]]
+name = "foundry-timestamp"
+version = "0.1.0"
+dependencies = [
+ "async-graphql",
+ "codechain-crypto",
+ "codechain-key",
+ "codechain-module",
+ "codechain-types",
+ "coordinator",
+ "erased-serde",
+ "foundry-module-rt",
+ "foundry-process-sandbox",
+ "hex",
+ "linkme",
+ "parking_lot 0.11.0",
+ "primitives",
+ "rand 0.7.3",
+ "remote-trait-object",
+ "serde",
+ "serde_cbor",
+ "serde_json",
+ "tokio 0.2.22",
 ]
 
 [[package]]
