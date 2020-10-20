@@ -103,18 +103,17 @@ cargo +nightly-2020-07-27 fmt
 
 You should run `clippy` also. This is a lint tool for rust. It suggests more efficient/readable code.
 You can see [the clippy document](https://rust-lang.github.io/rust-clippy/master/index.html) for more information.
-You need to install the nightly-2020-07-27 version of `clippy`.
+You need to install the stable version of `clippy`.
 
 ### Install
 ```sh
-rustup toolchain install nightly-2020-07-27
-rustup component add clippy --toolchain nightly-2020-07-27
+rustup component add clippy
 ```
 
 ### Run
 
 ```sh
-cargo +nightly-2020-07-27 clippy --all --all-targets
+cargo clippy --all --all-targets
 ```
 
 ## Testing
