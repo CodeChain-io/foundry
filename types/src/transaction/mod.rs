@@ -16,11 +16,9 @@
 
 mod approval;
 mod partial_hashing;
-mod timelock;
 #[cfg_attr(feature = "cargo-clippy", allow(clippy::module_inception))]
 mod validator;
 
 pub use self::approval::Approval;
 pub use self::partial_hashing::{HashingError, PartialHashing};
-pub use self::timelock::Timelock;
 pub use self::validator::Validator;
