@@ -28,7 +28,7 @@ jobs:
           fetch-depth: 1
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2020-07-27
+          toolchain: nightly-2020-10-20
           components: rustfmt
           profile: minimal
           override: true
