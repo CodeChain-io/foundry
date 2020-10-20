@@ -81,11 +81,6 @@ See [the specification](Foundry-Address.md).
 
 When `Transaction` is included in any response, there will be an additional field `hash` in the data, which is the hash value of the given transaction. This decreases the time to calculate the transaction hash when it is needed from the response.
 
-#### Timelock
-
- - type: "block" | "blockAge" | "time" | "timeAge"
- - value: `number`
-
 ## Signature
 `H512` for Ed25519 Signatures
 
