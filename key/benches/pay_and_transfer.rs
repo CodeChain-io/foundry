@@ -14,32 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#![feature(test)]
-
 extern crate codechain_crypto as ccrypto;
 extern crate codechain_key as ckey;
-extern crate test;
 
 use ccrypto::Blake;
 use ckey::{sign, verify, Ed25519KeyPair, Generator, KeyPairTrait, Message, Random};
+use criterion::{criterion_group, criterion_main, Criterion};
 use primitives::{H160, H256};
-use test::Bencher;
 
-#[bench]
-fn pay_with_ed25519(b: &mut Bencher) {
+fn pay_with_ed25519(c: &mut Criterion) {
     // A transaction only has a signature.
     let key_pair: Ed25519KeyPair = Random.generate().unwrap();
     let transaction = Message::random();
     let transaction_hash: H256 = Blake::blake(transaction);
     let signature = sign(transaction_hash.as_ref(), key_pair.private());
-    b.iter(|| {
-        let transaction_hash: H256 = Blake::blake(transaction);
-        assert!(verify(&signature, transaction_hash.as_ref(), key_pair.public()));
+
+    c.bench_function("pay_with_ed25519", |b| {
+        b.iter(|| {
+            let transaction_hash: H256 = Blake::blake(transaction);
+            assert!(verify(&signature, transaction_hash.as_ref(), key_pair.public()));
+        })
     });
 }
 
-#[bench]
-fn transfer_with_ed25519(b: &mut Bencher) {
+fn transfer_with_ed25519(c: &mut Criterion) {
     // Assuming 2-input transfer transaction.
     let key_pair_0: Ed25519KeyPair = Random.generate().unwrap();
     let key_pair_1: Ed25519KeyPair = Random.generate().unwrap();
@@ -56,21 +54,26 @@ fn transfer_with_ed25519(b: &mut Bencher) {
     let lock_script_2 = Message::random();
     let lock_script_hash_2: H160 = Blake::blake(lock_script_2);
 
-    b.iter(|| {
-        // Transaction verification
-        let transaction_hash: H256 = Blake::blake(transaction);
-        assert!(verify(&signature_tx, transaction_hash.as_ref(), key_pair_0.public()));
+    c.bench_function("transfer_with_ed25519", |b| {
+        b.iter(|| {
+            // Transaction verification
+            let transaction_hash: H256 = Blake::blake(transaction);
+            assert!(verify(&signature_tx, transaction_hash.as_ref(), key_pair_0.public()));
 
-        // Input 1 verification
-        // Lock script hash check
-        assert_eq!(lock_script_hash_1, Blake::blake(lock_script_1));
-        // Unfortunately, hash again because of partial hashing
-        let transaction_hash_1: H256 = Blake::blake(transaction);
-        assert!(verify(&signature_1, transaction_hash_1.as_ref(), key_pair_1.public()));
+            // Input 1 verification
+            // Lock script hash check
+            assert_eq!(lock_script_hash_1, Blake::blake(lock_script_1));
+            // Unfortunately, hash again because of partial hashing
+            let transaction_hash_1: H256 = Blake::blake(transaction);
+            assert!(verify(&signature_1, transaction_hash_1.as_ref(), key_pair_1.public()));
 
-        // Input 2 verification
-        assert_eq!(lock_script_hash_2, Blake::blake(lock_script_2));
-        let transaction_hash_2: H256 = Blake::blake(transaction);
-        assert!(verify(&signature_2, transaction_hash_2.as_ref(), key_pair_2.public()));
+            // Input 2 verification
+            assert_eq!(lock_script_hash_2, Blake::blake(lock_script_2));
+            let transaction_hash_2: H256 = Blake::blake(transaction);
+            assert!(verify(&signature_2, transaction_hash_2.as_ref(), key_pair_2.public()));
+        })
     });
 }
+
+criterion_group!(benches, pay_with_ed25519, transfer_with_ed25519);
+criterion_main!(benches);
