@@ -14,29 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#![feature(test)]
-
 extern crate codechain_key as ckey;
-extern crate test;
 
 use ckey::{sign, verify, Ed25519KeyPair, Generator, KeyPairTrait, Message, Random};
-use test::Bencher;
+use criterion::{criterion_group, criterion_main, Criterion};
 
-#[bench]
-fn ec25519_sign(b: &mut Bencher) {
-    b.iter(|| {
-        let key_pair: Ed25519KeyPair = Random.generate().unwrap();
-        let message = Message::random();
-        let _signature = sign(message.as_ref(), key_pair.private());
-    })
+fn ec25519_sign(c: &mut Criterion) {
+    c.bench_function("ec25519_sign", |b| {
+        b.iter(|| {
+            let key_pair: Ed25519KeyPair = Random.generate().unwrap();
+            let message = Message::random();
+            let _signature = sign(message.as_ref(), key_pair.private());
+        })
+    });
 }
 
-#[bench]
-fn ed25519_sign_and_verify(b: &mut Bencher) {
-    b.iter(|| {
-        let key_pair: Ed25519KeyPair = Random.generate().unwrap();
-        let message = Message::random();
-        let signature = sign(message.as_ref(), key_pair.private());
-        assert!(verify(&signature, message.as_ref(), key_pair.public()));
-    })
+fn ed25519_sign_and_verify(c: &mut Criterion) {
+    c.bench_function("ed25519_sign_and_verify", |b| {
+        b.iter(|| {
+            let key_pair: Ed25519KeyPair = Random.generate().unwrap();
+            let message = Message::random();
+            let signature = sign(message.as_ref(), key_pair.private());
+            assert!(verify(&signature, message.as_ref(), key_pair.public()));
+        })
+    });
 }
+
+criterion_group!(benches, ec25519_sign, ed25519_sign_and_verify);
+criterion_main!(benches);

@@ -14,17 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#![feature(test)]
-
 extern crate codechain_crypto as ccrypto;
 extern crate codechain_key as ckey;
-extern crate test;
 
 use ckey::{sign, verify, Ed25519KeyPair, Generator, KeyPairTrait, Message, Random};
-use test::Bencher;
+use criterion::{criterion_group, criterion_main, Criterion};
 
-#[bench]
-fn tendermint_max_step_time(b: &mut Bencher) {
+fn tendermint_max_step_time(c: &mut Criterion) {
     // Based on prevote/precommit state.
     let num_validators = 30;
 
@@ -46,13 +42,18 @@ fn tendermint_max_step_time(b: &mut Bencher) {
 
         i += 1;
     }
-    b.iter(|| {
-        sign(message_self.as_ref(), key_pair_self.private());
+    c.bench_function("tendermint_max_step_time", |b| {
+        b.iter(|| {
+            sign(message_self.as_ref(), key_pair_self.private());
 
-        let mut i = 0;
-        while i < num_validators - 1 {
-            assert!(verify(&signatures[i], messages[i].as_ref(), key_pairs[i].public()));
-            i += 1;
-        }
+            let mut i = 0;
+            while i < num_validators - 1 {
+                assert!(verify(&signatures[i], messages[i].as_ref(), key_pairs[i].public()));
+                i += 1;
+            }
+        })
     });
 }
+
+criterion_group!(benches, tendermint_max_step_time);
+criterion_main!(benches);
