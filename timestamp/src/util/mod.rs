@@ -31,7 +31,7 @@ pub struct GraphQlRequestHandler {
 
 #[async_graphql::Object]
 impl GraphQlRoot {
-    async fn sign_and_encode_tx(&self, private: String, content: String) -> async_graphql::FieldResult<String> {
+    async fn sign_and_encode_tx(&self, private: String, content: String) -> async_graphql::Result<String> {
         let private =
             Private::from_slice(&hex::decode(&private).map_err(|_| "Failed to parse private key".to_owned())?)
                 .ok_or_else(|| "Invalid private key".to_owned())?;
