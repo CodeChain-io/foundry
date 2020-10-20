@@ -21,7 +21,7 @@ use ckey::Ed25519Public as Public;
 use coordinator::engine::{BlockExecutor, ExecutionId};
 use coordinator::types::Event;
 use coordinator::{Header as PreHeader, Transaction, TransactionWithMetadata};
-use cstate::{CurrentValidatorSet, NextValidatorSet, StateDB, StateError, StateWithCache, TopLevelState, TopState};
+use cstate::{StateDB, StateError, StateValidatorSet, StateWithCache, TopLevelState, TopState};
 use ctypes::header::{Header, Seal};
 use ctypes::util::unexpected::Mismatch;
 use ctypes::{ChainParams, CompactValidatorSet, TxHash};
@@ -233,7 +233,7 @@ impl OpenBlock {
         let updated_validator_set = block_outcome.updated_validator_set;
         let next_validator_set_hash = match updated_validator_set {
             Some(ref set) => set.hash(),
-            None => NextValidatorSet::load_from_state(self.block.state())?.create_compact_validator_set().hash(),
+            None => StateValidatorSet::load_from_state(self.block.state(), false)?.hash(),
         };
         let updated_chain_params = block_outcome.updated_chain_params;
         if let Err(e) = self.update_next_block_state(updated_validator_set, updated_chain_params) {
@@ -293,10 +293,8 @@ impl OpenBlock {
 
     // called on open_block
     fn update_current_validator_set(&mut self) -> Result<(), Error> {
-        let mut current_validators = CurrentValidatorSet::load_from_state(&self.state())?;
-        current_validators.update(NextValidatorSet::load_from_state(&self.state())?);
-        current_validators.save_to_state(self.inner_mut().state_mut())?;
-
+        let current_validators = StateValidatorSet::load_from_state(&self.state(), false)?;
+        current_validators.save_to_state(self.inner_mut().state_mut(), true)?;
         Ok(())
     }
 
@@ -309,8 +307,8 @@ impl OpenBlock {
         let state = self.block.state_mut();
 
         if let Some(set) = updated_validator_set {
-            let validators = NextValidatorSet::from_compact_validator_set(set);
-            validators.save_to_state(state)?;
+            let validators = StateValidatorSet::new(set.to_vec());
+            validators.save_to_state(state, false)?;
         }
 
         if let Some(params) = updated_chain_params {

@@ -1259,6 +1259,8 @@ dependencies = [
  "rlp 0.5.0",
  "rlp_derive",
  "rustc-hex 1.0.0",
+ "serde",
+ "serde_cbor",
 ]
 
 [[package]]

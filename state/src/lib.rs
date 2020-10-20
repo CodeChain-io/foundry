@@ -43,8 +43,7 @@ pub use crate::item::action_data::ActionData;
 pub use crate::item::metadata::{Metadata, MetadataAddress};
 pub use crate::item::module::{Module, ModuleAddress};
 pub use crate::item::module_datum::{ModuleDatum, ModuleDatumAddress};
-pub use crate::item::stake::CurrentValidators;
-pub use crate::item::validator_set::{CurrentValidatorSet, NextValidatorSet, SimpleValidator};
+pub use crate::item::stake::StateValidatorSet;
 pub use crate::stake::StakeKeyBuilder;
 pub use crate::traits::{StateWithCache, TopState, TopStateView};
 

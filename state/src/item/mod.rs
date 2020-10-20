@@ -22,7 +22,6 @@ pub mod metadata;
 pub mod module;
 pub mod module_datum;
 pub mod stake;
-pub mod validator_set;
 
 #[derive(Clone, Copy)]
 #[repr(u8)]

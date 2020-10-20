@@ -50,7 +50,7 @@ use coordinator::test_coordinator::TestCoordinator;
 use coordinator::types::Event;
 use coordinator::Transaction;
 use cstate::tests::helpers::empty_top_state_with_metadata;
-use cstate::{NextValidatorSet, StateDB, TopLevelState};
+use cstate::{StateDB, StateValidatorSet, TopLevelState};
 use ctimer::{TimeoutHandler, TimerToken};
 use ctypes::Header;
 use ctypes::{
@@ -98,7 +98,7 @@ pub struct TestBlockChainClient {
     /// Fixed validator keys
     pub validator_keys: RwLock<HashMap<Public, Private>>,
     /// Fixed validators
-    pub validators: NextValidatorSet,
+    pub validators: StateValidatorSet,
 }
 
 impl Default for TestBlockChainClient {
@@ -147,7 +147,7 @@ impl TestBlockChainClient {
             history: RwLock::new(None),
             term_id: Some(1),
             validator_keys: RwLock::new(HashMap::new()),
-            validators: NextValidatorSet::from_compact_validator_set(CompactValidatorSet::new(Vec::new())),
+            validators: StateValidatorSet::new(Vec::new()),
         };
 
         // insert genesis hash.
@@ -285,7 +285,7 @@ impl TestBlockChainClient {
                 .collect(),
         );
 
-        let fixed_validators: NextValidatorSet = NextValidatorSet::from_compact_validator_set(compact_validator_set);
+        let fixed_validators = StateValidatorSet::new(compact_validator_set.to_vec());
 
         self.validators = fixed_validators
     }

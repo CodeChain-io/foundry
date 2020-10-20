@@ -40,7 +40,7 @@ use coordinator::engine::{BlockExecutor, GraphQlHandlerProvider, Initializer};
 use coordinator::module::SessionId;
 use coordinator::types::Event;
 use coordinator::Transaction;
-use cstate::{Metadata, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopState, TopStateView};
+use cstate::{Metadata, StateDB, StateValidatorSet, StateWithCache, TopLevelState, TopState, TopStateView};
 use ctimer::{TimeoutHandler, TimerApi, TimerScheduleError, TimerToken};
 use ctypes::{BlockHash, BlockId, BlockNumber, ChainParams, Header, SyncHeader, TxHash};
 use kvdb::{DBTransaction, KeyValueDB};
@@ -261,8 +261,8 @@ impl Client {
 
         let (validators, chain_params) = coordinator.initialize_chain(&mut state);
 
-        let validator_set = NextValidatorSet::from_compact_validator_set(validators);
-        validator_set.save_to_state(&mut state)?;
+        let validator_set = StateValidatorSet::new(validators.to_vec());
+        validator_set.save_to_state(&mut state, false)?;
 
         *state.get_metadata_mut().unwrap() = Metadata::new(chain_params);
 

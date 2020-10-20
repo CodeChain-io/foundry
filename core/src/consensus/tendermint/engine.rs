@@ -30,7 +30,7 @@ use crate::views::HeaderView;
 use ckey::{verify, Ed25519Public as Public};
 use cnetwork::NetworkService;
 use crossbeam_channel as crossbeam;
-use cstate::CurrentValidators;
+use cstate::StateValidatorSet;
 use ctypes::{util::unexpected::OutOfBounds, BlockHash, BlockId, CompactValidatorSet, Header, SyncHeader};
 use std::iter::Iterator;
 use std::sync::atomic::Ordering as AtomicOrdering;
@@ -277,11 +277,9 @@ impl ConsensusEngine for Tendermint {
             Some(state) => state,
         };
         if block_number != Some(0) {
-            Ok(Some(
-                CurrentValidators::load_from_state(&state)
-                    .expect("We read state from verified block")
-                    .create_compact_validator_set(),
-            ))
+            Ok(Some(CompactValidatorSet::new(
+                StateValidatorSet::load_from_state(&state, true).expect("We read state from verified block").to_vec(),
+            )))
         } else {
             Ok(None)
         }
