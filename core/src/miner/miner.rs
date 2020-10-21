@@ -502,7 +502,7 @@ pub mod test {
     use super::super::super::service::ClientIoMessage;
     use super::*;
     use crate::client::Client;
-    use crate::{db::NUM_COLUMNS, genesis::Genesis, Scheme, Tendermint};
+    use crate::{db::NUM_COLUMNS, genesis::Genesis, Tendermint};
     use cio::IoService;
     use coordinator::test_coordinator::TestCoordinator;
     use ctimer::TimerLoop;
@@ -511,7 +511,6 @@ pub mod test {
     fn check_add_transactions_result_idx() {
         let test_coordinator = Arc::new(TestCoordinator::default());
         let db = Arc::new(kvdb_memorydb::create(NUM_COLUMNS.unwrap()));
-        let scheme = Scheme::new_test();
         let genesis = Genesis::new(Default::default(), test_coordinator.as_ref());
         let engine = Tendermint::new_for_test();
         let miner = Arc::new(Miner::with_engine_for_test(engine, db.clone(), test_coordinator.clone()));

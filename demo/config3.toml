@@ -1,7 +1,6 @@
 [codechain]
 quiet = false
 base_path = "."
-chain = "./tendermint-solo.json"
 password_path = "./password.json"
 
 [mining]

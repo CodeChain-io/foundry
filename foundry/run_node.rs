@@ -234,10 +234,6 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     let config = load_config(matches)?;
 
     let time_gap_params = config.mining.create_time_gaps();
-    let scheme = match &config.operating.chain {
-        Some(chain) => chain.scheme()?,
-        None => return Err("chain is not specified".to_string()),
-    };
 
     let app_desc =
         AppDesc::from_str(&fs::read_to_string(config.operating.app_desc_path.as_ref().unwrap()).unwrap()).unwrap();
@@ -457,8 +453,6 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
         }
     };
 
-    // drop the scheme to free up genesis state.
-    drop(scheme);
     client.client().engine().complete_register();
 
     cinfo!(TEST_SCRIPT, "Initialization complete");

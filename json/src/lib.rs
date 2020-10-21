@@ -14,10 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#[macro_use]
 extern crate serde_derive;
 
 pub mod bytes;
 pub mod hash;
-pub mod scheme;
 pub mod uint;

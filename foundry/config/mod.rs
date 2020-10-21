@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-mod chain_type;
-
 use ccore::{MinerOptions, TimeGapParams};
 use cidr::IpCidr;
 use cinformer::InformerConfig;
@@ -27,7 +25,6 @@ use std::fs;
 use std::str::{self, FromStr};
 use std::time::Duration;
 
-pub use self::chain_type::ChainType;
 use crate::rpc::{RpcHttpConfig, RpcIpcConfig, RpcWsConfig};
 
 #[derive(Deserialize)]
@@ -210,7 +207,6 @@ pub struct Operating {
     pub db_path: Option<String>,
     pub keys_path: Option<String>,
     pub password_path: Option<String>,
-    pub chain: Option<ChainType>,
 }
 
 #[derive(Deserialize)]
@@ -362,9 +358,6 @@ impl Operating {
         if other.password_path.is_some() {
             self.password_path = other.password_path.clone();
         }
-        if other.chain.is_some() {
-            self.chain = other.chain.clone();
-        }
     }
 
     pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
@@ -388,9 +381,6 @@ impl Operating {
         }
         if let Some(password_path) = matches.value_of("password-path") {
             self.password_path = Some(password_path.to_string());
-        }
-        if let Some(chain) = matches.value_of("chain") {
-            self.chain = Some(chain.parse().unwrap());
         }
         Ok(())
     }
