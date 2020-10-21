@@ -275,7 +275,14 @@ impl Initializer for Coordinator {
 
         let (validator_set, params) = services.init_consensus.init_consensus(session_id);
 
-        self.max_body_size.set(params.max_body_size() as usize).expect("this must be the first assignment");
+        // FIXME: Should we cache max body size?
+        match self.max_body_size.set(params.max_body_size() as usize) {
+            Ok(_) => {}
+            Err(_) => {
+                // cwarn!(COORDINATOR, "initialize_chain is called twice");
+                cwarn!(CLIENT, "initialize_chain is called twice");
+            }
+        }
         self.end_session(session_id);
 
         (validator_set, params)
