@@ -14,6 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#[macro_use]
+extern crate codechain_logger as clogger;
+#[macro_use]
+extern crate log;
+
 pub mod app_desc;
 pub mod context;
 pub mod engine;
