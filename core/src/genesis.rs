@@ -14,15 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::scheme::seal::{Generic as GenericSeal, Seal};
 use crate::Error;
 use ccrypto::BLAKE_NULL_RLP;
 use cdb::HashDB;
 use ckey::{Ed25519Public as Public, PlatformAddress};
-use coordinator::engine::Initializer;
+use coordinator::{app_desc::TendermintSeal, engine::Initializer};
 use cstate::{Metadata, NextValidatorSet, StateDB, StateWithCache, TopLevelState, TopState};
 use ctypes::{BlockHash, Header};
-use primitives::{Bytes, H256};
+use primitives::{Bytes, H256, H520};
 use rlp::{Rlp, RlpStream};
 
 pub struct Genesis {
@@ -44,8 +43,7 @@ pub struct Genesis {
 impl Genesis {
     // get parameters
     pub fn new(s: coordinator::app_desc::Genesis, coordinator: &impl Initializer) -> Self {
-        let seal: Seal = From::from(s.seal);
-        let GenericSeal(seal_rlp) = seal.into();
+        let seal_rlp = Self::seal_to_bytes(s.seal);
         let db = StateDB::new_with_memorydb();
         let (_, state_root) = Self::initialize_state(db, coordinator).expect("DB error while creating genesis block");
         Genesis {
@@ -56,6 +54,22 @@ impl Genesis {
             extra_data: s.extra_data.map_or_else(Vec::new, Into::into),
             seal_rlp,
             state_root,
+        }
+    }
+
+    fn seal_to_bytes(seal: coordinator::app_desc::Seal) -> Bytes {
+        match seal {
+            coordinator::app_desc::Seal::Tendermint(TendermintSeal {
+                prev_view,
+                cur_view,
+                precommits,
+            }) => {
+                let mut stream = RlpStream::new_list(3);
+                let precommits: Vec<H520> = precommits.into_iter().map(Into::into).collect();
+                stream.append(&prev_view).append(&cur_view).append_list(&precommits);
+                stream.out()
+            }
+            coordinator::app_desc::Seal::Generic(bytes) => bytes.into_vec(),
         }
     }
 

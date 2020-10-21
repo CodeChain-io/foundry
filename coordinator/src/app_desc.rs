@@ -29,7 +29,7 @@ pub use engine::Engine;
 pub use genesis::Genesis;
 use once_cell::sync::Lazy;
 use regex::Regex;
-pub use seal::Seal;
+pub use seal::{Seal, TendermintSeal};
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
