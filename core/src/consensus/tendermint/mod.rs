@@ -133,7 +133,6 @@ mod tests {
     use crate::consensus::Seal;
     use crate::error::BlockError;
     use crate::error::Error;
-    use crate::scheme::Scheme;
 
     use super::*;
 
@@ -141,7 +140,7 @@ mod tests {
     fn setup() -> (Arc<dyn ConsensusEngine>, Arc<AccountProvider>, Arc<TestBlockChainClient>) {
         let tap = AccountProvider::transient_provider();
         let engine = Tendermint::new_for_test();
-        let test = TestBlockChainClient::new_with_scheme(Scheme::new_test_tendermint());
+        let test = TestBlockChainClient::new();
 
         let test_client: Arc<TestBlockChainClient> = Arc::new(test);
         let consensus_client = Arc::clone(&test_client) as Arc<dyn ConsensusClient>;

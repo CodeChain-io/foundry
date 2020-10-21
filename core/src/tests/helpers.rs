@@ -14,10 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::scheme::Scheme;
+use coordinator::test_coordinator::TestCoordinator;
 use ctypes::{BlockHash, Header};
 use primitives::Bytes;
 use rlp::RlpStream;
+
+use crate::genesis::Genesis;
 
 pub fn create_test_block(header: &Header) -> Bytes {
     let mut rlp = RlpStream::new_list(3);
@@ -34,10 +36,10 @@ pub fn get_good_dummy_block() -> Bytes {
 
 pub fn get_good_dummy_block_hash() -> (BlockHash, Bytes) {
     let mut block_header = Header::new();
-    let test_scheme = Scheme::new_test();
+    let genesis = Genesis::new(Default::default(), &TestCoordinator::default());
     block_header.set_timestamp(40);
     block_header.set_number(1);
-    block_header.set_parent_hash(test_scheme.genesis_header().hash());
+    block_header.set_parent_hash(genesis.header().hash());
 
     (block_header.hash(), create_test_block(&block_header))
 }

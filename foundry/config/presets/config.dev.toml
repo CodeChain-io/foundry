@@ -1,7 +1,6 @@
 [codechain]
 quiet = false
 base_path = "."
-chain = "solo"
 
 [mining]
 mem_pool_mem_limit = 4 # MB

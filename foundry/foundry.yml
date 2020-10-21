@@ -8,12 +8,6 @@ args:
         value_name: PATH
         help: Specify the app descriptor path.
         takes_value: true
-    - chain:
-        short: c
-        long: chain
-        help: Set the blockchain type out of solo, tendermint, corgi, mainnet or a path to chain scheme file.
-        takes_value: true
-        global: true
     - allowed-future-gap:
         long: allowed-future-gap
         value_name: MS

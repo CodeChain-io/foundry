@@ -30,7 +30,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::block::{Block, ClosedBlock, OpenBlock};
 use crate::blockchain_info::BlockChainInfo;
 use crate::client::{
     BlockChainClient, BlockChainTrait, BlockProducer, BlockStatus, ConsensusClient, EngineInfo, ImportBlock,
@@ -41,8 +40,11 @@ use crate::db::{COL_STATE, NUM_COLUMNS};
 use crate::encoded;
 use crate::error::{BlockImportError, Error as GenericError};
 use crate::miner::{Miner, MinerService};
-use crate::scheme::Scheme;
 use crate::types::{TransactionId, VerificationQueueInfo as QueueInfo};
+use crate::{
+    block::{Block, ClosedBlock, OpenBlock},
+    genesis::Genesis,
+};
 use crate::{ConsensusEngine, LocalizedTransaction, PendingTransactions, Tendermint};
 use ccrypto::BLAKE_NULL_RLP;
 use ckey::{Ed25519Private as Private, Ed25519Public as Public, NetworkId, PlatformAddress};
@@ -87,8 +89,8 @@ pub struct TestBlockChainClient {
     pub queue_size: AtomicUsize,
     /// Miner
     pub miner: Arc<Miner>,
-    /// Scheme
-    pub scheme: Scheme,
+    /// Genesis
+    pub genesis: Genesis,
     /// Timestamp assigned to latest closed block
     pub latest_block_timestamp: RwLock<u64>,
     /// Pruning history size to report.
@@ -116,20 +118,16 @@ impl TestBlockChainClient {
     /// Creates new test client with specified extra data for each block
     pub fn new_with_extra_data(extra_data: Bytes) -> Self {
         let db = Arc::new(kvdb_memorydb::create(NUM_COLUMNS.unwrap()));
-        let scheme = Scheme::new_test();
-        TestBlockChainClient::new_with_scheme_and_extra(scheme, extra_data, db)
+        TestBlockChainClient::new_with_extra_and_db(extra_data, db)
     }
 
-    /// Create test client with custom scheme.
-    pub fn new_with_scheme(scheme: Scheme) -> Self {
-        let db = Arc::new(kvdb_memorydb::create(NUM_COLUMNS.unwrap()));
-        TestBlockChainClient::new_with_scheme_and_extra(scheme, Bytes::new(), db)
-    }
+    /// Create test client with custom extra data.
+    pub fn new_with_extra_and_db(extra_data: Bytes, db: Arc<dyn KeyValueDB>) -> Self {
+        let coordinator = TestCoordinator::default();
 
-    /// Create test client with custom scheme and extra data.
-    pub fn new_with_scheme_and_extra(scheme: Scheme, extra_data: Bytes, db: Arc<dyn KeyValueDB>) -> Self {
-        let genesis_block = scheme.genesis_block();
-        let genesis_header = scheme.genesis_header();
+        let genesis = Genesis::new(Default::default(), &coordinator);
+        let genesis_block = genesis.block();
+        let genesis_header = genesis.header();
         let genesis_hash = genesis_header.hash();
         let engine = Tendermint::new_for_test();
 
@@ -142,7 +140,7 @@ impl TestBlockChainClient {
             storage: RwLock::new(HashMap::new()),
             queue_size: AtomicUsize::new(0),
             miner: Arc::new(Miner::with_engine_for_test(engine, db, Arc::new(TestCoordinator::default()))),
-            scheme,
+            genesis,
             latest_block_timestamp: RwLock::new(10_000_000),
             history: RwLock::new(None),
             term_id: Some(1),
@@ -307,7 +305,7 @@ pub fn get_temp_state_db() -> StateDB {
 impl BlockProducer for TestBlockChainClient {
     fn prepare_open_block(&self, _parent_block: BlockId, author: Public, extra_data: Bytes) -> OpenBlock {
         let engine: Arc<dyn ConsensusEngine> = Tendermint::new_for_test();
-        let genesis_header = self.scheme.genesis_header();
+        let genesis_header = self.genesis.header();
         let db = get_temp_state_db();
 
         let evidences = engine.fetch_evidences();

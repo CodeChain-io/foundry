@@ -1,7 +1,6 @@
 [codechain]
 quiet = false
 base_path = "."
-chain = "mainnet"
 
 [mining]
 mem_pool_mem_limit = 512 # MB
