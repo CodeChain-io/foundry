@@ -30,6 +30,19 @@ pub enum Value {
     Map(HashMap<String, Value>),
 }
 
+#[derive(Deserialize)]
+pub struct TOMLValueDeserializer {
+    value: Value,
+}
+
+impl TOMLValueDeserializer {
+    pub fn deserialize(text: &str) -> anyhow::Result<Value> {
+        let wrapped_text = format!("value = {}", text);
+        let wrapper: Self = toml::from_str(&wrapped_text)?;
+        Ok(wrapper.value)
+    }
+}
+
 impl Default for Value {
     fn default() -> Self {
         Value::Null
@@ -44,7 +57,7 @@ impl<'de> Deserialize<'de> for Value {
             type Value = Value;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("any YAML value")
+                formatter.write_str("any TOML value")
             }
 
             fn visit_bool<E: Error>(self, b: bool) -> Result<Value, E> {
