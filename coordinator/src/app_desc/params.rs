@@ -14,8 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::app_desc::{AppDesc, HostSetup, ModuleSetup};
 use crate::values::Value;
+use crate::{
+    app_desc::{AppDesc, HostSetup, ModuleSetup},
+    values::TOMLValueDeserializer,
+};
 use anyhow::Context as _;
 use handlebars::{no_escape, Context, Handlebars, TemplateRenderError};
 pub use serde_yaml::Error as YamlError;

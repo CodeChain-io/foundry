@@ -1414,6 +1414,7 @@ dependencies = [
  "serde_cbor",
  "serde_yaml",
  "thiserror",
+ "toml 0.4.10",
  "unindent",
 ]
 
