@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#[macro_use]
 extern crate codechain_logger as clogger;
-#[macro_use]
 extern crate log;
 
 pub mod app_desc;
@@ -48,7 +46,6 @@ use crate::weaver::Weaver;
 use cmodule::sandbox::Sandbox;
 use ctypes::StorageId;
 use ctypes::{ChainParams, CompactValidatorSet};
-use once_cell::sync::OnceCell;
 use parking_lot::{Mutex, RwLock};
 use remote_trait_object::{Service, ServiceRef};
 use std::collections::HashMap;
@@ -80,9 +77,6 @@ type SessionSlot = u128;
 /// It assembles modules and feeds them various events from the underlying
 /// consensus engine.
 pub struct Coordinator {
-    /// The maximum block size.
-    max_body_size: OnceCell<usize>,
-
     /// Currently active sessions represented as bits set.
     sessions: RwLock<Vec<SessionSlot>>,
 
@@ -114,13 +108,8 @@ impl Coordinator {
         Ok(Coordinator {
             services,
             _sandboxes: sandboxes,
-            max_body_size: Default::default(),
             sessions: RwLock::new(vec![0]),
         })
-    }
-
-    pub fn max_body_size(&self) -> usize {
-        *self.max_body_size.get().expect("the max_body_size is not set yet")
     }
 
     fn new_session(&self, storage: &mut dyn StorageAccess) -> SessionId {
@@ -275,14 +264,6 @@ impl Initializer for Coordinator {
 
         let (validator_set, params) = services.init_consensus.init_consensus(session_id);
 
-        // FIXME: Should we cache max body size?
-        match self.max_body_size.set(params.max_body_size() as usize) {
-            Ok(_) => {}
-            Err(_) => {
-                // cwarn!(COORDINATOR, "initialize_chain is called twice");
-                cwarn!(CLIENT, "initialize_chain is called twice");
-            }
-        }
         self.end_session(session_id);
 
         (validator_set, params)
@@ -357,19 +338,19 @@ impl BlockExecutor for Coordinator {
         } = services.tx_sorter.sort_txs(session_id, &owned_txs);
 
         let mut tx_n_outcomes: Vec<(&'a Transaction, TransactionOutcome)> = Vec::new();
-        let mut remaining_block_space = self.max_body_size();
+        let mut remaining_block_space = storage.max_body_size();
 
         for index in sorted {
             let tx = &txs[index].tx;
             if let Some(owner) = services.tx_owner.get(tx.tx_type()) {
-                if remaining_block_space <= tx.size() {
+                if remaining_block_space <= tx.size() as u64 {
                     break
                 }
                 storage.create_checkpoint();
                 if let Ok(outcome) = owner.execute_transaction(session_id, &tx) {
                     storage.discard_checkpoint();
                     tx_n_outcomes.push((tx, outcome));
-                    remaining_block_space -= tx.size();
+                    remaining_block_space -= tx.size() as u64;
                     continue
                 }
                 storage.revert_to_the_checkpoint();
