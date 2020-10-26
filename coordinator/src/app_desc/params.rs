@@ -90,7 +90,19 @@ impl Value {
     fn merge_params(&mut self, merger: &Merger) -> anyhow::Result<()> {
         match self {
             Self::String(s) => {
-                *self = serde_yaml::from_str::<Value>(&merger.merge(s)?)?;
+                if s.starts_with("@@") {
+                    // Change @@ to @ and type is string
+                    let merged = merger.merge(&s[1..])?;
+                    *self = Value::String(merged);
+                } else if s.starts_with('@') {
+                    // Remove @ and type is anything
+                    let merged = merger.merge(&s[1..])?;
+                    *self = serde_yaml::from_str::<Value>(&merged)?;
+                } else {
+                    // Type is string
+                    let merged = merger.merge(s)?;
+                    *self = Value::String(merged);
+                }
             }
             Self::List(list) => {
                 for v in list {
@@ -162,5 +174,44 @@ mod tests {
         value.merge_params(&merger).unwrap();
 
         assert_eq!(value, Value::List(vec![Value::Int(1), Value::String(String::from("==world=="))]));
+    }
+
+    #[test]
+    fn merge_at() {
+        let params = vec![("hello".to_owned(), "world".to_owned())].into_iter().collect();
+        let merger = Merger::new(&params);
+        let mut value = Value::String("@=={{hello}}==".to_owned());
+        value.merge_params(&merger).unwrap();
+        assert_eq!(value, Value::String("==world==".to_owned()))
+    }
+
+    #[test]
+    fn merge_at_array() {
+        let params = vec![("hello".to_owned(), "world".to_owned())].into_iter().collect();
+        let merger = Merger::new(&params);
+        let mut value = Value::String("@[\"{{hello}}\", \"{{hello}}\"]".to_owned());
+        value.merge_params(&merger).unwrap();
+        assert_eq!(value, Value::List(vec![Value::String("world".to_owned()), Value::String("world".to_owned())]))
+    }
+
+    #[test]
+    fn merge_at_map() {
+        let params = vec![("hello".to_owned(), "world".to_owned())].into_iter().collect();
+        let merger = Merger::new(&params);
+        let mut value = Value::String("@{ \"key\": \"{{hello}}\" }".to_owned());
+        value.merge_params(&merger).unwrap();
+        assert_eq!(
+            value,
+            Value::Map(vec![("key".to_string(), Value::String("world".to_string())),].into_iter().collect())
+        )
+    }
+
+    #[test]
+    fn merge_atat() {
+        let params = vec![("hello".to_owned(), "world".to_owned())].into_iter().collect();
+        let merger = Merger::new(&params);
+        let mut value = Value::String("@@=={{hello}}==".to_owned());
+        value.merge_params(&merger).unwrap();
+        assert_eq!(value, Value::String("@==world==".to_owned()))
     }
 }
