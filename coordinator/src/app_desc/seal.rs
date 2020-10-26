@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use super::hash::H520;
+use super::hash::deserialize_vec_h520;
+use primitives::H520;
 use serde::Deserialize;
 
 /// Tendermint seal.
@@ -25,6 +26,7 @@ pub struct TendermintSeal {
     /// Proposal seal signature.
     pub cur_view: u64,
     /// Proposal seal signature.
+    #[serde(deserialize_with = "deserialize_vec_h520")]
     pub precommits: Vec<H520>,
 }
 
@@ -47,9 +49,8 @@ impl Default for Seal {
 
 #[cfg(test)]
 mod tests {
-    use super::super::hash::H520;
     use super::{Seal, TendermintSeal};
-    use primitives::H520 as Core520;
+    use primitives::H520;
     use std::str::FromStr;
 
     #[test]
@@ -75,7 +76,7 @@ mod tests {
             Seal::Tendermint(TendermintSeal {
                 prev_view: 0x3,
                 cur_view: 0x4,
-                precommits: vec![H520(Core520::from_str("4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004").unwrap())]
+                precommits: vec![H520::from_str("4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004").unwrap()]
             }),
         ]);
     }

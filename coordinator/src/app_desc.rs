@@ -19,11 +19,11 @@ use std::collections::{BTreeMap, HashMap};
 use std::{fmt, fmt::Display, fmt::Formatter};
 
 use primitives::H256;
-use rustc_hex::FromHexError;
 use serde::de::{DeserializeOwned, DeserializeSeed, Error, Unexpected};
 use serde::de::{MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
 
+use self::hash::deserialize_h256;
 use super::values::Value;
 pub use engine::Engine;
 pub use genesis::Genesis;
@@ -32,7 +32,6 @@ use regex::Regex;
 pub use seal::{Seal, TendermintSeal};
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
-use std::str::FromStr;
 pub use tendermint::TendermintParams;
 
 mod engine;
@@ -243,30 +242,6 @@ impl GlobalName {
         let delimiter_index = self.0.find(MODULE_DELIMITER).expect("a module name followed by a module delimiter");
         &self.0[delimiter_index + 1..]
     }
-}
-
-fn deserialize_h256<'de, D: Deserializer<'de>>(deserializer: D) -> Result<H256, D::Error> {
-    struct H256Visitor;
-
-    impl<'de> Visitor<'de> for H256Visitor {
-        type Value = H256;
-
-        fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
-            write!(formatter, "64 hexadecimals representing a H256")
-        }
-
-        fn visit_str<E: Error>(self, v: &str) -> Result<Self::Value, E> {
-            let hash = H256::from_str(v).map_err(|e| match e {
-                FromHexError::InvalidHexCharacter(_char, _usize) => {
-                    let message = &*format!("{:?}", e);
-                    E::invalid_value(Unexpected::Str(v), &message)
-                }
-                FromHexError::InvalidHexLength => E::invalid_length(v.len(), &"64 hex decimals"),
-            })?;
-            Ok(hash)
-        }
-    }
-    deserializer.deserialize_str(H256Visitor)
 }
 
 struct ConstructorVisitor;

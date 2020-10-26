@@ -17,116 +17,90 @@
 
 //! Lenient hash json deserialization for test json files.
 
-use primitives::{H256 as Hash256, H520 as Hash520};
-use serde::de::{Error, Visitor};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use primitives::{H256, H520};
+use rustc_hex::FromHexError;
+use serde::de::Visitor;
+use serde::de::{Error, Unexpected};
+use serde::{Deserialize, Deserializer};
 use std::fmt;
+use std::fmt::Formatter;
 use std::str::FromStr;
 
-macro_rules! impl_hash {
-    ($name:ident, $inner:ident) => {
-        /// Lenient hash json deserialization for test json files.
-        #[derive(Default, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Clone)]
-        pub struct $name(pub $inner);
+pub fn deserialize_h256<'de, D: Deserializer<'de>>(deserializer: D) -> Result<H256, D::Error> {
+    struct H256Visitor;
 
-        impl From<$name> for $inner {
-            fn from(other: $name) -> $inner {
-                other.0
-            }
+    impl<'de> Visitor<'de> for H256Visitor {
+        type Value = H256;
+
+        fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+            write!(formatter, "64 hexadecimals representing a H256")
         }
 
-        impl From<$inner> for $name {
-            fn from(i: $inner) -> Self {
-                $name(i)
-            }
-        }
-
-        impl<'a> Deserialize<'a> for $name {
-            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where
-                D: Deserializer<'a>, {
-                struct HashVisitor;
-
-                impl<'b> Visitor<'b> for HashVisitor {
-                    type Value = $name;
-
-                    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-                        write!(formatter, "a 0x-prefixed hex-encoded hash")
-                    }
-
-                    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-                    where
-                        E: Error, {
-                        let value = match value.len() {
-                            0 => $inner::zero(),
-                            2 if value == "0x" => $inner::zero(),
-                            _ if value.starts_with("0x") => $inner::from_str(&value[2..])
-                                .map_err(|e| Error::custom(format!("Invalid hex value {}: {}", value, e).as_str()))?,
-                            _ => $inner::from_str(value)
-                                .map_err(|e| Error::custom(format!("Invalid hex value {}: {}", value, e).as_str()))?,
-                        };
-
-                        Ok($name(value))
-                    }
-
-                    fn visit_string<E>(self, value: String) -> Result<Self::Value, E>
-                    where
-                        E: Error, {
-                        self.visit_str(value.as_ref())
-                    }
+        fn visit_str<E: Error>(self, v: &str) -> Result<Self::Value, E> {
+            let hash = H256::from_str(v).map_err(|e| match e {
+                FromHexError::InvalidHexCharacter(_char, _usize) => {
+                    let message = &*format!("{:?}", e);
+                    E::invalid_value(Unexpected::Str(v), &message)
                 }
-
-                deserializer.deserialize_any(HashVisitor)
-            }
+                FromHexError::InvalidHexLength => E::invalid_length(v.len(), &"64 hex decimals"),
+            })?;
+            Ok(hash)
         }
-
-        impl Serialize for $name {
-            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where
-                S: Serializer, {
-                serializer.serialize_str(&format!("0x{:x}", self.0))
-            }
-        }
-    };
+    }
+    deserializer.deserialize_str(H256Visitor)
 }
 
-impl_hash!(H256, Hash256);
-impl_hash!(H520, Hash520);
+pub fn deserialize_h520<'de, D: Deserializer<'de>>(deserializer: D) -> Result<H520, D::Error> {
+    struct H520Visitor;
+
+    impl<'de> Visitor<'de> for H520Visitor {
+        type Value = H520;
+
+        fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
+            write!(formatter, "64 hexadecimals representing a H520")
+        }
+
+        fn visit_str<E: Error>(self, v: &str) -> Result<Self::Value, E> {
+            let hash = H520::from_str(v).map_err(|e| match e {
+                FromHexError::InvalidHexCharacter(_char, _usize) => {
+                    let message = &*format!("{:?}", e);
+                    E::invalid_value(Unexpected::Str(v), &message)
+                }
+                FromHexError::InvalidHexLength => E::invalid_length(v.len(), &"64 hex decimals"),
+            })?;
+            Ok(hash)
+        }
+    }
+    deserializer.deserialize_str(H520Visitor)
+}
+
+pub fn deserialize_vec_h520<'de, D>(deserializer: D) -> Result<Vec<H520>, D::Error>
+where
+    D: Deserializer<'de>, {
+    #[derive(Deserialize)]
+    struct Helper(#[serde(deserialize_with = "deserialize_h520")] H520);
+
+    let helper: Vec<Helper> = Vec::deserialize(deserializer)?;
+    Ok(helper.into_iter().map(|Helper(h520)| h520).collect())
+}
 
 #[cfg(test)]
 mod test {
-    use super::H256;
+    use super::deserialize_h256;
+    use primitives::H256;
+    use serde::Deserialize;
     use std::str::FromStr;
+
+    #[derive(PartialEq, Deserialize, Debug)]
+    struct H256Wrapper(#[serde(deserialize_with = "deserialize_h256")] H256);
 
     #[test]
     fn hash_deserialization() {
-        let s = r#"["", "5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae"]"#;
-        let deserialized: Vec<H256> = serde_yaml::from_str(s).unwrap();
+        let s = r#"["0000000000000000000000000000000000000000000000000000000000000000", "5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae"]"#;
+        let deserialized: Vec<H256Wrapper> = serde_yaml::from_str(s).unwrap();
         assert_eq!(deserialized, vec![
-            H256(primitives::H256::zero()),
-            H256(
-                primitives::H256::from_str("5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae").unwrap()
-            ),
+            H256Wrapper(H256::zero()),
+            H256Wrapper(H256::from_str("5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae").unwrap()),
         ]);
-    }
-
-    #[test]
-    fn hash_serialization() {
-        let hash1 = H256(primitives::H256::zero());
-        let hash2 =
-            primitives::H256::from_str("5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae").unwrap();
-        assert_eq!(
-            "---\n\"0x0000000000000000000000000000000000000000000000000000000000000000\"",
-            serde_yaml::to_string(&hash1).unwrap()
-        );
-        assert_eq!(
-            "---\n\"0x5a39ed1020c04d4d84539975b893a4e7c53eab6c2965db8bc3468093a31bc5ae\"",
-            serde_yaml::to_string(&hash2).unwrap()
-        );
-    }
-
-    #[test]
-    fn hash_into() {
-        assert_eq!(primitives::H256::zero(), H256(primitives::H256::zero()).into());
     }
 }
