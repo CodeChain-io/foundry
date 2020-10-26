@@ -35,7 +35,6 @@ use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
 pub use tendermint::TendermintParams;
 
-mod bytes;
 mod engine;
 mod genesis;
 mod hash;
