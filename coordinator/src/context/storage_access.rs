@@ -22,6 +22,8 @@ pub trait StorageAccess: Send {
     /// Returns a subspace of the given `storage_id` in the underlying storage.
     fn sub_storage(&mut self, storage_id: StorageId) -> Box<dyn SubStorageAccess>;
 
+    fn max_body_size(&self) -> u64;
+
     /// Create a recoverable checkpoint of this state
     fn create_checkpoint(&mut self);
     /// Revert to the last checkpoint and discard it

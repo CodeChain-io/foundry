@@ -145,6 +145,13 @@ impl StorageAccess for TopLevelState {
     fn discard_checkpoint(&mut self) {
         StateWithCheckpoint::discard_checkpoint(self, TOP_CHECKPOINT)
     }
+
+    fn max_body_size(&self) -> u64 {
+        let metadata_in_state = TopStateView::metadata(self)
+            .expect("Corrupted database; returns error only when a trie node cannot be found in the DB.");
+        let metadata = metadata_in_state.expect("metadata is initialized when generating genesis state");
+        metadata.chain_params().max_body_size()
+    }
 }
 
 impl StateWithCache for TopLevelState {

@@ -410,5 +410,9 @@ pub mod test {
         fn discard_checkpoint(&mut self) {
             unimplemented!()
         }
+
+        fn max_body_size(&self) -> u64 {
+            unimplemented!()
+        }
     }
 }
