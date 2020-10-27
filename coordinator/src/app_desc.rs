@@ -29,7 +29,6 @@ pub use engine::Engine;
 pub use genesis::Genesis;
 use once_cell::sync::Lazy;
 use regex::Regex;
-pub use seal::{Seal, TendermintSeal};
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 pub use tendermint::TendermintParams;
@@ -38,7 +37,6 @@ mod engine;
 mod genesis;
 mod hash;
 pub(self) mod params;
-mod seal;
 mod tendermint;
 pub(self) mod validator;
 

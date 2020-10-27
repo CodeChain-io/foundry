@@ -17,11 +17,11 @@
 
 //! Lenient hash json deserialization for test json files.
 
-use primitives::{H256, H520};
+use primitives::H256;
 use rustc_hex::FromHexError;
 use serde::de::Visitor;
 use serde::de::{Error, Unexpected};
-use serde::{Deserialize, Deserializer};
+use serde::Deserializer;
 use std::fmt;
 use std::fmt::Formatter;
 use std::str::FromStr;
@@ -48,40 +48,6 @@ pub fn deserialize_h256<'de, D: Deserializer<'de>>(deserializer: D) -> Result<H2
         }
     }
     deserializer.deserialize_str(H256Visitor)
-}
-
-pub fn deserialize_h520<'de, D: Deserializer<'de>>(deserializer: D) -> Result<H520, D::Error> {
-    struct H520Visitor;
-
-    impl<'de> Visitor<'de> for H520Visitor {
-        type Value = H520;
-
-        fn expecting(&self, formatter: &mut Formatter) -> fmt::Result {
-            write!(formatter, "64 hexadecimals representing a H520")
-        }
-
-        fn visit_str<E: Error>(self, v: &str) -> Result<Self::Value, E> {
-            let hash = H520::from_str(v).map_err(|e| match e {
-                FromHexError::InvalidHexCharacter(_char, _usize) => {
-                    let message = &*format!("{:?}", e);
-                    E::invalid_value(Unexpected::Str(v), &message)
-                }
-                FromHexError::InvalidHexLength => E::invalid_length(v.len(), &"64 hex decimals"),
-            })?;
-            Ok(hash)
-        }
-    }
-    deserializer.deserialize_str(H520Visitor)
-}
-
-pub fn deserialize_vec_h520<'de, D>(deserializer: D) -> Result<Vec<H520>, D::Error>
-where
-    D: Deserializer<'de>, {
-    #[derive(Deserialize)]
-    struct Helper(#[serde(deserialize_with = "deserialize_h520")] H520);
-
-    let helper: Vec<Helper> = Vec::deserialize(deserializer)?;
-    Ok(helper.into_iter().map(|Helper(h520)| h520).collect())
 }
 
 #[cfg(test)]
