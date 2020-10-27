@@ -23,7 +23,8 @@ use serde::de::{DeserializeOwned, DeserializeSeed, Error, Unexpected};
 use serde::de::{MapAccess, Visitor};
 use serde::{Deserialize, Deserializer};
 
-use self::hash::deserialize_h256;
+use self::deserialize::Hex;
+
 use super::values::Value;
 pub use engine::Engine;
 pub use genesis::Genesis;
@@ -33,9 +34,9 @@ use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 pub use tendermint::TendermintParams;
 
+mod deserialize;
 mod engine;
 mod genesis;
-mod hash;
 pub(self) mod params;
 mod tendermint;
 pub(self) mod validator;
@@ -160,8 +161,7 @@ impl AppDesc {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct ModuleSetup {
-    #[serde(deserialize_with = "deserialize_h256")]
-    pub hash: H256,
+    pub hash: Hex<H256>,
     #[serde(default)]
     pub sandboxer: String,
     #[serde(default)]
