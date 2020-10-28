@@ -24,8 +24,248 @@ use serde::Deserialize;
 use std::fs;
 use std::str::{self, FromStr};
 use std::time::Duration;
+use structconf::{clap, StructConf};
 
 use crate::rpc::{RpcHttpConfig, RpcIpcConfig, RpcWsConfig};
+
+#[derive(Debug, StructConf, Default)]
+pub struct NewConfig {
+    #[conf(
+        no_short,
+        no_file,
+        long = "config",
+        help = "Specify the certain config file path that you want to use to configure CodeChain to your needs."
+    )]
+    pub config: Option<String>,
+
+    // operating
+    #[conf(no_short, long = "app-desc-path", help = "Specify the app descriptor path.")]
+    pub app_desc_path: Option<String>,
+
+    #[conf(
+        short = "i",
+        long = "instance-id",
+        help = "Specify instance id for logging. Used when running multiple instances of CodeChain."
+    )]
+    pub instance_id: Option<usize>,
+
+    #[conf(no_short, long = "base-path", help = "Specify the base directory path on which the "db" and "keys" directory will be created.")]
+    pub base_path: Option<String>,
+
+    #[conf(no_short, long = "db-path", help = "Specify the database directory path.")]
+    pub db_path: Option<String>,
+
+    #[conf(no_short, long = "keys-path", help = "Specify the path for JSON key files to be found")]
+    pub keys_path: Option<String>,
+
+    #[conf(no_short, long = "password-path", help = "Specify the password file path.")]
+    pub password_path: Option<String>,
+
+    // mining
+    #[conf(
+        no_short,
+        long = "engine-signer",
+        help = "Specify the address which should be used to sign consensus messages and issue blocks."
+    )]
+    pub engine_signer: Option<PlatformAddress>,
+
+    #[conf(
+        no_short,
+        long = "mem-pool-size",
+        help = "Maximum amount of transactions in the queue (waiting to be included in next block)."
+    )]
+    pub mem_pool_size: Option<usize>,
+
+    #[conf(
+        no_short,
+        long = "mem-pool-mem-limit",
+        help = "Maximum amount of memory that can be used by the mem pool. Setting this parameter to 0 disables limiting."
+    )]
+    pub mem_pool_mem_limit: Option<usize>,
+
+    #[conf(
+        no_short,
+        long = "reseal-on-txs",
+        help = "Specify which transactions should force the node to reseal a block."
+    )]
+    pub reseal_on_txs: Option<String>,
+
+    #[conf(
+        no_short,
+        long = "reseal-min-period",
+        help = "Specify the minimum time between reseals from incoming transactions. MS is time measured in milliseconds."
+    )]
+    pub reseal_min_period: Option<u64>,
+
+    #[conf(
+        no_short,
+        long = "allowed-past-gap",
+        help = "Specify the allowed gap in the past direction from the system time to the block generation time. MS is time measured in milliseconds."
+    )]
+    pub allowed_past_gap: Option<u64>,
+
+    #[conf(
+        no_short,
+        long = "allowed-future-gap",
+        help = "Specify the allowed gap in the future direction from the system time to the block generation time. MS is time measured in milliseconds."
+    )]
+    pub allowed_future_gap: Option<u64>,
+
+    // network
+    #[conf(negated_arg, no_short, long = "no-network", help = "Do not open network socket.")]
+    pub network_enable: bool,
+
+    #[conf(no_short, long = "interface", help = "Network interface to listen to.")]
+    pub interface: Option<String>,
+
+    #[conf(no_short, long = "port", help = "Listen for connections on PORT.")]
+    pub port: Option<u16>,
+
+    // FIXME: need to parse array
+    #[conf(no_short, long = "bootstrap-addresses", help = "Bootstrap addresses to connect.")]
+    pub bootstrap_addresses: Option<String>,
+
+    #[conf(no_short, long = "min-peers", help = "Set the minimum number of connections the user would like.")]
+    pub min_peers: Option<usize>,
+
+    #[conf(no_short, long = "max-peers", help = "Set the maximum number of connections the user would like.")]
+    pub max_peers: Option<usize>,
+
+    #[conf(negated_arg, no_short, long = "no-sync", help = "Do not run block sync extension")]
+    pub sync_enable: bool,
+
+    #[conf(no_short, long = "snapshot-hash", help = "The block hash of the snapshot target block.")]
+    pub snapshot_hash: Option<H256>,
+
+    #[conf(no_short, long = "snapshot-number", help = "The block number of the snapshot target block.")]
+    pub snapshot_number: Option<u64>,
+
+    #[conf(negated_arg, no_short, long = "no-tx-relay", help = "Do not relay transactions.")]
+    pub tx_relay_enable: bool,
+
+    #[conf(negated_arg, no_short, long = "no-discovery", help = "Do not use discovery")]
+    pub discovery_enable: bool,
+
+    #[conf(
+        no_short,
+        long = "discovery",
+        help = "Decide how to choose the addresses to be sent. Options are kademlia and unstructured. In a testing environment, an unstructured p2p network is desirable because it is more than sufficient when there are a few nodes(< 100)."
+    )]
+    pub discovery_type: Option<String>,
+
+    #[conf(
+        no_short,
+        long = "discovery-refresh",
+        help = "Refresh timeout of discovery. MS is time measured in milliseconds."
+    )]
+    pub discovery_refresh: Option<u32>,
+
+    #[conf(no_short, long = "discovery-bucket-size", help = "Bucket size for discovery")]
+    pub discovery_bucket_size: Option<u8>,
+
+    #[conf(no_short, long = "blacklist-path", help = "Specify the path for the network blacklist file.")]
+    pub blacklist_path: Option<String>,
+
+    #[conf(no_short, long = "whitelist-path", help = "Specify the path for the network whitelist file.")]
+    pub whitelist_path: Option<String>,
+
+    // IPC
+    #[conf(negated_arg, no_short, long = "no-ipc", help = "Do not run JSON-RPC over IPC service.")]
+    pub ipc_enable: bool,
+
+    #[conf(no_short, long = "ipc-path", help = "Specify custom path for JSON-RPC over IPC service.")]
+    pub ipc_path: Option<String>,
+
+    // RPC
+    #[conf(negated_arg, no_short, long = "no-jsonrpc", help = "Do not run jsonrpc.")]
+    pub jsonrpc_enable: bool,
+
+    #[conf(no_short, long = "jsonrpc-interface", help = "Specify the interface address for rpc connections")]
+    pub jsonrpc_interface: Option<String>,
+
+    #[conf(no_short, long = "jsonrpc-hosts", help = "Specify the allowed host addresses for rpc connections")]
+    pub jsonrpc_hosts: Option<String>,
+
+    // FIXME: read a list
+    #[conf(no_short, long = "jsonrpc-cors", help = "Specify the cors domains for rpc connections")]
+    pub jsonrpc_cors: Option<String>,
+
+    #[conf(no_short, long = "jsonrpc-port", help = "Listen for rpc connections on PORT.")]
+    pub jsonrpc_port: Option<u16>,
+
+    #[conf(no_short, long = "enable-devel-api", help = "Enable the RPC's devel APIs")]
+    pub enable_devel_api: bool,
+
+    // WS
+    #[conf(negated_arg, no_short, long = "no-ws", help = "Do not run the WebSockets JSON-RPC server.")]
+    pub ws_enable: bool,
+
+    #[conf(
+        no_short,
+        long = "ws-interface",
+        help = "Specify the interface address for the WebSockets JSON-RPC server."
+    )]
+    pub ws_interface: Option<String>,
+
+    #[conf(no_short, long = "ws-port", help = "Specify the port portion of the WebSockets JSON-RPC server.")]
+    pub ws_port: Option<u16>,
+
+    #[conf(
+        no_short,
+        long = "ws-max-connections",
+        help = "Maximum number of allowed concurrent WebSockets JSON-RPC connections."
+    )]
+    pub ws_max_connections: Option<usize>,
+
+    // GraphQL
+    #[conf(no_short, long = "graphql-port", help = "Open GraphQL webserver on PORT.")]
+    pub graphql_port: Option<u16>,
+
+    #[conf(negated_arg, no_short, long = "no-informer", help = "Do not run the WebSockets JSON-RPC server.")]
+    pub informer_enable: bool,
+
+    // Informer
+    #[conf(
+        no_short,
+        long = "informer-interface",
+        help = "Specify the interface address for the WebSockets JSON-RPC server."
+    )]
+    pub informer_interface: Option<String>,
+
+    #[conf(no_short, long = "informer-port", help = "Specify the port portion of the WebSockets JSON-RPC server.")]
+    pub informer_port: Option<u16>,
+
+    #[conf(
+        no_short,
+        long = "informer-max-connections",
+        help = "Maximum number of allowed concurrent WebSockets JSON-RPC connections."
+    )]
+    pub informer_max_connections: Option<usize>,
+
+    // Snapshot
+    #[conf(negated_arg, no_short, long = "no-snapshot", help = "Disable snapshots")]
+    pub snapshot_enable: bool,
+
+    #[conf(no_short, long = "snapshot-path", help = "Specify the snapshot directory path.")]
+    pub snapshot_path: Option<String>,
+
+    #[conf(no_short, no_long)]
+    pub snapshot_expiration: Option<u64>,
+
+    // Email
+    #[conf(negated_arg, no_short, long = "no-email-alarm", help = "Do not use email alarm")]
+    pub email_alarm_enable: bool,
+
+    #[conf(no_short, long = "email-alarm-to", help = "Specify the email address to receive the alarm.")]
+    pub email_alarm_to: Option<String>,
+
+    #[conf(
+        no_short,
+        long = "email-alarm-sendgrid-key",
+        help = "Specify the sendgrid key which is used to send alarms."
+    )]
+    pub email_alarm_sendgrid_key: Option<String>,
+}
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
