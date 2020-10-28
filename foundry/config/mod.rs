@@ -79,7 +79,6 @@ impl Config {
                 0 => None,
                 mem_size => Some(mem_size * 1024 * 1024),
             },
-            mem_pool_fee_bump_shift: self.mining.mem_pool_fee_bump_shift.unwrap(),
             reseal_on_own_transaction,
             reseal_on_external_transaction,
             reseal_min_period: Duration::from_millis(self.mining.reseal_min_period.unwrap()),
@@ -201,7 +200,6 @@ pub struct GraphQl {
 #[serde(deny_unknown_fields)]
 pub struct Operating {
     pub app_desc_path: Option<String>,
-    pub quiet: Option<bool>,
     pub instance_id: Option<usize>,
     pub base_path: Option<String>,
     pub db_path: Option<String>,
@@ -212,15 +210,9 @@ pub struct Operating {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Mining {
-    pub author: Option<PlatformAddress>,
     pub engine_signer: Option<PlatformAddress>,
     pub mem_pool_size: Option<usize>,
     pub mem_pool_mem_limit: Option<usize>,
-    pub self_nomination_metadata: Option<String>,
-    pub self_target_deposit: Option<u64>,
-    pub self_nomination_enable: bool,
-    pub self_nomination_interval: Option<u64>,
-    pub mem_pool_fee_bump_shift: Option<usize>,
     pub reseal_on_txs: Option<String>,
     pub reseal_min_period: Option<u64>,
     pub allowed_past_gap: Option<u64>,
@@ -340,9 +332,6 @@ impl Operating {
         if other.app_desc_path.is_some() {
             self.app_desc_path = other.app_desc_path.clone();
         }
-        if other.quiet.is_some() {
-            self.quiet = other.quiet;
-        }
         if other.instance_id.is_some() {
             self.instance_id = other.instance_id;
         }
@@ -363,9 +352,6 @@ impl Operating {
     pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
         if let Some(base_path) = matches.value_of("app-desc-path") {
             self.app_desc_path = Some(base_path.to_string());
-        }
-        if matches.is_present("quiet") {
-            self.quiet = Some(true);
         }
         if let Some(instance_id) = matches.value_of("instance-id") {
             self.instance_id = Some(instance_id.parse().map_err(|e| format!("{}", e))?);
@@ -389,20 +375,8 @@ impl Operating {
 impl Mining {
     #[allow(clippy::cognitive_complexity)]
     pub fn merge(&mut self, other: &Mining) {
-        if other.author.is_some() {
-            self.author = other.author;
-        }
         if other.engine_signer.is_some() {
             self.engine_signer = other.engine_signer;
-        }
-        if other.self_nomination_metadata.is_some() {
-            self.self_nomination_metadata = other.self_nomination_metadata.clone();
-        }
-        if other.self_target_deposit.is_some() {
-            self.self_target_deposit = other.self_target_deposit;
-        }
-        if other.self_nomination_interval.is_some() {
-            self.self_nomination_interval = other.self_nomination_interval;
         }
         if other.mem_pool_size.is_some() {
             self.mem_pool_size = other.mem_pool_size;
@@ -419,36 +393,12 @@ impl Mining {
     }
 
     pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
-        if let Some(author) = matches.value_of("author") {
-            self.author = Some(author.parse().map_err(|_| "Invalid address format")?);
-        }
         if let Some(engine_signer) = matches.value_of("engine-signer") {
             self.engine_signer = Some(engine_signer.parse().map_err(|_| "Invalid address format")?);
         }
-        if let Some(self_nomination_metadata) = matches.value_of("self-nomination-metadata") {
-            self.self_nomination_metadata =
-                Some(self_nomination_metadata.parse().map_err(|_| "Invalid self nomination metadata format")?);
-        }
-        if let Some(self_nomination_target_deposit) = matches.value_of("self-nomination-target-deposit") {
-            self.self_target_deposit = Some(
-                self_nomination_target_deposit.parse().map_err(|_| "Invalid self nomination target deposit format")?,
-            );
-        }
-        if let Some(self_nomination_interval) = matches.value_of("self-nomination-interval") {
-            self.self_nomination_interval =
-                Some(self_nomination_interval.parse().map_err(|_| "Invalid self nomination interval format")?);
-        }
-        if matches.is_present("enable-auto-self-nomination") {
-            self.self_nomination_enable = true;
-        }
         if matches.is_present("no-miner") {
-            self.author = None;
             self.engine_signer = None;
             println!("This option was deprecated. PBFT type engine with no author implicitly means no-miner.");
-        }
-        if let Some(mem_pool_fee_bump_shift) = matches.value_of("mem-pool-fee-bump-shift") {
-            self.mem_pool_fee_bump_shift =
-                Some(mem_pool_fee_bump_shift.parse().map_err(|_| "Invalid mem pool fee bump shift")?);
         }
         if let Some(mem_pool_mem_limit) = matches.value_of("mem-pool-mem-limit") {
             self.mem_pool_mem_limit = Some(mem_pool_mem_limit.parse().map_err(|_| "Invalid mem limit")?);

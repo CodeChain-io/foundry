@@ -146,14 +146,10 @@ fn new_miner(
                 Err(e) => return Err(format!("{}", e)),
                 _ => (),
             },
-            None if config.mining.author.is_some() => {
-                return Err("PBFT type engine needs not an author but an engine signer for mining. Specify the engine signer using --engine-signer option."
-                    .to_string())
-            }
             None => (),
         },
         EngineType::Solo => miner
-            .set_author(ap, config.mining.author.map_or(Public::default(), PlatformAddress::into_pubkey))
+            .set_author(ap, config.mining.engine_signer.map_or(Public::default(), PlatformAddress::into_pubkey))
             .expect("set_author never fails when Solo is used"),
     }
 

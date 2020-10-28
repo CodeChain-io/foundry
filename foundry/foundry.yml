@@ -56,10 +56,6 @@ args:
         long: instance-id
         help: Specify instance id for logging. Used when running multiple instances of CodeChain.
         takes_value: true
-    - quiet:
-        short: q
-        long: quiet
-        help: Do not show any synchronization information in the console.
     - base-path:
         long: base-path
         value_name: PATH
@@ -181,25 +177,9 @@ args:
     - no-miner:
         long: no-miner
         help: Do not mine.
-    - author:
-        long: author
-        help: Specify the block author (aka "coinbase") address for sending block rewards from sealed blocks.
-        takes_value: true
     - engine-signer:
         long: engine-signer
         help: Specify the address which should be used to sign consensus messages and issue blocks.
-        takes_value: true
-    - self-nomination-metadata:
-        long: self-nomination-metadata
-        help: Specify metadata which should be used to do self nomination.
-        takes_value: true
-    - self-nomination-target-deposit:
-        long: self-nomination-target-deposit
-        help: Specify the amount of deposit need to provide deposite for candidatory in the process of self nomination.
-        takes_value: true
-    - self-nomination-interval:
-        long: self-nomination-interval
-        help: Specify the time(ms) interval for self nomination process.
         takes_value: true
     - enable-auto-self-nomination:
         long: enable-auto-self-nomination
@@ -207,11 +187,6 @@ args:
     - password-path:
         long: password-path
         help: Specify the password file path.
-        takes_value: true
-    - mem-pool-fee-bump-shift:
-        long: mem-pool-fee-bump-shift
-        value_name: INTEGER
-        help: A value which is used to check whether a new transaciton can replace a transaction in the memory pool with the same signer and seq. If the fee of the new transaction is `new_fee` and the fee of the transaction in the memory pool is `old_fee`, then `new_fee > old_fee + old_fee >> mem_pool_fee_bump_shift` should be satisfied to replace.
         takes_value: true
     - mem-pool-mem-limit:
         long: mem-pool-mem-limit
