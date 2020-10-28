@@ -20,7 +20,9 @@ extern crate log;
 extern crate codechain_logger as clogger;
 
 use app_dirs::AppInfo;
-use clap::load_yaml;
+use clap::SubCommand;
+use config::Config;
+use structconf::StructConf;
 
 pub use crate::run_node::run_node;
 use crate::subcommand::run_subcommand;
@@ -51,13 +53,20 @@ async fn main() -> Result<(), String> {
 }
 
 fn run() -> Result<(), String> {
-    let yaml = load_yaml!("foundry.yml");
     let version = env!("CARGO_PKG_VERSION");
-    let matches = clap::App::from_yaml(yaml).version(version).get_matches();
+    let app = clap::App::new("foundry")
+        .version(version)
+        .author("CodeChain Team <hi@codechain.io>")
+        .about("Foundry client")
+        .subcommand(SubCommand::with_name("commit-hash").about("Print the commit hash of the source tree"));
+
+    let matches = Config::parse_args(app);
+    let config_path = matches.value_of("config").unwrap_or("./config.ini");
+    let conf = Config::parse_file(&matches, config_path).expect("read config file");
 
     match matches.subcommand_name() {
         Some(_) => run_subcommand(&matches),
-        None => run_node(&matches, None),
+        None => run_node(conf, None),
     }
 }
 
