@@ -22,6 +22,7 @@ use cnetwork::{FilterEntry, NetworkConfig, SocketAddr};
 use primitives::H256;
 use std::fmt::Display;
 use std::fs;
+use std::net::Ipv4Addr;
 use std::str::{self, FromStr};
 use std::time::Duration;
 use structconf::StructConf;
@@ -116,7 +117,7 @@ pub struct Config {
     pub network_enable: bool,
 
     #[conf(no_short, long = "interface", help = "Network interface to listen to.")]
-    pub interface: Option<String>,
+    pub interface: Option<Ipv4Addr>,
 
     #[conf(no_short, long = "port", help = "Listen for connections on PORT.")]
     pub port: Option<u16>,
@@ -180,7 +181,7 @@ pub struct Config {
     pub jsonrpc_enable: bool,
 
     #[conf(no_short, long = "jsonrpc-interface", help = "Specify the interface address for rpc connections")]
-    pub jsonrpc_interface: Option<String>,
+    pub jsonrpc_interface: Option<Ipv4Addr>,
 
     #[conf(no_short, long = "jsonrpc-hosts", help = "Specify the allowed host addresses for rpc connections")]
     pub jsonrpc_hosts: Option<CommaSeparated<String>>,
@@ -203,7 +204,7 @@ pub struct Config {
         long = "ws-interface",
         help = "Specify the interface address for the WebSockets JSON-RPC server."
     )]
-    pub ws_interface: Option<String>,
+    pub ws_interface: Option<Ipv4Addr>,
 
     #[conf(no_short, long = "ws-port", help = "Specify the port portion of the WebSockets JSON-RPC server.")]
     pub ws_port: Option<u16>,
@@ -228,7 +229,7 @@ pub struct Config {
         long = "informer-interface",
         help = "Specify the interface address for the WebSockets JSON-RPC server."
     )]
-    pub informer_interface: Option<String>,
+    pub informer_interface: Option<Ipv4Addr>,
 
     #[conf(no_short, long = "informer-port", help = "Specify the port portion of the WebSockets JSON-RPC server.")]
     pub informer_port: Option<u16>,

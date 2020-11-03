@@ -20,11 +20,14 @@ use crpc::{
     jsonrpc_core, start_http, start_ipc, start_ws, HttpServer, IpcServer, MetaIoHandler, Middleware, WsError, WsServer,
 };
 use futures::future::Either;
-use std::io;
+use std::{
+    io,
+    net::{IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4},
+};
 
 #[derive(Debug, PartialEq)]
 pub struct RpcHttpConfig {
-    pub interface: String,
+    pub interface: Ipv4Addr,
     pub port: u16,
     pub cors: Option<Vec<String>>,
     pub hosts: Option<Vec<String>>,
@@ -34,16 +37,15 @@ pub fn rpc_http_start(
     server: MetaIoHandler<(), impl Middleware<()>>,
     config: RpcHttpConfig,
 ) -> Result<HttpServer, String> {
-    let url = format!("{}:{}", config.interface, config.port);
-    let addr = url.parse().map_err(|_| format!("Invalid JSONRPC listen host/port given: {}", url))?;
+    let addr = SocketAddr::V4(SocketAddrV4::new(config.interface, config.port));
     let start_result = start_http(&addr, config.cors.clone(), config.hosts.clone(), server);
     match start_result {
         Err(ref err) if err.kind() == io::ErrorKind::AddrInUse => {
-            Err(format!("RPC address {} is already in use, make sure that another instance of a CodeChain node is not running or change the address using the --jsonrpc-port option.", url))
+            Err(format!("RPC address {} is already in use, make sure that another instance of a CodeChain node is not running or change the address using the --jsonrpc-port option.", addr))
         },
         Err(e) => Err(format!("RPC error: {:?}", e)),
         Ok(server) => {
-            cinfo!(RPC, "RPC Listening on {}", url);
+            cinfo!(RPC, "RPC Listening on {}", addr);
             if let Some(hosts) = config.hosts {
                 cinfo!(RPC, "Allowed hosts are {:?}", hosts);
             }
@@ -79,14 +81,13 @@ pub fn rpc_ipc_start(
 
 #[derive(Debug, PartialEq)]
 pub struct RpcWsConfig {
-    pub interface: String,
+    pub interface: Ipv4Addr,
     pub port: u16,
     pub max_connections: usize,
 }
 
 pub fn rpc_ws_start(server: MetaIoHandler<(), impl Middleware<()>>, config: RpcWsConfig) -> Result<WsServer, String> {
-    let url = format!("{}:{}", config.interface, config.port);
-    let addr = url.parse().map_err(|_| format!("Invalid WebSockets listen host/port given: {}", url))?;
+    let addr = SocketAddr::new(IpAddr::V4(config.interface), config.port);
     let start_result = start_ws(&addr, server, config.max_connections);
     match start_result {
         Err(WsError::Io(ref err)) if err.kind() == io::ErrorKind::AddrInUse => {
