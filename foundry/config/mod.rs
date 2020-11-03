@@ -20,6 +20,7 @@ use cinformer::InformerConfig;
 use ckey::PlatformAddress;
 use cnetwork::{FilterEntry, NetworkConfig, SocketAddr};
 use primitives::H256;
+use std::fmt::Display;
 use std::fs;
 use std::str::{self, FromStr};
 use std::time::Duration;
@@ -120,9 +121,8 @@ pub struct Config {
     #[conf(no_short, long = "port", help = "Listen for connections on PORT.")]
     pub port: Option<u16>,
 
-    // FIXME: need to parse array
     #[conf(no_short, long = "bootstrap-addresses", help = "Bootstrap addresses to connect.")]
-    pub bootstrap_addresses: Option<String>,
+    pub bootstrap_addresses: Option<CommaSeparated<SocketAddr>>,
 
     #[conf(no_short, long = "min-peers", help = "Set the minimum number of connections the user would like.")]
     pub min_peers: Option<usize>,
@@ -183,11 +183,10 @@ pub struct Config {
     pub jsonrpc_interface: Option<String>,
 
     #[conf(no_short, long = "jsonrpc-hosts", help = "Specify the allowed host addresses for rpc connections")]
-    pub jsonrpc_hosts: Option<String>,
+    pub jsonrpc_hosts: Option<CommaSeparated<String>>,
 
-    // FIXME: read a list
     #[conf(no_short, long = "jsonrpc-cors", help = "Specify the cors domains for rpc connections")]
-    pub jsonrpc_cors: Option<String>,
+    pub jsonrpc_cors: Option<CommaSeparated<String>>,
 
     #[conf(no_short, long = "jsonrpc-port", help = "Listen for rpc connections on PORT.")]
     pub jsonrpc_port: Option<u16>,
@@ -299,10 +298,8 @@ impl Config {
         RpcHttpConfig {
             interface: self.jsonrpc_interface.clone().unwrap(),
             port: self.jsonrpc_port.unwrap(),
-            // FIXME: we need to parse list
-            cors: self.jsonrpc_cors.as_ref().map(|cors| vec![cors.clone()]),
-            // FIXME: we need to parse list
-            hosts: self.jsonrpc_hosts.as_ref().map(|cors| vec![cors.clone()]),
+            cors: self.jsonrpc_cors.as_ref().map(|cors| cors.inner.clone()),
+            hosts: self.jsonrpc_hosts.as_ref().map(|cors| cors.inner.clone()),
         }
     }
 
@@ -360,9 +357,8 @@ impl Config {
             }
         }
 
-        // FIXME: parse a list
         let bootstrap_addresses =
-            self.bootstrap_addresses.iter().map(|address| SocketAddr::from_str(address).unwrap()).collect();
+            self.bootstrap_addresses.as_ref().map(|addresses| addresses.inner.clone()).unwrap_or_default();
 
         let whitelist = make_ipaddr_list(self.whitelist_path.as_ref(), "white")?;
         let blacklist = make_ipaddr_list(self.blacklist_path.as_ref(), "black")?;
@@ -386,5 +382,38 @@ impl Config {
             allowed_past_gap,
             allowed_future_gap,
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct CommaSeparated<T> {
+    pub inner: Vec<T>,
+}
+
+impl<T: Display> Display for CommaSeparated<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut string_vec = Vec::new();
+        for t in &self.inner {
+            string_vec.push(format!("{}", t));
+        }
+        write!(f, "{}", string_vec.join(","))
+    }
+}
+
+impl<T: FromStr> FromStr for CommaSeparated<T> {
+    type Err = T::Err;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let tokens = s.split(',');
+        let mut ret: Vec<T> = Vec::new();
+
+        for token in tokens {
+            let t: T = token.parse()?;
+            ret.push(t);
+        }
+
+        Ok(CommaSeparated {
+            inner: ret,
+        })
     }
 }
