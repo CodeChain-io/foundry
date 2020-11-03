@@ -32,12 +32,12 @@ impl Stateful for StateManager {
     fn new_session(&mut self, session: SessionId, storage: ServiceRef<dyn SubStorageAccess>) {
         assert!(
             self.states.insert(session, storage.unwrap_import().into_proxy()).is_none(),
-            "invalid set_storage() requested from coordinator. This is a bug"
+            "invalid new_session() call from coordinator. This is a bug"
         )
     }
 
     fn end_session(&mut self, session: SessionId) {
-        self.states.remove(&session).expect("invalid clear_storage() requested from coordinator. This is a bug");
+        self.states.remove(&session).expect("invalid end_session() requested from coordinator. This is a bug");
     }
 }
 
