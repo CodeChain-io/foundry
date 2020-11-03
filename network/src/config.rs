@@ -14,11 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use std::net::Ipv4Addr;
+
 use crate::filters::FilterEntry;
 use crate::SocketAddr;
 
 pub struct Config {
-    pub address: String,
+    pub address: Ipv4Addr,
     pub port: u16,
     pub bootstrap_addresses: Vec<SocketAddr>,
     pub min_peers: usize,

@@ -43,10 +43,10 @@ use fdlimit::raise_fd_limit;
 use kvdb::KeyValueDB;
 use kvdb_rocksdb::{Database, DatabaseConfig};
 use parking_lot::{Condvar, Mutex};
-use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Weak};
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::{fs, net::IpAddr};
 
 struct ClientWrapper(Arc<Client>);
 
@@ -68,8 +68,7 @@ fn network_start(
     peer_db: Box<dyn ManagingPeerdb>,
     sender: InformerEventSender,
 ) -> Result<Arc<NetworkService>, String> {
-    let addr = cfg.address.parse().map_err(|_| format!("Invalid NETWORK listen host given: {}", cfg.address))?;
-    let sockaddress = SocketAddr::new(addr, cfg.port);
+    let sockaddress = SocketAddr::new(IpAddr::V4(cfg.address), cfg.port);
     let filters = Filters::new(cfg.whitelist.clone(), cfg.blacklist.clone());
     let service = NetworkService::start(
         network_id,
@@ -262,7 +261,7 @@ pub fn run_node(config: config::Config, test_cmd: Option<&str>) -> Result<(), St
     let _graphql_webserver = {
         use foundry_graphql::{GraphQlRequestHandler, ServerData};
         use std::collections::HashMap;
-        use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+        use std::net::{Ipv4Addr, SocketAddr};
 
         let mut handlers: HashMap<String, GraphQlRequestHandler> = client
             .client()
