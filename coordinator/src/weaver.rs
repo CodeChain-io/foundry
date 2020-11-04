@@ -122,9 +122,9 @@ impl Weaver {
             // FIXME: assumes that path is not used to locate a module here. Fix this later when we
             //        introduce a proper module registry.
             let path = if sandboxer_id == "multi-process" {
-                format!("../target/debug/{:x}", &setup.hash)
+                format!("../target/debug/{:x}", &setup.hash.value)
             } else {
-                format!("{:x}", &setup.hash)
+                format!("{:x}", &setup.hash.value)
             };
             let (exports, init_exports) = Self::process_exports(&setup.exports);
             let imports = RefCell::new(Self::process_imports(&setup.imports));
