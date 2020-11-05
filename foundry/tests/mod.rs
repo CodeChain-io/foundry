@@ -32,17 +32,17 @@ pub fn handle_test_command(cmd: &str, client: Arc<Client>) {
 #[test]
 #[ignore]
 fn check_block_nums() {
-    super::run_node(Default::default(), Some("check_block_nums")).unwrap()
+    super::run_node(Default::default(), Default::default(), Some("check_block_nums")).unwrap()
 }
 
 #[test]
 #[ignore]
 fn inject_hello_txes() {
-    super::run_node(Default::default(), Some("inject_hello_txes")).unwrap()
+    super::run_node(Default::default(), Default::default(), Some("inject_hello_txes")).unwrap()
 }
 
 #[test]
 #[ignore]
 fn graphql() {
-    super::run_node(Default::default(), Some("graphql")).unwrap()
+    super::run_node(Default::default(), Default::default(), Some("graphql")).unwrap()
 }

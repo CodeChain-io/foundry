@@ -43,9 +43,12 @@ use fdlimit::raise_fd_limit;
 use kvdb::KeyValueDB;
 use kvdb_rocksdb::{Database, DatabaseConfig};
 use parking_lot::{Condvar, Mutex};
-use std::path::Path;
-use std::sync::{Arc, Weak};
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    collections::BTreeMap,
+    sync::{Arc, Weak},
+};
+use std::{collections::HashMap, path::Path};
 use std::{fs, net::IpAddr};
 
 struct ClientWrapper(Arc<Client>);
@@ -219,7 +222,11 @@ pub fn open_db(cfg: &config::Config, client_config: &ClientConfig) -> Result<Arc
     Ok(db)
 }
 
-pub fn run_node(config: config::Config, test_cmd: Option<&str>) -> Result<(), String> {
+pub fn run_node(
+    config: config::Config,
+    module_arguments: BTreeMap<String, String>,
+    test_cmd: Option<&str>,
+) -> Result<(), String> {
     // increase max number of open files
     raise_fd_limit();
 
@@ -227,7 +234,8 @@ pub fn run_node(config: config::Config, test_cmd: Option<&str>) -> Result<(), St
 
     let time_gap_params = config.create_time_gaps();
 
-    let app_desc = AppDesc::from_str(&fs::read_to_string(config.app_desc_path.as_ref().unwrap()).unwrap()).unwrap();
+    let mut app_desc = AppDesc::from_str(&fs::read_to_string(config.app_desc_path.as_ref().unwrap()).unwrap()).unwrap();
+    app_desc.merge_params(&module_arguments).expect("error in merge params");
     let coordinator = Arc::new(Coordinator::from_app_desc(&app_desc).unwrap());
 
     let genesis = Genesis::new(app_desc.host.genesis, coordinator.as_ref());
@@ -260,7 +268,6 @@ pub fn run_node(config: config::Config, test_cmd: Option<&str>) -> Result<(), St
 
     let _graphql_webserver = {
         use foundry_graphql::{GraphQlRequestHandler, ServerData};
-        use std::collections::HashMap;
         use std::net::{Ipv4Addr, SocketAddr};
 
         let mut handlers: HashMap<String, GraphQlRequestHandler> = client
