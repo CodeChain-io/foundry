@@ -22,6 +22,7 @@ use crossbeam::Sender;
 use crossbeam_channel as crossbeam;
 use jsonrpc_core::{futures, BoxFuture};
 use std::io;
+use std::net::Ipv4Addr;
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -31,7 +32,7 @@ pub enum Registration {
 }
 
 pub struct InformerConfig {
-    pub interface: String,
+    pub interface: Ipv4Addr,
     pub port: u16,
     pub max_connections: usize,
 }

@@ -41,7 +41,7 @@ pub fn run_node(port: u16) -> FoundryNode {
             .arg("--app-desc-path")
             .arg("../timestamp/app-desc.toml")
             .arg("--config")
-            .arg("config.tendermint-solo.toml")
+            .arg("config.tendermint-solo.ini")
             .arg("--graphql-port")
             .arg(format!("{}", port))
             .spawn()

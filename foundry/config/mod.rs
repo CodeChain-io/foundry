@@ -20,46 +20,255 @@ use cinformer::InformerConfig;
 use ckey::PlatformAddress;
 use cnetwork::{FilterEntry, NetworkConfig, SocketAddr};
 use primitives::H256;
-use serde::Deserialize;
+use std::fmt::Display;
 use std::fs;
+use std::net::Ipv4Addr;
 use std::str::{self, FromStr};
 use std::time::Duration;
+use structconf::StructConf;
 
 use crate::rpc::{RpcHttpConfig, RpcIpcConfig, RpcWsConfig};
 
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, StructConf, Default)]
 pub struct Config {
-    pub ipc: Ipc,
-    pub graphql: GraphQl,
-    #[serde(rename = "codechain")]
-    pub operating: Operating,
-    pub mining: Mining,
-    pub network: Network,
-    pub rpc: Rpc,
-    pub ws: Ws,
-    pub informer: Informer,
-    pub snapshot: Snapshot,
-    #[serde(default)]
-    pub email_alarm: EmailAlarm,
+    #[conf(
+        no_short,
+        no_file,
+        long = "config",
+        help = "Specify the certain config file path that you want to use to configure CodeChain to your needs."
+    )]
+    pub config: Option<String>,
+
+    // operating
+    #[conf(no_short, long = "app-desc-path", help = "Specify the app descriptor path.")]
+    pub app_desc_path: Option<String>,
+
+    #[conf(
+        short = "i",
+        long = "instance-id",
+        help = "Specify instance id for logging. Used when running multiple instances of CodeChain."
+    )]
+    pub instance_id: Option<usize>,
+
+    #[conf(no_short, long = "base-path", help = "Specify the base directory path on which the "db" and "keys" directory will be created.")]
+    pub base_path: Option<String>,
+
+    #[conf(no_short, long = "db-path", help = "Specify the database directory path.")]
+    pub db_path: Option<String>,
+
+    #[conf(no_short, long = "keys-path", help = "Specify the path for JSON key files to be found")]
+    pub keys_path: Option<String>,
+
+    #[conf(no_short, long = "password-path", help = "Specify the password file path.")]
+    pub password_path: Option<String>,
+
+    // mining
+    #[conf(
+        no_short,
+        long = "engine-signer",
+        help = "Specify the address which should be used to sign consensus messages and issue blocks."
+    )]
+    pub engine_signer: Option<PlatformAddress>,
+
+    #[conf(
+        no_short,
+        long = "mem-pool-size",
+        help = "Maximum amount of transactions in the queue (waiting to be included in next block)."
+    )]
+    pub mem_pool_size: Option<usize>,
+
+    #[conf(
+        no_short,
+        long = "mem-pool-mem-limit",
+        help = "Maximum amount of memory that can be used by the mem pool. Setting this parameter to 0 disables limiting."
+    )]
+    pub mem_pool_mem_limit: Option<usize>,
+
+    #[conf(
+        no_short,
+        long = "reseal-on-txs",
+        help = "Specify which transactions should force the node to reseal a block."
+    )]
+    pub reseal_on_txs: Option<String>,
+
+    #[conf(
+        no_short,
+        long = "reseal-min-period",
+        help = "Specify the minimum time between reseals from incoming transactions. MS is time measured in milliseconds."
+    )]
+    pub reseal_min_period: Option<u64>,
+
+    #[conf(
+        no_short,
+        long = "allowed-past-gap",
+        help = "Specify the allowed gap in the past direction from the system time to the block generation time. MS is time measured in milliseconds."
+    )]
+    pub allowed_past_gap: Option<u64>,
+
+    #[conf(
+        no_short,
+        long = "allowed-future-gap",
+        help = "Specify the allowed gap in the future direction from the system time to the block generation time. MS is time measured in milliseconds."
+    )]
+    pub allowed_future_gap: Option<u64>,
+
+    // network
+    #[conf(negated_arg, no_short, long = "no-network", help = "Do not open network socket.")]
+    pub network_enable: bool,
+
+    #[conf(no_short, long = "interface", help = "Network interface to listen to.")]
+    pub interface: Option<Ipv4Addr>,
+
+    #[conf(no_short, long = "port", help = "Listen for connections on PORT.")]
+    pub port: Option<u16>,
+
+    #[conf(no_short, long = "bootstrap-addresses", help = "Bootstrap addresses to connect.")]
+    pub bootstrap_addresses: Option<CommaSeparated<SocketAddr>>,
+
+    #[conf(no_short, long = "min-peers", help = "Set the minimum number of connections the user would like.")]
+    pub min_peers: Option<usize>,
+
+    #[conf(no_short, long = "max-peers", help = "Set the maximum number of connections the user would like.")]
+    pub max_peers: Option<usize>,
+
+    #[conf(negated_arg, no_short, long = "no-sync", help = "Do not run block sync extension")]
+    pub sync_enable: bool,
+
+    #[conf(no_short, long = "snapshot-hash", help = "The block hash of the snapshot target block.")]
+    pub snapshot_hash: Option<H256>,
+
+    #[conf(no_short, long = "snapshot-number", help = "The block number of the snapshot target block.")]
+    pub snapshot_number: Option<u64>,
+
+    #[conf(negated_arg, no_short, long = "no-tx-relay", help = "Do not relay transactions.")]
+    pub tx_relay_enable: bool,
+
+    #[conf(negated_arg, no_short, long = "no-discovery", help = "Do not use discovery")]
+    pub discovery_enable: bool,
+
+    #[conf(
+        no_short,
+        long = "discovery",
+        help = "Decide how to choose the addresses to be sent. Options are kademlia and unstructured. In a testing environment, an unstructured p2p network is desirable because it is more than sufficient when there are a few nodes(< 100)."
+    )]
+    pub discovery_type: Option<String>,
+
+    #[conf(
+        no_short,
+        long = "discovery-refresh",
+        help = "Refresh timeout of discovery. MS is time measured in milliseconds."
+    )]
+    pub discovery_refresh: Option<u32>,
+
+    #[conf(no_short, long = "discovery-bucket-size", help = "Bucket size for discovery")]
+    pub discovery_bucket_size: Option<u8>,
+
+    #[conf(no_short, long = "blacklist-path", help = "Specify the path for the network blacklist file.")]
+    pub blacklist_path: Option<String>,
+
+    #[conf(no_short, long = "whitelist-path", help = "Specify the path for the network whitelist file.")]
+    pub whitelist_path: Option<String>,
+
+    // IPC
+    #[conf(negated_arg, no_short, long = "no-ipc", help = "Do not run JSON-RPC over IPC service.")]
+    pub ipc_enable: bool,
+
+    #[conf(no_short, long = "ipc-path", help = "Specify custom path for JSON-RPC over IPC service.")]
+    pub ipc_path: Option<String>,
+
+    // RPC
+    #[conf(negated_arg, no_short, long = "no-jsonrpc", help = "Do not run jsonrpc.")]
+    pub jsonrpc_enable: bool,
+
+    #[conf(no_short, long = "jsonrpc-interface", help = "Specify the interface address for rpc connections")]
+    pub jsonrpc_interface: Option<Ipv4Addr>,
+
+    #[conf(no_short, long = "jsonrpc-hosts", help = "Specify the allowed host addresses for rpc connections")]
+    pub jsonrpc_hosts: Option<CommaSeparated<String>>,
+
+    #[conf(no_short, long = "jsonrpc-cors", help = "Specify the cors domains for rpc connections")]
+    pub jsonrpc_cors: Option<CommaSeparated<String>>,
+
+    #[conf(no_short, long = "jsonrpc-port", help = "Listen for rpc connections on PORT.")]
+    pub jsonrpc_port: Option<u16>,
+
+    #[conf(no_short, long = "enable-devel-api", help = "Enable the RPC's devel APIs")]
+    pub enable_devel_api: bool,
+
+    // WS
+    #[conf(negated_arg, no_short, long = "no-ws", help = "Do not run the WebSockets JSON-RPC server.")]
+    pub ws_enable: bool,
+
+    #[conf(
+        no_short,
+        long = "ws-interface",
+        help = "Specify the interface address for the WebSockets JSON-RPC server."
+    )]
+    pub ws_interface: Option<Ipv4Addr>,
+
+    #[conf(no_short, long = "ws-port", help = "Specify the port portion of the WebSockets JSON-RPC server.")]
+    pub ws_port: Option<u16>,
+
+    #[conf(
+        no_short,
+        long = "ws-max-connections",
+        help = "Maximum number of allowed concurrent WebSockets JSON-RPC connections."
+    )]
+    pub ws_max_connections: Option<usize>,
+
+    // GraphQL
+    #[conf(no_short, long = "graphql-port", help = "Open GraphQL webserver on PORT.")]
+    pub graphql_port: Option<u16>,
+
+    #[conf(negated_arg, no_short, long = "no-informer", help = "Do not run the WebSockets JSON-RPC server.")]
+    pub informer_enable: bool,
+
+    // Informer
+    #[conf(
+        no_short,
+        long = "informer-interface",
+        help = "Specify the interface address for the WebSockets JSON-RPC server."
+    )]
+    pub informer_interface: Option<Ipv4Addr>,
+
+    #[conf(no_short, long = "informer-port", help = "Specify the port portion of the WebSockets JSON-RPC server.")]
+    pub informer_port: Option<u16>,
+
+    #[conf(
+        no_short,
+        long = "informer-max-connections",
+        help = "Maximum number of allowed concurrent WebSockets JSON-RPC connections."
+    )]
+    pub informer_max_connections: Option<usize>,
+
+    // Snapshot
+    #[conf(negated_arg, no_short, long = "no-snapshot", help = "Disable snapshots")]
+    pub snapshot_enable: bool,
+
+    #[conf(no_short, long = "snapshot-path", help = "Specify the snapshot directory path.")]
+    pub snapshot_path: Option<String>,
+
+    #[conf(no_short, no_long)]
+    pub snapshot_expiration: Option<u64>,
+
+    // Email
+    #[conf(negated_arg, no_short, long = "no-email-alarm", help = "Do not use email alarm")]
+    pub email_alarm_enable: bool,
+
+    #[conf(no_short, long = "email-alarm-to", help = "Specify the email address to receive the alarm.")]
+    pub email_alarm_to: Option<String>,
+
+    #[conf(
+        no_short,
+        long = "email-alarm-sendgrid-key",
+        help = "Specify the sendgrid key which is used to send alarms."
+    )]
+    pub email_alarm_sendgrid_key: Option<String>,
 }
 
 impl Config {
-    pub fn merge(&mut self, other: &Config) {
-        self.ipc.merge(&other.ipc);
-        self.graphql.merge(&other.graphql);
-        self.operating.merge(&other.operating);
-        self.mining.merge(&other.mining);
-        self.network.merge(&other.network);
-        self.rpc.merge(&other.rpc);
-        self.ws.merge(&other.ws);
-        self.informer.merge(&other.informer);
-        self.snapshot.merge(&other.snapshot);
-        self.email_alarm.merge(&other.email_alarm);
-    }
-
     pub fn miner_options(&self) -> Result<MinerOptions, String> {
-        let (reseal_on_own_transaction, reseal_on_external_transaction) = match self.mining.reseal_on_txs.as_deref() {
+        let (reseal_on_own_transaction, reseal_on_external_transaction) = match self.reseal_on_txs.as_deref() {
             Some("all") => (true, true),
             Some("own") => (true, false),
             Some("ext") => (false, true),
@@ -74,61 +283,51 @@ impl Config {
         };
 
         Ok(MinerOptions {
-            mem_pool_size: self.mining.mem_pool_size.unwrap(),
-            mem_pool_memory_limit: match self.mining.mem_pool_mem_limit.unwrap() {
+            mem_pool_size: self.mem_pool_size.unwrap(),
+            mem_pool_memory_limit: match self.mem_pool_mem_limit.unwrap() {
                 0 => None,
                 mem_size => Some(mem_size * 1024 * 1024),
             },
             reseal_on_own_transaction,
             reseal_on_external_transaction,
-            reseal_min_period: Duration::from_millis(self.mining.reseal_min_period.unwrap()),
+            reseal_min_period: Duration::from_millis(self.reseal_min_period.unwrap()),
         })
     }
 
     pub fn rpc_http_config(&self) -> RpcHttpConfig {
-        debug_assert!(!self.rpc.disable.unwrap());
-
         // FIXME: Add interface, cors and hosts options.
         RpcHttpConfig {
-            interface: self.rpc.interface.clone().unwrap(),
-            port: self.rpc.port.unwrap(),
-            cors: self.rpc.cors.clone(),
-            hosts: self.rpc.hosts.clone(),
+            interface: self.jsonrpc_interface.clone().unwrap(),
+            port: self.jsonrpc_port.unwrap(),
+            cors: self.jsonrpc_cors.as_ref().map(|cors| cors.inner.clone()),
+            hosts: self.jsonrpc_hosts.as_ref().map(|cors| cors.inner.clone()),
         }
     }
 
     pub fn rpc_ipc_config(&self) -> RpcIpcConfig {
-        debug_assert!(!self.ipc.disable.unwrap());
-
         RpcIpcConfig {
-            socket_addr: self.ipc.path.clone().unwrap(),
+            socket_addr: self.ipc_path.clone().unwrap(),
         }
     }
 
     pub fn rpc_ws_config(&self) -> RpcWsConfig {
-        debug_assert!(!self.ws.disable.unwrap());
-
         // FIXME: Add hosts and origins options.
         RpcWsConfig {
-            interface: self.ws.interface.clone().unwrap(),
-            port: self.ws.port.unwrap(),
-            max_connections: self.ws.max_connections.unwrap(),
+            interface: self.ws_interface.clone().unwrap(),
+            port: self.ws_port.unwrap(),
+            max_connections: self.ws_max_connections.unwrap(),
         }
     }
 
     pub fn informer_config(&self) -> InformerConfig {
-        debug_assert!(!self.informer.disable.unwrap());
-
         InformerConfig {
-            interface: self.informer.interface.clone().unwrap(),
-            port: self.informer.port.unwrap(),
-            max_connections: self.informer.max_connections.unwrap(),
+            interface: self.informer_interface.clone().unwrap(),
+            port: self.informer_port.unwrap(),
+            max_connections: self.informer_max_connections.unwrap(),
         }
     }
 
     pub fn network_config(&self) -> Result<NetworkConfig, String> {
-        debug_assert!(!self.network.disable.unwrap());
-
         fn make_ipaddr_list(list_path: Option<&String>, list_name: &str) -> Result<Vec<FilterEntry>, String> {
             if let Some(path) = list_path {
                 fs::read_to_string(path)
@@ -159,266 +358,21 @@ impl Config {
             }
         }
 
-        let bootstrap_addresses = self
-            .network
-            .bootstrap_addresses
-            .clone()
-            .unwrap()
-            .iter()
-            .map(|s| SocketAddr::from_str(s).unwrap())
-            .collect::<Vec<_>>();
+        let bootstrap_addresses =
+            self.bootstrap_addresses.as_ref().map(|addresses| addresses.inner.clone()).unwrap_or_default();
 
-        let whitelist = make_ipaddr_list(self.network.whitelist_path.as_ref(), "white")?;
-        let blacklist = make_ipaddr_list(self.network.blacklist_path.as_ref(), "black")?;
+        let whitelist = make_ipaddr_list(self.whitelist_path.as_ref(), "white")?;
+        let blacklist = make_ipaddr_list(self.blacklist_path.as_ref(), "black")?;
 
         Ok(NetworkConfig {
-            address: self.network.interface.clone().unwrap(),
-            port: self.network.port.unwrap(),
+            address: self.interface.clone().unwrap(),
+            port: self.port.unwrap(),
             bootstrap_addresses,
-            min_peers: self.network.min_peers.unwrap(),
-            max_peers: self.network.max_peers.unwrap(),
+            min_peers: self.min_peers.unwrap(),
+            max_peers: self.max_peers.unwrap(),
             whitelist,
             blacklist,
         })
-    }
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Ipc {
-    pub disable: Option<bool>,
-    pub path: Option<String>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct GraphQl {
-    pub port: Option<u16>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Operating {
-    pub app_desc_path: Option<String>,
-    pub instance_id: Option<usize>,
-    pub base_path: Option<String>,
-    pub db_path: Option<String>,
-    pub keys_path: Option<String>,
-    pub password_path: Option<String>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Mining {
-    pub engine_signer: Option<PlatformAddress>,
-    pub mem_pool_size: Option<usize>,
-    pub mem_pool_mem_limit: Option<usize>,
-    pub reseal_on_txs: Option<String>,
-    pub reseal_min_period: Option<u64>,
-    pub allowed_past_gap: Option<u64>,
-    pub allowed_future_gap: Option<u64>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Network {
-    pub interface: Option<String>,
-    pub disable: Option<bool>,
-    pub port: Option<u16>,
-    pub bootstrap_addresses: Option<Vec<String>>,
-    pub min_peers: Option<usize>,
-    pub max_peers: Option<usize>,
-    pub sync: Option<bool>,
-    pub snapshot_hash: Option<H256>,
-    pub snapshot_number: Option<u64>,
-    pub transaction_relay: Option<bool>,
-    pub discovery: Option<bool>,
-    pub discovery_type: Option<String>,
-    pub discovery_refresh: Option<u32>,
-    pub discovery_bucket_size: Option<u8>,
-    pub blacklist_path: Option<String>,
-    pub whitelist_path: Option<String>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Rpc {
-    pub disable: Option<bool>,
-    pub interface: Option<String>,
-    pub hosts: Option<Vec<String>>,
-    pub cors: Option<Vec<String>>,
-    pub port: Option<u16>,
-    #[serde(default = "default_enable_devel_api")]
-    pub enable_devel_api: bool,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Ws {
-    pub disable: Option<bool>,
-    pub interface: Option<String>,
-    pub port: Option<u16>,
-    pub max_connections: Option<usize>,
-}
-
-fn default_enable_devel_api() -> bool {
-    cfg!(debug_assertions)
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Informer {
-    pub disable: Option<bool>,
-    pub interface: Option<String>,
-    pub port: Option<u16>,
-    pub max_connections: Option<usize>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct Snapshot {
-    pub disable: Option<bool>,
-    pub path: Option<String>,
-    // Snapshot's age in blocks
-    pub expiration: Option<u64>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct EmailAlarm {
-    pub disable: Option<bool>,
-    pub to: Option<String>,
-    pub sendgrid_key: Option<String>,
-}
-
-impl Ipc {
-    pub fn merge(&mut self, other: &Ipc) {
-        if other.disable.is_some() {
-            self.disable = other.disable;
-        }
-        if other.path.is_some() {
-            self.path = other.path.clone();
-        }
-    }
-
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
-        if matches.is_present("no-ipc") {
-            self.disable = Some(true);
-        }
-        if let Some(path) = matches.value_of("ipc-path") {
-            self.path = Some(path.to_string());
-        }
-        Ok(())
-    }
-}
-
-impl GraphQl {
-    pub fn merge(&mut self, other: &GraphQl) {
-        if other.port.is_some() {
-            self.port = other.port;
-        }
-    }
-
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
-        if let Some(port) = matches.value_of("graphql-port") {
-            self.port = Some(port.parse().map_err(|_| "Invalid port")?);
-        }
-        Ok(())
-    }
-}
-
-impl Operating {
-    pub fn merge(&mut self, other: &Operating) {
-        if other.app_desc_path.is_some() {
-            self.app_desc_path = other.app_desc_path.clone();
-        }
-        if other.instance_id.is_some() {
-            self.instance_id = other.instance_id;
-        }
-        if other.base_path.is_some() {
-            self.base_path = other.base_path.clone();
-        }
-        if other.db_path.is_some() {
-            self.db_path = other.db_path.clone();
-        }
-        if other.keys_path.is_some() {
-            self.keys_path = other.keys_path.clone();
-        }
-        if other.password_path.is_some() {
-            self.password_path = other.password_path.clone();
-        }
-    }
-
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
-        if let Some(base_path) = matches.value_of("app-desc-path") {
-            self.app_desc_path = Some(base_path.to_string());
-        }
-        if let Some(instance_id) = matches.value_of("instance-id") {
-            self.instance_id = Some(instance_id.parse().map_err(|e| format!("{}", e))?);
-        }
-        if let Some(base_path) = matches.value_of("base-path") {
-            self.base_path = Some(base_path.to_string());
-        }
-        if let Some(db_path) = matches.value_of("db-path") {
-            self.db_path = Some(db_path.to_string());
-        }
-        if let Some(keys_path) = matches.value_of("keys-path") {
-            self.keys_path = Some(keys_path.to_string());
-        }
-        if let Some(password_path) = matches.value_of("password-path") {
-            self.password_path = Some(password_path.to_string());
-        }
-        Ok(())
-    }
-}
-
-impl Mining {
-    #[allow(clippy::cognitive_complexity)]
-    pub fn merge(&mut self, other: &Mining) {
-        if other.engine_signer.is_some() {
-            self.engine_signer = other.engine_signer;
-        }
-        if other.mem_pool_size.is_some() {
-            self.mem_pool_size = other.mem_pool_size;
-        }
-        if other.mem_pool_mem_limit.is_some() {
-            self.mem_pool_mem_limit = other.mem_pool_mem_limit;
-        }
-        if other.reseal_on_txs.is_some() {
-            self.reseal_on_txs = other.reseal_on_txs.clone();
-        }
-        if other.reseal_min_period.is_some() {
-            self.reseal_min_period = other.reseal_min_period;
-        }
-    }
-
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
-        if let Some(engine_signer) = matches.value_of("engine-signer") {
-            self.engine_signer = Some(engine_signer.parse().map_err(|_| "Invalid address format")?);
-        }
-        if matches.is_present("no-miner") {
-            self.engine_signer = None;
-            println!("This option was deprecated. PBFT type engine with no author implicitly means no-miner.");
-        }
-        if let Some(mem_pool_mem_limit) = matches.value_of("mem-pool-mem-limit") {
-            self.mem_pool_mem_limit = Some(mem_pool_mem_limit.parse().map_err(|_| "Invalid mem limit")?);
-        }
-        if let Some(mem_pool_size) = matches.value_of("mem-pool-size") {
-            self.mem_pool_size = Some(mem_pool_size.parse().map_err(|_| "Invalid size")?);
-        }
-        if let Some(reseal_on_txs) = matches.value_of("reseal-on-txs") {
-            self.reseal_on_txs = Some(reseal_on_txs.to_string());
-        }
-        if let Some(reseal_min_period) = matches.value_of("reseal-min-period") {
-            self.reseal_min_period = Some(reseal_min_period.parse().map_err(|_| "Invalid period")?);
-        }
-        if let Some(allowed_past_gap) = matches.value_of("allowed-past-gap") {
-            self.allowed_past_gap = Some(allowed_past_gap.parse().map_err(|_| "Invalid time gap")?);
-        }
-        if let Some(allowed_future_gap) = matches.value_of("allowed-future-gap") {
-            self.allowed_future_gap = Some(allowed_future_gap.parse().map_err(|_| "Invalid time gap")?);
-        }
-        Ok(())
     }
 
     pub fn create_time_gaps(&self) -> TimeGapParams {
@@ -432,327 +386,35 @@ impl Mining {
     }
 }
 
-impl Network {
-    pub fn merge(&mut self, other: &Network) {
-        if other.interface.is_some() {
-            self.interface = other.interface.clone();
-        }
-        if other.disable.is_some() {
-            self.disable = other.disable;
-        }
-        if other.port.is_some() {
-            self.port = other.port;
-        }
-        if other.bootstrap_addresses.is_some() {
-            self.bootstrap_addresses = other.bootstrap_addresses.clone();
-        }
-        if other.min_peers.is_some() {
-            self.min_peers = other.min_peers;
-        }
-        if other.max_peers.is_some() {
-            self.max_peers = other.max_peers;
-        }
-        if other.sync.is_some() {
-            self.sync = other.sync;
-        }
-        if other.snapshot_hash.is_some() {
-            self.snapshot_hash = other.snapshot_hash;
-        }
-        if other.snapshot_number.is_some() {
-            self.snapshot_number = other.snapshot_number;
-        }
-        if other.transaction_relay.is_some() {
-            self.transaction_relay = other.transaction_relay;
-        }
-        if other.discovery.is_some() {
-            self.discovery = other.discovery;
-        }
-        if other.discovery_type.is_some() {
-            self.discovery_type = other.discovery_type.clone();
-        }
-        if other.discovery_refresh.is_some() {
-            self.discovery_refresh = other.discovery_refresh;
-        }
-        if other.discovery_bucket_size.is_some() {
-            self.discovery_bucket_size = other.discovery_bucket_size;
-        }
-        if other.blacklist_path.is_some() {
-            self.blacklist_path = other.blacklist_path.clone();
-        }
-        if other.whitelist_path.is_some() {
-            self.whitelist_path = other.whitelist_path.clone();
-        }
-    }
+#[derive(Debug)]
+pub struct CommaSeparated<T> {
+    pub inner: Vec<T>,
+}
 
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
-        if matches.is_present("no-network") {
-            self.disable = Some(true);
+impl<T: Display> Display for CommaSeparated<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut string_vec = Vec::new();
+        for t in &self.inner {
+            string_vec.push(format!("{}", t));
         }
-
-        if let Some(addresses) = matches.values_of("bootstrap-addresses") {
-            self.bootstrap_addresses = Some(addresses.map(|a| a.into()).collect());
-        }
-
-        if let Some(interface) = matches.value_of("interface") {
-            self.interface = Some(interface.to_string());
-        }
-        if let Some(port) = matches.value_of("port") {
-            self.port = Some(port.parse().map_err(|_| "Invalid port")?);
-        }
-
-        if let Some(min_peers) = matches.value_of("min-peers") {
-            self.min_peers = Some(min_peers.parse().map_err(|_| "Invalid min-peers")?);
-        }
-        if let Some(max_peers) = matches.value_of("max-peers") {
-            self.max_peers = Some(max_peers.parse().map_err(|_| "Invalid max-peers")?);
-        }
-        if self.min_peers > self.max_peers {
-            return Err("Invalid min/max peers".to_string())
-        }
-
-        if matches.is_present("no-sync") {
-            self.sync = Some(false);
-        }
-        if let Some(snapshot_hash) = matches.value_of("snapshot-hash") {
-            self.snapshot_hash = Some(snapshot_hash.parse().map_err(|_| "Invalid snapshot-hash")?);
-        }
-        if let Some(snapshot_number) = matches.value_of("snapshot-number") {
-            self.snapshot_number = Some(snapshot_number.parse().map_err(|_| "Invalid snapshot-number")?);
-        }
-        if matches.is_present("no-tx-relay") {
-            self.transaction_relay = Some(false);
-        }
-
-        if matches.is_present("no-discovery") {
-            self.discovery = Some(false);
-        }
-        if let Some(discovery_type) = matches.value_of("discovery") {
-            self.discovery_type = Some(discovery_type.to_string());
-        }
-        if let Some(refresh) = matches.value_of("discovery-refresh") {
-            self.discovery_refresh = Some(refresh.parse().map_err(|_| "Invalid discovery-refresh")?);
-        }
-        if let Some(bucket_size) = matches.value_of("discovery-bucket-size") {
-            self.discovery_bucket_size = Some(bucket_size.parse().map_err(|_| "Invalid discovery-bucket-size")?);
-        }
-
-        if let Some(file_path) = matches.value_of("whitelist-path") {
-            self.whitelist_path = Some(file_path.to_string());
-        }
-        if let Some(file_path) = matches.value_of("blacklist-path") {
-            self.blacklist_path = Some(file_path.to_string());
-        }
-
-        Ok(())
+        write!(f, "{}", string_vec.join(","))
     }
 }
 
-impl Rpc {
-    pub fn merge(&mut self, other: &Rpc) {
-        if other.disable.is_some() {
-            self.disable = other.disable;
+impl<T: FromStr> FromStr for CommaSeparated<T> {
+    type Err = T::Err;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let tokens = s.split(',');
+        let mut ret: Vec<T> = Vec::new();
+
+        for token in tokens {
+            let t: T = token.parse()?;
+            ret.push(t);
         }
-        if other.interface.is_some() {
-            self.interface = other.interface.clone();
-        }
-        if other.hosts.is_some() {
-            self.hosts = other.hosts.clone();
-        }
-        if other.cors.is_some() {
-            self.cors = other.cors.clone();
-        }
-        if other.port.is_some() {
-            self.port = other.port;
-        }
+
+        Ok(CommaSeparated {
+            inner: ret,
+        })
     }
-
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
-        if matches.is_present("no-jsonrpc") {
-            self.disable = Some(true);
-        }
-        if let Some(port) = matches.value_of("jsonrpc-port") {
-            self.port = Some(port.parse().map_err(|_| "Invalid port")?);
-        }
-        if let Some(interface) = matches.value_of("jsonrpc-interface") {
-            self.interface = Some(interface.to_string());
-        }
-        if let Some(hosts) = matches.values_of_lossy("jsonrpc-hosts") {
-            self.hosts = Some(hosts);
-        }
-        if let Some(cors) = matches.values_of_lossy("jsonrpc-cors") {
-            self.cors = Some(cors);
-        }
-        if matches.is_present("enable-devel-api") {
-            self.enable_devel_api = true;
-        }
-        Ok(())
-    }
-}
-
-impl Informer {
-    pub fn merge(&mut self, other: &Informer) {
-        if other.disable.is_some() {
-            self.disable = other.disable;
-        }
-        if other.interface.is_some() {
-            self.interface = other.interface.clone();
-        }
-        if other.port.is_some() {
-            self.port = other.port;
-        }
-        if other.max_connections.is_some() {
-            self.max_connections = other.max_connections;
-        }
-    }
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
-        if matches.is_present("no-informer") {
-            self.disable = Some(true);
-        }
-
-        if let Some(interface) = matches.value_of("informer-interface") {
-            self.interface = Some(interface.to_string());
-        }
-        if let Some(port) = matches.value_of("informer-port") {
-            self.port = Some(port.parse().map_err(|_| "Invalid port")?);
-        }
-        if let Some(max_connections) = matches.value_of("informer-max-connections") {
-            self.max_connections = Some(max_connections.parse().map_err(|_| "Invalid max connections")?);
-        }
-        Ok(())
-    }
-}
-
-impl Ws {
-    pub fn merge(&mut self, other: &Ws) {
-        if other.disable.is_some() {
-            self.disable = other.disable;
-        }
-        if other.interface.is_some() {
-            self.interface = other.interface.clone();
-        }
-        if other.port.is_some() {
-            self.port = other.port;
-        }
-        if other.max_connections.is_some() {
-            self.max_connections = other.max_connections;
-        }
-    }
-
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
-        if matches.is_present("no-ws") {
-            self.disable = Some(true);
-        }
-
-        if let Some(interface) = matches.value_of("ws-interface") {
-            self.interface = Some(interface.to_string());
-        }
-        if let Some(port) = matches.value_of("ws-port") {
-            self.port = Some(port.parse().map_err(|_| "Invalid port")?);
-        }
-        if let Some(max_connections) = matches.value_of("ws-max-connections") {
-            self.max_connections = Some(max_connections.parse().map_err(|_| "Invalid max connections")?);
-        }
-        Ok(())
-    }
-}
-
-impl Snapshot {
-    pub fn merge(&mut self, other: &Snapshot) {
-        if other.disable.is_some() {
-            self.disable = other.disable;
-        }
-        if other.path.is_some() {
-            self.path = other.path.clone();
-        }
-        if other.expiration.is_some() {
-            self.expiration = other.expiration;
-        }
-    }
-
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
-        if matches.is_present("no-snapshot") {
-            self.disable = Some(true);
-        }
-
-        if let Some(snapshot_path) = matches.value_of("snapshot-path") {
-            self.path = Some(snapshot_path.to_string());
-        }
-        Ok(())
-    }
-}
-
-impl EmailAlarm {
-    pub fn merge(&mut self, other: &EmailAlarm) {
-        if other.disable.is_some() {
-            self.disable = other.disable;
-        }
-        if other.to.is_some() {
-            self.to = other.to.clone();
-        }
-        if other.sendgrid_key.is_some() {
-            self.sendgrid_key = other.sendgrid_key.clone();
-        }
-    }
-
-    pub fn overwrite_with(&mut self, matches: &clap::ArgMatches<'_>) -> Result<(), String> {
-        if matches.is_present("no-email-alarm") {
-            self.disable = Some(true);
-        }
-        if let Some(to) = matches.value_of("email-alarm-to") {
-            self.to = Some(to.to_string());
-        }
-        if let Some(sendgrid_key) = matches.value_of("email-alarm-sendgrid-key") {
-            self.sendgrid_key = Some(sendgrid_key.to_string());
-        }
-
-        Ok(())
-    }
-}
-
-impl Default for EmailAlarm {
-    fn default() -> Self {
-        Self {
-            disable: Some(true),
-            to: None,
-            sendgrid_key: None,
-        }
-    }
-}
-
-#[cfg(not(debug_assertions))]
-pub fn read_preset_config() -> &'static str {
-    let bytes = include_bytes!("presets/config.prod.toml");
-    str::from_utf8(bytes).expect("The preset config file must be valid")
-}
-
-#[cfg(debug_assertions)]
-pub fn read_preset_config() -> &'static str {
-    let bytes = include_bytes!("presets/config.dev.toml");
-    str::from_utf8(bytes).expect("The preset config file must be valid")
-}
-
-pub fn load_config(matches: &clap::ArgMatches<'_>) -> Result<Config, String> {
-    let mut config: Config = {
-        let toml_string = read_preset_config().to_string();
-        toml::from_str(toml_string.as_ref()).expect("The preset config file must be valid")
-    };
-
-    if let Some(config_path) = matches.value_of("config") {
-        let toml_string = fs::read_to_string(config_path).map_err(|e| format!("Fail to read file: {:?}", e))?;
-        let extra_config: Config =
-            toml::from_str(toml_string.as_ref()).map_err(|e| format!("Error while parsing TOML: {:?}", e))?;
-        config.merge(&extra_config);
-    };
-
-    config.ipc.overwrite_with(&matches)?;
-    config.graphql.overwrite_with(&matches)?;
-    config.operating.overwrite_with(&matches)?;
-    config.mining.overwrite_with(&matches)?;
-    config.network.overwrite_with(&matches)?;
-    config.rpc.overwrite_with(&matches)?;
-    config.ws.overwrite_with(&matches)?;
-    config.informer.overwrite_with(&matches)?;
-    config.snapshot.overwrite_with(&matches)?;
-    config.email_alarm.overwrite_with(&matches)?;
-    Ok(config)
 }

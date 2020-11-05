@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::config::{self, load_config};
+use crate::config;
 use crate::constants::{DEFAULT_DB_PATH, DEFAULT_KEYS_PATH};
 use crate::dummy_network_service::DummyNetworkService;
 use crate::json::PasswordFile;
@@ -30,7 +30,6 @@ use cinformer::{handler::Handler, InformerEventSender, InformerService, MetaIoHa
 use ckey::{Ed25519Public as Public, NetworkId, PlatformAddress};
 use ckeystore::accounts_dir::RootDiskDirectory;
 use ckeystore::KeyStore;
-use clap::ArgMatches;
 use clogger::{EmailAlarm, LoggerConfig};
 use cnetwork::{Filters, ManagingPeerdb, NetworkConfig, NetworkControl, NetworkService, RoutingTable, SocketAddr};
 use coordinator::{AppDesc, Coordinator};
@@ -44,10 +43,10 @@ use fdlimit::raise_fd_limit;
 use kvdb::KeyValueDB;
 use kvdb_rocksdb::{Database, DatabaseConfig};
 use parking_lot::{Condvar, Mutex};
-use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Weak};
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::{fs, net::IpAddr};
 
 struct ClientWrapper(Arc<Client>);
 
@@ -69,8 +68,7 @@ fn network_start(
     peer_db: Box<dyn ManagingPeerdb>,
     sender: InformerEventSender,
 ) -> Result<Arc<NetworkService>, String> {
-    let addr = cfg.address.parse().map_err(|_| format!("Invalid NETWORK listen host given: {}", cfg.address))?;
-    let sockaddress = SocketAddr::new(addr, cfg.port);
+    let sockaddress = SocketAddr::new(IpAddr::V4(cfg.address), cfg.port);
     let filters = Filters::new(cfg.whitelist.clone(), cfg.blacklist.clone());
     let service = NetworkService::start(
         network_id,
@@ -91,7 +89,7 @@ fn network_start(
 
 fn discovery_start(
     service: &NetworkService,
-    cfg: &config::Network,
+    cfg: &config::Config,
     routing_table: Arc<RoutingTable>,
 ) -> Result<(), String> {
     let config = Config {
@@ -136,7 +134,7 @@ fn new_miner(
     let miner = Miner::new(config.miner_options()?, engine, db, coordinator);
 
     match miner.engine_type() {
-        EngineType::PBFT => match &config.mining.engine_signer {
+        EngineType::PBFT => match &config.engine_signer {
             Some(ref engine_signer) => match miner.set_author(ap, (*engine_signer).into_pubkey()) {
                 Err(AccountProviderError::NotUnlocked) => {
                     return Err(
@@ -149,7 +147,7 @@ fn new_miner(
             None => (),
         },
         EngineType::Solo => miner
-            .set_author(ap, config.mining.engine_signer.map_or(Public::default(), PlatformAddress::into_pubkey))
+            .set_author(ap, config.engine_signer.map_or(Public::default(), PlatformAddress::into_pubkey))
             .expect("set_author never fails when Solo is used"),
     }
 
@@ -201,7 +199,7 @@ fn unlock_accounts(ap: &AccountProvider, pf: &PasswordFile) -> Result<(), String
     Ok(())
 }
 
-pub fn open_db(cfg: &config::Operating, client_config: &ClientConfig) -> Result<Arc<dyn KeyValueDB>, String> {
+pub fn open_db(cfg: &config::Config, client_config: &ClientConfig) -> Result<Arc<dyn KeyValueDB>, String> {
     let base_path = cfg.base_path.as_ref().unwrap().clone();
     let db_path = cfg.db_path.as_ref().map(String::clone).unwrap_or_else(|| base_path + "/" + DEFAULT_DB_PATH);
     // this is for debug
@@ -221,18 +219,15 @@ pub fn open_db(cfg: &config::Operating, client_config: &ClientConfig) -> Result<
     Ok(db)
 }
 
-pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), String> {
+pub fn run_node(config: config::Config, test_cmd: Option<&str>) -> Result<(), String> {
     // increase max number of open files
     raise_fd_limit();
 
     let timer_loop = TimerLoop::new(2);
 
-    let config = load_config(matches)?;
+    let time_gap_params = config.create_time_gaps();
 
-    let time_gap_params = config.mining.create_time_gaps();
-
-    let app_desc =
-        AppDesc::from_str(&fs::read_to_string(config.operating.app_desc_path.as_ref().unwrap()).unwrap()).unwrap();
+    let app_desc = AppDesc::from_str(&fs::read_to_string(config.app_desc_path.as_ref().unwrap()).unwrap()).unwrap();
     let coordinator = Arc::new(Coordinator::from_app_desc(&app_desc).unwrap());
 
     let genesis = Genesis::new(app_desc.host.genesis, coordinator.as_ref());
@@ -247,15 +242,14 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     };
     engine.register_time_gap_config_to_worker(time_gap_params);
 
-    let pf = load_password_file(&config.operating.password_path)?;
-    let base_path = config.operating.base_path.as_ref().unwrap().clone();
-    let keys_path =
-        config.operating.keys_path.as_ref().map(String::clone).unwrap_or_else(|| base_path + "/" + DEFAULT_KEYS_PATH);
+    let pf = load_password_file(&config.password_path)?;
+    let base_path = config.base_path.as_ref().unwrap().clone();
+    let keys_path = config.keys_path.as_ref().map(String::clone).unwrap_or_else(|| base_path + "/" + DEFAULT_KEYS_PATH);
     let ap = prepare_account_provider(&keys_path)?;
     unlock_accounts(&*ap, &pf)?;
 
     let client_config: ClientConfig = Default::default();
-    let db = open_db(&config.operating, &client_config)?;
+    let db = open_db(&config, &client_config)?;
 
     let miner = new_miner(&config, Arc::clone(&engine), ap.clone(), Arc::clone(&db), coordinator.clone())?;
     let client =
@@ -267,7 +261,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     let _graphql_webserver = {
         use foundry_graphql::{GraphQlRequestHandler, ServerData};
         use std::collections::HashMap;
-        use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+        use std::net::{Ipv4Addr, SocketAddr};
 
         let mut handlers: HashMap<String, GraphQlRequestHandler> = client
             .client()
@@ -287,21 +281,20 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
         });
 
         let server_data = ServerData::new(Arc::new(ClientWrapper(client.client())), handlers);
-        let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), config.graphql.port.unwrap());
+        let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), config.graphql_port.unwrap());
         foundry_graphql::run_server(server_data, socket).unwrap()
     };
 
-    let instance_id = config.operating.instance_id.unwrap_or(
+    let instance_id = config.instance_id.unwrap_or(
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("Current time should be later than unix epoch")
             .subsec_nanos() as usize,
     );
-    let email_alarm = if !config.email_alarm.disable.unwrap() {
-        let to = config.email_alarm.to.clone().ok_or_else(|| "email-alarm-to is not specified".to_string())?;
+    let email_alarm = if config.email_alarm_enable {
+        let to = config.email_alarm_to.clone().ok_or_else(|| "email-alarm-to is not specified".to_string())?;
         let sendgrid_key = config
-            .email_alarm
-            .sendgrid_key
+            .email_alarm_sendgrid_key
             .clone()
             .ok_or_else(|| "email-alarm-sendgrid-key is not specified".to_string())?;
         Some(EmailAlarm::new(to, sendgrid_key, client.client().network_id().to_string()))
@@ -319,7 +312,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     // This will be fixed soon.
     let (informer_sub_sender, informer_sub_receiver) = unbounded();
     let informer_event_sender = {
-        if !config.informer.disable.unwrap() {
+        if config.informer_enable {
             let (service, event_sender) = InformerService::new(informer_sub_receiver, client.client());
             service.run_service();
             event_sender
@@ -334,7 +327,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     engine.register_chain_notify(client.client().as_ref());
 
     let network_service: Arc<dyn NetworkControl> = {
-        if !config.network.disable.unwrap() {
+        if config.network_enable {
             let network_config = config.network_config()?;
             // XXX: What should we do if the network id has been changed.
             let c = client.client();
@@ -350,20 +343,20 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
                 informer_event_sender,
             )?;
 
-            if config.network.discovery.unwrap() {
-                discovery_start(&service, &config.network, routing_table)?;
+            if config.discovery_enable {
+                discovery_start(&service, &config, routing_table)?;
             } else {
                 cwarn!(DISCOVERY, "Node runs without discovery extension");
             }
 
-            if config.network.sync.unwrap() {
+            if config.sync_enable {
                 let sync_sender = {
                     let client = client.client();
-                    let snapshot_target = match (config.network.snapshot_hash, config.network.snapshot_number) {
+                    let snapshot_target = match (config.snapshot_hash, config.snapshot_number) {
                         (Some(hash), Some(num)) => Some((hash, num)),
                         _ => None,
                     };
-                    let snapshot_dir = config.snapshot.path.clone();
+                    let snapshot_dir = config.snapshot_path.clone();
                     service.register_extension(move |api| {
                         BlockSyncExtension::new(client, api, snapshot_target, snapshot_dir)
                     })
@@ -373,7 +366,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
                 _maybe_sync = Some(sync); // Hold sync to ensure it not to be destroyed.
                 maybe_sync_sender = Some(sync_sender);
             }
-            if config.network.transaction_relay.unwrap() {
+            if config.tx_relay_enable {
                 let client = client.client();
                 service.register_extension(move |api| TransactionSyncExtension::new(client, api));
             }
@@ -387,7 +380,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
     };
 
     let informer_server = {
-        if !config.informer.disable.unwrap() {
+        if config.informer_enable {
             let io: PubSubHandler<Arc<Session>> = PubSubHandler::new(MetaIoHandler::default());
             let mut informer_handler = Handler::new(io);
             informer_handler.event_subscription(informer_sub_sender);
@@ -407,7 +400,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
         };
 
         let rpc_server = {
-            if !config.rpc.disable.unwrap() {
+            if config.jsonrpc_enable {
                 let server = setup_rpc_server(&config, &rpc_apis_deps);
                 Some(rpc_http_start(server, config.rpc_http_config())?)
             } else {
@@ -416,7 +409,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
         };
 
         let ipc_server = {
-            if !config.ipc.disable.unwrap() {
+            if config.ipc_enable {
                 let server = setup_rpc_server(&config, &rpc_apis_deps);
                 Some(rpc_ipc_start(server, config.rpc_ipc_config())?)
             } else {
@@ -425,7 +418,7 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
         };
 
         let ws_server = {
-            if !config.ws.disable.unwrap() {
+            if config.ws_enable {
                 let server = setup_rpc_server(&config, &rpc_apis_deps);
                 Some(rpc_ws_start(server, config.rpc_ws_config())?)
             } else {
@@ -440,9 +433,9 @@ pub fn run_node(matches: &ArgMatches<'_>, test_cmd: Option<&str>) -> Result<(), 
         let client = client.client();
         let (tx, rx) = snapshot_notify::create();
         client.engine().register_snapshot_notify_sender(tx);
-        if !config.snapshot.disable.unwrap() {
+        if config.snapshot_enable {
             let service =
-                Arc::new(SnapshotService::new(client, rx, config.snapshot.path.unwrap(), config.snapshot.expiration));
+                Arc::new(SnapshotService::new(client, rx, config.snapshot_path.unwrap(), config.snapshot_expiration));
             Some(service)
         } else {
             None
