@@ -98,7 +98,10 @@ handle-graphql-request.handle-graphql-request = {}
 
 [host]
 
-[host.engine.tendermint.params]
+[host.engine]
+type = "tendermint"
+
+[host.engine.params]
 timeoutPropose = 1000
 timeoutProposeDelta = 1000
 timeoutPrevote = 1000
