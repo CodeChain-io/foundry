@@ -23,6 +23,13 @@ use anyhow::Context as _;
 use handlebars::{no_escape, Context, Handlebars, TemplateRenderError};
 use std::collections::BTreeMap;
 
+/// You use Handlebars style template in app descriptor.
+///   some-config = "{{other-variable}}"
+/// By starting "@" you can express map or array using template.
+///   some-config-array = "@[ {{variable1}}, {{variable2}} ]"
+///   some-config-map = "@[ \"key\" = {{value-variable}} ]"
+/// If you want to start a string value please use "@@"
+///   some-config = "@@start from @"
 struct Merger<'reg> {
     registry: Handlebars<'reg>,
     context: Context,
