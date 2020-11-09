@@ -17,6 +17,8 @@
 extern crate codechain_logger as clogger;
 extern crate log;
 
+#[macro_use]
+mod desc_common;
 pub mod app_desc;
 pub mod context;
 pub mod engine;
