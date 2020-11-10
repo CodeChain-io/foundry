@@ -32,7 +32,7 @@ use ckeystore::accounts_dir::RootDiskDirectory;
 use ckeystore::KeyStore;
 use clogger::{EmailAlarm, LoggerConfig};
 use cnetwork::{Filters, ManagingPeerdb, NetworkConfig, NetworkControl, NetworkService, RoutingTable, SocketAddr};
-use coordinator::{AppDesc, Coordinator};
+use coordinator::{AppDesc, Coordinator, LinkDesc};
 use crossbeam::unbounded;
 use crossbeam_channel as crossbeam;
 use csync::snapshot::Service as SnapshotService;
@@ -243,6 +243,13 @@ pub fn run_node(
     app_desc
         .merge_params(&module_arguments)
         .map_err(|err| format!("Foundry failed to merge params you supplied into the app descriptor. {}", err))?;
+    let _link_desc = {
+        let link_desc_path = &config.link_desc_path;
+        let link_desc_string = fs::read_to_string(link_desc_path)
+            .map_err(|err| format!("Foundry failed to read a link desc at {}: {}", link_desc_path, err))?;
+        LinkDesc::from_str(&link_desc_string)
+            .map_err(|err| format!("Foundry failed to parse link descriptor: {}", err))?
+    };
     let coordinator = Arc::new(Coordinator::from_app_desc(&app_desc).unwrap());
 
     let genesis = Genesis::new(app_desc.host.genesis, coordinator.as_ref());

@@ -23,6 +23,7 @@ pub mod app_desc;
 pub mod context;
 pub mod engine;
 mod header;
+mod link_desc;
 mod linkable;
 pub mod module;
 pub mod test_coordinator;
@@ -35,6 +36,7 @@ pub use crate::app_desc::AppDesc;
 use crate::context::StorageAccess;
 use crate::engine::{BlockExecutor, ExecutionId, GraphQlHandlerProvider, Initializer, TxFilter};
 pub use crate::header::Header;
+pub use crate::link_desc::LinkDesc;
 use crate::module::{
     HandleCrimes, HandleGraphQlRequest, InitConsensus, InitGenesis, SessionId, SortedTxs, Stateful, TxOwner, TxSorter,
     UpdateConsensus,
