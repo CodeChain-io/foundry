@@ -234,7 +234,7 @@ pub fn run_node(
 
     let time_gap_params = config.create_time_gaps();
 
-    let mut app_desc = AppDesc::from_str(&fs::read_to_string(config.app_desc_path.as_ref().unwrap()).unwrap()).unwrap();
+    let mut app_desc = AppDesc::from_str(&fs::read_to_string(&config.app_desc_path).unwrap()).unwrap();
     app_desc.merge_params(&module_arguments).expect("error in merge params");
     let coordinator = Arc::new(Coordinator::from_app_desc(&app_desc).unwrap());
 
