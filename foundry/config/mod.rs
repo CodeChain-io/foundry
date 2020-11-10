@@ -40,8 +40,13 @@ pub struct Config {
     pub config: Option<String>,
 
     // operating
-    #[conf(no_short, long = "app-desc-path", help = "Specify the app descriptor path.")]
-    pub app_desc_path: Option<String>,
+    #[conf(
+        no_short,
+        long = "app-desc-path",
+        help = "Specify the app descriptor path.",
+        default = "\"./app-desc.toml\".to_string()"
+    )]
+    pub app_desc_path: String,
 
     #[conf(
         short = "i",
