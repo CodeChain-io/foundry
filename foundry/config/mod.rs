@@ -49,6 +49,14 @@ pub struct Config {
     pub app_desc_path: String,
 
     #[conf(
+        no_short,
+        long = "link-desc-path",
+        help = "Specify the link descriptor path.",
+        default = "\"./link-desc.toml\".to_string()"
+    )]
+    pub link_desc_path: String,
+
+    #[conf(
         short = "i",
         long = "instance-id",
         help = "Specify instance id for logging. Used when running multiple instances of CodeChain."
