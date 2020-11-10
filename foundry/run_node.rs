@@ -234,8 +234,15 @@ pub fn run_node(
 
     let time_gap_params = config.create_time_gaps();
 
-    let mut app_desc = AppDesc::from_str(&fs::read_to_string(&config.app_desc_path).unwrap()).unwrap();
-    app_desc.merge_params(&module_arguments).expect("error in merge params");
+    let mut app_desc = {
+        let app_desc_path = &config.app_desc_path;
+        let app_desc_string = fs::read_to_string(app_desc_path)
+            .map_err(|err| format!("Foundry failed to read an app desc at {}: {}", app_desc_path, err))?;
+        AppDesc::from_str(&app_desc_string).map_err(|err| format!("Foundry failed to parse app descriptor: {}", err))?
+    };
+    app_desc
+        .merge_params(&module_arguments)
+        .map_err(|err| format!("Foundry failed to merge params you supplied into the app descriptor. {}", err))?;
     let coordinator = Arc::new(Coordinator::from_app_desc(&app_desc).unwrap());
 
     let genesis = Genesis::new(app_desc.host.genesis, coordinator.as_ref());
