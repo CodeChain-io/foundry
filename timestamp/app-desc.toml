@@ -11,7 +11,7 @@ get-account-and-seq.get-account-and-seq = {}
 handle-graphql-request.handle-graphql-request = {}
 
 [modules.module-account.init-config]
-thread-pool-size = 16
+thread-pool-size = "@{{thread-pool-size}}"
 
 [modules.module-account.tags]
 previliged = true
@@ -29,7 +29,7 @@ update-chain.update-chain = {}
 token-manager = "module-token/token-manager"
 
 [modules.module-staking.init-config]
-thread-pool-size = 16
+thread-pool-size = "@{{thread-pool-size}}"
 
 [modules.module-staking.tags]
 previliged = true
@@ -48,7 +48,7 @@ account-manager = "module-account/account-manager"
 token-manager = "module-token/token-manager"
 
 [modules.module-stamp.init-config]
-thread-pool-size = 16
+thread-pool-size = "@{{thread-pool-size}}"
 
 [modules.module-stamp.tags]
 previliged = true
@@ -67,7 +67,7 @@ get-account-and-seq.get-account-and-seq = {}
 account-manager = "module-account/account-manager"
 
 [modules.module-token.init-config]
-thread-pool-size = 16
+thread-pool-size = "@{{thread-pool-size}}"
 
 [modules.module-token.tags]
 previliged = true
@@ -83,7 +83,7 @@ tx-sorter.tx-sorter = {}
 account-manager = "module-account/account-manager"
 
 [modules.module-sorting.init-config]
-thread-pool-size = 16
+thread-pool-size = "@{{thread-pool-size}}"
 
 [modules.module-sorting.tags]
 previliged = true
@@ -108,4 +108,4 @@ stamp = "module-stamp"
 token-transfer = "module-token"
 
 [param-defaults]
-hi = "Annyeong Haseyo"
+thread-pool-size = "16"
