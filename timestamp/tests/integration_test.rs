@@ -23,7 +23,7 @@ mod common;
 use ccrypto::blake256;
 use ckey::{Ed25519KeyPair, Generator, KeyPairTrait, Random};
 use common::*;
-use coordinator::module::SessionId;
+use coordinator::{module::SessionId, LinkDesc};
 use coordinator::{AppDesc, Coordinator};
 use rand::prelude::*;
 use serde_json::Value;
@@ -103,6 +103,14 @@ fn app_desc_path() -> &'static str {
     }
 }
 
+fn link_desc_path() -> &'static str {
+    if std::path::Path::exists(std::path::Path::new("./link-desc.toml")) {
+        "./link-desc.toml"
+    } else {
+        "./timestamp/link-desc.toml"
+    }
+}
+
 fn app_desc() -> AppDesc {
     let app_desc = std::fs::read_to_string(app_desc_path()).unwrap();
     let mut app_desc = AppDesc::from_str(&app_desc).unwrap();
@@ -115,9 +123,22 @@ fn app_desc() -> AppDesc {
     app_desc
 }
 
+// We need clippy::let_and_return because of `feature = multi-process`
+// When feature != "multi-process", code become let a = x; a
+#[allow(clippy::let_and_return)]
+fn link_desc() -> LinkDesc {
+    let link_desc = std::fs::read_to_string(link_desc_path()).unwrap();
+    let link_desc = LinkDesc::from_str(&link_desc).unwrap();
+    #[cfg(feature = "multi-process")]
+    {
+        link_desc.default_sandboxer = "multi-process".to_owned();
+    }
+    link_desc
+}
+
 #[test]
 fn weave() {
-    let c = Coordinator::from_app_desc(&app_desc()).unwrap();
+    let c = Coordinator::from_descs(&app_desc(), &link_desc()).unwrap();
 
     assert_eq!(c.services().stateful.lock().len(), 2);
     assert_eq!(c.services().init_genesis.len(), 2);
@@ -132,7 +153,7 @@ fn weave_conccurent() {
         let mut joins = Vec::new();
         for _ in 0..n {
             joins.push(std::thread::spawn(|| {
-                let c = Coordinator::from_app_desc(&app_desc()).unwrap();
+                let c = Coordinator::from_descs(&app_desc(), &link_desc()).unwrap();
 
                 assert_eq!(c.services().stateful.lock().len(), 2);
                 assert_eq!(c.services().init_genesis.len(), 2);
@@ -149,7 +170,7 @@ fn weave_conccurent() {
 
 #[test]
 fn simple1() {
-    let coordinator = Coordinator::from_app_desc(&app_desc()).unwrap();
+    let coordinator = Coordinator::from_descs(&app_desc(), &link_desc()).unwrap();
     set_empty_session(0, &coordinator);
     let services = Services::new(&coordinator);
 
@@ -226,13 +247,13 @@ fn run_massive_token_exchange(id: SessionId, c: &Coordinator) {
 
 #[test]
 fn multiple() {
-    let coordinator = Coordinator::from_app_desc(&app_desc()).unwrap();
+    let coordinator = Coordinator::from_descs(&app_desc(), &link_desc()).unwrap();
     run_massive_token_exchange(0, &coordinator);
 }
 
 #[test]
 fn multiple_concurrent() {
-    let coordinator = Arc::new(Coordinator::from_app_desc(&app_desc()).unwrap());
+    let coordinator = Arc::new(Coordinator::from_descs(&app_desc(), &link_desc()).unwrap());
     let mut joins = Vec::new();
     for i in 0..4 {
         let c = Arc::clone(&coordinator);
@@ -245,7 +266,7 @@ fn multiple_concurrent() {
 
 #[test]
 fn query() {
-    let coordinator = Coordinator::from_app_desc(&app_desc()).unwrap();
+    let coordinator = Coordinator::from_descs(&app_desc(), &link_desc()).unwrap();
     set_empty_session(0, &coordinator);
     let services = Services::new(&coordinator);
 
@@ -275,7 +296,7 @@ fn query() {
 
 #[test]
 fn query_tx() {
-    let coordinator = Coordinator::from_app_desc(&app_desc()).unwrap();
+    let coordinator = Coordinator::from_descs(&app_desc(), &link_desc()).unwrap();
     set_empty_session(0, &coordinator);
     let services = Services::new(&coordinator);
 
@@ -293,7 +314,7 @@ fn query_tx() {
 
 #[test]
 fn query_concurrent() {
-    let coordinator = Coordinator::from_app_desc(&app_desc()).unwrap();
+    let coordinator = Coordinator::from_descs(&app_desc(), &link_desc()).unwrap();
     set_empty_session(0, &coordinator);
     let services = Services::new(&coordinator);
 

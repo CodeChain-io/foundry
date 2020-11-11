@@ -94,11 +94,11 @@ pub struct Coordinator {
 const SESSION_BITS_PER_SLOT: usize = mem::size_of::<SessionSlot>() * 8;
 
 impl Coordinator {
-    pub fn from_app_desc(app_desc: &AppDesc) -> anyhow::Result<Coordinator> {
+    pub fn from_descs(app_desc: &AppDesc, link_desc: &LinkDesc) -> anyhow::Result<Coordinator> {
         cmodule::init_modules();
 
         let weaver = Weaver::new();
-        let (sandboxes, mut services) = weaver.weave(app_desc)?;
+        let (sandboxes, mut services) = weaver.weave(app_desc, link_desc)?;
 
         // The order of stateful decides the assignment of substorage ids. It MUST be deterministic.
         services.stateful.lock().sort_by(|a, b| a.0.cmp(&b.0));

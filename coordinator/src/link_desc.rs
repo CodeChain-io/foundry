@@ -54,4 +54,8 @@ impl LinkDesc {
 
         Ok(link_desc)
     }
+
+    pub fn get(&self, module_name: &str) -> Option<&ModuleSetup> {
+        self.modules.get(module_name)
+    }
 }
