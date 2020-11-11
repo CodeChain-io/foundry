@@ -19,6 +19,8 @@ use crate::desc_common::{Constructor, GlobalName, Namespaced, SimpleName};
 use serde::Deserialize;
 use std::collections::HashMap;
 
+mod params;
+
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct LinkDesc {

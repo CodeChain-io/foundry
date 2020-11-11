@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::app_desc::{AppDesc, HostSetup, ModuleSetup};
-use crate::desc_common::params::Merger;
+use super::ModuleSetup;
+use crate::{desc_common::params::Merger, LinkDesc};
 use anyhow::Context as _;
 use std::collections::BTreeMap;
 
-impl AppDesc {
+impl LinkDesc {
     pub fn merge_params(&mut self, params: &BTreeMap<String, String>) -> anyhow::Result<()> {
         let mut merged_params = self.param_defaults.clone();
         merged_params.append(&mut params.clone());
@@ -29,24 +29,16 @@ impl AppDesc {
         for (name, setup) in self.modules.iter_mut() {
             setup.merge_params(&merger).with_context(|| format!("module: {}", name))?;
         }
-        self.host.merge_params(&merger)?;
-
         Ok(())
     }
 }
 
 impl ModuleSetup {
     fn merge_params(&mut self, merger: &Merger) -> anyhow::Result<()> {
-        self.genesis_config.merge_params(merger).context("genesis-config")?;
-        Ok(())
-    }
-}
-
-impl HostSetup {
-    fn merge_params(&mut self, merger: &Merger) -> anyhow::Result<()> {
-        for (config, value) in self.genesis_config.iter_mut() {
-            value.merge_params(merger).with_context(|| format!("host > genesis-config > {}", config))?;
+        for (export, cons) in self.exports.iter_mut() {
+            cons.args.merge_params(merger).with_context(|| format!("exports > {} = {}", export, cons.name))?;
         }
+        self.init_config.merge_params(merger).context("init-config")?;
         Ok(())
     }
 }
