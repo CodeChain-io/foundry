@@ -40,6 +40,8 @@ pub fn run_node(port: u16) -> FoundryNode {
             .env("RUST_LOG", "warn")
             .arg("--app-desc-path")
             .arg("../timestamp/app-desc.toml")
+            .arg("--link-desc-path")
+            .arg("../timestamp/link-desc.toml")
             .arg("--config")
             .arg("config.tendermint-solo.ini")
             .arg("--graphql-port")

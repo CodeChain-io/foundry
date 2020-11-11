@@ -1,0 +1,64 @@
+default-sandboxer = "single-process"
+
+[modules.module-account.exports]
+stateful.stateful = {}
+tx-owner.tx-owner = {}
+account-manager.account-manager = {}
+get-account-and-seq.get-account-and-seq = {}
+handle-graphql-request.handle-graphql-request = {}
+
+[modules.module-account.init-config]
+thread-pool-size = "@{{thread-pool-size}}"
+
+[modules.module-staking.exports]
+init-genesis.init-genesis = {}
+init-chain.init-chain = {}
+update-chain.update-chain = {}
+
+[modules.module-staking.imports]
+token-manager = "module-token/token-manager"
+
+[modules.module-staking.init-config]
+thread-pool-size = "@{{thread-pool-size}}"
+
+[modules.module-stamp.exports]
+tx-owner.tx-owner = {}
+get-account-and-seq.get-account-and-seq = {}
+init-genesis.init-genesis = {}
+
+[modules.module-stamp.imports]
+account-manager = "module-account/account-manager"
+token-manager = "module-token/token-manager"
+
+[modules.module-stamp.init-config]
+thread-pool-size = "@{{thread-pool-size}}"
+
+[modules.module-token.exports]
+tx-owner.tx-owner = {}
+stateful.stateful = {}
+token-manager.token-manager = {}
+handle-graphql-request.handle-graphql-request = {}
+get-account-and-seq.get-account-and-seq = {}
+
+[modules.module-token.imports]
+account-manager = "module-account/account-manager"
+
+[modules.module-token.init-config]
+thread-pool-size = "@{{thread-pool-size}}"
+
+[modules.module-sorting.exports]
+tx-sorter.tx-sorter = {}
+
+[modules.module-sorting.imports]
+account-manager = "module-account/account-manager"
+
+[modules.module-sorting.init-config]
+thread-pool-size = "@{{thread-pool-size}}"
+
+[modules.host]
+imports = {}
+exports = {}
+init-config = {}
+
+[param-defaults]
+thread-pool-size = "16"
