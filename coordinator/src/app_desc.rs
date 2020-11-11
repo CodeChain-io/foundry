@@ -37,9 +37,6 @@ pub(self) mod validator;
 pub struct AppDesc {
     // keyed with Name rather than module hash to allow for multiple instances of single module
     pub modules: HashMap<SimpleName, ModuleSetup>,
-    /// The ID of the default `Sandboxer` to be used when no `Sandboxer` is specified for modules.
-    #[serde(default)]
-    pub default_sandboxer: String,
     #[serde(default)]
     pub host: HostSetup,
     #[serde(default)]
@@ -62,19 +59,11 @@ impl AppDesc {
 #[serde(rename_all = "kebab-case")]
 pub struct ModuleSetup {
     pub hash: Hex<H256>,
-    #[serde(default)]
-    pub sandboxer: String,
-    #[serde(default)]
-    pub exports: Namespaced<Constructor>,
-    #[serde(default)]
-    pub imports: Namespaced<GlobalName>,
     /// List of export names expected to hold the required services.
     /// Then the module will receive imports for `@tx/<transaction-type>/<export-name>`s.
     /// It is mainly intended for modules providing `TxSorter` service.
     #[serde(default)]
     pub transactions: Vec<LocalName>,
-    #[serde(default)]
-    pub init_config: Value,
     #[serde(default)]
     pub genesis_config: Value,
     #[serde(default)]
@@ -83,12 +72,6 @@ pub struct ModuleSetup {
 
 #[derive(Deserialize, Default, Debug)]
 pub struct HostSetup {
-    #[serde(default)]
-    pub exports: Namespaced<Constructor>,
-    #[serde(default)]
-    pub imports: Namespaced<GlobalName>,
-    #[serde(default)]
-    pub init_config: Namespaced<Value>,
     #[serde(default)]
     pub genesis_config: Namespaced<Value>,
     #[serde(default)]
@@ -110,25 +93,11 @@ mod tests {
 hash = "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 transactions = ["has-seq"]
 
-[modules.awesome-module.init-config]
-test = 1
-
 [modules.awesome-module.init-config.test1]
 key1 = 1
 key2 = "sdfsdaf"
 
-[modules.awesome-module.exports]
-init-genesis.init-genesis = {}
-init-chain.init-chain = {}
-update-chain.update-chain = {}
-
 [host]
-
-[host.imports]
-a = "awesome-module/a.a"
-
-[host.imports."\\namespace"]
-"b.b" = "asdfsdaf-asdf"
 
 [transactions]
 great-tx = "awesome-module"
