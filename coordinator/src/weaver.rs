@@ -25,7 +25,10 @@ use anyhow::{anyhow, bail, Context};
 use cmodule::link::{best_linker, Port};
 use cmodule::sandbox::{sandboxer, Sandbox};
 
-use crate::app_desc::{AppDesc, Constructor, GlobalName, HostSetup, ModuleSetup, Namespaced, SimpleName};
+use crate::{
+    app_desc::{AppDesc, Constructor, GlobalName, ModuleSetup, Namespaced, SimpleName},
+    link_desc::{self, LinkDesc},
+};
 use crate::{Occurrences, Services};
 use crate::{HOST_ID, SERVICES_FOR_HOST, TX_SERVICES_FOR_HOST};
 
@@ -59,11 +62,16 @@ impl Weaver {
         Self::default()
     }
 
-    pub(super) fn weave(mut self, app_desc: &AppDesc) -> anyhow::Result<(Vec<Box<dyn Sandbox>>, Services)> {
+    pub(super) fn weave(
+        mut self,
+        app_desc: &AppDesc,
+        link_desc: &LinkDesc,
+    ) -> anyhow::Result<(Vec<Box<dyn Sandbox>>, Services)> {
         self.modules.reserve(app_desc.modules.len());
 
-        self.process_host(&app_desc.host)?;
-        self.process_modules(&app_desc)?;
+        let host_module = link_desc.get("host").ok_or_else(|| anyhow!("can't find host module in app descriptor"))?;
+        self.process_host(host_module)?;
+        self.process_modules(app_desc, link_desc)?;
         self.tx_owners =
             app_desc.transactions.iter().map(|(tx_type, module)| (tx_type.clone(), (**module).clone())).collect();
         self.import_tx_services_for_modules(&app_desc.modules);
@@ -76,9 +84,9 @@ impl Weaver {
         Ok((linkables, self.services.write().take().unwrap()))
     }
 
-    fn process_host(&mut self, setup: &HostSetup) -> anyhow::Result<()> {
-        let (exports, init_exports) = Self::process_exports(&setup.exports);
-        let imports = Self::process_imports(&setup.imports);
+    fn process_host(&mut self, link: &link_desc::ModuleSetup) -> anyhow::Result<()> {
+        let (exports, init_exports) = Self::process_exports(&link.exports);
+        let imports = Self::process_imports(&link.imports);
         let imports = RefCell::new(imports);
 
         let init_exports: Vec<(String, Vec<u8>)> = init_exports
@@ -111,12 +119,15 @@ impl Weaver {
         Ok(())
     }
 
-    fn process_modules(&mut self, app_desc: &AppDesc) -> anyhow::Result<()> {
+    fn process_modules(&mut self, app_desc: &AppDesc, link_desc: &LinkDesc) -> anyhow::Result<()> {
         for (name, setup) in app_desc.modules.iter() {
-            let sandboxer_id = if setup.sandboxer.is_empty() {
-                &app_desc.default_sandboxer
+            let link =
+                link_desc.get(name).ok_or_else(|| anyhow!("Failed to find module {} in the link descriptor", name))?;
+
+            let sandboxer_id = if link.sandboxer.is_empty() {
+                &link_desc.default_sandboxer
             } else {
-                &setup.sandboxer
+                &link.sandboxer
             };
             let sandboxer = sandboxer(sandboxer_id).ok_or_else(|| anyhow!("Sandboxer unknown: {}", sandboxer_id))?;
             // FIXME: assumes that path is not used to locate a module here. Fix this later when we
@@ -126,9 +137,9 @@ impl Weaver {
             } else {
                 format!("{:x}", &setup.hash.value)
             };
-            let (exports, init_exports) = Self::process_exports(&setup.exports);
-            let imports = RefCell::new(Self::process_imports(&setup.imports));
-            let linkable = RefCell::new(sandboxer.load(&path, &setup.init_config, &*init_exports)?);
+            let (exports, init_exports) = Self::process_exports(&link.exports);
+            let imports = RefCell::new(Self::process_imports(&link.imports));
+            let linkable = RefCell::new(sandboxer.load(&path, &link.init_config, &*init_exports)?);
 
             self.modules.insert((*name).clone(), LinkInfo {
                 linkable,
