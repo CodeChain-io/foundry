@@ -20,6 +20,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 
 mod params;
+mod validator;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "kebab-case")]
@@ -49,6 +50,8 @@ pub struct ModuleSetup {
 impl LinkDesc {
     pub fn from_str(s: &str) -> anyhow::Result<LinkDesc> {
         let link_desc: LinkDesc = toml::from_str(s)?;
+        link_desc.validate()?;
+
         Ok(link_desc)
     }
 }
