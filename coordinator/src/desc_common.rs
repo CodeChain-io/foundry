@@ -26,6 +26,8 @@ use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 use std::{fmt, fmt::Display, fmt::Formatter};
 
+pub(crate) mod params;
+
 macro_rules! module_delim {
     () => {
         "/"
