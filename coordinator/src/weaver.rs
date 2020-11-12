@@ -180,7 +180,7 @@ impl Weaver {
                 ..
             } in imports.iter()
             {
-                exports.push(*export_ids.get(from).unwrap());
+                exports.push(*export_ids.get(from).expect("We checked whether exporter exist in validate"));
             }
             export_port.export(&exports);
         }
