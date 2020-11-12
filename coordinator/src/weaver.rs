@@ -70,7 +70,7 @@ impl Weaver {
         self.modules.reserve(app_desc.modules.len());
 
         let host_module = link_desc.get("host").ok_or_else(|| anyhow!("can't find host module in app descriptor"))?;
-        self.process_host(host_module)?;
+        self.process_host(host_module);
         self.process_modules(app_desc, link_desc)?;
         self.tx_owners =
             app_desc.transactions.iter().map(|(tx_type, module)| (tx_type.clone(), (**module).clone())).collect();
@@ -84,7 +84,7 @@ impl Weaver {
         Ok((linkables, self.services.write().take().unwrap()))
     }
 
-    fn process_host(&mut self, link: &link_desc::ModuleSetup) -> anyhow::Result<()> {
+    fn process_host(&mut self, link: &link_desc::ModuleSetup) {
         let (exports, init_exports) = Self::process_exports(&link.exports);
         let imports = Self::process_imports(&link.imports);
         let imports = RefCell::new(imports);
@@ -115,8 +115,6 @@ impl Weaver {
             exports,
             imports,
         });
-
-        Ok(())
     }
 
     fn process_modules(&mut self, app_desc: &AppDesc, link_desc: &LinkDesc) -> anyhow::Result<()> {
