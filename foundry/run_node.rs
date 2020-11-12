@@ -253,7 +253,10 @@ pub fn run_node(
     link_desc
         .merge_params(&module_arguments)
         .map_err(|err| format!("Foundry failed to merge params you supplied into the link descriptor. {}", err))?;
-    let coordinator = Arc::new(Coordinator::from_descs(&app_desc, &link_desc).unwrap());
+    let coordinator = Arc::new(
+        Coordinator::from_descs(&app_desc, &link_desc)
+            .map_err(|err| format!("Failed to parse app descriptor and link descriptor: {}", err))?,
+    );
 
     let genesis = Genesis::new(app_desc.host.genesis, coordinator.as_ref());
 
