@@ -418,6 +418,12 @@ impl<T: FromStr> FromStr for CommaSeparated<T> {
     type Err = T::Err;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == "" {
+            return Ok(CommaSeparated {
+                inner: vec![],
+            })
+        }
+
         let tokens = s.split(',');
         let mut ret: Vec<T> = Vec::new();
 
@@ -429,5 +435,29 @@ impl<T: FromStr> FromStr for CommaSeparated<T> {
         Ok(CommaSeparated {
             inner: ret,
         })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::CommaSeparated;
+
+    #[test]
+    fn comma_separated_empty() {
+        let empty: CommaSeparated<String> = "".parse().unwrap();
+        let expected: Vec<String> = vec![];
+        assert_eq!(empty.inner, expected);
+    }
+
+    #[test]
+    fn comma_separated_one() {
+        let one: CommaSeparated<String> = "one".parse().unwrap();
+        assert_eq!(one.inner, vec!["one".to_string()]);
+    }
+
+    #[test]
+    fn comma_separated_two() {
+        let onetwo: CommaSeparated<String> = "one,two".parse().unwrap();
+        assert_eq!(onetwo.inner, vec!["one".to_string(), "two".to_string()]);
     }
 }
