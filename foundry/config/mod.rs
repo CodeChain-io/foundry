@@ -304,8 +304,13 @@ pub struct Config {
     #[conf(negated_arg, no_short, long = "no-snapshot", help = "Disable snapshots")]
     pub snapshot_enable: bool,
 
-    #[conf(no_short, long = "snapshot-path", help = "Specify the snapshot directory path.")]
-    pub snapshot_path: Option<String>,
+    #[conf(
+        no_short,
+        long = "snapshot-path",
+        help = "Specify the snapshot directory path.",
+        default = "\"snapshot\".to_string()"
+    )]
+    pub snapshot_path: String,
 
     // FIXME: We don't have a method to make snapshot_expiration as None.
     // If snapshot_expiration is None, it means that snapshots do not expire.
