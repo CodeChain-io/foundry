@@ -18,8 +18,11 @@ use awc::Client;
 use ckey::{Ed25519Private as Private, Ed25519Public as Public, Signature};
 use coordinator::Transaction;
 use serde_json::Value;
-use std::collections::HashMap;
 use std::process::{Child, Command};
+use std::sync::atomic::AtomicUsize;
+use std::{collections::HashMap, sync::atomic::Ordering};
+
+static ID_COUNT: AtomicUsize = AtomicUsize::new(1);
 
 pub struct FoundryNode {
     child: Child,
@@ -53,6 +56,7 @@ pub fn run_node(
 ) -> FoundryNode {
     let path = std::fs::canonicalize(foundry_path).unwrap();
     let mut command = Command::new(path);
+    let id = ID_COUNT.fetch_add(1, Ordering::SeqCst);
     FoundryNode {
         child: command
             .env("RUST_LOG", rust_log)
@@ -64,6 +68,8 @@ pub fn run_node(
             .arg(config_path)
             .arg("--graphql-port")
             .arg(format!("{}", graphql_port))
+            .arg("-i")
+            .arg(format!("{}", id))
             .spawn()
             .unwrap(),
     }
