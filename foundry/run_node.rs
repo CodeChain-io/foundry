@@ -460,8 +460,7 @@ pub fn run_node(
         let (tx, rx) = snapshot_notify::create();
         client.engine().register_snapshot_notify_sender(tx);
         if config.snapshot_enable {
-            let service =
-                Arc::new(SnapshotService::new(client, rx, config.snapshot_path.unwrap(), config.snapshot_expiration));
+            let service = Arc::new(SnapshotService::new(client, rx, config.snapshot_path, config.snapshot_expiration));
             Some(service)
         } else {
             None

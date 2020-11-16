@@ -199,7 +199,7 @@ pub struct Extension {
     api: Box<dyn Api>,
     last_request: u64,
     seq: u64,
-    snapshot_dir: Option<String>,
+    snapshot_dir: String,
 }
 
 impl Extension {
@@ -207,7 +207,7 @@ impl Extension {
         client: Arc<Client>,
         api: Box<dyn Api>,
         snapshot_target: Option<(H256, u64)>,
-        snapshot_dir: Option<String>,
+        snapshot_dir: String,
     ) -> Extension {
         api.set_timer(SYNC_TIMER_TOKEN, Duration::from_millis(SYNC_TIMER_INTERVAL)).expect("Timer set succeeds");
 
@@ -841,12 +841,10 @@ impl Extension {
     fn create_state_chunk_response(&self, hash: BlockHash, chunk_roots: Vec<H256>) -> ResponseMessage {
         let mut result = Vec::new();
         for root in chunk_roots {
-            if let Some(dir) = &self.snapshot_dir {
-                let chunk_path = snapshot_path(&dir, &hash, &root);
-                match fs::read(chunk_path) {
-                    Ok(chunk) => result.push(chunk),
-                    _ => result.push(Vec::new()),
-                }
+            let chunk_path = snapshot_path(&self.snapshot_dir, &hash, &root);
+            match fs::read(chunk_path) {
+                Ok(chunk) => result.push(chunk),
+                _ => result.push(Vec::new()),
             }
         }
         ResponseMessage::StateChunk(result)
