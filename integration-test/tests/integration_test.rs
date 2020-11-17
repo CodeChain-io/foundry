@@ -27,15 +27,26 @@ use std::time::Duration;
 use test_common::*;
 use tokio::time::delay_for;
 
+fn run_node_override(port: u16) -> FoundryNode {
+    run_node(RunNodeArgs {
+        foundry_path: "../target/debug/foundry".to_string(),
+        rust_log: "warn".to_string(),
+        app_desc_path: "../timestamp/app-desc.toml".to_string(),
+        link_desc_path: "../timestamp/link-desc.toml".to_string(),
+        config_path: "config.tendermint-solo.ini".to_string(),
+        graphql_port: port,
+    })
+}
+
 #[actix_rt::test]
 async fn run() {
-    let _node = run_node(4444);
+    let _node = run_node_override(4444);
     delay_for(Duration::from_secs(3)).await;
 }
 
 #[actix_rt::test]
 async fn ping() {
-    let _node = run_node(5555);
+    let _node = run_node_override(5555);
     delay_for(Duration::from_secs(3)).await;
     let x = request_query(5555, "ping", "aaaa", "aaaa").await;
     assert_eq!(x, "Module not found: ping");
@@ -44,7 +55,7 @@ async fn ping() {
 #[actix_rt::test]
 async fn track_blocks() {
     let port = 5555;
-    let _node = run_node(port);
+    let _node = run_node_override(port);
     delay_for(Duration::from_secs(3)).await;
 
     let start_block = get_latest_block(port).await;
@@ -56,7 +67,7 @@ async fn track_blocks() {
 #[actix_rt::test]
 async fn sequence_management1() {
     let port = 5555;
-    let _node = run_node(port);
+    let _node = run_node_override(port);
     delay_for(Duration::from_secs(3)).await;
 
     let user: Ed25519KeyPair = Random.generate().unwrap();
@@ -95,7 +106,7 @@ async fn sequence_management1() {
 #[actix_rt::test]
 async fn sequence_management2() {
     let port = 5555;
-    let _node = run_node(port);
+    let _node = run_node_override(port);
     delay_for(Duration::from_secs(3)).await;
 
     let user: Ed25519KeyPair = Random.generate().unwrap();
