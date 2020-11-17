@@ -19,6 +19,7 @@
 
 # integration test
 /integration-test/db/
+/integration-test/logs/
 
 # demo
 /demo/db*
