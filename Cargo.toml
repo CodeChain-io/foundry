@@ -71,6 +71,10 @@ foundry-graphql-engine = { path = "./graphql-engine"}
 [build-dependencies]
 vergen = "3"
 
+[lib]
+path = "foundry/lib.rs"
+name = "foundry"
+
 [[bin]]
 path = "foundry/main.rs"
 name = "foundry"
