@@ -370,12 +370,10 @@ impl MinerService for Miner {
             }
         };
 
-        if true {
-            let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("There is no time machine.").as_secs();
-            if block.header().timestamp() > now {
-                let delta = block.header().timestamp() - now;
-                std::thread::sleep(std::time::Duration::from_secs(delta));
-            }
+        let now = SystemTime::now().duration_since(UNIX_EPOCH).expect("There is no time machine.").as_secs();
+        if block.header().timestamp() > now {
+            let delta = block.header().timestamp() - now;
+            std::thread::sleep(std::time::Duration::from_secs(delta));
         }
 
         if self.engine.seals_internally() {
