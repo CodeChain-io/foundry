@@ -42,7 +42,7 @@ previliged = true
 type = "tendermint"
 
 [host.engine.params]
-timeoutPropose = 1000
+timeoutPropose = 3000
 timeoutProposeDelta = 1000
 timeoutPrevote = 1000
 timeoutPrevoteDelta = 1000

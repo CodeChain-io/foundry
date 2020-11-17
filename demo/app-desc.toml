@@ -44,7 +44,7 @@ hash = "a060000000012345678901234567890123456789012345678901234567890123"
 type = "tendermint"
 
 [host.engine.params]
-timeoutPropose = 1000
+timeoutPropose = 3000
 timeoutProposeDelta = 1000
 timeoutPrevote = 1000
 timeoutPrevoteDelta = 1000
