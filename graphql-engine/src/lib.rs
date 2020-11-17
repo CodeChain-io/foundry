@@ -14,6 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#[macro_use]
+extern crate clogger;
+#[macro_use]
+extern crate log;
+
 mod block;
 mod header;
 
@@ -96,13 +101,17 @@ impl HandleGraphQlRequest for EngineLevelGraphQlHandler {
             async_graphql::EmptySubscription,
         );
         let query = async_graphql::Request::new(query).variables(variables);
+        cdebug!(GRAPHQL, "Request {:?}", query);
         let res = schema.execute(query);
 
         // FIXME: We can't use tokio runtime inside another tokio. We spawn a new thread to avoid such restriciton.
-        crossbeam::thread::scope(|s| {
+        let response = crossbeam::thread::scope(|s| {
             let j = s.spawn(|_| serde_json::to_string(&self.tokio_runtime.handle().block_on(res)).unwrap());
             j.join().unwrap()
         })
-        .unwrap()
+        .unwrap();
+
+        cdebug!(GRAPHQL, "response {:?}", response);
+        response
     }
 }

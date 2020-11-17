@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#[macro_use]
 extern crate codechain_logger as clogger;
+#[macro_use]
 extern crate log;
 
 #[macro_use]
@@ -281,6 +283,7 @@ impl BlockExecutor for Coordinator {
         header: &Header,
         verified_crimes: &[VerifiedCrime],
     ) -> Result<ExecutionId, HeaderError> {
+        cdebug!(COORDINATOR, "open block");
         let services = &self.services;
 
         let session_id = self.new_session(storage);
@@ -306,6 +309,7 @@ impl BlockExecutor for Coordinator {
         let session_id = execution_id as SessionId;
 
         for tx in transactions {
+            cdebug!(COORDINATOR, "execute transaction {:?}", tx);
             match services.tx_owner.get(tx.tx_type()) {
                 Some(owner) => {
                     storage.create_checkpoint();
@@ -330,6 +334,7 @@ impl BlockExecutor for Coordinator {
         storage: &mut dyn StorageAccess,
         transactions: &mut dyn Iterator<Item = &'a TransactionWithMetadata>,
     ) -> Vec<(&'a Transaction, TransactionOutcome)> {
+        cdebug!(COORDINATOR, "prepare block");
         let services = &self.services;
 
         let txs: Vec<_> = transactions.collect();
@@ -364,6 +369,7 @@ impl BlockExecutor for Coordinator {
     }
 
     fn close_block(&self, execution_id: ExecutionId) -> Result<BlockOutcome, CloseBlockError> {
+        cdebug!(COORDINATOR, "close block");
         let services = &self.services;
 
         let session_id = execution_id as SessionId;
