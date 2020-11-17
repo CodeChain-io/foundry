@@ -32,20 +32,38 @@ impl Drop for FoundryNode {
     }
 }
 
-pub fn run_node(port: u16) -> FoundryNode {
-    let path = std::fs::canonicalize("../target/debug/foundry").unwrap();
+pub struct RunNodeArgs {
+    pub foundry_path: String,
+    pub rust_log: String,
+    pub app_desc_path: String,
+    pub link_desc_path: String,
+    pub config_path: String,
+    pub graphql_port: u16,
+}
+
+pub fn run_node(
+    RunNodeArgs {
+        foundry_path,
+        rust_log,
+        app_desc_path,
+        link_desc_path,
+        config_path,
+        graphql_port,
+    }: RunNodeArgs,
+) -> FoundryNode {
+    let path = std::fs::canonicalize(foundry_path).unwrap();
     let mut command = Command::new(path);
     FoundryNode {
         child: command
-            .env("RUST_LOG", "warn")
+            .env("RUST_LOG", rust_log)
             .arg("--app-desc-path")
-            .arg("../timestamp/app-desc.toml")
+            .arg(app_desc_path)
             .arg("--link-desc-path")
-            .arg("../timestamp/link-desc.toml")
+            .arg(link_desc_path)
             .arg("--config")
-            .arg("config.tendermint-solo.ini")
+            .arg(config_path)
             .arg("--graphql-port")
-            .arg(format!("{}", port))
+            .arg(format!("{}", graphql_port))
             .spawn()
             .unwrap(),
     }
