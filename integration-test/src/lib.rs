@@ -15,12 +15,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use awc::Client;
+use chrono::Local;
 use ckey::{Ed25519Private as Private, Ed25519Public as Public, Signature};
 use coordinator::Transaction;
 use serde_json::Value;
-use std::process::{Child, Command};
-use std::sync::atomic::AtomicUsize;
 use std::{collections::HashMap, sync::atomic::Ordering};
+use std::{
+    fs::File,
+    process::{Child, Command},
+};
+use std::{path::Path, sync::atomic::AtomicUsize};
 
 static ID_COUNT: AtomicUsize = AtomicUsize::new(1);
 
@@ -57,9 +61,16 @@ pub fn run_node(
     let path = std::fs::canonicalize(foundry_path).unwrap();
     let mut command = Command::new(path);
     let id = ID_COUNT.fetch_add(1, Ordering::SeqCst);
+    let LogFiles {
+        stdout,
+        stderr,
+    } = create_log_files(id);
+
     FoundryNode {
         child: command
             .env("RUST_LOG", rust_log)
+            .stdout(stdout)
+            .stderr(stderr)
             .arg("--app-desc-path")
             .arg(app_desc_path)
             .arg("--link-desc-path")
@@ -72,6 +83,32 @@ pub fn run_node(
             .arg(format!("{}", id))
             .spawn()
             .unwrap(),
+    }
+}
+
+struct LogFiles {
+    stdout: File,
+    stderr: File,
+}
+
+fn create_log_files(id: usize) -> LogFiles {
+    if !Path::new("logs").is_dir() {
+        std::fs::create_dir("logs").expect("create log directory");
+    }
+
+    let now = Local::now().format("%y%m%d_%H%M%S");
+    let stderr_log_file = {
+        let name = format!("logs/{now}.{id}.stderr.log", now = now, id = id);
+        File::create(name).expect("Create log file")
+    };
+    let stdout_log_file = {
+        let name = format!("logs/{now}.{id}.stdout.log", now = now, id = id);
+        File::create(name).expect("Create log file")
+    };
+
+    LogFiles {
+        stdout: stdout_log_file,
+        stderr: stderr_log_file,
     }
 }
 

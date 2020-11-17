@@ -2131,6 +2131,7 @@ version = "0.1.0"
 dependencies = [
  "actix-rt",
  "awc",
+ "chrono",
  "codechain-crypto",
  "codechain-key",
  "codechain-types",
