@@ -103,6 +103,9 @@ macro_rules! log_target {
     (INFORMER) => {
         "informer"
     };
+    (GRAPHQL) => {
+        "graphql"
+    };
 }
 
 #[macro_export]
