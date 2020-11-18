@@ -12,8 +12,8 @@ thread-pool-size = "@{{thread-pool-size}}"
 
 [modules.module-staking.exports]
 init-genesis.init-genesis = {}
-init-chain.init-chain = {}
-update-chain.update-chain = {}
+init-consensus.init-consensus = {}
+update-consensus.update-consensus = {}
 
 [modules.module-staking.imports]
 token-manager = "module-token/token-manager"
