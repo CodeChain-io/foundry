@@ -106,6 +106,9 @@ macro_rules! log_target {
     (GRAPHQL) => {
         "graphql"
     };
+    (MODULE) => {
+        "module"
+    };
 }
 
 #[macro_export]
