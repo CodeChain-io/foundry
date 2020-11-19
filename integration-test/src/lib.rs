@@ -58,7 +58,7 @@ pub fn run_node(
         graphql_port,
     }: RunNodeArgs,
 ) -> FoundryNode {
-    let path = std::fs::canonicalize(foundry_path).unwrap();
+    let path = std::fs::canonicalize(foundry_path).expect("Can't find foundry binary");
     let mut command = Command::new(path);
     let id = ID_COUNT.fetch_add(1, Ordering::SeqCst);
     let LogFiles {
