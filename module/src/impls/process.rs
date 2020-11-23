@@ -258,10 +258,10 @@ impl<E: ExecutionScheme> ProcessLinker<E> {
 
 impl<E: ExecutionScheme> Linker for ProcessLinker<E> {
     fn link(&self, a: &mut dyn Port, b: &mut dyn Port) -> Result<(), link::Error> {
-        let port_a: &mut ProcessPort = a.mut_any().downcast_mut().ok_or_else(|| link::Error::UnsupportedPortType {
+        let port_a: &mut ProcessPort = a.mut_any().downcast_mut().ok_or(link::Error::UnsupportedPortType {
             id: "Unknown",
         })?;
-        let port_b: &mut ProcessPort = b.mut_any().downcast_mut().ok_or_else(|| link::Error::UnsupportedPortType {
+        let port_b: &mut ProcessPort = b.mut_any().downcast_mut().ok_or(link::Error::UnsupportedPortType {
             id: "Unknown",
         })?;
 

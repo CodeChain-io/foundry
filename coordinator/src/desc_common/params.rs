@@ -57,9 +57,9 @@ impl Value {
                     // Change @@ to @ and type is string
                     let merged = merger.merge(&s[1..])?;
                     *self = Value::String(merged);
-                } else if s.starts_with('@') {
+                } else if let Some(stripped) = s.strip_prefix('@') {
                     // Remove @ and type is anything
-                    let merged = merger.merge(&s[1..])?;
+                    let merged = merger.merge(stripped)?;
                     *self = TOMLValueDeserializer::deserialize(&merged)?;
                 } else {
                     // Type is string

@@ -266,7 +266,7 @@ impl TopLevelState {
     }
 
     fn module_state_mut(&self, storage_id: StorageId) -> StateResult<ModuleLevelState> {
-        let module_root = self.module_root(storage_id)?.ok_or_else(|| RuntimeError::InvalidStorageId(storage_id))?;
+        let module_root = self.module_root(storage_id)?.ok_or(RuntimeError::InvalidStorageId(storage_id))?;
         let mut module_caches = self.module_caches.borrow_mut();
         let module_cache = module_caches.entry(storage_id).or_default();
         Ok(ModuleLevelState::from_existing(storage_id, Arc::clone(&self.db), module_root, Arc::clone(&module_cache))?)

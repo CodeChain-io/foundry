@@ -25,12 +25,12 @@ pub use state_manager::StateManager;
 
 pub type TxSeq = u64;
 
-pub fn assert_empty_arg(arg: &[u8]) -> Result<(), ()> {
-    let a: std::collections::HashMap<String, String> = serde_cbor::from_slice(arg).map_err(|_| ())?;
+pub fn assert_empty_arg(arg: &[u8]) -> Result<(), String> {
+    let a: std::collections::HashMap<String, String> = serde_cbor::from_slice(arg).map_err(|err| err.to_string())?;
     if a.is_empty() {
         Ok(())
     } else {
-        Err(())
+        Err(format!("This arg is not empty: {:?}", a))
     }
 }
 
