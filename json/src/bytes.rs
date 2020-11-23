@@ -78,8 +78,8 @@ impl FromStr for Bytes {
     type Err = FromHexError;
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
-        let value = if value.starts_with("0x") {
-            &value[2..]
+        let value = if let Some(stripped) = value.strip_prefix("0x") {
+            stripped
         } else {
             value
         };
