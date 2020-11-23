@@ -137,10 +137,10 @@ impl Linker for MockLinker {
         let a = a.mut_any();
         let b = b.mut_any();
 
-        let a = a.downcast_ref::<MockPort>().ok_or_else(|| link::Error::UnsupportedPortType {
+        let a = a.downcast_ref::<MockPort>().ok_or(link::Error::UnsupportedPortType {
             id: "not MockPort",
         })?;
-        let b = b.downcast_ref::<MockPort>().ok_or_else(|| link::Error::UnsupportedPortType {
+        let b = b.downcast_ref::<MockPort>().ok_or(link::Error::UnsupportedPortType {
             id: "not MockPort",
         })?;
 
