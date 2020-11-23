@@ -66,8 +66,8 @@ pub(crate) type Occurrences = (Bound<usize>, Bound<usize>);
 
 pub(crate) static SERVICES_FOR_HOST: &[(Occurrences, &str)] = &[
     ((Included(0), Unbounded), "init-genesis"),
-    ((Included(1), Excluded(2)), "init-chain"),
-    ((Included(0), Excluded(2)), "update-chain"),
+    ((Included(1), Excluded(2)), "init-consensus"),
+    ((Included(0), Excluded(2)), "update-consensus"),
     ((Included(0), Unbounded), "stateful"),
     ((Included(0), Excluded(2)), "tx-sorter"),
     ((Included(0), Excluded(2)), "handle-crimes"),
