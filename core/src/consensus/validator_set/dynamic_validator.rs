@@ -100,7 +100,7 @@ impl DynamicValidator {
         let n_validators = validators.len();
         for index in votes.true_index_iter() {
             assert!(index < n_validators);
-            let validator = validators.get(index).ok_or_else(|| {
+            let validator = validators.get(index).ok_or({
                 EngineError::ValidatorNotExist {
                     height: 0, // FIXME
                     index,
@@ -155,7 +155,7 @@ impl ValidatorSet for DynamicValidator {
         let n_validators = validators.len();
         for index in votes.true_index_iter() {
             assert!(index < n_validators);
-            let validator = validators.get(index).ok_or_else(|| {
+            let validator = validators.get(index).ok_or({
                 EngineError::ValidatorNotExist {
                     height: 0, // FIXME
                     index,

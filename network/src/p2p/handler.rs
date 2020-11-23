@@ -440,8 +440,7 @@ impl IoHandler<Message> for Handler {
                 need_encryption,
                 data,
             } => {
-                let stream =
-                    *self.remote_node_ids_reverse.read().get(&node_id).ok_or_else(|| Error::InvalidNode(node_id))?;
+                let stream = *self.remote_node_ids_reverse.read().get(&node_id).ok_or(Error::InvalidNode(node_id))?;
                 let (network_message_size, peer_addr) = match stream {
                     FIRST_OUTBOUND..=LAST_OUTBOUND => {
                         let mut outbound_connections = self.outbound_connections.write();
