@@ -96,14 +96,13 @@ fn discovery_start(
     routing_table: Arc<RoutingTable>,
 ) -> Result<(), String> {
     let config = Config {
-        bucket_size: cfg.discovery_bucket_size.unwrap(),
-        t_refresh: cfg.discovery_refresh.unwrap(),
+        bucket_size: cfg.discovery_bucket_size,
+        t_refresh: cfg.discovery_refresh,
     };
-    let use_kademlia = match cfg.discovery_type.as_deref() {
-        Some("unstructured") => false,
-        Some("kademlia") => true,
-        Some(discovery_type) => return Err(format!("Unknown discovery {}", discovery_type)),
-        None => return Ok(()),
+    let use_kademlia = match cfg.discovery_type.as_str() {
+        "unstructured" => false,
+        "kademlia" => true,
+        discovery_type => return Err(format!("Unknown discovery {}", discovery_type)),
     };
     service.register_extension(move |api| Discovery::new(routing_table, config, api, use_kademlia));
     Ok(())
@@ -203,7 +202,7 @@ fn unlock_accounts(ap: &AccountProvider, pf: &PasswordFile) -> Result<(), String
 }
 
 pub fn open_db(cfg: &config::Config, client_config: &ClientConfig) -> Result<Arc<dyn KeyValueDB>, String> {
-    let base_path = cfg.base_path.as_ref().unwrap().clone();
+    let base_path = cfg.base_path.clone();
     let db_path = cfg.db_path.as_ref().map(String::clone).unwrap_or_else(|| base_path + "/" + DEFAULT_DB_PATH);
     // this is for debug
     std::process::Command::new("rm").arg("-rf").arg(&db_path).output().unwrap();
@@ -253,7 +252,10 @@ pub fn run_node(
     link_desc
         .merge_params(&module_arguments)
         .map_err(|err| format!("Foundry failed to merge params you supplied into the link descriptor. {}", err))?;
-    let coordinator = Arc::new(Coordinator::from_descs(&app_desc, &link_desc).unwrap());
+    let coordinator = Arc::new(
+        Coordinator::from_descs(&app_desc, &link_desc)
+            .map_err(|err| format!("Failed to parse app descriptor and link descriptor: {}", err))?,
+    );
 
     let genesis = Genesis::new(app_desc.host.genesis, coordinator.as_ref());
 
@@ -268,7 +270,7 @@ pub fn run_node(
     engine.register_time_gap_config_to_worker(time_gap_params);
 
     let pf = load_password_file(&config.password_path)?;
-    let base_path = config.base_path.as_ref().unwrap().clone();
+    let base_path = config.base_path.clone();
     let keys_path = config.keys_path.as_ref().map(String::clone).unwrap_or_else(|| base_path + "/" + DEFAULT_KEYS_PATH);
     let ap = prepare_account_provider(&keys_path)?;
     unlock_accounts(&*ap, &pf)?;
@@ -305,8 +307,8 @@ pub fn run_node(
         });
 
         let server_data = ServerData::new(Arc::new(ClientWrapper(client.client())), handlers);
-        let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), config.graphql_port.unwrap());
-        foundry_graphql::run_server(server_data, socket).unwrap()
+        let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), config.graphql_port);
+        foundry_graphql::run_server(server_data, socket)
     };
 
     let instance_id = config.instance_id.unwrap_or(
@@ -458,8 +460,7 @@ pub fn run_node(
         let (tx, rx) = snapshot_notify::create();
         client.engine().register_snapshot_notify_sender(tx);
         if config.snapshot_enable {
-            let service =
-                Arc::new(SnapshotService::new(client, rx, config.snapshot_path.unwrap(), config.snapshot_expiration));
+            let service = Arc::new(SnapshotService::new(client, rx, config.snapshot_path, config.snapshot_expiration));
             Some(service)
         } else {
             None
