@@ -35,7 +35,7 @@ pub struct Config {
         no_short,
         no_file,
         long = "config",
-        help = "Specify the certain config file path that you want to use to configure CodeChain to your needs."
+        help = "Specify the certain config file path that you want to use to configure Foundry to your needs."
     )]
     pub config: Option<String>,
 
@@ -59,7 +59,7 @@ pub struct Config {
     #[conf(
         short = "i",
         long = "instance-id",
-        help = "Specify instance id for logging. Used when running multiple instances of CodeChain."
+        help = "Specify instance id for logging. Used when running multiple instances of Foundry."
     )]
     pub instance_id: Option<usize>,
 
