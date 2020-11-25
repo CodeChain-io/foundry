@@ -32,8 +32,6 @@ mod config;
 mod constants;
 mod dummy_network_service;
 mod json;
-mod rpc;
-mod rpc_apis;
 mod run_node;
 mod subcommand;
 mod tests;

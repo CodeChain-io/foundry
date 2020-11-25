@@ -27,8 +27,6 @@ use std::str::{self, FromStr};
 use std::time::Duration;
 use structconf::StructConf;
 
-use crate::rpc::{RpcHttpConfig, RpcIpcConfig, RpcWsConfig};
-
 #[derive(Debug, StructConf, Default)]
 pub struct Config {
     #[conf(
@@ -201,72 +199,6 @@ pub struct Config {
     #[conf(no_short, long = "whitelist-path", help = "Specify the path for the network whitelist file.")]
     pub whitelist_path: Option<String>,
 
-    // IPC
-    #[conf(negated_arg, no_short, long = "no-ipc", help = "Do not run JSON-RPC over IPC service.")]
-    pub ipc_enable: bool,
-
-    #[conf(
-        no_short,
-        long = "ipc-path",
-        help = "Specify custom path for JSON-RPC over IPC service.",
-        default = "\"/tmp/jsonrpc.ipc\".to_string()"
-    )]
-    pub ipc_path: String,
-
-    // RPC
-    #[conf(negated_arg, no_short, long = "no-jsonrpc", help = "Do not run jsonrpc.")]
-    pub jsonrpc_enable: bool,
-
-    // We are using the Option type since Ipv4Addr does not implement the Default trait.
-    #[conf(
-        no_short,
-        long = "jsonrpc-interface",
-        help = "Specify the interface address for rpc connections",
-        default = "Ipv4Addr::LOCALHOST"
-    )]
-    pub jsonrpc_interface: Option<Ipv4Addr>,
-
-    #[conf(no_short, long = "jsonrpc-hosts", help = "Specify the allowed host addresses for rpc connections")]
-    pub jsonrpc_hosts: Option<CommaSeparated<String>>,
-
-    #[conf(no_short, long = "jsonrpc-cors", help = "Specify the cors domains for rpc connections")]
-    pub jsonrpc_cors: Option<CommaSeparated<String>>,
-
-    #[conf(no_short, long = "jsonrpc-port", help = "Listen for rpc connections on PORT.", default = "8080")]
-    pub jsonrpc_port: u16,
-
-    #[conf(no_short, long = "enable-devel-api", help = "Enable the RPC's devel APIs")]
-    pub enable_devel_api: bool,
-
-    // WS
-    #[conf(negated_arg, no_short, long = "no-ws", help = "Do not run the WebSockets JSON-RPC server.")]
-    pub ws_enable: bool,
-
-    // We are using the Option type since Ipv4Addr does not implement the Default trait.
-    #[conf(
-        no_short,
-        long = "ws-interface",
-        help = "Specify the interface address for the WebSockets JSON-RPC server.",
-        default = "Ipv4Addr::LOCALHOST"
-    )]
-    pub ws_interface: Option<Ipv4Addr>,
-
-    #[conf(
-        no_short,
-        long = "ws-port",
-        help = "Specify the port portion of the WebSockets JSON-RPC server.",
-        default = "8081"
-    )]
-    pub ws_port: u16,
-
-    #[conf(
-        no_short,
-        long = "ws-max-connections",
-        help = "Maximum number of allowed concurrent WebSockets JSON-RPC connections.",
-        default = "100"
-    )]
-    pub ws_max_connections: usize,
-
     // GraphQL
     #[conf(no_short, long = "graphql-port", help = "Open GraphQL webserver on PORT.", default = "4040")]
     pub graphql_port: u16,
@@ -357,31 +289,6 @@ impl Config {
             reseal_on_external_transaction,
             reseal_min_period: Duration::from_millis(self.reseal_min_period),
         })
-    }
-
-    pub fn rpc_http_config(&self) -> RpcHttpConfig {
-        // FIXME: Add interface, cors and hosts options.
-        RpcHttpConfig {
-            interface: self.jsonrpc_interface.clone().unwrap(),
-            port: self.jsonrpc_port,
-            cors: self.jsonrpc_cors.as_ref().map(|cors| cors.inner.clone()),
-            hosts: self.jsonrpc_hosts.as_ref().map(|cors| cors.inner.clone()),
-        }
-    }
-
-    pub fn rpc_ipc_config(&self) -> RpcIpcConfig {
-        RpcIpcConfig {
-            socket_addr: self.ipc_path.clone(),
-        }
-    }
-
-    pub fn rpc_ws_config(&self) -> RpcWsConfig {
-        // FIXME: Add hosts and origins options.
-        RpcWsConfig {
-            interface: self.ws_interface.clone().unwrap(),
-            port: self.ws_port,
-            max_connections: self.ws_max_connections,
-        }
     }
 
     pub fn informer_config(&self) -> InformerConfig {
