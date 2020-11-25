@@ -85,7 +85,9 @@ pub fn run_node(
         .arg("--config")
         .arg(config_path)
         .arg("-i")
-        .arg(format!("{}", id));
+        .arg(format!("{}", id))
+        .arg("--db-path")
+        .arg(format!("/tmp/foundry_db{}", id));
 
     command
         .arg("--graphql-port")
