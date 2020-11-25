@@ -34,7 +34,6 @@ mod dummy_network_service;
 mod json;
 mod run_node;
 mod subcommand;
-mod tests;
 
 pub const APP_INFO: AppInfo = AppInfo {
     name: "foundry",
@@ -70,7 +69,7 @@ pub fn run() -> Result<(), String> {
 
     match matches.subcommand_name() {
         Some(_) => run_subcommand(&matches),
-        None => run_node(conf, module_arguments, None),
+        None => run_node(conf, module_arguments),
     }
 }
 

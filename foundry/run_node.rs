@@ -219,11 +219,7 @@ pub fn open_db(cfg: &config::Config, client_config: &ClientConfig) -> Result<Arc
     Ok(db)
 }
 
-pub fn run_node(
-    config: config::Config,
-    module_arguments: BTreeMap<String, String>,
-    test_cmd: Option<&str>,
-) -> Result<(), String> {
+pub fn run_node(config: config::Config, module_arguments: BTreeMap<String, String>) -> Result<(), String> {
     // increase max number of open files
     raise_fd_limit();
 
@@ -276,7 +272,7 @@ pub fn run_node(
     let client_config: ClientConfig = Default::default();
     let db = open_db(&config, &client_config)?;
 
-    let miner = new_miner(&config, Arc::clone(&engine), ap.clone(), Arc::clone(&db), coordinator.clone())?;
+    let miner = new_miner(&config, Arc::clone(&engine), ap, Arc::clone(&db), coordinator.clone())?;
     let client =
         client_start(&client_config, &timer_loop, db, Arc::clone(&engine), &genesis, miner.clone(), coordinator)?;
     miner.recover_from_db();
@@ -429,11 +425,7 @@ pub fn run_node(
 
     cinfo!(TEST_SCRIPT, "Initialization complete");
 
-    if let Some(test_cmd) = test_cmd {
-        super::tests::handle_test_command(test_cmd, client.client())
-    } else {
-        wait_for_exit();
-    }
+    wait_for_exit();
 
     if let Some(server) = informer_server {
         server.close_handle().close();
