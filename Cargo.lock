@@ -2044,7 +2044,6 @@ dependencies = [
  "codechain-logger",
  "codechain-module",
  "codechain-network",
- "codechain-rpc",
  "codechain-state",
  "codechain-sync",
  "codechain-timer",

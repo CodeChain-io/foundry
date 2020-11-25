@@ -18,8 +18,6 @@ use crate::config;
 use crate::constants::{DEFAULT_DB_PATH, DEFAULT_KEYS_PATH};
 use crate::dummy_network_service::DummyNetworkService;
 use crate::json::PasswordFile;
-use crate::rpc::{rpc_http_start, rpc_ipc_start, rpc_ws_start, setup_rpc_server};
-use crate::rpc_apis::ApiDependencies;
 use ccore::{
     genesis::Genesis, AccountProvider, AccountProviderError, ChainNotify, Client, ClientConfig, ClientService,
     EngineInfo, EngineType, Miner, MinerService, NullEngine, PeerDb, Solo, Tendermint, NUM_COLUMNS,
@@ -348,11 +346,10 @@ pub fn run_node(
     };
 
     let mut _maybe_sync = None;
-    let mut maybe_sync_sender = None;
 
     engine.register_chain_notify(client.client().as_ref());
 
-    let network_service: Arc<dyn NetworkControl> = {
+    let _network_service: Arc<dyn NetworkControl> = {
         if config.network_enable {
             let network_config = config.network_config()?;
             // XXX: What should we do if the network id has been changed.
@@ -387,10 +384,9 @@ pub fn run_node(
                         BlockSyncExtension::new(client, api, snapshot_target, snapshot_dir)
                     })
                 };
-                let sync = Arc::new(BlockSyncSender::from(sync_sender.clone()));
+                let sync = Arc::new(BlockSyncSender::from(sync_sender));
                 client.client().add_notify(Arc::downgrade(&sync) as Weak<dyn ChainNotify>);
                 _maybe_sync = Some(sync); // Hold sync to ensure it not to be destroyed.
-                maybe_sync_sender = Some(sync_sender);
             }
             if config.tx_relay_enable {
                 let client = client.client();
@@ -415,44 +411,6 @@ pub fn run_node(
         } else {
             None
         }
-    };
-    let (rpc_server, ipc_server, ws_server) = {
-        let rpc_apis_deps = ApiDependencies {
-            client: client.client(),
-            miner: Arc::clone(&miner),
-            network_control: Arc::clone(&network_service),
-            account_provider: ap,
-            block_sync: maybe_sync_sender,
-        };
-
-        let rpc_server = {
-            if config.jsonrpc_enable {
-                let server = setup_rpc_server(&config, &rpc_apis_deps);
-                Some(rpc_http_start(server, config.rpc_http_config())?)
-            } else {
-                None
-            }
-        };
-
-        let ipc_server = {
-            if config.ipc_enable {
-                let server = setup_rpc_server(&config, &rpc_apis_deps);
-                Some(rpc_ipc_start(server, config.rpc_ipc_config())?)
-            } else {
-                None
-            }
-        };
-
-        let ws_server = {
-            if config.ws_enable {
-                let server = setup_rpc_server(&config, &rpc_apis_deps);
-                Some(rpc_ws_start(server, config.rpc_ws_config())?)
-            } else {
-                None
-            }
-        };
-
-        (rpc_server, ipc_server, ws_server)
     };
 
     let _snapshot_service = {
@@ -479,18 +437,6 @@ pub fn run_node(
 
     if let Some(server) = informer_server {
         server.close_handle().close();
-    }
-    if let Some(server) = rpc_server {
-        server.close_handle().close();
-        server.wait();
-    }
-    if let Some(server) = ipc_server {
-        server.close_handle().close();
-        server.wait();
-    }
-    if let Some(server) = ws_server {
-        server.close_handle().close();
-        server.wait().map_err(|err| format!("Error while closing jsonrpc ws server: {}", err))?;
     }
 
     Ok(())
