@@ -27,62 +27,75 @@ use std::time::Duration;
 use test_common::*;
 use tokio::time::delay_for;
 
-fn run_node_override(port: u16) -> FoundryNode {
-    run_node(RunNodeArgs {
-        foundry_path: "../target/debug/foundry".to_string(),
-        rust_log: "warn".to_string(),
-        app_desc_path: "../timestamp/app-desc.toml".to_string(),
-        link_desc_path: "../timestamp/link-desc.toml".to_string(),
-        config_path: "config.tendermint-solo.ini".to_string(),
-        graphql_port: port,
-    })
+fn run_node_override(arg: FoundryArgs) -> FoundryNode {
+    run_node(
+        RunNodeArgs {
+            foundry_path: "../target/debug/foundry".to_string(),
+            rust_log: "warn".to_string(),
+            app_desc_path: "../timestamp/app-desc.toml".to_string(),
+            link_desc_path: "../timestamp/link-desc.toml".to_string(),
+            config_path: "config.tendermint-solo.ini".to_string(),
+        },
+        arg,
+    )
+}
+
+const GRAPHQL_PORT: u16 = 4444;
+
+fn simple_solo_node() -> FoundryArgs {
+    FoundryArgs {
+        graphql_port: GRAPHQL_PORT,
+        mem_pool_size: 32768,
+        engine_signer: "rjmxg19kCmkCxROEoV0QYsrDpOYsjQwusCtN5_oKMEzk-I6kgtAtc0".to_owned(),
+        port: 3333,
+        bootstrap_addresses: Vec::new(),
+        password_path: "./password.json".to_owned(),
+    }
 }
 
 #[actix_rt::test]
 async fn run() {
-    let _node = run_node_override(4444);
+    let _node = run_node_override(simple_solo_node());
     delay_for(Duration::from_secs(3)).await;
 }
 
 #[actix_rt::test]
 async fn ping() {
-    let _node = run_node_override(5555);
+    let _node = run_node_override(simple_solo_node());
     delay_for(Duration::from_secs(3)).await;
-    let x = request_query(5555, "ping", "aaaa", "aaaa").await;
+    let x = request_query(GRAPHQL_PORT, "ping", "aaaa", "aaaa").await;
     assert_eq!(x, "Module not found: ping");
 }
 
 #[actix_rt::test]
 async fn track_blocks() {
-    let port = 5555;
-    let _node = run_node_override(port);
+    let _node = run_node_override(simple_solo_node());
     delay_for(Duration::from_secs(3)).await;
 
-    let start_block = get_latest_block(port).await;
-    while get_latest_block(port).await < start_block + 15 {
+    let start_block = get_latest_block(GRAPHQL_PORT).await;
+    while get_latest_block(GRAPHQL_PORT).await < start_block + 15 {
         delay_for(Duration::from_secs(1)).await;
     }
 }
 
 #[actix_rt::test]
 async fn sequence_management1() {
-    let port = 5555;
-    let _node = run_node_override(port);
+    let _node = run_node_override(simple_solo_node());
     delay_for(Duration::from_secs(3)).await;
 
     let user: Ed25519KeyPair = Random.generate().unwrap();
 
     // valid
-    let tx = create_tx_hello(port, user.public(), user.private(), 0).await;
-    send_tx(port, tx.tx_type(), tx.body()).await.unwrap();
+    let tx = create_tx_hello(GRAPHQL_PORT, user.public(), user.private(), 0).await;
+    send_tx(GRAPHQL_PORT, tx.tx_type(), tx.body()).await.unwrap();
 
     // invalid
-    let tx = create_tx_hello(port, user.public(), user.private(), 100).await;
-    send_tx(port, tx.tx_type(), tx.body()).await.unwrap();
+    let tx = create_tx_hello(GRAPHQL_PORT, user.public(), user.private(), 100).await;
+    send_tx(GRAPHQL_PORT, tx.tx_type(), tx.body()).await.unwrap();
 
     delay_for(Duration::from_secs(6)).await;
 
-    let latest = get_latest_block(port).await;
+    let latest = get_latest_block(GRAPHQL_PORT).await;
     let mut num = 0;
     let query = "query Test($number: Int!) {
         block(number: $number) {
@@ -90,7 +103,7 @@ async fn sequence_management1() {
         }
     }";
     for i in 0..latest {
-        let query_result = request_query(port, "engine", query, &format!(r#"{{"number": {}}}"#, i)).await;
+        let query_result = request_query(GRAPHQL_PORT, "engine", query, &format!(r#"{{"number": {}}}"#, i)).await;
         let value: Value = serde_json::from_str(&query_result).unwrap();
         let txes: Vec<Value> = serde_json::from_value(value["data"]["block"]["transactions"].clone()).unwrap();
         num += txes.len();
@@ -98,15 +111,14 @@ async fn sequence_management1() {
     assert_eq!(num, 1);
 
     let query = format!("{{ account(public: \"{}\") {{ seq }} }}", hex::encode(user.public().as_ref()));
-    let query_result = request_query(port, "module-account", &query, "{}").await;
+    let query_result = request_query(GRAPHQL_PORT, "module-account", &query, "{}").await;
     let value: Value = serde_json::from_str(&query_result).unwrap();
     assert_eq!(value["data"]["account"]["seq"], 1);
 }
 
 #[actix_rt::test]
 async fn sequence_management2() {
-    let port = 5555;
-    let _node = run_node_override(port);
+    let _node = run_node_override(simple_solo_node());
     delay_for(Duration::from_secs(3)).await;
 
     let user: Ed25519KeyPair = Random.generate().unwrap();
@@ -116,24 +128,26 @@ async fn sequence_management2() {
     for i in 0..4 {
         let mut txes = Vec::new();
         for j in 0..tx_num_per_step {
-            txes.push(create_tx_hello(port, user.public(), user.private(), i * tx_num_per_step + j).await);
+            txes.push(create_tx_hello(GRAPHQL_PORT, user.public(), user.private(), i * tx_num_per_step + j).await);
             // Far future tx
-            txes.push(create_tx_hello(port, user.public(), user.private(), 100000 + j).await);
+            txes.push(create_tx_hello(GRAPHQL_PORT, user.public(), user.private(), 100000 + j).await);
             // invalid tx
             if i > 0 {
-                txes.push(create_tx_hello(port, user.public(), user.private(), (i - 1) * tx_num_per_step + j).await);
+                txes.push(
+                    create_tx_hello(GRAPHQL_PORT, user.public(), user.private(), (i - 1) * tx_num_per_step + j).await,
+                );
             }
         }
         txes.shuffle(&mut rng);
 
         for tx in txes {
-            let _ = send_tx(port, tx.tx_type(), tx.body()).await;
+            let _ = send_tx(GRAPHQL_PORT, tx.tx_type(), tx.body()).await;
         }
 
         delay_for(Duration::from_secs(8)).await;
 
         let query = format!("{{ account(public: \"{}\") {{ seq }} }}", hex::encode(user.public().as_ref()));
-        let query_result = request_query(port, "module-account", &query, "{}").await;
+        let query_result = request_query(GRAPHQL_PORT, "module-account", &query, "{}").await;
         let value: Value = serde_json::from_str(&query_result).unwrap();
         assert_eq!(value["data"]["account"]["seq"], tx_num_per_step * (i + 1));
     }
