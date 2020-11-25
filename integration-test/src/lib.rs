@@ -45,7 +45,15 @@ pub struct RunNodeArgs {
     pub app_desc_path: String,
     pub link_desc_path: String,
     pub config_path: String,
+}
+
+pub struct FoundryArgs {
     pub graphql_port: u16,
+    pub mem_pool_size: u64,
+    pub engine_signer: String,
+    pub port: u16,
+    pub bootstrap_addresses: Vec<String>,
+    pub password_path: String,
 }
 
 pub fn run_node(
@@ -55,8 +63,8 @@ pub fn run_node(
         app_desc_path,
         link_desc_path,
         config_path,
-        graphql_port,
     }: RunNodeArgs,
+    foundry_args: FoundryArgs,
 ) -> FoundryNode {
     let path = std::fs::canonicalize(foundry_path).expect("Can't find foundry binary");
     let mut command = Command::new(path);
@@ -66,23 +74,35 @@ pub fn run_node(
         stderr,
     } = create_log_files(id);
 
+    command
+        .env("RUST_LOG", rust_log)
+        .stdout(stdout)
+        .stderr(stderr)
+        .arg("--app-desc-path")
+        .arg(app_desc_path)
+        .arg("--link-desc-path")
+        .arg(link_desc_path)
+        .arg("--config")
+        .arg(config_path)
+        .arg("-i")
+        .arg(format!("{}", id));
+
+    command
+        .arg("--graphql-port")
+        .arg(format!("{}", foundry_args.graphql_port))
+        .arg("--mem-pool-size")
+        .arg(format!("{}", foundry_args.mem_pool_size))
+        .arg("--engine-signer")
+        .arg(foundry_args.engine_signer)
+        .arg("--port")
+        .arg(format!("{}", foundry_args.port))
+        .arg("--bootstrap-addresses")
+        .arg(foundry_args.bootstrap_addresses.join(","))
+        .arg("--password-path")
+        .arg(foundry_args.password_path);
+
     FoundryNode {
-        child: command
-            .env("RUST_LOG", rust_log)
-            .stdout(stdout)
-            .stderr(stderr)
-            .arg("--app-desc-path")
-            .arg(app_desc_path)
-            .arg("--link-desc-path")
-            .arg(link_desc_path)
-            .arg("--config")
-            .arg(config_path)
-            .arg("--graphql-port")
-            .arg(format!("{}", graphql_port))
-            .arg("-i")
-            .arg(format!("{}", id))
-            .spawn()
-            .unwrap(),
+        child: command.spawn().unwrap(),
     }
 }
 
