@@ -19,6 +19,7 @@ extern crate codechain_crypto as crypto;
 extern crate serde_derive;
 
 mod ed25519;
+mod encryption;
 mod error;
 mod keypair;
 mod network;
@@ -31,6 +32,7 @@ pub use crate::ed25519::{
     sign, verify, KeyPair as Ed25519KeyPair, Private as Ed25519Private, Public as Ed25519Public, Signature,
     SIGNATURE_LENGTH,
 };
+pub use crate::encryption::{decrypt, encrypt, KeyPair as SealKeyPair, Private as SealPrivate, Public as SealPublic};
 pub use crate::error::Error;
 pub use crate::keypair::KeyPair as KeyPairTrait;
 pub use crate::network::NetworkId;

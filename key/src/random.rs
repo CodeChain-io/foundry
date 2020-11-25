@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{Ed25519KeyPair, Generator, KeyPairTrait, X25519KeyPair, X25519Private, X25519Public};
+use crate::{Ed25519KeyPair, Generator, KeyPairTrait, SealKeyPair, X25519KeyPair, X25519Private, X25519Public};
 use never_type::Never;
 use rand::rngs::OsRng;
 #[cfg(test)]
 use rand::SeedableRng;
 use rand_xorshift::XorShiftRng;
+use sodiumoxide::crypto::box_::gen_keypair as gen_curve25519xsalsa20poly1305;
 use sodiumoxide::crypto::kx::gen_keypair as gen_x25519;
 use sodiumoxide::crypto::sign::gen_keypair as gen_ed25519;
 #[cfg(test)]
@@ -124,5 +125,47 @@ impl Generator<X25519KeyPair> for XorShiftRng {
         let publ = X25519Public::from_slice(publ.as_ref()).expect("two types are equivalent");
         let sec = X25519Private::from_slice(sec.as_ref()).expect("two types are equivalent");
         Ok(X25519KeyPair::from_keypair(sec, publ))
+    }
+}
+
+impl Generator<SealKeyPair> for Random {
+    type Error = ::std::io::Error;
+
+    //FIXME: there is no distinction between the two generate functions
+    #[cfg(not(test))]
+    fn generate(&mut self) -> Result<SealKeyPair, Self::Error> {
+        let mut rng = OsRng::new()?;
+        match rng.generate() {
+            Ok(pair) => Ok(pair),
+            Err(never) => match never {}, // LLVM unreachable
+        }
+    }
+
+    #[cfg(test)]
+    fn generate(&mut self) -> Result<SealKeyPair, Self::Error> {
+        RNG.with(|rng| {
+            match rng.borrow_mut().generate() {
+                Ok(pair) => Ok(pair),
+                Err(never) => match never {}, // LLVM unreachable
+            }
+        })
+    }
+}
+
+impl Generator<SealKeyPair> for OsRng {
+    type Error = Never;
+
+    fn generate(&mut self) -> Result<SealKeyPair, Self::Error> {
+        let (publ, sec) = gen_curve25519xsalsa20poly1305();
+        Ok(SealKeyPair::from_keypair(sec.into(), publ.into()))
+    }
+}
+
+impl Generator<SealKeyPair> for XorShiftRng {
+    type Error = Never;
+
+    fn generate(&mut self) -> Result<SealKeyPair, Self::Error> {
+        let (publ, sec) = gen_curve25519xsalsa20poly1305();
+        Ok(SealKeyPair::from_keypair(sec.into(), publ.into()))
     }
 }
