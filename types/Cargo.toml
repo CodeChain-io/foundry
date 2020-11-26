@@ -8,6 +8,7 @@ edition = "2018"
 ccrypto = { package = "codechain-crypto", git = "https://github.com/CodeChain-io/rust-codechain-crypto.git", version = "0.3", tag = "v0.3.0" }
 cjson = { package = "codechain-json", path = "../json" }
 ckey = { package = "codechain-key", path = "../key" }
+foundry-hex = { path = "../util/hex" }
 primitives = { git = "https://github.com/CodeChain-io/rust-codechain-primitives.git", version = "0.5", tag = "v0.5.1" }
 rand = "0.6.1"
 rlp = { git = "https://github.com/CodeChain-io/rlp.git", version = "0.5", tag = "v0.5.0"}

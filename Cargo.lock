@@ -1302,6 +1302,7 @@ dependencies = [
  "codechain-crypto",
  "codechain-json",
  "codechain-key",
+ "foundry-hex",
  "primitives",
  "rand 0.6.5",
  "rlp 0.5.0",

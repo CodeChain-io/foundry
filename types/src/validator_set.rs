@@ -19,10 +19,11 @@ use primitives::H256;
 use rlp::{Decodable, DecoderError, Encodable, Rlp, RlpStream};
 use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
+use foundry_hex::Hex;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct CompactValidatorEntry {
-    pub public_key: Public,
+    pub public_key: Hex<Public>,
     pub delegation: u64,
 }
 
