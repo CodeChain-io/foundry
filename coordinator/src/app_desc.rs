@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use self::deserialize::Hex;
 use super::values::Value;
 pub use crate::desc_common::{Constructor, GlobalName, LocalName, Namespaced, SimpleName};
 pub use engine::Engine;
+use foundry_hex::Hex;
 pub use genesis::Genesis;
 use primitives::H256;
 use serde::Deserialize;
@@ -25,7 +25,6 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 pub use tendermint::TendermintParams;
 
-mod deserialize;
 mod engine;
 mod genesis;
 pub(self) mod params;

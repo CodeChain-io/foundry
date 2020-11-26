@@ -1397,6 +1397,7 @@ dependencies = [
  "codechain-module",
  "codechain-types",
  "erased-serde",
+ "foundry-hex",
  "foundry-module-rt",
  "foundry-process-sandbox",
  "handlebars",
