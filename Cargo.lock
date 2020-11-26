@@ -2127,6 +2127,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "foundry-hex"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "primitives",
+ "serde",
+]
+
+[[package]]
 name = "foundry-integration-test"
 version = "0.1.0"
 dependencies = [
