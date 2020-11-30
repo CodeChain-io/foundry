@@ -2127,6 +2127,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "foundry-graphql-types"
+version = "0.1.0"
+dependencies = [
+ "async-graphql",
+ "codechain-crypto",
+ "codechain-key",
+ "codechain-types",
+ "hex",
+ "primitives",
+ "remote-trait-object",
+ "serde",
+ "serde_cbor",
+ "serde_json",
+]
+
+[[package]]
 name = "foundry-integration-test"
 version = "0.1.0"
 dependencies = [
