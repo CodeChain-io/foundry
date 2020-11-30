@@ -100,4 +100,5 @@ members = [
     "graphql",
     "integration-test",
     "graphql-engine",
+    "graphql-types"
 ]
