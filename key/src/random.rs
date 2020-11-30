@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{Ed25519KeyPair, Generator, KeyPairTrait, SealKeyPair, X25519KeyPair, X25519Private, X25519Public};
+use crate::{Ed25519KeyPair, EncryptionKeyPair, Generator, KeyPairTrait, X25519KeyPair, X25519Private, X25519Public};
 use never_type::Never;
 use rand::rngs::OsRng;
 #[cfg(test)]
@@ -128,12 +128,12 @@ impl Generator<X25519KeyPair> for XorShiftRng {
     }
 }
 
-impl Generator<SealKeyPair> for Random {
+impl Generator<EncryptionKeyPair> for Random {
     type Error = ::std::io::Error;
 
     //FIXME: there is no distinction between the two generate functions
     #[cfg(not(test))]
-    fn generate(&mut self) -> Result<SealKeyPair, Self::Error> {
+    fn generate(&mut self) -> Result<EncryptionKeyPair, Self::Error> {
         let mut rng = OsRng::new()?;
         match rng.generate() {
             Ok(pair) => Ok(pair),
@@ -142,7 +142,7 @@ impl Generator<SealKeyPair> for Random {
     }
 
     #[cfg(test)]
-    fn generate(&mut self) -> Result<SealKeyPair, Self::Error> {
+    fn generate(&mut self) -> Result<EncryptionKeyPair, Self::Error> {
         RNG.with(|rng| {
             match rng.borrow_mut().generate() {
                 Ok(pair) => Ok(pair),
@@ -152,20 +152,20 @@ impl Generator<SealKeyPair> for Random {
     }
 }
 
-impl Generator<SealKeyPair> for OsRng {
+impl Generator<EncryptionKeyPair> for OsRng {
     type Error = Never;
 
-    fn generate(&mut self) -> Result<SealKeyPair, Self::Error> {
+    fn generate(&mut self) -> Result<EncryptionKeyPair, Self::Error> {
         let (publ, sec) = gen_curve25519xsalsa20poly1305();
-        Ok(SealKeyPair::from_keypair(sec.into(), publ.into()))
+        Ok(EncryptionKeyPair::from_keypair(sec.into(), publ.into()))
     }
 }
 
-impl Generator<SealKeyPair> for XorShiftRng {
+impl Generator<EncryptionKeyPair> for XorShiftRng {
     type Error = Never;
 
-    fn generate(&mut self) -> Result<SealKeyPair, Self::Error> {
+    fn generate(&mut self) -> Result<EncryptionKeyPair, Self::Error> {
         let (publ, sec) = gen_curve25519xsalsa20poly1305();
-        Ok(SealKeyPair::from_keypair(sec.into(), publ.into()))
+        Ok(EncryptionKeyPair::from_keypair(sec.into(), publ.into()))
     }
 }
