@@ -46,4 +46,17 @@ mod tests {
         let decrypted = decrypt(&encrypted, keypair.public(), keypair.private()).unwrap();
         assert_eq!(secret_data[..], decrypted[..]);
     }
+
+    #[test]
+    fn same_data_different_result() {
+        let secret_data = b"Dr. Crowe was dead";
+        let keypair: KeyPair = Random.generate().unwrap();
+        let encrypted1 = encrypt(secret_data, keypair.public());
+        let decrypted1 = decrypt(&encrypted1, keypair.public(), keypair.private()).unwrap();
+        let encrypted2 = encrypt(secret_data, keypair.public());
+        let decrypted2 = decrypt(&encrypted2, keypair.public(), keypair.private()).unwrap();
+        assert_eq!(secret_data[..], decrypted1[..]);
+        assert_eq!(secret_data[..], decrypted2[..]);
+        assert_ne!(encrypted1[..], encrypted2[..]);
+    }
 }
