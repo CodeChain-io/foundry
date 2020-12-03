@@ -2116,6 +2116,7 @@ dependencies = [
  "codechain-types",
  "coordinator",
  "crossbeam 0.7.3",
+ "foundry-graphql-types",
  "hex",
  "log",
  "parking_lot 0.11.0",

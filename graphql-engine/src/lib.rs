@@ -26,6 +26,7 @@ use block::Block;
 use ccore::Client;
 use ccore::{BlockChainClient, BlockChainTrait};
 use coordinator::module::{HandleGraphQlRequest, SessionId};
+use foundry_graphql_types::*;
 use remote_trait_object::Service;
 use std::sync::Arc;
 
@@ -42,6 +43,10 @@ impl QueryRoot {
             None => ctypes::BlockId::Latest,
         };
         self.client.block(&id).map(|x| Block::new(x.rlp().as_raw().to_vec()))
+    }
+
+    async fn event(&self, tx_hash: GqlH256) -> async_graphql::Result<Vec<Vec<u8>>> {
+        Ok(self.client.events_by_tx_hash(&ctypes::TxHash::from(tx_hash.0)).into_iter().map(|x| x.value).collect())
     }
 }
 
