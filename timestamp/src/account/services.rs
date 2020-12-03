@@ -80,7 +80,13 @@ impl TxOwner for ServiceHandler {
                 ExecuteError::NotAllowedHello => Err(()),
             }
         } else {
-            Ok(Default::default())
+            // For test/debug purpose, it returns an event which is just same as the content of transaction
+            Ok(TransactionOutcome {
+                events: vec![coordinator::types::Event {
+                    key: "".to_owned(),
+                    value: transaction.body().clone(),
+                }],
+            })
         }
     }
 
