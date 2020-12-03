@@ -152,3 +152,28 @@ async fn sequence_management2() {
         assert_eq!(value["data"]["account"]["seq"], tx_num_per_step * (i + 1));
     }
 }
+
+#[actix_rt::test]
+async fn events() {
+    let _node = run_node_override(simple_solo_node());
+    delay_for(Duration::from_secs(3)).await;
+
+    let user: Ed25519KeyPair = Random.generate().unwrap();
+
+    let tx1 = create_tx_hello(GRAPHQL_PORT, user.public(), user.private(), 0).await;
+    send_tx(GRAPHQL_PORT, tx1.tx_type(), tx1.body()).await.unwrap();
+
+    // invalid
+    let tx2 = create_tx_hello(GRAPHQL_PORT, user.public(), user.private(), 100).await;
+    send_tx(GRAPHQL_PORT, tx2.tx_type(), tx2.body()).await.unwrap();
+
+    delay_for(Duration::from_secs(4)).await;
+
+    let result = get_event(GRAPHQL_PORT, *tx1.hash()).await;
+
+    assert_eq!(1, result.len());
+    assert_eq!(*tx1.body(), result[0]);
+
+    let result = get_event(GRAPHQL_PORT, *tx2.hash()).await;
+    assert!(result.is_empty());
+}

@@ -151,6 +151,19 @@ pub async fn get_latest_block(port: u16) -> u64 {
     value["data"]["block"]["header"]["number"].as_u64().unwrap()
 }
 
+pub async fn get_event(port: u16, tx_hash: primitives::H256) -> Vec<Vec<u8>> {
+    let query = "query Test($txHash: String!) {
+        event(txHash: $txHash)
+    }";
+    let mut variables = Value::Object(Default::default());
+    variables["txHash"] = Value::String(hex::encode(tx_hash.as_ref()));
+
+    let query_result = request_query(port, "engine", query, &variables.to_string()).await;
+    let value: Value = serde_json::from_str(&query_result).unwrap();
+    let list = value["data"]["event"].as_array().unwrap();
+    list.iter().map(|event| event.as_array().unwrap().iter().map(|x| x.as_i64().unwrap() as u8).collect()).collect()
+}
+
 /// This is a copy from `foundry-timestamp`.
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct SignedTransaction {
