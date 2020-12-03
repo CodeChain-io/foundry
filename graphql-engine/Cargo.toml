@@ -21,3 +21,4 @@ async-graphql = "2.0.5"
 tokio = {version = "0.2.21", features = ["sync", "time", "rt-threaded", "macros", "uds"]}
 hex = "0.4.2"
 crossbeam = "0.7"
+foundry-graphql-types = { version = "0.1.0", path = "../graphql-types"}

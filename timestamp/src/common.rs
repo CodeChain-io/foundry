@@ -18,9 +18,9 @@ pub mod state_machine;
 mod state_manager;
 
 use ckey::{verify, Ed25519Public as Public, Signature};
+pub(crate) use foundry_graphql_types::*;
 use serde::{Deserialize, Serialize};
 pub use state_manager::StateManager;
-pub(crate) use foundry_graphql_types::*;
 
 pub type TxSeq = u64;
 
