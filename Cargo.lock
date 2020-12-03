@@ -2205,6 +2205,7 @@ dependencies = [
  "codechain-types",
  "coordinator",
  "erased-serde",
+ "foundry-graphql-types",
  "foundry-module-rt",
  "foundry-process-sandbox",
  "hex",

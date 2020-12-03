@@ -17,11 +17,10 @@
 pub mod state_machine;
 mod state_manager;
 
-use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value as GqlValue};
 use ckey::{verify, Ed25519Public as Public, Signature};
-use primitives::H256;
 use serde::{Deserialize, Serialize};
 pub use state_manager::StateManager;
+pub(crate) use foundry_graphql_types::*;
 
 pub type TxSeq = u64;
 
@@ -48,47 +47,6 @@ impl SignedTransaction {
         } else {
             Err(())
         }
-    }
-}
-
-pub struct GqlPublic(pub Public);
-
-#[Scalar]
-impl ScalarType for GqlPublic {
-    fn parse(value: GqlValue) -> InputValueResult<Self> {
-        if let GqlValue::String(s) = value {
-            Ok(GqlPublic(
-                Public::from_slice(
-                    &hex::decode(&s).map_err(|_| InputValueError::custom("Invalid public key".to_owned()))?,
-                )
-                .ok_or_else(|| InputValueError::custom("Invalid public key".to_owned()))?,
-            ))
-        } else {
-            Err(InputValueError::custom("Invalid public key".to_owned()))
-        }
-    }
-
-    fn to_value(&self) -> GqlValue {
-        GqlValue::String(hex::encode(self.0.as_ref()))
-    }
-}
-
-pub struct GqlH256(pub H256);
-
-#[Scalar]
-impl ScalarType for GqlH256 {
-    fn parse(value: GqlValue) -> InputValueResult<Self> {
-        if let GqlValue::String(s) = value {
-            Ok(GqlH256(H256::from_slice(
-                &hex::decode(&s).map_err(|_| InputValueError::custom("Invalid public key".to_owned()))?,
-            )))
-        } else {
-            Err(InputValueError::custom("Invalid public key".to_owned()))
-        }
-    }
-
-    fn to_value(&self) -> GqlValue {
-        GqlValue::String(hex::encode(self.0.as_ref()))
     }
 }
 
