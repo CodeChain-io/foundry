@@ -69,15 +69,19 @@ pub fn run_node(
     let path = std::fs::canonicalize(foundry_path).expect("Can't find foundry binary");
     let mut command = Command::new(path);
     let id = ID_COUNT.fetch_add(1, Ordering::SeqCst);
-    let LogFiles {
-        stdout,
-        stderr,
-    } = create_log_files(id);
+
+    if let Ok(x) = std::env::var("USE_LOG") {
+        if x == "1" {
+            let LogFiles {
+                stdout,
+                stderr,
+            } = create_log_files(id);
+            command.stdout(stdout).stderr(stderr);
+        }
+    }
 
     command
         .env("RUST_LOG", rust_log)
-        .stdout(stdout)
-        .stderr(stderr)
         .arg("--app-desc-path")
         .arg(app_desc_path)
         .arg("--link-desc-path")
