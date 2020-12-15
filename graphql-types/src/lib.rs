@@ -80,3 +80,20 @@ impl ScalarType for GqlH256 {
         GqlValue::String(hex::encode(self.0.as_ref()))
     }
 }
+
+pub struct GqlBytes(pub Vec<u8>);
+
+#[Scalar]
+impl ScalarType for GqlBytes {
+    fn parse(value: GqlValue) -> InputValueResult<Self> {
+        if let GqlValue::String(s) = value {
+            Ok(GqlBytes(hex::decode(&s).map_err(|_| InputValueError::custom("Invalid hex-encoded bytes".to_owned()))?))
+        } else {
+            Err(InputValueError::custom("String expected".to_owned()))
+        }
+    }
+
+    fn to_value(&self) -> GqlValue {
+        GqlValue::String(hex::encode(&self.0))
+    }
+}
