@@ -85,7 +85,15 @@ async fn track_blocks() {
         delay_for(Duration::from_secs(1)).await;
     }
 
-    for i in 0..4 {
-        assert!(get_latest_block(GRAPHQL_PORT_BASE + i).await >= start_block + 8)
+    for _ in 0..60 {
+        delay_for(Duration::from_secs(1)).await;
+        let mut success = true;
+        for i in 0..4 {
+            success = success && get_latest_block(GRAPHQL_PORT_BASE + i).await >= start_block + 8;
+        }
+        if success {
+            return
+        }
     }
+    panic!("Failed to sync 4 nodes")
 }
