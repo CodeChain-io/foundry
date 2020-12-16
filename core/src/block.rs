@@ -188,14 +188,14 @@ impl OpenBlock {
     pub fn execute_transactions(
         &mut self,
         block_executor: &dyn BlockExecutor,
-        mut transactions: Vec<Transaction>,
+        transactions: Vec<Transaction>,
     ) -> Result<(), Error> {
         let execution_id = self.execution_id.expect("Txs can be executed only after opening a block");
         // TODO: Handle erroneous transactions
         let transaction_results = block_executor
             .execute_transactions(execution_id, self.inner_mut().state_mut(), &transactions)
             .map_err(|_| Error::Other(String::from("Rejected while executing transactions")))?;
-        self.block.transactions.append(&mut transactions);
+        self.block.transactions.append(&mut transactions.clone());
         // TODO: How to do this without copy?
         let mut tx_events: HashMap<TxHash, Vec<Event>> = HashMap::new();
         for (tx, result) in transactions.into_iter().zip(transaction_results.into_iter()) {
