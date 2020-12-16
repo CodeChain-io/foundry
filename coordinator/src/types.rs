@@ -30,7 +30,7 @@ pub enum VerifiedCrime {
     },
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct TransactionOutcome {
     pub events: Vec<Event>,
 }
