@@ -19,6 +19,7 @@
 
 extern crate foundry_integration_test as test_common;
 
+use ckey::{Ed25519KeyPair, Generator, KeyPairTrait, Random};
 use std::time::Duration;
 use test_common::*;
 use tokio::time::delay_for;
@@ -96,4 +97,22 @@ async fn track_blocks() {
         }
     }
     panic!("Failed to sync 4 nodes")
+}
+
+#[actix_rt::test]
+async fn events_stored_in_every_nodes() {
+    let _node: Vec<FoundryNode> = (0..4).into_iter().map(|i| run_node_override(simple_multi_node(i))).collect();
+    delay_for(Duration::from_secs(3)).await;
+
+    let user: Ed25519KeyPair = Random.generate().unwrap();
+
+    let tx = create_tx_hello(GRAPHQL_PORT_BASE, user.public(), user.private(), 0).await;
+    send_tx(GRAPHQL_PORT_BASE, tx.tx_type(), tx.body()).await.unwrap();
+
+    delay_for(Duration::from_secs(4)).await;
+
+    for i in 0..4 {
+        let result = get_event(GRAPHQL_PORT_BASE + i, *tx.hash()).await;
+        assert_eq!(1, result.len());
+    }
 }
