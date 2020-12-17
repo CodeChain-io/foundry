@@ -505,6 +505,7 @@ impl IoHandler<Message> for Handler {
                 is_inbound: true,
             } => {
                 let mut inbound_connections = self.inbound_connections.write();
+                let outbound_connections = self.outbound_connections.write();
                 let target = connection.peer_addr();
                 self.peer_db.insert(*target);
                 if let Some(token) = self.inbound_tokens.lock().gen() {
@@ -516,17 +517,26 @@ impl IoHandler<Message> for Handler {
                         remote_node_id,
                         token
                     );
-                    assert_eq!(
-                        None,
-                        self.remote_node_ids_reverse.write().insert(remote_node_id, token),
-                        "{}:{} is already registered",
-                        remote_node_id,
-                        token
-                    );
-
-                    let t = inbound_connections.insert(token, connection);
-                    assert!(t.is_none());
-                    io.register_stream(token);
+                    if !self.remote_node_ids_reverse.write().contains_key(&remote_node_id) {
+                        assert_eq!(
+                            None,
+                            self.remote_node_ids_reverse.write().insert(remote_node_id, token),
+                            "{}:{} is already registered",
+                            remote_node_id,
+                            token
+                        );
+                    }
+                    let can_insert = inbound_connections
+                        .values()
+                        .all(|in_connection| in_connection.peer_addr() != connection.peer_addr());
+                    let is_not_out = outbound_connections
+                        .values()
+                        .all(|out_connection| out_connection.peer_addr() != connection.peer_addr());
+                    if can_insert && is_not_out {
+                        let t = inbound_connections.insert(token, connection);
+                        assert!(t.is_none());
+                        io.register_stream(token);
+                    }
                 } else {
                     cwarn!(NETWORK, "Cannot establish an inbound connection");
                 }
@@ -536,6 +546,7 @@ impl IoHandler<Message> for Handler {
                 is_inbound: false,
             } => {
                 let mut outbound_connections = self.outbound_connections.write();
+                let inbound_connections = self.inbound_connections.write();
                 if let Some(token) = self.outbound_tokens.lock().gen() {
                     let peer_addr = *connection.peer_addr();
                     let remote_node_id = peer_addr.into();
@@ -546,13 +557,15 @@ impl IoHandler<Message> for Handler {
                         remote_node_id,
                         token
                     );
-                    assert_eq!(
-                        None,
-                        self.remote_node_ids_reverse.write().insert(remote_node_id, token),
-                        "{}:{} is already registered",
-                        remote_node_id,
-                        token
-                    );
+                    if !self.remote_node_ids_reverse.write().contains_key(&remote_node_id) {
+                        assert_eq!(
+                            None,
+                            self.remote_node_ids_reverse.write().insert(remote_node_id, token),
+                            "{}:{} is already registered",
+                            remote_node_id,
+                            token
+                        );
+                    }
 
                     let mut network_message_size = 0;
                     for (name, versions) in self.client.extension_versions() {
@@ -565,9 +578,18 @@ impl IoHandler<Message> for Handler {
                             network_message_size,
                         );
                     }
-                    let t = outbound_connections.insert(token, connection);
-                    assert!(t.is_none());
-                    io.register_stream(token);
+                    let can_insert = outbound_connections
+                        .values()
+                        .all(|out_connection| out_connection.peer_addr() == connection.peer_addr());
+                    let is_not_in = inbound_connections
+                        .values()
+                        .all(|in_connection| in_connection.peer_addr() == connection.peer_addr());
+
+                    if can_insert && is_not_in {
+                        let t = outbound_connections.insert(token, connection);
+                        assert!(t.is_none());
+                        io.register_stream(token);
+                    }
                 } else {
                     cwarn!(NETWORK, "Cannot establish an outbound connection");
                 }
