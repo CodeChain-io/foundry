@@ -72,7 +72,7 @@ impl ScalarType for GqlH256 {
                 &hex::decode(&s).map_err(|_| InputValueError::custom("Invalid public key".to_owned()))?,
             )))
         } else {
-            Err(InputValueError::custom("Invalid public key".to_owned()))
+            Err(InputValueError::custom("Invalid H256".to_owned()))
         }
     }
 
