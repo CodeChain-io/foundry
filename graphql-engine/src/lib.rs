@@ -48,6 +48,11 @@ impl QueryRoot {
     async fn event(&self, tx_hash: GqlH256) -> async_graphql::Result<Vec<Vec<u8>>> {
         Ok(self.client.events_by_tx_hash(&ctypes::TxHash::from(tx_hash.0)).into_iter().map(|x| x.value).collect())
     }
+
+    /// FIXME: Design a general query scheme to handle both block to tx and tx to block.
+    async fn transaction(&self, tx_hash: GqlH256) -> Option<u64> {
+        self.client.transaction(&ctypes::TxHash::from(tx_hash.0).into()).map(|tx| tx.block_number)
+    }
 }
 
 #[derive(Clone)]

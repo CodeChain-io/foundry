@@ -176,4 +176,6 @@ async fn events() {
 
     let result = get_event(GRAPHQL_PORT, *tx2.hash()).await;
     assert!(result.is_empty());
+
+    assert!(get_tx(GRAPHQL_PORT, *tx1.hash()).await.unwrap() <= get_latest_block(GRAPHQL_PORT).await);
 }
