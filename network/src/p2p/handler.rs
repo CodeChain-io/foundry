@@ -516,6 +516,8 @@ impl IoHandler<Message> for Handler {
                         remote_node_id,
                         token
                     );
+                    // FIXME the if condition below is a hotfix.
+                    // `self.remote_node_ids_reverse.write().contains_key(&remote_node_id)` always should be false
                     if !self.remote_node_ids_reverse.write().contains_key(&remote_node_id) {
                         assert_eq!(
                             None,
@@ -548,6 +550,8 @@ impl IoHandler<Message> for Handler {
                         remote_node_id,
                         token
                     );
+                    // FIXME the if condition below is a hotfix.
+                    // `self.remote_node_ids_reverse.write().contains_key(&remote_node_id)` always should be false
                     if !self.remote_node_ids_reverse.write().contains_key(&remote_node_id) {
                         assert_eq!(
                             None,

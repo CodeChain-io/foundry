@@ -477,6 +477,8 @@ impl NetworkExtension<Event> for Extension {
         cinfo!(SYNC, "New peer detected #{}", id);
         self.send_status(id);
 
+        // FIXME the if condition below is a hotfix.
+        // `self.connected_nodes.contains(id)` always should be false
         if !self.connected_nodes.contains(id) {
             let t = self.connected_nodes.insert(*id);
             debug_assert!(t, "{} is already added to peer list", id);
@@ -488,6 +490,8 @@ impl NetworkExtension<Event> for Extension {
             request_id: None,
         };
 
+        // FIXME the if condition below is a hotfix.
+        // `self.requests.contains(id)` always should be false
         if !self.requests.contains_key(id) {
             let t = self.requests.insert(*id, Vec::new());
             debug_assert_eq!(None, t);
