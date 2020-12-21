@@ -17,6 +17,7 @@
 use crate::header::Header;
 use ccore::BlockView;
 use coordinator::Transaction as CTransaction;
+use foundry_graphql_types::*;
 
 // TODO: Fetching and holding the entire data always could be inefficient.
 pub struct Block {
@@ -61,7 +62,7 @@ impl Transaction {
         self.transaction.tx_type()
     }
 
-    async fn body(&self) -> &[u8] {
-        self.transaction.body()
+    async fn body(&self) -> GqlBytes {
+        GqlBytes(self.transaction.body().to_vec())
     }
 }

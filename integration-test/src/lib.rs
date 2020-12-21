@@ -165,7 +165,7 @@ pub async fn get_event(port: u16, tx_hash: primitives::H256) -> Vec<Vec<u8>> {
     let query_result = request_query(port, "engine", query, &variables.to_string()).await;
     let value: Value = serde_json::from_str(&query_result).unwrap();
     let list = value["data"]["event"].as_array().unwrap();
-    list.iter().map(|event| event.as_array().unwrap().iter().map(|x| x.as_i64().unwrap() as u8).collect()).collect()
+    list.iter().map(|event| hex::decode(event.as_str().unwrap()).unwrap()).collect()
 }
 
 /// Returns the number of block including it, if there is.
