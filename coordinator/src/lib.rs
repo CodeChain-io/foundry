@@ -309,7 +309,7 @@ impl BlockExecutor for Coordinator {
         let session_id = execution_id as SessionId;
 
         for tx in transactions {
-            cdebug!(COORDINATOR, "execute transaction {:?}", tx);
+            cdebug!(COORDINATOR, "execute transaction {}, {}", tx.tx_type(), tx.hash());
             match services.tx_owner.get(tx.tx_type()) {
                 Some(owner) => {
                     storage.create_checkpoint();
@@ -317,8 +317,18 @@ impl BlockExecutor for Coordinator {
                         Ok(outcome) => {
                             outcomes.push(outcome);
                             storage.discard_checkpoint();
+                            cdebug!(COORDINATOR, "execute transaction succeed {}, {}", tx.tx_type(), tx.hash());
                         }
-                        Err(_) => storage.revert_to_the_checkpoint(),
+                        Err(err) => {
+                            storage.revert_to_the_checkpoint();
+                            cdebug!(
+                                COORDINATOR,
+                                "execute transaction failed {}, {}, {:?}",
+                                tx.tx_type(),
+                                tx.hash(),
+                                err
+                            );
+                        }
                     }
                 }
                 None => outcomes.push(TransactionOutcome::default()),
@@ -348,23 +358,49 @@ impl BlockExecutor for Coordinator {
 
         let mut tx_n_outcomes: Vec<(&'a Transaction, TransactionOutcome)> = Vec::new();
         let mut remaining_block_space = storage.max_body_size();
+        let mut succeed_count = 0_u32;
+        let mut fail_count = 0_u32;
 
         for index in sorted {
             let tx = &txs[index].tx;
             if let Some(owner) = services.tx_owner.get(tx.tx_type()) {
+                cdebug!(COORDINATOR, "prepare_block: execute transaction {}, {}", tx.tx_type(), tx.hash());
                 if remaining_block_space <= tx.size() as u64 {
                     break
                 }
                 storage.create_checkpoint();
-                if let Ok(outcome) = owner.execute_transaction(session_id, &tx) {
-                    storage.discard_checkpoint();
-                    tx_n_outcomes.push((tx, outcome));
-                    remaining_block_space -= tx.size() as u64;
-                    continue
+                match owner.execute_transaction(session_id, &tx) {
+                    Ok(outcome) => {
+                        cdebug!(
+                            COORDINATOR,
+                            "prepare_block: execute transaction {}, {} succeed",
+                            tx.tx_type(),
+                            tx.hash()
+                        );
+                        storage.discard_checkpoint();
+                        tx_n_outcomes.push((tx, outcome));
+                        remaining_block_space -= tx.size() as u64;
+                        succeed_count += 1;
+                        continue
+                    }
+                    Err(err) => {
+                        cdebug!(
+                            COORDINATOR,
+                            "prepare_block: execute transaction {}, {} error {:?}",
+                            tx.tx_type(),
+                            tx.hash(),
+                            err
+                        );
+                        fail_count += 1;
+                    }
                 }
                 storage.revert_to_the_checkpoint();
+            } else {
+                cdebug!(COORDINATOR, "prepare_block: can't find transaction owner of {}, {}", tx.tx_type(), tx.hash());
+                fail_count += 1;
             }
         }
+        cdebug!(COORDINATOR, "prepare_block: succeed: {} failed: {}", succeed_count, fail_count);
         tx_n_outcomes
     }
 
