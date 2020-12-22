@@ -22,27 +22,13 @@ use ckey::Ed25519Public as Public;
 use cstate::{CurrentValidatorSet, NextValidatorSet, SimpleValidator};
 use ctypes::util::unexpected::OutOfBounds;
 use ctypes::BlockHash;
+use ctypes::BlockId;
 use parking_lot::RwLock;
-use std::cmp::Reverse;
 use std::sync::{Arc, Weak};
 
 #[derive(Default)]
 pub struct DynamicValidator {
     client: RwLock<Option<Weak<dyn ConsensusClient>>>,
-}
-
-pub struct WeightOrderedValidators(Vec<Public>);
-
-pub struct WeightIndex(usize);
-
-impl WeightOrderedValidators {
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
-    pub fn get(&self, index: WeightIndex) -> Option<&Public> {
-        self.0.get(index.0)
-    }
 }
 
 impl DynamicValidator {
@@ -67,20 +53,6 @@ impl DynamicValidator {
     fn validators(&self, hash: BlockHash) -> Vec<Public> {
         let validators = self.next_validators(hash);
         validators.into_iter().map(|val| *val.pubkey()).collect()
-    }
-
-    fn validators_order_by_weight(&self, hash: BlockHash) -> WeightOrderedValidators {
-        let mut validators = self.next_validators(hash);
-        // Should we cache the sorted validator?
-        validators.sort_unstable_by_key(|v| {
-            (
-                Reverse(v.weight()),
-                Reverse(v.deposit()),
-                v.nominated_at_block_number(),
-                v.nominated_at_transaction_index(),
-            )
-        });
-        WeightOrderedValidators(validators.into_iter().map(|val| *val.pubkey()).collect())
     }
 
     pub fn proposer_index(&self, parent: BlockHash, proposed_view: u64) -> usize {
@@ -138,11 +110,22 @@ impl ValidatorSet for DynamicValidator {
         self.validators(*parent).binary_search(public).ok()
     }
 
+    // This code assumes that validator set is not changed.
+    // Later this code should be moved to UpdateConsensus
     fn next_block_proposer(&self, parent: &BlockHash, view: u64) -> Public {
-        let validators = self.validators_order_by_weight(*parent);
-        let n_validators = validators.len();
-        let index = WeightIndex(view as usize % n_validators);
-        *validators.get(index).unwrap()
+        let client: Arc<dyn ConsensusClient> = self.client.read().as_ref().and_then(Weak::upgrade).unwrap();
+        let parent_header = client.block_header(&BlockId::from(*parent)).expect("Parent must be finalized");
+        if parent_header.number() == 0 {
+            return self.get(parent, 0)
+        }
+
+        let proposer = parent_header.author();
+        let grand_parent = parent_header.parent_hash();
+        let prev_proposer_idx =
+            self.get_index(&grand_parent, &proposer).expect("The proposer must be in the validator set");
+        let proposer_index = prev_proposer_idx + 1 + view as usize;
+        ctrace!(ENGINE, "Proposer index: {}", proposer_index);
+        self.get(&parent, proposer_index)
     }
 
     fn count(&self, parent: &BlockHash) -> usize {
