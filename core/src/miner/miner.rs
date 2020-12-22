@@ -397,7 +397,8 @@ impl MinerService for Miner {
         client: &C,
         transactions: Vec<Transaction>,
     ) -> Vec<Result<(), Error>> {
-        ctrace!(EXTERNAL_TX, "Importing external transactions");
+        let hashes: Vec<_> = transactions.iter().map(|tx| tx.hash()).collect();
+        ctrace!(EXTERNAL_TX, "Importing external transactions {:?}", hashes);
         let results = {
             let mut mem_pool = self.mem_pool.write();
             self.add_transactions_to_pool(client, transactions, TxOrigin::External, &mut mem_pool)
@@ -422,7 +423,7 @@ impl MinerService for Miner {
         chain: &C,
         tx: Transaction,
     ) -> Result<(), Error> {
-        ctrace!(OWN_TX, "Importing transaction: {:?}", tx);
+        ctrace!(OWN_TX, "Importing transaction: {}, {}", tx.tx_type(), tx.hash());
 
         let imported = {
             // Be sure to release the lock before we call prepare_work_sealing
