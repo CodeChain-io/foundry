@@ -4,7 +4,6 @@ Foundry is a framework for building blockchain applications. The goal of the Fou
 # Specification
 * [Foundry Address](Foundry-Address.md)
 * [Transaction](Transaction.md)
-* [State Trie](State-Trie.md)
 * Network Protocol
   * [Session Initiation Protocol](Session-Initiation-Protocol.md)
   * [P2P Protocol](P2P-Protocol.md)
