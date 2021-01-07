@@ -4,16 +4,18 @@ Foundry
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ==============
 
-CodeChain Foundry is a blockchain engine based on a composable module system, called _Mold_.
-Users can write their own modules and additionally bring those written by others in to construct an arbitrary blockchain application.
-The reason why we provide such a composable and user-configurable module system is
-because we want to make as much of an application configurable as possible and foster an ecosystem of reusable modules,
-while reusing the underlying consensus engine across all the different kinds of applications.
+CodeChain Foundry is a blockchain engine based on a composable module system called Mold.
+Users can write their own modules in addition to bringing in those written by others
+in order to construct an arbitrary blockchain application.
+The reason why we provide such a composable and user-configurable module system
+is because we want to make as much of the application configurable as possible
+and foster an ecosystem of reusable modules, while reusing the underlying consensus engine across all the different kinds of applications.
 
-On an execution of a transaction, that is essentially a state transition, the coordinator will be told to do so from the underlying consensus engine.
+Upon execution of a transaction that is essentially a state transition, the coordinator will be told to execute the transaction from the underlying consensus engine.
 Then the coordinator literally coordinates multiple modules constituting an application
 by invoking services exported by the modules to the coordinator in an appropriate order passing appropriate arguments.
-Transactions will be delivered to the responsible modules, and that the modules will handle the executions of the transactions,
+Transactions will be delivered to the responsible modules,
+and those modules will handle the executions of the transactions,
 which might also involve communications with other modules.
 
 ## Build
@@ -75,15 +77,6 @@ cargo build --release
 
 This will produce an executable in the ./target/release directory.
 
-## Run
-
-To run Foundry, just run
-
-```sh
-./target/release/foundry -c solo
-```
-You can create a block by sending a transaction through [JSON-RPC](https://github.com/CodeChain-io/foundry/blob/master/spec/JSON-RPC.md) or [JavaScript SDK](https://api.codechain.io/).
-
 ## Formatting
 
 Make sure you run `rustfmt` before creating a PR to the repo. You need to install the nightly-2020-10-20 version of `rustfmt`.
@@ -118,7 +111,8 @@ cargo clippy --all --all-targets
 
 ## Testing
 
-Developers are strongly encouraged to write unit tests for new code, and to submit new unit tests for old code. Unit tests can be compiled and run with: `cargo test --all`. For more details, please reference [Unit Tests](https://github.com/CodeChain-io/codechain/wiki/Unit-Tests).
+Run `cargo test --all` for unit tests.
+See `/integration-test/README.md` for integration tests.
 
 ## License
 CodeChain is licensed under the GPL License - see the [LICENSE](https://github.com/CodeChain-io/foundry/blob/master/LICENSE) file for details
