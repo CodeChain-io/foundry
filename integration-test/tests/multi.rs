@@ -109,7 +109,7 @@ async fn events_stored_in_every_nodes() {
     let tx = create_tx_hello(GRAPHQL_PORT_BASE, user.public(), user.private(), 0).await;
     send_tx(GRAPHQL_PORT_BASE, tx.tx_type(), tx.body()).await.unwrap();
 
-    delay_for(Duration::from_secs(4)).await;
+    delay_for(Duration::from_secs(8)).await;
 
     for i in 0..4 {
         let result = get_event(GRAPHQL_PORT_BASE + i, *tx.hash()).await;
