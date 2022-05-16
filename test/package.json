@@ -69,7 +69,7 @@
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
     "net": "^1.0.2",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.7",
     "request": "^2.88.2",
     "request-promise": "^4.2.5",
     "rlp": "^2.2.3",
