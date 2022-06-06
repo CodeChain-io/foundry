@@ -964,7 +964,7 @@ dependencies = [
  "codechain-timer",
  "codechain-types",
  "coordinator",
- "crossbeam-channel 0.4.3",
+ "crossbeam-channel 0.4.4",
  "hyper 0.13.7",
  "kvdb",
  "kvdb-memorydb",
@@ -1046,7 +1046,7 @@ dependencies = [
  "codechain-rpc",
  "codechain-types",
  "codechain_informer_courier",
- "crossbeam-channel 0.4.3",
+ "crossbeam-channel 0.4.4",
  "jsonrpc-core",
  "jsonrpc-derive",
  "jsonrpc-http-server",
@@ -1185,7 +1185,7 @@ dependencies = [
  "codechain-logger",
  "codechain-timer",
  "codechain_informer_courier",
- "crossbeam-channel 0.4.3",
+ "crossbeam-channel 0.4.4",
  "finally-block",
  "kvdb",
  "log",
@@ -1315,7 +1315,7 @@ dependencies = [
 name = "codechain_informer_courier"
 version = "0.1.0"
 dependencies = [
- "crossbeam-channel 0.4.3",
+ "crossbeam-channel 0.4.4",
  "serde",
  "serde_derive",
  "serde_json",
@@ -1515,7 +1515,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "69323bff1fb41c635347b8ead484a5ca6c3f11914d784170b158d8449ab07f8e"
 dependencies = [
  "cfg-if",
- "crossbeam-channel 0.4.3",
+ "crossbeam-channel 0.4.4",
  "crossbeam-deque 0.7.3",
  "crossbeam-epoch 0.8.2",
  "crossbeam-queue",
@@ -1533,12 +1533,12 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-channel"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09ee0cc8804d5393478d743b035099520087a5186f3b93fa58cec08fa62407b6"
+checksum = "b153fe7cbef478c567df0f972e02e6d736db11affe43dfc9c56a9374d1adfb87"
 dependencies = [
- "cfg-if",
  "crossbeam-utils 0.7.2",
+ "maybe-uninit",
 ]
 
 [[package]]
@@ -2049,7 +2049,7 @@ dependencies = [
  "codechain-timer",
  "codechain-types",
  "coordinator",
- "crossbeam-channel 0.4.3",
+ "crossbeam-channel 0.4.4",
  "ctrlc",
  "env_logger 0.5.13",
  "fdlimit",
@@ -4193,7 +4193,7 @@ version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8c4fec834fb6e6d2dd5eece3c7b432a52f0ba887cf40e595190c4107edc08bf"
 dependencies = [
- "crossbeam-channel 0.4.3",
+ "crossbeam-channel 0.4.4",
  "crossbeam-deque 0.7.3",
  "crossbeam-utils 0.7.2",
  "lazy_static",
