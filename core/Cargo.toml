@@ -18,7 +18,7 @@ cstate = { package = "codechain-state", path = "../state" }
 ctimer = { package = "codechain-timer", path = "../util/timer" }
 ctypes = { package = "codechain-types", path = "../types" }
 crossbeam-channel = "0.4"
-hyper = "0.13"
+hyper = "0.14"
 kvdb = "0.1"
 kvdb-rocksdb = "0.1"
 kvdb-memorydb = "0.1"
